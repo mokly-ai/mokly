@@ -10,6 +10,7 @@ import {
   normalizeSingleDocument,
 } from "../dist/review/ignore.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
@@ -55,13 +56,8 @@ test("Review classifies added, removed, and unchanged routes independently", asy
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
-  const detail = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.path === "details",
-  );
-  const home = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.path === "home",
-  );
-  assert.ok(detail?.kind === "screen" && home?.kind === "screen");
+  const detail = entryAt(compilation.manifest, "details", "screen");
+  const home = entryAt(compilation.manifest, "home", "screen");
   const old = {
     ...home,
     path: "old-screen",

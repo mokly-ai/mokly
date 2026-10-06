@@ -11,6 +11,7 @@ import { loadConfig } from "../dist/config/load.js";
 import { decodeProps } from "../packages/viewer/dist/components/codec.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
@@ -132,12 +133,8 @@ test("renderer mutations cannot change captured props or the next saved render",
   const first = await compileCatalogue(config);
   const second = await compileCatalogue(config);
   assert.deepEqual(first, second);
-  const action = first.manifest.entries.find(
-    (entry) => entry.kind === "component" && entry.path === "action/default",
-  )!;
-  assert.ok(action.kind === "component" && "variantOf" in action);
-  if (action.kind !== "component" || !("variantOf" in action))
-    throw new Error("Missing action variant");
+  const action = entryAt(first.manifest, "action/default", "component");
+  assert.ok("variantOf" in action);
   assert.deepEqual(decodeProps(action.props), {
     label: "Continue",
   });

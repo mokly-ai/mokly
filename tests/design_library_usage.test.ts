@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { entriesUnder } from "./helpers/catalogue_selection.js";
+import { entriesUnder, entryAt } from "./helpers/catalogue_selection.js";
 import { designCatalogue } from "./helpers/design_catalogue.js";
 import { designLibrary } from "./helpers/design_library.js";
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -79,13 +79,12 @@ test("every owning artboard records its shared chrome and real component consume
 test("nested chips and caller-owned frame slots retain their actual owner chains", async () => {
   const { manifest } = await designCatalogue;
   assert.ok(manifest.schemaVersion === 8);
-  const picker = manifest.entries.find(
-    (entry) => entry.path === "design/browse/views/screen/tag-picker",
+  const picker = entryAt(
+    manifest,
+    "design/browse/views/screen/tag-picker",
+    "screen",
   );
-  const flow = manifest.entries.find(
-    (entry) => entry.path === "design/browse/views/use-case",
-  );
-  assert.ok(picker?.kind === "screen" && flow?.kind === "screen");
+  const flow = entryAt(manifest, "design/browse/views/use-case", "screen");
   assert.ok(picker.componentViews);
   for (const view of picker.componentViews) {
     const chip = view.instances.find(

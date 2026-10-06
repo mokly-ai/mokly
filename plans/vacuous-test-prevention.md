@@ -1,7 +1,7 @@
 # Vacuous Test Prevention
 
 Status: Active; Milestones 1 through 5 completed and approved. Milestone 6
-in progress.
+completed. Waiting for reviewer approval before Milestone 7.
 Created 2026-10-06 with the user's consent after a report that four
 unit tests check nothing. The user chose four options: rewrite
 the empty checks with checked helpers, test-first; add a zero-assertion guard to
@@ -417,7 +417,7 @@ Send catalogue selections through the checked helpers.
       specs with `npx playwright test <spec>`.
 - [x] Commit.
 
-## Milestone 6: Lint literal path lookups
+## Milestone 6: Lint literal path lookups — completed
 
 Extend the lint rule to literal path lookups, as the user approved on
 2026-10-06.
@@ -439,10 +439,18 @@ Extend the lint rule to literal path lookups, as the user approved on
   - [x] Run the changed unit files, helper tests, ESLint, and prepared type
         checks. Browser specs are unchanged and need no repeat run.
   - [x] Commit the correction.
-- [ ] Extend the lint tests. Selector 3 reports a literal path compared with
+- [x] Extend the lint tests. Selector 3 reports a literal path compared with
       `===` or `!==` in `find`, `some`, `filter`, and `every` calls on
       `entries`. A comparison with a variable reports nothing.
-- [ ] Migrate the 54 sites in 32 files. A presence lookup becomes `entryAt`, an
+- [x] Keep fixture construction separate from absence assertions. Use
+      `entriesAt` for a retained path list and `entriesWhere` for exclusions.
+- [x] In `tests/move_links.test.ts`, select the saved component from its
+      manifest with `entryAt`, then find the private compiler location by that
+      checked path. The private record is not a manifest entry. Assert that
+      the location record exists; keep all render diagnostics.
+- [x] Record the selector 3 count as 54 before the root-anchor correction,
+      53 after its one migrated site, and 0 after the remaining migration.
+- [x] Migrate the 54 sites in 32 files. A presence lookup becomes `entryAt`, an
       absence check becomes `assertAbsent`, and a literal list becomes
       `entriesAt`. When a migrated test then makes no assertion, add one that
       states its claim. Today the sites are in
@@ -470,9 +478,9 @@ Extend the lint rule to literal path lookups, as the user approved on
       `tests/server_changed_manifest.test.ts`,
       `tests/server_route_scoped_bootstrap.test.ts`, and
       `tests/watch_imported_assets.test.ts`.
-- [ ] Add selector 3. Run `npm run lint`, the changed unit test files, and the
+- [x] Add selector 3. Run `npm run lint`, the changed unit test files, and the
       changed browser specs.
-- [ ] Commit.
+- [x] Commit.
 
 ## Milestone 7: Deliver and review
 

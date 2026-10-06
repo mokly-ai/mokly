@@ -8,6 +8,7 @@ import { loadConsumerGraph } from "../dist/build/load_graph.js";
 import { discoverEntryModules } from "../dist/config/entry_discovery.js";
 import { loadConfig } from "../dist/config/load.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import {
   createFixture,
   removeFixture,
@@ -168,7 +169,7 @@ test("discovery unions globs, ignores order, and sorts by repository path", asyn
     assert.deepEqual(graph.entrySources, expected);
     const manifest = (await compileCatalogue(config)).manifest;
     assert.equal(
-      manifest.entries.find((entry) => entry.path === "alpha")?.sourcePath,
+      entryAt(manifest, "alpha", "screen")?.sourcePath,
       "src/widgets/alpha/alpha.mockup.ts",
     );
     assert.ok(

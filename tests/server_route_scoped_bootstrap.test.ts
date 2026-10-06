@@ -15,17 +15,14 @@ import { createCatalogue } from "@mokly/viewer/server";
 import { projectCatalogue } from "../dist/catalogue/projection.js";
 import { homePage, notFoundPage, viewPage } from "../dist/server/pages.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
+
 const LIMIT = 1_048_576;
 type RoutedManifestEntry = ManifestV8["entries"][number];
 const manifest = JSON.parse(
   fs.readFileSync("examples/basic/generated/mokly-manifest.json", "utf8"),
 ) as ManifestV8;
-const sourceRemoved = manifest.entries.find(
-  (entry) =>
-    entry.kind === "screen" && entry.path === "example/screens/welcome",
-);
-if (!sourceRemoved || sourceRemoved.kind !== "screen")
-  throw new Error("Missing real historical fixture source.");
+const sourceRemoved = entryAt(manifest, "example/screens/welcome", "screen");
 const removed = {
   ...structuredClone(sourceRemoved),
   path: "historical-example-welcome",

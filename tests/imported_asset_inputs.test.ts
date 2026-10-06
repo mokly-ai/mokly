@@ -10,6 +10,7 @@ import { loadConfig } from "../dist/config/load.js";
 import { isPublicStaticFile } from "../dist/config/public_files.js";
 import { classifyWatchPath } from "../dist/server/watch_events.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 for (const loader of ["dataurl", "base64", "binary", "text"]) {
@@ -46,9 +47,8 @@ for (const loader of ["dataurl", "base64", "binary", "text"]) {
     await fs.writeFile(asset, '<svg width="200"><rect width="20"/></svg>');
     const rebuilt = await compileCatalogue(config);
     assert.notEqual(
-      rebuilt.manifest.entries.find((entry) => entry.path === "home")?.title,
-      compilation.manifest.entries.find((entry) => entry.path === "home")
-        ?.title,
+      entryAt(rebuilt.manifest, "home", "screen")?.title,
+      entryAt(compilation.manifest, "home", "screen")?.title,
     );
   });
 }

@@ -9,6 +9,7 @@ import { DocumentCompiler } from "../dist/build/document_compiler.js";
 import { compareReview } from "../dist/review/compare.js";
 import { ComponentRenderService } from "../dist/server/controls/service.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import { moveReviewFixture as componentReviewFixture } from "./helpers/move_review_fixture.js";
 import { pageSource, pathFixture } from "./helpers/path_fixture.js";
 
@@ -62,9 +63,10 @@ test("later controlled renders use accepted pairs from their own generation", as
   ]);
   const runtime = componentRuntime(fixture.after);
   const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime));
-  const location = compiler.entries.find(
-    (entry) => entry.path === "linker/saved",
-  )!.location;
+  const saved = entryAt(fixture.after.manifest, "linker/saved", "component");
+  const resolved = compiler.entries.find((entry) => entry.path === saved.path);
+  assert.ok(resolved);
+  const location = resolved.location;
   const prefix = `${location}: link target old does not exist`;
   const route = "linker/saved/index.desktop.html";
   assert.throws(() => compiler.render(route, { target: "old" }), {

@@ -77,6 +77,12 @@ export default tseslint.config(
           message:
             "Select catalogue entries with entriesUnder or entriesWhere so an empty selection fails.",
         },
+        {
+          selector:
+            "CallExpression[callee.object.property.name='entries'][callee.property.name=/^(filter|flatMap|find|findLast|findIndex|some|every)$/] BinaryExpression[operator=/^[!=]==$/][left.property.name='path'][right.type=/^(Literal|TemplateLiteral)$/]",
+          message:
+            "Select literal catalogue paths with entryAt, entriesAt or assertAbsent.",
+        },
       ],
     },
   },

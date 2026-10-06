@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 
 import { viewRoute } from "../../packages/viewer/dist/data.js";
 import type { ManifestV8 } from "../../packages/viewer/dist/registry/types.js";
-import { entriesUnder } from "../helpers/catalogue_selection.js";
+import { entriesUnder, entryAt } from "../helpers/catalogue_selection.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 const generated = path.join(repositoryRoot, "examples/basic/generated");
@@ -184,11 +184,12 @@ for (const viewport of ["desktop", "mobile"] as const) {
     test("the icon footer sample keeps its open content visible", async ({
       page,
     }) => {
-      const entry = manifest.entries.find(
-        (entry) => entry.path === "design/library/inspector/inspector/details",
+      const entry = entryAt(
+        manifest,
+        "design/library/inspector/inspector/details",
+        "component",
       );
-      if (entry?.kind !== "component" || !("variantOf" in entry))
-        throw new Error("Missing footer panel");
+      if (!("variantOf" in entry)) throw new Error("Missing footer panel");
       await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
       await expect(
         page.getByText(
@@ -225,12 +226,12 @@ test("mobile footer component owns its full-width sheet surface", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  const entry = manifest.entries.find(
-    (candidate) =>
-      candidate.path === "design/library/inspector/inspector/details",
+  const entry = entryAt(
+    manifest,
+    "design/library/inspector/inspector/details",
+    "component",
   );
-  if (entry?.kind !== "component" || !("variantOf" in entry))
-    throw new Error("Missing footer panel");
+  if (!("variantOf" in entry)) throw new Error("Missing footer panel");
   await page.goto(fileUrl(viewRoute(entry.path, "mobile", "light")));
   const workspace = page.locator(".ce-workspace");
   const dock = page.locator(".ce-inspector-dock");

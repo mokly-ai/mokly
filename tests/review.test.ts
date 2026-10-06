@@ -20,6 +20,7 @@ import type {
 } from "../packages/viewer/dist/registry/types.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
@@ -259,10 +260,7 @@ function withHomeIgnoredRegions(
   label: string,
   ids: readonly string[] = ["nav"],
 ): Compilation {
-  const home = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.path === "home",
-  );
-  if (home?.kind !== "screen") throw new Error("missing home screen");
+  const home = entryAt(compilation.manifest, "home", "screen");
   const outputs = new Map(compilation.outputs);
   for (const fragment of screenFragments(home)) {
     const content = outputs.get(fragment);

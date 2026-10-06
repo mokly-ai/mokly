@@ -192,6 +192,8 @@ lint scope. Each diagnostic names the checked helper to use.
 
 The first two diagnostics say: "Select catalogue entries with entriesUnder or
 entriesWhere so an empty selection fails."
+The third says: "Select literal catalogue paths with entryAt, entriesAt or
+assertAbsent."
 
 The rules reject these syntax shapes:
 
@@ -203,6 +205,11 @@ The rules reject these syntax shapes:
 3. A selection call directly on `.entries` that compares `entry.path` with a
    literal or template literal using `===` or `!==`. Use `entryAt` for one
    path, `entriesAt` for a path list, or `assertAbsent` for absence.
+
+Fixture construction that keeps or removes entries uses `entriesAt` or
+`entriesWhere`. It does not assert that the input lacks the removed path.
+Private render-location records use the path of an entry selected from the
+manifest, then match that checked path to their private metadata.
 
 The selection-call methods are `filter`, `flatMap`, `find`, `findLast`,
 `findIndex`, `some`, and `every`. The exact selectors are:

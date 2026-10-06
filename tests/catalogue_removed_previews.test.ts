@@ -8,6 +8,7 @@ import { loadConfig } from "../dist/config/load.js";
 import { catalogueAtBaseline } from "../dist/server/baseline_catalogue.js";
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 
+import { entriesAt } from "./helpers/catalogue_selection.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 const generation = "c".repeat(64);
@@ -109,9 +110,7 @@ async function previewInput(t: test.TestContext) {
   const before = await compileCatalogue(config);
   const current = {
     ...before.manifest,
-    entries: before.manifest.entries.filter(
-      (entry) => entry.path === "current",
-    ),
+    entries: entriesAt(before.manifest, ["current"], "screen"),
   };
   return {
     configPath: "mokly.config.ts",

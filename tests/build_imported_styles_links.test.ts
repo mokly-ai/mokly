@@ -6,6 +6,7 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import {
   createFixture,
@@ -93,8 +94,7 @@ test("a re-exported helper screen links its exporting entry's stylesheet", async
     "../mokly-generated/styles/entries/fixture.mockup.tsx.css",
   ]);
   assert.equal(
-    compiled.manifest.entries.find((entry) => entry.path === "home")
-      ?.sourcePath,
+    entryAt(compiled.manifest, "home", "screen")?.sourcePath,
     "entries/helper.tsx",
   );
   assert.ok(!JSON.stringify(compiled.manifest).includes("entryRoot"));

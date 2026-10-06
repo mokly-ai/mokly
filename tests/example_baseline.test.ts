@@ -9,6 +9,7 @@ import { RebuiltBaselineReader } from "../dist/baseline/reader.js";
 import { parseHistoricalManifest } from "../dist/registry/manifest.js";
 import { prepareReviewRepository } from "../dist/review/prepare.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import { createExampleBaseline } from "./helpers/example_baseline.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
@@ -43,9 +44,7 @@ test("the example fixture rebuilds an untracked baseline from its own source and
       ),
     ),
   );
-  assert.ok(
-    manifest.entries.some((entry) => entry.path === "example/screens/welcome"),
-  );
+  assert.ok(entryAt(manifest, "example/screens/welcome", "screen"));
   await prepared.assertUnchanged();
   await assert.rejects(fs.access(manifestPath), { code: "ENOENT" });
 });

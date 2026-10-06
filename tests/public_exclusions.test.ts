@@ -14,6 +14,7 @@ import { FileSystemReviewAssetReader } from "../dist/review/assets.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 import { classifyWatchPath } from "../dist/server/watch_events.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import {
   createFixture,
   removeFixture,
@@ -162,10 +163,7 @@ test("an excluded imported JSON file remains an authoring input and rebuilds", a
     "rebuild",
   );
   const second = await compileCatalogue(config);
-  assert.equal(
-    second.manifest.entries.find((entry) => entry.path === "home")?.title,
-    "After",
-  );
+  assert.equal(entryAt(second.manifest, "home", "screen")?.title, "After");
 });
 
 test("canonical builder metadata remains writable when excluded from public reads", async (t) => {

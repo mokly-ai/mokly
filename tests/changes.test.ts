@@ -14,6 +14,7 @@ import { serve } from "../dist/server/serve.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { screenVariantEntrySource } from "./helpers/screen_variant_fixture.js";
 import { waitForClassifiedCount } from "./helpers/watched_catalogue.js";
@@ -48,10 +49,7 @@ test("changing only a screen variant parent marks its id changed", async (t) => 
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const { manifest } = await compileCatalogue(config);
-  const parent = manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.path === "home",
-  );
-  assert.ok(parent?.kind === "screen");
+  const parent = entryAt(manifest, "home", "screen");
   const variant = {
     ...structuredClone(parent),
     path: "home/empty",
@@ -76,10 +74,7 @@ test("a material variant edit marks only the variant route", async (t) => {
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const { manifest } = await compileCatalogue(config);
-  const variant = manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.path === "home/empty",
-  );
-  assert.ok(variant?.kind === "screen");
+  const variant = entryAt(manifest, "home/empty", "screen");
 
   assert.deepEqual(
     changedManifestPaths(manifest, manifest, config, [
@@ -94,14 +89,8 @@ test("renaming a parent title marks its variant through the parent projection", 
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const { manifest } = await compileCatalogue(config);
-  const parent = manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.path === "home",
-  );
-  const variant = manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.path === "home/empty",
-  );
-  assert.ok(parent?.kind === "screen");
-  assert.ok(variant?.kind === "screen");
+  const parent = entryAt(manifest, "home", "screen");
+  const variant = entryAt(manifest, "home/empty", "screen");
   const current = {
     ...manifest,
     entries: manifest.entries.map((entry) =>

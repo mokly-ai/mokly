@@ -14,6 +14,7 @@ import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { runReview } from "../dist/review/run.js";
 import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import {
   createFixture,
   removeFixture,
@@ -69,10 +70,7 @@ test("Review validates malformed markers on added and removed panes", async (con
     /region nav has no end marker/,
   );
 
-  const home = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.path === "home",
-  );
-  assert.ok(home?.kind === "screen");
+  const home = entryAt(compilation.manifest, "home", "screen");
   const removed = {
     ...home,
     path: "removed",

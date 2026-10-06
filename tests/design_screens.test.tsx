@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { entryRoute } from "../packages/viewer/dist/data.js";
 
-import { assertAbsent } from "./helpers/catalogue_selection.js";
+import { assertAbsent, entryAt } from "./helpers/catalogue_selection.js";
 import {
   attribute,
   byClass,
@@ -46,10 +46,7 @@ const convertedVariants = [
 
 test("the Welcome conversion keeps the approved screens as variants, not folder members", async () => {
   const { manifest } = await designCatalogue;
-  const parent = manifest.entries.find(
-    (entry) => entry.path === "design/browse/views/screen",
-  );
-  assert.ok(parent?.kind === "screen");
+  const parent = entryAt(manifest, "design/browse/views/screen", "screen");
   for (const [id] of convertedVariants) {
     const entry = manifest.entries.find((candidate) => candidate.path === id);
     assert.equal(entry?.kind, "screen", id);
@@ -59,9 +56,7 @@ test("the Welcome conversion keeps the approved screens as variants, not folder 
     assert.ok(entry.path.startsWith(`${parent.path}/`), id);
   }
   assertAbsent(manifest, "design/browse/tags");
-  const filter = manifest.entries.find(
-    (entry) => entry.path === "design/browse/states/tag-filter",
-  );
+  const filter = entryAt(manifest, "design/browse/states/tag-filter", "screen");
   assert.equal(filter?.path, "design/browse/states/tag-filter");
 });
 

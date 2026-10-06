@@ -11,6 +11,7 @@ import { changedManifestPaths } from "../src/registry/changed_paths.js";
 import { removedManifestEntries } from "../src/registry/changes.js";
 import { viewPage, homePage } from "../src/server/pages.js";
 
+import { assertAbsent, entryAt } from "./helpers/catalogue_selection.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { documentText } from "./helpers/html.js";
 import { publicShellContext } from "./helpers/public_shell.js";
@@ -35,7 +36,7 @@ test("page path changes create an addition and a removal", async (context) => {
     source("app", "Renamed handbook"),
   );
   const after = (await compileCatalogue(config)).manifest;
-  const handbook = after.entries.find((entry) => entry.path === "app/handbook");
+  const handbook = entryAt(after, "app/handbook", "page");
   assert.equal(
     handbook?.kind === "page" ? entryRoute(handbook.path) : undefined,
     "app/handbook/index.html",
@@ -49,10 +50,7 @@ test("page path changes create an addition and a removal", async (context) => {
     [["page", "app/book/handbook"]],
   );
   assert.deepEqual(removed[0]?.folderTitles, ["App", "Book"]);
-  assert.equal(
-    after.entries.some((entry) => entry.path === "app/book/handbook"),
-    false,
-  );
+  assertAbsent(after, "app/book/handbook");
   const catalogue = createCatalogue(after);
   assert.deepEqual(
     buildNavSections(catalogue.hierarchy)[0]!

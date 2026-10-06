@@ -8,6 +8,8 @@ import { repositoryRoot } from "./helpers/fixture.js";
 const eslint = new ESLint({ cwd: repositoryRoot });
 const selectionMessage =
   "Select catalogue entries with entriesUnder or entriesWhere so an empty selection fails.";
+const literalMessage =
+  "Select literal catalogue paths with entryAt, entriesAt or assertAbsent.";
 
 async function messages(
   source: string,
@@ -63,6 +65,47 @@ for (const method of [
       );
     });
   }
+}
+
+for (const method of [
+  "filter",
+  "flatMap",
+  "find",
+  "findLast",
+  "findIndex",
+  "some",
+  "every",
+]) {
+  for (const comparison of ["===", "!=="]) {
+    for (const [name, literal] of [
+      ["literal", '"design/home"'],
+      ["template", "`design/home`"],
+    ]) {
+      test(`catalogue lint rejects entries.${method} with ${comparison} ${name} path`, async () => {
+        const found = await messages(`
+          export function check(manifest) {
+            return manifest.entries.${method}(
+              (entry) => entry.path ${comparison} ${literal},
+            );
+          }
+        `);
+        assert.deepEqual(
+          found.map(({ ruleId, message }) => ({ ruleId, message })),
+          [{ ruleId: "no-restricted-syntax", message: literalMessage }],
+        );
+      });
+    }
+  }
+  test(`catalogue lint allows entries.${method} with a variable path`, async () => {
+    assert.deepEqual(
+      await messages(`
+        export function check(manifest, path) {
+          return manifest.entries.${method}((entry) => entry.path === path);
+        }
+      `),
+      [],
+    );
+  });
 }
 
 const allowed = [
@@ -143,6 +186,8 @@ for (const filePath of [
     assert.deepEqual(
       await messages(
         `export function check(manifest) {
+          const screen = manifest.entries.find((entry) => entry.path === "design/home");
+          void screen;
           for (const entry of manifest.entries) {
             if (entry.kind !== "screen") continue;
             void entry;
