@@ -139,13 +139,14 @@ Uncovered advisory GHSA-68fv-2mgg-jv7q; package: source-map-js; severity: high.
 [xtask/command] `npm run dependencies:check` failed with status 1
 ```
 
-The user approved a lockfile-only update from source-map-js 1.2.1 to 1.2.2 on
-this branch. Runtime PostCSS and development Tailwind both resolve it. The
+This branch includes a lockfile-only update from source-map-js 1.2.1 to 1.2.2.
+Runtime PostCSS and development Tailwind both resolve it. The
 [reviewed advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q) identifies
 1.2.2 as patched. Main CI has the same failure, and unit jobs depend on the
 repository job. The patch therefore unblocks the audit required for CI shard
 measurement. Commit `a8bf3926` changes only version, resolved URL, and integrity
-in the source-map-js lockfile entry; `package.json` stays unchanged.
+in the source-map-js lockfile entry; `package.json` stays unchanged. The pull
+request description must flag this dependency update for the user's review.
 
 A clean `npm ci` installed 1.2.2 for both parents. The live
 `npm run dependencies:check` passed with the existing reviewed Braces exception.
@@ -168,8 +169,32 @@ the component-design protocol remains at 250 lines. The six projection tests
 passed in 0.220 s without compilation. All targeted attribution and protocol
 checks passed after correcting the two documented initial assertion failures.
 
-The earlier complete-gate attempt failed at the audit. After the approved patch
-and its decision notes are committed, `cargo xtask check` will run again as one
-unqualified command. Its result and suite durations will be recorded below.
+The earlier complete-gate attempt failed at the audit. After the lockfile update
+and decision notes were committed, the single unqualified `cargo xtask check`
+ran on `e8369ec5` and passed end to end with exit code 0. The run used
+Node 22.14.0 and the installed Chrome channel. No suite filter or retry was used.
 CI timing, push, the control decision, PR status, and post-push review remain
 with the orchestrator. No push or PR was made.
+
+### Complete-Gate Measurement
+
+The complete run started at 10:58:23 UTC and ended at 12:09:43 UTC on
+2026-10-06. A local-only stream observer used a monotonic clock at xtask's
+suite command markers. Suite wall time includes preparation; runner time comes
+from the suite evidence reports and excludes preparation. Total wall time also
+includes the initial Cargo startup. The observer and raw reports are local-only
+scratch artifacts, not repository files.
+
+| Suite      | Result                                                                  | Suite wall time |             Runner time |
+| ---------- | ----------------------------------------------------------------------- | --------------: | ----------------------: |
+| Repository | Audit, format, lint, length, ratchets, Clippy, and 15 Rust tests passed |        66.238 s | Not separately recorded |
+| Package    | Build, types, example, artifacts, and six consumer scenarios passed     |       208.609 s | Not separately recorded |
+| Unit       | 4310 passed; no failures, skips, or cancellations                       |      1499.296 s |              1463.651 s |
+| Browser    | 844 passed across 168 files; no skips or cancellations                  |      1676.426 s |              1634.914 s |
+| Hydration  | 263 passed across 11 files; no skips or cancellations                   |       830.156 s |               788.210 s |
+
+Total complete-gate wall time: **4280.759 s**
+(71 minutes, 20.759 seconds). All five suites passed in the same gate invocation.
+The dependency audit retained only the existing reviewed Braces exception; no
+new exception was added. The full run reported no functional failure, skip, or
+cancellation. The plan's local complete-gate TODO is checked.
