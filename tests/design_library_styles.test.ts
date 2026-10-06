@@ -62,7 +62,6 @@ test("ownership includes implementation and CSS, while variants stay outside imp
     variants: "exclude",
   });
   for (const entry of entries) {
-    if ("variantOf" in entry) continue;
     const slug = entry.path.slice(entry.path.lastIndexOf("/") + 1);
     assert.ok(
       entry.ownedDependencies.some((file) =>

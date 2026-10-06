@@ -9,6 +9,15 @@ type EntryOfKind<Kind extends EntryKind> = Extract<
   { kind: Kind }
 >;
 type VariantFilter = "include" | "exclude" | "only";
+type EntriesWithVariants<
+  Entry,
+  Variants extends VariantFilter,
+> = Variants extends "exclude"
+  ? Exclude<Entry, { variantOf: string }>
+  : Variants extends "only"
+    ? | (Extract<Entry, { kind: "screen" }> & { variantOf: string })
+      | Extract<Entry, { variantOf: string }>
+    : Entry;
 interface Catalogue {
   readonly entries: readonly ManifestEntry[];
 }
@@ -55,6 +64,15 @@ function matchesKind(
   return typeof kind === "string"
     ? entry.kind === kind
     : kind.some((candidate) => candidate === entry.kind);
+}
+
+function matchesVariants(
+  entry: ManifestEntry,
+  variants: VariantFilter,
+): boolean {
+  if (variants === "include") return true;
+  const isVariant = "variantOf" in entry;
+  return variants === "only" ? isVariant : !isVariant;
 }
 
 function selectEntry(
@@ -131,12 +149,27 @@ export function entriesAt(
   return selected;
 }
 
+/** Narrow folder entries by both their kind and their variant filter. */
+export function entriesUnder<
+  Kind extends EntryKind,
+  Variants extends VariantFilter,
+>(
+  manifest: Catalogue,
+  folder: string,
+  options: UnderOptions & { kind: Kind | readonly Kind[]; variants: Variants },
+): EntriesWithVariants<EntryOfKind<Kind>, Variants>[];
 /** Select a folder's entries and narrow them to one kind or a list of kinds. */
 export function entriesUnder<Kind extends EntryKind>(
   manifest: Catalogue,
   folder: string,
   options: UnderOptions & { kind: Kind | readonly Kind[] },
 ): EntryOfKind<Kind>[];
+/** Narrow folder entries to parents or variants when no kind is required. */
+export function entriesUnder<Variants extends VariantFilter>(
+  manifest: Catalogue,
+  folder: string,
+  options: UnderOptions & { variants: Variants },
+): EntriesWithVariants<ManifestEntry, Variants>[];
 /** Select a folder's entries with checked kind, variant, and count filters. */
 export function entriesUnder(
   manifest: Catalogue,
@@ -154,9 +187,7 @@ export function entriesUnder(
     (entry) =>
       entry.path.startsWith(`${folder}/`) &&
       matchesKind(entry, options.kind) &&
-      // prettier-ignore
-      (variants === "include" ||
-        ("variantOf" in entry) === (variants === "only")),
+      matchesVariants(entry, variants),
   );
   const min = options.min ?? 1;
   if (selected.length < min)
@@ -171,7 +202,21 @@ export function entriesUnder(
   return selected;
 }
 
+/** Preserve the narrowed result type of a catalogue type-guard predicate. */
+export function entriesWhere<Entry extends ManifestEntry>(
+  manifest: Catalogue,
+  description: string,
+  predicate: (entry: ManifestEntry) => entry is Entry,
+  options?: MinimumOptions,
+): Entry[];
 /** Select original entries by predicate with a named minimum-count check. */
+export function entriesWhere(
+  manifest: Catalogue,
+  description: string,
+  predicate: (entry: ManifestEntry) => boolean,
+  options?: MinimumOptions,
+): ManifestEntry[];
+/** Return matching entries in manifest order after the minimum-count check. */
 export function entriesWhere(
   manifest: Catalogue,
   description: string,

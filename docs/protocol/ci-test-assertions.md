@@ -140,7 +140,10 @@ The four selection helpers are preconditions. They throw
 
 `entriesWhere` also accepts `min`, with a default of 1.
 Kind arguments narrow the result types of `entryAt`, `entriesAt`, and
-`entriesUnder`. A component kind accepts both parents and variants.
+`entriesUnder`. A component kind accepts both parents and variants unless
+`variants: "exclude"` removes component variants. `variants: "only"` returns
+only screens with a required `variantOf` and component variants.
+`entriesWhere` preserves the result type of a type-guard predicate.
 Selection errors name the helper, path or folder, requested kind or variant
 filter, and match count. Predicate errors include their description.
 

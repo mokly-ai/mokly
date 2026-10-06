@@ -171,7 +171,10 @@ occupy.
   the check still looks at a real area.
 - The helpers return the manifest's own entry objects, never copies.
 - Kind arguments narrow the result type of `entryAt`, `entriesAt`, and
-  `entriesUnder`. A component kind still permits a component variant.
+  `entriesUnder`. A component kind still permits a component variant unless
+  `variants: "exclude"` removes it. `variants: "only"` returns only screen
+  variants and component variants. `entriesWhere` preserves a type guard's
+  narrowed result type.
 - Every error names the helper, the path or folder, the kind or variant filter,
   and the match count.
 - The shared lookups use `entryAt`: `designDocument` in
@@ -279,6 +282,17 @@ Prove that each check is empty, then make it check the current catalogue.
       Report the counts and remove the logs before the commit.
 - [x] Run the seven changed files. Every test in them must pass.
 - [x] Commit.
+
+### Review fixes — completed
+
+- [x] Preserve type-guard results in `entriesWhere` and narrow
+      `entriesUnder` by its variant filter. Add failing type assignments before
+      the implementation change. Remove both repeated loop checks.
+- [x] Use `matchesVariants` and remove the formatting directive.
+- [x] Move absence tests to `tests/catalogue_selection_absence.test.ts` so the
+      expanded type tests stay below 300 lines. Keep every assertion.
+- [x] Record the narrowing in this plan and the protocol. Run relevant tests,
+      lint, type checks, and formatting. Commit the review fixes separately.
 
 ## Milestone 4: Zero-assertion guard
 

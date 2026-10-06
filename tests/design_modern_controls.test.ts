@@ -3,11 +3,15 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import type { ManifestComponentVariant } from "../packages/viewer/dist/components/manifest_types.js";
 import {
   generatedViews,
   isManifestComponentVariant,
 } from "../packages/viewer/dist/data.js";
-import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
+import type {
+  ManifestScreen,
+  ManifestV8,
+} from "../packages/viewer/dist/registry/types.js";
 
 import { entriesWhere } from "./helpers/catalogue_selection.js";
 import { componentParent } from "./helpers/component_views.js";
@@ -82,24 +86,20 @@ test("every owning design and shared sample omits legacy footer and view markup"
   const entries = entriesWhere(
     manifest,
     "screens and component variants under design/",
-    (entry) =>
+    (entry): entry is ManifestScreen | ManifestComponentVariant =>
       entry.path.startsWith("design/") &&
       (entry.kind === "screen" ||
         (entry.kind === "component" && isManifestComponentVariant(entry))),
   );
   for (const entry of entries) {
-    if (
-      entry.kind === "screen" ||
-      (entry.kind === "component" && isManifestComponentVariant(entry))
-    )
-      for (const file of generatedViews(entry).map((view) => view.path)) {
-        const html = await fs.readFile(path.join(generated, file), "utf8");
-        assert.doesNotMatch(html, /class="mbk-details(?:-bar|-hint)?"/, file);
-        assert.doesNotMatch(
-          html,
-          /role="group" aria-label="(?:Viewport|Preview color scheme)"/,
-          file,
-        );
-      }
+    for (const file of generatedViews(entry).map((view) => view.path)) {
+      const html = await fs.readFile(path.join(generated, file), "utf8");
+      assert.doesNotMatch(html, /class="mbk-details(?:-bar|-hint)?"/, file);
+      assert.doesNotMatch(
+        html,
+        /role="group" aria-label="(?:Viewport|Preview color scheme)"/,
+        file,
+      );
+    }
   }
 });

@@ -3,12 +3,15 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type {
+  ManifestComponent,
+  ManifestComponentVariant,
+} from "../packages/viewer/dist/components/manifest_types.js";
+import type {
   ManifestPage,
   ManifestScreen,
 } from "../packages/viewer/dist/registry/types.js";
 
 import {
-  assertAbsent,
   CatalogueSelectionError,
   entriesAt,
   entriesUnder,
@@ -150,6 +153,14 @@ test("entriesUnder includes screen and component variants by default", () => {
 });
 
 test("entriesUnder can exclude screen and component variants", () => {
+  const parents: ManifestComponent[] = entriesUnder(
+    manifest,
+    "design/library",
+    {
+      kind: "component",
+      variants: "exclude",
+    },
+  );
   assert.deepEqual(
     entriesUnder(manifest, "design/components", { variants: "exclude" }),
     [screen, page],
@@ -158,9 +169,23 @@ test("entriesUnder can exclude screen and component variants", () => {
     entriesUnder(manifest, "design/library", { variants: "exclude" }),
     [parent],
   );
+  assert.deepEqual(parents, [parent]);
 });
 
 test("entriesUnder can select only screen and component variants", () => {
+  const variants: (ManifestScreen | ManifestComponentVariant)[] = entriesUnder(
+    manifest,
+    "design",
+    { variants: "only" },
+  );
+  const components: ManifestComponentVariant[] = entriesUnder(
+    manifest,
+    "design/library",
+    {
+      kind: "component",
+      variants: "only",
+    },
+  );
   assert.deepEqual(
     entriesUnder(manifest, "design/components", { variants: "only" }),
     [screenVariant],
@@ -169,6 +194,8 @@ test("entriesUnder can select only screen and component variants", () => {
     entriesUnder(manifest, "design/library", { variants: "only" }),
     [componentVariant],
   );
+  assert.deepEqual(variants, [screenVariant, componentVariant]);
+  assert.deepEqual(components, [componentVariant]);
 });
 
 test("entriesUnder rejects an empty default selection", () => {
@@ -209,10 +236,10 @@ test("entriesUnder returns original objects", () => {
 });
 
 test("entriesWhere keeps manifest order and original objects", () => {
-  const found = entriesWhere(
+  const found: ManifestScreen[] = entriesWhere(
     manifest,
     "screen entries",
-    (entry) => entry.kind === "screen",
+    (entry): entry is ManifestScreen => entry.kind === "screen",
   );
   assert.equal(found[0], screenVariant);
   assert.equal(found[1], screen);
@@ -254,35 +281,5 @@ test("entriesWhere rejects too few matches with its description", () => {
       { min: 3 },
     ).length,
     3,
-  );
-});
-
-test("assertAbsent raises AssertionError for a present path", () => {
-  assert.throws(
-    () => assertAbsent(manifest, screen.path),
-    assert.AssertionError,
-  );
-});
-
-test("assertAbsent accepts an absent path under a live anchor", () => {
-  assert.equal(assertAbsent(manifest, "design/components/missing"), undefined);
-});
-
-test("assertAbsent rejects a dead anchor without matching sibling prefixes", () => {
-  selectionError(
-    () => assertAbsent(manifest, "design/component/missing"),
-    "assertAbsent",
-    "design/component",
-    "matches=0",
-  );
-});
-
-test("assertAbsent uses a top-level path as its own anchor", () => {
-  assert.equal(assertAbsent(manifest, "design"), undefined);
-  selectionError(
-    () => assertAbsent(manifest, "missing"),
-    "assertAbsent",
-    "missing",
-    "matches=0",
   );
 });
