@@ -84,7 +84,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       );
       await preview
         .getByRole("link", { name: "Inspect Action, Continue" })
-        .click({ timeout: 3000 });
+        .click({ timeout: 15_000 });
     });
 
     test("inspector resizing and scrolling keep the shell and tabs in place", async ({

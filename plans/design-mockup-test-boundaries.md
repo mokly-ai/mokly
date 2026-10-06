@@ -555,6 +555,7 @@ Deletion evidence: `.context/design-mockup-test-boundaries/deletion-audit.md`.
 Test inventory: `.context/design-mockup-test-boundaries/original-test-titles.json`.
 Review-fix evidence: `.context/design-mockup-test-boundaries/review-fix-1/verification.md`.
 Final review-fix evidence: `.context/design-mockup-test-boundaries/review-fix-2/verification.md`.
+Timing integration record: `.context/design-mockup-test-boundaries/main-151-152/merge-preservation.md`.
 
 ## Post-merge follow-up (non-blocking)
 

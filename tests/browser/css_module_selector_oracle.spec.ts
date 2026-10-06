@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
-import { performance } from "node:perf_hooks";
 
 import { expect, test } from "@playwright/test";
 
 import { scopeModule } from "../../dist/build/styles/modules.js";
 import { pluginModuleOutput } from "../helpers/css_module_plugin_output.js";
+import { startDuration } from "../helpers/durations.js";
 
 import {
   oracleCases,
@@ -24,7 +24,7 @@ interface Comparison {
 }
 
 test(`seeded Chrome selector oracle (seed ${oracleSeed})`, async ({ page }) => {
-  const started = performance.now();
+  const duration = startDuration();
   const relative = "entries/oracle.module.css";
   const prefix = `mokly_${createHash("sha256").update(relative).digest("hex").slice(0, 12)}_`;
   const comparisons: Comparison[] = [];
@@ -133,6 +133,6 @@ test(`seeded Chrome selector oracle (seed ${oracleSeed})`, async ({ page }) => {
     ).toBeGreaterThanOrEqual(10);
   test.info().annotations.push({
     type: "oracle",
-    description: `${oracleCases.length} parsed cases; ${JSON.stringify(Object.fromEntries(familyCounts))}; ${strictRejections} tolerated strict rejections; ${(performance.now() - started).toFixed(1)} ms`,
+    description: `${oracleCases.length} parsed cases; ${JSON.stringify(Object.fromEntries(familyCounts))}; ${strictRejections} tolerated strict rejections; ${duration()}`,
   });
 });
