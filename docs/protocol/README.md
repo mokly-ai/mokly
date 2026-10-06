@@ -34,6 +34,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   cache and aggregation contract.
   - [CI dependency cache and security](./ci-verification-security.md).
   - [Repository gate and length audits](./ci-verification-repository.md).
+  - [Development hydration coverage](./ci-verification-hydration.md) — one
+    route per entry shape and the generated resource audit.
 - [CI workflow graph](./ci-workflow.md)
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, the shared
   example compilation snapshot, browser shard balance, and acceptance
