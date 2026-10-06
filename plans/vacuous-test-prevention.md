@@ -205,7 +205,7 @@ Milestone 3 rewrites 4 of them, which leaves 23 sites in 15 files for
 Milestone 5. Selector 3 reports 57 sites in 34 files. Milestone 3 rewrites 3 of
 them, which leaves 54 sites in 32 files for Milestone 6.
 
-## Milestone 1: Define the contract (completed)
+## Milestone 1: Define the contract — completed
 
 Write the guard, helper, and lint contracts into the documentation before any
 code changes.
@@ -404,6 +404,9 @@ Complete the required delivery sequence after validation passes.
 
 - [ ] Set the Delivery Status of `docs/protocol/ci-test-assertions.md` to
       implemented.
+- [ ] Remove the "planned" assertion-contract wording from `README.md`,
+      `xtask/README.md`, `examples/basic/README.md`, and the
+      `docs/protocol/README.md` index entry when the protocol is implemented.
 - [ ] Confirm that each remaining `"design-…"` literal in `tests/` names a
       stylesheet, a fixture, or a baseline profile, not a catalogue entry.
 - [ ] Fetch `origin/main` and record the source tip. Audit main's additions

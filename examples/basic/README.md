@@ -325,8 +325,8 @@ generated files. Under the planned
 checked catalogue selections. A moved or renamed spec makes a test fail.
 It cannot leave the test empty. Baseline fixtures copy authored inputs and use
 the normal cached rebuild through the historical commit's own package source
-and lockfile. The
-hand-authored stylesheets (`styles.css`, `design.css`, `design-stage.css`,
+and lockfile.
+The hand-authored stylesheets (`styles.css`, `design.css`, `design-stage.css`,
 `design-documents.css`, `design-review.css`, `design-review-scroll.css`, and the component design stylesheets) also live under `generated/` because it doubles as the
 public static root and remain tracked. Imported styles live under
 `src/components/workspace-note/` and are never public files. The config's
