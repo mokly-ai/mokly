@@ -12,6 +12,11 @@ It does not change
 classification, compilation, or any product behaviour. The dominant product
 cost is recorded under the non-blocking section as a separate plan candidate.
 
+Records: #147 moved review reports, verification evidence, and measurements out
+of the repository. This plan's measurement record is
+`.context/attribution-test-consolidation/measurements.md`, which Git ignores.
+The PR #139 description keeps the local and CI timing tables.
+
 Contract owners:
 
 - [Component design](../docs/protocol/mokly-component-design.md) names the
@@ -41,9 +46,9 @@ unit critical path. The 33 tests are five top-level tests plus 28 subtests
 (16 + 5 + 5 + 2). The design library has sixteen components in
 `tests/helpers/design_library.ts`, not 23.
 
-The [measurement record](../docs/reviews/attribution-test-consolidation.md)
-holds the per-file and per-shard CI tables and the local timings measured
-through the real fixture in `tests/helpers/design_library_fixture.ts`.
+The measurement record holds the per-file and per-shard CI tables and the
+local timings measured through the real fixture in
+`tests/helpers/design_library_fixture.ts`.
 
 Cost model: every `classifyComponents` call pays about 12 s before it looks at
 a change, because `classificationContext` builds new readers and caches and
@@ -119,9 +124,9 @@ Code evidence:
   so the marker rule always keeps the stylesheet as evidence with
   `analysis: { status: "unresolved", selectors: ["body"] }`.
 
-The [measurement record](../docs/reviews/attribution-test-consolidation.md#multi-edit-pass-evidence)
-holds the measured one-pass results for all sixteen library stylesheets and
-all nine shared stylesheets. They support this conclusion.
+The measurement record's "Multi-Edit Pass Evidence" section holds the measured
+one-pass results for all sixteen library stylesheets and all nine shared
+stylesheets. They support this conclusion.
 
 Conclusion: one pass preserves every per-component and per-stylesheet
 assertion, and the exact reason lists make isolation explicit. A stylesheet
@@ -364,9 +369,8 @@ Decisions:
 - Keep the single-change `tag-chip` control. The library attribution file
   stays below the 60 s CI threshold.
 
-The [measurement record](../docs/reviews/attribution-test-consolidation.md)
-holds the local and CI timings, the complete-gate results, and the dependency
-audit history.
+The measurement record holds the local and CI timings, the complete-gate
+results, and the dependency audit history.
 
 - [x] Apply the orchestrator's review corrections in follow-up commits.
   - [x] Separate same-file edits targeting different entries without adding a
@@ -419,7 +423,7 @@ The review ran on `cb28f59b`. Milestone 7 applies the user's decisions below:
    compilations become one" (three files now compile once each).
    User decision: A (Milestone 7).
 
-## Milestone 7: Apply approved review findings
+## Milestone 7: Apply approved review findings — completed
 
 Keep the five source-edit builds with an explicit grouping limit. Make shared
 file fixtures lazy and safe in filtered runs. Enforce their lifetime in tests
@@ -449,11 +453,10 @@ Evidence: `.context/attribution-test-consolidation/milestone-7-scratch-independe
 Evidence: `.context/attribution-test-consolidation/milestone-7-review-correction-checks.log`.
 Evidence: `.context/attribution-test-consolidation/milestone-7-corrected-complete-gate.log`.
 Evidence: `.context/attribution-test-consolidation/gate-without-audit-summary.log`.
+Evidence: `.context/attribution-test-consolidation/complete-gate-52e30d8c.log`.
 
-Complete-gate verification remains open pending repository dependency
-maintenance. The live audit reports advisories published on 2026-10-06 for
-`sharp` and `shell-quote`, outside this change. Keep the gate TODO incomplete
-until an unqualified run passes.
+`main` patched the `sharp` and `shell-quote` advisories that blocked the audit
+in #146, which the branch merged before the complete gate ran.
 
 - [x] Define the grouping rules and residual limit in the CI protocol, library
       README, plan introduction, and source-edit test comment.
@@ -484,7 +487,7 @@ until an unqualified run passes.
       single-test committed-baseline fixture.
 - [x] Rerun the changed helper tests, lifecycle test, format, lint, and prepared
       type checks after the review correction.
-- [ ] Fetch `origin/main` and run one unqualified `cargo xtask check`. Fix any
+- [x] Fetch `origin/main` and run one unqualified `cargo xtask check`. Fix any
       in-scope failure and rerun. Save the complete output outside the plan.
 - [x] Commit completed work locally in logical Conventional Commits.
 - [x] Run git add -A, commit with a Conventional Commits message, and push.
@@ -500,7 +503,7 @@ are not applied here:
    rule also flags a correct `owner.after` cleanup inside a `fileFixture` setup.
 2. Low: the measurement record's first sentence and the PR summary still say
    that every attribution guarantee is kept, despite the accepted grouping
-   limit.
+   limit. After #147 the record left the repository; the PR summary remains.
 3. Low: the introduction of `docs/protocol/ci-suite-evidence.md` and its entry
    in `docs/protocol/README.md` do not mention the Unit Shard Balance section.
 4. Low: the plan status still calls PR #139 a draft; the decision table says

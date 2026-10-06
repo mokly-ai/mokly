@@ -139,10 +139,11 @@ design fixtures.
 
 Node's `--test-shard` assigns whole files by sorted index modulo the shard count
 (four in CI). `nodeShardFiles` in `scripts/verification/evidence.mjs` mirrors
-that split for the evidence reports. Each
-shard runs two files concurrently. Use per-file `durationMs` in the unit
-reports to measure balance; test counts do not represent compilation and
-classification costs. Record shard wall time separately from summed file time.
+that split for the evidence reports. Each hosted shard runs two files at once,
+the limit that [Test Concurrency](#test-concurrency) derives for its 2-vCPU
+runner. Use per-file `durationMs` in the unit reports to measure balance; test
+counts do not represent compilation and classification costs. Record shard wall
+time separately from summed file time.
 
 A scenario suite classifies once per scenario, then projects that result for
 its assertions. Do not classify once per assertion or subtest when those checks
@@ -156,10 +157,8 @@ of that member's reason kinds is not visible. Grouping is a reviewed trade-off,
 not an exact per-edit proof. Retain exact isolation checks for single edits and
 for attribution outside a grouped build's expected union.
 
-The [attribution measurement record](../reviews/attribution-test-consolidation.md)
-records the whole-file baseline and consolidated attribution timings. File
-additions change later sorted indices, so confirm the resulting shard layout
-with actual CI reports before claiming a balance improvement.
+File additions change later sorted indices, so confirm the resulting shard
+layout with actual CI reports before claiming a balance improvement.
 
 ## Browser Shard Balance
 
