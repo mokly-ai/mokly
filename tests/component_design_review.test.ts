@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { entriesUnder } from "./helpers/catalogue_selection.js";
 import {
   attribute,
   byClass,
@@ -13,12 +14,10 @@ import {
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: component current-page links identify the rendered artboard`, async () => {
     const { manifest } = await designCatalogue;
-    for (const entry of manifest.entries) {
-      if (
-        entry.kind !== "screen" ||
-        !entry.path.startsWith("design-component-")
-      )
-        continue;
+    const entries = entriesUnder(manifest, "design/components", {
+      kind: "screen",
+    });
+    for (const entry of entries) {
       const { document } = await designDocument(entry.path, viewport);
       const current = elements(
         document,
@@ -36,12 +35,10 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
   test(`${viewport}: design-only footer navigation stays outside product artboards`, async () => {
     const { manifest } = await designCatalogue;
-    for (const entry of manifest.entries) {
-      if (
-        entry.kind !== "screen" ||
-        !entry.path.startsWith("design-component-")
-      )
-        continue;
+    const entries = entriesUnder(manifest, "design/components", {
+      kind: "screen",
+    });
+    for (const entry of entries) {
       const { document } = await designDocument(entry.path, viewport);
       assert.equal(byClass(document, "ce-design-links").length, 0, entry.path);
     }

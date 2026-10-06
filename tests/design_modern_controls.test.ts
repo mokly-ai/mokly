@@ -9,6 +9,7 @@ import {
 } from "../packages/viewer/dist/data.js";
 import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
 
+import { entriesWhere } from "./helpers/catalogue_selection.js";
 import { componentParent } from "./helpers/component_views.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
@@ -78,8 +79,15 @@ test("view options have one icon presentation and no view-controls scheme contro
 });
 
 test("every owning design and shared sample omits legacy footer and view markup", async () => {
-  for (const entry of manifest.entries) {
-    if (!entry.path.startsWith("design-")) continue;
+  const entries = entriesWhere(
+    manifest,
+    "screens and component variants under design/",
+    (entry) =>
+      entry.path.startsWith("design/") &&
+      (entry.kind === "screen" ||
+        (entry.kind === "component" && isManifestComponentVariant(entry))),
+  );
+  for (const entry of entries) {
     if (
       entry.kind === "screen" ||
       (entry.kind === "component" && isManifestComponentVariant(entry))

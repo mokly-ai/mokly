@@ -5,6 +5,7 @@ import { parse } from "parse5";
 
 import { generatedViews, viewRoute } from "../packages/viewer/dist/data.js";
 
+import { assertAbsent } from "./helpers/catalogue_selection.js";
 import {
   attribute,
   designCatalogue,
@@ -66,12 +67,7 @@ test("retained Welcome variants follow the single Appearance setting", async () 
       assert.equal(countClass(dark, "mbk-frame-scheme-note") > 0, !darkDevice);
     }
   }
-  assert.equal(
-    manifest.entries.find(
-      (entry) => entry.path === "design-review-dark-scheme",
-    ),
-    undefined,
-  );
+  assertAbsent(manifest, "design/changes/outcomes/dark-scheme");
 });
 
 test("every artboard with a top bar draws one Appearance control", async () => {

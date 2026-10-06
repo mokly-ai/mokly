@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import { entryRoute } from "../packages/viewer/dist/data.js";
 
+import { assertAbsent } from "./helpers/catalogue_selection.js";
 import {
   attribute,
   byClass,
@@ -57,10 +58,7 @@ test("the Welcome conversion keeps the approved screens as variants, not folder 
     assert.equal(entry.variantOf, "design/browse/views/screen", id);
     assert.ok(entry.path.startsWith(`${parent.path}/`), id);
   }
-  assert.equal(
-    manifest.entries.some((entry) => entry.path === "design-browse-tags"),
-    false,
-  );
+  assertAbsent(manifest, "design/browse/tags");
   const filter = manifest.entries.find(
     (entry) => entry.path === "design/browse/states/tag-filter",
   );

@@ -1,7 +1,7 @@
 # Vacuous Test Prevention
 
-Status: Active; Milestones 1 and 2 completed. Waiting for reviewer approval
-before Milestone 3.
+Status: Active; Milestones 1 through 3 completed. Waiting for reviewer approval
+before Milestone 4.
 Created 2026-10-06 with the user's consent after a report that four
 unit tests check nothing. The user chose four options: rewrite
 the empty checks with checked helpers, test-first; add a zero-assertion guard to
@@ -266,17 +266,19 @@ Add the helpers and their tests. No existing test changes its behavior.
       `npm run lint` and `npm run typecheck:prepared`.
 - [x] Commit.
 
-## Milestone 3: Rewrite the nine empty checks, test-first
+## Milestone 3: Rewrite the nine empty checks, test-first — completed
 
 Prove that each check is empty, then make it check the current catalogue.
 
-- [ ] Convert each check in the table to its helper, but keep the old id or
+- [x] Convert each check in the table to its helper, but keep the old id or
       prefix. Run each file. Confirm that each converted check now fails with
-      `CatalogueSelectionError`. Record the failed test names in the commit
-      body.
-- [ ] Change each converted check to the current path in the table.
-- [ ] Run the seven changed files. Every test in them must pass.
-- [ ] Commit.
+      `CatalogueSelectionError`. Record each failed test name and its error
+      message in the commit body. Stop if any converted check still passes.
+- [x] Change each converted check to the current path in the table.
+- [x] Measure each converted loop's current entry count with temporary logs.
+      Report the counts and remove the logs before the commit.
+- [x] Run the seven changed files. Every test in them must pass.
+- [x] Commit.
 
 ## Milestone 4: Zero-assertion guard
 

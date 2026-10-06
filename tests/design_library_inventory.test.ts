@@ -12,6 +12,7 @@ import {
   viewRoute,
 } from "../packages/viewer/dist/data.js";
 
+import { assertAbsent } from "./helpers/catalogue_selection.js";
 import {
   componentParent,
   componentVariants,
@@ -91,10 +92,7 @@ test("all sixteen shared components have connected pages, controls and saved exa
       entry.path.startsWith("design/library/"),
   );
   assert.equal(components.length, 16);
-  assert.equal(
-    manifest.entries.some((entry) => entry.path === "design-root"),
-    false,
-  );
+  assertAbsent(manifest, "design");
   const hierarchy = analyzeHierarchy(
     manifest.entries,
     manifest.folders,
