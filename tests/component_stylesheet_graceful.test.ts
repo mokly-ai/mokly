@@ -75,6 +75,13 @@ for (const [name, configured, position, markup, expected] of [
     ["../action.css", "b.css", "a.css"],
   ],
   [
+    "unequal distances with reordered separated anchors",
+    ["a.css", "b.css", "c.css"],
+    1,
+    link("c.css") + '<meta name="between">' + link("a.css"),
+    ["c.css", "a.css", "../action.css"],
+  ],
+  [
     "no present anchor",
     ["a.css", "b.css"],
     1,
@@ -92,6 +99,17 @@ for (const [name, configured, position, markup, expected] of [
       expected,
     );
   });
+
+test("fallback follows all logical head content", () => {
+  const markup =
+    '<meta name="first"><style>body{margin:0}</style><meta name="last">';
+  assert.equal(
+    insertComponentStylesheets(head(markup), route, ["missing.css"], 0, [
+      "action.css",
+    ]),
+    head(markup + link("../action.css")),
+  );
+});
 
 for (const [name, shared, expected] of [
   [

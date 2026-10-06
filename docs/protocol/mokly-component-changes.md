@@ -99,9 +99,9 @@ that affect its inputs. No-watch Serve and publication instead reuse their
 validated startup snapshot, including ownership evidence and unavailable-history
 state, for the lifetime of that capture.
 
-The comparison artifact is the schema v5 result with component/variant records
-and explicit affected-consumer evidence; readers accept only v5, and every
-record addresses its entry by path. Screen entries retain their actual view
+The comparison artifact is the review result v5 with component/variant records
+and explicit affected-consumer evidence. Readers accept only review result v5.
+Every record addresses its entry by path. Screen entries retain their actual view
 results, with affected-only evidence separate from direct Changes membership.
 All comparisons keep accepted before/after bytes and isolated assets.
 The [comparison schema](./mokly-component-review.md) defines the exact result,

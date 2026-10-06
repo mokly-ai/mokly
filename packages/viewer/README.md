@@ -636,3 +636,7 @@ consumers.
 ## License
 
 Mokly Viewer is available under the [MIT License](./LICENSE).
+
+## Delivery Status
+
+The [viewer library plan](../../plans/mokly-viewer-library.md) records delivery.

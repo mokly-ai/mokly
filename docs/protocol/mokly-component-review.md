@@ -63,8 +63,8 @@ markers, and one-sided range validation.
 Views omit empty `reasons` and `excludedResources` lists and sort both by path.
 Entry reasons merge by path and rule key under the
 [CSS evidence schema](./mokly-css-attribution-membership.md). It adds per-rule
-changed component paths and page evidence in v5, without a new version. A
-component-only rule can be absent from a consumer's entry reasons while still
+changed component paths and page evidence in review result v5, without a new
+version. A component-only rule can be absent from a consumer's entry reasons while still
 appearing in its view evidence. CSS at an actual invocation cannot change a
 component whose own pages keep no match for that rule. Non-CSS resource
 ownership keeps its current suppression policy. One view's exclusion never

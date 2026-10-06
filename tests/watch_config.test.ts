@@ -135,7 +135,11 @@ test("watched Serve attaches every declared stylesheet before the first build an
     replacement.includes(path.join(fixture.mockupsDir, "action.css")),
     false,
   );
-  assert.equal(watchers.watchers[0]?.closed, true);
+  assert.equal(watchers.watchers[sourceIndex]?.closed, true);
+  const activeIndex = watchers.targets.findLastIndex(
+    (targets) => targets === replacement,
+  );
+  assert.equal(watchers.watchers[activeIndex]?.closed, false);
 });
 
 test("dark stylesheet changes classify as reload", async (context) => {

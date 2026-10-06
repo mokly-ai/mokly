@@ -101,7 +101,7 @@ the same generated kind. Accept only unique aliases present in the retained
 sets, and scope HTML rewriting to the paired current view's references.
 Compare the mapped bytes as well; CSS compares bytes after resolving its URLs
 through the same resource map. Equal moved resources suppress current generated
-dependency and shared-impact evidence. A different image or stylesheet remains
+rendered-resource evidence. A different image or stylesheet remains
 resource evidence under the ordinary attribution rules. A per-view byte proof
 requires both corresponding references, so an unrelated equal file cannot hide
 an edit. These aliases affect comparison only, never Serve or snapshot routes.

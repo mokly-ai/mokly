@@ -32,13 +32,20 @@ test("warnings deduplicate across phases, sort before readiness and repeat only 
       "/repo/action.css",
     ]),
   );
-  assert.deepEqual(emitted.slice(-1), [
+  assert.deepEqual(emitted, [
+    "removed-dependencies:home",
+    "removed-shared-impact:/repo/config.ts",
     "ignored-stylesheet-resource-owner:home.mobile.html:/repo/action.css",
   ]);
   sink.reset();
   sink.add(warning("removed-dependencies", ["home"]));
   sink.flush();
-  assert.equal(emitted.at(-1), "removed-dependencies:home");
+  assert.deepEqual(emitted, [
+    "removed-dependencies:home",
+    "removed-shared-impact:/repo/config.ts",
+    "ignored-stylesheet-resource-owner:home.mobile.html:/repo/action.css",
+    "removed-dependencies:home",
+  ]);
 });
 
 test("a new attempt discards queued and late old warnings without relabelling them", () => {

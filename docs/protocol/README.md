@@ -23,9 +23,9 @@ The excluded-only mockup and shared Details card are implemented in
 Link placement and discovery are implemented in [M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).
 Warning generations, startup cleanup and unused-code removal are implemented in
 [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
-The remaining approved work is stronger regression tests with recorded failing-rule runs, the docs guard and
-removed-field types in [M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types),
-and exported navigation and viewer alignment in
+Stronger regression tests, recorded mutation runs, the docs guard and type checks are
+implemented in [M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types).
+Exported navigation and viewer alignment remain planned for
 [M31](../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
 
 ## Current Documentation Rule
@@ -37,9 +37,9 @@ with `Status: Active` or `Status: Completed` directly below its title.
 ## Graceful Handling
 
 The [graceful-handling rule](./mokly-build-warnings.md#graceful-handling) applies
-to safe stylesheet conflicts and the three removed inputs. Removed
-Removed `dependencies`, `ownedDependencies` and `review.sharedImpact` warn and have no
-effect. Other unknown fields, including former configuration fields, fail
+to safe stylesheet conflicts and the three removed inputs.
+Removed `dependencies`, `ownedDependencies` and `review.sharedImpact` warn
+and have no effect. Other unknown fields, including former configuration fields, fail
 under their owning contract.
 
 ## Supported Formats

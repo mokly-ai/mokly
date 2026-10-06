@@ -1,6 +1,6 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestones 1 to 28A are implemented, verified and pushed. Milestone 29 is implemented and verified locally under the approved audit fallback and PostCSS timing retry rules. Milestones 30 to 32 remain. The complete gate remains blocked by the existing `source-map-js` advisory GHSA-68fv-2mgg-jv7q.
+Status: Active. Milestones 1 to 28A are implemented, verified and pushed. Milestones 29 and 30 are implemented and verified locally under the recorded audit fallback. All final non-audit checks pass. Milestones 31 and 32 remain. This branch still has the `source-map-js` advisory GHSA-68fv-2mgg-jv7q; newer main fixes it but is not integrated by this task.
 
 ## Status And Outcome
 
@@ -3908,30 +3908,292 @@ retry rules. Delivery is one local commit. The branch is not pushed.
 
 ## Milestone 30: Strengthen tests, the docs guard and removed-field types
 
-- [ ] (4) Strengthen each weak test from the 2026-10-05 review, and record in
+- [x] (4) Strengthen each weak test from the 2026-10-05 review, and record in
       this plan a run where it fails against the broken rule:
-  - [ ] component-page link removal: a root link that a child also declares,
+  - [x] component-page link removal: a root link that a child also declares,
         child-only links and reordered root links;
-  - [ ] `rel` tokens, with an element after the anchor and an asserted warning
+  - [x] `rel` tokens, with an element after the anchor and an asserted warning
         list;
-  - [ ] the nearest-link distance with anchors that are not adjacent, and a
+  - [x] the nearest-link distance with anchors that are not adjacent, and a
         fallback test that checks the exact position;
-  - [ ] removed-field types: spread objects and the cases that depend on
+  - [x] removed-field types: spread objects and the cases that depend on
         `?: never`;
-  - [ ] Serve child warning forwarding with a warning that only the child
+  - [x] Serve child warning forwarding with a warning that only the child
         makes, and the warning sink's complete output;
-  - [ ] warnings on failing commands and on watched failed actions;
-  - [ ] the two checks that cannot fail, and tests whose names promise more
+  - [x] warnings on failing commands and on watched failed actions;
+  - [x] the two checks that cannot fail, and tests whose names promise more
         than they check;
-  - [ ] provenance tokens that a transformer strips, replaces or duplicates.
-- [ ] (5) Rewrite `tests/current_docs_contract.test.ts` to fail closed under the
+  - [x] provenance tokens that a transformer strips, replaces or duplicates.
+- [x] (5) Rewrite `tests/current_docs_contract.test.ts` to fail closed under the
       2026-10-05 docs rule. Scan protocol docs, guides, READMEs and notes, and
       read statements across line breaks. Show that it fails on the real
       stale lines from the reviews.
-- [ ] (7) Add `sharedImpact?: never` to the review configuration type, with
-      `@ts-expect-error` cases in the NodeNext consumer fixture, including a
-      configuration with other review keys.
-- [ ] Run the focused tests and the complete unit suite at 100%.
+- [x] (7) Verify the `sharedImpact?: never` guard added by M28A and its four
+      NodeNext consumer cases. Retain assigned and spread objects, other review
+      keys, and explicit `undefined` with `exactOptionalPropertyTypes`. Add
+      direct generic `defineConfig` value, undefined and spread cases. Update
+      Delivery Status notes.
+- [x] Run the focused tests and the complete unit suite at 100%.
+
+- [x] Use an isolated Git fixture for document-discovery tests so their stale
+      notes cannot affect a concurrent repository scan.
+- [x] Run build, typecheck, lint, changed-file Prettier, all docs tests and
+      the complete `cargo xtask check`. Use the approved audit fallback only
+      if the live audit fails. Inspect the diff and deletions against
+      `origin/main`. Record every command and result.
+- [x] Make one local Conventional Commit. The reviewer owns the push and
+      the post-push review. Keep M31 and M32 unchanged.
+
+Implementation notes:
+
+- The path-based input types already contain the removed-field guards. The
+  consumer fixture now covers spread values for every current entry, folder
+  and variant input. Its separate review fixture retains M28A's four cases
+  and adds generic `defineConfig` calls with supported review keys.
+- Placement tests assert full link order and head/body scope. Root comparison
+  tests keep shared root links, remove child-only links and check reordered
+  root links through complete and fast comparison. Token tests cover stripping,
+  unknown tokens, reassignment and duplicates.
+- M29 already covers direct child startup and late child generations. The
+  older Serve test now emits its warning only in the child. The sink checks
+  every emitted warning. Plain and rich command failures check warning order
+  and exit code 1. Watched failures check the real terminal report. Transient
+  rendering checks HTTP JSON and preview HTML, including actual rendered props.
+- Removed declarations name real files. Their presence leaves output unchanged
+  against a clean control with equal source coordinates. Editing the unrendered
+  file gives no evidence on either comparison path. A rendered non-CSS file
+  cannot grant ownership through a removed component declaration.
+- The docs guard scans Git's tracked and non-ignored authored Markdown in the
+  documented locations. It reads wrapped statements and fenced examples. Both
+  Markdown heading forms bound Delivery Status. Guides cannot use status to
+  exempt a statement. Exact exceptions name one file, statement and reason;
+  changed, missing and empty-reason exceptions fail. Current independent
+  protocols do not waive other retired names in the same statement.
+- The reviewed allow list has 50 exact entries. The guard fixes the remaining
+  shared-impact claims and delivery references. Explicit format names keep
+  current catalogue and review versions distinct. The regression fixture
+  records verbatim historical statements and their source revisions. A separate
+  assertion retains the Unnamed All-filter row that M26 added.
+- No production runtime, dependency, audit rule, mockup or generated example
+  output changes. All mutations run only in the detached Git worktree at
+  `.context/m30/mutation`. The main worktree never contains a broken rule.
+
+Mutation evidence (2026-10-06):
+
+Every mutation runs in `.context/m30/mutation`, a detached Git worktree at
+`b937bbca`. Its copies of the new tests match this branch. Source mutations
+first run `npx tsc --project tsconfig.build.json`; every counted mutation
+compiles. The test commands below then exit 1. Consumer compiler checks exit 2
+with unused `@ts-expect-error` diagnostics. The unmodified consumer check passes.
+Each rule is restored before the next mutation. Raw edits, commands and output
+are in `.context/m30/mutations/`.
+
+The runtime command for each row is
+`npx tsx --test --test-name-pattern='<pattern>' tests/<file>.test.ts`.
+A dash in the pattern column means run that file without a name filter.
+The failure column counts failing tests, not successful mutation builds.
+
+| Mutation             | Test file and pattern                                      | Broken rule and observed failure                                                                                                                |
+| -------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| root-shared          | `component_stylesheet_root_material`, `shared declaration` | Retain a root link only when it has one declarer. The shared root link disappears: 1 failure.                                                   |
+| child-retained       | `component_stylesheet_root_material`, `shared declaration` | Keep child-only links on component pages. The exact link list has an extra child link: 1 failure.                                               |
+| root-reorder         | `component_stylesheet_root_material`, `reordering`         | Remove every root link from comparison material. The reordered root no longer changes: 1 failure.                                               |
+| rel-exact            | `component_stylesheet_edges`, `configured alternate`       | Require the complete rel value to equal stylesheet. Insertion moves after the trailing meta element: 1 failure.                                 |
+| rel-false-warning    | `component_stylesheet_edges`, `configured alternate`       | Warn for a present alternate-stylesheet anchor. The asserted empty warning list differs: 1 failure.                                             |
+| distance             | `component_stylesheet_graceful`, `unequal distances`       | Change both following distances from index-position+1 to index-position. The separated, reordered anchors select the wrong side: 1 failure.     |
+| fallback             | `component_stylesheet_graceful`, `fallback`                | Insert at the start of head content. The exact document differs: 1 failure.                                                                     |
+| placement-end        | `component_stylesheet_placement`, `end of the head`        | Use that same start-of-head fallback. Links precede the final meta element: 1 failure.                                                          |
+| placement-duplicates | `component_stylesheet_placement`, `keeps duplicate`        | Remove a repeated configured link. The complete ordered link list loses one record: 1 failure.                                                  |
+| placement-order      | `component_stylesheet_placement`, `out of order`           | Swap the two authored configured links. Exact order differs: 1 failure.                                                                         |
+| placement-body       | `component_stylesheet_placement`, `outside head`           | Move an authored body link into head. Its recorded scope differs: 1 failure. The final fixture uses valid head/body markup.                     |
+| child-muted          | `build_warning_serve`, `made only by the child`            | Disable the child's warning IPC send. Both preview requests succeed, then the warning wait fails: 1 failure. The parent renderer emits no copy. |
+| sink-forget          | `build_warning_sink`, `across phases`                      | Clear seen identities after flush. The complete output contains a duplicate: 1 failure.                                                         |
+| command-no-flush     | `build_warning_failures`, `exits 1`                        | Skip the one-shot catch flush. All four commands in plain and rich modes lose warnings before the deliberate render error: 8 failures.          |
+| watch-no-flush       | `build_warning_failures`, `watched failure`                | Skip the watched-action final flush. Both terminal modes report failure before their warning: 2 failures.                                       |
+| config-no-callback   | `config`, `sharedImpact warns`                             | Retain collected config warnings but suppress the callback. The callback list is empty: 1 failure.                                              |
+| transient-leak       | `build_warning_transient`, `-`                             | Copy private warnings into the stored render's public response. HTTP JSON exposes diagnostics: 1 failure.                                       |
+| ownership            | `build_warning_authoring`, `without granting ownership`    | Grant every rendered component the non-CSS resource reason. Action incorrectly joins Home in Changes: 1 failure.                                |
+| removed-metadata     | `source_path_evidence`, `-`                                | Let a removed dependency declaration change the entry title. Both clean-control output comparisons fail: 2 failures.                            |
+| watcher-retained     | `watch_config`, `attaches every declared`                  | Skip closing the previously accepted watcher after adoption. The actual accepted watcher remains open: 1 failure.                               |
+| token-stripped       | `component_stylesheet_tokens`, `stripped`                  | Reconstruct stripped token proof from the pre-transform document. Final spans or unchanged link material differ: 1 failure.                     |
+| token-unknown        | `component_stylesheet_tokens`, `replaced`                  | Accept an unissued numeric token. The expected typed rejection is missing: 1 failure.                                                           |
+| token-reassigned     | `component_stylesheet_tokens`, `reassigned`                | Check token existence but not its original file. The expected ambiguous-token error is missing: 1 failure.                                      |
+| token-duplicate      | `component_stylesheet_tokens`, `duplicated`                | Remove the duplicate-token check. The expected ambiguous-token error is missing: 1 failure.                                                     |
+
+The type mutation command is
+`npx tsc --project tests/fixtures/consumers/nodenext/tsconfig.json`.
+Widening the authoring `dependencies?: never` declarations to `unknown` makes
+13 directives unused. Removing the component variant and ownership guards
+makes three new spread directives unused. Removing the review guard makes six
+directives unused, including the three generic config cases. Each mutation
+has a successful source build before its expected consumer failure.
+
+The first unknown-token mutation survived because the test replaced every
+token with the same value. The duplicate-token check still rejected it. The
+corrected test replaces one token, passes normally and fails when unknown
+tokens are accepted. The first authoring mutation deleted the type fields but
+could not compile the legacy folder extraction. That build is not counted as
+test evidence. The valid widening mutation above reaches the consumer check. A second valid
+mutation removes all authoring guards and changes only the scratch folder's
+legacy-field extraction to the equivalent Reflect deletion. Its source build
+passes; eight consumer directives become unused, including every added
+spread case for entries, screen variants and folders. The fresh non-generic
+literal cases still reject unknown keys, which proves why the spread checks
+are needed. The original logs remain beside the corrected runs.
+
+Each of the 14 verbatim statements in
+`tests/fixtures/current-docs-stale.json` was appended outside Delivery Status
+in its named file in the scratch worktree. Each run of
+`npx tsx --test --test-name-pattern='current docs allow restricted' tests/current_docs_contract.test.ts`
+fails on that file. This covers the eight original review excerpts, the old
+README manifest requirement, the pre-M26 policy, review-fix, neighbour and
+watch descriptions, and a component README delivery reference. Original
+Delivery Status history remains allowed by the current policy.
+
+Five additional guard mutations each fail one focused test: exempt statements
+with removed/older/never; scan individual lines; omit notes; ignore unused
+exceptions; or leave Delivery Status open after its next peer heading.
+Removing the Unnamed All-filter row also fails its focused documentation test.
+Their exact commands and failing output are in `guard-results.jsonl` and the
+matching logs. No weakened guard or stale statement remains in this branch.
+
+Verification and delivery evidence (2026-10-06):
+
+- `npm run build`, `npm run typecheck`, `npm run lint` and changed-file
+  Prettier pass. The focused command passes all 158 tests:
+
+  ```sh
+  npx tsx --test --test-concurrency=2 tests/component_stylesheet*.test.ts tests/build_warning*.test.ts tests/source_path_evidence.test.ts tests/config.test.ts tests/watch_config.test.ts tests/current_docs_contract.test.ts
+  ```
+
+- The seven documentation suites pass all 33 tests:
+
+  ```sh
+  npx tsx --test tests/current_docs_contract.test.ts tests/component_protocol_docs.test.ts tests/guides_structure.test.ts tests/protocol_doc_sizes.test.ts tests/protocol_split_links.test.ts tests/mainline_preservation_docs.test.ts tests/protocol_doc_history.test.ts
+  ```
+
+- The consumer compiler passes both locally and from the packed package:
+  `npx tsc --project tests/fixtures/consumers/nodenext/tsconfig.json`.
+  The first formatted attempt required moving four expect-error comments
+  beside the properties that TypeScript diagnoses. The initial lint run
+  required three import-order corrections. Both corrected checks pass.
+- The exact full unit command passes all 4,644 tests, with no failures,
+  skips, cancellations or TODOs. Its PostCSS collection takes 1,408.4 ms.
+
+  ```sh
+  npx tsx --test --test-concurrency=2 "tests/**/*.test.ts" "tests/**/*.test.tsx" "packages/viewer/tests/*.test.ts" "packages/viewer/tests/*.test.tsx"
+  ```
+
+- The strict unit gate also passes all 4,644 tests, with none skipped or
+  cancelled. Its PostCSS collection takes 1,377.7 ms. The strict report's
+  833 files equal the exact requested globs:
+
+  ```sh
+  MOKLY_VERIFICATION_REPORT=.context/m30/unit-final-report.json npm run test:prepared
+  node .context/m30/unit-file-set.mjs
+  ```
+
+- The first complete unit attempt passed 4,638 of 4,644. Five assertions
+  failed and one test timed out. The existing SIGINT startup, controls watch,
+  two watcher-scale checks, child startup and PostCSS timing check exceeded
+  their limits. Most still failed alone at first. The first strict repeat
+  reproduced startup failures and an existing CLI timing wait; it was stopped
+  and is not counted as complete or passing. Later, all affected files passed
+  alone without changes, then both full runs above passed. No time limit,
+  assertion, worker count or runtime implementation changed. No extra timing
+  waiver is used for the final result. All earlier logs are retained.
+- The first browser setup reached its existing limit while the new `HEAD`
+  baseline was still preparing. Normal Serve completed the configured baseline
+  commands and reached Changes ready. The next complete browser run passed
+  876 of 886; ten existing five-second waits or sixty-second test budgets
+  failed. The final run passes all 886, with no skipped or cancelled test:
+
+  ```sh
+  node dist/cli/bin.js serve --config examples/basic/mokly.config.ts --base HEAD --port 0 --no-watch --debug-timings
+  MOKLY_VERIFICATION_REPORT=.context/m30/browser-final-report.json npm run test:browser:prepared
+  ```
+
+  The diagnostic server closed before browser testing. The baseline was built
+  through its normal commands; no generated output was edited by hand.
+
+- Hydration passes all 266 tests, with no skipped or cancelled test:
+  `npm run test:hydration:prepared`.
+- `cargo xtask check` stops at the unchanged High `source-map-js` advisory
+  `GHSA-68fv-2mgg-jv7q`. The existing Braces exception is accepted through
+  2026-11-03. No dependency, override or audit rule changed. The task's approved
+  serial fallback runs every other gate step. Every final non-audit step
+  passes; no successful full-gate exit is claimed.
+- The serial fallback commands are:
+
+  ```sh
+  npm run format:check
+  npm run lint
+  node scripts/verification/source-file-length.mjs
+  node scripts/verification/repository-ratchets.mjs
+  cargo fmt --all -- --check
+  cargo clippy --workspace --all-targets -- -D warnings
+  cargo test --workspace
+  cargo xtask rust-file-length-lint
+  npm run prepare:verification
+  npm run typecheck:prepared
+  npm run example:check
+  npm run package:artifacts -- --out .context/verification/package-artifacts
+  npm run package:check:prepared -- --artifacts .context/verification/package-artifacts
+  npm run package:smoke:prepared -- --artifacts .context/verification/package-artifacts
+  npm run prepare:verification
+  npm run test:prepared
+  npm run prepare:verification
+  npm run test:browser:prepared
+  npm run prepare:verification
+  npm run test:hydration:prepared
+  ```
+
+- Rust passes 15 tests. Both packed packages pass all six consumer scenarios.
+  The example validates 478 files. The source-file audit passes for 730 files;
+  no cap is raised. Final reports and every command/result are under
+  `.context/m30/`, including `report.md` and `checks.jsonl`.
+- The diff audit uses fetched `origin/main` at `80ceb445`. Main advanced during
+  the task with #124 (link-control tiers and warnings), #140 (the dependency
+  patch) and #141 (the Node version-file rename). This task does not integrate
+  them. Every apparent deletion in the two-tree main diff was already absent
+  at source tip `b937bbca`. M30 introduces no deletion or feature reduction.
+  The existing `.nvmrc` to `.node-version` reverse rename in that diff is also
+  an upstream change that this task does not integrate.
+- The four earlier approved removals remain the style collector at
+  `examples/basic/specs/design/library/style_context.tsx`,
+  `src/components/dependency_validation.ts`,
+  `src/registry/dependency_paths.ts`, and
+  `tests/design_library_style_collector.test.tsx`. The additional main-only
+  paths below stay outside this task. They must be preserved in a separate
+  main integration; they are not deletions authored by M30.
+
+  - `plans/styled-link-control-ancestor-rule.md`
+  - `src/build/build_warnings.ts`
+  - `src/build/link_control_tiers.ts`
+  - `src/diagnostics/terminal_text.ts`
+  - `tests/build_link_control_tiers.test.ts`
+  - `tests/build_warning_compatibility.test.ts`
+  - `tests/build_warning_protocol.test.ts`
+  - `tests/build_warnings.test.ts`
+  - `tests/ci_required_guard.test.ts`
+  - `tests/cli_build_warnings.test.ts`
+  - `tests/export_build_warnings.test.ts`
+  - `tests/helpers/link_control_warning_fixture.ts`
+  - `tests/link_control_ancestor_tiers.test.ts`
+  - `tests/link_control_cli.test.ts`
+  - `tests/link_control_descendant_tiers.test.ts`
+  - `tests/link_control_serve_warnings.test.ts`
+  - `tests/server_build_warnings.test.ts`
+
+- `git diff --check`, `git diff --check origin/main`, and the complete name
+  and deletion audits pass. Historical plans, review records, changelogs and
+  dependency files remain unchanged by M30. The review includes every new
+  test and fixture. Delivery is one local Conventional Commit; the reviewer
+  owns the push and the later review. M31 and M32 remain unchanged.
+
+M30 is implemented and verified under the approved audit fallback. All final
+unit, browser, hydration, package and repository checks pass. The live audit
+remains the only failed gate step. The plan stays active until its PR merges.
 
 ## Milestone 31: Keep the branch name in exported navigation
 

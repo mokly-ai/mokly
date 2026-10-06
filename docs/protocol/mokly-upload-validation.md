@@ -34,7 +34,7 @@ local export in place.
 The marker and verified blobs reconstruct every public artifact, including the
 manifest, shells, static assets and enabled comparisons. Source
 `mokly-manifest.json` stays private. CLI and receiver enforce these binary-unit
-v1 ceilings; receivers may impose lower quotas and return 413.
+upload v1 ceilings; receivers may impose lower quotas and return 413.
 
 | Limit                                                    | Maximum           |
 | -------------------------------------------------------- | ----------------- |

@@ -2,6 +2,8 @@
 
 ## Delivery Status
 
+See the [implementation plans](../../plans/).
+
 Uniform CSS rule attribution in this guide is implemented in Milestone 19 of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
@@ -66,8 +68,7 @@ previews and editable local props. The outer Components and Usage tabs show actu
 recorded relationships; pictured example data inside an artboard stays separate.
 See the [library authoring guide](./specs/design/library/README.md),
 [adoption contract](../../docs/protocol/mokly-design-components.md),
-[library inventory](../../docs/protocol/mokly-design-component-library.md)
-and [implementation plans](../../plans/).
+[library inventory](../../docs/protocol/mokly-design-component-library.md).
 
 The example uses the recommended dedicated spec tree: discovered modules under
 `specs/example`, `specs/design/browse`, `specs/design/changes`,

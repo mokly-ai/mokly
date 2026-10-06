@@ -266,8 +266,7 @@ npm run package:smoke
 
 See the [export contract](../../docs/protocol/mokly-export.md),
 [static delivery contract](../../docs/protocol/mokly-export-delivery.md),
-[shell bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md), and
-[implementation plans](../../plans/).
+[shell bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md).
 
 Registered components export through the same transactional delivery boundary.
 The manifest, variant entries and validated comparison evidence supply the

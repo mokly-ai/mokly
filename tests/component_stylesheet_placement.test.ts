@@ -6,6 +6,7 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { insertComponentStylesheets } from "../dist/components/stylesheet_links.js";
 import { loadConfig } from "../dist/config/load.js";
+import { parseHtmlLinks } from "../dist/html_links.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
 
 import {
@@ -46,7 +47,7 @@ test("missing configured link places component links at the end of the head", as
   t.after(() => removeFixture(fixture));
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
-    `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
+    `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => '<html><head><meta name="last"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
   );
   const result = await compileCatalogue(await loadConfig(fixture.root));
   const screen = result.manifest.entries.find((entry) => entry.path === "home");
@@ -56,8 +57,10 @@ test("missing configured link places component links at the end of the head", as
     viewRoute(screen.path, "mobile", "light"),
   )!;
   assert.doesNotMatch(html, /href="\.\.\/base\.css"/);
-  assert.match(html, /pane\.css/);
-  assert.match(html, /action\.css/);
+  assert.match(
+    html,
+    /<meta name="last"><link rel="stylesheet" href="\.\.\/pane\.css"><link rel="stylesheet" href="\.\.\/action\.css"><\/head><body>/,
+  );
 });
 
 test("a configured link away from the insertion position may be absent", () => {
@@ -83,10 +86,7 @@ for (const [name, head] of [
     "out of order",
     '<link rel="stylesheet" href="${input.stylesheets[1]}"><link rel="stylesheet" href="${input.stylesheets[0]}">',
   ],
-  [
-    "outside head",
-    '</head><body><link rel="stylesheet" href="${input.stylesheets[0]}">',
-  ],
+  ["outside head", '<link rel="stylesheet" href="${input.stylesheets[0]}">'],
 ] as const)
   test(`keeps ${name} configured links when inserting component links`, async (t) => {
     const fixture = await fixtureWithSheets(
@@ -98,9 +98,13 @@ for (const [name, head] of [
       path.join(fixture.mockupsDir, "extra.css"),
       "body{margin:0}",
     );
+    const prefix =
+      name === "outside head"
+        ? `<html><head></head><body>${head}`
+        : `<html><head>${head}</head><body>`;
     await fs.writeFile(
       path.join(fixture.root, "renderer.tsx"),
-      `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => \`<html><head>${head}</head><body>\${renderToStaticMarkup(input.node)}</body></html>\`;`,
+      `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => \`${prefix}\${renderToStaticMarkup(input.node)}</body></html>\`;`,
     );
     const result = await compileCatalogue(await loadConfig(fixture.root));
     const screen = result.manifest.entries.find(
@@ -111,7 +115,24 @@ for (const [name, head] of [
       result.outputs,
       viewRoute(screen.path, "mobile", "light"),
     )!;
-    assert.match(html, /href="\.\.\/pane\.css"/);
-    assert.match(html, /href="\.\.\/action\.css"/);
-    assert.match(html, /href="\.\.\/base\.css"/);
+    const links = parseHtmlLinks(html).links.map((link) => [
+      link.scope,
+      link.attributes.get("href"),
+    ]);
+    const componentLinks = [
+      ["head", "../pane.css"],
+      ["head", "../action.css"],
+    ];
+    assert.deepEqual(
+      links,
+      name === "duplicate"
+        ? [["head", "../base.css"], ...componentLinks, ["head", "../base.css"]]
+        : name === "out of order"
+          ? [
+              ["head", "../extra.css"],
+              ...componentLinks,
+              ["head", "../base.css"],
+            ]
+          : [...componentLinks, ["body", "../base.css"]],
+    );
   });

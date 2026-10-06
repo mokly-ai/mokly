@@ -101,7 +101,7 @@ test(
 );
 
 test(
-  "watched Serve forwards and deduplicates child render warnings",
+  "watched Serve forwards and deduplicates warnings made only by the child",
   { timeout: 60_000 },
   async (context) => {
     const fixture = await fixtureWithSheets(
@@ -112,7 +112,8 @@ test(
     await fs.writeFile(
       path.join(fixture.root, "renderer.tsx"),
       `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => { const html = '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return input.entry.path === "home" ? { html, resources: [{path: "action.css", componentIds: ["action"]}] } : { html }; };`,
+import { workerData } from "node:worker_threads";
+export default (input) => { const html = '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return !workerData?.runtime && input.entry.path === "home" ? { html, resources: [{path: "action.css", componentIds: ["action"]}] } : { html }; };`,
     );
     const running = await startServe(fixture, true);
     const warning =

@@ -10,7 +10,7 @@ Generation-scoped watched Serve warnings are implemented in
 [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
 The `sharedImpact?: never` config guard is implemented in
 [M28A](../../plans/remove-source-path-evidence.md#milestone-28a-integrate-main-131-and-133).
-Stronger warning/type regression tests are planned for
+Stronger warning/type regression tests are implemented in
 [M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types).
 
 ## Warning Boundary

@@ -32,3 +32,14 @@ reason. It may hold only:
 
 No whole-directory exemption or broad keyword allowance is permitted. Match
 each reviewed exception exactly and fail when it no longer matches its source.
+
+The executable guard is `tests/current_docs_contract.test.ts`. Its reviewed
+exceptions live in `tests/fixtures/current-docs-allowlist.json`. Each exception
+matches one complete statement or fenced example after whitespace normalization.
+An added sentence requires its own review. Missing or changed exceptions fail.
+The regression fixture retains verbatim reviewed lines with their source revision.
+
+## Delivery Status
+
+The fail-closed guard and mutation checks are implemented in
+[M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types).

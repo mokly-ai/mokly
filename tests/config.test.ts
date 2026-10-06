@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
+import type { BuildWarning } from "../dist/build/warnings.js";
 import { discoverConfig, loadConfig } from "../dist/config/load.js";
 import { validateRelativeRoute } from "../dist/config/paths.js";
 import { resolveConfig } from "../dist/config/validate.js";
@@ -60,7 +61,10 @@ test("review.sharedImpact warns and is ignored even when undefined", async (cont
         `outDir: ".review", sharedImpact: ${value}`,
       ),
     );
-    const config = await loadConfig(fixture.root);
+    const emitted: BuildWarning[] = [];
+    const config = await loadConfig(fixture.root, undefined, (warning) =>
+      emitted.push(warning),
+    );
     assert.deepEqual(config.warnings, [
       {
         code: "removed-shared-impact",
@@ -69,7 +73,7 @@ test("review.sharedImpact warns and is ignored even when undefined", async (cont
           "review.sharedImpact has been removed; ignoring it. Delete the field.",
       },
     ]);
-    assert.equal(Object.hasOwn(config.review, "sharedImpact"), false);
+    assert.deepEqual(emitted, config.warnings);
     await fs.promises.writeFile(fixture.configPath, source);
   }
 });

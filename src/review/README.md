@@ -95,7 +95,7 @@ documents contribute move counts without synthetic visual review records.
 Candidate matching repeats with accepted references and uses hashed material
 before full comparison. Similarity reads private authored Markdown or visible
 page body lines. Generated resource routes resolve through accepted source moves;
-equal mapped bytes produce no dependency/shared-impact reasons.
+equal mapped bytes produce no rendered-resource reasons.
 Snapshots keep original before/after paths and bytes; logical reference
 normalization affects equality only. Resource traversal and CSS matching keep
 real URLs. Moved variants group under their current component parent, while
@@ -176,7 +176,8 @@ saved entry a row, but adds no affected consumers. Resource ownership cannot
 filter CSS or turn an invocation match into a component change. Declared links
 keep `insertedStylesheets` provenance, without derived `resources` records.
 The [evidence schema](../../docs/protocol/mokly-css-attribution-membership.md)
-defines the in-place v5/v4/v8 updates and complete/fast/selected agreement.
+defines the in-place review result v5, catalogue v4 and manifest v8 updates
+and complete/fast/selected agreement.
 
 Review result v5 replaces both earlier result versions; a catalogue without
 registered components emits the same shape with empty component arrays.
@@ -333,7 +334,7 @@ the same traversal that determines membership. The shell receives its selected
 `ViewResourceEvidence` records without requesting snapshots. Export projects
 the same slice from its unified v5 result;
 both producers omit empty views and screens left without evidence. The inspector
-merges it with loaded comparison details. The public result schema is v5; every catalogue uses the same
+merges it with loaded comparison details. The public review result is v5; every catalogue uses the same
 rendered-resource policy.
 
 With `--debug-timings`, `review.css-analysis` measures each stylesheet/view's

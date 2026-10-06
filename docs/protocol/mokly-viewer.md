@@ -1,6 +1,6 @@
 # Embeddable Mokly Viewer
 
-The [viewer library](../../plans/mokly-viewer-library.md) renders one React shell
+The viewer library renders one React shell
 in Serve, export and embedded hosts. Serve uses the strict
 [entry-scoped bootstrap](./mokly-shell-bootstrap.md).
 

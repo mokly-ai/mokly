@@ -46,7 +46,7 @@ writers remain allowlisted. Version 4 keys every record by path, adds
 documents, folder titles, `previousPath`, and one tree, and removes `id`,
 `navPath`, `useCaseIds`, `screenId`, and the per-section trees. Removed variants
 require `parentTitle`. These v4 fields are one unreleased contract; readers
-do not translate earlier v4 drafts. Optional
+do not translate earlier catalogue v4 drafts. Optional
 fields are additive; removals, required additions, changed meaning, new union
 discriminants or incompatible paths require a new version. This file and the
 inspector asset are additive inventory entries: ownership v2 and upload v1

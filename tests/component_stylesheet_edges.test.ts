@@ -5,6 +5,7 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
+import type { BuildWarning } from "../dist/build/warnings.js";
 import { insertComponentStylesheets } from "../dist/components/stylesheet_links.js";
 import { rendererStylesheetPaths } from "../dist/components/stylesheet_reuse.js";
 import { loadConfig } from "../dist/config/load.js";
@@ -169,14 +170,22 @@ export default (input) => '<html><head><link rel="stylesheet" href="' + input.st
 });
 
 test("configured alternate stylesheet tokens anchor declared links", () => {
+  const warnings: BuildWarning[] = [];
   const html =
-    '<html><head><link rel="alternate Stylesheet" href="../base.css"></head><body>Content</body></html>';
+    '<html><head><link rel="alternate Stylesheet" href="../base.css"><meta name="after-anchor"></head><body>Content</body></html>';
   assert.equal(
-    insertComponentStylesheets(html, "home/index.html", ["../base.css"], 1, [
-      "action.css",
-    ]),
-    '<html><head><link rel="alternate Stylesheet" href="../base.css"><link rel="stylesheet" href="../action.css"></head><body>Content</body></html>',
+    insertComponentStylesheets(
+      html,
+      "home/index.html",
+      ["../base.css"],
+      1,
+      ["action.css"],
+      false,
+      (warning) => warnings.push(warning),
+    ),
+    '<html><head><link rel="alternate Stylesheet" href="../base.css"><link rel="stylesheet" href="../action.css"><meta name="after-anchor"></head><body>Content</body></html>',
   );
+  assert.deepEqual(warnings, []);
 });
 
 test("configured links anchor insertion without an explicit head end tag", () => {

@@ -15,8 +15,7 @@ package and its protocol documents and fixtures; Mokly Cloud has no private
 protocol. `mokly export` remains local-only. `mokly publish` exports, then runs
 the exchange so a receiver stores only content it lacks. The
 `mokly-upload.json` envelope keeps `schemaVersion: 1`; the ownership marker is
-[schema 2](./mokly-export-ownership.md), and the Plan response is independently
-versioned as v1.
+[schema 2](./mokly-export-ownership.md), and the upload v1 Plan response has its own version.
 
 ## CLI
 

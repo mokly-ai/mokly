@@ -1,118 +1,193 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { repositoryRoot } from "./helpers/fixture.js";
+import {
+  currentDocs,
+  docStatements,
+  docsFindings,
+  isCurrentDoc,
+  type DocException,
+} from "./helpers/current_docs.js";
+import {
+  createFixture,
+  removeFixture,
+  repositoryRoot,
+} from "./helpers/fixture.js";
 
-const OLD_FORMAT = [
-  /\bmanifest\s*(?:schema\s*)?v5\b/i,
-  /\bversion\s+5\s+manifest\b/i,
-  /\b(?:public\s+)?catalogue\s+(?:read\s+model\s+)?v1\b/i,
-  /\bread\s+model\s+v1\b/i,
-  /\bpublic\s+inventory\s+v1\b/i,
-  /\b(?:comparison|review\s+result)\s+v[23]\b/i,
-  /\bv[23]\s+(?:(?:screen|component)\s+)?(?:comparison|result|artifacts?)\b/i,
-  /\bv5\s+pages\b/i,
-];
-const REMOVED_FIELD =
-  /\b(?:ownedDependencies|declaredDependencies|sharedImpact|review\.sharedImpact|shared[ -]impact\s+(?:paths?|patterns?|globs?)|(?:entry\s+)?dependencies\s*:\s*(?:\[|\{|undefined|null)|entry\s+dependencies)/i;
-const OLD_BEHAVIOR =
-  /\b(?:current\s+(?:code|packages)\s+still\s+emit\s+(?:v5|older)|non-CSS\s+rendered\s+resources\s+retain\s+(?:the\s+)?(?:existing\s+)?file-level\s+policy|target\s+guidance\s+below\s+does\s+not\s+yet)\b/i;
-const CURRENT_OLD_FORMAT =
-  /\bcurrent\s+(?:manifest\s+v5|(?:public\s+)?catalogue(?:\s+read\s+model)?\s+v1|read\s+model\s+v1|(?:comparison|review\s+result)\s+v[23])\b/i;
-const CURRENT_CLAIM =
-  /\b(?:current|now|still|emit|write|produce|project|read|require|support|include|retain|remain|use|gain|accept|select|describe|as\s+current)\b/i;
-const HISTORICAL_OR_REMOVAL =
-  /\b(?:historical|legacy|former|then-current|earlier|prior|older|old\s+format|reject|unsupported|removed|removal|obsolete|never|omitted|omit|strip|dropp?ed|migrat|no\s+version\s+includes|does\s+not\s+carry|do\s+not\s+contain|has\s+no)\b/i;
+const fixture = async (name: string) =>
+  JSON.parse(
+    await fs.readFile(path.join(import.meta.dirname, "fixtures", name), "utf8"),
+  );
 
-function staleLine(line: string): boolean {
-  const version = OLD_FORMAT.some((pattern) => pattern.test(line));
-  const field = REMOVED_FIELD.test(line) && !/\?:\s*never\b/.test(line);
-  if (OLD_BEHAVIOR.test(line)) return true;
-  if (!version && !field) return false;
-  if (
-    HISTORICAL_OR_REMOVAL.test(line) &&
-    (!CURRENT_OLD_FORMAT.test(line) ||
-      /\b(?:reject|unsupported|then-current)\b/i.test(line))
-  )
-    return false;
-  if (
-    version &&
-    /\b(?:public inventory v1|v5 pages|version 5 manifest)\b/i.test(line)
-  )
-    return true;
-  return field || CURRENT_CLAIM.test(line);
-}
-
-async function markdownFiles(directory: string): Promise<string[]> {
-  const files: string[] = [];
-  for (const item of await fs.readdir(directory, { withFileTypes: true })) {
-    const candidate = path.join(directory, item.name);
-    if (item.isDirectory()) files.push(...(await markdownFiles(candidate)));
-    else if (item.name.endsWith(".md")) files.push(candidate);
-  }
-  return files;
-}
-
-test("current docs reject superseded formats and removed source-path inputs", async () => {
-  const files = [
-    path.join(repositoryRoot, "README.md"),
-    ...(
-      await Promise.all(
-        ["docs/protocol", "docs/architecture", "docs/guides"].map((directory) =>
-          markdownFiles(path.join(repositoryRoot, directory)),
-        ),
-      )
-    ).flat(),
-    ...(
-      await Promise.all(
-        ["src", "packages", "examples"].map((directory) =>
-          markdownFiles(path.join(repositoryRoot, directory)),
-        ),
-      )
-    )
-      .flat()
-      .filter((file) => path.basename(file) === "README.md"),
-  ];
-  const findings: string[] = [];
-  for (const file of files) {
-    const relative = path.relative(repositoryRoot, file);
-    for (const [index, line] of (await fs.readFile(file, "utf8"))
-      .split("\n")
-      .entries())
-      if (staleLine(line))
-        findings.push(`${relative}:${index + 1}: ${line.trim()}`);
-  }
-  assert.deepEqual(findings, []);
+test("current docs allow restricted statements only in delivery status or exact reviewed exceptions", async () => {
+  const exceptions = (await fixture(
+    "current-docs-allowlist.json",
+  )) as DocException[];
+  assert.deepEqual(
+    docsFindings(await currentDocs(repositoryRoot), exceptions),
+    [],
+  );
 });
 
-test("the stale Milestone 9 claims are regression cases while history remains allowed", () => {
-  for (const stale of [
-    "current code still emits manifest v5 and retains path inputs",
-    "public catalogue read model v1 beside the private manifest",
-    "For a component-aware catalogue, project the existing v3 result",
-    "Screen-only catalogues use the same v2 screen comparison policy",
-    "v2 artifacts remain supported without adding component suppression",
-    "review configuration selects shared impact patterns",
-    'entry dependencies: ["source.ts"]',
-    'ownedDependencies: ["action.css"]',
-    'sharedImpact: ["shared/**"]',
-    "public inventory v1 beside the private manifest",
-    "v5 pages, both schemes and viewports",
-    "non-CSS rendered resources retain the existing file-level policy",
-    "the target guidance below does not yet describe the current example",
-    "current manifest v5 has no compatibility fallback",
-    "Current catalogue v1 supports legacy pages.",
-    "Current comparison v2 keeps legacy evidence.",
+test("verbatim review findings fail outside delivery status, across line breaks", async () => {
+  const cases = (await fixture("current-docs-stale.json")) as Array<{
+    file: string;
+    revision: string;
+    line: number;
+    statement: string;
+  }>;
+  for (const item of cases) {
+    const findings = docsFindings(docStatements(item.file, item.statement), []);
+    assert.ok(
+      findings.length > 0,
+      `${item.revision}:${item.file}:${item.line}: ${item.statement}`,
+    );
+    assert.ok(findings[0]!.startsWith(`${item.file}:`));
+  }
+});
+
+test("a removal word does not waive another statement or a fenced input", () => {
+  for (const text of [
+    "Former manifest v5 is rejected.",
+    "Current manifest v7 never reads older output.",
+    "Catalogue v3 omits removed fields.",
+    "Comparison v4 includes no legacy evidence.",
+    'The removed field is ignored.\nownedDependencies: ["file.css"]',
+    '```ts\nconst input = {\n  dependencies:\n    ["source.ts"],\n};\n```',
+    "```ts\ninterface Input { dependencies?:never; }\n```",
+    "The implementation\nplan is complete.",
+    "Milestone\n30 is implemented.",
+    "Current review result v5 still uses manifest v5.",
+    "The public v4 manifest omits old fields.",
+    "The public v4 comparison is current.",
+    "Upload v1 keeps sharedImpact fields.",
+    '```json\n{ "dependencies": ["source.ts"] }\n```',
+    "The `details.dependencies` field is current.",
+    "An entry's dependencies give evidence.",
   ])
-    assert.equal(staleLine(stale), true, stale);
-  for (const history of [
-    "Historical manifest v5 baselines normalize removed fields.",
-    "Catalogue v1 readers reject the old version.",
-    "Comparison v2 and v3 are unsupported historical results.",
-    "ownedDependencies has been removed; delete this field.",
-    "dependencies?: never;",
+    assert.ok(
+      docsFindings(docStatements("docs/protocol/test.md", text), []).length > 0,
+      text,
+    );
+});
+
+test("delivery sections end at equal or higher headings and fences cannot open them", () => {
+  for (const title of [
+    "## Delivery Status",
+    "Delivery Status\n---------------",
+  ]) {
+    const statements = docStatements(
+      "src/example/README.md",
+      `${title}\n\nMilestone 30 is complete.\n\n### History\n\nManifest v5 was used.\n\n## Current\n\nManifest\nv5 is current.\n\n# Other\n\nsharedImpact is accepted.`,
+    );
+    assert.equal(docsFindings(statements, []).length, 2);
+  }
+  assert.equal(
+    docsFindings(
+      docStatements(
+        "docs/protocol/test.md",
+        "```md\n## Delivery Status\nsharedImpact is accepted.\n```",
+      ),
+      [],
+    ).length,
+    1,
+  );
+  assert.equal(
+    docsFindings(
+      docStatements(
+        "docs/guides/test.md",
+        "## Delivery Status\n\nMilestone 30 is complete.",
+      ),
+      [],
+    ).length,
+    1,
+  );
+});
+
+test("exceptions are bounded by exact file and statement and fail when stale", () => {
+  const statement = "Removed `ownedDependencies` values are ignored.";
+  const exception = {
+    file: "src/example/README.md",
+    statement,
+    reason: "Removed-input migration contract.",
+  };
+  const statements = docStatements(exception.file, statement);
+  assert.deepEqual(docsFindings(statements, [exception]), []);
+  assert.equal(
+    docsFindings(docStatements("docs/new.md", statement), [exception]).length,
+    2,
+  );
+  assert.equal(
+    docsFindings(
+      docStatements(exception.file, `${statement}\nsharedImpact is accepted.`),
+      [exception],
+    ).length,
+    1,
+  );
+  assert.equal(
+    docsFindings(
+      docStatements(exception.file, statement.replace("ignored", "accepted")),
+      [exception],
+    ).length,
+    2,
+  );
+  assert.equal(docsFindings([], [exception]).length, 1);
+  assert.equal(
+    docsFindings(statements, [{ ...exception, reason: "" }]).length,
+    2,
+  );
+});
+
+test("the scan includes all documented Markdown locations and new authored notes", async (t) => {
+  for (const file of [
+    "docs/protocol/nested/a.md",
+    "docs/guides/a.md",
+    "docs/architecture/a.md",
+    "docs/superpowers/specs/a.md",
+    "docs/new/a.md",
+    "README.md",
+    "src/nested/README.md",
+    "packages/viewer/README.md",
+    "examples/basic/README.md",
+    "xtask/README.md",
+    "tests/fixtures/consumer/notes.md",
   ])
-    assert.equal(staleLine(history), false, history);
+    assert.equal(isCurrentDoc(file), true, file);
+  for (const file of [
+    "plans/old.md",
+    "docs/reviews/old.md",
+    "CHANGELOG.md",
+    "packages/viewer/CHANGELOG.md",
+  ])
+    assert.equal(isCurrentDoc(file), false, file);
+  const fixture = await createFixture();
+  t.after(() => removeFixture(fixture));
+  execFileSync("git", ["init", "-q"], { cwd: fixture.root });
+  const notes = "tests/fixtures/current-docs-new/notes.md";
+  await fs.mkdir(path.join(fixture.root, path.dirname(notes)), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    path.join(fixture.root, notes),
+    "Current output requires\nmanifest v5.\n",
+  );
+  assert.ok(
+    docsFindings(await currentDocs(fixture.root), []).some((finding) =>
+      finding.startsWith(`${notes}:1:`),
+    ),
+  );
+});
+
+test("the reviewed Unnamed All-filter destination stays documented", async () => {
+  const source = await fs.readFile(
+    path.join(repositoryRoot, "docs/protocol/mokly-design-links.md"),
+    "utf8",
+  );
+  assert.match(
+    source,
+    /\| Unnamed evidence: All filter\s*\| Canonical All Welcome, `design\/browse\/views\/screen`\s*\|/,
+  );
 });

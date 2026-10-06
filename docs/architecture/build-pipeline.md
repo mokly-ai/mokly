@@ -2,6 +2,8 @@
 
 ## Delivery Status
 
+The [path identity plan](../../plans/path-identity.md) records the delivered work.
+
 Removal of baseline compatibility below is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
@@ -52,8 +54,7 @@ mobile/desktop light and optional dark HTML for every screen, screen variant, an
 ```
 
 Path identity, roots, manifest v8, review result v5, Markdown rendering and move
-pairing are implemented. Remaining viewer presentation follows the
-[path identity plan](../../plans/path-identity.md).
+pairing are implemented. Viewer presentation uses the same path identity.
 
 ## 1. Config Loading
 

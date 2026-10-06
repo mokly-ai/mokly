@@ -173,6 +173,11 @@ resource exclusion policy as the complete comparison.
 
 ## Development
 
+Stylesheet regressions check exact link positions, root and child comparison
+material, and compatibility token validation. The consumer type fixtures use
+spread inputs so excess-property checks cannot hide a missing removed-field
+guard. Run the package suite to compile those fixtures with NodeNext.
+
 ```sh
 npm run build
 node --import tsx --test tests/component_*.test.ts

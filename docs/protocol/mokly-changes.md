@@ -73,7 +73,7 @@ Valid generated ownership headers are excluded from document comparison, so a
 source move alone stays unchanged. Resource URLs compare by their resolved route;
 accepted source moves map generated styles/assets and copied document resources
 under the [move normalisation rule](./mokly-moves.md#normalisation). Equal mapped
-resource bytes do not add material, dependency or shared-impact reasons. CSS URL
+resource bytes do not add material or rendered-resource reasons. CSS URL
 spellings use that same map; real resource edits retain normal attribution.
 Inventoried owned sources relocated with their defining module compare by
 logical path and confined bytes; only byte-identical moves lose dependency

@@ -16,8 +16,9 @@ Other behavior below remains implemented.
 
 This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 
-The matching configuration guard and stronger removed-field type tests are
-planned for [M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types).
+The configuration guard is implemented in
+[M28A](../../plans/remove-source-path-evidence.md#milestone-28a-integrate-main-131-and-133).
+Stronger removed-field type tests are implemented in [M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types).
 
 ## Public Authoring API
 

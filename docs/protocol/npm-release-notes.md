@@ -207,7 +207,7 @@ publish still complete without Changes.
 
 `mokly publish` now uses the content-addressed Plan, Blob, and Complete exchange
 instead of sending one archive containing the complete exported catalogue.
-Independent receivers must accept the v1 Plan archive, answer with the missing
+Independent receivers must accept the upload v1 Plan archive, answer with the missing
 content digests and upload URLs, verify raw Blob PUTs by digest and size, and
 make Complete idempotent under the documented first-publication rule. Clients
 upload only content the receiver does not already hold.

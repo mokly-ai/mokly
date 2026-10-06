@@ -11,6 +11,8 @@ implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-cla
 
 The removed `review.sharedImpact` field's type guard below is implemented in
 [M28A](../../plans/remove-source-path-evidence.md#milestone-28a-integrate-main-131-and-133).
+The generic configuration and spread-input type cases are verified in
+[M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types).
 The other configuration behavior is implemented.
 
 Roots and their defaults, globs, prefixes and transparent directories are
@@ -217,8 +219,7 @@ the [graceful-handling rule](./README.md#graceful-handling). The public review
 config type uses `sharedImpact?: never` to reject a value, including through
 spreads or alongside other review keys. An explicit `undefined` is rejected
 only with `exactOptionalPropertyTypes`; the build warning covers it otherwise.
-The Delivery Status above records the pending type guard. Source modules without rendered output or
-references do not create comparison evidence.
+Source modules without rendered output or references do not create evidence.
 Linked stylesheets, including transitive imports, are attributed by rule under
 [CSS change attribution](./mokly-css-attribution.md). A changed stylesheet keeps
 a view's dependency evidence only when a changed rule could match its before or

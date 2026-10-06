@@ -103,3 +103,33 @@ defineComponent({
     },
   ],
 });
+
+const dependencies = { dependencies: ["source.ts"] };
+const ownership = { ownedDependencies: ["source.ts"] };
+// @ts-expect-error Spread screen fields depend on the never guard.
+defineScreen({ ...screenInputBase, ...dependencies });
+defineScreen({
+  ...screenInputBase,
+  // @ts-expect-error Spread variant fields depend on the never guard.
+  variants: [{ ...typedVariant, ...dependencies }],
+});
+// @ts-expect-error Spread page fields depend on the never guard.
+definePage({ ...documentPage, ...dependencies });
+// @ts-expect-error Spread flow fields depend on the never guard.
+defineUseCase({ ...documentPage, steps: [], ...dependencies });
+// @ts-expect-error Spread folder fields depend on the never guard.
+defineFolder({ path: "nested", title: "Nested", ...dependencies });
+// @ts-expect-error Spread component fields depend on the never guard.
+defineComponent({ ...componentInput, ...dependencies });
+// @ts-expect-error Spread component ownership depends on the never guard.
+defineComponent({ ...componentInput, ...ownership });
+defineComponent({
+  ...componentInput,
+  // @ts-expect-error Spread component variant fields depend on the never guard.
+  variants: [{ ...componentInput.variants[0]!, ...dependencies }],
+});
+defineComponent({
+  ...componentInput,
+  // @ts-expect-error Spread component variant ownership depends on the never guard.
+  variants: [{ ...componentInput.variants[0]!, ...ownership }],
+});

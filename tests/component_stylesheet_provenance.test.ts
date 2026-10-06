@@ -144,7 +144,7 @@ export default (input) => '<html><head></head><body><p>data-mokly-component-styl
   );
 });
 
-test("compatibility removal of inserted links also removes their derived owners", async (context) => {
+test("compatibility removal discards links and final provenance", async (context) => {
   const fixture = await fixtureWithSheets(
     undefined,
     'stylesheets: [], compatibility: { transformer: "transform.ts" },',
