@@ -109,6 +109,11 @@ cycles and traversal through symlink ancestors. Git archives are uncompressed
 and bounded to 64 MiB and 65,536 entries. The parser reuses input and
 single-chunk entry buffers. The runtime `tar` dependency supplies its mature
 parser; implementing a second archive parser would duplicate security-sensitive code.
+The repository example uses direct viewer, compiler, asset-copy, and CLI commands.
+It never invokes Turbo inside ignored baseline sources, so its task cache and
+telemetry cannot affect reconstruction. The recipe works with pre-Turbo commits.
+`MOKLY_BASELINE_COMMIT` is set by the runner; no repository code reads it.
+
 Commands run without a shell and receive only the documented directory,
 locale, network and executable-lookup variables, CI=1 and MOKLY_BASELINE_COMMIT.
 `executable.ts` resolves Windows npm/npx in working-directory, PATH and PATHEXT

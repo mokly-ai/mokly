@@ -316,10 +316,12 @@ npm run preview:build
 This example uses the default `generatedOutput: "derived"`. Generated HTML,
 the schema-v8 manifest, and `generated/mokly-generated/` stylesheets and binary
 assets are ignored local artifacts, absent in a fresh clone.
-`example:build` writes them transactionally; `example:check` validates the current
+`example:build` clears the four generated output patterns before the CLI writes
+them transactionally; `example:check` validates the current
 compilation and rejects tracked generated output without requiring files on disk.
 Committed-mode stale and deterministic-output tests use isolated consumer fixtures.
-Both `npm test` and `npm run test:browser` build the example before tests read its
+Both `npm test` and `npm run test:browser` prepare the example through Turbo
+before tests read its
 generated files. Baseline fixtures copy authored inputs and use the normal cached
 rebuild through the historical commit's own package source and lockfile. The
 hand-authored stylesheets (`styles.css`, `design.css`, `design-stage.css`,
@@ -327,9 +329,10 @@ hand-authored stylesheets (`styles.css`, `design.css`, `design-stage.css`,
 public static root and remain tracked. Imported styles live under
 `src/components/workspace-note/` and are never public files. The config's
 `review.baselineBuild` runs
-`npm ci`, `npm run build`, then `npm run example:build` in the historical commit's
-extraction. The package build step ensures comparisons use that commit's own
-Mokly code. The resulting baseline is cached under `.mokly-cache/`.
+a fresh `npm ci`, the direct viewer build, the TypeScript executable, asset
+copying, and the direct example CLI in the historical extraction. These commands
+mirror the root build pipeline but bypass Turbo, whose Git-based hashes cannot
+see ignored nested baseline sources. No Turbo cache or telemetry is used. The resulting baseline is cached under `.mokly-cache/`.
 `preview:build` exports this catalogue through the shared
 package engine into `.context/mokly-preview` for Cloudflare Pages; it is the same
 current catalogue used by the main preview workflow. It preserves search, tags,

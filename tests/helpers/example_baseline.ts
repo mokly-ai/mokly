@@ -41,8 +41,10 @@ async function copyExampleRepository(root: string): Promise<void> {
     ".gitignore",
     "package.json",
     "package-lock.json",
+    "turbo.json",
     "tsconfig.json",
     "tsconfig.build.json",
+    "scripts/clean.mjs",
     "scripts/copy-assets.mjs",
     "packages/viewer",
     "src",
@@ -88,7 +90,7 @@ async function configureFocusedExample(
       "export default defineConfig({",
       'export default defineConfig({\n  generatedOutput: "committed",',
     )
-    .replace(/ {4}baselineBuild: \[[\s\S]*? {4}\],\n/, "");
+    .replace(/^ {4}baselineBuild: \[[\s\S]*?^ {4}\],\n/m, "");
   if (profile === "static-example") {
     config = config.replace(
       / {2}roots: \[[\s\S]*?\n {2}\],/,

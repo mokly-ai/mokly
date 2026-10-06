@@ -318,9 +318,9 @@ npm run dev
 renderer, and stylesheets. Changes to Mokly's own `src/` files require
 restarting the command so the CLI is rebuilt.
 
-Task caching is planned in the [CI task cache contract](./docs/protocol/ci-remote-cache.md).
-It is not implemented yet. Turbo will run build and verification preparation.
-`.turbo/` will hold the ignored local cache. Linked Git worktrees share the main
+Turbo runs build and verification preparation through the
+[CI task cache contract](./docs/protocol/ci-remote-cache.md). Unchanged tasks
+restore from the ignored local cache in `.turbo/`. Remote access remains planned. Linked Git worktrees share the main
 worktree's `.turbo/cache`. After remote delivery, approved developers receive a
 read-only token and the shared signature key through a private password-manager
 share. Load both into the shell and set `TURBO_CACHE=local:rw,remote:r`.

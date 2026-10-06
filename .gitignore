@@ -3,6 +3,7 @@
 .mokly-review-*/
 .mokly-write-*/
 .wrangler/
+.turbo/
 coverage/
 dist/
 examples/basic/generated/**/*.html

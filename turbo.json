@@ -1,0 +1,111 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "envMode": "strict",
+  "agentGuidance": false,
+  "noUpdateNotifier": true,
+  "ui": "stream",
+  "cacheMaxAge": "14d",
+  "globalPassThroughEnv": [
+    "CI",
+    "MOKLY_OUTPUT",
+    "NO_COLOR",
+    "FORCE_COLOR",
+    "TERM",
+    "TERM_PROGRAM",
+    "WT_SESSION",
+    "COLUMNS",
+    "BROWSERSLIST_IGNORE_OLD_DATA"
+  ],
+  "futureFlags": { "longerSignatureKey": true },
+  "remoteCache": {
+    "enabled": true,
+    "signature": true,
+    "timeout": 30,
+    "uploadTimeout": 60,
+    "preflight": false
+  },
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/tsconfig.json",
+        "$TURBO_ROOT$/scripts/clean.mjs"
+      ],
+      "outputs": ["dist/**"],
+      "env": ["NODE_ENV"]
+    },
+    "//#build:package": {
+      "dependsOn": ["@mokly/viewer#build"],
+      "inputs": [
+        "src/**",
+        "scripts/copy-assets.mjs",
+        "scripts/clean.mjs",
+        "tsconfig.json",
+        "tsconfig.build.json",
+        "!**/.context/**",
+        "!**/.mokly-cache/**",
+        "!**/.mokly-review-*/**",
+        "!**/.mokly-write-*/**",
+        "!**/.wrangler/**",
+        "!**/.turbo/**",
+        "!**/coverage/**",
+        "!**/dist/**",
+        "!**/node_modules/**",
+        "!**/target/**",
+        "!**/test-results/**",
+        "!**/playwright-report/**",
+        "!**/.superpowers/**",
+        "!**/*.tgz"
+      ],
+      "outputs": ["dist/**"],
+      "env": ["NODE_ENV"]
+    },
+    "//#example:build": {
+      "dependsOn": ["//#build:package"],
+      "inputs": [
+        "examples/basic/**",
+        "docs/protocol/mokly-component-controls-design.md",
+        "docs/protocol/mokly-component-controls.md",
+        "docs/protocol/mokly-component-design.md",
+        "docs/protocol/mokly-component-explorer.md",
+        "docs/protocol/mokly-component-inspector-design.md",
+        "docs/protocol/mokly-component-workspace-design.md",
+        "docs/protocol/mokly-design-component-library.md",
+        "docs/protocol/mokly-design-components.md",
+        "docs/protocol/mokly-shell-design.md",
+        "docs/protocol/mokly-viewer-appearance.md",
+        "!examples/basic/generated/**/*.html",
+        "!examples/basic/generated/mokly-manifest.json",
+        "!examples/basic/generated/example/workspace.svg",
+        "!examples/basic/generated/mokly-generated/**",
+        "!**/.context/**",
+        "!**/.mokly-cache/**",
+        "!**/.mokly-review-*/**",
+        "!**/.mokly-write-*/**",
+        "!**/.wrangler/**",
+        "!**/.turbo/**",
+        "!**/coverage/**",
+        "!**/dist/**",
+        "!**/node_modules/**",
+        "!**/target/**",
+        "!**/test-results/**",
+        "!**/playwright-report/**",
+        "!**/.superpowers/**",
+        "!**/*.tgz"
+      ],
+      "outputs": [
+        "examples/basic/generated/**/*.html",
+        "examples/basic/generated/mokly-manifest.json",
+        "examples/basic/generated/example/workspace.svg",
+        "examples/basic/generated/mokly-generated/**"
+      ],
+      "env": [
+        "NODE_ENV",
+        "BROWSERSLIST",
+        "BROWSERSLIST_ENV",
+        "AUTOPREFIXER_GRID"
+      ]
+    }
+  }
+}

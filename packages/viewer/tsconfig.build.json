@@ -9,5 +9,13 @@
     "types": []
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["tests"]
+  "exclude": [
+    "tests",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/target/**",
+    "**/coverage/**",
+    "**/test-results/**",
+    "**/playwright-report/**"
+  ]
 }

@@ -11,6 +11,7 @@ import {
   removeFixture,
   repositoryRoot,
 } from "./helpers/fixture.js";
+import { directBaselineCommands } from "./helpers/turbo_baseline.js";
 
 const input = { roots: [{ dir: "entries" }], mockupsDir: "mockups" };
 
@@ -21,11 +22,7 @@ test("the example rebuilds derived baselines with its own package tooling", asyn
   );
   const config = await loadConfig(repositoryRoot, configPath);
   assert.equal(config.generatedOutput, "derived");
-  const recipe = [
-    ["npm", "ci"],
-    ["npm", "run", "build"],
-    ["npm", "run", "example:build"],
-  ];
+  const recipe = directBaselineCommands;
   assert.deepEqual(config.review.baselineBuild, recipe);
   assert.deepEqual(
     resolveConfig(

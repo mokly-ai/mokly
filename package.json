@@ -40,14 +40,14 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "build": "npm run -s build --workspace @mokly/viewer && tsc --project tsconfig.build.json && node scripts/copy-assets.mjs",
+    "build": "turbo run build:package 1>&2",
     "clean": "node scripts/clean.mjs",
     "dependencies:check": "node scripts/verification/dependency-audit.mjs",
     "dev": "npm run -s build && node dist/cli/bin.js serve --config examples/basic/mokly.config.ts",
     "dev:large": "node scripts/large/cli.mjs serve",
     "fixture:large": "npm run build && tsx scripts/large/cli.mjs generate",
     "benchmark:large": "node scripts/large/cli.mjs benchmark",
-    "example:build": "node dist/cli/bin.js build --config examples/basic/mokly.config.ts",
+    "example:build": "node scripts/clean.mjs --example && node dist/cli/bin.js build --config examples/basic/mokly.config.ts",
     "example:check": "node dist/cli/bin.js check --config examples/basic/mokly.config.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -57,8 +57,8 @@
     "package:check:prepared": "node scripts/verification/prepared.mjs package && node scripts/package-check.mjs",
     "package:smoke": "npm run build && npm run package:smoke:prepared --",
     "package:smoke:prepared": "node scripts/verification/prepared.mjs package && node scripts/package-smoke.mjs",
-    "prepare:verification": "npm run build && npm run example:build",
-    "prepack": "npm run build",
+    "prepare:verification": "turbo run example:build",
+    "prepack": "node scripts/clean.mjs && npm run --silent build",
     "preview:build": "npm run build && npm run example:build && node scripts/preview/build.mjs",
     "test": "npm run prepare:verification && node scripts/verification/run-unit-dev.mjs",
     "test:browser": "npm run prepare:verification && playwright test",
@@ -67,7 +67,8 @@
     "test:prepared": "node scripts/verification/run-unit.mjs",
     "typecheck": "npm run build && npm run typecheck:prepared",
     "typecheck:prepared": "node scripts/verification/prepared.mjs package && tsc --project tsconfig.json --noEmit && npm run typecheck --workspace @mokly/viewer && npm run typecheck:script-declarations",
-    "typecheck:script-declarations": "tsc --project tsconfig.scripts-declarations.json --noEmit"
+    "typecheck:script-declarations": "tsc --project tsconfig.scripts-declarations.json --noEmit",
+    "build:package": "node scripts/clean.mjs --package @mokly/mokly && tsc --project tsconfig.build.json && node scripts/copy-assets.mjs"
   },
   "dependencies": {
     "@mokly/viewer": "0.4.0",
@@ -121,6 +122,7 @@
     "tailwindcss": "^4.3.3",
     "terser": "^5.51.2",
     "tsx": "^4.23.15",
+    "turbo": "^2.11.7",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.1",
     "wrangler": "4.113.0",

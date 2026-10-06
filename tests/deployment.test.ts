@@ -40,6 +40,9 @@ test("preview workflow deploys main and same-repository pull requests", async ()
   });
   assert.equal(workflow.env.CLOUDFLARE_PROJECT_NAME, "mokabook");
   assert.equal(workflow.env.MOKLY_COMMENT_MARKER, "<!-- mokly-preview -->");
+  assert.equal(workflow.env.TURBO_TELEMETRY_DISABLED, "1");
+  assert.equal(workflow.env.TURBO_CACHE, "local:rw");
+  assert.equal(workflow.env.TURBO_TOKEN, undefined);
   assert.deepEqual(Object.keys(workflow.jobs).sort(), [
     "close-pr",
     "deploy-main",

@@ -7,7 +7,7 @@ implemented. [Hosted measurements](https://github.com/mokly-ai/mokly/blob/f66c27
 and coverage. `cargo xtask check` is the complete local gate. A validated hosted
 aggregate proves its exact tree. Public package argument forwarding, hierarchical
 cancellation, and PR title validation are implemented. [Task caching](./ci-remote-cache.md)
-defines planned preparation and the hosted prepare job.
+defines implemented local preparation and the planned hosted prepare job.
 
 ## Verification Boundary
 
@@ -91,13 +91,14 @@ Public `package:check` and `package:smoke` preserve caller arguments, including
 `--artifacts DIR`, across nested npm. Prepared test commands skip preparation,
 reject arguments other than the optional shard, and fail when required output is
 missing; prepared package commands may instead receive the gate's archive pair.
-Today xtask prepares each suite and reuses output within it. It calls only
-prepared consumers. [Planned cache reuse](./ci-remote-cache.md#suite-preparation-and-restore) keeps those calls.
+Xtask calls preparation for each suite, then prepared consumers.
+[Task cache reuse](./ci-remote-cache.md#suite-preparation-and-restore) restores
+unchanged outputs across suites; every consumer still executes.
 
 Builds under test are not removed. Dry-run package inspection retains
-`--ignore-scripts`; real packing keeps lifecycle builds. Historical baselines,
-clean consumers and caches, source mutation, startup, and invalidation stay
-independent today. The linked planned rules allow hits; assertions still execute.
+`--ignore-scripts`; real packing keeps lifecycle builds with empty stdout.
+Historical baselines use direct commands with no Turbo cache or telemetry. Clean
+consumers, source mutation, startup, and invalidation keep independent assertions.
 
 ## Deterministic Test Repository Inputs
 

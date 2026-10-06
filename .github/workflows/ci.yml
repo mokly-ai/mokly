@@ -10,6 +10,8 @@ permissions:
 
 env:
   PLAYWRIGHT_CHANNEL: chromium
+  TURBO_TELEMETRY_DISABLED: "1"
+  TURBO_CACHE: local:rw
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

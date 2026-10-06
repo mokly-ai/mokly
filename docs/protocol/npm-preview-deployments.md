@@ -4,17 +4,18 @@
 
 The main-branch and pull-request preview workflows, static capture, publication,
 replacement, and cleanup behavior are implemented.
-The [task cache contract](./ci-remote-cache.md) defines planned cached
-package/example preparation; capture and deployment remain uncached.
+Local package preparation uses the [task cache contract](./ci-remote-cache.md).
+The direct example build, capture, and deployment remain uncached; remote package
+cache access is planned.
 
 ## Deployment Contract
 
-After task-cache delivery, eligible same-repository preview jobs may read and
+After remote delivery, eligible same-repository preview jobs may read and
 write signed artifacts. They map the writer and signature secrets only when
 both exist; otherwise they use local cache only. Fork gating stays unchanged.
-The first Turbo use disables hosted telemetry. Historical comparison rebuilds
-use the baseline commit's own build scripts; they may restore tool builds but
-still execute the configured direct example build. Capture, input-mutation
+Hosted Turbo telemetry is disabled. Historical comparison rebuilds use the
+commit's source and lockfile with the configured direct build recipe. They never
+invoke Turbo, read/write its cache, or send its telemetry. Capture, input-mutation
 checks, publication, replacement, and cleanup always execute independently.
 
 The [publication option](./mokly-publication.md) is implemented. The main job
@@ -35,7 +36,8 @@ stable `pr-<number>` branch alias and receive one updated sticky comment with
 the deployment result, URL, commit, and workflow run. Fork pull requests never
 receive Cloudflare credentials or write-capable execution.
 
-`npm run preview:build` first rebuilds Mokly and its derived basic consumer.
+`npm run preview:build` first prepares Mokly through Turbo, then directly builds
+its derived basic consumer.
 The repository-only preview builder starts the real Browse server on an
 ephemeral loopback port and snapshots the home, not-found, and current entry
 shells at `view/<path>/index.html`, plus removed-entry shells only when Changes

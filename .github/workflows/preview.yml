@@ -17,6 +17,8 @@ concurrency:
 env:
   CLOUDFLARE_PROJECT_NAME: mokabook
   MOKLY_COMMENT_MARKER: "<!-- mokly-preview -->"
+  TURBO_TELEMETRY_DISABLED: "1"
+  TURBO_CACHE: local:rw
 
 jobs:
   deploy-main:

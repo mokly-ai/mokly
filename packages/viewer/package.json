@@ -52,9 +52,9 @@
     "directory": "packages/viewer"
   },
   "scripts": {
-    "build": "tsc --project tsconfig.build.json && node scripts/build.mjs",
+    "build": "node ../../scripts/clean.mjs --package @mokly/viewer && tsc --project tsconfig.build.json && node scripts/build.mjs",
     "typecheck": "tsc --project tsconfig.json --noEmit",
     "test": "tsx --test tests/*.test.ts tests/*.test.tsx",
-    "prepack": "npm run build"
+    "prepack": "npm run --silent build 1>&2"
   }
 }

@@ -550,7 +550,10 @@ npm run package:smoke
 cargo xtask check
 ```
 
-The root build compiles the viewer before the CLI. Package smoke tests pack both
+The root Turbo graph compiles or restores the viewer before the CLI. Its source,
+scripts, README, and tests affect the global hash because the root depends on
+this workspace. Asset copying and TypeScript builds exclude ignored leftovers.
+The prepack lifecycle keeps stdout empty for JSON packing. Package smokes pack both
 workspaces and exercise every public entry from clean ESM and NodeNext
 consumers.
 

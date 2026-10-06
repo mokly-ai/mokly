@@ -2,9 +2,9 @@
 
 ## Delivery Status
 
-The job graph below is implemented. Turbo task caching, the parallel prepare job,
-and remote credentials are planned in the [task cache contract](./ci-remote-cache.md).
-Hosted telemetry opt-out starts with local task caching; remote wiring comes later.
+The job graph and local Turbo caching are implemented. The parallel prepare job
+and remote credentials remain planned in the [task cache contract](./ci-remote-cache.md).
+Hosted telemetry opt-out is configured; release builds force execution.
 
 ## Workflow Boundary
 
@@ -81,8 +81,8 @@ from its peers. Chromium is installed only in browser and hydration jobs. Rust
 formatting, Clippy, and tests run only in the repository job; selected suite
 jobs still compile xtask to dispatch their gate.
 
-Every npm-running job installs npm 11.7.0 and runs `npm ci`. CI caches only npm
-downloads. Every npm-running job keys npm's download cache from the checked-out
+Every npm-running job installs npm 11.7.0 and runs `npm ci`. CI persists only npm
+downloads across jobs and runs; local Turbo outputs remain in each checkout. Every npm-running job keys npm's download cache from the checked-out
 `package-lock.json`; none reads a branch-point lockfile. The
 [deterministic repository-input rule](./ci-verification.md#deterministic-test-repository-inputs)
 and [cache and security semantics](./ci-verification-security.md#dependency-cache-and-security)

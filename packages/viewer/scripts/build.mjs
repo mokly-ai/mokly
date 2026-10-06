@@ -5,12 +5,15 @@ import { build } from "esbuild";
 
 import { buildBrowserModules, writeBrowserManifest } from "./browser.mjs";
 import { bundleInspector } from "./inspector-bundle.mjs";
+import { isSourceAsset } from "./source_files.mjs";
 import { embeddedStyles } from "./styles.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const target = path.join(root, "dist");
-await fs.cp(path.join(root, "src/shell/assets"), path.join(target, "assets"), {
+const assets = path.join(root, "src/shell/assets");
+await fs.cp(assets, path.join(target, "assets"), {
   recursive: true,
+  filter: (source) => isSourceAsset(path.relative(assets, source)),
 });
 await buildBrowserModules(
   path.join(root, "src/client"),

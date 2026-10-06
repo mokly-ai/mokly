@@ -3,8 +3,8 @@
 ## Delivery Status
 
 Both verification modes and exact-tree evidence checks are implemented. The
-[task cache contract](./ci-remote-cache.md) adds a planned forced-build rule to
-the release workflow. Evidence selection and report inventories stay unchanged.
+[task cache contract](./ci-remote-cache.md) defines the implemented forced-build
+rule in the release workflow. Evidence selection and report inventories stay unchanged.
 
 ## Verification Modes
 
@@ -123,7 +123,7 @@ exact viewer and CLI archives, smoke-test clean consumers, recheck source and
 tags, guard existing registry versions, publish with trusted provenance, and
 verify registry bytes and attestations.
 
-After task caching is delivered, both release modes set `TURBO_FORCE=true`,
+Both release modes set `TURBO_FORCE=true`,
 select `TURBO_CACHE=local:rw`, and leave token and signature variables unset.
 Complete-mode preparation and every archive lifecycle build execute from source.
 Force bypasses cache reads; it may refresh local entries. Neither mode reads or

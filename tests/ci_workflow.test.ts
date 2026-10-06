@@ -31,6 +31,7 @@ interface WorkflowJob {
 }
 
 interface Workflow {
+  env: Readonly<Record<string, string>>;
   concurrency: { "cancel-in-progress": boolean };
   jobs: Readonly<Record<string, WorkflowJob>>;
   on: Readonly<Record<string, unknown>>;
@@ -42,6 +43,10 @@ test("CI shards complete verification behind one prerequisite", async () => {
   const workflow = parse(source) as Workflow;
   assert.deepEqual(Object.keys(workflow.on).sort(), ["pull_request", "push"]);
   assert.deepEqual(workflow.permissions, { contents: "read" });
+  assert.equal(workflow.env.TURBO_TELEMETRY_DISABLED, "1");
+  assert.equal(workflow.env.TURBO_CACHE, "local:rw");
+  assert.equal(workflow.env.TURBO_TOKEN, undefined);
+  assert.equal(workflow.env.TURBO_REMOTE_CACHE_SIGNATURE_KEY, undefined);
   assert.equal(workflow.concurrency["cancel-in-progress"], true);
   assert.deepEqual(Object.keys(workflow.jobs).sort(), [
     "browser",

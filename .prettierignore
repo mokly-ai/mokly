@@ -1,6 +1,7 @@
 AGENTS.md
 dist
 node_modules
+.turbo/
 target
 examples/basic/generated
 package-lock.json

@@ -9,5 +9,13 @@
     "sourceMap": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["src/**/_tests_/**"]
+  "exclude": [
+    "src/**/_tests_/**",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/target/**",
+    "**/coverage/**",
+    "**/test-results/**",
+    "**/playwright-report/**"
+  ]
 }

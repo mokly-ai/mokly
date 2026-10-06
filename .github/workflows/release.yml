@@ -29,6 +29,11 @@ concurrency:
   group: npm-release
   cancel-in-progress: false
 
+env:
+  TURBO_TELEMETRY_DISABLED: "1"
+  TURBO_CACHE: local:rw
+  TURBO_FORCE: "true"
+
 jobs:
   release-please:
     if: github.event_name == 'push'

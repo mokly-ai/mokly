@@ -39,8 +39,21 @@ export default defineConfig({
   review: {
     baselineBuild: [
       ["npm", "ci"],
-      ["npm", "run", "build"],
-      ["npm", "run", "example:build"],
+      ["npm", "run", "--silent", "build", "--workspace", "@mokly/viewer"],
+      [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--project",
+        "tsconfig.build.json",
+      ],
+      ["node", "scripts/copy-assets.mjs"],
+      [
+        "node",
+        "dist/cli/bin.js",
+        "build",
+        "--config",
+        "examples/basic/mokly.config.ts",
+      ],
     ],
     outDir: ".context/basic-review",
     sharedImpact: [

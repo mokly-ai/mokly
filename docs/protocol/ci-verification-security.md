@@ -4,12 +4,12 @@ Continuation of [CI Verification](./ci-verification.md).
 
 ## Delivery Status
 
-The npm download cache and audit rules are implemented. The signed Turbo task
-cache and credential policy below are planned in [CI Task Cache](./ci-remote-cache.md).
+The npm download cache, local task cache, and audit rules are implemented.
+Remote signing and credentials remain planned in [CI Task Cache](./ci-remote-cache.md).
 
 ## Dependency Cache And Security
 
-CI caches npm's download cache only. `actions/setup-node` keys it from the
+CI persists only npm's download cache across jobs and runs. `actions/setup-node` keys it from the
 committed `package-lock.json`. `npm ci` always runs, including after a cache
 hit, and every platform's optional native package remains available. A cache
 miss is an ordinary cold install and never permits a skipped command.
@@ -27,14 +27,14 @@ runtimes. Intentionally isolated clean-cache consumer tests keep private empty
 npm caches. Release publishing retains its uncached, OIDC-scoped boundary and
 exact-artifact checks.
 
-## Planned Task Cache Security
+## Task Cache Security And Remote Target
 
-The task cache stores viewer, package, and example outputs in a repository-owned
-Worker and R2 bucket. It does not cache `npm ci`, audits, tests, or reports.
+The local task cache stores viewer, package, and example outputs. The planned
+remote cache uses a repository-owned Worker and R2 bucket. It does not cache `npm ci`, audits, tests, or reports.
 Every job keeps its lockfile-keyed download cache and fresh install. Missing,
 unavailable, or rejected artifacts require task execution, not skipped checks.
 
-Same-repository CI has a writer token. Approved developers receive a reader
+After remote delivery, same-repository CI has a writer token. Developers receive a reader
 token and the shared signature key through a private password-manager share.
 They set `TURBO_CACHE=local:rw,remote:r` to prevent forbidden upload attempts.
 The signing key alone does not grant Worker write access. The Worker stores
@@ -48,7 +48,9 @@ Write-once R2 keys prevent later clients from replacing the first artifact or
 its metadata. Expiry and key rotation follow the
 [Worker contract](./ci-remote-cache-worker.md). Access credentials never enter
 Git, task hashes, or logs. Telemetry is disabled in hosted workflows from the
-first use of Turbo; developers can opt out through their environment.
+first use of Turbo; developers can opt out through their environment. Historical
+example baselines use direct commands, with no Turbo cache or telemetry, even
+though the baseline environment strips Turbo opt-out variables.
 
 Fixture ownership, failure cleanup, browser shard balance, and acceptance
 measurement follow the separate

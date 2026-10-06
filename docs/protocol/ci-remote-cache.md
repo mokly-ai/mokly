@@ -4,22 +4,22 @@
 
 This is the approved target of the
 [remote-cache plan](../../plans/turborepo-cloudflare-remote-cache.md).
-The task runner, local task cache, remote service, and workflow wiring are not
-implemented. Today each suite builds through the existing npm scripts.
-The R2 bucket and its expiry rule are provisioned; the Worker is not deployed.
-The sections below specify planned behavior. Tests and suite reports remain
-uncached under the [verification contract](./ci-verification.md).
+The local task graph, strict environment, cache exclusions, and workflow
+telemetry/release-force settings are implemented. The remote service, credentials,
+and hosted prepare job remain planned. The R2 bucket and expiry rule exist; the
+Worker is not deployed. Tests, reports, and `npm run example:check` stay uncached;
+the check revalidates referenced paths and Git state outside the build hash.
 
 ## Task Graph And Files
 
 Use Turborepo 2.11.7 as a root development dependency with npm workspaces.
 Keep the lockfile and `packageManager: "npm@11.7.0"`. Register these tasks:
 
-| Task                  | Dependency            | Inputs                                                                      | Outputs                                 |
-| --------------------- | --------------------- | --------------------------------------------------------------------------- | --------------------------------------- |
-| `@mokly/viewer#build` | `^build`              | `$TURBO_DEFAULT$`, `$TURBO_ROOT$/tsconfig.json`                             | `dist/**` relative to `packages/viewer` |
-| `//#build:package`    | `@mokly/viewer#build` | `src/**`, `scripts/copy-assets.mjs`, `tsconfig.json`, `tsconfig.build.json` | `dist/**` relative to the root          |
-| `//#example:build`    | `//#build:package`    | `examples/basic/**` with the exclusions below                               | The four generated patterns below       |
+| Task                  | Dependency            | Inputs                                                    | Outputs                                 |
+| --------------------- | --------------------- | --------------------------------------------------------- | --------------------------------------- |
+| `@mokly/viewer#build` | `^build`              | `$TURBO_DEFAULT$`, root tsconfig and cleanup script       | `dist/**` relative to `packages/viewer` |
+| `//#build:package`    | `@mokly/viewer#build` | `src/**`, asset-copy/cleanup scripts, both root tsconfigs | `dist/**` relative to the root          |
+| `//#example:build`    | `//#build:package`    | `examples/basic/**` with the exclusions below             | The four generated patterns below       |
 
 The example output patterns are exactly:
 
@@ -37,6 +37,12 @@ Explicit input globs do not inherit `.gitignore` exclusions.
 Do not include generated HTML, the manifest, copied SVG, or generated assets as
 inputs. Do not cache `.mokly-cache`, review output, reports, or preview exports.
 
+Example inputs also include the ten protocol files listed in
+[`turbo.json`](../../turbo.json). Two appear in the compilation source inventory;
+the other references affect metadata validation. Unrelated docs stay outside
+the hash. Both root tasks exclude every ignored cache, scratch, report, archive,
+and nested output pattern from their explicit inputs; see the configuration.
+
 `package.json`, `turbo.json`, and package manager lockfiles are always inputs,
 even with explicit `inputs`. The global hash includes source files in internal
 packages that the root depends on, directly or transitively. The root depends
@@ -46,21 +52,24 @@ Viewer edits also reach `//#build:package` through its viewer dependency hash.
 reads `packages/viewer/src/runtime.ts`. Both tracked files belong to the
 viewer's default inputs. Both hashing paths cover these reads without duplicate
 root globs. Preserve the dependency when narrowing viewer inputs. The root
-tsconfig is not a default global input; keep its explicit viewer input.
-Local task-graph checks must record whether viewer README and test edits also
-change the global hash and all three task hashes.
+tsconfig and cleanup script are explicit viewer inputs, not global inputs.
+Local checks show viewer README and test edits also change the global hash and
+all three task hashes. Root config/cleanup edits propagate through task inputs.
 
-Change only these root scripts:
+These root scripts select the cached tasks:
 
-| Script                 | Planned command                                                     |
-| ---------------------- | ------------------------------------------------------------------- |
-| `build`                | `turbo run build:package`                                           |
-| `build:package`        | `tsc --project tsconfig.build.json && node scripts/copy-assets.mjs` |
-| `prepare:verification` | `turbo run example:build`                                           |
+| Script                 | Command                                                                                                              |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `build`                | `turbo run build:package 1>&2`                                                                                       |
+| `build:package`        | `node scripts/clean.mjs --package @mokly/mokly && tsc --project tsconfig.build.json && node scripts/copy-assets.mjs` |
+| `prepare:verification` | `turbo run example:build`                                                                                            |
 
-Keep `example:build` as the direct CLI command. Turbo executes that script as
-a root task; the script must not call Turbo recursively. Existing `prepack`,
-`dev`, `test`, and preview scripts retain their command boundaries.
+`example:build` runs `node scripts/clean.mjs --example && node dist/cli/bin.js build --config examples/basic/mokly.config.ts`.
+Turbo runs it as a root task; it must not call Turbo recursively. Root `prepack` uses
+cleanup followed by `npm run --silent build`; Turbo stdout routes to stderr. Viewer
+`prepack` uses `npm run --silent build 1>&2`. Lifecycle builds still run, while
+stdout stays empty so real `npm pack --json` remains parseable. `1>&2` works in
+POSIX shells and Windows npm's `cmd.exe`; it is not PowerShell syntax.
 
 ## Global Settings And Environment
 
@@ -93,6 +102,9 @@ use the same empty team ID. Local task caching requires no signature key.
 
 Strict mode admits only declared variables and Turbo's built-in system list.
 Each cached task declares `env: ["NODE_ENV"]`, so its value is hashed.
+The example also hashes `BROWSERSLIST`, `BROWSERSLIST_ENV`, and `AUTOPREFIXER_GRID`.
+Ambient Browserslist config/statistics paths and `NODE_PATH` are not admitted;
+the example uses its checked-in Safari 14 target and lockfile-resolved packages.
 Use `globalPassThroughEnv` for `CI`, `MOKLY_OUTPUT`, `NO_COLOR`, `FORCE_COLOR`,
 `TERM`, `TERM_PROGRAM`, `WT_SESSION`, `COLUMNS`, and
 `BROWSERSLIST_IGNORE_OLD_DATA`. These affect terminal or warning behavior only;
@@ -113,6 +125,8 @@ Developers can export `TURBO_TELEMETRY_DISABLED=1` or `DO_NOT_TRACK=1`.
 `noUpdateNotifier` does not disable telemetry.
 
 ## Cache Sources And Credentials
+
+Remote access in this table remains planned. Current jobs use local cache only.
 
 | Environment                             | Local            | Remote read | Remote write |
 | --------------------------------------- | ---------------- | ----------- | ------------ |
@@ -157,31 +171,38 @@ cache in tests; removing a linked checkout's cache path may clear shared data.
 
 ## Suite Preparation And Restore
 
-Today xtask builds independently for each package, unit, browser, and hydration
-suite. The planned rule keeps each call to `npm run prepare:verification`.
-It restores unchanged tasks from local or authorized remote cache and executes
-misses. Prepared consumers and all suite assertions still run on every call.
+Each package, unit, browser, and hydration suite still calls
+`npm run prepare:verification`. Unchanged tasks restore from local cache; misses
+execute. Remote restoration remains planned. Every prepared consumer and suite
+assertion still executes.
 
-Planned restore semantics, pending
-[local task-graph verification](../../plans/turborepo-cloudflare-remote-cache.md#milestone-2-turborepo-task-graph-with-local-caching):
+Restore semantics verified against the local client:
 restore missing archived files and replace modified archived files with the
 cached bytes. Matching local files may avoid writes. Files absent from the
 archive remain in place, even inside an output directory. Restore is not a
 directory clean. Authored CSS is never an output and must survive unchanged.
 Test this with missing, corrupted, and extra files. Tests that require an empty
 output tree must clean their own output first; they must not infer cleanup from
-a cache hit. Tests must not mutate the shared prepared checkout.
+a cache hit. Task execution cleans each package distribution first; packing
+cleans both before restoring/building. Example execution clears all four ignored
+output patterns first, preserving authored CSS; unowned HTML must not enter cache.
+Fresh baseline extraction needs no task
+cleanup. Tests must not mutate the shared prepared checkout.
 
-Independent preparation retains these boundaries:
+Independent preparation retains these boundaries. The baseline recipe mirrors
+the root build commands; an alignment test protects it. Ignored nested baseline
+sources cannot be hashed safely through the enclosing Git repository.
+`baselineEnvironment()` sets `MOKLY_BASELINE_COMMIT`; no repository code reads it.
+Strict Turbo tasks hide it, and direct baseline builds do not need it.
 
-| Boundary                              | Planned cache behavior and safety rule                                                                                                                                                                                                                    |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Historical baseline reconstruction    | The baseline commit supplies its lockfile, source, and task config. Its `npm ci` always runs. Its `npm run build` can hit Turbo if that commit includes Turbo. Its direct `npm run example:build` still executes. Older commits use their original build. |
-| Isolated example repositories         | Copy `turbo.json` with the existing fixed tooling list before builds can use the new root script. Each repository owns its output and cache.                                                                                                              |
-| Clean packed consumers and npm caches | A package build or real `prepack` can restore tasks. Packing, fresh installs, private empty npm caches, and installed CLI smokes still execute; they are not cached tasks.                                                                                |
-| Source mutation                       | A declared input edit must miss the affected task and its dependents. Use `TURBO_FORCE=true` when the test must observe build execution independently of input hashing.                                                                                   |
-| Startup and pending-state tests       | Cached tool preparation is allowed before the measured command. The server, on-demand rendering, pending states, and command-to-preview timer always run independently. Force a build if its execution is the behavior under test.                        |
-| Cache invalidation                    | Mokly's application caches remain independent. A test of Turbo invalidation must own its cache, mutate an input, and prove a miss; a second unchanged preparation must prove a hit.                                                                       |
+| Boundary                              | Cache behavior and safety rule                                                                                                                                                                                                                                                 |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Historical baseline reconstruction    | The commit supplies its source and lockfile. The example recipe runs npm ci, the direct viewer build, the TypeScript executable, asset copying, and the direct example CLI. It never invokes Turbo, including for pre-Turbo commits; no task cache or Turbo telemetry is used. |
+| Isolated example repositories         | Copy `turbo.json` with the existing fixed tooling list before builds can use the new root script. Each repository owns its output and cache.                                                                                                                                   |
+| Clean packed consumers and npm caches | A package build or real `prepack` can restore tasks. Packing, fresh installs, private empty npm caches, and installed CLI smokes still execute; they are not cached tasks.                                                                                                     |
+| Source mutation                       | A declared input edit must miss the affected task and its dependents. Use `TURBO_FORCE=true` when the test must observe build execution independently of input hashing.                                                                                                        |
+| Startup and pending-state tests       | Cached tool preparation is allowed before the measured command. The server, on-demand rendering, pending states, and command-to-preview timer always run independently. Force a build if its execution is the behavior under test.                                             |
+| Cache invalidation                    | Mokly's application caches remain independent. A test of Turbo invalidation must own its cache, mutate an input, and prove a miss; a second unchanged preparation must prove a hit.                                                                                            |
 
 ## Cache Correctness And CI Delivery
 
@@ -190,10 +211,10 @@ environment. Git refs, commit identity, dirty state, wall-clock time, random
 values, and absolute checkout paths must not affect those bytes. Upload commit
 metadata is diagnostic and does not relax this rule. Cache archives and task
 logs may carry execution metadata; compare the declared product outputs.
-Before accepting local caching, build the example twice from clean output at
-different times and with changed Git metadata. Build in two different absolute
-checkout paths and compare every declared output byte for byte. Check Node
-22.14 and Node 24 equality. Reject path-bearing source maps or manifests.
+Clean old/new builds matched byte for byte. Node 22.14 and 24.21 matched across
+all declared outputs, including maps and manifests. Two absolute paths, later
+build times, Git ref/commit changes, and unrelated dirty state also matched.
+Input and Git-inventory regressions preserve these cache boundaries.
 Fix any hidden input or keep the affected task uncached until the contract holds.
 Input-mutation checks cover specs, config, authored CSS, root source, viewer
 runtime/helper, and the inherited root tsconfig.
@@ -210,8 +231,9 @@ Release jobs set `TURBO_FORCE=true`, unset both Turbo credentials, and disable
 remote cache with `TURBO_CACHE=local:rw`. Every build executes, including
 `prepack`; forced execution can still refresh local cache entries. Live audits,
 exact archives, installs, provenance, and registry checks stay independent.
-Eligible same-repository preview jobs may cache package/example preparation;
-capture, Git comparisons, publication, deployment, and cleanup always execute.
+Preview package preparation uses Turbo; its direct `example:build` executes
+without a task-cache restore. Future same-repository previews may share package
+artifacts remotely. Capture, comparisons, publication, and deployment execute.
 See the [workflow graph](./ci-workflow.md),
 [release evidence](./npm-release-evidence.md), and
 [Worker contract](./ci-remote-cache-worker.md).

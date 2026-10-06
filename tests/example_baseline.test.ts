@@ -9,10 +9,23 @@ import { RebuiltBaselineReader } from "../dist/baseline/reader.js";
 import { parseHistoricalManifest } from "../dist/registry/manifest.js";
 import { prepareReviewRepository } from "../dist/review/prepare.js";
 
-import { createExampleBaseline } from "./helpers/example_baseline.js";
+import {
+  createCommittedExampleBaseline,
+  createExampleBaseline,
+} from "./helpers/example_baseline.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
+
+test("committed example fixtures remove the complete multiline baseline recipe", async (context) => {
+  const root = await fs.mkdtemp(
+    path.join(repositoryRoot, ".context/example-committed-"),
+  );
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const config = await createCommittedExampleBaseline(root, "ordinary-preview");
+  assert.equal(config.generatedOutput, "committed");
+  assert.equal(config.review.baselineBuild, undefined);
+});
 
 test("the example fixture rebuilds an untracked baseline from its own source and lockfile", async (t) => {
   await fs.mkdir(path.join(repositoryRoot, ".context"), { recursive: true });
@@ -21,6 +34,11 @@ test("the example fixture rebuilds an untracked baseline from its own source and
   );
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const config = await createExampleBaseline(root);
+  assert.equal(
+    await fs.readFile(path.join(root, "turbo.json"), "utf8"),
+    await fs.readFile(path.join(repositoryRoot, "turbo.json"), "utf8"),
+  );
+  await fs.access(path.join(root, "scripts/clean.mjs"));
   assert.equal(config.generatedOutput, "derived");
   const tracked = (
     await execute("git", ["ls-files", "examples/basic/generated"], {

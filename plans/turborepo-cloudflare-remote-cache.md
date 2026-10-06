@@ -1,8 +1,9 @@
 # Turborepo Remote Cache On Cloudflare
 
-Status: Active. Created on 2026-10-06. No pull request yet. Milestone 1 defines
-the approved contract; its supervising-agent review remains open. Task caching
-and the Worker are not implemented.
+Status: Active. Created on 2026-10-06. No pull request yet. Milestone 1 was
+accepted at `7b70b7e`. Milestone 2 local implementation and checks are complete; hosted native
+verification remains a pre-merge requirement. The supervising agent owns formal
+reviews in another worktree. The Worker is not implemented.
 
 ## Summary
 
@@ -87,27 +88,29 @@ contract before implementation:
 - [`xtask/README.md`](../xtask/README.md) and the root
   [`README.md`](../README.md): developer commands, `.turbo/`, and local
   remote-cache setup.
-- Measurement record `docs/reviews/ci-remote-cache.md`, created in Milestone 4.
+- Measurement record `.context/turborepo-cloudflare-remote-cache/measurements.md`,
+  created in Milestone 4; evidence stays outside the tracked tree.
 
 ## Task Graph
 
-Root `package.json` scripts change as follows. Every other script keeps its
-name and behavior, including `example:build`, which `turbo` runs as a root
-task.
+Root `package.json` scripts change as follows. Other public commands keep their
+boundaries. `example:build` clears its four generated output patterns, then calls the CLI directly. Root prepack uses silent npm, and
+viewer prepack redirects build output to stderr, preserving pack JSON.
 
-| Script                 | Before                                       | After                                                               |
-| ---------------------- | -------------------------------------------- | ------------------------------------------------------------------- |
-| `build`                | viewer build, then `tsc`, then `copy-assets` | `turbo run build:package`                                           |
-| `build:package`        | none                                         | `tsc --project tsconfig.build.json && node scripts/copy-assets.mjs` |
-| `prepare:verification` | `npm run build && npm run example:build`     | `turbo run example:build`                                           |
+| Script                 | Before                                       | After                                                                                                                |
+| ---------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `build`                | viewer build, then `tsc`, then `copy-assets` | `turbo run build:package 1>&2`                                                                                       |
+| `build:package`        | none                                         | `node scripts/clean.mjs --package @mokly/mokly && tsc --project tsconfig.build.json && node scripts/copy-assets.mjs` |
+| `example:build`        | direct CLI build                             | `node scripts/clean.mjs --example && node dist/cli/bin.js build --config examples/basic/mokly.config.ts`             |
+| `prepare:verification` | `npm run build && npm run example:build`     | `turbo run example:build`                                                                                            |
 
 `turbo.json` registers these tasks:
 
-| Task               | Depends on            | Inputs                                                                      | Outputs                                                                                                                                                                               |
-| ------------------ | --------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `build` (viewer)   | `^build`              | `$TURBO_DEFAULT$`, `$TURBO_ROOT$/tsconfig.json`                             | `dist/**`                                                                                                                                                                             |
-| `//#build:package` | `@mokly/viewer#build` | `src/**`, `scripts/copy-assets.mjs`, `tsconfig.json`, `tsconfig.build.json` | `dist/**`                                                                                                                                                                             |
-| `//#example:build` | `//#build:package`    | `examples/basic/**` minus the generated outputs                             | `examples/basic/generated/**/*.html`, `examples/basic/generated/mokly-manifest.json`, `examples/basic/generated/example/workspace.svg`, `examples/basic/generated/mokly-generated/**` |
+| Task               | Depends on            | Inputs                                                          | Outputs                                                                                                                                                                               |
+| ------------------ | --------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `build` (viewer)   | `^build`              | `$TURBO_DEFAULT$`, root tsconfig and cleanup script             | `dist/**`                                                                                                                                                                             |
+| `//#build:package` | `@mokly/viewer#build` | `src/**`, asset-copy/cleanup scripts, both root tsconfigs       | `dist/**`                                                                                                                                                                             |
+| `//#example:build` | `//#build:package`    | `examples/basic/**` and referenced protocol docs, minus outputs | `examples/basic/generated/**/*.html`, `examples/basic/generated/mokly-manifest.json`, `examples/basic/generated/example/workspace.svg`, `examples/basic/generated/mokly-generated/**` |
 
 `package.json`, `turbo.json`, and package manager lockfiles are always task
 inputs, even with explicit `inputs`. The root manifest, lockfile, and source
@@ -138,10 +141,11 @@ audits dependency reads and verifies these do not hide output-changing inputs.
 Cached product outputs must not depend on Git state, timestamps, random values,
 or absolute checkout paths. Milestone 2 proves equality across paths and Node
 versions before accepting that contract. Restore replaces archived files but
-does not remove extra files from output directories (Milestone 2 verifies).
-Historical `baselineBuild` still runs `npm ci` and the baseline's scripts:
-`npm run build` can hit Turbo when that commit includes it, while the direct
-`npm run example:build` still executes.
+does not remove extra files from output directories, as Milestone 2 verified.
+Historical `baselineBuild` installs with npm ci, then runs direct viewer,
+compiler, asset-copy, and example commands from the commit. It never invokes
+Turbo inside ignored nested sources, so it cannot reuse an incorrect task hash
+or send Turbo telemetry. No repository code reads `MOKLY_BASELINE_COMMIT`.
 
 Cache sources per environment:
 
@@ -310,76 +314,133 @@ After this milestone every existing command works, repeated builds hit the
 local cache. Hosted CI keeps the same jobs and local cache only, but disables
 telemetry and forces release builds from the first Turbo use.
 
-- [ ] Run `npm install --save-dev turbo` for the latest 2.x release and confirm
+- [x] Before root script changes, build the old scripts from a clean tree and
+      record SHA-256 for every package/viewer file and all four example output
+      patterns. Compare with a forced Turbo build from clean outputs. Require
+      identical bytes; explain and justify any difference.
+- [x] Make historical baselines bypass Turbo entirely by using the underlying
+      viewer, TypeScript, asset-copy, and direct example commands. Keep this
+      recipe aligned with root scripts. Test distinct viewer/package baselines
+      in a linked worktree, both before and after Turbo delivery, with no Turbo
+      cache reads, writes, or telemetry. Confirm no code reads
+      `MOKLY_BASELINE_COMMIT`.
+- [x] Keep stdout empty across the prepack build chain while preserving real
+      lifecycle builds. Add an isolated real `npm pack --json` regression and
+      verify any redirection is compatible with Windows `cmd.exe`.
+- [x] Compare resolved example input files with Git's file inventory minus
+      generated outputs and ignored paths, including `examples/basic/.context`.
+      Document uncached example checking and direct preview example builds.
+      Move the Release Please timing measurement to non-blocking post-merge work.
+- [x] Audit the complete example configuration and everything it loads: roots,
+      styles, documents, renderer, PostCSS/Browserslist, assets, baseline recipe,
+      and shared-impact paths. Add uncovered repository inputs outside the
+      example. Prove input edits change hashes and unrelated docs, root README,
+      tests, and plans do not, using two-direction dry JSON checks.
+- [x] Audit ignored paths under explicit example and root-source input globs.
+      Exclude every possible scratch/output path, including `.mokly-write-*`
+      and `.mokly-review-*`, so ignored leftovers do not change task hashes.
+- [x] Align TypeScript source discovery and viewer asset copying with ignored
+      input exclusions. Add failing regressions first so an ignored leftover
+      cannot change uncached output while keeping the same cache key.
+- [x] Clean each package's owned distribution before uncached task execution,
+      and clean before packing. Add a failing stale-output regression and hash
+      the cleanup script in both tasks. Baselines start from fresh extracted
+      sources and need no task cleanup step.
+- [x] Clean all four declared example output patterns before root example
+      builds, preserving authored CSS. Capture an unowned ignored HTML cache
+      contamination regression before the fix and prove it cannot enter cache
+      artifacts. Keep the generic Mokly CLI ownership contract unchanged.
+- [x] Confirm the lockfile contains all six `@turbo/*` platform packages and
+      that the dependency audit accepts them.
+- [x] Run `npm install --save-dev turbo` for the latest 2.x release and confirm
       it resolves 2.11.7 and `npm run dependencies:check` passes. If upstream
       changes before installation, reverify the schema and client contract.
-- [ ] Add `turbo.json` with the `$schema`, the task table, and the global
+- [x] Resolve the newly uncovered Sharp and Shell Quote advisories with
+      compatible targeted dependency updates. Capture a bounded regression
+      before the Shell Quote update and rerun the live audit and complete gate.
+- [x] Add `turbo.json` with the `$schema`, the task table, and the global
       settings. Keep `remoteCache.apiUrl` and `teamSlug` out until
       Milestone 4.
-- [ ] Preserve viewer default inputs and its `$TURBO_ROOT$/tsconfig.json` input.
+- [x] Preserve viewer default inputs and its `$TURBO_ROOT$/tsconfig.json` input.
       Use `--dry=json` to prove viewer source/helper edits change the global hash
       and all three task hashes. Prove a root tsconfig edit changes the viewer
       and `//#build:package` hashes; the root tsconfig is not a global input.
       Check which viewer files the global hash covers, including README and
       tests, and record the result in `ci-remote-cache.md`.
-- [ ] Change the root scripts: `build` to `turbo run build:package`, a new
+- [x] Change the root scripts: `build` to `turbo run build:package 1>&2`, a new
       `build:package`, and `prepare:verification` to `turbo run example:build`.
-- [ ] Add `turbo.json` to the fixed copy list in
+- [x] Add `turbo.json` to the fixed copy list in
       `tests/helpers/example_baseline.ts`. Test historical reconstruction in
       the isolated example repository after the root build script changes.
-- [ ] Enumerate the environment variables that the viewer build, `copy-assets`,
+- [x] Keep committed example fixture conversion valid for multiline baseline
+      command arrays, with a failing regression before the fixture-helper fix.
+- [x] Ensure Turbo test fixtures never track or archive their shared
+      `node_modules` link; baseline installs must own their dependency tree.
+- [x] Enumerate the environment variables that the viewer build, `copy-assets`,
       and the CLI example build read. List them in `env` or `passThroughEnv`.
       Prove the tasks pass under strict mode with
       `cargo xtask check --suite package`.
-- [ ] Confirm the example-build input list: change one file in each candidate
+- [x] Confirm the example-build input list: change one file in each candidate
       location (`examples/basic/specs`, `mokly.config.ts`, authored CSS under
       `generated`, and `src`) and check that
-      `npx turbo run example:build --dry=json` changes the hash. Record the
+      `npx --no-install turbo run example:build --dry=json` changes the hash. Record the
       result in `ci-remote-cache.md`.
-- [ ] Prove cached outputs depend only on declared inputs and hashed
+- [x] Prove cached outputs depend only on declared inputs and hashed
       environment. Build from clean outputs at different times and after Git
       ref, commit, and dirty-state changes. Fix hidden inputs or disable the
       affected task's cache before accepting it.
-- [ ] Build in two different absolute checkout paths and compare all three
+- [x] Build in two different absolute checkout paths and compare all three
       tasks' declared product outputs byte for byte, including maps and
       manifests. Prove Node 22.14 and Node 24 output equality before sharing
       hashes across the two Linux profiles.
-- [ ] Verify restore with missing, corrupted, matching, and extra output files;
+- [x] Verify restore with missing, corrupted, matching, and extra output files;
       preserve authored CSS. Confirm extra files are not removed (Milestone 2
       verifies). Keep clean consumers, mutation, startup, and Mokly cache tests
       independent under the task-cache contract; force execution when needed.
-- [ ] Set workflow-scope `TURBO_TELEMETRY_DISABLED: "1"` in `ci.yml`,
+- [x] Set workflow-scope `TURBO_TELEMETRY_DISABLED: "1"` in `ci.yml`,
       `preview.yml`, and `release.yml` before any hosted Turbo run. Set release
       `TURBO_FORCE=true` and local cache only now, not in Milestone 4. Update
       workflow assertions for these early changes.
-- [ ] Prove `npm run build` and `npm run prepare:verification` pass with neither
+- [x] Prove `npm run build` and `npm run prepare:verification` pass with neither
       token nor key, using `TURBO_CACHE=local:rw` and both credentials unset.
-- [ ] Add `.turbo/` to `.gitignore` and confirm Prettier and ESLint ignore it
-      through the existing gitignore integration.
-- [ ] Add `tests/turbo_config.test.ts`. It parses `turbo.json`; asserts
+- [x] Add `.turbo/` to `.gitignore` and `.prettierignore`. Confirm ESLint's
+      existing Git-ignore integration and Prettier's explicit ignore file both
+      ignore cache metadata.
+- [x] Add `tests/turbo_config.test.ts`. It parses `turbo.json`; asserts
       `agentGuidance === false`, `envMode === "strict"`,
       `remoteCache.signature === true`, and
       `futureFlags.longerSignatureKey === true`; asserts the `example:build`
       outputs equal the ignored generated patterns in `.gitignore`; and runs
-      `npx turbo run example:build --dry=json` to assert the
-      `@mokly/viewer#build`, `//#build:package`, `//#example:build` order with
-      caching enabled.
-- [ ] Update `tests/ci_workflow*.test.ts`, `tests/release*.test.ts`, and
+      `npx --no-install turbo run example:build --dry=json` to assert the
+      `@mokly/viewer#build`, `//#build:package`, `//#example:build` dependency execution order with caching enabled, independent of the
+      dry JSON task array's lexical ordering.
+- [x] Update `tests/ci_workflow*.test.ts`, `tests/release*.test.ts`, and
       `tests/deployment.test.ts` where they assert script contents or workflow
       steps that change.
-- [ ] Smoke test: `npm run build` twice shows `FULL TURBO` on the second run;
+- [x] Smoke test: `npm run build` twice shows `FULL TURBO` on the second run;
       `npm run prepare:verification` twice does the same; `npm run dev` serves
       the example; `cargo xtask check` passes with each later suite restoring
       preparation from the local cache.
-- [ ] Confirm `turbo` did not write to `AGENTS.md` and that no `turbo` block
+- [x] Confirm `turbo` did not write to `AGENTS.md` and that no `turbo` block
       exists there.
-- [ ] Update the Delivery Status in `docs/protocol/ci-remote-cache.md` for the
+- [x] Update the Delivery Status in `docs/protocol/ci-remote-cache.md` for the
       local task graph.
-- [ ] Run `cargo xtask check`.
-- [ ] Run `git add -A`, commit with Conventional Commits, and push.
+- [x] Preserve incoming mainline dependency updates, hydration coverage, test
+      concurrency, and documentation policy. Repeat output/runtime/path proofs and the complete
+      gate on the integrated tree. Keep the original before-script evidence.
+- [ ] Before merge, verify hosted workflow behavior after a PR exists. Confirm
+      telemetry/local-only settings, release force behavior, and native macOS
+      and Windows binary installation and execution. The Linux workspace cannot
+      prove native jobs; no hosted CI run exists yet.
+- [x] Run `cargo xtask check`.
+- [x] Run `git add -A`, commit with Conventional Commits, and push.
 - [ ] Review the complete local diff against `origin/main` with
       `docs/implementation-review-prompt.md` after the push. Report findings
       without changing the implementation.
+
+Evidence: `.context/turborepo-cloudflare-remote-cache/m2-progress.md` and
+`.context/turborepo-cloudflare-remote-cache/m2-validation.md`.
+Merge decisions: `.context/turborepo-cloudflare-remote-cache/m2-merge-decisions.md`.
 
 ### Milestone 3: Remote Cache Worker
 
@@ -496,9 +557,9 @@ before the merge.
       `remote:r` prevents reader uploads. Document access-token rotation and
       new-namespace signature-key rotation.
 - [ ] Push and read the pull request run: `prepare` uploads three artifacts and
-      ten downstream jobs (twenty for Release Please) report cache hits. Record
+      ten ordinary downstream jobs report cache hits. Record
       per-job durations before and after, and the R2 object count, in
-      `docs/reviews/ci-remote-cache.md`.
+      `.context/turborepo-cloudflare-remote-cache/measurements.md`.
 - [ ] Update the Delivery Status sections and the Contract Owners documents to
       implemented.
 - [ ] Run `cargo xtask check`.
@@ -508,6 +569,10 @@ before the merge.
       without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)
+
+- Measure the first Release Please pull request's twenty downstream jobs after
+  this change merges. Release Please creates that pull request from main, so
+  this measurement cannot be a pre-merge milestone requirement.
 
 - Watch the first five `main` runs for remote cache errors in the `turbo` logs
   and in Worker observability.

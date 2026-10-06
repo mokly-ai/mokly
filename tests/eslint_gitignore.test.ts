@@ -6,10 +6,23 @@ import test from "node:test";
 import { promisify } from "node:util";
 
 import { ESLint } from "eslint";
+import { getFileInfo } from "prettier";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execFileAsync = promisify(execFile);
+
+test("formatting and linting ignore Turbo cache metadata", async () => {
+  const cacheFile = path.join(repositoryRoot, ".turbo/cache/probe-meta.json");
+  const info = await getFileInfo(cacheFile, {
+    ignorePath: path.join(repositoryRoot, ".prettierignore"),
+  });
+  assert.equal(info.ignored, true);
+  assert.equal(
+    await new ESLint({ cwd: repositoryRoot }).isPathIgnored(cacheFile),
+    true,
+  );
+});
 
 test("eslint ignores repository paths ignored by Git", async (context) => {
   const scratchParent = path.join(repositoryRoot, ".wrangler", "tmp");

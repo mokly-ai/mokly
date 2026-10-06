@@ -9,6 +9,32 @@ import { evaluateDependencyAudit } from "../scripts/verification/dependency-audi
 
 import { auditFixture } from "./helpers/dependency_audit.js";
 
+interface ShellQuoteModule {
+  quote(tokens: readonly (string | { comment: string })[]): string;
+  parse(command: string): unknown[];
+}
+
+test("shell quoting rejects line terminators after a comment token", () => {
+  const shellQuote = createRequire(import.meta.url)(
+    "shell-quote",
+  ) as ShellQuoteModule;
+  for (const separator of ["\n", "\r", "\u2028", "\u2029"])
+    assert.throws(
+      () =>
+        shellQuote.quote([
+          "echo",
+          "ok",
+          { comment: "note" },
+          `a${separator}echo injected;#`,
+        ]),
+      TypeError,
+    );
+  assert.deepEqual(
+    shellQuote.parse(shellQuote.quote(["echo", "ordinary argument"])),
+    ["echo", "ordinary argument"],
+  );
+});
+
 test("catalogue globs retain ordinary brace alternatives and padded ranges", () => {
   assert.deepEqual(braceExpand("screens/{account,billing}/step-{01..03}.tsx"), [
     "screens/account/step-01.tsx",
