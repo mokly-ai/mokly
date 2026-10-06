@@ -1,6 +1,9 @@
 # Shared Example Compilation Snapshot
 
-Status: Active
+Status: Active. All six milestones are complete on draft PR
+[#138](https://github.com/mokly-ai/mokly/pull/138); the plan closes when that
+PR merges. Three review findings stay open for the user to decide; Milestone
+6 lists them.
 
 ## Status And Outcome
 
@@ -286,10 +289,11 @@ Delivered notes:
   same 34 files passed with the same 143 tests; summed time 1,917.0 s and wall
   time 962.5 s. Every file logged `compile:missing`. Per-file test, pass,
   fail, and skip counts were identical on both paths.
-- This implementation VM compiles about 2.5 times slower than the planning VM:
-  one consumer file takes about 44 s instead of 17 s, and the no-compile
-  control file takes 1.6 s instead of 0.6 s. Before-and-after comparisons
-  below use this VM for both columns.
+- During the first hours of this work, this VM ran about three times slower
+  than later in the session: one consumer file took about 44 s instead of
+  14 s, and the no-compile control file took 1.6 s instead of 0.4 s. Each
+  before-and-after pair in this plan was measured back to back, under the
+  same conditions.
 
 Interim timings, each file run alone with `node --import tsx --test` on Node
 22.14.0 with a fresh snapshot:
@@ -381,10 +385,10 @@ Wire the producer into the unit suite and the developer test command.
 - [x] Remove the pending marks added by Milestone 1 and align every document
       with the delivered behavior.
 
-Pre-existing local failures. These two tests fail on this VM both on this
-branch and on a clean `origin/main` worktree (`f66c274`), so they are not
-caused by this change. They depend on runner speed, and this VM is about 2.5
-times slower than CI:
+Load-dependent local failures. While the VM ran slowly, these two tests
+failed both on this branch and on a clean `origin/main` worktree (`f66c274`),
+so they are not caused by this change. Both passed in the later full local
+unit run and in CI:
 
 - `tests/component_controls_watch.test.ts` exceeds its 25 s test timeout
   (28.7 s alone here; 17.4 s in CI run 37354719684).
@@ -405,30 +409,30 @@ Integration notes:
   the protocol field table lists it. The real example compiles with zero
   diagnostics; the synthetic codec tests cover a non-empty list.
 
-## Milestone 6: Measure, verify, commit, push, and review — in progress
+## Milestone 6: Measure, verify, commit, push, and review — completed
 
 Collect the acceptance evidence on the branch before the merge.
 
-- [ ] Record a before-and-after table in this plan for
+- [x] Record a before-and-after table in this plan for
       `tests/design_screen_counts.test.ts`, `tests/design_variants.test.ts`,
       `tests/design_library_inventory.test.ts`, and
       `tests/brand_logo.test.tsx`, each run alone with
       `node --import tsx --test` on Node 22.14.0, with the baseline values from
       this plan.
-- [ ] Run the complete `npm run test:prepared` locally and compare the summed
+- [x] Run the complete `npm run test:prepared` locally and compare the summed
       per-file time of the 34 files with the 510 s CI baseline.
-- [ ] Run the complete `cargo xtask check` on Node 22.14.0 or 24.19 or later,
+- [x] Run the complete `cargo xtask check` on Node 22.14.0 or 24.19 or later,
       because the CLI refuses Node 24.14.x. Fix every failure.
-- [ ] Inspect the diff and deletions against `origin/main`; no test file may be
+- [x] Inspect the diff and deletions against `origin/main`; no test file may be
       removed.
-- [ ] After the checks pass, run `git add -A`, commit with a Conventional
+- [x] After the checks pass, run `git add -A`, commit with a Conventional
       Commits message, and push the branch with every new script, declaration,
       helper, test, and document.
 - [x] Confirm with a CI run on the branch: download the `verification-unit-*`
       artifacts, compare the summed per-file time and the slowest shard with
       run 37354719684, confirm the `fullFiles` count did not shrink, and record
       the result in this plan.
-- [ ] Only after the push, use
+- [x] Only after the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`. Report numbered findings with severity, context,
       the impact of doing nothing, lettered options, and a recommendation. Do
@@ -460,6 +464,63 @@ before-state compiles alone, because their neighbours on the same 2 vCPU
 runner now compile far less; the other jobs and file counts also changed
 with `f66c274`, so only the unit numbers above are attributed to this plan.
 
+Final local timings, each file run alone with `node --import tsx --test` on
+Node 22.14.0 on the final tree, with the VM idle. The "Compile" column moves
+the snapshot aside, so the helper compiles the example as every file did
+before this change; the plan baseline comes from the planning VM.
+
+| File                                     | Plan baseline | Compile | Snapshot |
+| ---------------------------------------- | ------------: | ------: | -------: |
+| `tests/design_screen_counts.test.ts`     |        17.0 s |  14.4 s |    1.0 s |
+| `tests/design_variants.test.ts`          |             — |  14.0 s |    1.1 s |
+| `tests/design_library_inventory.test.ts` |             — |  14.9 s |    1.3 s |
+| `tests/brand_logo.test.tsx`              |             — |  14.0 s |    1.1 s |
+| `tests/derived_config.test.ts` (control) |         0.6 s |  0.42 s |   0.44 s |
+
+The snapshot lookup took 0.5 s to 0.7 s per file.
+
+Local `npm run test:prepared`, run by the complete `cargo xtask check` on
+head `9d15e6d` with the strict runner: 768 files and 4,370 tests, all
+passed; summed per-file time 1,884 s and test-process wall time 1,101 s.
+The 34 consumer files summed 26.4 s (0.5 s to 2.6 s each), against 510 s for
+the same files in the CI baseline and 19 s in CI on this branch. The two new
+tests that compile took 14.3 s and 15.1 s. All 37 snapshot users logged phase
+`snapshot`, and none fell back.
+
+An earlier local run on head `790421e`, while the VM was slow and busy,
+passed 4,369 of 4,370 tests; the 34 consumer files summed 52.8 s. Its one
+failure, `tests/postcss_dependency_review.test.ts`, asserts that a
+20,000-file collection takes less than 2,500 ms. It took 2,823.7 ms on the
+loaded VM, 1,472.3 ms on the idle VM, and passed in CI and in the complete
+gate.
+
+Complete local gate. `cargo xtask check` passed on head `9d15e6d` on Node
+22.14.0 in 57 minutes (exit 0): the repository suite, the package suite, the
+unit suite (4,370 tests), the browser suite (844 tests), and the hydration
+suite (263 tests) all passed with no skipped tests. An earlier local browser
+run, while the VM was slow, timed out in the five-minute ordinary-preview
+fixture setup; it passed here and in CI.
+
+Review findings. The review used
+[the implementation review prompt](../docs/implementation-review-prompt.md)
+on head `9d15e6d` against `origin/main` `f66c274`, after the push. It made no
+changes. The open findings, for the user to decide:
+
+1. Medium: the codec copies `Compilation` fields by name, so a field that a
+   later change adds to `Compilation` would be dropped from the snapshot
+   without a failing test. Recommended: compare the field names in
+   `assertSameCompilation`, and make `encodeCompilation` throw on an unknown
+   field so `prepare:unit` fails closed.
+2. Low: a snapshot that is invalid or stale falls back silently, so a codec
+   disagreement or a key-input write during the gate could remove the saving
+   without a failure. Recommended: decode before writing in the producer, and
+   let the strict runner make the helper fail instead of compiling.
+3. Low: `docs/protocol/ci-suite-evidence.md` and
+   `docs/protocol/ci-verification.md` still say prepared output belongs to
+   one suite invocation, but a fresh snapshot can outlive a run; three
+   sentences also describe the snapshot loosely. Recommended: make the xtask
+   unit suite always write a new snapshot, and correct the wording.
+
 ## Post-merge follow-up (non-blocking)
 
 - Compare the first green `main` run after the merge with run 37354719684 and
@@ -475,6 +536,9 @@ with `f66c274`, so only the unit numbers above are attributed to this plan.
    plan recommends no: the producer runs immediately before the runner, the
    helper falls back safely, and a strict check would need the runner to hash
    inputs in the wrapper harness. Per-file timings expose a silent fallback.
+   Review finding 2 reopens this question: the strict runner could set an
+   environment flag that makes the helper fail instead of compiling, which
+   needs no input hashing in the runner.
 2. Should the committed-mode fixture call also use the snapshot? This plan
    recommends no. Only one call uses that mode, and `generatedOutput` changes
    compile inputs, so the saving is one compile and the risk is a hidden
