@@ -27,7 +27,10 @@ export type ExampleSnapshotProduction =
       readonly compilation: Compilation;
     };
 
-/** Encode a compilation and its freshness key as one JSON-safe object. */
+/**
+ * Encode a compilation and its freshness key as one JSON-safe object. Throws
+ * when the compilation has a field that the snapshot does not store.
+ */
 export function encodeCompilation(
   compilation: Compilation,
   key: string,

@@ -22,6 +22,11 @@ with exactly these fields:
 | `deliveredStyleSources` | The compilation's repository-relative delivered style inputs.                                                         |
 | `documentMarkdown`      | `[sourcePath, markdown]` pairs; omitted when the compilation has none.                                                |
 
+The last five rows are the compilation's own fields. Encoding rejects a
+compilation that has any other field. The producer then fails, so
+`npm run prepare:unit` stops instead of writing a snapshot that drops the
+field.
+
 Decoding requires the manifest object to serialize exactly to the snapshot's
 `mokly-manifest.json` output. The compile writes that output only after its
 strict schema-v8 validation, so decoding does not repeat the validation, which
@@ -71,7 +76,8 @@ unit suite use it; the package, browser and hydration suites keep
 test process. It returns the decoded snapshot when the snapshot is fresh. When
 the snapshot is missing, stale or invalid, it compiles the example in memory,
 so a test file run by hand always works. Tests never write the shared snapshot
-file; the round-trip test writes only a temporary copy.
+file; the round-trip test writes only a temporary copy. The round-trip and
+copied-example tests require both compilations to have the same field set.
 `designCatalogue` and the default-mode before state of `designLibraryFixture`
 use this helper. Fixtures that compile edited copies, other config profiles or
 historical commits keep compiling, because that preparation is part of what

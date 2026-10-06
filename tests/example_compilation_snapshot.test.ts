@@ -74,6 +74,37 @@ test("a compilation survives the snapshot round trip exactly", () => {
   }
 });
 
+test("encoding rejects a compilation field that the snapshot does not store", async (t) => {
+  const extended = { ...compilation(), assets: [] } as Compilation;
+  assert.throws(
+    () => encodeCompilation(extended, KEY),
+    /cannot store compilation field assets/u,
+  );
+  const root = await directory(t);
+  await assert.rejects(
+    produceExampleSnapshot({
+      file: path.join(root, "example-compilation.json"),
+      key: async () => KEY,
+      compile: async () => extended,
+    }),
+    /cannot store compilation field assets/u,
+  );
+  assert.deepEqual(await fs.readdir(root), []);
+});
+
+test("the equality assertion compares compilation field sets", () => {
+  const expected = compilation();
+  const extended = { ...expected, assets: [] } as Compilation;
+  for (const [actual, wanted] of [
+    [extended, expected],
+    [expected, extended],
+  ] as const)
+    assert.throws(
+      () => assertSameCompilation(actual, wanted),
+      /compilation fields differ/u,
+    );
+});
+
 test("decoding rejects malformed snapshots", () => {
   const valid = () =>
     JSON.parse(JSON.stringify(encodeCompilation(compilation(), KEY)));

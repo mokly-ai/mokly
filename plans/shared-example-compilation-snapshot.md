@@ -1,9 +1,10 @@
 # Shared Example Compilation Snapshot
 
-Status: Active. All seven milestones are complete on draft PR
-[#138](https://github.com/mokly-ai/mokly/pull/138); the plan closes when that
-PR merges. Three review findings stay open for the user to decide; Milestone
-7 lists them.
+Status: Active. Milestones 1 to 7 are complete on draft PR
+[#138](https://github.com/mokly-ai/mokly/pull/138); Milestone 8 fixes review
+finding 1 with the option that the user chose. The plan closes when the PR
+merges. Review findings 2 and 3 stay open for the user to decide; Milestone 7
+lists them.
 
 ## Status And Outcome
 
@@ -381,10 +382,9 @@ the fix, and the other findings wait for the user.
       once, then stop and report. The re-review confirmed findings 4 and 5
       and reported finding 6, `Auto-fix: yes`: the example README now says
       that `npm test` keeps a fresh snapshot. The fix round then stopped.
-  - Open finding 1 (Medium, test): the codec names `Compilation` fields by
-    hand, so a new field can drop out of the snapshot while every test passes;
-    recommended: compare field sets in `assertSameCompilation` and make
-    `encodeCompilation` reject unknown fields.
+  - Finding 1 (Medium, test): the codec names `Compilation` fields by hand,
+    so a new field can drop out of the snapshot while every test passes. The
+    user chose option B; Milestone 8 fixes it.
   - Open finding 2 (Low, performance): a broken or stale snapshot falls back
     to a compile silently; recommended: decode before writing in the producer,
     and make the strict runner fail instead of compiling.
@@ -392,6 +392,30 @@ the fix, and the other findings wait for the user.
     output belongs to one run, but a fresh snapshot can outlive a run;
     recommended: make the xtask unit suite always write a new snapshot, and
     correct the docs.
+
+## Milestone 8: Fix review finding 1 with option B — in progress
+
+User decision: fix review finding 1 with option B. The test helper compares the
+field sets of two compilations, and the snapshot encoder rejects a compilation
+field that the snapshot format does not store, so `npm run prepare:unit` fails
+instead of writing a snapshot that drops the field.
+
+- [x] Update the snapshot contract in `docs/protocol/ci-example-snapshot.md`:
+      encoding rejects a compilation field that the field table does not list.
+- [x] Add failure-first tests in `tests/example_compilation_snapshot.test.ts`:
+      the encoder rejects an unknown compilation field; the producer then
+      fails and writes no snapshot; `assertSameCompilation` rejects two
+      compilations whose field sets differ, in both directions.
+- [x] Make `encodeCompilation` reject unknown compilation fields, compare the
+      field sets in `tests/helpers/compilation_equality.ts`, and update the
+      `.d.mts` declaration.
+- [x] Run the snapshot, loader, round-trip, and fixture equivalence tests.
+- [ ] Run `cargo xtask check`, commit with finding 1 named in the message, and
+      push.
+- [ ] Only after the push, review the change with
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against `origin/main`, then apply the review-fix rule: fix the
+      `Auto-fix: yes` findings, re-review once, and report the rest.
 
 ## Post-merge follow-up (non-blocking)
 

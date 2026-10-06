@@ -3,11 +3,16 @@ import assert from "node:assert/strict";
 import type { Compilation } from "../../dist/build/compile.js";
 import { generatedBytes } from "../../dist/build/generated_file.js";
 
-/** Require the same manifest, output order and bytes, and recorded inputs. */
+/** Require the same fields, manifest, output order and bytes, and inputs. */
 export function assertSameCompilation(
   actual: Compilation,
   expected: Compilation,
 ): void {
+  assert.deepStrictEqual(
+    Object.keys(actual).sort(),
+    Object.keys(expected).sort(),
+    "compilation fields differ",
+  );
   assert.deepStrictEqual(actual.diagnostics, expected.diagnostics);
   assert.deepStrictEqual(actual.manifest, expected.manifest);
   assert.deepStrictEqual(

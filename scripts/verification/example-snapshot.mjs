@@ -21,18 +21,27 @@ import {
   exampleSnapshotKey,
 } from "./example-snapshot-key.mjs";
 
-const FIELDS = new Set([
-  "schemaVersion",
-  "key",
+/** Compilation fields that the snapshot stores; any other field is rejected. */
+const COMPILATION_FIELDS = new Set([
   "diagnostics",
   "manifest",
   "outputs",
   "deliveredStyleSources",
   "documentMarkdown",
 ]);
+const FIELDS = new Set(["schemaVersion", "key", ...COMPILATION_FIELDS]);
 
-/** Encode a compilation and its freshness key as one JSON-safe object. */
+/**
+ * Encode a compilation and its freshness key as one JSON-safe object. A
+ * compilation field that the snapshot does not store fails the encode, so a
+ * new field can never drop out of the snapshot silently.
+ */
 export function encodeCompilation(compilation, key) {
+  for (const field of Object.keys(compilation))
+    if (!COMPILATION_FIELDS.has(field))
+      throw new Error(
+        `example compilation snapshot cannot store compilation field ${field}; add it to scripts/verification/example-snapshot.mjs and docs/protocol/ci-example-snapshot.md`,
+      );
   return {
     schemaVersion: EXAMPLE_SNAPSHOT_SCHEMA_VERSION,
     key,
