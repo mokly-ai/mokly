@@ -346,8 +346,9 @@ MOKLY_PLAYWRIGHT_WORKERS=3 npm run test:browser
 ```
 
 Required tests follow [CI test timing](./docs/protocol/ci-test-timing.md).
+Use [`waitUntil`](./tests/helpers/wait_until.ts) for polling.
 Use the [shared evidence helpers](./docs/protocol/ci-test-timing-helpers.md)
-for polling, operation counts, and duration text.
+for operation counts and duration text.
 
 Pull request titles use Conventional Commits and at most 72 Unicode code points.
 The separate title check runs when a PR opens, changes, or receives a push; see

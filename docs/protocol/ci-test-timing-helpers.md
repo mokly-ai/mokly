@@ -9,17 +9,26 @@ Continuation of [CI Test Timing](./ci-test-timing.md).
 Use `waitUntil(probe, options)` from `tests/helpers/wait_until.ts`.
 The probe can be synchronous or asynchronous. It can return a value or a
 boolean. The helper resolves with the first result that is not `undefined`,
-`null`, or `false`. It rethrows probe errors.
+`null`, or `false`. This includes `0` and an empty string. The return type
+excludes `undefined`, `null`, and `false`. It rethrows probe errors unchanged
+and does not retry them.
 
 The options are:
 
-- `timeoutMs`: defaults to 15,000 ms. A value below 10,000 ms throws.
+- `timeoutMs`: defaults to 15,000 ms. A value below 10,000 ms rejects with
+  `RangeError` before the first probe.
 - `intervalMs`: defaults to 10 ms between probes.
 - `message`: supplies the timeout error message.
 
-The helper reads `Date.now()` and pauses with `setTimeout` from
-`node:timers/promises`. Its own tests use `t.mock.timers` to drive both APIs
-without waiting in real time.
+The helper probes once before the first pause. It probes again after each
+pause. A result at or after the deadline still succeeds. If that probe has no
+result, the helper rejects with `Error`. The error uses `message` when supplied.
+Its default text names `timeoutMs`.
+
+The helper sets the deadline with `Date.now() + timeoutMs`. It compares the
+current time with `<`. It pauses with the global `setTimeout` wrapped in a
+promise. Its own tests use `t.mock.timers` to drive both APIs without waiting
+in real time.
 
 ### Operation Counting Helper
 

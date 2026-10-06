@@ -44,10 +44,11 @@ Planning evidence:
 - Add `waitUntil(probe, options)` in `tests/helpers/wait_until.ts`. The probe
   can be sync or async. The helper resolves with the first probe result that
   is not `undefined`, `null` or `false`. It rethrows probe errors.
-- Options: `timeoutMs` (default 15,000; a value below 10,000 throws),
-  `intervalMs` (default 10), and `message` for the timeout error.
-- The helper reads `Date.now()` and pauses with `setTimeout` from
-  `node:timers/promises`. Its own tests can then use `t.mock.timers` and do
+- Options: `timeoutMs` (default 15,000; a value below 10,000 rejects with
+  `RangeError` before the first probe), `intervalMs` (default 10), and
+  `message` for the timeout error.
+- The helper reads `Date.now()` and pauses with the global `setTimeout`
+  wrapped in a promise. Its own tests can then use `t.mock.timers` and do
   not wait in real time.
 - Replace every hand-written polling loop under the test roots that waits for
   an expected state. This includes counted loops (`N` pauses of `M` ms),
@@ -130,23 +131,28 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-1.md`.
 - [x] Validate the changed Markdown with `npx prettier --check`. Run the
       protocol tests and `tests/markdown_links.test.ts`. Review the diff.
 
-## Milestone 2: Shared helpers
+## Milestone 2: Shared helpers — completed
 
 Add the polling helper and the combined `realpath` selection with their own
 tests. No existing call site changes.
 
 Evidence: `.context/deterministic-test-timing-review-fixes/milestone-2.md`.
 
-- [ ] Write failing tests for `waitUntil`: value results, boolean probes,
+- [x] Check that Node mock timers drive the planned timer import. Use a
+      mockable timer form if needed. Keep the decision and contract aligned.
+- [x] Write failing tests for `waitUntil`: value results, boolean probes,
       async probes, probe errors, the timeout error and its message, the
       15,000 ms default, the 10,000 ms minimum, and the interval. Drive time
       with mock timers. No test waits in real time.
-- [ ] Implement `tests/helpers/wait_until.ts` until those tests pass.
-- [ ] Write failing tests for the combined `realpath` selection: equal sums
+- [x] Implement `tests/helpers/wait_until.ts` until those tests pass.
+- [x] Write failing tests for the combined `realpath` selection: equal sums
       pass, growth in either function fails, a zero sum at the smaller size
       fails, and the message names `realpath`, the path and both counts.
-- [ ] Implement the selection in `tests/helpers/operation_counts.ts`.
-- [ ] Run the helper tests five times. Run `npm run lint` and
+- [x] Implement the selection in `tests/helpers/operation_counts.ts`.
+- [x] Add `tests/helpers/wait_until.ts` to the README testing paragraph.
+- [x] Validate the changed Markdown with `npx prettier --check`. Run the
+      protocol tests and `tests/markdown_links.test.ts`. Review the diff.
+- [x] Run the helper tests five times. Run `npm run lint` and
       `npm run typecheck`.
 
 ## Milestone 3: Fixed root resolution (finding 4)
