@@ -131,11 +131,14 @@ an acceptance waiver. Queue time and the up-to-22 downstream verification jobs
 must be reported separately from execution. Compare shard balance and the
 measured setup/teardown phases of the slow export fixtures before changing
 partitioning. Coverage, assertion deadlines, worker limits, audits and zero
-retry behavior are never relaxed to meet the timing target.
+retry behavior are never relaxed to meet the timing target. The
+[entry-shape contract](./ci-verification-hydration.md) defines development
+hydration route coverage. For that suite, this rule protects the measured shell
+code coverage that a shape-key change must keep.
 
 Candidate `992c6a1` passed an empty-start cache attempt and two restored-cache
 attempts with complete dynamic inventories on both runtimes. The
-[measurement record](../reviews/ci-performance.md) retains all three observed
+[measurement record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md) retains all three observed
 results, including two queue-constrained misses and a 9m06s `Required CI`
 success with all 20 downstream runner slots available. Native whole-file
 sharding remains appropriate for the measured workload; the browser balance

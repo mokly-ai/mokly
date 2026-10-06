@@ -12,7 +12,7 @@ Reduce the time to `Required CI` success while exercising the complete existing
 verification contract. Start with independent jobs and four shards per large
 suite, then reduce repeated preparation and enable npm download caching.
 The 6–10 minute target is met at 9m06s with sufficient runner capacity; the
-[measurement record](../docs/reviews/ci-performance.md) retains the complete
+[measurement record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md) retains the complete
 timing, coverage, queue, cache, and runner-use evidence.
 
 This change covers repository verification, CI configuration, test fixtures,
@@ -231,7 +231,7 @@ serving the expected catalogue over the reported endpoint before clean shutdown.
 Hosted attempts execute the corrected publication, wrapper-isolation,
 preview-port, child-startup, cold-preview, and shared-preview coverage on both
 runtimes with complete passing evidence. The
-[measurement record](../docs/reviews/ci-performance.md) retains their fixture
+[measurement record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md) retains their fixture
 phase ranges.
 
 ## Milestone 5: Validate, measure, commit, push and review — completed
@@ -271,7 +271,7 @@ implementation PR merges; arrange the index transition as part of that merge.
       or automatically fix review findings.
 
 The final local gate and three successful hosted attempts are recorded in the
-[CI performance measurement](../docs/reviews/ci-performance.md). The
+[CI performance measurement](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md). The
 available-capacity attempt meets the target while retaining every verification
 boundary. Native whole-file sharding remains appropriate; browser shards 2 and
 3 are the measured follow-up point if future suite growth moves the critical
