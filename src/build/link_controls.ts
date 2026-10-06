@@ -1,6 +1,7 @@
 /** Adapt explicitly marked React controls before catalogue-link resolution. */
 
 import { parseAuthoredLink } from "./authored_links.js";
+import type { BuildDiagnostic } from "./build_warnings.js";
 import {
   assertNoChildLinkMarkers,
   parseControlMetadata,
@@ -10,7 +11,6 @@ import {
   controlError,
   isElement,
   isInactive,
-  isInteractive,
   validateControl,
   type ControlElement,
   type ControlNode,
@@ -21,6 +21,11 @@ import {
   controlPatches,
   type ControlPatch,
 } from "./link_control_patches.js";
+import {
+  classifyLinkControlAncestor,
+  describeLinkControlElement,
+  type LinkControlWarning,
+} from "./link_control_tiers.js";
 
 interface Boundary {
   ancestors: ControlElement[];
@@ -28,13 +33,23 @@ interface Boundary {
   target: string;
 }
 
+/** Adapted document bytes and any non-fatal placement diagnostics. */
+export interface AdaptedLinkControls {
+  readonly diagnostics: readonly BuildDiagnostic[];
+  readonly html: string;
+}
+
 /** Transform only marked controls, leaving documents without markers untouched. */
-export function adaptLinkControls(html: string, route: string): string {
+export function adaptLinkControls(
+  html: string,
+  route: string,
+): AdaptedLinkControls {
   const metadata = parseControlMetadata(html, route);
   if (metadata?.owners.length)
     throw controlError(route, "contains reserved adaptation metadata");
-  if (!metadata?.markers.length) return html;
+  if (!metadata?.markers.length) return { diagnostics: [], html };
   const { document, duplicateOffsets } = metadata;
+  const diagnostics: BuildDiagnostic[] = [];
   const patches: ControlPatch[] = [];
   let open: Boundary | undefined;
   let styled = false;
@@ -122,9 +137,24 @@ export function adaptLinkControls(html: string, route: string): string {
         ) {
           throw controlError(route, "contains duplicate attributes");
         }
-        if (open.ancestors.some(isInteractive))
-          throw controlError(route, "has an interactive ancestor");
-        validateControl(control, open.target, route);
+        const ancestorWarning = validateAncestors(open.ancestors, route);
+        const descendantWarning = validateControl(control, open.target, route);
+        if (ancestorWarning)
+          diagnostics.push({
+            code: "link-control-ancestor",
+            route,
+            message: `MockLink child control is inside ${describeLinkControlElement(ancestorWarning)}; one click or key press has two targets`,
+          });
+        if (descendantWarning)
+          diagnostics.push({
+            code: "link-control-descendant",
+            route,
+            message:
+              descendantWarning.feature.kind === "attribute" &&
+              descendantWarning.feature.name === "role"
+                ? `MockLink child control contains ${describeLinkControlElement(descendantWarning)}; the role does not belong inside a link`
+                : `MockLink child control contains ${describeLinkControlElement(descendantWarning)}; the link has an extra focus stop`,
+          });
         const inactive =
           isInactive(control, true) ||
           open.ancestors.some((ancestor) => isInactive(ancestor));
@@ -157,5 +187,22 @@ export function adaptLinkControls(html: string, route: string): string {
     });
   const result = applyControlPatches(html, patches);
   assertNoChildLinkMarkers(result, route);
-  return result;
+  return { diagnostics, html: result };
+}
+
+function validateAncestors(
+  ancestors: readonly ControlElement[],
+  route: string,
+): LinkControlWarning | undefined {
+  let warning: LinkControlWarning | undefined;
+  for (let index = ancestors.length - 1; index >= 0; index--) {
+    const placement = classifyLinkControlAncestor(ancestors[index]!);
+    if (placement?.tier === "error")
+      throw controlError(
+        route,
+        `is inside ${describeLinkControlElement(placement)}; move the control outside it`,
+      );
+    warning ??= placement;
+  }
+  return warning;
 }

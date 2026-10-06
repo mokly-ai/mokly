@@ -35,8 +35,12 @@ for (const source of [validEntrySource(), componentEntrySource()]) {
     const complete = await compileCatalogue(config);
     for (const [route, expected] of complete.outputs) {
       if (route === MANIFEST_NAME) continue;
-      assert.equal(compiler.render(route).html, expected, route);
-      assert.equal(compiler.render(route).html, expected, `cached ${route}`);
+      const rendered = compiler.render(route);
+      assert.equal(rendered.html, expected, route);
+      assert.deepEqual(rendered.diagnostics, [], route);
+      const cached = compiler.render(route);
+      assert.equal(cached.html, expected, `cached ${route}`);
+      assert.deepEqual(cached.diagnostics, [], `cached ${route}`);
     }
   });
 }

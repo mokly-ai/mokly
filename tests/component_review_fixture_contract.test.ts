@@ -10,6 +10,7 @@ test("component Git fixtures reject missing text and binary documents", async ()
     ["asset.bin", new Uint8Array([0, 255])],
   ]);
   const compilation: Compilation = {
+    diagnostics: [],
     manifest: {
       schemaVersion: 8,
       generatedBy: "mokly",

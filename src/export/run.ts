@@ -47,17 +47,31 @@ import { stageExport } from "./stage.js";
 import { ExportTransaction } from "./transaction.js";
 import type { ExportOptions, ExportResult, ExportRoutes } from "./types.js";
 
+/** Injectable exhaustive compilation boundary. */
+export interface ExportDependencies {
+  readonly compile: typeof compileCatalogue;
+}
+
 /** Build and transactionally export a consumer's complete static catalogue. */
 export async function exportCatalogue(
   config: ResolvedConfig,
   options: ExportOptions,
+  provided: Partial<ExportDependencies> = {},
 ): Promise<ExportResult> {
   const outputRoot = options.adapter?.outputRoot;
   const output = resolveExportOutput(config, options.outDir, outputRoot);
   assertExportActive(options.signal);
   const transaction = await ExportTransaction.open(output);
   return withExportCleanup(
-    () => generateExport(config, options, output, transaction, outputRoot),
+    () =>
+      generateExport(
+        config,
+        options,
+        output,
+        transaction,
+        provided.compile ?? compileCatalogue,
+        outputRoot,
+      ),
     () => transaction.close(),
   );
 }
@@ -67,6 +81,7 @@ async function generateExport(
   options: ExportOptions,
   output: string,
   transaction: ExportTransaction,
+  compile: typeof compileCatalogue,
   outputRoot?: string,
 ): Promise<ExportResult> {
   try {
@@ -97,8 +112,10 @@ async function generateExport(
       });
     const compilation = await withPreInstallationCancellation(
       options.signal,
-      () => compileCatalogue(config, undefined, options.signal),
+      () => compile(config, undefined, options.signal),
     );
+    assertExportActive(options.signal);
+    options.onBuildDiagnostics?.(compilation.diagnostics);
     config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
     assertExportActive(options.signal);
     const publicFiles = await withOutputLock(

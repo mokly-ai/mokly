@@ -15,6 +15,14 @@ import { chooseScheme, expectFrameSource } from "./workspace_actions.js";
 test("scheme selection survives progressive navigation", async ({ page }) => {
   await page.goto("/view/example/screens/welcome/");
   await chooseScheme(page, "dark");
+  await expectFrameSource(
+    page.locator(mobileFrame),
+    /example\/screens\/welcome\/index\.mobile\.dark\.html$/,
+  );
+  await expectFrameSource(
+    page.locator(desktopFrame),
+    /example\/screens\/welcome\/index\.desktop\.dark\.html$/,
+  );
   await page.click(detailsRow);
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   await expectFrameSource(
