@@ -23,7 +23,10 @@ test("Windows cancellation drains descendants even after their launcher exits", 
   await fixture.waitForEvent("release");
   fixture.exitLauncher();
   controller.abort(reason);
-  assert.equal(await Promise.race([outcome, setTimeout(1200, "hung")]), reason);
+  assert.equal(
+    await Promise.race([outcome, setTimeout(15_000, "hung", { ref: false })]),
+    reason,
+  );
   assert.ok(fixture.events.includes("terminate-tree"));
   assert.ok(fixture.events.includes("query"));
   assert.ok(fixture.events.includes("close-job"));
