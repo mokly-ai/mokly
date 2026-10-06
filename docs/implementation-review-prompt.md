@@ -81,5 +81,7 @@ from [`AGENTS.md`](../AGENTS.md):
    round without the user.
 4. Report the fixed findings (number, severity, plain explanation, what
    changed, commit) separately from the open findings and their
-   recommendations. When the plan has a review record under `docs/reviews/`,
-   mark each fixed finding there as resolved in its commit.
+   recommendations. Name each fixed finding in its commit message, and add
+   each open finding as one line under the plan's review TODO. Keep the review
+   report and any evidence under the git-ignored `.context/` directory, not in
+   the repository.

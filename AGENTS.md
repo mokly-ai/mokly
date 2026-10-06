@@ -37,9 +37,12 @@
   not start a third fix round without the user
 - In the final message, list the auto-fixed findings (number, severity, plain
   explanation, what changed, commit) separately from the findings that need a
-  decision, each with a clear recommendation. When the plan has a review
-  record under `docs/reviews/`, mark each fixed finding there as resolved in
-  its commit
+  decision, each with a clear recommendation. Name the fixed finding in its
+  commit message. Add each open finding as one line under the plan's review
+  TODO so that it is not lost when the session ends
+- Keep review reports, verification evidence, measurements, and other scratch
+  output under the git-ignored `.context/` directory. Do not create review
+  records or evidence files in the repository
 - When providing review comments or review output, number each review item, give
   each item a severity, and explain it in simple language that assumes the
   reader has no prior codebase or feature context. State the impact of not
