@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { normalizeBuildDiagnostics } from "../../dist/build/build_warnings.js";
 import { compileCatalogue } from "../../dist/build/compile.js";
 import {
   receiveGeneratedFile,
@@ -23,6 +24,7 @@ import {
 const FIELDS = new Set([
   "schemaVersion",
   "key",
+  "diagnostics",
   "manifest",
   "outputs",
   "deliveredStyleSources",
@@ -34,6 +36,7 @@ export function encodeCompilation(compilation, key) {
   return {
     schemaVersion: EXAMPLE_SNAPSHOT_SCHEMA_VERSION,
     key,
+    diagnostics: [...compilation.diagnostics],
     manifest: compilation.manifest,
     outputs: [...compilation.outputs].map(([route, content]) => [
       route,
@@ -76,6 +79,7 @@ export function decodeCompilation(value) {
   )
     invalid(`the manifest must serialize to the ${MANIFEST_NAME} output`);
   const compilation = {
+    diagnostics: buildDiagnostics(value.diagnostics),
     manifest,
     outputs,
     deliveredStyleSources: strings(
@@ -169,6 +173,20 @@ function plainBytes(content) {
   return typeof content === "string"
     ? content
     : new Uint8Array(content.buffer, content.byteOffset, content.byteLength);
+}
+
+function buildDiagnostics(value) {
+  if (
+    !Array.isArray(value) ||
+    value.some(
+      (diagnostic) =>
+        !diagnostic ||
+        typeof diagnostic !== "object" ||
+        Object.keys(diagnostic).sort().join() !== "code,message,route",
+    )
+  )
+    invalid("diagnostics must hold code, route, and message records");
+  return normalizeBuildDiagnostics(value);
 }
 
 function strings(value, field) {

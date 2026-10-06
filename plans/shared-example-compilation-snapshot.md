@@ -364,6 +364,20 @@ Wire the producer into the unit suite and the developer test command.
 - [ ] Remove the pending marks added by Milestone 1 and align every document
       with the delivered behavior.
 
+Integration notes:
+
+- `origin/main` gained `f66c274` (build warnings) during this work. The merge
+  commit `982580b` has exactly two parents. Its only conflict was
+  `README.md`, where both sides added a paragraph after the same line; the
+  resolution keeps main's pull-request title paragraph and then this branch's
+  unit snapshot paragraph. No other path needed a decision, and nothing on
+  main was deleted.
+- `f66c274` added the required `Compilation.diagnostics` field. The snapshot
+  now stores it, decoding validates it with `normalizeBuildDiagnostics` and
+  rejects records with other fields, `assertSameCompilation` compares it, and
+  the protocol field table lists it. The real example compiles with zero
+  diagnostics; the synthetic codec tests cover a non-empty list.
+
 ## Milestone 6: Measure, verify, commit, push, and review — not started
 
 Collect the acceptance evidence on the branch before the merge.

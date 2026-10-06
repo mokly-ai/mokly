@@ -71,6 +71,7 @@ with exactly these fields:
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `schemaVersion`         | `1`.                                                                                                                  |
 | `key`                   | The freshness key, as 64 lowercase hexadecimal characters.                                                            |
+| `diagnostics`           | The compilation's normalized build diagnostics as `{ code, route, message }` records.                                 |
 | `manifest`              | The compilation's schema-v8 manifest object.                                                                          |
 | `outputs`               | `[route, file]` pairs in compilation order. Text stays a string; binary output is `{ "kind": "bytes", "base64": … }`. |
 | `deliveredStyleSources` | The compilation's repository-relative delivered style inputs.                                                         |
@@ -79,9 +80,9 @@ with exactly these fields:
 Decoding requires the manifest object to serialize exactly to the snapshot's
 `mokly-manifest.json` output. The compile writes that output only after its
 strict schema-v8 validation, so decoding does not repeat the validation, which
-costs seconds per test process. Decoding rejects another schema version, a
-malformed key, unknown fields, duplicate routes or document paths, and invalid
-binary transfer values. A decoded compilation equals the encoded one, with
+costs seconds per test process. Diagnostics pass the build-warning validator.
+Decoding rejects another schema version, a malformed key, unknown fields,
+duplicate routes or document paths, and invalid binary transfer values. A decoded compilation equals the encoded one, with
 binary outputs as plain `Uint8Array` values like a fresh compile. It has no
 retained component runtime, so a test that needs `componentRuntime` compiles
 instead.

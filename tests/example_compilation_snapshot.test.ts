@@ -30,6 +30,13 @@ function compilation(documentMarkdown = true): Compilation {
     sourceFiles: [],
   } as unknown as ManifestV8;
   return {
+    diagnostics: [
+      {
+        code: "link-control-ancestor",
+        message: "A link control sits inside another interactive element.",
+        route: "home/index.html",
+      },
+    ],
     manifest,
     outputs: new Map<string, string | Uint8Array>([
       [MANIFEST_NAME, serializeManifest(manifest)],
@@ -97,6 +104,30 @@ test("decoding rejects malformed snapshots", () => {
       "a non-string delivered style source",
       (s) => (s.deliveredStyleSources = [1]),
       /deliveredStyleSources/u,
+    ],
+    [
+      "diagnostics that are not an array",
+      (s) => (s.diagnostics = {}),
+      /diagnostics/u,
+    ],
+    [
+      "an unsupported diagnostic",
+      (s) =>
+        (s.diagnostics = [{ code: "other", route: "a.html", message: "m" }]),
+      /diagnostic/u,
+    ],
+    [
+      "a diagnostic with an extra field",
+      (s) =>
+        (s.diagnostics = [
+          {
+            code: "link-control-ancestor",
+            route: "a.html",
+            message: "m",
+            extra: true,
+          },
+        ]),
+      /diagnostics/u,
     ],
     [
       "a non-string document",

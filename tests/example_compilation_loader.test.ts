@@ -15,6 +15,7 @@ import type { FixturePhaseTiming } from "./helpers/fixture_timing.js";
 
 function compilation(name: string): Compilation {
   return {
+    diagnostics: [],
     manifest: { name } as unknown as ManifestV8,
     outputs: new Map(),
     deliveredStyleSources: [],

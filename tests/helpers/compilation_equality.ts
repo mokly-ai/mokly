@@ -8,6 +8,7 @@ export function assertSameCompilation(
   actual: Compilation,
   expected: Compilation,
 ): void {
+  assert.deepStrictEqual(actual.diagnostics, expected.diagnostics);
   assert.deepStrictEqual(actual.manifest, expected.manifest);
   assert.deepStrictEqual(
     [...actual.outputs.keys()],

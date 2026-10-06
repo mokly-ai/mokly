@@ -5,6 +5,7 @@ import type { TransferredGeneratedFile } from "../../dist/build/generated_file.j
 export interface ExampleSnapshot {
   readonly schemaVersion: 1;
   readonly key: string;
+  readonly diagnostics: Compilation["diagnostics"];
   readonly manifest: Compilation["manifest"];
   readonly outputs: readonly (readonly [string, TransferredGeneratedFile])[];
   readonly deliveredStyleSources: readonly string[];
