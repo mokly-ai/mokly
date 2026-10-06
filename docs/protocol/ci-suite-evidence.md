@@ -62,11 +62,6 @@ and concurrency flags from changing child startup behavior.
 
 ## Example Compilation Snapshot
 
-Status: pending. The
-[shared example compilation plan](../../plans/shared-example-compilation-snapshot.md)
-delivers this contract; until its unit preparation lands, every consumer
-compiles the example itself.
-
 Unit test files that read the compiled `examples/basic` catalogue share one
 in-memory compilation per unit preparation. The snapshot is the Git-ignored
 file `.context/verification/example-compilation.json`. It is one JSON object
@@ -121,7 +116,8 @@ unit suite use it; the package, browser and hydration suites keep
 `tests/helpers/example_compilation.ts` loads the compilation at most once per
 test process. It returns the decoded snapshot when the snapshot is fresh. When
 the snapshot is missing, stale or invalid, it compiles the example in memory,
-so a test file run by hand always works. Tests never write the snapshot.
+so a test file run by hand always works. Tests never write the shared snapshot
+file; the round-trip test writes only a temporary copy.
 `designCatalogue` and the default-mode before state of `designLibraryFixture`
 use this helper. Fixtures that compile edited copies, other config profiles or
 historical commits keep compiling, because that preparation is part of what

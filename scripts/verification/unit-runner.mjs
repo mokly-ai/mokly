@@ -37,7 +37,7 @@ export async function runUnitVerification(policy, argv) {
   const assignedFiles = nodeShardFiles(fullFiles, shard);
   if (assignedFiles.length === 0)
     throw new Error("unit shard assignment was empty");
-  await requirePrepared(repositoryRoot);
+  await requirePrepared(repositoryRoot, "unit");
   const started = performance.now();
   const args = [
     "--import",

@@ -6,6 +6,8 @@ import test from "node:test";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
+import { EXAMPLE_SNAPSHOT_PATH } from "../scripts/verification/example-snapshot-key.mjs";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
@@ -72,6 +74,14 @@ fs.writeFileSync = function (file, ...args) {
     assert.equal(failed.outcome.status, "failed");
 
     const unitReport = path.join(root, "unit-report.json");
+    await assert.rejects(
+      runWrapper(root, "run-unit.mjs", unitReport),
+      /missing: \.context\/verification\/example-compilation\.json; run npm run prepare:unit first/u,
+    );
+    await assert.rejects(fs.stat(unitReport), { code: "ENOENT" });
+    const snapshot = path.join(root, EXAMPLE_SNAPSHOT_PATH);
+    await fs.mkdir(path.dirname(snapshot), { recursive: true });
+    await fs.writeFile(snapshot, "{}\n");
     await assert.rejects(runWrapper(root, "run-unit.mjs", unitReport));
     const unit = await readJson(unitReport);
     assert.equal(unit.outcome.status, "failed");

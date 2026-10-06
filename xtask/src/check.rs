@@ -196,9 +196,13 @@ fn commands_for(suite: VerificationSuite, shard: Option<Shard>) -> Vec<CommandSp
     match suite {
         VerificationSuite::Repository => repository_commands(),
         VerificationSuite::Package => package_commands(),
-        VerificationSuite::Unit => prepared_suite("test:prepared", shard),
-        VerificationSuite::Browser => prepared_suite("test:browser:prepared", shard),
-        VerificationSuite::Hydration => prepared_suite("test:hydration:prepared", shard),
+        VerificationSuite::Unit => prepared_suite("prepare:unit", "test:prepared", shard),
+        VerificationSuite::Browser => {
+            prepared_suite("prepare:verification", "test:browser:prepared", shard)
+        }
+        VerificationSuite::Hydration => {
+            prepared_suite("prepare:verification", "test:hydration:prepared", shard)
+        }
     }
 }
 
@@ -245,12 +249,14 @@ fn package_commands() -> Vec<CommandSpec> {
     ]
 }
 
-fn prepared_suite(script: &str, shard: Option<Shard>) -> Vec<CommandSpec> {
+/// Prepare once with `preparation`, then run the prepared `script`. Only the
+/// unit suite's preparation adds the example compilation snapshot.
+fn prepared_suite(preparation: &str, script: &str, shard: Option<Shard>) -> Vec<CommandSpec> {
     let mut command = npm(&["run", script]);
     if let Some(shard) = shard {
         command = command.args(["--", "--shard", &shard.to_string()]);
     }
-    vec![npm(&["run", "prepare:verification"]), command]
+    vec![npm(&["run", preparation]), command]
 }
 
 fn invalid_shard(shard: &str) -> Error {

@@ -301,7 +301,7 @@ Interim timings, each file run alone with `node --import tsx --test` on Node
 | `tests/design_library_inventory.test.ts` |           45.2 s |         4.3 s |
 | `tests/brand_logo.test.tsx`              |           43.8 s |         3.2 s |
 
-## Milestone 4: Use the snapshot for the design library fixture — not started
+## Milestone 4: Use the snapshot for the design library fixture — in progress
 
 Give the attribution fixture its before state from the snapshot in the default
 mode. Keep the diff in `design_library_fixture.ts` to a few lines so the
@@ -338,21 +338,21 @@ Delivered notes:
   default-mode calls in the two files therefore save about 240 s here and
   about 80 s in CI. The committed-mode call keeps its compile.
 
-## Milestone 5: Produce the snapshot during unit preparation — not started
+## Milestone 5: Produce the snapshot during unit preparation — in progress
 
 Wire the producer into the unit suite and the developer test command.
 
-- [ ] Add failure-first tests: `tests/verification_prepared.test.ts` for the
+- [x] Add failure-first tests: `tests/verification_prepared.test.ts` for the
       `unit` kind of `requirePrepared` and its message; update the exact
       `npm test` script assertion in `tests/verification_entrypoints.test.ts`;
       add the empty snapshot placeholder to the harness in
       `tests/verification_wrapper.test.ts`; update the unimock expectations in
       `xtask/src/_tests_/check_tests.rs` so the unit suite runs
       `npm run prepare:unit` and then `npm run test:prepared`.
-- [ ] Add the `prepare:unit` npm script and switch `test` to it. Leave
+- [x] Add the `prepare:unit` npm script and switch `test` to it. Leave
       `prepare:verification`, `test:browser`, and the package scripts alone.
-- [ ] Make both unit runners call `requirePrepared(repositoryRoot, "unit")`.
-- [ ] Change the unit suite in `xtask/src/check.rs` to prepare with
+- [x] Make both unit runners call `requirePrepared(repositoryRoot, "unit")`.
+- [x] Change the unit suite in `xtask/src/check.rs` to prepare with
       `prepare:unit`; run `cargo fmt --all -- --check`, Clippy, and the xtask
       tests.
 - [ ] Smoke on Node 22.14.0: `npm test` from a clean `.context` produces the

@@ -1,17 +1,33 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { EXAMPLE_SNAPSHOT_PATH } from "./example-snapshot-key.mjs";
+
 const outputs = {
   package: ["dist/cli/bin.js", "packages/viewer/dist/browser/inspector.js"],
   example: ["examples/basic/generated/mokly-manifest.json"],
+  snapshot: [EXAMPLE_SNAPSHOT_PATH],
 };
 
+const kinds = {
+  all: {
+    names: [...outputs.package, ...outputs.example],
+    preparation: "verification",
+  },
+  package: { names: outputs.package, preparation: "verification" },
+  example: { names: outputs.example, preparation: "verification" },
+  unit: {
+    names: [...outputs.package, ...outputs.example, ...outputs.snapshot],
+    preparation: "unit",
+  },
+};
+
+/** Fail before a prepared runner starts when its preparation output is missing. */
 export async function requirePrepared(repositoryRoot, kind = "all") {
-  const names =
-    kind === "all" ? [...outputs.package, ...outputs.example] : outputs[kind];
-  if (!names) throw new Error(`unknown prepared output kind ${kind}`);
+  const selected = Object.hasOwn(kinds, kind) ? kinds[kind] : undefined;
+  if (!selected) throw new Error(`unknown prepared output kind ${kind}`);
   const missing = [];
-  for (const name of names) {
+  for (const name of selected.names) {
     try {
       const stat = await fs.stat(path.join(repositoryRoot, name));
       if (!stat.isFile()) missing.push(name);
@@ -22,7 +38,7 @@ export async function requirePrepared(repositoryRoot, kind = "all") {
   }
   if (missing.length > 0)
     throw new Error(
-      `prepared verification output is missing: ${missing.join(", ")}; run npm run prepare:verification first`,
+      `prepared verification output is missing: ${missing.join(", ")}; run npm run prepare:${selected.preparation} first`,
     );
 }
 
