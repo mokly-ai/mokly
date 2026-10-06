@@ -4,7 +4,9 @@ Status: Active; not started. Created 2026-10-06 with the user's consent after a
 report that four unit tests check nothing. The user chose four options: rewrite
 the empty checks with checked helpers, test-first; add a zero-assertion guard to
 the unit runner; add checked catalogue-selection helpers and a lint rule; and
-make no change to the review prompt.
+make no change to the review prompt. On 2026-10-06 the user asked for every
+milestone, including the Milestone 6 lint extension, with implementation
+delegated to a Codex agent and checked by the planning agent.
 
 Make a test that checks nothing fail. A guard fails every unit test that makes
 no assertion. Checked helpers fail when a catalogue selection matches nothing,
@@ -43,6 +45,15 @@ Measurements on 2026-10-06, with the example catalogue built from `f66c274`:
   this turned `assert.match` into `doesNotMatch`, because that release compares
   its own function with the current `assert.match`. The guard therefore never
   changes Node's `assert` object.
+- A second prototype counted calls through wrapper functions. A failing
+  `assert.ok(expression)` without a message then showed the wrapper's source
+  line in place of the test's expression, because Node reads the caller's
+  source to generate that message. The guard therefore counts reads of
+  assertion methods, which add no stack frame.
+- Without process gating, a Node child that a test forks with inherited
+  `execArgv` loads the guard, starts a test-runner root, and appends serialized
+  test events to its own stdout. A prototype that gates on `NODE_TEST_CONTEXT`
+  and a process record keeps that stdout unchanged on Node 22.14 and 24.21.
 
 ## The Nine Empty Checks
 
@@ -84,32 +95,51 @@ occupy.
   `.github/workflows/ci.yml` pass the same flags. A direct run uses
   `node --import tsx --import ./scripts/verification/assertion-guard.mjs --test <file>`.
   A run without the guard is partial verification.
-- A resolve hook maps `node:assert`, `node:assert/strict`, `assert`, and
-  `assert/strict` to counting modules when a repository file outside
-  `node_modules` imports them. The counting modules import the real modules and
-  are not remapped. Each call of the default export or of an exported function
-  counts once. `AssertionError`, `Assert`, and `CallTracker` do not count.
+- A resolve hook, registered with `module.register`, maps `node:assert`,
+  `node:assert/strict`, `assert`, and `assert/strict` to counting modules when
+  a file inside the repository root imports them. Files under `node_modules`
+  and the guard's own modules get the real modules. The guard derives the
+  repository root from its own location.
+- A counting module's default export is a `Proxy` over the real module. Each
+  read of a function-valued property counts once, so `assert.equal(...)` counts
+  when the test reads `equal`. A direct call such as `assert(value)` counts
+  once. Reads of `AssertionError`, `Assert`, and `CallTracker` do not count.
+  `strict` returns the counting strict export. The counting modules also
+  provide the real modules' named exports; each call of a named export counts
+  once.
+- Reads of assertion methods through `t.assert` count the same way. The guard
+  replaces each test context's `assert` property with a counting `Proxy`.
 - Root `beforeEach` and `afterEach` hooks, registered before any test file
-  loads, open and close a frame for each test. A counted call adds one to every
-  open frame, so a parent test gets credit for its subtests. Assertions in the
+  loads, open and close a frame for each test. A counted read or call adds one
+  to every open frame, so a parent test gets credit for its subtests. Assertions in the
   test body, in its subtests, and in file `beforeEach` hooks count. Assertions
   in `afterEach`, `after`, and `t.after()` callbacks do not count, because the
   guard's `afterEach` hook runs first.
 - A test that closes with zero assertions fails with
   `test made no assertions: <full test name>`.
-- Tests skipped by option, tests that call `t.skip()` or `t.todo()`, and todo
-  tests are exempt. The guard wraps the `skip` and `todo` methods of each test
-  context, because Node 22.14 does not run `afterEach` after a run-time skip.
+- A test skipped by option, or a test that calls `t.skip()` or `t.todo()`, is
+  exempt. The guard wraps the `skip` and `todo` methods of each test context,
+  because Node 22.14 does not run `afterEach` after a run-time skip. A test
+  declared with `todo: true` reports the guard error as a todo failure, which
+  does not fail the run.
 - A test that starts while a test that is not its ancestor is open fails with
   `assertion guard needs sequential tests: <open test> is still running`. Node
   runs the tests of one file sequentially by default, and no file opts out
   today.
 - The guard acts only in the process that the test runner starts for a test
-  file. It records its process ID in an environment variable. A Node process
-  that a test forks with inherited `execArgv` sees the record of another process
-  and does nothing, so its stdout and exit code stay unchanged.
-- A failing assertion keeps its caller as the first stack frame. The counting
-  module removes its own frame from the stack.
+  file. It acts when `NODE_TEST_CONTEXT` is set and
+  `MOKLY_ASSERTION_GUARD_PID` is not set, and it then sets
+  `MOKLY_ASSERTION_GUARD_PID` to its process ID. The runner's own process has no
+  `NODE_TEST_CONTEXT`, so it does nothing. A Node process that a test forks with
+  inherited `execArgv` inherits both variables and does nothing, so its stdout
+  and exit code stay unchanged.
+- A failing assertion keeps its caller as the first stack frame. A method read
+  adds no frame. For a direct call or a named export, the counting module
+  removes its own frame from the stack.
+- A failing `assert.ok(expression)` without a message keeps Node's generated
+  message. A failing direct call or named `ok` call without a message shows the
+  counting module's source in that message. Today every assertion import in
+  `tests/` is a default import, and no test calls the default export directly.
 - A test whose claim is "completes without an error" states it with
   `assert.doesNotThrow(...)` or `await assert.doesNotReject(...)`.
 - Playwright specs are out of scope. The helpers and the lint rule cover them.
@@ -161,10 +191,9 @@ Each message names the helper to use.
 
 Selectors 1 and 2 implement the approved rule without its false positives. An
 assertion such as `assert.ok(entry.path.startsWith(...))` and a filter on
-another `path` field stay allowed. Selector 3 goes beyond the approved rule. It
-sends literal-path lookups through `entryAt` and `assertAbsent`, so a future
-absence check cannot go stale silently. Milestone 6 holds selector 3 alone, so
-the user can drop it without changes to the other milestones.
+another `path` field stay allowed. Selector 3 extends the rule. It sends
+literal-path lookups through `entryAt` and `assertAbsent`, so a future absence
+check cannot go stale silently. The user approved this extension on 2026-10-06.
 
 The rule sees syntax only. It does not see filters over arrays derived from
 `entries`, comparisons with variables, or content filters in inner loops. The
@@ -253,14 +282,18 @@ Fail every unit test that makes no assertion.
   - [ ] `describe` and `it` follow the same rules.
   - [ ] A skip option, `t.skip()`, and a todo test do not fail the run, and the
         tests after them still pass.
-  - [ ] `await assert.rejects(...)`, a direct `assert(value)` call, and an
-        import of `node:assert` each count.
+  - [ ] `await assert.rejects(...)`, a direct `assert(value)` call, a named
+        import, a `t.assert` method, and an import of `node:assert` each
+        count. `node:assert` keeps its loose comparisons, and its `strict`
+        property counts.
   - [ ] An assertion in a file `beforeEach` hook counts. An assertion only in
         `afterEach` or `t.after()` does not.
   - [ ] Concurrent sibling tests fail with the sequential message.
   - [ ] `assert.match`, `assert.doesNotMatch`, and the `rejects` message
         "Missing expected rejection" behave as they do without the guard.
   - [ ] The first stack frame of a failing assertion is the fixture line.
+  - [ ] A failing `assert.ok(expression)` without a message shows the fixture's
+        expression in its generated message.
   - [ ] A Node child that a fixture forks with inherited `execArgv` keeps its
         stdout and exit code.
 - [ ] Add a test to `tests/verification_entrypoints.test.ts` that the unit
@@ -326,8 +359,8 @@ Send catalogue selections through the checked helpers.
 
 ## Milestone 6: Lint literal path lookups
 
-This milestone extends the approved lint rule. Drop it if the user keeps the
-approved scope.
+Extend the lint rule to literal path lookups, as the user approved on
+2026-10-06.
 
 - [ ] Extend the lint tests. Selector 3 reports a literal path compared with
       `===` or `!==` in `find`, `some`, `filter`, and `every` calls on
