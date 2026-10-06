@@ -1,10 +1,11 @@
 /** Shared state and scope helpers for temporary component prop editing. */
 
+import type { CurrentPath } from "../catalogue/path_types.js";
 import type { ComponentWireProps } from "../components/prop_types.js";
 import type { ComponentRenderSuccess } from "../components/render_types.js";
-import type { GeneratedComponentView } from "../components/views.js";
 
 import type { ControlDraft } from "./component_control_fields.js";
+import type { ShellGeneratedView } from "./usage_types.js";
 import type { WorkspaceData, WorkspaceVariant } from "./workspace_data.js";
 
 /** One edit scope's current draft and last valid previews. */
@@ -13,7 +14,7 @@ export interface ComponentEditorState {
   errors: Readonly<Record<string, string>>;
   failure: string | undefined;
   dirty: boolean;
-  previews: ReadonlyMap<string, ComponentRenderSuccess>;
+  previews: ReadonlyMap<string, ComponentRenderSuccess<CurrentPath>>;
   props: ComponentWireProps;
   scope: string;
   status: string;
@@ -56,7 +57,7 @@ export function controlsUnavailable(
 
 /** Context identity for saved and temporary preview results. */
 export function controlViewKey(
-  view: Pick<GeneratedComponentView, "colorScheme" | "viewport">,
+  view: Pick<ShellGeneratedView, "colorScheme" | "viewport">,
 ): string {
   return `${view.viewport}/${view.colorScheme}`;
 }

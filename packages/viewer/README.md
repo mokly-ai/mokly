@@ -279,6 +279,8 @@ Removed parent and usage references, baseline inventory paths and all
 `previousPath` fields use `BranchPointPath`. Entry types carry both address and
 reference parameters. For example, a removed screen is
 `CatalogueScreen<CurrentPath, BranchPointPath>`. Stored JSON stays unchanged.
+The standalone shell and embedded viewer retain these types through display
+projection, generated views, inspection and comparison evidence.
 Call `readCatalogue` on decoded JSON to obtain the validated types. Tooling can
 use `readCurrentPath` and `readBranchPointPath` from `@mokly/viewer/data` for
 individual stored paths. Resolve historical names through `branchPoints`

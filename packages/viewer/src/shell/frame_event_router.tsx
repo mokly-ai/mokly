@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import type { FrameNavigation } from "../client/frame_adapter.js";
 import { viewHref } from "../navigation/routes.js";
 
+import { catalogueRouteEntry } from "./catalogue.js";
 import type { Catalogue } from "./catalogue.js";
 import { useOptionalShellFrameRegistry } from "./frame_registry.js";
 import { useShellStore } from "./store_context.js";
@@ -34,7 +35,7 @@ function routeNavigation(
   navigation: FrameNavigation,
 ): void {
   const href = frameNavigationHref(store.catalogue, navigation);
-  if (!store.catalogue.byPath.has(navigation.screenPath)) {
+  if (!catalogueRouteEntry(store.catalogue, navigation.screenPath)) {
     store.navigateFrame(href, navigation);
     return;
   }
@@ -53,7 +54,7 @@ export function frameNavigationHref(
   catalogue: Catalogue,
   navigation: FrameNavigation,
 ): string {
-  const entry = catalogue.byPath.get(navigation.screenPath);
+  const entry = catalogueRouteEntry(catalogue, navigation.screenPath);
   const pathname = entry
     ? viewHref(entry.path)
     : viewHref(navigation.screenPath);

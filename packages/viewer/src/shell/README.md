@@ -191,6 +191,17 @@ font delivery paths.
 removed entries whose paths are unique across both sets; an explicit snapshot
 selects its exact removed record. Baseline repository access remains in the
 CLI's `src/server/baseline_catalogue.ts`.
+The shell catalogue uses `CurrentPath` for record addresses and
+`BranchPointPath` for baseline inventories, retained usage names and previous
+paths. `accepted_inputs.ts` assigns these types to producer data that already
+passed validation. Generated views, inspection sessions and comparison results
+keep the types. The embedded viewer's display projection also keeps each
+record's reference side. `catalogueRouteEntry` accepts an external route string
+and returns a typed current or removed address; it does not follow moves.
+The type-aware guard checks path mixing and string escapes. The syntax guard
+still checks lookup ownership for move maps, variant parents and usage names.
+React dependency lists and bound class methods retain object identity, and whole-record `canonicalJson`
+serialization retains stored fields for hydration and snapshot equality.
 `store.tsx` and the focused `store_*` modules own standalone route/history,
 selection, disclosure, drawer, details, recovery and scroll state. `routes.ts`,
 `nav_model.ts`, `search_query.ts` and `entry_wording.ts` are deterministic

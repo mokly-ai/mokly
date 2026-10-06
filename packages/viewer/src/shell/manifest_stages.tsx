@@ -1,10 +1,12 @@
 /** Screen and use-case stages rendered from the manifest-backed catalogue. */
 
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type { Viewport } from "../data/axes.js";
 import { encodeUrlPath } from "../data/paths.js";
 import { entryRoute, viewHref, viewRoute } from "../navigation/routes.js";
 import type { ManifestScreen, ManifestUseCase } from "../registry/types.js";
 
+import { catalogueRouteEntry } from "./catalogue.js";
 import type { Catalogue } from "./catalogue.js";
 import { BrowserFrame, PhoneFrame } from "./frames.js";
 
@@ -19,7 +21,7 @@ function fragmentSrc(route: string, fragment?: string): string {
 }
 
 function fragmentSources(
-  screen: ManifestScreen,
+  screen: ManifestScreen<CurrentPath, CurrentPath | BranchPointPath>,
   viewport: Viewport,
   hasDarkFragments: boolean,
   fragment?: string,
@@ -37,7 +39,7 @@ function fragmentSources(
 }
 
 function isSchemeFallback(
-  screen: ManifestScreen,
+  screen: ManifestScreen<CurrentPath, CurrentPath | BranchPointPath>,
   hasDarkFragments: boolean,
 ): boolean {
   return hasDarkFragments && !screen.colorSchemes.includes("dark");
@@ -57,7 +59,7 @@ function FrameLabel(props: { fallback: boolean; text: string }) {
 export function FramesStage(props: {
   fragment?: string;
   hasDarkFragments: boolean;
-  screen: ManifestScreen;
+  screen: ManifestScreen<CurrentPath, CurrentPath | BranchPointPath>;
 }) {
   const screen = props.screen;
   const address = screen.address ?? entryRoute(screen.path);
@@ -131,7 +133,7 @@ function FlowScreen(props: {
   fragment?: string;
   stepIndex: number;
   hasDarkFragments: boolean;
-  screen: ManifestScreen;
+  screen: ManifestScreen<CurrentPath, CurrentPath | BranchPointPath>;
 }) {
   const screen = props.screen;
   const desktop = fragmentSources(
@@ -169,14 +171,17 @@ function FlowScreen(props: {
 
 export function UseCaseFlowStage(props: {
   catalogue: Catalogue;
-  entry: ManifestUseCase;
+  entry: ManifestUseCase<CurrentPath>;
   fragment?: string;
 }) {
   return (
     <div className="mbk-flow" data-mokly-scroll="flow">
       <div className="flow-track">
         {props.entry.steps.map((step, index) => {
-          const candidate = props.catalogue.byPath.get(step.screenPath);
+          const candidate = catalogueRouteEntry(
+            props.catalogue,
+            step.screenPath,
+          );
           const screen = candidate?.kind === "screen" ? candidate : undefined;
           return (
             <section className="flow-step" key={`${step.screenPath}-${index}`}>

@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { workspaceData } from "../packages/viewer/src/shell/workspace_data.js";
 import { inputChanges } from "../packages/viewer/src/shell/workspace_input_changes.js";
+import { baselineManifestEntryFixture } from "../packages/viewer/tests/manifest_path_fixture.js";
 
 import { branchPointShell, routedEntry } from "./helpers/branch_point_shell.js";
 
@@ -52,7 +53,7 @@ test("a screen without its own counterpart has no supplied-input pairing", async
       side.catalogue,
       screen,
       undefined,
-      side.catalogue.manifest.entries,
+      side.catalogue.manifest.entries.map(baselineManifestEntryFixture),
     ),
     [],
   );

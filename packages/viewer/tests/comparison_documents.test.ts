@@ -14,6 +14,8 @@ import {
 } from "../src/shell/comparison_selection.js";
 import type { ComparisonPresentation } from "../src/shell/use_comparison.js";
 
+import { typedReviewFixture } from "./path_fixture.js";
+
 const GENERATION = "https://catalogue.test/__mokly/diffs/__generations/one/";
 
 function view(
@@ -69,7 +71,10 @@ function comparison(
     ],
     affectedConsumers: [],
   };
-  return { result, url: `${generation}review.json` };
+  return {
+    result: typedReviewFixture(result),
+    url: `${generation}review.json`,
+  };
 }
 
 function presentation(

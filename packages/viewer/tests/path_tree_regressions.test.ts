@@ -11,6 +11,8 @@ import { navNodeVisible } from "../src/shell/nav_model.js";
 import { buildNavSections } from "../src/shell/nav_tree.js";
 import type { ViewerSelection } from "../src/viewer/types.js";
 
+import { shellHierarchyFixture } from "./manifest_path_fixture.js";
+
 const entry = (path: string, kind = "page", title = path): ManifestEntry =>
   ({ path, kind, title }) as ManifestEntry;
 const selection = (
@@ -83,7 +85,8 @@ test("hidden folders stay in the wire tree and Changes but disappear from All an
     ]).hierarchy;
     const tree = projectTree(hierarchy);
     assert.equal(tree[0]?.children?.[0]?.hidden, true);
-    const nodes = buildNavSections(hierarchy)[0]!.children;
+    const nodes = buildNavSections(shellHierarchyFixture(hierarchy))[0]!
+      .children;
     assert.equal(navNodeVisible(nodes[0]!, selection("all"), context), false);
     assert.equal(
       navNodeVisible(nodes[0]!, selection("all", "item"), context),

@@ -1,23 +1,24 @@
 /** Typed behavior boundary between the hydrated shell and first-party live hosts. */
 
+import type { CurrentPath } from "../catalogue/path_types.js";
 import { readCatalogue } from "../catalogue/reader.js";
 import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
 import type {
   ComponentRenderRequest,
   ComponentRenderSuccess,
 } from "../components/render_types.js";
-import type { GeneratedComponentView } from "../components/views.js";
 import type { ShellRecoverySnapshot } from "../shell/store_state.js";
+import type { ShellGeneratedView } from "../shell/usage_types.js";
 import type { WorkspaceData } from "../shell/workspace_data.js";
 import { readLiveShellBootstrap } from "../standalone/scoped_bootstrap.js";
 
-import {
-  viewerCapabilityRequestMatches,
-  viewerCapabilitySourceEquals,
-} from "./host_capability_descriptor.js";
 import type {
   ViewerCapabilityRequest,
   ViewerCapabilitySource,
+} from "./host_capability_descriptor.js";
+import {
+  viewerCapabilityRequestMatches,
+  viewerCapabilitySourceEquals,
 } from "./host_capability_descriptor.js";
 
 /** Validated same-content catalogue revision delivered by a live host. */
@@ -59,15 +60,15 @@ export interface ViewerTemporaryPreviewCapability {
   expired(
     request: ViewerCapabilityRequest,
     frame: HTMLIFrameElement,
-    previews: Iterable<ComponentRenderSuccess>,
+    previews: Iterable<ComponentRenderSuccess<CurrentPath>>,
     signal: AbortSignal,
   ): Promise<boolean>;
   render(
     request: ViewerCapabilityRequest,
     input: ComponentRenderRequest,
-    view: GeneratedComponentView,
+    view: ShellGeneratedView,
     signal: AbortSignal,
-  ): Promise<ComponentRenderSuccess>;
+  ): Promise<ComponentRenderSuccess<CurrentPath>>;
 }
 
 /** On-demand Usage loading for the currently routed workspace. */
@@ -77,7 +78,7 @@ export interface ViewerOnDemandCapability {
     data: WorkspaceData,
     signal: AbortSignal,
     changed: () => void,
-  ): (views: readonly GeneratedComponentView[]) => void;
+  ): (views: readonly ShellGeneratedView[]) => void;
 }
 
 /** Optional private services exposed to one hydrated shell tree. */

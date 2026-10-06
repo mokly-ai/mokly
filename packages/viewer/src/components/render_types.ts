@@ -1,4 +1,5 @@
 /** Private Serve controls protocol; these values never enter generated metadata. */
+
 import type { ColorScheme, Viewport } from "../data/axes.js";
 
 import type { ComponentViewRecord } from "./manifest_types.js";
@@ -18,12 +19,12 @@ export interface ComponentRenderRequest {
   pageId: string;
   overrides: Readonly<Record<string, ComponentOverride>>;
 }
-export interface ComponentRenderSuccess {
+export interface ComponentRenderSuccess<Path extends string = string> {
   renderId: string;
   generation: string;
   previewUrl: string;
   props: ComponentWireProps;
-  view: ComponentViewRecord;
+  view: ComponentViewRecord<Path>;
 }
 export interface RenderCapability {
   generation: string;

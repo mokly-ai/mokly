@@ -11,6 +11,8 @@ import {
   type NavSectionNode,
 } from "../src/shell/nav_tree.js";
 
+import { shellHierarchyFixture } from "./manifest_path_fixture.js";
+
 const entry = (
   path: string,
   kind: string,
@@ -63,7 +65,7 @@ for (const [kind, section] of [
       [{ path: "fx/vault", hidden: true, sourcePath: "specs/fx/vault.ts" }],
     ).hierarchy;
     const row = hiddenIndexRow(
-      buildNavSections(hierarchy),
+      buildNavSections(shellHierarchyFixture(hierarchy)),
       section,
       "fx/vault",
     );

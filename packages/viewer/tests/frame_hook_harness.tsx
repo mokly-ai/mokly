@@ -18,6 +18,10 @@ import {
   previewUsage,
   type HookHost,
 } from "./frame_hook_fakes.js";
+import {
+  currentUsageFixture,
+  currentViewFixture,
+} from "./manifest_path_fixture.js";
 
 const hosts = new Map<string, HookHost>();
 
@@ -192,16 +196,16 @@ function renderHost(host: HookHost): void {
       <HookFrame
         host={host}
         key={host.documentIdentity}
-        usage={
+        usage={currentUsageFixture(
           host.previewUsage
             ? generatedUsage({
                 colorScheme: "light",
                 path: "/__mokly/components/renders/preview.html",
-                usage: host.previewUsage,
+                usage: currentViewFixture(host.previewUsage),
                 viewport: "desktop",
               })
-            : host.usage
-        }
+            : host.usage,
+        )}
       />
     </ShellFrameRegistryProvider>
   );

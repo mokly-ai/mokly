@@ -1,8 +1,8 @@
 /** Saved and temporary preview context selection for one workspace. */
 
-import type { GeneratedComponentView } from "../components/views.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 
+import type { ShellGeneratedView } from "./usage_types.js";
 import { resolveViewPresentation, type EntryStatus } from "./view_status.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import type { WorkspaceVariantSelection } from "./workspace_selection.js";
@@ -13,13 +13,13 @@ export interface ResolvedWorkspaceView {
   comparisonEligible: boolean;
   evidence: "selection" | "view";
   status: EntryStatus | undefined;
-  views: readonly GeneratedComponentView[];
+  views: readonly ShellGeneratedView[];
 }
 
 /** Visible saved views plus the scheme their rendered documents actually use. */
 export interface ResolvedWorkspaceViews {
   colorScheme: "dark" | "light";
-  views: readonly GeneratedComponentView[];
+  views: readonly ShellGeneratedView[];
 }
 
 /** Resolve light fallback without changing the catalogue-wide scheme preference. */
@@ -61,7 +61,7 @@ export function visibleWorkspaceViews(
   variantPath: string | undefined,
   viewport: "both" | "desktop" | "mobile",
   colorScheme: ColorScheme,
-): readonly GeneratedComponentView[] {
+): readonly ShellGeneratedView[] {
   return resolveWorkspaceViews(data, variantPath, viewport, colorScheme).views;
 }
 

@@ -16,9 +16,9 @@ const lookups = new WeakMap<object, unknown>();
 
 /** Index a generation on first use, retaining each input entry and record. */
 export function branchPoints<
-  Entry extends BranchPointEntry<string, string>,
+  Entry extends BranchPointEntry<string, string, string>,
   Removed extends BranchPointRemovedEntry<
-    BranchPointEntry<Entry["path"], string>
+    BranchPointEntry<Entry["path"], string, string>
   >,
 >(
   catalogue: BranchPointInputs<Entry, Removed>,
@@ -32,9 +32,9 @@ export function branchPoints<
 }
 
 function createBranchPointLookup<
-  Entry extends BranchPointEntry<string, string>,
+  Entry extends BranchPointEntry<string, string, string>,
   Removed extends BranchPointRemovedEntry<
-    BranchPointEntry<Entry["path"], string>
+    BranchPointEntry<Entry["path"], string, string>
   >,
 >(
   catalogue: BranchPointInputs<Entry, Removed>,

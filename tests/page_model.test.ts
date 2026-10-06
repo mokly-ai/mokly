@@ -2,14 +2,16 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
 import { entryRoute } from "../packages/viewer/src/navigation/routes.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
 import { buildNavSections } from "../packages/viewer/src/shell/nav_tree.js";
+import { currentManifestEntryFixture } from "../packages/viewer/tests/manifest_path_fixture.js";
 import { compileCatalogue } from "../src/build/compile.js";
 import { loadConfig } from "../src/config/load.js";
 import { changedManifestPaths } from "../src/registry/changed_paths.js";
 import { removedManifestEntries } from "../src/registry/changes.js";
-import { viewPage, homePage } from "../src/server/pages.js";
+import { homePage, viewPage } from "../src/server/pages.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { documentText } from "./helpers/html.js";
@@ -77,7 +79,7 @@ test("removed page metadata keeps deleted ancestry and current path precedence",
   assert.deepEqual(removed[0]?.folderTitles, ["App", "Book"]);
   const catalogue = createCatalogue({ ...baseline, entries: [] }, removed);
   const entry = removed[0]!.entry;
-  const html = viewPage(entry, catalogue, {
+  const html = viewPage(currentManifestEntryFixture(entry), catalogue, {
     ...publicShellContext(catalogue, {
       base: "main",
       updateVersion: 1,
@@ -103,7 +105,9 @@ test("removed page metadata keeps deleted ancestry and current path precedence",
   const moved = removedManifestEntries(current, baseline);
   assert.equal(moved.length, 0);
   assert.equal(
-    createCatalogue(current, moved).byPath.get("app/book/handbook")?.title,
+    createCatalogue(current, moved).byPath.get(
+      readCurrentPath("app/book/handbook"),
+    )?.title,
     "New",
   );
   assert.equal(removedManifestEntries(baseline, baseline).length, 0);

@@ -9,6 +9,9 @@ import {
   type UsageLink,
   workspaceData,
 } from "../packages/viewer/dist/shell/workspace_data.js";
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
+import { baselineManifestFixture } from "../packages/viewer/tests/manifest_path_fixture.js";
+import { typedReviewFixture } from "../packages/viewer/tests/path_fixture.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
@@ -36,7 +39,7 @@ test("affected usage keeps complete serialized identity and evidence order with 
     },
     { entry: retained("home"), folderTitles: [] },
   ]);
-  const entry = catalogue.byPath.get("action");
+  const entry = catalogue.byPath.get(readCurrentPath("action"));
   if (entry?.kind !== "component" || "variantOf" in entry)
     assert.fail("Expected component");
   const base: UsageLink = {
@@ -131,7 +134,10 @@ test("affected usage keeps complete serialized identity and evidence order with 
     {
       base: "main",
       updateVersion: 1,
-      componentChanges: { baseline: fixture.before.manifest, result: snapshot },
+      componentChanges: {
+        baseline: baselineManifestFixture(fixture.before.manifest),
+        result: typedReviewFixture(snapshot),
+      },
     },
     entry,
   );

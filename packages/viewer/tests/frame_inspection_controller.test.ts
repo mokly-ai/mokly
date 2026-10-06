@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { setImmediate } from "node:timers/promises";
 
+import { readCurrentPath } from "../src/catalogue/path_values.js";
 import type { CatalogueUsage } from "../src/catalogue/types.js";
 import type {
   FrameAdapter,
@@ -237,7 +238,7 @@ function usage(key: string): CatalogueUsage {
     status: "ready",
     instances: [
       {
-        componentId: "component",
+        componentId: readCurrentPath("component"),
         id: "instance",
         key,
         order: 0,

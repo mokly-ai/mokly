@@ -256,7 +256,7 @@ function historicalSource(
 }
 
 function projectPreview(
-  entry: ManifestEntry,
+  entry: ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>,
   preview: RemovedEntryPreview | undefined,
   comparisonUrl: string | null,
 ): { preview?: RemovedEntryPreview } {
@@ -275,7 +275,9 @@ function projectPreview(
   return { preview: { kind: "page" } };
 }
 
-function entryDependencies(entry: ManifestEntry): string[] {
+function entryDependencies(
+  entry: ManifestEntry<CurrentPath, CurrentPath | BranchPointPath>,
+): string[] {
   return [
     ...new Set([
       entry.sourcePath,

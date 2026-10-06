@@ -1,5 +1,11 @@
 import ts from "typescript";
 
+import {
+  boundReceiver,
+  displayExpression,
+  reactDependency,
+  serializedRecord,
+} from "./branch_point_type_context.js";
 import { erasesReference, pathSides } from "./branch_point_type_values.js";
 
 const CURRENT = 1;
@@ -15,17 +21,6 @@ const COMPARISONS = new Set([
   ts.SyntaxKind.GreaterThanEqualsToken,
 ]);
 
-function displayExpression(node: ts.Node): boolean {
-  let parent = node.parent;
-  while (
-    ts.isParenthesizedExpression(parent) ||
-    ts.isTemplateSpan(parent) ||
-    ts.isTemplateExpression(parent)
-  )
-    parent = parent.parent;
-  return ts.isJsxExpression(parent);
-}
-
 /** Reject typed references used as current identities or erased into text. */
 export function typedBranchPointViolations(
   source: ts.SourceFile,
@@ -39,7 +34,11 @@ export function typedBranchPointViolations(
   const sides = (node: ts.Node) =>
     pathSides(checker, checker.getTypeAtLocation(node));
   const origin = (node: ts.Node, seen = new Set<ts.Node>()): number => {
-    const known = sides(node);
+    const type = checker.getTypeAtLocation(node);
+    const element =
+      (checker.isArrayType(type) || checker.isTupleType(type)) &&
+      checker.getIndexTypeOfType(type, ts.IndexKind.Number);
+    const known = sides(node) || (element ? pathSides(checker, element) : 0);
     if (known || seen.has(node)) return known;
     seen.add(node);
     if (
@@ -58,7 +57,8 @@ export function typedBranchPointViolations(
         return origin(declaration.initializer, seen);
     }
     if (
-      ts.isPropertyAccessExpression(node) &&
+      (ts.isPropertyAccessExpression(node) ||
+        ts.isElementAccessExpression(node)) &&
       checker.getTypeAtLocation(node).getCallSignatures().length
     )
       return origin(node.expression, seen);
@@ -72,7 +72,8 @@ export function typedBranchPointViolations(
           0,
         );
       if (
-        ts.isPropertyAccessExpression(node.expression) &&
+        (ts.isPropertyAccessExpression(node.expression) ||
+          ts.isElementAccessExpression(node.expression)) &&
         checker.getTypeAtLocation(node).flags & ts.TypeFlags.StringLike
       )
         return origin(node.expression, seen);
@@ -100,15 +101,33 @@ export function typedBranchPointViolations(
   ) => {
     if (
       target &&
+      !reactDependency(value, checker) &&
+      !boundReceiver(value, checker) &&
+      !serializedRecord(value, checker) &&
       erasesReference(checker, checker.getTypeAtLocation(value), target)
     )
       report(node, "erases a branch-point reference");
   };
   const visit = (node: ts.Node): void => {
     if (
-      ts.isPropertyAccessExpression(node) &&
-      sides(node.expression) & BEFORE &&
-      checker.getTypeAtLocation(node).getCallSignatures().length
+      (ts.isPropertyAccessExpression(node) ||
+        ts.isElementAccessExpression(node)) &&
+      checker
+        .getTypeAtLocation(node)
+        .getCallSignatures()
+        .some(
+          (signature) =>
+            Boolean(sides(node.expression) & BEFORE) ||
+            Boolean(
+              checker.getReturnTypeOfSignature(signature).flags &
+                ts.TypeFlags.StringLike &&
+              erasesReference(
+                checker,
+                checker.getTypeAtLocation(node.expression),
+                checker.getReturnTypeOfSignature(signature),
+              ),
+            ),
+        )
     )
       report(node, "uses a string method on a branch-point reference");
     if (
@@ -176,15 +195,18 @@ export function typedBranchPointViolations(
         signature &&
         pathSides(checker, checker.getReturnTypeOfSignature(signature));
       for (const [index, argument] of (node.arguments ?? []).entries()) {
-        if (resultSide && origin(argument) && origin(argument) & ~resultSide)
-          report(argument, "converts between reference sides through text");
         const parameter = signature?.parameters[index];
+        const parameterType =
+          parameter && checker.getTypeOfSymbolAtLocation(parameter, node);
+        if (
+          resultSide &&
+          origin(argument) &&
+          origin(argument) & ~resultSide &&
+          (!parameterType || !pathSides(checker, parameterType))
+        )
+          report(argument, "converts between reference sides through text");
         if (parameter && !(resultSide && origin(argument) === resultSide))
-          assignment(
-            argument,
-            argument,
-            checker.getTypeOfSymbolAtLocation(parameter, node),
-          );
+          assignment(argument, argument, parameterType);
       }
     }
     if (ts.isReturnStatement(node) && node.expression) {

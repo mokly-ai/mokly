@@ -12,6 +12,10 @@ import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
 import type { ShellRoute } from "../packages/viewer/dist/shell/routes.js";
 import { routeFromUrl } from "../packages/viewer/dist/shell/routes.js";
 import { defaultSelection } from "../packages/viewer/dist/viewer/selection.js";
+import {
+  baselineManifestFixture,
+  currentManifestEntryFixture,
+} from "../packages/viewer/tests/manifest_path_fixture.js";
 
 type CurrentManifestScreen = ManifestScreen & {
   declaredDependencies: readonly string[];
@@ -41,7 +45,7 @@ const context: ShellContext = {
   changedEntries: [empty.path, failure.path],
   changesStatus: "ready",
   componentChanges: {
-    baseline: manifest,
+    baseline: baselineManifestFixture(manifest),
     screenViews: [
       {
         path: empty.path,
@@ -190,7 +194,10 @@ test("All activation keeps the requested row and sticky axes", () => {
 
 function route(entry: ManifestScreen): ShellRoute {
   return {
-    view: { kind: "target", target: { kind: "entry", entry } },
+    view: {
+      kind: "target",
+      target: { kind: "entry", entry: currentManifestEntryFixture(entry) },
+    },
   };
 }
 

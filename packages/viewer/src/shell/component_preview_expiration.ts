@@ -2,6 +2,7 @@
 
 import { useEffect, type RefObject } from "react";
 
+import type { CurrentPath } from "../catalogue/path_types.js";
 import type { ViewerHostCapabilities } from "../client/host_capabilities.js";
 import type { ViewerCapabilityRequest } from "../client/host_capability_descriptor.js";
 import type { ComponentRenderSuccess } from "../components/render_types.js";
@@ -16,7 +17,7 @@ export function useComponentPreviewExpiration({
 }: {
   capabilities: ViewerHostCapabilities | undefined;
   onExpired(): void;
-  previews: ReadonlyMap<string, ComponentRenderSuccess>;
+  previews: ReadonlyMap<string, ComponentRenderSuccess<CurrentPath>>;
   request: ViewerCapabilityRequest | undefined;
   workspaceRef: RefObject<HTMLElement | null>;
 }): void {

@@ -3,6 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 
 import { resolveCatalogueEntry } from "../packages/viewer/src/catalogue/entry_selection.js";
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import type { CatalogueReadModel } from "../packages/viewer/src/catalogue/types.js";
 import type {
@@ -147,7 +148,7 @@ test("historical workspace resolution owns the old identity and Removed status",
   if (displayed.kind !== "screen") assert.fail("Expected a displayed screen");
   const workspace = publicWorkspace(catalogue, model, displayed);
 
-  const selected = catalogue.byPath.get(currentScreen.path);
+  const selected = catalogue.byPath.get(readCurrentPath(currentScreen.path));
   assert.ok(selected);
   assert.equal(selected.path, currentScreen.path);
   assert.equal(workspace.entry.path, oldScreen.path);

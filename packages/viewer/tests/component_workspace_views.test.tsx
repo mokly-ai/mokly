@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { readCurrentPath } from "../src/catalogue/path_values.js";
 import {
   workspaceData,
   type WorkspaceData,
@@ -23,19 +24,19 @@ test("workspace view selection uses exact contexts and light fallback", () => {
         viewport: "mobile",
         colorScheme: "light",
         path: "mobile-light.html",
-        variantPath: "components/action/default",
+        variantPath: readCurrentPath("components/action/default"),
       },
       {
         viewport: "mobile",
         colorScheme: "dark",
         path: "mobile-dark.html",
-        variantPath: "components/action/default",
+        variantPath: readCurrentPath("components/action/default"),
       },
       {
         viewport: "desktop",
         colorScheme: "light",
         path: "desktop-light.html",
-        variantPath: "components/action/default",
+        variantPath: readCurrentPath("components/action/default"),
       },
     ],
   } satisfies WorkspaceData;

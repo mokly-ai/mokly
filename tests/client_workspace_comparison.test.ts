@@ -8,6 +8,8 @@ import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_ty
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
+import { screenReviewFixture } from "../packages/viewer/tests/manifest_path_fixture.js";
 import { typedReviewFixture } from "../packages/viewer/tests/path_fixture.js";
 
 test("loaded v2 details merge with classification, deduplicate selectors and suppress retained exclusions", () => {
@@ -100,11 +102,13 @@ test("loaded comparisons for another screen cannot add evidence to the selected 
 test("v3 workspace evidence uses its selected comparison and keeps excluded stylesheets separate", () => {
   const data = workspace();
   data.status = "Unmodified";
-  data.comparison = componentComparison(
-    ["entries/renderer.ts", "mockups/unused.css"],
-    undefined,
-    "mockups/unused.css",
-  ).screens[0]!;
+  data.comparison = screenReviewFixture(
+    componentComparison(
+      ["entries/renderer.ts", "mockups/unused.css"],
+      undefined,
+      "mockups/unused.css",
+    ).screens[0]!,
+  );
   const loaded = parseReviewResult(componentComparison(["entries/stale.ts"]));
 
   const markup = renderEvidence(data, parseReviewResult(loaded));
@@ -249,7 +253,7 @@ function workspace(): WorkspaceData {
     entry: {
       colorSchemes: ["light"],
       declaredDependencies: [],
-      path: "home",
+      path: readCurrentPath("home"),
       kind: "screen",
       title: "Home",
       description: "Home",

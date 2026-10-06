@@ -1,13 +1,9 @@
-import type { BeforePath } from "../catalogue/path_types.js";
-import type { HistoricalManifest, ManifestV8 } from "../registry/types.js";
+import type { BeforePath, CurrentPath } from "../catalogue/path_types.js";
+import type { ManifestV8 } from "../registry/types.js";
 import type { ReviewResultV5 } from "../review/component_types.js";
-import type {
-  ReviewArtifact,
-  ScreenResourceEvidence,
-  ViewReview,
-} from "../review/types.js";
+import type { ScreenResourceEvidence, ViewReview } from "../review/types.js";
 
-export type CatalogueMetadata<Path extends string = string> =
+export type CatalogueMetadata<Path extends string = CurrentPath> =
   | ManifestV8<Path>
   | {
       schemaVersion: "live-index-1";
@@ -16,8 +12,11 @@ export type CatalogueMetadata<Path extends string = string> =
       generatedBy: "mokly";
       sourceFiles: readonly string[];
     };
-export interface RemovedEntrySnapshot<Path extends string = string> {
-  entry: ManifestV8<Path, BeforePath<Path>>["entries"][number];
+export interface RemovedEntrySnapshot<
+  Path extends string = CurrentPath,
+  Reference extends string = BeforePath<Path>,
+> {
+  entry: ManifestV8<Path, Reference>["entries"][number];
   folderTitles: readonly string[];
   /** Baseline parent title, present exactly for a removed variant. */
   parentTitle?: string;
@@ -32,12 +31,19 @@ export interface ScreenViewChanges {
   path: string;
   views: readonly Pick<ViewReview, "colorScheme" | "state" | "viewport">[];
 }
-export interface ShellEvidence {
-  baseline: HistoricalManifest;
+export interface ShellEvidence<Path extends string = CurrentPath> {
+  baseline: ManifestV8<BeforePath<Path>>;
   /** Actual material/metadata changes, independent of pure-move membership. */
-  changedEntries?: readonly string[];
-  pairing?: NonNullable<ReviewArtifact["pairing"]>;
-  result?: ReviewResultV5;
+  changedEntries?: readonly Path[];
+  pairing?: {
+    moves: readonly {
+      kind: ManifestV8["entries"][number]["kind"];
+      path: Path;
+      previousPath: BeforePath<Path>;
+    }[];
+    diagnostics: readonly string[];
+  };
+  result?: ReviewResultV5<Path, BeforePath<Path>>;
   screenEvidence?: readonly ScreenResourceEvidence[];
   screenViews?: readonly ScreenViewChanges[];
 }

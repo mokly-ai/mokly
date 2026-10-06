@@ -15,16 +15,18 @@ import {
   type NavNode,
 } from "../packages/viewer/dist/shell/nav_tree.js";
 import { toRouteTarget } from "../packages/viewer/dist/shell/target.js";
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
+import { currentManifestEntryFixture } from "../packages/viewer/tests/manifest_path_fixture.js";
 
 const removed = {
-  entryId: "welcome-error",
+  entryId: readCurrentPath("welcome-error"),
   entryKind: "screen" as const,
   key: "removed:welcome-error",
   kind: "leaf" as const,
   label: "Save failed · Removed",
   removedPage: true,
   title: "Save failed",
-  parentId: "welcome",
+  parentId: readCurrentPath("welcome"),
 };
 
 test("removed variants remain represented exactly once across parent transitions", () => {
@@ -75,9 +77,9 @@ test("removed variants remain represented exactly once across parent transitions
 test("a removed variant attaches to a parent listed among a folder's own screen members", () => {
   const nestedRemoved = {
     ...removed,
-    entryId: "billing/welcome/error",
+    entryId: readCurrentPath("billing/welcome/error"),
     key: "removed:billing/welcome/error",
-    parentId: "billing/welcome",
+    parentId: readCurrentPath("billing/welcome"),
   };
   const sections = buildNavSections(
     createCatalogue(
@@ -120,7 +122,7 @@ test("an ineligible former parent remains a plain-text breadcrumb", () => {
       },
     ],
   );
-  const target = toRouteTarget(removedVariant);
+  const target = toRouteTarget(currentManifestEntryFixture(removedVariant));
   assert.ok(target);
 
   assert.deepEqual(targetHead(catalogue, target).crumbs, [

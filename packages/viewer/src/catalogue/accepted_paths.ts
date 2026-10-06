@@ -6,8 +6,8 @@ import type { Catalogue } from "../shell/catalogue.js";
 import type { BranchPointPath, CurrentPath } from "./path_types.js";
 
 /** Current and removed addresses remain current; removed references are before. */
-export function acceptedCatalogue(
-  catalogue: Catalogue<string>,
+export function acceptedCatalogue<Path extends string>(
+  catalogue: Catalogue<Path>,
 ): Catalogue<CurrentPath> {
   return catalogue as unknown as Catalogue<CurrentPath>;
 }

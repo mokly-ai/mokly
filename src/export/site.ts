@@ -4,14 +4,19 @@ import type { HistoricalManifest, ReviewArtifact } from "@mokly/viewer/data";
 import {
   canonicalJson,
   entryRoute,
-  parseStaticDelivery,
-  type StaticDelivery,
   parseReviewResult,
+  parseStaticDelivery,
   snapshotSidePath,
   viewHref,
+  type StaticDelivery,
 } from "@mokly/viewer/data";
-import { createCatalogue, SHELL_CSS } from "@mokly/viewer/server";
 import type { ShellContext } from "@mokly/viewer/server";
+import {
+  acceptedShellEvidence,
+  catalogueRouteEntry,
+  createCatalogue,
+  SHELL_CSS,
+} from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../browse/document_adapter.js";
 import type { Compilation } from "../build/compile.js";
@@ -165,7 +170,7 @@ export function assembleExport(
             ...new Set([...changes, ...removed.map((entry) => entry.path)]),
           ],
           comparisons: true,
-          componentChanges: {
+          componentChanges: acceptedShellEvidence({
             baseline,
             result: comparison.result,
             ...(comparison.pairing ? { pairing: comparison.pairing } : {}),
@@ -208,7 +213,7 @@ export function assembleExport(
                 state,
               })),
             })),
-          },
+          }),
         }
       : { comparisons: changesStatus !== "disabled" }),
     updateVersion: 0,
@@ -241,11 +246,15 @@ export function assembleExport(
     const route = entryRoute(entry.path);
     const canonicalPath = viewHref(entry.path);
     const descriptor = { ...delivery, canonicalPath };
-    const html = viewPage(entry, catalogue, {
-      ...context,
-      activeId: entry.path,
-      delivery: descriptor,
-    });
+    const html = viewPage(
+      catalogueRouteEntry(catalogue, entry.path, entry.kind)!,
+      catalogue,
+      {
+        ...context,
+        activeId: entry.path,
+        delivery: descriptor,
+      },
+    );
     addShell(`view/${route}`, html, descriptor);
   }
   for (const [name, bytes] of publicFiles) {

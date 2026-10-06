@@ -9,16 +9,21 @@ import type {
 } from "./manifest_types.js";
 import { isManifestComponentVariant } from "./manifest_types.js";
 
-export interface GeneratedComponentView {
+export interface GeneratedComponentView<
+  Path extends string = string,
+  Reference extends string = Path,
+> {
   viewport: Viewport;
   colorScheme: ColorScheme;
   path: string;
-  variantPath?: string;
-  usage?: ComponentViewRecord;
+  variantPath?: Path;
+  usage?: ComponentViewRecord<Reference>;
 }
 
 /** Derive current and historical-v7 artifacts from identity and view axes. */
-export function generatedViews(entry: ManifestEntry): GeneratedComponentView[] {
+export function generatedViews<Path extends string, Reference extends string>(
+  entry: ManifestEntry<Path, Reference>,
+): GeneratedComponentView<Path, Reference>[] {
   if (entry.kind === "component")
     return isManifestComponentVariant(entry)
       ? fragmentViews(entry, entry.path)
@@ -28,7 +33,9 @@ export function generatedViews(entry: ManifestEntry): GeneratedComponentView[] {
 }
 
 /** Present logical instances by their first actual DOM occurrence, including slot replay. */
-export function orderedInstances(usage?: ComponentViewRecord) {
+export function orderedInstances<Reference extends string>(
+  usage?: ComponentViewRecord<Reference>,
+) {
   if (!usage) return [];
   const positions = new Map<string, number>();
   for (const range of usage.ranges)
@@ -43,10 +50,11 @@ export function orderedInstances(usage?: ComponentViewRecord) {
 }
 
 /** Derive current view artifacts from entry identity and retained axes. */
-export function fragmentViews(
-  entry: ManifestScreen | ManifestComponentVariant,
-  variantPath?: string,
-): GeneratedComponentView[] {
+export function fragmentViews<Path extends string, Reference extends string>(
+  entry:
+    ManifestScreen<Path, Reference> | ManifestComponentVariant<Path, Reference>,
+  variantPath?: Path,
+): GeneratedComponentView<Path, Reference>[] {
   return VIEWPORTS.flatMap((viewport) =>
     entry.colorSchemes.map((colorScheme) => {
       const usage = entry.componentViews?.find(

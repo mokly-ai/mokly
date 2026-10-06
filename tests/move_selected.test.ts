@@ -6,6 +6,7 @@ import { generatedBytes } from "../dist/build/generated_file.js";
 import { compareReview } from "../dist/review/compare.js";
 import { RepositorySelectedReview } from "../dist/review/selected.js";
 import { selectedComparisonViews } from "../packages/viewer/src/shell/comparison_selection.js";
+import { typedReviewFixture } from "../packages/viewer/tests/path_fixture.js";
 
 import { movedCatalogueFixture } from "./helpers/move_catalogue.js";
 import { moveReviewFixture as componentReviewFixture } from "./helpers/move_review_fixture.js";
@@ -46,7 +47,7 @@ async function capture(
   );
   const views = selectedComparisonViews(
     {
-      result: selected.result,
+      result: typedReviewFixture(selected.result),
       url: "https://catalogue.test/__mokly/diffs/__generations/selected-one/review.json",
     },
     {

@@ -5,10 +5,18 @@ import { readCatalogue } from "@mokly/viewer";
 
 import { branchPoints } from "../packages/viewer/src/catalogue/branch_point.js";
 import { currentCatalogueEntries } from "../packages/viewer/src/catalogue/entry_selection.js";
+import {
+  readBranchPointPath,
+  readCurrentPath,
+} from "../packages/viewer/src/catalogue/path_values.js";
 import { readShellCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import { projectScopedCatalogue } from "../packages/viewer/src/catalogue/scoped_projection.js";
 import { parseReviewResult } from "../packages/viewer/src/review/result_validation.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
+import {
+  baselineManifestEntryFixture,
+  currentIdentityFixture,
+} from "../packages/viewer/tests/manifest_path_fixture.js";
 import { projectCatalogue } from "../src/catalogue/projection.js";
 import { compareReview } from "../src/review/compare.js";
 import { computeCatalogueChanges } from "../src/server/changed.js";
@@ -83,7 +91,7 @@ for (const expected of cases) {
       changes.movedEntries,
     );
     const lookup = branchPoints(catalogue);
-    const baseline = before.manifest.entries;
+    const baseline = before.manifest.entries.map(baselineManifestEntryFixture);
     const model = projectCatalogue({
       catalogue,
       configPath: "mokly.config.ts",
@@ -131,10 +139,13 @@ for (const expected of cases) {
         false,
         "a paired previous path cannot be a current same-kind path",
       );
-      assert.deepEqual(lookup.counterpart(move, baseline), {
-        kind: move.kind,
-        path: move.previousPath,
-      });
+      assert.deepEqual(
+        lookup.counterpart(currentIdentityFixture(move), baseline),
+        {
+          kind: move.kind,
+          path: move.previousPath,
+        },
+      );
     }
     if (expected.name === "moved-consumers") {
       for (const [kind, path, previous] of [
@@ -162,7 +173,11 @@ for (const expected of cases) {
           path,
         );
         assert.equal(
-          lookup.resolve({ side: "before", kind, path: previous })?.entry.path,
+          lookup.resolve({
+            side: "before",
+            kind,
+            path: readBranchPointPath(previous),
+          })?.entry.path,
           path,
         );
       }
@@ -173,11 +188,17 @@ for (const expected of cases) {
         ["component", "library/action", "library/Action"],
         ["component", "library/action/primary", "library/Action/Primary"],
       ] as const) {
-        assert.deepEqual(lookup.counterpart({ kind, path }, baseline), {
-          kind,
-          path: previous,
-        });
-        assert.equal(lookup.previousPath({ kind, path }), undefined);
+        assert.deepEqual(
+          lookup.counterpart({ kind, path: readCurrentPath(path) }, baseline),
+          {
+            kind,
+            path: previous,
+          },
+        );
+        assert.equal(
+          lookup.previousPath({ kind, path: readCurrentPath(path) }),
+          undefined,
+        );
       }
       assert.ok(
         current.every(
@@ -206,7 +227,7 @@ for (const expected of cases) {
         lookup.resolve({
           side: "before",
           kind: "component",
-          path: "library/action",
+          path: readBranchPointPath("library/action"),
         }),
         undefined,
       );

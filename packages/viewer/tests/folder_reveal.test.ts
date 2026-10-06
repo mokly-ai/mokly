@@ -13,6 +13,8 @@ import { buildNavSections } from "../src/shell/nav_tree.js";
 import { defaultSelection } from "../src/viewer/selection.js";
 import type { ViewerSelection } from "../src/viewer/types.js";
 
+import { shellHierarchyFixture } from "./manifest_path_fixture.js";
+
 const entry = (
   path: string,
   kind: string,
@@ -37,7 +39,7 @@ const folders: ManifestFolder[] = [
   { path: "pruned/secret", hidden: true, sourcePath: "specs/pruned.ts" },
 ];
 const hierarchy = analyzeHierarchy(entries, folders).hierarchy;
-const sections = buildNavSections(hierarchy);
+const sections = buildNavSections(shellHierarchyFixture(hierarchy));
 
 const context = (changedEntries: readonly string[]): ShellContext => ({
   base: "main",
@@ -51,33 +53,55 @@ const select = (partial: Partial<ViewerSelection>): ViewerSelection => ({
 });
 
 test("folder crumbs link to the folder's own page, reveal plain folders, and keep hidden ones as text", () => {
-  assert.deepEqual(structuredCrumbTrail(hierarchy, "guide/setup/first"), [
-    { href: "/view/guide/", label: "Guide" },
-    { folder: { path: "guide/setup", section: "specs" }, label: "Setup" },
-  ]);
-  assert.deepEqual(structuredCrumbTrail(hierarchy, "guide/secret/plan"), [
-    { href: "/view/guide/", label: "Guide" },
-    { label: "Secret" },
-  ]);
-  assert.deepEqual(structuredCrumbTrail(hierarchy, "guide"), []);
-  assert.deepEqual(structuredCrumbTrail(hierarchy, "pruned/secret/plan"), [
-    { label: "Pruned" },
-    { label: "Secret" },
-  ]);
+  assert.deepEqual(
+    structuredCrumbTrail(shellHierarchyFixture(hierarchy), "guide/setup/first"),
+    [
+      { href: "/view/guide/", label: "Guide" },
+      { folder: { path: "guide/setup", section: "specs" }, label: "Setup" },
+    ],
+  );
+  assert.deepEqual(
+    structuredCrumbTrail(shellHierarchyFixture(hierarchy), "guide/secret/plan"),
+    [{ href: "/view/guide/", label: "Guide" }, { label: "Secret" }],
+  );
+  assert.deepEqual(
+    structuredCrumbTrail(shellHierarchyFixture(hierarchy), "guide"),
+    [],
+  );
+  assert.deepEqual(
+    structuredCrumbTrail(
+      shellHierarchyFixture(hierarchy),
+      "pruned/secret/plan",
+    ),
+    [{ label: "Pruned" }, { label: "Secret" }],
+  );
 });
 
 test("crumbs under a screen index use its title and link, and components reveal their own section", () => {
-  assert.deepEqual(structuredCrumbTrail(hierarchy, "billing/invoice/history"), [
-    { folder: { path: "billing", section: "specs" }, label: "Billing" },
-    { href: "/view/billing/invoice/", label: "Invoice" },
-  ]);
-  assert.deepEqual(structuredCrumbTrail(hierarchy, "billing/invoice/overdue"), [
-    { folder: { path: "billing", section: "specs" }, label: "Billing" },
-  ]);
-  assert.deepEqual(structuredCrumbTrail(hierarchy, "kit/parts/chip"), [
-    { folder: { path: "kit", section: "components" }, label: "Kit" },
-    { folder: { path: "kit/parts", section: "components" }, label: "Parts" },
-  ]);
+  assert.deepEqual(
+    structuredCrumbTrail(
+      shellHierarchyFixture(hierarchy),
+      "billing/invoice/history",
+    ),
+    [
+      { folder: { path: "billing", section: "specs" }, label: "Billing" },
+      { href: "/view/billing/invoice/", label: "Invoice" },
+    ],
+  );
+  assert.deepEqual(
+    structuredCrumbTrail(
+      shellHierarchyFixture(hierarchy),
+      "billing/invoice/overdue",
+    ),
+    [{ folder: { path: "billing", section: "specs" }, label: "Billing" }],
+  );
+  assert.deepEqual(
+    structuredCrumbTrail(shellHierarchyFixture(hierarchy), "kit/parts/chip"),
+    [
+      { folder: { path: "kit", section: "components" }, label: "Kit" },
+      { folder: { path: "kit/parts", section: "components" }, label: "Parts" },
+    ],
+  );
 });
 
 test("revealing a folder opens its section, ancestors, and any list it is listed in", () => {

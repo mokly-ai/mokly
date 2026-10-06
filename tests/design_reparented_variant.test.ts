@@ -20,12 +20,16 @@ import {
   type NavNode,
 } from "../packages/viewer/dist/shell/nav_tree.js";
 import { defaultSelection } from "../packages/viewer/dist/viewer/selection.js";
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
+import { shellHierarchyFixture } from "../packages/viewer/tests/manifest_path_fixture.js";
 
-import { attribute, byClass, textContent } from "./helpers/design_catalogue.js";
 import {
+  attribute,
+  byClass,
   designCatalogue,
   designDocument,
   elements,
+  textContent,
 } from "./helpers/design_catalogue.js";
 import {
   filterTargets,
@@ -84,15 +88,15 @@ test("reparented mockup shows the runtime's Changes-visible rows", async () => {
     },
   ];
   const { hierarchy } = analyzeHierarchy(entries);
-  const [specs] = buildNavSections(hierarchy, [
+  const [specs] = buildNavSections(shellHierarchyFixture(hierarchy), [
     {
-      entryId: "welcome-error",
+      entryId: readCurrentPath("welcome-error"),
       entryKind: "screen",
       key: "removed:welcome-error",
       kind: "leaf",
       label: "Save failed · Removed",
       title: "Save failed",
-      parentId: "welcome",
+      parentId: readCurrentPath("welcome"),
     },
   ]);
   assert.ok(specs);

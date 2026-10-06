@@ -1,5 +1,6 @@
 /** React lifecycle hook for one adapter-owned consumer frame. */
 
+import type { RefObject } from "react";
 import {
   useEffect,
   useLayoutEffect,
@@ -7,8 +8,8 @@ import {
   useRef,
   useState,
 } from "react";
-import type { RefObject } from "react";
 
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
 import type { FrameAdapter, FrameEvent } from "../client/frame_adapter.js";
 import { FrameError } from "../client/frame_error.js";
@@ -17,9 +18,9 @@ import { cancelFrameMount } from "../client/frame_mount.js";
 import { runFrameCleanup } from "./frame_cleanup.js";
 import { mountedFrameReadiness } from "./frame_readiness.js";
 import {
+  useOptionalShellFrameRegistry,
   type ShellFrameIdentity,
   type ShellFrameRegistry,
-  useOptionalShellFrameRegistry,
 } from "./frame_registry.js";
 import {
   adoptUsage,
@@ -34,7 +35,7 @@ interface MountedFrameInput {
   identity: ShellFrameIdentity;
   onEvent?(event: FrameEvent): void;
   source: string | undefined;
-  usage: CatalogueUsage;
+  usage: CatalogueUsage<CurrentPath | BranchPointPath>;
 }
 
 /** Mount one frame and adopt evidence without replacing its DOM element. */

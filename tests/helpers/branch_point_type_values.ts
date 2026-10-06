@@ -35,48 +35,79 @@ export function erasesReference(
   if (depth > 8 || from === to) return false;
   if (pathSides(checker, from) & BEFORE)
     return !(pathSides(checker, to) & BEFORE);
+  if (
+    pathSides(checker, from) & CURRENT &&
+    to.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown)
+  )
+    return true;
   if (from.isUnion())
     return from.types.some((part) =>
       erasesReference(checker, part, to, depth + 1),
     );
-  if (to.isUnion())
-    return to.types.every((part) =>
+  if (to.isUnion()) {
+    const compatible = to.types.filter((part) =>
+      checker.isTypeAssignableTo(from, part),
+    );
+    return (compatible.length ? compatible : to.types).every((part) =>
       erasesReference(checker, from, part, depth + 1),
     );
+  }
   const sourceIndex = checker.getIndexTypeOfType(from, ts.IndexKind.Number);
   const targetIndex = checker.getIndexTypeOfType(to, ts.IndexKind.Number);
+  const erasedObject = Boolean(
+    to.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown),
+  );
+  if (
+    from.flags & ts.TypeFlags.Object &&
+    (from as ts.ObjectType).objectFlags & ts.ObjectFlags.Reference
+  ) {
+    const source = from as ts.TypeReference;
+    const target =
+      to.flags & ts.TypeFlags.Object &&
+      (to as ts.ObjectType).objectFlags & ts.ObjectFlags.Reference
+        ? (to as ts.TypeReference)
+        : undefined;
+    const collection = source.target.symbol?.declarations?.some(
+      (declaration) =>
+        /\/typescript\/lib\/lib\./.test(
+          declaration.getSourceFile().fileName.split("\\").join("/"),
+        ) &&
+        [
+          "Map",
+          "ReadonlyMap",
+          "Set",
+          "ReadonlySet",
+          "Promise",
+          "PromiseLike",
+        ].includes(source.target.symbol.name),
+    );
+    if (collection && (erasedObject || target?.target === source.target)) {
+      const targets = target ? checker.getTypeArguments(target) : [];
+      if (
+        checker
+          .getTypeArguments(source)
+          .some((argument, index) =>
+            erasesReference(checker, argument, targets[index] ?? to, depth + 1),
+          )
+      )
+        return true;
+    }
+  }
   if (
     sourceIndex &&
-    targetIndex &&
-    erasesReference(checker, sourceIndex, targetIndex, depth + 1)
+    (targetIndex || erasedObject) &&
+    erasesReference(checker, sourceIndex, targetIndex ?? to, depth + 1)
   )
     return true;
-  for (const name of [
-    "path",
-    "variantOf",
-    "previousPath",
-    "componentId",
-    "entry",
-    "context",
-    "via",
-    "instances",
-    "usage",
-    "views",
-    "componentViews",
-    "evidence",
-    "steps",
-    "screenPath",
-    "useCasePaths",
-  ]) {
-    const source = checker.getPropertyOfType(from, name);
-    const target = checker.getPropertyOfType(to, name);
+  for (const source of checker.getPropertiesOfType(from)) {
+    const target = checker.getPropertyOfType(to, source.name);
     if (
       source &&
-      target &&
+      (target || erasedObject) &&
       erasesReference(
         checker,
         checker.getTypeOfSymbol(source),
-        checker.getTypeOfSymbol(target),
+        target ? checker.getTypeOfSymbol(target) : to,
         depth + 1,
       )
     )

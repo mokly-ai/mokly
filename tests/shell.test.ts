@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { buildNavSections } from "../packages/viewer/dist/shell/nav_tree.js";
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
 
 import {
   context,
@@ -37,7 +38,7 @@ test("nav tree nests pages and screens in one declared hierarchy", () => {
 
 test("page breadcrumbs reveal path folders without inventing Overview links", () => {
   const catalogue = createCatalogue(manifest);
-  const entry = catalogue.byPath.get("example/old");
+  const entry = catalogue.byPath.get(readCurrentPath("example/old"));
   assert.ok(entry);
   const html = viewPage(entry, catalogue, {
     ...context,
@@ -55,7 +56,9 @@ test("page breadcrumbs reveal path folders without inventing Overview links", ()
 
 test("catalogue nav marks active, changed, and iconed rows", () => {
   const catalogue = createCatalogue(manifest);
-  const entry = catalogue.byPath.get("example/screens/welcome");
+  const entry = catalogue.byPath.get(
+    readCurrentPath("example/screens/welcome"),
+  );
   assert.ok(entry);
   const html = viewPage(entry, catalogue, {
     ...context,

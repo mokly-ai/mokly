@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import type * as LocalAdapter from "../../packages/viewer/dist/client/same_origin_adapter.js";
 import type { ComponentViewRecord } from "../../packages/viewer/dist/components/manifest_types.js";
+import type { CurrentPath } from "../../packages/viewer/src/catalogue/path_types.js";
 
 import {
   crossOriginFixture,
@@ -32,7 +33,7 @@ test("same-origin interface supports geometry, hover, click, scroll and disposal
         url: new URL("/static/home/index.mobile.html", location.origin),
         usage: {
           status: "ready",
-          ...(JSON.parse(json) as ComponentViewRecord),
+          ...(JSON.parse(json) as ComponentViewRecord<CurrentPath>),
         },
       },
     );
@@ -155,7 +156,7 @@ test("temporary previews authenticate masks and preserve logical navigation", as
         `${location.origin}/__mokly/client/same_origin_adapter.js`
       )) as typeof LocalAdapter;
       const state = window as unknown as FrameTestWindow;
-      const usage = JSON.parse(usageJson) as ComponentViewRecord;
+      const usage = JSON.parse(usageJson) as ComponentViewRecord<CurrentPath>;
       const frame = document.querySelector<HTMLIFrameElement>("#frame")!;
       frame.dataset["workspaceFrame"] = usage.viewport;
       state.frameEvents = [];

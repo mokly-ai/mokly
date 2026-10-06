@@ -16,6 +16,17 @@ parameter before the reference parameter: `CatalogueRecord<Path, Reference>`.
 Object sources must use the validated model. Hosts can call `readCatalogue`
 on their decoded JSON instead of asserting its type.
 
+The private shell catalogue and embedded display records keep these path
+types. Generated views and ordered instances preserve their input reference
+type. Before evidence and baseline inventories keep branch-point paths;
+comparison result addresses and resolved destinations keep current paths.
+The shell assigns types at accepted producer boundaries. It does not rewrite
+values. Its route-string lookup returns a typed record address without move
+resolution. A syntax guard retains lookup ownership checks that types cannot
+enforce, including eligible-parent checks for current usage names. The type
+guard permits React dependency identity, typed class-method binding and complete-record serialization for
+hydration and snapshot equality. Neither operation maps reference identities.
+
 ```ts
 import type {
   BranchPointPath,

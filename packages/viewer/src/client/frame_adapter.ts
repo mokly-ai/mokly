@@ -1,3 +1,4 @@
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
 
 /** Finite CSS pixels in the immediate frame's visible content viewport. */
@@ -17,7 +18,7 @@ export interface FrameMount {
   /** Receive events from the visible document while the adapter mounts. */
   onEvent?: (event: FrameEvent) => void;
   url: URL;
-  usage: CatalogueUsage;
+  usage: CatalogueUsage<CurrentPath | BranchPointPath>;
 }
 export type NavigationTarget =
   | { kind: "self" | "top" | "parent" | "blank" }
@@ -46,7 +47,9 @@ export type FrameEvent =
   | { type: "error"; code: FrameErrorCode };
 export interface MountedFrame {
   /** Refresh validated usage for the same document without replacing its session. */
-  updateUsage?(usage: CatalogueUsage): Promise<void>;
+  updateUsage?(
+    usage: CatalogueUsage<CurrentPath | BranchPointPath>,
+  ): Promise<void>;
   listInstanceBoundaries(): Promise<readonly InstanceBoundary[]>;
   highlight(
     keys: readonly string[],

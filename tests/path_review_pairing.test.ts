@@ -15,6 +15,10 @@ import { entryPairs } from "../dist/review/component_metadata.js";
 import { acceptedCatalogue } from "../packages/viewer/src/catalogue/accepted_paths.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
 import { workspaceData } from "../packages/viewer/src/shell/workspace_data.js";
+import {
+  currentManifestEntryFixture,
+  shellEvidenceFixture,
+} from "../packages/viewer/tests/manifest_path_fixture.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { createExportFixture } from "./helpers/export_fixture.js";
@@ -123,8 +127,12 @@ test("kind changes are Added in catalogue projection and workspace evidence", as
   assert.equal(
     workspaceData(
       catalogue,
-      { base: "main", updateVersion: 1, componentChanges: evidence },
-      entry,
+      {
+        base: "main",
+        updateVersion: 1,
+        componentChanges: shellEvidenceFixture(evidence),
+      },
+      currentManifestEntryFixture(entry),
     ).status,
     "Added",
   );

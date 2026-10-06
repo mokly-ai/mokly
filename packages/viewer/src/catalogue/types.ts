@@ -99,7 +99,7 @@ export interface CatalogueEntry<Path extends string = CurrentPath> {
   details: CatalogueDetails;
   changes: CatalogueChanges;
 }
-export type CatalogueUsage<Reference extends string = string> =
+export type CatalogueUsage<Reference extends string = CurrentPath> =
   | {
       status: "ready";
       instances: readonly ComponentInstanceRecord<Reference>[];

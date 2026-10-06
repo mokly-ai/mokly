@@ -28,6 +28,11 @@ import type { ShellRoute } from "../src/shell/routes.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 import { defaultSelection, revealSelection } from "../src/viewer/selection.js";
 
+import {
+  currentManifestEntryFixture,
+  shellHierarchyFixture,
+} from "./manifest_path_fixture.js";
+
 const context: ShellContext = {
   base: "main",
   changesStatus: "ready",
@@ -87,7 +92,9 @@ test("search matches a folder's resolved title and shows every row below it", ()
     tags: readonly string[] = [],
   ) => {
     const found = rows(
-      buildNavSections(analyzeHierarchy(entries, folders).hierarchy),
+      buildNavSections(
+        shellHierarchyFixture(analyzeHierarchy(entries, folders).hierarchy),
+      ),
     );
     return [...found.values()]
       .filter((row) =>
@@ -118,7 +125,7 @@ test("search matches a folder's resolved title and shows every row below it", ()
     [],
   );
   const billing = buildNavSections(
-    analyzeHierarchy(entries, titled).hierarchy,
+    shellHierarchyFixture(analyzeHierarchy(entries, titled).hierarchy),
   )[0]?.children.find((node) => node.key === "folder:billing");
   assert.ok(billing);
   assert.equal(
@@ -173,7 +180,10 @@ test("Changes activation searches a removed variant as its row does", () => {
   const row = rows(catalogueNavSections(catalogue)).get(removed.path);
   assert.equal(row?.removedVariant, true);
   const route: ShellRoute = {
-    view: { kind: "target", target: { kind: "entry", entry: parent } },
+    view: {
+      kind: "target",
+      target: { kind: "entry", entry: currentManifestEntryFixture(parent) },
+    },
   };
   for (const [search, opens] of [
     ["removed", false],

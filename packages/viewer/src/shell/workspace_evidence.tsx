@@ -5,7 +5,7 @@ import { Fragment } from "react";
 import { decodeProps } from "../components/codec.js";
 import { viewHref } from "../navigation/routes.js";
 import type { EntryChangeReason } from "../review/component_types.js";
-import type { ReviewResult } from "../review/types.js";
+import type { TypedReviewResult } from "../review/types.js";
 
 import { entryWording } from "./entry_wording.js";
 import type { WorkspaceData } from "./workspace_data.js";
@@ -29,7 +29,7 @@ export function WorkspaceEvidence({
   variantPath,
 }: {
   data: WorkspaceData;
-  loaded?: ReviewResult;
+  loaded?: TypedReviewResult;
   previousPath?: string;
   variantPath?: string;
 }) {

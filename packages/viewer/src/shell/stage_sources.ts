@@ -1,20 +1,25 @@
 /** Source and usage projection for saved and temporary stage views. */
 
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type {
   AnyShellCatalogueUsage,
   AnyShellCatalogueView,
 } from "../catalogue/scoped_types.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
-import type { ComponentViewRecord } from "../components/manifest_types.js";
-import type { GeneratedComponentView } from "../components/views.js";
 import { encodeUrlPath } from "../data/paths.js";
 import { viewRoute } from "../navigation/routes.js";
 
-export const unavailableUsage: CatalogueUsage = { status: "unavailable" };
-const pendingUsage: CatalogueUsage = { status: "pending" };
+import type { ShellGeneratedView, ShellUsage } from "./usage_types.js";
+
+export const unavailableUsage: CatalogueUsage<CurrentPath | BranchPointPath> = {
+  status: "unavailable",
+};
+const pendingUsage: CatalogueUsage<CurrentPath | BranchPointPath> = {
+  status: "pending",
+};
 const generatedUsages = new WeakMap<
-  ComponentViewRecord,
-  CatalogueUsage<string>
+  ShellUsage,
+  CatalogueUsage<CurrentPath | BranchPointPath>
 >();
 
 export function framePath(path: string, fragment?: string): string {
@@ -38,17 +43,17 @@ export function frameSource(
 /** Normalize bootstrap-only omission to the frame's existing pending state. */
 export function shellFrameUsage(
   usage: AnyShellCatalogueUsage | undefined,
-): CatalogueUsage {
+): CatalogueUsage<CurrentPath | BranchPointPath> {
   if (!usage) return unavailableUsage;
   return usage.status === "omitted" ? pendingUsage : usage;
 }
 
 export function generatedView(
-  views: readonly GeneratedComponentView[] | undefined,
+  views: readonly ShellGeneratedView[] | undefined,
   variantPath: string | undefined,
   viewport: "desktop" | "mobile",
   colorScheme: "dark" | "light",
-): GeneratedComponentView | undefined {
+): ShellGeneratedView | undefined {
   return views?.find(
     (view) =>
       view.viewport === viewport &&
@@ -58,7 +63,7 @@ export function generatedView(
 }
 
 export function generatedFrameSource(
-  view: GeneratedComponentView,
+  view: ShellGeneratedView,
   fragment?: string,
   stepIndex?: number,
 ): string {
@@ -71,8 +76,8 @@ export function generatedFrameSource(
 }
 
 export function generatedUsage(
-  view: GeneratedComponentView,
-): CatalogueUsage<string> {
+  view: ShellGeneratedView,
+): CatalogueUsage<CurrentPath | BranchPointPath> {
   const record = view.usage;
   if (!record) return unavailableUsage;
   const current = generatedUsages.get(record);

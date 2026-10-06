@@ -7,8 +7,7 @@ import type {
   AnyShellCatalogueView,
 } from "../catalogue/scoped_types.js";
 import { temporaryPreviewAdapter } from "../client/same_origin_adapter.js";
-import type { GeneratedComponentView } from "../components/views.js";
-import { entryRoute, documentRoute } from "../navigation/routes.js";
+import { documentRoute, entryRoute } from "../navigation/routes.js";
 import { DisplaySelection } from "../viewer/display_context.js";
 
 import { useMountedShellFrame } from "./frame_mount_hook.js";
@@ -29,6 +28,7 @@ import {
   unavailableUsage,
 } from "./stage_sources.js";
 import { useOptionalShellStore } from "./store_context.js";
+import type { ShellGeneratedView } from "./usage_types.js";
 
 /** A selected, adapter-owned screen or component preview. */
 export function StageFrame({
@@ -46,7 +46,7 @@ export function StageFrame({
   flow?: boolean;
   fragment?: string;
   hasDarkFragments: boolean;
-  previewViews?: readonly GeneratedComponentView[];
+  previewViews?: readonly ShellGeneratedView[];
   stepIndex?: number;
   variantPath?: string;
   views: readonly AnyShellCatalogueView[];

@@ -56,10 +56,6 @@ test("the guard recognizes each prohibited mapping and its permitted forms", () 
   assert.deepEqual(rules("const { variantOf } = entry;"), [
     "destructures a branch-point field",
   ]);
-  assert.deepEqual(rules("item.path.toLowerCase() === other;"), [
-    "case-folds a path",
-  ]);
-  assert.deepEqual(rules("baselinePath.toLowerCase();"), ["case-folds a path"]);
   assert.deepEqual(rules("instance.componentId === component.path;"), [
     "matches a usage component name outside the lookup",
   ]);
@@ -67,9 +63,6 @@ test("the guard recognizes each prohibited mapping and its permitted forms", () 
     rules("instance.componentId === (component?.path ?? entry.path);"),
     ["matches a usage component name outside the lookup"],
   );
-  assert.deepEqual(rules("parent.previousPath === instance.componentId;"), [
-    "matches a usage component name outside the lookup",
-  ]);
   assert.deepEqual(rules("byPath.get(instance.componentId);"), [
     "indexes a usage component name outside the lookup",
   ]);
@@ -83,6 +76,9 @@ test("the guard recognizes each prohibited mapping and its permitted forms", () 
         "entry.variantOf !== undefined ? { variantOf: entry.variantOf } : {};",
         "typeof entry.variantOf;",
         '"variantOf" in entry;',
+        "item.path.toLowerCase() === other;",
+        "baselinePath.toLowerCase();",
+        "parent.previousPath === instance.componentId;",
         "tag.toLowerCase();",
         "query.freeText.toLowerCase();",
         'lookup.usageComponent(instance.componentId, "before");',

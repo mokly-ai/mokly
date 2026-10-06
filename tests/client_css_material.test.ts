@@ -12,6 +12,7 @@ import {
 import { ComparisonViews } from "../packages/viewer/dist/shell/comparison_views.js";
 import type { ComparisonPresentation } from "../packages/viewer/dist/shell/use_comparison.js";
 import { isStyleOnlyView } from "../packages/viewer/dist/shell/workspace_style_evidence.js";
+import { typedReviewFixture } from "../packages/viewer/tests/path_fixture.js";
 
 import { cssSchemaFixture } from "./helpers/review_css_schema.js";
 
@@ -20,7 +21,10 @@ function renderComparison(
   result: ReviewResult,
   presentation: ComparisonPresentation,
 ): string {
-  const loaded = { result, url: "https://example.test/review.json" };
+  const loaded = {
+    result: typedReviewFixture(result),
+    url: "https://example.test/review.json",
+  };
   const entryId = "auth";
   const views = selectedComparisonViews(
     loaded,

@@ -4,16 +4,16 @@ import { useContext } from "react";
 
 import { catalogueComponentVariants } from "../catalogue/entry_selection.js";
 import type {
-  ShellCatalogueReadModel,
-  AnyShellCatalogueEntry,
   AnyShellCatalogueScreen,
+  ShellCatalogueReadModel,
+  ShellCatalogueRoutedEntry,
 } from "../catalogue/scoped_types.js";
-import type { GeneratedComponentView } from "../components/views.js";
 import { viewHref } from "../navigation/routes.js";
 import { VIEWPORTS } from "../registry/views.js";
 import { DisplaySelection } from "../viewer/display_context.js";
 
 import { DocumentStageFrame, StageFrame } from "./stage_frame.js";
+import type { ShellGeneratedView } from "./usage_types.js";
 
 /** Render current frames without giving consumer documents script capability. */
 export function PublicStage({
@@ -25,10 +25,10 @@ export function PublicStage({
   variantPath,
 }: {
   catalogue: ShellCatalogueReadModel;
-  entry: AnyShellCatalogueEntry;
+  entry: ShellCatalogueRoutedEntry;
   fragment?: string;
   hasDarkFragments: boolean;
-  previewViews?: readonly GeneratedComponentView[];
+  previewViews?: readonly ShellGeneratedView[];
   variantPath?: string;
 }) {
   const selection = useContext(DisplaySelection);
@@ -98,7 +98,7 @@ function UseCaseFlow({
   hasDarkFragments,
 }: {
   catalogue: ShellCatalogueReadModel;
-  entry: Extract<AnyShellCatalogueEntry, { kind: "use-case" }>;
+  entry: Extract<ShellCatalogueRoutedEntry, { kind: "use-case" }>;
   fragment?: string;
   hasDarkFragments: boolean;
 }) {

@@ -1,7 +1,7 @@
 /** Comparison metadata requests shared by the hydrated shell controller. */
 
 import { parseReviewResult } from "../review/result_validation.js";
-import type { ReviewResult } from "../review/types.js";
+import type { TypedReviewResult } from "../review/types.js";
 
 import type {
   ComparisonDelivery,
@@ -10,7 +10,7 @@ import type {
 
 /** One validated result and the immutable URL that owns its snapshots. */
 export interface LoadedComparison {
-  result: ReviewResult;
+  result: TypedReviewResult;
   url: string;
 }
 

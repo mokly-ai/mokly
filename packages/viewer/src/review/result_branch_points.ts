@@ -15,14 +15,23 @@ import type {
   ScreenReviewV5,
 } from "./component_types.js";
 
-interface ReviewLookupEntry extends EntryIdentity {
+interface ReviewLookupEntry<
+  Current extends string,
+  Before extends string,
+> extends EntryIdentity {
   readonly variantOf?: CurrentPath | BranchPointPath;
-  readonly record: ScreenReviewV5 | ComponentReview | ComponentVariantReview;
+  readonly record:
+    | ScreenReviewV5<Current, Before>
+    | ComponentReview<Current, Before>
+    | ComponentVariantReview<Current, Before>;
 }
 
 /** One review generation resolves context entries, variants and usage names. */
-export function resultBranchPoints(result: ReviewResultV5) {
-  const entries: ReviewLookupEntry[] = [
+export function resultBranchPoints<
+  Current extends string,
+  Before extends string,
+>(result: ReviewResultV5<Current, Before>) {
+  const entries: ReviewLookupEntry<Current, Before>[] = [
     ...result.screens.map((record) => ({
       kind: "screen" as const,
       path: readCurrentPath(record.path),

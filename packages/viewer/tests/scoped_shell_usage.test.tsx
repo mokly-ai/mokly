@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { readCurrentPath } from "../src/catalogue/path_values.js";
 import { projectScopedCatalogue } from "../src/catalogue/scoped_projection.js";
 import { shellFrameUsage } from "../src/shell/stage_sources.js";
 import { inspectionAvailability } from "../src/shell/workspace_inspection_runtime.js";
@@ -71,7 +72,7 @@ test("an out-of-scope workspace shows the mockup's inspection waiting copy", () 
     entryKind: component.kind,
   });
   const catalogue = viewerCatalogue(scoped);
-  const entry = catalogue.byPath.get("product/browse/home");
+  const entry = catalogue.byPath.get(readCurrentPath("product/browse/home"));
   assert.ok(entry?.kind === "screen");
   const data = publicWorkspace(catalogue, scoped, entry);
   assert.equal(data.viewUsagePending, true);

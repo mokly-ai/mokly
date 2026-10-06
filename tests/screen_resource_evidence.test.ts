@@ -24,6 +24,8 @@ import {
 } from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 import { mergeWorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence_merge.js";
+import { readCurrentPath } from "../packages/viewer/src/catalogue/path_values.js";
+import { shellEvidenceFixture } from "../packages/viewer/tests/manifest_path_fixture.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
@@ -66,7 +68,7 @@ for (const [name, edit, resource] of [
       await compileCatalogue(fixture.config).then((value) => value.manifest),
     );
     for (const screen of artifact.result.screens) {
-      const entry = catalogue.byPath.get(screen.path);
+      const entry = catalogue.byPath.get(readCurrentPath(screen.path));
       assert.ok(entry?.kind === "screen");
       const data = workspaceData(
         catalogue,
@@ -75,7 +77,7 @@ for (const [name, edit, resource] of [
           updateVersion: 2,
           comparisons: true,
           changedEntries: changes.changedEntries,
-          componentChanges: snapshot,
+          componentChanges: shellEvidenceFixture(snapshot),
         },
         entry,
       );

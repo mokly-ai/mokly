@@ -3,11 +3,10 @@
 import { useState } from "react";
 
 import { branchPoints } from "../catalogue/branch_point.js";
-import type { ComponentInstanceRecord } from "../components/manifest_types.js";
 import { orderedInstances } from "../components/views.js";
-import type { GeneratedComponentView } from "../components/views.js";
 
 import type { Catalogue } from "./catalogue.js";
+import type { ShellGeneratedView, ShellInstance } from "./usage_types.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { WAITING_REASON } from "./workspace_inspection_runtime.js";
 
@@ -29,7 +28,7 @@ export function WorkspaceInstances({
   onSelect(key: string, viewport: "desktop" | "mobile"): void;
   onViewport(viewport: "desktop" | "mobile"): void;
   selectedKey?: string | undefined;
-  views: readonly GeneratedComponentView[];
+  views: readonly ShellGeneratedView[];
 }) {
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   const view =
@@ -103,7 +102,7 @@ function InstanceList({
   catalogue: Catalogue;
   data: WorkspaceData;
   expanded: ReadonlySet<string>;
-  instances: readonly ComponentInstanceRecord[];
+  instances: readonly ShellInstance[];
   onExpanded(key: string, open: boolean, child?: string): void;
   onSelect(key: string): void;
   owner?: string | undefined;

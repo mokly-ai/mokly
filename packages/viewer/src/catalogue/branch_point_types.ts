@@ -22,9 +22,10 @@ export type EntryReference<
 export interface BranchPointEntry<
   Path extends string = CurrentPath,
   Reference extends string = Path,
+  Before extends string = BeforePath<Path>,
 > extends EntryIdentity<Path> {
   readonly variantOf?: Reference;
-  readonly previousPath?: string;
+  readonly previousPath?: Before;
 }
 
 /** Removed inputs retain their original record and historical display context. */
@@ -65,7 +66,7 @@ export type VariantParentResolution<
 export interface BranchPointLookup<
   Entry extends EntryIdentity<string> = ManifestEntry<CurrentPath>,
   Removed extends BranchPointRemovedEntry<
-    BranchPointEntry<Entry["path"], string>
+    BranchPointEntry<Entry["path"], string, string>
   > = BranchPointRemovedEntry<
     BranchPointEntry<Entry["path"], BeforePath<Entry["path"]>>
   >,
@@ -111,9 +112,9 @@ export interface BranchPointLookup<
 
 /** Private catalogues and public read models supply the same validated inputs. */
 export type BranchPointInputs<
-  Entry extends BranchPointEntry<string, string>,
+  Entry extends BranchPointEntry<string, string, string>,
   Removed extends BranchPointRemovedEntry<
-    BranchPointEntry<Entry["path"], string>
+    BranchPointEntry<Entry["path"], string, string>
   >,
 > = {
   readonly removedEntries: readonly Removed[];

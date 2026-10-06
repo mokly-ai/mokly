@@ -1,3 +1,4 @@
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
 
 import type {
@@ -19,7 +20,7 @@ import { listenForFrameActivations } from "./same_origin_navigation.js";
 import { localPointer } from "./same_origin_pointer.js";
 
 interface LocalOperations {
-  updateUsage(usage: CatalogueUsage): void;
+  updateUsage(usage: CatalogueUsage<CurrentPath | BranchPointPath>): void;
   inspectable(): boolean;
   list(): readonly InstanceBoundary[];
   highlight(keys: readonly string[], mode: "off" | "highlight" | "pick"): void;

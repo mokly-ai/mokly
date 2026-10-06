@@ -29,7 +29,7 @@ import {
 } from "./values.js";
 
 /** Parse known v4 fields; ignore compatible additions without exposing private data. */
-export function readCatalogue(value: unknown): CatalogueReadModel {
+export function readCatalogue<Input>(value: Input): CatalogueReadModel {
   const model = readCatalogueModel(value, readEntry);
   validateCatalogueReferences(model);
   return model as unknown as CatalogueReadModel;

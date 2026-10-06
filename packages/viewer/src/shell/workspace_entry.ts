@@ -1,6 +1,7 @@
 /** Route-owned workspace entry and its component evidence parent. */
 
 import { branchPoints } from "../catalogue/branch_point.js";
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import {
   isManifestComponentVariant,
   type ManifestComponent,
@@ -18,7 +19,9 @@ export type WorkspaceEntry = Extract<
   { kind: "component" | "screen" }
 >;
 export type WorkspaceEvidenceEntry =
-  ManifestComponent | ManifestComponentVariant | ManifestScreen;
+  | ManifestComponent<CurrentPath>
+  | ManifestComponentVariant<CurrentPath, CurrentPath | BranchPointPath>
+  | ManifestScreen<CurrentPath, CurrentPath | BranchPointPath>;
 
 /** A variant's eligible current or removed parent entry, if the lookup has one. */
 function parentEntry(
@@ -37,7 +40,7 @@ function parentEntry(
 export function workspaceComponent(
   catalogue: Catalogue,
   entry: WorkspaceEntry,
-): ManifestComponent | undefined {
+): ManifestComponent<CurrentPath> | undefined {
   if (entry.kind !== "component") return;
   const candidate = isManifestComponentVariant(entry)
     ? parentEntry(catalogue, entry)
@@ -68,10 +71,11 @@ export function workspaceKey(
  * a variant without an eligible parent, the group that lists the variant.
  */
 export function componentReview(
-  components: readonly ComponentReview[] | undefined,
-  component: ManifestComponent | undefined,
+  components:
+    readonly ComponentReview<CurrentPath, BranchPointPath>[] | undefined,
+  component: ManifestComponent<CurrentPath> | undefined,
   entry: WorkspaceEntry,
-): ComponentReview | undefined {
+): ComponentReview<CurrentPath, BranchPointPath> | undefined {
   if (component)
     return components?.find((item) => item.path === component.path);
   return entry.kind === "component" && isManifestComponentVariant(entry)

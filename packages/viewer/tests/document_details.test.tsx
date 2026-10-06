@@ -4,11 +4,14 @@ import test from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { readCurrentPath } from "../src/catalogue/path_values.js";
 import { readCatalogue } from "../src/catalogue/reader.js";
 import type { ManifestEntry } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { EntryDetailsBody } from "../src/shell/details.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
+
+import { currentManifestEntryFixture } from "./manifest_path_fixture.js";
 
 /** The public fixture, with a screen that names the overview document. */
 function catalogue() {
@@ -32,7 +35,7 @@ function catalogue() {
 
 function details(path: string): string {
   const shell = catalogue();
-  const entry = shell.byPath.get(path);
+  const entry = shell.byPath.get(readCurrentPath(path));
   assert.ok(entry, path);
   return renderToStaticMarkup(
     <EntryDetailsBody catalogue={shell} entry={entry} />,
@@ -52,7 +55,7 @@ test("a related document opens its entry, labelled with its title", () => {
 test("a document's Details show its description, tags, and Markdown source", () => {
   const html = details("product");
   const shell = catalogue();
-  const entry = shell.byPath.get("product");
+  const entry = shell.byPath.get(readCurrentPath("product"));
   assert.ok(entry?.kind === "document");
   assert.match(html, new RegExp(`>${entry.description}</p>`, "u"));
   assert.match(html, /data-mokly-tag="guide"/u);
@@ -109,7 +112,7 @@ test("the served manifest's source path links its current document", () => {
     ],
   );
   const render = (path: string) => {
-    const entry = shell.byPath.get(path);
+    const entry = shell.byPath.get(readCurrentPath(path));
     assert.ok(entry, path);
     return renderToStaticMarkup(
       <EntryDetailsBody catalogue={shell} entry={entry} />,
@@ -142,7 +145,10 @@ test("a served document lists its resources under Dependencies, as projection do
   });
   assert.match(
     renderToStaticMarkup(
-      <EntryDetailsBody catalogue={shell} entry={document} />,
+      <EntryDetailsBody
+        catalogue={shell}
+        entry={currentManifestEntryFixture(document)}
+      />,
     ),
     /Dependencies<\/span><span class="mbk-meta-v"><span class="mbk-chips"><code class="mbk-code">specs\/guide\/terms\.md<\/code><code class="mbk-code">specs\/guide\/terms\.svg<\/code><\/span>/u,
   );

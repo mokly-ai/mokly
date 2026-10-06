@@ -2,7 +2,11 @@ import type { ServerResponse } from "node:http";
 
 import type { RenderCapability } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
-import { shellContext, SHELL_CSS } from "@mokly/viewer/server";
+import {
+  acceptedShellEvidence,
+  SHELL_CSS,
+  shellContext,
+} from "@mokly/viewer/server";
 
 import type { GeneratedFile } from "../build/generated_file.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -132,7 +136,8 @@ export async function handleCatalogueRequest(
   if (documents && renderCapability)
     context.previewGeneration = renderCapability.generation;
   if (changesStatus) context.changesStatus = changed ? "ready" : changesStatus;
-  if (componentChanges) context.componentChanges = componentChanges;
+  if (componentChanges)
+    context.componentChanges = acceptedShellEvidence(componentChanges);
   if (renderCapability) context.renderCapability = renderCapability;
   if (url.pathname === "/")
     return send(

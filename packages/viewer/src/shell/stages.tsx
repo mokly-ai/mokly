@@ -5,13 +5,14 @@
 
 import { useContext, type ReactNode } from "react";
 
+import { currentCatalogueEntries } from "../catalogue/entry_selection.js";
+import type { CurrentPath } from "../catalogue/path_types.js";
 import type { ManifestComponentVariant } from "../components/manifest_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
-import type { GeneratedComponentView } from "../components/views.js";
 import { encodeUrlPath } from "../data/paths.js";
-import { entryRoute, documentRoute } from "../navigation/routes.js";
+import { documentRoute, entryRoute } from "../navigation/routes.js";
+import type { ManifestUseCase } from "../registry/types.js";
 import { DisplaySelection } from "../viewer/display_context.js";
-import { routedEntries } from "../viewer/selection.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { ComponentStage } from "./component_stage.js";
@@ -19,6 +20,7 @@ import { FramesStage, UseCaseFlowStage } from "./manifest_stages.js";
 import { PublicStage } from "./public_stage.js";
 import { documentLightOnly, LightOnlyBand } from "./scheme_fallback.js";
 import type { RouteTarget } from "./target.js";
+import type { ShellGeneratedView } from "./usage_types.js";
 
 function fragmentSrc(route: string, fragment?: string): string {
   const source = `/static/${encodeUrlPath(route)}`;
@@ -69,7 +71,7 @@ export function EmptyStage(props: { children: ReactNode; heading: string }) {
 export function TargetStage(props: {
   catalogue: Catalogue;
   fragment?: string;
-  previewViews?: readonly GeneratedComponentView[];
+  previewViews?: readonly ShellGeneratedView[];
   target: RouteTarget;
   variantPath?: string | undefined;
 }) {
@@ -77,7 +79,7 @@ export function TargetStage(props: {
   const entry = props.target.entry;
   const model = props.catalogue.publicModel;
   if (model) {
-    const current = routedEntries(model).find(
+    const current = currentCatalogueEntries(model).find(
       (item) => item.path === entry.path,
     )!;
     return (
@@ -130,7 +132,7 @@ export function TargetStage(props: {
     const variants = (
       props.catalogue.hierarchy.variantsByPath.get(parent.path) ?? []
     ).filter(
-      (candidate): candidate is ManifestComponentVariant =>
+      (candidate): candidate is ManifestComponentVariant<CurrentPath> =>
         candidate.kind === "component" && isManifestComponentVariant(candidate),
     );
     const variant =
@@ -152,7 +154,10 @@ export function TargetStage(props: {
   ) : (
     <UseCaseFlowStage
       catalogue={props.catalogue}
-      entry={entry}
+      entry={props.catalogue.manifest.entries.find(
+        (candidate): candidate is ManifestUseCase<CurrentPath> =>
+          candidate.path === entry.path && candidate.kind === "use-case",
+      )!}
       {...(props.fragment ? { fragment: props.fragment } : {})}
     />
   );

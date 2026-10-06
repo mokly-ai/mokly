@@ -1,18 +1,20 @@
 /** Component canvases keep the real mobile/desktop renderer contexts. */
+
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type { ManifestComponentVariant } from "../components/manifest_types.js";
-import type { GeneratedComponentView } from "../components/views.js";
 import { encodeUrlPath } from "../data/paths.js";
 import { viewRoute } from "../navigation/routes.js";
 
 import { generatedFrameSource, generatedView } from "./stage_sources.js";
+import type { ShellGeneratedView } from "./usage_types.js";
 
 export function ComponentStage({
   variant,
   previewViews,
   title,
 }: {
-  variant: ManifestComponentVariant;
-  previewViews?: readonly GeneratedComponentView[];
+  variant: ManifestComponentVariant<CurrentPath, CurrentPath | BranchPointPath>;
+  previewViews?: readonly ShellGeneratedView[];
   title: string;
 }) {
   return (

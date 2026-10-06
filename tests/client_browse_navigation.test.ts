@@ -235,7 +235,7 @@ function leaf(
   tags: readonly string[] = [],
 ): NavLeafNode {
   return {
-    entryId,
+    entryId: readCurrentPath(entryId),
     entryKind: "screen",
     key: `entry:${entryId}`,
     kind: "leaf",

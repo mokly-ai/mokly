@@ -368,10 +368,27 @@ protocol page. No screen or stored JSON changed.
 
 Tags: ui
 
-- [ ] The shell and the embedded viewer use the typed values, and the
+- [x] The shell and the embedded viewer use the typed values, and the
       type-aware guard covers them.
-- [ ] Remove guard rules that the types now enforce.
-- [ ] Run the unit and browser tests.
+- [x] Remove guard rules that the types now enforce.
+- [x] Run the unit and browser tests.
+
+Evidence: the full strict unit suite passed all 4,319 tests. The final focused
+guard, reader, projection, bootstrap and comparison recheck passed all 40 tests.
+The related Chromium suites passed all 133 tests, including branch-point
+Serve, export and embedded-viewer cases at desktop and mobile widths, moved
+entries, removed previews and the changed frame-adapter fixtures. The moved
+and removed-preview hydration suites passed all 24 tests. These real Git
+Serve and export fixtures supplied the smoke checks. Build, example build,
+prepared type checks, lint, formatting and source-length checks passed.
+
+The guard now checks all stored reference fields and collection type arguments,
+including opaque casts, optional records, indexed string methods and array
+string conversion. It permits typed class method binding, React dependency
+identity and complete-record serialization. The syntax guard retains lookup
+ownership rules. Reader, snapshot and bootstrap helper signatures preserve
+their typed inputs. The read-model types page and both viewer READMEs describe
+these seams. No screen, stored string or JSON layout changed.
 
 ## Milestone 11: Verification, commit and review
 

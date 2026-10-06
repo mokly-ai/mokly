@@ -4,6 +4,10 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { branchPoints } from "../src/catalogue/branch_point.js";
+import {
+  readBranchPointPath,
+  readCurrentPath,
+} from "../src/catalogue/path_values.js";
 import type { ManifestEntry, ManifestV8 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import type { ShellContext } from "../src/shell/context.js";
@@ -114,12 +118,19 @@ test("a removed variant joins its moved parent and keeps its baseline variantOf"
     "account/billing/invoice",
   );
   assert.equal(
-    lookup.resolve({ side: "before", kind: "screen", path: "billing/invoice" })
-      ?.entry.path,
+    lookup.resolve({
+      side: "before",
+      kind: "screen",
+      path: readBranchPointPath("billing/invoice"),
+    })?.entry.path,
     "account/billing/invoice",
   );
   assert.equal(
-    lookup.resolve({ side: "before", kind: "screen", path: "old/gone" }),
+    lookup.resolve({
+      side: "before",
+      kind: "screen",
+      path: readBranchPointPath("old/gone"),
+    }),
     undefined,
   );
 });
@@ -194,7 +205,7 @@ test("All marks a moved row only when its entry changed beyond the move", () => 
 
 test("Details name the path a moved entry came from, after its source", () => {
   const details = (path: string) => {
-    const shown = catalogue.byPath.get(path);
+    const shown = catalogue.byPath.get(readCurrentPath(path));
     assert.ok(shown, path);
     return renderToStaticMarkup(
       <EntryDetailsBody catalogue={catalogue} entry={shown} />,

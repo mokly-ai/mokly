@@ -8,23 +8,16 @@ import { repositoryRoot } from "./fixture.js";
 const BOUNDARIES = new Set([
   "packages/viewer/src/catalogue/path_values.ts",
   "packages/viewer/src/catalogue/accepted_paths.ts",
+  "packages/viewer/src/shell/accepted_inputs.ts",
 ]);
 
 /** Select typed consumers by repository-relative POSIX path on every platform. */
-export function guardedTypedBranchPointModule(
-  file: string,
-  includeShell = false,
-): boolean {
+export function guardedTypedBranchPointModule(file: string): boolean {
   const normalized = file.split("\\").join("/");
   if (BOUNDARIES.has(normalized)) return false;
   if (normalized === "packages/viewer/src/review/result_branch_points.ts")
     return true;
-  if (!guardedBranchPointModule(normalized)) return false;
-  return (
-    includeShell ||
-    normalized.startsWith("src/catalogue/") ||
-    normalized.startsWith("packages/viewer/src/catalogue/")
-  );
+  return guardedBranchPointModule(normalized);
 }
 
 /** Use the same module resolution and strict compiler settings as typecheck. */

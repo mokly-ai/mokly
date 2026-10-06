@@ -3,6 +3,7 @@
 // populated from the manifest entry for the selected route.
 
 import { branchPoints } from "../catalogue/branch_point.js";
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type { ManifestScreen } from "../registry/types.js";
 
 import type { Catalogue, CatalogueManifestEntry } from "./catalogue.js";
@@ -22,7 +23,9 @@ import type { RouteTarget } from "./target.js";
 import type { ChangedView } from "./view_marks.js";
 
 /** The schemes a screen renders in, named for the reader. */
-function schemeNames(screen: ManifestScreen): string {
+function schemeNames(
+  screen: ManifestScreen<CurrentPath, CurrentPath | BranchPointPath>,
+): string {
   return screen.colorSchemes.join(", ");
 }
 

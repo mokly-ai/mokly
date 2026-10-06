@@ -1,5 +1,6 @@
 /** Pure selection of the views and pane documents one comparison shows. */
 
+import type { CurrentPath, BranchPointPath } from "../catalogue/path_types.js";
 import { reviewSnapshotViewPath } from "../navigation/review_snapshot.js";
 import type { ViewRouteKind } from "../navigation/routes.js";
 import type { ViewReview } from "../review/types.js";
@@ -25,8 +26,8 @@ function comparisonEntry(
 ):
   | {
       views: readonly ViewReview[];
-      before?: { path: string };
-      after?: { path: string };
+      before?: { path: BranchPointPath };
+      after?: { path: CurrentPath };
     }
   | undefined {
   if (kind === "screen")
@@ -40,7 +41,7 @@ function comparisonEntry(
 function snapshotUrl(
   base: string,
   side: "after" | "before",
-  record: { before?: { path: string }; after?: { path: string } },
+  record: { before?: { path: BranchPointPath }; after?: { path: CurrentPath } },
   view: ViewReview,
 ): string {
   const source = reviewSnapshotViewPath(side, record, view);

@@ -1,8 +1,9 @@
 /** React-scoped ownership for mounted consumer frames. */
 
-import { createContext, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 
+import type { BranchPointPath, CurrentPath } from "../catalogue/path_types.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
 import type {
   FrameAdapter,
@@ -33,7 +34,7 @@ export interface ShellFrameSession {
   ready: Promise<MountedFrame>;
   source: string;
   status: "error" | "loading" | "ready";
-  usage: CatalogueUsage;
+  usage: CatalogueUsage<CurrentPath | BranchPointPath>;
   usageRevision: number;
 }
 
