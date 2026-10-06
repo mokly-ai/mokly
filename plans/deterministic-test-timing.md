@@ -15,16 +15,21 @@ only; no mockup or UI work.
 
 ## Background
 
-`tests/postcss_dependency_review.test.ts:139` requires 20,000 Tailwind-shaped
-PostCSS reports to collect in less than 2,500 ms. That limit leaves less than
-two times headroom over the speed that review finding 13 in
-[the imported CSS review](../docs/reviews/imported-css-delivery.md) measured
-after its fix. CI passes, but slower machines, such as a Conductor sandbox,
-fail the test at random, even when it runs alone.
+Before this change, `tests/postcss_dependency_review.test.ts:139` required
+20,000 Tailwind-shaped PostCSS reports to collect in less than 2,500 ms.
+Finding 13 in [the imported CSS review](../docs/reviews/imported-css-delivery.md)
+measured the speed after its fix. The old limit left less than two times
+headroom over that measurement. CI passed. Slower machines, such as a
+Conductor sandbox, failed the test at random. They failed even when the test
+ran alone.
+
+The test now collects 500 and 2,000 reports. It checks fixed-root and sort
+counts for equality. Counted totals can grow by at most 4.5 times. It also
+checks the inventory size and reports duration as text only.
 
 The test guards against repeated sorts and repeated root projection. A real
-quadratic regression at that size takes minutes, so a limit near the normal
-time adds failures without adding protection. Time is also a weak signal for
+quadratic regression at the original size takes minutes. A limit near the
+normal time adds failures without adding protection. Time is also a weak signal for
 the root cache. When the cache is removed, the work stays linear and only
 gets slower by a constant factor. An equal-count check on fixed roots catches
 that change exactly.
@@ -76,14 +81,17 @@ Planning evidence: `.context/deterministic-test-timing/measurements.md`.
 
 ### Replacements
 
-| Assertion                                                 | Current limit             | Replacement                                                                                                                       | Contract                                                                                     |
+The table records the original test locations and removed limits.
+The replacement column defines the implemented deterministic checks.
+
+| Original assertion                                        | Removed limit             | Replacement                                                                                                                       | Contract                                                                                     |
 | --------------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | `tests/postcss_dependency_review.test.ts:93`              | 20,000 reports < 2,500 ms | 500 and 2,000 reports: equal fixed-root `realpath` counts, equal sort counts, totals at most 4.5 times                            | `mokly-imported-styles-postcss.md`: resolve fixed roots once, sort each candidate class once |
 | `tests/imported_styles_low_dependencies.test.ts:39`       | 8,000 files < 1,500 ms    | 1,000 and 4,000 files: one `Minimatch` compilation per walk                                                                       | `mokly-imported-styles-postcss.md`: each reported glob is compiled once per report           |
 | `tests/watch_postcss_scale.test.ts:51`                    | 3,000 lookups < 1,500 ms  | 750 and 3,000 sources: reads of `config.sourceFiles` elements during the lookup loop are at most one per source (one index build) | `mokly-watch.md`: build the required-file index once; callbacks consult it in constant time  |
 | `tests/watch_postcss_scale.test.ts:87`                    | ready < 8,000 ms          | The factory receives the directory and no file inside it                                                                          | `mokly-watch.md`: watch targets omit files covered by a PostCSS directory-dependency root    |
 | `tests/watch_postcss_scale.test.ts:144`                   | ready < 12,000 ms         | The same target check, plus the existing single-rebuild and single-watcher checks                                                 | `mokly-watch.md`, as above                                                                   |
-| `tests/metafile_path_mapper.test.ts:26`                   | 10,000 edges < 400 ms     | 2,500 and 10,000 edges: each metafile input read at most once; one working-directory `realpath` at both sizes                     | `mokly-imported-styles.md`: the sentence that Milestone 1 adds                               |
+| `tests/metafile_path_mapper.test.ts:26`                   | 10,000 edges < 400 ms     | 2,500 and 10,000 edges: each metafile input read at most once; one working-directory `realpath` at both sizes                     | `mokly-imported-styles.md`: working-directory and input-read rule                            |
 | `tests/metafile_path_mapper.test.ts:60`                   | 3,000 inputs < 2,500 ms   | 750 and 3,000 inputs: one working-directory `realpath` at both sizes; at most one `realpath` per input                            | `mokly-imported-styles.md`, as above                                                         |
 | `tests/css_module_selector_plugin_acceptance.test.ts:144` | matrix < 10,000 ms        | Remove the limit. Report the duration with the helper. Keep the 20-second test timeout                                            | No speed contract; the test checks correctness                                               |
 | `tests/component_controls_watch.test.ts:74`               | Browse < 1,000 ms         | Browse answers with 200 while the `Hang` render is still pending                                                                  | `mokly-component-controls.md`: a synchronous render failure cannot hang Browse               |
@@ -91,17 +99,20 @@ Planning evidence: `.context/deterministic-test-timing/measurements.md`.
 
 The original count was nine limits. Planning found the tenth, the lower bound
 in the frame adapter spec. Planning also found five polling deadlines under
-10 seconds that wait for an expected state, and two browser specs that build
+10 seconds that waited for an expected state, and two browser specs that built
 duration text by hand:
 
-- `tests/export_watch.test.ts:160` waits 2 seconds for a real watcher event.
+- `tests/export_watch.test.ts:160` waited 2 seconds for a real watcher event.
 - `tests/component_controls_watch.test.ts:92`,
   `tests/verification_process.test.ts:226`,
   `tests/watch_boundaries.test.ts:293` and
-  `tests/watch_child_exit.test.ts:117` wait 5 seconds each.
+  `tests/watch_child_exit.test.ts:117` waited 5 seconds each.
 - `tests/browser/css_module_selector_oracle.spec.ts:136` and
-  `tests/browser/css_module_escape_fuzz.spec.ts:184` subtract clock reads for
+  `tests/browser/css_module_escape_fuzz.spec.ts:184` subtracted clock reads for
   their annotation text.
+
+Those five polling deadlines now allow 15 seconds. Both browser specs use
+the shared duration helper for annotation text.
 
 ### Helpers
 
@@ -358,7 +369,7 @@ Integrate main, run the complete gate, and deliver the branch.
 
 Evidence: `.context/deterministic-test-timing/milestone-7.md`.
 
-- [ ] Search the current docs and READMEs for the removed limits and renamed
+- [x] Search the current docs and READMEs for the removed limits and renamed
       test titles, and update each match. Skip `docs/reviews` and completed
       plans.
 - [ ] Fetch `origin/main`. If it moved, merge it path by path with the
