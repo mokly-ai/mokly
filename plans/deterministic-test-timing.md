@@ -17,7 +17,7 @@ only; no mockup or UI work.
 
 Before this change, `tests/postcss_dependency_review.test.ts:139` required
 20,000 Tailwind-shaped PostCSS reports to collect in less than 2,500 ms.
-Finding 13 in [the imported CSS review](../docs/reviews/imported-css-delivery.md)
+Finding 13 in [the imported CSS review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery.md)
 measured the speed after its fix. The old limit left less than two times
 headroom over that measurement. CI passed. Slower machines, such as a
 Conductor sandbox, failed the test at random. They failed even when the test
@@ -37,9 +37,9 @@ that change exactly.
 The repository already rejects this pattern in words:
 `docs/protocol/mokly-timings.md` says that CI correctness fixtures have no
 machine-specific wall-clock assertion. Earlier reviews made the same point:
-[Milestone 17 review](../docs/reviews/imported-css-delivery-milestone-17.md)
+[Milestone 17 review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-17.md)
 finding 12 recommends counting `realpath` calls instead of timing, and the
-[Milestone 47 review](../docs/reviews/imported-css-delivery-milestone-47.md)
+[Milestone 47 review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-47.md)
 lists the readiness limits in `tests/watch_postcss_scale.test.ts` as fragile.
 Parallel local verification (PR #136) adds load to local runs, which makes
 these limits weaker still.
@@ -161,7 +161,8 @@ test a rule with `ESLint.lintText`.
 - Opt-in benchmarks and fixture setup budgets in
   `tests/helpers/fixture_timing.ts` do not change. Test-runner timeouts follow
   the timing contract. Only the controls watch test's runner limit changes.
-- Completed plans and `docs/reviews` stay as historical records.
+- Completed plans stay as historical records. Main removed `docs/reviews`
+  in PR #147; links to its records are pinned to commit `f66c274`.
 
 ## Milestone 1: Define the timing contract — completed
 
