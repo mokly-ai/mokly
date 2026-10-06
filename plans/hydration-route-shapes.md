@@ -2,10 +2,10 @@
 
 Status: Active. Created 2026-10-05. On 2026-10-05 the user approved option C:
 hydrate one route per entry shape instead of every example route, and add an
-audit of generated resource references. Milestones 1 to 5 are complete.
-[PR #142](https://github.com/mokly-ai/mokly/pull/142) is open. Milestone 6
-moves this plan's evidence logs out, as #137 requires. The plan stays Active
-until the pull request merges. Four review findings await the user's decision.
+audit of generated resource references. All six milestones are complete.
+[PR #142](https://github.com/mokly-ai/mokly/pull/142) is open. The plan stays
+Active until the pull request merges. Five review findings await the user's
+decision: four from Milestone 5 and one from Milestone 6.
 
 ## Outcome
 
@@ -329,14 +329,25 @@ plan file.
       names its file.
 - [x] Run `npx prettier --check` on the plan. Inspect the diff and the
       deletions against `origin/main`.
-- [ ] Run `git add -A`, commit with a Conventional Commit, and push. Add the
+- [x] Run `git add -A`, commit with a Conventional Commit, and push. Add the
       #137 merge decision to the pull request description.
-- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
+- [x] After the push, use `docs/implementation-review-prompt.md` to review the
       complete diff against `origin/main`. Report numbered findings with a
       severity, the impact, lettered options and a recommendation. Do not
       change the implementation.
 
-Evidence: `.context/hydration-route-shapes/milestone-6.md`.
+Review summary: one new finding awaits the user's decision, and the four
+Milestone 5 findings still apply.
+
+1. Low: the pull request description says that two local checks ran "after
+   the latest merge". They ran before the #137 merge, and no log records the
+   68-test count. Recommended: replace those lines with the CI result on the
+   head commit.
+
+A fix for Milestone 5 finding 1 must also correct the [Decision](#decision)
+section.
+
+Evidence and the review report: `.context/hydration-route-shapes/milestone-6.md`.
 
 ## Post-merge follow-up (non-blocking)
 
