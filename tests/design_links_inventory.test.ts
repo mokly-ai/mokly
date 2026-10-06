@@ -11,7 +11,9 @@ import {
   welcomeModes,
 } from "../examples/basic/specs/design/parts/navigation_states.js";
 import { generatedViews, viewRoute } from "../packages/viewer/dist/data.js";
+import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 
+import { entriesUnder, entriesWhere } from "./helpers/catalogue_selection.js";
 import {
   attribute,
   byClass,
@@ -36,12 +38,11 @@ test("the canonical documented inventory exactly matches the complete design pat
   const documented = [...spec.matchAll(/\|\s*`(design\/[^`]+)`\s*\|/g)]
     .map((match) => match[1])
     .sort();
-  const actual = manifest.entries
-    .flatMap((entry) =>
-      entry.kind === "screen" && entry.path.startsWith("design/")
-        ? [entry.path]
-        : [],
-    )
+  const actual = entriesUnder(manifest, "design", {
+    kind: "screen",
+    min: Math.max(1, documented.length),
+  })
+    .map((entry) => entry.path)
     .sort();
   assert.deepEqual(documented, actual);
 });
@@ -54,13 +55,17 @@ const COMPARISON_FAMILIES = [
 
 test("a dark fragment's links stay dark wherever the target has a dark render", async () => {
   const { manifest, outputs } = await designCatalogue;
-  const designs = manifest.entries.filter(
-    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+  const designs = entriesUnder(manifest, "design", { kind: "screen" });
+  const darkDesigns = entriesWhere(
+    manifest,
+    "design screens with a dark fragment",
+    (entry): entry is ManifestScreen =>
+      entry.kind === "screen" &&
+      entry.path.startsWith("design/") &&
+      entry.colorSchemes.includes("dark"),
   );
   let checked = 0;
-  for (const entry of designs) {
-    if (entry.kind !== "screen" || !entry.colorSchemes.includes("dark"))
-      continue;
+  for (const entry of darkDesigns) {
     for (const viewport of ["mobile", "desktop"] as const) {
       const route = viewRoute(entry.path, viewport, "dark");
       assert.ok(route, `${entry.path} ${viewport}`);
@@ -134,8 +139,7 @@ test("a tag chip without a destination is a label, not a control", async () => {
         `${selector!.trim()} styles a chip that may be a label`,
       );
   let labels = 0;
-  for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
+  for (const entry of entriesUnder(manifest, "design", { kind: "screen" })) {
     for (const route of generatedViews(entry)
       .filter((view) => view.colorScheme === "light")
       .map((view) => view.path)) {

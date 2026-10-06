@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { entriesUnder } from "./helpers/catalogue_selection.js";
 import { designCatalogue } from "./helpers/design_catalogue.js";
 import { designLibrary } from "./helpers/design_library.js";
 import { repositoryRoot } from "./helpers/fixture.js";
@@ -10,9 +11,10 @@ import { repositoryRoot } from "./helpers/fixture.js";
 test("every owning artboard records its shared chrome and real component consumers", async () => {
   const { manifest } = await designCatalogue;
   assert.ok(manifest.schemaVersion === 8);
-  const screens = manifest.entries.flatMap((entry) =>
-    entry.kind === "screen" && entry.path.startsWith("design/") ? [entry] : [],
-  );
+  const screens = entriesUnder(manifest, "design", {
+    kind: "screen",
+    min: 111,
+  });
   assert.equal(screens.length, 111);
   for (const entry of screens) {
     assert.ok(entry.componentViews);

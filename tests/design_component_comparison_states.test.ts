@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { entriesUnder } from "./helpers/catalogue_selection.js";
 import {
   attribute,
   byClass,
@@ -37,9 +38,10 @@ function evidence(document: Document, where: string): Map<string, string> {
 test("component comparison captions follow the recorded change, never the depicted content", async () => {
   const { manifest } = await designCatalogue;
   const captions = new Map<string, Set<string>>();
-  for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.path.startsWith("design/components/"))
-      continue;
+  for (const entry of entriesUnder(manifest, "design/components", {
+    kind: "screen",
+    min: 2,
+  })) {
     for (const { document, route } of await renders(entry.path)) {
       const compared = previews(document).filter(
         ([, preview]) => byClass(preview, "ce-component-comparison").length,

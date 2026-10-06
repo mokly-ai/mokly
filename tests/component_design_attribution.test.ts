@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
+import { entriesUnder } from "./helpers/catalogue_selection.js";
 import { designLibraryFixture } from "./helpers/design_library_fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
@@ -36,9 +37,10 @@ test("mixed component design styles retain their actual rendered resource scope"
         (entry) => entry.kind === "screen",
       );
       if (screens === "all-design") {
-        const allDesignScreens = fixture.before.manifest.entries.filter(
-          (entry) =>
-            entry.kind === "screen" && entry.path.startsWith("design/"),
+        const allDesignScreens = entriesUnder(
+          fixture.before.manifest,
+          "design",
+          { kind: "screen" },
         );
         assert.deepEqual(
           expectedScreens.map(({ path }) => path).sort(),

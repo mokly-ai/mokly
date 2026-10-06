@@ -5,6 +5,7 @@ import { parse } from "parse5";
 
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
+import { entriesUnder } from "./helpers/catalogue_selection.js";
 import {
   attribute,
   byClass,
@@ -168,14 +169,15 @@ const SCROLLING_APART = new Set([
 
 test("every diff-mode band draws Scroll together after its modes, and Current never does", async () => {
   const { manifest, outputs } = await designCatalogue;
-  const views = manifest.entries.flatMap((entry) => {
-    if (entry.kind !== "screen" && entry.kind !== "component") return [];
-    if (!entry.path.startsWith("design/")) return [];
-    return generatedViews(entry).map((view) => ({
+  const views = entriesUnder(manifest, "design", {
+    kind: ["screen", "component"],
+    min: DIFF_MODE_DESIGNS.length,
+  }).flatMap((entry) =>
+    generatedViews(entry).map((view) => ({
       id: entry.path,
       route: view.path,
-    }));
-  });
+    })),
+  );
   const diffModes = new Set<string>();
   let current = 0;
   for (const { id, route } of views) {

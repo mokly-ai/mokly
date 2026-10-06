@@ -12,7 +12,7 @@ import {
   viewRoute,
 } from "../packages/viewer/dist/data.js";
 
-import { assertAbsent } from "./helpers/catalogue_selection.js";
+import { assertAbsent, entriesUnder } from "./helpers/catalogue_selection.js";
 import {
   componentParent,
   componentVariants,
@@ -85,12 +85,11 @@ test("the shared library preserves every existing design screen and viewport rou
 
 test("all sixteen shared components have connected pages, controls and saved examples", async () => {
   const { manifest, outputs } = await designCatalogue;
-  const components = manifest.entries.filter(
-    (entry) =>
-      entry.kind === "component" &&
-      !("variantOf" in entry) &&
-      entry.path.startsWith("design/library/"),
-  );
+  const components = entriesUnder(manifest, "design/library", {
+    kind: "component",
+    variants: "exclude",
+    min: 16,
+  });
   assert.equal(components.length, 16);
   assertAbsent(manifest, "design");
   const hierarchy = analyzeHierarchy(

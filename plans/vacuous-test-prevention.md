@@ -1,7 +1,7 @@
 # Vacuous Test Prevention
 
-Status: Active; Milestones 1 through 3 completed and approved. Milestone 4
-completed. Waiting for reviewer approval before Milestone 5.
+Status: Active; Milestones 1 through 4 completed and approved. Milestone 5
+completed. Waiting for reviewer approval before Milestone 6.
 Created 2026-10-06 with the user's consent after a report that four
 unit tests check nothing. The user chose four options: rewrite
 the empty checks with checked helpers, test-first; add a zero-assertion guard to
@@ -366,20 +366,29 @@ Fail every unit test that makes no assertion.
       run. Then delete the file.
 - [x] Commit.
 
-## Milestone 5: Lint prefix and continue filters
+## Milestone 5: Lint prefix and continue filters — completed
 
 Send catalogue selections through the checked helpers.
 
-- [ ] Add failing tests in `tests/eslint_catalogue_selection.test.ts` that call
+- [x] Confirm that all 295 existing assertion calls in the migrated files
+      remain unchanged.
+- [x] Use the existing expected count as `min` during migration. For
+      `checked > 100`, use `min: 101`. Keep every count assertion. Otherwise
+      keep the default `min` of 1.
+- [x] Record the selectors 1 and 2 lint result over `tests/` before and after
+      migration. The reported-site count must change from 23 to 0.
+- [x] Run each browser spec affected by the shared fixture, including each
+      project where it runs, without setting `PLAYWRIGHT_CHANNEL`.
+- [x] Add failing tests in `tests/eslint_catalogue_selection.test.ts` that call
       `ESLint.lintText` with a `tests/` file path:
-  - [ ] Selectors 1 and 2 report each banned shape, including the braced
+  - [x] Selectors 1 and 2 report each banned shape, including the braced
         `continue` form, with the documented message.
-  - [ ] Helper calls, `entries.map`, an assertion on
+  - [x] Helper calls, `entries.map`, an assertion on
         `entry.path.startsWith(...)`, a `continue` in an inner loop, a loop over
         `Object.entries(...)`, and a filter on another `path` field report
         nothing.
-  - [ ] The helper module and files outside `tests/` report nothing.
-- [ ] Migrate the 23 remaining sites in 15 files to the helpers:
+  - [x] The helper module and files outside `tests/` report nothing.
+- [x] Migrate the 23 remaining sites in 15 files to the helpers:
       `tests/browser/component_design_fixture.ts`,
       `tests/browser/design_comparison_eligibility.spec.ts`,
       `tests/browser/design_library.spec.ts`,
@@ -394,10 +403,10 @@ Send catalogue selections through the checked helpers.
       `tests/design_library_usage.test.ts`, `tests/design_links.test.ts`,
       `tests/design_links_inventory.test.ts`, and
       `tests/design_screen_counts.test.ts`.
-- [ ] Add the ESLint block with selectors 1 and 2.
-- [ ] Run `npm run lint`, the changed unit test files, and the changed browser
+- [x] Add the ESLint block with selectors 1 and 2.
+- [x] Run `npm run lint`, the changed unit test files, and the changed browser
       specs with `npx playwright test <spec>`.
-- [ ] Commit.
+- [x] Commit.
 
 ## Milestone 6: Lint literal path lookups
 

@@ -6,6 +6,7 @@ import { expect, test } from "@playwright/test";
 
 import { viewRoute } from "../../packages/viewer/dist/data.js";
 import type { ManifestV8 } from "../../packages/viewer/dist/registry/types.js";
+import { entriesUnder } from "../helpers/catalogue_selection.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
 const generated = path.join(repositoryRoot, "examples/basic/generated");
@@ -30,13 +31,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
     }, testInfo) => {
       const failed: string[] = [];
       page.on("requestfailed", (request) => failed.push(request.url()));
-      for (const entry of manifest.entries) {
-        if (
-          entry.kind !== "component" ||
-          !("variantOf" in entry) ||
-          !entry.path.startsWith("design/library/")
-        )
-          continue;
+      for (const entry of entriesUnder(manifest, "design/library", {
+        kind: "component",
+        variants: "only",
+      })) {
         {
           await page.goto(fileUrl(viewRoute(entry.path, viewport, "light")));
           await expect(page.locator(".mbk-library-host")).toBeVisible();

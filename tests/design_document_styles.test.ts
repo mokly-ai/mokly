@@ -5,6 +5,7 @@ import { parse } from "parse5";
 
 import { viewRoute } from "../packages/viewer/dist/data.js";
 
+import { entriesUnder } from "./helpers/catalogue_selection.js";
 import {
   attribute,
   byClass,
@@ -16,8 +17,7 @@ import { textOutput } from "./helpers/generated_text.js";
 test("every design artboard with a rendered document links the document stylesheet", async () => {
   const { manifest, outputs } = await designCatalogue;
   let documents = 0;
-  for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
+  for (const entry of entriesUnder(manifest, "design", { kind: "screen" })) {
     for (const viewport of ["mobile", "desktop"] as const)
       for (const scheme of entry.colorSchemes) {
         const route = viewRoute(entry.path, viewport, scheme);

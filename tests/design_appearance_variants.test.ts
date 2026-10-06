@@ -9,7 +9,11 @@ import { DUAL_SCHEME_SAMPLES } from "../examples/basic/specs/design/library/meta
 import { viewRoute } from "../packages/viewer/dist/data.js";
 import { AppearanceSelect } from "../packages/viewer/dist/shell/appearance.js";
 
-import { assertAbsent, entriesAt } from "./helpers/catalogue_selection.js";
+import {
+  assertAbsent,
+  entriesAt,
+  entriesUnder,
+} from "./helpers/catalogue_selection.js";
 import { componentVariants } from "./helpers/component_views.js";
 import {
   attribute,
@@ -45,11 +49,9 @@ function appearanceOf(html: string): string | undefined {
 
 test("appearance screens publish both schemes for both viewports", async () => {
   const { manifest } = await designCatalogue;
-  const screens = manifest.entries.filter(
-    (entry) =>
-      entry.kind === "screen" &&
-      entry.path.startsWith("design/browse/appearance/"),
-  );
+  const screens = entriesUnder(manifest, "design/browse/appearance", {
+    kind: "screen",
+  });
   assert.ok(screens.length > 0, "the appearance section exists");
   for (const entry of screens) {
     assert.ok(entry.kind === "screen");
@@ -63,11 +65,9 @@ test("appearance screens publish both schemes for both viewports", async () => {
 
 test("each generated appearance variant draws the scheme it was rendered for", async () => {
   const { manifest, outputs } = await designCatalogue;
-  const screens = manifest.entries.filter(
-    (entry) =>
-      entry.kind === "screen" &&
-      entry.path.startsWith("design/browse/appearance/"),
-  );
+  const screens = entriesUnder(manifest, "design/browse/appearance", {
+    kind: "screen",
+  });
   for (const entry of screens) {
     assert.ok(entry.kind === "screen");
     for (const viewport of ["mobile", "desktop"] as const) {
@@ -115,18 +115,17 @@ async function appearanceFragments(): Promise<
   { id: string; scheme: "light" | "dark"; viewport: string; html: string }[]
 > {
   const { manifest, outputs } = await designCatalogue;
-  return manifest.entries.flatMap((entry) =>
-    entry.kind === "screen" &&
-    entry.path.startsWith("design/browse/appearance/")
-      ? (["mobile", "desktop"] as const).flatMap((viewport) =>
-          (["light", "dark"] as const).map((scheme) => ({
-            id: entry.path,
-            scheme,
-            viewport,
-            html: textOutput(outputs, viewRoute(entry.path, viewport, scheme))!,
-          })),
-        )
-      : [],
+  return entriesUnder(manifest, "design/browse/appearance", {
+    kind: "screen",
+  }).flatMap((entry) =>
+    (["mobile", "desktop"] as const).flatMap((viewport) =>
+      (["light", "dark"] as const).map((scheme) => ({
+        id: entry.path,
+        scheme,
+        viewport,
+        html: textOutput(outputs, viewRoute(entry.path, viewport, scheme))!,
+      })),
+    ),
   );
 }
 

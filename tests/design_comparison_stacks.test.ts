@@ -5,6 +5,7 @@ import { parse } from "parse5";
 
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
+import { entriesUnder } from "./helpers/catalogue_selection.js";
 import {
   attribute,
   byClass,
@@ -138,10 +139,9 @@ test("Side by side keeps one chrome per version", async () => {
 /** Every generated design output: each screen view and saved sample view. */
 async function designOutputs(): Promise<string[]> {
   const { manifest } = await designCatalogue;
-  return manifest.entries.flatMap((entry) => {
-    if (!entry.path.startsWith("design/")) return [];
-    return generatedViews(entry).map((view) => view.path);
-  });
+  return entriesUnder(manifest, "design").flatMap((entry) =>
+    generatedViews(entry).map((view) => view.path),
+  );
 }
 
 /** Regions that depict a comparison, one of its panes, or a stacked layer. */

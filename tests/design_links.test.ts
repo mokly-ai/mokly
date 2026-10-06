@@ -4,6 +4,7 @@ import { test } from "node:test";
 
 import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 
+import { entriesUnder } from "./helpers/catalogue_selection.js";
 import {
   attribute,
   byClass,
@@ -134,12 +135,14 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
 test("every design link resolves to a real same-viewport design artifact without scripts or nested controls", async () => {
   const { manifest } = await designCatalogue;
-  const designs = manifest.entries.filter(
-    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
-  );
-  const componentDesigns = designs.filter((entry) =>
-    entry.path.startsWith("design/components/"),
-  );
+  const designs = entriesUnder(manifest, "design", {
+    kind: "screen",
+    min: 111,
+  });
+  const componentDesigns = entriesUnder(manifest, "design/components", {
+    kind: "screen",
+    min: 39,
+  });
   assert.equal(componentDesigns.length, 39);
   assert.equal(designs.length - componentDesigns.length, 72);
   for (const entry of designs) {
@@ -199,11 +202,10 @@ test("every design link resolves to a real same-viewport design artifact without
 
 test("no design route doubles as a directory holding another design route", async () => {
   const { manifest } = await designCatalogue;
-  const routes = manifest.entries.flatMap((entry) =>
-    entry.kind === "screen" && entry.path.startsWith("design/")
-      ? [entryRoute(entry.path)]
-      : [],
-  );
+  const routes = entriesUnder(manifest, "design", {
+    kind: "screen",
+    min: 111,
+  }).map((entry) => entryRoute(entry.path));
   const directories = new Set(
     routes.flatMap((route) => {
       const segments = route.split("/").slice(0, -1);

@@ -143,6 +143,9 @@ The four selection helpers are preconditions. They throw
 - `min`: the minimum match count, with a default of 1.
 
 `entriesWhere` also accepts `min`, with a default of 1.
+
+When a test states an expected count, use that lower bound as `min`. For
+`checked > 100`, use `min: 101`. Keep the existing count assertion.
 Kind arguments narrow the result types of `entryAt`, `entriesAt`, and
 `entriesUnder`. A component kind accepts both parents and variants unless
 `variants: "exclude"` removes component variants. `variants: "only"` returns
@@ -175,6 +178,9 @@ path under a live anchor passes and counts as an assertion.
 `tests/**/*.{ts,tsx}`, excluding `tests/helpers/catalogue_selection.ts`.
 `packages/viewer/tests` has no catalogue selections and remains outside the
 lint scope. Each diagnostic names the checked helper to use.
+
+The first two diagnostics say: "Select catalogue entries with entriesUnder or
+entriesWhere so an empty selection fails."
 
 The rules reject these syntax shapes:
 

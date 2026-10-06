@@ -60,6 +60,27 @@ export default tseslint.config(
     },
   },
   {
+    files: ["tests/**/*.{ts,tsx}"],
+    ignores: ["tests/helpers/catalogue_selection.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "ForOfStatement[right.type='MemberExpression'][right.property.name='entries'] > BlockStatement > IfStatement:matches([consequent.type='ContinueStatement'], [consequent.type='BlockStatement'][consequent.body.length=1][consequent.body.0.type='ContinueStatement'])",
+          message:
+            "Select catalogue entries with entriesUnder or entriesWhere so an empty selection fails.",
+        },
+        {
+          selector:
+            "CallExpression[callee.object.property.name='entries'][callee.property.name=/^(filter|flatMap|find|findLast|findIndex|some|every)$/] CallExpression[callee.property.name=/^(startsWith|endsWith)$/][callee.object.property.name='path']",
+          message:
+            "Select catalogue entries with entriesUnder or entriesWhere so an empty selection fails.",
+        },
+      ],
+    },
+  },
+  {
     files: [
       "src/config/**/*.ts",
       "src/build/discovery.ts",

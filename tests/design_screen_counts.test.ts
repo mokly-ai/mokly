@@ -3,6 +3,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
+
+import { entriesUnder, entriesWhere } from "./helpers/catalogue_selection.js";
 import { designCatalogue } from "./helpers/design_catalogue.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
@@ -62,19 +65,34 @@ async function stated(file: string, pattern: RegExp): Promise<number[]> {
 
 test("documented design-screen counts match the compiled catalogue", async () => {
   const { manifest } = await designCatalogue;
-  const designs = manifest.entries.flatMap((entry) =>
-    entry.kind === "screen" && entry.path.startsWith("design/") ? [entry] : [],
-  );
-  const components = designs.filter((entry) =>
-    entry.path.startsWith("design/components/"),
-  );
+  const readme = "examples/basic/README.md";
+  const designs = entriesUnder(manifest, "design", {
+    kind: "screen",
+    min: Math.max(
+      1,
+      (await stated(readme, /Mokly's (\d+) design screens/gu))[0]!,
+    ),
+  });
+  const components = entriesUnder(manifest, "design/components", {
+    kind: "screen",
+    min: Math.max(
+      1,
+      (
+        await stated(readme, /scoped to the (\d+) component-design routes/gu)
+      )[0]!,
+    ),
+  });
   const dual = designs.filter((entry) => entry.colorSchemes.includes("dark"));
-  const dualBrowse = dual.filter((entry) =>
-    entry.path.startsWith("design/browse/views/"),
+  const dualBrowse = entriesWhere(
+    manifest,
+    "Browse screen views with a dark render",
+    (entry): entry is ManifestScreen =>
+      entry.kind === "screen" &&
+      entry.path.startsWith("design/browse/views/") &&
+      entry.colorSchemes.includes("dark"),
   );
   const variants = dualBrowse.filter((entry) => entry.variantOf !== undefined);
   const shell = designs.length - components.length;
-  const readme = "examples/basic/README.md";
   const word = "([A-Za-z]+(?:-[a-z]+)?)";
   for (const [file, pattern, expected] of [
     [readme, /Mokly's (\d+) design screens/gu, [designs.length]],
