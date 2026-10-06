@@ -317,8 +317,10 @@ This example uses `mockupsDir: "."`; its schema-v9 manifest and HTML under
 `mokly-generated/` are ignored local artifacts, absent in a fresh clone.
 `example:build` replaces the entire disposable `mokly-generated/` tree as one
 transaction; unexpected files inside it are removed without touching authored CSS.
-`example:check` validates the current compilation without requiring output on
-disk. Tracked output checks and historical manifest compatibility use isolated fixtures.
+`example:check` validates the current compilation and ignores the untracked local
+tree, which can be absent or stale. Do not commit anything under `mokly-generated/`;
+commit authored files, including specs, configuration and CSS, normally.
+Tracked output checks and historical manifest compatibility use isolated fixtures.
 Both `npm test` and `npm run test:browser` build the example before tests read its
 generated files. Baseline fixtures copy authored inputs and use the normal cached
 rebuild through the historical commit's own package source and lockfile. The

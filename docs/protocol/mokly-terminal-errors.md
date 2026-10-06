@@ -32,9 +32,11 @@ that normalized URL alone.
 Plain commands add no phase or watch-event lines. Baseline preparation notes
 and the exact earlier-version notice use stdout, under the
 [watch-writer contract](./mokly-watch-writers.md#summaries-and-plain-notices).
-Successful plain commands write nothing to stderr unless `--debug-timings` was requested. Expected plain
-errors remain exactly `[mokly/<code>] <message>\n`. Timing mode retains the
-same stdout and writes only its documented JSON lines plus existing failures.
+Warning-free successful plain commands write nothing to stderr unless
+`--debug-timings` was requested. [Build warnings](./mokly-build-warnings.md) use
+stderr. Expected plain errors remain exactly `[mokly/<code>] <message>\n`.
+Timing mode retains the same stdout and writes its documented JSON lines plus
+build warnings and existing failures.
 
 The
 [exchange cancellation rule](./mokly-upload-exchange.md#accounting-and-output)

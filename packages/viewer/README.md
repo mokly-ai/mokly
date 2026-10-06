@@ -236,7 +236,7 @@ at least one current variant.
 
 Every removed variant carries `parentTitle`, its parent's title at the branch
 point. Public and scoped readers require this field and reject it on removed
-non-variants. The unreleased read model uses v5.
+non-variants. The read model is v5.
 
 Current paired entries carry `previousPath`; comparisons select the original
 before-side path. Removed entries advertise an optional opaque `snapshotId`. Supply it with the
@@ -367,10 +367,16 @@ React applications normally need only the root entry and stylesheet. Do not
 import `@mokly/viewer/browser` in an application-owned React root; it
 automatically hydrates a matching standalone Mokly document.
 
-`@mokly/viewer/data` also exports the shared path helpers `entryRoute`,
-`viewRoute`, `documentRoute`, `viewHref`, `parseViewHref`,
-`snapshotViewPath`, `snapshotDocumentPath`, `snapshotSidePath`,
-`snapshotResourcePath`, and `previewMetadataPath`. Entry helpers take a path;
+`@mokly/viewer/data` also exports the directory constants `GENERATED_DIRECTORY`
+and `VIEWER_DIRECTORY`, and the shared path helpers `entryRoute`, `viewRoute`,
+`documentRoute`, `viewHref`, `parseViewHref`, `snapshotViewPath`,
+`snapshotDocumentPath`, `snapshotSidePath`, `snapshotResourcePath`,
+`previewMetadataPath`, `currentDocumentPath`, `currentDocumentRoute`,
+`generatedResourcePath` and `generatedResourceRoute`. `currentDocumentPath`
+builds a current static-document path; `currentDocumentRoute` validates and
+reads its URL pathname. `generatedResourcePath` and `generatedResourceRoute`
+add or remove the generated-directory prefix of a catalogue-relative resource.
+Entry helpers take a path;
 `snapshotSidePath` takes a side, and `snapshotResourcePath` takes a side and
 resource path. `viewHref` returns the canonical `/view/<path>/` URL and `parseViewHref` reads
 the canonical, extensionless, and `index.html` forms of that URL back into a
@@ -615,6 +621,9 @@ is rejected. See the [namespace version gates](../../docs/protocol/mokly-viewer-
 
 ### Related Docs
 
+The [path/output contract](../../docs/protocol/mokly-path-output-integration.md)
+defines the generated catalogue layout and format boundaries.
+
 - [Viewer behavior contract](../../docs/protocol/mokly-viewer.md)
 - [Markers and multi-instance highlights](../../docs/protocol/mokly-viewer-markers.md)
 - [Catalogue read model](../../docs/protocol/mokly-catalogue.md)
@@ -629,9 +638,3 @@ is rejected. See the [namespace version gates](../../docs/protocol/mokly-viewer-
 ## License
 
 Mokly Viewer is available under the [MIT License](./LICENSE).
-
-The approved [path/output integration](../../docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
-Markdown documents and moves inside one generated tree. It introduces manifest
-v9, catalogue v5 and review v6, with explicit versions for the other boundaries.
-Accepted workers use immutable in-memory route sets; only writing commands
-acquire the output lock. The integration plan records verification and scope.

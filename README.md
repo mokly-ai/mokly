@@ -309,8 +309,9 @@ The guides are user-facing and ship with the npm package. The protocol documents
 are the detailed implementation contracts used to keep the CLI, viewer,
 generated output, and tests aligned.
 
-Generated output uses the [unified layout](./docs/protocol/mokly-unified-output.md)
-for pages, imported styles and assets. The portable
+The [path/output contract](./docs/protocol/mokly-path-output-integration.md) defines
+one [unified layout](./docs/protocol/mokly-unified-output.md) for generated pages,
+imported styles and assets. The portable
 [viewer namespace](./docs/protocol/mokly-viewer-namespace.md) is `mokly-viewer/`.
 Older receivers reject the new upload format. Mokly Cloud needs the documented
 receiver and viewer update before publication. Progress remains in the
@@ -431,9 +432,3 @@ review rules, and the temporary Braces exception.
 ## License
 
 Mokly is available under the [MIT License](./LICENSE).
-
-The approved [path/output integration](./docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
-Markdown documents and moves inside one generated tree. It introduces manifest
-v9, catalogue v5 and review v6, with explicit versions for the other boundaries.
-Accepted workers use immutable in-memory route sets; only writing commands
-acquire the output lock. The integration plan records verification and scope.

@@ -47,8 +47,8 @@ unsupported versions before content or path interpretation.
   setup, cancellation, summaries and notice streams.
 - [Comparison inventories and post-render edits](./mokly-comparison-inventory.md)
   — approved side-aware resource reads, baseline races and offset mapping.
-- [Check, export and frame boundaries](./mokly-boundary-results.md) — approved
-  machine-readable Git state, nonthrowing parsing, refusal paths and frame URLs.
+- [Check, export and frame boundaries](./mokly-boundary-results.md) — implemented
+  delivery parsing and export refusals; target Git-state and frame-identity rules.
 - [Public API reports and unused members](./verification-api-members.md) —
   approved signature reports, release-note gate and member ratchet.
 

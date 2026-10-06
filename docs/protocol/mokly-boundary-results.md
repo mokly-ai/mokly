@@ -2,11 +2,14 @@
 
 ## Delivery Status
 
-This is the approved target in
+Static-delivery parsing and export refusals are implemented. Git-state and
+frame-identity changes are approved targets in
 [Generated Output Simplification](../../plans/generated-output-simplification.md).
 Format gates detect unsupported data; they do not convert it.
 
 ## Git State For Check
+
+Status: Approved target.
 
 After successful compilation, Check asks Git whether the configured directory
 is inside a work tree. Use `git rev-parse --is-inside-work-tree` and interpret
@@ -45,6 +48,8 @@ directories, nested configured roots and alias paths. Only proven absence or
 
 ## Static Delivery Parser
 
+Status: Implemented.
+
 `parseStaticDelivery` returns a discriminated result and never throws:
 
 ```ts
@@ -70,6 +75,8 @@ Upload's separate HTTP 426 handling remains unchanged.
 
 ## Export Refusals
 
+Status: Implemented.
+
 Local replacement accepts only an empty directory or current valid ownership.
 It never adopts older output or deletes it to repair an error. Every ownership
 refusal includes the destination path. Use these details under `export-invalid`:
@@ -90,6 +97,8 @@ they must inspect. Keep read-only preflight, reservations, rollback and the
 existing typed error code. Test that every refusal preserves all files.
 
 ## Delivered Frame Identity
+
+Status: Approved target.
 
 One browser-safe helper compares an assigned URL with a delivered same-origin
 document URL. It requires exact origin and query, decodes each URL path once,

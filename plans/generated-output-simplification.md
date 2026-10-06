@@ -1,8 +1,8 @@
 # Generated Output Simplification
 
 Status: Active. Milestones 1–22 are implemented and verified. Milestone 23's
-#124 integration, document audit and re-plan are complete. One further main
-integration and the orchestrator's final review remain. The branch uses one
+main integrations, document audit and re-plan are complete. The orchestrator's
+re-review and decisions on open findings remain. The branch uses one
 generated tree, a referenced authored closure, writer-only output locks, current-format baselines and `mokly-viewer/`.
 The combined formats are manifest v9, catalogue v5 and review v6. Milestones
 24–28 contain the remaining review fixes. Findings 17 and 52 still await user
@@ -43,8 +43,8 @@ documents and their CSS. For the example:
 
 ```
 examples/basic/mokly-generated/         all generated files, replaced on every build
-examples/basic/styles.css …        authored, tracked (13 stylesheets)
-examples/basic/design-library/**   authored, tracked (15 stylesheets)
+examples/basic/styles.css …        authored, tracked (15 stylesheets)
+examples/basic/design-library/**   authored, tracked (16 stylesheets)
 ```
 
 **Change C: the ownership machinery goes.** With `mokly-generated/` disposable,
@@ -1816,6 +1816,37 @@ Evidence: `.context/generated-output-simplification/m22-final-validation.md`.
       using `docs/implementation-review-prompt.md`. Report severity, category,
       effort, options and Auto-fix tags. Follow `AGENTS.md`'s review-fix rule
       after the report. Keep findings 17 and 52 pending their existing user decisions.
+
+  - 67 — High: Non-ASCII changed filenames break Changes.
+  - 68 — Medium: Markdown resources overwrite imported-CSS assets.
+  - 69 — Medium: Markdown public-file links disappear under containing catalogue roots.
+  - 70 — Medium: Watched Build misses repairs in newly imported files after failure.
+  - 71 — Medium: Protocol documents retain merge history and one-time integration steps.
+  - 72 — Medium: Resource audit accepts private authored targets.
+  - 73 — Medium: Compilation lacks a regression for the final Markdown safety check.
+  - 74 — Medium: Three boundaries lack older-version rejection tests.
+  - 75 — Low: Shell delivery version error names version 4 instead of 5.
+  - 76 — Low: Catalogue-root-only moves mark styled screens changed.
+  - 77 — Low: Internal READMEs repeat plan-history prose.
+  - 78 — Low: Milestone 28 review TODO uses the earlier workflow wording.
+  - 79 — Low: Check, publish and plain Serve lack lock-free regressions.
+  - 80 — Low: Failed transaction cleanup writes directly to stderr.
+  - 81 — Low: Route-set contract overstates worker-thread validation.
+  - 82 — Low: Output collision model retains an orphan field and comment.
+  - 83 — Low: Four unused test helpers remain after the merge.
+  - 84 — Low: Resource-audit error calls the boundary the generated root.
+  - 85 — Low: Test titles retain earlier format versions.
+  - 86 — Low: Cache marker v2 accepts unknown fields.
+  - Known 54 A — Partial: document base reads are restored; image and unused-CSS lazy-read parity remains open.
+  - Known 10 — Changed: main normalizes `.html` and highlights work through redirects; the shared helper and regression remain in Milestone 26.
+  - Known 25 — Still open: frame paths are decoded twice.
+  - Known 57 — Unchanged: hydration global setup still rebuilds the shared example.
+  - Known 63 — Still open: ESLint names the deleted `src/build/discovery.ts`.
+  - Known 65 — Unchanged: the planned test corrections remain.
+
+Review reports: `.context/generated-output-simplification/m23-review/`.
+
+Review-fix validation: `.context/generated-output-simplification/m23-review/fixes-87-92-validation.md`.
 
 ### Current checkpoint and integration instructions
 

@@ -209,11 +209,11 @@
   changing example entries, the renderer, configuration, or configured styles,
   run `npm run build`, run `npm run example:build`, run
   `npm run example:check`, and visually smoke-test the changed pages through
-  `npm run dev`. Generated HTML and `mokly-manifest.json` under
-  `examples/basic/mokly-generated/` are ignored local artifacts validated by
-  `npm run example:check`. Commit only the tracked authored CSS under
-  `examples/basic/` and `examples/basic/design-library/`; never force-add
-  ignored generated output.
+  `npm run dev`. `npm run example:check` validates the compilation and ignores
+  the untracked local tree under `examples/basic/mokly-generated/`. Never commit
+  anything under that generated directory. Commit authored files normally,
+  including specs, configuration and CSS under `examples/basic/`,
+  `examples/basic/design-library/` and `examples/basic/src/components/workspace-note/`.
 - Do not hand-edit Mokly-owned generated HTML or `mokly-manifest.json` as source
   of truth. Update the entry, imported helper, renderer, or shared component
   first, then regenerate the example catalogue.
