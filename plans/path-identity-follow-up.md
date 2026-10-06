@@ -7,8 +7,10 @@ PR #131 (`c4138a0`). The work uses the existing workspace branch
 complete. On 2026-10-05 the user asked to delegate the fixes to Codex
 (`gpt-6.1-sol`, effort `max`). Four Codex workspaces implemented Milestones 2
 and 6–7, 3–4, 5, and 8 from this branch. The orchestrator reviewed each
-branch, ran its key tests independently, and merged it here. Milestones 1–8
-are complete. Milestones 9–11 remain.
+branch, ran its key tests independently, and merged it here. A fifth Codex
+workspace implemented Milestones 9–10. Milestones 1–10 are complete. In
+Milestone 11, the smoke tests, the full gate and the push are complete; the
+fresh review is in progress.
 
 ## Scope And Decisions
 
@@ -406,12 +408,36 @@ suites passed their 27-case recheck. This repair changes test setup only.
 
 ## Milestone 11: Verification, commit and review
 
-- [ ] Run the full smoke cases in Serve and export at desktop and mobile
+- [x] Run the full smoke cases in Serve and export at desktop and mobile
       widths.
-- [ ] Run `cargo xtask check`.
-- [ ] Commit with Conventional Commits and push the branch. Confirm that the
+- [x] Run `cargo xtask check`.
+- [x] Commit with Conventional Commits and push the branch. Confirm that the
       push deletes nothing on `origin/main` without approval.
 - [ ] After the push, a fresh reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against the complete diff from `origin/main`, and reports findings
       without changing the implementation.
+
+Smoke evidence: on `fb7e1fa7`, whose product code equals the final head, a
+smoke agent built 19 scratch Git repositories and ran the real CLI with
+`serve --base main` and `export --base main`. Eight cases passed in both
+hosts at 1280px and 390px, 32 runs in total: removed-screen usage after a
+component move and a case-only rename; removed-variant order after a parent
+move and a case-only rename; nested Before and Current values under a new
+parent; Serve's complete comparison after a case-only rename with a
+stylesheet edit; no false change after an exporting-module, folder `index`
+or renderer move; list state under search and Changes; a plain-text crumb for
+a folder with only hidden folders; and comparison mode on views that Serve
+had not rendered yet. Every response was below HTTP 400, and the only console
+errors were the expected sandbox reports. The same checks failed on
+`c4138a0`, so they detect the original bugs. Evidence:
+`.context/m11-smoke/` in the smoke worktree.
+
+Gate evidence: the unmodified `cargo xtask check` exited 0 at `bce265da` in
+the Codex workspace. The merge commit `7a979088` has the same tree. Earlier,
+the orchestrator's independent run passed on the Milestone 1–8 integration
+(`17b7c329`): 4,310 unit, 898 browser and 268 hydration tests.
+
+Deletion audit: against `origin/main`, the branch deletes only
+`packages/viewer/src/shell/catalogue_branch_point.ts`, which Milestone 3
+moved under the user's approval.
