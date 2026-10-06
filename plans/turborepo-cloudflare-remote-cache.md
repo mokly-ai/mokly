@@ -18,10 +18,8 @@ twenty times. After this change one prepare job builds and uploads the outputs,
 and every other job restores them. Developers get the same cache locally, and
 the complete local gate stops rebuilding the package for each suite.
 
-Measured on 2026-10-06 in an 8-CPU sandbox: `npm ci` took 17 s,
-`npm run prepare:verification` took 37 s, and the outputs were 39 MB across
-`dist`, `packages/viewer/dist`, and `examples/basic/generated`. Hosted runners
-have 2 CPUs, so CI times are about two times longer.
+Baseline timings and output sizes are recorded in
+`.context/turborepo-cloudflare-remote-cache/baseline-measurements.md`.
 
 The [CI performance plan](./ci-performance.md) chose to build inside each job
 because cross-job artifact transfer was unnecessary for the measured setup
