@@ -105,8 +105,8 @@ Each cached task declares `env: ["NODE_ENV"]`, so its value is hashed.
 The example also hashes `BROWSERSLIST`, `BROWSERSLIST_ENV`, and `AUTOPREFIXER_GRID`.
 Ambient Browserslist config/statistics paths and `NODE_PATH` are not admitted;
 the example uses its checked-in Safari 14 target and lockfile-resolved packages.
-Use `globalPassThroughEnv` for `CI`, `MOKLY_OUTPUT`, `NO_COLOR`, `FORCE_COLOR`,
-`TERM`, `TERM_PROGRAM`, `WT_SESSION`, `COLUMNS`, and
+Use `globalPassThroughEnv` for `CI`, `MOKLY_OUTPUT`, `MOKLY_DIAGNOSTIC`, `NO_COLOR`,
+`FORCE_COLOR`, `TERM`, `TERM_PROGRAM`, `WT_SESSION`, `COLUMNS`, and
 `BROWSERSLIST_IGNORE_OLD_DATA`. These affect terminal or warning behavior only;
 they must not change artifact bytes. The viewer bundler fixes its browser
 `process.env.NODE_ENV` to `production`. Audit the CLI and dependency reads

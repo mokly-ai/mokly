@@ -428,6 +428,8 @@ telemetry and forces release builds from the first Turbo use.
 - [x] Preserve incoming mainline dependency updates, hydration coverage, test
       concurrency, and documentation policy. Repeat output/runtime/path proofs and the complete
       gate on the integrated tree. Keep the original before-script evidence.
+- [x] Fix review finding 7: pass `MOKLY_DIAGNOSTIC` through strict-mode tasks,
+      document it, and add the failing configuration regression before the fix.
 - [ ] Before merge, verify hosted workflow behavior after a PR exists. Confirm
       telemetry/local-only settings, release force behavior, and native macOS
       and Windows binary installation and execution. The Linux workspace cannot
@@ -437,9 +439,18 @@ telemetry and forces release builds from the first Turbo use.
 - [ ] Review the complete local diff against `origin/main` with
       `docs/implementation-review-prompt.md` after the push. Report findings
       without changing the implementation.
+  - Finding 1 (medium, code structure): direct baseline recipe copies the build pipeline; recommend a stable `baseline:build` in a follow-up PR. Waiting for the user.
+  - Finding 2 (medium, test): Turbo tests check the real root's unstaged AGENTS diff; recommend comparing bytes where Turbo runs. Waiting for the user.
+  - Finding 3 (low, product bug): distribution cleanup causes dev HTTP 500 during uncached builds; recommend building in place and removing unwritten files. Waiting for the user.
+  - Finding 4 (low, test): root prepack cleanup on a cache hit has no test. Waiting for the user.
+  - Finding 5 (low, performance): Turbo tests add about 4.7 minutes of serial work; recommend one installed fixture per file. Waiting for the user.
+  - Finding 6 (low, cache correctness): example excludes `.wrangler`, `.turbo`, and `.superpowers` that entry discovery reads; recommend removing these exclusions and comparing inventories. Waiting for the user.
+  - Finding 8 (low, test): helpers do not create `.context` before temporary directories; focused fresh-checkout runs fail. Waiting for the user.
+  - Finding 9 (low, process): Turbo uses `^2.11.7` despite an exact verified contract; recommend pinning 2.11.7. Waiting for the user.
 
 Evidence: `.context/turborepo-cloudflare-remote-cache/m2-progress.md` and
 `.context/turborepo-cloudflare-remote-cache/m2-validation.md`.
+Review-fix evidence: `.context/turborepo-cloudflare-remote-cache/m2-review-fix-validation.md`.
 Merge decisions: `.context/turborepo-cloudflare-remote-cache/m2-merge-decisions.md`.
 
 ### Milestone 3: Remote Cache Worker

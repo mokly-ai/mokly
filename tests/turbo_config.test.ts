@@ -23,6 +23,7 @@ interface TaskDefinition {
 interface TurboConfiguration {
   agentGuidance: boolean;
   envMode: string;
+  globalPassThroughEnv: string[];
   remoteCache: { signature: boolean; apiUrl?: string; teamSlug?: string };
   futureFlags: { longerSignatureKey: boolean };
   tasks: Record<string, TaskDefinition>;
@@ -34,6 +35,7 @@ test("Turbo configuration preserves guidance, integrity, and generated ownership
   ) as TurboConfiguration;
   assert.equal(config.agentGuidance, false);
   assert.equal(config.envMode, "strict");
+  assert.ok(config.globalPassThroughEnv.includes("MOKLY_DIAGNOSTIC"));
   assert.equal(config.remoteCache.signature, true);
   assert.equal(config.futureFlags.longerSignatureKey, true);
   assert.equal(config.remoteCache.apiUrl, undefined);
