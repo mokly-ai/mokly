@@ -15,11 +15,11 @@ export const PULL_REQUEST_TITLE_TYPES = Object.freeze([
   "test",
 ]);
 
-/** Fixed actionable output for an invalid pull request title. */
-export const PULL_REQUEST_TITLE_ERROR =
-  "Pull request titles must use type(scope)!: description with type build, chore, ci, docs, feat, fix, perf, refactor, revert, style, or test. Keep any scope lowercase and the whole title to 50 characters or fewer.";
+const TITLE_LIMIT = 72;
 
-const TITLE_LIMIT = 50;
+/** Fixed actionable output for an invalid pull request title. */
+export const PULL_REQUEST_TITLE_ERROR = `Pull request titles must use type(scope)!: description with type build, chore, ci, docs, feat, fix, perf, refactor, revert, style, or test. Keep any scope lowercase and the whole title to ${TITLE_LIMIT} characters or fewer.`;
+
 const TITLE_PATTERN = new RegExp(
   `^(?:${PULL_REQUEST_TITLE_TYPES.join("|")})(?:\\([a-z0-9._/-]+\\))?!?: \\S(?:[^\\r\\n]*\\S)?$`,
   "u",

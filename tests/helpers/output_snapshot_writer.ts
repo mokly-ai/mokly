@@ -10,6 +10,7 @@ const root = process.argv[2]!;
 const input = JSON.parse(
   await fs.readFile(path.join(root, "writer-input.json"), "utf8"),
 ) as {
+  diagnostics: Compilation["diagnostics"];
   manifest: Compilation["manifest"];
   outputs: [string, string][];
   deliveredStyleSources: string[];
