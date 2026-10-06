@@ -158,6 +158,7 @@ npm run example:build
 npm run example:check
 npm run typecheck
 node --import tsx --test tests/design_library*.test.ts tests/design_library*.test.tsx tests/component_design_attribution.test.ts
+node --import tsx --test tests/design_library_attribution.test.ts tests/component_design_attribution.test.ts tests/design_library_source_edits.test.ts tests/design_library_committed_baseline.test.ts
 npx playwright test tests/browser/design_library*.spec.ts
 cargo xtask check
 ```
@@ -166,6 +167,14 @@ Open changed generated fragments directly from disk in both viewports. Check
 saved variants and local edit/unset/reset behavior in Serve, plus read-only
 inspection after export. Keep the generated HTML and manifest as ignored local
 artifacts; commit their authored source instead.
+
+The four attribution files separate the expensive scenarios. Library CSS uses
+one classification for all sixteen owned stylesheets and one single-change
+`tag-chip` control. Shared design CSS uses one classification for all nine
+stylesheets, with exact scope checks from each stylesheet's dependency reasons.
+Source edits use grouped rebuilds only when every edit keeps its own detection
+and isolation proof. The committed-baseline file checks baseline reads and
+agreement between Serve and comparison. Each file shares one isolated fixture.
 
 The tests retain the established screen inventory with its file-derived paths,
 assert real consumers and

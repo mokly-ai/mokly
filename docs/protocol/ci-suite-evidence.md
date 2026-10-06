@@ -81,6 +81,25 @@ fixture helpers. Failed browser and hydration jobs retain only the uploaded
 diagnostic artifacts selected by the workflow. Jobs must not delete, overwrite
 or reuse another job's writable output.
 
+## Unit Shard Balance
+
+Unit shards assign whole files by their sorted inventory index modulo four,
+as defined by `nodeShardFiles` in `scripts/verification/evidence.mjs`. Each
+shard runs two files concurrently. Use per-file `durationMs` in the unit
+reports to measure balance; test counts do not represent compilation and
+classification costs. Record shard wall time separately from summed file time.
+
+A scenario suite classifies once per scenario, then projects that result for
+its assertions. Do not classify once per assertion or subtest when those checks
+describe the same scenario. Group independent edits only when each edit keeps
+its own exact change path, reasons, and impact proof. Retain isolation checks
+that reject attribution to another component or an unrelated entry.
+
+The [attribution measurement record](../reviews/attribution-test-consolidation.md)
+records the whole-file baseline and consolidated attribution timings. File
+additions change later sorted indices, so confirm the resulting shard layout
+with actual CI reports before claiming a balance improvement.
+
 ## Browser Shard Balance
 
 Playwright assigns whole non-hydration spec files to the `chromium` browser

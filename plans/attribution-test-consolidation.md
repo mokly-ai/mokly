@@ -187,33 +187,33 @@ The shared compilation snapshot planned in another workspace would remove the
 source-edit file are unaffected by that snapshot. This plan does not depend on
 it.
 
-## Milestone 1: Document the consolidated verification contract
+## Milestone 1: Document the consolidated verification contract (completed)
 
 Update every document that describes these tests or the fixture before the
 tests change. Documentation-only; validate the Markdown and review the diff.
 
-- [ ] Update the `Verification And Maintenance` section of
+- [x] Update the `Verification And Maintenance` section of
       `docs/protocol/mokly-component-design.md`: the shared-stylesheet test
       changes all nine stylesheets in one classification, derives each
       stylesheet's scope from the changed entries whose dependency reasons name
       that stylesheet, and keeps the exact counts, the `design/` confinement,
       and the `design.css` shared-impact evidence. The file is at its 250-line
       cap; shorten text in place rather than growing it.
-- [ ] Update the `Verification` section of
+- [x] Update the `Verification` section of
       `examples/basic/specs/design/library/README.md`: list the four test files
       in the command, describe the one-pass library attribution with its
       single-change control, the grouped source-edit file, and the committed
       baseline file, and keep the paragraph about what the tests retain exact.
-- [ ] Add a `Unit Shard Balance` section to `docs/protocol/ci-suite-evidence.md`:
+- [x] Add a `Unit Shard Balance` section to `docs/protocol/ci-suite-evidence.md`:
       whole-file partition by sorted index modulo four, two concurrent files,
       per-file durations as the measure, and the rule that a scenario suite
       classifies once per scenario rather than once per subtest. Link the
       measurement record below. Do not name plan milestones in protocol
       documents; `tests/protocol_doc_history.test.ts` rejects that pattern.
-- [ ] Create `docs/reviews/attribution-test-consolidation.md` with the CI run
+- [x] Create `docs/reviews/attribution-test-consolidation.md` with the CI run
       link, the per-file and per-shard baseline table, and the local operation
       table above. Milestone 6 appends the after figures.
-- [ ] Run `npx prettier --check` on the changed Markdown, run
+- [x] Run `npx prettier --check` on the changed Markdown, run
       `node --import tsx --test tests/protocol_doc_sizes.test.ts tests/protocol_doc_history.test.ts`,
       and review the diff.
 
