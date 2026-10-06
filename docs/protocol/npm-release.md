@@ -86,8 +86,7 @@ npm, Node and Rust commands from the workspace root and includes:
 - an example `check` that validates the derived compilation and rejects tracked
   generated output;
 - package-file inspection with `npm pack --dry-run --json`;
-- packed-tarball installs in clean ESM, NodeNext, themed, and alternate-layout
-  consumers;
+- packed-tarball installs in clean ESM, NodeNext, and themed consumers;
 - a strict production-dependency audit of the freshly resolved packed ESM
   consumer, with no workspace audit exceptions;
 - local-npx and clean-cache npx-style execution from the packed artifact;

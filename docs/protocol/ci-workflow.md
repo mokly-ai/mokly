@@ -62,11 +62,11 @@ versions before loading its application modules.
 
 Local verification uses the supported floor at 22.14.0 and Node 24.21.0. These
 are tested representatives rather than the bounds of the supported range. The
-repository's `.node-version` and preview workflow remain pinned to 24.21.0. CI
+repository's `.nvmrc` and preview workflow remain pinned to 24.21.0. CI
 resolves the latest Node 24 patch once per run, while publishing resolves its
 own latest patch. The dependency-free CLI bootstrap owns the support bounds and
 local tested-version list. Tests keep them aligned with package engines, the
-lockfile, README, `.node-version`, and the event-selected runtime profiles.
+lockfile, README, `.nvmrc`, and the event-selected runtime profiles.
 
 ## Job Execution
 

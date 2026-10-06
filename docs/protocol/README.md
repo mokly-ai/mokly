@@ -34,6 +34,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   cache and aggregation contract.
   - [CI dependency cache and security](./ci-verification-security.md).
   - [Repository gate and length audits](./ci-verification-repository.md).
+  - [Development hydration coverage](./ci-verification-hydration.md) — one
+    route per entry shape and the generated resource audit.
 - [Remote verification](./remote-verification.md) — approved executor target;
   executor integration is pending.
   - [Testbox execution](./remote-verification-testbox.md) — workflow, commands,
