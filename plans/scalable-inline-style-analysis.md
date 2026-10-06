@@ -1852,24 +1852,28 @@ Evidence: `.context/scalable-inline-style-analysis/m10-prior-plan-evidence.md`, 
 
 - [x] Merge main's path identity, Markdown, imported CSS and publication changes
       with M1–M9. Preserve all original-tree, resource, route and fingerprint
-      contracts and their differential proofs. The user approved deletion of
-      `src/components/output_validation.ts` and `src/components/style_ownership.ts`
-      after their required behavior was ported.
-- [x] Apply the separately approved source-map-js, shell-quote and Sharp updates
-      within their specified package-file scopes. Keep their separate commits.
+      contracts and their differential proofs. The
+      [inferred ownership plan](./inferred-inline-style-ownership.md) planned
+      deletion of `src/components/output_validation.ts` and
+      `src/components/style_ownership.ts`; `f439de0c` delivered both deletions
+      before this merge. The merge ported main's later `output_validation.ts`
+      changes to the link checks in `src/build/html_links.ts`.
+- [x] Supervisor decision (2026-10-06), under the user's merge request: apply
+      the source-map-js, shell-quote and Sharp updates within their specified
+      package-file scopes. Keep their separate commits.
 - [x] Fix the seven supervisor findings in separate follow-up commits. Use
       production links in the differential contexts, preserve useful URL
       fingerprints, count link-normalization parses, guard original foreign EOF
       state, restore final-status waits, correct stale-resource coverage, and
       use path identity in the benchmark contracts. Keep every oracle and proof.
-- [x] User approval (2026-10-06): merge current main a second time after the
-      seven fixes. Keep main's dependency versions. Follow its evidence and
-      review-fix rules from this merge forward. Do not migrate M1–M9A records.
+- [x] Supervisor decision (2026-10-06), under the user's merge request: merge
+      current main a second time after the seven fixes. Keep main's dependency
+      versions. Follow its evidence and review-fix rules from this merge forward. Do not migrate M1–M9A records.
       Preserve main's shape-based hydration tests and its five consumer smokes.
 - [ ] Re-read every document this plan touched against the implementation,
       fix drift, and replace the approved-target sentences naming this plan
       with the Decision 13 deferral.
-- [ ] Run the final full unit, pinned-Chromium browser and hydration suites,
+- [x] Run the final full unit, pinned-Chromium browser and hydration suites,
       package smoke, example build/check, static checks and `cargo xtask check`
       after the second merge. Record the CPU before and after browser/hydration.
       The full browser gate includes `component_design_navigation`,
@@ -1879,10 +1883,10 @@ Evidence: `.context/scalable-inline-style-analysis/m10-prior-plan-evidence.md`, 
       excepted tests pass the browser gate. The 2.90 GHz host must stay stable;
       a return to 2.50 GHz leaves the gate open. Performance deferral does not
       change this browser gate.
-- [ ] Run real-server smoke checks for the example catalogue, a small fixture's
+- [x] Run real-server smoke checks for the example catalogue, a small fixture's
       style route and markup edit, and a moved path with `previousPath`.
-- [ ] Commit the local checkpoint and stop for the user's check. Do not push
-      until the user permits it.
+- [x] Commit the local checkpoint and stop for the supervisor's check before
+      the push.
 - [ ] After checks pass and push is permitted, `git add -A`, commit with
       Conventional Commits, and push the branch.
 - [ ] After the push, use
@@ -1892,27 +1896,44 @@ Evidence: `.context/scalable-inline-style-analysis/m10-prior-plan-evidence.md`, 
       re-review once, and report fixed and open findings separately. Ask for
       decisions when that rule requires them. Do not change older review records.
 
-### User approvals and pending decisions
+### Decisions and approvals
 
-The two PostCSS timing limits can remain recorded checkpoint host failures only
-if clean main fails them in the same boot. This approval does not relax the
-final gate or change any wait, limit, assertion or UI behavior. A failure absent
-on clean current main in the same boot is a merge defect to fix.
+- **User decision (2026-10-06):** Stop optimization (Decision 1 = C). Implement
+  no M9A candidate or recorded M1–M9A review finding.
+- **User decision (2026-10-06):** Defer performance acceptance. Remove the speed
+  test from this plan for now. Keep all harness code, fixtures and tests.
+- **User decision (2026-10-06):** Merge the latest `origin/main` and resolve
+  its conflicts.
+- **Supervisor decision (2026-10-06), under the user's merge request:** Apply
+  the source-map-js, shell-quote and Sharp updates in separate commits, within
+  their specified package-file scopes.
+- **Supervisor decision (2026-10-06), under the user's merge request:** Allow
+  the two PostCSS limits as checkpoint host failures only if clean main fails
+  them in the same boot. This does not relax the final gate or change a wait,
+  limit, assertion or UI behavior. A failure absent on clean current main in
+  the same boot is a merge defect to fix.
+- **Supervisor decision (2026-10-06), under the user's merge request:** Permit
+  the #131 digest-covered benchmark-contract path correction.
+- **Supervisor decision (2026-10-06), under the user's merge request:** Merge
+  current main a second time. Keep main's dependency versions. Follow #137
+  and #147 from that merge forward. Do not migrate M1–M9A records.
 
-The main #125 (`ff376d71`) projection-test conflict is **pending the user's
-decision**. Keep `tests/component_material_projection.test.ts` unchanged,
-including `componentAware: false`. Main expects no image read for Home, but a
-Pane image read and `mockups/components/image.svg` dependency. Production mode
-makes no Pane read and emits no such dependency: M7 uses the original tree,
-and the browser discards `<section>` and `<img>` inside `<select>`. A component
-root with `componentAware: false` cannot occur in production. Option A changes
+**Pending user decisions:** Main's #125 (`ff376d71`) projection test. Keep
+`tests/component_material_projection.test.ts` unchanged, including
+`componentAware: false`. Main expects no image read for Home, but a Pane image
+read and `mockups/components/image.svg` dependency. Production mode makes no
+Pane read and emits no such dependency: M7 uses the original tree, and the
+browser discards `<section>` and `<img>` inside `<select>`. A component root
+with `componentAware: false` cannot occur in production. Option A changes
 main's case to production mode and the M7 expectation. Option B keeps main's
 case in legacy mode. Keep the branch select and retained-template assertions.
 No option is selected by this merge.
 
-The user permits the #131 digest-covered benchmark-contract correction. Keep
-all harnesses and fixtures. Do not run speed matrices or implement M9A candidates
-or recorded review findings without a separate decision.
+**Pending user decisions:** Whether to migrate the M1–M9A evidence out of this
+plan under #137. Leave those records in place until the user decides.
+
+**Pending user decisions:** Whether to grade the open M1–M9A review findings
+under #147. Do not grade or implement those findings without that decision.
 
 ## Post-merge follow-up (non-blocking)
 
