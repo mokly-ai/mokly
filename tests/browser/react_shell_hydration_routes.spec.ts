@@ -1,30 +1,11 @@
-import fs from "node:fs";
-import path from "node:path";
+import { test } from "@playwright/test";
 
-import { expect, test } from "@playwright/test";
-
-import { parseManifest } from "../../dist/registry/manifest.js";
-import { entryRoute } from "../../packages/viewer/dist/data.js";
-
+import { buildDevelopmentBundle } from "./react_shell_hydration_helpers.js";
 import {
-  buildDevelopmentBundle,
-  captureBrowserErrors,
-  expectCleanHydration,
-  installDevelopmentBundle,
-} from "./react_shell_hydration_helpers.js";
-
-const manifest = parseManifest(
-  JSON.parse(
-    fs.readFileSync(
-      path.resolve("examples/basic/generated/mokly-manifest.json"),
-      "utf8",
-    ),
-  ),
-);
-const fixtureRoutes = [
-  ...new Set(manifest.entries.map((entry) => entryRoute(entry.path))),
-];
-expect(fixtureRoutes.length).toBeGreaterThan(80);
+  hydrateFixtureRoute,
+  hydrateShellRoute,
+  routesForPartition,
+} from "./react_shell_hydration_route_inventory.js";
 
 let developmentBundle: string;
 test.beforeAll(async () => {
@@ -32,35 +13,16 @@ test.beforeAll(async () => {
   developmentBundle = await buildDevelopmentBundle();
 });
 
-for (const route of fixtureRoutes) {
+for (const route of routesForPartition(0)) {
   test(`development React hydrates fixture route ${route}`, async ({
     page,
   }) => {
-    const errors = captureBrowserErrors(page);
-    await installDevelopmentBundle(page, developmentBundle);
-    const encoded = route.split("/").map(encodeURIComponent).join("/");
-    const response = await page.goto(`/view/${encoded}`);
-    expect(response?.status(), route).toBe(200);
-    await expectCleanHydration(page, errors, route);
+    await hydrateFixtureRoute(page, developmentBundle, route);
   });
 }
 
-for (const [route, expectedStatus] of [
-  ["/", 200],
-  ["/view/not-in-catalogue.html", 200],
-] as const) {
+for (const route of ["/", "/view/not-in-catalogue.html"]) {
   test(`development React hydrates shell route ${route}`, async ({ page }) => {
-    const errors = captureBrowserErrors(page);
-    await installDevelopmentBundle(page, developmentBundle);
-    if (route === "/view/not-in-catalogue.html") {
-      await page.route("**/view/not-in-catalogue.html", async (request) => {
-        const response = await request.fetch();
-        expect(response.status()).toBe(404);
-        await request.fulfill({ response, status: 200 });
-      });
-    }
-    const response = await page.goto(route);
-    expect(response?.status(), route).toBe(expectedStatus);
-    await expectCleanHydration(page, errors, route);
+    await hydrateShellRoute(page, developmentBundle, route);
   });
 }

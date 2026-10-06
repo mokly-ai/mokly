@@ -16,6 +16,7 @@ import {
   createExampleBaseline,
 } from "./helpers/example_baseline.js";
 import { repositoryRoot } from "./helpers/fixture.js";
+import { timeFixturePhase } from "./helpers/fixture_timing.js";
 
 test("preview build snapshots a static Browse catalogue", async (context) => {
   const contextDir = path.join(repositoryRoot, ".context");
@@ -36,8 +37,10 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   await writeCompilation(await compileCatalogue(config), config);
   const output = path.join(root, ".context/preview");
   const options = { includeChanges: true as const, base: "HEAD" };
-  await buildPreview(config, output, options);
-  await buildPreview(config, output, options);
+  for (const phase of ["first-build", "repeat-build"])
+    await timeFixturePhase("preview-snapshot", phase, true, () =>
+      buildPreview(config, output, options),
+    );
 
   await assertClientGraphIsComplete(output);
   const index = await read(output, "index.html");

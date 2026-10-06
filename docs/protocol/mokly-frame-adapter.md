@@ -178,74 +178,10 @@ diagnostics are not extracted from consumer text.
 
 ## Same-Origin Implementation
 
-`sameOriginAdapter` confines `contentDocument` access to
-[`same_origin_access.ts`](../../packages/viewer/src/client/same_origin_access.ts)
-and the adapter-owned mount. Geometry, pointer inspection and presentation stay
-in their dedicated local modules. A loaded document must retain the exact
-origin, query and decoded resource path. A provider may canonicalize a final
-`.html` suffix to the otherwise identical extensionless path; no other path
-redirect is accepted. The URL fragment is client-only positioning rather than
-resource identity, so the adapter authenticates the document first and then
-applies a missing or changed validated fragment. An authenticated document
-reload renews every document-scoped listener and observer without replacing the
-outer frame session. Preserve ownership and range authentication, clipping,
-highlighting, scroll restoration and logical-link classification unchanged.
-Ready usage is required for instance inspection; absent usage does not disable
-valid navigation.
-
-When a same-origin replacement starts, the adapter transfers its mount-time
-navigation receiver before changing `location` only when the currently visible
-immediate document is the exact `Document` object that a previous same-origin
-mount authenticated for that frame. Object identity is the transfer key because
-scripts are disabled, so a document cannot change its resource identity, while
-every frame navigation commits a new document. Valid marked activations in that
-authenticated still-visible document therefore remain host-owned while the
-assigned resource loads. A document that no mount authenticated, including one
-the frame reached through its own native navigation, keeps portable native-link
-behavior until the replacement authenticates.
-
-The adapter records weak per-frame mount provenance and the last assigned
-resource, separately from the iframe's initial `src` attribute. On the first same-origin
-mount only, its immediate watcher may authenticate an already rendered
-document whose resource exactly matches the assignment; this is the explicit
-server-rendered hydration path. Every later mount captures the immediate
-pre-replacement `Document`. When that exact object was not previously
-authenticated for the frame, both the watcher and `load` handler exclude it
-from assigned-resource authentication even if its URL exactly equals the new
-assignment. Only a different replacement `Document` may then pass the resource
-check. A rejected starting document must trigger a fresh history-replacing
-navigation even when both its URL and the iframe's `src` equal the assignment;
-URL equality alone cannot justify reuse or waiting for a load that is not in
-progress. This decision is independent of document readiness: rejected starting
-documents and different assigned resources are replaced while loading or
-interactive as well as after completion. Changing the assigned resource also
-cancels any earlier navigation, even when the still-visible authenticated
-document already matches the new choice. A delayed superseded response must
-never overwrite the latest preview selection.
-
-Authenticated matching documents and the initial matching server-rendered
-document are reused without reloading; incomplete accepted documents wait only
-for their own load completion. Only the first mount may wait for a
-startup-assigned recorded fragment that has not committed yet. Frame and
-document provenance is weakly held and does not extend either object's lifetime.
-
-As soon as the new immediate `Document` becomes same-origin-accessible, the
-adapter independently authenticates its exact origin, decoded resource path and
-query, then moves the receiver before slower subresources can delay the iframe
-`load` event. The replacement watcher and `load` handler accept only this
-assigned-resource authentication; previously authenticated identity never lets
-a transferred document satisfy a new mount. Readiness installs inspection and
-geometry over the authenticated document. Unsubscribing or disposing removes
-the receiver, so an unenhanced document continues to use its portable native
-links.
-
-The sandbox remains exactly `allow-same-origin`; consumer scripts stay disabled.
-Historical [removed previews](./mokly-removed-previews.md) and
-[comparison panes](./mokly-comparison-panes.md) bypass this adapter as guarded,
-viewer-origin `srcdoc`; panes add only their documented scrolling behavior.
-Existing local memory previews retain their authenticated private transport.
-No inspector handshake, extra badge, pick control, or visible affordance appears
-locally. Panes gain no inspection, geometry, markers, or navigation messages.
+The [same-origin loading contract](./mokly-same-origin-loading.md) defines local
+resource authentication, document ownership, early navigation, the 30-second
+load deadline, and cleanup. Same-origin frames retain `allow-same-origin`
+without script permission; cross-origin handshake rules below stay separate.
 
 ## Cross-Origin Mount And Handshake
 

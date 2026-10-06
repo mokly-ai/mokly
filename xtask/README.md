@@ -54,6 +54,21 @@ required; when a release manifest records a release but the tag is unavailable,
 fetch them with `git fetch --tags origin` and retry. All four checks belong to
 the repository suite and complete gate.
 
+The [local verification contract](../docs/protocol/local-verification.md) defines
+the complete gate: up to four isolated workers with three available CPUs reserved per
+worker (two jobs with seven or eight available CPUs), exact staged/unstaged/untracked
+sources, source-drift detection, and nine current-invocation reports covering
+four unit shards, four browser shards, and the unsharded hydration suite.
+Each worker owns its output and copied dependencies; copy-on-write clones keep
+package CSS inside each repository without sharing writes. Browser and hydration
+workers use separate ports. Workers use canonical system-temporary paths so
+checkout depth does not truncate recovery diagnostics and temp aliases match
+Git's registered paths. Unit runners retain two-file concurrency.
+All verifier process groups and Playwright servers register with their owner
+so cancellation drains them before snapshot removal. Reports remain under
+`.context/verification-reports/local-check-*/`. A preflight isolation failure
+announces a sequential fallback; a failed worker never triggers a fallback.
+
 The sole current unused-export exception is the component renderer imported by
 generated consumer-module source: `src/build/consumer_entry.ts` emits that
 re-export as source text, so there is no static module edge for the analyser to
@@ -65,6 +80,12 @@ requests add Node 24; CI resolves the latest patch in its repository
 prerequisite and explicitly shares that exact result with dependent jobs,
 keeping shard evidence consistent across runner caches. The single release
 publishing job independently resolves the latest Node 24.
+
+Preview preparation and ordinary publication fixtures share a seven-minute
+setup budget for their real build/export work. UI-state assertions and test
+deadlines stay unchanged. The local frame adapter and frame-load assertions
+allow 30 seconds for document resources, with delayed HTML/stylesheets,
+cancellation and expiry covered by browser regressions.
 
 Hydration coverage discovers a separate browser test for every example route, so
 adding screens does not consume one shared test deadline. The unsharded
@@ -105,6 +126,8 @@ cargo test --package xtask
   boundary.
 - [`src/check.rs`](./src/check.rs) defines the complete source, packed-consumer,
   browser, hydration, and Rust verification sequence.
+- [`../scripts/verification/local-check.mjs`](../scripts/verification/local-check.mjs)
+  runs the complete gate in isolated snapshots and validates every suite report.
 - [`../scripts/package/browser_graph_analysis.mjs`](../scripts/package/browser_graph_analysis.mjs)
   validates the delivered browser module graph;
   [`../scripts/package/consumer_cases`](../scripts/package/consumer_cases) and
@@ -136,4 +159,5 @@ cargo test --package xtask
 - [Repository README](../README.md)
 - [CI and npm release contract](../docs/protocol/npm-release.md)
 - [CI verification](../docs/protocol/ci-verification.md)
+- [Complete local verification](../docs/protocol/local-verification.md)
 - [Dependency security](../docs/protocol/dependency-security.md)

@@ -1,7 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { isInside, projectRealPath, toPosixPath } from "./paths.js";
+import {
+  isInside,
+  projectRealPath,
+  resolveAbsolutePath,
+  toPosixPath,
+} from "./paths.js";
 
 /** Logical and canonical identities confined to the same configured root. */
 export interface FileLocation {
@@ -16,7 +21,7 @@ export function logicalRepositoryPath(
   candidate: string,
   repoRoot: string,
 ): string {
-  const absolute = path.resolve(candidate);
+  const absolute = resolveAbsolutePath(candidate);
   if (isInside(repoRoot, absolute)) return absolute;
   const physicalRoot = projectRealPath(repoRoot);
   return isInside(physicalRoot, absolute)

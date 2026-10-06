@@ -4,10 +4,12 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { VERIFICATION_RESOURCE_ROOT_ENV } from "../dist/baseline/process_owner.js";
 import { timeAsync } from "../dist/diagnostics/timings.js";
 
 import {
   PREVIEW_ARTIFACT_MARKER,
+  previewFixtureContextRoot,
   startOwnedPreviewFixture,
 } from "./browser/preview_fixture_owner.js";
 import {
@@ -15,6 +17,24 @@ import {
   timeFixturePhase,
   type FixturePhaseTiming,
 } from "./helpers/fixture_timing.js";
+
+test("preview outputs stay in the executing checkout even with an outer owner", () => {
+  const context = path.join(os.tmpdir(), "worker", ".context");
+  const sibling = path.join(os.tmpdir(), "parent", ".context", "resources");
+  assert.equal(
+    previewFixtureContextRoot(context, {
+      [VERIFICATION_RESOURCE_ROOT_ENV]: sibling,
+    }),
+    context,
+  );
+  const own = path.join(context, "resources", "owned");
+  assert.equal(
+    previewFixtureContextRoot(context, {
+      [VERIFICATION_RESOURCE_ROOT_ENV]: own,
+    }),
+    own,
+  );
+});
 
 test("owned preview fixtures isolate writable output and close independently", async (context) => {
   const contextRoot = await fs.mkdtemp(

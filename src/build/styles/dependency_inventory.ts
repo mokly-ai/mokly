@@ -61,11 +61,12 @@ export function collectPostcssDependencies(
         "build-invalid",
         `PostCSS plugin ${report.plugin} reported an invalid dependency for ${relative(config, source)}; report a file or directory path and optional glob`,
       );
+    const reported =
+      report.type === "dependency" ? report.file! : report.directory!;
     const file = logicalRepositoryPath(
-      path.resolve(
-        path.dirname(source),
-        report.type === "dependency" ? report.file! : report.directory!,
-      ),
+      path.sep === "/" && path.isAbsolute(reported)
+        ? reported
+        : path.resolve(path.dirname(source), reported),
       config.repoRoot,
     );
     const normalizedReport = { ...report, source };

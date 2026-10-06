@@ -92,7 +92,7 @@ fn selected_hydration_suite_prepares_then_runs_its_project() {
 fn repository_suite_runs_audit_first_and_includes_file_length() {
     let command_runner = Arc::new(Unimock::new((
         CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "npm run dependencies:check"))
+            .next_call(matching!((command) if command.display() == "npm run dependencies:check" && command.working_directory() == Some(Path::new("/workspace"))))
             .returns(Ok(())),
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "npm run format:check"))
@@ -151,7 +151,7 @@ fn source_length_audit_supports_changed_and_all_modes() {
 fn dependency_check_failure_stops_verification() {
     let command_runner = Arc::new(Unimock::new(
         CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "npm run dependencies:check"))
+            .next_call(matching!((command) if command.display() == "npm run dependencies:check" && command.working_directory() == Some(Path::new("/workspace"))))
             .returns(Err(Error::CommandFailed {
                 command: "npm run dependencies:check".to_owned(),
                 status: "1".to_owned(),
@@ -165,6 +165,44 @@ fn dependency_check_failure_stops_verification() {
         runner.run(request),
         Err(Error::CommandFailed { command, .. }) if command == "npm run dependencies:check"
     ));
+}
+
+#[test]
+fn complete_gate_audits_before_starting_local_fan_out() {
+    let command_runner = Arc::new(Unimock::new((
+        CommandRunnerRunMock
+            .next_call(matching!((command) if command.display() == "npm run dependencies:check" && command.working_directory() == Some(Path::new("/workspace"))))
+            .returns(Ok(())),
+        CommandRunnerRunMock
+            .next_call(matching!((command) if command.display() == "node scripts/verification/local-check.mjs" && command.working_directory() == Some(Path::new("/workspace"))))
+            .returns(Ok(())),
+    )));
+    let runner = DefaultCheckRunner::new(command_runner, Arc::new(Unimock::new(())), workspace());
+
+    runner
+        .run(CheckRequest::new(None, None).expect("valid request"))
+        .expect("the complete local runner succeeds");
+}
+
+#[test]
+fn local_worker_failure_is_not_mistaken_for_unavailable_isolation() {
+    let command_runner = Arc::new(Unimock::new((
+        CommandRunnerRunMock
+            .next_call(matching!((command) if command.display() == "npm run dependencies:check" && command.working_directory() == Some(Path::new("/workspace"))))
+            .returns(Ok(())),
+        CommandRunnerRunMock
+            .next_call(matching!((command) if command.display() == "node scripts/verification/local-check.mjs" && command.working_directory() == Some(Path::new("/workspace"))))
+            .returns(Err(Error::CommandFailed {
+                command: "node scripts/verification/local-check.mjs".to_owned(),
+                status: "1".to_owned(),
+            })),
+    )));
+    let runner = DefaultCheckRunner::new(command_runner, Arc::new(Unimock::new(())), workspace());
+
+    assert!(
+        matches!(runner.run(CheckRequest::new(None, None).expect("valid request")),
+        Err(Error::CommandFailed { status, .. }) if status == "1")
+    );
 }
 
 #[test]

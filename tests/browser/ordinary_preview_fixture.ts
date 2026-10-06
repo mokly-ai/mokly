@@ -6,7 +6,7 @@ import { buildPreview } from "../../scripts/preview/catalogue.mjs";
 import { createCommittedExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import {
-  FULL_CATALOGUE_SETUP_TIMEOUT_MS,
+  PREVIEW_BUILD_SETUP_TIMEOUT_MS,
   timeFixturePhase,
 } from "../helpers/fixture_timing.js";
 
@@ -54,6 +54,6 @@ export const test = base.extend<
         await preview.close();
       }
     },
-    { scope: "worker", timeout: FULL_CATALOGUE_SETUP_TIMEOUT_MS },
+    { scope: "worker", timeout: PREVIEW_BUILD_SETUP_TIMEOUT_MS },
   ],
 });

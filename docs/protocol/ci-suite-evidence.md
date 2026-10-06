@@ -39,7 +39,10 @@ outer cancellation fallback rather than replacing the job boundary.
 
 A dedicated preview-preparation spec still runs the real cold
 `npm run preview:build`, verifies generated-output digest stability, and serves
-the fresh artifact. Historical rebuilds, source mutation, missing-source export,
+the fresh artifact. Its setup has a separate seven-minute deadline after a
+297-second build and a later five-minute expiry under four-worker contention.
+Its browser assertions keep their ordinary deadline. Other full-catalogue
+setups keep the five-minute budget. Historical rebuilds, source mutation, missing-source export,
 clean-install and cache-invalidation behavior continue to create independent
 inputs because preparation is part of what those tests verify. Fixture phases
 emit `[mokly:fixture-timing]` JSON with the fixture, phase, duration, status,

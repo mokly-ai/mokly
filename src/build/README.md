@@ -18,6 +18,8 @@ generation. A known prior target produces `moved-link-target`; links never follo
 it automatically. Build and Check do not infer moves from incomplete output.
 
 Imported CSS follows the [delivery contract](../../docs/protocol/mokly-imported-styles.md).
+Large dependency inventories use the shared path-containment helper's normalized
+POSIX fast path; physical path and regular-file checks still run at admission.
 `load_graph.ts` now collects each configured renderer and entry root's CSS
 imports in JavaScript import order, traverses prelude `@import`s, and emits
 one deterministic stylesheet per nonempty root. The renderer's complete CSS

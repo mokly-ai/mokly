@@ -5,7 +5,10 @@ import path from "node:path";
 import { expect, test as base } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
-import { FULL_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.js";
+import {
+  PREVIEW_BUILD_SETUP_TIMEOUT_MS,
+  timeFixturePhase,
+} from "../helpers/fixture_timing.js";
 
 import { startPreviewFixture } from "./preview_fixture.js";
 import type { OwnedPreviewFixture } from "./preview_fixture_owner.js";
@@ -19,15 +22,28 @@ interface PreparedPreview {
 const test = base.extend<{ preparedPreview: PreparedPreview }>({
   preparedPreview: [
     async ({ browserName: _browserName }, use) => {
-      const before = await generatedDigest();
+      const before = await timeFixturePhase(
+        "preview-preparation",
+        "digest-before",
+        false,
+        generatedDigest,
+      );
       const preview = await startPreviewFixture();
       try {
-        await use({ before, after: await generatedDigest(), preview });
+        const after = await timeFixturePhase(
+          "preview-preparation",
+          "digest-after",
+          false,
+          generatedDigest,
+        );
+        await use({ before, after, preview });
       } finally {
-        await preview.close();
+        await timeFixturePhase("preview-preparation", "teardown", false, () =>
+          preview.close(),
+        );
       }
     },
-    { timeout: FULL_CATALOGUE_SETUP_TIMEOUT_MS },
+    { timeout: PREVIEW_BUILD_SETUP_TIMEOUT_MS },
   ],
 });
 

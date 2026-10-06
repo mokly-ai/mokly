@@ -4,14 +4,15 @@ import path from "node:path";
 
 import {
   assertOwnerOpen,
-  assertOwnerId,
   assertRealDirectory,
   beginOwnerClosure,
   drainOwnedProcesses,
   removeOwnedOwnerRecords,
   terminateOwnedProcesses,
   writeOwnerRecord,
+  writeProcessRecord,
 } from "./process-owner-records.mjs";
+import { assertOwnerId } from "./process-owner-registry.mjs";
 
 export const VERIFICATION_OWNER_ID_ENV = "MOKLY_VERIFICATION_OWNER_ID";
 export const VERIFICATION_PROCESS_REGISTRY_ENV =
@@ -104,6 +105,12 @@ class VerificationProcessOwner {
     } catch (error) {
       return Promise.reject(error);
     }
+  }
+
+  registerProcessGroup(processGroupId) {
+    if (this.#closed)
+      throw new Error(`Verification process owner is closing: ${this.ownerId}`);
+    return writeProcessRecord(this.registry, this.ownerId, processGroupId);
   }
 
   dispose() {

@@ -18,6 +18,9 @@ import { initialFrameLoad } from "./same_origin_load.js";
 import { listenForFrameActivations } from "./same_origin_navigation.js";
 import { localPointer } from "./same_origin_pointer.js";
 
+/** Local readiness includes cold HTML and blocking subresources, not a handshake. */
+const DOCUMENT_LOAD_TIMEOUT_MS = 30_000;
+
 interface LocalOperations {
   updateUsage(usage: CatalogueUsage): void;
   inspectable(): boolean;
@@ -151,7 +154,7 @@ export function mountLocalDocument(
     const timer = win.setTimeout(() => {
       reject(new FrameError("timeout"));
       dispose();
-    }, 5000);
+    }, DOCUMENT_LOAD_TIMEOUT_MS);
     const adoptLoadedDocument = () => {
       const doc = localFrameAccess(frame).document();
       if (!doc || doc.defaultView?.frameElement !== frame) {

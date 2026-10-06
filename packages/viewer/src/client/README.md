@@ -80,7 +80,12 @@ slow resources must not strand a scheme switch or reconnect. Only the first
 mount may wait for a startup-assigned recorded fragment already loading.
 An authenticated matching document can reconnect without reloading and waits
 for completion before inspection becomes ready. Matching URLs alone do not
-authorize reuse.
+authorize reuse. The [local loading contract](../../../../docs/protocol/mokly-same-origin-loading.md)
+gives current and temporary previews 30 seconds to load HTML and blocking
+resources. Navigation stays attached to authenticated documents while they
+load; inspection waits for completion. Cancellation and deadline expiry remove
+all handlers and polling, so a late resource response cannot revive a mount.
+The cross-origin handshake retains its separate five-second limit.
 
 Frames holding a previous version carry `data-mokly-preview-frame` and
 `data-mokly-preview-source`; comparison pane frames carry

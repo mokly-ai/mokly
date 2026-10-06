@@ -34,6 +34,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   cache and aggregation contract.
   - [CI dependency cache and security](./ci-verification-security.md).
   - [Repository gate and length audits](./ci-verification-repository.md).
+- [Complete local verification](./local-verification.md) — audit-first dirty-tree
+  snapshots, isolated fan-out, complete evidence, cleanup, and measurement.
 - [CI workflow graph](./ci-workflow.md)
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard
   balance, and acceptance measurement.
@@ -97,6 +99,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   host-owned anchored content and exact atomic highlight behavior.
 - [Viewer frame adapter](./mokly-frame-adapter.md) — approved same-origin
   interface and cross-origin inspector protocol v1.
+  - [Same-origin loading](./mokly-same-origin-loading.md) — authentication,
+    early navigation, load deadlines and cleanup.
 - [Published inspector and overlay](./mokly-published-inspector.md) — static
   injection, inert metadata, style isolation, and script budget.
 - [On-demand Serve](./mokly-on-demand.md)

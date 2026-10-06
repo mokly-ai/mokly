@@ -12,8 +12,9 @@ validation are implemented.
 ## Verification Boundary
 
 `cargo xtask check` is the complete local and release complete-mode entrypoint.
-With no options it runs every gate sequentially in one checkout, beginning with
-the live workspace dependency audit. Only active reviewed path exceptions can
+With no options it starts with the live workspace dependency audit and runs
+every remaining gate in isolated snapshots with bounded concurrency, as defined
+by the [local verification contract](./local-verification.md). Only active reviewed path exceptions can
 cover findings; the [dependency security contract](./dependency-security.md)
 defines their UTC expiry and 31-day limit. The packed-consumer production audit
 has no exceptions. A selected suite is partial evidence and
