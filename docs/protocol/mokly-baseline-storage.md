@@ -82,10 +82,9 @@ Git processes.
 
 The cache lives at `<repoRoot>/.mokly-cache/baselines/`; the sibling
 `locks/` directory holds only the transient
-[generated-output writer lock](./mokly-rendering-generated.md#concurrent-writers),
-whose release removes an empty `.mokly-cache/`. Creating a cache entry
-therefore restarts its ancestor walk, at most five times, when a parent
-disappears. The cache is package owned: never served, never watched, never a comparison resource, excluded from
+[generated-output writer lock](./mokly-rendering-generated.md#concurrent-writers).
+Its release removes only the lock file, never a directory, so creating a cache
+entry never races a directory removal. The cache is package owned: never served, never watched, never a comparison resource, excluded from
 changed-path evidence and shared-impact globs before those globs are evaluated,
 and never a valid `mockupsDir`, root, resolved entry module or document,
 `review.outDir`, or export destination. Consumers add `.mokly-cache/` to their
@@ -101,7 +100,7 @@ ignore file; only `check` runs the index guard, failing if Git tracks anything u
 ```
 
 New `complete.json` markers are `{ schemaVersion: 2, commit, finishedAt,
-commands, manifestVersion: 8, historicalCatalogueRoot, layout: "generated-v9" }`.
+commands, manifestVersion: 9, historicalCatalogueRoot, layout: "generated-v9" }`.
 The root identifies the harvest; it never replaces the requested path in
 `inputs.json`. Reuse requires the matching commit, request and recipe, a valid
 v9 manifest and its verified inventory/closure. Keep the

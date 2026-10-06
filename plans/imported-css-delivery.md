@@ -1,5 +1,9 @@
 # Imported CSS Delivery
 
+Status: Completed. [PR #125](https://github.com/mokly-ai/mokly/pull/125)
+merged on 2026-10-02. The [Status](#status) section lists each review round
+and the findings that await the user's decision.
+
 Path identity integration preserves every CSS-delivery feature with roots, slugs,
 manifest v8, read model v4 and nested entry artifacts. See
 [Milestone 3A](./path-identity.md#milestone-3a-integrate-main). Completed integration

@@ -1,7 +1,8 @@
 # Screen Variants Follow-up
 
-Status: the initial follow-up is implemented, verified, pushed, and reviewed in
-[PR #115](https://github.com/mokly-ai/mokly/pull/115). Active pending PR merge.
+Status: Completed. [PR #115](https://github.com/mokly-ai/mokly/pull/115)
+merged on 2026-09-23. The initial follow-up was implemented, verified, pushed,
+and reviewed in that PR.
 The user has approved fixing historical snapshot selection;
 Milestones 9–12 carry that work without reopening completed milestones. Created 2026-09-22 to close
 [Screen Variants](./screen-variants.md) for
@@ -10,7 +11,7 @@ request to implement this follow-up authorizes its six design route moves and
 related collection cleanup. Delivery belongs in a separate PR. Implementation
 is delegated to Codex 5.6 Sol with max reasoning; the coordinating agent checks
 the implementation, runs the complete gate, commits and pushes, then performs
-the final read-only review. Keep this plan Active until its PR merges.
+the final read-only review.
 
 ## Scope And Contracts
 

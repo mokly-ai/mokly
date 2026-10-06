@@ -265,6 +265,8 @@ only after successful complete compilations.
   serializes every generated-output transaction across processes. The writer
   holds the lock through validation, replacement and cleanup; waiters reclaim
   only provably stopped holders. Nonwriting callers use accepted memory.
+  Release removes only the lock file and keeps `.mokly-cache/locks/`, so it
+  never races another writer that is creating its lock there.
 
 See the [build pipeline](../../docs/architecture/build-pipeline.md),
 [instance contract](../../docs/protocol/mokly-instances.md),

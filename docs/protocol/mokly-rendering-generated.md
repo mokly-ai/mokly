@@ -111,24 +111,23 @@ longer runs, or when the record names the waiter's own process with a token
 that process does not hold. A record without both values is never reclaimed.
 After 120 s the waiter fails with `build-invalid`; the message names the holder
 and the lock path, and tells the user to delete the lock only when no Mokly
-command is running. Release removes the lock, then `locks/` and `.mokly-cache/`
-while each is empty, so a repository without baseline history keeps no cache
-directory. If removal fails, the next writer reclaims the lock after its holder
-stops.
+command is running. Release removes only the lock file. `locks/` and
+`.mokly-cache/` stay, even when empty, so a release never removes a directory
+in which another writer is creating its lock; APFS fails that create with
+`EINVAL` rather than `ENOENT`. If removal fails, the next writer reclaims the
+lock after its holder stops.
 
 Plain Serve, export and publication compile/capture in memory and never acquire
 this writer lock. Cancellation stops a Build or opted-in Serve wait; it does not
 interrupt a tree transaction already underway. Cache paths remain private and
 cannot create watch feedback or Changes evidence.
 
-Compile-time collision, ownership and target-realpath checks use a short hold of
-this same lock. Build captures the snapshot after rendering; live Serve captures
-it while accepting the metadata generation. The snapshot contains validated
-output routes and owned orphan routes, never rendered bytes. Demand, Props and
-background workers reuse that accepted snapshot instead of caching a tree read
-mid-transaction. Writers still revalidate the live tree under their own lock.
-No consumer render, import or compatibility callback runs under the snapshot
-lock. Export cancellation also cancels an initial or recheck snapshot wait.
+Compilation and live metadata acceptance retain an immutable checked route set
+from in-memory outputs and validated identities. Snapshot capture never reads the
+output folder or acquires this lock. Demand, Props and background workers reject
+routes outside that set with strict private IPC validation. There is no owned
+orphan inventory. Writers still revalidate the live tree under their own lock.
+See the [accepted route-set contract](./mokly-generation-routes.md).
 
 Other read-only path probes can overlap a writer. A disappearing ordinary
 ancestor restarts path projection at most five times; a dangling symlink and

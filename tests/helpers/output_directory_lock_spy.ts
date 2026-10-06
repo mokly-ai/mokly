@@ -6,7 +6,7 @@ import { outputLockPath } from "../../dist/build/output_lock.js";
 import { isInside } from "../../dist/config/paths.js";
 import type { ResolvedConfig } from "../../dist/config/types.js";
 
-/** Observe every output-tree mutation while leaving private lock-directory cleanup separate. */
+/** Observe every output-tree mutation; the private lock directory lies outside that tree. */
 export function spyOutputDirectoryLock(t: TestContext, config: ResolvedConfig) {
   type Operation = "mkdir" | "rmdir" | "rename" | "rm";
   const calls: { operation: Operation; directory: string }[] = [];

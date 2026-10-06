@@ -63,7 +63,40 @@ test(
   },
 );
 
-test("release removes the lock and its empty directories once", async (context) => {
+/**
+ * APFS fails a create with `EINVAL`, not `ENOENT`, when another process removes
+ * the parent directory during the create, so a release must keep `locks/`.
+ */
+test("a release never removes the directory a waiting writer creates its lock in", async (context) => {
+  const root = await repository(context);
+  const first = await acquireOutputLock(root);
+  const file = outputLockPath(root);
+  const open = fs.open.bind(fs);
+  let released = false;
+  context.mock.method(
+    fs,
+    "open",
+    async (candidate: string, flags?: string | number, mode?: number) => {
+      if (candidate === file && flags === "wx" && !released) {
+        released = true;
+        await first.release();
+        await fs.lstat(path.dirname(file)).catch(() => {
+          throw Object.assign(
+            new Error(`EINVAL: invalid argument, open '${candidate}'`),
+            { code: "EINVAL" },
+          );
+        });
+      }
+      return open(candidate, flags, mode);
+    },
+  );
+  const second = await acquireOutputLock(root, { timeoutMs: 5_000 });
+  assert.equal(released, true);
+  assertOutputLockHeld(second, root);
+  await second.release();
+});
+
+test("release removes only its own lock file, once", async (context) => {
   const root = await repository(context);
   const lock = await acquireOutputLock(root);
   assert.equal(lock.path, outputLockPath(root));
@@ -72,16 +105,13 @@ test("release removes the lock and its empty directories once", async (context) 
     process.pid,
   );
   await lock.release();
-  await assert.rejects(fs.access(path.join(root, ".mokly-cache")), {
-    code: "ENOENT",
-  });
+  assert.deepEqual(await fs.readdir(path.dirname(lock.path)), []);
   assert.throws(() => assertOutputLockHeld(lock, root), /writer lock/u);
+  const successor = await acquireOutputLock(root);
   await lock.release();
-  const history = path.join(root, ".mokly-cache", "baselines");
-  await fs.mkdir(history, { recursive: true });
-  await (await acquireOutputLock(root)).release();
-  await assert.rejects(fs.access(path.dirname(lock.path)), { code: "ENOENT" });
-  await fs.access(history);
+  assertOutputLockHeld(successor, root);
+  await fs.access(successor.path);
+  await successor.release();
 });
 
 for (const [name, pid] of [
@@ -97,9 +127,7 @@ for (const [name, pid] of [
       process.pid,
     );
     await lock.release();
-    await assert.rejects(fs.access(path.dirname(lock.path)), {
-      code: "ENOENT",
-    });
+    assert.deepEqual(await fs.readdir(path.dirname(lock.path)), []);
   });
 
 test(
@@ -194,24 +222,6 @@ test("watches never observe the lock", async (context) => {
     isPackageOwnedIgnoredWatchPath(path.dirname(file), config),
     true,
   );
-});
-
-test("a lock directory that a concurrent release removes is recreated", async (context) => {
-  const root = await repository(context);
-  const locks = path.dirname(outputLockPath(root));
-  const lstat = fs.lstat.bind(fs);
-  let removed = 0;
-  context.mock.method(fs, "lstat", async (candidate: string) => {
-    if (candidate === locks && removed === 0) {
-      removed += 1;
-      await fs.rm(path.dirname(locks), { force: true, recursive: true });
-    }
-    return lstat(candidate);
-  });
-  const lock = await acquireOutputLock(root, { timeoutMs: 5_000 });
-  assert.equal(removed, 1);
-  assertOutputLockHeld(lock, root);
-  await lock.release();
 });
 
 test("a lock directory replaced by a regular file fails at once", async (context) => {

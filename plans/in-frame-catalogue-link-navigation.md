@@ -1,6 +1,7 @@
 # In-Frame Catalogue Link Navigation
 
-**Status:** Completed.
+Status: Completed. [PR #30](https://github.com/mokly-ai/mokly/pull/30)
+merged on 2026-08-25.
 
 **Goal:** Make an explicit catalogue link activated inside a Mokabook fragment
 navigate the outer Browse shell to the destination's canonical page, while

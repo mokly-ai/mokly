@@ -301,7 +301,7 @@ appearance with any preview scheme. See the
 - [Variants](./docs/protocol/mokly-variants.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
-- [Implementation plans](./plans/README.md)
+- [Implementation plans](./plans/)
 - [Changelog](./CHANGELOG.md)
 
 The guides are user-facing and ship with the npm package. The protocol documents
@@ -313,7 +313,7 @@ for pages, imported styles and assets. The portable
 [viewer namespace](./docs/protocol/mokly-viewer-namespace.md) is `mokly-viewer/`.
 Older receivers reject the new upload format. Mokly Cloud needs the documented
 receiver and viewer update before publication. Progress remains in the
-[plan index](./plans/README.md).
+[implementation plans](./plans/).
 
 ## Develop Mokly
 

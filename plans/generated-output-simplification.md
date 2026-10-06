@@ -1,5 +1,13 @@
 # Generated Output Simplification
 
+Status: Active. Milestones 1–22 are implemented and verified. The branch uses
+one generated tree, a referenced authored closure, writer-only output locks,
+current-format baselines and the `mokly-viewer/` namespace. The path-identity
+merge uses manifest v9, catalogue v5 and review v6. Milestone 23 integrates main's
+plan-status and persistent lock-directory changes, checks the documents, and
+re-plans the remaining review fixes in Milestones 24–28. Findings 17 and 52
+still await decisions. Cloud rollout remains a non-blocking post-merge follow-up.
+
 ## Summary
 
 Three related changes to how Mokly handles generated output, all following
@@ -4062,6 +4070,15 @@ is removed. The latest fetch still names `781da7ae`; it is not merged.
 
 ## Milestone 23: Verify the merge and re-plan the review fixes
 
+- [x] Merge `origin/main` once more under Mainline Feature Preservation before
+      the remaining TODOs. Capture the source tip and merge base, audit all main
+      changes, resolve each conflict path, preserve exactly two parents, inspect
+      every remerge path, and check deletions. Keep #133's `AGENTS.md`, delete
+      `plans/README.md`, and put this plan's useful summary in its first
+      `Status: Active` paragraph. Keep #132's persistent lock directories with
+      decision B's writer-only lock. Run the full gate, commit, and push before
+      the document check and re-plan. If main moves again, report its tip without
+      another merge.
 - [ ] Re-read every document changed in Milestones 21 and 22 against the code,
       and fix drift. If code changes, rerun the full gate.
 - [ ] Check each decision of Milestones 24–27 against the merged code. Update
@@ -4072,6 +4089,128 @@ is removed. The latest fetch still names `781da7ae`; it is not merged.
 - [ ] After the push, review the merge against `origin/main` using
       `docs/implementation-review-prompt.md`; report numbered findings with
       severities and recommendations without changing the implementation.
+
+### Additional main integration: #133 and #132
+
+The user approved this additional merge under decision 1 A after accepting
+Milestone 22's `d724b952` merge. That commit is pushed before this step starts.
+Captured source tip: `d724b9529f8d404016f3526d99cd3f6d12e8fe84`.
+Captured incoming tip: `781da7ae3261e6694a5ef5608a91f3e34061f6d0`.
+Captured merge base: `c4138a0b9578448d81ce2a2868bd7ec47f5a88c6`.
+The audit command is `git diff --name-status c4138a0b..origin/main`.
+Its 65-path result is saved in `.context/milestone-23-merge/main-name-status.txt`.
+
+Preserve all incoming changes:
+
+- #133 (`60d48370`): keep main's plan rules in `AGENTS.md`, its plan statuses,
+  PR links, review owners and documentation links. Delete the index as main did.
+  This branch's still-useful index summary moves to this plan's first paragraph.
+  Repair branch-only index links to point to the plans directory or the owning
+  plan. Historical review evidence remains intact.
+- #132 (`781da7ae`): release only the owned lock file. Keep `.mokly-cache/locks/`
+  and `.mokly-cache/` even when empty. Keep its successor-lock and APFS create
+  regression tests, and remove only main's obsolete directory-disappearance
+  retries and their tests. Keep source confinement and cancellation checks.
+  Carry its cache fixture setup changes into the whole-tree model.
+- Snapshot decision B still applies: only Build, `build --watch`, and the
+  `serve --build` parent call the output write lock. Compilation, plain Serve,
+  export, publication and Check neither acquire nor wait for it. The accepted
+  in-memory route set and strict worker validation remain unchanged.
+
+Main itself removes `plans/README.md` and
+`tests/baseline_directory_walk.test.ts`. The latter's removed titles are
+`baseline directory creation restarts when an empty cache root disappears` and
+`baseline directory creation stops retrying a parent that keeps disappearing`.
+Main also removes `a lock directory that a concurrent release removes is recreated`
+and replaces `release removes the lock and its empty directories once` with
+`release removes only its own lock file, once`. These changes are #132/#133
+behavior and test changes approved by this merge instruction. No other incoming
+main file, feature or assertion is approved for removal in this step.
+
+The incoming APFS regression was run against the pre-merge implementation first:
+`node --import tsx --test --test-name-pattern='a release never removes the directory a waiting writer creates its lock in' .context/milestone-23-merge/generated_output_lock.test.ts`.
+It failed (one test, zero passes, zero skips) with the expected create error:
+
+```text
+"[mokly/build-invalid] could not lock generated output at /home/vercel-sandbox/mokly/.context/tmp/mokly-output-lock-ckc5EL/.mokly-cache/locks/generated-output.lock: EINVAL: invalid argument, open '/home/vercel-sandbox/mokly/.context/tmp/mokly-output-lock-ckc5EL/.mokly-cache/locks/generated-output.lock'"
+```
+
+The copied test uses the incoming assertions with absolute imports of the current
+package. It changes no tracked test before the merge. The exact failing log is
+`.context/milestone-23-merge/lock-before.log`.
+
+Conflict resolutions and merge-only adaptations:
+
+- `plans/README.md`: accept main's deletion after moving this plan's useful
+  status summary to its first paragraph. Historical textual index references
+  stay as historical evidence; no live link targets the deleted file.
+- `packages/viewer/src/client/README.md`: keep the approved frame contract and
+  use main's directory link for implementation plans.
+- `src/build/README.md`: combine persistent lock directories with the existing
+  writer-only, whole-tree transaction. Do not restore reader-lock instructions.
+- `tests/path_transaction_regressions.test.ts`: retain every whole-tree and
+  authored-sibling assertion. Add main's zero-`rmdir` assertion across both
+  writes, with its directory-removal spy, so lock release cannot remove parents.
+- `tests/export_current_derived.test.ts`: a fresh nonwriting fixture keeps the
+  cache absent under decision B. A new separate case keeps main's `locks`-only
+  assertion after a real prior Build and also checks the lock directory's inode
+  and empty contents. No original test title or assertion coverage is dropped.
+- `README.md`: repair the additional branch-only link to the removed index.
+- `mokly-rendering-generated.md`: retain #132's release behavior and replace
+  the stale disk-snapshot paragraph with decision B's immutable memory route
+  set. `mokly-baseline-storage.md` retains #132's cache creation rule and corrects
+  its stale marker example from manifest 8 to the implemented manifest 9.
+  These two documentation corrections are recorded for the later full audit.
+- `AGENTS.md`: main's Plans section is byte-identical. Existing generated-tree
+  example instructions remain under the prior approved output-layout decision.
+  All other incoming plan statuses, PR history and review owners stay intact.
+
+The first focused post-merge run passed 30 of 31 tests. Its export fixture failed
+because the incoming assertion expected a cache even though the branch's
+fixture only compiles and export never takes the writer lock:
+
+```text
+ENOENT: no such file or directory, scandir '/home/vercel-sandbox/mokly/.context/mokly-test-Xnpz5A/.mokly-cache'
+```
+
+The explicit no-writer/prior-writer cases above resolve that conflict. The next
+focused command passed all 32 tests:
+`node --import tsx --test tests/generated_output_lock.test.ts tests/generated_output_lock_waits.test.ts tests/path_transaction_regressions.test.ts tests/derived_build.test.ts tests/derived_cache_boundaries.test.ts tests/export_current_derived.test.ts`.
+The incoming APFS test now passes. The writer-lock call remains exclusively in
+`writeCompilation`. All 13 documentation/link/size/history/guide checks pass.
+No timeout, audit policy, schema version or nonwriting boundary changes.
+
+### Additional merge validation
+
+All seven commands pass under Node 22.14.0:
+
+| Command                                                                              | Result                                                                       |  Seconds |
+| ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | -------: |
+| `npm run format:check`                                                               | Pass                                                                         |   49.849 |
+| `npm run lint`                                                                       | Pass                                                                         |   32.725 |
+| `npm run typecheck`                                                                  | Pass                                                                         |   65.868 |
+| `npm run test:browser -- --output .context/milestone-23-merge/final-browser-results` | 1,114 passed                                                                 | 2751.623 |
+| `npm test`                                                                           | 4,352 passed; no skips/cancellations                                         | 1728.273 |
+| `npm run example:check`                                                              | Valid, untracked; 472 files                                                  |   13.507 |
+| `cargo xtask check`                                                                  | Pass; audit, Rust, six packed consumers, strict unit/browser/hydration gates | 4789.246 |
+
+Cargo repeats all 4,352 unit cases, 851 browser cases and 263 hydration cases.
+All pass with no skips or cancellations. The deterministic APFS create-race
+regression passes, as do successor-lock safety, whole-tree lock coverage,
+lock-free nonwriters and the prior-Build export case. Main's audit exception
+and its strict packed-consumer audits stay unchanged. Logs and exact receipts
+are under `.context/milestone-23-merge/`.
+
+The final title audit against `781da7ae` retains every incoming test title except
+the same 171 prior approved replacements listed in Milestone 22. Relative to
+that incoming tip, the same 17 approved branch file removals remain. Main's own
+two-file deletion and old lock-test replacements are recorded separately above.
+No new incoming feature or test is removed. The latest fetch remains `781da7ae`.
+The merge retains the captured two parents; its remerge diff and deletion list
+are checked immediately after the commit and before the explicit push.
+
+The document check, remaining-decision re-plan and their commit below are still
+pending. The orchestrator owns the final review TODO.
 
 ## Milestone 24: Shared watching and command output
 

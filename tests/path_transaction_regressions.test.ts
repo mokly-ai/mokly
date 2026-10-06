@@ -100,6 +100,16 @@ test("whole-tree replacement keeps the catalogue parent and authored siblings", 
   });
   t.after(fixture.remove);
   const config = await fixture.config();
+  const removed: string[] = [];
+  const rmdir = fs.promises.rmdir;
+  t.mock.method(
+    fs.promises,
+    "rmdir",
+    async (...args: Parameters<typeof fs.promises.rmdir>) => {
+      removed.push(String(args[0]));
+      return rmdir(...args);
+    },
+  );
   await writeCompilation(await fixture.compile(), config);
   const parent = fs.statSync(config.mockupsDir);
   const sibling = fs.statSync(path.join(config.mockupsDir, "notes.txt"));
@@ -124,6 +134,7 @@ test("whole-tree replacement keeps the catalogue parent and authored siblings", 
     ),
     /Changed/,
   );
+  assert.deepEqual(removed, []);
 });
 
 test("whole-tree cleanup runs while the output lock remains held", async (t) => {

@@ -1,9 +1,12 @@
 # Configurable Changes Listing
 
-Status: Planned; not started. Created 2026-09-26 with the user's consent while
+Status: Active; not started. Created 2026-09-26 with the user's consent while
 discussing finding 2 of [Path-Only Evidence](./changes-path-only-evidence.md).
-The user will implement it in a new PR after PR #118 merges. The settings UI
-is deliberately out of scope and comes in a later plan.
+The user will implement it in a new PR. Its prerequisite merged in
+[PR #123](https://github.com/mokly-ai/mokly/pull/123) on 2026-09-30, which
+replaced PR #118. [Path Identity](./path-identity.md) has since replaced
+`navPath`, which this plan still names. The settings UI is deliberately out
+of scope and comes in a later plan.
 
 **Problem:** Changes lists an entry whenever the comparison records any reason
 for it, including reasons nobody can see. On PR #118, 82 screens were listed

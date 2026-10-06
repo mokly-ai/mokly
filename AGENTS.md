@@ -199,9 +199,14 @@
 - Plans do not live at the repo root anymore; they live under `./plans`
 - Create one plan file per change, named after the change in concise kebab-case, for example `tool-request-error-contract-alignment.md`
 - Do not combine unrelated work into a shared plan file; create a new plan file for each distinct change
-- `plans/README.md` is the directory index and must list active and completed plans
-- When creating a new plan file, add it to `plans/README.md` immediately
-- When a plan is completed, move its link from the active section to the completed section in `plans/README.md`
+- There is no plans index file. Each plan records its own status in the first
+  paragraph directly below its title. That paragraph starts with
+  `Status: Active` while the plan is open, or with `Status: Completed` when it
+  is closed. List the open plans with `grep -l '^Status: Active' plans/*.md`
+- When creating a new plan file, start it with a `Status: Active` paragraph
+- When a plan's PR merges, change its status paragraph to start with
+  `Status: Completed. [PR #<number>](<url>) merged on <YYYY-MM-DD>.` and keep
+  any open review findings or follow-up owners in that paragraph
 - Each plan describes work needed to ensure complete alignment with the protocol docs
 - The PR merge is the completion boundary for a plan. Every milestone and its
   required TODOs must be completable on the branch before the PR merges or by
@@ -210,8 +215,8 @@
 - Put post-merge work, including additional tasks and smoke tests that require
   the merged or deployed change, in a `## Post-merge follow-up (non-blocking)`
   section outside the milestones. Items in this section do not affect
-  milestone or plan completion and must not prevent the plan from being closed
-  and moved to completed when the PR merges.
+  milestone or plan completion and must not prevent the plan from being marked
+  completed when the PR merges.
 - Keep smoke tests that can and should run before merge as required milestone
   TODOs under the normal testing rules.
 - Each plan should break up the work into concrete units called Milestones. At the end of each milestone there should be a functioning product. Never leave the code base or feature in a broken state.
@@ -249,7 +254,7 @@
 - Any time a new TODO is discovered during implementation, it should be added under the relevant milestone (just add the new TODO, and then continue with the active TODO)
 - If a TODO is complex, break it down into sub-tasks/TODOs
 - As you complete items, you should tick them off in the relevant file under `./plans`
-- The workspace `README.md` should link to `plans/README.md`, not to an individual plan file unless a specific change needs to be referenced
+- The workspace `README.md` should link to the `plans/` directory, not to an individual plan file unless a specific change needs to be referenced
 - Mark a milestone as completed when all the tasks are completed, do not re-open existing milestones - create a new milestone if new tasks are needed that do not fit into an existing milestone
 
 ## Rust

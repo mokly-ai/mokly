@@ -65,29 +65,26 @@ export async function publishLock(file: string): Promise<string | undefined> {
 }
 
 /**
- * Open the lock file exclusively. Another writer's release can remove `locks/`
- * and `.mokly-cache/` at any step, so a missing directory is created again.
+ * Open the lock file exclusively inside a real `locks/` directory. Releases
+ * never remove that directory, so no other writer can remove it mid-create.
  */
 async function createExclusively(
   file: string,
 ): Promise<fs.FileHandle | undefined> {
   const directory = path.dirname(file);
-  for (let attempt = 1; ; attempt += 1) {
-    try {
-      await fs.mkdir(directory, { recursive: true }).catch((error: unknown) => {
-        if (!hasCode(error, "EEXIST")) throw error;
-      });
-      if (!(await fs.lstat(directory)).isDirectory())
-        throw new MoklyError(
-          "build-invalid",
-          `generated-output lock directory must be a real directory: ${directory}`,
-        );
-      return await fs.open(file, "wx");
-    } catch (error) {
-      if (hasCode(error, "ENOENT") && attempt < 20) continue;
-      if (hasCode(error, "EEXIST") || pendingDeletion(error)) return undefined;
-      throw error;
-    }
+  try {
+    await fs.mkdir(directory, { recursive: true }).catch((error: unknown) => {
+      if (!hasCode(error, "EEXIST")) throw error;
+    });
+    if (!(await fs.lstat(directory)).isDirectory())
+      throw new MoklyError(
+        "build-invalid",
+        `generated-output lock directory must be a real directory: ${directory}`,
+      );
+    return await fs.open(file, "wx");
+  } catch (error) {
+    if (hasCode(error, "EEXIST") || pendingDeletion(error)) return undefined;
+    throw error;
   }
 }
 
@@ -165,9 +162,10 @@ export async function reclaimLock(
 }
 
 /**
- * Remove this token's lock, then `locks/` and `.mokly-cache/` while each is
- * empty. A failed lock removal is left for the next writer, which reclaims it
- * after this holder stops.
+ * Remove only this token's lock file. `locks/` and `.mokly-cache/` stay, so a
+ * release never races another writer's create inside them; APFS fails such a
+ * create with `EINVAL` rather than `ENOENT`. A failed lock removal is left for
+ * the next writer, which reclaims it after this holder stops.
  */
 export async function removeLock(file: string, token: string): Promise<void> {
   try {
@@ -177,14 +175,6 @@ export async function removeLock(file: string, token: string): Promise<void> {
     return;
   } finally {
     ownTokens.delete(token);
-    const locks = path.dirname(file);
-    if (
-      await fs.rmdir(locks).then(
-        () => true,
-        () => false,
-      )
-    )
-      await fs.rmdir(path.dirname(locks)).catch(() => {});
   }
 }
 

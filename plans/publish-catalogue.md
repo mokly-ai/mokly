@@ -1,5 +1,9 @@
 # Publish Catalogue
 
+Status: Completed. [PR #71](https://github.com/mokly-ai/mokly/pull/71)
+merged on 2026-09-14. [Delta Publishing](./delta-publishing.md) later
+replaced its single-archive upload exchange.
+
 Implement the public [upload v1 contract](../docs/protocol/mokly-upload.md) in
 the npm CLI and a composite GitHub Action. Receivers use documented artifacts
 only; no private Cloud integration or hosting service is part of this change.

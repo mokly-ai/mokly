@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { writeCompilation } from "../dist/build/transaction.js";
 import { exportCatalogue } from "../dist/export/run.js";
 
 import { derivedFixture } from "./helpers/derived_fixture.js";
@@ -59,6 +60,18 @@ test("current-only derived export skips history and captures compiled bytes", as
   await assert.rejects(fs.stat(path.join(fixture.root, ".mokly-cache")), {
     code: "ENOENT",
   });
+});
+
+test("current-only export keeps lock directories left by an earlier Build", async (context) => {
+  const fixture = await derivedFixture(context);
+  await writeCompilation(fixture.baseline, fixture.config);
+  const cache = path.join(fixture.root, ".mokly-cache");
+  const locks = path.join(cache, "locks");
+  const before = await fs.stat(locks);
+  await exportCatalogue(fixture.config, { outDir: "site", noChanges: true });
+  assert.deepEqual(await fs.readdir(cache), ["locks"]);
+  assert.deepEqual(await fs.readdir(locks), []);
+  assert.equal((await fs.stat(locks)).ino, before.ino);
 });
 
 test("current-only derived export still rejects authored edits before installation", async (context) => {

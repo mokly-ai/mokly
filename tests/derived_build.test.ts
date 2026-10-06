@@ -44,7 +44,7 @@ test("check guards indexed cache paths and reports mixed generated paths", async
   const fixture = await derivedFixture(t);
   const store = new FileSystemGeneratedOutputStore();
   await store.write(fixture.baseline, fixture.config);
-  await fs.mkdir(path.join(fixture.root, ".mokly-cache"));
+  await fs.mkdir(path.join(fixture.root, ".mokly-cache"), { recursive: true });
   await fs.writeFile(
     path.join(fixture.root, ".mokly-cache", "forced.txt"),
     "cache",
