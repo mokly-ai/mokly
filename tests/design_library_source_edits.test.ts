@@ -25,6 +25,9 @@ interface EditGroup {
  * Impacting edits rebuild alone so another component cannot mask attribution.
  * Non-impacting edits may share a build only with exact path/reason unions and
  * no affected consumers. Edits at the same path need disjoint reason kinds.
+ * Same-file edits targeting different entries must rebuild separately.
+ * A subset of another member's reasons can mask an extra change at its path;
+ * this rule keeps that limit away from same-file variant attribution.
  * Equal or subset signatures stay separate. Regroup when a signature changes.
  */
 const groups: readonly EditGroup[] = [
@@ -51,17 +54,15 @@ const groups: readonly EditGroup[] = [
     impacting: ["design/library/controls/tag-chip"],
   },
   {
-    name: "3: saved titles, control labels, screen title and slot, tag and field value",
+    name: "3: saved title, screen title and slot, tag and field value",
     edits: [
       sourceEdits.savedTitle,
-      sourceEdits.controlLabel,
       sourceEdits.screenTitle,
       sourceEdits.slot,
       sourceEdits.pickerTag,
       sourceEdits.cornerRadius,
     ],
     changes: {
-      "design/library/chrome/top-bar": [{ kind: "metadata" }],
       "design/library/chrome/top-bar/search": [
         { kind: "material" },
         { kind: "metadata" },
@@ -96,9 +97,10 @@ const groups: readonly EditGroup[] = [
     impacting: [],
   },
   {
-    name: "5: removed screen instance",
-    edits: [sourceEdits.removal],
+    name: "5: control label and removed screen instance",
+    edits: [sourceEdits.controlLabel, sourceEdits.removal],
     changes: {
+      "design/library/chrome/top-bar": [{ kind: "metadata" }],
       "design/browse/views/use-case": [
         { kind: "material" },
         { kind: "structure" },

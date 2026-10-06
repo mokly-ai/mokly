@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import test, { after } from "node:test";
 
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import type { DependencyReason } from "../packages/viewer/dist/data.js";
 
 import {
   changedEntryPaths,
+  reasonsOf,
   stylesheetScope,
 } from "./helpers/attribution_result.js";
 import { designLibraryFixture } from "./helpers/design_library_fixture.js";
@@ -66,6 +68,17 @@ test("mixed component design styles retain their actual rendered resource scope 
   }
   const paths = changedEntryPaths(result);
   assert.deepEqual(paths, [...new Set([...scopes.values()].flat())].sort());
+  for (const path of paths) {
+    const expectedReasons = [...scopes]
+      .filter(([, scope]) => scope.includes(path))
+      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+      .map(([stylesheet]): DependencyReason => ({
+        kind: "dependency",
+        path: `examples/basic/generated/${stylesheet}`,
+        analysis: { status: "unresolved", selectors: ["body"] },
+      }));
+    assert.deepEqual(reasonsOf(result, path), expectedReasons, path);
+  }
   const designCssScope = scopes.get("design.css");
   assert.ok(designCssScope);
   assert.deepEqual(

@@ -103,3 +103,19 @@ chain's presence. Both passes now require the exact pair, preserving that
 guarantee and checking agreement with the single-change control. This chain correction did not change the source-edit grouping. A later
 review moved the control-label edit into build 5 to preserve same-file variant
 isolation. The number of builds remains five.
+
+## Review Corrections
+
+The shared-style test now checks each entry's complete dependency reasons,
+including exact paths and unresolved `body` analysis. The source groups keep
+all three `top-bar.tsx` edits in different builds. Build 3 has the saved title;
+build 4 has the saved query; build 5 combines the control label and screen
+removal. The table still has five builds. The plan states the residual masking
+limit and the rule that protects same-file variant attribution.
+
+The corrected shared-style file passed in 28.014 s. The corrected source-edit
+file passed all five groups in 135.715 s. Formatting, ESLint, and prepared type
+checks passed. The first contract-restoration check reported
+`mokly-component-design.md has 251 lines`. Tightening only the new test
+paragraph restored the 250-line cap. All five protocol size/history tests then
+passed. The interrupted run's owned fixture directory was removed.

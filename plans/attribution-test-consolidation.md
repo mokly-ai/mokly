@@ -381,10 +381,10 @@ file). Today's `affects` boolean becomes the exact `impactingIds` list.
 Prove the runtime reduction locally and in CI, record it, and close the plan
 with the required commit, push, and review steps.
 
-- [ ] Apply the orchestrator's review corrections in follow-up commits.
-  - [ ] Separate same-file edits targeting different entries without adding a
+- [x] Apply the orchestrator's review corrections in follow-up commits.
+  - [x] Separate same-file edits targeting different entries without adding a
         build; document the grouping limit and rule.
-  - [ ] Check every shared-style entry's complete dependency reasons and analysis.
+  - [x] Check every shared-style entry's complete dependency reasons and analysis.
   - [x] Run the README's heavy files once and name all four in prose.
   - [x] Restore the public-input, route-scope, and shared-metadata contract text.
   - [x] Use current-merge before timings and identify scratch evidence as local-only.
