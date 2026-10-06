@@ -1872,6 +1872,10 @@ Evidence: `.context/scalable-inline-style-analysis/m10-prior-plan-evidence.md`, 
       fingerprints, count link-normalization parses, guard original foreign EOF
       state, restore final-status waits, correct stale-resource coverage, and
       use path identity in the benchmark contracts. Keep every oracle and proof.
+- [x] Discovered: fix four supervisor-found defects in those fixes: production
+      links in every component-aware test context, an EOF guard for foreign
+      closers inside paired ignores, independent actual/projected URL tests, and
+      README guard ownership (8fe729a7, 321b8cda, 652f32bf).
 - [x] Supervisor decision (2026-10-06), under the user's merge request: merge
       current main a second time after the seven fixes. Keep main's dependency
       versions. Follow its evidence and review-fix rules from this merge forward.
@@ -1911,6 +1915,10 @@ Evidence: `.context/scalable-inline-style-analysis/m10-prior-plan-evidence.md`, 
       Finding 6: history phrases, stale links and the release-note coverage list in the protocol docs; pending the user's decision.
       Finding 7: move-pairing HTML parses are not counted; pending the user's decision.
       Finding 8: the `197df9c5` message names the wrong decision owner; pending the user's decision.
+      Re-review of the fix round complete; report: `.context/scalable-inline-style-analysis/m10-review/rereview.md`. No Auto-fix: yes findings.
+      Re-review finding 1: the foreign-content guard misses ignore regions that uncover an SVG or MathML opener; pending the user's decision.
+      Re-review finding 2: the test-context audit accepts contexts whose links can be missing; pending the user's decision.
+      Re-review finding 3: plan bookkeeping for the re-review and the four fixes; addressed by these lines; the user may prefer unticking the review TODO.
 
 ### Decisions and approvals
 
