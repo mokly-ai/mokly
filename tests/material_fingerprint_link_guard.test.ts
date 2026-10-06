@@ -18,7 +18,10 @@ import {
   styleRouteFixture,
   withHeadStyles,
 } from "./helpers/style_route.js";
-import { styleSwitches } from "./helpers/style_switches.js";
+import {
+  compareStyleSwitches,
+  styleSwitches,
+} from "./helpers/style_switches.js";
 
 test("equal-source skipped link proof adds no normalization call", async (t) => {
   const style =
@@ -47,6 +50,47 @@ test("equal-source skipped link proof adds no normalization call", async (t) => 
 });
 
 for (const mode of ["committed", "derived"] as const) {
+  for (const kind of ["actual", "projected"] as const)
+    test(`${mode}: ${kind} URL equality independently retains text materials`, async (t) => {
+      const css = (color: string, url: string) =>
+        kind === "actual"
+          ? `.actual-only{background:url("${url}")}`
+          : `.actual-only{color:${color}}.entry{background:url("${url}")}`;
+      const original = withHeadStyles(
+        await styleRouteFixture(t),
+        `<style>${css("red", "../asset.svg")}</style>`,
+        `<style>${css("blue", ".././asset.svg")}</style>`,
+        mode,
+      );
+      const fixture = {
+        ...original,
+        beforeFiles: new Map([...original.beforeFiles, ["asset.svg", "image"]]),
+        afterFiles: new Map([...original.afterFiles, ["asset.svg", "image"]]),
+      };
+      const oracle = await compareStyleSwitches(
+        fixture,
+        styleSwitches[0],
+        false,
+      );
+      if (kind === "actual") assert.equal(oracle.view.state, "unchanged");
+      else assert.deepEqual(oracle.reasons, []);
+      for (const switches of styleSwitches) {
+        const { comparisonPath: _oraclePath, ...expected } = oracle;
+        const { comparisonPath: _path, ...result } = await compareStyleSwitches(
+          fixture,
+          switches,
+        );
+        assert.deepEqual(result, expected, JSON.stringify(switches));
+      }
+      const fingerprint = fingerprintMaterials(fixture);
+      const text = fingerprintMaterials(fixture, false);
+      assert.deepEqual(
+        comparisonMaterials(fingerprint),
+        comparisonMaterials(text),
+      );
+      assert.deepEqual(fingerprint.references, text.references);
+    });
+
   test(`an unchanged URL beside an edited rule retains fingerprints in ${mode}`, async (t) => {
     const original = withHeadStyles(
       await styleRouteFixture(t),
