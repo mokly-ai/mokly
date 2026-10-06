@@ -374,7 +374,7 @@ the fix, and the other findings wait for the user.
       compile when the saved snapshot is still fresh.
 - [x] Fix finding 5: the snapshot contract now states the exact first hashed
       line, `mokly-example-compilation-snapshot 1`.
-- [ ] Run `cargo xtask check`, commit with the fixed findings named in the
+- [x] Run `cargo xtask check`, commit with the fixed findings named in the
       message, and push.
 - [ ] Re-run [the implementation review prompt](../docs/implementation-review-prompt.md)
       once on the fix against `origin/main`. Fix new `Auto-fix: yes` findings
