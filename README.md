@@ -351,6 +351,17 @@ functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
 
+Local test runs scale with the machine. Unit tests run half the available CPUs'
+worth of test files at once, never fewer than two, and the hydration suite uses
+half the CPUs as Playwright workers. Other browser runs use one worker. Set
+`MOKLY_UNIT_CONCURRENCY` or `MOKLY_PLAYWRIGHT_WORKERS` to a positive integer to
+choose a different value. Playwright worker N serves the example on port
+`MOKLY_PLAYWRIGHT_PORT` + N, and `MOKLY_PLAYWRIGHT_PORT` defaults to 4517:
+
+```bash
+MOKLY_PLAYWRIGHT_WORKERS=3 npm run test:browser
+```
+
 Pull request titles use Conventional Commits and at most 72 Unicode code points.
 The separate title check runs when a PR opens, changes, or receives a push; see
 the [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).

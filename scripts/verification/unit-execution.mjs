@@ -11,7 +11,7 @@ export async function executeUnitTests(repositoryRoot, options) {
     "--import",
     "tsx",
     "--test",
-    "--test-concurrency=2",
+    `--test-concurrency=${options.concurrency}`,
     "--test-reporter=./scripts/verification/node-reporter.mjs",
   ];
   if (options.shard)

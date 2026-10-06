@@ -55,8 +55,9 @@ Developer runner arguments (`npm test -- ...` and `npm run test:unit -- ...`):
   values and unrelated npm configuration remain accepted. The parser takes an
   injected environment, with `process.env` as the default.
 - Before any test process starts, the runner parses and validates argument
-  forms, pattern values, file existence, and normalized paths; discovers the
-  inventory and validates membership; checks prepared output; then runs tests.
+  forms, pattern values, file existence, and normalized paths; validates shared
+  file concurrency; discovers the inventory and validates membership; checks
+  prepared output; then runs tests.
   Public npm preparation happens before the runner starts. Empty discovery
   fails before execution.
 - The selected helper owns discovery, membership checks, preparation checks,
@@ -91,8 +92,10 @@ Developer runner arguments (`npm test -- ...` and `npm run test:unit -- ...`):
 - A run with at least one file or pattern argument is a selected run. A
   pattern without file arguments selects the complete discovered inventory and
   still writes no evidence report. Execute only the selected files with the
-  existing two-file concurrency and verification reporter. Pass patterns before
-  Node's file arguments. Allow skipped and todo tests under the existing
+  [shared file concurrency](../docs/protocol/ci-suite-evidence.md#test-concurrency)
+  and verification reporter. Print `unit test files active at once: <count>`
+  before execution. Pass patterns before Node's file arguments. Allow skipped
+  and todo tests under the existing
   developer policy, including intentional Windows skips, and print their
   combined count. Then print one line with the selected file count, partial
   verification status, and complete gate command:
@@ -248,6 +251,8 @@ Refresh evidence: `.context/targeted-developer-test-runs/after-refresh-verificat
 Smoke evidence: `.context/targeted-developer-test-runs/smoke-tests.md`.
 Gate evidence: `.context/targeted-developer-test-runs/gate.md`.
 Document check evidence: `.context/targeted-developer-test-runs/document-checks.md`.
+Review evidence: `.context/targeted-developer-test-runs/review-1.md`.
+Review-fix evidence: `.context/targeted-developer-test-runs/review-fixes.md`.
 
 Decision: The orchestrating agent accepted the complete gate on `732c981`
 and merged documentation-only main updates without another complete gate.
@@ -278,7 +283,16 @@ and merged documentation-only main updates without another complete gate.
 - [x] Run `cargo xtask check --suite repository` first, then the complete
       `cargo xtask check`, and fix every finding.
 - [x] Run `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] Fix review findings 2 and 7, and record the open findings.
+- [ ] Merge current main with shared file concurrency and preserve all changes.
+- [ ] Run affected tests on both Node versions, then the required gates.
+- [ ] Commit and push this review-fix round before the next review.
 - [ ] After the push, review the complete local diff against `origin/main`
       with `docs/implementation-review-prompt.md`, and report the numbered
       findings with severities and recommendations. Then apply the review-fix
       rule in `AGENTS.md`.
+  - Finding 1, Medium: Zero matches look passed; recommend A: count and warn.
+  - Finding 3, Low: Windows npm probes fail; recommend B: share an npm helper.
+  - Finding 4, Low: Bad arguments wait for build; recommend B: validate first.
+  - Finding 5, Low: Error output is unclear; recommend A: clear messages.
+  - Finding 6, Low: Changes need approval; recommend A: keep all three changes.

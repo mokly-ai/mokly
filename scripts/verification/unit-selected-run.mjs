@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+import { unitTestConcurrency } from "./concurrency.mjs";
 import { discoverUnitFiles } from "./evidence.mjs";
 import { requirePrepared } from "./prepared.mjs";
 import { executeUnitTests } from "./unit-execution.mjs";
@@ -9,6 +10,7 @@ import { selectUnitFiles } from "./unit-selection.mjs";
 
 /** Run partial verification without accessing persistent evidence paths. */
 export async function runSelectedUnitVerification(repositoryRoot, selection) {
+  const concurrency = unitTestConcurrency();
   const inventory = await discoverUnitFiles(repositoryRoot);
   const files = selectUnitFiles(selection, inventory);
   await requirePrepared(repositoryRoot);
@@ -16,8 +18,10 @@ export async function runSelectedUnitVerification(repositoryRoot, selection) {
     path.join(os.tmpdir(), "mokly-unit-selected-"),
   );
   try {
+    console.log(`unit test files active at once: ${concurrency}`);
     const result = await executeUnitTests(repositoryRoot, {
       files,
+      concurrency,
       patterns: selection.patterns,
       eventPath: path.join(temporary, "report.events"),
     });

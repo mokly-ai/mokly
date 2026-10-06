@@ -28,8 +28,15 @@ subdirectory. The source audit finds that root with Git, covers `.ts`, `.tsx`,
 During an uncommitted merge, the changed-file audit compares the resolved tree
 directly with `origin/main`, so main-only additions do not become false
 violations before the merge commit exists.
-The Node unit/integration suite runs at most two test files concurrently;
-individual concurrency tests and their existing timeouts remain unchanged.
+The Node unit/integration suite runs at most half the available CPUs' worth of
+test files at once, never fewer than two. The hydration suite runs half the
+available CPUs as Playwright workers, never fewer than one, and the browser
+suite keeps one worker. Each Playwright worker owns one example server and runs
+whole spec files. Set `MOKLY_UNIT_CONCURRENCY` or `MOKLY_PLAYWRIGHT_WORKERS` to a
+positive integer to override these values. The
+[test concurrency contract](../docs/protocol/ci-suite-evidence.md#test-concurrency)
+defines them. Individual concurrency tests and their existing timeouts remain
+unchanged.
 For targeted unit and browser runs during development, use the
 [developer test commands](../docs/protocol/developer-test-commands.md).
 The complete check starts with `npm run dependencies:check`, covering all

@@ -9,7 +9,10 @@ import {
   createSelectedHarness,
   runSelected,
 } from "./helpers/verification_unit_selected.js";
-import { writeHarnessFile } from "./helpers/verification_wrapper.js";
+import {
+  runWrapper,
+  writeHarnessFile,
+} from "./helpers/verification_wrapper.js";
 
 test("one selected file runs alone and prints the partial verification boundary", async (context) => {
   const harness = await createSelectedHarness(context);
@@ -108,6 +111,46 @@ test("argument validation precedes preparation and every test process", async (c
       code: "ENOENT",
     });
   }
+});
+
+test("selected concurrency validation follows arguments and precedes discovery", async (context) => {
+  const harness = await createSelectedHarness(context);
+  const environment = { MOKLY_UNIT_CONCURRENCY: "0" };
+  await assert.rejects(
+    runWrapper(harness.root, "run-unit-dev.mjs", {
+      args: ["--unknown"],
+      environment,
+    }),
+    /usage: npm test --/u,
+  );
+  await assert.rejects(
+    runWrapper(harness.root, "run-unit-dev.mjs", {
+      args: ["tests/failing.test.ts"],
+      environment,
+    }),
+    /MOKLY_UNIT_CONCURRENCY must be a positive integer/u,
+  );
+  await assert.rejects(fs.stat(path.join(harness.root, "test-ran.marker")), {
+    code: "ENOENT",
+  });
+  await fs.rm(path.join(harness.root, "tests"), { recursive: true });
+  await assert.rejects(
+    runWrapper(harness.root, "run-unit-dev.mjs", {
+      args: ["--test-name-pattern=any"],
+      environment,
+    }),
+    /MOKLY_UNIT_CONCURRENCY must be a positive integer/u,
+  );
+});
+
+test("selected runs print the shared concurrency override they use", async (context) => {
+  const harness = await createSelectedHarness(context);
+  const { stdout } = await runWrapper(harness.root, "run-unit-dev.mjs", {
+    args: ["tests/passing.test.ts"],
+    environment: { MOKLY_UNIT_CONCURRENCY: "3" },
+  });
+  assert.match(stdout, /unit test files active at once: 3/u);
+  assert.match(stdout, /selected passing sentinel/u);
 });
 
 for (const present of [true, false]) {

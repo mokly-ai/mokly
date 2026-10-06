@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { unitTestConcurrency } from "./concurrency.mjs";
 import {
   defaultReportPath,
   discoverUnitFiles,
@@ -27,7 +28,7 @@ export async function runUnitVerification(policy, argv) {
       return await runSelectedUnitVerification(repositoryRoot, selection);
   }
   const shard = policy === "strict" ? parseShardArgument(argv) : undefined;
-
+  const concurrency = unitTestConcurrency();
   const identity = await verificationIdentity(repositoryRoot);
   const reportPath =
     process.env.MOKLY_VERIFICATION_REPORT ??
@@ -44,8 +45,10 @@ export async function runUnitVerification(policy, argv) {
   if (assignedFiles.length === 0)
     throw new Error("unit shard assignment was empty");
   await requirePrepared(repositoryRoot);
+  console.log(`unit test files active at once: ${concurrency}`);
   const result = await executeUnitTests(repositoryRoot, {
     files: fullFiles,
+    concurrency,
     shard,
     eventPath,
   });

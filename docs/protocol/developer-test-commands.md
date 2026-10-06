@@ -58,11 +58,12 @@ Before starting a test process, the developer runner follows this order:
 
 1. Parse and validate the arguments, including flag forms, pattern values,
    file existence, and path normalization.
-2. Discover the unit inventory with `discoverUnitFiles(repositoryRoot)` and
+2. Validate the [shared file concurrency](./ci-suite-evidence.md#test-concurrency).
+3. Discover the unit inventory with `discoverUnitFiles(repositoryRoot)` and
    validate file membership against that inventory.
-3. Check required package and example output with
+4. Check required package and example output with
    `requirePrepared(repositoryRoot)`.
-4. Run tests.
+5. Run tests.
 
 The [strict discovery rules](./ci-verification.md#gate-ownership) define the
 inventory roots and file extensions. Empty discovery fails before execution.
@@ -111,8 +112,11 @@ File arguments select their normalized, de-duplicated files. A pattern without
 file arguments selects the complete discovered inventory. It still uses the
 selected-run policy and writes no evidence report.
 
-Execute only the selected files, with at most two files active and the existing
-verification reporter. Pass name patterns to Node before its file arguments.
+Execute only the selected files, with the
+[shared file concurrency](./ci-suite-evidence.md#test-concurrency) and existing
+verification reporter. Before Node starts, print
+`unit test files active at once: <count>` with the value used for this run.
+Pass name patterns to Node before its file arguments.
 Allow skipped and todo tests, including intentional Windows skips, under the
 current developer policy. Print their combined count. Zero matching tests in a
 selected file is not a failure; the reporter must still observe that file and
