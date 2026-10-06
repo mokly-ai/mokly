@@ -57,7 +57,7 @@ restores Changes without restarting Serve.
 ## Invalid Or Missing Data
 
 The graceful branch above is only for recognized earlier output. An integer
-`schemaVersion` above `8` is an unsupported newer baseline and follows the
+`schemaVersion` above `9` is an unsupported newer baseline and follows the
 invalid-baseline path. Invalid JSON, a non-object root, a missing or non-integer
 version, or a schema-v9 file that fails validation follows the same path.
 Absence of the canonical generated manifest at the requested root selects a rebuild with that commit's own recipe under the [manifest selection contract](./mokly-generated-manifest.md#selection-cache-and-resource-addressing). None of these cases

@@ -54,14 +54,14 @@ type StaticDeliveryParseResult =
   | { kind: "invalid" };
 ```
 
-Preserve the exact v4 field list and canonical-path/comparison-path validators.
+Preserve the exact v5 field list and canonical-path/comparison-path validators.
 Non-object input, an absent version or malformed current-version input is
-invalid. Only a present non-4 `schemaVersion` is unsupported-version before path use.
+invalid. Only a present non-5 `schemaVersion` is unsupported-version before path use.
 Do not coerce values or let hostile property access escape the parser; catch
 unreadable input as invalid. JSON decoding remains the caller's responsibility.
 
 Browser boundary readers convert unsupported-version into `MoklyVersionError`
-with boundary `delivery` and supported version 4. They retain the existing
+with boundary `delivery` and supported version 5. They retain the existing
 product copy and server-rendered fallback. Export treats invalid and
 unsupported results alike as `export-invalid`, naming the captured shell with
 `Invalid or changed static shell metadata: <name>`. A version error must not
@@ -93,7 +93,9 @@ existing typed error code. Test that every refusal preserves all files.
 
 One browser-safe helper compares an assigned URL with a delivered same-origin
 document URL. It requires exact origin and query, decodes each URL path once,
-and accepts either the exact path or removal of only the final `.html` suffix.
+and accepts the exact path or its provider-normalized form: removal of the
+final `.html` suffix, or an `index.html` document's containing directory with
+or without its trailing slash. Preserve these existing index-page forms.
 The fragment is positioning, not resource identity. Invalid escapes, separators
 decoded into a different path, dot segments, another route or another query do
 not match. Percent text remaining after one decode is not decoded again.

@@ -77,12 +77,12 @@ no EventSource or polling request, and no events endpoint or redirect. Test
 home, current, not-found, and supported removed-entry routes while proving
 normal navigation and opted-in comparison loading still work.
 For both options, reject escaping context, parent, and output symlinks without
-changing the outside target. Prove valid in-repository symlinks and a symlinked
-repository root still support publication.
+changing the outside target. Prove configured in-repository root aliases and a symlinked
+repository root still support publication; selected resource symlinks fail.
 Test a rebuild immediately before the first input scan and a manifest mutation
 after its initial read. Verify navigation, captured pages, and opted-in change
 metadata agree, and failed capture preserves the previous output.
-Cover safe file/directory aliases in both options, target-only edits, private
-aliases, unrelated outside/dangling/cyclic links, and an escaping manifest before
-any target read. Remove a copied resource during staging to prove validation
+Cover configured-root aliases in both options, target-only edits, rejected
+selected file/directory symlinks, unrelated outside/dangling/cyclic links, and
+protected manifest aliases before any target read. Remove a copied resource during staging to prove validation
 checks exported bytes and preserves the previous artifact.

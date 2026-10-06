@@ -27,7 +27,7 @@ adapt explicit child controls -> resolve mock:<path> links
 validate markers/links/resources
         |
         v
-mobile/desktop light and optional dark HTML for every screen, screen variant, and component variant entry, whole documents + schema-v8 manifest + CSS and binary asset outputs in memory
+mobile/desktop light and optional dark HTML for every screen, screen variant, and component variant entry, whole documents + schema-v9 manifest + CSS and binary asset outputs in memory
         |
         +---- check (tracked): compare entire mokly-generated/ tree, write nothing
         |
@@ -36,9 +36,9 @@ mobile/desktop light and optional dark HTML for every screen, screen variant, an
         `---- build: stage and replace mokly-generated/ tree, roll back on failure
 ```
 
-Path identity, roots, manifest v8, review result v5, Markdown rendering and move
-pairing are implemented. Remaining viewer presentation follows the
-[path identity plan](../../plans/path-identity.md).
+Path identity, roots, manifest v9, review result v6, Markdown rendering and move
+pairing and viewer presentation are implemented. The
+[path/output contract](../protocol/mokly-path-output-integration.md) owns their combined layout.
 
 ## 1. Config Loading
 
@@ -129,7 +129,7 @@ See [on-demand Serve](../protocol/mokly-on-demand.md) and the
 [local rendering service](../../src/server/controls/README.md).
 
 An esbuild resolver uses `createRequire(configPath)` for `react`, React
-subpaths, `react-dom`, and React DOM subpaths. Imports of `mokly` resolve to
+subpaths, `react-dom`, and React DOM subpaths. Imports of `@mokly/mokly` resolve to
 the executing package. The result is one React runtime even when Mokly itself
 lives in npm's transient npx directory.
 
@@ -194,10 +194,10 @@ see the [component manifest](../protocol/mokly-component-manifest.md).
 Each component variant entry renders in every configured context through the
 same consumer graph. Wrappers record actual invocations, data, caller-owned
 slots, and layout-neutral ranges. The variant's root render is not its own
-instance. All catalogues emit manifest v8 with the complete source inventory.
+instance. All catalogues emit manifest v9 with the complete source inventory.
 Registered components add variant entries and complete per-view
 invocation/ownership records; explicit page callbacks still emit exactly one
-complete document. Current and Git-baseline readers require v8; earlier output
+complete document. Current and Git-baseline readers require v9; earlier output
 makes Changes unavailable under
 [baseline compatibility](../protocol/mokly-baseline-compatibility.md).
 
@@ -263,7 +263,7 @@ an exact Git path match.
 
 Link/resource validation targets only the candidate generated tree and its
 referenced authored closure, never files left by an earlier build. The closure
-and generated-file inventory are recorded in manifest v8; see
+and generated-file inventory are recorded in manifest v9; see
 [generated output](../protocol/mokly-generated-output.md).
 
 Watched Serve and Browse use the accepted compiled route and validated
@@ -271,7 +271,7 @@ manifest to authenticate generated HTML. They do not parse generated markers.
 
 Every generated file name derives from the entry's path under the
 [artifact path contract](../protocol/mokly-artifact-paths.md): the entry
-document is `<path>/index.html`, each view is
+document inside `mokly-generated/` is `<path>/index.html`, each view there is
 `<path>/index.<viewport>[.dark].html`, and each shell is
 `view/<path>/index.html`. Path segments are portable ASCII letters, digits,
 `-`, and `_` with case preserved; a segment that is a Windows device name is
@@ -323,4 +323,4 @@ Shared catalogue validation uses synchronous browser-safe SHA-256, checked again
 Node digests; source inventory excludes the resolved viewer runtime even when
 npm installs it as a workspace symlink. Browser
 packaging fails if a client imports Node-only code. Comparison JSON is decoded
-with the same strict review-result v5 validator used by its producer.
+with the same strict review-result v6 validator used by its producer.

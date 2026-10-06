@@ -71,7 +71,7 @@ export interface ManifestV9 {
   sourceFiles: readonly string[];
 }
 
-/** A baseline accepted by the historical boundary is exactly manifest v8. */
+/** A baseline accepted by the historical boundary is exactly manifest v9. */
 export type HistoricalManifest = ManifestV9;
 
 /** Historical names express caller intent without introducing a second shape. */
@@ -80,7 +80,7 @@ export type HistoricalManifestScreen = ManifestScreen;
 export type HistoricalManifestPage = ManifestPage;
 export type HistoricalManifestUseCase = ManifestUseCase;
 
-/** Current and historical comparison inputs share the exact v8 contract. */
+/** Current and historical comparison inputs share the exact v9 contract. */
 export type Manifest = ManifestV9;
 
 /** Whole-document entry rendered from Markdown. */

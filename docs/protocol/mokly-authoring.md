@@ -50,6 +50,7 @@ interface EntryInput {
   rationale?: string;
   relatedDocs: readonly string[];
   slug?: string;
+  tags?: readonly string[];
   title: string;
 }
 ```

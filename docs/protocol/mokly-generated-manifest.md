@@ -138,7 +138,7 @@ safe diagnostics in Serve and failure for explicit comparison captures.
 
 Keep per-commit blob/rebuild selection, exact v9 inventory verification,
 bounded moved-root discovery, descriptors, locks, cleanup and source privacy.
-Both comparison sides use v9. Pair by kind/id and view axes, then resolve
+Both comparison sides use v9. Pair by kind/path and view axes, then resolve
 generated and authored resources under each side's own historical root.
 Resource membership and exact bytes are compared on every path; no mode flag
 can disable byte comparison.

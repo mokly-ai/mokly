@@ -213,6 +213,7 @@ complete gate.
 
 The cache and audit continuation is [Dependency Cache And Security](./ci-verification-security.md).
 
-The [shared fixture preparation contract](./ci-fixture-preparation.md) defines
-implemented global baseline preparation and the unchanged 600-second
-fixture limit. Existing workflow and audit contracts remain in force.
+Global setup currently prepares one baseline and cache for isolated fixture
+copies. The [fixture preparation contract](./ci-fixture-preparation.md) defines
+the approved replacement with committed-output fixtures and keeps the 600-second
+limit. Existing workflow and audit contracts remain in force.

@@ -126,7 +126,7 @@ CSS-selector inference.
 
 ## Validation
 
-Every current screen and component variant has one `ComponentViewRecord` for
+When components are registered, every current screen and component variant has one `ComponentViewRecord` for
 each effective view, ordered mobile/light, mobile/dark, desktop/light,
 desktop/dark. A view with no instances still has an explicit empty record;
 missing usage is never normalized to empty.

@@ -161,8 +161,9 @@ globs, while stylesheet `match` matches catalogue routes. `repoRoot` defaults to
 matches and watch paths are invalid. Additional watch rules cannot override
 configured source/module rebuilds, reloads for configured stylesheets and
 referenced resources, or package-owned ignores for dependency, build, test,
-Review, `mokly-generated/`, and transaction paths. Hand-written public HTML under
-`mockupsDir` is not a supported publication surface.
+Review, `mokly-generated/`, and transaction paths. Referenced authored HTML under `mockupsDir` is a checked
+closure asset and can be served and exported. It is not a catalogue entry
+unless registered with `definePage`.
 The repository's `.mokly-cache/` and its physical aliases are always private
 and ignored before source exceptions or broad globs, and cannot be configured
 as a root, mockups, Review output, or an export destination.

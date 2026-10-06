@@ -21,10 +21,10 @@ The following table describes the implemented formats.
 | With registered components    | 9                  | 6                 |
 
 Current output uses manifest v9, review result v6, and public read model v5,
-keyed by kind and path. The private catalogue-change snapshot is v3 and removed
+with globally unique entry paths. The private catalogue-change snapshot is v3 and removed
 page preview metadata is v3. Delivery descriptors are v5. The manifest stores
 folder records, declared dependencies, component variants and per-view usage,
-with no derivable file names. Markdown documents and their resource copies are
+with no derived file names on entries; the generated inventory lists exact paths. Markdown documents and their resource copies are
 implemented. Accepted move pairs carry `previousPath` in review records and
 the public read model; the manifest retains authored hints only.
 Current and baseline manifest readers accept only one version; earlier output
@@ -135,7 +135,7 @@ unsupported versions before content or path interpretation.
 - [Viewer markers and multi-instance highlights](./mokly-viewer-markers.md) —
   host-owned anchored content and exact atomic highlight behavior.
 - [Viewer frame adapter](./mokly-frame-adapter.md) — approved same-origin
-  interface and cross-origin inspector protocol v1.
+  interface and cross-origin inspector protocol v2.
 - [Published inspector and overlay](./mokly-published-inspector.md) — static
   injection, inert metadata, style isolation, and script budget.
 - [On-demand Serve](./mokly-on-demand.md)

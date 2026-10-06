@@ -275,8 +275,8 @@ See the [build pipeline](../../docs/architecture/build-pipeline.md),
 
 The implemented [public closure contract](../../docs/protocol/mokly-public-closure.md)
 uses one policy instance per compile for configured stylesheets, renderer seeds
-and transitive links. The [post-render edit contract](../../docs/protocol/mokly-comparison-inventory.md#post-render-offset-mapping)
-maps style ownership through exact text patches rather than style positions.
+and transitive links. The approved [post-render edit target](../../docs/protocol/mokly-comparison-inventory.md#post-render-offset-mapping)
+will replace positional style rebinding with exact text-patch offset mapping.
 
 `config/public_policy.ts` caches authored-file decisions for one compilation;
 `config/public_denial.ts` shares lexical/current privacy with export. The

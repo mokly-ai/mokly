@@ -20,8 +20,8 @@ local output; comparison baselines inspect the pinned commit's tree instead.
 **Change A: Git state replaces the output modes.** The `generatedOutput`
 option (`"committed" | "derived"`) is removed. Everything it selected is
 derived from one fact, read per commit: whether the generated output is
-tracked in Git. Only v8 can be a readable baseline after the merge. Complete
-v8 output uses Git blobs; missing or incomplete v8 output uses
+tracked in Git. Only v9 can be a readable baseline after the merge. Complete
+v9 output uses Git blobs; missing or incomplete v9 output uses
 `review.baselineBuild`. The selected current-location version gate and the post-rebuild check retain
 main's incompatible-earlier outcome; other committed locations are ignored. `check` always validates the sources,
 and compares compiled bytes with the tracked files only when the output is
@@ -66,21 +66,22 @@ Decisions:
   commit from Git alone.
 - Current formats only: the approved fourteen removals below supersede earlier
   compatibility decisions. Select committed baselines only from the canonical
-  manifest in the generated subtree. Missing or incomplete v8 output rebuilds
+  manifest in the generated subtree. Missing or incomplete v9 output rebuilds
   with its own recipe; stale root-level metadata never decides availability.
-  Keep the v8 version gate, including the earlier-version outcome after a
-  rebuild writes root-level output below v8. Invalid caches are partial and
+  Keep the v9 version gate, including the earlier-version outcome after a
+  rebuild writes root-level output below v9. Invalid caches are partial and
   rebuild under their lock; completion markers publish by atomic rename.
   Remove transformers, old ownership adaptation and notice handling, obsolete
   reservation/key logic, inferred snapshot ids and serialized layout prefixes.
   Keep current format gates, removed-key diagnostics, identity hash domains,
   exact earlier-baseline product copy and the 426 service-version response.
-- Finding 32 = **B**, documentation only: generated HTML derives from kind/id
-  and starts with `pages/`, `screens/` or `components/`. Its outer delivery
-  prefix is separate; ids may contain the directory-name text. The merged
-  viewer reads catalogue v4 only, with one fixed generated layout. Add no
-  new route validator or substring rejection for this finding. The approved
-  `styles`/`assets` reservation remains decision 28 work.
+- Finding 32 = **B**, documentation only: the combined route model derives
+  entry identities from configured roots and source paths. Documents use
+  `<path>/index.html`; view variants derive their index filenames from that
+  identity. No fixed kind prefix is required. The outer generated directory
+  is separate, and entry paths may contain the directory-name text. The viewer
+  reads catalogue v5 only. Add no route validator or substring rejection for
+  this finding; the approved `styles`/`assets` reservation remains.
 - Finding 34 = **C**: new Milestone 14 prepares the unchanged example baseline
   repository and rebuilt cache once in Playwright global setup, with isolated
   fixture copies. Audit every equivalent browser consumer after the merge;
@@ -105,13 +106,13 @@ Decisions:
   beside `mokly-generated/`, so the cache stays self-contained. Both copies are
   internal to `.mokly-cache/`.
 - The manifest lists the referenced closure so the harvest and the readers
-  know exactly which files belong to the catalogue. Only v8
+  know exactly which files belong to the catalogue. Only v9
   content is readable. Only the canonical manifest name has metadata status.
 - `mockupsDir` keeps its name. The generated child is the fixed name
   `mokly-generated`; unlike local-only `.mokly-cache`, deployable output has
   no leading dot because some static hosts and deploy tools skip dot-paths.
-  `publicExclude`, hand-written public HTML
-  under `mockupsDir`, and the directory-based public policy are removed.
+  `publicExclude` and automatic directory-wide public delivery are removed.
+  Referenced authored HTML remains part of the checked asset closure.
 - The directory name is defined once in `@mokly/viewer/data`, used directly by
   the CLI and viewer, and guarded against other production literals by lint.
   The unreleased dot-directory spelling has no compatibility alias.
@@ -2697,7 +2698,10 @@ guides and READMEs, and fixes the documentation-only findings.
 - **57 B:** remove the shared browser baseline setup and return both export
   fixtures to the committed-output helper. Keep the cold-rebuild test and the
   real `preview:build` test.
-- **63 B:** delete the listed dead code and stale references. Use a small
+- **63 B:** delete the listed dead code and stale references, except
+  `PendingGeneratedFiles.routes()`. The user chose A after the path-identity
+  merge: retain this now-used member and its `DocumentCompiler` route-set check,
+  required by snapshot decision B. All other cleanup and tooling remain. Use a small
   repository script built on TypeScript's language service `findReferences`,
   not Knip v6 or pinned Knip v5. Check class methods, getters, setters and
   properties in `src/` and `packages/viewer/src` for references outside their
@@ -3175,7 +3179,7 @@ classification again reads only the required baseline documents (54 A). Current
 and historical v9 inventory hashes detect generated edits without head tracking;
 whole-document pages and Markdown retain targeted material comparison. Markdown resource
 counterparts absent from the historical inventory return absence without reading
-an unlisted file (the document part of 62 A). No full side-reader redesign is
+an unlisted file (the document part of 39 B). No full side-reader redesign is
 included. Main's imported-CSS move normalization now uses catalogue-relative
 generated paths. Frame inspection uses the reverse current-document helper;
 this repairs the merge without implementing the later shared-helper UI work.
@@ -4079,8 +4083,27 @@ is removed. The latest fetch still names `781da7ae`; it is not merged.
       decision B's writer-only lock. Run the full gate, commit, and push before
       the document check and re-plan. If main moves again, report its tip without
       another merge.
-- [ ] Re-read every document changed in Milestones 21 and 22 against the code,
-      and fix drift. If code changes, rerun the full gate.
+- [x] Re-read every document changed in Milestones 21 and 22 against the code,
+      and fix drift. Keep the tested projection and Markdown boundary fixes.
+- [x] Finish the current non-browser checks and checkpoint the document audit
+      locally, including the approved `source-map-js` advisory patch. Do not push.
+- [ ] Move evidence to `.context/generated-output-simplification/` as a separate
+      local plan-only commit. Keep decisions, approvals, contracts and TODOs in
+      this plan; name the evidence files here. Validate the plan with Prettier
+      and review its diff. Use `docs(plans): move evidence logs to .context`.
+- [ ] Merge `origin/main` at #124 under Mainline Feature Preservation. Capture
+      both tips and the merge base, audit all paths, resolve each conflict,
+      confirm two parents and review every remerge path and deletion. Keep all
+      tier, warning, strict-mode and test-wait behavior with the writer-only
+      lock and unified tree. Save preservation records and merge justifications
+      under this plan's evidence directory. Do not merge again if main moves.
+- [ ] Run the full gate once on the merged tip. If browser tests fail, rerun
+      only the failed specs once. Investigate a case that fails in both runs;
+      write a failing test before any code fix. Keep all deadlines, retry
+      settings and assertions. Record both outcomes for each flaky case.
+      If the slow machine prevents a passing gate, stop without pushing.
+- [ ] Push the two local checkpoints and the merge together only after the
+      merged gate passes. Then complete the re-plan below.
 - [ ] Check each decision of Milestones 24–27 against the merged code. Update
       their TODOs with current files, routes and fixtures. Record each finding
       that the merge resolved or changed, and stop for the user's decision
@@ -4089,6 +4112,20 @@ is removed. The latest fetch still names `781da7ae`; it is not merged.
 - [ ] After the push, review the merge against `origin/main` using
       `docs/implementation-review-prompt.md`; report numbered findings with
       severities and recommendations without changing the implementation.
+
+### Current checkpoint and integration approval
+
+The user approved local audit and evidence commits before the #124 merge.
+This supersedes the earlier audit-push-before-merge order. No commit is pushed
+until the merged gate passes. Keep the compatible `source-map-js` 1.2.2 update
+for GHSA-68fv-2mgg-jv7q and name that advisory in the audit commit body.
+The user also directed this plan to follow PR #137's evidence rule without
+editing `AGENTS.md`: keep evidence and merge justifications in the ignored
+plan directory, and copy merge justifications into the future PR description.
+
+Evidence: `.context/generated-output-simplification/m23-browser-trace-observations.md`.
+
+Evidence: `.context/generated-output-simplification/m23-checkpoint-validation.md`.
 
 ### Additional main integration: #133 and #132
 
@@ -4212,6 +4249,178 @@ are checked immediately after the commit and before the explicit push.
 The document check, remaining-decision re-plan and their commit below are still
 pending. The orchestrator owns the final review TODO.
 
+### Document audit and route-member decision
+
+The document audit covers 226 changed Markdown paths since `a422fbf8`, including
+historical plans and review records. All 174 current documents in the 63 read
+batches have been read. Historical review outcomes remain intact. Current edits
+correct version numbers, generated resource paths, source privacy, removed
+compatibility claims, appearance controls and the writer-only lock boundary.
+The historical release notes retain main's original version numbers; the current
+release note names the combined formats. The audit edits are complete and await
+the full gate. Its inventory and notes are in `.context/milestone-23-docs/`.
+
+Two runtime corrections follow already approved contracts, with failing tests
+written first:
+
+- **2 A:** `src/catalogue/projection.ts` now checks manifest v9/live-index-2
+  before accessing entries and reports v9 in its diagnostic.
+  `tests/catalogue_projection_versions.test.ts` probes v8, v10 and live-index-1
+  with an entries getter that must not run. Before the fix, all three failed:
+
+  ```text
+  The input did not match the regular expression /current projection requires manifest v9 or live metadata/. Input:
+
+  'Error: entry identity read before the version gate'
+  ```
+
+- **37 A:** `src/documents/destination_files.ts` uses the shared public-resource
+  denial directly. Markdown Build and Serve must not apply export's package-root
+  equality guard. Export retains its exact guard and error.
+  `tests/documents_export_boundary.test.ts` covers successful Build, real Serve
+  GETs and the export refusal. The initial fixture lacked package metadata:
+
+  ```text
+  [mokly/config-invalid] moduleResolution package root has no package.json: mockups
+  ```
+
+  After adding the fixture's package.json, the test failed for the intended
+  reason before changing production code:
+
+  ```text
+  [mokly/export-invalid] A consumer package root must not equal mockupsDir; choose a separate public output directory.
+  ```
+
+Failing commands were `node --import tsx --test tests/catalogue_projection_versions.test.ts tests/documents_export_boundary.test.ts`
+and then `node --import tsx --test tests/documents_export_boundary.test.ts`.
+After both fixes, `npm run build` and
+`node --import tsx --test tests/catalogue_projection_versions.test.ts tests/documents_export_boundary.test.ts tests/documents_links.test.ts tests/documents_safety.test.ts tests/export_resource_policy.test.ts`
+passed all 64 cases, with no skips or cancellations (4,369.446 ms).
+No main file or test title is removed. The user permits a local audit checkpoint;
+the merged full gate remains required before any push.
+
+**Resolved re-plan question: finding 63 B includes a used main member.**
+`PendingGeneratedFiles.routes()` at `src/build/pending_generated.ts:84` has a
+production caller at `src/build/document_compiler.ts:136`:
+
+```ts
+assertSnapshotRoutes(runtime.outputSnapshot, this.pending.routes());
+```
+
+The same call exists on main `781da7ae`, introduced with #131. It checks the
+complete pending generated route set, including styles and document resources,
+against the immutable generation proof. Snapshot decision B explicitly keeps
+this guarantee. The earlier finding described `routes()` as unused and approved
+its deletion. That description no longer fits the merged code. The user chose
+**A**: retain `routes()` and remove it from the 63 B deletion list. Preserve its
+real caller and the route-set guarantee. All other 63 B cleanup and the
+TypeScript language-service unused-member ratchet remain planned for Milestone 27. The ratchet must count this production call as a use.
+
+The other verified re-plan facts remain drafts: 54 A's targeted reads are
+restored, the production dependency fallback in 62 A is already removed while
+its artificial projector round-trip test remains, and #132 does not fix 59 A's
+per-entry retention race. Milestone 22's document-resource counterpart handling belongs to **39 B**,
+not the projection cleanup. Findings 17 and 52 remain untouched. No remaining
+review-fix milestone or final review has started.
+
+The first documentation command passed 9 of 11 cases. Its exact failure details
+were:
+
+```text
+docs/protocol/mokly-artifact-paths.md -> ./mokly-unified-output.md#reserved-route-segments: missing anchor
+docs/protocol/mokly-published-inspector.md -> ./mokly-frame-adapter.md#wire-protocol-v1: missing anchor
+mokly-component-explorer.md has 251 lines; new protocol docs must stay at or below 250 lines, or gain a reviewed cap
+mokly-design-components.md has 254 lines, above its 253-line cap; split by responsibility instead of raising the cap
+mokly-viewer-appearance.md has 381 lines; lower the cap to 381
+```
+
+Corrected the two links, removed repeated wording and lowered the appearance
+cap to 381. No cap increased. The command is
+`node --import tsx --test tests/markdown_links.test.ts tests/protocol_doc_sizes.test.ts tests/protocol_doc_history.test.ts tests/protocol_split_links.test.ts tests/protocol_structure.test.ts tests/component_protocol_docs.test.ts`.
+
+The final fetch for this pause returned main `781da7ae3261e6694a5ef5608a91f3e34061f6d0`.
+`HEAD` and `origin/calummoore/lome-v2` both point to
+`74e7db538d72f575e47601b735cf6412d05ff91b`; both accepted merges are pushed.
+
+### Clean-checkout comparison and validation blockers
+
+The first audit browser command ran for 6,532.989 seconds, then was stopped
+with SIGINT after the user said the timing investigation could be deferred to
+prioritize integration. It reported **908 passed, 13 failed, 1 interrupted and
+192 not run**, exit 130. This is failed/incomplete evidence, never a gate pass.
+The user then required a clean-checkout comparison and restored full validation
+before the audit push. No timeout, retry, worker, assertion or NODE_ENV change
+was made. The test list and traces are saved under
+`.context/milestone-23-docs/final-browser-results/`.
+
+A detached clean worktree at `74e7db53` was created under
+`.context/milestone-23-comparison/clean`. It installed its own dependencies with
+`npm ci`, rebuilt its own package/example, and retained an independent viewer
+workspace link. The original clean attempt failed during global setup:
+
+```text
+Error: referenced resource edit did not publish completed initial Changes; the last published update had no changed screens; waiting after version 0; last version 3, Changes unavailable
+```
+
+That diagnostic does not prove terminal unavailable status: its final text uses
+`changedCount` as a fallback label. The baseline was still preparing. Normal
+`prepareReviewRepository(config, "HEAD")` completed the clean tree's own rebuild
+in 178.354 seconds. The current tree already had the same completed baseline
+(7.664-second cache validation). Both comparison runs then used warm server
+baselines and their unchanged normal shared-fixture setup.
+
+Both ran `npm run test:browser -- tests/browser/design_links.spec.ts tests/browser/pages.spec.ts --output <separate .context result directory>`:
+
+| Tree             | Result                  | Command seconds | Serve readiness seconds |
+| ---------------- | ----------------------- | --------------: | ----------------------: |
+| Clean `74e7db53` | 7 passed, 4 failed      |         590.207 |                 105.092 |
+| Current audit    | 7 passed, same 4 failed |         607.456 |                 108.438 |
+
+The common failures are mobile design navigation; mobile and desktop comparison,
+tag and flow links; and mobile page-design details/drawer navigation. Their exact
+assertion text, commands and traces are in
+`.context/milestone-23-comparison/report.md` and the adjacent result directories.
+These failures reproduce without the audit changes. No bisection of the two
+runtime fixes is justified by this result. It does not establish the cause of
+all 13 failures in the larger run.
+
+Environment checks: both use Node 22.14.0, npm 11.11.0, Chrome 153.0.8010.52,
+unset NODE_ENV/CI, matching checked dependency files, and byte-identical 29
+browser JavaScript bundles. Both rebuild before testing. The clean worktree
+remains Git-clean. No prior servers or browsers were left running; disk had
+49 GB free. No specific environment defect is established. A 10-second CPU
+profile of a slow ordinary-preview worker attributed about 81% of samples to
+React's development JSX runtime; its inspector was closed. The 600-second
+fixture limit and shorter assertion limits remain unchanged. Incoming #124
+already adds frame/target waits to two affected specs; they are not yet applied.
+The user approved the local audit checkpoint, a separate local evidence move,
+and the #124 merge before requiring the final passing gate. The current approval
+above supersedes the earlier push order.
+
+The non-browser repository gate separately failed its live audit (7.437 s):
+
+```text
+Uncovered advisory GHSA-68fv-2mgg-jv7q; package: source-map-js; severity: high.
+Title: source-map-js allows event-loop denial of service through indexed source-map section offsets
+URL: https://github.com/advisories/GHSA-68fv-2mgg-jv7q
+Install locations: node_modules/source-map-js
+Action: Update the dependency to remove the advisory, or request a reviewed exception for this exact dev-only path.
+[xtask/command] `npm run dependencies:check` failed with status 1
+```
+
+`npm ls source-map-js --all`, npm metadata and the live advisory confirm version
+1.2.1 through runtime PostCSS and Tailwind Node tools, with compatible patched
+1.2.2. Under the existing dependency update policy, `npm update source-map-js
+--ignore-scripts --no-audit --no-fund` updated only that lock entry's version,
+resolved URL and integrity; no package range, other lock entry, override, audit
+runner or exception changed. `npm run dependencies:check` is rerun afterward.
+The first scratch-only lockfile probes also materialized optional dependency
+metadata; none of those unrelated records was applied. The root targeted npm
+update produced the exact three-field patch. The interrupted `npm test` run
+(437.259 s) was stopped for the user's isolated comparison and is incomplete;
+the current non-browser checks finish before the local checkpoint. The merged
+full gate decides whether the branch can be pushed.
+
 ## Milestone 24: Shared watching and command output
 
 Implements 40 B, 9 B, 41 B, 50 B, 18 A, 16 B and 51 A.
@@ -4258,8 +4467,10 @@ Implements 57 B, 65 A, 63 B and 42 B.
 
 - [ ] Remove the shared browser baseline setup (57 B), and fix the tests and
       plan rows of finding 65.
-- [ ] Delete the dead code and stale references, and add the unused-member
-      ratchet and the ESLint path test (63 B).
+- [ ] Delete the other listed dead code and stale references, and add the
+      unused-member ratchet and ESLint path test (63 B). Keep
+      `PendingGeneratedFiles.routes()` and its real route-validation caller,
+      as approved by the user's post-merge decision A.
 - [ ] Add the public API reports and the CI rule (42 B).
 - [ ] Run the full gate as in Milestone 20; `git add -A`; commit; push.
 
@@ -4288,5 +4499,5 @@ Implements 57 B, 65 A, 63 B and 42 B.
 - Smoke-test a fresh consumer with the next published package: `npx mokly`
   and `npx mokly export` produce nothing under `mokly-generated/`, `npx mokly
 build` produces it, `check` passes with the directory ignored, and a
-  comparison against `origin/main` uses verified v8 blobs or a v8 rebuild when
-  required. If that base predates v8, confirm the documented unavailable outcome.
+  comparison against `origin/main` uses verified v9 blobs or a v9 rebuild when
+  required. If that base predates v9, confirm the documented unavailable outcome.

@@ -258,7 +258,7 @@ selectors and allow classification to continue.
 Review v6 retains `material: true` exactly when the actual paired,
 ignore-normalized documents differ, including added and removed views. Ownership
 projections do not define this flag. A material change keeps the ordinary screen
-heading even when stylesheet evidence is also present. Both versions retain
+heading even when stylesheet evidence is also present. Complete and selected results retain
 optional view `reasons` (with stylesheet `analysis`) and `excludedResources`.
 Entry reasons merge by path and union selectors, with
 unresolved evidence taking precedence. The shared browser/server decoder rejects

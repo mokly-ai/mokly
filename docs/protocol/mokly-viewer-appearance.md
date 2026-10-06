@@ -11,8 +11,7 @@ appearance before the first paint, and the documented precedence over the
 `scheme` pin, the stored override and the server-supplied initial theme. The
 standalone scheme switches and the workspace Dark preview button are gone from
 standalone documents; an embedded root keeps its own preview control. Markdown
-documents follow the approved [document contract](./mokly-documents.md) below
-and arrive with the [path identity plan](../../plans/path-identity.md).
+documents follow the implemented [document contract](./mokly-documents.md).
 
 One package-owned semantic palette carries the recorded swatches and their
 three Light corrections, in [mokly-viewer-palette.md](./mokly-viewer-palette.md).

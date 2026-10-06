@@ -45,8 +45,8 @@ Readers require `schemaVersion: 5` and reject older and unknown versions;
 writers remain allowlisted. Version 5 keys every record by path, adds
 documents, folder titles, `previousPath`, and one tree, and removes `id`,
 `navPath`, `useCaseIds`, `screenId`, and the per-section trees. Removed variants
-require `parentTitle`. These v5 fields are one unreleased contract; readers
-do not translate either parent's v4 output. Optional
+require `parentTitle`. Readers accept only this v5 contract and
+do not translate earlier output. Optional
 fields are additive; removals, required additions, changed meaning, new union
 discriminants or incompatible paths require a new version. This file and the
 inspector asset are additive inventory entries: ownership v3 and upload v2

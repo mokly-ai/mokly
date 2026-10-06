@@ -188,10 +188,10 @@ Removed entries have no current files and no route field; their URL is
 `/view/<path>/`, and historical HTML is never disguised as current output. The
 descriptor contains no baseline metadata, source paths, or commit identifiers
 beyond those already public in review JSON. Readers validate each published
-`snapshotId` as a unique lowercase 64-hex identity. They tolerate its absence
-and may derive it from an immutable `comparisonUrl` generation; an explicitly
-published baseline-backed identity remains valid before a generation exists or
-while `comparisonUrl` is null.
+`snapshotId` as a unique lowercase 64-hex identity. Every removed record requires
+`snapshotId` when `comparisonUrl` is non-null; readers never derive a missing
+identity. With a null comparison URL, the field may be absent. A published
+baseline-backed identity remains valid before a generation exists.
 
 Preview validation is separate: readers validate `preview.kind`, tolerate
 `preview` being absent, and reject a preview on current entries or when

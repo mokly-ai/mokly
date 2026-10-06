@@ -3,9 +3,9 @@ import path from "node:path";
 
 import { isGeneratedRoute } from "../build/styles/routes.js";
 import { isInside, projectRealPath, toPosixPath } from "../config/paths.js";
+import { publicResourceDenial } from "../config/public_denial.js";
 import { isInternalCatalogueFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { exportResourcePolicy } from "../export/resource_policy.js";
 
 /** Missing and unreadable path components share the document's attributed error. */
 export function regularDocumentTarget(candidate: string): string | undefined {
@@ -37,10 +37,11 @@ export function documentTargetKind(
     );
     if (isGeneratedRoute(route)) return "generated";
   }
-  return scopes.some((scope) =>
-    exportResourcePolicy(scope.config)(
-      toPosixPath(path.relative(scope.config.mockupsDir, scope.file)),
-    ),
+  return scopes.some(
+    (scope) =>
+      publicResourceDenial(scope.config)(
+        toPosixPath(path.relative(scope.config.mockupsDir, scope.file)),
+      ) === undefined,
   )
     ? "public"
     : "source";

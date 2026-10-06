@@ -73,8 +73,8 @@ body style or change its ownership. Build and requested Serve compilation use
 the same mapping for all component views.
 
 Public catalogue dependency labels always derive from the sorted unique union
-of `sourcePath` and `declaredDependencies`. Remove the projector's separate
-`dependencies` read; display projection is a reader-side shell representation,
+of `sourcePath`, `declaredDependencies`, and each Markdown document's `resources`.
+The projector never reads an entry's stored `dependencies`; display projection is a reader-side shell representation,
 not a current CLI catalogue producer. Do not retain a producer round-trip test
 that fabricates that unsupported path.
 

@@ -32,7 +32,7 @@ local generation aliases, with their authentication, retention and
 generation identity rules. The nested generation segment is `generations`;
 no deployed Mokly-owned path segment starts with `_`.
 Retain generation-local `snapshots/before/`, `snapshots/after/` and page metadata
-paths. Do not change their identity-derived names or review-v4 content shape.
+paths. Use path-derived names and the current review-v6 content shape.
 
 Exports, publication captures, ownership inventory entries, upload metadata,
 Plan archives and Blob reconstruction use those exact paths without a leading
@@ -47,7 +47,7 @@ static/<catalogue-relative authored closure file>
 
 The static artifact never includes event, control or other live capabilities.
 The upload Plan contains only `mokly-upload.json`, `.mokly-export-artifact`,
-and the optional pinned review file, as on `main`; it does not revert to a
+and the optional pinned review file, without a
 full-artifact upload. Blob digest, size and snapshot accounting stay unchanged.
 
 Update every producer and consumer together: SSR/hydration bootstraps,
@@ -121,9 +121,8 @@ The marker remains required for upload and local recovery.
 
 An independently hosted older viewer given catalogue v5 must reject its
 unsupported version before deriving `/static/` URLs or reading entry fields.
-strict v3 reader already rejects a non-3 version. The updated viewer
-must expose a typed version failure that a host can distinguish from malformed
-data; its diagnostic is `Unsupported Mokly catalogue version <version>; this viewer supports version 4.`
+The current viewer exposes a typed version failure that a host can distinguish
+from malformed data; its diagnostic is `Unsupported Mokly catalogue version <version>; this viewer supports version 5.`
 Unknown delivery/bootstrap versions likewise fail before any resource request
 or hydration. Use `Unsupported Mokly <boundary> version <version>; this viewer supports version <supported>.`
 with boundary `delivery` or `bootstrap` and the table's supported version.
@@ -170,7 +169,7 @@ Receiver deployment is independent of local catalogue compilation and export.
 Fixed deployed names that Mokly chooses must not start with `.`, `_`, `#` or
 `~`. This applies to the generated tree, viewer namespace, `generations`, and
 other fixed path segments written by Mokly. It adds no validation rule for
-authored closure names, entry ids, or repository paths mirrored below `styles/`
+authored closure names, entry paths, or repository paths mirrored below `styles/`
 and `assets/`. Those user-chosen names retain existing path validation
 and diagnostics, including its hidden-segment rejection. Do not reject or
 rename an otherwise accepted authored path to enforce this naming policy.
@@ -188,7 +187,7 @@ configuration and must not become a visitor dependency.
 
 Regression tests cover failure cases for an old receiver rejecting new
 current-only and Changes-enabled uploads, new readers rejecting old/unknown
-versions before path use, and an old strict catalogue reader rejecting v4.
+versions before path use, and a strict older catalogue reader rejecting v5.
 The ownership-v3 fixtures retain v2 digest coverage and explicit
 unsupported-v2 cases; preserve Plan v1 retry, keep-first, delta and cancellation
 tests. Update installed-package fixtures for catalogue v5, ownership v3 and

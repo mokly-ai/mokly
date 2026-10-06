@@ -5,10 +5,9 @@ hosting. Consumers use `mokly export --out <path>`, not a JavaScript deep import
 The separate `mokly publish` command uploads through the
 [public upload boundary](../publish/README.md); export itself performs no upload.
 
-Initial and final input-check compilation capture output-validation evidence
-under a short writer-lock hold. Their pending waits obey export cancellation.
-Rendering stays outside the lock; capture and installation retain their existing
-separate writer-lock boundaries.
+Initial and final input-check compilations retain checked in-memory route sets.
+They neither inspect disk output nor acquire its writer lock. Export
+installation uses its separate destination reservation and transaction.
 
 `run.ts` pins one merge-base commit through `RepositoryEvidence`, retains the
 independent `BaselineReader`, compiles in memory and captures the authored closure,
@@ -215,8 +214,7 @@ and CLI output. In the documented pre-installation phases, a failure waits one
 event-loop turn for an already-delivered signal before classification. A
 `MoklyError` is marked in place, preserving its class, fields, message and
 diagnostic stack; non-Mokly failures retain the contextual export wrapper.
-Export transaction setup and generated-output writes keep their own recovery
-errors. `runExport` holds a referenced handle for its signal-aware lifetime so
+Export transaction setup keeps its own reservation recovery errors. `runExport` holds a referenced handle for its signal-aware lifetime so
 helper shutdown cannot end Node before Mokly reports status 1. Cancellation
 remains a cancellation only when cleanup, or any required rollback, succeeds.
 A restore, backup or reservation-cleanup failure instead keeps its normal

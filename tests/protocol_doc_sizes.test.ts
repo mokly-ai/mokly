@@ -16,7 +16,7 @@ const oversizedCaps: Readonly<Record<string, number>> = {
   "mokly-navigation.md": 372,
   "mokly-runtime.md": 434,
   "mokly-shell-design.md": 351,
-  "mokly-viewer-appearance.md": 382,
+  "mokly-viewer-appearance.md": 381,
   "mokly-viewer.md": 452,
 };
 

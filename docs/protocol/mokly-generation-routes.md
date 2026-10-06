@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-This is the approved in-memory output-snapshot contract for the
+This is the implemented in-memory output-snapshot contract for the
 [path/output integration](./mokly-path-output-integration.md). It retains
 generation route validation without reading generated files from disk.
 

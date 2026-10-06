@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-This is the approved target for
+This is the implemented contract for
 [path identity in one generated tree](./mokly-path-output-integration.md).
 One format number denotes one shape and interpretation. Readers accept only
 the current shape; checking older data is not a content compatibility reader.

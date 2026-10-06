@@ -25,7 +25,7 @@ import {
 } from "./values.js";
 import { MoklyVersionError } from "./version_error.js";
 
-/** Parse known v4 fields; ignore compatible additions without exposing private data. */
+/** Parse known v5 fields; ignore compatible additions without exposing private data. */
 export function readCatalogue(value: unknown): CatalogueReadModel {
   const model = readCatalogueModel(value, readEntry);
   validateCatalogueReferences(model);

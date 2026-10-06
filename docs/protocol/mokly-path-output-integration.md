@@ -2,14 +2,12 @@
 
 ## Delivery Status
 
-This is the approved integration target tracked by
+This implemented contract is tracked by
 [Generated Output Simplification](../../plans/generated-output-simplification.md).
-The implementation uses file-derived paths. Integration replaced the earlier
-identities with file-derived paths and adopts the
-[combined format versions](./mokly-format-versions.md). The incoming contracts
-named `mokly-paths.md`, `mokly-folders.md`, `mokly-documents.md`,
-`mokly-moves.md` and `mokly-branch-point-lookup.md` supply the path and move
-rules. Their links are added when those files arrive with the merge.
+File-derived identity uses the [combined format versions](./mokly-format-versions.md).
+[Paths](./mokly-paths.md), [folders](./mokly-folders.md),
+[documents](./mokly-documents.md), [moves](./mokly-moves.md) and
+[branch-point lookup](./mokly-branch-point-lookup.md) define the shared rules.
 
 ## Identity, Discovery And Presentation
 

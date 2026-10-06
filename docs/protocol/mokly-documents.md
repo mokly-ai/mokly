@@ -116,10 +116,10 @@ links retain repository spelling when catalogue placement differs:
   [navigation contract](./mokly-navigation.md).
 - A relative destination that names a file with an extension in `png`, `jpg`,
   `jpeg`, `gif`, `svg`, `webp`, `avif`, or `pdf` is a resource. Mokly copies it
-  to `static/<folder path>/<relative path>`, where the folder path is the
+  to `static/mokly-generated/<folder path>/<relative path>`, where the folder path is the
   document's logical-link base folder and the relative path is the destination as written after
   normalisation; `../shared/a.png` from a folder README at `account/billing` writes
-  `static/account/shared/a.png`. The file must exist inside the same root's
+  `static/mokly-generated/account/shared/a.png`. The file must exist inside the same root's
   directory; a destination that escapes it fails with
   `<location>: resource <destination> is outside the root`. Resources join the
   public-file inventory and its collision rules. Both lexical and physical paths
@@ -134,10 +134,10 @@ links retain repository spelling when catalogue placement differs:
   enter the graph before imported CSS validation, so a nested source root can
   share an explicitly referenced asset with CSS. Unrelated public files keep
   the CSS pass's existing protection. Exact
-  output ownership derives from the document source, path and `resources` in a
-  validated previous manifest for this configuration, or a document still
-  resolved or inventoried by the current config. Thus a config rename retains
-  its documents' resource ownership. No unowned file may be replaced. The same transaction installs copies and removes owned orphans.
+  resource routes derive from the document source, path and `resources`. Copies
+  join the accepted generated inventory with exact byte hashes. Whole-tree
+  replacement installs the copies and removes obsolete generated files; authored
+  files outside `mokly-generated/` remain untouched.
 - Classify existing targets under `mockupsDir`, including physical aliases,
   before collecting inputs. A target proven to be Mokly-owned output or internal
   metadata fails with `<location>: link target <destination> targets Mokly-owned output or metadata`.

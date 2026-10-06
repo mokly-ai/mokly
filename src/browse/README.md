@@ -10,9 +10,8 @@ closure HTML, including a file whose trailing path equals a generated route.
 
 The adapter checks route membership, complete component marker forest,
 native logical links, duplicate reserved attributes and portable destinations
-before adding package metadata. It strips the plain generated notice or a
-historical generated first line after range validation, without using its
-source text for authentication. It preserves live hrefs and targets, deriving
+before adding package metadata. It strips only the current plain generated notice after range validation,
+without using that line for authentication. It preserves live hrefs and targets, deriving
 only the trusted target metadata that parent navigation consumes. Authored HTML
 has existing reserved navigation attributes stripped from the published copy.
 
@@ -37,5 +36,6 @@ See [navigation](../../docs/protocol/mokly-navigation.md),
 [inspector implementation](../../packages/viewer/src/inspector/README.md), and
 [export assembly](../export/README.md).
 
-Markdown documents authenticate by source header in each supported scheme. Their
+Markdown documents authenticate through the accepted in-memory route and
+content set in each supported scheme. Their
 logical links use the same portable targets and parent navigation as pages.

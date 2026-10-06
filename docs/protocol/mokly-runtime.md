@@ -93,7 +93,7 @@ fails for:
 
 - invalid config or registry metadata;
 - duplicate or case-colliding paths, or a derived view or document that
-  collides with another generated or public file;
+  collides with another generated file;
 - [path](./mokly-paths.md#diagnostics), [folder](./mokly-folders.md#diagnostics),
   and [entry module](./mokly-entry-modules.md#diagnostics) violations, unknown
   or moved link targets, missing use-case screens, or reciprocal memberships;

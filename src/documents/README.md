@@ -28,10 +28,13 @@ plain text and join the private source inventory, so direct HTTP requests
 cannot expose them. Copyable resources remain byte-exact and join source watching.
 Targets already public under the output root stay public and render as text.
 Proven Mokly-owned output and metadata are rejected before inventory. Copied
-resources use the same lexical public-name policy as export, including hidden
-and private directory names. Filesystem failures never expose absolute paths.
+resources retain their lexical public-name rules, including hidden and private
+directory names. Authored closure files use the separate shared public policy. Filesystem failures never expose absolute paths.
 `resource_paths.ts` reconstructs their public paths from manifest metadata so
-transactions can replace and remove only proven generated copies.
+compilation can validate copies before whole-tree replacement.
+
+Destination classification uses the shared privacy policy. Package-root equality
+is checked only by export capture; it does not reject Build or Serve.
 
 The graph retains documents and asset bytes for demand rendering and worker
 replay. Build applies the same generated-tree, final-link, resource

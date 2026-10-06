@@ -16,7 +16,7 @@ and eligible component variants in Side by side, Overlay and Difference. It
 changes nothing about comparison eligibility, capture, generation, publishing,
 current previews, or [removed previews](./mokly-removed-previews.md) beyond the
 shared pipeline named here. Snapshot addresses below derive from paths under
-the [artifact path contract](./mokly-artifact-paths.md) and review v5.
+the [artifact path contract](./mokly-artifact-paths.md) and review v6.
 
 ## Behavior
 
@@ -46,8 +46,8 @@ pinned `comparisonUrl`. The GET carries the comparison's abort signal and uses
 the comparison credential rule: `credentials: "omit"` for pinned delivery and
 `credentials: "same-origin"` for live delivery.
 
-Review v5 supplies only entry identity, view axes, and state. The viewer derives
-each side's `snapshots/<side>/<viewRoute(...)>` address from the entry's path,
+Review v6 addresses panes by entry identity, view axes, and state. The viewer derives
+each side's `snapshots/<side>/mokly-generated/<viewRoute(...)>` address from the entry's path,
 `previousPath` on a [moved](./mokly-moves.md) entry's before side; no entry route
 or snapshot path travels in comparison JSON.
 

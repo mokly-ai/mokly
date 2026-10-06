@@ -330,7 +330,7 @@ exposed as a host API.
 | `onScreenNavigate`                   | Reports logical navigation for host routing                                                                       |
 | `onInstanceHover`, `onInstanceClick` | Reports interaction with inspectable component instances                                                          |
 | `onPickStart`, `onPickEnd`           | Reports the instance-picking lifecycle                                                                            |
-| `onError`                            | Reports safe catalogue, selection, frame, comparison or marker errors                                             |
+| `onError`                            | Reports safe catalogue, version, selection, frame, comparison or marker errors                                    |
 | `ref`                                | Exposes the `MoklyViewerHandle` methods below                                                                     |
 
 `viewerId` must contain 1–64 ASCII letters, digits, hyphens or underscores and
@@ -421,7 +421,7 @@ retains usage only for that entry's derived scope; other views use the
 runtime-only `omitted` state. The matching private capability descriptor
 supplies complete cross-route Usage. Static pages keep their compact external
 reference and resolve the complete shared `catalogue.json`. The public `readCatalogue`
-boundary accepts only that complete v4 model and rejects `omitted`.
+boundary accepts only that complete v5 model and rejects `omitted`.
 
 The runtime subpath exposes `projectScopedCatalogue`, the
 `ShellCatalogueUsage`/`ShellCatalogueReadModel` types and the strict
@@ -504,7 +504,7 @@ search experience based on the viewer container—not the browser viewport.
 
 Mokly artifacts are static files. Deploy the exported directory at the root of
 an HTTP(S) origin with correct MIME types and without an SPA fallback.
-Catalogue v4 serves current documents only under
+Catalogue v5 serves current documents only under
 `/static/mokly-generated/<route>`. The viewer uses the shared directory constant,
 not a model field or mount option. Older catalogue versions fail the version
 gate before URL derivation; no prefixless layout is supported. See the [generated delivery contract](../../docs/protocol/mokly-generated-delivery.md).

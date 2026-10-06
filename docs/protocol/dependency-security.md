@@ -135,6 +135,11 @@ an old override is not proof that the current tree is clean.
 
 The current maintenance choices are:
 
+- `source-map-js` resolves to 1.2.2 through PostCSS and Tailwind's Node tools.
+  This compatible lockfile patch fixes
+  [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q).
+  It adds no direct dependency, override or exception, retains the Node floor,
+  and leaves the existing package ranges and other lockfile records unchanged.
 - [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
   / CVE-2026-93687 affects `braces <=3.0.3`, with no patched release at review
   on 2026-10-03. The sole exception ends on 2026-11-03 UTC. Its exact dev-only

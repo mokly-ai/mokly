@@ -19,11 +19,11 @@ and duplicate-import checks.
 `mockupsDir` is the catalogue directory. Its fixed, Mokly-owned child
 `<mockupsDir>/mokly-generated/` holds generated documents/fragments and the
 manifest, plus compiled CSS and copied assets.
-No authored file belongs in this child. Merged HTML routes derive from kind/id
-and start with `pages/`, `screens/` or `components/`; for example,
-`screens/a.mobile.html` is stored at
-`<mockupsDir>/mokly-generated/screens/a.mobile.html`. The fixed outer prefix
-is separate from the logical route; this adds no substring ban on ids.
+No authored file belongs in this child. HTML routes derive from file-derived
+entry paths and view axes; for example, `account/home/index.mobile.html` is
+stored at `<mockupsDir>/mokly-generated/account/home/index.mobile.html`.
+The fixed outer prefix is separate from entry identity. The shared
+[path rules](./mokly-paths.md) and reserved output segments still apply.
 Authored assets stay at their original
 paths below `mockupsDir`, including stylesheet-rule paths, which remain relative
 to `mockupsDir`. Output, cache, and authored input paths must remain confined
@@ -33,7 +33,7 @@ Deployable generated content uses the plain, tool-owned directory name
 `mokly-generated/`: some static hosts and deployment tools skip or deny
 dot-directories. Fixed deployed path segments chosen by Mokly must not start
 with `.`, `_`, `#`, or `~`. This adds no rejection for user-chosen names:
-authored closure paths, mirrored repository paths and ids retain their existing
+authored closure paths, mirrored repository paths and entry paths retain their existing
 rules. Hosts such as GitHub Pages with Jekyll can still omit user-chosen names
 starting with `_`; consumers must configure the host or choose suitable names.
 A host may drop the optional root
@@ -106,8 +106,8 @@ it is staged (and then committed as part of the tracked-output workflow).
 `build` cannot be blocked by its own remedy.
 
 Only `build`, `build --watch`, and `serve --build` write generated output.
-`build --watch` compiles/writes once, then reuses the consumer watcher and its
-debounce and reload/rebuild/ignore classifications; a reload or config change
+`build --watch` compiles/writes once, then uses the shared event classification
+and debounce helpers; a reload or config change
 that affects compilation produces a new complete compilation. It writes only
 after each **successful, fully validated** compilation and reports each
 accepted build; a failure reports the error, retains the last successful tree,
@@ -148,7 +148,7 @@ where `<n>` includes the manifest. `build` prints `Generated <n> Mokly files.`
 after every successful transaction. Rich equivalents and watched reporting
 are specified in [terminal output](./mokly-terminal-output.md).
 
-## Manifest V8 And Per-Commit Baselines
+## Manifest V9 And Per-Commit Baselines
 
 The [manifest contract](./mokly-generated-manifest.md) defines identity-only v9
 entries, authored closure, exact generated-file inventory and Git blob hashes.
@@ -183,7 +183,7 @@ realpath protection even for files listed in the manifest.
 Compute local hrefs from the **document's actual directory under**
 `mokly-generated/` to the authored file under `mockupsDir`, using POSIX relative
 paths, `/` separators, and URL-encoding per segment, preserving query and
-fragment; for example `mokly-generated/screens/a.mobile.html` to `styles.css` uses
+fragment; for example `mokly-generated/home/index.mobile.html` to `styles.css` uses
 `../../styles.css`. Resolve CSS references relative to the CSS file, not the
 generated document. A generated-to-generated link resolves inside
 `mokly-generated/`; no root-absolute catalogue hrefs. Disk-opened HTML and HTTP

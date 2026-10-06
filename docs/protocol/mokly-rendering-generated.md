@@ -47,7 +47,7 @@ configuration. The common shape is:
 interface ManifestV9 {
   schemaVersion: 9;
   generatedBy: "mokly";
-  entries: readonly ManifestEntryV8[];
+  entries: readonly ManifestEntry[];
   folders: readonly ManifestFolder[];
   sourceFiles: readonly string[];
   assetClosure: readonly string[];
@@ -144,8 +144,8 @@ Imported CSS adds deterministic routes under `mokly-generated/`:
 - `mokly-generated/assets/<repository-relative asset path>` for local CSS
   assets, preserving opaque binary bytes.
 
-Every regular file in the reserved tree is owned output and is removed as an
-orphan when it is absent from the next accepted compilation. Authored CSS
+Every regular file in the reserved tree is owned output. Whole-tree replacement
+removes files absent from the next accepted compilation. Authored CSS
 sources remain private. Manifest v9 inventories these files by exact Git blob hashes; entry routes
 still derive from path and kind.
 

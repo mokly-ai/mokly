@@ -14,11 +14,11 @@ npx mokly build --watch
 
 ## Options
 
-| Option            | Meaning                                                      |
-| ----------------- | ------------------------------------------------------------ |
-| `--config <path>` | Use an explicit `mokly.config` file                          |
-| `--watch`         | Rebuild after validated source changes using Serve's watcher |
-| `--debug-timings` | Report phase timings and catalogue counts on standard error  |
+| Option            | Meaning                                                     |
+| ----------------- | ----------------------------------------------------------- |
+| `--config <path>` | Use an explicit `mokly.config` file                         |
+| `--watch`         | Rebuild after validated source changes                      |
+| `--debug-timings` | Report phase timings and catalogue counts on standard error |
 
 ## What it writes
 
@@ -44,8 +44,8 @@ commit the **entire** `mokly-generated/` tree, or ignore that directory and
 lists its route under `untracked:` until it is staged. Only `check` reports
 partial tracking, with instructions for both choices.
 
-`build --watch` performs an initial build and then uses Serve's debounce and
-source rules. Every successful complete compilation replaces `mokly-generated/`;
+`build --watch` performs an initial build and then watches configured inputs with debounced
+rebuilds. Every successful complete compilation replaces `mokly-generated/`;
 errors preserve the last-good tree and watching continues. Plain `serve` and
 `export` never write generated output. Use `serve --build` to opt into writing
 while you browse.

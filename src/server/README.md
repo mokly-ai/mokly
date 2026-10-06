@@ -277,8 +277,8 @@ check. This avoids a second PostCSS pass merely to recover accepted head bytes.
 
 The implemented [shared closure](../../docs/protocol/mokly-public-closure.md)
 replaces the separate Watch list with checked serving membership. Serve still
-rechecks each listed file without following symlinks. The
-[shared watch setup](../../docs/protocol/mokly-watch-writers.md) also supplies
+rechecks each listed file without following symlinks. The approved
+[shared watch setup](../../docs/protocol/mokly-watch-writers.md) will also supply
 `build --watch`, including initial edits and interruptible lock waits.
 
 `watch_resources.ts` uses Build's closure builder. Invalid recovery edges can

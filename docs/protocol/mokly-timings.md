@@ -42,8 +42,8 @@ rendering, component metadata validation, `html.links` for control adaptation
 and logical-link rewriting, ignore rules, manifest construction/validation,
 resource validation, output-path checks and runtime retention. Watcher attachment,
 resource discovery, transactional output, and Changes have separate spans;
-`output.lock` measures the wait for the generated-output writer lock, including
-short output-validation snapshot reads. `output.paths` measures snapshot checks.
+`output.lock` measures only a writer's wait for the generated-output lock.
+`output.paths` measures validation of the in-memory route set.
 Graph work for watcher inventory and source-freshness validation is deliberately
 visible even when it repeats compilation's graph work. Output spans are
 `output.write` (parent), `output.validate-targets` (routes and inventory),

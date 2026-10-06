@@ -10,11 +10,11 @@ route-evidence loading and failed Usage states are implemented by the
 
 Serve loads one consumer graph and validates its catalogue metadata, routes,
 hierarchy, schemas, source inventory and output confinement before listening.
-Output collision/ownership/confinement checks capture one stable snapshot under
-the repository writer lock. The private runtime transfers its validated routes
-and orphan routes with the accepted generation. Demand and background workers
-reuse that evidence; they never scan a partially written output tree or acquire
-a writer lock while executing consumer code. A new generation captures new evidence.
+Output collision and confinement checks create one immutable in-memory route
+set from validated identities and retained generated resources. Private runtime
+transfer preserves that set. Demand and background workers reject undeclared
+routes; they never scan disk output or acquire its writer lock. A new generation
+creates a new checked set under the [route-set contract](./mokly-generation-routes.md).
 It does not render every document, write output, classify Git changes or transfer
 generated HTML as a prerequisite for Browse. This applies with and without watch.
 

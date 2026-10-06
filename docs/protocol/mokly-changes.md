@@ -23,7 +23,7 @@ Changes-only rows with baseline folder titles, and an entry the
 labelled Moved. Review reads follow the [source policy](./mokly-source-protection.md).
 
 Opt into [Published Changes](./mokly-publication.md) with
-`npm run preview:build -- --include-changes`; default publication omits Changes,
+`npm run preview:build -- --include-changes`; default repository-preview publication omits Changes,
 comparisons, history, and removals. Both options omit live updates. Strict
 baseline admission and pairing/order fixes run in Serve, export, and publish.
 
@@ -54,7 +54,7 @@ with changed content remain eligible. Both viewports and every available color
 scheme participate. Metadata includes address, titles, descriptions,
 rationale, tags, related-doc links, flow steps and memberships, and view
 structure; it excludes folder titles, source locations, and dependencies.
-The plain generated marker are excluded from document comparison, so a
+The plain generated marker is excluded from document comparison, so a
 source move alone stays unchanged. Resource URLs compare by their resolved route;
 accepted source moves map generated styles/assets and copied document resources
 under the [move normalisation rule](./mokly-moves.md#normalisation). Equal mapped
@@ -70,27 +70,27 @@ transitively using the snapshot resource resolver and public-file confinement.
 Only references outside paired ignored regions participate; speculative
 preload/prefetch hints alone do not establish rendered impact. A linked resource
 edit is conservative evidence of a rendering change, not a pixel measurement.
-Unreferenced public files never add entries through a broad shared-impact glob.
+Unreferenced authored files never add entries through a broad shared-impact glob.
 Every reachable existing resource is validated, including images and fonts;
 finding a changed resource does not skip its CSS/HTML references or later graph
 edges. Added screens, newly available views, and existing material fragment
 changes do not bypass resource validation. Pages and documents use these same
 rules for their generated documents and rendered resources; they do not gain
 screen comparison controls or viewport variants.
-For public file and directory aliases, compare changed Git paths against both
-the referenced route and its validated physical path relative to the real
-`mockupsDir`. Editing a target marks its consumers even when the alias itself
-is unchanged. Obtain both identities from the same confined reader used by
-resource watching; source, internal-metadata, and escape checks still apply.
+For configured catalogue-root aliases, compare changed Git paths against both
+the logical route and its validated physical path relative to the real
+`mockupsDir`. Authored file and descendant-directory symlinks are not public.
+Obtain root identities from the same confined reader used by resource watching;
+source, internal-metadata, and escape checks still apply.
 Historical snapshot reads continue to require regular Git files and reject
 symlink blobs; detecting current impact does not relax baseline validation.
 Both comparison paths share one rule. A resource is a verified deletion in
 all baseline selections, for every type including embedded HTML, only when
 it was a regular file at the branch point, is now deleted, and remains
 referenced by a current document. It marks consumers changed and never makes
-Changes unavailable. Reject resources absent at the branch point, dangling or
-escaping symlinks, unsafe or source-root paths, and newly missing files that are
-not verified deletions. Snapshot generation still requires current references
+Changes unavailable. A missing current resource that was also absent at the branch point is not a
+verified deletion. Reject dangling or escaping symlinks, unsafe or source-root
+paths, and newly missing files that are not verified deletions. Snapshot generation still requires current references
 to resolve.
 Live classification walks a changed or moved document's branch-point resource
 graph whenever the document changed or one of its current stylesheets changed,
@@ -115,7 +115,7 @@ The shell receives this per-view resource evidence for screen-only catalogues
 as well as component catalogues, including in Current before snapshots exist.
 Live screen-only classification retains its analysis as `screenEvidence`, keyed
 by entry path; the workspace selects its `resourceEvidence` slice without a
-second analysis pass. Static exports select that slice from their packaged v5
+second analysis pass. Static exports select that slice from their packaged v6
 comparison. Details merge the loaded comparison's evidence
 with classification evidence, preserving retained stylesheet selectors,
 exclusions, shared-impact, and ignored-content details without duplicate cards.

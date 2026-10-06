@@ -5,9 +5,8 @@
 Live evidence updates and bounded affected-usage deduplication are implemented.
 Deduplication verification is recorded in the
 [dependency patch upstreaming plan](../../plans/mokabook-dependency-patch-upstreaming.md).
-The path-named link fields below are the approved contract; the current
-implementation still carries `entryId` until the
-[path identity plan](../../plans/path-identity.md) delivers them.
+Affected-usage links use `entryPath`, matching the implemented
+[path identity contract](./mokly-paths.md).
 Adoption of the current entry's scoped bootstrap with its complete private
 workspace when applicable, exact-scoped Serve responses, and rejection of
 complete live catalogues are implemented.

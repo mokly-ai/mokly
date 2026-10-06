@@ -120,10 +120,10 @@ source files or directories in `dependencies`. An entry file ends in
 `.mockup.ts` or `.mockup.tsx` and exports its definitions from any export,
 default or named. Mokly derives everything else from the file's place: this
 screen is `account/account-home`, it lives at `/view/account/account-home/`,
-and its views are written under `mockupsDir` as
+and its views are written under `mockupsDir/mokly-generated/` as
 `account/account-home/index.mobile.html` and `index.desktop.html`, one file
-per viewport and color scheme. Serve exposes them below `/static/`; export
-writes them below `static/`. The `account`
+per viewport and color scheme. Serve exposes them below `/static/mokly-generated/`; export
+writes them below `static/mokly-generated/`. The `account`
 directory is a folder in the catalogue; a `_folder.json` file or a
 `defineFolder` export gives it a title and an order.
 
@@ -134,8 +134,8 @@ Keep generated output local by ignoring its dedicated directory and cache:
 /specs/generated/mokly-generated/
 ```
 
-`build` writes only under `docs/mockups/mokly-generated/`; referenced authored
-assets stay under `docs/mockups/` and are served and exported in place. To
+For this configuration, `build` writes only under `specs/generated/mokly-generated/`; referenced authored
+assets stay under `specs/generated/` and are served and exported in place. To
 commit generated output instead, commit every generated file. `check`
 compares compiled output only when the generated tree is indexed; a partial
 index fails with both remedies. A committed baseline's v9 inventory must

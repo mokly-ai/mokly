@@ -1,20 +1,14 @@
 # Historical npm Upgrade Notes
 
-These notes describe earlier releases. Current changes are in
-[npm release notes](./npm-release-notes.md).
+These notes describe earlier releases and retain their original format numbers.
+Current changes are in [npm release notes](./npm-release-notes.md).
 
 ## Historical Navigation Path Upgrade Release Note
-
-The unified-output contract supersedes the format versions in these earlier
-upgrade notes: use source manifest v9, catalogue v5, delivery v5 and bootstrap v2.
-`ManifestV9` replaces `ManifestV7` in `@mokly/viewer/data`. The identity and
-navigation migrations below still apply. See the
-[manifest contract](./mokly-generated-manifest.md) for the v9-only baseline gate.
 
 The navigation-path upgrade removes `defineCollection`, `collection`, and their
 exported types; adds per-entry `navPath` and nested `folder()` authoring; and
 replaces collection edges with independent section folder trees. Consumers must
-regenerate manifest v9 and adopt catalogue read model v5. Obsolete
+regenerate manifest v7 and adopt catalogue read model v3. Obsolete
 `collection:` disclosure keys are ignored on restore.
 
 Migrate the released `@mokly/mokly` exports as follows:
@@ -39,7 +33,7 @@ The identity upgrade derives paths from kind and id, removes authored `route`,
 `slug`, `segment`, and root `path`, and makes component variants global entries.
 The `defineComponent()` return changes from `.entry` to `.entries`; export that
 parent-first array of the component and its variant entries. Consumers adopt
-manifest v9, catalogue v5, review v4, and delivery v5; `/id/` URLs no longer
+manifest v7, catalogue v3, review v4, and delivery v3; `/id/` URLs no longer
 exist.
 
 Migrate the released `@mokly/viewer/data` exports as follows:
@@ -47,7 +41,7 @@ Migrate the released `@mokly/viewer/data` exports as follows:
 - Replace `catalogueViewHref` with `viewHref`: change the arguments from
   `(route)` to `(kind, id)`. Callers pass entry identity instead of a stored
   route.
-- Remove `publicPath` calls. Catalogue v5 has no public document or view path
+- Remove `publicPath` calls. Catalogue v3 has no public document or view path
   fields to validate; derive documents with `entryRoute` using `(kind, id)` and
   rendered views with `viewRoute` using
   `(kind, id, viewport, colorScheme)` when an artifact path is required.
@@ -59,7 +53,7 @@ Migrate the released `@mokly/viewer/data` exports as follows:
   `(route, variantId, viewport, colorScheme?)` to
   `("component", variantId, viewport, colorScheme?)`. The component parent's
   route is no longer an argument because every variant is an entry.
-- Replace `ManifestV5` with `ManifestV9`, `ReviewResultV3` with
+- Replace `ManifestV5` with `ManifestV7`, `ReviewResultV3` with
   `ReviewResultV4`, and `ScreenReviewV3` with `ScreenReviewV4`. The current
   types use identity and view axes instead of stored artifact routes.
 
@@ -108,12 +102,12 @@ content digests and upload URLs, verify raw Blob PUTs by digest and size, and
 make Complete idempotent under the documented first-publication rule. Clients
 upload only content the receiver does not already hold.
 
-Export ownership marker schema 3 records each owned file
+Export ownership marker schema 2 replaces schema 1. Each owned file is recorded
 as `{ path, sha256, size }`, and the marker covers the exact finalized bytes that
 the exchange addresses. Export folders written by earlier releases are not
 recognized as owned: move any files you added, delete the old export folder,
 and export again. The public `export-ownership-v1.json` compatibility fixture is
-removed; receiver conformance uses `export-ownership-v3.json`.
+removed; receiver conformance uses `export-ownership-v2.json`.
 
 The new `--upload-concurrency <n>` publish option controls parallel Blob PUTs.
 It accepts integers from 1 through 32 and defaults to 8.

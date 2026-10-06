@@ -84,7 +84,7 @@ The cache lives at `<repoRoot>/.mokly-cache/baselines/`; the sibling
 `locks/` directory holds only the transient
 [generated-output writer lock](./mokly-rendering-generated.md#concurrent-writers).
 Its release removes only the lock file, never a directory, so creating a cache
-entry never races a directory removal. The cache is package owned: never served, never watched, never a comparison resource, excluded from
+entry does not race a writer removing its cache ancestors. The cache is package owned: never served, never watched, never a comparison resource, excluded from
 changed-path evidence and shared-impact globs before those globs are evaluated,
 and never a valid `mockupsDir`, root, resolved entry module or document,
 `review.outDir`, or export destination. Consumers add `.mokly-cache/` to their
@@ -107,7 +107,7 @@ v9 manifest and its verified inventory/closure. Keep the
 [reader mapping](./mokly-baseline-addressing.md#cache-identity-and-readers).
 
 A reusable entry requires regular bounded JSON files for `complete.json` and
-`inputs.json`, the exact schema-1 marker with `manifestVersion: 8` and
+`inputs.json`, the exact schema-2 marker with `manifestVersion: 9` and
 `layout: "generated-v9"`, a safe historical root, matching commit, requested
 path and argv arrays, and complete valid v9 output. Verify generated membership,
 blob hashes and every authored closure file with the same confinement rules.
@@ -208,6 +208,6 @@ the whole entry is retired: removing them independently would allow a delayed
 reclaimer to unlink a successor's lock. Unrecognized temporaries without a PID are
 also retained until entry retirement because their owner cannot be checked.
 
-The approved [cache acquisition rule](./mokly-comparison-inventory.md#cache-acquisition-and-discovery)
+The pending [cache acquisition rule](./mokly-comparison-inventory.md#cache-acquisition-and-discovery)
 recreates an entry directory removed by retention and retries only ENOENT, at
 most three attempts. Existing lock deadlines, cancellation and ownership stay.

@@ -27,9 +27,9 @@ Example Action/Toolbar components, miniature subject screens and pictured usage
 fixtures keep their separate roles. New usage in the outer inspector comes from
 the real generated manifest, not from those pictured fixtures.
 
-All existing design entries, relationships, mobile/desktop artboards, copy,
-links and supported native controls remain. All catalogue screens use the shared
-icon inspector and view toolbar for Details, viewport and theme controls.
+Preserve existing entries, relationships, both artboard sizes, copy, links and
+supported controls. Each screen uses the shared Details inspector and viewport
+toolbar. Top-bar Appearance owns the scheme.
 The footer has one current form; no alternative disclosure, presentation or
 behavior fields are supported. Comparison-mode controls keep their segments.
 New component entry metadata belongs outside the rendered sample;
@@ -38,7 +38,7 @@ samples contain no implementation notes, environment badges or extra footers.
 ## Catalogue And Source Ownership
 
 Add `Components → Design → Shared components` beneath the same `Design` folder
-as `Pages → Design`: a folder holding both kinds appears in both
+as `Specs → Design`: a folder holding both kinds appears in both
 sections with its own children in each, under the
 [catalogue tree rule](./mokly-catalogue.md#tree). Keep the existing Component
 explorer design section and Components → Example → Components group. The

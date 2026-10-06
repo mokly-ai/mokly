@@ -366,7 +366,7 @@ Coverage must prove:
 - [Paths, roots, and identity](./mokly-paths.md)
 - [Folders](./mokly-folders.md)
 - [Shell destination queries](./mokly-shell-destinations.md)
-- [Logical link transformer validation](./mokly-link-validation.md)
+- [Final logical link validation](./mokly-link-validation.md)
 - [Build and Browse runtime](./mokly-runtime.md)
 - [Shell design contract](./mokly-shell-design.md)
 - [Build pipeline](../architecture/build-pipeline.md)

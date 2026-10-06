@@ -284,7 +284,7 @@ Ready/requests time out after five seconds, disposing the session without retrie
 Disposal/unload clears all work; a fresh mount loads a new document and nonce.
 At most 16 requests are pending.
 
-## Wire Protocol v1
+## Wire Protocol v2
 
 Every message is a JSON string of at most 262,144 UTF-8 bytes; reject nonstrings
 or oversized strings before JSON parsing. The exact envelope is

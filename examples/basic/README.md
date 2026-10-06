@@ -296,7 +296,7 @@ From the repository root:
 npm run dev
 ```
 
-This builds the local CLI, generates the catalogue, and watches entries, the
+This builds the local CLI, compiles the catalogue in memory, and watches entries, the
 renderer, and configured stylesheets. Open the printed URL; the browser reloads
 after watched edits. Forward Serve options with `npm run dev -- --port 0`.
 Imported consumer helpers, including this example's `theme.ts`, are tracked
@@ -348,7 +348,7 @@ or comparison CLI command.
 
 The Browse shell › Appearance folder records the delivered Auto/Light/Dark
 interface appearance for standalone Browse. `design/browse/appearance/overview` is its
-canonical screen; Appearance states owns three more, and Panels and comparisons
+canonical screen; Appearance states owns four more, and Panels and comparisons
 and Status and recovery own five each. Every one of them is an ordinary
 dual-scheme entry, so `mokly build` writes a Light and a
 Dark file per viewport and Browse's Appearance control switches the mockup you

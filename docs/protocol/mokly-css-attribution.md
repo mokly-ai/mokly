@@ -9,7 +9,7 @@ inspector receives retained and excluded stylesheet evidence for component and
 screen-only catalogues, including before a comparison is loaded. Screen-only
 delivery reuses the screen-only classification without component
 classification or a second resource analysis. The result version follows the
-[Changes contract](./mokly-changes-serving.md#comparison-engine), whose v5 is approved.
+[Changes contract](./mokly-changes-serving.md#comparison-engine), whose v6 is implemented.
 
 ## Purpose
 
@@ -75,8 +75,8 @@ selectors. Their original `.css` and `.module.css` files and plugin
 dependencies remain private `sourceFiles`: they trigger rebuilds but are not
 additional public CSS analyzed as if linked. One imported source can
 contribute to multiple root bundles; analyze each reachable generated route.
-A baseline built before generated CSS links produces a one-time Changes jump
-for the linked views.
+Adding generated CSS links against a compatible v9 baseline without those
+links can change the linked views. Earlier-format baselines provide no comparison.
 
 Git does not report ignored generated routes. Compare the
 baseline builder's captured generated CSS and asset bytes with the accepted

@@ -10,8 +10,8 @@ create and read its own remotes because those references are fixture-owned
 inputs inside the test tree.
 
 CI's package, unit, browser, and hydration jobs key npm's download cache from
-the checked-out `package-lock.json`; none resolves `origin/main` or reads a
-branch-point lockfile. Identical trees must produce identical test results; the
+the checked-out `package-lock.json`. Their cache steps use local data: none
+resolves `origin/main` or reads a branch-point lockfile. Identical trees must produce identical test results; the
 release workflow's exact-tree evidence reuse depends on that determinism.
 
 The remaining automated checks for repository inputs are deliberately narrow:

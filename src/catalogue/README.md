@@ -26,10 +26,12 @@ evidence; projection performs no filesystem reads, Git commands, or rendering.
 `projection.ts`, `views.ts`, and `changes.ts` select public fields explicitly.
 The v9 and CLI live-index producers emit `sourcePath` and
 `declaredDependencies`; runtime and worker transfers retain those fields.
-Their public `details.dependencies` is the sorted unique union. The viewer's
+Documents also retain their `resources`. Public `details.dependencies` is the
+sorted unique union of those paths. The viewer's
 `displayEntry` conversion is a shell read representation; no product caller
 feeds its records back into the CLI projector. Public projection derives labels
-from source and declared paths only, as the comparison inventory contract requires.
+from source/declared paths and Markdown resource paths; it never reads a stored
+`dependencies` field.
 Changes membership comes from entry and component attribution, independently
 of per-view comparison eligibility. Removed variants require their baseline
 `parentTitle`, including when another kind reuses the parent's path. Both readers
@@ -54,7 +56,7 @@ projection never derives it from Git or the filesystem. The map is keyed by
 removed entry path; `previewMetadataPath(path)` names page metadata, while
 screen descriptors reuse the same generation's comparison. Readers reject descriptors
 on current entries, mismatched entry kinds, or missing comparison URLs while
-accepting v4 catalogues that omit the optional preview field.
+accepting v5 catalogues that omit the optional preview field.
 Serve supplies only removed-screen descriptors after a complete comparison is
 pinned; selected-only generations never change the public model, and live page
 descriptors remain absent. Changes-enabled consumer export and repository

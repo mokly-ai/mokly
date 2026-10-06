@@ -52,7 +52,7 @@ interface VariantClassification {
   reviews: readonly ComponentVariantReview[];
 }
 
-/** Classify variant entries while retaining Review v5's grouped component result. */
+/** Classify variant entries while retaining Review v6's grouped component result. */
 export function classifyComponentVariants(
   input: VariantClassificationInput,
 ): VariantClassification {
@@ -149,7 +149,7 @@ export function classifyComponentVariants(
   return { parentReasons, reviews };
 }
 
-/** Index current or historical-v8 flattened variants by case-folded path. */
+/** Index current or historical-v9 flattened variants by case-folded path. */
 export function componentVariantEntries(
   entries: readonly (ManifestEntry | HistoricalManifestEntry)[],
 ): ReadonlyMap<string, ReviewComponentVariant> {

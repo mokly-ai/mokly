@@ -21,7 +21,7 @@ import {
 import { validateResultReferences } from "./result_references.js";
 import type { ReviewResult } from "./types.js";
 
-/** Decode the path-addressed v5 result shared by every catalogue. */
+/** Decode the path-addressed v6 result shared by every catalogue. */
 export function parseReviewResult(value: unknown): ReviewResult {
   try {
     return validateResult(value);

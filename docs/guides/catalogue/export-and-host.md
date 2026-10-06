@@ -18,7 +18,7 @@ beside the config, not beside your working directory; an absolute path must
 stay inside the repository root.
 
 `--base` overrides the configured base ref for that run. The branch point must
-be present in the checkout. Mokly reads a complete verified v8 inventory from
+be present in the checkout. Mokly reads a complete verified v9 inventory from
 that commit or runs the commit's own baseline recipe when output is absent or
 incomplete. Check out full history in CI. Export never fetches history for you.
 A base built by an earlier Mokly version makes Changes unavailable; export
@@ -62,12 +62,3 @@ control characters, backslashes, colons, empty segments, `.` or `..`, and at
 most 1,024 UTF-8 bytes. A refusal prints the escaped path so invisible
 characters can be found. Before deleting a destination created by an earlier
 Mokly release, move out any files you added yourself.
-
-## Approved path-layout integration
-
-The combined path and output contract defines the next path-based catalogue: shell routes become `/view/<entry path>/`,
-and generated documents and copied Markdown resources share
-`static/mokly-generated/`. The viewer reads catalogue v5. A base built by the
-incoming main's v8 toolchain makes Changes unavailable while export succeeds.
-These are the approved integration targets; the current examples above retain
-the installed command behavior until that integration lands.

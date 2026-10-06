@@ -12,7 +12,7 @@ is tracked by the [path identity plan](../../plans/path-identity.md).
 
 ## Components And Saved Examples
 
-Each row defines parent `design-ui-{slug}` and its variant entries under the
+Each row defines parent `design/library/{group}/{slug}` and its variant entries under the
 [variant contract](./mokly-variants.md). Each variant's slug is the table's
 kebab-case name, so its path is the parent's path plus that name, and every
 file name follows the [artifact contract](./mokly-artifact-paths.md); the first

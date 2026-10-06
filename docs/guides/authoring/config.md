@@ -97,8 +97,8 @@ or `darkStylesheets` after its shared list for the matching output.
 Imported CSS delivery appends the
 configured renderer stylesheet and then the entry stylesheet after those
 links, even if no rule matches. Complete page callbacks receive no automatic
-links. `<mockupsDir>/mokly-generated/` is reserved for CSS and asset
-output; keep authored public stylesheets elsewhere.
+links. `<mockupsDir>/mokly-generated/` holds all generated documents, the private manifest, compiled CSS and copied
+assets; keep authored public stylesheets elsewhere.
 In authored public or imported CSS, write local `image-set()` sources as
 `url()` values (`image-set(url("./photo.png") 1x)`) so Mokly validates the
 reference. Imported CSS also copies the asset into `mokly-generated/`;
@@ -132,7 +132,7 @@ and token modules. A renderer or token file matched only by a glob appears in
 Details without adding the screen to Changes. A changed preview or resource
 still appears there, as can a registered component's own file or a dependency
 named by its exact path.
-`review.baselineBuild` runs when a pinned historical v8 inventory is missing or incomplete: an ordered list of argv
+`review.baselineBuild` runs when a pinned historical v9 inventory is missing or incomplete: an ordered list of argv
 arrays run without a shell to rebuild the historical catalogue. It defaults to
 `npm ci` followed by `npx --no-install mokly build --config` and the config
 path, independent of head Git tracking.

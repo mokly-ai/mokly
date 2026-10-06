@@ -101,8 +101,8 @@ joined with `/`, with no empty, leading, or trailing segment. Two paths whose
 lowercase forms are equal name the same path for every collision rule, because
 generated files share case-insensitive hosts and filesystems. Links, URLs, and
 stored paths use the authored case. The first segment must not equal
-`mokly-generated`, compared case-insensitively: that output folder belongs to
-Mokly's CSS and assets. This applies to derived paths, declared paths and root
+`mokly-generated`, compared case-insensitively: that output folder contains
+Mokly's generated documents, stylesheets, copied assets and private manifest. This applies to derived paths, declared paths and root
 `path` prefixes; later segments may use that name. Entries fail with the
 attributed `invalid-path` diagnostic below; root prefixes use `config-invalid`.
 

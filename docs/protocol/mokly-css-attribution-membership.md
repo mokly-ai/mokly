@@ -21,7 +21,7 @@ the real bytes.
 
 A dependency reason gains an optional `analysis` record. Absent `analysis`
 means the analysis did not run for that path, which is the case for non-CSS
-resources and for historical results.
+resources. Only current-format review results are readable.
 
 ```ts
 interface DependencyAnalysis {
@@ -71,9 +71,9 @@ interface ViewReview {
 }
 ```
 
-Every [review result v6](./mokly-changes-serving.md#comparison-engine) view record
-carries these fields. Results without them remain valid and mean the analysis
-did not run.
+These fields are optional on each [review result v6](./mokly-changes-serving.md#comparison-engine)
+view. Empty reason and exclusion lists are omitted. Their absence records no
+retained or excluded resource evidence; it does not select an older schema.
 
 `reasons` holds the view's retained resource evidence; it is omitted when
 empty. View evidence describes the complete retained render; component entry

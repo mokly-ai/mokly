@@ -133,8 +133,8 @@ interface ReviewResult {
 }
 ```
 
-Version 5 is version 4 with every entry and view addressed by path and view
-axes instead of kind and id, `screenPath` wherever a step names a screen,
+Version 6 addresses every entry and view by path and view
+axes, with `screenPath` wherever a step names a screen,
 optional `previousPath` on an entry the [move contract](./mokly-moves.md)
 paired, and documents classified like pages: neither kind has a record here,
 and the [catalogue change snapshot](./mokly-catalogue-changes.md) classifies
@@ -144,7 +144,7 @@ entry; a side the view's state lacks (`added` has no `before`, `removed` has
 no `after`) has no document. Component catalogues add component, variant,
 use-case, and affected-consumer records addressed by entry path, defined by
 the [component comparison schema](./mokly-component-review.md). Readers accept
-only version 5.
+only version 6.
 
 Every catalogue emits the complete `ReviewResultV6` shape defined by the
 [component comparison schema](./mokly-component-review.md), which extends the

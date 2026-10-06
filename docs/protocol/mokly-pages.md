@@ -58,7 +58,7 @@ export default definePage({
 ```
 
 The example assumes an existing `source(): string` export and, under the
-default `specs` root, generates `static/documents/account-statement/index.html`
+default `specs` root, generates `static/mokly-generated/documents/account-statement/index.html`
 for the path `documents/account-statement`. A page named `index.mockup.tsx`,
 or declaring `slug: "index"`, is its folder's own page under the
 [folder row rules](./mokly-folders.md#rows-and-clicks).
@@ -112,7 +112,7 @@ interface ManifestPage extends ManifestEntryBase {
 }
 ```
 
-`ManifestEntryV8` includes pages, documents, screens, use cases and
+`ManifestEntry` includes pages, documents, screens, use cases and
 components, and its base `kind` union includes `page`. All existing common
 fields remain, including `path` and required `declaredDependencies`. No entry
 carries a file name: readers derive `<path>/index.html` from the path. Pages

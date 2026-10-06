@@ -58,7 +58,7 @@ npx mokly export --config docs/mokly.config.ts --out ../site --base main
   new typed `export-invalid` category. Normal author errors do not print stacks.
 
 Existing `build` and `check` retain their generated-fragment and manifest
-contracts. Export itself performs the normal build, so a separate consumer
+contracts. Export compiles and validates in memory, so a separate consumer
 build command is not required. Normal config evaluation and compilation retain
 their existing execution boundary; export adds no hosting network calls.
 

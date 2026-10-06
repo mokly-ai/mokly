@@ -21,7 +21,7 @@ import { validateOutputCollisions } from "./output_collisions.js";
 import { isReservedSource } from "./source_inventory.js";
 import { isValidGeneratedRoute } from "./styles/routes.js";
 
-/** Refuse a staged tree whose exact bytes differ from its v8 manifest inventory. */
+/** Refuse a staged tree whose exact bytes differ from its v9 manifest inventory. */
 export function validateGeneratedInventory(compilation: Compilation): void {
   const { manifest, outputs } = compilation;
   const routes = [...outputs.keys()]
