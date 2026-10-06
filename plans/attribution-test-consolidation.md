@@ -42,10 +42,10 @@ unit critical path. The 33 tests are five top-level tests plus 28 subtests
 `tests/helpers/design_library.ts`, not 23.
 
 Local measurements in this sandbox (Node 22.14.0, 8 cores) through the real
-fixture in `tests/helpers/design_library_fixture.ts`. The previous session measured
-832 s and 154 s before the main merge. The unchanged current-merge runs took
-612.961 s and 123.173 s with `node --import tsx --test <file>`; those are the
-primary local before figures. The earlier operation measurements below and
+fixture in `tests/helpers/design_library_fixture.ts`. The previous session
+measured 832 s and 154 s before the main merge. The unchanged current-merge
+runs took 612.961 s and 123.173 s with `node --import tsx --test <file>`;
+those are the primary local before figures. The earlier measurements below and
 library subtest times of 13–19 s remain context:
 
 | Operation                                       | Local time |
@@ -206,9 +206,10 @@ tests change. Documentation-only; validate the Markdown and review the diff.
       cap; shorten text in place rather than growing it.
 - [x] Update the `Verification` section of
       `examples/basic/specs/design/library/README.md`: name the four test files
-      in prose and run them once through the existing globs, describe the one-pass library attribution with its
-      single-change control, the grouped source-edit file, and the committed
-      baseline file, and keep the paragraph about what the tests retain exact.
+      in prose and run them once through the existing globs, describe the
+      one-pass library attribution with its single-change control, the grouped
+      source-edit file, and the committed baseline file, and keep the paragraph
+      about what the tests retain exact.
 - [x] Add a `Unit Shard Balance` section to `docs/protocol/ci-suite-evidence.md`:
       whole-file partition by sorted index modulo four, two concurrent files,
       per-file durations as the measure, and the rule that a scenario suite
@@ -295,10 +296,10 @@ scope comes from the dependency reasons.
       every path outside `design.css`'s scope starts with `design/`,
       `sharedImpact` includes `examples/basic/generated/design.css`, and
       `affectedConsumers` is empty because shared stylesheets have no owner.
-- Per-entry reasons must equal exactly the dependency reasons for the sheets
-  whose expected scope contains that entry, including deterministic
-  `analysis: { status: "unresolved", selectors: ["body"] }`. No other reason
-  kind or dependency path is allowed.
+- [x] Per-entry reasons must equal exactly the dependency reasons for the sheets
+      whose expected scope contains that entry, including deterministic
+      `analysis: { status: "unresolved", selectors: ["body"] }`. No other reason
+      kind or dependency path is allowed.
 - [x] Run the file; record the after timing.
 
 ## Milestone 5: Source-edit groups and the committed baseline in their own files — completed
@@ -306,7 +307,8 @@ scope comes from the dependency reasons.
 Move tests 2–5 out of `design_library_attribution.test.ts`. Group source
 edits into one rebuild only when every edit keeps its own proof under the
 rules below: its own change path or reason kinds, its own impacting
-expectation, and no other member that could mask a wrong attribution.
+expectation, no impacting member, and no same-file member that could mask a
+wrong attribution.
 
 Measured single-edit signatures (change path, reason kinds, impacting
 components) from the real fixture:
