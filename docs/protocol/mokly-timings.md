@@ -193,8 +193,8 @@ or sum them with inclusive spans. This counter does not itself measure RSS.
 ## Benchmark Sample Outcomes
 
 Every requested scenario/state gets one sample with `outcome`, `scenario`,
-`state` (`cold`/`warm`), sorted `expectedChangedIds` and `expectedChangedRoutes`.
-Report observed sorted `changedIds`/`changedRoutes` only when complete Changes
+`state` (`cold`/`warm`), sorted `expectedChangedPaths` and `expectedChangedRoutes`.
+Report observed sorted `changedPaths`/`changedRoutes` only when complete Changes
 is available. Keep available interactive/baseline fields even on failure.
 Include `heapPeakMiB`, `documentWork` and `inlineStyleCounts` only when their
 completed counts records exist; absent diagnostics are not invented zeros.
@@ -211,7 +211,7 @@ never copy companion fields into timed samples or acceptance comparisons.
   measurement failure also uses `error` with `failurePhase` and `error` text;
   it must not invent a classification status/end. Preserve successful worker
   measurements if a later browser check fails.
-- `membership-mismatch`: classification ends `ok` but the delivered id set
+- `membership-mismatch`: classification ends `ok` but the delivered path set
   differs; includes both sets/counts and the successful worker measurements.
   Matching counts alone cannot prove matching membership.
 - `incomplete`: classification starts but has no end after worker stop or the

@@ -63,7 +63,7 @@ Only README reporting edits are excluded from the digest; other template-tree
 edits require preparation again. A changed Mokly commit or dirty flag alone
 is not a template mismatch.
 
-The renderer supplies `token = JSON.stringify([entry.id, viewport, colorScheme])`.
+The renderer supplies `token = JSON.stringify([entry.path, viewport, colorScheme])`.
 Every Action in a view shares that rule; renders without the provider use
 the fallback token `"interactive"`. Per-view atomic values use SHA-256 of
 UTF-8 `JSON.stringify([area, token])`, never a registration index.

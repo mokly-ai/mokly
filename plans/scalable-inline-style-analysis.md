@@ -2123,13 +2123,17 @@ Additional integration decisions:
   Failed batches cannot poison a later read of an existing resource. Three
   new assertions failed before the fix. All four pass after it. The existing
   main deleted-resource expectation is unchanged.
-- `tests/component_material_projection.test.ts` retains all main assertions.
-  Set the merged context's required `componentAware` flag to `false`, matching
-  main's fixture behavior, instead of the merge's incorrect `true` value.
-  The branch-only `tests/page_analysis_root_resources.test.ts` adds explicit
-  select and template cases. Original-tree discovery does not invent
-  references for tokens that the HTML parser discards; template references
-  still follow root ownership.
+- `tests/component_material_projection.test.ts` retains main's #125
+  (`ff376d71`) assertions and explicit `componentAware: false`. This conflict is
+  **pending the user's decision**. Main expects no image read for Home, but an
+  image read and `mockups/components/image.svg` dependency for Pane. Production
+  component-aware mode makes no Pane read and emits no dependency: M7 uses the
+  original tree, and the browser discards `<section>` and `<img>` inside
+  `<select>`. A component root with `componentAware: false` cannot occur in
+  production. Option A switches main's case to production mode and the M7
+  expectation. Option B retains main's case in legacy mode. Neither decision
+  is made here. The branch select and retained-template assertions remain
+  unchanged; the template case retains root-specific reads.
 - `tests/page_analysis_scope.test.ts` prepares main's move inventory before
   the measured view-comparison scope. Its strict no-duplicate-reference-parse
   assertion is unchanged. The 39 focused resource, move and scope checks pass
@@ -2247,6 +2251,87 @@ smokes, example build/check and `cargo xtask check`. The real Wrangler Pages
 runtime runs through `preview_comparisons`, `preview_pages`,
 `preview_preparation`, `preview_design_links` and `preview_navigation`; its
 Miniflare worker runtime is not replaced by a test double.
+
+### M10 supervisor corrections
+
+The dependency-tip unit suite on `46009a7d` passed all **6,586 tests in 948
+files**, with no failures, skipped tests or cancellations. This includes the
+two earlier timing-limit cases. See `unit-46009a7d.json` and
+`xtask-final-deps.log` under `.context/delegation/scalable/m10-merge/`.
+The gate then started its browser wrapper automatically. The wrapper was
+stopped on the supervisor's instruction. That partial browser run is not
+verification; hydration did not start. Follow-up fixes use new commits after
+`46009a7d`, without amending the merge or changing dependency scope.
+
+- [ ] Require production link normalization in comparison helpers and probes.
+      The new context probe failed first with `production links: undefined`.
+      Only explicit `page_m6` comparisons can omit modern links. The captured
+      M6 projection has no resource-material fields, so its material helper
+      marks both compared contexts explicitly. Its separate M8 fingerprint/text
+      check still uses production links. Removing either production helper's
+      links fails the new probe.
+- [ ] Refine fingerprint URL guards. Equal-source skipped styles need no URL
+      fallback. Resolved appendices fall back only when normalization changes
+      their actual or projected equality outcome. The replay now has **8,100
+      fingerprinted views**, **432 catalogues** and **860 committed/derived
+      pairs**, with zero result/error mismatches. This restores the lowered
+      7,612 pin and exceeds M9's 7,844; the two named historical exclusions
+      remain four pairs. `followup-targeted.log` retains the first restored
+      result. The final gate records per-file counts.
+- [ ] Count link normalization through the shared HTML parser as
+      `linkNormalization`. The interception test first found uncounted parses;
+      the changed-page case counts 18 original parses plus 44 link parses.
+      Preserve original-only CSS matching and reference derivation. The
+      reference case counts 20 original parses plus 92 link parses. Branch
+      counter pins now include these parses: fall-through is 20 + 156; the
+      resource quick-check fallback is 2 + 18. The style helper still permits
+      exactly one original parse and no non-link extra parse; the preceding
+      non-identical quick check's link work is counted separately. These
+      changes do not alter result, error, reference or material assertions.
+- [ ] Use original EOF parser state to guard open SVG/MathML. Both shortcuts
+      first disagreed with text in every mode/switch combination. Keep text
+      when whole-document URL normalization can decode foreign style content.
+- [ ] Restore main's final-status waits while keeping per-variant comparisons.
+      The new execution probe first caught the immediate `textContent` read.
+      Verify both viewports three times without changing any time limit.
+- [ ] Correct the stale-reserved-file renderer's path depth and error assertion.
+      The stronger assertion first caught `escapes mockupsDir`. Confirm the
+      reserved/orphan rejection mutation fails the corrected test.
+- [ ] Replace stale entry-id terminology in the timing and benchmark contracts.
+      A new documentation check first failed on the old membership field names.
+      The digest-covered edit is approved for #131; acceptance stays deferred.
+- [ ] Run the complete final verification and real-server smoke checks. Keep all
+      follow-up commits local for the supervisor's check.
+
+The first broad follow-up run executed 1,768 tests. It had 1,681 passes and 87
+failures, with zero skips/cancellations. All failures came from the lowered
+coverage pin, newly counted link parses, or the unmarked M6 material context.
+No result/error oracle comparison failed. The updated pins keep exact parse
+steps and preserve all original assertions outside these branch counter fields.
+`followup-targeted.log` retains the entire run.
+
+Every mutation below was caught by an assertion, not a tool or compile error.
+The two runners restore each file in `finally`; no mutation remains in source
+or generated code. See `followup-mutations.json`,
+`followup-proof-mutations.json` and each `followup-mutation-*.log`.
+
+| Mutation                                                   | Result                                                    |
+| ---------------------------------------------------------- | --------------------------------------------------------- |
+| Omit production links from `page_comparison.ts`            | Caught by the context probe                               |
+| Omit production links from `component_comparison_paths.ts` | Caught by the context probe                               |
+| Remove the skipped-style URL guard                         | Caught by exact material bytes on changed link identities |
+| Restore the broad resolved URL fallback                    | Caught by the unchanged-URL fingerprint control           |
+| Remove skipped `equalSource` proof reuse                   | Caught by the forbidden normalization call                |
+| Leave logical-link HTML parses uncounted                   | Caught by parse5 interception                             |
+| Leave resource-link HTML parses uncounted                  | Caught by parse5 interception                             |
+| Remove the fingerprint foreign-content guard               | Caught by result and byte comparisons                     |
+| Remove the style-route foreign-content guard               | Caught across route switches                              |
+| Stop recording foreign EOF state                           | Caught by the compiled SVG/MathML cases                   |
+| Omit the base-side foreign-state guard                     | Caught by the base-only open case                         |
+| Omit the head-side foreign-state guard                     | Caught by the head-only open case                         |
+| Remove selected-variant URL waits                          | Caught by the saved-status execution probe                |
+| Remove final-status waits                                  | Caught by the saved-status execution probe                |
+| Disable reserved-route and pending-orphan rejections       | Caught: missing expected rejection                        |
 
 ## Post-merge follow-up (non-blocking)
 
