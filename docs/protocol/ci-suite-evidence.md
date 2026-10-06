@@ -1,9 +1,10 @@
 # CI Suite Evidence
 
 This document supplements the [CI verification contract](./ci-verification.md)
-with fixture ownership, the shared example compilation snapshot, failure
-cleanup, browser shard balance, and acceptance measurement rules for the unit,
-browser, and hydration suites.
+with fixture ownership, test concurrency, failure cleanup, browser shard
+balance, and acceptance measurement rules for the unit, browser, and hydration
+suites. The [example compilation snapshot](./ci-example-snapshot.md) contract
+defines the compiled example that unit test files share.
 
 ## Fixture Lifetime And Cleanup
 
@@ -49,8 +50,9 @@ and whether the operation itself is under test.
 Full-catalogue browser preparations share a five-minute setup budget in
 `tests/helpers/fixture_timing.ts`. Cold package/example builds, baseline
 exports, and ordinary publication fixtures use that budget independently of the
-default one-minute browser test timeout. Assertion deadlines, retries, and
-worker limits remain unchanged; server readiness retains its own bound.
+default one-minute browser test timeout. Assertion deadlines and retries
+remain unchanged, worker counts follow [Test Concurrency](#test-concurrency),
+and server readiness retains its own bound.
 
 Wrangler Pages fixtures pass port zero and adopt the exact readiness URL
 Wrangler reports; they do not release a probe socket before server startup.
@@ -60,77 +62,48 @@ consumer repository's publication fingerprint. Unit tests that fork compiled CLI
 entrypoints set an empty `execArgv`, preventing the parent test runner's loader
 and concurrency flags from changing child startup behavior.
 
-## Example Compilation Snapshot
+## Test Concurrency
 
-Unit test files that read the compiled `examples/basic` catalogue share one
-in-memory compilation per unit preparation. The snapshot is the Git-ignored
-file `.context/verification/example-compilation.json`. It is one JSON object
-with exactly these fields:
+[`scripts/verification/concurrency.mjs`](../../scripts/verification/concurrency.mjs)
+owns how many tests run at once. Node runs at most half of
+`os.availableParallelism()` test files at once, and never fewer than two.
+Playwright uses one worker unless `MOKLY_PLAYWRIGHT_WORKERS` is set. The
+hydration suite runner sets that variable to half the available CPUs, never
+fewer than one, when the caller leaves it unset. Each spec file still runs in
+one worker because `fullyParallel` stays `false`. The 2-vCPU hosted runners
+therefore keep two unit files and one worker in every Playwright suite, and an
+eight-CPU workstation runs four unit files and four hydration workers.
 
-| Field                   | Value                                                                                                                 |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `schemaVersion`         | `1`.                                                                                                                  |
-| `key`                   | The freshness key, as 64 lowercase hexadecimal characters.                                                            |
-| `diagnostics`           | The compilation's normalized build diagnostics as `{ code, route, message }` records.                                 |
-| `manifest`              | The compilation's schema-v8 manifest object.                                                                          |
-| `outputs`               | `[route, file]` pairs in compilation order. Text stays a string; binary output is `{ "kind": "bytes", "base64": … }`. |
-| `deliveredStyleSources` | The compilation's repository-relative delivered style inputs.                                                         |
-| `documentMarkdown`      | `[sourcePath, markdown]` pairs; omitted when the compilation has none.                                                |
+Browser specs keep one worker by default. The viewer gives a same-origin
+preview five seconds to load, as the
+[frame adapter contract](./mokly-frame-adapter.md) states, and the first
+on-demand render of a page can exceed that while other workers load the CPU.
+Pages that load correctly alone then fail. Hydration specs check that pages
+hydrate, and they pass with parallel workers.
 
-Decoding requires the manifest object to serialize exactly to the snapshot's
-`mokly-manifest.json` output. The compile writes that output only after its
-strict schema-v8 validation, so decoding does not repeat the validation, which
-costs seconds per test process. Diagnostics pass the build-warning validator.
-Decoding rejects another schema version, a malformed key, unknown fields,
-duplicate routes or document paths, and invalid binary transfer values. A decoded compilation equals the encoded one, with
-binary outputs as plain `Uint8Array` values like a fresh compile. It has no
-retained component runtime, so a test that needs `componentRuntime` compiles
-instead.
+`MOKLY_UNIT_CONCURRENCY` replaces the unit file limit and
+`MOKLY_PLAYWRIGHT_WORKERS` replaces the worker count of both Playwright suites.
+Each accepts only a positive decimal integer without a sign or leading zero, up
+to JavaScript's maximum safe integer. Any other value stops the command before
+tests start. The unit and Playwright runners print the value they use.
 
-The freshness key is a SHA-256 digest of the schema version followed by one
-`[path, digest]` JSON line per input, in code-unit order of the
-repository-relative `/`-separated path. `digest` is the SHA-256 of the file
-bytes, `symlink:` plus the target of a symbolic link, or `missing` when the
-path is absent or is not a regular file. The inputs are:
+Each Playwright worker owns one example server.
+[`tests/browser/example_servers.ts`](../../tests/browser/example_servers.ts)
+assigns consecutive ports from `MOKLY_PLAYWRIGHT_PORT` (default 4517), one per
+worker, and each worker's `baseURL` uses the port at its `TEST_PARALLEL_INDEX`.
+A server renders on-demand pages through one worker thread, so a shared server
+would queue every worker's renders behind each other. Global setup waits until
+every server finishes its initial HEAD comparison. The servers write the
+example's generated output under the shared output lock, so they write it one
+at a time. Use `MOKLY_PLAYWRIGHT_WORKERS` rather than Playwright's `--workers`:
+global setup rejects a worker count above the number of servers.
 
-- every file that `git ls-files --cached --others --exclude-standard` lists
-  under `examples/basic`, `docs/protocol` and `README.md`, so a tracked file
-  deleted from the working tree hashes as `missing`;
-- every regular file under `dist/` and `packages/viewer/dist/`, or the
-  directory itself as `missing`;
-- `package-lock.json` and `tsconfig.json`.
-
-Ignored generated output never enters the key. The producer and the test
-helper share one key function, so a mismatch means an input changed after the
-snapshot was written.
-
-`node scripts/verification/example-snapshot.mjs` is the only writer. It exits
-without compiling when the existing snapshot decodes and carries the current
-key. Otherwise it compiles `examples/basic/mokly.config.ts` in memory and
-computes the key again; when an input changed during the compile, it fails
-without writing. It writes a temporary file beside the snapshot and renames it
-into place, so a reader never sees a partial file. `npm run prepare:unit` runs
-`npm run prepare:verification` and then the producer. `npm test` and the xtask
-unit suite use it; the package, browser and hydration suites keep
-`npm run prepare:verification` because they never read the snapshot.
-
-`tests/helpers/example_compilation.ts` loads the compilation at most once per
-test process. It returns the decoded snapshot when the snapshot is fresh. When
-the snapshot is missing, stale or invalid, it compiles the example in memory,
-so a test file run by hand always works. Tests never write the shared snapshot
-file; the round-trip test writes only a temporary copy.
-`designCatalogue` and the default-mode before state of `designLibraryFixture`
-use this helper. Fixtures that compile edited copies, other config profiles or
-historical commits keep compiling, because that preparation is part of what
-they verify. Each load emits `[mokly:fixture-timing]` lines with fixture
-`example-compilation`: phase `snapshot` measures the lookup, and a fallback
-adds phase `compile:missing`, `compile:stale` or `compile:invalid`.
-
-Both unit runners require the snapshot file, the package outputs and the
-example manifest to exist, and name `npm run prepare:unit` when one is missing.
-They only check existence and never import the compiler; the helper owns
-freshness and the compile fallback. Per-file report durations and the fixture
-timing lines show when a fallback happened.
+Test files that run at the same time share only the suite's read-only prepared
+output. Every mutable tree, port, server and child process stays worker- or
+fixture-owned, as the section above requires. The hydration route-inventory
+spec opts into Playwright parallel mode, so its independent route tests spread
+across workers. It builds the development bundle in a worker-scoped fixture,
+because parallel mode reruns `beforeAll` hooks for every test.
 
 ## Failure, Cancellation And Cleanup
 
@@ -161,7 +134,9 @@ shards and balances them by test count. Specs whose filenames contain
 `hydration` run unsharded in the separate `hydration` project and CI job, so
 they do not participate in browser shard balance. The evidence aggregate
 requires browser shard file assignments to be pairwise disjoint; every browser
-spec therefore stays whole and no spec uses parallel mode.
+spec therefore stays whole and no spec uses parallel mode except the unsharded
+hydration route-inventory spec that [Test Concurrency](#test-concurrency)
+defines.
 
 [`tests/browser_shard_balance.test.ts`](../../tests/browser_shard_balance.test.ts)
 first lists the all-project Playwright inventory, then the complete `chromium`
@@ -207,11 +182,12 @@ partitioning. Coverage, assertion deadlines, worker limits, audits and zero
 retry behavior are never relaxed to meet the timing target. The
 [entry-shape contract](./ci-verification-hydration.md) defines development
 hydration route coverage. For that suite, this rule protects the measured shell
-code coverage that a shape-key change must keep.
+code coverage that a shape-key change must keep. Hosted runners keep the worker
+limits that [Test Concurrency](#test-concurrency) derives for their CPU count.
 
 Candidate `992c6a1` passed an empty-start cache attempt and two restored-cache
 attempts with complete dynamic inventories on both runtimes. The
-[measurement record](../reviews/ci-performance.md) retains all three observed
+[measurement record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md) retains all three observed
 results, including two queue-constrained misses and a 9m06s `Required CI`
 success with all 20 downstream runner slots available. Native whole-file
 sharding remains appropriate for the measured workload; the browser balance

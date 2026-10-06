@@ -24,8 +24,10 @@ that the restructured files inherit automatically. See Milestone 4.
 
 Contract owners:
 
-- [CI suite evidence](../docs/protocol/ci-suite-evidence.md) owns the snapshot
-  contract added by Milestone 1.
+- [CI example compilation snapshot](../docs/protocol/ci-example-snapshot.md)
+  owns the snapshot contract. Milestone 1 added it to `ci-suite-evidence.md`;
+  it moved to its own page when main's #148 grew that page toward the
+  250-line protocol limit.
 - [CI verification](../docs/protocol/ci-verification.md) owns the unit gate's
   preparation sequence.
 - [Local verification](../xtask/README.md) and the

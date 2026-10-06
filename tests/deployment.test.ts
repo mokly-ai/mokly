@@ -79,9 +79,13 @@ test("preview workflow deploys main and same-repository pull requests", async ()
 });
 
 test("browser checks support an isolated workspace port", async () => {
-  const [config, browseTest] = await Promise.all([
+  const [config, servers, browseTest] = await Promise.all([
     fs.promises.readFile(
       path.join(repositoryRoot, "playwright.config.ts"),
+      "utf8",
+    ),
+    fs.promises.readFile(
+      path.join(repositoryRoot, "tests", "browser", "example_servers.ts"),
       "utf8",
     ),
     fs.promises.readFile(
@@ -89,7 +93,8 @@ test("browser checks support an isolated workspace port", async () => {
       "utf8",
     ),
   ]);
-  assert.match(config, /process\.env\["MOKLY_PLAYWRIGHT_PORT"\]/);
+  assert.match(servers, /env\["MOKLY_PLAYWRIGHT_PORT"\]/);
+  assert.match(config, /exampleServerPorts\(\)/);
   assert.match(config, /globalSetup: "\.\/tests\/browser\/setup\.ts"/);
   assert.match(
     config,

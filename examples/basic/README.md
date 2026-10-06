@@ -323,7 +323,7 @@ Both `npm test` and `npm run test:browser` build the example before tests read i
 generated files. `npm test` also saves one in-memory compilation of the example
 to `.context/verification/example-compilation.json`; unit tests that read
 compiled output load it instead of compiling the example again, as the
-[snapshot contract](../../docs/protocol/ci-suite-evidence.md#example-compilation-snapshot)
+[snapshot contract](../../docs/protocol/ci-example-snapshot.md)
 defines. Baseline fixtures copy authored inputs and use the normal cached
 rebuild through the historical commit's own package source and lockfile. The
 hand-authored stylesheets (`styles.css`, `design.css`, `design-stage.css`,
