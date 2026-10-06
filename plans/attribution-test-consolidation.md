@@ -1,9 +1,8 @@
 # Attribution Test Consolidation
 
 Status: Active. [PR #139](https://github.com/mokly-ai/mokly/pull/139) is open and
-ready for review. Milestone 8 applies the review-fix rule to the Milestone 7
-review. Milestone 7 finding 1 awaits the user's decision. The plan stays active
-until the PR merges.
+ready for review. Milestone 7 finding 1 awaits the user's decision (see
+Milestone 8). The plan stays active until the PR merges.
 
 Restructure `tests/design_library_attribution.test.ts` and
 `tests/component_design_attribution.test.ts` to reduce repeated work. Keep exact
@@ -526,6 +525,8 @@ User approval (2026-10-06): the user asked to apply the review-fix rule from
 
 Evidence: `.context/attribution-test-consolidation/review-78b35567.md`.
 Evidence: `.context/attribution-test-consolidation/milestone-8-validation.log`.
+Evidence: `.context/attribution-test-consolidation/review-da1fafc6.md`.
+Evidence: `.context/attribution-test-consolidation/milestone-8-round-2-validation.log`.
 
 - [x] Tag the Milestone 7 review findings under the review-fix rule.
 - [x] Finding 2 (Auto-fix: yes): correct the PR #139 summary and the local
@@ -537,13 +538,21 @@ Evidence: `.context/attribution-test-consolidation/milestone-8-validation.log`.
 - [x] Validate the changed Markdown and review the diff.
 - [x] Run `git add -A`, commit with a Conventional Commits message that names
       the fixed findings, and push.
-- [ ] After the push, re-run the review once with
+- [x] After the push, re-run the review once with
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
       against `origin/main`. Fix any new `Auto-fix: yes` findings once, then
       stop and report the rest.
+  - [x] Re-review finding 1 (Low, docs or spec, small; Auto-fix: yes): correct
+        the PR #139 description: review status, grouping sentence, and plan link.
+  - [x] Re-review finding 2 (Low, docs or spec, small; Auto-fix: yes): name
+        test concurrency, unit shard balance, and scenario grouping in the suite
+        evidence summary in `docs/protocol/ci-verification-security.md`.
+  - [ ] Commit the round-2 fixes with a message that names them, and push.
   - Open: Milestone 7 finding 1 (Low, test, medium; Auto-fix: no) — the
     lifecycle rule points designLibraryFixture users to a beforeRemove hook the
-    fixture lacks; recommended option C.
+    fixture lacks; recommended option C. Option B would still delete the
+    fixture directory after a failed dependent cleanup, which contradicts the
+    cleanup rule in `docs/protocol/ci-suite-evidence.md`; this supports option C.
 
 ## Post-merge follow-up (non-blocking)
 
