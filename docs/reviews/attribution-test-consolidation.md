@@ -71,11 +71,22 @@ operation and single-edit evidence used to approve the grouping.
 Record intermediate file timings here. Final measurements run all four files
 individually, one after another, with no other heavy work running.
 
-| Step                                 | File or check                                |  Duration | Result                   |
-| ------------------------------------ | -------------------------------------------- | --------: | ------------------------ |
-| Helper verification                  | `tests/attribution_result_helpers.test.ts`   |   0.220 s | 6 passed; no compilation |
-| Unchanged current-merge verification | `tests/design_library_attribution.test.ts`   | 612.961 s | 33 passed                |
-| Unchanged current-merge verification | `tests/component_design_attribution.test.ts` | 123.173 s | 10 passed                |
+| Step                                                      | File or check                                |  Duration | Result                   |
+| --------------------------------------------------------- | -------------------------------------------- | --------: | ------------------------ |
+| Helper verification                                       | `tests/attribution_result_helpers.test.ts`   |   0.220 s | 6 passed; no compilation |
+| Unchanged current-merge verification                      | `tests/design_library_attribution.test.ts`   | 612.961 s | 33 passed                |
+| Unchanged current-merge verification                      | `tests/component_design_attribution.test.ts` | 123.173 s | 10 passed                |
+| Library CSS consolidated; source cases still in this file | `tests/design_library_attribution.test.ts`   | 382.350 s | 18 passed                |
 
 The unchanged files ran individually in this session after the merge. These
 verification runs do not replace the approved previous-session before figures.
+
+The initial library consolidation run failed because a new chain assertion
+required only `top-bar/tag-picker/tag-chip`. The result also had
+`tag-picker/tag-chip`. The run stopped after this failure. Inspection of
+`affectedConsumers` confirmed that screen invocations include the top-bar
+instance, while its saved variant uses top-bar as the context entry and starts
+the instance chain at tag-picker. The approved contract required the long
+chain's presence. Both passes now require the exact pair, preserving that
+guarantee and checking agreement with the single-change control. The source-edit
+grouping is unchanged.

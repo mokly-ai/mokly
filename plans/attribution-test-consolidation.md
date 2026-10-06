@@ -139,7 +139,10 @@ Measured evidence from one pass over all sixteen library stylesheets:
 - The screen consumers per `changedComponentId` equal the manifest consumers
   and equal the single-edit consumers for every sampled component.
 - The `changedComponentId` set equals the sixteen paths. The `tag-chip` to
-  `top-bar` evidence lists only the `tag-picker` variant.
+  `top-bar` evidence lists only the `tag-picker` variant. Its chain projection
+  includes `top-bar/tag-picker/tag-chip` from screen invocations and
+  `tag-picker/tag-chip` from the saved top-bar variant, whose root is the
+  context entry rather than an instance. Assert the exact pair in both passes.
 
 Measured evidence from one pass over the nine shared stylesheets:
 
@@ -245,17 +248,17 @@ fast tests. No attribution test changes yet; the repository stays green.
       single-test use. Keep the file under 300 lines.
 - [x] Run the new helper tests and both unchanged attribution files; all pass.
 
-## Milestone 3: One pass for the sixteen library stylesheets
+## Milestone 3: One pass for the sixteen library stylesheets (completed)
 
 Replace the sixteen-subtest loop with one classification and one control.
 Tests 2–4 share the new module-level fixture; test 5 keeps its committed
 fixture. All four stay in the file until Milestone 5 moves them.
 
-- [ ] Record the before timing:
+- [x] Record the before timing:
       `node --import tsx --test tests/design_library_attribution.test.ts`
       (local 8-core figure and the CI figure, 615 s) in the measurement record.
-- [ ] Share one fixture across the file through the module-level `after` hook.
-- [ ] Add `library stylesheets attribute only to their own component in one pass`:
+- [x] Share one fixture across the file through the module-level `after` hook.
+- [x] Add `library stylesheets attribute only to their own component in one pass`:
       append the marker rule to all sixteen stylesheets, classify once, and
       assert: `changedEntryPaths` equals the sixteen library paths; for every
       component, `reasonsOf` equals exactly the single dependency reason for its
@@ -265,11 +268,13 @@ fixture. All four stay in the file until Milestone 5 moves them.
       sixteen paths; the `tag-chip` to `chrome/top-bar` evidence lists only the
       `top-bar/tag-picker` variant and includes the
       `top-bar/tag-picker/tag-chip` chain.
-- [ ] Keep one single-change control subtest for `tag-chip` with today's
+- [x] Keep one single-change control subtest for `tag-chip` with today's
       assertions (`changes`, manifest consumers, top-bar evidence) so the
       one-changed-resource fallback stays covered and agrees with the
       multi-pass projection for that component.
-- [ ] Run the file; record the after timing in the measurement record.
+- [x] Confirm both top-bar consumer chains from their manifest contexts and
+      require the exact pair in the grouped pass and single-change control.
+- [x] Run the file; record the after timing in the measurement record.
 
 ## Milestone 4: One pass for the nine shared design stylesheets
 
