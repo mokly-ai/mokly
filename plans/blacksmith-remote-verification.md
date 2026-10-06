@@ -205,8 +205,10 @@ valid. The fingerprint check covers the uncommitted changes.
 - Since 2026-10-06, `main` fails the dependency audit for advisory
   `GHSA-68fv-2mgg-jv7q` in `source-map-js`. Fix it in a separate change before
   Milestone 6. Until then, every complete check fails in the repository suite.
-- The Conductor cloud snapshot script installs the Blacksmith CLI. Until a new
-  snapshot exists, install the CLI by hand in the implementation workspace.
+- Done on 2026-10-06: the Conductor cloud snapshot installs the Blacksmith
+  CLI. A new cloud workspace had CLI 0.4.65 in `/usr/local/bin`, `rsync`,
+  `openssh-clients`, no saved Blacksmith login and a working
+  `BLACKSMITH_ORG_TOKEN`.
 
 ## Milestone 1: Contract documentation
 
