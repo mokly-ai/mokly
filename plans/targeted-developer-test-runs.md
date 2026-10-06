@@ -246,18 +246,18 @@ Gate evidence: `.context/targeted-developer-test-runs/gate.md`.
 
 - [x] Split dependency remediation and targeted test commands into separate
       commits before integrating main.
-- [ ] Merge fetched `origin/main`, preserve each main change, confirm two
+- [x] Merge fetched `origin/main`, preserve each main change, confirm two
       merge parents, and inspect every path in the remerge diff.
-- [ ] Check this plan against the evidence-log rule after the main merge.
-- [ ] Smoke test from a fresh `npm run prepare:verification`:
+- [x] Check this plan against the evidence-log rule after the main merge.
+- [x] Smoke test from a fresh `npm run prepare:verification`:
       `npm test -- tests/ci_workflow.test.ts`,
       `npm test -- tests/ci_workflow.test.ts --test-name-pattern="lockfile"`,
-      `npm run test:unit -- packages/viewer/tests/<one file>`,
+      `npm run test:unit -- packages/viewer/tests/routes.test.ts`,
       `npm test -- tests/browser/pages.spec.ts` (expect the browser hint),
       `npm test -- --shard 1/4` (expect the `test:prepared` message),
       `npm test --test-name-pattern=lockfile` (expect the npm-consumed message), and
       `npm run test:browser -- tests/browser/pages.spec.ts -g "retain metadata"`.
-- [ ] Confirm that no selected run created or changed a file under
+- [x] Confirm that no selected run created or changed a file under
       `.context/verification-reports`.
 - [ ] Run `cargo xtask check --suite repository` first, then the complete
       `cargo xtask check`, and fix every finding.
