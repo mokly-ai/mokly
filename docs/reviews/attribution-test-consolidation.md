@@ -130,8 +130,8 @@ These are summed isolated file times. CI shard wall times remain pending.
 
 ## Final Verification
 
-`cargo xtask check` ran after the implementation and timing commits and after
-`git fetch origin main`. It stopped at the live dependency audit. A retry with
+`cargo xtask check` initially ran after the implementation and timing commits
+and after `git fetch origin main`. It stopped at the live dependency audit. A retry with
 `cargo xtask check --suite repository` reported the same failure:
 
 ```text
@@ -139,13 +139,20 @@ Uncovered advisory GHSA-68fv-2mgg-jv7q; package: source-map-js; severity: high.
 [xtask/command] `npm run dependencies:check` failed with status 1
 ```
 
-The lockfile has source-map-js 1.2.1 through runtime PostCSS and development
-Tailwind. The [reviewed advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q)
-identifies 1.2.2 as patched. The repository lockfile stays unchanged under the
-test-only scope. A targeted three-field lockfile proposal is a local-only
-artifact. Its scope decision remains open; no exception was added.
+The user approved a lockfile-only update from source-map-js 1.2.1 to 1.2.2 on
+this branch. Runtime PostCSS and development Tailwind both resolve it. The
+[reviewed advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q) identifies
+1.2.2 as patched. Main CI has the same failure, and unit jobs depend on the
+repository job. The patch therefore unblocks the audit required for CI shard
+measurement. Commit `a8bf3926` changes only version, resolved URL, and integrity
+in the source-map-js lockfile entry; `package.json` stays unchanged.
 
-The functional suites then ran separately on Node 22.14.0:
+A clean `npm ci` installed 1.2.2 for both parents. The live
+`npm run dependencies:check` passed with the existing reviewed Braces exception.
+No new exception was added. The earlier scope decision is closed.
+
+Before this dependency patch, the functional suites ran separately on
+Node 22.14.0:
 
 | Check             | Result                                                 | Suite duration |
 | ----------------- | ------------------------------------------------------ | -------------: |
@@ -161,6 +168,8 @@ the component-design protocol remains at 250 lines. The six projection tests
 passed in 0.220 s without compilation. All targeted attribution and protocol
 checks passed after correcting the two documented initial assertion failures.
 
-The complete gate remains unsuccessful because its audit prerequisite failed.
+The earlier complete-gate attempt failed at the audit. After the approved patch
+and its decision notes are committed, `cargo xtask check` will run again as one
+unqualified command. Its result and suite durations will be recorded below.
 CI timing, push, the control decision, PR status, and post-push review remain
 with the orchestrator. No push or PR was made.

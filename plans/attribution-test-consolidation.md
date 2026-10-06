@@ -383,11 +383,15 @@ file). Today's `affects` boolean becomes the exact `impactingIds` list.
 Prove the runtime reduction locally and in CI, record it, and close the plan
 with the required commit, push, and review steps.
 
-Local timing work is committed. The complete gate stopped at the live audit for
-source-map-js 1.2.1 (GHSA-68fv-2mgg-jv7q); 1.2.2 is patched. The repository's
-other checks and the separately selected package, unit, browser, and hydration
-suites passed. The test-only scope leaves the runtime lockfile unchanged, so
-complete-gate verification remains open. See the measurement record for results.
+Local timing work is committed. The first complete gate stopped at the audit for
+source-map-js 1.2.1 (GHSA-68fv-2mgg-jv7q). The user approved the compatible,
+lockfile-only 1.2.2 patch on this branch because the same advisory blocks main CI
+and the repository job gates unit shard measurement. Commit `a8bf3926` changes
+only the source-map-js entry's version, resolved URL, and integrity. Runtime
+PostCSS and development Tailwind both resolve 1.2.2 after a clean `npm ci`, and
+the live audit passes with the existing reviewed Braces exception. No new
+exception was added. The complete gate will run again as one unqualified command
+after these decision notes are committed. See the measurement record for results.
 
 - [x] Apply the orchestrator's review corrections in follow-up commits.
   - [x] Separate same-file edits targeting different entries without adding a
