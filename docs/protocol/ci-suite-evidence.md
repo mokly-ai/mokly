@@ -1,8 +1,9 @@
 # CI Suite Evidence
 
 This document supplements the [CI verification contract](./ci-verification.md)
-with fixture ownership, failure cleanup, browser shard balance, and acceptance
-measurement rules for the unit, browser, and hydration suites.
+with fixture ownership, test concurrency, failure cleanup, browser shard
+balance, and acceptance measurement rules for the unit, browser, and hydration
+suites.
 
 ## Fixture Lifetime And Cleanup
 
@@ -48,8 +49,9 @@ and whether the operation itself is under test.
 Full-catalogue browser preparations share a five-minute setup budget in
 `tests/helpers/fixture_timing.ts`. Cold package/example builds, baseline
 exports, and ordinary publication fixtures use that budget independently of the
-default one-minute browser test timeout. Assertion deadlines, retries, and
-worker limits remain unchanged; server readiness retains its own bound.
+default one-minute browser test timeout. Assertion deadlines and retries
+remain unchanged, worker counts follow [Test Concurrency](#test-concurrency),
+and server readiness retains its own bound.
 
 The ordinary preview's real catalogue build runs in an owned Node child,
 outside Playwright's expanded diagnostic stack capture. The child uses the same
@@ -65,6 +67,49 @@ directory beneath their temporary harness so runner metadata cannot enter the
 consumer repository's publication fingerprint. Unit tests that fork compiled CLI
 entrypoints set an empty `execArgv`, preventing the parent test runner's loader
 and concurrency flags from changing child startup behavior.
+
+## Test Concurrency
+
+[`scripts/verification/concurrency.mjs`](../../scripts/verification/concurrency.mjs)
+owns how many tests run at once. Node runs at most half of
+`os.availableParallelism()` test files at once, and never fewer than two.
+Playwright uses one worker unless `MOKLY_PLAYWRIGHT_WORKERS` is set. The
+hydration suite runner sets that variable to half the available CPUs, never
+fewer than one, when the caller leaves it unset. Each spec file still runs in
+one worker because `fullyParallel` stays `false`. The 2-vCPU hosted runners
+therefore keep two unit files and one worker in every Playwright suite, and an
+eight-CPU workstation runs four unit files and four hydration workers.
+
+Browser specs keep one worker by default. The viewer gives a same-origin
+preview five seconds to load, as the
+[frame adapter contract](./mokly-frame-adapter.md) states, and the first
+on-demand render of a page can exceed that while other workers load the CPU.
+Pages that load correctly alone then fail. Hydration specs check that pages
+hydrate, and they pass with parallel workers.
+
+`MOKLY_UNIT_CONCURRENCY` replaces the unit file limit and
+`MOKLY_PLAYWRIGHT_WORKERS` replaces the worker count of both Playwright suites.
+Each accepts only a positive decimal integer without a sign or leading zero, up
+to JavaScript's maximum safe integer. Any other value stops the command before
+tests start. The unit and Playwright runners print the value they use.
+
+Each Playwright worker owns one example server.
+[`tests/browser/example_servers.ts`](../../tests/browser/example_servers.ts)
+assigns consecutive ports from `MOKLY_PLAYWRIGHT_PORT` (default 4517), one per
+worker, and each worker's `baseURL` uses the port at its `TEST_PARALLEL_INDEX`.
+A server renders on-demand pages through one worker thread, so a shared server
+would queue every worker's renders behind each other. Global setup waits until
+every server finishes its initial HEAD comparison. The servers write the
+example's generated output under the shared output lock, so they write it one
+at a time. Use `MOKLY_PLAYWRIGHT_WORKERS` rather than Playwright's `--workers`:
+global setup rejects a worker count above the number of servers.
+
+Test files that run at the same time share only the suite's read-only prepared
+output. Every mutable tree, port, server and child process stays worker- or
+fixture-owned, as the section above requires. The hydration route-inventory
+spec opts into Playwright parallel mode, so its independent route tests spread
+across workers. It builds the development bundle in a worker-scoped fixture,
+because parallel mode reruns `beforeAll` hooks for every test.
 
 ## Failure, Cancellation And Cleanup
 
@@ -95,7 +140,9 @@ shards and balances them by test count. Specs whose filenames contain
 `hydration` run unsharded in the separate `hydration` project and CI job, so
 they do not participate in browser shard balance. The evidence aggregate
 requires browser shard file assignments to be pairwise disjoint; every browser
-spec therefore stays whole and no spec uses parallel mode.
+spec therefore stays whole and no spec uses parallel mode except the unsharded
+hydration route-inventory spec that [Test Concurrency](#test-concurrency)
+defines.
 
 [`tests/browser_shard_balance.test.ts`](../../tests/browser_shard_balance.test.ts)
 first lists the all-project Playwright inventory, then the complete `chromium`
@@ -141,7 +188,8 @@ partitioning. Coverage, assertion deadlines, worker limits, audits and zero
 retry behavior are never relaxed to meet the timing target. The
 [entry-shape contract](./ci-verification-hydration.md) defines development
 hydration route coverage. For that suite, this rule protects the measured shell
-code coverage that a shape-key change must keep.
+code coverage that a shape-key change must keep. Hosted runners keep the worker
+limits that [Test Concurrency](#test-concurrency) derives for their CPU count.
 
 Candidate `992c6a1` passed an empty-start cache attempt and two restored-cache
 attempts with complete dynamic inventories on both runtimes. The

@@ -2,8 +2,10 @@
 
 Status: Active. Milestones 1 to 30 are implemented, verified and pushed.
 Milestone 30A combines the warning systems and integrates main through
-`24c97311` in two local merges. The plan evidence has moved. Final verification is in progress. Milestones 31 and 32 remain. The branch must not be pushed
-by this task.
+`6bf62517` in three local merges. The plan evidence has moved. The warning
+check remains open pending the user's Serve fixture decision. The full suite
+and gate are deferred. Milestones 31 and 32 remain. The branch must not be
+pushed by this task.
 
 ## Status And Outcome
 
@@ -2192,6 +2194,15 @@ and the original smoke checks on the final tree. Do not push or start
 Milestone 31. The new review rule supersedes the earlier instruction to report
 all findings without fixing them.
 
+Later on 2026-10-06 the user authorized the two gate repairs as a separate
+local commit and a third two-parent merge of the latest `main`, now
+`6bf62517` (#148, #149 and #150). Keep main's local test concurrency and
+shared example-server setup, and port branch tests where needed. Then run
+build, typecheck, lint and focused warning, Serve, export and #148 checks.
+Stop after those checks. Do not run the complete unit suite or full gate
+until the user answers the unwatched Serve fixture question. Do not apply,
+change or remove that fixture test while the answer is pending. Do not push.
+
 ## Milestone 30A: Integrate `main` #124, #140 and #141
 
 Merge `main` at `80ceb445` before Milestones 31 and 32.
@@ -2240,6 +2251,17 @@ Merge `main` at `80ceb445` before Milestones 31 and 32.
       incompatible-baseline behavior, then run the export checks.
 - [x] Keep the reporter's existing `ServeShortcuts` export in use after the
       shutdown-helper extraction, then run the repository checks.
+- [x] Merge the latest `origin/main` as a third two-parent merge. Preserve
+      #148's test concurrency and example servers, #149's design snapshot
+      deletion and #150's dependency policy cleanup. Review every remerge
+      path and every main-added line since `24c97311`.
+- [x] Remove only the docs exceptions for #149's deleted snapshot. Prove the
+      stale exceptions fail the existing guard, then run it again.
+- [x] Run build, typecheck, lint and focused export and #148 checks on the
+      third merge, including the parallel route hydration tests.
+- [ ] Complete the focused warning and Serve checks after the user's fixture
+      decision. Leave the unwatched Serve fixture unchanged while the answer
+      is pending. Stop before the complete suite and gate.
 - [ ] Push the branch after the reviewer checks the local merge.
 
 ### Integration decisions
@@ -2249,6 +2271,12 @@ preserves the fetched additions: #137 keeps new evidence logs outside plans,
 #142 covers hydration by route shape, and #143 removes the Juno consumer smoke.
 The two extra
 fixture conflicts accept main's Juno deletion.
+
+The third merge keeps main's #148 test concurrency and one example server per
+Playwright worker. The branch's owned preview build child stays. Main's #149
+deletion replaces the branch's retained dated design snapshot; only that
+snapshot's three docs exceptions leave the allow list. Main's #150 removes
+one-time dependency update notes and keeps the active security choices.
 
 ### Warning names and messages
 
@@ -2315,7 +2343,7 @@ from merging. No absolute checkout path decides the order.
   the new packed-fixture README describes rendered-resource changes instead of
   removed shared-impact globs. Main's five retained package scenarios stay.
 
-Evidence: `.context/remove-source-path-evidence/milestone-30a.md`.
+Evidence: `.context/remove-source-path-evidence/milestone-30a.md`; `.context/remove-source-path-evidence/third-merge-evidence.md`.
 
 ## Milestone 31: Keep the branch name in exported navigation
 

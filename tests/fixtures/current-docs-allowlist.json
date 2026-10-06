@@ -170,21 +170,6 @@
     "reason": "Consumer release migration: names removed inputs, rejected formats or current wire identifiers."
   },
   {
-    "file": "docs/superpowers/specs/2026-08-06-native-color-scheme-design.md",
-    "statement": "**Manifest schema v3 with one additive optional field**, not a v4 restructure.",
-    "reason": "Explicitly dated 2026-08-06 design snapshot retained as history, not current behavior."
-  },
-  {
-    "file": "docs/superpowers/specs/2026-08-06-native-color-scheme-design.md",
-    "statement": "Why: committed base manifests (and the legacy v2 compatibility path) keep parsing with no third version branch in Review base reading; light-only manifests stay byte-identical.",
-    "reason": "Explicitly dated 2026-08-06 design snapshot retained as history, not current behavior."
-  },
-  {
-    "file": "docs/superpowers/specs/2026-08-06-native-color-scheme-design.md",
-    "statement": "```ts interface ReviewResultV2 { schemaVersion: 2; baseRef: string; baseCommit: string; changedPaths: readonly string[]; sharedImpact: readonly string[]; ignoredImpact: readonly { id: string; viewport: \"mobile\" | \"desktop\"; colorScheme: \"light\" | \"dark\"; count: number; }[]; screens: readonly { id: string; route: string; title: string; state: ReviewState; dependencies: readonly string[]; sharedImpact: readonly string[]; views: readonly { viewport: \"mobile\" | \"desktop\"; colorScheme: \"light\" | \"dark\"; state: ReviewState; beforePath?: string; afterPath?: string; ignoredIds: readonly string[]; }[]; }[]; } ```",
-    "reason": "Explicitly dated 2026-08-06 design snapshot retained as history, not current behavior."
-  },
-  {
     "file": "packages/viewer/README.md",
     "statement": "| `mokly:nav-disclosure:v4` | Open catalogue groups |",
     "reason": "Current independent UI persistence keys, not former catalogue formats."
