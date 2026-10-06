@@ -38,12 +38,25 @@ test("assertAbsent rejects a dead anchor without matching sibling prefixes", () 
   );
 });
 
-test("assertAbsent uses a top-level path as its own anchor", () => {
+test("assertAbsent accepts a top-level absent path under a live root", () => {
   assert.equal(assertAbsent(manifest, "design"), undefined);
+  assert.equal(assertAbsent(manifest, "missing"), undefined);
+});
+
+test("assertAbsent rejects a top-level path under an empty root", () => {
   selectionError(
-    () => assertAbsent(manifest, "missing"),
+    () => assertAbsent({ entries: [] }, "missing"),
     "assertAbsent",
     "missing",
     "matches=0",
+    "catalogue root has no entries",
+  );
+});
+
+test("assertAbsent raises AssertionError for a present top-level path", () => {
+  assert.throws(
+    () =>
+      assertAbsent({ entries: [{ ...screen, path: "present" }] }, "present"),
+    assert.AssertionError,
   );
 });

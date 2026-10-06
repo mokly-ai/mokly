@@ -170,10 +170,14 @@ when the selected entry is a component variant.
 ### Absence Assertions
 
 `assertAbsent(manifest, path)` is an assertion. It first checks that its
-anchor contains entries. The anchor is the parent folder of `path`, or `path`
-itself when the path contains no `/`. An empty anchor throws
-`CatalogueSelectionError`. A live anchor proves that the assertion still
-checks a real catalogue area.
+anchor contains entries. A path with a `/` uses its parent folder as the
+anchor. A top-level path uses the catalogue root, which is live when the
+manifest contains at least one entry. An empty root throws
+`CatalogueSelectionError` with reason `catalogue root has no entries`.
+An empty folder anchor also throws `CatalogueSelectionError`. A live anchor
+proves that the assertion still checks a real catalogue area. A top-level
+absence check also selects a real entry from its module when the root alone
+cannot prove that the paths still have their expected shape.
 
 After that precondition, the helper uses `node:assert/strict` to assert that
 no entry has the exact path. A present path raises `AssertionError`. An absent

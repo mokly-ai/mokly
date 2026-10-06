@@ -177,8 +177,11 @@ occupy.
 - `assertAbsent(manifest, path)` is an assertion. It throws
   `CatalogueSelectionError` when its anchor holds no entry. Then it asserts with
   `node:assert/strict` that no entry has `path`. The anchor is the parent folder
-  of `path`, or `path` itself when `path` has no `/`. A live anchor proves that
-  the check still looks at a real area.
+  of `path`, or the catalogue root when `path` has no `/`. The root is live
+  when the manifest has at least one entry. An empty root throws with reason
+  `catalogue root has no entries`. A live anchor proves that the check still
+  looks at a real area. A top-level absence check also selects a real entry
+  from its module when the root alone cannot prove the path shape.
 - The helpers return the manifest's own entry objects, never copies.
 - Kind arguments narrow the result type of `entryAt`, `entriesAt`, and
   `entriesUnder`. A component kind still permits a component variant unless
@@ -263,7 +266,7 @@ Add the helpers and their tests. No existing test changes its behavior.
         the message.
   - [x] `assertAbsent`: a present path raises `AssertionError`; an absent path
         under a live anchor passes; a dead anchor raises
-        `CatalogueSelectionError`; a top-level path is its own anchor.
+        `CatalogueSelectionError`; a top-level path uses the catalogue root.
   - [x] Every helper returns the manifest's own objects.
   - [x] Kind arguments narrow result types without caller casts.
   - [x] `componentParent` returns a parent and rejects a variant with
@@ -419,6 +422,12 @@ Send catalogue selections through the checked helpers.
 Extend the lint rule to literal path lookups, as the user approved on
 2026-10-06.
 
+- [x] Resolve the top-level absence contract in a separate commit, test-first.
+      A top-level path uses the catalogue root. The root is live when at least
+      one entry exists; an empty root throws `CatalogueSelectionError` with
+      reason `catalogue root has no entries`. Migrate the `helper` check in
+      `tests/component_registry_validation.test.ts` to `assertAbsent`, after
+      `entryAt(manifest, "action", "component")` proves the module's path shape.
 - [x] Apply the reviewer correction in a separate commit before selector 3:
   - [x] Remove the eleven raised `min` values from Milestone 5. Keep exact count
         assertions and use the default minimum.

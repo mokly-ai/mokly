@@ -261,16 +261,23 @@ export function entriesWhere(
 /** Assert exact-path absence only after confirming a live anchor. */
 export function assertAbsent(manifest: Catalogue, path: string): void {
   const separator = path.lastIndexOf("/");
-  const anchor = separator === -1 ? path : path.slice(0, separator);
-  const anchorEntries = manifest.entries.filter(
-    (entry) => entry.path === anchor || entry.path.startsWith(`${anchor}/`),
-  );
+  const anchor = separator === -1 ? undefined : path.slice(0, separator);
+  const anchorEntries =
+    anchor === undefined
+      ? manifest.entries
+      : manifest.entries.filter(
+          (entry) =>
+            entry.path === anchor || entry.path.startsWith(`${anchor}/`),
+        );
   if (anchorEntries.length === 0)
     throw new CatalogueSelectionError({
       helper: "assertAbsent",
       target: path,
       matches: 0,
-      reason: `anchor "${anchor}" has no entries`,
+      reason:
+        anchor === undefined
+          ? "catalogue root has no entries"
+          : `anchor "${anchor}" has no entries`,
     });
   const matches = manifest.entries.filter(
     (entry) => entry.path === path,
