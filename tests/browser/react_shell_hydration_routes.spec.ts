@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { expect, test } from "@playwright/test";
+import { expect, test as base } from "@playwright/test";
 
 import { parseManifest } from "../../dist/registry/manifest.js";
 import { entryRoute } from "../../packages/viewer/dist/data.js";
@@ -12,6 +12,24 @@ import {
   expectCleanHydration,
   installDevelopmentBundle,
 } from "./react_shell_hydration_helpers.js";
+
+interface DevelopmentBundleWorkerFixtures {
+  readonly developmentBundle: string;
+}
+
+/** Route tests share one development bundle per worker, not one per test. */
+const test = base.extend<Record<never, never>, DevelopmentBundleWorkerFixtures>(
+  {
+    developmentBundle: [
+      async ({ browserName: _browserName }, use) => {
+        await use(await buildDevelopmentBundle());
+      },
+      { scope: "worker", timeout: 120_000 },
+    ],
+  },
+);
+
+test.describe.configure({ mode: "parallel" });
 
 const manifest = parseManifest(
   JSON.parse(
@@ -26,14 +44,9 @@ const fixtureRoutes = [
 ];
 expect(fixtureRoutes.length).toBeGreaterThan(80);
 
-let developmentBundle: string;
-test.beforeAll(async () => {
-  test.setTimeout(120_000);
-  developmentBundle = await buildDevelopmentBundle();
-});
-
 for (const route of fixtureRoutes) {
   test(`development React hydrates fixture route ${route}`, async ({
+    developmentBundle,
     page,
   }) => {
     const errors = captureBrowserErrors(page);
@@ -49,7 +62,10 @@ for (const [route, expectedStatus] of [
   ["/", 200],
   ["/view/not-in-catalogue.html", 200],
 ] as const) {
-  test(`development React hydrates shell route ${route}`, async ({ page }) => {
+  test(`development React hydrates shell route ${route}`, async ({
+    developmentBundle,
+    page,
+  }) => {
     const errors = captureBrowserErrors(page);
     await installDevelopmentBundle(page, developmentBundle);
     if (route === "/view/not-in-catalogue.html") {
