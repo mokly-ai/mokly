@@ -1,6 +1,6 @@
 # Blacksmith Remote Verification
 
-Status: Active. No pull request exists yet. Milestone 1 is complete.
+Status: Active. No pull request exists yet. Milestones 1 and 2 are complete.
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
 Blacksmith key is available. Run it locally when no key is available. The key
@@ -210,9 +210,10 @@ valid. The fingerprint check covers the uncommitted changes.
 
 ## Prerequisites
 
-- Since 2026-10-06, `main` fails the dependency audit for advisory
-  `GHSA-68fv-2mgg-jv7q` in `source-map-js`. Fix it in a separate change before
-  Milestone 6. Until then, every complete check fails in the repository suite.
+- The trial found advisory `GHSA-68fv-2mgg-jv7q` in `source-map-js` on
+  2026-10-06. The local live audit now passes with the same lockfile as
+  `origin/main`. Confirm the audit on `main` before Milestone 6. Keep any
+  required dependency fix in a separate change.
 - Done on 2026-10-06: the Conductor cloud snapshot installs the Blacksmith
   CLI. A new cloud workspace had CLI 0.4.65 in `/usr/local/bin`, `rsync`,
   `openssh-clients`, no saved Blacksmith login and a working
@@ -248,27 +249,37 @@ The first link test needed the ignored example output, so the example build
 created it. No authored example files changed. The diff contains only Markdown.
 This documentation-only work does not require `cargo xtask check`.
 
-## Milestone 2: Fingerprint and suite wrapper scripts
+## Milestone 2: Fingerprint and suite wrapper scripts — completed
 
 Add the two scripts that the boxes run. Nothing calls them yet.
 
-- [ ] Add failure-first tests for `scripts/verification/source-tree.mjs`:
-  - [ ] Content, mode, path and deletion changes change the fingerprint.
-  - [ ] Untracked files change it, and Git-ignored files do not.
-  - [ ] Symbolic links use their target, and a submodule entry fails.
-  - [ ] An unpushed commit and the same uncommitted change give the same
+- [x] Add failure-first tests for `scripts/verification/source-tree.mjs`:
+  - [x] Content, mode, path and deletion changes change the fingerprint.
+  - [x] Untracked files change it, and Git-ignored files do not.
+  - [x] Symbolic links use their target, and a submodule entry fails.
+  - [x] An unpushed commit and the same uncommitted change give the same
         fingerprint.
-- [ ] Implement `source-tree.mjs` with `--expect` and `--print-head`. Add a
+- [x] Implement `source-tree.mjs` with `--expect` and `--print-head`. Add a
       `.d.mts` declaration if TypeScript tests import it.
-- [ ] Add failure-first tests for `scripts/verification/testbox-suite.mjs`.
+- [x] Add failure-first tests for `scripts/verification/testbox-suite.mjs`.
       Inject the process runner. Cover a fingerprint mismatch, a shallow and
       a complete repository, a changed and an unchanged lockfile stamp, the
       exact xtask command, the report path and the exit code.
-- [ ] Implement `testbox-suite.mjs`. Keep each file at 300 lines or less.
+  - [x] Reject invalid arguments before any work starts.
+  - [x] Cover preparation failures, streamed output and signal forwarding.
+- [x] Implement `testbox-suite.mjs`. Keep each file at 300 lines or less.
       Until Milestone 4 adds `--executor`, the wrapper runs
       `cargo xtask check --suite <suite>` without that flag.
-- [ ] Run the focused tests with a 100% pass rate.
-- [ ] Commit.
+- [x] Run the focused tests with a 100% pass rate.
+- [x] Run ESLint, the test TypeScript check and Prettier. Run the source
+      length audit and `cargo xtask check`. Record any existing gate blocker.
+- [x] Commit.
+
+The tests failed before implementation because both scripts were absent.
+All 59 focused tests pass on Node 22.14.0 and npm 11.7.0.
+ESLint, TypeScript, Prettier and command smoke checks pass.
+`cargo xtask check` passes with 4,368 unit tests, 844 browser tests and 263
+hydration tests. All 15 Rust tests pass. The source length audits pass.
 
 ## Milestone 3: Testbox workflow
 
@@ -339,7 +350,7 @@ Make `auto` use the remote gate when a working key is present.
 
 ## Milestone 6: Verification, close-out and review
 
-- [ ] Confirm that the prerequisite advisory fix is on `main`. Merge `main`
+- [ ] Confirm that the live dependency audit passes on `main`. Merge `main`
       into the branch and follow the mainline preservation rules.
 - [ ] Run all tests for this change with a 100% pass rate. Run
       `cargo fmt --all -- --check`, Clippy and `cargo xtask check`. Fix every

@@ -5,8 +5,10 @@ Continuation of [Remote Verification](./remote-verification.md).
 ## Delivery Status
 
 The active [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
-approves this target. The workflow and scripts described here are pending
-implementation.
+approves this target. The fingerprint and suite wrapper scripts are implemented.
+Workflow and executor integration are pending. The current wrapper uses
+`cargo xtask check --suite <suite>` with the optional shard. The local executor
+flag described below is pending CLI support.
 
 ## Workflow
 
@@ -118,6 +120,10 @@ fallback at this boundary.
    Add `--shard INDEX/4` for a unit or browser shard.
    Explicit local mode prevents recursive remote execution.
 5. Return the suite's exit code. A wrapper preparation failure returns nonzero.
+
+Stream child standard output and standard error. Forward SIGINT and SIGTERM
+to the running child through the verification process owner.
+An interrupted command must not produce a successful wrapper result.
 
 Testbox commands do not receive `GITHUB_SHA`, `GITHUB_ACTIONS` or `CI` from
 the workflow session. Keep that behavior. Report writers must read the synced

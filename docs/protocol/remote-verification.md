@@ -3,8 +3,9 @@
 ## Delivery Status
 
 The active [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
-defines this approved target. Implementation is pending. The current complete
-gate runs locally under [CI verification](./ci-verification.md).
+defines this approved target. Executor integration is pending. The fingerprint
+and suite wrapper scripts are implemented. The current complete gate runs
+locally under [CI verification](./ci-verification.md).
 The [Testbox execution contract](./remote-verification-testbox.md) defines the
 workflow, commands, probe, suite wrapper and source-tree fingerprint.
 

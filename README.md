@@ -332,6 +332,11 @@ functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
 
+The [remote verification contract](./docs/protocol/remote-verification.md)
+defines the approved Testbox target. Its fingerprint and suite wrapper scripts
+are available. Workflow and executor integration are pending. The complete gate
+still runs locally.
+
 Pull request titles use Conventional Commits and at most 72 Unicode code points.
 The separate title check runs when a PR opens, changes, or receives a push; see
 the [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).
@@ -388,6 +393,10 @@ review rules, and the temporary Braces exception.
 - [`scripts/preview/baseline.mjs`](./scripts/preview/baseline.mjs) and
   [`html_paths.mjs`](./scripts/preview/html_paths.mjs) — preview publication's
   baseline-availability and provider-path adapters.
+- [`scripts/verification/source-tree.mjs`](./scripts/verification/source-tree.mjs)
+  computes the source fingerprint, including uncommitted changes.
+- [`scripts/verification/testbox-suite.mjs`](./scripts/verification/testbox-suite.mjs)
+  checks that fingerprint and prepares one suite through injected commands.
 - [`examples/basic`](./examples/basic/README.md) — reference consumer and design
   catalogue.
 
