@@ -244,8 +244,8 @@ checks or starting a test process. Values still pass to Node unchanged.
 
 ## Milestone 3: Verification, Commit, Push, And Review
 
-Prove the commands with real runs, run the complete gate once, then commit,
-push, and review.
+Completed. The commands passed real runs and the complete gate. The branch is
+pushed. Review 1 fixed findings 2 and 7; the re-review found no new findings.
 Merge evidence: `.context/targeted-developer-test-runs/merge-main.md`.
 Refresh evidence: `.context/targeted-developer-test-runs/after-refresh-verification.md`.
 Smoke evidence: `.context/targeted-developer-test-runs/smoke-tests.md`.
@@ -253,6 +253,7 @@ Gate evidence: `.context/targeted-developer-test-runs/gate.md`.
 Document check evidence: `.context/targeted-developer-test-runs/document-checks.md`.
 Review evidence: `.context/targeted-developer-test-runs/review-1.md`.
 Review-fix evidence: `.context/targeted-developer-test-runs/review-fixes.md`.
+Re-review evidence: `.context/targeted-developer-test-runs/review-2.md`.
 
 Decision: The orchestrating agent accepted the complete gate on `732c981`
 and merged documentation-only main updates without another complete gate.
@@ -287,7 +288,7 @@ and merged documentation-only main updates without another complete gate.
 - [x] Merge current main with shared file concurrency and preserve all changes.
 - [x] Run affected tests on both Node versions, then the required gates.
 - [x] Commit and push this review-fix round before the next review.
-- [ ] After the push, review the complete local diff against `origin/main`
+- [x] After the push, review the complete local diff against `origin/main`
       with `docs/implementation-review-prompt.md`, and report the numbered
       findings with severities and recommendations. Then apply the review-fix
       rule in `AGENTS.md`.
