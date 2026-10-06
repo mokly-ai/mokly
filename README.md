@@ -301,8 +301,10 @@ generated output, and tests aligned.
 ## Develop Mokly
 
 For repository development, use the tested Node.js version in
-[`.nvmrc`](./.nvmrc), npm 11.7, Rust 1.95, and Chromium for the browser suite.
-With nvm, run `nvm install` in the repository to install and use that version.
+[`.nvmrc`](./.nvmrc), npm 11.21.0 (the `packageManager` version in
+`package.json`), Rust 1.95, and Chromium for the browser suite. With nvm, run
+`nvm install` in the repository to install and use that Node.js version. Use
+the pinned npm version for dependency changes.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git
