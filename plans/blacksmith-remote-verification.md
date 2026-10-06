@@ -1,6 +1,6 @@
 # Blacksmith Remote Verification
 
-Status: Active. The review is complete; 13 open findings await the user's decision. The plan closes when its PR merges.
+Status: Active. The review is complete; 14 open findings await the user's decision. The plan closes when its PR merges.
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
 Blacksmith key is available. Run it locally when no key is available. The key
@@ -402,6 +402,8 @@ Leave the final review to the separate reviewer.
   - Open finding 11 (Low): The timestamp dependency adds unused packages.
   - Open finding 12 (Low): Cancellation warnings can follow completed runs.
   - Open finding 13 (Low): Warning lines repeat the output prefix.
+  - Open finding 14 (Medium): A Blacksmith API outage skips GitHub run
+    cancellation, because cleanup reads run IDs only from `testbox status`.
 
 Evidence: `.context/blacksmith-remote-verification/milestone-6-evidence.md`.
 Evidence: `.context/blacksmith-remote-verification/review-fixes-evidence.md`.
