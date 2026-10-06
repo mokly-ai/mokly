@@ -447,6 +447,10 @@ Evidence: `.context/attribution-test-consolidation/design_library_source_edits.l
 Evidence: `.context/attribution-test-consolidation/design_library_committed_baseline.log`.
 Evidence: `.context/attribution-test-consolidation/milestone-7-scratch-independent-check.log`.
 Evidence: `.context/attribution-test-consolidation/milestone-7-review-correction-checks.log`.
+Evidence: `.context/attribution-test-consolidation/milestone-7-corrected-complete-gate.log`.
+
+Complete-gate verification remains open pending repository dependency
+maintenance. Keep the gate TODO incomplete until an unqualified run passes.
 
 - [x] Define the grouping rules and residual limit in the CI protocol, library
       README, plan introduction, and source-edit test comment.
@@ -479,7 +483,7 @@ Evidence: `.context/attribution-test-consolidation/milestone-7-review-correction
       type checks after the review correction.
 - [ ] Fetch `origin/main` and run one unqualified `cargo xtask check`. Fix any
       in-scope failure and rerun. Save the complete output outside the plan.
-- [ ] Commit completed work locally in logical Conventional Commits.
+- [x] Commit completed work locally in logical Conventional Commits.
 - [ ] Run git add -A, commit with a Conventional Commits message, and push.
 - [ ] After the push, review the complete local diff against `origin/main`
       with [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
