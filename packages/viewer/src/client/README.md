@@ -142,4 +142,4 @@ Related boundaries: [inspector](../inspector/README.md),
 [Browse document adaptation](../../../../src/browse/README.md),
 [logical navigation](../../../../docs/protocol/mokly-navigation.md),
 [standalone bootstrap](../../../../docs/protocol/mokly-shell-bootstrap.md), and
-[implementation plans](../../../../plans/README.md).
+[implementation plans](../../../../plans/).

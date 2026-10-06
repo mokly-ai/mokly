@@ -133,7 +133,9 @@ check until it prunes empty generated directories. Build, Serve's background
 generation, export and any other process that writes the same repository
 therefore never interleave backups or installs, and the later writer leaves
 exactly its own complete compilation. Every spelling of the repository root
-resolves to the same lock.
+resolves to the same lock. Before it acquires the lock, a writer creates
+`.mokly-cache/` and its [ignore file](./mokly-baseline-storage.md#cache-layout)
+when they are missing.
 
 The lock file records the holder's process id and a random token. A waiter
 retries every 50 ms. It reclaims a lock only when the recorded process no
@@ -141,10 +143,11 @@ longer runs, or when the record names the waiter's own process with a token
 that process does not hold. A record without both values is never reclaimed.
 After 120 s the waiter fails with `build-invalid`; the message names the holder
 and the lock path, and tells the user to delete the lock only when no Mokly
-command is running. Release removes the lock, then `locks/` and `.mokly-cache/`
-while each is empty, so a repository without baseline history keeps no cache
-directory. If removal fails, the next writer reclaims the lock after its holder
-stops.
+command is running. Release removes only the lock file. `locks/` and
+`.mokly-cache/` stay, even when empty, so a release never removes a directory
+in which another writer is creating its lock; APFS fails that create with
+`EINVAL` rather than `ENOENT`. If removal fails, the next writer reclaims the
+lock after its holder stops.
 
 Export holds the lock while it writes and captures generated output, and
 again while its final input check re-reads that output. Cancelling an export,

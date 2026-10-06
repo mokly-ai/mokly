@@ -1,13 +1,17 @@
 # Native Color Scheme (Dark Mode) Support
 
+Status: Completed. [PR #26](https://github.com/mokly-ai/mokly/pull/26)
+merged on 2026-08-07.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: use
 > superpowers:subagent-driven-development (recommended) or
 > superpowers:executing-plans to implement this plan task-by-task. Steps use
 > checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Make color scheme (`light`/`dark`) a first-class variant axis beside
-the mobile/desktop viewport axis, per the approved spec at
-[`docs/superpowers/specs/2026-08-06-native-color-scheme-design.md`](../docs/superpowers/specs/2026-08-06-native-color-scheme-design.md).
+the mobile/desktop viewport axis, per the approved spec. The spec is no longer
+in the tree; read it in Git history at
+[`2026-08-06-native-color-scheme-design.md`](https://github.com/mokly-ai/mokly/blob/f1ab12923fdcc848d7f87c5694aa2fdb88d28d5f/docs/superpowers/specs/2026-08-06-native-color-scheme-design.md).
 
 **Architecture:** A catalogue-wide `colorSchemes` config switch with per-screen
 opt-out re-renders each screen's existing mobile/desktop nodes through the

@@ -246,6 +246,21 @@ installation and rollback, while preserving overwrite and source guards;
 it removes only output whose ownership is still proven by a resolved file,
 inventoried source or matching configured root glob. Unclaimed files stay untouched.
 
+## Build Warnings
+
+`build_warnings.ts` owns the validated code, route, and single-line message
+record plus deterministic sorting and de-duplication. The child-control adapter
+and compatibility transform return diagnostics beside their output;
+`compile.ts` puts the normalized list on `Compilation`, while
+`document_compiler.ts` retains the requested document's list without reporting
+it. Diagnostics never enter generated files, the manifest, HTTP bytes, or
+timing records. Authored C0/C1 controls become visible `\uXXXX` escapes before
+normalization, and reporters defensively apply the same encoder.
+`link_control_tiers.ts` owns the explicit ancestor and
+descendant tier sets, feature precedence, and one-line element descriptions
+used by both errors and warnings. See the
+[build warnings contract](../../docs/protocol/mokly-build-warnings.md).
+
 ## Development
 
 ```sh
@@ -256,10 +271,17 @@ npm run example:check
 cargo xtask check
 ```
 
-- `compile.ts`, `render.ts`, `document_compiler.ts`: exhaustive and requested-view
-  compilation with shared validation.
-- `load_graph.ts`, `consumer_entry.ts`, `consumer_resolution.ts`: consumer graph,
-  exports and dependency resolution.
+The example uses derived output: generation writes local ignored HTML and a
+manifest; authored public CSS remains tracked. Committed output and historical
+manifest rejection are tested with isolated consumers.
+
+- `compile.ts`, `build_warnings.ts`, `render.ts`, `document_compiler.ts`:
+  exhaustive and requested-view compilation using the same validation boundary.
+- `link_control_tiers.ts`, `link_control_nodes.ts`, `link_controls.ts`: tiered
+  placement validation and source-byte-preserving styled-control adaptation.
+- `load_graph.ts`, `consumer_entry.ts`, `consumer_resolution.ts`: one consumer
+  graph, discovered through `config/entry_discovery.ts`, and its module
+  resolution.
 - `source_inventory.ts`, `ownership.ts`, `previous_ownership.ts`, `output_paths.ts`: source protection and
   transactional output boundaries. `output_directories.ts` prunes empty ancestors
   after backup and restores directory changes on rollback. Directories retained
@@ -275,6 +297,11 @@ cargo xtask check
   serializes every generated-output transaction across processes. Callers that
   must read the tree they wrote use `withOutputLock` with
   `writeLockedCompilation`; waiters reclaim only provably stopped holders.
+  Release removes only the lock file and keeps `.mokly-cache/locks/`, so it
+  never races another writer that is creating its lock there. Before each
+  acquisition, `config/cache_ignore.ts` creates `.mokly-cache/` and, unless it
+  is a symbolic link, its `.gitignore` when they are missing, so Git ignores the
+  cache in both modes.
 
 See [paths](../../docs/protocol/mokly-paths.md),
 [entry modules](../../docs/protocol/mokly-entry-modules.md),

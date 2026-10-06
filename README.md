@@ -187,7 +187,8 @@ follow the command, for example `mokly build --config tools/mokly.config.ts`.
 
 The CLI uses stable plain output in CI and a richer interactive display in a
 terminal. During watched Serve, press `h` to see shortcuts for opening,
-rebuilding, clearing, and quitting.
+rebuilding, clearing, and quitting. Build warnings print on standard error
+without changing the exit status; `--strict` turns them into a failed command.
 
 Detailed command references:
 
@@ -290,7 +291,7 @@ appearance with any preview scheme. See the
 - [Variants](./docs/protocol/mokly-variants.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
-- [Implementation plans](./plans/README.md)
+- [Implementation plans](./plans/)
 - [Changelog](./CHANGELOG.md)
 
 The guides are user-facing and ship with the npm package. The protocol documents
@@ -300,8 +301,8 @@ generated output, and tests aligned.
 ## Develop Mokly
 
 For repository development, use the tested Node.js version in
-[`.node-version`](./.node-version), npm 11.7, Rust 1.95, and Chromium for the
-browser suite.
+[`.nvmrc`](./.nvmrc), npm 11.7, Rust 1.95, and Chromium for the browser suite.
+With nvm, run `nvm install` in the repository to install and use that version.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git
@@ -330,6 +331,21 @@ suite, dependency checks, and Rust checks. See the
 functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
+
+Local test runs scale with the machine. Unit tests run half the available CPUs'
+worth of test files at once, never fewer than two, and the hydration suite uses
+half the CPUs as Playwright workers. Other browser runs use one worker. Set
+`MOKLY_UNIT_CONCURRENCY` or `MOKLY_PLAYWRIGHT_WORKERS` to a positive integer to
+choose a different value. Playwright worker N serves the example on port
+`MOKLY_PLAYWRIGHT_PORT` + N, and `MOKLY_PLAYWRIGHT_PORT` defaults to 4517:
+
+```bash
+MOKLY_PLAYWRIGHT_WORKERS=3 npm run test:browser
+```
+
+Pull request titles use Conventional Commits and at most 72 Unicode code points.
+The separate title check runs when a PR opens, changes, or receives a push; see
+the [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).
 
 `npm run dependencies:check` audits every workspace dependency category against
 the live registry. It fails on Low-or-higher advisories unless an active reviewed

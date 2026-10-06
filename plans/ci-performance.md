@@ -1,16 +1,16 @@
 # CI Performance
 
-## Status And Outcome
+Status: Completed. [PR #93](https://github.com/mokly-ai/mokly/pull/93)
+merged on 2026-09-19. The review follow-up in Milestones 6–8 shipped in
+that PR, but its post-push review was not recorded before the merge.
 
-Status: review follow-up validation complete; commit and push are pending. The
-implementation PR's merge is the completion boundary; keep this plan in the
-active index until then.
+## Status And Outcome
 
 Reduce the time to `Required CI` success while exercising the complete existing
 verification contract. Start with independent jobs and four shards per large
 suite, then reduce repeated preparation and enable npm download caching.
 The 6–10 minute target is met at 9m06s with sufficient runner capacity; the
-[measurement record](../docs/reviews/ci-performance.md) retains the complete
+[measurement record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md) retains the complete
 timing, coverage, queue, cache, and runner-use evidence.
 
 This change covers repository verification, CI configuration, test fixtures,
@@ -229,7 +229,7 @@ serving the expected catalogue over the reported endpoint before clean shutdown.
 Hosted attempts execute the corrected publication, wrapper-isolation,
 preview-port, child-startup, cold-preview, and shared-preview coverage on both
 runtimes with complete passing evidence. The
-[measurement record](../docs/reviews/ci-performance.md) retains their fixture
+[measurement record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md) retains their fixture
 phase ranges.
 
 ## Milestone 5: Validate, measure, commit, push and review — completed
@@ -269,7 +269,7 @@ implementation PR merges; arrange the index transition as part of that merge.
       or automatically fix review findings.
 
 The final local gate and three successful hosted attempts are recorded in the
-[CI performance measurement](../docs/reviews/ci-performance.md). The
+[CI performance measurement](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md). The
 available-capacity attempt meets the target while retaining every verification
 boundary. Native whole-file sharding remains appropriate; browser shards 2 and
 3 are the measured follow-up point if future suite growth moves the critical
@@ -335,8 +335,9 @@ Finish the approved review fixes without weakening the measured CI contract.
 - [x] Run all relevant tests with a 100% pass rate, TypeScript checks, formatting,
       lint, Rust formatting/Clippy/tests/file-length checks and the complete
       `cargo xtask check`; validate updated Markdown and the complete diff.
-- [ ] After checks pass, run `git add -A`, commit every follow-up file with a
-      Conventional Commit and push the current branch.
+- [x] After checks pass, run `git add -A`, commit every follow-up file with a
+      Conventional Commit and push the current branch. Pushed as `3a95e30`
+      and merged in PR #93.
 - [ ] Only after the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main` and report any findings in the session without

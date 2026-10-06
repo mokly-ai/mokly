@@ -53,6 +53,13 @@ exit before the reporter sets status 1.
 Publish-only modules are loaded after command selection. Build, Check, Export,
 and supervised Serve children therefore do not initialize the upload exchange.
 
+Build warnings are non-fatal compile diagnostics carried on the compilation
+result. `run.ts` prints them through the reporter after the rendering phase.
+`build`, `check`, `export`, and `publish` accept `--strict`, which reports every
+warning and then fails before the next write, comparison, staging, or upload
+boundary. Serve refuses the flag. Plain and rich warning lines both use stderr,
+so plain stdout and rich summaries retain their established bytes.
+
 Rich presentation never changes `MoklyError`, generated output, HTTP responses,
 or timing JSON. The supervised Serve child stays plain and forwards diagnostics
 to the parent so only one reporter owns the terminal.
@@ -92,6 +99,7 @@ ordinary test runners pipe stdout and intentionally select plain mode.
 ### Related Docs
 
 - [Terminal output contract](../../docs/protocol/mokly-terminal-output.md)
+- [Build warnings](../../docs/protocol/mokly-build-warnings.md)
 - [Package and CLI contract](../../docs/protocol/mokly-package.md)
 - [Timing diagnostics](../../docs/protocol/mokly-timings.md)
 - [Watched development](../../docs/protocol/mokly-watch.md)

@@ -1,5 +1,8 @@
 # Browse Shell Design Parity
 
+Status: Active. Milestones 1–5 and 7 are complete. Milestone 6, the Review
+artifact chrome parity follow-up, is not started.
+
 Bring the served Mokabook Browse shell to the refined design recorded in the
 design catalogue, and use `@firna/ui` in the example catalogue to prove the
 custom renderer boundary. The earlier shell had flat device frames, a too-small

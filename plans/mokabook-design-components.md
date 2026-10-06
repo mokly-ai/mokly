@@ -1,8 +1,11 @@
 # Reuse Registered Components In Mokabook's Design Catalogue
 
+Status: Completed. [PR #48](https://github.com/mokly-ai/mokly/pull/48)
+merged on 2026-09-10.
+
 ## Outcome And Status
 
-Status: completed and verified; review follow-ups are recorded for the user's decision.
+Completed and verified; review follow-ups are recorded for the user's decision.
 Give Mokabook's own design screens real shared component pages, saved
 variants, local controls, generated usage and reliable change attribution.
 
@@ -334,10 +337,10 @@ or backend work are required.
 
 ## Verification Evidence
 
-The [review and verification record](../docs/reviews/mokabook-design-components.md)
+The [review and verification record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/mokabook-design-components.md)
 retains startup, source attribution, direct-file audit, complete gate and CI
 results. The normalization adds regression coverage for icon-only schemas,
 all-screen viewport selection, native panel opening/resizing and non-overlapping
-full-size phone/desktop previews. Its [final delivery review](../docs/reviews/mokabook-design-controls.md)
+full-size phone/desktop previews. Its [final delivery review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/mokabook-design-controls.md)
 records the published smoke results and all six post-push findings with assessed
 recommendations; none was automatically fixed.

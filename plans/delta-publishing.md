@@ -1,5 +1,10 @@
 # Delta Publishing
 
+Status: Completed. [PR #122](https://github.com/mokly-ai/mokly/pull/122)
+merged on 2026-09-30. Open findings in the
+[review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/delta-publishing.md) await the user's
+decision.
+
 Replace the single-archive `mokly publish` upload with the content-addressed
 delta exchange that Mokly Cloud is adopting: the receiver learns every file's
 SHA-256 from the export ownership marker before any catalogue bytes are sent,
@@ -62,7 +67,7 @@ records them in the protocol docs so no later milestone needs the brief.
 ## Review Fix Decisions
 
 The user approved fixing every finding of the
-[delta publishing review](../docs/reviews/delta-publishing.md) with its
+[delta publishing review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/delta-publishing.md) with its
 recommended option (2026-09-26). Milestones 7–13 carry that work; `#n` refers
 to finding _n_ of that review. These decisions settle what the
 recommendations left open:
@@ -124,7 +129,7 @@ recommendations left open:
 ## Second Review Fix Decisions
 
 On 2026-09-27 the user chose option B for finding 1 and option A for finding 2
-of the [second review](../docs/reviews/delta-publishing.md#second-review). The
+of the [second review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/delta-publishing.md#second-review). The
 other nine second-review findings are not approved and stay open. Milestones
 14–17 carry this work; `second #n` refers to finding _n_ of that review.
 
@@ -156,7 +161,7 @@ other nine second-review findings are not approved and stay open. Milestones
 ## Third Review Fix Decisions
 
 On 2026-09-27 the user asked to fix the three
-[third-review](../docs/reviews/delta-publishing.md#third-review) findings with
+[third-review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/delta-publishing.md#third-review) findings with
 their recommended options: B + D for finding 1, B for finding 2 and B + C plus
 the cheap cases of A for finding 3. Second-review findings 3–11 stay open.
 Milestones 18–22 carry this work; `third #n` refers to finding _n_ of that
@@ -198,7 +203,7 @@ review.
 ## Fourth Review Fix Decisions
 
 On 2026-09-27 the user asked to fix the seven
-[fourth-review](../docs/reviews/delta-publishing.md#fourth-review) findings with
+[fourth-review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/delta-publishing.md#fourth-review) findings with
 their recommended options: A + D for finding 1, B for 2, A for 3, B for 4,
 A + B for 5, A for 6 and A for 7. Second-review findings 3–11 stay open.
 Milestones 23–27 carry this work; `fourth #n` refers to finding _n_ of that
@@ -254,7 +259,7 @@ review.
 
 On 2026-09-28 the user judged `scripts/verification/remove-remote-state.mjs`
 too dangerous and asked to remove it:
-[fifth-review](../docs/reviews/delta-publishing.md#fifth-review) finding 1
+[fifth-review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/delta-publishing.md#fifth-review) finding 1
 showed that, run in a Conductor worktree or a copy of one, it deletes the
 shared repository's remotes. Milestones 28–29 carry this work.
 
@@ -275,7 +280,7 @@ shared repository's remotes. Milestones 28–29 carry this work.
 ## Lint Removal Decision
 
 On 2026-09-28 the user chose, for
-[sixth-review](../docs/reviews/delta-publishing.md#sixth-review) finding 1, to
+[sixth-review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/delta-publishing.md#sixth-review) finding 1, to
 remove the remote-branch lint and restore a small workflow check instead of
 widening the lint. Milestones 30–31 carry this work.
 
@@ -304,7 +309,7 @@ widening the lint. Milestones 30–31 carry this work.
 ## Test Export Decision
 
 On 2026-09-28 the user chose option B for
-[seventh-review](../docs/reviews/delta-publishing.md#seventh-review) finding 2:
+[seventh-review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/delta-publishing.md#seventh-review) finding 2:
 move the workflow guard's command scanner out of its test file into
 `tests/helpers/`. Milestones 32–33 carry this work.
 
@@ -709,7 +714,7 @@ Complete branch work before review; merge remains the completion boundary.
       recommendation to `docs/reviews/delta-publishing.md` and report them
       without changing the implementation. Fifteen findings (five Medium,
       ten Low) are recorded in the
-      [review](../docs/reviews/delta-publishing.md) for the user's decision.
+      [review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/delta-publishing.md) for the user's decision.
 
 ## Milestone 7: Review fix contract — completed
 

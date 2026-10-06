@@ -1,11 +1,12 @@
 # Component Explorer
 
-Status: completed; the design feedback and component runtime are implemented,
-verified, committed, pushed, and reviewed. Milestone 4h audited all 112 design
+Status: Completed. [PR #48](https://github.com/mokly-ai/mokly/pull/48)
+merged on 2026-09-10. The design feedback and component runtime are
+implemented, verified, committed, pushed, and reviewed. Milestone 4h audited all 112 design
 artboards and corrected the divider and comparison eligibility. The public API,
 saved pages, attribution, inspection, static export and local controls are
 delivered. Review follow-ups remain for the user's decision in the
-[runtime review record](../docs/reviews/component-explorer-runtime.md).
+[runtime review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/component-explorer-runtime.md).
 
 Implement the approved [component authoring contract](../docs/protocol/mokly-components.md),
 [change attribution](../docs/protocol/mokly-component-changes.md),
@@ -645,7 +646,7 @@ Deliver the validated implementation through the mandatory post-push review.
 Implementation commit `f27b8ae` contains the integration with main `a0e349a`,
 preserving the captured source tip `b68e84a` as its other parent. Its full check,
 post-push review, green Node 22/24 and macOS/Windows CI, and published mobile and
-desktop smokes are recorded in the [delivery review](../docs/reviews/component-explorer-runtime.md).
+desktop smokes are recorded in the [delivery review](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/component-explorer-runtime.md).
 [PR #48](https://github.com/futex-ai/mokabook/pull/48) now describes the complete
 implementation. Review follow-ups are recorded separately; none were
 automatically fixed.

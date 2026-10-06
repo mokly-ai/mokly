@@ -34,6 +34,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   cache and aggregation contract.
   - [CI dependency cache and security](./ci-verification-security.md).
   - [Repository gate and length audits](./ci-verification-repository.md).
+  - [Development hydration coverage](./ci-verification-hydration.md) — one
+    route per entry shape and the generated resource audit.
 - [CI workflow graph](./ci-workflow.md)
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard
   balance, and acceptance measurement.
@@ -50,6 +52,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   interactive progress, watched events, and shortcuts.
 - [CLI terminal compatibility and errors](./mokly-terminal-errors.md) — exact
   plain output and rich error presentation.
+- [Build warnings](./mokly-build-warnings.md) — implemented non-fatal compile
+  diagnostics, command reporting, and `--strict` enforcement.
 - [Packaged CLI guides](./mokly-guides.md) — versioned Markdown consumed by the
   cloud documentation site.
 - [Configuration contract](./mokly-configuration.md) — includes public-exclusion validation and defaults.

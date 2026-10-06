@@ -17,6 +17,16 @@ npx mokly build
 | ----------------- | ----------------------------------------------------------- |
 | `--config <path>` | Use an explicit `mokly.config` file                         |
 | `--debug-timings` | Report phase timings and catalogue counts on standard error |
+| `--strict`        | Fail before writing when the build reports warnings         |
+
+## Warnings
+
+A build can succeed with warnings, for example a styled link placed inside a
+button. Each warning is one line on standard error naming the route and the
+element, the output is still written, and the exit status stays `0`. Pass
+`--strict` to print the warnings and then fail without writing anything.
+The failure says `1 build warning with --strict` for one warning and
+`<n> build warnings with --strict` otherwise.
 
 ## What it writes
 
@@ -47,8 +57,13 @@ reserved directory after a successful transaction.
 With the default `generatedOutput: "derived"`, keep the generated routes, the
 manifest, `mokly-generated/` and `.mokly-cache/` out of Git; build still
 writes them locally in the same transaction. With `generatedOutput:
-"committed"`, commit what build writes. When the repository is a Git work-tree
-root, Build and Check reject generated files hidden by `.gitignore`; the error
-names the matching rule and a negation to add in that rule's `.gitignore` file.
-Do not ignore the mockups directory itself: remove that rule or choose derived
-output.
+"committed"`, commit what build writes to `mockupsDir`. When the repository is
+a Git work-tree root, Build and Check reject generated files hidden by
+`.gitignore`; the error names the matching rule and a negation to add in that
+rule's `.gitignore` file. Do not ignore the mockups directory itself: remove
+that rule or choose derived output.
+
+In both modes, Mokly keeps private state in `.mokly-cache/` at the repository
+root and writes a `.gitignore` file inside it, so Git never shows or adds that
+folder. Also list `.mokly-cache/` in your root `.gitignore` when other tools,
+such as formatters or linters, read only that file.

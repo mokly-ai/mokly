@@ -60,22 +60,37 @@ Git processes.
 
 The cache lives at `<repoRoot>/.mokly-cache/baselines/`; the sibling
 `locks/` directory holds only the transient
-[generated-output writer lock](./mokly-rendering-generated.md#concurrent-writers),
-whose release removes an empty `.mokly-cache/`. Creating a cache entry
-therefore restarts its ancestor walk, at most five times, when a parent
-disappears. The cache is package owned: never served, never watched, never a comparison resource, excluded from
+[generated-output writer lock](./mokly-rendering-generated.md#concurrent-writers).
+Its release removes only the lock file, never a directory, so creating a cache
+entry never races a directory removal. The cache is package owned: never served, never watched, never a comparison resource, excluded from
 changed-path evidence and shared-impact globs before those globs are evaluated,
 and never a valid `mockupsDir`, root, resolved entry module or document,
-`review.outDir`, or export destination. Consumers add `.mokly-cache/` to their ignore file; derived
-`check` also fails when Git tracks anything under it.
+`review.outDir`, or export destination. Derived `check` fails when Git tracks
+anything under it.
+
+The cache ignores itself in both output modes. Before a writer acquires the
+generated-output lock, and after a rebuild validates the cache ancestors,
+Mokly creates `.mokly-cache/.gitignore` when no entry has that name. Its bytes
+are `# Created by Mokly automatically.\n*\n`: `*` matches every cache path,
+the ignore file included, so Git never shows or adds the cache, not even a
+lock that a stopped command left. Mokly writes a temporary sibling and renames
+it into place, so an interrupted write never leaves a partial file; failing to
+publish it fails that lock acquisition or rebuild. An existing entry is never
+replaced, so a consumer may edit it. A writer skips the file when
+`.mokly-cache` is a symbolic link, because Git does not read ignore files
+through a link. Consumers may still list `.mokly-cache/` in root ignore files
+that other tools read.
 
 ```text
-.mokly-cache/baselines/<commit>/
-  lock            # holder pid and start time, created exclusively
-  source/         # extraction, removed after adoption
-  output/         # the rebuilt mockupsDir tree
-  complete.json   # completion marker
-  inputs.json     # JSON string containing repository-relative mockupsDir
+.mokly-cache/
+  .gitignore        # "*": Git ignores every cache path, this file included
+  locks/            # the generated-output writer lock
+  baselines/<commit>/
+    lock            # holder pid and start time, created exclusively
+    source/         # extraction, removed after adoption
+    output/         # the rebuilt mockupsDir tree
+    complete.json   # completion marker
+    inputs.json     # JSON string containing repository-relative mockupsDir
 ```
 
 `complete.json` is `{ schemaVersion: 1, commit, finishedAt, commands,
