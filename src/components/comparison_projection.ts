@@ -9,6 +9,7 @@ import {
 import {
   normalizeReviewPair,
   normalizeSingleDocument,
+  type ReviewLinkNormalization,
 } from "../review/ignore.js";
 
 import {
@@ -21,9 +22,17 @@ import {
 import { validateComponentRanges, type RenderedRange } from "./ranges.js";
 
 export interface ComponentProjection {
-  actual: { base: string; head: string; ignoredIds: readonly string[] };
+  actual: {
+    base: string;
+    head: string;
+    ignoredIds: readonly string[];
+    resourceBase?: string;
+    resourceHead?: string;
+  };
   before: string;
   after: string;
+  resourceBefore?: string;
+  resourceAfter?: string;
   inputs: boolean;
   structure: boolean;
   rawEqual: boolean;
@@ -56,6 +65,7 @@ export function projectComponentPair(
   },
   beforeRanges?: readonly RenderedRange[],
   afterRanges?: readonly RenderedRange[],
+  links?: ReviewLinkNormalization,
 ): ComponentProjection {
   return documentWorkSync("projectionMs", () => {
     const validatedBefore = beforeView
@@ -74,8 +84,16 @@ export function projectComponentPair(
       afterView,
       validatedAfter,
     );
-    const rawBefore = normalizeSingleDocument(actualBefore, context);
-    const rawAfter = normalizeSingleDocument(actualAfter, context);
+    const rawBefore = normalizeSingleDocument(
+      actualBefore,
+      context,
+      links?.before,
+    );
+    const rawAfter = normalizeSingleDocument(
+      actualAfter,
+      context,
+      links?.after,
+    );
     const pairs = new Map<string, string>();
     if (beforeView && afterView) {
       const current = new Map(
@@ -106,13 +124,24 @@ export function projectComponentPair(
             validatedAfter,
           )
         : stripMarkers(after, afterView, validatedAfter);
-    const normalized = normalizeReviewPair(left, right, context);
-    const actual = normalizeReviewPair(actualBefore, actualAfter, context);
+    const normalized = normalizeReviewPair(left, right, context, links);
+    const actual = normalizeReviewPair(
+      actualBefore,
+      actualAfter,
+      context,
+      links,
+    );
     const { inputs, structure } = componentUsageSignals(beforeView, afterView);
     return {
       actual,
       before: normalized.base,
       after: normalized.head,
+      ...(normalized.resourceBase === undefined
+        ? {}
+        : { resourceBefore: normalized.resourceBase }),
+      ...(normalized.resourceHead === undefined
+        ? {}
+        : { resourceAfter: normalized.resourceHead }),
       inputs,
       structure,
       rawEqual: rawBefore === rawAfter,
@@ -130,6 +159,7 @@ export function changedComponentImplementations(
   head: ComponentViewRecord | undefined,
   baseRanges?: readonly RenderedRange[],
   headRanges?: readonly RenderedRange[],
+  links?: ReviewLinkNormalization,
 ): ReadonlySet<string> {
   return documentWorkSync("implementationMs", () => {
     const changed = new Set<string>();
@@ -198,7 +228,7 @@ export function changedComponentImplementations(
       const left = contents(before, base, validatedBase);
       const right = contents(after, head, validatedHead);
       const match = (a: string, b: string) => {
-        const pair = normalizeReviewPair(a, b, instance.componentId);
+        const pair = normalizeReviewPair(a, b, instance.componentId, links);
         return pair.base === pair.head;
       };
       if (

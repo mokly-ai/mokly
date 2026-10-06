@@ -5,13 +5,18 @@
 The suite CLI, evidence, workflow graph, fixture reuse, and every repository
 ratchet are implemented. [Hosted measurements](../reviews/ci-performance.md)
 record timing and coverage. `cargo xtask check` remains the complete local gate;
-a validated hosted aggregate is reusable evidence for its exact tree.
+a validated hosted aggregate is reusable evidence for its exact tree. Public
+package argument forwarding, hierarchical cancellation, and pull-request title
+validation are implemented.
 
 ## Verification Boundary
 
 `cargo xtask check` is the complete local and release complete-mode entrypoint.
 With no options it runs every gate sequentially in one checkout, beginning with
-the live workspace dependency audit. A selected suite is partial evidence and
+the live workspace dependency audit. Only active reviewed path exceptions can
+cover findings; the [dependency security contract](./dependency-security.md)
+defines their UTC expiry and 31-day limit. The packed-consumer production audit
+has no exceptions. A selected suite is partial evidence and
 must never report that the complete gate passed. CI's validated aggregate of all
 required jobs and reports is complete verification of their exact tree; the
 [release evidence contract](./npm-release-evidence.md) defines reuse.
@@ -37,15 +42,15 @@ hydration suite fail before any subprocess starts.
 
 ## Gate Ownership
 
-| Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                                                                |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Repository       | Live dependency audit first; Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                                                                                                              |
-| Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; all five clean consumer smokes using that pair. Real `prepack` builds remain part of packing. |
-| Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most two files active. A shard runs its whole-file partition.                                                                                                                                                                                                                                |
-| Browser          | One ordinary package/example preparation followed by every non-hydration Playwright spec, with `fullyParallel: false`, one worker, existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                                                                              |
-| Hydration        | One ordinary package/example preparation followed by every Playwright spec whose filename contains `hydration`, using the same browser settings without sharding.                                                                                                                                                                                                                          |
-| Native platforms | On macOS and Windows, build once and run export transaction and destination-race tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                                                            |
-| Required CI      | Evaluate the result and evidence from the repository job, every package runtime selected for this event, all selected unit, browser, and hydration runtime combinations, and both native platforms.                                                                                                                                                                                        |
+| Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                                                            |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repository       | Live dependency audit first; Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                                                                                                          |
+| Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; every clean consumer smoke using that pair. Real `prepack` builds remain part of packing. |
+| Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most two files active. A shard runs its whole-file partition.                                                                                                                                                                                                                            |
+| Browser          | One ordinary package/example preparation followed by every non-hydration Playwright spec, with `fullyParallel: false`, one worker, existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                                                                          |
+| Hydration        | One ordinary package/example preparation followed by every Playwright spec whose filename contains `hydration`, using the same browser settings without sharding.                                                                                                                                                                                                                      |
+| Native platforms | On macOS and Windows, build once and run export transaction and destination-race tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                                                        |
+| Required CI      | Evaluate the result and evidence from the repository job, every package runtime selected for this event, all selected unit, browser, and hydration runtime combinations, and both native platforms.                                                                                                                                                                                    |
 
 Complete and selected suites share gate definitions; adding a suite command adds
 it to the complete gate. In-process auditors fail like subprocesses.
@@ -56,6 +61,15 @@ uses the newest matching release tags reachable from `HEAD`. The
 [owning contract](./verification-ratchets.md) defines the module extensions,
 shrink-only baselines, and recursive `docs/protocol/**` scan excluding
 `fixtures/`.
+
+The repository prerequisite also runs the workspace-root source/protocol
+length audit. It covers changed repository TypeScript/JavaScript and protocol
+Markdown plus non-ignored untracked files. Protocol pages over 250 lines use
+only the exact reviewed caps in `tests/protocol_doc_sizes.test.ts`; `cargo xtask
+source-file-length-lint --all` audits every scoped file. This remains in
+addition to main's repository ratchets.
+The full scope and failure semantics are in
+[Repository Gate And Length Audits](./ci-verification-repository.md).
 
 ESLint derives global ignores from `.gitignore` before adding its broader
 ESLint-only ignores. Ignored build, cache, report, and tool scratch paths,
@@ -85,24 +99,106 @@ Builds under test are not removed. Package dry-run allowlist inspection retains
 baseline reconstruction, clean consumers and caches, source mutation, startup,
 and cache invalidation retain independent preparation.
 
+## Deterministic Test Repository Inputs
+
+Unit and browser tests must depend only on the tree under test and fixture-owned
+state. The example preview unit test copies the checked-out example and tooling
+into an isolated fixture repository, commits that fixture-owned baseline,
+applies one deterministic source edit and asserts its exact changed
+destinations and count. The browser suite's example server runs with
+`--base HEAD` and compares with the checked-out `HEAD`. A fixture repository may
+create and read its own remotes because those references are fixture-owned
+inputs inside the test tree.
+
+CI's package, unit, browser, and hydration jobs key npm's download cache from
+the checked-out `package-lock.json`; none resolves `origin/main` or reads a
+branch-point lockfile. Identical trees must produce identical test results; the
+release workflow's exact-tree evidence reuse depends on that determinism.
+
+The remaining automated checks for repository inputs are deliberately narrow:
+
+- [`tests/preview.test.ts`](../../tests/preview.test.ts) owns the isolated
+  fixture baseline, deterministic edit and exact changed-result assertions.
+- [`tests/deployment.test.ts`](../../tests/deployment.test.ts) requires the
+  browser server command to use `--base HEAD`.
+- [`tests/ci_workflow.test.ts`](../../tests/ci_workflow.test.ts) requires the
+  package, unit, browser, and hydration jobs to use the checked-out lockfile and
+  never resolve `origin/main` or a branch-point lockfile.
+
+Nothing scans test code for remote-branch reads. New tests rely on review to
+keep this deterministic-input rule.
+
+No workflow or composite-action `run:` step may delete remote Git state. In a
+shared Git worktree, such a command deletes the shared repository's remotes,
+remote-tracking references or upstream settings.
+[`tests/ci_workflow_remote_state.test.ts`](../../tests/ci_workflow_remote_state.test.ts)
+enforces this as a text check across workflow and composite-action steps, using
+the command scanner in
+[`tests/helpers/remote_state_commands.ts`](../../tests/helpers/remote_state_commands.ts).
+It cannot see commands inside scripts that a step calls.
+
+## Pull Request Title Contract
+
+A separate pull-request workflow validates titles on `opened`, `edited`,
+`reopened` and `synchronize`. It passes the untrusted title through an
+environment variable to a repository script; workflow expressions never
+interpolate the title into shell source. The workflow runs
+`scripts/verification/pull-request-title.mjs`, which reads only
+`PULL_REQUEST_TITLE` and needs no installed dependencies.
+
+The complete title is at most 72 Unicode code points, has no leading or
+trailing whitespace or newline, and has this Conventional Commits shape:
+
+```text
+<type>(<optional-scope>)<optional-!>: <description>
+```
+
+`type` is exactly one of `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`,
+`refactor`, `revert`, `style` or `test`. When present, `scope` is lowercase
+ASCII matching `[a-z0-9._/-]+`. `!` may follow the type or closing scope. The
+separator is exactly colon plus one space. `description` is nonempty, begins
+and ends with a non-whitespace character, and contains no newline. Examples
+include `fix: preserve upload counts`, `chore(main): release 0.13.0` and
+`feat(publish)!: upload catalogue content deltas`.
+
+This type list is fixed. Its unit test checks that it covers the Conventional
+Commit examples in `AGENTS.md`; it does not derive policy from Git history or
+remote-tracking references.
+
+An invalid title exits unsuccessfully and prints exactly:
+
+```text
+Pull request titles must use type(scope)!: description with type build, chore, ci, docs, feat, fix, perf, refactor, revert, style, or test. Keep any scope lowercase and the whole title to 72 characters or fewer.
+```
+
+The check protects release notes because this repository squash-merges pull
+requests and release-please reads the squash title on `main`. A breaking title
+retains its `BREAKING CHANGE:` explanation in the squash body; title validation
+does not inspect or synthesize that body.
+
 ## CI Workflow Graph
 
 The hosted job graph, checkout ownership, runtime profiles, runner policy,
 30-minute timeouts, and stable `Required CI` status follow the separate
-[CI workflow graph contract](./ci-workflow.md). The suites below own the report
-evidence that status validates.
+[CI workflow graph contract](./ci-workflow.md).
+The suites below own the report evidence that status validates.
+Inventory and evidence rules remain here because local selected suites and
+hosted jobs share them.
 
 ## Inventory And Report Evidence
 
 Unit and Playwright inventories are discovered on the executing runtime, not
 fixed in advance. Browser or hydration discovery asks Playwright; an empty suite
-fails.
+fails. A failed browser discovery reports the load errors from Playwright's JSON
+output as well as its standard error.
 
 Development hydration registers one browser test per unique generated catalogue
 route at discovery time, plus the home and missing-route cases. Each route keeps
 the normal test deadline and error assertions; catalogue growth cannot exhaust a
 shared route-loop deadline. Unit coverage checks that browser discovery includes
-every generated route exactly once.
+every generated route exactly once. Browser error assertions accept only Chrome's
+report that a viewer-owned sandboxed frame (`/static/`, a temporary render, or
+`about:srcdoc`) blocked a script, as `tests/browser/console_notices.ts` defines.
 
 Each runner records the commit SHA, runtime, suite, optional shard, complete
 discovered file inventory, assigned file inventory, observed executed files,
@@ -148,130 +244,4 @@ profile cannot skip the complete publish gate. Reports are retained for 14 days,
 which bounds their release reuse; missing or expired evidence falls back to the
 complete gate.
 
-## Dependency Cache And Security
-
-CI caches npm's download cache only. `actions/setup-node` keys it from the
-committed `package-lock.json`; jobs that can run historical installs also add a
-lockfile read from the merge-base commit. `npm ci` always runs, including after
-a cache hit, and every platform's optional native package remains available. A
-cache miss is an ordinary cold install and never permits a skipped command.
-
-The live workspace audit runs first in the repository prerequisite and does not
-depend on cache state. The complete local and release commands retain the same
-audit-first ordering. Every selected package-runtime job also preserves the
-separate production audit of the freshly resolved ESM consumer, which is outside
-the workspace lockfile and overrides; the release profile proves it on both
-runtimes. Intentionally isolated clean-cache consumer tests keep private empty
-npm caches. Release publishing retains its uncached, OIDC-scoped boundary and
-exact-artifact checks.
-
-## Fixture Lifetime And Cleanup
-
-Prepared package/example output belongs to one suite invocation. Navigation and
-design-link specs share one unique read-only ordinary-preview artifact per
-browser worker. Before serving, the fixture proves that its owned output path
-was absent and validates a current-build ownership marker. Mutable source trees,
-Git repositories, generated directories, ports, servers and child processes
-remain worker/job local. Setup failure triggers the same cleanup as normal
-teardown. Cleanup drains the complete POSIX process group or Windows job before
-removing owned output. If termination cannot be confirmed, teardown fails and
-retains the owned output for diagnosis; concurrent and repeated close calls
-share that same completion or failure.
-
-`changedFixture` owns live test resources through `onCleanup`. It drains them in
-reverse registration order before deleting the consumer tree. Every registered
-cleanup runs even if another fails; failures retain the tree for diagnosis.
-Servers and workers must use this boundary instead of a later test `after` hook,
-which can run after directory removal or be skipped when an earlier hook fails.
-
-Every report-producing wrapper creates a unique verification owner identity and
-passes its registry and resource root to the child. A wrapper nested beneath
-another owner creates a child identity in the same registry; cancellation acts
-only on that owner subtree, so concurrent sibling commands cannot terminate or
-remove each other's work. Independently grouped process scopes atomically
-register before releasing their command worker and unregister only after normal
-drainage. Abrupt cancellation signals the direct process tree and every
-registered descendant group, rescans for registrations racing with shutdown,
-escalates from TERM to KILL within the existing bound, and waits for all groups
-to stop before removing the subtree's resources. Invalid owner registrations or a
-group that cannot be drained fail verification and retain resources for
-diagnosis. Windows retains kill-on-close job ownership; the hierarchy adds an
-outer cancellation fallback rather than replacing the job boundary.
-
-A dedicated preview-preparation spec still runs the real cold
-`npm run preview:build`, verifies generated-output digest stability, and serves
-the fresh artifact. Historical rebuilds, source mutation, missing-source export,
-clean-install and cache-invalidation behavior continue to create independent
-inputs because preparation is part of what those tests verify. Fixture phases
-emit `[mokly:fixture-timing]` JSON with the fixture, phase, duration, status,
-and whether the operation itself is under test.
-
-Full-catalogue browser preparations share a five-minute setup budget in
-`tests/helpers/fixture_timing.ts`. Cold package/example builds, baseline
-exports, and ordinary publication fixtures use that budget independently of the
-default one-minute browser test timeout. Assertion deadlines, retries, and
-worker limits remain unchanged; server readiness retains its own bound.
-
-Wrangler Pages fixtures pass port zero and adopt the exact readiness URL
-Wrangler reports; they do not release a probe socket before server startup.
-Miniature Playwright projects used inside unit tests set an explicit output
-directory beneath their temporary harness so runner metadata cannot enter the
-consumer repository's publication fingerprint. Unit tests that fork compiled CLI
-entrypoints set an empty `execArgv`, preventing the parent test runner's loader
-and concurrency flags from changing child startup behavior.
-
-## Failure, Cancellation And Cleanup
-
-Commands stop their local sequence at the first failure and propagate the
-subprocess error. CI cancellation may interrupt a job, but the aggregate treats
-that result as unsuccessful. Report-producing wrappers install exit and signal
-handling, drain their complete hierarchical ownership subtree, preserve partial
-timing evidence when possible, and never write a successful outcome until
-independent completeness checks pass.
-
-Temporary fixtures use repository-local `.context` or operating-system temp
-directories and remove owned output on success and failure. A fixture drains
-dependent servers, workers, watchers, and other runtime resources in reverse
-registration order before removing its workspace. Concurrent or repeated fixture
-removal shares one teardown, and a dependent cleanup failure retains the
-workspace for diagnosis. Tests that create a runtime after obtaining a shared
-fixture register that cleanup through the fixture's `beforeRemove` lifecycle;
-they must not add a later test-runner teardown hook that can race workspace
-removal. Source-level verification enforces this ownership rule for shared
-fixture helpers. Failed browser and hydration jobs retain only the uploaded
-diagnostic artifacts selected by the workflow. Jobs must not delete, overwrite
-or reuse another job's writable output.
-
-## Acceptance Measurement
-
-The baseline is the 18 September 2026
-[main run](https://github.com/mokly-ai/mokly/actions/runs/35364820627), which
-took 32m43s, and the
-[successful PR run](https://github.com/mokly-ai/mokly/actions/runs/35360449325),
-which took 31m19s. The main run's Node 22.14 job recorded 13m06s for 1,807 unit
-tests, 14m54s for 452 browser tests, 2m18s for package checks and five
-consumers, and 36s for dependency and Chromium installation. The run consumed
-65.667 summed job minutes. These counts and consumption describe the baseline
-only.
-
-Acceptance uses two successful PR workflow runs of the same implementation
-commit: one after a controlled fresh npm workflow cache and one with restored
-caches. Record wall-clock time to `Required CI`, queue delay, runner
-availability/concurrency, the slowest shard, suite and preparation durations,
-dynamic inventories, and total runner minutes. Record hosted-run billing/cost
-data when GitHub exposes it; otherwise record the applicable repository plan and
-the calculated runner-minute consumption.
-
-The initial 6–10 minute goal assumes enough concurrent hosted runners and is not
-an acceptance waiver. Queue time and the up-to-22 downstream verification jobs
-must be reported separately from execution. Compare shard balance and the
-measured setup/teardown phases of the slow export fixtures before changing
-partitioning. Coverage, assertion deadlines, worker limits, audits and zero
-retry behavior are never relaxed to meet the timing target.
-
-Candidate `992c6a1` passed an empty-start cache attempt and two restored-cache
-attempts with complete dynamic inventories on both runtimes. The
-[measurement record](../reviews/ci-performance.md) retains all three observed
-results, including two queue-constrained misses and a 9m06s `Required CI`
-success with all 20 downstream runner slots available. Native whole-file
-sharding remains appropriate for the measured workload.
+The cache and audit continuation is [Dependency Cache And Security](./ci-verification-security.md).

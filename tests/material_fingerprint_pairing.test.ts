@@ -5,7 +5,7 @@ import { normalizeReviewPair } from "../dist/review/ignore.js";
 import { PageAnalysisPair } from "../dist/review/page_pair.js";
 
 const view = {
-  path: "screens/home.mobile.html",
+  path: "home/index.mobile.html",
   viewport: "mobile",
   colorScheme: "light",
 } as const;

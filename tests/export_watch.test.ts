@@ -4,7 +4,14 @@ import path from "node:path";
 import test from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 
-import { EXPORT_MARKER } from "../dist/export/ownership.js";
+import {
+  ExportIgnoredMatcher,
+  isExportIgnoredPath,
+} from "../dist/export/ignored.js";
+import {
+  EXPORT_MARKER,
+  parseExportOwnership,
+} from "../dist/export/ownership.js";
 import { exportCatalogue } from "../dist/export/run.js";
 import { classifyWatchPath } from "../dist/server/watch_events.js";
 import { isPackageOwnedIgnoredWatchPath } from "../dist/server/watch_paths.js";
@@ -39,7 +46,7 @@ test("watch ownership follows the inventory and does not suppress unowned descen
   for (const name of [
     EXPORT_MARKER,
     "index.html",
-    "static/screens/home.mobile.html",
+    "static/home/index.mobile.html",
   ])
     assert.equal(
       classifyWatchPath(
@@ -49,6 +56,80 @@ test("watch ownership follows the inventory and does not suppress unowned descen
       "ignore",
       name,
     );
+});
+
+test("retired schema 1 markers do not suppress watch paths", async (context) => {
+  const fixture = await createExportFixture();
+  context.after(() => fixture.close());
+  await fs.promises.mkdir(fixture.output);
+  await fs.promises.writeFile(path.join(fixture.output, "index.html"), "Old");
+  await fs.promises.writeFile(
+    path.join(fixture.output, EXPORT_MARKER),
+    JSON.stringify({ schemaVersion: 1, files: ["index.html"] }),
+  );
+  for (const name of [EXPORT_MARKER, "index.html"])
+    assert.equal(
+      isExportIgnoredPath(path.join(fixture.output, name), fixture.root),
+      false,
+      name,
+    );
+});
+
+test("watch parses an unchanged marker once and reparses after replacement", async (context) => {
+  const fixture = await createExportFixture();
+  context.after(() => fixture.close());
+  await exportCatalogue(fixture.config, { outDir: "site" });
+  let parses = 0;
+  const matcher = new ExportIgnoredMatcher({
+    lstat: (candidate) => fs.lstatSync(candidate),
+    read: (candidate) => fs.readFileSync(candidate, "utf8"),
+    parse(content) {
+      parses++;
+      return parseExportOwnership(content);
+    },
+  });
+  const owned = [EXPORT_MARKER, "index.html", "static/home/index.mobile.html"];
+  for (let iteration = 0; iteration < 5; iteration++)
+    for (const name of owned)
+      assert.equal(
+        matcher.isIgnored(path.join(fixture.output, name), fixture.root),
+        true,
+        name,
+      );
+  assert.equal(parses, 1);
+  await fs.promises.appendFile(path.join(fixture.output, EXPORT_MARKER), "\n");
+  assert.equal(
+    matcher.isIgnored(path.join(fixture.output, "index.html"), fixture.root),
+    true,
+  );
+  assert.equal(parses, 2);
+});
+
+test("watch accepts ownership markers between 8 and 64 MiB", () => {
+  const root = path.resolve("repository");
+  const output = path.join(root, "site");
+  const marker = path.join(output, EXPORT_MARKER);
+  const content = JSON.stringify({
+    schemaVersion: 2,
+    files: [{ path: "index.html", sha256: "a".repeat(64), size: 1 }],
+  });
+  const matcher = new ExportIgnoredMatcher({
+    lstat(candidate) {
+      if (candidate !== marker)
+        throw Object.assign(new Error(), { code: "ENOENT" });
+      return {
+        ctimeMs: 1,
+        dev: 1,
+        ino: 1,
+        isFile: () => true,
+        mtimeMs: 1,
+        size: 9 * 1024 * 1024,
+      };
+    },
+    parse: parseExportOwnership,
+    read: () => content,
+  });
+  assert.equal(matcher.isIgnored(path.join(output, "index.html"), root), true);
 });
 
 test("the real watcher traverses owned directories to observe later unowned additions", async (context) => {

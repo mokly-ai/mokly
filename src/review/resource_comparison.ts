@@ -13,6 +13,7 @@ import {
   decideReferencedResource,
   type ResourceDecision,
 } from "./deleted_resource.js";
+import type { MoveResources } from "./moves/resources.js";
 
 /** A view side after the comparison's paired normalization. */
 export interface ResourceDocument {
@@ -31,6 +32,7 @@ export class ResourceComparison {
     readonly css: CssResourceAnalysis = new CssResourceAnalysis(),
     readonly compareBytes = false,
     readonly componentAware = false,
+    readonly identities?: MoveResources,
   ) {
     before.pairWith(after, "before");
     after.pairWith(before, "after");
@@ -72,7 +74,10 @@ export class ResourceComparison {
         )
       : new Set<string>();
     const resources: ChangedResource[] = [];
-    const discovered = [...new Set([...bases, ...heads])];
+    const equal = this.identities?.equivalent(bases, heads);
+    const discovered = [...new Set([...bases, ...heads])].filter(
+      (route) => !equal?.has(route),
+    );
     const changedRoutes = discovered.filter(
       (route) => !excluded?.(route) && this.changed.has(this.path(route)),
     );

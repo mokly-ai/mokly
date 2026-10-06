@@ -84,12 +84,12 @@ edit; duplicates collapse; selected rows retain the table's order. Each row
 gets one cold and one warm fresh-server/browser-context sample, not a warmed
 classification worker. Chrome is launched before the measured command.
 
-| Scenario            | Input state relative to isolated Git `main`                       | Expected Changes ids               |
-| ------------------- | ----------------------------------------------------------------- | ---------------------------------- |
-| `no-changes`        | Baseline renderer and baseline `shared-1.css`                     | none                               |
-| `component-style`   | Only the area-one Action color constant edited; baseline CSS      | `area-1-action`                    |
-| `screen-markup`     | Only screen-one markup constant edited; baseline CSS              | `area-1-screen-1`, `area-1-flow-1` |
-| `linked-stylesheet` | Baseline renderer, **keep setup's unused rule** in `shared-1.css` | none                               |
+| Scenario            | Input state relative to isolated Git `main`                       | Expected Changes paths                                            |
+| ------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `no-changes`        | Baseline renderer and baseline `shared-1.css`                     | none                                                              |
+| `component-style`   | Only the area-one Action color constant edited; baseline CSS      | `area-1/components/action`                                        |
+| `screen-markup`     | Only screen-one markup constant edited; baseline CSS              | `area-1/screens/activity-group-1/screen-1`, `area-1/flows/flow-1` |
+| `linked-stylesheet` | Baseline renderer, **keep setup's unused rule** in `shared-1.css` | none                                                              |
 
 Reset both mutatable files independently before each scenario; never carry a
 previous edit into the next one. Build current outputs after preparation,

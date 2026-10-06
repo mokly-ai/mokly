@@ -112,7 +112,7 @@ test("excluded page styles yield only when no inline style is retained", () => {
 
 test("retained paths keep every changed dependency once, in order", () => {
   const reasons: readonly EntryChangeReason[] = [
-    { kind: "screen", id: "home" },
+    { kind: "screen", screenPath: "home" },
     { kind: "dependency", path: SHARED },
     { kind: "dependency", path: "mockups/logo.svg" },
     { kind: "dependency", path: SHARED },

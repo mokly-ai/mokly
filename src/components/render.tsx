@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { ComponentViewRecord } from "@mokly/viewer";
 import { invalidData } from "@mokly/viewer/data";
 
+import { definitionPath } from "../authoring/identity.js";
 import { rendererDocument } from "../renderer/result.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { RenderInput, Renderer } from "../renderer/types.js";
@@ -33,9 +34,9 @@ export const renderWithComponents: ComponentGraphRenderer = (
   definitions,
 ) => {
   const collector = new ComponentCollector(
-    new Map(definitions.map((entry) => [entry.id, entry])),
+    new Map(definitions.map((entry) => [definitionPath(entry), entry])),
     input,
-    `${input.entry.id} / ${input.viewport} / ${input.colorScheme}`,
+    `${input.entry.path} / ${input.viewport} / ${input.colorScheme}`,
   );
   const node = (
     <ComponentContext
@@ -44,7 +45,8 @@ export const renderWithComponents: ComponentGraphRenderer = (
       {input.entry.kind === "component" ? (
         <ComponentRoot
           definition={definitions.find(
-            (definition) => definition.id === input.entry.variantOf,
+            (definition) =>
+              definitionPath(definition) === input.entry.variantOf,
           )}
           entry={input.entry}
           input={input}
@@ -87,11 +89,12 @@ function ComponentRoot({
   entry: ComponentVariantDefinition;
   input: RenderInput;
 }): ReactNode {
-  if (!definition) invalidData(entry.id, "unknown component parent");
+  if (!definition)
+    invalidData(entry.path ?? "<unresolved>", "unknown component parent");
   const { data, slots } = componentInputs(
     definition,
     entry.props,
-    `${definition.id} / ${entry.id}`,
+    `${definitionPath(definition)} / ${entry.path}`,
   );
   return definition.render(
     { ...(input.componentProps ?? data), ...slots },

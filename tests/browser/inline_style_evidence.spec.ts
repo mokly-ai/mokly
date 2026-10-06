@@ -28,7 +28,7 @@ for (const [name, viewport] of INSPECTOR_VIEWPORTS) {
     test("renders excluded, matched and affected classification in Details", async ({
       page,
     }) => {
-      await page.goto(`${fixture.url}/view/screens/excluded.html`);
+      await page.goto(`${fixture.url}/view/excluded/`);
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Unmodified",
       );
@@ -48,7 +48,7 @@ for (const [name, viewport] of INSPECTOR_VIEWPORTS) {
         name === "mobile" ? "absolute" : "relative",
       );
 
-      await page.goto(`${fixture.url}/view/screens/matched.html`);
+      await page.goto(`${fixture.url}/view/matched/`);
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Changed",
       );
@@ -63,7 +63,7 @@ for (const [name, viewport] of INSPECTOR_VIEWPORTS) {
         `Desktop · ${CHANGED_HEADING}`,
       ]);
 
-      await page.goto(`${fixture.url}/view/screens/affected.html`);
+      await page.goto(`${fixture.url}/view/affected/`);
       const affected = await openEvidence(page);
       await expect(affected).toContainText("Changed component: Action");
       await expect(

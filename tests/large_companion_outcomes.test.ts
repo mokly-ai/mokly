@@ -42,9 +42,9 @@ const records = [
 const input = {
   scenario: "no-changes",
   state: "cold",
-  expectedChangedIds: [],
+  expectedChangedPaths: [],
   expectedChangedRoutes: [],
-  changedIds: [],
+  changedPaths: [],
   changedRoutes: [],
   templateDigest: "template",
   fixtureCommit: "fixture",
@@ -94,7 +94,7 @@ test("companions require one valid detail record within the completed worker", (
     "incomplete",
   );
   assert.equal(
-    companionOutcome(records, { ...input, changedIds: ["wrong"] }).outcome,
+    companionOutcome(records, { ...input, changedPaths: ["wrong"] }).outcome,
     "membership-mismatch",
   );
   const noisy = [

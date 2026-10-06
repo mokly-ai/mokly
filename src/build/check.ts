@@ -5,16 +5,19 @@ import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
 import type { Compilation } from "./compile.js";
+import { generatedMatchesBytes } from "./generated_file.js";
 import {
   pendingGeneratedOrphanRoutes,
   unclaimedGeneratedRoutes,
 } from "./ownership.js";
+import { assertSafeGeneratedTree } from "./reserved_tree.js";
 
 /** Compare expected bytes with committed output without writing anything. */
 export function checkCompilation(
   compilation: Compilation,
   config: ResolvedConfig,
 ): void {
+  assertSafeGeneratedTree(config);
   config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
   const missing: string[] = [];
   const stale: string[] = [];
@@ -22,7 +25,7 @@ export function checkCompilation(
     const target = path.join(config.mockupsDir, route);
     if (!fs.existsSync(target)) {
       missing.push(route);
-    } else if (fs.readFileSync(target, "utf8") !== expected) {
+    } else if (!generatedMatchesBytes(expected, fs.readFileSync(target))) {
       stale.push(route);
     }
   }
@@ -47,7 +50,7 @@ export function checkCompilation(
   const unclaimedGuidance =
     unclaimed.length === 0
       ? ""
-      : "\nUnclaimed generated files are not changed by build; delete them or restore the source under a configured entry glob.";
+      : "\nUnclaimed generated files are not changed by build; delete them or restore the source under a configured root file glob.";
   throw new MoklyError(
     "build-invalid",
     `committed output does not match source; run mokly build:\n${groups.join("\n")}${unclaimedGuidance}`,

@@ -9,7 +9,7 @@ import {
   cssSchemaFixture,
 } from "./helpers/review_css_schema.js";
 
-for (const version of [4] as const) {
+for (const version of [5] as const) {
   test(`v${version} validates material even without resource evidence`, () => {
     const result = cssSchemaFixture(version);
     for (const view of result.screens[0]!.views) {
@@ -80,7 +80,7 @@ for (const version of [4] as const) {
         analysis: patch,
       });
       assert.throws(() => parseReviewResult(value), /review/);
-      const entry = cssSchemaFixture(4);
+      const entry = cssSchemaFixture(5);
       Object.assign(entry.changes[0]!, {
         reasons: [
           { kind: "dependency", path: "mockups/shared.css", analysis: patch },

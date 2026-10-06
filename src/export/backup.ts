@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { errorMessage } from "../errors.js";
+import { errorMessage, isCancellation } from "../errors.js";
 
 import {
   assertDestination,
@@ -8,11 +8,7 @@ import {
 } from "./destination.js";
 import { exportError } from "./error.js";
 import type { ExportOperations } from "./operations.js";
-import {
-  assertExportOwnership,
-  EXPORT_MARKER,
-  type LegacyExportOwnership,
-} from "./ownership.js";
+import { assertExportOwnership, EXPORT_MARKER } from "./ownership.js";
 
 /** Recovery and deletion policy for a captured, potentially concurrently edited output. */
 export class ExportBackup {
@@ -20,12 +16,11 @@ export class ExportBackup {
     private readonly output: string,
     private readonly backup: string,
     private readonly operations: ExportOperations,
-    private readonly legacy: LegacyExportOwnership | undefined,
   ) {}
 
   /** Validate the tree actually moved, not only the destination observed earlier. */
   async validate(initial: ExportDirectoryIdentity): Promise<void> {
-    if (!(await assertExportOwnership(this.backup, this.legacy)))
+    if (!(await assertExportOwnership(this.backup)))
       throw exportError(
         `Export backup disappeared before installation: ${this.backup}.`,
       );
@@ -54,21 +49,19 @@ export class ExportBackup {
     throw exportError(
       `Could not install export; the previous output was restored. ${errorMessage(primary)}`,
       primary,
+      { cancelled: isCancellation(primary) },
     );
   }
 
   /** Delete only a validated snapshot; new files make non-recursive removal fail. */
   async discard(): Promise<void> {
     try {
-      const entries = await assertExportOwnership(this.backup, this.legacy);
+      const entries = await assertExportOwnership(this.backup);
       if (!entries)
         throw exportError(
           `Export backup disappeared during cleanup: ${this.backup}.`,
         );
-      const marker =
-        this.legacy && entries.files.includes(this.legacy.marker)
-          ? this.legacy.marker
-          : EXPORT_MARKER;
+      const marker = EXPORT_MARKER;
       for (const name of entries.files.filter((name) => name !== marker))
         await this.operations.unlink(path.join(this.backup, name));
       for (const name of [...entries.directories].sort(

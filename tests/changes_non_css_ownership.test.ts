@@ -22,8 +22,8 @@ function actualOnlyPublicAssetSource(): string {
     actionRender:
       '(props) => <button>{props.label}{props.label === "Finish" ? <img src="../asset.svg" /> : null}</button>',
   }).replace(
-    'id: "action",',
-    'id: "action", dependencies: ["mockups/asset.svg"], ownedDependencies: ["mockups/asset.svg"],',
+    'path: "action",',
+    'path: "action", dependencies: ["mockups/asset.svg"], ownedDependencies: ["mockups/asset.svg"],',
   );
 }
 
@@ -50,16 +50,18 @@ test("committed non-CSS actual-invocation evidence belongs to its declared owner
       "main",
     ),
   ]);
-  assert.deepEqual(live.changedIds, ["action"]);
-  assert.equal(artifact.result.schemaVersion, 4);
-  if (artifact.result.schemaVersion !== 4) return;
+  assert.deepEqual(live.changedEntries, ["action"]);
+  assert.equal(artifact.result.schemaVersion, 5);
+  if (artifact.result.schemaVersion !== 5) return;
   assert.deepEqual(artifact.result.changes, [
     {
       kind: "component",
-      before: artifact.result.components.find((entry) => entry.id === "action")!
-        .before,
-      after: artifact.result.components.find((entry) => entry.id === "action")!
-        .after,
+      before: artifact.result.components.find(
+        (entry) => entry.path === "action",
+      )!.before,
+      after: artifact.result.components.find(
+        (entry) => entry.path === "action",
+      )!.after,
       reasons: [{ kind: "dependency", path: "mockups/asset.svg" }],
     },
   ]);
@@ -68,7 +70,7 @@ test("committed non-CSS actual-invocation evidence belongs to its declared owner
       (item) =>
         item.changedComponentId === "action" &&
         item.consumer.kind === "screen" &&
-        item.consumer.id === "home",
+        item.consumer.path === "home",
     ),
   );
 });
@@ -96,7 +98,7 @@ test("derived non-CSS actual-invocation bytes become owner material", async (t) 
   });
   assert.deepEqual(
     result.changes.map((entry) => ({
-      route: entry.after?.id,
+      route: entry.after?.path,
       reasons: entry.reasons,
     })),
     [{ route: "action", reasons: [{ kind: "material" }] }],
@@ -111,8 +113,8 @@ test("derived non-CSS actual-invocation bytes become owner material", async (t) 
 
 test("non-public implementation dependencies keep declarative ownership", async (t) => {
   const source = componentEntrySource().replace(
-    'id: "action",',
-    'id: "action", dependencies: ["shared/action.ts"], ownedDependencies: ["shared/action.ts"],',
+    'path: "action",',
+    'path: "action", dependencies: ["shared/action.ts"], ownedDependencies: ["shared/action.ts"],',
   );
   const fixture = await changedFixture(
     t,
@@ -135,10 +137,10 @@ test("non-public implementation dependencies keep declarative ownership", async 
     "main",
     committedReviewRepository(fixture.config),
   );
-  assert.deepEqual(live.changedIds, ["action"]);
+  assert.deepEqual(live.changedEntries, ["action"]);
   const result = live.componentChanges?.result;
-  assert.equal(result?.schemaVersion, 4);
-  if (result?.schemaVersion !== 4) return;
+  assert.equal(result?.schemaVersion, 5);
+  if (result?.schemaVersion !== 5) return;
   assert.deepEqual(result.changes[0]?.reasons, [
     { kind: "dependency", path: "shared/action.ts" },
   ]);

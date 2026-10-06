@@ -2,7 +2,7 @@
 
 These local tools prepare deterministic consumer catalogues and measure real
 Serve classification. Build Mokly first. The [fixture README](../../tests/fixtures/large/README.md)
-owns setup and historical results; its unchanged
+owns setup and historical results; the
 [benchmark contract](../../tests/fixtures/large/benchmark-contract.md) owns identity,
 scenarios, restoration and acceptance.
 
@@ -35,8 +35,9 @@ scoped detail record with valid exact counts and bounds. `materialDetails` owns
 one pass per scenario; `benchmark` retains the existing cold/warm matrix.
 
 Never edit files under `tests/fixtures/large/` except `README.md` for diagnostics
-work. `identity.mjs` hashes all other template bytes, so edits would invalidate
-shared fixtures and the M2 acceptance reference. Harness code lives here,
+work. `identity.mjs` hashes all other template bytes, so edits invalidate shared
+fixtures. The mainline path-identity migration changes those templates; a later
+acceptance plan needs a fresh same-session reference. Harness code lives here,
 outside that digest.
 
 ```bash

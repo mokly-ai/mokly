@@ -59,9 +59,9 @@ export async function assertComparisonPaths(
   };
   let comparedViews = 0;
   for (const entry of fixture.after.entries) {
-    if (entryIds && !entryIds.includes(entry.id)) continue;
+    if (entryIds && !entryIds.includes(entry.path)) continue;
     const before = fixture.before.entries.find(
-      (candidate) => candidate.id === entry.id,
+      (candidate) => candidate.path === entry.path,
     );
     assert.ok(before);
     const beforeViews = generatedViews(before);
@@ -93,12 +93,12 @@ export async function assertComparisonPaths(
               event.event === "start",
           ).length,
           expectedInlineAnalyses,
-          `${entry.id}: ${view.path} inline analysis count`,
+          `${entry.path}: ${view.path} inline analysis count`,
         );
       assert.equal(
         comparison.comparisonPath,
         expected,
-        `${entry.id}: ${view.path}`,
+        `${entry.path}: ${view.path}`,
       );
       comparedViews += 1;
     }

@@ -135,7 +135,7 @@ for (const mode of ["committed", "derived"] as const) {
   test(`${mode} real design library classification preserves every cache field`, async (context) => {
     const fixture = await designLibraryFixture(context, mode);
     const file =
-      "examples/basic/entries/design/library/controls/tag-chip.view.tsx";
+      "examples/basic/specs/design/library/controls/tag-chip.view.tsx";
     await fixture.edit(file, (source) =>
       source.replace("{label}", "{label} revised"),
     );
@@ -158,7 +158,9 @@ for (const mode of ["committed", "derived"] as const) {
       baseRef: "main",
     });
     assert.ok(
-      result.changes.some((entry) => entry.after?.id === "design-ui-tag-chip"),
+      result.changes.some(
+        (entry) => entry.after?.path === "design/library/controls/tag-chip",
+      ),
     );
   });
 }

@@ -69,14 +69,16 @@ export async function comparePageViews(
   const compare = oracle ? delivered : compareComponentView;
   const results = [];
   for (const entry of fixture.after.entries) {
-    const previous = fixture.before.entries.find(({ id }) => id === entry.id)!;
+    const previous = fixture.before.entries.find(
+      ({ path: id }) => id === entry.path,
+    )!;
     for (const after of generatedViews(entry)) {
       const before = generatedViews(previous).find(
         ({ path }) => path === after.path,
       )!;
       const root = "variantOf" in entry ? entry.variantOf : undefined;
       results.push({
-        entryId: entry.id,
+        entryId: entry.path,
         path: after.path,
         comparison: await compare(context, before, after, root),
       });

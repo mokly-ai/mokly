@@ -42,7 +42,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("a screen the changed styles reach names them in Details", async ({
       page,
     }) => {
-      await page.goto(`${matched.url}/view/screens/home.html`);
+      await page.goto(`${matched.url}/view/home/`);
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Changed",
       );
@@ -81,7 +81,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("an excluded screen stays out of Changes and explains why", async ({
       page,
     }) => {
-      await page.goto(`${matched.url}/view/screens/details.html`);
+      await page.goto(`${matched.url}/view/details/`);
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Unmodified",
       );
@@ -105,10 +105,10 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await openCatalogue(page, name);
       await page.locator('[data-filter="changed"]').click();
       await expect(
-        page.locator('[data-route="screens/home.html"]'),
+        page.locator('[data-route="home/index.html"]'),
       ).toBeVisible();
       await expect(
-        page.locator('[data-route="screens/details.html"]'),
+        page.locator('[data-route="details/index.html"]'),
       ).toBeHidden();
       await expect(page.locator(".mbk-nav-scroll")).not.toContainText(".auth");
       await expect(page.locator(".mbk-nav-scroll")).not.toContainText(
@@ -119,7 +119,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("a change that can reach anything says so without naming a status", async ({
       page,
     }) => {
-      await page.goto(`${unresolved.url}/view/screens/home.html`);
+      await page.goto(`${unresolved.url}/view/home/`);
       const evidence = await openEvidence(page);
       await expect(
         evidence.getByText(UNRESOLVED_LEAD, { exact: true }),
@@ -132,7 +132,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("an unchanged saved view closes with its own status line", async ({
       page,
     }) => {
-      await page.goto(`${matched.url}/view/components/badge.html`);
+      await page.goto(`${matched.url}/view/badge/`);
       await expect(page.locator("[data-workspace-status]")).toHaveText(
         "Unmodified",
       );
@@ -146,7 +146,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("a rendered change keeps the screen heading beside its styles", async ({
       page,
     }) => {
-      await page.goto(`${material.url}/view/screens/home.html`);
+      await page.goto(`${material.url}/view/home/`);
       const evidence = await openEvidence(page);
       await expect(
         evidence.getByText(MATCHED_LEAD, { exact: true }),
@@ -160,7 +160,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
     test("the comparison heading leads with the style outcome", async ({
       page,
     }) => {
-      await page.goto(`${matched.url}/view/screens/home.html`);
+      await page.goto(`${matched.url}/view/home/`);
       await page
         .getByRole("button", { name: "Side by side", exact: true })
         .click();

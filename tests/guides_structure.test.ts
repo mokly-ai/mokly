@@ -24,6 +24,7 @@ const EXPECTED = [
   "authoring/pages",
   "authoring/links",
   "authoring/review-ignore",
+  "authoring/styles",
   "catalogue/browse",
   "catalogue/search-and-filters",
   "catalogue/changes",
@@ -46,6 +47,7 @@ const REFERENCE_SLUGS = new Set([
   "export-delivery",
   "export-ownership",
   "upload",
+  "upload-exchange",
   "navigation",
   "link-controls",
   "pages",
@@ -71,7 +73,7 @@ function allowedLink(destination: string): boolean {
   }
 }
 
-test("the guide tree contains the exact 30-page reading order", () => {
+test("the guide tree contains the exact 31-page reading order", () => {
   assert.deepEqual(
     GUIDES.map((guide) => guide.id),
     EXPECTED,
@@ -87,7 +89,7 @@ test("the guide tree contains the exact 30-page reading order", () => {
     readdirSync(guidesRoot, { recursive: true, withFileTypes: true }).filter(
       (entry) => entry.isFile(),
     ).length,
-    30,
+    31,
   );
 });
 
@@ -149,20 +151,18 @@ test("bodies use headings, comments, and fenced code within the contract", () =>
   }
 });
 
-test("the initial corpus has no links and future destinations are bounded", () => {
+test("guide links use only bounded destinations", () => {
   for (const guide of GUIDES) {
     const prose = withoutFencedCode(guide.body).replace(
       /<!--[\s\S]*?-->/gu,
       "",
     );
-    assert.deepEqual(
-      [...prose.matchAll(/!?\[[^\]]*\]\(([^\s)]+)[^)]*\)/gu)],
-      [],
-    );
+    for (const match of prose.matchAll(/!?\[[^\]]*\]\(([^\s)]+)[^)]*\)/gu))
+      assert.ok(allowedLink(match[1] ?? ""), `${guide.id}: ${match[1]}`);
   }
   for (const destination of [
     "/docs/authoring/screens/",
-    "/docs/reference/upload/#limits",
+    "/docs/reference/upload-exchange/#export-files-and-limits",
     "/docs/",
     "/changelog/#v0100",
     "https://example.com/docs",

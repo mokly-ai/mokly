@@ -174,7 +174,7 @@ export function useWorkspaceInspection(
   );
   useEffect(
     () => setPresentationFailed(false),
-    [input.data.entry.id, input.views, sessionSignature],
+    [input.data.entry.path, input.views, sessionSignature],
   );
 
   useEffect(() => {

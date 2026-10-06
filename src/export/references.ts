@@ -1,6 +1,8 @@
 import path from "node:path";
 
-import { isSafeRepositoryPath, snapshotSidePath } from "@mokly/viewer/data";
+import { parse } from "es-module-lexer/minimal";
+
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import { extractCssReferences } from "../css_references.js";
@@ -10,11 +12,13 @@ import {
   type ResourceReference,
 } from "../html_link_validation.js";
 import { extractHtmlReferences } from "../html_references.js";
+import { classifyResourceUrl } from "../resource_url.js";
 
 import { exportError } from "./error.js";
 import { ExportPathIndex } from "./path_index.js";
 
-const SNAPSHOT_MARKER = `/${path.posix.dirname(snapshotSidePath("before"))}/`;
+const COMPARISON_SNAPSHOT =
+  /^__mokly\/diffs\/__generations\/[a-f0-9]{64}\/snapshots\//;
 
 /** Prove every local document/resource/module request has an exported target. */
 export function validateExportReferences(
@@ -56,7 +60,7 @@ export function validateExportReferences(
     if (extension === ".html" || extension === ".htm") {
       references.push(
         ...(documents.get(name)?.references ?? []).filter(
-          (item) => !item.checkFragment || !name.includes(SNAPSHOT_MARKER),
+          (item) => !item.checkFragment || !COMPARISON_SNAPSHOT.test(name),
         ),
       );
     } else if (extension === ".css")
@@ -66,12 +70,8 @@ export function validateExportReferences(
           checkFragment: false,
         })),
       );
-    else if (extension === ".js" && name.startsWith("__mokly/")) {
-      for (const match of content.matchAll(
-        /\b(?:from|import)\s*["']([^"']+)["']/g,
-      ))
-        references.push({ value: match[1] ?? "", checkFragment: false });
-    }
+    else if (extension === ".js" && name.startsWith("__mokly/"))
+      references.push(...moduleReferences(name, content));
     for (const reference of references) {
       const target = referenceTarget(name, reference.value);
       if (target === undefined) continue;
@@ -94,12 +94,35 @@ export function validateExportReferences(
   }
 }
 
+function moduleReferences(
+  source: string,
+  content: string,
+): ResourceReference[] {
+  try {
+    const [imports] = parse(content, source);
+    return imports.flatMap(({ n }) =>
+      n === undefined ? [] : [{ value: n, checkFragment: false }],
+    );
+  } catch (error) {
+    throw exportError(
+      `Could not read export module references: ${source}`,
+      error,
+    );
+  }
+}
+
 function referenceTarget(source: string, value: string): string | undefined {
   const reference = value.trim();
-  if (reference === "" || /^(?:https?:|mailto:|tel:|data:)/i.test(reference))
-    return undefined;
+  const classification = classifyResourceUrl(
+    reference,
+    source.endsWith(".css") ? "css" : "html",
+  );
+  if (classification.kind === "external") return;
   if (reference.startsWith("#") || reference.startsWith("?")) return source;
-  if (reference.startsWith("//") || /^[a-z][a-z0-9+.-]*:/i.test(reference))
+  if (
+    classification.kind === "invalid" &&
+    classification.reason !== "root-absolute"
+  )
     throw exportError(`Unsupported export URL: ${source} -> ${reference}`);
   const encoded = reference.split(/[?#]/, 1)[0] ?? "";
   let decoded: string;

@@ -60,6 +60,20 @@ test("existing inline, CSS and Changes catalogues equal M8 text materials in bot
           excludedPairs: number;
         },
     );
+  if (process.env.MOKLY_FINGERPRINT_EVIDENCE) {
+    await fs.writeFile(
+      process.env.MOKLY_FINGERPRINT_EVIDENCE,
+      JSON.stringify(records, null, 2) + "\n",
+    );
+    await fs.writeFile(
+      process.env.MOKLY_FINGERPRINT_EVIDENCE + ".stdout.log",
+      stdout,
+    );
+    await fs.writeFile(
+      process.env.MOKLY_FINGERPRINT_EVIDENCE + ".stderr.log",
+      stderr,
+    );
+  }
   const total = (
     field:
       | "catalogues"
@@ -77,9 +91,9 @@ test("existing inline, CSS and Changes catalogues equal M8 text materials in bot
       excludedPairs: total("excludedPairs"),
     },
     {
-      catalogues: 382,
-      pairs: 760,
-      fingerprintedViews: 7844,
+      catalogues: 432,
+      pairs: 860,
+      fingerprintedViews: 7612,
       excludedCatalogues: 2,
       excludedPairs: 4,
     },
@@ -95,19 +109,5 @@ test("existing inline, CSS and Changes catalogues equal M8 text materials in bot
   context.diagnostic(
     `${files.length} files, ${records.reduce((sum, row) => sum + row.catalogues, 0)} catalogues, ${records.reduce((sum, row) => sum + row.pairs, 0)} committed/derived pairs, ${records.reduce((sum, row) => sum + row.fingerprintedViews, 0)} fingerprinted views, ${records.reduce((sum, row) => sum + row.fingerprintHashes, 0)} fingerprint hashes; ${total("excludedCatalogues")} named exclusions (${total("excludedPairs")} pairs)`,
   );
-  if (process.env.MOKLY_FINGERPRINT_EVIDENCE) {
-    await fs.writeFile(
-      process.env.MOKLY_FINGERPRINT_EVIDENCE,
-      JSON.stringify(records, null, 2) + "\n",
-    );
-    await fs.writeFile(
-      process.env.MOKLY_FINGERPRINT_EVIDENCE + ".stdout.log",
-      stdout,
-    );
-    await fs.writeFile(
-      process.env.MOKLY_FINGERPRINT_EVIDENCE + ".stderr.log",
-      stderr,
-    );
-  }
   successful = true;
 });

@@ -78,7 +78,7 @@ export const componentChangeCases: readonly ComponentChangeCase[] = [
         'props: { label: "Continue" }',
         'props: { label: "Next" }',
       ),
-    ["action-default"],
+    ["action/default"],
   ],
   [
     "control schema metadata",

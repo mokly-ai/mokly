@@ -19,8 +19,8 @@ for (const mode of ["committed", "derived"] as const)
       },
     );
     const { result } = await fixture.complete(false, mode);
-    assert.ok(result.schemaVersion === 4);
-    const home = result.screens.find((screen) => screen.id === "home");
+    assert.ok(result.schemaVersion === 5);
+    const home = result.screens.find((screen) => screen.path === "home");
     assert.ok(home);
     assert.equal(home.views.length, 2);
     for (const view of home.views) {
@@ -34,7 +34,7 @@ for (const mode of ["committed", "derived"] as const)
     }
     assert.ok(
       result.changes
-        .find((change) => change.after?.id === "home")
+        .find((change) => change.after?.path === "home")
         ?.reasons.some((reason) => reason.kind === "material"),
     );
     assert.deepEqual(

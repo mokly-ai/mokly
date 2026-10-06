@@ -30,6 +30,9 @@
   the simplest, smallest, or quickest fix when a larger change would materially
   reduce future bugs, review findings, or maintenance risk; explain the tradeoff
   and recommend the scope that best protects the codebase.
+- Write agent responses to the user, including summaries, plans, and review
+  output, in Simplified Technical English (STE, ASD-STE100): short sentences,
+  one instruction per sentence, active voice, and simple, consistent words
 - Documentation-only or plan-only changes, including initial plan creation, do not require `cargo xtask check`; validate the changed Markdown and review the diff instead
 - This project is not currently in production/live, so breaking changes are
   acceptable when they improve correctness, architecture, or product quality
@@ -154,7 +157,7 @@
   explanatory annotations inside the rendered screen area. Put implementation
   hints below the screen or in a separate non-screen section.
 - Mokly's example catalogue under `examples/basic/generated/` is generated from
-  the structured definitions under `examples/basic/entries/` using
+  the structured definitions under `examples/basic/specs/` using
   `examples/basic/mokly.config.ts`. Canonical entry modules end in `.mockup.ts`
   or `.mockup.tsx`; shared TSX components and page-render helpers live alongside
   them in the example source tree. Definitions and helpers should compose TSX
@@ -195,9 +198,14 @@
 - Plans do not live at the repo root anymore; they live under `./plans`
 - Create one plan file per change, named after the change in concise kebab-case, for example `tool-request-error-contract-alignment.md`
 - Do not combine unrelated work into a shared plan file; create a new plan file for each distinct change
-- `plans/README.md` is the directory index and must list active and completed plans
-- When creating a new plan file, add it to `plans/README.md` immediately
-- When a plan is completed, move its link from the active section to the completed section in `plans/README.md`
+- There is no plans index file. Each plan records its own status in the first
+  paragraph directly below its title. That paragraph starts with
+  `Status: Active` while the plan is open, or with `Status: Completed` when it
+  is closed. List the open plans with `grep -l '^Status: Active' plans/*.md`
+- When creating a new plan file, start it with a `Status: Active` paragraph
+- When a plan's PR merges, change its status paragraph to start with
+  `Status: Completed. [PR #<number>](<url>) merged on <YYYY-MM-DD>.` and keep
+  any open review findings or follow-up owners in that paragraph
 - Each plan describes work needed to ensure complete alignment with the protocol docs
 - The PR merge is the completion boundary for a plan. Every milestone and its
   required TODOs must be completable on the branch before the PR merges or by
@@ -206,8 +214,8 @@
 - Put post-merge work, including additional tasks and smoke tests that require
   the merged or deployed change, in a `## Post-merge follow-up (non-blocking)`
   section outside the milestones. Items in this section do not affect
-  milestone or plan completion and must not prevent the plan from being closed
-  and moved to completed when the PR merges.
+  milestone or plan completion and must not prevent the plan from being marked
+  completed when the PR merges.
 - Keep smoke tests that can and should run before merge as required milestone
   TODOs under the normal testing rules.
 - Each plan should break up the work into concrete units called Milestones. At the end of each milestone there should be a functioning product. Never leave the code base or feature in a broken state.
@@ -245,7 +253,7 @@
 - Any time a new TODO is discovered during implementation, it should be added under the relevant milestone (just add the new TODO, and then continue with the active TODO)
 - If a TODO is complex, break it down into sub-tasks/TODOs
 - As you complete items, you should tick them off in the relevant file under `./plans`
-- The workspace `README.md` should link to `plans/README.md`, not to an individual plan file unless a specific change needs to be referenced
+- The workspace `README.md` should link to the `plans/` directory, not to an individual plan file unless a specific change needs to be referenced
 - Mark a milestone as completed when all the tasks are completed, do not re-open existing milestones - create a new milestone if new tasks are needed that do not fit into an existing milestone
 
 ## Rust
@@ -292,6 +300,8 @@
 - Add doc comments to private Rust items when they define non-obvious behavior, invariants, or contracts that a maintainer would otherwise need to infer from the implementation.
 
 ### Rust File Size Limits
+
+The repository gate also limits changed TypeScript/JavaScript anywhere in the repository to 300 lines and protocol Markdown to 250 lines, except pages with exact reviewed caps in `tests/protocol_doc_sizes.test.ts`; fetch `origin/main` before `cargo xtask source-file-length-lint`. It excludes only Git-ignored untracked files.
 
 The file length linter enforces a **300-line** hard cap for Rust files under `crates/` and `xtask/` when they are changed relative to `origin/main` or present in the working tree. Run `cargo xtask rust-file-length-lint --all` to audit every Rust file under those directories. Files exceeding 300 lines must be refactored into multiple modules; there is no override mechanism.
 
@@ -508,6 +518,27 @@ docs, mockups, plans, migrations, or schema—without explicit user approval.
 
 - Resolve conflicts path-by-path; never bulk-take `--ours` or `--theirs` for a
   tree, directory, or feature. Passing CI does not prove preservation.
+- Immediately after committing each merge, before another commit, name it and
+  confirm it has exactly two parents; merge one branch at a time because Git
+  skips remerge diffs for octopus merges. Stop if the parent check fails.
+  Review every listed path before pushing:
+
+  ```sh
+  merge=$(git rev-parse HEAD)
+  git rev-parse --verify --quiet "$merge^2" >/dev/null &&
+    ! git rev-parse --verify --quiet "$merge^3" >/dev/null # succeeds only for exactly two parents
+  git show --remerge-diff --stat "$merge"
+  git show --remerge-diff "$merge" -- <path> # repeat for every listed path
+  git diff "$merge" HEAD # review commits made after the merge
+  ```
+
+  The remerge diff shows conflict resolutions, edits to one-sided files,
+  undone changes and deletions. Restore lost content before pushing with
+  `git commit --amend`, which keeps both parents; then review the merge again.
+  After pushing, use a follow-up commit.
+  Justify each intentional decision in the PR description, naming every path
+  it affects. If no PR exists yet, record the justifications in the active
+  plan milestone and copy them into the PR description when it opens.
 
 - Before commit and after commit, inspect the diff and deletions against main:
 
@@ -522,7 +553,9 @@ docs, mockups, plans, migrations, or schema—without explicit user approval.
 
 ### Rules
 
-Commit title (first line) must be <= 50 characters.
+Use at most 50 characters for individual commit titles (the first line).
+Pull request titles and their squash commit titles may use at most 72 Unicode
+code points. Keep the Conventional Commits format for both.
 Commit body (subsequent lines, after a blank line) has no strict length limit.
 If a merge produces conflicts, resolve every conflict and verify the resulting
 worktree before saying the merge or work is complete.

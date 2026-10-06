@@ -7,7 +7,7 @@ import {
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
 import { compareComponentViews } from "../dist/review/component_compare_views.js";
-import { viewPairs } from "../dist/review/component_pairing.js";
+import { entryViewPairs } from "../dist/review/component_pairing.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { pageContext } from "./helpers/page_comparison.js";
@@ -21,11 +21,8 @@ for (const mode of ["committed", "derived"] as const)
       "<style>.entry{color:blue}</style>",
       mode,
     );
-    const before = generatedViews(
-      fixture.before.entries.find(({ id }) => id === "home")!,
-    );
     const after = generatedViews(
-      fixture.after.entries.find(({ id }) => id === "home")!,
+      fixture.after.entries.find(({ path: id }) => id === "home")!,
     );
     assert.equal(after.length, 2);
     const fallback = after[1]!.path;
@@ -42,12 +39,27 @@ for (const mode of ["committed", "derived"] as const)
       ]),
     };
     const events: TimingEvent[] = [];
+    const beforeEntry = fixture.before.entries.find(
+      (entry) => entry.path === "home",
+    );
+    const afterEntry = fixture.after.entries.find(
+      (entry) => entry.path === "home",
+    );
+    assert.ok(beforeEntry?.kind === "screen" && afterEntry?.kind === "screen");
     const results = await runWithTimings(
       true,
       "test",
       () =>
         runWithDocumentWork(() =>
-          compareComponentViews(pageContext(input), viewPairs(before, after)),
+          compareComponentViews(
+            pageContext(input),
+            entryViewPairs(
+              { before: beforeEntry, after: afterEntry },
+              new Map(),
+              new Map(),
+              [],
+            ).views,
+          ),
         ),
       { write: (event) => events.push(event) },
     );

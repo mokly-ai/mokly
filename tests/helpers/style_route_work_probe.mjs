@@ -10,10 +10,10 @@ input.afterFiles = new Map(input.afterFiles);
 const { generatedViews } =
   await import("../../packages/viewer/dist/components/views.js");
 const before = generatedViews(
-  input.before.entries.find(({ id }) => id === "home"),
+  input.before.entries.find(({ path }) => path === "home"),
 )[0];
 const after = generatedViews(
-  input.after.entries.find(({ id }) => id === "home"),
+  input.after.entries.find(({ path }) => path === "home"),
 )[0];
 mock.module("../../dist/review/material_marker_offsets.js", {
   namedExports: {

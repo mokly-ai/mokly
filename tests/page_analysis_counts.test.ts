@@ -61,7 +61,7 @@ for (const mode of ["committed", "derived"] as const)
 test("added and removed views parse their sole original side exactly once", async (context) => {
   const fixture = await componentReviewFixture(context, (source) => source);
   const view = generatedViews(
-    fixture.after.manifest.entries.find(({ id }) => id === "home")!,
+    fixture.after.manifest.entries.find(({ path: id }) => id === "home")!,
   )[0]!;
   const input = {
     ...fixture,

@@ -20,15 +20,12 @@ import { defaultSelection } from "../packages/viewer/dist/viewer/selection.js";
 
 const context: ShellContext = {
   base: "",
-  changedIds: [],
+  changedEntries: [],
   changesStatus: "ready",
   updateVersion: 0,
 };
-const welcome = leaf("screens/welcome.html", "Welcome", [
-  "forms",
-  "onboarding",
-]);
-const details = leaf("screens/details.html", "Details", ["forms"]);
+const welcome = leaf("welcome/index.html", "Welcome", ["forms", "onboarding"]);
+const details = leaf("details/index.html", "Details", ["forms"]);
 const glossary = leaf("docs/glossary.html", "Glossary");
 
 test("a tag chip enters its term and filters the catalogue", () => {
@@ -100,6 +97,7 @@ function leaf(
     kind: "leaf",
     label,
     tags,
+    title: label,
   };
 }
 

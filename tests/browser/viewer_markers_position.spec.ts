@@ -180,27 +180,27 @@ for (const cross of [false, true]) {
     const flowRef = await page.evaluate(() => {
       const host = window.viewerHarness.get("one");
       const model = structuredClone(host.props.catalogue) as CatalogueReadModel;
-      const home = model.screens.find(({ id }) => id === "home")!;
-      home.useCaseIds = ["tour"];
+      const home = model.screens.find(({ path }) => path === "home")!;
+      home.useCasePaths = ["tour"];
       model.useCases = [
         {
           kind: "use-case",
-          id: "tour",
-          navPath: [],
+          path: "tour",
+
           title: "Tour",
           tags: [],
           details: home.details,
           changes: { status: "disabled" },
-          steps: [{ screenId: "home" }, { screenId: "home" }],
+          steps: [{ screenPath: "home" }, { screenPath: "home" }],
         },
       ];
-      model.tree.pages = [...model.tree.pages, { kind: "entry", id: "tour" }];
+      model.tree = [...model.tree, { kind: "entry", path: "tour" }];
       const view = home.views.find(
         (view) => view.viewport === "desktop" && view.colorScheme === "light",
       )!;
       if (view.usage.status !== "ready") throw new Error("Expected usage");
       const instance: InstanceRef = {
-        screenId: "home",
+        screenPath: "home",
         stepIndex: 1,
         viewport: "desktop",
         colorScheme: "light",
@@ -209,7 +209,7 @@ for (const cross of [false, true]) {
       host.props = {
         ...host.props,
         catalogue: model,
-        defaultSelection: { screenId: "tour", viewport: "both" },
+        defaultSelection: { screenPath: "tour", viewport: "both" },
       } as MoklyViewerProps;
       host.setMarkers([{ id: "flow", instance }]);
       return instance;
@@ -234,7 +234,7 @@ for (const cross of [false, true]) {
         const host = window.viewerHarness.start("one", {
           cross,
           defaultSelection: {
-            screenId: "pane-second",
+            screenPath: "pane/second",
             viewport: "mobile",
           },
         });

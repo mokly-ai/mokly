@@ -11,9 +11,11 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ? { width: 1440, height: 1000 }
         : { width: 390, height: 844 },
     );
-    await page.goto(componentDesignUrl("overview", viewport));
+    await page.goto(componentDesignUrl("design/components/overview", viewport));
     const saved = await page.locator(".ce-canvas:visible").boundingBox();
-    await page.goto(componentDesignUrl("controls/overview", viewport));
+    await page.goto(
+      componentDesignUrl("design/components/controls/controls", viewport),
+    );
     const editable = await page.locator(".ce-canvas:visible").boundingBox();
     expect(editable?.width).toBe(saved?.width);
   });
@@ -26,14 +28,21 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ? { width: 1440, height: 1000 }
         : { width: 390, height: 844 },
     );
-    await page.goto(componentDesignUrl("pages/variants", viewport));
+    await page.goto(
+      componentDesignUrl("design/components/pages/variants", viewport),
+    );
     await page.getByRole("link", { name: "Edit props", exact: false }).click();
     await expect(page).toHaveURL(
-      componentDesignUrl("controls/editing/variant", viewport),
+      componentDesignUrl(
+        "design/components/controls/editing/variant",
+        viewport,
+      ),
     );
     await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
     await expect(page.locator(".ce-canvas:visible .ce-action")).toBeDisabled();
-    await page.goto(componentDesignUrl("controls/overview", viewport));
+    await page.goto(
+      componentDesignUrl("design/components/controls/controls", viewport),
+    );
     const controls = page.getByRole("region", {
       name: "Controls",
       exact: true,
@@ -59,7 +68,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await expect(
       controls.getByRole("textbox", { name: "label", exact: true }),
     ).toHaveValue("Next");
-    await page.goto(componentDesignUrl("controls/editing/edited", viewport));
+    await page.goto(
+      componentDesignUrl("design/components/controls/editing/edited", viewport),
+    );
     await expect(page.locator(".ce-canvas:visible .ce-action")).toHaveText(
       "Get started",
     );
@@ -70,7 +81,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       .getByRole("link", { name: "Reset to Default", exact: true })
       .click();
     await expect(page).toHaveURL(
-      componentDesignUrl("controls/editing/reset", viewport),
+      componentDesignUrl("design/components/controls/editing/reset", viewport),
     );
     await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
     await expect(page.locator(".ce-canvas:visible .ce-action")).toHaveText(
@@ -88,7 +99,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await expect(
       controls.getByRole("checkbox", { name: "disabled", exact: true }),
     ).toBeChecked();
-    await page.goto(componentDesignUrl("controls/states/invalid", viewport));
+    await page.goto(
+      componentDesignUrl("design/components/controls/states/invalid", viewport),
+    );
     const radius = controls.getByRole("spinbutton", {
       name: "cornerRadius",
       exact: true,
@@ -101,13 +114,15 @@ for (const viewport of ["desktop", "mobile"] as const) {
       "border-radius",
       "8px",
     );
-    await page.goto(componentDesignUrl("controls/states/error", viewport));
+    await page.goto(
+      componentDesignUrl("design/components/controls/states/error", viewport),
+    );
     await expect(page.getByRole("alert")).toContainText(
       "Couldn’t update this component",
     );
     await page.getByRole("link", { name: "Try again", exact: true }).click();
     await expect(page).toHaveURL(
-      componentDesignUrl("controls/states/pending", viewport),
+      componentDesignUrl("design/components/controls/states/pending", viewport),
     );
     await expect(
       page.locator(`[data-preview-viewport="${viewport}"]`).getByRole("status"),
@@ -122,7 +137,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ? { width: 1440, height: 1000 }
         : { width: 390, height: 844 },
     );
-    await page.goto(componentDesignUrl("controls/editing/unset", viewport));
+    await page.goto(
+      componentDesignUrl("design/components/controls/editing/unset", viewport),
+    );
     await expect(
       page.getByRole("checkbox", { name: "Set hint", exact: true }),
     ).not.toBeChecked();
@@ -133,7 +150,12 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await expect(
       page.getByRole("textbox", { name: "hint", exact: true }),
     ).toBeVisible();
-    await page.goto(componentDesignUrl("controls/states/comparison", viewport));
+    await page.goto(
+      componentDesignUrl(
+        "design/components/controls/states/comparison",
+        viewport,
+      ),
+    );
     await expect(
       page.getByRole("region", { name: "Controls", exact: true }),
     ).toContainText("Switch to Current to edit props.");
@@ -146,9 +168,14 @@ for (const viewport of ["desktop", "mobile"] as const) {
       .getByRole("link", { name: "Switch to Current", exact: true })
       .click();
     await expect(page).toHaveURL(
-      componentDesignUrl("controls/overview", viewport),
+      componentDesignUrl("design/components/controls/controls", viewport),
     );
-    await page.goto(componentDesignUrl("controls/published/default", viewport));
+    await page.goto(
+      componentDesignUrl(
+        "design/components/controls/published/readonly",
+        viewport,
+      ),
+    );
     await expect(
       page.getByRole("region", { name: "Controls", exact: true }),
     ).toContainText("Open this catalogue locally to edit props.");
@@ -162,7 +189,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
       .getByRole("link", { name: "Disabled", exact: true })
       .click();
     await expect(page).toHaveURL(
-      componentDesignUrl("controls/published/variant", viewport),
+      componentDesignUrl(
+        "design/components/controls/published/readonly-variant",
+        viewport,
+      ),
     );
     await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
     await expect(

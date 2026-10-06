@@ -8,6 +8,7 @@ import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
 } from "../dist/review/assets.js";
+import { asChangeEvidence } from "../dist/review/change_evidence.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
 import {
   CommittedRepository,
@@ -129,10 +130,16 @@ for (const scenario of deletionCases) {
       await fs.mkdir(entriesDir, { recursive: true });
       await fs.writeFile(path.join(entriesDir, "private.svg"), "private");
       await fs.symlink("src/entries/private.svg", resource);
-      config = { ...config, entriesDir };
+      config = {
+        ...config,
+        sourceFiles: [
+          ...(config.sourceFiles ?? []),
+          "mockups/src/entries/private.svg",
+        ],
+      };
     }
     const manifest = readManifest(fixture.config);
-    const home = manifest.entries.find((entry) => entry.id === "home")!;
+    const home = manifest.entries.find((entry) => entry.path === "home")!;
     const viewPaths = generatedViews(home).map((view) => view.path);
     if (scenario.unsafe)
       for (const viewPath of viewPaths) {
@@ -188,11 +195,11 @@ for (const scenario of deletionCases) {
               commit,
               "mockups",
             ),
-            changedPaths,
+            changedPaths: asChangeEvidence(changedPaths),
             config,
           });
           return result.screens
-            .find((screen) => screen.id === "home")
+            .find((screen) => screen.path === "home")
             ?.views.some((view) => view.reasons?.length);
         },
       },
@@ -205,11 +212,11 @@ for (const scenario of deletionCases) {
             config,
             baselineReader,
             commit,
-            changedPaths,
+            asChangeEvidence(changedPaths),
             new FileSystemReviewAssetReader(config),
           );
           return result.changedPaths.some((changed) =>
-            changed.endsWith("screens/home.mobile.html"),
+            changed.endsWith("home/index.mobile.html"),
           );
         },
       },

@@ -26,17 +26,17 @@ test("a caller prop edit under atomic CSS stays with the screen inputs", async (
     renderer: { before: atomicRenderer, after: atomicRenderer },
   });
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 4);
-  if (result.schemaVersion !== 4) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   const actionIds = await actionEntryIds(fixture.config);
-  const home = result.changes.find((entry) => entry.after?.id === "home");
+  const home = result.changes.find((entry) => entry.after?.path === "home");
   assert.deepEqual(
     home?.reasons.map(({ kind }) => kind),
     ["inputs", "material"],
   );
   assert.ok(
     !result.changes.some((entry) =>
-      actionIds.has((entry.after ?? entry.before)!.id),
+      actionIds.has((entry.after ?? entry.before)!.path),
     ),
   );
 });
@@ -46,8 +46,8 @@ test("a parent implementation changing child props owns the atomic rule", async 
     actionRender:
       "(props) => <button className={`tone-${props.label}`}>{props.label}</button>",
     extra:
-      'const parent = defineComponent({ ...metadata, id: "parent", title: "Parent", description: "Parent", propSchema: { kind: "object", properties: {} }, render: () => <action.Component label="before" />, variants: [{ id: "parent-default", title: "Default", props: {} }] });',
-    exports: "action.entries, pane.entries, parent.entries,",
+      'const parent = defineComponent({ ...metadata, path: "parent", title: "Parent", description: "Parent", propSchema: { kind: "object", properties: {} }, render: () => <action.Component label="before" />, variants: [{ slug: "default", title: "Default", props: {} }] });',
+    exports: "...action.entries, ...pane.entries, ...parent.entries,",
     body: "<parent.Component />",
   });
   const after = before.replace(
@@ -60,17 +60,17 @@ test("a parent implementation changing child props owns the atomic rule", async 
     renderer: { before: atomicRenderer, after: atomicRenderer },
   });
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 4);
-  if (result.schemaVersion !== 4) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   const actionIds = await actionEntryIds(fixture.config);
   const routes = result.changes.map(
-    (entry) => (entry.after ?? entry.before)!.id,
+    (entry) => (entry.after ?? entry.before)!.path,
   );
   assert.ok(routes.includes("parent"));
   assert.ok(!routes.includes("action"));
   assert.ok(
     !result.changes.some((entry) =>
-      actionIds.has((entry.after ?? entry.before)!.id),
+      actionIds.has((entry.after ?? entry.before)!.path),
     ),
   );
   assert.ok(
@@ -84,9 +84,9 @@ async function actionEntryIds(config: Parameters<typeof compileCatalogue>[0]) {
   const compilation = await compileCatalogue(config);
   const entries = compilation.manifest.entries.filter(
     (entry) =>
-      entry.id === "action" ||
+      entry.path === "action" ||
       ("variantOf" in entry && entry.variantOf === "action"),
   );
   assert.equal(entries.length, 3);
-  return new Set(entries.map((entry) => entry.id));
+  return new Set(entries.map((entry) => entry.path));
 }

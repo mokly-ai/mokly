@@ -8,6 +8,7 @@ import {
   normalizeReviewPair,
   parseReviewDocument,
   type NormalizedReviewPair,
+  type ReviewLinkNormalization,
 } from "./ignore.js";
 import { PageAnalysis } from "./page_analysis.js";
 
@@ -25,6 +26,7 @@ export class PageAnalysisPair {
     readonly after: GeneratedComponentView,
     readonly baseText: string,
     readonly headText: string,
+    readonly links?: ReviewLinkNormalization,
   ) {}
 
   get beforeAnalysis(): PageAnalysis {
@@ -100,13 +102,14 @@ export class PageAnalysisPair {
       this.baseText,
       this.headText,
       this.after.path,
+      this.links,
     ));
   }
 
   normalize(base: string, head: string): NormalizedReviewPair {
     return base === this.baseText && head === this.headText
       ? this.normalization
-      : normalizeReviewPair(base, head, this.after.path);
+      : normalizeReviewPair(base, head, this.after.path, this.links);
   }
 
   resourceExclusion(

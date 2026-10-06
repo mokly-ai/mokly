@@ -15,6 +15,7 @@ export function mergeWorkspaceEvidence(
     "comparison",
     "resourceEvidence",
     "usageComplete",
+    "viewUsagePending",
     "previewGeneration",
     "renderCapability",
   ] as const)

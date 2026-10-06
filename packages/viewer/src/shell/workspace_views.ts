@@ -25,11 +25,13 @@ export interface ResolvedWorkspaceViews {
 /** Resolve light fallback without changing the catalogue-wide scheme preference. */
 export function resolveWorkspaceViews(
   data: WorkspaceData,
-  variantId: string | undefined,
+  variantPath: string | undefined,
   viewport: "both" | "desktop" | "mobile",
   requestedScheme: "dark" | "light",
 ): ResolvedWorkspaceViews {
-  const variants = data.views.filter((view) => view.variantId === variantId);
+  const variants = data.views.filter(
+    (view) => view.variantPath === variantPath,
+  );
   const views = (["mobile", "desktop"] as const)
     .filter((size) => viewport === "both" || viewport === size)
     .flatMap((size) => {
@@ -56,11 +58,11 @@ export function resolveWorkspaceViews(
 /** Select the actual visible viewport and scheme contexts for a variant. */
 export function visibleWorkspaceViews(
   data: WorkspaceData,
-  variantId: string | undefined,
+  variantPath: string | undefined,
   viewport: "both" | "desktop" | "mobile",
   colorScheme: ColorScheme,
 ): readonly GeneratedComponentView[] {
-  return resolveWorkspaceViews(data, variantId, viewport, colorScheme).views;
+  return resolveWorkspaceViews(data, variantPath, viewport, colorScheme).views;
 }
 
 /**
@@ -73,21 +75,24 @@ export function resolveWorkspaceView(
   viewport: "both" | Viewport,
   colorScheme: ColorScheme,
 ): ResolvedWorkspaceView {
-  const variantId = selection.variant?.value.id;
+  const variantPath = selection.variant?.value.path;
   const resolved = resolveWorkspaceViews(
     data,
-    variantId,
+    variantPath,
     viewport,
     colorScheme,
   );
   const evidenceKey =
-    data.entry.kind === "component" ? variantId : data.entry.id;
+    data.entry.kind === "component" ? variantPath : data.entry.path;
   const presentation = resolveViewPresentation({
     displayedViews: resolved.views,
     fallbackComparisonEligible: selection.comparisonEligible,
     fallbackStatus: selection.variant?.status ?? data.status,
     kind: data.entry.kind,
-    states: evidenceKey ? data.viewStates[evidenceKey] : undefined,
+    states:
+      evidenceKey && Object.hasOwn(data.viewStates, evidenceKey)
+        ? data.viewStates[evidenceKey]
+        : undefined,
   });
   return {
     ...resolved,

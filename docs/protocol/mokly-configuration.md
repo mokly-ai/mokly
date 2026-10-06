@@ -1,13 +1,18 @@
 # Mokly Configuration Contract
 
 This is the detailed configuration boundary of the
-[package contract](./mokly-package.md). These settings describe current behavior.
+[package contract](./mokly-package.md). These settings describe current
+behavior, including imported CSS and optional PostCSS.
 
 ## Delivery Status
 
-Every setting in this document is implemented, including glob-based entry
-discovery through `entries` and the `entriesDir` shorthand delivered by the
-[co-located entry discovery plan](../../plans/co-located-entry-discovery.md).
+Roots and their defaults, globs, prefixes and transparent directories are
+implemented. Matched Markdown files become document entries. Their sources and
+resource inputs remain protected and watched. A catalogue may contain only
+documents. Every setting below is implemented.
+The reserved CSS output directory, CSS delivery and `postcss` key are
+implemented. See [imported stylesheet delivery](./mokly-imported-styles.md)
+and [diagnostics](./mokly-imported-styles-errors.md) for exact errors.
 
 ## Configuration Discovery
 
@@ -23,9 +28,9 @@ globs operate on repo-relative POSIX paths; `publicExclude` uses the
 the following contract:
 
 - `mockupsDir`: output/catalogue root, such as `docs/mockups/generated`;
-- `entries`: repository-relative POSIX globs that define which regular files
-  are entry modules anywhere in the repository, or the `entriesDir` shorthand
-  for conventional `.mockup.ts` and `.mockup.tsx` files in one directory;
+- `roots`: the directories Mokly scans for entry modules and Markdown
+  documents, each with optional file globs, a path prefix, and transparent
+  directory names, defaulting to one `specs` root;
 - `repoRoot`: repository root, defaulting to the config file's directory;
 - a light-only or light-and-dark catalogue rendering set;
 - optional renderer-module path and declarative route-to-stylesheet rules;
@@ -38,7 +43,8 @@ the following contract:
 - an optional temporary document transformer for an existing consumer cutover.
 
 The resolved config has one repository root, one mockups root, one sorted
-resolved entry-module set, and normalized repo-relative POSIX paths. Config
+resolved source-file set across every root, and normalized repo-relative POSIX
+paths. Config
 validation rejects path traversal, output outside the repository (including
 through symlinks), entry modules inside internal or package-owned private roots,
 duplicate rules, and a watch path that cannot be classified safely. An entry
@@ -80,15 +86,22 @@ type ModuleLoader =
   | "ts"
   | "tsx";
 
+interface RootConfig {
+  dir: string; // config-relative directory inside repoRoot
+  files?: readonly string[]; // ["**/*.mockup.{ts,tsx}", "**/*.md"]
+  path?: string; // prefix for every derived path; none by default
+  transparent?: readonly string[]; // directory names removed from paths
+}
+
 interface MoklyConfig {
   colorSchemes?: readonly ColorScheme[]; // ["light"]
-  entries?: readonly string[]; // exactly one of entries or entriesDir
-  entriesDir?: string; // shorthand for [`${dir}/**/*.mockup.{ts,tsx}`]
   generatedOutput?: "committed" | "derived"; // "derived"
   mockupsDir: string;
+  roots?: readonly RootConfig[]; // [{ dir: "specs" }]
   publicExclude?: readonly string[]; // extends shipped public exclusions
   repoRoot?: string; // config directory
   renderer?: string;
+  postcss?: string; // config-relative PostCSS module
   moduleResolution?: {
     aliases?: Readonly<Record<string, string>>;
     conditions?: readonly string[];
@@ -122,11 +135,11 @@ interface MoklyConfig {
 }
 ```
 
-Filesystem fields (`repoRoot`, `entriesDir`, `mockupsDir`, `renderer`,
+Filesystem fields (`repoRoot`, `roots[].dir`, `mockupsDir`, `renderer`,
 compatibility transformer, module-resolution package
-roots, and Review `outDir`) are config-relative. `entries` globs are
-repository-relative, like `review.sharedImpact` and `watch.rules[].paths`;
-see [entry discovery](#entry-discovery). Stylesheet file paths are
+roots, and Review `outDir`) are config-relative. `roots[].files` globs are
+relative to their root; `review.sharedImpact` and `watch.rules[].paths` are
+repository-relative; see [roots](#roots). Stylesheet file paths are
 relative to `mockupsDir`; HTTP(S) stylesheet URLs are allowed.
 `colorSchemes` is a non-empty, duplicate-free subset of `"light" | "dark"`
 that must include `"light"`; it defaults to `["light"]` and normalizes to
@@ -153,22 +166,22 @@ generated, and transaction paths. An unowned public HTML file below
 `mockupsDir` remains consumer-authored and can match an explicit watch rule.
 The repository's `.mokly-cache/` and its physical aliases are always private
 and ignored before source exceptions or broad globs, and cannot be configured
-as an entry glob root, mockups, Review output, or an export destination.
-Two layouts are recommended. A sibling layout for a repository-root config
-uses `entriesDir: "docs/mockups/entries"`, `mockupsDir: "docs/mockups/generated"`,
-and `renderer: "docs/mockups/renderer.tsx"`; public assets live under
-`generated`, and README and tsconfig files can live beside it with the renderer
-and entry sources, so publication output never mixes with developer files. A
-co-located layout keeps each entry module beside the product component or
-screen it describes, for example `entries: ["src/**/*.mockup.{ts,tsx}"]` with
-the same `mockupsDir` and renderer. The `.mockup.ts` and `.mockup.tsx` names are
-the recommended convention selected by that example glob, not an additional
-runtime suffix rule. Both layouts are examples, not runtime defaults.
-Authored source directories and entry modules may sit below `mockupsDir` for a
-`docs/mockups/src` layout. They remain inventoried protected inputs rather than
-public output. When `entriesDir` supplies the entry set, that shorthand root
-must not equal `mockupsDir`; glob-matched modules may sit directly below
-`mockupsDir`. Generated routes are collision-checked against every inventoried
+as a root, mockups, Review output, or an export destination.
+The recommended layout is a dedicated spec tree: the default root `specs`
+holds screens, pages, documents, and flows by product area, with
+`mockupsDir: "specs/generated"` or another output directory and
+`renderer: "specs/renderer.tsx"`, so publication output never mixes with
+authored files. A component library adds a second root over its source tree,
+such as `{ dir: "packages/ui/src", path: "components" }`, so component mockups
+stay beside component code. The documented alternative co-locates every mockup
+beside the product code it describes, for example
+`{ dir: "src/features", transparent: ["__mockups__"] }`; both layouts produce
+the same catalogue paths under the [path contract](./mokly-paths.md). The
+`.mockup.ts` and `.mockup.tsx` names are the convention the default `files`
+pattern selects, not a runtime suffix rule.
+Authored source directories and entry modules may sit below `mockupsDir`. They
+remain inventoried protected inputs rather than public output. A root
+directory must not equal `mockupsDir`; matched files may sit below it. Generated routes are collision-checked against every inventoried
 source before writing, including through aliases. Review output must not overlap an entry
 module's directory or `mockupsDir` in either direction. Those boundaries are
 covered by the nested discovery, output collision, and public alias tests in
@@ -197,137 +210,38 @@ roots must be in-repository directories containing `package.json`; their
 `node_modules` directories supplement consumer lookup. Aliases accept bare
 package specifiers only. Conditions, package fields, and extensions are ordered,
 deduplicated lists, while loader keys are extensions and values are supported
-esbuild loader names. React and React DOM still resolve through Mokly's
+JavaScript-safe esbuild loader names. The `css` loader is rejected for every
+extension because it would emit an undelivered sibling stylesheet. React and
+React DOM still resolve through Mokly's
 consumer-peer plugin so these options cannot introduce a second React runtime.
 
-The obsolete `legacy` config key is rejected, including `legacy: undefined`.
-Register every complete document explicitly with `definePage` or nested `page`;
-baseline compatibility never restores source discovery or old configuration.
+Configuration accepts only the declared fields above. An undeclared field fails
+with `config-invalid` and `unknown configuration field: <field>`.
 
-## Entry Discovery
+## Roots
 
-`entries` is a non-empty ordered list of safe relative POSIX globs matched
-against repository-relative paths under `repoRoot`, using the same minimatch
-syntax and path rules as `review.sharedImpact`. `entriesDir` is validated
-exactly as before, must name an existing directory inside `repoRoot`, and is
-resolved to the single glob `<dir>/**/*.mockup.{ts,tsx}` relative to
-`repoRoot`. Exactly one of the two fields must be present; supplying both,
-neither, an empty list, a duplicate glob, or a glob whose stable prefix lies
-inside `.mokly-cache/` fails with `config-invalid` naming the field.
+`roots` is a non-empty list of root objects. `dir` names an existing
+directory inside `repoRoot`, config-relative, outside `.mokly-cache/`, Review
+output, and package-owned private roots, and not equal to `mockupsDir`.
+`files` is a non-empty list of safe relative POSIX globs matched against paths
+relative to `dir` with the same minimatch syntax and path rules as
+`review.sharedImpact`; it defaults to `**/*.mockup.{ts,tsx}` and `**/*.md`.
+`path` is a path under the [segment grammar](./mokly-paths.md#segment-grammar)
+and prefixes every path derived from the root. `transparent` lists directory
+names, each a valid segment, that derivation removes. Omitting `roots` means
+`[{ dir: "specs" }]`. A missing directory, an empty or duplicate glob, two
+roots with the same `dir`, or an invalid `path` or `transparent` value fails
+with `config-invalid` naming `roots[<index>].<field>`.
 
-Discovery walks each glob's stable prefix, the leading segments before the
-first wildcard, without following symlinks, and keeps every regular file that
-matches the glob. The glob alone defines the entry shape. Mokly applies no
-filename suffix or extension filter, so `entries: ["src/**/*.ts"]` evaluates
-every matched TypeScript file as an entry module. Mokly reads `mockups` or a
-default registry value from each; a matched helper with neither contributes no
-definitions and can produce the normal empty-registry error.
-`.mockup.ts` and `.mockup.tsx` remain the recommended naming convention, and
-the `entriesDir` shorthand preserves it through its generated glob.
+The [discovery contract](./mokly-configuration-discovery.md) defines traversal,
+folder-record ownership, filesystem races and the retained source inventory.
 
-Below the deepest matching glob root, walks skip directories named `.git`,
-`node_modules`, `.mokly-cache`, `dist`, `coverage`, `target`, `test-results`,
-`playwright-report`, or `.context`, or prefixed with `.mokly-review-` or
-`.mokly-write-`. Regular file basenames are not denied. The rule is relative
-to the glob root: `src/dist/x.mockup.tsx` is denied under
-`src/**/*.mockup.{ts,tsx}`, while an explicit `dist/entries/**` root can
-discover `dist/entries/a.mockup.tsx` because the package-owned directory rule
-only applies below that explicit root. Discovery never inspects a denied tree.
-
-Before any glob walk, discovery projects the repository identity and every
-distinct glob-root identity once for the pass. It also projects `review.outDir`
-once, with a lexical fallback only for that Review boundary. A non-benign
-repository or glob-root projection error therefore fails before per-glob module
-validation; an error projecting a later glob's root can precede a denial under
-an earlier glob. Walks then run in declared glob order and validate matched
-modules during each walk. The first denial or zero-match failure stops the pass,
-so an earlier glob's denied module precedes a later empty glob, while reversing
-those globs makes the empty-glob diagnostic precede the denial.
-
-Accepted and vanished candidates are each validated once per pass. An accepted
-candidate still counts as a match for every later overlapping glob; a vanished
-candidate does not. Walks skip either Review identity and directories that
-vanish or are replaced (`ENOENT` or `ENOTDIR`). Other read or projection errors
-fail with `config-invalid`, naming the repository-relative path and error code
-(`unknown` if absent). A matched module that is deleted, or replaced by
-something other than a regular file, between the directory listing and
-validation is dropped and listed under `not searched` when its glob is then
-empty. A projection or lstat failure with any code other than `ENOENT` fails
-with `config-invalid`.
-
-Normal configuration validation rejects a glob whose stable prefix is inside
-`.mokly-cache/` before discovery. The discovery boundary retains the same
-private-cache denial for direct callers. Module existence is checked before
-that denial, so a cache candidate that vanishes concurrently is dropped and,
-when it was the only match, listed under `not searched`; a surviving cache
-candidate is rejected. The race never makes a private cache path readable.
-
-Every glob must retain a module; otherwise
-`entries glob matches no module: <glob>` lists denied and vanished paths,
-including dropped modules, sorted under
-`; not searched: <repository-relative paths>`. Validation is per glob so one
-valid glob cannot hide a typo or silent omission in another. The union is
-sorted and deduplicated by repository-relative path, independent of glob or
-filesystem order.
-
-Every resolved entry module is classified before bundling. Discovery fails
-with `config-invalid` naming the module and the matched rule when the module
-lies inside `review.outDir`, inside `.mokly-cache/`, below a denied directory
-relative to its deepest matching glob root, or resolves outside `repoRoot`
-through a symlink. An entry module may sit below `mockupsDir` in a nested
-`docs/mockups/src` layout; it is protected authored source under the
-[source-protection contract](./mokly-source-protection.md), cannot be served or
-exported as a public file, and remains protected through aliases. Generated
-routes are collision-checked against it. The check runs once per resolved
-module instead of once per configured directory.
-
-Discovery runs when the configuration is resolved, so every resolved config
-carries its sorted entry set beside `entryGlobs`, and again at the start of
-each compilation so watched Serve observes created, renamed, or deleted entry
-modules as defined by the [watch contract](./mokly-watch.md). The set is
-retained beside `sourceFiles` across build, check, watched Serve, publication,
-and the component runtime; later stages consume it and never repeat the glob
-walk within one compilation. Generated output is trusted for replacement when
-its recorded repository-relative owner is a resolved entry module, an
-inventoried source, or matches at least one configured entry glob with dotfile
-matching enabled. The match rule keeps output owned after a matched entry is
-renamed or deleted. A repository-root glob such as
-`**/*.mockup.{ts,tsx}` trusts every owner path matching that glob and no other
-path through the glob rule; resolved entries and inventoried sources remain
-independent trust branches. In particular, that root glob trusts
-`other/catalogue/thing.mockup.tsx` but not `docs/notes.md`. An ownership header
-that satisfies none of the three branches is unclaimed: committed `check`
-reports it, while Build, Serve, and Export leave the file untouched. Registry
-attribution remains narrower and accepts only a resolved entry module or
-inventoried source.
-
-A matched barrel that re-exports another matched module's registry array fails
-with `duplicate-id`. Narrow the glob, rename the barrel so the glob no longer
-matches it, or stop re-exporting registry arrays.
-
-## Public Exclusion Configuration
-
-`publicExclude?: readonly string[]` extends the defaults in the
-[source-protection contract](./mokly-source-protection.md#public-exclusions):
-`**/README`, `**/README.*`, `**/tsconfig.json`, and `**/tsconfig.*.json`.
-The case-folded defaults are prepended without mutating consumer input;
-omission and an empty array produce the defaults alone.
-The resolved list is frozen. Watched children require this already-resolved
-array and use the shared glob validator to adopt a frozen copy with exactly
-the transferred entries, without prepending defaults again. Missing, non-array
-or unsafe values reject the startup message. Repeated globs are harmless and
-do not fail config.
-
-Validate the array and each string at config load. A safe relative POSIX glob
-is nonempty and contains no absolute/drive/UNC prefix, backslash,
-colon, NUL/control character, or empty, `.` or `..` path segment. Reject
-whitespace-only strings, leading `!` negation, and leading `#` comment syntax.
-Use the repository's minimatch glob syntax; any brace-expanded alternative must
-also satisfy those path rules. Invalid input fails with the typed `config-invalid`
-error naming `publicExclude` and the offending item, before publication or serving.
-
-Match the whole candidate path relative to `mockupsDir`, not relative to
-`repoRoot` or the config directory, with case-insensitive and dotfile matching.
-For example, `publicExclude: ["internal/**"]` hides that directory's contents
-under `mockupsDir` in addition to every shipped default. Realpath aliases and
-all public-resource boundaries use the same source-protection policy.
+Every matched
+entry module or Markdown file belongs to exactly one root, including through
+physical aliases. If a file matches two roots after exclusions, discovery fails
+with `config-invalid` and exact text `file <path> is matched by roots[<n>] and
+roots[<m>]`, naming its repository-relative path and both zero-based root
+indices. Overlapping directories remain legal when their file sets are disjoint.
+[Public exclusions](./mokly-public-exclusions.md) defines defaults, frozen
+resolution and safe glob matching. [Imported CSS configuration](./mokly-configuration-imported-styles.md)
+defines `postcss` and reserved output.

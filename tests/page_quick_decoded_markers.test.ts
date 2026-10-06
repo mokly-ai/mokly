@@ -32,7 +32,7 @@ for (const mode of ["committed", "derived"] as const)
           await context.test(JSON.stringify(switches), async () => {
             await assert.rejects(compareStyleSwitches(fixture, switches), {
               message:
-                "[mokly/review-ignore] screens/home.mobile.html: material signal for clock has no region",
+                "[mokly/review-ignore] home/index.mobile.html: material signal for clock has no region",
             });
           });
       });

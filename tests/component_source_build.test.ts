@@ -4,6 +4,7 @@ import path from "node:path";
 import { test } from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
+import { generatedText } from "../dist/build/generated_file.js";
 import { loadConfig } from "../dist/config/load.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
@@ -39,7 +40,7 @@ test("consumer graph captures exact invocation sites in all views and strips sou
   for (const [route, html] of first.outputs)
     if (route.endsWith(".html"))
       assert.doesNotMatch(
-        html,
+        generatedText(html, route)!,
         /__moklySource|lineNumber|columnNumber|data-mokly-source/,
       );
 });
@@ -131,7 +132,7 @@ test("source capture resolves a nested configuration against repoRoot", async (t
   await fs.mkdir(path.join(fixture.root, "tools"));
   await fs.writeFile(
     path.join(fixture.root, "tools/mokly.config.ts"),
-    'export default { repoRoot: "..", entriesDir: "../entries", mockupsDir: "../mockups" };',
+    'export default { repoRoot: "..", roots: [{ dir: "../entries" }], mockupsDir: "../mockups" };',
   );
   const config = await loadConfig(fixture.root, "tools/mokly.config.ts");
   assert.ok(

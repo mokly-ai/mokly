@@ -25,19 +25,21 @@ for (const mode of ["serve", "static"] as const) {
           page.on("pageerror", (error) => errors.push(error.message));
           await page.route(`${host.url}/view/**`, async (route) => {
             const url = new URL(route.request().url());
-            if (url.pathname.endsWith(".html")) return route.continue();
-            url.pathname += ".html";
+            if (url.pathname.endsWith("/index.html")) return route.continue();
+            url.pathname = `${url.pathname.replace(/\/$/, "")}/index.html`;
             await route.fulfill({
               response: await route.fetch({ url: url.href }),
             });
           });
           const record = host.catalogue.removedEntries.find(
-            ({ entry: candidate }) => candidate.id === entry.previousId,
+            ({ entry: candidate }) => candidate.path === entry.previousPath,
           );
           expect(record?.snapshotId).toMatch(/^[a-f0-9]{64}$/);
-          const previousUrl = `${host.url}/view/${entry.previousRoute.slice(0, -5)}?snapshot=${record!.snapshotId}`;
-          const currentUrl = `${host.url}/view/${entry.currentRoute.slice(0, -5)}`;
-          await page.goto(previousUrl);
+          const previousUrl = `${host.url}/view/${entry.previousPath}/?snapshot=${record!.snapshotId}`;
+          const currentUrl = `${host.url}/view/${entry.currentPath}/`;
+          await page.goto(
+            `${host.url}/view/${entry.previousPath}?snapshot=${record!.snapshotId}`,
+          );
           await expect(page.locator("html")).toHaveAttribute(
             "data-mokly-hydrated",
             "",
@@ -78,11 +80,11 @@ for (const mode of ["serve", "static"] as const) {
         const errors: string[] = [];
         page.on("pageerror", (error) => errors.push(error.message));
         const snapshotId = host.catalogue.removedEntries.find(
-          ({ entry: candidate }) => candidate.id === entry.previousId,
+          ({ entry: candidate }) => candidate.path === entry.previousPath,
         )?.snapshotId;
         expect(snapshotId).toMatch(/^[a-f0-9]{64}$/);
-        const previousUrl = `${host.url}/view/${entry.previousRoute}?snapshot=${snapshotId!}`;
-        const currentUrl = `${host.url}/view/${entry.currentRoute}`;
+        const previousUrl = `${host.url}/view/${entry.previousPath}/?snapshot=${snapshotId!}`;
+        const currentUrl = `${host.url}/view/${entry.currentPath}/`;
         await page.goto(currentUrl);
         await expect(page.locator("html")).toHaveAttribute(
           "data-mokly-hydrated",

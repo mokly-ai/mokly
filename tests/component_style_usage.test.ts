@@ -35,7 +35,7 @@ for (const mode of ["committed", "derived"] as const) {
       { kind: "inputs" },
     ]);
     assert.deepEqual([...comparison.changedImplementations], []);
-    const root = await assertStyleRoute(input, "style", "action-default");
+    const root = await assertStyleRoute(input, "style", "action/default");
     assert.deepEqual(root.comparison.reasons, [{ kind: "material" }]);
     assert.deepEqual([...root.comparison.changedImplementations], []);
   });

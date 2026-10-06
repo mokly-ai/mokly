@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import path from "node:path";
 
+import { isOwned } from "../../dist/build/ownership.js";
 import {
   publicationFiles,
   publicationInput,
@@ -11,21 +12,32 @@ import { MANIFEST_NAME, parseManifest } from "../../dist/registry/manifest.js";
 /** Capture metadata and its exact input digest together, including private helpers. */
 export async function capturePublicationInputs(config, excludedRoots) {
   const files = new Map();
+  const enumerated = [];
+  const excludes =
+    config.generatedOutput === "derived"
+      ? [...excludedRoots, path.join(config.mockupsDir, "mokly-generated")]
+      : excludedRoots;
   for (const [root, publicRoot] of [
     [config.repoRoot, false],
     [config.mockupsDir, true],
   ])
-    for (const file of await publicationFiles(
-      config,
-      root,
-      excludedRoots,
-      publicRoot,
-    ))
-      files.set(file.path, file);
+    enumerated.push(
+      ...(await publicationFiles(config, root, excludes, publicRoot)),
+    );
   const manifestFile = path.join(config.mockupsDir, MANIFEST_NAME);
   const input = await publicationInput(manifestFile, config.repoRoot);
   const manifestBytes = await readPublicationFile(input, config.repoRoot);
   const manifest = parseManifest(JSON.parse(manifestBytes.toString("utf8")));
+  const ownershipConfig =
+    config.generatedOutput === "derived"
+      ? { ...config, sourceFiles: manifest.sourceFiles }
+      : config;
+  for (const file of enumerated)
+    if (
+      config.generatedOutput !== "derived" ||
+      !isOwned(file.path, ownershipConfig)
+    )
+      files.set(file.path, file);
   files.set(manifestFile, input);
   for (const source of [
     ...manifest.sourceFiles,

@@ -19,12 +19,13 @@ import {
 import type { Manifest } from "../packages/viewer/dist/registry/types.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const records: readonly ComponentRangeRecord[] = [
   { id: "r-0", target: { kind: "instance", instanceKey: "instance" } },
 ];
 
-test("baseline v7 ranges retain original offsets and validation", () => {
+test("baseline v8 ranges retain original offsets and validation", () => {
   const start = "<!--mokly-component:start:r-0-->";
   const end = "<!--mokly-component:end:r-0-->";
   const html = `<html><body>😀${start}<button>Action</button>${end}<style>.a{color:red}</style></body></html>`;
@@ -67,7 +68,7 @@ for (const side of ["added", "removed"] as const)
     assert.ok(screen);
     const view = generatedViews(screen)[0];
     assert.ok(view?.usage?.ranges.length);
-    const current = fixture.after.outputs.get(view.path);
+    const current = textOutput(fixture.after.outputs, view.path);
     assert.notEqual(current, undefined);
     const document = current!;
     const malformed = document.replace(/<!--mokly-component:end:r-0-->/, "");

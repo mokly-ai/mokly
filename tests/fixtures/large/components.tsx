@@ -5,7 +5,7 @@ import { defineComponent } from "@mokly/mokly";
 import { InlineActionStyle } from "./inline_styles.js";
 
 const metadata = {
-  dependencies: ["entries/components.tsx"],
+  dependencies: ["src/components.tsx"],
   relatedDocs: ["notes.md"],
 };
 const noop = () => {};
@@ -13,8 +13,8 @@ const noop = () => {};
 export function createComponents(area: string) {
   const action = defineComponent({
     ...metadata,
-    navPath: [area.replaceAll("-", " "), "Components"],
-    id: `${area}-action`,
+
+    path: `${area}/components/action`,
     title: "Action",
     description: "A reusable action.",
     propSchema: {
@@ -42,18 +42,14 @@ export function createComponents(area: string) {
       </InlineActionStyle>
     ),
     variants: [
+      { slug: "default", title: "Default", props: { label: "Continue" } },
       {
-        id: `${area}-action-default`,
-        title: "Default",
-        props: { label: "Continue" },
-      },
-      {
-        id: `${area}-action-secondary`,
+        slug: "secondary",
         title: "Secondary",
         props: { label: "Save for later", secondary: true },
       },
       {
-        id: `${area}-action-disabled`,
+        slug: "disabled",
         title: "Disabled",
         props: { label: "Continue", disabled: true },
       },
@@ -61,8 +57,8 @@ export function createComponents(area: string) {
   });
   const panel = defineComponent({
     ...metadata,
-    navPath: [area.replaceAll("-", " "), "Components"],
-    id: `${area}-panel`,
+
+    path: `${area}/components/panel`,
     title: "Panel",
     description: "A summary with caller-owned content.",
     propSchema: {
@@ -80,7 +76,7 @@ export function createComponents(area: string) {
     ),
     variants: [
       {
-        id: `${area}-panel-default`,
+        slug: "default",
         title: "Default",
         props: {
           title: "Overview",
@@ -88,12 +84,12 @@ export function createComponents(area: string) {
         },
       },
       {
-        id: `${area}-panel-empty`,
+        slug: "empty",
         title: "Empty",
         props: { title: "Overview", children: <p>No activity yet.</p> },
       },
       {
-        id: `${area}-panel-detailed`,
+        slug: "detailed",
         title: "Detailed",
         props: {
           title: "Overview",

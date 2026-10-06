@@ -8,6 +8,7 @@ import { compareComponentView } from "../dist/review/component_view.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
+import { textOutput } from "./helpers/generated_text.js";
 import { inlineChangesFixture } from "./helpers/inline_changes.js";
 
 test("parse failure selectors remain prepared for later evidence delivery", async (t) => {
@@ -18,10 +19,10 @@ test("parse failure selectors remain prepared for later evidence delivery", asyn
   );
   const compilation = await compileCatalogue(fixture.config);
   const screen = compilation.manifest.entries.find(
-    (entry) => entry.id === "home",
+    (entry) => entry.path === "home",
   )!;
   const view = generatedViews(screen)[0]!;
-  const head = compilation.outputs.get(view.path)!;
+  const head = textOutput(compilation.outputs, view.path)!;
   const base = head.replace(
     "<style>.action{color:blue</style>",
     "<style>.action{color:red}</style>",
@@ -74,10 +75,10 @@ test("all-excluded status remains prepared for later evidence delivery", async (
   );
   const compilation = await compileCatalogue(fixture.config);
   const screen = compilation.manifest.entries.find(
-    (entry) => entry.id === "home",
+    (entry) => entry.path === "home",
   )!;
   const view = generatedViews(screen)[0]!;
-  const head = compilation.outputs.get(view.path)!;
+  const head = textOutput(compilation.outputs, view.path)!;
   const base = head.replace(
     "<style>.unused{color:blue}</style>",
     "<style>.unused{color:red}</style>",
@@ -134,10 +135,10 @@ test("unchanged reference analysis prepares no future inline evidence", async (t
   });
   const compilation = await compileCatalogue(fixture.config);
   const screen = compilation.manifest.entries.find(
-    (entry) => entry.id === "home",
+    (entry) => entry.path === "home",
   )!;
   const view = generatedViews(screen)[0]!;
-  const document = compilation.outputs.get(view.path)!;
+  const document = textOutput(compilation.outputs, view.path)!;
   const reader = () =>
     new ComponentMaterialReader({
       read: async (route) => {

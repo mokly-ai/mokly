@@ -6,7 +6,7 @@ import type { ResolvedConfig } from "../config/types.js";
 
 import type { CatalogueChangeClassifier } from "./component_changes.js";
 import { BackgroundGeneration } from "./demand/generation.js";
-import type { ServeReporter } from "./reporter.js";
+import { reportCatalogueReady, type ServeReporter } from "./reporter.js";
 import type { ResourceWatcher } from "./resource_watcher.js";
 import type { ProcessSupervisor } from "./supervisor.js";
 
@@ -40,8 +40,9 @@ export class WatchedBackground {
       (compilation, accepted) => {
         this.changesStartedAt = Date.now();
         if (this.reportCatalogue)
-          options.reporter.catalogueReady(
-            compilation.manifest,
+          reportCatalogueReady(
+            options.reporter,
+            compilation,
             this.changesStartedAt - this.generationStartedAt,
           );
         this.activeCompilation = compilation;
@@ -54,12 +55,12 @@ export class WatchedBackground {
         const duration = Date.now() - this.changesStartedAt;
         if (snapshot)
           options.reporter.changesReady(
-            snapshot.changedIds?.length ?? 0,
+            snapshot.changedEntries?.length ?? 0,
             duration,
           );
         else options.reporter.changesUnavailable(duration);
         options.running.notifyUpdate(
-          snapshot?.changedIds,
+          snapshot?.changedEntries,
           snapshot,
           snapshot ? "ready" : "unavailable",
           "evidence",

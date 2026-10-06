@@ -5,6 +5,7 @@ import { readDisclosureStorage } from "./disclosure_storage.js";
 import {
   buildDevelopmentBundle,
   captureBrowserErrors,
+  delayHydration,
   expectCleanHydration,
   expectNoBrowserErrors,
   installDevelopmentBundle as installBundle,
@@ -23,7 +24,7 @@ test("development React hydrates a fresh desktop document cleanly", async ({
   const errors = captureBrowserErrors(page);
   await installDevelopmentBundle(page);
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expectCleanHydration(page, errors);
 });
 
@@ -35,7 +36,7 @@ test("development React hydrates a restored dark appearance cleanly", async ({
     localStorage.setItem("mokly:theme", "dark");
   });
   await installDevelopmentBundle(page);
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expectCleanHydration(page, errors);
   await expect(page.locator("body")).toHaveAttribute(
     "data-mokly-color-scheme",
@@ -50,9 +51,9 @@ test("development React hydrates navigation and filters as live state", async ({
   await installDevelopmentBundle(page);
   await page.goto("/");
   await expectCleanHydration(page, errors);
-  const pages = page.locator('[data-nav-section="pages"]');
-  await pages.locator(":scope > summary").click();
-  await expect(pages).not.toHaveAttribute("open", "");
+  const specs = page.locator('[data-nav-section="specs"]');
+  await specs.locator(":scope > summary").click();
+  await expect(specs).not.toHaveAttribute("open", "");
   await page.locator('[data-filter="changed"]').click();
   await expect(page.locator('[data-filter="changed"]')).toHaveAttribute(
     "aria-pressed",
@@ -83,7 +84,7 @@ test("development React hydrates controls and persisted details as live state", 
     localStorage.setItem("mokly:details-disclosure", "open");
   });
   await installDevelopmentBundle(page);
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expectCleanHydration(page, errors);
   await expect(page.locator("[data-workspace-inspector]")).toHaveAttribute(
     "data-open",
@@ -106,31 +107,16 @@ test("development React hydrates live component controls before enabling them", 
   page,
 }) => {
   const errors = captureBrowserErrors(page);
-  let markRequested = (): void => undefined;
-  const requested = new Promise<void>((resolve) => {
-    markRequested = resolve;
-  });
-  let release = (): void => undefined;
-  const released = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  await page.route("**/__mokly/client/react-shell.js", async (route) => {
-    markRequested();
-    await released;
-    await route.fulfill({
-      body: developmentBundle,
-      contentType: "text/javascript",
-    });
-  });
-  const navigation = page.goto("/view/components/example-action.html");
-  await requested;
+  const gate = await delayHydration(page, developmentBundle);
+  const navigation = page.goto("/view/example/components/action/");
+  await gate.requested;
   const props = page.locator('[data-inspector-panel="props"]');
   await expect(props.locator("[data-controls-status]")).toHaveText(
     "Open this catalogue locally to edit props.",
   );
   await expect(props.locator("[data-prop-control]").first()).toBeDisabled();
 
-  release();
+  gate.release();
   await navigation;
   await expectCleanHydration(page, errors);
   await page.getByRole("tab", { name: "Props", exact: true }).click();
@@ -165,7 +151,7 @@ test("development React hands persisted navigation width off after hydration", a
   });
   await installDevelopmentBundle(page);
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expectCleanHydration(page, errors);
   await expect(page.locator("[data-mokly-nav-resize]")).toHaveAttribute(
     "aria-valuenow",
@@ -186,7 +172,7 @@ test("development React hydrates a mobile document cleanly", async ({
   const errors = captureBrowserErrors(page);
   await installDevelopmentBundle(page);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/view/screens/example-welcome.html");
+  await page.goto("/view/example/screens/welcome/");
   await expectCleanHydration(page, errors);
 });
 
@@ -194,37 +180,22 @@ test("an early native disclosure wins hydration before reload promotes active an
   page,
 }) => {
   const errors = captureBrowserErrors(page);
-  let bundleRequested = () => {};
-  const requested = new Promise<void>((resolve) => {
-    bundleRequested = resolve;
-  });
-  let releaseBundle = () => {};
-  const released = new Promise<void>((resolve) => {
-    releaseBundle = resolve;
-  });
-  await page.route("**/__mokly/client/react-shell.js", async (route) => {
-    bundleRequested();
-    await released;
-    await route.fulfill({
-      body: developmentBundle,
-      contentType: "text/javascript",
-    });
-  });
-  const navigation = page.goto("/view/screens/example-welcome.html");
-  await requested;
+  const gate = await delayHydration(page, developmentBundle);
+  const navigation = page.goto("/view/example/screens/welcome/");
+  await gate.requested;
   const disclosure = page.locator(
-    'details[data-nav-disclosure="section:pages"]',
+    'details[data-nav-disclosure="section:specs"]',
   );
   await expect(disclosure).toHaveAttribute("open", "");
   await disclosure.locator(":scope > summary").click();
   await expect(disclosure).not.toHaveAttribute("open", "");
-  releaseBundle();
+  gate.release();
   await navigation;
   await expectCleanHydration(page, errors);
   await expect(disclosure).not.toHaveAttribute("open", "");
   await expect
     .poll(() => readDisclosureStorage(page))
-    .toMatchObject({ "section:pages": false });
+    .toMatchObject({ "section:specs": false });
   await page.reload();
   await expectCleanHydration(page, errors);
   await expect(disclosure).toHaveAttribute("open", "");

@@ -10,6 +10,7 @@ import {
   extractHtmlReferences,
   type HtmlReferenceOptions,
 } from "../html_references.js";
+import { classifyResourceUrl } from "../resource_url.js";
 
 /** Resolve portable local resource references using the snapshot URL rules. */
 export function referencedRoutes(
@@ -43,7 +44,7 @@ export function referenceRoutes(
     return [
       ...new Set(
         references.flatMap((reference) => {
-          const resolved = resolveReference(sourceRoute, reference);
+          const resolved = resolveResourceReference(sourceRoute, reference);
           return resolved ? [resolved] : [];
         }),
       ),
@@ -51,34 +52,21 @@ export function referenceRoutes(
   });
 }
 
-function resolveReference(
+/** Resolve one reference with the same confinement used by resource traversal. */
+export function resolveResourceReference(
   sourceRoute: string,
   rawReference: string,
 ): string | undefined {
   const reference = rawReference.trim();
-  if (reference.startsWith("//")) {
+  const classification = classifyResourceUrl(
+    reference,
+    sourceRoute.endsWith(".css") ? "css" : "html",
+  );
+  if (classification.kind === "external" || reference.startsWith("#")) return;
+  if (classification.kind === "invalid") {
     throw assetError(
       sourceRoute,
-      `non-portable asset URL ${reference} (protocol-relative)`,
-    );
-  }
-  if (reference.startsWith("/")) {
-    throw assetError(
-      sourceRoute,
-      `non-portable asset URL ${reference} (root-absolute)`,
-    );
-  }
-  if (
-    reference === "" ||
-    reference.startsWith("#") ||
-    /^(?:https?:|data:)/i.test(reference)
-  ) {
-    return undefined;
-  }
-  if (/^[a-z][a-z0-9+.-]*:/i.test(reference)) {
-    throw assetError(
-      sourceRoute,
-      `non-portable asset URL ${reference} (unsupported scheme)`,
+      `non-portable asset URL ${reference} (${classification.reason})`,
     );
   }
   const encodedPath = reference.split(/[?#]/, 1)[0] ?? "";

@@ -5,8 +5,8 @@ import {
   COMPONENT_PAGES,
   CONTROLS_PAGES,
   INSPECTION_PAGES,
-} from "../examples/basic/entries/design/components/parts/destinations.js";
-import { actionModes } from "../examples/basic/entries/design/components/parts/navigation_states.js";
+} from "../examples/basic/specs/design/components/parts/destinations.js";
+import { actionModes } from "../examples/basic/specs/design/components/parts/navigation_states.js";
 
 import {
   attribute,
@@ -31,7 +31,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       ...Object.values(CONTROLS_PAGES),
       ...Object.values(INSPECTION_PAGES),
     ];
-    assert.equal(new Set(destinations).size, 36);
+    assert.equal(new Set(destinations).size, 39);
     const family = new Map<string, keyof typeof MODE_LABELS>(
       Object.entries(actionModes).map(([mode, id]) => [
         id,
@@ -42,7 +42,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       const { document } = await designDocument(id, viewport);
       assert.equal(
         attribute(byClass(document, "mbk-brand")[0]!, "data-mokly-link"),
-        "design-browse-home",
+        "design/browse/views/home",
         id,
       );
       const toolbar = byClass(document, "mbk-cmp-toolbar")[0];
@@ -115,7 +115,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       if (viewport === "mobile") {
         assert.equal(
           attribute(byClass(document, "mbk-menu-btn")[0]!, "data-mokly-link"),
-          "design-browse-navigation",
+          "design/browse/states/navigation",
           id,
         );
       }

@@ -5,6 +5,7 @@ import type { ComponentRenderRequest } from "@mokly/viewer/data";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { DocumentCompiler } from "../../build/document_compiler.js";
 import type { LoadedGraph } from "../../build/load_graph.js";
+import type { AcceptedMoveTargets } from "../../build/move_targets.js";
 import { validateRenderRequest } from "../../components/render_request.js";
 import { isComponentVariantDefinition } from "../../components/types.js";
 
@@ -19,6 +20,7 @@ export function renderTransient(
   runtime: ComponentRuntime,
   graph: LoadedGraph,
   request: ComponentRenderRequest,
+  moveTargets?: AcceptedMoveTargets,
 ): TransientRender {
   const { props } = validateRenderRequest(
     request,
@@ -32,7 +34,7 @@ export function renderTransient(
   }
   const entry = compiler.entries.find(
     (entry) =>
-      entry.id === request.componentId &&
+      entry.path === request.componentId &&
       entry.kind === "component" &&
       !isComponentVariantDefinition(entry),
   );
@@ -41,30 +43,27 @@ export function renderTransient(
     (candidate) =>
       candidate.kind === "component" &&
       isComponentVariantDefinition(candidate) &&
-      candidate.id === request.variantId &&
-      candidate.variantOf === entry.id,
+      candidate.path === request.variantPath &&
+      candidate.variantOf === entry.path,
   );
   if (!saved) throw new Error("Missing component variant record");
   const route = [...compiler.routes].find(
     ([, target]) =>
-      target.entryId === saved.id &&
+      target.entryId === saved.path &&
       target.viewport === request.viewport &&
       target.colorScheme === request.colorScheme,
   )![0];
-  const document = compiler.render(route, props);
+  const document = compiler.render(route, props, moveTargets);
   return {
     route,
     props: encodeProps(props),
     view: document.view!,
     files: captureRenderBundle(
       route,
-      new Map([[route, document.html]]),
+      new Map([...graph.styleOutputs, [route, document.html]]),
       runtime.manifest,
       runtime.config,
-      (target) =>
-        compiler!.routes.has(target)
-          ? compiler!.render(target).html
-          : undefined,
+      (target) => compiler!.readGeneratedFile(target),
     ),
   };
 }

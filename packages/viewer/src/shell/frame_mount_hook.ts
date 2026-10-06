@@ -15,18 +15,18 @@ import { FrameError } from "../client/frame_error.js";
 import { cancelFrameMount } from "../client/frame_mount.js";
 
 import { runFrameCleanup } from "./frame_cleanup.js";
-import {
-  adoptedFrameReadiness,
-  mountedFrameReadiness,
-} from "./frame_readiness.js";
+import { mountedFrameReadiness } from "./frame_readiness.js";
 import {
   type ShellFrameIdentity,
   type ShellFrameRegistry,
-  type ShellFrameSession,
   useOptionalShellFrameRegistry,
 } from "./frame_registry.js";
-
-export type ShellFrameStatus = "error" | "loading" | "ready" | "unavailable";
+import {
+  adoptUsage,
+  finishMountedUsage,
+  type ActiveSession,
+  type ShellFrameStatus,
+} from "./frame_session_usage.js";
 
 interface MountedFrameInput {
   adapter?: FrameAdapter;
@@ -35,15 +35,6 @@ interface MountedFrameInput {
   onEvent?(event: FrameEvent): void;
   source: string | undefined;
   usage: CatalogueUsage;
-}
-
-interface ActiveSession extends ShellFrameSession {
-  appliedUsageRevision: number;
-  initializing: boolean;
-  rejectReady(error: unknown): void;
-  unsubscribe?: () => void;
-  updates: Promise<void>;
-  replacing?: boolean;
 }
 
 /** Mount one frame and adopt evidence without replacing its DOM element. */
@@ -133,19 +124,15 @@ export function useMountedShellFrame(input: MountedFrameInput): {
         session.appliedUsageRevision = mountedUsageRevision;
         session.unsubscribe = mounted.subscribe(receive);
         registry.changed();
-        const synchronized = await synchronizeMountedUsage(
-          registry,
-          session,
-          replace,
-        );
-        if (!synchronized) return;
-        session.initializing = false;
-        readiness.resolve(mounted);
-        if (!controller.signal.aborted && active.current === session) {
-          session.status = "ready";
-          setStatus("ready");
-          registry.changed();
-        }
+        await finishMountedUsage(registry, session, replace, () => {
+          session.initializing = false;
+          readiness.resolve(mounted);
+          if (!controller.signal.aborted && active.current === session) {
+            session.status = "ready";
+            setStatus("ready");
+            registry.changed();
+          }
+        });
       })
       .catch((error: unknown) => {
         readiness.reject(error);
@@ -174,115 +161,15 @@ export function useMountedShellFrame(input: MountedFrameInput): {
   return { frameRef, status };
 }
 
-async function adoptUsage(
-  registry: ShellFrameRegistry,
-  session: ActiveSession,
-  usage: CatalogueUsage,
-  replace: () => void,
-  setStatus: (status: ShellFrameStatus) => void,
-): Promise<void> {
-  const revision = ++session.usageRevision;
-  session.usage = usage;
-  const mounted = session.mounted;
-  if (!mounted || session.initializing) {
-    registry.changed();
-    return;
-  }
-  if (!mounted.updateUsage) {
-    registry.changed();
-    if (!session.replacing) {
-      session.replacing = true;
-      replace();
-    }
-    return;
-  }
-  const update = session.updates
-    .catch(() => undefined)
-    .then(async () => {
-      if (
-        session.controller.signal.aborted ||
-        session.usageRevision !== revision
-      )
-        return;
-      await mounted.updateUsage!(usage);
-      session.appliedUsageRevision = Math.max(
-        session.appliedUsageRevision,
-        revision,
-      );
-    });
-  session.updates = update;
-  const readiness = adoptedFrameReadiness(
-    session.controller.signal,
-    update.then(() => mounted),
-  );
-  session.rejectReady(new FrameError("disposed"));
-  session.ready = readiness.promise;
-  session.rejectReady = readiness.reject;
-  void session.ready.catch(() => undefined);
-  registry.changed();
-  await update.then(
-    () => {
-      if (
-        !session.controller.signal.aborted &&
-        session.usageRevision === revision
-      ) {
-        setStatus("ready");
-        session.status = "ready";
-        registry.changed();
-      }
-    },
-    () => {
-      if (
-        !session.controller.signal.aborted &&
-        session.usageRevision === revision
-      ) {
-        setStatus("error");
-        session.status = "error";
-        registry.changed();
-      }
-    },
-  );
-}
-
-async function synchronizeMountedUsage(
-  registry: ShellFrameRegistry,
-  session: ActiveSession,
-  replace: () => void,
-): Promise<boolean> {
-  const mounted = session.mounted;
-  if (!mounted) return false;
-  while (
-    !session.controller.signal.aborted &&
-    session.appliedUsageRevision < session.usageRevision
-  ) {
-    if (!mounted.updateUsage) {
-      if (!session.replacing) {
-        session.replacing = true;
-        replace();
-      }
-      return false;
-    }
-    const revision = session.usageRevision;
-    try {
-      await mounted.updateUsage(session.usage);
-      session.appliedUsageRevision = revision;
-      registry.changed();
-    } catch (error) {
-      if (revision === session.usageRevision) throw error;
-    }
-  }
-  return !session.controller.signal.aborted;
-}
-
 function sameFrameIdentity(
   current: ShellFrameIdentity,
   next: ShellFrameIdentity,
 ): boolean {
   return (
     current.colorScheme === next.colorScheme &&
-    current.entryId === next.entryId &&
+    current.entryPath === next.entryPath &&
     current.stepIndex === next.stepIndex &&
-    current.variantId === next.variantId &&
+    current.variantPath === next.variantPath &&
     current.viewport === next.viewport
   );
 }

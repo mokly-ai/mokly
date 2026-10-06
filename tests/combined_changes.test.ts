@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { capturePublicFiles } from "../dist/export/public_files.js";
 import { assembleExport } from "../dist/export/site.js";
+import { asChangeEvidence } from "../dist/review/change_evidence.js";
 import { compareReview } from "../dist/review/compare.js";
 import { changedContentPaths } from "../dist/server/changed_content.js";
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
@@ -12,7 +13,7 @@ import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
 const page = `import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ id: "handbook", title: "Handbook", description: "Document", dependencies: [], relatedDocs: [], render: () => "<html><body>Original handbook</body></html>" }));`;
+mockups.push(definePage({ path: "handbook", title: "Handbook", description: "Document", dependencies: [], relatedDocs: [], render: () => "<html><body>Original handbook</body></html>" }));`;
 
 for (const editComponent of [false, true]) {
   test(`page material Changes survive component classification and static export: component edit=${editComponent}`, async (t) => {
@@ -37,7 +38,7 @@ for (const editComponent of [false, true]) {
       "a".repeat(40),
     );
     assert.deepEqual(
-      changed.changedIds,
+      changed.changedEntries,
       editComponent ? ["action", "handbook"] : ["handbook"],
     );
     assert.ok(changed.result);
@@ -57,7 +58,7 @@ for (const editComponent of [false, true]) {
       fixture.config,
       fixture.git.reader,
       "a".repeat(40),
-      fixture.changedPaths,
+      asChangeEvidence(fixture.changedPaths),
       undefined,
       "pages",
     );
@@ -72,16 +73,16 @@ for (const editComponent of [false, true]) {
     const home = String(site.inventory.files.get("index.html"));
     assert.match(
       home,
-      /data-changed="true"[^>]*data-route="pages\/handbook.html"/,
+      /data-changed="true"[^>]*data-route="handbook\/index.html"/,
     );
     assert.doesNotMatch(
       home,
-      /data-changed="true"[^>]*data-route="screens\/home.html"/,
+      /data-changed="true"[^>]*data-route="home\/index.html"/,
     );
     const document = String(
-      site.inventory.files.get("view/pages/handbook.html"),
+      site.inventory.files.get("view/handbook/index.html"),
     );
-    assert.match(document, /src="\/static\/pages\/handbook.html"/);
+    assert.match(document, /src="\/static\/handbook\/index.html"/);
     assert.doesNotMatch(document, /data-workspace-data|data-diff-screen/);
   });
 }
@@ -108,11 +109,7 @@ test("a component catalogue without review never asks for Git Changes", async (t
     },
   });
   fixture.beforeRemove(() => server.close());
-  for (const route of [
-    "/",
-    "/view/pages/handbook.html",
-    "/view/components/action.html",
-  ]) {
+  for (const route of ["/", "/view/handbook/", "/view/action/"]) {
     const response = await fetch(server.url + route);
     assert.equal(response.status, 200);
     const html = await response.text();

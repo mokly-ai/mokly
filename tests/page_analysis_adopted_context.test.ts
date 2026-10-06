@@ -49,7 +49,7 @@ for (const mode of ["committed", "derived"] as const)
                 ? '<link rel="stylesheet" href="../sheet.css">'
                 : `<style>${css}</style>`;
             const renderer = (css: string) =>
-              `import { renderToStaticMarkup } from 'react-dom/server'; export default input => input.entry.id === 'home' ? ${JSON.stringify(document(styles(css)))} : '<!doctype html><html><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
+              `import { renderToStaticMarkup } from 'react-dom/server'; export default input => input.entry.path === 'home' ? ${JSON.stringify(document(styles(css)))} : '<!doctype html><html><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
             const embedded = path === "embedded";
             const fixture = await inlineChangesFixture(
               context,

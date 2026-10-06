@@ -76,7 +76,7 @@ for (const mode of ["committed", "derived"] as const)
                   kind: "error",
                   name: "Error",
                   message:
-                    "[mokly/review-ignore] screens/home.mobile.html: material signal for clock has no region",
+                    "[mokly/review-ignore] home/index.mobile.html: material signal for clock has no region",
                 });
               for (const switches of styleSwitches)
                 await context.test(JSON.stringify(switches), async () => {
@@ -115,7 +115,7 @@ for (const mode of ["committed", "derived"] as const)
                     kind: "error",
                     name: "Error",
                     message:
-                      "[mokly/review-ignore] screens/home.mobile.html: region clock has no end marker",
+                      "[mokly/review-ignore] home/index.mobile.html: region clock has no end marker",
                   },
                 );
               });

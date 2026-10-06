@@ -43,6 +43,7 @@ test("real React Native Web cumulative sheets equal whole parses", async (contex
   let elements = 0;
   let rules = 0;
   for (const source of compilation.outputs.values()) {
+    if (typeof source !== "string") continue;
     for (const span of findUnownedInlineStyles(source, [], new Set())) {
       const parsed = compare(span.text, `RNW element ${elements++}`);
       assert.equal(parsed.status, "parsed");

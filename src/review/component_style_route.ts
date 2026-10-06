@@ -34,6 +34,7 @@ export async function compareStyleOnlyView(
   view: ViewReview,
   root?: string,
 ): Promise<ComparedComponentView | undefined> {
+  if (pages.links && pages.links.equalSource !== true) return;
   const { before, after, baseText, headText } = pages;
   // Condition 1: validation remains in the shared page analysis/full path.
   if (

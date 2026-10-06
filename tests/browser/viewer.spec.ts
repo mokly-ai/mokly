@@ -24,7 +24,7 @@ test("uncontrolled selection, slots and handle lifecycle", async ({ page }) => {
   );
   await expect(page.locator("#one .mbk-frag").first()).toHaveAttribute(
     "src",
-    /\/static\/screens\/home.mobile.html/,
+    /\/static\/home\/index.mobile.html/,
   );
   await page.getByText("Host start").click();
   await expect(page.getByText("Annotation")).toBeVisible();
@@ -33,7 +33,7 @@ test("uncontrolled selection, slots and handle lifecycle", async ({ page }) => {
     await host.ref.current.startPick();
     host.ref.current.cancelPick();
     host.ref.current.cancelPick();
-    host.ref.current.select({ screenId: null });
+    host.ref.current.select({ screenPath: null });
   });
   await expect(page.getByText("Host home")).toBeVisible();
   expect(
@@ -58,7 +58,7 @@ test("controlled proposals wait for the host and normalize search", async ({
   );
   await page.evaluate(() =>
     window.viewerHarness.get("one").ref.current.select({
-      screenId: "action",
+      screenPath: "action",
       search: "TAG:forms action",
       tags: ["forms"],
     }),
@@ -102,24 +102,18 @@ test("uncontrolled shell links apply valid axes independently on the same destin
   const viewport = page.locator("#one [data-workspace-viewport]");
   const scheme = page.locator("#one [data-workspace-scheme]");
 
-  await clickRouteProbe(
-    page,
-    "/view/screens/home.html?viewport=desktop&scheme=invalid",
-  );
+  await clickRouteProbe(page, "/view/home/?viewport=desktop&scheme=invalid");
   await expect(viewport).toHaveValue("desktop");
   await expect(scheme).toHaveAttribute("aria-pressed", "false");
 
   await clickRouteProbe(
     page,
-    "/view/screens/home.html?viewport=mobile&viewport=desktop&scheme=dark",
+    "/view/home/?viewport=mobile&viewport=desktop&scheme=dark",
   );
   await expect(viewport).toHaveValue("desktop");
   await expect(scheme).toHaveAttribute("aria-pressed", "true");
 
-  await clickRouteProbe(
-    page,
-    "/view/screens/home.html?viewport=invalid&scheme=invalid",
-  );
+  await clickRouteProbe(page, "/view/home/?viewport=invalid&scheme=invalid");
   expect(
     await page.evaluate(() =>
       window.viewerHarness
@@ -135,11 +129,7 @@ test("controlled shell-axis proposals stay inert until the host accepts them", a
   await page.evaluate(() =>
     window.viewerHarness.start("one", { controlled: true }),
   );
-  await clickRouteProbe(
-    page,
-    "/view/screens/home.html?viewport=desktop&scheme=dark",
-    true,
-  );
+  await clickRouteProbe(page, "/view/home/?viewport=desktop&scheme=dark", true);
   const viewport = page.locator("#one [data-workspace-viewport]");
   const scheme = page.locator("#one [data-workspace-scheme]");
   await expect(viewport).toHaveValue("mobile");
@@ -152,7 +142,7 @@ test("controlled shell-axis proposals stay inert until the host accepts them", a
   );
   expect(proposal?.value).toEqual(
     expect.objectContaining({
-      screenId: "home",
+      screenPath: "home",
       viewport: "desktop",
       colorScheme: "dark",
     }),
@@ -177,7 +167,9 @@ test("StrictMode replay and independent roots", async ({ page }) => {
     Boolean(window.viewerHarness.get("two").ref.current),
   );
   await page.evaluate(() =>
-    window.viewerHarness.get("one").ref.current.select({ screenId: "action" }),
+    window.viewerHarness
+      .get("one")
+      .ref.current.select({ screenPath: "action" }),
   );
   await expect(page.locator("#one h2")).toContainText("Action");
   await expect(page.locator("#two h2")).toContainText("Home");
@@ -224,7 +216,7 @@ test("postMessage frames emit pick/hover/click and support imperative rejection"
             .at(-1)?.value,
       ),
     )
-    .toEqual({ instance: null, boxes: [], frame: { entryId: "home" } });
+    .toEqual({ instance: null, boxes: [], frame: { entryPath: "home" } });
   await frame.getByText("Visible", { exact: true }).click();
   await expect
     .poll(() =>

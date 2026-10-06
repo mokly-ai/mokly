@@ -27,7 +27,7 @@ for (const mode of ["committed", "derived"] as const)
         const after = `${item.selector}{color:blue}`;
         const body = `${start}${item.body}${end}<span>Home</span>`;
         const shell = (styles: string) =>
-          `import { renderToStaticMarkup } from 'react-dom/server'; export default input => input.entry.id === 'home' ? '<!doctype html><html><head>${styles}</head><body>${body}</body></html>' : '<!doctype html><html><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
+          `import { renderToStaticMarkup } from 'react-dom/server'; export default input => input.entry.path === 'home' ? '<!doctype html><html><head>${styles}</head><body>${body}</body></html>' : '<!doctype html><html><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
         const embedded = path === "embedded";
         const linked = path !== "inline";
         const fixture = await inlineChangesFixture(

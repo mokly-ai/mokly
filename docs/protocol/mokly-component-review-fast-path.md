@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-The fast path and its strict-v7 baseline boundary are implemented. Approved target of
+The fast path and its strict-v8 baseline boundary are implemented. Delivered by
 the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
 [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
 implements the analysis-backed quick check below with no inline work;
@@ -11,7 +11,7 @@ implements the equivalent style-only attempt before complete fall-through.
 M7's ownership-only projection and stable discovery policy clarify existing
 rules, closing documentation gaps rather than introducing new behavior.
 The [M7 checkpoint](../dev/shared-page-analysis-measurements.md) records its
-same-host quick-check/complete-path work; performance acceptance remains pending.
+same-host quick-check/complete-path work; performance acceptance is deferred under Decision 13.
 
 This contract owns the unchanged-view decision used by component-aware Changes
 classification. Input ownership and materiality remain defined by
@@ -33,6 +33,10 @@ validation diagnostic; they are not proof of an unchanged view.
 Apply these steps in order:
 
 0. Try the [identical-text check](./mokly-page-analysis.md#identical-text-quick-check).
+   If link normalization is present, require its metadata proof that equal
+   original text normalizes equally on both sides; an absent proof takes
+   fall-through. A reused path after a move can otherwise change link identity
+   without changing the HTML. The proof scans no document or stylesheet text.
    It shares the head analysis and raw seeds, skips projection and preserves
    usage reasons. If any eligible unowned style's outer source contains
    `<!--mokly-review-`, take fall-through: canonicalization may remove region
@@ -41,7 +45,7 @@ Apply these steps in order:
    matcher below: serialization can decode escapes and join comments/whitespace.
    Also check after removing escaped newlines everywhere. These source-only
    checks run no inline analysis; failed proofs retain preparation.
-1. Retain v7 component markers on both sides and apply paired manual-ignore
+1. Retain v8 component markers on both sides and apply paired manual-ignore
    normalization. If documents differ outside paired ignored regions, take the
    fall-through. Marker-stripped equality is insufficient because marker
    positions participate in ownership projection. For non-identical sources,
@@ -65,7 +69,7 @@ Apply these steps in order:
    Without ownership text edits, derive actual seeds directly from the analyses:
    do not prepare a projection merely because inline references may exist.
 4. When either usage record has instances or entry-owned slots,
-   compute the complete comparison's ownership projection, including v7 range
+   compute the complete comparison's ownership projection, including v8 range
    validation and root-specific ownership, but no inline analysis. Retain
    preparation on fall-through, so a side is parsed only once. Require equal
    projected material and use provenance-derived resources plus conservative
@@ -158,7 +162,7 @@ complete material HTML as a map key. The page contract defines copy exposure
 and parser-context differences; do not reparse a projected page to compensate.
 
 Added and removed views do not use the paired decision. Before normalizing the
-one-sided v7 document, validate every recorded component range. A malformed
+one-sided v8 document, validate every recorded component range. A malformed
 ownership tree fails with `$document` validation instead of becoming an
 ordinary addition or removal.
 

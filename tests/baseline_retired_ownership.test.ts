@@ -15,7 +15,7 @@ import { baselineFixture } from "./helpers/baseline_fixture.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
-test("rebuilt v7 cache accepts retired arrays without changing retained bytes", async (context) => {
+test("rebuilt v8 cache accepts retired arrays without changing retained bytes", async (context) => {
   const catalogue = await createFixture(componentEntrySource());
   context.after(() => removeFixture(catalogue));
   const original = (await compileCatalogue(await loadConfig(catalogue.root)))
@@ -42,7 +42,7 @@ test("rebuilt v7 cache accepts retired arrays without changing retained bytes", 
     return result;
   };
   const built = await fixture.builder.build(fixture.request);
-  assert.equal(built.marker.manifestVersion, 7);
+  assert.equal(built.marker.manifestVersion, 8);
   assert.equal((await fixture.builder.build(fixture.request)).cacheHit, true);
   const manifestPath = path.join(built.outputDir, "mokly-manifest.json");
   const retained = Buffer.from(await fixture.fs.read(manifestPath, raw.length));

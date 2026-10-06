@@ -15,14 +15,15 @@ import { ResourceComparison } from "../dist/review/resource_comparison.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("disabled classification creates and retains no document counter state", async (testContext) => {
   const fixture = await componentReviewFixture(testContext, (source) => source);
   const events: TimingEvent[] = [];
-  const reader = (outputs: ReadonlyMap<string, string>) => ({
+  const reader = (outputs: ReadonlyMap<string, string | Uint8Array>) => ({
     read: async (route: string) => {
       assert.equal(timingDocumentWork(), undefined);
-      return Buffer.from(outputs.get(route)!);
+      return Buffer.from(textOutput(outputs, route)!);
     },
   });
   await runWithTimings(
@@ -53,22 +54,23 @@ for (const full of [false, true])
         ? (source) => source.replace("Screen content", "Edited screen content")
         : (source) => source,
     );
-    const reader = (outputs: ReadonlyMap<string, string>) =>
+    const reader = (outputs: ReadonlyMap<string, string | Uint8Array>) =>
       new ComponentMaterialReader({
-        read: async (route: string) => Buffer.from(outputs.get(route)!),
+        read: async (route: string) => Buffer.from(textOutput(outputs, route)!),
         readIfExists: async (route: string) =>
-          outputs.has(route) ? Buffer.from(outputs.get(route)!) : undefined,
+          outputs.has(route)
+            ? Buffer.from(textOutput(outputs, route)!)
+            : undefined,
       });
     const files = (side: typeof fixture.before, color: string) => {
       const outputs = new Map(side.outputs);
       if (full) {
         const selected = generatedViews(
-          side.manifest.entries.find(({ id }) => id === "home")!,
+          side.manifest.entries.find(({ path: id }) => id === "home")!,
         )[0]!;
         outputs.set(
           selected.path,
-          outputs
-            .get(selected.path)!
+          textOutput(outputs, selected.path)!
             .replace(
               "</head>",
               `<style>main{color:${color}}</style><link rel="stylesheet" href="../sheet.css"></head>`,
@@ -112,7 +114,7 @@ for (const full of [false, true])
     };
     const view = (side: typeof fixture.before) =>
       generatedViews(
-        side.manifest.entries.find(({ id }) => id === "home")!,
+        side.manifest.entries.find(({ path: id }) => id === "home")!,
       )[0]!;
     const events: TimingEvent[] = [];
     await runWithTimings(

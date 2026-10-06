@@ -10,10 +10,10 @@ const real = await import("../../dist/review/ignore.js");
 const { generatedViews } =
   await import("../../packages/viewer/dist/components/views.js");
 const after = generatedViews(
-  input.after.entries.find(({ id }) => id === "home"),
+  input.after.entries.find(({ path }) => path === "home"),
 )[0];
 const before = generatedViews(
-  input.before.entries.find(({ id }) => id === "home"),
+  input.before.entries.find(({ path }) => path === "home"),
 ).find(({ path }) => path === after.path);
 const base = input.beforeFiles.get(before.path);
 const head = input.afterFiles.get(after.path);

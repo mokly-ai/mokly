@@ -12,7 +12,9 @@ function published(value: unknown): RemovedEntryPreview | undefined {
   if (!value || typeof value !== "object") return undefined;
   const record = value as { kind?: unknown };
   if (record.kind === "screen") return { kind: "screen" };
-  return record.kind === "page" ? { kind: "page" } : undefined;
+  return record.kind === "page" || record.kind === "document"
+    ? { kind: record.kind }
+    : undefined;
 }
 
 /**
@@ -32,11 +34,21 @@ export function readPreviewDescriptor(
   }
   if (!value || typeof value !== "object") return undefined;
   const record = value as Record<string, unknown>;
-  const id = text(record["id"]);
+  const id = text(record["path"]);
   const title = text(record["title"]);
   const kind = record["kind"];
   if (!id || !title) return undefined;
-  if (kind !== "page" && kind !== "screen") return undefined;
+  if (kind !== "page" && kind !== "document" && kind !== "screen")
+    return undefined;
+  const schemes = record["colorSchemes"];
+  if (
+    kind === "document" &&
+    (!Array.isArray(schemes) ||
+      !schemes.includes("light") ||
+      !schemes.every((scheme) => scheme === "light" || scheme === "dark") ||
+      new Set(schemes).size !== schemes.length)
+  )
+    return undefined;
   const address = text(record["address"]);
   const advertised = published(record["published"]);
   const catalogueIdentity = record["catalogueIdentity"];
@@ -50,9 +62,12 @@ export function readPreviewDescriptor(
   )
     return undefined;
   return {
-    id,
+    path: id,
     kind,
     title,
+    ...(kind === "document"
+      ? { colorSchemes: schemes as ("light" | "dark")[] }
+      : {}),
     ...(address ? { address } : {}),
     ...(hasIdentity ? { catalogueIdentity, snapshotId } : {}),
     ...(advertised ? { published: advertised } : {}),
@@ -62,10 +77,11 @@ export function readPreviewDescriptor(
 /** Identity of one requested preview; a different entry can never adopt it. */
 export function previewKey(data: RemovedPreviewData): string {
   return JSON.stringify([
-    data.id,
+    data.path,
     data.kind,
     data.catalogueIdentity,
     data.snapshotId,
     data.published,
+    data.colorSchemes,
   ]);
 }

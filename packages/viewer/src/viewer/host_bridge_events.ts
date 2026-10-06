@@ -24,7 +24,7 @@ interface HostBridgeEventInput {
   picking: { readonly active: boolean };
   pickSessions: MutableRefObject<ReadonlySet<ShellFrameSession> | undefined>;
   report(error: unknown, code: "frame"): Error;
-  selectedEntryId: string | null;
+  selectedEntryPath: string | null;
 }
 
 /** Route only events owned by the current public inspection generation. */
@@ -36,7 +36,7 @@ export function useHostBridgeEvents({
   picking,
   pickSessions,
   report,
-  selectedEntryId,
+  selectedEntryPath,
 }: HostBridgeEventInput) {
   const receiveInstance = useCallback(
     (
@@ -60,7 +60,7 @@ export function useHostBridgeEvents({
         instance: instance ?? null,
         boxes,
         frame: {
-          entryId: selectedEntryId ?? session.identity.entryId,
+          entryPath: selectedEntryPath ?? session.identity.entryPath,
           ...(session.identity.stepIndex === undefined
             ? {}
             : { stepIndex: session.identity.stepIndex }),
@@ -79,7 +79,7 @@ export function useHostBridgeEvents({
       picking,
       pickSessions,
       report,
-      selectedEntryId,
+      selectedEntryPath,
     ],
   );
 

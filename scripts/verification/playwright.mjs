@@ -13,7 +13,13 @@ export async function discoverBrowserTests(repositoryRoot, options = {}) {
   });
   if (result.exitCode !== 0 || result.signal !== null)
     throw new Error(
-      `Playwright discovery failed (${result.signal ?? result.exitCode})\n${result.stderr}`,
+      [
+        `Playwright discovery failed (${result.signal ?? result.exitCode})`,
+        ...reportedErrors(result.stdout),
+        result.stderr,
+      ]
+        .filter(Boolean)
+        .join("\n"),
     );
   let report;
   try {
@@ -34,6 +40,15 @@ export async function discoverBrowserTests(repositoryRoot, options = {}) {
     files: [...new Set(tests.map((test) => test.file))].sort(),
     tests: tests.sort((left, right) => left.id.localeCompare(right.id)),
   };
+}
+
+/** Return the load errors a failed JSON list run reported, if its output parses. */
+function reportedErrors(stdout) {
+  try {
+    return (JSON.parse(stdout).errors ?? []).map((entry) => entry.message);
+  } catch {
+    return [];
+  }
 }
 
 function playwrightTests(report, repositoryRoot) {

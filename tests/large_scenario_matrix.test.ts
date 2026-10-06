@@ -52,9 +52,9 @@ test("scenario filters are exact, deduplicated and ordered before any scenario e
   assert.throws(() => selectScenarios([""]), /Unknown/);
   assert.deepEqual(
     browseMembership(
-      '<div data-changes-status="ready"><a data-changed="true" data-entry-id="two" data-route="screens/two.html"></a><a data-changed-variants="true" data-entry-id="one"></a></div>',
+      '<div data-changes-status="ready"><a data-changed="true" data-entry-id="two" data-route="two/index.html"></a><a data-changed-variants="true" data-entry-id="one"></a></div>',
     ),
-    { changedIds: ["two"], changedRoutes: ["screens/two.html"] },
+    { changedPaths: ["two"], changedRoutes: ["two/index.html"] },
   );
   assert.throws(
     () => browseMembership('<div data-changes-status="pending"></div>'),
@@ -139,13 +139,19 @@ test(
       record,
     );
     const before = await fs.readFile(
-      path.join(fixture.root, "mockups/screens/area-1-screen-1.desktop.html"),
+      path.join(
+        fixture.root,
+        "mockups/area-1/screens/activity-group-1/screen-1/index.desktop.html",
+      ),
       "utf8",
     );
     await restoreFixtureSetup(repositoryRoot, fixture);
     assert.equal(
       await fs.readFile(
-        path.join(fixture.root, "mockups/screens/area-1-screen-1.desktop.html"),
+        path.join(
+          fixture.root,
+          "mockups/area-1/screens/activity-group-1/screen-1/index.desktop.html",
+        ),
         "utf8",
       ),
       before,
@@ -161,7 +167,7 @@ test("restoration errors fail without discarding recorded sample errors", async 
       sampleOutcome([], {
         scenario: scenario.name,
         state,
-        expectedChangedIds: [],
+        expectedChangedPaths: [],
         expectedChangedRoutes: [],
         error: "Worker did not start",
       }),

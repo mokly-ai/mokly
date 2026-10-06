@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { projectRealPath } from "../config/paths.js";
-import { errorMessage } from "../errors.js";
+import { errorMessage, isCancellation } from "../errors.js";
 
 import { ExportBackup } from "./backup.js";
 import { failAfterExportCleanup } from "./cleanup.js";
@@ -13,10 +13,7 @@ import {
 } from "./destination.js";
 import { assertExportActive, exportError } from "./error.js";
 import { fileExportOperations, type ExportOperations } from "./operations.js";
-import {
-  assertExportOwnership,
-  type LegacyExportOwnership,
-} from "./ownership.js";
+import { assertExportOwnership } from "./ownership.js";
 import { prepareReservation, reservationPath } from "./reservation.js";
 
 /** Marker proving ownership of an active export reservation. */
@@ -38,7 +35,6 @@ export class ExportTransaction {
     readonly output: string,
     readonly reservation: string,
     private readonly operations: ExportOperations,
-    private readonly legacy: LegacyExportOwnership | undefined,
     private readonly initial: ExportDestination,
   ) {
     this.stage = path.join(reservation, "stage");
@@ -49,10 +45,9 @@ export class ExportTransaction {
   /** Reserve output without stealing an abandoned or active reservation. */
   static async open(
     output: string,
-    legacy?: LegacyExportOwnership,
     operations = fileExportOperations,
   ): Promise<ExportTransaction> {
-    const initial = await captureDestination(output, operations, legacy);
+    const initial = await captureDestination(output, operations);
     const real = projectRealPath(output);
     await assertDestination(real, initial, operations);
     await prepareReservation(real);
@@ -69,7 +64,6 @@ export class ExportTransaction {
       real,
       reservation,
       operations,
-      legacy,
       initial,
     );
     try {
@@ -87,16 +81,11 @@ export class ExportTransaction {
   /** Replace validated owned output and restore its previous bytes on failure. */
   async install(signal?: AbortSignal): Promise<void> {
     await assertDestination(this.output, this.initial, this.operations);
-    await assertExportOwnership(this.output, this.legacy);
+    await assertExportOwnership(this.output);
     await assertDestination(this.output, this.initial, this.operations);
     assertExportActive(signal);
     const existed = this.initial.kind === "directory";
-    const backup = new ExportBackup(
-      this.output,
-      this.backup,
-      this.operations,
-      this.legacy,
-    );
+    const backup = new ExportBackup(this.output, this.backup, this.operations);
     if (existed) await this.operations.rename(this.output, this.backup);
     try {
       if (this.initial.kind === "directory")
@@ -108,6 +97,7 @@ export class ExportTransaction {
       throw exportError(
         `Could not install export; no previous output was moved. ${errorMessage(error)}`,
         error,
+        { cancelled: isCancellation(error) },
       );
     }
     this.installed = true;

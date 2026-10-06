@@ -6,6 +6,8 @@ The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md)
 implements heap/document counts (M2), segments (M4), shared page parses (M7),
 `stylePath` (M8), and separate [material details](./mokly-material-work-counts.md) (M9).
 
+Performance acceptance is deferred under the plan's Decision 13 (2026-10-06).
+
 ## Opt-in timings
 
 `--debug-timings` is a common boolean CLI option for `serve` (including the
@@ -45,8 +47,11 @@ Build phases distinguish discovery, bundling, evaluation, registry validation,
 rendering, compatibility transformation, component metadata validation, logical
 links, ignore rules, manifest construction/validation, resource validation,
 HTML links, output-path checks and runtime retention. Watcher attachment,
-resource discovery, transactional output, and Changes have separate spans.
-Watcher inventory and freshness graph work remain visible even when repeating compilation.
+resource discovery, transactional output, and Changes have separate spans;
+`output.lock` measures the wait for the generated-output writer lock, including
+short output-validation snapshot reads. `output.paths` measures snapshot checks.
+Graph work for watcher inventory and source-freshness validation is deliberately
+visible even when it repeats compilation's graph work.
 
 Review phases use the same session, role and parent context as their caller:
 
@@ -54,7 +59,7 @@ Review phases use the same session, role and parent context as their caller:
   Pinned readers reuse the resolved commit without another Git span.
 - `review.changed-paths` covers output exclusions, tracked/untracked discovery,
   deduplication and sorting, including later input-freshness checks.
-- `review.base-manifest` covers canonical baseline reading, v7 validation, and
+- `review.base-manifest` covers canonical baseline reading, v8 validation, and
   incompatible-version detection.
 - `review.base-documents` covers each bulk baseline-document read, including
   live component prefetch and bounded live document-comparison batches. It does
@@ -122,29 +127,11 @@ Apply this to inline/CSS analysis, never supervisor wait, startup or cross-sessi
 
 ## Historical baseline phases
 
-`baseline.resolve` measures repository-root validation and resolving (or accepting
-an already pinned) merge-base commit. It precedes the `baseline` builder span,
-which includes cache validation, lock waiting, extraction, commands, output
-adoption and cleanup. Both run in the process owning preparation, never inside
-the disposable classification worker. A failed phase ends with `status: error`;
-diagnostics retain neither the command argv nor captured error output.
-
-On a cache miss, `baseline.extract` includes Git object validation, archive
-reading and confined extraction. Each configured argv has its own zero-based
-`baseline.command[<index>]` span, including non-zero-exit validation. The exact
-configured command list is unchanged by profiling. `baseline.adopt` includes
-baseline-manifest/output validation, output adoption, deleting source and
-writing the completion marker. The parent ends after cleanup and lock release,
-with `cacheHit: false`. A reused entry ends with `cacheHit: true` and omits the
-extraction, command and adoption spans. A waiter can also finish as a cache hit.
+See [Historical baseline phases](./mokly-timing-baselines.md#historical-baseline-phases) for the complete rules.
 
 ## Representative local fixture
 
-The [fixture README](../../tests/fixtures/large/README.md) describes setup/caching for 1,590 entries and 5,550 documents.
-Samples report startup/Props/preview/Changes times, baseline phases, classification
-inline/CSS shares or incomplete bounds, and available heap/document-work counts.
-The [benchmark contract](../../tests/fixtures/large/benchmark-contract.md)
-owns identity, scenarios and acceptance; CI has no wall-clock assertion.
+See [Representative local fixture](./mokly-timing-baselines.md#representative-local-fixture) for the complete rules.
 
 ## Component Analysis Counts
 

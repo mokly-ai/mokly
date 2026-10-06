@@ -17,4 +17,5 @@ export const cssReferenceInputs = [
     ["theme.css", "icon.svg"],
   ],
   ["a { background: url(icon.svg); } /* unclosed", ["icon.svg"]],
+  ['a{background:image-set("a.png" 1x, url("b.png") 2x)}', ["a.png", "b.png"]],
 ] as const;

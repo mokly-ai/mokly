@@ -33,9 +33,9 @@ test("excluded inline evidence is omitted from an ignored-only view", async (t) 
     { source, afterSource: source.replaceAll(">Before<", ">After<") },
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 4);
-  if (result.schemaVersion !== 4) return;
-  const home = result.screens.find((screen) => screen.id === "home")!;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
+  const home = result.screens.find((screen) => screen.path === "home")!;
   assert.ok(
     home.views.every(
       (view) => view.state === "ignored-only" && !view.inlineStyles,
@@ -61,11 +61,11 @@ test("excluded inline evidence is omitted beside a resource reason", async (t) =
     },
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 4);
-  if (result.schemaVersion !== 4) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   assert.ok(
     result.screens
-      .find((screen) => screen.id === "home")!
+      .find((screen) => screen.path === "home")!
       .views.every(
         (view) =>
           view.state === "changed" &&
@@ -90,13 +90,13 @@ test("excluded inline evidence is omitted beside an input reason", async (t) => 
     },
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 4);
-  if (result.schemaVersion !== 4) return;
-  const home = result.changes.find((entry) => entry.after?.id === "home");
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
+  const home = result.changes.find((entry) => entry.after?.path === "home");
   assert.deepEqual(home?.reasons, [{ kind: "inputs" }]);
   assert.ok(
     result.screens
-      .find((screen) => screen.id === "home")!
+      .find((screen) => screen.path === "home")!
       .views.every((view) => view.state === "unchanged" && !view.inlineStyles),
   );
 });
@@ -130,21 +130,21 @@ test("excluded evidence is omitted for a derived byte-only material change", asy
     changedPaths: [],
     config: { ...config, generatedOutput: "derived" },
   });
-  const home = result.screens.find((screen) => screen.id === "home")!;
+  const home = result.screens.find((screen) => screen.path === "home")!;
   assert.ok(
     home.views.every(
       (view) => view.state === "changed" && !view.reasons && !view.inlineStyles,
     ),
   );
   assert.deepEqual(
-    result.changes.find((entry) => entry.after?.id === "home")?.reasons,
+    result.changes.find((entry) => entry.after?.path === "home")?.reasons,
     [{ kind: "material" }],
   );
 });
 
 function scopedRenderer(styles: string): string {
   return `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => '<!doctype html><html><head>' + (input.entry.id === "home" ? ${JSON.stringify(styles)} : '<style>.stable{color:black}</style>') + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
+export default (input) => '<!doctype html><html><head>' + (input.entry.path === "home" ? ${JSON.stringify(styles)} : '<style>.stable{color:black}</style>') + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
 }
 
 test("views settled by the fast path emit no inline evidence", async (t) => {
@@ -162,8 +162,8 @@ test("views settled by the fast path emit no inline evidence", async (t) => {
       event.stage === "review.compare-screens" && event.event === "counts",
   )?.counts;
   assert.ok(Number(counts?.fastPath) > 0);
-  assert.equal(result.schemaVersion, 4);
-  if (result.schemaVersion !== 4) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   assert.ok(
     [
       ...result.screens.flatMap((screen) => screen.views),

@@ -112,6 +112,20 @@ export function cliErrorPresentation(error: unknown): CliErrorPresentation {
       hint: "Retry, or set MOKLY_DIAGNOSTIC=1 for diagnostic details.",
     };
   }
+  if (error.presentation === "publish-cancelled")
+    return {
+      code: error.code,
+      detail: undefined,
+      headline: "Publication was cancelled.",
+      hint: "Run mokly publish again when you are ready.",
+    };
+  if (error.presentation === "publish-transport-failed")
+    return {
+      code: error.code,
+      detail: undefined,
+      headline: "The catalogue upload did not complete.",
+      hint: "Check the endpoint and connection, then retry.",
+    };
   const detail = stripErrorPrefix(error);
   if (error.code === "cli-invalid") {
     const command = /^unknown command: (.+)$/.exec(detail)?.[1];

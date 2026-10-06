@@ -2,14 +2,16 @@
 
 Use `defineComponent` to give a shared React component its own catalogue page,
 variants, controls, and recorded usage in screens or other components.
-Callers render the returned `Component` and export its `entries` in `mockups`.
-Mokly renders that wrapper in the consumer's existing React/provider graph.
+Callers render the returned `Component` and export the registration or its
+`entries` from a discovered module. The exporting file supplies the path while
+the registration retains its defining module as source attribution. Mokly renders
+the wrapper in the consumer's existing React/provider graph.
 
 ```tsx
 import { defineComponent } from "@mokly/mokly";
 
 export const action = defineComponent({
-  id: "action",
+  slug: "action",
   title: "Action",
   description: "A shared action.",
   dependencies: [],
@@ -21,18 +23,16 @@ export const action = defineComponent({
   controls: { label: { kind: "text", label: "Label", maxLength: 80 } },
   render: (props) => <button>{props.label}</button>,
   variants: [
-    { id: "action-default", title: "Default", props: { label: "Continue" } },
+    { slug: "default", title: "Default", props: { label: "Continue" } },
   ],
 });
 export const mockups = [...action.entries];
 ```
 
-A registration may live in any repository module, typically beside the
-component it adapts, and the entry module that exports its `entries` may be
-discovered through any configured `entries` glob. The registration file is
-recorded as the component's source. The glob itself defines the entry shape;
-`.mockup.ts` and `.mockup.tsx` are the recommended convention selected by the
-`entriesDir` shorthand, not a separate filename rule.
+A registration may live beside the component it adapts. A root discovers its
+exporting module through `files`; the default matches `.mockup.ts` and
+`.mockup.tsx`. Prefix a component-library root with `path: "components"` when
+that is the desired catalogue hierarchy. Path rules never depend on kind.
 
 Render `<action.Component label="Save" />` in a screen. Give repeated siblings
 distinct `moklyInstance` values; stable ids preserve their identity across
@@ -56,8 +56,12 @@ values from the same view. It returns `missing` for an absent or different key,
 `present` for equal props keys, order and slot, and `moved` otherwise. It does not
 classify visual or material Changes.
 
+Comparison projection receives canonical catalogue links for equality and keeps
+real href values for resource traversal and CSS selector matching. Move pairing
+aligns component identities without changing captured bytes or instance offsets.
+
 Compiled JSX invocations record optional `source: { path, line, column }` in
-manifest v7. The path identifies the caller inside the repository, with 1-based
+manifest v8. The path identifies the caller inside the repository, with 1-based
 coordinates. Programmatic or already-compiled calls can omit it. The internal
 `__moklySource` prop is reserved from data schemas and slots and stripped before
 validation, hashing and rendering. Source metadata never affects identity or
@@ -67,14 +71,18 @@ including empty output.
 
 Variants are explicit named examples, never inferred from screenshots or every
 combination of controls. Each variant is its own `kind: "component"` entry with
-a global kebab-case id and `variantOf`, grouped beneath its component in
-navigation with its own route `components/<variant id>.html`, its own Changes
+a slug and derived parent relationship, grouped beneath its component in
+navigation with its own route `<parent path>/<slug>/index.html`, its own Changes
 row, and its own comparison. Both viewports and every configured scheme are
 built for each variant. `MockLink to="action"` opens the component page, which
-shows its first variant; `MockLink to="action-disabled"` opens that variant
+shows its first variant; `MockLink to="action/disabled"` opens that variant
 directly.
 
 Local Serve edits declared text, boolean, number, and primitive preset controls.
+Component views defined in a helper module use the stylesheet of the entry
+that exported the component, including saved variants and both viewports.
+Resources discovered from generated HTML and CSS can name pending generated CSS or assets
+before Build writes them; missing generated resources never fall back to disk.
 Complex props remain inspectable; an adapter can map a primitive preset key to
 a complex consumer value. Optional controls distinguish unset from empty text
 or null. Reset restores the variant's declared props; navigating to another
@@ -95,7 +103,7 @@ Review diffs rules and infers owners from every matched element in the paired do
 Entry-reaching or unresolved rules stay with the entry; unmatched rules are
 excluded. Referenced files follow inferred rule owners, while entry-owned
 references retain entry evidence. The renderer returns a complete document
-string. Compatible v7 baselines retain their original bytes; historical
+string. Compatible v8 baselines retain their original bytes; historical
 readers discard retired ownership arrays without relaxing instance validation.
 
 Component-aware comparison shares one original page tree per used view side.
@@ -119,7 +127,7 @@ node --import tsx --test tests/component_*.test.ts
   boundary and inference.
 - [`manifest_build.ts`](./manifest_build.ts) and
   [`manifest_entry_validation.ts`](./manifest_entry_validation.ts): flattened
-  parent/variant records and manifest-v7 validation.
+  parent/variant records and manifest-v8 validation.
 - Viewer [`props.ts`](../../packages/viewer/src/components/props.ts),
   [`schema.ts`](../../packages/viewer/src/components/schema.ts), and
   [`codec.ts`](../../packages/viewer/src/components/codec.ts): declarative

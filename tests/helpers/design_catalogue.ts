@@ -8,6 +8,7 @@ import { viewRoute } from "../../packages/viewer/dist/data.js";
 import type { ManifestScreen } from "../../packages/viewer/dist/registry/types.js";
 
 import { repositoryRoot } from "./fixture.js";
+import { textOutput } from "./generated_text.js";
 
 type Node = DefaultTreeAdapterMap["node"];
 export type Element = DefaultTreeAdapterMap["element"];
@@ -56,10 +57,10 @@ export async function designDocument(
   route: string;
 }> {
   const compilation = await designCatalogue;
-  const entry = compilation.manifest.entries.find((entry) => entry.id === id);
+  const entry = compilation.manifest.entries.find((entry) => entry.path === id);
   assert.ok(entry?.kind === "screen", `Missing screen ${id}`);
-  const route = viewRoute("screen", entry.id, viewport, "light");
-  const html = compilation.outputs.get(route);
+  const route = viewRoute(entry.path, viewport, "light");
+  const html = textOutput(compilation.outputs, route);
   assert.ok(html, `Missing ${viewport} output for ${id}`);
   return { document: parse(html), entry, html, route };
 }

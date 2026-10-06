@@ -11,10 +11,11 @@ import {
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
 import { prepareRegistry } from "../dist/registry/prepare.js";
-import { viewRoute } from "../packages/viewer/dist/data.js";
+import { analyzeHierarchy, viewRoute } from "../packages/viewer/dist/data.js";
 
 import { generateLargeFixture, largeSize } from "./fixtures/large/generate.js";
 import { repositoryRoot } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("large fixture validates dimensions and defaults to high-scale routes", () => {
   assert.deepEqual(largeSize({}), {
@@ -66,6 +67,29 @@ for (const screens of [10, 11, 20, 21]) {
         .filter((entry) => entry.kind === "use-case")
         .every((entry) => entry.steps.length >= 2),
     );
+    const hierarchy = analyzeHierarchy(
+      registry.entries,
+      registry.folders,
+    ).hierarchy;
+    assert.deepEqual(
+      hierarchy.ancestorsByPath.get("area-1/screens/activity-group-1/screen-1"),
+      ["Area 1", "Screens", "Activity group 1"],
+    );
+    assert.deepEqual(hierarchy.ancestorsByPath.get("area-1/flows/flow-1"), [
+      "Area 1",
+      "Flows",
+    ]);
+    assert.deepEqual(
+      hierarchy.ancestorsByPath.get("area-1/components/action"),
+      ["Area 1", "Components"],
+    );
+    if (screens > 10)
+      assert.deepEqual(
+        hierarchy.ancestorsByPath.get(
+          "area-1/screens/activity-group-2/screen-11",
+        ),
+        ["Area 1", "Screens", "Activity group 2"],
+      );
   });
 }
 
@@ -108,8 +132,9 @@ test("scaled consumer exercises the same render, hierarchy, resource and compone
       (view) => view.instances.length >= 4 && view.slots.length > 0,
     ),
   );
-  const html = compilation.outputs.get(
-    viewRoute("screen", screen.id, "desktop", "light"),
+  const html = textOutput(
+    compilation.outputs,
+    viewRoute(screen.path, "desktop", "light"),
   )!;
   assert.match(html, /react-native-stylesheet/);
   assert.match(html, /data-mokly-link/);

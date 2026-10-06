@@ -64,7 +64,13 @@ export function prepareComponentProjection(
   pages?: PageAnalysisPair,
 ): PreparedComponentComparison {
   pages ??= context.componentAware
-    ? new PageAnalysisPair(before, after, base, head)
+    ? new PageAnalysisPair(
+        before,
+        after,
+        base,
+        head,
+        context.links?.(before.path, after.path),
+      )
     : undefined;
   const baseRanges = pages
     ? pages.beforeAnalysis.ranges
@@ -159,6 +165,7 @@ export function prepareComponentProjection(
       inline,
       baseRanges,
       headRanges,
+      context.links?.(before.path, after.path),
     );
   return {
     ...(baseRanges ? { baseRanges } : {}),

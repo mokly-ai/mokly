@@ -25,23 +25,23 @@ export function ComponentStage({
       {(["mobile", "desktop"] as const).map((viewport) => {
         const previewLight = generatedView(
           previewViews,
-          variant.id,
+          variant.path,
           viewport,
           "light",
         );
         const previewDark = generatedView(
           previewViews,
-          variant.id,
+          variant.path,
           viewport,
           "dark",
         );
         const light = previewLight
           ? generatedFrameSource(previewLight)
-          : `/static/${encodeUrlPath(viewRoute("component", variant.id, viewport, "light"))}`;
+          : `/static/${encodeUrlPath(viewRoute(variant.path, viewport, "light"))}`;
         const dark = previewDark
           ? generatedFrameSource(previewDark)
           : variant.colorSchemes.includes("dark")
-            ? `/static/${encodeUrlPath(viewRoute("component", variant.id, viewport, "dark"))}`
+            ? `/static/${encodeUrlPath(viewRoute(variant.path, viewport, "dark"))}`
             : undefined;
         return (
           <section

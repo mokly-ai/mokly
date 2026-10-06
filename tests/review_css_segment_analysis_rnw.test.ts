@@ -22,9 +22,9 @@ test("real cumulative RNW view pairs preserve the M4 ordered diff, material and 
     inlineStyles: true,
   });
   const compilation = await compileCatalogue(await loadConfig(root));
-  const sources = [...compilation.outputs.values()].map((source) =>
-    stripMarkers(source),
-  );
+  const sources = [...compilation.outputs.values()]
+    .filter((source): source is string => typeof source === "string")
+    .map((source) => stripMarkers(source));
   const parser = new CssResourceAnalysis().parser;
   let compared = 0;
   for (let index = 1; index < sources.length; index += 4) {

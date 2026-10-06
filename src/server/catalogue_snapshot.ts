@@ -1,4 +1,4 @@
-import type { ManifestV7 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 import { createCatalogue, type Catalogue } from "@mokly/viewer/server";
 
 import { assertFreshSourceInventory } from "../build/source_freshness.js";
@@ -11,6 +11,10 @@ import {
 } from "../registry/catalogue_index.js";
 import type { CatalogueChangeSnapshot } from "../registry/changes.js";
 import { parseManifest, readManifest } from "../registry/manifest.js";
+import {
+  acceptedGenerationFromInventory,
+  type AcceptedGeneration,
+} from "../review/accepted_generation.js";
 import type { ReadOnlyReviewRepository } from "../review/repository.js";
 
 import {
@@ -33,21 +37,24 @@ export interface CatalogueSnapshot {
 export async function loadCatalogueSnapshot(
   config: ResolvedConfig,
   resolveChanges?: (
-    manifest: ManifestV7,
+    manifest: ManifestV8,
+    accepted: AcceptedGeneration,
   ) => Promise<ResolvedCatalogueChanges | undefined>,
-  manifest: ManifestV7 = readManifest(config),
+  manifest: ManifestV8 = readManifest(config),
 ): Promise<CatalogueSnapshot> {
   timeSync("catalogue.validate", () => parseManifest(manifest));
-  await timeAsync("catalogue.source-freshness", () =>
+  const inventory = await timeAsync("catalogue.source-freshness", () =>
     assertFreshSourceInventory(config, manifest),
   );
   const changes = resolveChanges
-    ? await timeAsync("changes.classify", () => resolveChanges(manifest))
+    ? await timeAsync("changes.classify", () =>
+        resolveChanges(manifest, acceptedGenerationFromInventory(inventory)),
+      )
     : undefined;
   return {
     [configIdentity]: config,
     catalogue: timeSync("catalogue.index", () =>
-      createCatalogue(manifest, changes?.removedEntries),
+      createCatalogue(manifest, changes?.removedEntries, changes?.movedEntries),
     ),
     ...(changes ? { changes } : {}),
     ...(changes?.componentChanges
@@ -70,20 +77,22 @@ export async function loadLiveCatalogueSnapshot(
 export function loadServedCatalogueSnapshot(
   config: ResolvedConfig,
   base?: string,
-  manifest?: ManifestV7,
+  manifest?: ManifestV8,
   repository?: () => ReadOnlyReviewRepository,
 ): Promise<CatalogueSnapshot> {
   return loadCatalogueSnapshot(
     config,
     base === undefined || !repository
       ? undefined
-      : async (current) => {
+      : async (current, accepted) => {
           try {
             return await computeCatalogueChanges(
               config,
               base,
               repository(),
               current,
+              undefined,
+              accepted,
             );
           } catch (error) {
             if (

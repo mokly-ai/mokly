@@ -19,7 +19,7 @@ test("projection and reader retain typed removed page and screen previews", asyn
   assert.deepEqual(
     model.removedEntries.map(({ entry, preview }) => [
       entry.kind,
-      entry.id,
+      entry.path,
       preview,
     ]),
     [
@@ -109,13 +109,15 @@ async function previewInput(t: test.TestContext) {
   const before = await compileCatalogue(config);
   const current = {
     ...before.manifest,
-    entries: before.manifest.entries.filter((entry) => entry.id === "current"),
+    entries: before.manifest.entries.filter(
+      (entry) => entry.path === "current",
+    ),
   };
   return {
     configPath: "mokly.config.ts",
     catalogue: catalogueAtBaseline(current, before.manifest),
     changesStatus: "ready" as const,
-    changedIds: ["guide", "old"],
+    changedEntries: ["guide", "old"],
     comparisonUrl,
     removedPreviews: new Map([
       ["guide", { kind: "page" as const }],
@@ -130,8 +132,8 @@ function source(): string {
 import { definePage, defineScreen } from "@mokly/mokly";
 const metadata = { dependencies: [], relatedDocs: [], description: "Fixture" };
 export const mockups = [
-  defineScreen({ ...metadata, id: "current", title: "Current", mobile: <p>Current</p>, desktop: <p>Current</p>, useCaseIds: [] }),
-  defineScreen({ ...metadata, id: "old", title: "Old", mobile: <p>Old</p>, desktop: <p>Old</p>, useCaseIds: [] }),
-  definePage({ ...metadata, id: "guide", title: "Guide", render: () => "<!doctype html><html><body>Guide</body></html>" })
+  defineScreen({ ...metadata, path: "current", title: "Current", mobile: <p>Current</p>, desktop: <p>Current</p>, useCasePaths: [] }),
+  defineScreen({ ...metadata, path: "old", title: "Old", mobile: <p>Old</p>, desktop: <p>Old</p>, useCasePaths: [] }),
+  definePage({ ...metadata, path: "guide", title: "Guide", render: () => "<!doctype html><html><body>Guide</body></html>" })
 ];`;
 }

@@ -167,5 +167,5 @@ export function browseMembership(html) {
     for (const child of node.childNodes ?? []) visit(child);
   };
   visit(parse(html));
-  return { changedIds: [...ids].sort(), changedRoutes: [...routes].sort() };
+  return { changedPaths: [...ids].sort(), changedRoutes: [...routes].sort() };
 }

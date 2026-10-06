@@ -11,6 +11,7 @@ import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
 import { repositoryRoot } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("adding a real generated screen preserves other areas' values, classes, markup and membership", async (testContext) => {
   const root = await fs.mkdtemp(
@@ -26,7 +27,7 @@ test("adding a real generated screen preserves other areas' values, classes, mar
   });
   const config = await loadConfig(root);
   const before = await compileCatalogue(config);
-  const entryPath = path.join(root, "entries/area-1/catalogue.mockup.tsx");
+  const entryPath = path.join(root, "specs/area-1/catalogue.mockup.tsx");
   await fs.writeFile(
     entryPath,
     (await fs.readFile(entryPath, "utf8")).replace(
@@ -35,15 +36,15 @@ test("adding a real generated screen preserves other areas' values, classes, mar
     ),
   );
   const after = await compileCatalogue(config);
-  for (const entry of before.manifest.entries.filter(({ id }) =>
-    id.startsWith("area-2-"),
+  for (const entry of before.manifest.entries.filter(({ path: id }) =>
+    id.startsWith("area-2/"),
   ))
     for (const view of generatedViews(entry)) {
-      const left = before.outputs.get(view.path)!;
-      const right = after.outputs.get(view.path)!;
+      const left = textOutput(before.outputs, view.path)!;
+      const right = textOutput(after.outputs, view.path)!;
       if (entry.kind !== "page") {
         const token = JSON.stringify([
-          entry.id,
+          entry.path,
           view.viewport,
           view.colorScheme,
         ]);
@@ -76,7 +77,7 @@ test("adding a real generated screen preserves other areas' values, classes, mar
         );
       }
     }
-  const reader = (outputs: ReadonlyMap<string, string>) => ({
+  const reader = (outputs: ReadonlyMap<string, string | Uint8Array>) => ({
     read: async (route: string) =>
       Buffer.from(
         outputs.get(route) ??
@@ -89,14 +90,14 @@ test("adding a real generated screen preserves other areas' values, classes, mar
     beforeReader: reader(before.outputs),
     afterReader: reader(after.outputs),
     config,
-    changedPaths: ["entries/area-1/catalogue.mockup.tsx"],
+    changedPaths: ["specs/area-1/catalogue.mockup.tsx"],
     baseCommit: "a".repeat(40),
     baseRef: "main",
   });
   assert.ok(result.changes.length > 0);
   assert.ok(
     result.changes.every(
-      (change) => !(change.after ?? change.before)!.id.startsWith("area-2-"),
+      (change) => !(change.after ?? change.before)!.path.startsWith("area-2/"),
     ),
   );
 });

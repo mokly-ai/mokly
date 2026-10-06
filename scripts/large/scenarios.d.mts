@@ -1,7 +1,7 @@
 export interface ClassificationScenario {
   name:
     "no-changes" | "component-style" | "screen-markup" | "linked-stylesheet";
-  expectedChangedIds: readonly string[];
+  expectedChangedPaths: readonly string[];
   expectedChangedRoutes: readonly string[];
 }
 

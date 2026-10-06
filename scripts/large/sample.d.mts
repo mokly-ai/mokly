@@ -1,4 +1,4 @@
 export function browseMembership(html: string): {
-  changedIds: string[];
+  changedPaths: string[];
   changedRoutes: string[];
 };

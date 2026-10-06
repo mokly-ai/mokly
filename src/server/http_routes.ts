@@ -4,6 +4,7 @@ import type { RenderCapability } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 import { shellContext, SHELL_CSS } from "@mokly/viewer/server";
 
+import type { GeneratedFile } from "../build/generated_file.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import {
@@ -32,7 +33,7 @@ export async function handleCatalogueRequest(
   catalogue: Catalogue,
   config: ResolvedConfig,
   base: string,
-  currentChangedIds: () => readonly string[] | undefined,
+  currentChangedPaths: () => readonly string[] | undefined,
   streams: Set<ServerResponse>,
   assets: ServedAssets,
   currentVersion: () => number,
@@ -43,6 +44,7 @@ export async function handleCatalogueRequest(
   changesStatus?: ChangesStatus,
   contentVersion?: number,
   publicCatalogue?: PublicCatalogueSource,
+  acceptedGenerated?: ReadonlyMap<string, GeneratedFile>,
   unavailableComparisons = false,
 ): Promise<void> {
   if (method !== "GET" && method !== "HEAD")
@@ -103,21 +105,22 @@ export async function handleCatalogueRequest(
       config,
       catalogue,
       method,
+      acceptedGenerated,
     );
   const changed =
-    componentChanges?.changedIds ??
+    componentChanges?.changedEntries ??
     (componentChanges?.result
       ? componentChanges.result.changes.map(
-          (entry) => (entry.after ?? entry.before)!.id,
+          (entry) => (entry.after ?? entry.before)!.path,
         )
-      : currentChangedIds());
+      : currentChangedPaths());
   const context = shellContext(
     base,
     changed
       ? [
           ...new Set([
             ...changed,
-            ...catalogue.removedEntries.map(({ entry }) => entry.id),
+            ...catalogue.removedEntries.map(({ entry }) => entry.path),
           ]),
         ]
       : undefined,

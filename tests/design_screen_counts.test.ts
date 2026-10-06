@@ -28,9 +28,18 @@ const UNITS = [
   "eighteen",
   "nineteen",
 ];
-const TENS = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy"];
+const TENS = [
+  "twenty",
+  "thirty",
+  "forty",
+  "fifty",
+  "sixty",
+  "seventy",
+  "eighty",
+  "ninety",
+];
 
-/** A count written in digits or as English words up to seventy-nine. */
+/** A count written in digits or as English words up to ninety-nine. */
 function count(written: string): number {
   if (/^\d+$/u.test(written)) return Number(written);
   const [tens, unit] = written.toLowerCase().split("-");
@@ -54,14 +63,14 @@ async function stated(file: string, pattern: RegExp): Promise<number[]> {
 test("documented design-screen counts match the compiled catalogue", async () => {
   const { manifest } = await designCatalogue;
   const designs = manifest.entries.flatMap((entry) =>
-    entry.kind === "screen" && entry.id.startsWith("design-") ? [entry] : [],
+    entry.kind === "screen" && entry.path.startsWith("design/") ? [entry] : [],
   );
   const components = designs.filter((entry) =>
-    entry.id.startsWith("design-component-"),
+    entry.path.startsWith("design/components/"),
   );
   const dual = designs.filter((entry) => entry.colorSchemes.includes("dark"));
   const dualBrowse = dual.filter((entry) =>
-    entry.navPath.includes("Catalogue views"),
+    entry.path.startsWith("design/browse/views/"),
   );
   const variants = dualBrowse.filter((entry) => entry.variantOf !== undefined);
   const shell = designs.length - components.length;
@@ -106,8 +115,10 @@ test("documented design-screen counts match the compiled catalogue", async () =>
       ),
       [
         dual.length,
-        dual.filter((entry) => entry.navPath.includes("Appearance")).length,
-        dual.filter((entry) => entry.navPath.includes("Changes")).length,
+        dual.filter((entry) =>
+          entry.path.startsWith("design/browse/appearance/"),
+        ).length,
+        dual.filter((entry) => entry.path.startsWith("design/changes/")).length,
         dualBrowse.length - variants.length,
         variants.length,
       ],
@@ -140,8 +151,9 @@ test("documented design-screen counts match the compiled catalogue", async () =>
     );
   assert.equal(
     dual.length,
-    dual.filter((entry) => entry.navPath.includes("Appearance")).length +
-      dual.filter((entry) => entry.navPath.includes("Changes")).length +
+    dual.filter((entry) => entry.path.startsWith("design/browse/appearance/"))
+      .length +
+      dual.filter((entry) => entry.path.startsWith("design/changes/")).length +
       dualBrowse.length,
     "every light/dark design belongs to one documented group",
   );

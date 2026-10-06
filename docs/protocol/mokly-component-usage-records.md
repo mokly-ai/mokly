@@ -2,10 +2,11 @@
 
 ## Delivery Status
 
-Implemented for manifest v7, including strict admission of baseline-v7 usage
+Implemented for manifest v8, including strict admission of baseline-v8 usage
 records, with historical retirement of obsolete ownership arrays.
 
-This contract owns the per-view component instance, slot, and range records stored by [manifest v7](./mokly-component-manifest.md).
+This contract owns the per-view component instance, slot, and range records stored by [manifest v8](./mokly-component-manifest.md).
+`componentId` names a component parent by its path.
 Stable instance-key behavior is defined separately by
 [Component Instance Identity](./mokly-instances.md).
 
@@ -60,7 +61,7 @@ interface ComponentViewRecord {
 ```
 
 References are local to one view except `componentId`, which names a registered
-component parent. An entry owner is the containing screen or component variant.
+component parent by its path. An entry owner is the containing screen or component variant.
 The component root rendered for its own variant is the entry owner and is not a
 used instance.
 
@@ -69,8 +70,8 @@ without a final LF. Their preimages are
 `["mokabook-instance-v1", owner.kind, owner.kind === "instance" ? owner.instanceKey : null, slotKey ?? null, id]`
 and `["mokabook-slot-v1", instanceKey, name]`. Those domain strings are frozen
 protocol identifiers. Readers recompute keys and reject mismatches or
-conflicting duplicates. Keys are not paths, selectors, catalogue ids, or
-routes.
+conflicting duplicates. Keys are not entry paths, selectors, or file
+names.
 
 ## Ownership And Ordering
 
@@ -100,7 +101,7 @@ changes remain material under the
 ## Retired Ownership Records
 
 The renderer returns a document string, never ownership assertions. Current
-v7 usage records reject `styles` and `resources` as unknown keys; retirement
+v8 usage records reject `styles` and `resources` as unknown keys; retirement
 does not bump the manifest version. Inline ownership is inferred under the
 [inline style contract](./mokly-inline-styles.md); linked-file ownership uses
 `ownedDependencies`.
@@ -108,7 +109,7 @@ does not bump the manifest version. Inline ownership is inferred under the
 At the Git boundary and when loading a rebuilt baseline cache, every admitted
 historical usage record may contain either retired key only as an array.
 Readers discard those arrays before comparison without interpreting their
-contents and reject non-arrays. All other v7 validation remains identical to
+contents and reject non-arrays. All other v8 validation remains identical to
 current validation, including prop schemas, declared slots, keys, references,
 ordering and source locations.
 

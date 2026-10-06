@@ -2,7 +2,9 @@
 
 ## Delivery Status
 
-Implemented. Verification and delivery are tracked by the
+Implemented. The Placement Tiers were delivered by the
+[styled link control ancestor rule plan](../../plans/styled-link-control-ancestor-rule.md).
+The original `MockLink asChild` delivery is recorded in the
 [MockLink child controls plan](../../plans/mocklink-child-controls.md).
 
 ## Authoring Contract
@@ -11,7 +13,7 @@ Implemented. Verification and delivery are tracked by the
 explicitly adapts one rendered control into a catalogue link:
 
 ```tsx
-<MockLink asChild to="return-overview">
+<MockLink asChild to="account/overview">
   <Button tone="primary" onPress={noop}>
     Continue
   </Button>
@@ -24,7 +26,8 @@ still owns the component, theme, and styles. A component that requires an
 handler nor executes one in the browser.
 
 Child mode accepts only `asChild`, `to`, `fragment`, and one React element as
-`children`. Put classes, styles, ids, accessibility labels, `target`, and other
+`children`; `to` takes the complete path, relative path, or definition
+reference forms of the [authoring contract](./mokly-authoring.md#links). Put classes, styles, ids, accessibility labels, `target`, and other
 attributes on that child. Fragments, text, arrays, missing children, and extra
 wrapper props fail rather than silently losing props. The existing target and
 fragment grammars apply in both modes. A component may render one HTML `a`,
@@ -36,16 +39,68 @@ attributes; selectors that require the original element name no longer match
 an active control after it becomes an anchor.
 
 The root may have no role, `role="button"`, or `role="link"`. Other roles,
-interactive descendants, nested child-mode links, unsupported/void roots,
-editable content, inline event handlers, and malformed marker boundaries fail
-the build. Descendant anchors, controls, focus targets, interactive ARIA roles,
-embedded browsing contexts, and media with controls count as interactive even
-when disabled. An outer anchor/button or other interactive ancestor also makes
-the placement invalid. This prevents nested links and multiple keyboard targets.
-Any ancestor or descendant with `tabindex` is a focus target, including negative
-values used for programmatic focus; put intended focus attributes on the child
-root itself instead of a surrounding container.
-Inert template contents cannot contain child-mode markers.
+unsupported/void roots, an editable root, inline event handlers on the root,
+nested child-mode links, and malformed marker boundaries fail the build. Inert
+template contents cannot contain child-mode markers. Intended focus attributes
+belong on the root itself.
+
+### Placement Tiers
+
+Every ancestor and descendant of the control falls into one of three tiers. An
+error fails the build. A warning is a
+[build warning](./mokly-build-warnings.md): the control still becomes a link
+and the bytes are identical to a silent placement. A silent placement produces
+no output. Disabled state does not change an element's tier.
+
+| Tier    | Ancestors                                                                                                                                                                                                                                                                               | Reason                                                                                       |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| error   | `a`, `area`; an editable element                                                                                                                                                                                                                                                        | The parser splits nested links; editable content captures the click                          |
+| warning | `button`, `label`, `summary`, `object`; `audio`/`video` with `controls`; a `role` token of `button`, `link`, `checkbox`, `combobox`, `menuitem`, `menuitemcheckbox`, `menuitemradio`, `option`, `radio`, `searchbox`, `slider`, `spinbutton`, `switch`, `tab`, `textbox`, or `treeitem` | One click or key press has two targets; the role may hide children from assistive technology |
+| silent  | `tabindex` of any value, including `-1` on a programmatic focus target; `details` content outside `summary`; a `role` token of `gridcell`, `listbox`, `menu`, `menubar`, `radiogroup`, `tablist`, `tree`, or `treegrid`; every other element                                            | Not a click target                                                                           |
+
+| Tier    | Descendants                                                                                                                                                                                                                       | Reason                                                                                                         |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| error   | `a`, `area`, `button`, `input`, `select`, `textarea`, `summary`, `details`, `label`, `iframe`, `object`, `embed`; an editable element; `audio`/`video` with `controls`; the warning-tier ancestor roles; an attribute named `on*` | The nested control can take the click, and a `details` without `summary` renders one; scripts cannot be static |
+| warning | `tabindex` of any value; the silent-tier ancestor roles                                                                                                                                                                           | An extra focus stop or structural role inside one link                                                         |
+| silent  | Every other element                                                                                                                                                                                                               | Ordinary content                                                                                               |
+
+An element is editable when its `contenteditable` attribute is present with
+any value other than `false`. Roles are matched per whitespace-separated
+token. An element takes the highest tier reached by any of its features: error,
+then warning, then silent. Within that tier, the message shows the first
+matching feature in this order: element name, `contenteditable`, `controls`,
+`role`, the first `on*` attribute in authored attribute order, then `tabindex`.
+For example, `<button tabindex="0">` is an error named as `<button>`,
+`<span role="button" onclick="go()">` is an error named with its role, and
+`<div role="menu" tabindex="0">` is a warning named with its role.
+
+Checks run in this order: ancestors, the root contract, then descendants.
+Ancestors are examined from the control outward. The closest error ancestor
+fails the build even when a warning ancestor is closer; without an error, the
+closest warning ancestor produces one diagnostic. Descendants are examined in
+document order. The first error fails the build even when an earlier warning
+was found; without an error, the first warning produces one diagnostic. One
+control can therefore produce at most one ancestor and one descendant warning.
+
+Messages describe the classified element as `<tag>` or
+`<tag attribute="value">`, where the attribute is the one that decided the
+tier: `role`, `contenteditable`, `controls`, or `tabindex`. Displayed authored
+values collapse each whitespace run to one space, trim leading and trailing
+whitespace, escape `"` as `&quot;`, and render C0/C1 terminal controls as
+lowercase `\uXXXX`, so every message remains safe on one line. An `on*`
+attribute is shown by name only, never with its value. Errors keep the existing
+`<route>: MockLink child control` prefix; warning messages omit the route, which
+the [build warning record](./mokly-build-warnings.md#record) carries.
+
+```text
+MockLink child control is inside <a>; move the control outside it
+MockLink child control is inside <div contenteditable="">; move the control outside it
+MockLink child control is inside <button>; one click or key press has two targets
+MockLink child control contains <input>; remove the nested interactive element
+MockLink child control contains <span onclick>; remove the inline event handler
+MockLink child control contains <span tabindex="-1">; the link has an extra focus stop
+MockLink child control contains <div role="menu">; the role does not belong inside a link
+```
 
 A root's existing `href` or `data-nav-href` must either be absent or equal the
 complete logical destination supplied by `MockLink`. Conflicting destinations

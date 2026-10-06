@@ -7,6 +7,7 @@ import type { ManifestComponentVariant } from "@mokly/viewer";
 import {
   generatedViews,
   entryRoute,
+  documentRoute,
   isLogicalFragment,
   isManifestComponentVariant,
 } from "@mokly/viewer/data";
@@ -31,9 +32,24 @@ export async function requestedFragment(
   if (values.length === 0) return undefined;
   const fragment = values.length === 1 ? values[0] : undefined;
   if (!fragment || !isLogicalFragment(fragment)) return null;
+  if (entry?.kind === "document")
+    return (
+      await Promise.all(
+        entry.colorSchemes.map((scheme) =>
+          containsFragment(
+            documentRoute(entry.path, scheme),
+            fragment,
+            config,
+            documents,
+          ),
+        ),
+      )
+    ).every(Boolean)
+      ? fragment
+      : null;
   if (entry?.kind === "page")
     return (await containsFragment(
-      entryRoute("page", entry.id),
+      entryRoute(entry.path),
       fragment,
       config,
       documents,
@@ -54,10 +70,10 @@ function destinationScreen(
   if (entry?.kind === "component")
     return isManifestComponentVariant(entry)
       ? entry
-      : (catalogue.hierarchy.variantsById.get(entry.id)?.[0] as
+      : (catalogue.hierarchy.variantsByPath.get(entry.path)?.[0] as
           ManifestComponentVariant | undefined);
   if (entry?.kind !== "use-case" || !entry.steps[0]) return undefined;
-  const candidate = catalogue.byId.get(entry.steps[0].screenId);
+  const candidate = catalogue.byPath.get(entry.steps[0].screenPath);
   return candidate?.kind === "screen" ? candidate : undefined;
 }
 

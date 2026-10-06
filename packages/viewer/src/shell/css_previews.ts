@@ -10,6 +10,23 @@ export const SHELL_PREVIEW_CSS = `
   font-size: 11.5px;
 }
 
+/* A document with no dark render keeps its light page. The current
+   document's band and the removed document's label are always rendered, and
+   name that fallback only while Dark. */
+.mbk-previous.mbk-scheme-fallback {
+  display: none;
+}
+
+body[data-mokly-color-scheme="dark"] .mbk-previous.mbk-scheme-fallback {
+  display: block;
+}
+
+body[data-mokly-color-scheme="dark"]
+  .mbk-previous[data-color-scheme-fallback]
+  .mbk-frame-scheme-note {
+  display: inline;
+}
+
 .mbk-preview {
   display: flex;
   flex: 1;

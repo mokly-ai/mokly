@@ -21,9 +21,9 @@ test("an image in an excluded inline rule creates no Changes row", async (t) => 
     fixture.live(),
     fixture.complete(),
   ]);
-  assert.deepEqual(live.changedIds, []);
-  assert.equal(result.schemaVersion, 4);
-  if (result.schemaVersion !== 4) return;
+  assert.deepEqual(live.changedEntries, []);
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   assert.deepEqual(result.changes, []);
   assert.ok(
     result.screens.every((screen) =>
@@ -53,9 +53,9 @@ test("a string-form inline import stays unresolved entry material", async (t) =>
     },
   });
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 4);
-  if (result.schemaVersion !== 4) return;
-  const screen = result.changes.find((entry) => entry.after?.id === "home");
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
+  const screen = result.changes.find((entry) => entry.after?.path === "home");
   assert.deepEqual(screen?.reasons, [
     {
       kind: "dependency",
@@ -66,7 +66,7 @@ test("a string-form inline import stays unresolved entry material", async (t) =>
   assert.ok(!result.changes.some((entry) => entry.kind === "component"));
   assert.ok(
     result.screens
-      .find((entry) => entry.id === "home")!
+      .find((entry) => entry.path === "home")!
       .views.every((view) => !view.inlineStyles),
   );
 });

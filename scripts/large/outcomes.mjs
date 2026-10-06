@@ -13,12 +13,14 @@ export function sampleOutcome(records, sample) {
     detailField,
   );
   if (detailedDocument) delete result.documentWork;
-  result.expectedChangedIds = [...new Set(sample.expectedChangedIds)].sort();
+  result.expectedChangedPaths = [
+    ...new Set(sample.expectedChangedPaths),
+  ].sort();
   result.expectedChangedRoutes = [
     ...new Set(sample.expectedChangedRoutes),
   ].sort();
-  if (sample.changedIds !== undefined)
-    result.changedIds = [...new Set(sample.changedIds)].sort();
+  if (sample.changedPaths !== undefined)
+    result.changedPaths = [...new Set(sample.changedPaths)].sort();
   if (sample.changedRoutes !== undefined)
     result.changedRoutes = [...new Set(sample.changedRoutes)].sort();
   try {
@@ -44,17 +46,17 @@ export function sampleOutcome(records, sample) {
     else if (evidence.classificationStatus === "error")
       result.outcome = "error";
     else if (
-      sample.changedIds !== undefined &&
-      JSON.stringify(result.changedIds) !==
-        JSON.stringify(result.expectedChangedIds)
+      sample.changedPaths !== undefined &&
+      JSON.stringify(result.changedPaths) !==
+        JSON.stringify(result.expectedChangedPaths)
     )
       result.outcome = "membership-mismatch";
-    else if (sample.error || sample.changedIds === undefined)
+    else if (sample.error || sample.changedPaths === undefined)
       result.outcome = "error";
     else result.outcome = "ok";
     if (result.outcome === "membership-mismatch") {
-      result.expectedChangedCount = result.expectedChangedIds.length;
-      result.changedCount = result.changedIds.length;
+      result.expectedChangedCount = result.expectedChangedPaths.length;
+      result.changedCount = result.changedPaths.length;
     }
   } catch (error) {
     result.outcome = "error";

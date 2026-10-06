@@ -118,12 +118,12 @@ test("readers validate known fields while additive schema, control and usage fie
 
 test("public fixture rejects incomplete view axes and private nested extension paths", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
   );
   fixture.screens[0].views.pop();
   assert.throws(() => readCatalogue(fixture));
   const extended = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
   );
   extended.extension = { absolutePath: "/private/file.tsx" };
   assert.throws(() => readCatalogue(extended));
@@ -131,42 +131,51 @@ test("public fixture rejects incomplete view axes and private nested extension p
 
 test("reader retains variant relationships and entry-node children", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
   );
   const parent = fixture.screens.find(
-    ({ id }: { id: string }) => id === "home",
+    ({ path }: { path: string }) => path === "product/browse/home",
   );
   const variant = fixture.screens.find(
-    ({ id }: { id: string }) => id === "home-empty",
+    ({ path }: { path: string }) => path === "product/browse/home/empty",
   );
   assert.ok(parent);
   assert.ok(variant);
-  const parentNode = findFixtureNode(fixture.tree.pages, parent.id);
+  const parentNode = findFixtureNode(fixture.tree, parent.path);
   assert.ok(parentNode);
-  assert.deepEqual(parentNode.children, [{ id: variant.id, kind: "entry" }]);
+  assert.deepEqual(parentNode.children, [
+    { path: variant.path, kind: "entry" },
+  ]);
 
   const model = readCatalogue(fixture);
   assert.equal(
-    model.screens.find(({ id }) => id === variant.id)?.variantOf,
-    parent.id,
+    model.screens.find(({ path }) => path === variant.path)?.variantOf,
+    parent.path,
   );
-  assert.deepEqual(model.tree.pages, fixture.tree.pages);
+  assert.deepEqual(model.tree, fixture.tree);
 });
 
 test("reader accepts empty sections but rejects empty folders", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
   );
   fixture.components = [];
-  fixture.tree.components = [];
-  assert.deepEqual(readCatalogue(fixture).tree.components, []);
-  fixture.tree.pages.unshift({ kind: "folder", label: "Empty", children: [] });
-  assert.throws(() => readCatalogue(fixture), /tree must project/);
+  fixture.tree = fixture.tree.filter(
+    (node: { path: string }) => node.path !== "components",
+  );
+  assert.deepEqual(readCatalogue(fixture).components, []);
+  fixture.tree.unshift({
+    kind: "folder",
+    path: "empty",
+    title: "Empty",
+    children: [],
+  });
+  assert.throws(() => readCatalogue(fixture), /tree folder cannot be empty/);
 });
 
 test("a current component variant cannot claim a removed comparison", async () => {
   const value = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v3.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
   );
   value.changesStatus = "ready";
   const variant = value.components.find(
@@ -186,7 +195,7 @@ test("a current component variant cannot claim a removed comparison", async () =
 
 interface FixtureNode {
   children?: FixtureNode[];
-  id?: string;
+  path?: string;
   kind: string;
 }
 
@@ -195,9 +204,17 @@ function findFixtureNode(
   id: string,
 ): FixtureNode | undefined {
   for (const node of nodes) {
-    if (node.id === id) return node;
+    if (node.path === id) return node;
     const nested = findFixtureNode(node.children ?? [], id);
     if (nested) return nested;
   }
   return undefined;
 }
+
+test("case-folded folder paths remain unique when one entry is hidden from the tree", async () => {
+  const fixture = JSON.parse(
+    await fs.readFile("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
+  );
+  fixture.pages.push({ ...fixture.pages[0], path: "Product/hidden" });
+  assert.throws(() => readCatalogue(fixture), /differ only by letter case/);
+});

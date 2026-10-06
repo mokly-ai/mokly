@@ -8,6 +8,11 @@ import { createCatalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../../browse/document_adapter.js";
 import {
+  generatedBytes,
+  type GeneratedFile,
+} from "../../build/generated_file.js";
+import { isGeneratedRoute } from "../../build/styles/routes.js";
+import {
   isPublicStaticFile,
   publicFileFailureReason,
 } from "../../config/public_files.js";
@@ -15,6 +20,7 @@ import type { ResolvedConfig } from "../../config/types.js";
 import { extractCssReferences } from "../../css_references.js";
 import { extractHtmlReferences } from "../../html_references.js";
 import type { CatalogueMetadata } from "../../registry/catalogue_index.js";
+import { classifyResourceUrl } from "../../resource_url.js";
 import { contentType } from "../respond.js";
 
 import { rebaseTransientNavigation } from "./transient_links.js";
@@ -32,10 +38,10 @@ export interface TransientRender {
 }
 export function captureRenderBundle(
   route: string,
-  outputs: ReadonlyMap<string, string>,
+  outputs: ReadonlyMap<string, GeneratedFile>,
   manifest: CatalogueMetadata,
   config: ResolvedConfig,
-  readGenerated?: (route: string) => string | undefined,
+  readGenerated?: (route: string) => GeneratedFile | undefined,
 ): ReadonlyMap<string, RenderFile> {
   const catalogue = createCatalogue(manifest);
   const files = new Map<string, RenderFile>();
@@ -45,6 +51,11 @@ export function captureRenderBundle(
     const current = pending.shift()!;
     if (files.has(current)) continue;
     const generated = outputs.get(current) ?? readGenerated?.(current);
+    if (generated === undefined && isGeneratedRoute(current))
+      throw new ComponentRenderError(
+        "render-failed",
+        "Preview resource is unavailable; rebuild the catalogue and try again.",
+      );
     const candidate = path.resolve(config.mockupsDir, current);
     if (generated === undefined && !isPublicStaticFile(candidate, config))
       throw new Error(
@@ -53,7 +64,7 @@ export function captureRenderBundle(
     let bytes =
       generated === undefined
         ? fs.readFileSync(candidate)
-        : Buffer.from(generated);
+        : generatedBytes(generated);
     const type = contentType(current);
     const references = type.startsWith("text/html")
       ? extractHtmlReferences(bytes.toString()).resources
@@ -76,7 +87,18 @@ export function captureRenderBundle(
     files.set(current, { type, bytes });
     for (const reference of references) {
       const value = reference;
-      if (!value || /^(?:[a-z][a-z0-9+.-]*:|#|\?|\/)/i.test(value)) continue;
+      const classification = classifyResourceUrl(
+        value,
+        type.startsWith("text/css") ? "css" : "html",
+      );
+      if (
+        classification.kind === "external" ||
+        value.startsWith("#") ||
+        value.startsWith("?")
+      )
+        continue;
+      if (classification.kind === "invalid")
+        throw new Error(`Preview resource has a non-portable URL: ${value}`);
       const pathname = decodeURIComponent(value.split(/[?#]/, 1)[0]!);
       const target = path.posix.normalize(
         path.posix.join(path.posix.dirname(current), pathname),

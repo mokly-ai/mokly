@@ -8,7 +8,7 @@ import {
   parseHistoricalManifest,
   parseManifest,
 } from "../dist/registry/manifest.js";
-import type { ManifestV7 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
@@ -43,7 +43,7 @@ for (const [field, before, after] of [
     assert.equal(componentUsageTopologyEqual(baseline, current), true);
   });
 
-function usage(manifest: ManifestV7) {
+function usage(manifest: ManifestV8) {
   const screen = manifest.entries.find((entry) => entry.kind === "screen");
   assert.ok(screen?.kind === "screen" && screen.componentViews?.[0]);
   return screen.componentViews[0];

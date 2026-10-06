@@ -16,34 +16,33 @@ export interface SelectedComparisonView {
   viewport: "desktop" | "mobile";
 }
 
-/** Find the identity-only v4 result record for one routed screen or variant. */
+/** Find the path-addressed v5 result record for one routed screen or variant. */
 function comparisonEntry(
   loaded: LoadedComparison,
   kind: ViewRouteKind,
   id: string,
-): { views: readonly ViewReview[] } | undefined {
+):
+  | {
+      views: readonly ViewReview[];
+      before?: { path: string };
+      after?: { path: string };
+    }
+  | undefined {
   if (kind === "screen")
-    return loaded.result.screens.find((candidate) => candidate.id === id);
+    return loaded.result.screens.find((candidate) => candidate.path === id);
   return loaded.result.components
     .flatMap((component) => component.variants)
-    .find((candidate) => candidate.id === id);
+    .find((candidate) => candidate.path === id);
 }
 
 /** Resolve a derived snapshot path beneath its comparison's generation. */
 function snapshotUrl(
   base: string,
   side: "after" | "before",
-  kind: ViewRouteKind,
   id: string,
   view: ViewReview,
 ): string {
-  const source = snapshotViewPath(
-    side,
-    kind,
-    id,
-    view.viewport,
-    view.colorScheme,
-  );
+  const source = snapshotViewPath(side, id, view.viewport, view.colorScheme);
   return new URL(source.split("/").map(encodeURIComponent).join("/"), base)
     .href;
 }
@@ -80,10 +79,24 @@ export function selectedComparisonViews(
       {
         documents: {
           ...(before
-            ? { before: snapshotUrl(loaded.url, "before", kind, id, view) }
+            ? {
+                before: snapshotUrl(
+                  loaded.url,
+                  "before",
+                  entry.before?.path ?? id,
+                  view,
+                ),
+              }
             : {}),
           ...(after
-            ? { after: snapshotUrl(loaded.url, "after", kind, id, view) }
+            ? {
+                after: snapshotUrl(
+                  loaded.url,
+                  "after",
+                  entry.after?.path ?? id,
+                  view,
+                ),
+              }
             : {}),
         },
         mode: before && after ? presentation.mode : "side",

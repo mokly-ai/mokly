@@ -1,14 +1,14 @@
-import { isEntryId } from "../navigation/logical.js";
+import { isEntryPath } from "../navigation/logical.js";
 
 import { reviewInvalid, reviewObject, reviewString } from "./result_helpers.js";
 import type { ReviewArtifactContent } from "./types.js";
 
 /** Typed metadata for one removed page captured from a pinned baseline. */
 export interface RemovedPagePreview {
-  schemaVersion: 2;
+  schemaVersion: 3;
   baseRef: string;
   baseCommit: string;
-  id: string;
+  path: string;
 }
 
 /** Historical page bytes and the metadata serialized beside them. */
@@ -23,14 +23,14 @@ export function parseRemovedPagePreview(value: unknown): RemovedPagePreview {
     "schemaVersion",
     "baseRef",
     "baseCommit",
-    "id",
+    "path",
   ]);
-  if (input.schemaVersion !== 2) reviewInvalid("unsupported preview version");
+  if (input.schemaVersion !== 3) reviewInvalid("unsupported preview version");
   const baseCommit = reviewString(input.baseCommit);
   if (!/^[a-f0-9]{40,64}$/.test(baseCommit))
     reviewInvalid("invalid base commit");
   const baseRef = reviewString(input.baseRef);
-  const id = reviewString(input.id);
-  if (!isEntryId(id)) reviewInvalid("invalid page id");
-  return { schemaVersion: 2, baseRef, baseCommit, id };
+  const path = reviewString(input.path);
+  if (!isEntryPath(path)) reviewInvalid("invalid page path");
+  return { schemaVersion: 3, baseRef, baseCommit, path };
 }

@@ -19,7 +19,7 @@ test("seeded single-window edits of real RNW sheets equal the disabled-route and
   const views = fixture.before.entries.flatMap((entry) =>
     entry.kind === "page"
       ? []
-      : generatedViews(entry).map((view) => ({ id: entry.id, view })),
+      : generatedViews(entry).map((view) => ({ id: entry.path, view })),
   );
   let routed = 0;
   for (let index = 0; index < 320; index++) {

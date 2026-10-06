@@ -47,7 +47,7 @@ for (const linked of [false, true])
       const before = `${item.selector}{color:red}`;
       const after = `${item.selector}{color:blue}`;
       const shell = (styles: string) =>
-        `import { renderToStaticMarkup } from 'react-dom/server'; export default input => input.entry.id === 'home' ? '<!doctype html><html><head>${styles}</head>${item.body}</html>' : '<!doctype html><html><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
+        `import { renderToStaticMarkup } from 'react-dom/server'; export default input => input.entry.path === 'home' ? '<!doctype html><html><head>${styles}</head>${item.body}</html>' : '<!doctype html><html><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
       const fixture = await inlineChangesFixture(context, "", "", {
         source: componentEntrySource({ body: "<main>Home</main>" }),
         colorSchemes: false,

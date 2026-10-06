@@ -9,13 +9,15 @@ audit-first repository suite.
 
 The repository job's full-history checkout uses `fetch-depth: 0`. It must fetch
 release tags for the public-package-export ratchet, plus `origin/main` and
-enough history for merge-base ratchets. Every other job that resolves
-`origin/main` or creates a historical baseline also receives complete Git
-history.
+enough history for merge-base ratchets; it resolves `origin/main` for nothing
+else. The same-repository Preview deployment resolves `origin/main` for its
+branch comparison and branch-point lockfile. The package, unit, browser, and
+hydration jobs keep complete history for fixture-owned historical baselines but
+never read remote-tracking references.
 
-Each downstream job owns a fresh checkout and its writable output. No job
-receives a live checkout or writable build directory from another job. Full Git
-history remains available wherever baseline resolution requires `origin/main`.
+Each downstream job starts from a fresh checkout and owns its writable build,
+example, fixture, report, and trace output. No job receives a live checkout or
+writable build directory from another job.
 
 ## Runtime Profiles
 
@@ -74,15 +76,20 @@ formatting, Clippy, and tests run only in the repository job; selected suite
 jobs still compile xtask to dispatch their gate.
 
 Every npm-running job installs npm 11.7.0 and runs `npm ci`. CI caches only npm
-downloads. Jobs that can build historical baselines include the merge-base
-lockfile in their cache key. The
-[CI verification contract](./ci-verification.md#dependency-cache-and-security)
-owns the cache and security semantics.
+downloads. Every npm-running job keys npm's download cache from the checked-out
+`package-lock.json`; none reads a branch-point lockfile. The
+[deterministic repository-input rule](./ci-verification.md#deterministic-test-repository-inputs)
+and [cache and security semantics](./ci-verification-security.md#dependency-cache-and-security)
+own these boundaries.
 
 Linux and Windows jobs across CI, preview, and release workflows use
 Blacksmith's 2-vCPU tiers. Native macOS verification uses the provider's
-smallest available tier, which is 6 vCPUs. Every job in `ci.yml` has a 30-minute
-execution timeout.
+smallest available tier, which is 6 vCPUs. The one exception is any job that
+publishes to npm with trusted publishing, today only the release `publish` job:
+it runs on GitHub-hosted `ubuntu-24.04` with `actions/checkout`, because npm
+creates provenance only on GitHub-hosted runners and rejects a publish from a
+self-hosted runner such as Blacksmith. `tests/workflow_runner_sizes.test.ts`
+enforces both rules. Every job in `ci.yml` has a 30-minute execution timeout.
 
 Action revisions are immutable commit hashes with reviewed version comments,
 runtime versions are explicit, and fork pull requests receive no release secrets

@@ -27,14 +27,18 @@ receive Cloudflare credentials or write-capable execution.
 
 `npm run preview:build` first rebuilds Mokly and its derived basic consumer.
 The repository-only preview builder starts the real Browse server on an
-ephemeral loopback port and snapshots the home, not-found, current catalogue
-routes, plus removed-entry routes only when Changes is included. It copies the
+ephemeral loopback port and snapshots the home, not-found, and current entry
+shells at `view/<path>/index.html`, plus removed-entry shells only when Changes
+is included. It copies the
 shell stylesheet, browser and shared navigation modules, fonts, and every
 validated public consumer asset into `.context/mokly-preview`. HTML copies pass
 through the same manifest/header-aware logical-link adapter as served Browse;
 unowned reserved metadata is removed and invalid trusted output fails the
-build. Preview shell links use Cloudflare Pages' canonical extensionless HTML
-routes, and static shell HTML omits the watched server's live-update entrypoint.
+build. Preview shell links use the canonical `/view/<path>/` URLs, which
+Cloudflare Pages serves from `view/<path>/index.html` without rewrites; static
+HTML artifacts keep Cloudflare's extensionless aliases under the
+[artifact path contract](./mokly-artifact-paths.md). Static shell HTML omits the
+watched server's live-update entrypoint.
 The parent client validates one optional `fragment` query and applies its
 encoded hash to every applicable current and light/dark frame source, with
 first-step-only use-case scope.
@@ -58,8 +62,9 @@ absent change evidence never invents a status. Pages retain Changes membership
 but never offer visual comparisons. The
 [Changes contract](./mokly-changes.md) owns the shared interaction and snapshot
 rules. Artifact replacement uses the shared exclusive reservation, ownership
-inventory, and rollback transaction. Only this adapter can migrate a valid
-legacy `.mokly-preview-artifact` directory; consumer export cannot claim it.
+inventory, and rollback transaction. The adapter requires current schema-2
+export ownership; an earlier `.mokly-preview-artifact` cannot authorize replacing
+any file or adopting pre-derived `view/` paths. See [export safety](./mokly-export-safety.md).
 
 Closing a same-repository pull request marks its sticky comment inactive and
 attempts to delete all Cloudflare deployments carrying that PR branch alias.

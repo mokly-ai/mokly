@@ -15,14 +15,14 @@ for (const mode of ["committed", "derived"] as const)
       );
       const result = await compareInlineClassification(fixture, mode);
       assert.deepEqual(
-        result.changes.map((change) => change.after?.id).sort(),
+        result.changes.map((change) => change.after?.path).sort(),
         selector === ".actual-only"
           ? ["action"]
           : selector === ".entry"
             ? ["home"]
             : [],
       );
-      const home = result.screens.find((screen) => screen.id === "home")!;
+      const home = result.screens.find((screen) => screen.path === "home")!;
       assert.equal(home.views.length, 2);
       for (const view of home.views) {
         assert.equal(

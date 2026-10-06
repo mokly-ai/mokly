@@ -7,7 +7,7 @@ import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
 import { buildNavSections } from "../packages/viewer/src/shell/nav_tree.js";
 import { compileCatalogue } from "../src/build/compile.js";
 import { loadConfig } from "../src/config/load.js";
-import { changedManifestIds } from "../src/registry/changed_ids.js";
+import { changedManifestPaths } from "../src/registry/changed_paths.js";
 import { removedManifestEntries } from "../src/registry/changes.js";
 import { viewPage, homePage } from "../src/server/pages.js";
 
@@ -16,15 +16,16 @@ import { documentText } from "./helpers/html.js";
 import { publicShellContext } from "./helpers/public_shell.js";
 
 function source(parent: "app" | "book" = "book", title = "Handbook") {
+  const entryPath = parent === "app" ? "app/handbook" : "app/book/handbook";
   return `import { definePage } from "@mokly/mokly";
 const meta = { dependencies: [], relatedDocs: [], description: "Example" };
 export const mockups = [
- definePage({...meta, id: "handbook", title: ${JSON.stringify(title)}, navPath: ${JSON.stringify(parent === "app" ? ["App"] : ["App", "Book"])}, tags: ["documents"], render: () => "<!doctype html><html><body>Handbook</body></html>"}),
- ${parent === "app" ? 'definePage({...meta, id: "second", title: "Second", navPath: ["App", "Book"], render: () => "<html><body>Second</body></html>"}),' : ""}
+ definePage({...meta, path: "${entryPath}", title: ${JSON.stringify(title)}, tags: ["documents"], render: () => "<!doctype html><html><body>Handbook</body></html>"}),
+ ${parent === "app" ? 'definePage({...meta, path: "app/book/second", title: "Second", render: () => "<html><body>Second</body></html>"}),' : ""}
 ];`;
 }
 
-test("flat page titles and memberships affect Changes without moving derived routes", async (context) => {
+test("page path changes create an addition and a removal", async (context) => {
   const fixture = await createFixture(source());
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -34,12 +35,24 @@ test("flat page titles and memberships affect Changes without moving derived rou
     source("app", "Renamed handbook"),
   );
   const after = (await compileCatalogue(config)).manifest;
-  const handbook = after.entries.find((entry) => entry.id === "handbook");
+  const handbook = after.entries.find((entry) => entry.path === "app/handbook");
   assert.equal(
-    handbook?.kind === "page" ? entryRoute("page", handbook.id) : undefined,
-    "pages/handbook.html",
+    handbook?.kind === "page" ? entryRoute(handbook.path) : undefined,
+    "app/handbook/index.html",
   );
-  assert.ok(changedManifestIds(after, before, config, []).includes("handbook"));
+  assert.ok(
+    changedManifestPaths(after, before, config, []).includes("app/handbook"),
+  );
+  const removed = removedManifestEntries(after, before);
+  assert.deepEqual(
+    removed.map(({ entry }) => [entry.kind, entry.path]),
+    [["page", "app/book/handbook"]],
+  );
+  assert.deepEqual(removed[0]?.folderTitles, ["App", "Book"]);
+  assert.equal(
+    after.entries.some((entry) => entry.path === "app/book/handbook"),
+    false,
+  );
   const catalogue = createCatalogue(after);
   assert.deepEqual(
     buildNavSections(catalogue.hierarchy)[0]!
@@ -47,10 +60,12 @@ test("flat page titles and memberships affect Changes without moving derived rou
       .map((entry) => entry.label),
     ["App"],
   );
-  assert.deepEqual(catalogue.hierarchy.ancestorsById.get("handbook"), ["App"]);
+  assert.deepEqual(catalogue.hierarchy.ancestorsByPath.get("app/handbook"), [
+    "App",
+  ]);
 });
 
-test("removed page metadata keeps deleted ancestry and current id precedence", async (context) => {
+test("removed page metadata keeps deleted ancestry and current path precedence", async (context) => {
   const fixture = await createFixture(source());
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -59,14 +74,14 @@ test("removed page metadata keeps deleted ancestry and current id precedence", a
     { ...baseline, entries: [] },
     baseline,
   );
-  assert.deepEqual(removed[0]?.entry.navPath, ["App", "Book"]);
+  assert.deepEqual(removed[0]?.folderTitles, ["App", "Book"]);
   const catalogue = createCatalogue({ ...baseline, entries: [] }, removed);
   const entry = removed[0]!.entry;
   const html = viewPage(entry, catalogue, {
     ...publicShellContext(catalogue, {
       base: "main",
       updateVersion: 1,
-      changedIds: [entry.id],
+      changedEntries: [entry.path],
     }),
   });
   assert.match(documentText(html), /Showing previous version/);
@@ -78,7 +93,7 @@ test("removed page metadata keeps deleted ancestry and current id precedence", a
       publicShellContext(catalogue, {
         base: "main",
         updateVersion: 1,
-        changedIds: [entry.id],
+        changedEntries: [entry.path],
       }),
     ),
     /data-removed-page=""[^>]*hidden/,
@@ -88,31 +103,31 @@ test("removed page metadata keeps deleted ancestry and current id precedence", a
   const moved = removedManifestEntries(current, baseline);
   assert.equal(moved.length, 0);
   assert.equal(
-    createCatalogue(current, moved).byId.get("handbook")?.title,
+    createCatalogue(current, moved).byPath.get("app/book/handbook")?.title,
     "New",
   );
   assert.equal(removedManifestEntries(baseline, baseline).length, 0);
 });
 
-test("nested page ids derive URLs independently of folder labels", async (context) => {
+test("folder title changes preserve page paths and update breadcrumbs", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
-  const nested = (
-    title: string,
-  ) => `import { defineRoot, folder, page } from "@mokly/mokly";
-export const mockups = defineRoot({ navPath: ["App"], dependencies: ["notes.md"], relatedDocs: ["notes.md"], address: "ignored", children: [folder({title: ${JSON.stringify(title)}, children: [page({id: "handbook", title: "Handbook", description: "Notes", render: () => "<html><body>Guide</body></html>"})]})]});`;
   for (const title of ["Book", "Renamed", "Moved"]) {
-    await fs.promises.writeFile(fixture.entryPath, nested(title));
-    const entry = (await compileCatalogue(config)).manifest.entries.find(
-      (value) => value.kind === "page",
+    await fs.promises.writeFile(
+      fixture.entryPath,
+      `import {defineFolder,definePage} from "@mokly/mokly";
+export const folders = defineFolder({path:"app/book",title:${JSON.stringify(title)}});
+export default definePage({path:"app/book/handbook",title:"Handbook",description:"Notes",dependencies:["notes.md"],relatedDocs:["notes.md"],render:()=>"<html><body>Guide</body></html>"});`,
     );
-    assert.equal(
-      entry?.kind === "page" ? entryRoute("page", entry.id) : undefined,
-      "pages/handbook.html",
+    const manifest = (await compileCatalogue(config)).manifest;
+    const entry = manifest.entries.find((value) => value.kind === "page");
+    assert.ok(entry);
+    assert.equal(entryRoute(entry.path), "app/book/handbook/index.html");
+    assert.deepEqual(
+      createCatalogue(manifest).hierarchy.ancestorsByPath.get(entry.path),
+      ["App", title],
     );
-    assert.deepEqual(entry?.navPath, ["App", title]);
-    assert.deepEqual(entry?.relatedDocs, ["notes.md"]);
-    assert.equal("address" in entry!, false);
+    assert.deepEqual(entry.relatedDocs, ["notes.md"]);
   }
 });

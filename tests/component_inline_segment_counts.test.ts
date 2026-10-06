@@ -9,27 +9,26 @@ import { classifyComponents } from "../dist/review/component_classification.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("a real small catalogue emits exactly one inline count record with parsing, reuse and fallback totals", async (context) => {
   const fixture = await componentReviewFixture(context, (source) => source);
   const entry = fixture.before.manifest.entries.find(
-    ({ id }) => id === "home",
+    ({ path: id }) => id === "home",
   )!;
   const selected = generatedViews(entry)[0]!;
   const documents = (
-    outputs: ReadonlyMap<string, string>,
+    outputs: ReadonlyMap<string, string | Uint8Array>,
     color: string,
     failure: string,
   ) => {
     const files = new Map(outputs);
     files.set(
       selected.path,
-      files
-        .get(selected.path)!
-        .replace(
-          "</head>",
-          `<style>.target{color:${color}}.common{display:block}.common{display:block}</style><style>${failure}{</style></head>`,
-        ),
+      textOutput(files, selected.path)!.replace(
+        "</head>",
+        `<style>.target{color:${color}}.common{display:block}.common{display:block}</style><style>${failure}{</style></head>`,
+      ),
     );
     return { read: async (route: string) => Buffer.from(files.get(route)!) };
   };
@@ -63,7 +62,7 @@ test("a real small catalogue emits exactly one inline count record with parsing,
     fallbacks: 2,
   });
   assert.deepEqual(
-    result.changes.map(({ after, before }) => after?.id ?? before?.id),
+    result.changes.map(({ after, before }) => after?.path ?? before?.path),
     ["home"],
   );
   const paths = events.find(

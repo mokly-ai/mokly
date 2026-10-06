@@ -49,7 +49,7 @@ for (const mode of ["committed", "derived"] as const)
       await assertComparisonPaths(input, "complete");
       const result = await assertComparisonModesEquivalent(input);
       assert.deepEqual(
-        result.changes.map((entry) => entry.after?.id),
+        result.changes.map((entry) => entry.after?.path),
         expected,
       );
       if (mode === "derived")
@@ -107,8 +107,8 @@ for (const mode of ["committed", "derived"] as const)
       input,
       "fast",
       fixture.compilation.manifest.entries
-        .filter((entry) => entry.id !== "home")
-        .map((entry) => entry.id),
+        .filter((entry) => entry.path !== "home")
+        .map((entry) => entry.path),
       0,
     );
     const events: TimingEvent[] = [];
@@ -139,7 +139,7 @@ for (const mode of ["committed", "derived"] as const)
     });
     assert.deepEqual(result, await assertComparisonModesEquivalent(input));
     assert.deepEqual(
-      result.changes.map((entry) => entry.after?.id),
+      result.changes.map((entry) => entry.after?.path),
       ["action"],
     );
     const views = fixture.compilation.manifest.entries.reduce(
@@ -175,7 +175,7 @@ async function referenceFixture(
   const styles = `<style>${selector}{background:url("../image.svg")}</style>`;
   const renderer = mixed
     ? `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => '<!doctype html><html><head>' + (input.entry.id === "home" ? ${JSON.stringify(styles)} : ${JSON.stringify(styles.replace("../image.svg", "../other.svg"))}) + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`
+export default (input) => '<!doctype html><html><head>' + (input.entry.path === "home" ? ${JSON.stringify(styles)} : ${JSON.stringify(styles.replace("../image.svg", "../other.svg"))}).replaceAll('../', '../'.repeat(input.entry.path.split('/').length)) + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`
     : inlineRenderer(styles);
   await fs.writeFile(path.join(fixture.root, "renderer.tsx"), renderer);
   await fs.writeFile(path.join(fixture.mockupsDir, "image.svg"), "image");

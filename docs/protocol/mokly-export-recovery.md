@@ -1,7 +1,7 @@
 # Export Recovery
 
 This supplements the [consumer export contract](./mokly-export.md). The same
-rules apply to consumer export and the repository's legacy preview migration.
+rules apply to consumer export and repository previews with current ownership.
 No new CLI options or supported JavaScript API are introduced.
 
 ## Captured Ownership And Installation
@@ -107,6 +107,83 @@ normal export error categorization occurs before this policy handles that failur
 
 The normal CLI prints actionable combined messages without requiring diagnostic
 mode or printing stacks. It never prints the success message when cleanup fails.
+
+## Cancellation And Recovery Precedence
+
+The [publish exchange contract](./mokly-upload-exchange.md#accounting-and-output)
+owns the shared cancellation classification. This document owns how export
+transactions apply it:
+
+### Pre-installation Window
+
+The pre-installation window ends immediately before installation begins. Its
+boundary treats the command's signal as fired only after the event loop has
+processed all signals the operating system already delivered. If a covered step
+fails while the signal is not set, the boundary lets the event loop complete
+one full turn that includes an I/O poll, then checks once more. This uses no
+wall-clock delay; two consecutive `setImmediate` continuations provide the
+turn. The extra check closes the terminal race where Ctrl+C stops esbuild and
+its failure reaches Mokly before Node invokes the SIGINT listener.
+
+For `mokly export`, the signal listener is installed after configuration is
+loaded. The window covers these operations:
+
+1. Comparison preparation and the base-manifest read.
+2. Catalogue compilation.
+3. Public-file capture and changed-path evidence collection.
+4. Comparison generation, Changes calculation and removed-page preview
+   capture.
+5. Site assembly, adapter transformation and publication-metadata validation.
+6. Staging, including the finalized export capture callback.
+7. The final input recheck, prepared-baseline recheck and output-location
+   recheck.
+
+`mokly publish` installs its listener earlier, so the same window additionally
+covers publish configuration loading and repository identity. Two operations
+remain outside it because their failures carry separate recovery guarantees:
+opening the export transaction keeps its reservation error, and writing the
+generated build output keeps the build transaction's rollback error.
+
+If the signal is set after the event-loop check, the failure is a cancellation.
+Marking a `MoklyError` as cancellation keeps the original error object, class,
+fields, message and stack; `MOKLY_DIAGNOSTIC=1` therefore shows the stack from
+the failing operation. A non-`MoklyError` keeps the existing marked
+`Could not export catalogue` wrapper. `mokly export` prints the original code
+and message, while `mokly publish` prints the publication-cancelled output.
+This window is the only place cancellation may be inferred from the command
+signal. It is safe because installation has not begun: no backup or reservation
+holds the previous export, and the previous output has not moved.
+
+From the moment each command installs its signal listeners until its work and
+cleanup finish, `mokly export` and `mokly publish` hold a referenced Node
+handle. Ctrl+C during unreferenced helper startup, including esbuild startup,
+therefore still settles through Mokly's reporter and exits with status 1 rather
+than letting Node end early with unsettled work.
+
+Stage and reservation cleanup still run. If cleanup fails after a
+pre-installation cancellation, the combined recovery error is not a
+cancellation and retains the cleanup diagnostic and recovery path.
+
+### Installation And Recovery
+
+- Cancellation during installation is a cancellation when no previous output
+  was moved and all cleanup succeeds.
+- Cancellation after capturing the previous export is a cancellation when
+  rollback restores that export and all remaining cleanup succeeds. The
+  restored export remains installed even though the command fails.
+- A failed restore, backup cleanup or reservation cleanup is a recovery error,
+  not a cancellation. If it accompanies cancellation, the combined
+  `export-invalid` error retains both failures and names every backup or
+  reservation path the user needs.
+- Outside the pre-installation window, cancellation comes only from the shared
+  explicit classification. `mokly export` keeps its existing messages and exit
+  behavior. Publish may replace only a cancellation with its cancellation
+  output; it must show every recovery error unchanged.
+
+For example, if cancellation occurs during installation and restoring the
+previous export fails, `mokly publish` prints the export rollback error naming
+the retained backup. It does not print the publication-cancelled line. All of
+these failed commands exit with status 1.
 
 ## Verification
 

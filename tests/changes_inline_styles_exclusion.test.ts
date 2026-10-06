@@ -11,11 +11,11 @@ test("a cumulative sheet excludes another component's unused rule from a zero-in
   );
   const live = await fixture.live();
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 4);
-  if (result.schemaVersion !== 4) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   assert.deepEqual(result.changes, []);
-  assert.deepEqual(live.changedIds, []);
-  const plain = result.screens.find((screen) => screen.id === "plain")!;
+  assert.deepEqual(live.changedEntries, []);
+  const plain = result.screens.find((screen) => screen.path === "plain")!;
   assert.equal(plain.views.length, 4);
   assert.ok(
     plain.views.every(
@@ -37,10 +37,10 @@ test("formatting, comments, attributes and element splits carry no identity", as
   );
   const live = await fixture.live();
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 4);
-  if (result.schemaVersion !== 4) return;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
   assert.deepEqual(result.changes, []);
-  assert.deepEqual(live.changedIds, []);
+  assert.deepEqual(live.changedEntries, []);
   assert.ok(
     [...result.screens, ...result.components].every(
       (entry) => entry.state === "unchanged",
@@ -61,19 +61,19 @@ test("a parse failure stays entry material with no inferred component owner", as
   );
   const live = await fixture.live();
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 4);
-  if (result.schemaVersion !== 4) return;
-  assert.ok(live.changedIds?.includes("home"));
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
+  assert.ok(live.changedEntries?.includes("home"));
   assert.ok(
     result.changes.some(
       (entry) =>
-        entry.after?.id === "home" &&
+        entry.after?.path === "home" &&
         entry.reasons.some((reason) => reason.kind === "material"),
     ),
   );
   assert.ok(
     result.screens
-      .find((screen) => screen.id === "home")!
+      .find((screen) => screen.path === "home")!
       .views.every(
         (view) =>
           view.inlineStyles?.status === "unresolved" &&

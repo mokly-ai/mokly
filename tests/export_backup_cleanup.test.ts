@@ -4,13 +4,13 @@ import path from "node:path";
 import test from "node:test";
 
 import { fileExportOperations } from "../dist/export/operations.js";
-import { EXPORT_MARKER } from "../dist/export/ownership.js";
 import {
   ExportTransaction,
   TRANSACTION_MARKER,
 } from "../dist/export/transaction.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { writeOwnershipMarker } from "./helpers/ownership_marker.js";
 
 test("late unlisted files during deletion stop backup cleanup without being deleted", async (context) => {
   const fixture = await createFixture();
@@ -18,12 +18,9 @@ test("late unlisted files during deletion stop backup cleanup without being dele
   const output = path.join(fixture.root, "site");
   await fs.promises.mkdir(path.join(output, "nested"), { recursive: true });
   await fs.promises.writeFile(path.join(output, "nested/owned.txt"), "Owned");
-  await fs.promises.writeFile(
-    path.join(output, EXPORT_MARKER),
-    JSON.stringify({ schemaVersion: 1, files: ["nested/owned.txt"] }),
-  );
+  await writeOwnershipMarker(output);
   let recursiveBackupRemovals = 0;
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     unlink: async (candidate) => {
       if (candidate.endsWith("/nested/owned.txt"))
@@ -64,7 +61,7 @@ test("rollback leaves even an empty concurrently recreated destination untouched
   const output = path.join(fixture.root, "site");
   await fs.promises.mkdir(output);
   let replacementInode: number | undefined;
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rename: async (from, to) => {
       if (from.endsWith("/stage")) {
@@ -95,7 +92,7 @@ test("transaction setup preserves its original failure when partial-stage cleanu
     },
   );
   await assert.rejects(
-    ExportTransaction.open(path.join(fixture.root, "site"), undefined, {
+    ExportTransaction.open(path.join(fixture.root, "site"), {
       ...fileExportOperations,
       remove: async () => {
         throw new Error("Injected close failure");
@@ -118,7 +115,7 @@ test("a destination populated after the recovery check is not overwritten by ren
   context.after(() => removeFixture(fixture));
   const output = path.join(fixture.root, "site");
   await fs.promises.mkdir(output);
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rename: async (from, to) => {
       if (from.endsWith("/stage")) throw new Error("Injected install failure");
@@ -144,7 +141,7 @@ test("a symlink captured instead of a directory is retained for manual recovery"
   const output = path.join(fixture.root, "site");
   const missing = path.join(fixture.root, "missing");
   await fs.promises.mkdir(output);
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rename: async (from, to) => {
       if (from === output) {

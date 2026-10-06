@@ -56,10 +56,16 @@ export function projectAnalyzedPair(
           actual,
           before: projected.base,
           after: projected.head,
+          ...(projected.resourceBase === undefined
+            ? {}
+            : { resourceBefore: projected.resourceBase }),
+          ...(projected.resourceHead === undefined
+            ? {}
+            : { resourceAfter: projected.resourceHead }),
           ...componentUsageSignals(before.usage, after.usage),
           rawEqual:
-            normalizeSingleDocument(left, after.route) ===
-            normalizeSingleDocument(right, after.route),
+            normalizeSingleDocument(left, after.route, pages.links?.before) ===
+            normalizeSingleDocument(right, after.route, pages.links?.after),
           ignoredIds: projected.ignoredIds,
           pairedComponentIds: new Set(pairs.values()),
         },

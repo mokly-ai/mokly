@@ -112,13 +112,19 @@ export async function bootstrapFixture(
       ]),
     ),
     "docs/protocol/mokly-upload.md": "# Upload protocol test fixture\n",
+    "docs/protocol/mokly-upload-exchange.md":
+      "# Upload exchange protocol test fixture\n",
+    "docs/protocol/mokly-upload-validation.md":
+      "# Upload validation protocol test fixture\n",
     "docs/protocol/mokly-export-ownership.md":
       "# Ownership protocol test fixture\n",
-    "docs/protocol/fixtures/export-ownership-v1.json":
+    "docs/protocol/fixtures/export-ownership-v2.json":
       '{"schemaVersion":1,"cases":[]}\n',
+    "docs/protocol/fixtures/upload-plan-v1.json":
+      '{"schemaVersion":1,"endpoint":"https://example.com","marker":[],"cases":[]}\n',
     "docs/protocol/mokly-frame-adapter.md": "# Frame protocol test fixture\n",
     "docs/protocol/mokly-catalogue.md": "# Catalogue protocol test fixture\n",
-    "docs/protocol/fixtures/catalogue-v3.json": '{"schemaVersion":1}\n',
+    "docs/protocol/fixtures/catalogue-v4.json": '{"schemaVersion":1}\n',
     LICENSE: "MIT\n",
     "CHANGELOG.md": "# Test release\n",
     "source.txt": "reviewed source\n",

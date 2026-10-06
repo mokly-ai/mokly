@@ -29,8 +29,16 @@ for (const mode of ["committed", "derived"] as const)
           after: fingerprintRenderer(head(changedIgnore ? "later" : "same")),
         },
         files: {
-          before: { "shared.css": ".missing{color:red}" },
-          after: { "shared.css": ".missing{color:blue}" },
+          before: {
+            "shared.css": ".missing{color:red}",
+            "action/shared.css": ".missing{color:red}",
+            "pane/shared.css": ".missing{color:red}",
+          },
+          after: {
+            "shared.css": ".missing{color:blue}",
+            "action/shared.css": ".missing{color:blue}",
+            "pane/shared.css": ".missing{color:blue}",
+          },
         },
       });
       const input = await pageFixtureInput(fixture, mode);

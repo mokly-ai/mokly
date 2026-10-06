@@ -19,7 +19,7 @@ parser, rule diff, keep list and matcher that this analysis reuses; the
 [CSS evidence presentation contract](./mokly-css-evidence-presentation.md) owns the
 presentation.
 
-Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
+Delivered by the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
 [M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse)
 implements verified parse reuse; [M5](../../plans/scalable-inline-style-analysis.md#milestone-5-changed-segment-analysis)
 implements cancellation, matched-copy pairing and stored-text composition;
@@ -28,6 +28,8 @@ implements original-page analysis/matching and removes fast-path inline work;
 [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
 implements the equivalent route; [M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprinted-comparison-materials)
 implements fingerprinted material. These analysis/material rules are delivered.
+
+Performance acceptance is deferred under the plan's Decision 13 (2026-10-06).
 
 ## Purpose
 
@@ -42,10 +44,10 @@ no markup, but never claims exclusion when a rule reaches entry-owned markup.
 The analysis runs inside the component-aware classifier for a paired view with
 usage records on both sides, including a component-aware view whose records
 contain no instances. The complete path always considers it; the unchanged
-fast path runs no inline analysis under the approved target. A one-sided view or a paired view missing
+fast path runs no inline analysis under the delivered rule. A one-sided view or a paired view missing
 either usage record keeps the existing comparison behavior.
 Without component usage, inline style edits remain ordinary material changes
-in the unified v4 classifier. One-sided views run no analysis. Views settled by the
+in the unified v5 classifier. One-sided views run no analysis. Views settled by the
 [unchanged view decision](./mokly-component-review-fast-path.md)
 use conservative raw reference proof, falling through on a changed resource.
 The [style-only route](./mokly-style-only-route.md) may instead settle a
@@ -61,7 +63,7 @@ elements. Their `type` attribute is absent, empty or ASCII-case-insensitively
 in the document and compares as ordinary markup. An eligible element is
 unowned when its start offset lies inside no recorded range and no paired
 manual-ignore region. It is located on each side's original document with the
-validated v7 ranges. Its span uses that
+validated v8 ranges. Its span uses that
 document's coordinates and covers the start tag's start through the end tag's
 end; the record retains both that outer source and the content text between
 the tags.
@@ -225,7 +227,7 @@ removed together with an eligible style contributes no emitted id.
 
 The [inline evidence contract](./mokly-inline-style-evidence.md)
 owns the optional `inlineStyles` shape, coupling to states and material, and
-delivery through live, complete, selected and published v4 results. The
+delivery through live, complete, selected and published v5 results. The
 [validation contract](./mokly-component-review-validation.md#inline-style-evidence-validation)
 owns strict paired-view validation and canonical selector order.
 

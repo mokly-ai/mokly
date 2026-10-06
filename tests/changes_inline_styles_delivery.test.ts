@@ -6,10 +6,8 @@ import test from "node:test";
 import { exportCatalogue } from "../dist/export/run.js";
 import { readManifest } from "../dist/registry/manifest.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
-import {
-  ComponentChangeCache,
-  RepositoryComponentChanges,
-} from "../dist/server/component_changes.js";
+import { ComponentChangeCache } from "../dist/server/component_change_cache.js";
+import { RepositoryComponentChanges } from "../dist/server/component_changes.js";
 import { configuredServedReview } from "../dist/server/configured_review.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
@@ -29,12 +27,12 @@ test("inline ownership agrees across live, complete, selected and publication bo
   const snapshot = await cache.read(1);
   assert.ok(snapshot?.result);
   const artifact = await fixture.complete();
-  assert.equal(artifact.result.schemaVersion, 4);
-  if (artifact.result.schemaVersion !== 4) return;
+  assert.equal(artifact.result.schemaVersion, 5);
+  if (artifact.result.schemaVersion !== 5) return;
   assert.deepEqual(snapshot.result, artifact.result);
   assert.ok(
     artifact.result.screens
-      .find((screen) => screen.id === "home")!
+      .find((screen) => screen.path === "home")!
       .views.every(
         (view) =>
           view.inlineStyles?.status === "matched" &&
@@ -56,12 +54,12 @@ test("inline ownership agrees across live, complete, selected and publication bo
   });
   t.after(() => server.close());
   const response = await fetch(
-    `${server.url}/__mokly/diffs/review.json?id=home`,
+    `${server.url}/__mokly/diffs/review.json?path=home`,
   );
   assert.equal(response.status, 200, await response.clone().text());
   const selected = parseReviewResult(await response.json());
   assert.deepEqual(selected.screens, [
-    artifact.result.screens.find((screen) => screen.id === "home"),
+    artifact.result.screens.find((screen) => screen.path === "home"),
   ]);
 
   const exported = await exportCatalogue(fixture.config, {

@@ -9,13 +9,14 @@ example's generated files or shipped as product data.
 
 The deterministic generator, four-scenario benchmark and identity/diagnostic
 records are delivered. Milestone 2 records the verified-code reference below.
-The identity, stable-value, scenario-matrix and acceptance rules in the
-[benchmark contract](./benchmark-contract.md) are
-the approved target of [scalable analysis](../../../plans/scalable-inline-style-analysis.md):
-Milestone 2 records the reference; Milestone 4 adds segment-reuse diagnostics;
-Milestones 3 to 9 record optimization samples; Milestone 6 records the cost
-checkpoint; Milestone 10 runs the acceptance procedure and removes this target
-schedule. The Milestone 2 reference and cumulative baseline are recorded below.
+The [benchmark contract](./benchmark-contract.md) retains the identity,
+stable-value, scenario-matrix and acceptance procedure for a later plan.
+The user deferred performance acceptance on 2026-10-06 under
+[Decision 13](../../../plans/scalable-inline-style-analysis.md#decisions).
+Milestones 2–9 retain their historical samples and cost reports below.
+A later acceptance run needs a fresh reference and candidate measured in one
+session, on one machine, in alternating order. Main's path-identity templates
+change the fixture digest, so the stored Milestone 2 reference is not reusable.
 
 ```bash
 npm run fixture:large
@@ -217,9 +218,11 @@ command and adoption separately; `changesReadyMs` ends only on delivered
 complete Browse Changes. These phases do not share the navigation budget.
 
 Defaults are 30 areas, 40 screens per area, and 12 records per screen. Each area
-adds two registered components, each with three saved variants, a page and one flow
+adds two registered components with three saved variants, a page and one flow
 per ten screens. The default therefore has 1,590 routed entries and 5,550
-documents plus the manifest. Folder paths group entries without additional records.
+documents plus the manifest. Each area contains Components and Flows folders, plus Screens with one Activity group
+folder per ten screens. The guide stays directly under its area. Paths provide this
+hierarchy without extra entries.
 Each screen and component variant renders in mobile/desktop and light/dark.
 Flows reuse the canonical screens rather than adding documents. Shared panels
 contain nested actions and caller-owned slots; screens also invoke repeated
@@ -235,7 +238,7 @@ are additional to the configured shared-sheet count.
 
 `--areas`, `--screens` and `--rows` take positive integers; screens must be at
 least two per area. To reproduce a source edit, change an entry module in the
-printed directory, or its shared `entries/screens.tsx`, then observe rebuild
+printed directory, or its shared `src/screens.tsx`, then observe rebuild
 and Changes timings. To compare repeated startups, reuse the printed config
 path instead of generating a new baseline every time.
 
@@ -354,7 +357,8 @@ See [harness usage](../../../scripts/large/README.md) and the
 
 `templateDigest` hashes every template file here except this README. Diagnostics
 changes must not edit those files or regenerate fixtures: keeping their bytes
-preserves the M2 reference and shared fixtures for same-host M8/M9 controls.
+preserves shared fixtures for same-host controls. The mainline path-identity
+migration changes the templates; the stored M2 reference is not reusable.
 
 The focused [benchmark contract](./benchmark-contract.md) owns
 [template identity and stable values](./benchmark-contract.md#template-identity-and-stable-values),

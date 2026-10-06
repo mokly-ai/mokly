@@ -8,7 +8,7 @@ import type { ComponentVariantDefinition } from "../components/types.js";
 /** Context passed by the builder to a consumer renderer. */
 export interface RenderInput {
   colorScheme: ColorScheme;
-  entry: ScreenDefinition | ComponentVariantDefinition;
+  entry: (ScreenDefinition | ComponentVariantDefinition) & { path: string };
   componentProps?: Readonly<Record<string, unknown>>;
   node: ReactNode;
   stylesheets: readonly string[];

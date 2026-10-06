@@ -59,12 +59,14 @@ for (const cross of [false, true]) {
 
     await page.evaluate(() =>
       window.viewerHarness.get("one").ref.current.select({
-        screenId: "pane-default",
+        screenPath: "pane/default",
       }),
     );
     await expectMarkerState(page, "visible", "unavailable");
     await page.evaluate(() =>
-      window.viewerHarness.get("one").ref.current.select({ screenId: "home" }),
+      window.viewerHarness
+        .get("one")
+        .ref.current.select({ screenPath: "home" }),
     );
     await expectMarkerState(page, "visible", "visible");
 
@@ -95,7 +97,7 @@ for (const cross of [false, true]) {
     await page.evaluate((visible) => {
       const host = window.viewerHarness.get("one");
       const model = structuredClone(host.props.catalogue) as CatalogueReadModel;
-      const home = model.screens.find(({ id }) => id === "home")!;
+      const home = model.screens.find(({ path }) => path === "home")!;
       home.views = home.views.map((view) =>
         view.viewport === "mobile" && view.colorScheme === "light"
           ? { ...view, usage: { status: "pending" as const } }
@@ -105,7 +107,7 @@ for (const cross of [false, true]) {
         ...host.props,
         catalogue: model,
         defaultSelection: {
-          screenId: "home",
+          screenPath: "home",
           viewport: "mobile",
           colorScheme: "light",
         },

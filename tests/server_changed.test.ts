@@ -7,7 +7,7 @@ import { promisify } from "node:util";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
-import { changedManifestIds } from "../dist/registry/changed_ids.js";
+import { changedManifestPaths } from "../dist/registry/changed_paths.js";
 import { compareReview } from "../dist/review/compare.js";
 import {
   NodeGitCommandRunner,
@@ -15,7 +15,7 @@ import {
 } from "../dist/review/git.js";
 import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
 
 import {
@@ -23,60 +23,10 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 import { nestedRepository } from "./helpers/nested_repository.js";
 
 const execFileAsync = promisify(execFile);
-
-test("changed routes select fragment edits rather than source or dependency edits", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
-  const compilation = await compileCatalogue(config);
-  await writeCompilation(compilation, config);
-  assert.deepEqual(
-    changedManifestIds(compilation.manifest, compilation.manifest, config, [
-      "entries/fixture.mockup.tsx",
-    ]),
-    [],
-  );
-  assert.deepEqual(
-    changedManifestIds(compilation.manifest, compilation.manifest, config, [
-      "notes.md",
-    ]),
-    [],
-  );
-  assert.deepEqual(
-    changedManifestIds(compilation.manifest, compilation.manifest, config, [
-      "mockups/screens/home.mobile.html",
-    ]),
-    ["home", "tour"],
-  );
-  assert.deepEqual(
-    changedManifestIds(compilation.manifest, compilation.manifest, config, [
-      "unrelated.txt",
-    ]),
-    [],
-  );
-});
-
-test("manifest entry changes are attributed to their route", async (context) => {
-  const fixture = await createFixture();
-  context.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
-  const manifest = (await compileCatalogue(config)).manifest;
-  const baseManifest = structuredClone(manifest);
-  const baseHome = baseManifest.entries.find((entry) => entry.id === "home");
-  if (!baseHome) throw new Error("fixture base home missing");
-  baseHome.title = "Previous home";
-
-  assert.deepEqual(
-    changedManifestIds(manifest, baseManifest, config, [
-      "entries/fixture.mockup.tsx",
-      "mockups/mokly-manifest.json",
-    ]),
-    ["home", "tour"],
-  );
-});
 
 test("tag-only manifest changes mark their route as changed", async (context) => {
   const fixture = await createFixture();
@@ -86,42 +36,42 @@ test("tag-only manifest changes mark their route as changed", async (context) =>
 
   const taggedScreenBase = structuredClone(manifest);
   const baseDetails = taggedScreenBase.entries.find(
-    (entry) => entry.id === "details",
+    (entry) => entry.path === "details",
   );
   if (baseDetails?.kind !== "screen") {
     throw new Error("fixture base details missing");
   }
   baseDetails.tags = ["forms"];
-  assert.deepEqual(changedManifestIds(manifest, taggedScreenBase, config, []), [
-    "details",
-    "tour",
-  ]);
+  assert.deepEqual(
+    changedManifestPaths(manifest, taggedScreenBase, config, []),
+    ["details", "tour"],
+  );
 
   const taggedUseCaseBase = structuredClone(manifest);
   const baseTour = taggedUseCaseBase.entries.find(
-    (entry) => entry.id === "tour",
+    (entry) => entry.path === "tour",
   );
   if (baseTour?.kind !== "use-case")
     throw new Error("fixture base tour missing");
   baseTour.tags = ["onboarding"];
   assert.deepEqual(
-    changedManifestIds(manifest, taggedUseCaseBase, config, []),
+    changedManifestPaths(manifest, taggedUseCaseBase, config, []),
     ["tour"],
   );
 });
 
-test("a changed navigation path marks each moved route", async (context) => {
+test("a changed path marks each added entry", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const manifest = (await compileCatalogue(config)).manifest;
   const baseManifest = structuredClone(manifest);
   for (const entry of baseManifest.entries)
-    entry.navPath = ["Historical label"];
+    entry.path = `historical/${entry.path}`;
 
   assert.deepEqual(
-    changedManifestIds(manifest, baseManifest, config, []),
-    manifest.entries.map((entry) => entry.id).sort(),
+    changedManifestPaths(manifest, baseManifest, config, []),
+    manifest.entries.map((entry) => entry.path).sort(),
   );
 });
 
@@ -130,8 +80,8 @@ test("changed screens propagate to use cases authored separately", async (contex
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const manifest = structuredClone((await compileCatalogue(config)).manifest);
-  const home = manifest.entries.find((entry) => entry.id === "home");
-  const tour = manifest.entries.find((entry) => entry.id === "tour");
+  const home = manifest.entries.find((entry) => entry.path === "home");
+  const tour = manifest.entries.find((entry) => entry.path === "tour");
   if (!home || home.kind !== "screen" || !tour || tour.kind !== "use-case") {
     throw new Error("fixture entries missing");
   }
@@ -141,8 +91,8 @@ test("changed screens propagate to use cases authored separately", async (contex
   tour.declaredDependencies = [];
 
   assert.deepEqual(
-    changedManifestIds(manifest, manifest, config, [
-      `mockups/${viewRoute("screen", home.id, "mobile", "light")}`,
+    changedManifestPaths(manifest, manifest, config, [
+      `mockups/${viewRoute(home.path, "mobile", "light")}`,
     ]),
     ["home", "tour"],
   );
@@ -153,13 +103,13 @@ test("shared entry changes do not mark unchanged sibling screens", async (contex
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const manifest = (await compileCatalogue(config)).manifest;
-  const home = manifest.entries.find((entry) => entry.id === "home");
+  const home = manifest.entries.find((entry) => entry.path === "home");
   if (!home || home.kind !== "screen") throw new Error("fixture home missing");
 
   assert.deepEqual(
-    changedManifestIds(manifest, manifest, config, [
+    changedManifestPaths(manifest, manifest, config, [
       home.sourcePath,
-      `mockups/${viewRoute("screen", home.id, "mobile", "light")}`,
+      `mockups/${viewRoute(home.path, "mobile", "light")}`,
     ]),
     ["home", "tour"],
   );
@@ -199,7 +149,7 @@ test("branch comparisons exclude commits made only on the base branch", async (c
   const client = new CommittedRepository(
     new NodeGitCommandRunner(fixture.root),
   );
-  const changed = await computeChangedIds(config, "main", client);
+  const changed = await computeChangedPaths(config, "main", client);
   const review = await compareReview(
     await compileCatalogue(config),
     config,
@@ -210,7 +160,7 @@ test("branch comparisons exclude commits made only on the base branch", async (c
   assert.deepEqual(changed, ["home", "tour"]);
   assert.equal(review.result.baseCommit, commonCommit);
   assert.equal(
-    review.result.screens.find((screen) => screen.id === "details")?.state,
+    review.result.screens.find((screen) => screen.path === "details")?.state,
     "unchanged",
   );
 });
@@ -220,12 +170,12 @@ test("directory dependency edits alone leave unchanged routes out of Changes", a
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const manifest = structuredClone((await compileCatalogue(config)).manifest);
-  const home = manifest.entries.find((entry) => entry.id === "home");
+  const home = manifest.entries.find((entry) => entry.path === "home");
   if (!home) throw new Error("fixture home entry missing");
   home.declaredDependencies = ["src/components"];
 
   assert.deepEqual(
-    changedManifestIds(manifest, manifest, config, [
+    changedManifestPaths(manifest, manifest, config, [
       "src/components/Button.tsx",
     ]),
     [],
@@ -235,7 +185,8 @@ test("directory dependency edits alone leave unchanged routes out of Changes", a
 test("changed routes require the config repo root to be the Git top level", async (context) => {
   const { config } = await nestedRepository(context);
   await assert.rejects(
-    () => computeChangedIds(config, "HEAD", committedReviewRepository(config)),
+    () =>
+      computeChangedPaths(config, "HEAD", committedReviewRepository(config)),
     { code: "config-invalid" },
   );
 });
@@ -259,7 +210,7 @@ test("changed-route detection degrades to undefined when Git fails", async (cont
     },
   };
   assert.equal(
-    await computeChangedIds(config, "origin/main", failing),
+    await computeChangedPaths(config, "origin/main", failing),
     undefined,
   );
   const succeeding: ReadOnlyReviewRepository = {
@@ -281,7 +232,10 @@ test("changed-route detection degrades to undefined when Git fails", async (cont
       readFile: async (_commit, repoPath) =>
         repoPath === "mockups/mokly-manifest.json"
           ? JSON.stringify(compilation.manifest)
-          : compilation.outputs.get(repoPath.replace(/^mockups\//, ""))!,
+          : textOutput(
+              compilation.outputs,
+              repoPath.replace(/^mockups\//, ""),
+            )!,
       readFileBytes: async (_commit, repoPath) =>
         Buffer.from(
           repoPath === "mockups/mokly-manifest.json"
@@ -291,7 +245,7 @@ test("changed-route detection degrades to undefined when Git fails", async (cont
     },
   };
   assert.deepEqual(
-    await computeChangedIds(config, "origin/main", succeeding),
+    await computeChangedPaths(config, "origin/main", succeeding),
     [],
   );
 });

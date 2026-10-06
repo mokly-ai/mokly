@@ -18,7 +18,7 @@ const schema = {
   },
 } as const;
 const component = defineComponent({
-  id: "typed-component",
+  path: "typed-component",
   title: "Typed component",
   description: "Packed declaration inference.",
   dependencies: [],
@@ -35,7 +35,8 @@ const component = defineComponent({
   ),
   variants: [
     {
-      id: "typed-component-default",
+      slug: "default",
+
       title: "Default",
       props: { label: "Continue", children: <strong>Slot</strong> },
     },

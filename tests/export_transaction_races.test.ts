@@ -4,17 +4,17 @@ import path from "node:path";
 import test from "node:test";
 
 import { fileExportOperations } from "../dist/export/operations.js";
-import { EXPORT_MARKER } from "../dist/export/ownership.js";
 import { ExportTransaction } from "../dist/export/transaction.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { writeOwnershipMarker } from "./helpers/ownership_marker.js";
 
 test("a late unowned destination file is restored instead of deleted with backup", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const output = path.join(fixture.root, "site");
   await writeOwned(output, "Previous");
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rename: async (from, to) => {
       if (from === output)
@@ -41,7 +41,7 @@ test("unowned backup additions during install survive cleanup and preserve the i
   context.after(() => removeFixture(fixture));
   const output = path.join(fixture.root, "site");
   await writeOwned(output, "Previous");
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rename: async (from, to) => {
       await fs.promises.rename(from, to);
@@ -73,7 +73,7 @@ test("a concurrent destination is retained alongside an unowned captured backup"
   context.after(() => removeFixture(fixture));
   const output = path.join(fixture.root, "site");
   await writeOwned(output, "Previous");
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rename: async (from, to) => {
       await fs.promises.rename(from, to);
@@ -123,7 +123,6 @@ test("close preserves a backup introduced after its initial recovery check", asy
   context.after(() => removeFixture(fixture));
   const transaction = await ExportTransaction.open(
     path.join(fixture.root, "site"),
-    undefined,
     {
       ...fileExportOperations,
       remove: async (candidate) => {
@@ -149,8 +148,5 @@ test("close preserves a backup introduced after its initial recovery check", asy
 async function writeOwned(directory: string, content: string): Promise<void> {
   await fs.promises.mkdir(directory, { recursive: true });
   await fs.promises.writeFile(path.join(directory, "index.html"), content);
-  await fs.promises.writeFile(
-    path.join(directory, EXPORT_MARKER),
-    JSON.stringify({ schemaVersion: 1, files: ["index.html"] }),
-  );
+  await writeOwnershipMarker(directory);
 }

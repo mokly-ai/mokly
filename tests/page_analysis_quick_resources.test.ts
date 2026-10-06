@@ -21,7 +21,7 @@ for (const mode of ["committed", "derived"] as const)
     test(`identical quick check uses ${mode} reader closures and reuses fall-through discovery, changed=${changed}`, async (context) => {
       const fixture = await componentReviewFixture(context, (source) => source);
       const view = generatedViews(
-        fixture.after.manifest.entries.find(({ id }) => id === "home")!,
+        fixture.after.manifest.entries.find(({ path: id }) => id === "home")!,
       )[0]!;
       const html =
         fixture.after.outputs.get(view.path)! +
@@ -125,7 +125,7 @@ for (const mode of ["committed", "derived"] as const)
 test("derived quick check traverses differing memberships independently, without a Git hint", async (context) => {
   const fixture = await componentReviewFixture(context, (source) => source);
   const view = generatedViews(
-    fixture.after.manifest.entries.find(({ id }) => id === "home")!,
+    fixture.after.manifest.entries.find(({ path: id }) => id === "home")!,
   )[0]!;
   const html =
     fixture.after.outputs.get(view.path)! +

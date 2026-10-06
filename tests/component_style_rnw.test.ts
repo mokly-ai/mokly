@@ -30,7 +30,7 @@ test("every eligible cumulative RNW component-style view routes with exact catal
         await assertStyleRoute(
           input,
           base === head ? "fast" : "style",
-          entry.id,
+          entry.path,
           true,
           view.path,
         );
@@ -80,8 +80,8 @@ test("every eligible cumulative RNW component-style view routes with exact catal
     assert.deepEqual(actual, await classify(false));
     assert.deepEqual(actual, await classify(false, false));
     assert.deepEqual(
-      actual.changes.map(({ before, after }) => (after ?? before)!.id),
-      ["area-1-action"],
+      actual.changes.map(({ before, after }) => (after ?? before)!.path),
+      ["area-1/components/action"],
     );
     const unchangedEvents: TimingEvent[] = [];
     const unchanged = await runWithTimings(

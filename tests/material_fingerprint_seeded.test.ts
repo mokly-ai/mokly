@@ -33,11 +33,17 @@ test("seeded compiled catalogues preserve text results/errors under every switch
           after: fingerprintRenderer(sample.after),
         },
         files: {
-          before: { "image.svg": '<svg width="10"/>' },
+          before: {
+            "image.svg": '<svg width="10"/>',
+            "action/image.svg": '<svg width="10"/>',
+            "pane/image.svg": '<svg width="10"/>',
+          },
           after: {
             "image.svg": sample.resourceChange
               ? '<svg width="20"/>'
               : '<svg width="10"/>',
+            "action/image.svg": '<svg width="10"/>',
+            "pane/image.svg": '<svg width="10"/>',
           },
         },
       });

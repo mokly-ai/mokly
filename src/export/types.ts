@@ -1,6 +1,6 @@
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
-import type { LegacyExportOwnership } from "./ownership.js";
+import type { BuildDiagnostic } from "../build/build_warnings.js";
 
 /** Immutable route information available before an adapter finishes staging. */
 export interface ExportRoutes {
@@ -17,7 +17,8 @@ export interface ExportResult extends ExportRoutes {
 export interface ExportAdapter {
   /** Optional stricter config-relative root, pinned for this operation. */
   outputRoot?: string;
-  legacyOwnership?: LegacyExportOwnership;
+  /** Root files added by transform that describe publication, not content. */
+  publicationMetadata?: readonly string[];
   transform(
     files: Map<string, ReviewArtifactContent>,
     result: ExportRoutes,
@@ -37,6 +38,8 @@ export interface ExportOptions {
   incompatibleBaseline?: (commit: string) => void;
   /** Omit baseline reads and comparison artifacts; publish uses this capability. */
   noChanges?: boolean;
+  /** Observe the packaged compilation before generated or staged bytes are written. */
+  onBuildDiagnostics?: (diagnostics: readonly BuildDiagnostic[]) => void;
   /** Consume finalized bytes before installation, while the output is reserved. */
   capture?: (
     files: ReadonlyMap<string, ReviewArtifactContent>,

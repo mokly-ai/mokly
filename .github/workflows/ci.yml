@@ -84,20 +84,13 @@ jobs:
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
-      - name: Read baseline dependency lockfile
-        run: |
-          mkdir -p .context
-          baseline_commit="$(git merge-base HEAD origin/main)"
-          git show "${baseline_commit}:package-lock.json" > .context/baseline-package-lock.json
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            .context/baseline-package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.7.0
       - name: Set up Rust
@@ -127,20 +120,13 @@ jobs:
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
-      - name: Read baseline dependency lockfile
-        run: |
-          mkdir -p .context
-          baseline_commit="$(git merge-base HEAD origin/main)"
-          git show "${baseline_commit}:package-lock.json" > .context/baseline-package-lock.json
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            .context/baseline-package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.7.0
       - name: Set up Rust
@@ -180,20 +166,13 @@ jobs:
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
-      - name: Read baseline dependency lockfile
-        run: |
-          mkdir -p .context
-          baseline_commit="$(git merge-base HEAD origin/main)"
-          git show "${baseline_commit}:package-lock.json" > .context/baseline-package-lock.json
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            .context/baseline-package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.7.0
       - name: Set up Rust
@@ -241,20 +220,13 @@ jobs:
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
         with:
           fetch-depth: 0
-      - name: Read baseline dependency lockfile
-        run: |
-          mkdir -p .context
-          baseline_commit="$(git merge-base HEAD origin/main)"
-          git show "${baseline_commit}:package-lock.json" > .context/baseline-package-lock.json
       - name: Set up Node.js
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: ${{ matrix.node == '24' && needs.repository.outputs.node-24-version || matrix.node }}
           package-manager-cache: false
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            .context/baseline-package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.7.0
       - name: Set up Rust
@@ -313,7 +285,7 @@ jobs:
       - name: Build package
         run: npm run build
       - name: Verify exclusive directory transactions
-        run: node --import tsx --test tests/export_rename.test.ts tests/export_destination_races.test.ts
+        run: node --import tsx --test tests/export_rename.test.ts tests/export_destination_races.test.ts tests/generated_output_lock.test.ts tests/path_transaction_regressions.test.ts
       - name: Verify native CSS rule parsing and diffing
         run: node --import tsx --test tests/review_css_rules.test.ts tests/review_css_diff.test.ts
       - name: Verify native baseline commands

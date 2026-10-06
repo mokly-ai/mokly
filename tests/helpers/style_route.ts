@@ -57,8 +57,8 @@ export function selectedStyleViews(
   id = "home",
   viewPath?: string,
 ) {
-  const entry = fixture.after.entries.find((entry) => entry.id === id)!;
-  const previous = fixture.before.entries.find((entry) => entry.id === id)!;
+  const entry = fixture.after.entries.find((entry) => entry.path === id)!;
+  const previous = fixture.before.entries.find((entry) => entry.path === id)!;
   const after = generatedViews(entry).find(
     (view) => !viewPath || view.path === viewPath,
   )!;

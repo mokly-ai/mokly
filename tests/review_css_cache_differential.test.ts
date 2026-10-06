@@ -84,12 +84,12 @@ for (const mode of ["committed", "derived"] as const)
         baseRef: "main",
       });
       assert.deepEqual(
-        result.changes.map((entry) => entry.after?.id),
+        result.changes.map((entry) => entry.after?.path),
         scenario.expected,
       );
       if (inline) {
         const home = result.screens.find(
-          (screen) => screen.after?.id === "home",
+          (screen) => screen.after?.path === "home",
         );
         assert.equal(home?.views.length, 2);
         assert.ok(

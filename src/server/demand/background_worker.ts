@@ -2,10 +2,11 @@
 import { setImmediate, setTimeout } from "node:timers/promises";
 import { parentPort, workerData, type MessagePort } from "node:worker_threads";
 
-import type { ManifestV7 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 
 import { compileRuntime } from "../../build/compile_runtime.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
+import type { GeneratedFile } from "../../build/generated_file.js";
 import { runWithTimings, timeAsync } from "../../diagnostics/timings.js";
 import { RepositoryCatalogueChangeClassifier } from "../component_changes.js";
 
@@ -16,8 +17,8 @@ const inputs = workerData as {
   runtime: ComponentRuntime;
   pause: SharedArrayBuffer;
   debug: boolean;
-  existingManifest?: ManifestV7;
-  existingOutputs?: ReadonlyMap<string, string>;
+  existingManifest?: ManifestV8;
+  existingOutputs?: ReadonlyMap<string, GeneratedFile>;
   gitPort: MessagePort;
 };
 const { pause, debug, existingManifest, gitPort } = inputs;

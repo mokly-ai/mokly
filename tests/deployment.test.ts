@@ -85,12 +85,16 @@ test("browser checks support an isolated workspace port", async () => {
       "utf8",
     ),
     fs.promises.readFile(
-      path.join(repositoryRoot, "tests", "browser", "browse.spec.ts"),
+      path.join(repositoryRoot, "tests", "browser", "browse_layout.spec.ts"),
       "utf8",
     ),
   ]);
   assert.match(config, /process\.env\["MOKLY_PLAYWRIGHT_PORT"\]/);
   assert.match(config, /globalSetup: "\.\/tests\/browser\/setup\.ts"/);
+  assert.match(
+    config,
+    /serve --config examples\/basic\/mokly\.config\.ts --base HEAD --port \$\{port\} --no-watch/u,
+  );
   assert.match(browseTest, /browser\.newContext\(\{\s+baseURL,/);
   assert.doesNotMatch(browseTest, /127\.0\.0\.1:4517/);
 });

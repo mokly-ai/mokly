@@ -11,12 +11,13 @@ import {
   MANIFEST_NAME,
 } from "../dist/registry/manifest.js";
 import { compareReview } from "../dist/review/compare.js";
-import { computeChangedIds } from "../dist/server/changed.js";
+import { computeChangedPaths } from "../dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentGit } from "./helpers/component_review_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 const originalCss = ".action{color:red}";
 const source = componentEntrySource({
@@ -34,7 +35,7 @@ for (const edit of [
   "material-key",
   "implementation",
 ])
-  test(`historical v7 retired arrays preserve inline attribution: ${edit}`, async (t) => {
+  test(`historical v8 retired arrays preserve inline attribution: ${edit}`, async (t) => {
     const fixture = await createFixture(source, {
       extraConfig: 'renderer: "renderer.tsx", colorSchemes: ["light", "dark"],',
     });
@@ -71,8 +72,8 @@ for (const edit of [
     );
     const git = componentGit(before, changedPaths);
     const artifact = await compareReview(after, config, git, "main");
-    assert.equal(artifact.result.schemaVersion, 4);
-    if (artifact.result.schemaVersion !== 4) return;
+    assert.equal(artifact.result.schemaVersion, 5);
+    if (artifact.result.schemaVersion !== 5) return;
     const expected =
       edit === "owned-css" || edit === "implementation"
         ? ["action"]
@@ -82,15 +83,15 @@ for (const edit of [
             ? ["home"]
             : [];
     assert.deepEqual(
-      artifact.result.changes.map((entry) => entry.after!.id),
+      artifact.result.changes.map((entry) => entry.after!.path),
       expected,
     );
     assert.deepEqual(
-      await computeChangedIds(config, "main", git),
+      await computeChangedPaths(config, "main", git),
       [...expected].sort(),
     );
     const screenReview = artifact.result.screens.find(
-      (screen) => screen.id === "home",
+      (screen) => screen.path === "home",
     )!;
     assert.equal(
       screenReview.state,
@@ -110,7 +111,7 @@ for (const edit of [
         ),
       );
     for (const view of generatedViews(
-      after.manifest.entries.find((entry) => entry.id === "home")!,
+      after.manifest.entries.find((entry) => entry.path === "home")!,
     )) {
       assert.equal(
         artifact.files.get(`snapshots/before/${view.path}`),
@@ -137,15 +138,17 @@ function historical(compilation: Compilation): Compilation {
   const outputs = new Map(
     [...compilation.outputs].map(([route, html]) => [
       route,
-      html.replace(
-        `<style>body{display:block}${originalCss}</style>`,
-        `<style>${originalCss}body{display:block}</style>`,
-      ),
+      typeof html === "string"
+        ? html.replace(
+            `<style>body{display:block}${originalCss}</style>`,
+            `<style>${originalCss}body{display:block}</style>`,
+          )
+        : html,
     ]),
   );
   for (const entry of manifest.entries)
     for (const view of generatedViews(entry)) {
-      const html = outputs.get(view.path)!;
+      const html = textOutput(outputs, view.path)!;
       const startOffset = html.indexOf(originalCss);
       assert.ok(startOffset > html.indexOf("<!--mokly-component:"));
       assert.equal(

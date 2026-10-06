@@ -1,4 +1,6 @@
 import { execFileSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 
 /** Parse the NUL-delimited output from `git diff --name-status -z`. */
 function parseNameStatus(value) {
@@ -29,10 +31,36 @@ export class GitWorkspace {
   requireBase() {
     if (this.base) return this.base;
     this.#run(["rev-parse", "--verify", "HEAD^{commit}"]);
-    this.#run(["rev-parse", "--verify", `${this.target}^{commit}`]);
-    const base = this.#run(["merge-base", "HEAD", this.target])
+    const target = this.#run([
+      "rev-parse",
+      "--verify",
+      `${this.target}^{commit}`,
+    ])
       .toString("utf8")
       .trim();
+    const mergePath = this.#run(["rev-parse", "--git-path", "MERGE_HEAD"])
+      .toString("utf8")
+      .trim();
+    const merging = fs.existsSync(path.resolve(this.root, mergePath));
+    const mergeHead = merging
+      ? this.#run(["rev-parse", "--verify", "MERGE_HEAD^{commit}"])
+          .toString("utf8")
+          .trim()
+      : undefined;
+    if (
+      mergeHead &&
+      mergeHead !== target &&
+      this.#isAncestor(mergeHead, target)
+    )
+      throw new Error(
+        `${this.target} moved during the merge; fetch and merge it again`,
+      );
+    const base =
+      mergeHead === target
+        ? mergeHead
+        : this.#run(["merge-base", "HEAD", this.target])
+            .toString("utf8")
+            .trim();
     if (!base)
       throw new Error(
         `Repository ratchet could not resolve the merge base of HEAD and ${this.target}`,
@@ -138,6 +166,23 @@ export class GitWorkspace {
 
   #paths(args) {
     return this.#run(args).toString("utf8").split("\0").filter(Boolean).sort();
+  }
+
+  #isAncestor(ancestor, descendant) {
+    try {
+      execFileSync(
+        "git",
+        ["merge-base", "--is-ancestor", ancestor, descendant],
+        {
+          cwd: this.root,
+          stdio: "ignore",
+        },
+      );
+      return true;
+    } catch (error) {
+      if (error?.status === 1) return false;
+      throw error;
+    }
   }
 
   #run(args) {

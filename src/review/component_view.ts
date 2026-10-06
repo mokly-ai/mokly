@@ -1,3 +1,4 @@
+import type { ComponentViewRecord } from "@mokly/viewer";
 import type {
   GeneratedComponentView,
   EntryChangeReason,
@@ -27,6 +28,8 @@ import {
   deliveredInlineStyles,
   compareOneSidedComponentView,
 } from "./component_view_material.js";
+import type { ReviewLinkNormalization } from "./ignore.js";
+import type { MoveResources } from "./moves/resources.js";
 import { PageAnalysisPair } from "./page_pair.js";
 import type { ResourceComparison } from "./resource_comparison.js";
 
@@ -40,6 +43,7 @@ export interface ComparedComponentView {
 }
 export interface ComponentViewContext {
   componentAware: boolean;
+  resourceIdentity?: MoveResources;
   beforeReader: ComponentMaterialReader;
   afterReader: ComponentMaterialReader;
   dependencies: ComponentDependencyPolicy;
@@ -51,6 +55,8 @@ export interface ComponentViewContext {
   useStylePath?: boolean;
   /** Test-only: retain delivered text materials instead of fingerprints. */
   useMaterialFingerprints?: boolean;
+  links?: (beforeRoute: string, afterRoute: string) => ReviewLinkNormalization;
+  beforeUsage?: (usage: ComponentViewRecord) => ComponentViewRecord;
 }
 
 /** Compare material and declared inputs without altering the retained view documents. */
@@ -60,6 +66,8 @@ export async function compareComponentView(
   after: GeneratedComponentView | undefined,
   root?: string,
 ): Promise<ComparedComponentView> {
+  if (before?.usage && context.beforeUsage)
+    before = { ...before, usage: context.beforeUsage(before.usage) };
   const selected = after ?? before;
   if (!selected)
     throw new MoklyError(
@@ -87,7 +95,13 @@ export async function compareComponentView(
     );
   let prepared: PreparedComponentComparison | undefined;
   const pages = context.componentAware
-    ? new PageAnalysisPair(before!, after!, base, head)
+    ? new PageAnalysisPair(
+        before!,
+        after!,
+        base,
+        head,
+        context.links?.(before!.path, after!.path),
+      )
     : undefined;
   if (context.useFastPath !== false) {
     const attempt = await compareUnchangedComponentView(
@@ -133,17 +147,21 @@ export async function compareComponentView(
   if (projected.inputs) reasons.push({ kind: "inputs" });
   if (projected.structure) reasons.push({ kind: "structure" });
   const actual = projected.actual;
+  const resourceBefore = projected.resourceBefore ?? projected.before;
+  const resourceAfter = projected.resourceAfter ?? projected.after;
+  const actualBefore = actual.resourceBase ?? actual.base;
+  const actualAfter = actual.resourceHead ?? actual.head;
   const repoPath = (path: string) =>
     context.prefix ? `${context.prefix}/${path}` : path;
   const evidence = await context.resources.compare(
     {
       path: before!.path,
-      html: projected.before,
+      html: resourceBefore,
       ...(references ? { references: references.before } : {}),
     },
     {
       path: after!.path,
-      html: projected.after,
+      html: resourceAfter,
       ...(references ? { references: references.after } : {}),
     },
     excluded,
@@ -153,12 +171,12 @@ export async function compareComponentView(
   const actualEvidence = await context.resources.compare(
     {
       path: before!.path,
-      html: actual.base,
+      html: actualBefore,
       ...(references ? { references: references.actualBefore } : {}),
     },
     {
       path: after!.path,
-      html: actual.head,
+      html: actualAfter,
       ...(references ? { references: references.actualAfter } : {}),
     },
     undefined,
@@ -175,18 +193,19 @@ export async function compareComponentView(
     ? await changedResourceBytes(
         await context.beforeReader.resources(
           before!.path,
-          projected.before,
+          resourceBefore,
           excluded,
           references?.before,
         ),
         await context.afterReader.resources(
           after!.path,
-          projected.after,
+          resourceAfter,
           excluded,
           references?.after,
         ),
         context.beforeReader,
         context.afterReader,
+        context.resourceIdentity,
       )
     : new Set<string>();
   if ([...byteChanges].some((route) => !context.changed.has(repoPath(route))))
@@ -195,18 +214,19 @@ export async function compareComponentView(
     ? await changedResourceBytes(
         await context.beforeReader.resources(
           before!.path,
-          actual.base,
+          actualBefore,
           undefined,
           references?.actualBefore,
         ),
         await context.afterReader.resources(
           after!.path,
-          actual.head,
+          actualAfter,
           undefined,
           references?.actualAfter,
         ),
         context.beforeReader,
         context.afterReader,
+        context.resourceIdentity,
       )
     : new Set<string>();
   const actualResourceChange =
@@ -254,6 +274,7 @@ export async function compareComponentView(
         after?.usage,
         baseRanges,
         headRanges,
+        context.links?.(before!.path, after!.path),
       ),
       ...ownedComponentIds,
       ...derivedOwnedComponents,

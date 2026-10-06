@@ -21,7 +21,7 @@ test("real Serve classification counts the page and component passes once, inclu
       "defineComponent, definePage, defineScreen",
     ) +
     `
-mockups.push(definePage({ id: "guide", title: "Guide", description: "Guide", dependencies: [], relatedDocs: [], render: () => '<!doctype html><html><head><link rel="stylesheet" href="../shared.css"></head><body><main>Guide</main><iframe src="../embedded.html"></iframe></body></html>' }));`;
+mockups.push(definePage({ path: "guide", title: "Guide", description: "Guide", dependencies: [], relatedDocs: [], render: () => '<!doctype html><html><head><link rel="stylesheet" href="../shared.css"></head><body><main>Guide</main><iframe src="../embedded.html"></iframe></body></html>' }));`;
   const fixture = await changedFixture(
     testContext,
     source,

@@ -4,7 +4,9 @@
 
 Implemented for committed and derived comparison, including unchanged
 reference-bearing rules and resources absent from saved variants.
-Approved target of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
+The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md)
+implements the following behavior. Decision 13 performance acceptance is
+deferred by the user decision of 2026-10-06.
 [M5](../../plans/scalable-inline-style-analysis.md#milestone-5-changed-segment-analysis)
 implements the [matched-occurrence rule](./mokly-css-parse-reuse.md#unchanged-references-and-composition);
 [M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)

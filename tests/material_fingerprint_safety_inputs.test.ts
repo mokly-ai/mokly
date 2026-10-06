@@ -12,7 +12,7 @@ import { pageFixtureInput } from "./helpers/page_fixture_inputs.js";
 import { selectedStyleViews } from "./helpers/style_route.js";
 
 const view = {
-  path: "screens/home.html",
+  path: "home/index.html",
   viewport: "mobile",
   colorScheme: "light",
 } as const;

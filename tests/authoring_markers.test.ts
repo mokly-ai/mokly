@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { MoklyError, isMoklyError } from "../dist/errors.js";
+import { isCancellation, MoklyError, isMoklyError } from "../dist/errors.js";
 
 const authoring = path.resolve("src/authoring");
 const facadeImports = [
@@ -43,4 +43,23 @@ test("cross-copy error branding requires a known code and an intact detail", () 
     false,
   );
   assert.equal(isMoklyError(new Error("bad folder")), false);
+});
+
+test("cross-copy cancellation branding survives a bundled runtime boundary", () => {
+  const duplicateRuntimeError = {
+    [Symbol.for("mokly.error")]: true,
+    [Symbol.for("mokly.error.cancelled")]: true,
+    code: "build-invalid",
+    detail: "compile stopped",
+    message: "[mokly/build-invalid] compile stopped",
+  };
+  assert.equal(isMoklyError(duplicateRuntimeError), true);
+  assert.equal(isCancellation(duplicateRuntimeError), true);
+  assert.equal(
+    isCancellation({
+      ...duplicateRuntimeError,
+      [Symbol.for("mokly.error.cancelled")]: false,
+    }),
+    false,
+  );
 });

@@ -3,23 +3,28 @@ import path from "node:path";
 
 import { Minimatch } from "minimatch";
 
+import { GENERATED_DIRECTORY } from "../build/styles/routes.js";
 import { MoklyError } from "../errors.js";
 
-import { globStablePrefix } from "./entry_globs.js";
 import { projectRealPath, toPosixPath } from "./paths.js";
 import type { ResolvedConfig } from "./types.js";
 
 /** Repository, Review output, and glob identities retained for one discovery pass. */
 export interface DiscoveryPaths {
   readonly repoRoot: string;
+  readonly generatedOutput?: {
+    readonly lexical: string;
+    readonly projected: string;
+  };
   readonly realRepoRoot: string;
   readonly reviewOutput: {
     readonly lexical: string;
     readonly projected: string;
   };
-  readonly globs: readonly {
-    readonly glob: string;
-    readonly matcher: Minimatch;
+  readonly realFiles: Map<string, string>;
+  readonly roots: readonly {
+    readonly matchers: readonly Minimatch[];
+    readonly config: ResolvedConfig["roots"][number];
     readonly root: string;
     readonly projected: string;
   }[];
@@ -27,7 +32,8 @@ export interface DiscoveryPaths {
 
 /** Project shared roots once, retaining a lexical Review boundary if it is unavailable. */
 export function discoveryPaths(
-  config: Pick<ResolvedConfig, "entryGlobs" | "repoRoot" | "review">,
+  config: Pick<ResolvedConfig, "roots" | "repoRoot" | "review"> &
+    Partial<Pick<ResolvedConfig, "mockupsDir">>,
 ): DiscoveryPaths {
   const lexical = path.resolve(config.review.outDir);
   let projected: string;
@@ -42,10 +48,12 @@ export function discoveryPaths(
   } catch (cause) {
     throw discoveryPathError(config.repoRoot, config.repoRoot, cause);
   }
-  const roots = new Map<string, string>([[config.repoRoot, realRepoRoot]]);
-  const globs = config.entryGlobs.map((glob) => {
-    const root = path.resolve(config.repoRoot, globStablePrefix(glob));
-    let realRoot = roots.get(root);
+  const projectedRoots = new Map<string, string>([
+    [config.repoRoot, realRepoRoot],
+  ]);
+  const roots = config.roots.map((configured) => {
+    const root = configured.dir;
+    let realRoot = projectedRoots.get(root);
     if (realRoot === undefined) {
       realRoot = root;
       try {
@@ -54,21 +62,46 @@ export function discoveryPaths(
         if (!isVanishedDirectory(cause))
           throw discoveryPathError(root, config.repoRoot, cause);
       }
-      roots.set(root, realRoot);
+      projectedRoots.set(root, realRoot);
     }
     return {
-      glob,
+      config: configured,
       root,
-      matcher: new Minimatch(glob, { dot: true }),
+      matchers: configured.files.map(
+        (glob) => new Minimatch(glob, { dot: true }),
+      ),
       projected: realRoot,
     };
   });
   return {
     repoRoot: config.repoRoot,
     realRepoRoot,
+    ...(config.mockupsDir
+      ? {
+          generatedOutput: {
+            lexical: path.join(config.mockupsDir, GENERATED_DIRECTORY),
+            projected: generatedRootProjection(config.mockupsDir),
+          },
+        }
+      : {}),
     reviewOutput: { lexical, projected },
-    globs,
+    roots,
+    realFiles: new Map(),
   };
+}
+
+function generatedRootProjection(mockupsDir: string): string {
+  const root = path.join(mockupsDir, GENERATED_DIRECTORY);
+  try {
+    return projectRealPath(root);
+  } catch (error) {
+    if (
+      (error as NodeJS.ErrnoException).code === "ENOENT" &&
+      fs.lstatSync(root, { throwIfNoEntry: false })?.isSymbolicLink()
+    )
+      return root;
+    throw error;
+  }
 }
 
 /** Only missing or replaced directories are benign races during discovery. */

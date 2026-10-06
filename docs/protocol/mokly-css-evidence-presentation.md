@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Implemented; this split records the existing shell projection and corrected
-field names, including inferred inline-style evidence.
+field names, including inferred inline-style evidence. Evidence is keyed by kind and path.
 
 This contract owns how the shell derives and presents the rule-aware evidence
 defined by [CSS Change Attribution](./mokly-css-attribution.md). The compact
@@ -11,13 +11,13 @@ visual rules remain in [CSS Evidence In The Shell](./mokly-css-evidence-shell.md
 
 ## Shell Derivation
 
-Live classification retains screen-only `screenEvidence` keyed by entry id,
+Live classification retains screen-only `screenEvidence` keyed by entry path,
 with per-view viewport, color scheme, optional reasons, and optional excluded
-resources. Component-aware classification retains its full v4 result, including
+resources. Component-aware classification retains its full v5 result, including
 `inlineStyles`, instead of projecting it into the screen-only slice. Paths remain repository-relative. The workspace projects the
 selected screen's views as optional `resourceEvidence`; it does not invent
 component reasons, component results, or comparison states. Static exports
-project the same slice from review result v4. A new classification generation
+project the same slice from review result v5. A new classification generation
 replaces the slice and clears stale evidence while Changes is pending or
 unavailable.
 

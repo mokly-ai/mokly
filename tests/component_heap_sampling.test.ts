@@ -18,10 +18,10 @@ test("each completed real view samples heap once; a rejecting view never samples
   const fixture = await componentReviewFixture(testContext, (source) => source);
   const views = (id: string) =>
     generatedViews(
-      fixture.before.manifest.entries.find((entry) => entry.id === id)!,
+      fixture.before.manifest.entries.find((entry) => entry.path === id)!,
     );
   const home = views("home");
-  const rejected = views("action-default")[0]!;
+  const rejected = views("action/default")[0]!;
   const failure = new Error("Rejected view reader");
   const observations = [30.111, 81.126, 65.001, 40.555];
   let samples = 0;

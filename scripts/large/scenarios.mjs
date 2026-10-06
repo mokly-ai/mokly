@@ -13,23 +13,26 @@ const SETUP_RULE =
   ".scale-unrelated-rule { outline: 1px solid rebeccapurple; }\n";
 
 export const classificationScenarios = [
-  { name: "no-changes", expectedChangedIds: [], expectedChangedRoutes: [] },
+  { name: "no-changes", expectedChangedPaths: [], expectedChangedRoutes: [] },
   {
     name: "component-style",
-    expectedChangedIds: ["area-1-action"],
-    expectedChangedRoutes: ["components/area-1-action.html"],
+    expectedChangedPaths: ["area-1/components/action"],
+    expectedChangedRoutes: ["area-1/components/action/index.html"],
   },
   {
     name: "screen-markup",
-    expectedChangedIds: ["area-1-flow-1", "area-1-screen-1"],
+    expectedChangedPaths: [
+      "area-1/flows/flow-1",
+      "area-1/screens/activity-group-1/screen-1",
+    ],
     expectedChangedRoutes: [
-      "user-flows/area-1-flow-1.html",
-      "screens/area-1-screen-1.html",
+      "area-1/flows/flow-1/index.html",
+      "area-1/screens/activity-group-1/screen-1/index.html",
     ],
   },
   {
     name: "linked-stylesheet",
-    expectedChangedIds: [],
+    expectedChangedPaths: [],
     expectedChangedRoutes: [],
   },
 ];

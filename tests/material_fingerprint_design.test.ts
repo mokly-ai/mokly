@@ -50,9 +50,9 @@ test("design catalogue keeps fingerprints on all complete-path views", async (co
       ({ stage, event }) =>
         stage === "review.compare-screens" && event === "counts",
     )!.counts!;
-    assert.equal(paths.views, 428);
-    assert.equal(paths.completePath, 428);
-    assert.equal(counts.fingerprintedViews, 428);
+    assert.equal(paths.views, 460);
+    assert.equal(paths.completePath, 460);
+    assert.equal(counts.fingerprintedViews, 460);
     coverage.push({
       mode,
       views: paths.views,

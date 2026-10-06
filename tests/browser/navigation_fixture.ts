@@ -25,31 +25,20 @@ export interface NavigationFixture {
  * Removed row inside the surviving parent's list instead of at the root.
  */
 const REMOVED_HOME_VARIANT = {
+  folderTitles: ["Fixture", "Nested"],
+  parentTitle: "Home",
   entry: {
     declaredDependencies: [],
-    dependencies: [],
     description: "Home after the workspace was deleted",
-    artifacts: [
-      {
-        colorScheme: "light" as const,
-        path: "screens/home-gone.mobile.html",
-        viewport: "mobile" as const,
-      },
-      {
-        colorScheme: "light" as const,
-        path: "screens/home-gone.desktop.html",
-        viewport: "desktop" as const,
-      },
-    ],
     colorSchemes: ["light" as const],
-    id: "home-gone",
+    path: "fixture/nested/home/gone",
     kind: "screen" as const,
-    navPath: ["Fixture", "Nested"],
+
     relatedDocs: [],
     sourcePath: "entries/fixture.mockup.tsx",
     title: "Workspace deleted",
-    useCaseIds: [],
-    variantOf: "home",
+    useCasePaths: [],
+    variantOf: "fixture/nested/home",
   },
 };
 
@@ -62,12 +51,15 @@ export async function startNavigationFixture(): Promise<NavigationFixture> {
   await fs.promises.mkdir(legacy);
   await fs.promises.writeFile(
     path.join(legacy, "guide.source.ts"),
-    `export const source = () => '<!doctype html><html><body><a id="legacy-link" href="mock:details#section">Details</a></body></html>';\n`,
+    `export const source = () => '<!doctype html><html><body><a id="legacy-link" href="mock:fixture/nested/details#section">Details</a></body></html>';\n`,
   );
-  await fs.promises.mkdir(path.join(fixture.mockupsDir, "screens"));
+  await fs.promises.mkdir(
+    path.join(fixture.mockupsDir, "fixture/nested/home"),
+    { recursive: true },
+  );
   await fs.promises.writeFile(
-    path.join(fixture.mockupsDir, "screens", "nested.html"),
-    `<!doctype html><html><head><base target="_top"></head><body><div id="local"></div><a id="local-base" href="#local">Base-targeted</a><a id="local-unmarked" href="#local" target="_top">Local</a><a data-mokly-link="details" href="./details.mobile.html" id="local-marked" target="_top">Marked-looking</a></body></html>`,
+    path.join(fixture.mockupsDir, "fixture/nested/home", "nested.html"),
+    `<!doctype html><html><head><base target="_top"></head><body><div id="local"></div><a id="local-base" href="#local">Base-targeted</a><a id="local-unmarked" href="#local" target="_top">Local</a><a data-mokly-link="fixture/nested/details" href="../details/index.mobile.html" id="local-marked" target="_top">Marked-looking</a></body></html>`,
   );
   for (const viewport of ["desktop", "mobile"])
     await fs.promises.writeFile(
@@ -76,7 +68,7 @@ export async function startNavigationFixture(): Promise<NavigationFixture> {
     );
   await fs.promises.writeFile(
     fixture.configPath,
-    `export default { colorSchemes: ["light", "dark"], entriesDir: "entries",  mockupsDir: "mockups", repoRoot: "." };\n`,
+    `export default { colorSchemes: ["light", "dark"], roots: [{ dir: "entries" }],  mockupsDir: "mockups", repoRoot: "." };\n`,
   );
   await registerFixturePage(
     fixture,
@@ -89,10 +81,16 @@ export async function startNavigationFixture(): Promise<NavigationFixture> {
   const server = await startCatalogueServer(config, {
     base: "origin/main",
     snapshot: await loadCatalogueSnapshot(config, async () => ({
-      schemaVersion: 1,
+      movedEntries: [],
+      schemaVersion: 2,
       baseRef: "origin/main",
       baseCommit: "a".repeat(40),
-      changedIds: ["extra", "home-error", "home-gone", "tour"],
+      changedEntries: [
+        "other/extra",
+        "fixture/nested/home/error",
+        "fixture/nested/home/gone",
+        "fixture/nested/tour",
+      ],
       removedEntries: [REMOVED_HOME_VARIANT],
     })),
     port: 0,
@@ -112,18 +110,18 @@ function navigationSource(): string {
 import React from "react";
 const metadata = { dependencies: [], relatedDocs: [] };
 function Home({ compact }) {
-  const nestedGenerated = compact ? "./details.mobile.html" : "./details.desktop.html";
+  const nestedGenerated = compact ? "../details/index.mobile.html" : "../details/index.desktop.html";
   return <main id="home">
-    <img alt="" src={compact ? "../slow-navigation-mobile.svg" : "../slow-navigation-desktop.svg"} />
-    {compact ? <MockLink fragment="section" id="mock-link" to="details">MockLink details</MockLink> : <a href="mock:details#section" id="raw-link">Raw details</a>}
-    <map name="destinations"><area href="mock:details#section" id="area-link" shape="default" /></map>
-    <svg viewBox="0 0 100 30"><a href="mock:details#section" id="svg-link"><text x="0" y="20">SVG details</text></a></svg>
-    <a href="mock:details#section" id="blank-link" target="_blank">Blank details</a>
-    <a href="mock:details#section" id="named-link" target="DetailsFrame">Named details</a>
-    <a href="mock:details#section" id="top-link" target="_top">Top details</a>
-    <a href="mock:details#section" id="parent-link" target="_parent">Parent details</a>
-    <a href="./details.mobile.html" id="unowned-details-link">Unowned details</a>
-    <a href="./home.mobile.dark.html" id="unowned-next-scheme-link">Unowned next scheme</a>
+    <img alt="" src={compact ? "../../../slow-navigation-mobile.svg" : "../../../slow-navigation-desktop.svg"} />
+    {compact ? <MockLink fragment="section" id="mock-link" to="fixture/nested/details">MockLink details</MockLink> : <a href="mock:fixture/nested/details#section" id="raw-link">Raw details</a>}
+    <map name="destinations"><area href="mock:fixture/nested/details#section" id="area-link" shape="default" /></map>
+    <svg viewBox="0 0 100 30"><a href="mock:fixture/nested/details#section" id="svg-link"><text x="0" y="20">SVG details</text></a></svg>
+    <a href="mock:fixture/nested/details#section" id="blank-link" target="_blank">Blank details</a>
+    <a href="mock:fixture/nested/details#section" id="named-link" target="DetailsFrame">Named details</a>
+    <a href="mock:fixture/nested/details#section" id="top-link" target="_top">Top details</a>
+    <a href="mock:fixture/nested/details#section" id="parent-link" target="_parent">Parent details</a>
+    <a href="../details/index.mobile.html" id="unowned-details-link">Unowned details</a>
+    <a href="./index.mobile.dark.html" id="unowned-next-scheme-link">Unowned next scheme</a>
     <a href="#home" id="unmarked-top" target="_top">Ordinary top</a>
     <a href="#home" id="unmarked-parent" target="_parent">Ordinary parent</a>
     <svg viewBox="0 0 100 30"><a href="#home" id="unmarked-svg-top" target="_top"><text x="0" y="20">Ordinary SVG</text></a></svg>
@@ -131,23 +129,23 @@ function Home({ compact }) {
     <a download="fixture.txt" href="data:text/plain,fixture" id="download-top" target="_top">Download</a>
     <form action="#home" id="top-form" target="_top"><button type="submit">Submit</button></form>
     <script>window.__consumerScriptRan = true;</script>
-    <iframe id="srcdoc-nested" srcDoc={'<a data-mokly-link="details#section" href="./details.mobile.html" id="srcdoc-marked" target="_top">Marked</a><a href="#ordinary" id="srcdoc-unmarked" target="_top">Ordinary</a><a href="#popup" id="srcdoc-popup" target="_blank">Popup</a><script>parent.__nestedScriptRan=true</script>'} title="srcdoc nested" />
+    <iframe id="srcdoc-nested" srcDoc={'<a data-mokly-link="fixture/nested/details#section" href="../details/index.mobile.html" id="srcdoc-marked" target="_top">Marked</a><a href="#ordinary" id="srcdoc-unmarked" target="_top">Ordinary</a><a href="#popup" id="srcdoc-popup" target="_blank">Popup</a><script>parent.__nestedScriptRan=true</script>'} title="srcdoc nested" />
     <iframe id="local-nested" src="./nested.html" title="local nested" />
     <iframe id="generated-nested" src={nestedGenerated} title="generated nested" />
     <iframe id="cross-nested" src="https://cross-origin.example.test/nested.html" title="cross-origin nested" />
   </main>;
 }
 function Details() {
-  return <main id="section"><h1>Details destination</h1><a href="mock:home" id="return-link">Return home</a><a href="mock:extra" id="extra-link">Extra</a></main>;
+  return <main id="section"><h1>Details destination</h1><a href="mock:fixture/nested/home" id="return-link">Return home</a><a href="mock:other/extra" id="extra-link">Extra</a></main>;
 }
 export const mockups = [
-  defineScreen({ ...metadata, navPath: ["Fixture", "Nested"], description: "Home", desktop: <Home compact={false} />, id: "home", mobile: <Home compact />, route: "screens/home.html", title: "Home", useCaseIds: ["tour"], variants: [
-    { description: "Home before any workspace exists", desktop: <main id="home-empty">Empty workspace</main>, id: "home-empty", mobile: <main id="home-empty">Empty workspace</main>, slug: "empty", title: "Empty workspace" },
-    { description: "Home after saving failed", desktop: <main id="home-error">Save failed</main>, id: "home-error", mobile: <main id="home-error">Save failed</main>, slug: "error", title: "Save failed" },
+  ...defineScreen({ ...metadata, description: "Home", desktop: <Home compact={false} />, path: "fixture/nested/home", mobile: <Home compact />, title: "Home", useCasePaths: ["fixture/nested/tour"], variants: [
+    { description: "Home before any workspace exists", desktop: <main id="home-empty">Empty workspace</main>,  mobile: <main id="home-empty">Empty workspace</main>, slug: "empty", title: "Empty workspace" },
+    { description: "Home after saving failed", desktop: <main id="home-error">Save failed</main>,  mobile: <main id="home-error">Save failed</main>, slug: "error", title: "Save failed" },
   ] }),
-  defineScreen({ ...metadata, navPath: ["Fixture", "Nested"], description: "Details", desktop: <Details />, id: "details", mobile: <Details />, route: "screens/details.html", title: "Details", useCaseIds: ["tour"] }),
-  defineScreen({ ...metadata, navPath: ["Other"], description: "Extra", desktop: <main>Extra</main>, id: "extra", mobile: <main>Extra</main>, route: "screens/extra.html", title: "Extra", useCaseIds: [] }),
-  defineUseCase({ ...metadata, navPath: ["Fixture", "Nested"], description: "Tour", id: "tour", route: "user-flows/tour.html", steps: [{ screenId: "home" }, { screenId: "details" }], title: "Tour" })
+  defineScreen({ ...metadata, description: "Details", desktop: <Details />, path: "fixture/nested/details", mobile: <Details />, title: "Details", useCasePaths: ["fixture/nested/tour"] }),
+  defineScreen({ ...metadata, description: "Extra", desktop: <main>Extra</main>, path: "other/extra", mobile: <main>Extra</main>, title: "Extra", useCasePaths: [] }),
+  defineUseCase({ ...metadata, description: "Tour", path: "fixture/nested/tour", steps: [{ screenPath: "fixture/nested/home" }, { screenPath: "fixture/nested/details" }], title: "Tour" })
 ];
 `;
 }

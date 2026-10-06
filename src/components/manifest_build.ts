@@ -49,12 +49,12 @@ export function componentVariantManifestEntry(
   const inputs = componentInputs(
     parent,
     entry.props,
-    `${parent.id} / ${entry.id}`,
+    `${parent.path} / ${entry.path}`,
   );
   const fragment = (
     viewport: "mobile" | "desktop",
     scheme: ColorScheme = "light",
-  ) => viewRoute("component", entry.id, viewport, scheme);
+  ) => viewRoute(entry.path, viewport, scheme);
   const colorSchemes = effectiveColorSchemes(entry, schemes);
   return {
     ...common,

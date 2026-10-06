@@ -10,12 +10,12 @@ import {
   cssSchemaFixture,
 } from "./helpers/review_css_schema.js";
 
-function fixture(version: 4): ReviewResult {
+function fixture(version: 5): ReviewResult {
   return structuredClone(cssSchemaFixture(version));
 }
 
-test("schema-v4 artifact validation triggers for inline evidence alone", () => {
-  const result = fixture(4);
+test("schema-v5 artifact validation triggers for inline evidence alone", () => {
+  const result = fixture(5);
   for (const view of result.screens[0]!.views) {
     delete view.material;
     delete view.reasons;
@@ -39,7 +39,7 @@ function secondView(result: ReviewResult) {
   return result.screens[0]!.views[1]!;
 }
 
-for (const version of [4] as const) {
+for (const version of [5] as const) {
   for (const evidence of [
     { status: "matched", selectors: [".a", ".z"] },
     { status: "unresolved", selectors: [] },

@@ -26,14 +26,14 @@ for (const ownership of ["dependency", "migrated-renderer"] as const)
             '(props) => <button className={props.label === "Finish" ? "actual-only" : "saved"}>{props.label}</button>',
         })
           .replace(
-            'id: "action",',
-            'id: "action", dependencies: ["mockups/action.css"], ownedDependencies: ["mockups/action.css"],',
+            'path: "action",',
+            'path: "action", dependencies: ["mockups/action.css"], ownedDependencies: ["mockups/action.css"],',
           )
           .replace(
-            'id: "home",',
+            'path: "home",',
             exact
-              ? 'id: "home", dependencies: ["mockups/action.css"],'
-              : 'id: "home",',
+              ? 'path: "home", dependencies: ["mockups/action.css"],'
+              : 'path: "home",',
           );
         const fixture = await changedFixture(
           t,
@@ -66,7 +66,7 @@ export default (input) => '<html><head><link rel="stylesheet" href="' + input.st
           committedReviewRepository(fixture.config),
         );
         const expected = matches ? ["action", ...(exact ? ["home"] : [])] : [];
-        assert.deepEqual(live.changedIds, expected);
+        assert.deepEqual(live.changedEntries, expected);
         const artifact = await compareReview(
           await compileCatalogue(fixture.config),
           fixture.config,
@@ -74,8 +74,8 @@ export default (input) => '<html><head><link rel="stylesheet" href="' + input.st
           "main",
         );
         const { result } = artifact;
-        assert.equal(result.schemaVersion, 4);
-        if (result.schemaVersion !== 4) return;
+        assert.equal(result.schemaVersion, 5);
+        if (result.schemaVersion !== 5) return;
         assert.deepEqual(live.componentChanges?.result, result);
         const reason = {
           kind: "dependency",
@@ -84,7 +84,7 @@ export default (input) => '<html><head><link rel="stylesheet" href="' + input.st
         };
         for (const change of result.changes)
           assert.deepEqual(change.reasons, [reason]);
-        const home = result.screens.find((entry) => entry.id === "home")!;
+        const home = result.screens.find((entry) => entry.path === "home")!;
         assert.equal(home.views.length, 4);
         for (const view of home.views) {
           assert.equal(view.state, matches ? "changed" : "unchanged");
@@ -99,7 +99,9 @@ export default (input) => '<html><head><link rel="stylesheet" href="' + input.st
         for (const component of result.components) {
           assert.deepEqual(
             component.sharedImpact,
-            matches && component.id === "action" ? ["mockups/action.css"] : [],
+            matches && component.path === "action"
+              ? ["mockups/action.css"]
+              : [],
           );
           for (const variant of component.variants) {
             assert.equal(variant.views.length, 4);
@@ -124,8 +126,8 @@ test("non-CSS declared public dependencies retain their existing file-level poli
   const fixture = await changedFixture(
     t,
     componentEntrySource().replace(
-      'id: "action",',
-      'id: "action", dependencies: ["mockups/asset.svg"], ownedDependencies: ["mockups/asset.svg"],',
+      'path: "action",',
+      'path: "action", dependencies: ["mockups/asset.svg"], ownedDependencies: ["mockups/asset.svg"],',
     ),
     undefined,
     ({ mockupsDir }) =>
@@ -137,10 +139,10 @@ test("non-CSS declared public dependencies retain their existing file-level poli
     "main",
     committedReviewRepository(fixture.config),
   );
-  assert.deepEqual(live.changedIds, ["action"]);
+  assert.deepEqual(live.changedEntries, ["action"]);
   const result = live.componentChanges?.result;
-  assert.equal(result?.schemaVersion, 4);
-  if (result?.schemaVersion !== 4) return;
+  assert.equal(result?.schemaVersion, 5);
+  if (result?.schemaVersion !== 5) return;
   assert.deepEqual(result.changes[0]?.reasons, [
     { kind: "dependency", path: "mockups/asset.svg" },
   ]);

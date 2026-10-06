@@ -22,10 +22,9 @@ export function renderEvidence({
   status?: "Changed" | "Unmodified";
   variant?: boolean;
 }): string {
-  const route = variant ? "components/action.html" : "screens/home.html";
+  const route = variant ? "action/index.html" : "home/index.html";
   const address = {
-    id: variant ? "action" : "home",
-    route,
+    path: variant ? "action" : "home",
     title: variant ? "Action" : "Home",
   };
   const data = {
@@ -67,9 +66,7 @@ export function renderEvidence({
     comparisons: true,
     entry: { ...address, kind: variant ? "component" : "screen" },
     inputChanges: [],
-    relatedComponents: affected
-      ? [{ title: "Action", route: "components/action.html" }]
-      : [],
+    relatedComponents: affected ? [{ title: "Action", path: "action" }] : [],
     resourceEvidence:
       excluded.length || inlineStyles
         ? [

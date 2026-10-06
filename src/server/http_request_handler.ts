@@ -14,10 +14,11 @@ import type { ChangesStatus } from "./update_messages.js";
 type CatalogueRequestArguments = Parameters<typeof handleCatalogueRequest>;
 
 interface CatalogueRequestHandlerInput {
+  acceptedGenerated(): CatalogueRequestArguments[17];
   activity: ForegroundActivity;
   activeCatalogue(): CatalogueRequestArguments[3];
   assets: CatalogueRequestArguments[8];
-  changedIds(): readonly string[] | undefined;
+  changedEntries(): readonly string[] | undefined;
   changesStatus(): ChangesStatus;
   componentChanges(): CatalogueRequestArguments[11];
   config: ResolvedConfig;
@@ -57,7 +58,7 @@ export function catalogueRequestHandler(
       return;
     }
     const requestedVersion = input.updateVersion();
-    const requestedChanges = input.changedIds();
+    const requestedChanges = input.changedEntries();
     void handleCatalogueRequest(
       request.url ?? "/",
       request.method ?? "GET",
@@ -79,6 +80,7 @@ export function catalogueRequestHandler(
         : input.changesStatus(),
       input.contentVersion(),
       input.publicCatalogue,
+      input.acceptedGenerated(),
       input.options.liveChanges === false &&
         input.options.changesStatus === "unavailable",
     ).catch(() => {

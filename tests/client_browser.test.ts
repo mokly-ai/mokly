@@ -60,7 +60,7 @@ test("React host updates consume stale-URL recovery without applying it", () => 
     "mokly:live-update-recovery",
     JSON.stringify({
       browse: browseState(),
-      url: "http://127.0.0.1:4173/view/screens/other.html",
+      url: "http://127.0.0.1:4173/view/other/",
       version: 2,
     }),
   );
@@ -88,7 +88,7 @@ function descriptor(updateVersion: number): ViewerCapabilityDescriptor {
 }
 
 function request(value: ViewerCapabilityDescriptor): ViewerCapabilityRequest {
-  return { entryId: null, source: value.source };
+  return { entryPath: null, source: value.source };
 }
 
 function shellState(): ShellRecoverySnapshot {
@@ -99,11 +99,11 @@ function shellState(): ShellRecoverySnapshot {
 function browseState(): BrowseRecoveryState {
   return {
     changedOnly: false,
-    disclosures: { "folder:pages:fixture": false },
+    disclosures: { "folder:specs:fixture": false },
     colorScheme: "dark",
     detailsOpen: true,
     drawerOpen: true,
-    filterBaselineDisclosures: { "folder:pages:fixture": false },
+    filterBaselineDisclosures: { "folder:specs:fixture": false },
     navScroll: 12,
     query: "home",
     regionScrolls: { stage: 24 },
@@ -153,7 +153,7 @@ class FakeEnvironment implements ReactCapabilityEnvironment {
   readonly source = new FakeEventSource();
   readonly storage = new FakeStorage();
   readonly location = {
-    href: "http://127.0.0.1:4173/view/screens/home.html",
+    href: "http://127.0.0.1:4173/view/home/",
     reloads: 0,
     reload() {
       this.reloads += 1;

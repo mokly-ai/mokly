@@ -11,6 +11,7 @@ import {
   textContent,
   type Element,
 } from "./design_catalogue.js";
+import { textOutput } from "./generated_text.js";
 
 export type Document = DefaultTreeAdapterMap["document"];
 export type Viewport = "desktop" | "mobile";
@@ -20,11 +21,11 @@ export async function renders(
   id: string,
 ): Promise<{ dark: boolean; document: Document; route: string }[]> {
   const { manifest, outputs } = await designCatalogue;
-  const entry = manifest.entries.find((candidate) => candidate.id === id);
+  const entry = manifest.entries.find((candidate) => candidate.path === id);
   assert.ok(entry?.kind === "screen", id);
   return generatedViews(entry).map((view) => {
     const route = view.path;
-    const html = outputs.get(route);
+    const html = textOutput(outputs, route);
     assert.ok(html, route);
     return {
       dark: view.colorScheme === "dark",

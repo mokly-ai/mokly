@@ -1,8 +1,9 @@
 import path from "node:path";
 
-import { entryRoute, type ArtifactView } from "@mokly/viewer/data";
+import { type ArtifactView } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
+import type { BuildDiagnostic } from "../build/build_warnings.js";
 import { walkFiles } from "../build/discovery.js";
 import { validateControlMetadata } from "../build/link_control_metadata.js";
 import { adaptLinkControls } from "../build/link_controls.js";
@@ -12,11 +13,21 @@ import { validateCompatibilityRecords } from "../build/logical_records.js";
 import { artifactRouteForEntry } from "../build/mock_link_routes.js";
 import { rewriteMockLinks } from "../build/mock_links.js";
 import { pendingGeneratedOrphanRoutes } from "../build/ownership.js";
+import type { PendingGeneratedFiles } from "../build/pending_generated.js";
+import { isGeneratedRoute } from "../build/styles/routes.js";
 import { toPosixPath } from "../config/paths.js";
 import { isPublicStaticFile } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { validateDocumentHtml } from "../documents/safety.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
+import type { EntryMove } from "../review/moves/types.js";
+
+/** Compatibility records and non-fatal diagnostics from transformed documents. */
+export interface CompatibilityTransform {
+  readonly diagnostics: readonly BuildDiagnostic[];
+  readonly records: readonly LogicalReferenceRecord[];
+}
 
 /** Resolve catalogue id links and apply an explicitly configured migration bridge. */
 export function transformCompatibilityDocuments(
@@ -27,14 +38,16 @@ export function transformCompatibilityDocuments(
   fragmentViews: ReadonlyMap<string, ArtifactView>,
   retainedRoutes?: readonly string[],
   context?: CompatibilityContext,
-): readonly LogicalReferenceRecord[] {
-  const byId =
-    context?.byId ?? new Map(entries.map((entry) => [entry.id, entry]));
+  pending?: PendingGeneratedFiles,
+): CompatibilityTransform {
+  const byPath =
+    context?.byPath ?? new Map(entries.map((entry) => [entry.path, entry]));
   const records: LogicalReferenceRecord[] = [];
+  const diagnostics: BuildDiagnostic[] = [];
   const outputRoutes = [...outputs.keys()];
   const availableRoutes = graph.compatibilityTransformer
     ? (context?.availableRoutes ??
-      availablePublicRoutes(retainedRoutes ?? outputRoutes, config))
+      availablePublicRoutes(retainedRoutes ?? outputRoutes, config, pending))
     : [];
   if (context && graph.compatibilityTransformer)
     context.availableRoutes = availableRoutes;
@@ -45,13 +58,16 @@ export function transformCompatibilityDocuments(
       colorScheme: "light",
       viewport: "desktop",
     };
+    const adapted = adaptLinkControls(original, route);
+    diagnostics.push(...adapted.diagnostics);
     const linked = rewriteMockLinks(
-      adaptLinkControls(original, route),
+      adapted.html,
       route,
       viewport,
       colorScheme,
-      byId,
+      byPath,
       config.colorSchemes,
+      context?.moves,
     );
     records.push(...linked.records);
     const transformer = graph.compatibilityTransformer;
@@ -103,14 +119,19 @@ export function transformCompatibilityDocuments(
     validateCompatibilityRecords(route, normalized, linked.records);
     outputs.set(route, normalized);
   }
-  return records;
+  for (const [route, html] of outputs) {
+    const entry = byPath.get(route.slice(0, route.lastIndexOf("/")));
+    if (entry?.kind === "document") validateDocumentHtml(html, entry.location);
+  }
+  return { diagnostics, records };
 }
 
 /** Immutable-route indexes reused across documents of one consumer generation. */
 export interface CompatibilityContext {
-  byId: ReadonlyMap<string, ResolvedRegistryEntry>;
+  byPath: ReadonlyMap<string, ResolvedRegistryEntry>;
   availableRoutes?: string[];
   routeIndexes: Map<string, LogicalArtifactRouteIndex>;
+  moves?: readonly EntryMove[];
 }
 
 type LogicalArtifactRouteIndex = Readonly<Record<string, string>>;
@@ -121,33 +142,40 @@ function logicalArtifactRoutes(
   colorScheme: Parameters<typeof artifactRouteForEntry>[2],
   catalogueSchemes: Parameters<typeof artifactRouteForEntry>[4],
 ): LogicalArtifactRouteIndex {
-  const byId = new Map(entries.map((entry) => [entry.id, entry]));
-  return Object.fromEntries(
-    entries.flatMap((entry) => {
-      const artifact = artifactRouteForEntry(
-        entry,
-        viewport,
-        colorScheme,
-        byId,
-        catalogueSchemes,
-      );
-      return artifact
-        ? [[entryRoute(entry.kind, entry.id), artifact] as const]
-        : [];
-    }),
+  const byPath = new Map(entries.map((entry) => [entry.path, entry]));
+  return Object.assign(
+    Object.create(null) as Record<string, string>,
+    Object.fromEntries(
+      entries.flatMap((entry) => {
+        const artifact = artifactRouteForEntry(
+          entry,
+          viewport,
+          colorScheme,
+          byPath,
+          catalogueSchemes,
+        );
+        return artifact ? [[entry.path, artifact] as const] : [];
+      }),
+    ),
   );
 }
 
 function availablePublicRoutes(
   outputRoutes: readonly string[],
   config: ResolvedConfig,
+  pending?: PendingGeneratedFiles,
 ): string[] {
-  const nextRoutes = [...outputRoutes, MANIFEST_NAME];
+  const nextRoutes = [
+    ...new Set([...outputRoutes, ...(pending?.routes() ?? []), MANIFEST_NAME]),
+  ];
   const pendingOrphans = new Set(
     pendingGeneratedOrphanRoutes(config, nextRoutes),
   );
   const publicRoutes = walkFiles(config.mockupsDir)
-    .filter((candidate) => isPublicStaticFile(candidate, config))
+    .filter((candidate) => {
+      const route = toPosixPath(path.relative(config.mockupsDir, candidate));
+      return !isGeneratedRoute(route) && isPublicStaticFile(candidate, config);
+    })
     .map((candidate) =>
       toPosixPath(path.relative(config.mockupsDir, candidate)),
     )

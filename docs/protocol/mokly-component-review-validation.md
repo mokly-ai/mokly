@@ -2,7 +2,8 @@
 
 This spec validates and emits the [component comparison result schema](./mokly-component-review.md).
 Canonical order enforcement and the shared affected-consumer key are
-implemented by both the producer and strict v4 reader.
+implemented by both the producer and the strict reader, which accept the
+path-keyed v5 described here.
 
 ## Validation And Canonical Output
 
@@ -23,7 +24,17 @@ from an actual invocation, including non-CSS files and inferred inline owners. S
 reason only when that entry's recorded sources contain its path. It never
 re-evaluates the path rule or treats the result's own records as sources.
 The classifier keys these sources exactly as it keys entry pairs: by kind and
-id for every entry, including variants of both kinds.
+path for every entry, including variants of both kinds; a paired moved entry
+keys by its current path.
+
+Source validation receives the same accepted pairs as classification. It requires
+exact `previousPath` coverage, both original side addresses, and one Changes
+record for every moved screen, component, variant or use case. Readers reject
+case-only previous paths, duplicate historical identities, and any paired
+historical identity also advertised as removed. Catalogue readers additionally
+require ready, included, unmodified-or-changed current records for prior paths.
+Empty entry reasons are valid only for a paired move. Page and document moves
+remain catalogue evidence under the [move contract](./mokly-moves.md#result).
 
 Source validation also receives the implementation-impact set computed from
 the classifier's paired material, unchanged inputs and dependency policy, including inferred inline-rule owners
@@ -40,8 +51,9 @@ this schema's record and reference validation, while catalogue-wide source
 coverage and affected evidence remain owned by the original background
 classification and shell inspector.
 
-Entry ids use the portable entry-id grammar. `ignoredIds` use the
-[Review-ignore grammar](./mokly-changes.md#review-ignore). The result
+Entry paths follow the [path grammar](./mokly-paths.md#segment-grammar);
+`ignoredIds` use the
+[Review-ignore grammar](./mokly-changes-serving.md#review-ignore). The result
 stores no snapshot path: files are derived with the shared builders in the
 [artifact path contract](./mokly-artifact-paths.md). When those files are
 written or served, reject absolute paths, traversal, encoded
@@ -59,19 +71,19 @@ Selected live generations instead serve an immutable captured byte map; they do
 not reopen filesystem paths when delivering a retained snapshot.
 
 Lexical ordering uses UTF-16 code units. This paragraph exclusively owns
-`review.json` array order: `screens` and `components` sort by id; each
+`review.json` array order: `screens` and `components` sort by path; each
 `components[].variants` array contains current variants in current authored
 order followed by baseline-only variants in baseline authored order; each
 entry's views are mobile/light, mobile/dark, desktop/light, desktop/dark;
-`changes` sorts by kind then `(after ?? before).id`; and affected consumers sort
-by changed component id, consumer kind, then consumer id. The shared
+`changes` sorts by kind then `(after ?? before).path`; and affected consumers
+sort by `changedComponentId`, consumer kind, then consumer path. The shared
 `@mokly/viewer/data` export `affectedConsumerOrderKey(record)` joins that tuple
-with `\u0000` and is used by producer and reader. Reasons sort by kind then
-path/id. Affected
-evidence sorts by side (before then after), context entry id, variant id when
-present, viewport/scheme order, and canonical JSON of `via`; `via` itself keeps
-dependency-chain order. Path/id sets are sorted and unique, and `ignoredImpact`
-uses viewport/scheme/id order. Readers enforce every stated order and reject
+with `\u0000` and is used by producer and reader. Reasons sort by kind, then
+by `path` or `screenPath`. Affected evidence sorts by side (before then
+after), context entry path, `variantPath` when present, viewport/scheme order,
+and canonical JSON of `via`; `via` itself keeps dependency-chain order. Path
+sets are sorted and unique, and `ignoredImpact` uses viewport/scheme/id order
+of its Review-ignore ids. Readers enforce every stated order and reject
 duplicates rather than reordering input.
 
 New object keys sort lexically; optional fields are omitted and required empty
@@ -79,7 +91,7 @@ arrays remain explicit. Emit two-space JSON and a final LF, with no timestamp,
 absolute checkout path, or transient controls result. Serve no-store/nosniff
 headers and retain immutable snapshot generations and unmodified documents.
 
-Emit schema v4 for every result. Readers accept only v4; older and unknown
+Emit schema v5 for every result. Readers accept only v5; older and unknown
 versions fail. Shared fixture tests must
 cover valid/invalid schemas, deterministic round trips, current and removed
 variants/consumers, metadata-only changes, zero Changes with affected screens,
@@ -98,3 +110,11 @@ and identical served/published membership. This coverage is required.
 - Browse's lightweight classification, complete comparison generation,
   publishing and the selected live endpoint use one implementation and produce
   identical membership and evidence.
+
+## Path Identity
+
+Pair entries by kind and case-folded path. A case-only rename keeps one identity
+and has no removed record; classify it by metadata and material content. Component
+parents and variants share this pairing namespace, so changing between the two
+shapes produces one Changed record with both sides. Grouped component comparison
+records retain the views belonging to each component side.

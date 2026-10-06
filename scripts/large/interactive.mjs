@@ -17,12 +17,14 @@ export async function measureInteractive(
   const url = match[1];
   const readinessMs = Math.round(performance.now() - beginning);
   Object.assign(measured, { url, beginning, readinessMs });
-  await page.goto(url + "/view/screens/area-1-screen-1.html");
+  await page.goto(url + "/view/area-1/screens/activity-group-1/screen-1/");
   const desktop = page.frameLocator('[data-workspace-frame="desktop"]');
   await expect(desktop.locator("h1")).toHaveText("Activity 1");
   await expect(desktop.locator('[role="row"]')).toHaveCount(fixture.size.rows);
   await page.getByRole("searchbox").fill("activity 2");
-  await expect(page.locator('[data-entry-id="area-1-screen-1"]')).toBeHidden();
+  await expect(
+    page.locator('[data-entry-id="area-1/screens/activity-group-1/screen-1"]'),
+  ).toBeHidden();
   const usableMs = Math.round(performance.now() - beginning);
   measured.usableMs = usableMs;
   await page.getByRole("searchbox").fill("");
@@ -48,7 +50,7 @@ export async function measureInteractive(
       await expect(frame.locator("h1")).toHaveText("Activity 1");
     }
   }
-  await page.goto(url + "/view/components/area-1-action-default.html");
+  await page.goto(url + "/view/area-1/components/action/default/");
   await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
   await page.getByRole("tab", { name: "Props", exact: true }).click();
   const edited = performance.now();
@@ -62,13 +64,13 @@ export async function measureInteractive(
   measured.propsMs = propsMs;
   const cached = performance.now();
   const response = await fetch(
-    url + "/static/screens/area-1-screen-1.desktop.html",
+    url + "/static/area-1/screens/activity-group-1/screen-1/index.desktop.html",
   );
   if (!response.ok) throw new Error(`Cached preview: HTTP ${response.status}`);
   const bytes = (await response.arrayBuffer()).byteLength;
   const cachedPreviewMs = Math.round(performance.now() - cached);
   Object.assign(measured, { cachedPreviewMs, bytes });
-  await page.goto(url + "/view/pages/area-1-guide.html");
+  await page.goto(url + "/view/area-1/guide/");
   await expect(
     page
       .frameLocator(".mbk-stage-embed iframe")

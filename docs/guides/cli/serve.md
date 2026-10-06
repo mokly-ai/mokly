@@ -36,14 +36,22 @@ resolved, so its URL survives a restart.
 
 ## What it serves
 
-Navigation and local controls are available immediately, and each preview is
-rendered and validated when you ask for it. The complete generated output and
+Every entry answers at `/view/<path>/`, and `/view/<path>` or
+`/view/<path>/index.html` opens the same page. Navigation and local controls
+are available immediately, and each preview is rendered and validated when you
+ask for it. The complete generated output and
 the Git comparison finish in the background while you read, and previews and
 prop edits take priority over that work.
 
 A watched server also notices Git ref changes, reloads the page when your
 sources change and keeps your place. `--no-watch` starts the same way but does
 not follow later edits.
+
+When the complete generated output finishes, Serve prints that generation's
+build warnings once on standard error. Previews you open afterwards are not
+reported again, and Serve never stops for a warning.
+`--strict` is not a Serve option; use it with `build`, `check`, `export`, or
+`publish` when warnings must fail automation.
 
 ## Access
 

@@ -28,7 +28,7 @@ for (const mode of ["committed", "derived"] as const)
         const content = ignoredActual
           ? `${hidden}${start}${actual}${end}`
           : `${start}${hidden}${end}${actual}`;
-        const renderer = `import { renderToStaticMarkup } from 'react-dom/server'; export default input => input.entry.id === 'home' ? ${JSON.stringify(`<!doctype html><html><head></head><body><p>Home</p>${content}</body></html>`)} : '<!doctype html><html><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
+        const renderer = `import { renderToStaticMarkup } from 'react-dom/server'; export default input => input.entry.path === 'home' ? ${JSON.stringify(`<!doctype html><html><head></head><body><p>Home</p>${content}</body></html>`)} : '<!doctype html><html><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
         const fixture = await inlineChangesFixture(context, "", "", {
           colorSchemes: false,
           source: componentEntrySource({ body: "<span>Home</span>" }),

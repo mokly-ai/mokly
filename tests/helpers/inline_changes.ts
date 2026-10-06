@@ -18,14 +18,14 @@ export function inlineComponentSource(): string {
       '(props) => <section className="pane shared">{props.children}<action.Component label="Inside" /></section>',
     body: '<main className="entry"><pane.Component><span className="slot-content">Screen content</span><action.Component label="Slot action" /></pane.Component><action.Component moklyInstance="footer" label="Finish" /></main>',
     extra:
-      'const plain = defineScreen({ ...metadata, id: "plain", title: "Plain", description: "No component instances", mobile: <main className="plain">Plain</main>, desktop: <main className="plain">Plain</main> });',
-    exports: "action.entries, pane.entries, plain,",
+      'const plain = defineScreen({ ...metadata, path: "plain", title: "Plain", description: "No component instances", mobile: <main className="plain">Plain</main>, desktop: <main className="plain">Plain</main> });',
+    exports: "...action.entries, ...pane.entries, plain,",
   });
 }
 
 export function inlineRenderer(styles: string): string {
   return `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => '<!doctype html><html><head>${styles}</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
+export default (input) => '<!doctype html><html><head>' + ${JSON.stringify(styles)}.replaceAll('../', '../'.repeat(input.entry.path.split('/').length)) + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
 }
 
 export async function inlineChangesFixture(

@@ -13,7 +13,7 @@ for (const direction of ["added", "removed"] as const) {
   test(`fast and complete paths agree for ${direction} component views`, async (t) => {
     const full = componentEntrySource();
     const withoutVariant = full.replace(
-      ', { id: "action-disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
+      ', { slug: "disabled", title: "Disabled", props: { label: "Continue", disabled: true } }',
       "",
     );
     const fixture = await componentReviewFixture(
@@ -23,8 +23,8 @@ for (const direction of ["added", "removed"] as const) {
     );
     const result = await assertFastPathEquivalent(reviewFixture(fixture));
     const variant = result.components
-      .find((entry) => entry.id === "action")!
-      .variants.find((entry) => entry.id === "action-disabled")!;
+      .find((entry) => entry.path === "action")!
+      .variants.find((entry) => entry.path === "action/disabled")!;
 
     assert.equal(variant.state, direction);
     assert.ok(
@@ -43,7 +43,7 @@ for (const direction of ["added", "removed"] as const) {
       direction === "added" ? withoutScreen : full,
     );
     const result = await assertFastPathEquivalent(reviewFixture(fixture));
-    const screen = result.screens.find((entry) => entry.id === "home")!;
+    const screen = result.screens.find((entry) => entry.path === "home")!;
 
     assert.equal(screen.state, direction);
     assert.ok(

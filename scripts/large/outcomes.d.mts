@@ -2,9 +2,9 @@ import type { ReceivedTiming, ClassificationEvidence } from "./timings.mjs";
 export interface SampleInput {
   scenario: string;
   state: string;
-  expectedChangedIds: readonly string[];
+  expectedChangedPaths: readonly string[];
   expectedChangedRoutes: readonly string[];
-  changedIds?: readonly string[];
+  changedPaths?: readonly string[];
   changedRoutes?: readonly string[];
   stopRequestedMs?: number;
   failurePhase?: string;

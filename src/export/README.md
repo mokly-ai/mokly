@@ -5,12 +5,31 @@ hosting. Consumers use `mokly export --out <path>`, not a JavaScript deep import
 The separate `mokly publish` command uploads through the
 [public upload boundary](../publish/README.md); export itself performs no upload.
 
+The primary compilation reports its sorted build diagnostics through
+`ExportOptions.onBuildDiagnostics` immediately after rendering and before
+generated output or staged export bytes are written. The CLI uses that seam for
+warning presentation and `--strict`. The final freshness compilation remains a
+private consistency check and deliberately does not report its diagnostics.
+
+Initial and final input-check compilation capture output-validation evidence
+under a short writer-lock hold. Their pending waits obey export cancellation.
+Rendering stays outside the lock; capture and installation retain their existing
+separate writer-lock boundaries.
+
 `run.ts` pins one merge-base commit through `RepositoryEvidence`, retains the
 independent `BaselineReader`, runs the normal build, captures public inputs,
-compares them through the existing review engine, and verifies inputs again
+constructs one typed authored-plus-generated `ChangeEvidence` shared by Review
+and material Changes classification, and verifies inputs again
 before installation. `site.ts` uses the existing shell and Browse adapter to
-assemble one shell page per entry at `view/<route>`, package assets, and
-immutable comparisons.
+assemble one shell page per entry at `view/<path>/index.html`, package assets, and
+immutable comparisons. Snapshot and preview names derive from entry paths
+under the [artifact path contract](../../docs/protocol/mokly-artifact-paths.md).
+Review and catalogue classification share one accepted move pairing. Paired
+current entries carry prior paths and never produce removed previews. Capture
+uses the original baseline paths, including component and screen variants.
+Accepted move diagnostics pass through the command's terminal reporter before
+publication removes summary files. Baseline source reads for Markdown similarity
+remain separate from rebuilt public-output reads; neither enters the exported site.
 Publish's `--no-changes` uses this same engine with baseline reads, removed
 entries and comparisons omitted. Current-only assembly retains the normal
 input consistency checks and a null delivery comparison URL. A capture callback
@@ -25,13 +44,13 @@ catalogue change snapshots. A removed variant retains its baseline parent
 relationship; removal preserves ancestor context without introducing visual
 comparisons.
 Changes-enabled delivery captures every removed page from the same pinned
-baseline before installation. `pagePreviewMetadataPath(id)` names its typed
-metadata beside `review.json`; `snapshotPagePath(id)` names its document, and
+baseline before installation. `previewMetadataPath(path)` names its typed
+metadata beside `review.json`; `snapshotDocumentPath("before", path, "light")` names its document, and
 the local closure shares the snapshot tree with screen comparisons. Removed
 page and screen descriptors are emitted only for a complete generation. These
 files enter comparison identity before the generation path is chosen, then the
-normal reference checks, ownership inventory, deployment identity and upload
-capture. A missing local closure fails the transaction and preserves the prior
+non-marker inventory, deployment identity, ownership marker, reference checks
+and upload capture. A missing local closure fails the transaction and preserves the prior
 artifact. Current-only assembly branches before preparation or capture and
 replaces any previously owned historical files.
 The descriptor builder lives in `publication/removed_previews.ts` and is shared
@@ -39,17 +58,18 @@ with repository preview packaging. Repository capture therefore cannot publish
 a page path that consumer export would reject, while Serve itself continues to
 omit live page descriptors.
 The shared `server/changed_content.ts` calculation receives the same captured
-asset reader as comparisons, preserving Serve's material-output/resource Changes
+asset reader and merged evidence as comparisons, preserving Serve's
+material-output/resource Changes
 membership without reading a different current-file snapshot.
 For screen-only catalogues, `site.ts` projects per-view resource evidence from
-the unified v4 comparison into shell workspace data. Details can show matched,
+the unified v5 comparison into shell workspace data. Details can show matched,
 unresolved, and excluded stylesheets in Current without fetching comparison
 JSON, and no extra classification pass is needed for this projection.
 The projection omits views without retained or excluded resources and drops
 screens whose evidence slice is empty. Comparison JSON separately retains all
 view states and the material-change flag.
 
-Review result v4 is the only comparison result: a catalogue without
+Review result v5 is the only comparison result: a catalogue without
 registered components emits the same shape with empty component arrays.
 Snapshot roots and resources use `snapshotSidePath` and
 `snapshotResourcePath`; all builders are exported from `@mokly/viewer/data` and owned by the
@@ -62,6 +82,14 @@ and input-change checks. The completion marker is revalidated for the pinned
 commit before installation. Missing, replaced, or invalid baseline markers
 abort export while preserving the previous artifact. Cache trees and aliases
 cannot be exported or selected as a destination.
+`public_files.ts` never enumerates the reserved tree on disk in derived mode;
+its only CSS/assets come from the accepted compilation. Committed exports
+capture checked disk bytes. The export writes and captures generated output
+under one hold of the generated-output writer lock, and `inputs.ts` re-reads it
+under the lock again, so a concurrent Build or Serve write is never captured
+half-installed. `resource_policy.ts` admits portable generated
+CSS/asset routes even when they contain `dist`, `target` or
+`node_modules/@scope`; authored dependency trees and CSS inputs stay private.
 
 `stage.ts` shares ownership assembly, alias/reference validation, and staged
 file writes between consumer export and repository preview capture.
@@ -71,10 +99,23 @@ outside that span; the caller's `export` span includes all phases.
 The [public ownership schema and fixtures](../../docs/protocol/mokly-export-ownership.md)
 define the emitted inventory and reader compatibility. Tests exercise them
 against this parser and an independent reader in the packed-consumer smoke.
-`deployment.ts` finalizes a separate complete-artifact identity after provider
-transformation and ownership assembly. `content_id.ts` uses deterministic file
+The shipped contract is schema 2 with a SHA-256 digest and byte size per entry.
+`stage.ts` builds it from exact finalized bytes and every local reader accepts
+only that version. `portable_path.ts` owns the path rule applied by the
+inventory, marker builder/parser and upload metadata validation.
+`publication_metadata.ts` accepts only new root files explicitly declared by
+the adapter. `deployment.ts` finalizes a separate artifact identity after
+provider transformation, that declaration and non-marker assembly.
+`content_id.ts` uses deterministic file
 hashes and alias edges; `shell_metadata.ts` normalizes and stamps only known
 shell roots while preserving other bytes and rejecting adapter metadata drift.
+The final export input-stability check compares authored configuration,
+compilation and public bytes. It excludes generation-scoped PostCSS directory
+watch roots from configuration equality; matching source files and transformed
+outputs remain covered by the compilation comparison.
+The ownership marker and adapter-declared publication metadata are excluded
+from the identity hash; both remain in the ownership inventory, and the marker
+is added last from every finalized file.
 Descriptor version 3 carries `deploymentId`, `canonicalPath`, and
 `comparisonUrl` so clients reload across incompatible deployments; it carries
 no id-to-route map. Comparison generation URLs retain their separate content
@@ -83,7 +124,9 @@ identity.
 `site.ts` also writes the [public catalogue projection](../catalogue/README.md)
 at `__mokly/catalogue.json`. Its per-entry Changes state uses the same accepted
 attribution as the shell. It enters the normal collision-checked inventory,
-ownership v1 marker and upload v1 archive without changing either schema.
+ownership marker and upload inventories without changing either schema.
+This model is complete and never contains the live-bootstrap-only `omitted`
+usage state.
 Each shell page embeds only a compact reference with this catalogue's identity
 and revisions. The standalone browser validates and fetches the shared finalized
 resource once before hydration, avoiding catalogue-sized bytes repeated for
@@ -94,10 +137,16 @@ Finalization validates the catalogue and canonicalizes only its top-level
 Other catalogue fields participate in the hash, including additive fields.
 Export revisions are zero; current-only exports have disabled Changes and a
 null comparison pointer. Repository preview capture uses the same projection and
-finalization. Captured live shell bootstraps are replaced with references to
-that projected model before staging; conversion rejects rendered catalogue
-drift beyond the deployment id, revision counters, and finalized comparison
-path. Shell HTML retains its existing bytes apart from the identity.
+finalization. Capture validates that complete published model once per build.
+For each captured live page, it validates the page's scoped bootstrap and
+compares it with the route-scoped projection of the published model before
+replacing it with the existing compact reference. Conversion rejects leaked or
+missing route usage and rendered catalogue drift beyond the deployment id,
+revision counters, and finalized comparison path. For identical catalogue,
+consumer, and comparison inputs, catalogue, shell, workspace, ownership, and
+comparison bytes remain unchanged by live route scoping after deployment-id
+normalization. Viewer changes may alter `__mokly/client/**`; across this switch,
+only those changed client bytes may account for a new deployment identity.
 Its opt-in Changes build captures removed pages through the already prepared
 repository reader; the default build performs no Git or historical capture.
 The finalized projection carries validated packaged preview descriptors, and
@@ -130,16 +179,26 @@ platform dependencies when installing the package.
 `inventory.ts` and `references.ts` use
 `path_index.ts` for one case-folded file/alias collision policy, including
 directory prefixes and the final ownership marker. Reference validation also
-proves local resource closure. `ignored.ts` keeps owned
-outputs and transactions out of broad Watch rules. The repository-only preview
-adapter supplies validated host aliases and legacy ownership explicitly. It
+proves local resource closure. It uses `es-module-lexer/minimal` for package-owned
+JavaScript static imports, re-exports and literal dynamic imports. The lexer
+decodes string escapes and ignores prose, comments and `import.meta`; computed
+expressions are not evaluated. Every returned specifier uses the existing URL
+and inventory checks, and a lexer failure names the script and aborts export.
+`ignored.ts` keeps schema 2 owned outputs and
+transactions out of broad Watch rules. It caches parsed ownership by file
+identity and timestamps as bounded path/prefix sets, revalidating with one
+metadata read per lookup. Retired schema 1 outputs are
+intentionally treated as unowned, so their events are not suppressed and their
+files never gain replacement authority. The repository-only preview
+adapter supplies validated host aliases and uses current schema-2 ownership;
+an earlier preview marker grants no replacement authority. It
 captures already-built Browse output, retaining optional Changes and its
 source/resource fingerprint contract. Its capture server disables live Changes
 states: ordinary publications omit the tabs, while opt-in Changes publications
 render completed counts or the explicit earlier-baseline unavailable state.
 Current-only static delivery explicitly
 disables comparison requests while retaining canonical `/view/<route>`
-navigation resolved by entry id.
+navigation resolved by entry path.
 It also declares its stricter `.context` output root; the same shared path
 validator enforces that scope at preflight and before installation.
 
@@ -147,11 +206,18 @@ validator enforces that scope at preflight and before installation.
 owned `.mokly-export-reservations` namespace, retaining only its metadata
 after cleanup. Case and symlink aliases cannot bypass an active lock. Legacy
 hashed reservations require explicit recovery before another export.
-`resource_policy.ts` applies the same package/source boundary to current and
-historical copies. The
+`generated_inventory.ts` derives exact historical document/resource paths and
+current traversal directories. Both modes pass accepted compilation outputs to
+`public_files.ts`; committed capture reads disk bytes and derived capture uses
+compiled bytes. Traversal through a private directory reaches only inventory
+members, not siblings. Historical policy uses each side's own manifest and source
+inventory. `resource_policy.ts` keeps source, alias, metadata and configured
+exclusion denials even for generated files. Other files retain name filters. The
 [public-exclusion contract](../../docs/protocol/mokly-source-protection.md#public-exclusions)
 extends that one policy with resolved `publicExclude` globs. Defaults exclude
 README and tsconfig files case-insensitively; consumer globs only add exclusions.
+Its lexical name rules live in `config/public_names.ts`; Markdown checks copied
+resource routes with that same policy during resolution, before publication.
 Capture, reference validation, Review reads and content-change classification
 must agree on candidate and realpath-alias matching relative to `mockupsDir`.
 Excluded files stay out of public inventory without becoming `sourceFiles`;
@@ -168,7 +234,18 @@ unlisted authored files while ignoring the recorded generated files.
 allowlisted, non-recursive cleanup. `operations.ts` is the injectable filesystem
 boundary; recursive removal is reserved for the private generated stage.
 `cleanup.ts` preserves primary and secondary failures through setup, orchestration,
-and CLI output. See the [recovery contract](../../docs/protocol/mokly-export-recovery.md).
+and CLI output. In the documented pre-installation phases, a failure waits one
+event-loop turn for an already-delivered signal before classification. A
+`MoklyError` is marked in place, preserving its class, fields, message and
+diagnostic stack; non-Mokly failures retain the contextual export wrapper.
+Export transaction setup and generated-output writes keep their own recovery
+errors. `runExport` holds a referenced handle for its signal-aware lifetime so
+helper shutdown cannot end Node before Mokly reports status 1. Cancellation
+remains a cancellation only when cleanup, or any required rollback, succeeds.
+A restore, backup or reservation-cleanup failure instead keeps its normal
+`export-invalid` recovery message and path; `mokly export` presentation is
+unchanged. See the
+[recovery contract](../../docs/protocol/mokly-export-recovery.md).
 
 Focused verification:
 
@@ -180,8 +257,9 @@ npm run package:smoke
 ```
 
 See the [export contract](../../docs/protocol/mokly-export.md),
-[static delivery contract](../../docs/protocol/mokly-export-delivery.md), and
-[plan index](../../plans/README.md).
+[static delivery contract](../../docs/protocol/mokly-export-delivery.md),
+[shell bootstrap contract](../../docs/protocol/mokly-shell-bootstrap.md), and
+[implementation plans](../../plans/).
 
 Registered components export through the same transactional delivery boundary.
 The manifest, variant entries and validated comparison evidence supply the
@@ -189,3 +267,7 @@ shared workspace; removed components and variants retain baseline snapshots.
 Controls have no rendering capability in exported pages, while usage,
 highlighting and navigation between variant entries remain available without
 the consumer repository.
+
+Markdown documents join current shell and static inventories in each scheme.
+Their copied resources remain byte-exact. Removed documents use page preview
+metadata and capture every historical scheme and its full resource closure.

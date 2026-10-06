@@ -8,7 +8,7 @@ import {
 import { validateDependencyDeclarations } from "./dependency_validation.js";
 import { validateVariantAgainstParent } from "./manifest_entry_validation.js";
 
-/** Validate every v7 per-view record against the complete component set. */
+/** Validate every v8 per-view record against the complete component set. */
 export function validateManifestComponentUsage(
   manifest: {
     entries: readonly Record<string, unknown>[];
@@ -18,13 +18,18 @@ export function validateManifestComponentUsage(
 ): void {
   exactKeys(
     manifest,
-    ["schemaVersion", "generatedBy", "entries", "sourceFiles"],
+    ["schemaVersion", "generatedBy", "entries", "folders", "sourceFiles"],
     "$manifest",
   );
   const components = new Map<string, ManifestComponent>(
     manifest.entries.flatMap((entry) =>
       entry.kind === "component" && typeof entry.variantOf !== "string"
-        ? [[entry.id as string, entry as unknown as ManifestComponent] as const]
+        ? [
+            [
+              entry.path as string,
+              entry as unknown as ManifestComponent,
+            ] as const,
+          ]
         : [],
     ),
   );
@@ -35,7 +40,7 @@ export function validateManifestComponentUsage(
         validateComponentViews(
           entry.componentViews,
           components,
-          String(entry.id),
+          String(entry.path),
           {
             dark: (entry.colorSchemes as string[]).includes("dark"),
             historical,
@@ -43,7 +48,7 @@ export function validateManifestComponentUsage(
         );
       else if (entry.componentViews !== undefined)
         invalidData(
-          String(entry.id),
+          String(entry.path),
           "component usage requires registered components",
         );
       continue;
@@ -53,9 +58,14 @@ export function validateManifestComponentUsage(
     const parent = components.get(entry.variantOf);
     if (!parent) continue;
     validateVariantAgainstParent(entry, parent);
-    validateComponentViews(entry.componentViews, components, String(entry.id), {
-      dark: (entry.colorSchemes as string[]).includes("dark"),
-      historical,
-    });
+    validateComponentViews(
+      entry.componentViews,
+      components,
+      String(entry.path),
+      {
+        dark: (entry.colorSchemes as string[]).includes("dark"),
+        historical,
+      },
+    );
   }
 }

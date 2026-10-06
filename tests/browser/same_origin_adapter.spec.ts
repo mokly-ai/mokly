@@ -29,7 +29,7 @@ test("same-origin interface supports geometry, hover, click, scroll and disposal
     state.mounted = await sameOriginAdapter().mount(
       document.querySelector<HTMLIFrameElement>("#frame")!,
       {
-        url: new URL("/static/screens/home.mobile.html", location.origin),
+        url: new URL("/static/home/index.mobile.html", location.origin),
         usage: {
           status: "ready",
           ...(JSON.parse(json) as ComponentViewRecord),
@@ -107,7 +107,7 @@ test("valid local logical navigation works without instance usage", async ({
     state.mounted = await sameOriginAdapter().mount(
       document.querySelector<HTMLIFrameElement>("#frame")!,
       {
-        url: new URL("/static/screens/home.mobile.html", location.origin),
+        url: new URL("/static/home/index.mobile.html", location.origin),
         usage: { status: "unavailable" },
       },
     );
@@ -192,7 +192,8 @@ test("temporary previews authenticate masks and preserve logical navigation", as
       page.evaluate(() =>
         (window as unknown as FrameTestWindow).frameEvents.some(
           (event) =>
-            event.type === "navigation" && event.navigation.id === "action",
+            event.type === "navigation" &&
+            event.navigation.screenPath === "action",
         ),
       ),
     )

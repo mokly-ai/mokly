@@ -94,7 +94,7 @@ for (const components of [false, true]) {
       ]);
       assert.doesNotMatch(
         timed.stderr,
-        /shared\.css|unrelated-private-rule|Screen content|screens\/home/,
+        /shared\.css|unrelated-private-rule|Screen content|home\/index/,
       );
       if (components) {
         assertComparisonCounts(events, "export");
@@ -256,9 +256,6 @@ test(
           event.status === "error",
       ),
     );
-    assert.doesNotMatch(
-      JSON.stringify(failed),
-      /unowned|\.review|screens\/home/,
-    );
+    assert.doesNotMatch(JSON.stringify(failed), /unowned|\.review|home\/index/);
   },
 );

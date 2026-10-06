@@ -10,6 +10,7 @@ import {
   withInlineAppendix,
   type InlineMaterialReplacements,
 } from "./css/inline_rendering.js";
+import { inlineLinkMaterialChanges } from "./inline_link_material.js";
 import { hasFingerprintSeam } from "./page_fingerprint_guard.js";
 import type { PageAnalysisPair } from "./page_pair.js";
 import { isPageResourceReference } from "./page_reference_records.js";
@@ -61,6 +62,7 @@ function prepareMaterials(
     head.includes("mokly-inline-") ||
     unsafeStyleSources(analysis, pages, options.reuseSourceSafety) ||
     skippedSourceReferences(analysis, pages) ||
+    inlineLinkMaterialChanges(pages, analysis, text) ||
     (analysis.status === "skipped" &&
       (pages.beforeAnalysis.sourceEditsIntersect(analysis.beforeSpans) ||
         pages.afterAnalysis.sourceEditsIntersect(analysis.afterSpans) ||

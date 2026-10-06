@@ -55,7 +55,7 @@ test(
     await writeCompilation(compilation, config);
     const manifest = compilation.manifest;
     const screenHtml = async (id: string) => {
-      const entry = manifest.entries.find((candidate) => candidate.id === id);
+      const entry = manifest.entries.find((candidate) => candidate.path === id);
       assert.ok(entry?.kind === "screen");
       return fs.readFile(
         path.join(root, "mockups", generatedViews(entry)[0]!.path),
@@ -63,11 +63,15 @@ test(
       );
     };
     const areaOneHtml = await Promise.all(
-      [1, 2, 3].map((index) => screenHtml(`area-1-screen-${index}`)),
+      [1, 2, 3].map((index) =>
+        screenHtml(`area-1/screens/activity-group-1/screen-${index}`),
+      ),
     );
     assert.ok(areaOneHtml[1]!.length > areaOneHtml[0]!.length);
     assert.ok(areaOneHtml[2]!.length > areaOneHtml[1]!.length);
-    const laterHtml = await screenHtml("area-2-screen-1");
+    const laterHtml = await screenHtml(
+      "area-2/screens/activity-group-1/screen-1",
+    );
     assert.ok(laterHtml.length > areaOneHtml[2]!.length);
     assert.match(laterHtml, /rgba\(4,5,6,1\.00\)/);
 
@@ -77,38 +81,44 @@ test(
       committedReviewRepository(config),
     );
     const result = snapshot.componentChanges?.result;
-    assert.equal(result?.schemaVersion, 4);
-    if (result?.schemaVersion !== 4) return;
+    assert.equal(result?.schemaVersion, 5);
+    if (result?.schemaVersion !== 5) return;
     assert.deepEqual(
       result.changes.map((change) => ({
         kind: change.kind,
-        id: (change.after ?? change.before)!.id,
+        id: (change.after ?? change.before)!.path,
       })),
-      [{ kind: "component", id: "area-1-action" }],
+      [{ kind: "component", id: "area-1/components/action" }],
     );
     assert.deepEqual(
       [
         ...new Set(
           result.affectedConsumers.flatMap((affected) =>
-            affected.changedComponentId === "area-1-action" &&
+            affected.changedComponentId === "area-1/components/action" &&
             affected.consumer.kind === "screen"
-              ? [affected.consumer.id]
+              ? [affected.consumer.path]
               : [],
           ),
         ),
       ].sort(),
-      ["area-1-screen-1", "area-1-screen-2", "area-1-screen-3"],
+      [
+        "area-1/screens/activity-group-1/screen-1",
+        "area-1/screens/activity-group-1/screen-2",
+        "area-1/screens/activity-group-1/screen-3",
+      ],
     );
     assert.ok(
       !result.changes.some(
-        (change) => (change.after ?? change.before)?.id === "area-2-screen-1",
+        (change) =>
+          (change.after ?? change.before)?.path ===
+          "area-2/screens/activity-group-1/screen-1",
       ),
     );
     assert.ok(
       !result.affectedConsumers.some(
         (affected) =>
           affected.consumer.kind === "screen" &&
-          affected.consumer.id === "area-2-screen-1",
+          affected.consumer.path === "area-2/screens/activity-group-1/screen-1",
       ),
     );
   },

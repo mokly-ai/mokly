@@ -10,6 +10,7 @@ import { viewRoute } from "../packages/viewer/dist/data.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 function assertMarkers(html: string, view: ComponentViewRecord): void {
   const starts: string[] = [];
@@ -102,13 +103,8 @@ test("each recorded range in every screen/variant view has exactly one matched p
           : [];
     for (const target of targets)
       for (const view of target.componentViews ?? []) {
-        const route = viewRoute(
-          target.kind,
-          target.id,
-          view.viewport,
-          view.colorScheme,
-        );
-        assertMarkers(compilation.outputs.get(route)!, view);
+        const route = viewRoute(target.path, view.viewport, view.colorScheme);
+        assertMarkers(textOutput(compilation.outputs, route)!, view);
         count++;
       }
   }

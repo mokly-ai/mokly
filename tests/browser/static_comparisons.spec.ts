@@ -29,7 +29,7 @@ test("isolated comparisons stay lazy, immutable, sandboxed, and responsive", asy
   page.on("response", (response) => {
     if (response.status() >= 400) failures.push(response.url());
   });
-  await page.goto(`${site.url}/view/screens/home.html`);
+  await page.goto(`${site.url}/view/home/`);
   await expect(page.locator('[data-view-changed="scheme"]')).toBeVisible();
   await page.getByRole("tab", { name: "Details", exact: true }).click();
   await expect(page.locator("[data-workspace-changed-views]")).toContainText(
@@ -85,25 +85,25 @@ test("isolated comparisons stay lazy, immutable, sandboxed, and responsive", asy
 test("added and removed screens stay current while light-only comparisons retain their sides", async ({
   page,
 }) => {
-  await page.goto(`${site.url}/view/screens/added.html`);
+  await page.goto(`${site.url}/view/added/`);
   await chooseViewport(page, "mobile");
-  await expect(page).toHaveURL(`${site.url}/view/screens/added.html`);
+  await expect(page).toHaveURL(`${site.url}/view/added/`);
   await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
   await expect(
     page.frameLocator('[data-workspace-frame="mobile"]').locator("main"),
   ).toHaveText("added");
 
-  await page.goto(`${site.url}/view/screens/removed.html`);
+  await page.goto(`${site.url}/view/removed/`);
   await chooseViewport(page, "mobile");
   const catalogue = readCatalogue(
     JSON.parse(site.files.get("__mokly/catalogue.json")!.toString()),
   );
   const removed = catalogue.removedEntries.find(
-    ({ entry }) => entry.id === "removed",
+    ({ entry }) => entry.path === "removed",
   );
   expect(removed?.snapshotId).toMatch(/^[a-f0-9]{64}$/);
   await expect(page).toHaveURL(
-    `${site.url}/view/screens/removed.html?snapshot=${removed!.snapshotId}`,
+    `${site.url}/view/removed/?snapshot=${removed!.snapshotId}`,
   );
   await expect(page.locator("[data-workspace-status]")).toHaveText("Removed");
   await expect(page.locator(".mbk-diff-toolbar")).toHaveCount(0);
@@ -116,7 +116,7 @@ test("added and removed screens stay current while light-only comparisons retain
       .locator("main"),
   ).toHaveText("removed");
   await expect(page.locator("[data-diff-stage]")).toHaveCount(0);
-  await page.goto(`${site.url}/view/screens/details.html`);
+  await page.goto(`${site.url}/view/details/`);
   await chooseScheme(page, "dark");
   await expect(page.locator('[data-view-changed="scheme"]')).toBeHidden();
   await page.getByRole("button", { name: "Overlay", exact: true }).click();
@@ -132,7 +132,7 @@ test("added and removed screens stay current while light-only comparisons retain
 test("static failures retry the same generation and abandoned requests stay cancelled", async ({
   page,
 }) => {
-  await page.goto(`${site.url}/view/screens/home.html`);
+  await page.goto(`${site.url}/view/home/`);
   await chooseViewport(page, "mobile");
   let fail = true;
   await page.route("**/review.json*", async (route) => {
@@ -164,7 +164,7 @@ test("static failures retry the same generation and abandoned requests stay canc
     "aria-busy",
     "true",
   );
-  await page.locator('[data-route="screens/details.html"]').click();
+  await page.locator('[data-route="details/index.html"]').click();
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   release?.();
   await expect(
@@ -178,7 +178,7 @@ test("malformed static metadata never falls back to a live comparison endpoint",
 }) => {
   const requests: string[] = [];
   page.on("request", (request) => requests.push(request.url()));
-  await page.goto(`${site.url}/view/screens/home.html`);
+  await page.goto(`${site.url}/view/home/`);
   await page
     .locator("html")
     .evaluate((root) => root.removeAttribute("data-mokly-delivery"));

@@ -20,7 +20,7 @@ export default function render(input: RenderInput): string {
     <SharedUiThemeProvider theme={themes[input.colorScheme]}>
       <InlineViewKey.Provider
         value={JSON.stringify([
-          input.entry.id,
+          input.entry.path,
           input.viewport,
           input.colorScheme,
         ])}
@@ -34,7 +34,8 @@ export default function render(input: RenderInput): string {
     AppRegistry.getApplication("scale-styles", {}).getStyleElement(),
   ).replace("rgba(1,2,3,1.00)", AREA_ONE_ACTION_COLOR);
   const markedBody =
-    input.entry.id === "area-1-screen-1" && SCREEN_ONE_MARKUP
+    input.entry.path === "area-1/screens/activity-group-1/screen-1" &&
+    SCREEN_ONE_MARKUP
       ? body.replace(
           "<main ",
           `<main data-scale-markup="${SCREEN_ONE_MARKUP}" `,

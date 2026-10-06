@@ -4,10 +4,10 @@ import path from "node:path";
 import test from "node:test";
 
 import { fileExportOperations } from "../dist/export/operations.js";
-import { EXPORT_MARKER } from "../dist/export/ownership.js";
 import { ExportTransaction } from "../dist/export/transaction.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { writeOwnershipMarker } from "./helpers/ownership_marker.js";
 
 test("destination creation during initial ownership inspection cannot be adopted", async (context) => {
   const fixture = await createFixture();
@@ -15,7 +15,7 @@ test("destination creation during initial ownership inspection cannot be adopted
   const output = path.join(fixture.root, "site");
   let inspected = false;
   await assert.rejects(
-    ExportTransaction.open(output, undefined, {
+    ExportTransaction.open(output, {
       ...fileExportOperations,
       lstat: async (candidate) => {
         const stat = await fileExportOperations.lstat(candidate);
@@ -66,7 +66,7 @@ for (const timing of ["before install", "during capture"] as const) {
       await fs.promises.rename(output, saved);
       await writeOwned(output, "Concurrent export");
     };
-    const transaction = await ExportTransaction.open(output, undefined, {
+    const transaction = await ExportTransaction.open(output, {
       ...fileExportOperations,
       rename: async (from, to) => {
         if (from === output && timing === "during capture") await replace();
@@ -102,7 +102,7 @@ for (const existed of [false, true]) {
     const output = path.join(fixture.root, "site");
     if (existed) await writeOwned(output, "Previous");
     let lateIdentity: Awaited<ReturnType<typeof fileExportOperations.lstat>>;
-    const transaction = await ExportTransaction.open(output, undefined, {
+    const transaction = await ExportTransaction.open(output, {
       ...fileExportOperations,
       rename: async (from, to) => {
         if (path.basename(from) === "stage") {
@@ -135,7 +135,7 @@ test("an empty output created at the restore operation is never replaced", async
   const output = path.join(fixture.root, "site");
   await writeOwned(output, "Previous");
   let lateIdentity: Awaited<ReturnType<typeof fileExportOperations.lstat>>;
-  const transaction = await ExportTransaction.open(output, undefined, {
+  const transaction = await ExportTransaction.open(output, {
     ...fileExportOperations,
     rename: async (from, to) => {
       if (path.basename(from) === "stage") throw new Error("Install failed");
@@ -159,10 +159,7 @@ test("an empty output created at the restore operation is never replaced", async
 async function writeOwned(directory: string, contents: string): Promise<void> {
   await fs.promises.mkdir(directory, { recursive: true });
   await fs.promises.writeFile(path.join(directory, "index.html"), contents);
-  await fs.promises.writeFile(
-    path.join(directory, EXPORT_MARKER),
-    JSON.stringify({ schemaVersion: 1, files: ["index.html"] }),
-  );
+  await writeOwnershipMarker(directory);
 }
 
 async function readIndex(directory: string): Promise<string> {

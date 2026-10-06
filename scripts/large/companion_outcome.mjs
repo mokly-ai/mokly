@@ -32,10 +32,10 @@ export function companionOutcome(records, sample) {
         .filter((key) => sample[key] !== undefined)
         .map((key) => [key, sample[key]]),
     ),
-    expectedChangedIds: [...new Set(sample.expectedChangedIds)].sort(),
+    expectedChangedPaths: [...new Set(sample.expectedChangedPaths)].sort(),
     expectedChangedRoutes: [...new Set(sample.expectedChangedRoutes)].sort(),
-    ...(sample.changedIds
-      ? { changedIds: [...new Set(sample.changedIds)].sort() }
+    ...(sample.changedPaths
+      ? { changedPaths: [...new Set(sample.changedPaths)].sort() }
       : {}),
     ...(sample.changedRoutes
       ? { changedRoutes: [...new Set(sample.changedRoutes)].sort() }
@@ -99,11 +99,11 @@ export function companionOutcome(records, sample) {
       result.outcome = "error";
     else if (evidence.classificationStatus !== "ok" || !result.materialWork)
       throw new Error("Completed material companion counts were not recorded");
-    else if (result.changedIds === undefined || sample.error)
+    else if (result.changedPaths === undefined || sample.error)
       result.outcome = "error";
     else if (
-      JSON.stringify(result.changedIds) !==
-        JSON.stringify(result.expectedChangedIds) ||
+      JSON.stringify(result.changedPaths) !==
+        JSON.stringify(result.expectedChangedPaths) ||
       JSON.stringify(result.changedRoutes) !==
         JSON.stringify(result.expectedChangedRoutes)
     )

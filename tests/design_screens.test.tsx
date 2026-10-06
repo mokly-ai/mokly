@@ -8,76 +8,91 @@ import {
   byClass,
   designCatalogue,
   designDocument,
-  elements,
   textContent,
 } from "./helpers/design_catalogue.js";
 
 const additions = [
-  ["design-browse-details-screen", "screens/design-browse-details-screen.html"],
-  ["design-browse-tag-picker", "screens/design-browse-tag-picker.html"],
-  ["design-browse-tag-forms", "screens/design-browse-tag-forms.html"],
-  ["design-browse-tag-onboarding", "screens/design-browse-tag-onboarding.html"],
   [
-    "design-browse-tag-onboarding-picker",
-    "screens/design-browse-tag-onboarding-picker.html",
+    "design/browse/views/details-screen",
+    "design/browse/views/details-screen/index.html",
+  ],
+  [
+    "design/browse/views/screen/tag-picker",
+    "design/browse/views/screen/tag-picker/index.html",
+  ],
+  [
+    "design/browse/views/screen/tag-forms",
+    "design/browse/views/screen/tag-forms/index.html",
+  ],
+  [
+    "design/browse/views/screen/tag-onboarding",
+    "design/browse/views/screen/tag-onboarding/index.html",
+  ],
+  [
+    "design/browse/views/screen/tag-onboarding-picker",
+    "design/browse/views/screen/tag-onboarding-picker/index.html",
   ],
 ] as const;
 
 const convertedVariants = [
-  ["design-browse-dark-scheme", "dark-scheme"],
-  ["design-browse-light-only", "light-only"],
-  ["design-browse-tag-picker", "picker"],
-  ["design-browse-tag-forms", "forms"],
-  ["design-browse-tag-onboarding", "onboarding"],
-  ["design-browse-tag-onboarding-picker", "onboarding-picker"],
+  ["design/browse/views/screen/dark-scheme", "dark-scheme"],
+  ["design/browse/views/screen/light-only", "light-only"],
+  ["design/browse/views/screen/tag-picker", "picker"],
+  ["design/browse/views/screen/tag-forms", "forms"],
+  ["design/browse/views/screen/tag-onboarding", "onboarding"],
+  ["design/browse/views/screen/tag-onboarding-picker", "onboarding-picker"],
 ] as const;
 
 test("the Welcome conversion keeps the approved screens as variants, not folder members", async () => {
   const { manifest } = await designCatalogue;
   const parent = manifest.entries.find(
-    (entry) => entry.id === "design-browse-screen",
+    (entry) => entry.path === "design/browse/views/screen",
   );
   assert.ok(parent?.kind === "screen");
   for (const [id] of convertedVariants) {
-    const entry = manifest.entries.find((candidate) => candidate.id === id);
+    const entry = manifest.entries.find((candidate) => candidate.path === id);
     assert.equal(entry?.kind, "screen", id);
     if (entry?.kind !== "screen") continue;
-    assert.equal(entryRoute("screen", entry.id), `screens/${id}.html`, id);
-    assert.equal(entry.variantOf, "design-browse-screen", id);
-    assert.deepEqual(entry.navPath, parent.navPath, id);
+    assert.equal(entryRoute(entry.path), `${id}/index.html`, id);
+    assert.equal(entry.variantOf, "design/browse/views/screen", id);
+    assert.ok(entry.path.startsWith(`${parent.path}/`), id);
   }
   assert.equal(
-    manifest.entries.some((entry) => entry.id === "design-browse-tags"),
+    manifest.entries.some((entry) => entry.path === "design-browse-tags"),
     false,
   );
   const filter = manifest.entries.find(
-    (entry) => entry.id === "design-browse-tag-filter",
+    (entry) => entry.path === "design/browse/states/tag-filter",
   );
-  assert.deepEqual(filter?.navPath, [
-    "Design",
-    "Mokly design",
-    "Browse shell",
-    "Shell states",
-  ]);
+  assert.equal(filter?.path, "design/browse/states/tag-filter");
 });
 
 for (const viewport of ["mobile", "desktop"] as const) {
-  test(`${viewport}: catalogue navigation separates pages and components`, async () => {
+  test(`${viewport}: catalogue navigation separates specs and components`, async () => {
     const { document } = await designDocument(
-      viewport === "mobile" ? "design-browse-navigation" : "design-browse-home",
+      viewport === "mobile"
+        ? "design/browse/states/navigation"
+        : "design/browse/views/home",
       viewport,
     );
     const sections = byClass(document, "mbk-nav-section");
     assert.deepEqual(
       sections.map((section) => attribute(section, "data-nav-section")),
-      ["pages", "components"],
+      ["specs", "components"],
     );
     assert.ok(sections.every((section) => attribute(section, "open") === ""));
-    const pages = textContent(sections[0] ?? document);
+    assert.deepEqual(
+      sections.map((section) =>
+        textContent(byClass(section, "mbk-nav-section-head")[0]!).trim(),
+      ),
+      ["Specs", "Components"],
+    );
+    const specs = textContent(sections[0] ?? document);
     const components = textContent(sections[1] ?? document);
-    assert.match(pages, /Welcome/);
-    assert.match(pages, /Example tour/);
-    assert.doesNotMatch(pages, /Action|Toolbar/);
+    assert.match(specs, /Welcome/);
+    assert.match(specs, /Example tour/);
+    assert.match(specs, /Overview/);
+    assert.doesNotMatch(specs, /Action|Toolbar/);
     assert.match(components, /Action/);
     assert.match(components, /Toolbar/);
     assert.doesNotMatch(components, /Welcome|Example tour/);
@@ -86,7 +101,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: all five owning destinations keep their route and frame`, async () => {
     for (const [id, route] of additions) {
       const { entry, document } = await designDocument(id, viewport);
-      assert.equal(entryRoute("screen", entry.id), route);
+      assert.equal(entryRoute(entry.path), route);
       assert.equal(byClass(document, "mbk-shell").length, 1);
       assert.equal(
         byClass(
@@ -100,11 +115,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
   test(`${viewport}: tag states agree on query, picker, selection, and visible rows`, async () => {
     for (const [id, tag, picker] of [
-      ["design-browse-tag-picker", undefined, true],
-      ["design-browse-tag-filter", "forms", true],
-      ["design-browse-tag-forms", "forms", false],
-      ["design-browse-tag-onboarding", "onboarding", false],
-      ["design-browse-tag-onboarding-picker", "onboarding", true],
+      ["design/browse/views/screen/tag-picker", undefined, true],
+      ["design/browse/states/tag-filter", "forms", true],
+      ["design/browse/views/screen/tag-forms", "forms", false],
+      ["design/browse/views/screen/tag-onboarding", "onboarding", false],
+      ["design/browse/views/screen/tag-onboarding-picker", "onboarding", true],
     ] as const) {
       const { document } = await designDocument(id, viewport);
       const query = byClass(document, "mbk-search-value").map(textContent);
@@ -132,147 +147,27 @@ for (const viewport of ["mobile", "desktop"] as const) {
 }
 
 test("inspector metadata belongs to its depicted subject", async () => {
-  const detailPage = await designDocument("design-review-added", "desktop");
+  const detailPage = await designDocument(
+    "design/changes/outcomes/added",
+    "desktop",
+  );
   const detailBody = byClass(detailPage.document, "mbk-details-body")[0];
   assert.ok(detailBody);
   const details = textContent(detailBody);
   assert.match(details, /Additional context for the example catalogue/);
-  assert.doesNotMatch(details, /Generated|screens\/details\.html/);
+  assert.doesNotMatch(details, /Generated|details\/index\.html/);
   assert.doesNotMatch(
     details,
-    /screens\/welcome\.html|landing screen|onboarding/,
+    /welcome\/index\.html|landing screen|onboarding/,
   );
   assert.match(details, /Example tour/);
-  const removedPage = await designDocument("design-review-removed", "desktop");
+  const removedPage = await designDocument(
+    "design/changes/outcomes/removed",
+    "desktop",
+  );
   const removedBody = byClass(removedPage.document, "mbk-details-body")[0];
   assert.ok(removedBody);
   const removed = textContent(removedBody);
-  assert.doesNotMatch(
-    removed,
-    /screens\/welcome\.html|Example tour|onboarding/,
-  );
+  assert.doesNotMatch(removed, /welcome\/index\.html|Example tour|onboarding/);
   assert.match(removed, /Farewell/);
-});
-
-const stylesheetEvidence = [
-  [
-    "design-review-style-matched",
-    "screens/design-review-style-matched.html",
-    "Changed styles that apply to this screen",
-  ],
-  [
-    "design-review-style-unresolved",
-    "screens/design-review-style-unresolved.html",
-    "This change can apply anywhere on the screen, so the screen stays in Changes:",
-  ],
-  [
-    "design-review-style-unnamed",
-    "screens/design-review-style-unnamed.html",
-    "This change can apply anywhere on the screen, so the screen stays in Changes.",
-  ],
-  [
-    "design-review-style-excluded",
-    "screens/design-review-style-excluded.html",
-    "This stylesheet changed, but none of the changed styles apply to this screen",
-  ],
-  [
-    "design-review-style-page-excluded",
-    "screens/design-review-style-page-excluded.html",
-    "Styles on this page changed, but none of the changed styles apply to this screen.",
-  ],
-] as const;
-
-const comparedStyleScreens = [
-  "design-review-style-matched",
-  "design-review-style-unresolved",
-  "design-review-style-unnamed",
-] as const;
-
-for (const viewport of ["mobile", "desktop"] as const) {
-  test(`${viewport}: stylesheet evidence states keep selectors out of headings`, async () => {
-    for (const [id, route, copy] of stylesheetEvidence) {
-      const { entry, document } = await designDocument(id, viewport);
-      assert.equal(entryRoute("screen", entry.id), route);
-      assert.deepEqual(entry.colorSchemes, ["light"]);
-      const evidence = byClass(document, "mbk-comparison-details")[0];
-      assert.ok(evidence, id);
-      const text = textContent(evidence);
-      assert.ok(text.includes(copy), `${id}: ${text}`);
-      if (id === "design-review-style-page-excluded") {
-        assert.doesNotMatch(text, /generated\/styles\.css/, id);
-        assert.doesNotMatch(text, /Examined and excluded/, id);
-        assert.doesNotMatch(text, /Shared component changes affect/, id);
-      } else assert.match(text, /generated\/styles\.css/, id);
-      const compared = comparedStyleScreens.includes(
-        id as (typeof comparedStyleScreens)[number],
-      );
-      const outcome = byClass(document, "mbk-comparison-stage").map((stage) =>
-        textContent(elements(stage, (node) => node.tagName === "h3")[0]!),
-      );
-      assert.deepEqual(
-        outcome,
-        compared
-          ? ["Mobile", "Desktop"].map(
-              (name) => `${name} · Styles this screen uses changed`,
-            )
-          : [],
-        id,
-      );
-      assert.equal(
-        byClass(document, "mbk-compare").length,
-        compared ? 2 : 0,
-        id,
-      );
-      assert.deepEqual(
-        byClass(document, "mbk-compare-label").map((node) =>
-          textContent(node).trim(),
-        ),
-        compared ? ["Before", "Current", "Before", "Current"] : [],
-        id,
-      );
-      assert.equal(
-        byClass(document, "mbk-cmp-toolbar").length,
-        compared ? 1 : 0,
-        id,
-      );
-      if (!compared)
-        assert.ok(text.trimEnd().endsWith("No changes to this screen."), id);
-      for (const heading of elements(document, (node) =>
-        ["h1", "h2", "h3"].includes(node.tagName),
-      ))
-        assert.doesNotMatch(
-          textContent(heading),
-          /\.example-head|main a|:root/,
-          id,
-        );
-    }
-  });
-}
-
-test("stylesheet evidence states are entered and left through the filter", async () => {
-  for (const [source, filter, target] of [
-    ["design-review-shared-impact", "Changes0", "design-review-style-matched"],
-    [
-      "design-review-ignored-only",
-      "Changes0",
-      "design-review-style-unresolved",
-    ],
-    ["design-review-style-matched", "All", "design-review-style-excluded"],
-    ["design-review-style-unresolved", "All", "design-browse-screen"],
-    ["design-review-style-unnamed", "All", "design-browse-screen"],
-    ["design-review-style-excluded", "Changes0", "design-review-empty"],
-    ["design-review-style-page-excluded", "Changes0", "design-review-empty"],
-  ] as const) {
-    const { document } = await designDocument(source, "desktop");
-    assert.deepEqual(
-      byClass(document, "mbk-nav-filter-opt")
-        .filter((node) => node.tagName === "a")
-        .map((node) => [
-          textContent(node).trim(),
-          attribute(node, "data-mokly-link"),
-        ]),
-      [[filter, target]],
-      source,
-    );
-  }
 });

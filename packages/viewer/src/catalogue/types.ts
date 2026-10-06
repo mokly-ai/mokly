@@ -14,39 +14,60 @@ export type ChangesStatus =
   "preparing" | "pending" | "ready" | "unavailable" | "disabled";
 export type ChangeKind = "added" | "changed" | "removed" | "unmodified";
 export type PublicPath = string;
-export type RemovedEntryPreview = { kind: "screen" } | { kind: "page" };
+export type RemovedEntryPreview =
+  { kind: "screen" } | { kind: "page" } | { kind: "document" };
 
-/** Public v3 contract, independent of private build and comparison inventories. */
+/** Public v4 contract, independent of private build and comparison inventories. */
 export interface CatalogueReadModel {
-  schemaVersion: 3;
+  schemaVersion: 4;
   identity: { id: string; title: string };
   deploymentId: string;
   revision: { content: number; evidence: number };
   changesStatus: ChangesStatus;
   comparisonUrl: PublicPath | null;
-  tree: {
-    pages: readonly CatalogueNode[];
-    components: readonly CatalogueNode[];
-  };
+  tree: readonly CatalogueNode[];
+  /** The top-level folder `order`, which each section applies again. */
+  treeOrder?: readonly string[];
+  documents: readonly CatalogueDocument[];
   screens: readonly CatalogueScreen[];
   pages: readonly CataloguePage[];
   useCases: readonly CatalogueUseCase[];
   components: readonly (CatalogueComponent | CatalogueComponentVariant)[];
   removedEntries: readonly {
     entry: CatalogueRecord;
+    folderTitles: readonly string[];
+    /** Required exactly when the removed entry is a variant. */
+    parentTitle?: string;
     snapshotId?: string;
     preview?: RemovedEntryPreview;
   }[];
 }
 export type CatalogueRecord =
   | CatalogueScreen
+  | CatalogueDocument
   | CataloguePage
   | CatalogueUseCase
   | CatalogueComponent
   | CatalogueComponentVariant;
 export type CatalogueNode =
-  | { kind: "folder"; label: string; children: readonly CatalogueNode[] }
-  | { kind: "entry"; id: string; children?: readonly CatalogueNode[] };
+  | {
+      kind: "folder";
+      path: string;
+      title: string;
+      index?: string;
+      hidden?: true;
+      /** The folder record's `order`, which each section applies again. */
+      order?: readonly string[];
+      children: readonly CatalogueNode[];
+    }
+  | {
+      kind: "entry";
+      path: string;
+      hidden?: true;
+      /** The `order` of the folder whose own page this entry is. */
+      order?: readonly string[];
+      children?: readonly CatalogueNode[];
+    };
 export type CatalogueChanges =
   | { status: "ready"; kind: ChangeKind; included: boolean }
   | { status: Exclude<ChangesStatus, "ready"> };
@@ -61,10 +82,10 @@ export interface CatalogueDetails {
   dependencies: readonly string[];
 }
 export interface CatalogueEntry {
-  id: string;
+  path: string;
   title: string;
   tags: readonly string[];
-  navPath: readonly string[];
+  previousPath?: string;
   details: CatalogueDetails;
   changes: CatalogueChanges;
 }
@@ -87,8 +108,8 @@ export interface CatalogueScreen extends CatalogueEntry {
   address?: string;
   colorSchemes: readonly ColorScheme[];
   views: readonly CatalogueView[];
-  useCaseIds: readonly string[];
-  /** Parent screen id, present only when this screen is a variant. */
+  useCasePaths: readonly string[];
+  /** Parent screen path, present only when this screen is a variant. */
   variantOf?: string;
 }
 export interface CataloguePage extends CatalogueEntry {
@@ -96,7 +117,11 @@ export interface CataloguePage extends CatalogueEntry {
 }
 export interface CatalogueUseCase extends CatalogueEntry {
   kind: "use-case";
-  steps: readonly { screenId: string; title?: string; description?: string }[];
+  steps: readonly {
+    screenPath: string;
+    title?: string;
+    description?: string;
+  }[];
 }
 export interface CatalogueComponent extends CatalogueEntry {
   kind: "component";
@@ -113,4 +138,10 @@ export interface CatalogueComponentVariant extends CatalogueEntry {
   suppliedSlots: readonly string[];
   views: readonly CatalogueView[];
   comparison: ComparisonSelection;
+}
+
+/** Markdown document entry, with colour schemes and no viewports. */
+export interface CatalogueDocument extends CatalogueEntry {
+  kind: "document";
+  colorSchemes: readonly ColorScheme[];
 }

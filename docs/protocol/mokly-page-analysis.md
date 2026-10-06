@@ -6,6 +6,8 @@
 original analysis, derived references, matching and quick checks;
 [M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprinted-comparison-materials) implements fingerprints. [Timings](./mokly-timings.md#component-analysis-counts) owns work counters.
 
+Performance acceptance is deferred under the plan's Decision 13 (2026-10-06).
+
 ## Scope And Lifetime
 
 Component-aware means the shared per-view comparison loop when **either**
@@ -18,7 +20,7 @@ shared loop retains its delivered matching and parsing. The separate
 also retains ignore-normalized matching and its existing parse/cache policy;
 it does not share the view analyses or their CSS cache. Duplicate page/resource
 parses from that separate path are counted, not removed by extending scope.
-Baseline admission is manifest **v7 only**, under
+Baseline admission is manifest **v8 only**, under
 [baseline compatibility](./mokly-baseline-compatibility.md): all ownership and
 review markers use the current `mokly-` syntax. No retired `mokabook-` dialect
 normalization or historical-dialect route exists; those strings are ordinary
@@ -167,6 +169,12 @@ original-context matching outcomes change; differentials assert actual-tree resu
 
 ## Identical-text Quick Check
 
+With link/move normalization, require a proof that equal original text has equal
+link material on both sides. The normalizer proves equal entry kinds/paths,
+generated route maps, resource membership and side-independent resource identities from accepted
+metadata. Otherwise skip this check; the ordinary quick check still normalizes
+both sides before comparing them. The metadata proof adds no source scan or parse.
+
 The [unchanged decision](./mokly-component-review-fast-path.md) first tests same
 path, exact original-text equality and canonical usage-topology equality,
 allowing entry-owned input changes. Validate ignores/ranges through the head
@@ -203,48 +211,4 @@ missing files fail proof without replacing complete required-read diagnostics.
 
 ## Fingerprinted Materials
 
-Materials remain strings, compared and hashed as strings. Keep delivered text
-on **both sides, actual and projected**, if either original contains
-`mokly-inline-`, or a delivered rewrite could create it or create/complete a
-reserved marker. A seam joins pieces not adjacent in the original: component
-and ignore boundaries, signals, styles, caller copies and inserted text all
-participate. Check the last 12 UTF-16 units before and first 12 after each seam,
-walking across tiny pieces. Reject `mokly-inline-` or `<!--mokly-` crossing it.
-Also reject a seam inside an unclosed `<!--mokly-review-` or
-`<!--mokly-component:` opener, including an opener name completed by a join.
-Use per-side opener/close offsets. Inserts are closed by construction: appendix
-comments, placeholders, contract tokens and wrappers are complete markers/tags.
-Use lazy [view-local proofs](./mokly-material-work-counts.md#source-proof-reuse); shortcuts build no fingerprint inventories/indexes.
-Seam work never scans sheet-sized pieces or constructs materials. Include actual
-single-document and actual/projected pair normalization; unprovable structure keeps text/errors.
-Existing M8 source guards and `<!--mokly-` in canonical appendices keep text too;
-canonical markers must reach normalization unchanged. Those checked appendices
-need no index scan. No fingerprint appears on a guarded view.
-
-Use SHA-256 over **UTF-8 bytes**, encoded as unpadded base64url (43 characters):
-
-- After successful inline analysis, remove eligible unowned outer spans and
-  append `<!--mokly-inline-rules:<digest>-->` at the canonical appendix
-  position after the source, in both actual/projected materials. The digest
-  input is the canonical rendering of that side's retained rule multiset,
-  not the `<style>` wrapper or original element source; even an empty
-  retained list gets the digest of empty text. References come from retained
-  stored rule references, with the same ownership and exclusions.
-- When analysis skips for equal ordered sources, require delivered text to equal
-  each eligible outer source on both sides. Any intersecting marker/signal/header
-  removal or replacement, or source resource record, keeps the whole view on text.
-  Anchor/navigation records allow fingerprints. Every exact original occurrence must
-  be eligible (`indexOf`, including overlaps). Reject [position-exact style-copy
-  seams](./mokly-material-work-counts.md#skipped-style-equality) too; otherwise
-  replace each eligible element in place with `<!--mokly-inline-style:<digest>-->`;
-  hash its complete outer source, including tags/attributes; supply no references.
-- A parse failure retains original style text verbatim, not a successful-rule
-  fingerprint. Ownership projection/ignore normalization otherwise retain
-  their existing ordering and semantics; copied spans carry the same edits.
-
-Both forms survive ignore normalization and component stripping. Under the
-ordinary SHA-256 collision assumption, equal inputs give equal comments and
-unequal inputs differ; guards exclude authored lookalikes and interchangeable
-non-replaced copies, including joins. Moving a style past retained markup stays
-material. The [required proofs](./mokly-material-work-counts.md#required-proof)
-cover results/errors, retained references, exact bytes on fallback and work.
+See [Fingerprinted Materials](./mokly-fingerprinted-materials.md#fingerprinted-materials) for the complete rules.

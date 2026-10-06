@@ -12,6 +12,7 @@ import {
   installLocalHighlight,
   type HighlightFrame,
 } from "./same_origin_highlight.js";
+import { normalizedHtmlPath } from "./same_origin_identity.js";
 import { mountLocalDocument } from "./same_origin_mount.js";
 
 /** Current-document capability used by the synchronous, SSR-enhanced local shell. */
@@ -56,8 +57,8 @@ export function localFrameReady(
 ): boolean {
   return (
     localFrameAccess(frame).document()?.readyState === "complete" &&
-    decodeURIComponent(localFramePath(frame)!).replace(/\.html$/, "") ===
-      `/static/${path}`.replace(/\.html$/, "")
+    normalizedHtmlPath(decodeURIComponent(localFramePath(frame)!)) ===
+      normalizedHtmlPath(`/static/${path}`)
   );
 }
 

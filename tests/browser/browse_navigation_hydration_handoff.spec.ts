@@ -39,7 +39,7 @@ test("initial hydration keeps logical frame navigation host-owned", async ({
   });
 
   const initialNavigation = page.goto(
-    `${navigation.url}/view/screens/home.html`,
+    `${navigation.url}/view/fixture/nested/home/`,
   );
   try {
     await requestStarted;
@@ -59,7 +59,7 @@ test("initial hydration keeps logical frame navigation host-owned", async ({
       );
 
     await expect(page).toHaveURL(
-      /\/view\/screens\/details\.html\?fragment=section$/,
+      /\/view\/fixture\/nested\/details\/\?fragment=section$/,
     );
     await expect(page.locator("#mb-main h2")).toHaveText("Details");
     expect(imageRequests).toBe(1);
@@ -72,7 +72,7 @@ test("initial hydration keeps logical frame navigation host-owned", async ({
 test("an unowned exact-resource document stays frame-owned during replacement", async ({
   page,
 }) => {
-  await page.goto(`${navigation.url}/view/screens/home.html`);
+  await page.goto(`${navigation.url}/view/fixture/nested/home/`);
   const frame = page.frameLocator(".mbk-frame-mobile iframe");
 
   let matchingRequests = 0;
@@ -84,16 +84,19 @@ test("an unowned exact-resource document stays frame-owned during replacement", 
   const requestReleased = new Promise<void>((resolve) => {
     releaseRequest = resolve;
   });
-  await page.route("**/static/screens/home.mobile.dark.html", async (route) => {
-    matchingRequests++;
-    if (matchingRequests === 1) {
+  await page.route(
+    "**/static/fixture/nested/home/index.mobile.dark.html",
+    async (route) => {
+      matchingRequests++;
+      if (matchingRequests === 1) {
+        await route.continue();
+        return;
+      }
+      reportRequest();
+      await requestReleased;
       await route.continue();
-      return;
-    }
-    reportRequest();
-    await requestReleased;
-    await route.continue();
-  });
+    },
+  );
 
   await frame.locator("#unowned-next-scheme-link").click();
   await expect
@@ -102,7 +105,7 @@ test("an unowned exact-resource document stays frame-owned during replacement", 
         .locator(".mbk-frame-mobile iframe")
         .evaluate((element: HTMLIFrameElement) =>
           element.contentDocument?.URL.endsWith(
-            "/static/screens/home.mobile.dark.html",
+            "/static/fixture/nested/home/index.mobile.dark.html",
           ),
         ),
     )
@@ -141,7 +144,7 @@ test("an unowned exact-resource document stays frame-owned during replacement", 
     });
     expect(defaultPrevented).toBe(false);
     await page.waitForTimeout(100);
-    await expect(page).toHaveURL(/\/view\/screens\/home\.html$/);
+    await expect(page).toHaveURL(/\/view\/fixture\/nested\/home\/$/);
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
 
     releaseRequest();
@@ -151,7 +154,7 @@ test("an unowned exact-resource document stays frame-owned during replacement", 
     );
     await frame.locator("#mock-link").click();
     await expect(page).toHaveURL(
-      /\/view\/screens\/details\.html\?fragment=section$/,
+      /\/view\/fixture\/nested\/details\/\?fragment=section$/,
     );
     await expect(page.locator("#mb-main h2")).toHaveText("Details");
   } finally {

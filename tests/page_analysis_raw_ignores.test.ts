@@ -30,10 +30,10 @@ for (const mode of ["committed", "derived"] as const)
       );
       const input = await pageFixtureInput(fixture, mode);
       const before = generatedViews(
-        input.before.entries.find(({ id }) => id === "home")!,
+        input.before.entries.find(({ path: id }) => id === "home")!,
       )[0]!;
       const after = generatedViews(
-        input.after.entries.find(({ id }) => id === "home")!,
+        input.after.entries.find(({ path: id }) => id === "home")!,
       )[0]!;
       const text = (
         files: ReadonlyMap<string, string | Uint8Array>,

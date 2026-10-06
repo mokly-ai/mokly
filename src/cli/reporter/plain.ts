@@ -1,6 +1,10 @@
-import type { ManifestV7 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 
 import { EARLIER_BASELINE_MESSAGE } from "../../baseline/compatibility.js";
+import {
+  formatBuildDiagnostic,
+  type BuildDiagnostic,
+} from "../../build/build_warnings.js";
 import { errorMessage } from "../../errors.js";
 import type { ServeReadyReport, WatchReport } from "../../server/reporter.js";
 
@@ -13,6 +17,7 @@ import type {
 const INACTIVE_PHASE: ReporterPhase = {
   fail: () => undefined,
   succeed: () => undefined,
+  update: () => undefined,
 };
 
 /** Compatibility reporter whose bytes match the historical CLI output. */
@@ -34,7 +39,14 @@ export class PlainReporter implements CliReporter {
     _durationMs: number,
   ): void {}
 
-  catalogueReady(_manifest: ManifestV7, _durationMs: number): void {}
+  buildWarnings(diagnostics: readonly BuildDiagnostic[]): void {
+    for (const diagnostic of diagnostics)
+      this.environment.stderr.write(
+        `[mokly/warning] ${formatBuildDiagnostic(diagnostic)}\n`,
+      );
+  }
+
+  catalogueReady(_manifest: ManifestV8, _durationMs: number): void {}
 
   changesReady(_changed: number, _durationMs: number): void {}
 

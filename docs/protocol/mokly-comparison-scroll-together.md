@@ -61,7 +61,7 @@ The band keeps 16px between controls on a row and 8px between rows. Desktop
 places the switch after the mode group and Refresh at the far end. At the
 narrow breakpoint, the mode group fills the first row, then the switch starts
 the second and Refresh ends it. Every diff-mode artboard shows the switch on
-except `design-changes-side-by-side-apart`; Current shows none.
+except `design/changes/diff-controls/side-by-side-apart`; Current shows none.
 
 ## Last-Scrolled Version
 

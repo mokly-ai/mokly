@@ -1,6 +1,7 @@
 /** Shared decoded reference tokens; source locations belong to their caller. */
 import { extractCssReferences } from "./css_references.js";
 import type { HtmlReferenceOptions } from "./html_references.js";
+import { extractSourceSetReferences } from "./source_set_references.js";
 
 export interface ReferenceNode {
   nodeName?: string;
@@ -22,7 +23,7 @@ export interface HtmlReferenceValue {
   attribute?: string;
 }
 
-const SOURCE_ATTRIBUTES = new Map<string, readonly string[]>([
+export const SOURCE_ATTRIBUTES = new Map<string, readonly string[]>([
   ["audio", ["src"]],
   ["embed", ["src"]],
   ["iframe", ["src"]],
@@ -74,21 +75,4 @@ export function htmlReferenceValues(
     ))
       result.push({ kind: "styleText", value });
   return result;
-}
-
-function extractSourceSetReferences(value: string): string[] {
-  const references: string[] = [];
-  let position = 0;
-  while (position < value.length) {
-    while (/[\s,]/.test(value[position] ?? "")) position += 1;
-    const start = position;
-    while (position < value.length && !/\s/.test(value[position] ?? ""))
-      position += 1;
-    const token = value.slice(start, position);
-    const reference = token.replace(/,+$/, "");
-    if (reference) references.push(reference);
-    if (reference !== token) continue;
-    while (position < value.length && value[position] !== ",") position += 1;
-  }
-  return references;
 }

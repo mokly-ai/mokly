@@ -40,9 +40,11 @@ for (const mode of ["committed", "derived"] as const)
       );
       const input = await pageFixtureInput(fixture, mode);
       const entry = input.after.entries.find(
-        ({ id }) => id === (owned ? "home" : "plain"),
+        ({ path: id }) => id === (owned ? "home" : "plain"),
       )!;
-      const previous = input.before.entries.find(({ id }) => id === entry.id)!;
+      const previous = input.before.entries.find(
+        ({ path: id }) => id === entry.path,
+      )!;
       const after = generatedViews(entry)[0]!;
       const before = generatedViews(previous).find(
         ({ path }) => path === after.path,

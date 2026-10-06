@@ -42,7 +42,7 @@ test("eligible styles interleaved with instances keep fingerprints per view", as
     });
     for (const mode of ["committed", "derived"] as const) {
       const input = await pageFixtureInput(fixture, mode);
-      const entry = input.after.entries.find(({ id }) => id === "home")!;
+      const entry = input.after.entries.find(({ path: id }) => id === "home")!;
       for (const view of generatedViews(entry))
         await context.test(`${kind}/${mode}/${view.path}`, async () => {
           const events: TimingEvent[] = [];

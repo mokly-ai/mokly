@@ -13,9 +13,7 @@ export interface StaticDelivery {
 function isCanonicalViewPath(value: unknown): value is string {
   if (typeof value !== "string") return false;
   const identity = parseViewHref(value);
-  return (
-    identity !== undefined && viewHref(identity.kind, identity.id) === value
-  );
+  return identity !== undefined && viewHref(identity) === value;
 }
 
 /** Validate static metadata before it can authorize browser requests. */

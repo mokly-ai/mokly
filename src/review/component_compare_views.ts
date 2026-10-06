@@ -1,7 +1,7 @@
 /** Compare a view batch and sample its isolate immediately after each result. */
 import { timingDocumentWork } from "../diagnostics/timings.js";
 
-import type { viewPairs } from "./component_pairing.js";
+import type { entryViewPairs } from "./component_pairing.js";
 import {
   compareComponentView,
   type ComponentViewContext,
@@ -9,7 +9,7 @@ import {
 
 export function compareComponentViews(
   context: ComponentViewContext,
-  views: ReturnType<typeof viewPairs>,
+  views: ReturnType<typeof entryViewPairs>["views"],
   root?: string,
 ) {
   const work = timingDocumentWork();

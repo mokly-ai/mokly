@@ -66,7 +66,7 @@ export function Inspector({
   const changedViews = selectedChangedViews(
     workspaceEvidenceEntry(data),
     data.changedViews,
-    variant?.value.id,
+    variant?.value.path,
   );
   const previousTab = useRef<HTMLElement | null>(null);
   const inspector = useRef<HTMLElement>(null);

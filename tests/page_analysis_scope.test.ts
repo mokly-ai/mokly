@@ -10,7 +10,9 @@ import {
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
 import { readBaseManifest } from "../dist/review/base_manifest.js";
+import { asChangeEvidence } from "../dist/review/change_evidence.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
+import { prepareMoveClassification } from "../dist/review/moves/prepare.js";
 import { committedReviewRepository } from "../dist/review/repository.js";
 import { classifyChangedContent } from "../dist/server/changed_content.js";
 
@@ -33,23 +35,21 @@ test("either input manifest enables page analysis even when current identities r
   assert.ok(
     !fixture.after.manifest.entries.some((entry) => entry.kind === "component"),
   );
+  const prepared = await prepareMoveClassification({
+    before: fixture.before.manifest,
+    after: fixture.after.manifest,
+    beforeReader: memoryReader(fixture.before.outputs),
+    afterReader: memoryReader(fixture.after.outputs),
+    changedPaths: fixture.changedPaths,
+    config: fixture.config,
+    baseCommit: "a".repeat(40),
+    baseRef: "main",
+  });
   const events: TimingEvent[] = [];
   await runWithTimings(
     true,
     "test",
-    () =>
-      runWithDocumentWork(() =>
-        classifyComponents({
-          before: fixture.before.manifest,
-          after: fixture.after.manifest,
-          beforeReader: memoryReader(fixture.before.outputs),
-          afterReader: memoryReader(fixture.after.outputs),
-          changedPaths: fixture.changedPaths,
-          config: fixture.config,
-          baseCommit: "a".repeat(40),
-          baseRef: "main",
-        }),
-      ),
+    () => runWithDocumentWork(() => classifyComponents(prepared)),
     { write: (event) => events.push(event) },
   );
   const counts = events.find(
@@ -120,7 +120,7 @@ for (const mode of ["committed", "derived"] as const)
         "defineComponent, definePage, defineScreen",
       ) +
       `
-mockups.push(definePage({ id: "guide", title: "Guide", description: "Page path", dependencies: [], relatedDocs: [], render: () => '<!doctype html><html><head><link rel="stylesheet" href="../sheet.css"></head><body><div><!--mokly-review-ignore:start:context--><i class="ignored"></i><!--mokly-review-ignore:end:context--><b class="subject"></b></div></body></html>' }));`;
+mockups.push(definePage({ path: "guide", title: "Guide", description: "Page path", dependencies: [], relatedDocs: [], render: () => '<!doctype html><html><head><link rel="stylesheet" href="../sheet.css"></head><body><div><!--mokly-review-ignore:start:context--><i class="ignored"></i><!--mokly-review-ignore:end:context--><b class="subject"></b></div></body></html>' }));`;
     const fixture = await inlineChangesFixture(context, "", "", {
       source,
       colorSchemes: false,
@@ -146,7 +146,7 @@ mockups.push(definePage({ id: "guide", title: "Guide", description: "Page path",
             config,
             git.reader,
             commit,
-            ["mockups/sheet.css"],
+            asChangeEvidence(["mockups/sheet.css"]),
             undefined,
             "pages",
           ),

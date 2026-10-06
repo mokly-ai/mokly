@@ -33,7 +33,7 @@ const end = record("changes.classify", "end", 100, {
 const base = {
   scenario: "no-changes",
   state: "cold",
-  expectedChangedIds: [],
+  expectedChangedPaths: [],
   expectedChangedRoutes: [],
 };
 
@@ -57,7 +57,7 @@ test("completed outcomes use worker status, exact id membership and preserve suc
   ];
   const measured = sampleOutcome(records, {
     ...base,
-    changedIds: [],
+    changedPaths: [],
     changedRoutes: [],
   });
   assert.equal(measured.outcome, "ok");
@@ -68,12 +68,12 @@ test("completed outcomes use worker status, exact id membership and preserve suc
   assert.deepEqual(measured.documentWork, { htmlParses: 8 });
   const mismatch = sampleOutcome(records, {
     ...base,
-    expectedChangedIds: ["one"],
-    changedIds: ["two"],
-    changedRoutes: ["screens/two.html"],
+    expectedChangedPaths: ["one"],
+    changedPaths: ["two"],
+    changedRoutes: ["two/index.html"],
   });
   assert.equal(mismatch.outcome, "membership-mismatch");
-  assert.deepEqual(mismatch.changedIds, ["two"]);
+  assert.deepEqual(mismatch.changedPaths, ["two"]);
   const browserError = sampleOutcome(records, {
     ...base,
     error: "Browser closed",
@@ -156,7 +156,7 @@ test("ambiguous spans and pre-classification infrastructure errors are errors, n
   assert.equal(
     sampleOutcome([start, failedInterval, end], {
       ...base,
-      changedIds: [],
+      changedPaths: [],
       changedRoutes: [],
     }).cssAnalysisMs,
     10,
@@ -171,7 +171,7 @@ test("ambiguous spans and pre-classification infrastructure errors are errors, n
         },
         end,
       ],
-      { ...base, changedIds: [], changedRoutes: [] },
+      { ...base, changedPaths: [], changedRoutes: [] },
     ).cssAnalysisMs,
     0,
   );

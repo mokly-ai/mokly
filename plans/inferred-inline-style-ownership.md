@@ -1,5 +1,8 @@
 # Inferred Inline Style Ownership
 
+Status: Active. Implementation is delivered on this branch. Review findings
+remain for the user's decision; mainline integration is in progress.
+
 Replace the renderer-supplied style and resource ownership records with
 ownership that Mokly derives from the rendered documents and the component
 ranges it already records. Style rules that a styling library places in the
@@ -258,7 +261,7 @@ field and the shell presentation in the specs before any code changes, and
 register the plan. Documentation-only; validated with Prettier and a diff
 review rather than `cargo xtask check`.
 
-- [x] Register this plan in [`plans/README.md`](./README.md).
+- [x] Register this plan in [the plans directory](./) (then indexed by `plans/README.md`).
 - [x] In [`mokly-rendering.md`](../docs/protocol/mokly-rendering.md), make
       the renderer contract `(input: RenderInput) => string`, delete
       `RenderResult` and the ownership sentence, and state that a non-string

@@ -1,8 +1,9 @@
 /** Retain only the worker's classification inputs after complete parent delivery. */
-import type { ManifestV7 } from "@mokly/viewer/data";
+import type { ManifestV8 } from "@mokly/viewer/data";
 
 import type { Compilation } from "../../build/compile.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
+import type { GeneratedFile } from "../../build/generated_file.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { errorMessage } from "../../errors.js";
 import type { CatalogueChangeClassification } from "../classification_result.js";
@@ -26,7 +27,7 @@ interface BackgroundFunctions {
   post(message: BackgroundWorkerMessage): void;
   classify(
     config: ResolvedConfig,
-    manifest: ManifestV7,
+    manifest: ManifestV8,
     base: string,
     accepted: CatalogueClassificationInputs,
   ): Promise<CatalogueChangeClassification>;
@@ -34,8 +35,8 @@ interface BackgroundFunctions {
 
 export class BackgroundWorkerState {
   private readonly runtime: ComponentRuntime;
-  private manifest: ManifestV7 | undefined;
-  private outputs: ReadonlyMap<string, string> | undefined;
+  private manifest: ManifestV8 | undefined;
+  private outputs: ReadonlyMap<string, GeneratedFile> | undefined;
 
   constructor(
     inputs: ReturnType<typeof backgroundInputs>,
@@ -86,7 +87,17 @@ export class BackgroundWorkerState {
       message.base,
       {
         ...(message.commit ? { commit: message.commit } : {}),
-        ...(this.outputs ? { outputs: this.outputs } : {}),
+        generation: {
+          routes: this.runtime.styleOutputs.map(([route]) => route),
+          ...(this.outputs ? { outputs: this.outputs } : {}),
+          deliveredStyleSources: this.runtime.deliveredStyleSources,
+          documentMarkdown: new Map(
+            (this.runtime.bundle.documents ?? []).map((entry) => [
+              entry.sourceRelativePath,
+              entry.markdown,
+            ]),
+          ),
+        },
       },
     );
     this.functions.post({ type: "classified", snapshot });

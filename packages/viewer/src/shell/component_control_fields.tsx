@@ -131,7 +131,7 @@ export function ComponentControlFields({
         const field = draft[key]!;
         const label = control.label ?? key;
         const optional = component.propSchema.properties[key]?.optional;
-        const id = identifier(`mb-prop-${component.id}-${key}`);
+        const id = identifier(`mb-prop-${component.path}-${key}`);
         const help =
           control.description ??
           (control.kind === "number" &&

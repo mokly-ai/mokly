@@ -28,6 +28,11 @@ Every condition must hold, otherwise use the full comparison:
 1. Both view sides exist at the same path, both have validated usage, and
    canonical usage topology is equal under the unchanged-decision rule.
    Entry-owned input changes remain allowed and retain their signals.
+   Link/move normalization, when present, must prove that equal original text
+   has equal link material on both sides, using the
+   [metadata-only proof](./mokly-page-analysis.md#identical-text-quick-check).
+   A missing proof takes full comparison: a moved target's old path can be
+   reused by a different entry while the link's written bytes stay unchanged.
 2. Texts are unequal. Compute their longest common UTF-16 prefix, then their
    longest common suffix without overlapping that prefix on either side.
    What remains is exactly one changed window per side; either may be empty.

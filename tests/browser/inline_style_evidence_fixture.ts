@@ -17,21 +17,21 @@ const AFTER =
 function entrySource(): string {
   return `import React from "react";
 import { defineComponent, defineScreen } from "@mokly/mokly";
-const metadata = { navPath: ["Fixture"], dependencies: ["notes.md"], relatedDocs: [] };
+const metadata = { dependencies: ["notes.md"], relatedDocs: [] };
 const action = defineComponent({ ...metadata,
-  id: "action", title: "Action", description: "A shared action",
+  path: "action", title: "Action", description: "A shared action",
   propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } } } },
   render: (props) => <button className="action">{props.label}</button>,
-  variants: [{ id: "action-default", title: "Default", props: { label: "Continue" } }]
+  variants: [{ slug: "default", title: "Default", props: { label: "Continue" } }]
 });
 export const mockups = [
-  defineScreen({ ...metadata, id: "matched", title: "Matched", description: "Entry-owned styles",
+  defineScreen({ ...metadata, path: "matched", title: "Matched", description: "Entry-owned styles",
     mobile: <main className="entry">Matched</main>, desktop: <main className="entry">Matched</main> }),
-  defineScreen({ ...metadata, id: "excluded", title: "Welcome", description: "Excluded page styles",
+  defineScreen({ ...metadata, path: "excluded", title: "Welcome", description: "Excluded page styles",
     mobile: <main className="plain">Welcome</main>, desktop: <main className="plain">Welcome</main> }),
-  defineScreen({ ...metadata, id: "affected", title: "Affected", description: "Component-owned styles",
+  defineScreen({ ...metadata, path: "affected", title: "Affected", description: "Component-owned styles",
     mobile: <main><action.Component label="Affected" /></main>, desktop: <main><action.Component label="Affected" /></main> }),
-  action.entries
+  ...action.entries
 ];`;
 }
 

@@ -15,7 +15,7 @@ const objectRenderer =
 
 for (const [name, source, entry] of [
   ["screen-only", undefined, "details"],
-  ["component-aware", componentEntrySource(), "action-default"],
+  ["component-aware", componentEntrySource(), "action/default"],
 ] as const)
   test(`${name} renderers reject non-string results with view context`, async (t) => {
     const fixture = await createFixture(source, {

@@ -13,15 +13,15 @@ export interface GeneratedComponentView {
   viewport: Viewport;
   colorScheme: ColorScheme;
   path: string;
-  variantId?: string;
+  variantPath?: string;
   usage?: ComponentViewRecord;
 }
 
-/** Derive current and historical-v7 artifacts from identity and view axes. */
+/** Derive current and historical-v8 artifacts from identity and view axes. */
 export function generatedViews(entry: ManifestEntry): GeneratedComponentView[] {
   if (entry.kind === "component")
     return isManifestComponentVariant(entry)
-      ? fragmentViews(entry, entry.id)
+      ? fragmentViews(entry, entry.path)
       : [];
   if (entry.kind === "screen") return fragmentViews(entry);
   return [];
@@ -45,7 +45,7 @@ export function orderedInstances(usage?: ComponentViewRecord) {
 /** Derive current view artifacts from entry identity and retained axes. */
 export function fragmentViews(
   entry: ManifestScreen | ManifestComponentVariant,
-  variantId?: string,
+  variantPath?: string,
 ): GeneratedComponentView[] {
   return VIEWPORTS.flatMap((viewport) =>
     entry.colorSchemes.map((colorScheme) => {
@@ -56,9 +56,9 @@ export function fragmentViews(
       return {
         viewport,
         colorScheme,
-        path: viewRoute(entry.kind, entry.id, viewport, colorScheme),
+        path: viewRoute(entry.path, viewport, colorScheme),
         ...(usage ? { usage } : {}),
-        ...(variantId ? { variantId } : {}),
+        ...(variantPath ? { variantPath } : {}),
       };
     }),
   );

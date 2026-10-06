@@ -1,5 +1,5 @@
 import { reviewMaterialKey } from "../data/material_key.js";
-import { isCatalogueId } from "../navigation/logical.js";
+import { isKebabCase, isEntryPath } from "../navigation/logical.js";
 
 import { decodeProps, encodeProps } from "./codec.js";
 import { canonicalJson, exactKeys, invalidData } from "./data.js";
@@ -122,8 +122,9 @@ export function validateComponentViewRecord(
       validateComponentSource(instance.source, `${at}.source`);
     if (
       !isComponentKey(instance.key) ||
-      !isCatalogueId(instance.id) ||
-      !isCatalogueId(instance.componentId)
+      !isEntryPath(instance.componentId) ||
+      (!isKebabCase(instance.id) &&
+        instance.id !== instance.componentId.split("/").at(-1))
     )
       invalidData(at, "invalid component instance identity");
     validateOwner(instance.owner, at);

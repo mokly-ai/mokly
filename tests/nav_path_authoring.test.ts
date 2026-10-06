@@ -1,118 +1,53 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  defineRoot,
-  defineScreen,
-  folder,
-  page,
-  screen,
-} from "../dist/authoring/definitions.js";
-import { entryRoute } from "../packages/viewer/dist/data.js";
+import { textOutput } from "./helpers/generated_text.js";
+import { pathFixture, pageSource } from "./helpers/path_fixture.js";
 
-test("nested folders derive paths while ids alone derive routes", () => {
-  const entries = defineRoot({
-    navPath: ["Design"],
-    children: [
-      folder({
-        title: "Browse shell",
-        children: [
-          screen({
-            id: "browse-home",
-            title: "Home",
-            description: "Home screen",
-            mobile: "Mobile",
-            desktop: "Desktop",
-          }),
-          page({
-            id: "browse-document",
-            title: "Document",
-            description: "Document page",
-            render: () => "<main>Document</main>",
-          }),
-        ],
-      }),
-    ],
+const metadata =
+  "title:'Invoice',description:'Invoice state',dependencies:[],relatedDocs:[]";
+
+test("index, ordinary, variant and declared paths share the resolved link-base rule", async (t) => {
+  const fixture = await pathFixture({
+    "specs/account/index.mockup.ts": pageSource(
+      "",
+      '<html><body><a href="mock:./billing/payment-methods">Payments</a></body></html>',
+    ),
+    "specs/account/billing/payment-methods.mockup.ts": pageSource(),
+    "specs/account/billing/invoice.mockup.tsx": `import {defineScreen,MockLink} from '@mokly/mokly'; export default defineScreen({${metadata},mobile:<MockLink to='./payment-methods'>Payments</MockLink>,desktop:'Invoice',variants:[{slug:'overdue',title:'Overdue',description:'Overdue invoice',mobile:<MockLink to='./payment-methods'>Payments</MockLink>,desktop:'Overdue'}]});`,
+    "specs/elsewhere.mockup.ts": pageSource(
+      'path:"account/billing/declared",',
+      '<html><body><a href="mock:./payment-methods">Payments</a></body></html>',
+    ),
   });
-  assert.deepEqual(
-    entries.map(({ navPath }) => navPath),
-    [
-      ["Design", "Browse shell"],
-      ["Design", "Browse shell"],
-    ],
-  );
-  assert.deepEqual(
-    entries.map((entry) => entryRoute(entry.kind, entry.id)),
-    ["screens/browse-home.html", "pages/browse-document.html"],
-  );
+  t.after(fixture.remove);
+  const result = await fixture.compile();
+  for (const route of [
+    "account/index.html",
+    "account/billing/invoice/index.mobile.html",
+    "account/billing/invoice/overdue/index.mobile.html",
+    "account/billing/declared/index.html",
+  ])
+    assert.match(
+      textOutput(result.outputs, route)!,
+      /data-mokly-link="account\/billing\/payment-methods"/,
+    );
 });
 
-test("root and folders reject empty authored structure", () => {
-  assert.throws(
-    () => defineRoot({ navPath: ["Design"], children: [] }),
-    /root Design has no children/,
-  );
-  assert.throws(
-    () =>
-      defineRoot({
-        navPath: ["Design"],
-        children: [folder({ title: "Views", children: [] })],
-      }),
-    /folder Design › Views has no children/,
-  );
-  assert.deepEqual(defineRoot({ children: [] }), []);
-  assert.deepEqual(defineRoot({ navPath: [], children: [] }), []);
-});
-
-test("root navPath and empty-folder errors use navigation labels", () => {
-  assert.throws(
-    () =>
-      defineRoot({
-        navPath: "Design" as unknown as string[],
-        children: [],
-      }),
-    /root navPath must be an array/,
-  );
-  assert.throws(
-    () =>
-      defineRoot({
-        navPath: ["Design"],
-        children: [
-          folder({
-            title: "Views",
-            children: [
-              folder({ title: 42 as unknown as string, children: [] }),
-            ],
-          }),
-        ],
-      }),
-    /folder Design › Views › 42 has no children/,
-  );
-});
-
-test("flattened variants inherit their parent path", () => {
-  const entries = defineScreen({
-    id: "browse-home",
-    title: "Home",
-    description: "Home screen",
-    dependencies: [],
-    relatedDocs: [],
-    mobile: "Mobile",
-    desktop: "Desktop",
-    navPath: ["Design"],
-    variants: [
-      {
-        id: "browse-dark",
-        title: "Dark",
-        description: "Dark screen",
-        mobile: "Dark mobile",
-        desktop: "Dark desktop",
-      },
-    ],
+test("a variant's reciprocal flow references resolve from the parent's base", async (t) => {
+  const fixture = await pathFixture({
+    "specs/billing/invoice.mockup.tsx": `import {defineScreen} from '@mokly/mokly'; export default defineScreen({${metadata},mobile:'Invoice',desktop:'Invoice',variants:[{slug:'overdue',title:'Overdue',description:'Overdue invoice',mobile:'Overdue',desktop:'Overdue',useCasePaths:['./collect']}]});`,
+    "specs/billing/collect.mockup.ts": `import {defineUseCase} from '@mokly/mokly'; export default defineUseCase({${metadata},steps:[{screenPath:'./invoice/overdue'}]});`,
   });
+  t.after(fixture.remove);
+  const entries = (await fixture.compile()).manifest.entries;
+  assert.deepEqual(entries.find((entry) => entry.kind === "use-case")?.steps, [
+    { screenPath: "billing/invoice/overdue" },
+  ]);
   assert.deepEqual(
-    entries.map(({ navPath }) => navPath),
-    [["Design"], ["Design"]],
+    entries
+      .filter((entry) => entry.kind === "screen")
+      .find((entry) => entry.variantOf)?.useCasePaths,
+    ["billing/collect"],
   );
-  assert.notStrictEqual(entries[0]?.navPath, entries[1]?.navPath);
 });

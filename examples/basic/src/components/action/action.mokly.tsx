@@ -6,10 +6,10 @@ const dependency = "examples/basic/generated/example-components.css";
 const implementation = "examples/basic/src/components/action/action.tsx";
 
 export const action = defineComponent({
-  id: "example-action",
+  slug: "index",
   title: "Action",
   description: "A shared action with an optional destination and hint.",
-  navPath: ["Example", "Components"],
+
   dependencies: [dependency, implementation],
   ownedDependencies: [dependency, implementation],
   relatedDocs: ["examples/basic/README.md"],
@@ -68,8 +68,8 @@ export const action = defineComponent({
                   asChild
                   to={
                     destination === "details"
-                      ? "example-details"
-                      : "example-welcome"
+                      ? "example/screens/details"
+                      : "example/screens/welcome"
                   }
                   {...(destination === "details"
                     ? { fragment: "details" }
@@ -84,7 +84,7 @@ export const action = defineComponent({
   },
   variants: [
     {
-      id: "example-action-default",
+      slug: "default",
       title: "Default",
       props: {
         label: "Continue",
@@ -95,12 +95,12 @@ export const action = defineComponent({
       },
     },
     {
-      id: "example-action-disabled",
+      slug: "disabled",
       title: "Disabled",
       props: { label: "Continue", tone: "primary", radius: 8, disabled: true },
     },
     {
-      id: "example-action-secondary",
+      slug: "secondary",
       title: "Secondary",
       props: {
         label: "Go back",

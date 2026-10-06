@@ -74,7 +74,7 @@ for (const mode of ["committed", "derived"] as const)
               async () => new Set(),
               async () => new Set(),
             );
-            await cache.resources("screens/home.html", html);
+            await cache.resources("home/index.html", html);
           }
         });
         assert.ok(counts.materialBytes! > 0);

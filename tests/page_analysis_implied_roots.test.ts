@@ -36,8 +36,8 @@ for (const mode of ["committed", "derived"] as const)
             ? '<link rel="stylesheet" href="../sheet.css">'
             : `<style>${css}</style>`;
         const render = (css: string) =>
-          `import { renderToStaticMarkup } from 'react-dom/server'; export default input => input.entry.id === 'home' ? ${JSON.stringify(item.document(styles(css)))} : '<!doctype html><html><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
-        const host = `import { renderToStaticMarkup } from 'react-dom/server'; export default input => '<!doctype html><html>${start}<head></head>${end}<body><iframe src="../frame.html"></iframe>' + renderToStaticMarkup(input.node) + '</body></html>';`;
+          `import { renderToStaticMarkup } from 'react-dom/server'; export default input => input.entry.path === 'home' ? ${JSON.stringify(item.document(styles(css)))} : '<!doctype html><html><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
+        const host = `import { renderToStaticMarkup } from 'react-dom/server'; export default input => '<!doctype html><html>${start}<head></head>${end}<body><iframe src="' + '../'.repeat(input.entry.path.split('/').length) + 'frame.html"></iframe>' + renderToStaticMarkup(input.node) + '</body></html>';`;
         const fixture = await inlineChangesFixture(
           context,
           embedded ? '<iframe src="../frame.html"></iframe>' : "",

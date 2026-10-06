@@ -51,5 +51,5 @@ for (const mode of ["committed", "derived"] as const)
 
 function scopedRenderer(styles: string): string {
   return `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => '<!doctype html><html><head>' + (input.entry.id === "home" ? ${JSON.stringify(styles)} : '<style>.stable{color:black}</style>') + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
+export default (input) => '<!doctype html><html><head>' + (input.entry.path === "home" ? ${JSON.stringify(styles)} : '<style>.stable{color:black}</style>') + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
 }

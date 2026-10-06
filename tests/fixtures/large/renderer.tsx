@@ -28,7 +28,8 @@ export default function render(input: RenderInput): string {
     ? `<style data-scale-component-styles="">[data-scale-action="area-1"]{border-top-color:${AREA_ONE_ACTION_COLOR}}</style>`
     : "";
   const markedBody =
-    input.entry.id === "area-1-screen-1" && SCREEN_ONE_MARKUP
+    input.entry.path === "area-1/screens/activity-group-1/screen-1" &&
+    SCREEN_ONE_MARKUP
       ? body.replace(
           "<main ",
           `<main data-scale-markup="${SCREEN_ONE_MARKUP}" `,

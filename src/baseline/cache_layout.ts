@@ -89,7 +89,7 @@ export function parseCompletionMarker(
     !Number.isFinite(Date.parse(marker.finishedAt)) ||
     !validCommands(marker.commands) ||
     !Number.isInteger(marker.manifestVersion) ||
-    (marker.manifestVersion as number) > 7
+    (marker.manifestVersion as number) > 8
   )
     return;
   return marker as CompletionMarker;

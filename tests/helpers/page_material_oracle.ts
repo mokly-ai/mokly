@@ -15,7 +15,9 @@ export async function assertPageMaterialEquivalence(fixture: FastPathFixture) {
   const context = pageContext(fixture);
   const oldContext = pageContext(fixture, false);
   for (const entry of fixture.after.entries) {
-    const previous = fixture.before.entries.find(({ id }) => id === entry.id)!;
+    const previous = fixture.before.entries.find(
+      ({ path: id }) => id === entry.path,
+    )!;
     const root = "variantOf" in entry ? entry.variantOf : undefined;
     for (const after of generatedViews(entry)) {
       const before = generatedViews(previous).find(
@@ -58,7 +60,7 @@ export async function assertPageMaterialEquivalence(fixture: FastPathFixture) {
       assert.deepEqual(
         current.projected,
         old.projected,
-        `${entry.id}/${after.path}: text materials`,
+        `${entry.path}/${after.path}: text materials`,
       );
       assert.ok(current.references);
       for (const side of ["before", "after"] as const)

@@ -7,9 +7,9 @@ import type { ReceivedTiming } from "../scripts/large/timings.mjs";
 const input = {
   scenario: "no-changes",
   state: "cold",
-  expectedChangedIds: [],
+  expectedChangedPaths: [],
   expectedChangedRoutes: [],
-  changedIds: [],
+  changedPaths: [],
   changedRoutes: [],
 };
 const event = (

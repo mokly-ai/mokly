@@ -13,7 +13,7 @@ import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
 test("disabled view instrumentation creates no promises beyond the delivered comparison batch", async (testContext) => {
   const fixture = await componentReviewFixture(testContext, (source) => source);
-  const reader = (outputs: ReadonlyMap<string, string>) =>
+  const reader = (outputs: ReadonlyMap<string, string | Uint8Array>) =>
     new ComponentMaterialReader({
       read: async (route: string) => Buffer.from(outputs.get(route)!),
     });
@@ -41,7 +41,9 @@ test("disabled view instrumentation creates no promises beyond the delivered com
     };
   };
   const views = (side: typeof fixture.before) =>
-    generatedViews(side.manifest.entries.find(({ id }) => id === "home")!);
+    generatedViews(
+      side.manifest.entries.find(({ path: id }) => id === "home")!,
+    );
   const before = views(fixture.before);
   const after = views(fixture.after);
   const pairs = before.map((view, index) => ({

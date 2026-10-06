@@ -7,15 +7,16 @@ owns everything that gives a screen application meaning or appearance. The
 boundary is enforced through peer dependencies, a renderer hook, declarative
 paths, and synthetic tests.
 
-| Mokly owns                              | Consumer owns                    | Configured at the boundary |
-| --------------------------------------- | -------------------------------- | -------------------------- |
-| Registry definitions and validation     | Product screens and fixture data | Source and output roots    |
-| esbuild discovery and one-graph loading | Product component library        | Renderer/module resolution |
-| Static fragments and manifest schema    | Theme/tokens/providers           | Stylesheet rules           |
-| Generated-file ownership and check      | Product CSS/fonts/images         | Document transformer       |
-| Safe routes and catalogue navigation    | Product route semantics          | Additional watch inputs    |
-| Git comparison and Review-ignore rules  | Comparison policy                | Base, output, impact globs |
-| Complete static catalogue export        | Hosting, credentials, deployment | Export output and Git base |
+| Mokly owns                                            | Consumer owns                                 | Configured at the boundary               |
+| ----------------------------------------------------- | --------------------------------------------- | ---------------------------------------- |
+| Registry definitions and validation                   | Product screens and fixture data              | Source and output roots                  |
+| esbuild discovery and one-graph loading               | Product component library                     | Renderer/module resolution               |
+| Static fragments and manifest schema                  | Theme/tokens/providers                        | Stylesheet rules                         |
+| Per-root CSS/asset bundling and PostCSS orchestration | Imported CSS/fonts/images and PostCSS plugins | `postcss` module and CSS `empty` opt-out |
+| Generated-file ownership and check                    | Product CSS/fonts/images                      | Document transformer                     |
+| Safe paths and catalogue navigation                   | Product route semantics                       | Additional watch inputs                  |
+| Git comparison and Review-ignore rules                | Comparison policy                             | Base, output, impact globs               |
+| Complete static catalogue export                      | Hosting, credentials, deployment              | Export output and Git base               |
 
 ## Dependency Direction
 
@@ -37,6 +38,11 @@ Module-resolution configuration is likewise consumer-owned: aliases,
 conditions, package fields, extensions, loaders, and package roots describe the
 consumer component tree. Mokly validates and applies them without supplying
 React Native Web or application-specific defaults.
+The [imported-CSS contract](../protocol/mokly-imported-styles.md) reserves
+`.css`/`.module.css` import handling and `mokly-generated/` ownership for
+Mokly. Consumer files, PostCSS plugins and their dependency/version choices
+remain consumer-owned; Mokly owns their private inventory and byte-safe
+delivery rather than shipping product CSS in its npm package.
 
 ## Registered Components
 
@@ -62,7 +68,7 @@ never imports the CLI, Node built-ins, Git or consumer application code. Its `./
 is explicitly Node-only SSR and is excluded from the browser entry graph.
 
 The public boundary consists of [scoped instances](../protocol/mokly-instances.md),
-the [catalogue v3 projection](../protocol/mokly-catalogue.md), the
+the [catalogue v4 projection](../protocol/mokly-catalogue.md), the
 [React/SSR viewer API](../protocol/mokly-viewer.md) and
 [FrameAdapter](../protocol/mokly-frame-adapter.md). Hosts consume packages and
 documented public artifacts, without private manifest access, deep imports or
@@ -91,12 +97,17 @@ the viewer before the CLI that depends on it.
 
 ## Complete-Document Boundary
 
-Consumers register complete HTML with `definePage` or nested `page`. A callback
-may reuse an existing render helper; consumer policy owns source allowlists and
-document-stage rules. A configured complete-document transformer remains an
-explicit deterministic boundary whose result receives normal validation.
-Current and comparison-base manifests both require v7 under the
+Consumers register complete HTML with `definePage`; a Markdown file matched by a
+configured root defines a [document](../protocol/mokly-documents.md), which
+Mokly renders while its source remains protected and watched. A page callback
+may reuse an existing render helper; consumer
+policy owns source allowlists and document-stage rules. A configured
+complete-document transformer remains an explicit deterministic boundary whose
+result receives normal validation. Current and comparison-base manifests both
+require v8 under the
 [baseline compatibility contract](../protocol/mokly-baseline-compatibility.md).
+[Paths and roots](../protocol/mokly-paths.md) determine identity for every kind.
+[Move detection](../protocol/mokly-moves.md) pairs entries across accepted builds.
 
 ## Runtime Boundary
 
@@ -122,7 +133,7 @@ the server's temporary archive lifecycle. Archive roots are explicit
 changed-path exclusions rather than consumer-owned ignore policy, and shutdown
 drains generation work before removing them.
 
-Browse promotes only explicit id-addressed
+Browse promotes only explicit path-addressed
 catalogue links from manifest-owned generated fragments and complete pages
 whose ownership header matches the entry's manifest `sourcePath` into outer
 Browse routes. Adapted public unowned HTML loses reserved-looking metadata and
@@ -140,14 +151,15 @@ link marker, sandbox boundary, and active-tree invariant.
 
 `src/export` orchestrates existing Build, Browse rendering, and comparison
 boundaries. Its only new consumer interface is the CLI: no deep imports or
-hosting SDK is required. Typed shell-owned delivery metadata supplies exact
-static routes and immutable comparison URLs. The exporter owns file selection,
-input consistency, exclusive output reservation, replacement, and rollback;
-`scripts/preview` captures one already-built Browse snapshot with optional Changes
-and adds Pages URL/header metadata and old-preview migration. Both paths share
-artifact validation, deployment identity, and the output transaction, and reuse
-the same shell renderer and comparison engine. Watch ignores inventory-listed
-export files while traversing output directories for new authored files.
+hosting SDK is required. Typed shell-owned delivery metadata supplies each
+page's canonical `/view/<path>/` URL and immutable comparison URLs. The exporter
+owns file selection, input consistency, exclusive output reservation,
+replacement, and rollback; `scripts/preview` captures one already-built Browse
+snapshot with optional Changes and adds Pages URL/header metadata and
+current schema-2 preview ownership. Both paths share artifact validation, deployment
+identity, and the output transaction, and reuse the same shell renderer and
+comparison engine. Watch ignores inventory-listed export files while traversing
+output directories for new authored files.
 
 The viewer is a separate public rendering API; it does not expose
 the export engine as a JavaScript API or take over deployment/authentication.

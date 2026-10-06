@@ -11,7 +11,7 @@ export type ComponentOverride =
   { kind: "set"; value: ComponentWirePrimitive } | { kind: "unset" };
 export interface ComponentRenderRequest {
   componentId: string;
-  variantId: string;
+  variantPath: string;
   viewport: Viewport;
   colorScheme: ColorScheme;
   generation: string;

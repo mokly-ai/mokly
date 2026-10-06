@@ -47,9 +47,9 @@ test("linked stylesheet matching uses real documents before inline material remo
     repository,
     "main",
   );
-  assert.equal(result.schemaVersion, 4);
-  if (result.schemaVersion !== 4) return;
-  const home = result.screens.find((screen) => screen.id === "home")!;
+  assert.equal(result.schemaVersion, 5);
+  if (result.schemaVersion !== 5) return;
+  const home = result.screens.find((screen) => screen.path === "home")!;
   assert.ok(home.views.every((view) => view.state === "changed"));
   assert.ok(
     home.views.every((view) =>

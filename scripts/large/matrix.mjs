@@ -24,7 +24,7 @@ export async function executeMatrix(definitions, operations, identity = {}) {
             ...identity,
             scenario: scenario.name,
             state,
-            expectedChangedIds: scenario.expectedChangedIds,
+            expectedChangedPaths: scenario.expectedChangedPaths,
             expectedChangedRoutes: scenario.expectedChangedRoutes,
             failurePhase: preparationError ? "preparation" : "infrastructure",
             error: error.message,

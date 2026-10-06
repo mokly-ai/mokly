@@ -17,6 +17,10 @@ for (const mode of ["committed", "derived"] as const)
       const runtime = {
         ...componentRuntime(fixture.after),
         config: { ...fixture.config, generatedOutput: mode },
+        styleOutputs: [
+          ["mokly-generated/styles/fixture.css", ".action{color:red}"],
+        ] as const,
+        deliveredStyleSources: ["entries/fixture.css"],
       };
       const inputs = backgroundInputs(
         runtime,
@@ -44,13 +48,28 @@ for (const mode of ["committed", "derived"] as const)
           assert.equal(config, runtime.config);
           assert.equal(manifest, fixture.after.manifest);
           assert.equal(base, "main");
-          assert.deepEqual(
-            Object.keys(accepted).sort(),
-            mode === "derived" ? ["commit", "outputs"] : ["commit"],
-          );
+          assert.deepEqual(Object.keys(accepted).sort(), [
+            "commit",
+            "generation",
+          ]);
           assert.equal(accepted.commit, "a".repeat(40));
+          assert.ok(accepted.generation);
+          assert.deepEqual(Object.keys(accepted.generation).sort(), [
+            "deliveredStyleSources",
+            "documentMarkdown",
+            ...(mode === "derived" ? ["outputs"] : []),
+            "routes",
+          ]);
+          assert.deepEqual(accepted.generation.routes, [
+            "mokly-generated/styles/fixture.css",
+          ]);
           assert.equal(
-            accepted.outputs,
+            accepted.generation.deliveredStyleSources,
+            runtime.deliveredStyleSources,
+          );
+          assert.deepEqual(accepted.generation.documentMarkdown, new Map());
+          assert.equal(
+            accepted.generation?.outputs,
             mode === "derived" ? fixture.after.outputs : undefined,
           );
           return undefined;
