@@ -1844,494 +1844,75 @@ contract's Result and proof sections before implementation (M6 finding 2).
 
 ## Milestone 10: Mainline Integration And Final Alignment
 
-Summary: merge the latest mainline features with M1–M9, verify the complete
-implementation, and align its documentation. Optimization and performance
-acceptance are deferred by the user decision of 2026-10-06.
+Integrate current main while preserving delivered features from both sides.
+Performance acceptance is deferred under Decision 13. Complete correctness,
+package, browser and hydration verification before the local checkpoint.
 
-- [x] Discovered: before final implementation and documentation checks, fetch
-      and merge the latest `origin/main` under
-      [Mainline Feature Preservation](../AGENTS.md#mainline-feature-preservation).
-      Capture the source tip, audit main's additions, reconcile each path
-      without bulk side-taking, preserve delivered features and record the
-      reconciliations/deletion audits in the merge commit. Leave PR #122 and
-      later main commits unmerged until this step; do not rebase or force-push.
-      Merged `f66c274d` into `fa685bca` as one local two-parent merge. Resolved
-      all 77 conflicts and the semantic ports, reviewed all remerge paths,
-      and retained only the two approved main-relative deletions. The merge
-      and approved dependency update remain local for the user's check.
-- [x] Discovered: before final acceptance, the complete browser and hydration
-      suites, including `component_design_navigation`, `design_library_runtime`,
-      `design_links`, `preview_design_links`, `preview_navigation` and
-      `standalone_appearance_history`, must pass in CI with pinned Chromium or
-      on a host whose `machine.cpu` matches the M2 reference (2.90GHz Xeon).
-      Include the additional Browse light-only and desktop component-preview
-      waits retained by the second-round gate investigation; no skipped or
-      excepted tests satisfy this final complete-suite gate.
-      The reboot moved M7 to a 2.50GHz host; the six specs fail fixed waits on
-      M6 too, with median per-test slowdown 1.46×. The M7 checkpoint exception
-      is not final acceptance. The user deferred performance acceptance on
-      2026-10-06; this browser gate still applies unchanged.
-      M10 verification on 2026-10-06: pinned Chromium passed all 846 browser
-      and 264 hydration tests, with no skips, cancellations or exceptions.
-      All six named specs and the retained Browse waits ran. The CPU stayed
-      `Intel(R) Xeon(R) Processor @ 2.90GHz` at 2899.960 MHz on the same boot.
-      Evidence: `browser-pre-merge.json`, `hydration-pre-merge.json`, their
-      complete logs and before/after host snapshots under
-      `.context/delegation/scalable/m10-merge/`.
+Evidence: `.context/scalable-inline-style-analysis/m10-prior-plan-evidence.md`, `m10-first-merge/`, `m10-fix-commits.json`, `m10-second-merge/`, and `m10-final-verification/`.
+
+- [x] Merge main's path identity, Markdown, imported CSS and publication changes
+      with M1–M9. Preserve all original-tree, resource, route and fingerprint
+      contracts and their differential proofs. The user approved deletion of
+      `src/components/output_validation.ts` and `src/components/style_ownership.ts`
+      after their required behavior was ported.
+- [x] Apply the separately approved source-map-js, shell-quote and Sharp updates
+      within their specified package-file scopes. Keep their separate commits.
+- [x] Fix the seven supervisor findings in separate follow-up commits. Use
+      production links in the differential contexts, preserve useful URL
+      fingerprints, count link-normalization parses, guard original foreign EOF
+      state, restore final-status waits, correct stale-resource coverage, and
+      use path identity in the benchmark contracts. Keep every oracle and proof.
+- [x] User approval (2026-10-06): merge current main a second time after the
+      seven fixes. Keep main's dependency versions. Follow its evidence and
+      review-fix rules from this merge forward. Do not migrate M1–M9A records.
+      Preserve main's shape-based hydration tests and its five consumer smokes.
 - [ ] Re-read every document this plan touched against the implementation,
       fix drift, and replace the approved-target sentences naming this plan
       with the Decision 13 deferral.
-- [x] Discovered: confirm two unchanged main unit timing checks on an idle
-      machine, in merge/main/main/merge order. Both fail in all four runs;
-      tests, limits and gate behavior remain unchanged. The user's conditional
-      checkpoint exception is met. The final M10 suite gate remains open until
-      these pass in CI or on an idle host, or the user grants a final exception.
-      The browser gate remains unchanged. See the idle evidence below.
-- [x] Discovered: confirm the CLI startup, watched-controls, move-watch,
-      worker-exit and indexed-lookup timing failures on an idle machine.
-      All six checks pass in merge/main/main/merge order (24 passes, no skips
-      or cancellations). Keep every main assertion, wait and limit unchanged.
-      No exception is needed for these checks. See the idle evidence below.
-- [ ] Discovered: keep the merge commit free of dependency changes. After its
-      two-parent and remerge audit, run the approved `npm update source-map-js`.
-      Only its lockfile `version`, `resolved` and `integrity` may change;
-      `package.json` must stay unchanged. Stop if npm changes anything else.
-      Run `npm ci` and all verification again. Commit the patch separately as
-      `fix(deps): update source-map-js to 1.2.2`; keep both commits local for
-      the user check. The audit is the regression check; add no security test.
-- [x] Discovered: the remerge audit exposed a link-identity interaction between
-      main's moves and the branch's shortcuts. A native link can keep identical
-      generated bytes when a page moves and a Markdown document takes its old
-      path. Add compiled regressions first, then require an equal-source link
-      proof for the identical-text check and style route. Keep the ordinary
-      normalized quick check available when the proof is absent. No main
-      assertion or time limit changes. See the amendment evidence below.
-- [x] Discovered: the live audit reported two further advisories after the
-      source-map update. Both also fail on clean main. Apply the user's
-      approved shell-quote range update and existing Sharp override patch as
-      two separate local commits, with strict package-file audits. The final
-      dependency audit passes with only main's active braces exception.
-- [ ] Run the full suite, `npm run package:smoke`, and `cargo xtask check`.
-- [ ] `git add -A`, commit with Conventional Commits, and push the branch.
+- [ ] Run the final full unit, pinned-Chromium browser and hydration suites,
+      package smoke, example build/check, static checks and `cargo xtask check`
+      after the second merge. Record the CPU before and after browser/hydration.
+      The full browser gate includes `component_design_navigation`,
+      `design_library_runtime`, `design_links`, `preview_design_links`,
+      `preview_navigation`, `standalone_appearance_history`, and the retained
+      Browse light-only and desktop component-preview waits. No skipped or
+      excepted tests pass the browser gate. The 2.90 GHz host must stay stable;
+      a return to 2.50 GHz leaves the gate open. Performance deferral does not
+      change this browser gate.
+- [ ] Run real-server smoke checks for the example catalogue, a small fixture's
+      style route and markup edit, and a moved path with `previousPath`.
+- [ ] Commit the local checkpoint and stop for the user's check. Do not push
+      until the user permits it.
+- [ ] After checks pass and push is permitted, `git add -A`, commit with
+      Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
-      to review the complete local diff against `origin/main`; report
-      numbered, severity-rated findings with options and recommendations
-      without changing the implementation.
+      against `origin/main`. Keep the review read-only. Then apply main's
+      [review-fix rule](../AGENTS.md#general) to findings marked `Auto-fix: yes`,
+      re-review once, and report fixed and open findings separately. Ask for
+      decisions when that rule requires them. Do not change older review records.
 
-### M10 idle unit timing confirmation
+### User approvals and pending decisions
 
-On 2026-10-06, the two checks ran serially with no other build or suite active.
-The clean control was `origin/main` at `f66c274d`. Both check files and the
-PostCSS dependency collector match main. Each run waited for a one-minute
-load below 1.0. The CPU stayed `Intel(R) Xeon(R) Processor @ 2.90GHz`, at
-2899.960 MHz, with boot ID `3b631985-61a9-4b39-9757-a307889e7514` throughout.
+The two PostCSS timing limits can remain recorded checkpoint host failures only
+if clean main fails them in the same boot. This approval does not relax the
+final gate or change any wait, limit, assertion or UI behavior. A failure absent
+on clean current main in the same boot is a merge defect to fix.
 
-The checks are:
+The main #125 (`ff376d71`) projection-test conflict is **pending the user's
+decision**. Keep `tests/component_material_projection.test.ts` unchanged,
+including `componentAware: false`. Main expects no image read for Home, but a
+Pane image read and `mockups/components/image.svg` dependency. Production mode
+makes no Pane read and emits no such dependency: M7 uses the original tree,
+and the browser discards `<section>` and `<img>` inside `<select>`. A component
+root with `componentAware: false` cannot occur in production. Option A changes
+main's case to production mode and the M7 expectation. Option B keeps main's
+case in legacy mode. Keep the branch select and retained-template assertions.
+No option is selected by this merge.
 
-- `tests/postcss_dependency_review.test.ts`: “Tailwind-shaped 20,000-file reports
-  classify without repeated sort or root projection”, limit **2,500 ms**.
-- `tests/watch_postcss_scale.test.ts`: “watched Serve accepts 3,000 plugin reports
-  and rebuilds once for one added file”, readiness limit **12,000 ms**.
-
-| Order | Tree       | Collection (ms) | Readiness (ms) | One-minute load before / after |
-| ----- | ---------- | --------------: | -------------: | ------------------------------ |
-| 1     | Merge      |         3,416.3 |       13,147.6 | 0.41 / 1.70                    |
-| 2     | Clean main |         3,961.5 |       14,093.4 | 0.80 / 1.85                    |
-| 3     | Clean main |         4,124.6 |       13,143.1 | 0.87 / 1.14                    |
-| 4     | Merge      |         3,593.6 |       13,806.2 | 0.97 / 1.79                    |
-
-Both checks failed in each run. The control stayed clean. The user allows
-these as host failures for the local checkpoint only. This does not pass the
-final Milestone 10 suite gate. Every test and time limit is retained.
-The catalogue replay also reports these failures when it runs the original
-checks; its 432 catalogues and 860 comparison pairs had no result/error
-mismatches and retained 7,612 fingerprinted views, with the same two named
-historical exclusions. The expanded design catalogue retains fingerprints
-on all 460 complete views in each mode; the cumulative RNW controls retain
-64 fast or style-route views as appropriate.
-
-Evidence is under `.context/delegation/scalable/m10-merge/`:
-`idle-unit-summary.json`, `idle-unit-confirmation.json`, the four
-`idle-unit-{1-merge,2-main,3-main,4-merge}.log` files, and each run's
-`-before.json` / `-after.json` CPU, MHz and uptime snapshots. The runner log
-records idle waits. `main-control-postcss-timing.log` and
-`postcss-timing-unwrapped.log` retain the earlier control and merge runs.
-`replay-complete-counts.json` retains the per-file comparison counts.
-
-The later idle confirmation covered six more checks. All passed on both
-trees in merge/main/main/merge order. The CPU, MHz and boot ID stayed the same
-as above. Starting one-minute loads were 0.04, 0.44, 0.36 and 0.55.
-
-| Check                          | Merge run 1 / 4 (ms) | Main run 2 / 3 (ms) |
-| ------------------------------ | -------------------: | ------------------: |
-| Piped-stdin SIGINT startup     |    2,090.9 / 2,070.8 |   1,878.8 / 1,989.4 |
-| Watched CLI timing and rebuild |    2,770.5 / 2,925.5 |   2,699.3 / 2,663.1 |
-| Watched controls               |  14,024.6 / 14,044.5 | 14,154.6 / 13,768.2 |
-| Move diagnostics with watch    |    3,886.9 / 3,927.0 |   3,862.5 / 3,674.9 |
-| PostCSS worker exits zero      |        257.0 / 264.5 |       253.6 / 263.4 |
-| Indexed PostCSS required paths |        506.2 / 478.2 |       501.5 / 526.8 |
-
-These are whole-test durations. All internal limits stayed unchanged.
-`idle-cli-summary.json` records each full test name and its time.
-`idle-cli-confirmation.json`, the four `idle-cli-*.log` files and their
-before/after snapshots retain all 24 passes. No exception is needed for
-these checks. The two earlier PostCSS limit failures remain separate.
-
-### M10 merge decisions and evidence
-
-The merge uses source tip `fa685bca` and main `f66c274d`, with merge base
-`b4314fec`. The initial audit found 77 conflicted paths. The twelve main
-commit messages and PR descriptions are retained under
-`.context/delegation/scalable/m10-merge/`. Main’s publication deltas, imported
-CSS, path identity, move detection, Markdown, shell bootstraps, MockLink
-controls and warnings, write-race fixes, lock directories, and agent rules
-remain. M1–M9 remain. No M9A candidate or recorded review finding is implemented.
-
-Each intentional resolution is recorded below. The same evidence directory
-holds frozen three-way inputs, test logs, and deletion and remerge audits.
-
-| Paths                                                                                                                                                                                                                                                                                                                       | Merge decision                                                                                                                                                                                                                                                                        |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/viewer/src/catalogue/references.ts`                                                                                                                                                                                                                                                                               | Keep path identity and branch options API without removed authored style/resource metadata.                                                                                                                                                                                           |
-| `packages/viewer/tests/frame_hook_harness.tsx`                                                                                                                                                                                                                                                                              | Main extracted these fakes into frame_hook_fakes; keep all lifecycle and race coverage through shared imports.                                                                                                                                                                        |
-| `src/build/compile.ts`                                                                                                                                                                                                                                                                                                      | Do not restore removed renderer resource hints; actual HTML/CSS resources validate through pending generated files in validateHtmlLinks.                                                                                                                                              |
-| `src/build/document_compiler.ts`                                                                                                                                                                                                                                                                                            | Keep main diagnostics, path registry and pending resources; preserve branch rejection of authored ownership hints and options validation API.                                                                                                                                         |
-| `src/build/html_links.ts`                                                                                                                                                                                                                                                                                                   | Keep main protocol-relative/external URL classification with generated pending-file validation.                                                                                                                                                                                       |
-| `src/export/references.ts`                                                                                                                                                                                                                                                                                                  | Keep shared main resource URL policy for binary/imported CSS export.                                                                                                                                                                                                                  |
-| `src/components/render.tsx`                                                                                                                                                                                                                                                                                                 | Keep renderer HTML-only contract and main definitionPath identity.                                                                                                                                                                                                                    |
-| `src/components/manifest_validation.ts`                                                                                                                                                                                                                                                                                     | Retain branch historical/options validation and move each entry lookup to path; removed style groups need no parent-style argument.                                                                                                                                                   |
-| `src/registry/manifest_validation.ts`                                                                                                                                                                                                                                                                                       | Keep manifest v8 path-collision validation and branch historical usage stripping.                                                                                                                                                                                                     |
-| `src/review/asset_references.ts`                                                                                                                                                                                                                                                                                            | Keep branch referenceRoutes reuse/timers and main public resource URL resolver.                                                                                                                                                                                                       |
-| `src/review/compare.ts`                                                                                                                                                                                                                                                                                                     | Keep all differential switches with imported change evidence, Markdown and move source readers.                                                                                                                                                                                       |
-| `src/review/component_classification_input.ts`                                                                                                                                                                                                                                                                              | Preserve switches and main move pairing/resource identity inputs.                                                                                                                                                                                                                     |
-| `src/review/component_compare.ts`                                                                                                                                                                                                                                                                                           | Use branch options object alongside main move markdown/source reader parameters.                                                                                                                                                                                                      |
-| `src/review/resource_comparison.ts`                                                                                                                                                                                                                                                                                         | Keep both component-aware page analysis and main resource move identity.                                                                                                                                                                                                              |
-| `src/server/changed_resources.ts`                                                                                                                                                                                                                                                                                           | Keep main document-linked/moved resources and branch graph-work diagnostics.                                                                                                                                                                                                          |
-| `src/css_references.ts`                                                                                                                                                                                                                                                                                                     | Keep main image-set token references and token-preserving rewrites; reapply branch prefilter and exclusive reference work timing.                                                                                                                                                     |
-| `src/html_references.ts`                                                                                                                                                                                                                                                                                                    | Keep single shared-tree traversal and provenance values; main rewrite APIs move to dedicated source-set module.                                                                                                                                                                       |
-| `src/components/comparison_projection.ts`                                                                                                                                                                                                                                                                                   | Preserve inferred inline actual/projected material and timed implementation comparison; add main logical/resource normalization to the same material outputs.                                                                                                                         |
-| `src/review/ignore.ts`                                                                                                                                                                                                                                                                                                      | Preserve eager flat-region validation, paired IDs and split counters; layer main link normalization on comparison strings while keeping real-resource strings.                                                                                                                        |
-| `src/review/component_projection_resources.ts`                                                                                                                                                                                                                                                                              | Keep page material fingerprint preparation; pass main links to page pair and legacy projection separately.                                                                                                                                                                            |
-| `src/review/component_view.ts`                                                                                                                                                                                                                                                                                              | Keep branch original-tree matching/reference recipes/evidence and main usage/resource move mapping; use resourceBase/resourceHead for resource analysis.                                                                                                                              |
-| `src/review/component_view_fast_path.ts`                                                                                                                                                                                                                                                                                    | Keep all source-safety guards and optional proof reads; move normalization uses page-pair links and real-resource text.                                                                                                                                                               |
-| `src/review/component_classification_sources.ts`                                                                                                                                                                                                                                                                            | Keep main move grouping/finish and branch shared diagnostic lifetime/per-view counters; move resource context setup into main extracted owner.                                                                                                                                        |
-| `src/server/component_changes.ts`                                                                                                                                                                                                                                                                                           | Keep main accepted imported evidence, Markdown, move pairing and binary transfer inside the branch comparison-work scope.                                                                                                                                                             |
-| `src/server/demand/background_worker.ts`                                                                                                                                                                                                                                                                                    | Keep bounded worker state from branch; port main generation CSS/Markdown/binary inputs into BackgroundWorkerState.                                                                                                                                                                    |
-| `examples/basic/specs/design/review_style_screens.tsx`                                                                                                                                                                                                                                                                      | Keep both branch exclusion designs with main discovered path/slug identity.                                                                                                                                                                                                           |
-| `scripts/large/benchmark.mjs`                                                                                                                                                                                                                                                                                               | Preserve four-scenario/cold-warm/restoration harness; port main path interactions to interactive.mjs and scenario expectations.                                                                                                                                                       |
-| `tests/browser/design_library_runtime.spec.ts`                                                                                                                                                                                                                                                                              | Keep branch variant-specific per-view status checks and main path-based navigation, without timeout changes.                                                                                                                                                                          |
-| `tests/changes_css_ownership.test.ts`                                                                                                                                                                                                                                                                                       | Keep dependency migration for obsolete renderer ownership on path-based fixtures.                                                                                                                                                                                                     |
-| `tests/component_asset_changes.test.ts`                                                                                                                                                                                                                                                                                     | Keep migrated ownership declaration while adopting path source.                                                                                                                                                                                                                       |
-| `tests/client_style_evidence.test.ts`                                                                                                                                                                                                                                                                                       | Main old local renderer is superseded by branch shared style_evidence helper with inline tests; migrate helper fields separately.                                                                                                                                                     |
-| `tests/component_fast_path_equivalence.test.ts`                                                                                                                                                                                                                                                                             | Keep main path-correct image inventory and branch per-view mode assertion distinction.                                                                                                                                                                                                |
-| `tests/component_fast_path_projected_resources.test.ts`                                                                                                                                                                                                                                                                     | Keep M7 original-tree parser-recovery oracle expectations and binary text helper from main.                                                                                                                                                                                           |
-| `tests/component_fast_path_resources.test.ts`                                                                                                                                                                                                                                                                               | Keep path-specific images and branch actual fast-versus-complete assertions.                                                                                                                                                                                                          |
-| `tests/component_fast_path_review_equivalence.test.ts`                                                                                                                                                                                                                                                                      | Keep compiled before/head result/path/count oracle under v5.                                                                                                                                                                                                                          |
-| `tests/component_fast_path_template.test.ts`                                                                                                                                                                                                                                                                                | Keep text helper for binary outputs and M7 parser-recovery oracle.                                                                                                                                                                                                                    |
-| `tests/component_material_reader.test.ts`                                                                                                                                                                                                                                                                                   | Keep main binary-output test helper and branch resource proof tests.                                                                                                                                                                                                                  |
-| `tests/component_rendering.test.ts`                                                                                                                                                                                                                                                                                         | Keep inference output record key assertions, no old style/resource hints; use main path-based binary output accessor.                                                                                                                                                                 |
-| `tests/design_library_usage.test.ts`                                                                                                                                                                                                                                                                                        | Main has 111 designs; preserve branch page-style exclusion as an additional design.                                                                                                                                                                                                   |
-| `tests/design_links.test.ts`                                                                                                                                                                                                                                                                                                | Preserve main39 component designs and 72other designs plus branch page-style exclusion.                                                                                                                                                                                               |
-| `tests/design_link_states.test.ts`                                                                                                                                                                                                                                                                                          | Keep path-based main link states and branch page-style excluded destination.                                                                                                                                                                                                          |
-| `tests/fixtures/large/generate.ts`                                                                                                                                                                                                                                                                                          | Keep main discovered specs/source split with branch cumulative inline helpers.                                                                                                                                                                                                        |
-| `tests/helpers/component_fast_path.ts`                                                                                                                                                                                                                                                                                      | Keep per-view path proving oracle and mode comparison with v5 result.                                                                                                                                                                                                                 |
-| `tests/html_css_references.test.ts`                                                                                                                                                                                                                                                                                         | Keep shared expanded tokenizer corpus and add main image-set string input there.                                                                                                                                                                                                      |
-| `tests/protocol_doc_sizes.test.ts`                                                                                                                                                                                                                                                                                          | Retain main ratchet caps; reconcile edited protocols under250 rather than restore branch older relaxed caps.                                                                                                                                                                          |
-| `tests/resource_denials.test.ts`                                                                                                                                                                                                                                                                                            | Keep actual resource denial assertions at new paths; removed authored ownership metadata is rejected upstream.                                                                                                                                                                        |
-| `tests/shell.test.ts`                                                                                                                                                                                                                                                                                                       | Main moved shell tests to shell_frames/metadata/appearance/chrome/styles; keep all there and port branch-only inline exclusion regression separately.                                                                                                                                 |
-| `tests/design_screens.test.tsx`                                                                                                                                                                                                                                                                                             | Preserve all expanded branch stylesheet assertions in main split owner design_stylesheet_screens.                                                                                                                                                                                     |
-| `docs/architecture/build-pipeline.md`                                                                                                                                                                                                                                                                                       | Keep v8 and inferred ownership scope.                                                                                                                                                                                                                                                 |
-| `docs/guides/authoring/config.md`                                                                                                                                                                                                                                                                                           | Keep main roots/path config and branch HTML-only renderer API.                                                                                                                                                                                                                        |
-| `docs/protocol/README.md`                                                                                                                                                                                                                                                                                                   | Retain every branch protocol link alongside main imported CSS, path, move, and security documents.                                                                                                                                                                                    |
-| `docs/protocol/ci-verification.md`                                                                                                                                                                                                                                                                                          | Main split fixture/security/acceptance sections into linked current owners; preserve its audit exception and cleanup rules there.                                                                                                                                                     |
-| `docs/protocol/mokly-catalogue.md`                                                                                                                                                                                                                                                                                          | Keep main privacy exclusions and branch retired metadata boundary.                                                                                                                                                                                                                    |
-| `docs/protocol/mokly-changes.md`                                                                                                                                                                                                                                                                                            | Use main split Changes-serving owner; port branch material/inline rules into that owner.                                                                                                                                                                                              |
-| `docs/protocol/mokly-component-changes.md`                                                                                                                                                                                                                                                                                  | Keep inference, resource ownership and optimizations under v8 and v5.                                                                                                                                                                                                                 |
-| `docs/protocol/mokly-component-manifest.md`                                                                                                                                                                                                                                                                                 | Keep main folder/path schema and retired ownership-array rule.                                                                                                                                                                                                                        |
-| `docs/protocol/mokly-component-review-fast-path.md`                                                                                                                                                                                                                                                                         | Keep every M7/M8 proof and fallback on main strict v8 baseline boundary.                                                                                                                                                                                                              |
-| `docs/protocol/mokly-component-review-validation.md`                                                                                                                                                                                                                                                                        | Preserve both inline evidence constraints and path/move identity rules.                                                                                                                                                                                                               |
-| `docs/protocol/mokly-component-review.md`                                                                                                                                                                                                                                                                                   | Keep schema v5 moves and inferred material/evidence definitions.                                                                                                                                                                                                                      |
-| `docs/protocol/mokly-component-usage-records.md`                                                                                                                                                                                                                                                                            | Keep instance/slot/range records and retirement rules with path component identities.                                                                                                                                                                                                 |
-| `docs/protocol/mokly-css-attribution.md`                                                                                                                                                                                                                                                                                    | Keep bounded parsing/original matching and move main membership split; port inferred material rules to split owner.                                                                                                                                                                   |
-| `docs/protocol/mokly-css-evidence-presentation.md`                                                                                                                                                                                                                                                                          | Keep inline evidence and path keyed v5 presentation.                                                                                                                                                                                                                                  |
-| `docs/protocol/mokly-css-evidence-shell.md`                                                                                                                                                                                                                                                                                 | Preserve branch page-inline excluded state in path-based design inventory.                                                                                                                                                                                                            |
-| `docs/protocol/mokly-design-links.md`                                                                                                                                                                                                                                                                                       | Keep new links/control tiers, all main paths and branch inline-style design links.                                                                                                                                                                                                    |
-| `docs/protocol/mokly-on-demand.md`                                                                                                                                                                                                                                                                                          | Keep scoped shell loading/failure and bounded worker output retention.                                                                                                                                                                                                                |
-| `docs/protocol/mokly-shell-design.md`                                                                                                                                                                                                                                                                                       | Keep main separated inventory; port branch extra excluded style design to that inventory.                                                                                                                                                                                             |
-| `docs/protocol/mokly-source-protection.md`                                                                                                                                                                                                                                                                                  | Keep public allowlist and removed ownership hints.                                                                                                                                                                                                                                    |
-| `docs/protocol/mokly-timings.md`                                                                                                                                                                                                                                                                                            | Keep main output lock/path and freshness spans with branch core/detail collectors.                                                                                                                                                                                                    |
-| `docs/protocol/npm-release-notes.md`                                                                                                                                                                                                                                                                                        | Retain both breaking path-identity and renderer ownership notes.                                                                                                                                                                                                                      |
-| `examples/basic/README.md`                                                                                                                                                                                                                                                                                                  | Combine main expanded catalogue with branch page-style design; keep exact counts pending example validation.                                                                                                                                                                          |
-| `packages/viewer/README.md`                                                                                                                                                                                                                                                                                                 | Keep main moved/removed identities and branch historical property validation.                                                                                                                                                                                                         |
-| `src/components/README.md`                                                                                                                                                                                                                                                                                                  | Preserve document-inferred ownership on main path identities; no renderer hint table returns.                                                                                                                                                                                         |
-| `src/review/README.md`                                                                                                                                                                                                                                                                                                      | Retain optimized analysis and main entry/move/document semantics.                                                                                                                                                                                                                     |
-| `tests/fixtures/large/README.md`                                                                                                                                                                                                                                                                                            | Keep four scenarios and detail pass, current path-based generator hierarchy, and all historical evidence.                                                                                                                                                                             |
-| `plans/README.md`, `plans/scalable-inline-style-analysis.md`, `plans/inferred-inline-style-ownership.md`                                                                                                                                                                                                                    | Accept the requested index deletion. Keep both branch plans and add the required Active status. Link to the plans directory.                                                                                                                                                          |
-| `examples/basic/entries/design/parts/destinations.ts`, `examples/basic/specs/design/parts/destinations.ts`                                                                                                                                                                                                                  | Accept main’s source-tree move. Port the branch page-excluded design destination to specs.                                                                                                                                                                                            |
-| `src/components/output_validation.ts`, `src/components/style_ownership.ts`, `tests/build_imported_styles_resources.test.ts`                                                                                                                                                                                                 | Keep the two approved branch deletions. Validate pending imported resources through real HTML and CSS, with pending and stale generation regressions.                                                                                                                                 |
-| `src/review/component_classification_context.ts`, `src/review/component_classification_finish.ts`, `src/review/page_pair.ts`, `src/review/page_projection.ts`, `src/review/moves/identity.ts`                                                                                                                               | Carry both sets of comparison inputs through main’s extracted modules. Retain path/move pairing and real-resource matching beside fingerprint material and diagnostic scopes.                                                                                                         |
-| `src/source_set_references.ts`, `src/html_reference_values.ts`, `src/review/moves/resource_links.ts`                                                                                                                                                                                                                        | Share main’s source-set token rewriting with branch reference extraction. Keep real URLs for resource traversal and logical URLs only for material equality.                                                                                                                          |
-| `src/server/demand/background_inputs.ts`, `src/server/demand/background_state.ts`, `src/server/demand/background_protocol.ts`                                                                                                                                                                                               | Keep bounded committed output retention. Carry main’s binary generated output, imported style inventory, and Markdown through worker input and transfer types.                                                                                                                        |
-| `src/review/inline_link_material.ts`, `src/review/page_inline_material.ts`, `tests/material_fingerprint_link_normalization.test.ts`                                                                                                                                                                                         | New integration regression: normalized equivalent URLs must compare equally before and after fingerprints. Keep text when main’s link rewrite changes style material. Both modes and all switch combinations retain the text oracle.                                                  |
-| `scripts/large/interactive.mjs`, `scripts/large/scenarios.mjs`, `scripts/large/sample.mjs`, `scripts/large/outcomes.mjs`, `scripts/large/companion_outcome.mjs`, `scripts/large/types.d.mts`, `tests/fixtures/large/benchmark-contract.md`, `tests/fixtures/large/renderer.tsx`, `tests/fixtures/large/renderer_inline.tsx` | Use path identity for scenario membership, generated output, browser navigation, and renderer selection. Retain all diagnostics, restoration tests, and fixture inline-style behavior. Template changes belong to #131 and invalidate the old reference; no speed matrix is required. |
-| `docs/protocol/mokly-shell-layout.md`, `docs/protocol/mokly-design-link-states.md`, `docs/protocol/mokly-timing-baselines.md`, `docs/protocol/mokly-fingerprinted-materials.md`, `docs/protocol/mokly-css-run-composition.md`                                                                                               | Move complete sections to focused documents. Preserve their parent anchors and index links. Do not reduce contract detail to meet the 250-line cap.                                                                                                                                   |
-| `tests/helpers/inline_changes.ts`, `tests/helpers/style_route_work_probe.mjs`, `tests/helpers/page_normalization_probe.mjs`, `tests/helpers/style_evidence.ts`, `tests/browser/inline_style_evidence_fixture.ts`, `tests/browser/inline_style_evidence.spec.ts`                                                             | Port generated fixture source, nested relative references, evidence data and subprocess probes to path identity. Preserve every branch guard, oracle, and differential.                                                                                                               |
-
-### M10 local merge verification
-
-The pre-merge unit run executed 6,568 tests in 945 files, with no skipped
-tests. It recorded nine failures and two timeout cancellations. Three
-integration failures are fixed and covered by the 39 passing focused checks:
-required resource errors after optional absence, projection fixture setup,
-and the page-analysis counter scope. The later idle runs passed all six
-additional timing checks on both trees. The two approved PostCSS limit
-failures remain checkpoint exceptions; the final full-suite TODO stays open.
-See `unit-report-pre-merge-2.json`, `unit-pre-merge-2-summary.json`,
-`cache-integration-green.log` and the idle evidence above.
-
-The package suite passed build, type checks, example build/check, real package
-archives and all six clean consumer smoke cases. Rust formatting, Clippy and
-all 15 Rust tests passed. The example has 211 entries, 112 design screens and
-474 generated files. Browser and hydration counts and CPU evidence are
-recorded in the gate TODO above.
-
-Final pre-merge format, lint, all type checks, source-file lengths and the four
-repository ratchets passed. `cargo xtask check` stopped at the live dependency
-audit: main's `braces` exception is active through 2026-11-03, but
-`source-map-js` 1.2.1 has uncovered advisory GHSA-68fv-2mgg-jv7q. The approved
-1.2.2 update follows this merge as a separate commit. Both package files still
-match main at this checkpoint. See `static-final-2.json`,
-`typecheck-final-2.log` and `xtask-pre-merge.log`.
-
-The real-server smoke checks passed. The small cumulative fixture's
-component-style edit used the style route for all 32 views and included only
-`area-1/components/action` in Changes. The markup edit used four complete
-comparisons and 28 fast comparisons; Changes included the screen and its
-flow at their current paths. A compiled moved screen retained
-`path: new/screen` and `previousPath: old/screen`. The example and both small
-fixture pages rendered in Chromium; the screenshots were inspected.
-`smoke.json`, `smoke-3.log` and `smoke-*.png` retain the evidence. Earlier
-smoke script attempts omitted the required server `base` option and looked
-for worker events in the parent sink. Only the uncommitted script changed;
-the successful run checks the worker's emitted path counts.
-
-Additional integration decisions:
-
-- `src/review/cached_assets.ts` and `tests/cached_asset_proofs.test.ts` keep
-  the underlying reader's required-read error after an optional absence.
-  Failed batches cannot poison a later read of an existing resource. Three
-  new assertions failed before the fix. All four pass after it. The existing
-  main deleted-resource expectation is unchanged.
-- `tests/component_material_projection.test.ts` retains main's #125
-  (`ff376d71`) assertions and explicit `componentAware: false`. This conflict is
-  **pending the user's decision**. Main expects no image read for Home, but an
-  image read and `mockups/components/image.svg` dependency for Pane. Production
-  component-aware mode makes no Pane read and emits no dependency: M7 uses the
-  original tree, and the browser discards `<section>` and `<img>` inside
-  `<select>`. A component root with `componentAware: false` cannot occur in
-  production. Option A switches main's case to production mode and the M7
-  expectation. Option B retains main's case in legacy mode. Neither decision
-  is made here. The branch select and retained-template assertions remain
-  unchanged; the template case retains root-specific reads.
-- `tests/page_analysis_scope.test.ts` prepares main's move inventory before
-  the measured view-comparison scope. Its strict no-duplicate-reference-parse
-  assertion is unchanged. The 39 focused resource, move and scope checks pass
-  in `cache-integration-green.log`.
-
-### M10 remerge audit amendment
-
-The first local merge has exactly two parents, `fa685bca` and `f66c274d`.
-The audit reviewed every one of its 213 remerge paths, including changes
-outside the 77 textual conflicts. `remerge-stat.txt`, `remerge-full.diff`,
-`remerge-inventory.json` and `remerge-reviewed.json` retain the path list,
-diffs and decisions. The only main-relative deletions remain the two approved
-files, `src/components/output_validation.ts` and
-`src/components/style_ownership.ts`.
-
-The amendment restores main's explicit private style-offset exclusions in
-the catalogue and source-protection contracts. The complete catalogue
-projection/privacy section moves to `mokly-catalogue-projection.md`, with its
-old heading and anchor retained as a link, to meet the 250-line cap without
-removing text. The protocol index includes the new document. The design inventory
-retains the complete page-excluded state and uses its actual folder label.
-The benchmark contract's scenario column names paths. The generated-view
-comment names manifest v8. These are alignment changes, not relaxed rules.
-
-The link interaction is reproduced with two real compiled catalogues. A page
-at `target` moves to `moved`, while a Markdown document takes `target`.
-Automatic move pairing accepts the page move. Both generated guide views
-retain identical native `MockLink` bytes. Text comparison reports
-`changed`/`material`; the old identical check reports `unchanged`. An excluded
-style edit also lets the old style route hide that material change.
-
-`src/review/moves/links.ts` proves equal entry kinds/paths and generated route
-maps. `src/review/moves/resources.ts` also proves equal resource membership
-and identities. The proof uses accepted metadata and adds no source scan,
-parse or cache semantics. `ignore.ts` carries the proof with the normalizers.
-`component_view_fast_path.ts` uses it for the identical-text check; when it
-cannot prove equality, the existing normalized quick check still runs.
-`component_style_route.ts` takes full fallback without the proof. Stable maps
-keep both shortcuts. The source-safety rules and core collectors are unchanged.
-The fast-path, page-analysis and style-route contracts record the condition.
-
-`tests/move_link_shortcuts.test.ts` and its compiled helper check both modes,
-both viewports and all four switch settings, with and without supplied proofs.
-They retain 64 result comparisons with the complete text oracle. Stable-map
-controls fail if a shortcut adds a source rewrite. Four cases failed first in
-`move-link-shortcuts-red.log`. The proof-model check also caught a one-sided
-attachment with an empty resource pairing before the membership check was
-added (`move-link-proof-red.log`). A first broad fallback failed the four
-unchanged one-sided-view tests; retaining the ordinary quick check restored
-their fast-path coverage without changing their assertions.
-
-All 74 targeted checks pass in `move-link-paths-final-green.log`, including
-the existing fast-path catalogue and RNW controls. The earlier 22-test run also
-retains material and seam work bounds. The seven proof-model tests compare
-admitted source rewrites across links, generated routes, resources, source sets,
-styles and templates. Every mutation below fails its regression; generated
-files were restored after each run. `link-proof-mutations.json` and the six
-`mutation-link-*.log` files retain the results.
-
-Post-amendment type, lint, file-length, repository-ratchet and Markdown link
-checks pass. The protocol/proof group passes 12 tests. Complete suites will
-run again after the separately approved dependency update; the earlier
-browser/hydration passes do not replace that rerun.
-
-| Mutation                             | Result                                     |
-| ------------------------------------ | ------------------------------------------ |
-| Remove the identical-text link guard | Caught by the compiled result differential |
-| Remove the style-route link guard    | Caught by the compiled result differential |
-| Remove resource membership equality  | Caught by the one-sided attachment case    |
-| Ignore non-identity resource pairs   | Caught by the resource-move model          |
-| Ignore entry kinds                   | Caught by the reused-route model           |
-| Ignore generated route-map equality  | Caught by the equal-size route-set model   |
-
-### M10 dependency updates and final verification
-
-The final merge is `197df9c5`, with the same two parents. Its final remerge
-diff has 223 paths. The 203 unchanged diffs match the first completed audit
-byte-for-byte; all 20 changed or new diffs were read after the amendment.
-`remerge-final-review.json` records each path. The final deletion audit still
-contains only the two approved branch deletions.
-
-The three dependency changes are separate local commits. No test file was
-added for these security updates. Each commit body records the advisory,
-dependency path and clean-main reproduction.
-
-| Commit     | Change                      | Advisory                             | Scope check                                                                    |
-| ---------- | --------------------------- | ------------------------------------ | ------------------------------------------------------------------------------ |
-| `603bb1ca` | source-map-js 1.2.1 → 1.2.2 | GHSA-68fv-2mgg-jv7q                  | Only lockfile version, URL and integrity changed; package.json unchanged       |
-| `124e4c46` | shell-quote 1.10.0 → 1.12.0 | GHSA-pqg4-j6r4-53mv                  | npm resolved 1.12.0 within ^1.6.1; only those three lockfile fields changed    |
-| `44468100` | Sharp 0.35.4 → 0.35.5       | GHSA-wq5f-xc86-pv6w / CVE-2026-96889 | Only the existing miniflare.sharp pin and 27 Sharp/native lock entries changed |
-
-Source-map-js is reached through PostCSS and @tailwindcss/node. Its patched
-release was published on 2026-09-30; main still locks 1.2.1. Shell-quote is
-on the dev path @firna/ui → react-native → react-devtools-core. Sharp is on
-the dev path wrangler → miniflare through the existing override. Wrangler,
-Miniflare and the Undici override remain unchanged. Sharp's permitted native
-packages include libvips 1.3.4.
-
-The source-map-only gate attempt exposed the two later advisories. The clean
-main control reproduced both before the user approved their fixes. The strict
-audits are `source-map-lock-audit.json`, `shell-quote-lock-audit.json` and
-`sharp-lock-audit.json`. `main-control-audit-post-deps.log` and
-`post-deps-raw-audit.json` retain the failures and paths.
-
-After all three commits, `npm ci` passed and the live audit passed. It reports
-only main's reviewed braces exception, valid through 2026-11-03. No other
-advisory remains uncovered. `npm-ci-final-deps.log` and `audit-final-deps.log`
-retain those results. The security contract's documented Sharp pin is updated
-in this separate documentation commit, so each dependency commit retains its
-approved file scope.
-
-Complete verification of the final dependency tip is next. It includes the
-full unit, pinned-Chromium browser and hydration suites, the package consumer
-smokes, example build/check and `cargo xtask check`. The real Wrangler Pages
-runtime runs through `preview_comparisons`, `preview_pages`,
-`preview_preparation`, `preview_design_links` and `preview_navigation`; its
-Miniflare worker runtime is not replaced by a test double.
-
-### M10 supervisor corrections
-
-The dependency-tip unit suite on `46009a7d` passed all **6,586 tests in 948
-files**, with no failures, skipped tests or cancellations. This includes the
-two earlier timing-limit cases. See `unit-46009a7d.json` and
-`xtask-final-deps.log` under `.context/delegation/scalable/m10-merge/`.
-The gate then started its browser wrapper automatically. The wrapper was
-stopped on the supervisor's instruction. That partial browser run is not
-verification; hydration did not start. Follow-up fixes use new commits after
-`46009a7d`, without amending the merge or changing dependency scope.
-
-- [ ] Require production link normalization in comparison helpers and probes.
-      The new context probe failed first with `production links: undefined`.
-      Only explicit `page_m6` comparisons can omit modern links. The captured
-      M6 projection has no resource-material fields, so its material helper
-      marks both compared contexts explicitly. Its separate M8 fingerprint/text
-      check still uses production links. Removing either production helper's
-      links fails the new probe.
-- [ ] Refine fingerprint URL guards. Equal-source skipped styles need no URL
-      fallback. Resolved appendices fall back only when normalization changes
-      their actual or projected equality outcome. The replay now has **8,100
-      fingerprinted views**, **432 catalogues** and **860 committed/derived
-      pairs**, with zero result/error mismatches. This restores the lowered
-      7,612 pin and exceeds M9's 7,844; the two named historical exclusions
-      remain four pairs. `followup-targeted.log` retains the first restored
-      result. The final gate records per-file counts.
-- [ ] Count link normalization through the shared HTML parser as
-      `linkNormalization`. The interception test first found uncounted parses;
-      the changed-page case counts 18 original parses plus 44 link parses.
-      Preserve original-only CSS matching and reference derivation. The
-      reference case counts 20 original parses plus 92 link parses. Branch
-      counter pins now include these parses: fall-through is 20 + 156; the
-      resource quick-check fallback is 2 + 18. The style helper still permits
-      exactly one original parse and no non-link extra parse; the preceding
-      non-identical quick check's link work is counted separately. These
-      changes do not alter result, error, reference or material assertions.
-- [ ] Use original EOF parser state to guard open SVG/MathML. Both shortcuts
-      first disagreed with text in every mode/switch combination. Keep text
-      when whole-document URL normalization can decode foreign style content.
-- [ ] Restore main's final-status waits while keeping per-variant comparisons.
-      The new execution probe first caught the immediate `textContent` read.
-      Verify both viewports three times without changing any time limit.
-- [ ] Correct the stale-reserved-file renderer's path depth and error assertion.
-      The stronger assertion first caught `escapes mockupsDir`. Confirm the
-      reserved/orphan rejection mutation fails the corrected test.
-- [ ] Replace stale entry-id terminology in the timing and benchmark contracts.
-      A new documentation check first failed on the old membership field names.
-      The digest-covered edit is approved for #131; acceptance stays deferred.
-- [ ] Run the complete final verification and real-server smoke checks. Keep all
-      follow-up commits local for the supervisor's check.
-
-The first broad follow-up run executed 1,768 tests. It had 1,681 passes and 87
-failures, with zero skips/cancellations. All failures came from the lowered
-coverage pin, newly counted link parses, or the unmarked M6 material context.
-No result/error oracle comparison failed. The updated pins keep exact parse
-steps and preserve all original assertions outside these branch counter fields.
-`followup-targeted.log` retains the entire run.
-
-Every mutation below was caught by an assertion, not a tool or compile error.
-The two runners restore each file in `finally`; no mutation remains in source
-or generated code. See `followup-mutations.json`,
-`followup-proof-mutations.json` and each `followup-mutation-*.log`.
-
-| Mutation                                                   | Result                                                    |
-| ---------------------------------------------------------- | --------------------------------------------------------- |
-| Omit production links from `page_comparison.ts`            | Caught by the context probe                               |
-| Omit production links from `component_comparison_paths.ts` | Caught by the context probe                               |
-| Remove the skipped-style URL guard                         | Caught by exact material bytes on changed link identities |
-| Restore the broad resolved URL fallback                    | Caught by the unchanged-URL fingerprint control           |
-| Remove skipped `equalSource` proof reuse                   | Caught by the forbidden normalization call                |
-| Leave logical-link HTML parses uncounted                   | Caught by parse5 interception                             |
-| Leave resource-link HTML parses uncounted                  | Caught by parse5 interception                             |
-| Remove the fingerprint foreign-content guard               | Caught by result and byte comparisons                     |
-| Remove the style-route foreign-content guard               | Caught across route switches                              |
-| Stop recording foreign EOF state                           | Caught by the compiled SVG/MathML cases                   |
-| Omit the base-side foreign-state guard                     | Caught by the base-only open case                         |
-| Omit the head-side foreign-state guard                     | Caught by the head-only open case                         |
-| Remove selected-variant URL waits                          | Caught by the saved-status execution probe                |
-| Remove final-status waits                                  | Caught by the saved-status execution probe                |
-| Disable reserved-route and pending-orphan rejections       | Caught: missing expected rejection                        |
+The user permits the #131 digest-covered benchmark-contract correction. Keep
+all harnesses and fixtures. Do not run speed matrices or implement M9A candidates
+or recorded review findings without a separate decision.
 
 ## Post-merge follow-up (non-blocking)
 

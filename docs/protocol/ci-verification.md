@@ -3,7 +3,7 @@
 ## Delivery Status
 
 The suite CLI, evidence, workflow graph, fixture reuse, and every repository
-ratchet are implemented. [Hosted measurements](../reviews/ci-performance.md)
+ratchet are implemented. [Hosted measurements](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md)
 record timing and coverage. `cargo xtask check` remains the complete local gate;
 a validated hosted aggregate is reusable evidence for its exact tree. Public
 package argument forwarding, hierarchical cancellation, and pull-request title
@@ -192,11 +192,12 @@ fixed in advance. Browser or hydration discovery asks Playwright; an empty suite
 fails. A failed browser discovery reports the load errors from Playwright's JSON
 output as well as its standard error.
 
-Development hydration registers one browser test per unique generated catalogue
-route at discovery time, plus the home and missing-route cases. Each route keeps
-the normal test deadline and error assertions; catalogue growth cannot exhaust a
-shared route-loop deadline. Unit coverage checks that browser discovery includes
-every generated route exactly once. Browser error assertions accept only Chrome's
+Development hydration registers one browser test per entry shape of the
+generated example catalogue at discovery time, plus the home and missing-route
+cases, as [development hydration coverage](./ci-verification-hydration.md)
+defines. Each test keeps the normal deadline and error assertions, and unit
+coverage checks that discovery lists each shape exactly once. That page also
+owns the generated resource audit. Browser error assertions accept only Chrome's
 report that a viewer-owned sandboxed frame (`/static/`, a temporary render, or
 `about:srcdoc`) blocked a script, as `tests/browser/console_notices.ts` defines.
 
