@@ -117,9 +117,33 @@ report completeness, caching, and failure semantics. The
 [release verification evidence contract](./npm-release-evidence.md) defines when
 the dual-runtime aggregate can prove an immutable release tree.
 
+## Testbox Workflow Target
+
+The active [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
+approves `.github/workflows/blacksmith-testbox.yml`. Implementation is pending.
+The workflow has `workflow_dispatch` with an optional `testbox_id` input.
+It also has `push`, limited to changes of its own workflow file.
+An empty `testbox_id` makes `begin-testbox` use validation mode.
+The push run registers the workflow before merge.
+
+One job runs on `blacksmith-2vcpu-ubuntu-2404` with a 30-minute timeout.
+It has `contents: read` permission and no secrets.
+It checks out full history with `persist-credentials: false`.
+It prepares Node 22.14.0, npm 11.7.0, Rust 1.95.0 and Chromium.
+It records the installed lockfile digest and exposes the job environment to
+Testbox SSH sessions. `run-testbox` keeps the job alive until the idle timeout.
+
+The workflow pins `useblacksmith/checkout` v1, `useblacksmith/begin-testbox` v2,
+`actions/setup-node` v6.5.0 and `useblacksmith/run-testbox` v2 to reviewed commits.
+The [Testbox workflow contract](./remote-verification-testbox.md#workflow)
+defines the exact revisions and step order. `Required CI` does not depend on
+this workflow. The hosted CI graph and its release profile keep their current
+required jobs.
+
 ## Related Docs
 
 - [Protocol index](./README.md)
 - [CI verification](./ci-verification.md)
+- [Remote verification](./remote-verification.md)
 - [CI and npm release](./npm-release.md)
 - [Release verification evidence](./npm-release-evidence.md)

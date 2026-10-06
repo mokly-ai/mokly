@@ -1,6 +1,8 @@
 # Blacksmith Remote Verification
 
-Status: Active. No pull request exists yet. Work starts at Milestone 1.
+Status: Active. No pull request exists yet. Milestone 1 is complete.
+Claude review is pending. Implementation is pending. Start Milestone 2 only
+after that review.
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
 Blacksmith key is available. Run it locally when no key is available. The key
@@ -218,27 +220,36 @@ valid. The fingerprint check covers the uncommitted changes.
   `openssh-clients`, no saved Blacksmith login and a working
   `BLACKSMITH_ORG_TOKEN`.
 
-## Milestone 1: Contract documentation
+## Milestone 1: Contract documentation (completed)
 
 Define the complete remote verification contract before any code changes.
 
-- [ ] Add `docs/protocol/remote-verification.md`. Give it a Delivery Status
+- [x] Add `docs/protocol/remote-verification.md`. Give it a Delivery Status
       that names this plan. Define every rule in the Decisions section. Split
       it into a second page if it becomes longer than 250 lines.
-- [ ] Link the new page from `docs/protocol/README.md`.
-- [ ] Update `docs/protocol/ci-verification.md`. State that the complete gate
+- [x] Link the new page from `docs/protocol/README.md`.
+- [x] Update `docs/protocol/ci-verification.md`. State that the complete gate
       can run on Testboxes, and link the new page. Keep the page at 250 lines
       or less.
-- [ ] Update `docs/protocol/ci-workflow.md`. Describe the Testbox workflow,
+- [x] Update `docs/protocol/ci-workflow.md`. Describe the Testbox workflow,
       its triggers, runner tier, timeout and pinned actions. State that
       `Required CI` does not depend on it.
-- [ ] Update `docs/protocol/ci-verification-security.md`. Define the key
+- [x] Update `docs/protocol/ci-verification-security.md`. Define the key
       handling, the box secret boundary and `persist-credentials: false`.
-- [ ] Read `docs/protocol/npm-release.md`. State that the release workflow
+- [x] Read `docs/protocol/npm-release.md`. State that the release workflow
       always runs the local gate, because it runs in GitHub Actions.
-- [ ] Run Prettier and the protocol size, history and link tests. Review the
+- [x] Run Prettier and the protocol size, history and link tests. Review the
       diff.
-- [ ] Commit.
+- [x] Commit.
+
+Validation on 2026-10-06 used Node 22.14.0 and npm 11.7.0. `npm ci`,
+`npm run build`, `npm run example:build` and `npm run example:check` passed.
+Prettier formatting and checks passed. All 30 tests in the eight focused test
+files passed. The link test checked the new pages and their anchors.
+The first link test needed the ignored example output, so the example build
+created it. No authored example files changed. The diff contains only Markdown.
+This documentation-only work does not require `cargo xtask check`.
+The commit stays local for the separate review. Do not push this milestone.
 
 ## Milestone 2: Fingerprint and suite wrapper scripts
 

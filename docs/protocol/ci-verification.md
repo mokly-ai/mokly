@@ -4,22 +4,23 @@
 
 The suite CLI, evidence, workflow graph, fixture reuse, and every repository
 ratchet are implemented. [Hosted measurements](../reviews/ci-performance.md)
-record timing and coverage. `cargo xtask check` remains the complete local gate;
-a validated hosted aggregate is reusable evidence for its exact tree. Public
-package argument forwarding, hierarchical cancellation, and pull-request title
-validation are implemented.
+record timing and coverage. `cargo xtask check` is the complete gate.
+A validated hosted aggregate is reusable evidence for its exact tree.
+Public package argument forwarding, hierarchical cancellation and title
+validation are implemented. Remote execution is an approved pending target.
 
 ## Verification Boundary
 
-`cargo xtask check` is the complete local and release complete-mode entrypoint.
-With no options it runs every gate sequentially in one checkout, beginning with
-the live workspace dependency audit. Only active reviewed path exceptions can
-cover findings; the [dependency security contract](./dependency-security.md)
-defines their UTC expiry and 31-day limit. The packed-consumer production audit
-has no exceptions. A selected suite is partial evidence and
-must never report that the complete gate passed. CI's validated aggregate of all
-required jobs and reports is complete verification of their exact tree; the
-[release evidence contract](./npm-release-evidence.md) defines reuse.
+`cargo xtask check` is the complete repository and release complete-mode entrypoint.
+The local executor runs every gate sequentially in one checkout.
+It starts with the live workspace dependency audit. The complete gate can
+instead run on Testboxes under the pending
+[remote verification contract](./remote-verification.md).
+Only active reviewed path exceptions cover findings. [Dependency security](./dependency-security.md)
+defines their UTC expiry and 31-day limit. The packed-consumer production audit has no exceptions.
+A selected suite is partial evidence and must never claim a complete pass.
+CI's validated aggregate is complete evidence for its exact tree.
+[Release evidence](./npm-release-evidence.md) defines reuse.
 
 The CLI is:
 
