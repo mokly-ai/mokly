@@ -1,6 +1,9 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestones 1 to 28A are implemented, verified and pushed. Milestones 29 and 30 are implemented and verified locally under the recorded audit fallback. All final non-audit checks pass. Milestones 31 and 32 remain. This branch still has the `source-map-js` advisory GHSA-68fv-2mgg-jv7q; newer main fixes it but is not integrated by this task.
+Status: Active. Milestones 1 to 30 are implemented, verified and pushed.
+Milestone 30A integrates `main` #124, #140 and #141 and combines the two build
+warning systems, as the user decided on 2026-10-06. Milestones 31 and 32
+remain. Main's #140 removes the `source-map-js` audit blocker.
 
 ## Status And Outcome
 
@@ -13,10 +16,9 @@ change rule, which replaces second-review finding 1. Milestones 22 to 25, with
 23A and 23B, apply the user's 2026-10-04 decisions on the third review and on
 baseline compatibility. Milestones 26 to 32 apply the user's 2026-10-05
 decisions on the fourth-review finding and on second-review findings 2 to 11.
-Milestones 26 to 28 are implemented, verified and pushed. Milestone 28A
-integrates `main` #131, #133 and the fetched #132 locally before Milestones 29
-to 32. Its non-audit checks pass; the live dependency audit is blocked as
-recorded below. The reviewer owns the push.
+Milestones 26 to 30, with 28A, are implemented, verified and pushed. Milestone
+28A integrated `main` #131, #133 and #132. Milestone 30A integrates `main` #124,
+#140 and #141 before Milestones 31 and 32.
 Milestone 16 is implemented, verified and pushed as merge `77773e56`. The merge
 includes main through `b2c82c15`,
 including imported CSS (#125), route-scoped bootstraps (#120), and the STE
@@ -4194,6 +4196,48 @@ Verification and delivery evidence (2026-10-06):
 M30 is implemented and verified under the approved audit fallback. All final
 unit, browser, hydration, package and repository checks pass. The live audit
 remains the only failed gate step. The plan stays active until its PR merges.
+
+On 2026-10-06 the user decided to merge the latest `main` after Milestone 30,
+and to combine the two build warning systems as option A. `main` moved to
+`80ceb445` with #124 (link-control placement tiers and a build warning channel
+with `--strict`), #140 (the patched `source-map-js`, which removes the audit
+blocker) and #141 (`.node-version` renamed to `.nvmrc`). One warning system
+remains, based on main's #124 channel. Main's record, reporters, exact output
+lines and `--strict` stay. This branch's warnings become producers in that
+channel: the three removed fields, duplicate component stylesheets, missing
+configured links, ignored renderer stylesheet owners and former folder
+dependencies. A warning that is not about one generated page names its subject
+instead of a route: the entry or component path, or the configuration file.
+The user approved this change to main's warning record. `--strict` counts every
+warning, so a removed field fails a strict build. Watched Serve keeps the
+Milestone 29 rule that ties each warning to its build attempt, inside main's
+once-per-generation reporting.
+
+## Milestone 30A: Integrate `main` #124, #140 and #141
+
+Merge `main` at `80ceb445` before Milestones 31 and 32. A trial merge gives 19
+conflicts, most of them between the two build warning systems.
+
+- [ ] Audit main's additions from the source tip, merge `origin/main` with
+      exactly two parents, resolve conflicts path by path and review every
+      remerge-diff path.
+- [ ] Combine the two warning systems under the 2026-10-06 decision: main's
+      record, reporters, exact lines and `--strict`; this branch's warnings as
+      producers, with a non-page subject where needed; Milestone 29 build
+      fencing in Serve. Update the build warning, terminal output, CLI, Serve
+      and watch contracts and the guides. Record here every renamed code,
+      field, type or message and every conflict of meaning.
+- [ ] Failure-first tests: `--strict` fails on each of this branch's warnings;
+      warnings with a non-page subject print in the plain and rich reporters;
+      Serve prints each attempt's warnings once and no older-generation warning
+      after a rebuild; main's link-control warnings keep their exact lines.
+- [ ] Follow #141: use `.nvmrc` wherever the branch names `.node-version`.
+- [ ] Compare every line that main added since `781da7ae` with the merged tree.
+      Classify each absent line as an intended migration, a move or a loss, and
+      restore every loss before the push.
+- [ ] Run `cargo xtask check` at 100%, including the dependency audit. Inspect
+      the diff and the deletions against `origin/main`, record the result, and
+      push the branch.
 
 ## Milestone 31: Keep the branch name in exported navigation
 
