@@ -72,7 +72,7 @@ impl Blacksmith for SystemBlacksmith {
                 "--ref".into(),
                 reference.into(),
                 "--idle-timeout".into(),
-                "10".into(),
+                "30".into(),
             ],
             None,
             None,

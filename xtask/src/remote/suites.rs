@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 use std::thread;
 
-use crate::remote::error::{Error, Result};
+use crate::remote::error::Error;
 use crate::remote::plan::{RunCommand, commands};
 
 use crate::remote::runner::DefaultRemoteRunner;
@@ -18,6 +18,12 @@ pub(super) struct Completion {
     pub(super) passed: bool,
     /// Milliseconds from suite start to child completion.
     pub(super) elapsed: u128,
+    /// Whether the report download succeeded.
+    pub(super) report_downloaded: bool,
+    /// Whether cleanup stopped the box or proved it already completed.
+    pub(super) stopped: bool,
+    /// Whether the first cleanup attempt failed.
+    pub(super) cleanup_failed: bool,
 }
 
 impl DefaultRemoteRunner {
@@ -27,7 +33,7 @@ impl DefaultRemoteRunner {
         boxes: &[String],
         fingerprint: &str,
         run: &str,
-    ) -> Result<Vec<Completion>> {
+    ) -> Vec<Completion> {
         let dependencies = &self.dependencies;
         thread::scope(|scope| {
             let workers: Vec<_> = commands()
@@ -41,6 +47,9 @@ impl DefaultRemoteRunner {
                                 box_id: id.clone(),
                                 passed: false,
                                 elapsed: 0,
+                                report_downloaded: false,
+                                stopped: false,
+                                cleanup_failed: false,
                             };
                         }
                         let start = dependencies.clock.millis();
@@ -84,11 +93,18 @@ impl DefaultRemoteRunner {
                                 )),
                             }
                         }
+                        let report_downloaded = command.report
+                            && !dependencies.interrupt.requested()
+                            && self.download_one(id, &command.name, run);
+                        let cleanup_failed = self.stop_boxes(std::slice::from_ref(id)) != 0;
                         Completion {
                             command,
                             box_id: id.clone(),
                             passed,
                             elapsed,
+                            report_downloaded,
+                            stopped: !cleanup_failed,
+                            cleanup_failed,
                         }
                     })
                 })
@@ -97,40 +113,35 @@ impl DefaultRemoteRunner {
             for worker in workers {
                 match worker.join() {
                     Ok(outcome) => outcomes.push(outcome),
-                    Err(_) => return Err(Error::Worker),
+                    Err(_) => dependencies
+                        .reporter
+                        .executor(&format!("warning: suite worker failed: {}", Error::Worker)),
                 }
             }
-            Ok(outcomes)
+            outcomes
         })
     }
 
-    /// Try every required report, even when a command failed.
-    pub(super) fn download(&self, completed: &[Completion], reports: &Path) -> usize {
+    /// Download one ended command's report before stopping its box.
+    fn download_one(&self, id: &str, name: &str, run: &str) -> bool {
         let dependencies = &self.dependencies;
-        let mut failures = 0;
-        for completion in completed
-            .iter()
-            .filter(|completion| completion.command.report)
-        {
-            let name = &completion.command.name;
-            let source = format!(".context/verification-reports/remote/{name}.json");
-            let target = reports.join(format!("{name}.json"));
-            if let Err(error) =
-                dependencies
-                    .blacksmith
-                    .download(&completion.box_id, &source, &target)
-            {
-                failures += 1;
-                dependencies
-                    .reporter
-                    .executor(&format!("warning: report {name} failed: {error}"));
-            } else {
-                dependencies
-                    .reporter
-                    .executor(&format!("information: report {name} downloaded"));
-            }
+        let reports = dependencies
+            .workspace
+            .join(".context/verification-reports/remote")
+            .join(run);
+        let source = format!(".context/verification-reports/remote/{name}.json");
+        let target = reports.join(format!("{name}.json"));
+        if let Err(error) = dependencies.blacksmith.download(id, &source, &target) {
+            dependencies
+                .reporter
+                .executor(&format!("warning: report {name} failed: {error}"));
+            false
+        } else {
+            dependencies
+                .reporter
+                .executor(&format!("information: report {name} downloaded"));
+            true
         }
-        failures
     }
 }
 
@@ -141,3 +152,7 @@ fn log_path(workspace: &Path, run: &str, name: &str) -> PathBuf {
         .join(run)
         .join(format!("{name}.log"))
 }
+
+#[cfg(test)]
+#[path = "_tests_/completion_tests.rs"]
+mod completion_tests;

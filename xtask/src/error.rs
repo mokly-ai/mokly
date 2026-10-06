@@ -14,7 +14,7 @@ pub(crate) type Result<T> = std::result::Result<T, Error>;
 #[derive(Debug, Error)]
 pub(crate) enum Error {
     /// Remote verification failed at a typed runtime boundary.
-    #[error("[xtask/remote] {source}")]
+    #[error("[xtask/check] {source}")]
     Remote {
         /// Original remote verification error.
         source: error::Error,

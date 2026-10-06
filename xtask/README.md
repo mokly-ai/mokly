@@ -104,17 +104,26 @@ Explicit `remote` rejects `--suite` and GitHub Actions.
 Push local `HEAD` before a remote check. Install `blacksmith`, `rsync` and `ssh`.
 Set `BLACKSMITH_ORG_TOKEN` to use org-key login through stdin.
 Remote mode can use the current CLI login when the key is absent.
+Login saves the key in `~/.blacksmith/credentials`.
+It replaces any saved login for the same organization.
 The CLI never receives the key in arguments or remote commands.
 `MOKLY_TESTBOX_REF` selects the workflow ref. Its default is `main`.
 It does not change the required source fingerprint or `HEAD`.
 
 The [remote contract](../docs/protocol/remote-verification.md) defines the
 availability order, probe barrier, report aggregate and cleanup.
+Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
+Each command worker downloads its report and cleans up its box when it ends.
+It does not wait for other commands. Final cleanup covers only remaining boxes.
+The status table can prove a box already completed. That box needs no stop or
+GitHub cancellation. The aggregate runs after all commands and cleanup end.
 Each check creates new report and log directories under `.context/`.
 Their shared run name is UTC `YYYYMMDDTHHMMSSZ` followed by `-<process-id>`.
 Decision, information and warning lines start with `[xtask/executor]`.
 Suite progress and summaries start with `[xtask/remote]`.
 Failed commands show their last 60 log lines and the log path.
+Failed aggregate and fingerprint reads show captured stdout and stderr after
+their warning. The summary names the aggregate outcome as `passed` or `failed`.
 Remote failures never substitute local suite results.
 
 ## Development

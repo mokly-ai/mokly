@@ -30,10 +30,12 @@ measurement follow the separate
 
 The [remote verification contract](./remote-verification.md) is an approved
 target under the active [plan](../../plans/blacksmith-remote-verification.md).
-The workflow secret boundary is implemented. Executor key handling is pending.
+The workflow secret boundary and explicit executor key handling are implemented.
 
 Xtask reads the org key only from `BLACKSMITH_ORG_TOKEN`.
 It sends the key to `blacksmith auth login --api-token -` on standard input.
+Login saves the key in `~/.blacksmith/credentials`.
+It replaces any saved login for the same organization.
 The key must never appear in arguments, logs, remote commands or reports.
 Explicit remote mode can use the current CLI login when the variable is unset
 or empty. Automatic mode selects local execution in that case.

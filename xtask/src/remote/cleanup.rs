@@ -2,13 +2,16 @@
 
 use std::collections::BTreeSet;
 
-use crate::remote::parse::run_id_from_status;
+use crate::remote::parse::{box_is_completed, run_id_from_status};
 
 use crate::remote::runner::DefaultRemoteRunner;
 
 impl DefaultRemoteRunner {
     /// Stop all known boxes, preserving status-before-stop and warning-only cancel rules.
     pub(super) fn stop_boxes(&self, boxes: &[String]) -> usize {
+        if boxes.is_empty() {
+            return 0;
+        }
         let dependencies = &self.dependencies;
         let github = match dependencies.programs.find("gh") {
             Ok(available) => available,
@@ -22,7 +25,15 @@ impl DefaultRemoteRunner {
         let mut failures = 0;
         for id in boxes.iter().collect::<BTreeSet<_>>() {
             let run = match dependencies.blacksmith.status(id) {
-                Ok(status) => run_id_from_status(&status),
+                Ok(status) => {
+                    if box_is_completed(&status, id) {
+                        dependencies.reporter.executor(&format!(
+                            "information: box={id} already completed; cleanup skipped"
+                        ));
+                        continue;
+                    }
+                    run_id_from_status(&status)
+                }
                 Err(error) => {
                     dependencies
                         .reporter

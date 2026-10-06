@@ -1,6 +1,6 @@
 # Blacksmith Remote Verification
 
-Status: Active. Milestone 4 awaits a timeout decision; Milestone 3 awaits the separate dependency fixes.
+Status: Active. Milestone 4 fixes are in progress; the full remote smoke check is pending.
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
 Blacksmith key is available. Run it locally when no key is available. The key
@@ -90,6 +90,8 @@ reason. It does not warm up boxes.
 - xtask reads the key only from `BLACKSMITH_ORG_TOKEN`. It sends the key to
   `blacksmith auth login --api-token -` on stdin. The key never appears in
   command arguments, logs, remote commands or reports.
+  Login saves it in `~/.blacksmith/credentials` and replaces the saved login
+  for the same organization.
 - xtask sets `BLACKSMITH_DISABLE_AUTO_UPDATE=1` for every CLI call. It prints
   the CLI version.
 - xtask never installs the CLI. The Conductor cloud snapshot includes the
@@ -125,7 +127,7 @@ these rules:
 
 1. xtask computes the local source-tree fingerprint and reads the local `HEAD`.
 2. xtask warms up 11 boxes in parallel with `--ref main` and
-   `--idle-timeout 10`. `MOKLY_TESTBOX_REF` overrides the ref for tests before
+   `--idle-timeout 30`. `MOKLY_TESTBOX_REF` overrides the ref for tests before
    merge.
 3. xtask probes each box with `blacksmith testbox run` and a 10-minute
    readiness limit. The probe runs `scripts/verification/source-tree.mjs` with
@@ -134,9 +136,12 @@ these rules:
 4. xtask starts the 11 commands in parallel: `repository`, `package`, `unit`
    shards 1 to 4 of 4, `browser` shards 1 to 4 of 4, and `hydration`. Each
    command runs `node scripts/verification/testbox-suite.mjs` on its box.
-5. xtask downloads the 9 unit, browser and hydration reports.
-6. xtask stops every box. When `gh` is available, it cancels the GitHub run of
-   each box. A failed cancel prints a warning only.
+5. As each command ends, xtask downloads its report when it produces one.
+   Then it cleans up that box at once. It does not wait for another command.
+6. Final cleanup covers only boxes that are not yet stopped.
+   Status proves an already-completed box needs no stop or cancellation.
+   Other boxes use status, stop and then optional GitHub cancellation.
+   A failed cancel prints a warning only.
 7. xtask runs `scripts/verification/aggregate.mjs` with the local `HEAD` and
    the `node-22.14.0` runtime profile.
 8. xtask computes the local fingerprint again. A changed tree fails the check.
@@ -194,11 +199,8 @@ valid. The fingerprint check covers the uncommitted changes.
 
 ## Prerequisites
 
-- The live audit reports `GHSA-wq5f-xc86-pv6w` in `sharp` and
-  `GHSA-pqg4-j6r4-53mv` in `shell-quote`.
-  Keep required dependency fixes in a separate change. The repository smoke
-  test needs a passing live audit. Confirm the audit on `main` before
-  Milestone 6.
+The separate advisory fixes are merged from main.
+Use that dependency tree for the remaining remote smoke checks.
 
 ## Milestone 1: Contract documentation — completed
 
@@ -287,8 +289,8 @@ Evidence: `.context/blacksmith-remote-verification/milestone-3-evidence.md`.
 Add `--executor remote`. The default `auto` keeps the local behavior in this
 milestone.
 
-The full remote smoke check is blocked by box idle expiry.
-Resolve the idle-timeout contract before repeating that check.
+The user approved a 30-minute idle timeout. Readiness stays at 10 minutes.
+Finish per-box cleanup and diagnostics before repeating the full smoke check.
 
 - [x] Run `cargo add ctrlc --features termination` in `xtask`.
 - [x] Add failure-first unimock tests at each new trait boundary:
@@ -321,7 +323,16 @@ Resolve the idle-timeout contract before repeating that check.
       `blacksmith testbox list` shows no box and that the GitHub runs end.
 
 - [x] Record both smoke checks. Commit and push the plan update.
-- [ ] Resolve the idle-timeout contract. Repeat the full remote smoke check.
+- [x] Resolve the idle-timeout contract.
+- [x] Add failure-first tests for the approved cleanup and diagnostic changes.
+- [x] Download each report and clean up its box as its command ends.
+      Track stopped boxes for final cleanup.
+- [x] Skip stop and cancellation for a matching completed status table row.
+- [x] Print failed script output and use clear error and aggregate wording.
+- [x] Document saved CLI credentials and the approved timeout.
+- [ ] Commit and push these fixes before the full remote smoke check.
+- [ ] Repeat the full remote smoke check with all commands and reports.
+- [ ] Close Milestones 3 and 4. Commit and push the smoke record.
 
 Evidence: `.context/blacksmith-remote-verification/milestone-4-evidence.md`.
 

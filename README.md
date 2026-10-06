@@ -341,7 +341,12 @@ MOKLY_TESTBOX_REF="$(git branch --show-current)" cargo xtask check --executor re
 
 Install `blacksmith`, `rsync` and `ssh`. Set `BLACKSMITH_ORG_TOKEN` for org-key
 login, or use the current CLI login. The remote gate runs 11 commands in parallel.
-It requires nine reports and stops every warmed box. Logs stay under `.context/`.
+Login saves the key in `~/.blacksmith/credentials`.
+It replaces any saved login for the same organization.
+Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
+Each ended command downloads its report and cleans up its box at once.
+The gate requires nine reports. It skips stop and cancellation for a status
+table row that proves the box is completed. Logs stay under `.context/`.
 `--executor local` skips remote checks. The default `auto` still runs locally.
 `MOKLY_CHECK_EXECUTOR` sets the default mode. The CLI flag overrides it.
 The workflow ref defaults to `main`. A selected `--suite` stays local.

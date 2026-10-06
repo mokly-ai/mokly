@@ -1,7 +1,9 @@
 //! Pure remote command, identifier and output contract regressions.
 
 use crate::executor::{Executor, resolve_executor};
-use crate::remote::parse::{probe_identity, require_warmup_id, run_id_from_status, warmup_ids};
+use crate::remote::parse::{
+    box_is_completed, probe_identity, require_warmup_id, run_id_from_status, warmup_ids,
+};
 use crate::remote::plan::commands;
 
 #[test]
@@ -16,6 +18,30 @@ fn mode_precedence_uses_the_flag_before_the_environment() {
         Executor::Remote
     );
     assert!(resolve_executor(None, Some("bad")).is_err());
+}
+
+#[test]
+fn completed_status_requires_one_matching_table_row() {
+    assert!(box_is_completed(
+        "ID STATUS REPO\ntbx_a completed mokly",
+        "tbx_a"
+    ));
+    assert!(box_is_completed(
+        "ID REPO STATUS\ntbx_a mokly completed",
+        "tbx_a"
+    ));
+    for output in [
+        "completed",
+        "tbx_a completed",
+        "ID STATUS\ntbx_other completed",
+        "ID STATUS\ntbx_a ready",
+        "ID STATUS\ntbx_a",
+        "ID REPO\ntbx_a completed",
+        "ID STATUS\ntbx_a completed\ntbx_a ready",
+        "ID STATUS\ntbx_a COMPLETED",
+    ] {
+        assert!(!box_is_completed(output, "tbx_a"), "{output}");
+    }
 }
 
 #[test]

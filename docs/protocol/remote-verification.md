@@ -6,8 +6,8 @@ The active [Blacksmith remote verification plan](../../plans/blacksmith-remote-v
 defines this approved target. Explicit remote execution, the scripts and the
 Testbox workflow are implemented. Automatic remote selection and
 `cargo xtask executor` are pending. The default `auto` runs locally.
-The complete remote smoke check is blocked by box idle expiry.
-The idle timeout needs a contract decision.
+The approved idle timeout is 30 minutes. Per-box cleanup and diagnostics are
+being updated. The complete remote smoke check is pending.
 The [Testbox execution contract](./remote-verification-testbox.md) defines the
 workflow, commands, probe, suite wrapper and source-tree fingerprint.
 
@@ -75,6 +75,8 @@ standard error. Each line starts with `[xtask/executor]` followed by a space.
 
 Read the supplied key only from `BLACKSMITH_ORG_TOKEN`.
 Send it to `blacksmith auth login --api-token -` on standard input.
+Login saves the key in `~/.blacksmith/credentials`.
+It replaces any saved login for the same organization.
 Never put it in arguments, logs, remote commands or reports.
 The CLI does not read that variable itself. The org token selects its own
 organization. Validate access with `blacksmith testbox list` after login.
@@ -102,7 +104,7 @@ Run all local and CLI operations from the workspace root.
 1. Read local `HEAD`. Compute the local source-tree fingerprint.
 2. Warm up 11 boxes in parallel through `blacksmith testbox warmup`.
    Use `.github/workflows/blacksmith-testbox.yml`, `--ref main` and
-   `--idle-timeout 10`. Use `MOKLY_TESTBOX_REF` when it is set.
+   `--idle-timeout 30`. Use `MOKLY_TESTBOX_REF` when it is set.
    Record each box ID. Warmup must return exactly one
    box ID per request. Missing, multiple or repeated IDs fail warmup.
 3. Probe every box through `blacksmith testbox run`.
@@ -111,10 +113,10 @@ Run all local and CLI operations from the workspace root.
 4. Start the [11 suite commands](./remote-verification-testbox.md#remote-commands)
    in parallel. Assign one command to each box. No suite may start until
    all probes pass.
-5. Download the nine unit, browser and hydration reports.
+5. When a command ends, download its report if it produces one.
    Collect available failure reports as well as success reports.
-6. Stop every warmed box. If `gh` is available, cancel each box's GitHub run.
-   A failed cancellation prints a warning only.
+   Clean up that box at once. Do not wait for another command.
+6. After all commands end, clean up boxes that are not yet stopped.
 7. Run the local report aggregate with local `HEAD` and `node-22.14.0`.
 8. Compute the local fingerprint again. Fail if the source tree changed.
 
@@ -126,7 +128,7 @@ success. Never substitute local suite results after remote execution starts.
 The default warmup command for each box is:
 
 ```bash
-blacksmith testbox warmup blacksmith-testbox.yml --ref main --idle-timeout 10
+blacksmith testbox warmup blacksmith-testbox.yml --ref main --idle-timeout 30
 ```
 
 ## Report Download And Aggregation
@@ -143,6 +145,7 @@ xtask process ID in decimal. For example, `20261006T134131Z-1234`.
 Compute it once at run start. Report and log directories use the same value.
 Download each report there under its command name. Do not use reports from
 another run. A missing or failed download fails remote verification.
+Download each report as its command ends, before stopping that box.
 
 Use the CLI download command for each required report:
 
@@ -171,13 +174,21 @@ Track boxes as warmup requests complete. Cleanup must also cover boxes created
 during an interrupted or failed warmup. Stop launching suite commands after
 an interrupt. Attempt cleanup for all boxes even if one cleanup call fails.
 Report cleanup failures. An interrupted check cannot pass or start local fallback.
+Track successful stops and already-completed boxes. Final cleanup processes
+only the remaining boxes. A failed stop stays eligible for final cleanup.
 
 Before stopping each box, run `blacksmith testbox status --id <box-id>`.
+Split table lines on ASCII whitespace. Find the header whose first column is
+`ID`. Read the column named `STATUS`. Require exactly one row whose first
+column is the box ID. If that row's status is exactly `completed`, skip both
+stop and cancellation. Count no cleanup failure for that box.
+Missing, ambiguous or incomplete table data does not prove completion.
+A failed status read still requires a stop attempt.
 Read its GitHub run ID from the first `/actions/runs/<digits>` match.
 If there is no match, print a warning and skip cancellation for that box.
 Then run `blacksmith testbox stop --id <box-id>`.
 Use `gh run cancel <github-run-id>` when an ID and `gh` are available.
-The 10-minute idle timeout and 30-minute workflow
+The 30-minute idle timeout and 30-minute workflow
 timeout limit cost if the local process is killed before cleanup.
 Do not reuse boxes between checks.
 
@@ -188,6 +199,11 @@ Write each command's standard output and standard error to
 `.context/verification-logs/remote/<run>/<command>.log`.
 For each failed command, print the last 60 log lines and the log path.
 The summary lists command durations and box IDs. Preserve logs after cleanup.
+Print `aggregate=passed` or `aggregate=failed` in the summary.
+On aggregate or fingerprint read failure, print a warning first.
+Then print that command's captured stdout and stderr with the executor prefix.
+Describe command termination as `exit <code>` or `a signal`.
+Use `[xtask/check]` for the outer error wrapper.
 Apply the key secrecy rule to diagnostics and captured output.
 
 ## Out Of Scope

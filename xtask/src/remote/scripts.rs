@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use crate::remote::clients::success;
-use crate::remote::contracts::{Aggregate, Fingerprint, Git};
-use crate::remote::error::{Operation, Result};
+use crate::remote::contracts::{Aggregate, Fingerprint, Git, Output};
+use crate::remote::error::{Error, Operation, Result};
 use crate::remote::parse::fingerprint_value;
 use crate::remote::process::{Process, Request};
 
@@ -19,7 +19,7 @@ pub(crate) struct SystemScripts {
 
 impl SystemScripts {
     /// Capture one local command and require its real zero exit.
-    fn capture(&self, program: &str, args: Vec<String>, operation: Operation) -> Result<String> {
+    fn capture(&self, program: &str, args: Vec<String>, operation: Operation) -> Result<Output> {
         let output = self.process.execute(&Request {
             program: program.into(),
             args,
@@ -30,8 +30,13 @@ impl SystemScripts {
             cancellable: true,
             blacksmith: false,
         })?;
-        success(&output, operation)?;
-        Ok(output.stdout)
+        if let Err(source) = success(&output, operation) {
+            return Err(Error::Captured {
+                source: Box::new(source),
+                output,
+            });
+        }
+        Ok(output)
     }
 }
 
@@ -43,6 +48,7 @@ impl Git for SystemScripts {
                 vec!["rev-parse".into(), "HEAD".into()],
                 Operation::Git,
             )?
+            .stdout
             .trim()
             .to_owned())
     }
@@ -59,6 +65,7 @@ impl Git for SystemScripts {
                 ],
                 Operation::Git,
             )?
+            .stdout
             .trim()
             .is_empty())
     }
@@ -66,11 +73,18 @@ impl Git for SystemScripts {
 
 impl Fingerprint for SystemScripts {
     fn read(&self) -> Result<String> {
-        fingerprint_value(&self.capture(
+        let output = self.capture(
             "node",
             vec!["scripts/verification/source-tree.mjs".into()],
             Operation::Fingerprint,
-        )?)
+        )?;
+        match fingerprint_value(&output.stdout) {
+            Ok(value) => Ok(value),
+            Err(source) => Err(Error::Captured {
+                source: Box::new(source),
+                output,
+            }),
+        }
     }
 }
 

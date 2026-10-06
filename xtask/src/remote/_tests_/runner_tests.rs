@@ -97,6 +97,14 @@ fn every_failed_run_cleans_all_recoverable_boxes() {
             assert!(stopped.contains("tbx_extra"));
         }
         for id in &stopped {
+            assert_eq!(
+                events
+                    .iter()
+                    .filter(|event| **event == format!("stop:{id}"))
+                    .count(),
+                1,
+                "{case:?}"
+            );
             let status = events
                 .iter()
                 .position(|event| event == &format!("status:{id}"))
@@ -166,4 +174,49 @@ fn interruption_is_nonzero_even_when_children_return_zero() {
         .run(),
         Err(Error::Interrupted)
     ));
+}
+
+#[test]
+fn aggregate_summary_names_the_failed_outcome() {
+    let fixture = harness(Case::Aggregate);
+    assert!(
+        DefaultRemoteRunner {
+            dependencies: fixture.dependencies
+        }
+        .run()
+        .is_err()
+    );
+    assert!(fixture.events.lock().unwrap().iter().any(|event| event.contains("summary: commands=") && event.contains("aggregate=failed")));
+}
+
+#[test]
+fn each_report_download_precedes_its_box_stop() {
+    let fixture = harness(Case::Success);
+    DefaultRemoteRunner {
+        dependencies: fixture.dependencies,
+    }
+    .run()
+    .unwrap();
+    let events = fixture.events.lock().unwrap();
+    for id in events
+        .iter()
+        .filter_map(|event| event.strip_prefix("download:"))
+    {
+        let download = events
+            .iter()
+            .position(|event| event == &format!("download:{id}"))
+            .unwrap();
+        let stop = events
+            .iter()
+            .position(|event| event == &format!("stop:{id}"))
+            .unwrap();
+        assert!(download < stop);
+        assert_eq!(
+            events
+                .iter()
+                .filter(|event| **event == format!("stop:{id}"))
+                .count(),
+            1
+        );
+    }
 }

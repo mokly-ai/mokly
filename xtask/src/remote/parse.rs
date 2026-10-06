@@ -87,6 +87,26 @@ pub(crate) fn run_id_from_status(output: &str) -> Option<u64> {
     })
 }
 
+/// Prove completion only from one box row and the named table status column.
+pub(crate) fn box_is_completed(output: &str, id: &str) -> bool {
+    let status_column = output.lines().find_map(|line| {
+        let columns: Vec<_> = line.split_ascii_whitespace().collect();
+        if columns.first() != Some(&"ID") {
+            return None;
+        }
+        columns.iter().position(|column| *column == "STATUS")
+    });
+    let Some(column) = status_column else {
+        return false;
+    };
+    let rows: Vec<Vec<_>> = output
+        .lines()
+        .map(|line| line.split_ascii_whitespace().collect())
+        .filter(|row: &Vec<&str>| row.first() == Some(&id))
+        .collect();
+    rows.len() == 1 && rows[0].get(column) == Some(&"completed")
+}
+
 #[cfg(test)]
 #[path = "_tests_/parsing_tests.rs"]
 mod parsing_tests;

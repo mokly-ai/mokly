@@ -4,6 +4,8 @@ use std::io;
 
 use thiserror::Error;
 
+use crate::remote::contracts::Output;
+
 /// Remote verification result.
 pub(crate) type Result<T> = std::result::Result<T, Error>;
 
@@ -25,6 +27,10 @@ pub(crate) enum Operation {
     /// Inspect an executable path.
     Program,
 }
+
+#[cfg(test)]
+#[path = "_tests_/error_tests.rs"]
+mod error_tests;
 
 /// Failures that prevent a complete remote pass.
 #[derive(Debug, Error)]
@@ -70,12 +76,20 @@ pub(crate) enum Error {
         source: io::Error,
     },
     /// A command returned a failed or signal exit.
-    #[error("[xtask/remote] {operation:?} command failed with exit {code:?}")]
+    #[error("[xtask/remote] {operation:?} command failed with {}", termination(*code))]
     Command {
         /// Command responsibility.
         operation: Operation,
         /// Numeric exit code, absent for a signal.
         code: Option<i32>,
+    },
+    /// Preserve both script streams alongside the original typed failure.
+    #[error("[xtask/scripts] {source}")]
+    Captured {
+        /// Original command or identity error.
+        source: Box<Error>,
+        /// Captured stdout, stderr and termination status.
+        output: Output,
     },
     /// Warmup output must identify exactly one box.
     #[error("[xtask/remote] warmup reported {count} box IDs; expected exactly one")]
@@ -111,7 +125,7 @@ pub(crate) enum Error {
     },
     /// At least one complete-gate requirement failed.
     #[error(
-        "[xtask/remote] verification failed: {commands} commands, {reports} downloads, aggregate={aggregate}, changed-tree={changed}, cleanup={cleanup}"
+        "[xtask/remote] verification failed: {commands} commands, {reports} downloads, aggregate-failed={aggregate_failed}, changed-tree={changed}, cleanup={cleanup}"
     )]
     Verification {
         /// Failed suite commands.
@@ -119,10 +133,18 @@ pub(crate) enum Error {
         /// Failed report downloads.
         reports: usize,
         /// Aggregate failure.
-        aggregate: bool,
+        aggregate_failed: bool,
         /// Local source tree changed.
         changed: bool,
         /// Failed box stops.
         cleanup: usize,
     },
+}
+
+/// Clear termination wording without Rust's Option debug notation.
+fn termination(code: Option<i32>) -> String {
+    match code {
+        Some(code) => format!("exit {code}"),
+        None => "a signal".to_owned(),
+    }
 }

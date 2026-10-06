@@ -42,7 +42,7 @@ fn warmup_probe_download_status_and_stop_use_the_contract_arguments() {
                                 "--ref",
                                 "feature",
                                 "--idle-timeout",
-                                "10"
+                                "30"
                             ]
                         );
                         assert!(!request.cancellable);

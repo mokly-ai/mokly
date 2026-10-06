@@ -34,7 +34,7 @@ fn head_fingerprint_and_log_failures_stop_before_warmup() {
             BlacksmithVersionMock
                 .next_call(matching!())
                 .answers(&|_| Ok("test version".into())),
-            ReporterExecutorMock.next_call(matching!(_)).returns(()),
+            ReporterExecutorMock.each_call(matching!(_)).returns(()),
             BlacksmithListMock
                 .next_call(matching!())
                 .answers(&|_| Ok(())),

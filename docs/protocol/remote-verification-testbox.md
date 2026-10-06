@@ -7,11 +7,9 @@ Continuation of [Remote Verification](./remote-verification.md).
 The active [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
 approves this target. Explicit remote execution, the fingerprint, suite wrapper
 and workflow are implemented. The wrapper selects `--executor local`.
-Workflow validation and the box package smoke check pass. The repository box
-smoke check is blocked by the live dependency audit. Automatic remote selection
-and `cargo xtask executor` are pending.
-The complete remote smoke check is blocked by box idle expiry.
-The idle timeout needs a contract decision.
+Workflow validation and the box package smoke check pass.
+Main's dependency fixes are merged. The complete remote smoke check is pending.
+Automatic remote selection and `cargo xtask executor` are pending.
 
 ## Workflow
 
@@ -45,6 +43,15 @@ Run the steps in this order:
    Replace previous entries for those two names. Preserve other entries.
    New Testbox SSH sessions must use Node 22.14.0 and Chromium.
 8. Run `useblacksmith/run-testbox`. It keeps the job alive until the idle timeout.
+
+Warmup selects a 30-minute idle timeout. Readiness still uses `10m`.
+The pinned action does not detect the SSH session in this environment.
+Only the start of each `testbox run` resets the observed idle timer.
+Download a report as its command ends. Then clean up that box at once under
+the [cleanup contract](./remote-verification.md#cleanup-and-interrupts).
+Key login saves the key in the local CLI credential file.
+It replaces any saved login for the same organization.
+The [key contract](./remote-verification.md#key-and-cli-handling) names that file.
 
 Pin each action to these immutable revisions. Keep the version comments.
 

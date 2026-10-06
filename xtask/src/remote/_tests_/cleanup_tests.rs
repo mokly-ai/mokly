@@ -11,7 +11,7 @@ use crate::remote::runner::DefaultRemoteRunner;
 
 #[test]
 fn cleanup_continues_after_status_stop_and_optional_github_failures() {
-    for case in 0..4 {
+    for case in 0..5 {
         let events = Arc::new(Mutex::new(Vec::new()));
         let status_events = events.clone();
         let stop_events = events.clone();
@@ -38,6 +38,8 @@ fn cleanup_continues_after_status_stop_and_optional_github_failures() {
                             operation: Operation::Blacksmith,
                             code: Some(1),
                         })
+                    } else if case == 4 && id == "tbx_a" {
+                        Ok("ID STATUS REPO\ntbx_other completed mokly\ntbx_a completed mokly\n/actions/runs/123".into())
                     } else {
                         Ok("https://github.com/org/repo/actions/runs/123".into())
                     }
@@ -97,8 +99,11 @@ fn cleanup_continues_after_status_stop_and_optional_github_failures() {
                     .iter()
                     .filter(|event| **event == format!("stop:{id}"))
                     .count(),
-                1
+                usize::from(case != 4 || id != "tbx_a")
             );
+            if case == 4 && id == "tbx_a" {
+                continue;
+            }
             assert!(
                 events
                     .iter()
@@ -111,7 +116,7 @@ fn cleanup_continues_after_status_stop_and_optional_github_failures() {
         assert_eq!(
             events.iter().filter(|event| **event == "cancel").count(),
             match case {
-                2 => 1,
+                2 | 4 => 1,
                 3 => 2,
                 _ => 0,
             }
