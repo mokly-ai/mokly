@@ -3,11 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { loadConsumerGraph } from "../dist/build/load_graph.js";
-import { collectPostcssDependencies } from "../dist/build/styles/dependency_inventory.js";
-import { loadConfig } from "../dist/config/load.js";
-import { classifyWatchPath } from "../dist/server/watch_events.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { loadConsumerGraph } from "../packages/mokly/dist/build/load_graph.js";
+import { collectPostcssDependencies } from "../packages/mokly/dist/build/styles/dependency_inventory.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { classifyWatchPath } from "../packages/mokly/dist/server/watch_events.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

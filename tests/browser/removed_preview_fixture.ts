@@ -2,8 +2,8 @@ import { setTimeout as delay } from "node:timers/promises";
 
 import { readCatalogue } from "@mokly/viewer";
 
-import { exportCatalogue } from "../../dist/export/run.js";
-import { serve } from "../../dist/server/serve.js";
+import { exportCatalogue } from "../../packages/mokly/dist/export/run.js";
+import { serve } from "../../packages/mokly/dist/server/serve.js";
 import { createRemovedPreviewFixture } from "../helpers/removed_preview_fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 

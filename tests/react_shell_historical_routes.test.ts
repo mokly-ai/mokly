@@ -3,13 +3,13 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { ConfiguredGitCommandRunner } from "../dist/config/git.js";
-import { exportCatalogue } from "../dist/export/run.js";
-import { CommittedRepository } from "../dist/review/git.js";
-import { configuredServedReview } from "../dist/server/configured_review.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { ConfiguredGitCommandRunner } from "../packages/mokly/dist/config/git.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
+import { CommittedRepository } from "../packages/mokly/dist/review/git.js";
+import { configuredServedReview } from "../packages/mokly/dist/server/configured_review.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";

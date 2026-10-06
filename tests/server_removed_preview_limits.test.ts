@@ -6,8 +6,8 @@ import test from "node:test";
 import type {
   RemovedPagePreviewProvider,
   RemovedPagePreviewSource,
-} from "../dist/review/selection_types.js";
-import { SelectedReviewRoutes } from "../dist/server/selected_review_routes.js";
+} from "../packages/mokly/dist/review/selection_types.js";
+import { SelectedReviewRoutes } from "../packages/mokly/dist/server/selected_review_routes.js";
 
 const id = "removed-page";
 const page = {

@@ -4,14 +4,14 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { acceptedGenerationFromCompilation } from "../dist/review/accepted_generation.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
-import { loadCatalogueSnapshot } from "../dist/server/catalogue_snapshot.js";
-import { computeCatalogueChanges } from "../dist/server/changed.js";
-import { readCatalogueChanges } from "../dist/server/component_changes.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { acceptedGenerationFromCompilation } from "../packages/mokly/dist/review/accepted_generation.js";
+import { committedReviewRepository } from "../packages/mokly/dist/review/repository.js";
+import { loadCatalogueSnapshot } from "../packages/mokly/dist/server/catalogue_snapshot.js";
+import { computeCatalogueChanges } from "../packages/mokly/dist/server/changed.js";
+import { readCatalogueChanges } from "../packages/mokly/dist/server/component_changes.js";
 
 import { removeFixture } from "./helpers/fixture.js";
 import { styleFixture } from "./helpers/imported_styles_fixture.js";

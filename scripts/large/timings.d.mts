@@ -1,4 +1,4 @@
-import type { TimingEvent } from "../../src/diagnostics/timings.js";
+import type { TimingEvent } from "../../packages/mokly/src/diagnostics/timings.js";
 
 export interface ReceivedTiming {
   event: TimingEvent;

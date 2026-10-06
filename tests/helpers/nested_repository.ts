@@ -4,14 +4,26 @@ import path from "node:path";
 import type { TestContext } from "node:test";
 import { promisify } from "node:util";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
+import {
+  compileCatalogue,
+  type Compilation,
+} from "../../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
 
 import { createFixture, removeFixture } from "./fixture.js";
 
+type NestedRepositoryResult = {
+  config: ResolvedConfig;
+  compilation: Compilation;
+  root: string;
+};
+
 /** Valid committed output inside a Git repo whose config incorrectly roots a subdirectory. */
-export async function nestedRepository(t: TestContext) {
+export async function nestedRepository(
+  t: TestContext,
+): Promise<NestedRepositoryResult> {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const nested = path.join(fixture.root, "catalogue");

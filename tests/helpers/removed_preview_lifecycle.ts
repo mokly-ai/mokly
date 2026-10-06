@@ -8,9 +8,9 @@ import type {
   RemovedPagePreviewSource,
   SelectedReviewProvider,
   SelectedReviewSource,
-} from "../../dist/review/selection_types.js";
-import type { SelectedReviewRoutesOptions } from "../../dist/server/selected_review_capture.js";
-import { SelectedReviewRoutes } from "../../dist/server/selected_review_routes.js";
+} from "../../packages/mokly/dist/review/selection_types.js";
+import type { SelectedReviewRoutesOptions } from "../../packages/mokly/dist/server/selected_review_capture.js";
+import { SelectedReviewRoutes } from "../../packages/mokly/dist/server/selected_review_routes.js";
 import { entryRoute } from "../../packages/viewer/dist/data.js";
 import type { RemovedPagePreviewArtifact } from "../../packages/viewer/dist/review/page_preview.js";
 import type { ReviewArtifact } from "../../packages/viewer/dist/review/types.js";

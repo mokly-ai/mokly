@@ -12,7 +12,7 @@ export async function buildPreviewFixture(root: string, output: string) {
     [
       "--input-type=module",
       "--eval",
-      'import { loadConfig } from "./dist/config/load.js"; import { buildPreview } from "./scripts/preview/catalogue.mjs"; await buildPreview(await loadConfig(process.argv[1]), process.argv[2]);',
+      'import { loadConfig } from "./packages/mokly/dist/config/load.js"; import { buildPreview } from "./scripts/preview/catalogue.mjs"; await buildPreview(await loadConfig(process.argv[1]), process.argv[2]);',
       root,
       output,
     ],

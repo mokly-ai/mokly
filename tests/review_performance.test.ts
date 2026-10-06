@@ -3,13 +3,13 @@ import { execFile } from "node:child_process";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { renderReviewArtifact } from "../dist/review/artifact.js";
-import { compareReview } from "../dist/review/compare.js";
-import { CommittedRepository } from "../dist/review/git.js";
-import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { renderReviewArtifact } from "../packages/mokly/dist/review/artifact.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import { CommittedRepository } from "../packages/mokly/dist/review/git.js";
+import type { ReadOnlyReviewRepository } from "../packages/mokly/dist/review/repository.js";
 import { generatedViews } from "../packages/viewer/dist/data.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ExportInventory } from "../dist/export/inventory.js";
-import { validateExportReferences } from "../dist/export/references.js";
+import { ExportInventory } from "../packages/mokly/dist/export/inventory.js";
+import { validateExportReferences } from "../packages/mokly/dist/export/references.js";
 
 const collisions = [
   { label: "exact alias/file", files: ["view/home"], aliases: ["view/home"] },

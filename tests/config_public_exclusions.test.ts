@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { resolveConfig } from "../dist/config/validate.js";
-import { MoklyError } from "../dist/errors.js";
+import { resolveConfig } from "../packages/mokly/dist/config/validate.js";
+import { MoklyError } from "../packages/mokly/dist/errors.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

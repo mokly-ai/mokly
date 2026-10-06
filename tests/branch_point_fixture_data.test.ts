@@ -3,14 +3,14 @@ import test from "node:test";
 
 import { readCatalogue } from "@mokly/viewer";
 
+import { projectCatalogue } from "../packages/mokly/src/catalogue/projection.js";
+import { compareReview } from "../packages/mokly/src/review/compare.js";
+import { computeCatalogueChanges } from "../packages/mokly/src/server/changed.js";
 import { currentCatalogueEntries } from "../packages/viewer/src/catalogue/entry_selection.js";
 import { readShellCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import { projectScopedCatalogue } from "../packages/viewer/src/catalogue/scoped_projection.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
 import { branchPoints } from "../packages/viewer/src/shell/catalogue_branch_point.js";
-import { projectCatalogue } from "../src/catalogue/projection.js";
-import { compareReview } from "../src/review/compare.js";
-import { computeCatalogueChanges } from "../src/server/changed.js";
 
 import { branchPointFixture } from "./helpers/branch_point_fixture.js";
 

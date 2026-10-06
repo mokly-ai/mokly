@@ -5,13 +5,13 @@ import test from "node:test";
 
 import { readCatalogue } from "@mokly/viewer";
 
-import { componentRuntime } from "../dist/build/component_runtime.js";
-import { exportCatalogue } from "../dist/export/run.js";
-import { catalogueWithChanges } from "../dist/server/baseline_catalogue.js";
-import { computeCatalogueChanges } from "../dist/server/changed.js";
-import { readCatalogueChanges } from "../dist/server/component_changes.js";
-import { startCatalogueServer } from "../dist/server/http.js";
-import { removedPagePreviewSource } from "../dist/server/review_sources.js";
+import { componentRuntime } from "../packages/mokly/dist/build/component_runtime.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
+import { catalogueWithChanges } from "../packages/mokly/dist/server/baseline_catalogue.js";
+import { computeCatalogueChanges } from "../packages/mokly/dist/server/changed.js";
+import { readCatalogueChanges } from "../packages/mokly/dist/server/component_changes.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
+import { removedPagePreviewSource } from "../packages/mokly/dist/server/review_sources.js";
 
 import { movedCatalogueFixture } from "./helpers/move_catalogue.js";
 

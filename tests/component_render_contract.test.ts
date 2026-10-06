@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { validateRenderRequest } from "../dist/components/render_request.js";
+import { validateRenderRequest } from "../packages/mokly/dist/components/render_request.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 

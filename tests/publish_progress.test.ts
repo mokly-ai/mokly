@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ResolvedConfig } from "../dist/config/types.js";
+import type { ResolvedConfig } from "../packages/mokly/dist/config/types.js";
 import {
   publishCatalogue,
   type PublishDependencies,
   type PublishUploadProgress,
-} from "../dist/publish/run.js";
+} from "../packages/mokly/dist/publish/run.js";
 
 import { ownershipMarkerFromFiles } from "./helpers/ownership_marker.js";
 

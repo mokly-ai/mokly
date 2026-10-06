@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { VERIFICATION_RESOURCE_ROOT_ENV } from "../../dist/baseline/process_owner.js";
+import { VERIFICATION_RESOURCE_ROOT_ENV } from "../../packages/mokly/dist/baseline/process_owner.js";
 
 export const PREVIEW_ARTIFACT_MARKER = ".mokly-preview-artifact";
 

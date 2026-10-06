@@ -6,8 +6,8 @@ import test from "node:test";
 import {
   StylePreprocessor,
   type StyleTextProcessor,
-} from "../dist/build/styles/preprocess.js";
-import { loadConfig } from "../dist/config/load.js";
+} from "../packages/mokly/dist/build/styles/preprocess.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

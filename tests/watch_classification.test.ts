@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ResolvedConfig } from "../dist/config/types.js";
+import type { ResolvedConfig } from "../packages/mokly/dist/config/types.js";
 import type {
   CatalogueChangeClassifier,
   ComponentChangeSnapshot,
-} from "../dist/server/component_changes.js";
-import { WatchClassification } from "../dist/server/watch_classification.js";
+} from "../packages/mokly/dist/server/component_changes.js";
+import { WatchClassification } from "../packages/mokly/dist/server/watch_classification.js";
 
 test("background classification aborts superseded work and publishes only the latest result", async () => {
   const pending: {

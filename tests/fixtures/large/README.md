@@ -110,7 +110,7 @@ spans for background classification to stderr, including `review.css-analysis`
 for rule parsing, diffing, matching and reduction.
 It does not write comparison artifacts. To measure the complete artifact path
 on the same prepared fixture, run
-`node dist/cli/bin.js export --config <printed-config> --base main --out .context/site --debug-timings`.
+`node packages/mokly/dist/cli/bin.js export --config <printed-config> --base main --out .context/site --debug-timings`.
 The output must stay inside the fixture; review timing rows are inclusive, and
 overlapping traversals must not be added to their parent duration.
 

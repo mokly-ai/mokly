@@ -3,13 +3,13 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { componentRuntime } from "../dist/build/component_runtime.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { captureRenderBundle } from "../dist/server/controls/transient_assets.js";
-import { startCatalogueServer } from "../dist/server/http.js";
-import { serve } from "../dist/server/serve.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { componentRuntime } from "../packages/mokly/dist/build/component_runtime.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { captureRenderBundle } from "../packages/mokly/dist/server/controls/transient_assets.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 
 import { removeFixture } from "./helpers/fixture.js";
 import { entryStyle, styleFixture } from "./helpers/imported_styles_fixture.js";

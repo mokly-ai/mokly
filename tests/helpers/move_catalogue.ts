@@ -1,8 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { generatedBytes } from "../../dist/build/generated_file.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
+import type { Compilation } from "../../packages/mokly/dist/build/compile.js";
+import { generatedBytes } from "../../packages/mokly/dist/build/generated_file.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
+import type { ReadOnlyReviewRepository } from "../../packages/mokly/dist/review/repository.js";
 
 import { componentGit } from "./component_review_fixture.js";
 import {
@@ -13,11 +16,24 @@ import {
 import { assertMoveDelivery, commitMoveBaseline } from "./move_delivery.js";
 import { pathFixture } from "./path_fixture.js";
 
+type MovedCatalogueFixtureResult = {
+  config: ResolvedConfig;
+  before: Compilation;
+  after: Compilation;
+  changedPaths: string[];
+  git: ReadOnlyReviewRepository;
+  beforeRemove: (cleanup: () => Promise<void>) => void;
+  root: string;
+  write: (name: string, content: string) => Promise<void>;
+  remove: () => Promise<void>;
+  compile: () => Promise<Compilation>;
+};
+
 /** A real compiled directory move with a folder README, document, page and screen variant. */
 export async function movedCatalogueFixture(
   t: { after: (cleanup: () => Promise<void>) => void },
   options: MoveCatalogueOptions = {},
-) {
+): Promise<MovedCatalogueFixtureResult> {
   const sources = moveCatalogueSources(options);
   const fixture = await pathFixture(
     sources,

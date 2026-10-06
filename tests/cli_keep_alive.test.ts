@@ -5,9 +5,9 @@ import path from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 
-import { withCommandKeepAlive } from "../dist/cli/keep_alive.js";
+import { withCommandKeepAlive } from "../packages/mokly/dist/cli/keep_alive.js";
 
-import { repositoryRoot, packageRoot } from "./helpers/fixture.js";
+import { packageRoot } from "./helpers/fixture.js";
 
 test("the command keep-alive lets unreferenced awaited work settle", async () => {
   const result = await withCommandKeepAlive(
@@ -58,7 +58,7 @@ console.log(await withCommandKeepAlive(() => ${action}));`,
 
 test("export and publish hold the command keep-alive around listeners", () => {
   for (const relative of ["src/cli/export.ts", "src/cli/publish.ts"]) {
-    const source = fs.readFileSync(path.join(repositoryRoot, relative), "utf8");
+    const source = fs.readFileSync(path.join(packageRoot, relative), "utf8");
     const keepAlive = source.indexOf("withCommandKeepAlive(async () => {");
     assert.notEqual(keepAlive, -1, relative);
     assert.ok(keepAlive < source.indexOf('process.on("SIGINT"'), relative);

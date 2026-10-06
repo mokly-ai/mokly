@@ -3,20 +3,23 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { defineScreen, defineUseCase } from "../dist/authoring/definitions.js";
-import type { ResolvedRegistryEntry } from "../dist/authoring/types.js";
-import { checkCompilation } from "../dist/build/check.js";
-import { compileCatalogue } from "../dist/build/compile.js";
-import { pendingGeneratedOrphanRoutes } from "../dist/build/ownership.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
+import {
+  defineScreen,
+  defineUseCase,
+} from "../packages/mokly/dist/authoring/definitions.js";
+import type { ResolvedRegistryEntry } from "../packages/mokly/dist/authoring/types.js";
+import { checkCompilation } from "../packages/mokly/dist/build/check.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { pendingGeneratedOrphanRoutes } from "../packages/mokly/dist/build/ownership.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 import {
   createManifest,
   MANIFEST_NAME,
   parseManifest,
   readManifest,
   serializeManifest,
-} from "../dist/registry/manifest.js";
+} from "../packages/mokly/dist/registry/manifest.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { resolvedEntry } from "./helpers/resolved.js";

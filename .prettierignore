@@ -11,5 +11,7 @@ playwright-report
 docs/protocol/fixtures/catalogue-v4.json
 
 # release-please owns the changelog format
-CHANGELOG.md
+packages/mokly/CHANGELOG.md
 packages/viewer/CHANGELOG.md
+
+packages/mokly/docs

@@ -6,15 +6,15 @@ import path from "node:path";
 import test from "node:test";
 import { setTimeout } from "node:timers/promises";
 
-import { cacheLayout } from "../dist/baseline/cache_layout.js";
-import { SystemBaselineClock } from "../dist/baseline/clock.js";
-import { BaselineCommandError } from "../dist/baseline/errors.js";
-import { NodeBaselineFileSystem } from "../dist/baseline/filesystem.js";
-import { StderrBaselineMaintenanceReporter } from "../dist/baseline/maintenance.js";
-import { NodeBaselineProcessRunner } from "../dist/baseline/process.js";
-import { RebuiltBaselineReader } from "../dist/baseline/reader.js";
-import { CachedBaselineBuilder } from "../dist/baseline/rebuild.js";
-import type { BaselineProcessRunner } from "../dist/baseline/types.js";
+import { cacheLayout } from "../packages/mokly/dist/baseline/cache_layout.js";
+import { SystemBaselineClock } from "../packages/mokly/dist/baseline/clock.js";
+import { BaselineCommandError } from "../packages/mokly/dist/baseline/errors.js";
+import { NodeBaselineFileSystem } from "../packages/mokly/dist/baseline/filesystem.js";
+import { StderrBaselineMaintenanceReporter } from "../packages/mokly/dist/baseline/maintenance.js";
+import { NodeBaselineProcessRunner } from "../packages/mokly/dist/baseline/process.js";
+import { RebuiltBaselineReader } from "../packages/mokly/dist/baseline/reader.js";
+import { CachedBaselineBuilder } from "../packages/mokly/dist/baseline/rebuild.js";
+import type { BaselineProcessRunner } from "../packages/mokly/dist/baseline/types.js";
 
 /** Exercise the actual host boundaries only here; unit tests use an injected host. */
 test("real Git baseline lifecycle: reuse, interruption, failure and confinement", async (t) => {

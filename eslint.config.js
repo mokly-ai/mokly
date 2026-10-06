@@ -61,11 +61,11 @@ export default tseslint.config(
   },
   {
     files: [
-      "src/config/**/*.ts",
-      "src/build/discovery.ts",
-      "src/build/styles/**/*.ts",
-      "src/build/source_inventory.ts",
-      "src/build/package_owned_paths.ts",
+      "packages/mokly/src/config/**/*.ts",
+      "packages/mokly/src/build/discovery.ts",
+      "packages/mokly/src/build/styles/**/*.ts",
+      "packages/mokly/src/build/source_inventory.ts",
+      "packages/mokly/src/build/package_owned_paths.ts",
     ],
     rules: {
       "no-restricted-syntax": [

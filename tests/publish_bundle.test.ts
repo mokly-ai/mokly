@@ -6,7 +6,10 @@ import { gunzipSync } from "node:zlib";
 
 import { extract } from "tar-stream";
 
-import { bundleUpload, UPLOAD_LIMITS } from "../dist/publish/bundle.js";
+import {
+  bundleUpload,
+  UPLOAD_LIMITS,
+} from "../packages/mokly/dist/publish/bundle.js";
 
 test("plan archive preserves binary bytes, Unicode and long paths without an enclosing directory", async () => {
   const files = new Map([

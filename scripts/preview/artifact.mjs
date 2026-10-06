@@ -7,13 +7,13 @@ import {
   viewHref,
 } from "@mokly/viewer/data";
 
-import { ownedEntries } from "../../dist/export/ownership.js";
+import { ownedEntries } from "../../packages/mokly/dist/export/ownership.js";
 import {
   markCapturedShell,
   STAGED_DEPLOYMENT_ID,
-} from "../../dist/export/shell_metadata.js";
-import { stageExport } from "../../dist/export/stage.js";
-import { advertisePublicationShell } from "../../dist/publication/shell_previews.js";
+} from "../../packages/mokly/dist/export/shell_metadata.js";
+import { stageExport } from "../../packages/mokly/dist/export/stage.js";
+import { advertisePublicationShell } from "../../packages/mokly/dist/publication/shell_previews.js";
 
 import { comparisonMetadata } from "./comparisons.mjs";
 import { normalizeProviderHtmlAttributes } from "./html_paths.mjs";

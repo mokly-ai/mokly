@@ -4,13 +4,13 @@ import path from "node:path";
 import test from "node:test";
 import { setTimeout } from "node:timers/promises";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { exportCatalogue } from "../dist/export/run.js";
-import { publishCatalogue } from "../dist/publish/run.js";
-import { NodeGitCommandRunner } from "../dist/review/git.js";
-import { PlainServeReporter } from "../dist/server/reporter.js";
-import { serve } from "../dist/server/serve.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
+import { publishCatalogue } from "../packages/mokly/dist/publish/run.js";
+import { NodeGitCommandRunner } from "../packages/mokly/dist/review/git.js";
+import { PlainServeReporter } from "../packages/mokly/dist/server/reporter.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";

@@ -2,16 +2,27 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { TestContext } from "node:test";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { compareReview } from "../../dist/review/compare.js";
+import type { ReviewArtifact } from "@mokly/viewer/data";
+
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
+import { compareReview } from "../../packages/mokly/dist/review/compare.js";
 import {
   NodeGitCommandRunner,
   CommittedRepository,
-} from "../../dist/review/git.js";
+} from "../../packages/mokly/dist/review/git.js";
 
 import { changedFixture } from "./changed_fixture.js";
 import { componentEntrySource } from "./component_fixture.js";
 import { validEntrySource, type TestFixture } from "./fixture.js";
+
+type CssAttributionFixtureResult = TestFixture & {
+  config: ResolvedConfig;
+  append: (css: string, resource?: string) => Promise<void>;
+  compare: (useFastPath?: boolean) => Promise<ReviewArtifact>;
+  build: () => Promise<void>;
+  git: (...args: string[]) => NonSharedBuffer;
+};
 
 export async function cssAttributionFixture(
   t: TestContext,
@@ -21,7 +32,7 @@ export async function cssAttributionFixture(
     prepare?(fixture: TestFixture): Promise<void>;
     transformSource?(source: string): string;
   } = {},
-) {
+): Promise<CssAttributionFixtureResult> {
   const source = validEntrySource({
     body: options.body ?? '<button className="auth">Sign in</button>',
   }).replaceAll(">Detail</main>", '><p className="guide">Guide</p></main>');

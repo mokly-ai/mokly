@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
 
-import { scopeModule } from "../dist/build/styles/modules.js";
+import { scopeModule } from "../packages/mokly/dist/build/styles/modules.js";
 
 import { pluginModuleOutput } from "./helpers/css_module_plugin_output.js";
 

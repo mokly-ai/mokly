@@ -3,11 +3,11 @@ import type fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import type { WatchEvent } from "../dist/server/watch_events.js";
+import type { WatchEvent } from "../packages/mokly/dist/server/watch_events.js";
 import {
   rawRenamePaths,
   ResourceWatchNotifications,
-} from "../dist/server/watch_notifications.js";
+} from "../packages/mokly/dist/server/watch_notifications.js";
 
 test("raw replacements identify only named watched resources, including file and directory notifications", () => {
   const directory = path.resolve("mockups/assets");

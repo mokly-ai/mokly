@@ -4,15 +4,15 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { capturePublicFiles } from "../dist/export/public_files.js";
-import { assembleExport } from "../dist/export/site.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeCatalogueChanges } from "../dist/server/changed.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { capturePublicFiles } from "../packages/mokly/dist/export/public_files.js";
+import { assembleExport } from "../packages/mokly/dist/export/site.js";
+import { committedReviewRepository } from "../packages/mokly/dist/review/repository.js";
+import { computeCatalogueChanges } from "../packages/mokly/dist/server/changed.js";
 import {
   childUpdateMessage,
   parseChildUpdateMessage,
-} from "../dist/server/update_messages.js";
+} from "../packages/mokly/dist/server/update_messages.js";
 import type {
   ScreenReview,
   ViewResourceEvidence,

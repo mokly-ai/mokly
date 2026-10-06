@@ -12,8 +12,12 @@ import {
 } from "@mokly/viewer/runtime";
 import { createCatalogue } from "@mokly/viewer/server";
 
-import { projectCatalogue } from "../dist/catalogue/projection.js";
-import { homePage, notFoundPage, viewPage } from "../dist/server/pages.js";
+import { projectCatalogue } from "../packages/mokly/dist/catalogue/projection.js";
+import {
+  homePage,
+  notFoundPage,
+  viewPage,
+} from "../packages/mokly/dist/server/pages.js";
 
 const LIMIT = 1_048_576;
 type RoutedManifestEntry = ManifestV8["entries"][number];

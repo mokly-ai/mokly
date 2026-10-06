@@ -4,13 +4,13 @@ import fs from "node:fs";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import { parseArguments } from "../dist/cli/arguments.js";
+import { parseArguments } from "../packages/mokly/dist/cli/arguments.js";
 import {
   defineFolder,
   defineScreen,
   mockLink,
   reviewMaterialKey,
-} from "../dist/index.js";
+} from "../packages/mokly/dist/index.js";
 import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import { packageRoot, cliBinPath } from "./helpers/fixture.js";

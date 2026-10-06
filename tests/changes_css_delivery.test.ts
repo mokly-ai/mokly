@@ -3,13 +3,13 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { exportCatalogue } from "../dist/export/run.js";
-import { readManifest } from "../dist/registry/manifest.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
-import { ComponentChangeCache } from "../dist/server/component_change_cache.js";
-import { RepositoryComponentChanges } from "../dist/server/component_changes.js";
-import { configuredServedReview } from "../dist/server/configured_review.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
+import { readManifest } from "../packages/mokly/dist/registry/manifest.js";
+import { committedReviewRepository } from "../packages/mokly/dist/review/repository.js";
+import { ComponentChangeCache } from "../packages/mokly/dist/server/component_change_cache.js";
+import { RepositoryComponentChanges } from "../packages/mokly/dist/server/component_changes.js";
+import { configuredServedReview } from "../packages/mokly/dist/server/configured_review.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 

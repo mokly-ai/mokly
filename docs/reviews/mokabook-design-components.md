@@ -22,7 +22,7 @@ share compact comparison sizing across native buttons and links.
 ## Findings From The Adoption Review
 
 1. **Medium — served Review snapshots follow symbolic links.**
-   [The response helper](../../src/server/review_responses.ts) checks lexical
+   [The response helper](../../packages/mokly/src/server/review_responses.ts) checks lexical
    containment, then reads the requested path with an operation that follows
    symbolic links. A tampered artifact can therefore expose a file outside the
    retained generation through its snapshot URL. Doing nothing retains this
@@ -38,7 +38,7 @@ share compact comparison sizing across native buttons and links.
    snapshot callers; writer-only checks do not protect files altered later.
 
 2. **Medium — source validation accepts missing affected-consumer records.**
-   [The validator](../../src/review/component_result_sources.ts) checks every
+   [The validator](../../packages/mokly/src/review/component_result_sources.ts) checks every
    supplied record against possible source usage, but does not reject an omitted
    record. A producer/export regression could under-report affected screens or
    components without being caught by this validation layer.
@@ -56,7 +56,7 @@ share compact comparison sizing across native buttons and links.
    a looser classification in the validator.
 
 3. **Low — inherited v4 entry fields merit contract clarification.**
-   [Inherited entry validation](../../src/registry/manifest_validation.ts) accepts
+   [Inherited entry validation](../../packages/mokly/src/registry/manifest_validation.ts) accepts
    unknown fields for screens, collections and use cases, whereas component and
    usage structures use exact-key validation. The reviewer proposed extending
    exact-key checks to inherited entries, legacy pages and use-case steps.
@@ -81,10 +81,10 @@ share compact comparison sizing across native buttons and links.
 These were reported before adoption and remain separate from its implementation.
 
 1. **Medium — component registry validation accepts malformed definitions.**
-   [Registry preparation](../../src/registry/prepare.ts) and
-   [entry validation](../../src/registry/entry_validation.ts) can accept a forged
+   [Registry preparation](../../packages/mokly/src/registry/prepare.ts) and
+   [entry validation](../../packages/mokly/src/registry/entry_validation.ts) can accept a forged
    or mutated component whose missing variants later cause an unstructured
-   error in [manifest generation](../../src/components/manifest_build.ts).
+   error in [manifest generation](../../packages/mokly/src/components/manifest_build.ts).
    Doing nothing leaves authors with internal errors instead of useful build
    diagnostics.
 
@@ -94,7 +94,7 @@ These were reported before adoption and remain separate from its implementation.
    prevents drift; freezing or a late guard alone leaves other entry paths weak.
 
 2. **Medium — authored titles can inject Markdown into Review summaries.**
-   [Summary generation](../../src/review/artifact.ts) inserts v3 change titles
+   [Summary generation](../../packages/mokly/src/review/artifact.ts) inserts v3 change titles
    directly into Markdown. Newlines or Markdown syntax can make a generated
    summary misleading. Doing nothing retains that reporting ambiguity.
 

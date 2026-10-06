@@ -5,14 +5,14 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { runtimeGraph } from "../dist/build/component_runtime.js";
-import { DocumentCompiler } from "../dist/build/document_compiler.js";
-import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import { outputLockPath } from "../dist/build/output_lock.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { runWithTimings } from "../dist/diagnostics/timings.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { runtimeGraph } from "../packages/mokly/dist/build/component_runtime.js";
+import { DocumentCompiler } from "../packages/mokly/dist/build/document_compiler.js";
+import { prepareLiveRuntime } from "../packages/mokly/dist/build/live_runtime.js";
+import { outputLockPath } from "../packages/mokly/dist/build/output_lock.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { runWithTimings } from "../packages/mokly/dist/diagnostics/timings.js";
 
 import { createFixture, repositoryRoot } from "./helpers/fixture.js";
 

@@ -3,10 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { checkCompilation } from "../src/build/check.js";
-import { compileCatalogue } from "../src/build/compile.js";
-import { writeCompilation } from "../src/build/transaction.js";
-import { loadConfig } from "../src/config/load.js";
+import { checkCompilation } from "../packages/mokly/src/build/check.js";
+import { compileCatalogue } from "../packages/mokly/src/build/compile.js";
+import { writeCompilation } from "../packages/mokly/src/build/transaction.js";
+import { loadConfig } from "../packages/mokly/src/config/load.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";

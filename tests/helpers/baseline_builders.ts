@@ -1,14 +1,14 @@
-import { SystemBaselineClock } from "../../dist/baseline/clock.js";
-import type { BaselineError } from "../../dist/baseline/errors.js";
-import { NodeBaselineFileSystem } from "../../dist/baseline/filesystem.js";
-import { StderrBaselineMaintenanceReporter } from "../../dist/baseline/maintenance.js";
-import { NodeBaselineProcessRunner } from "../../dist/baseline/process.js";
-import { CachedBaselineBuilder } from "../../dist/baseline/rebuild.js";
+import { SystemBaselineClock } from "../../packages/mokly/dist/baseline/clock.js";
+import type { BaselineError } from "../../packages/mokly/dist/baseline/errors.js";
+import { NodeBaselineFileSystem } from "../../packages/mokly/dist/baseline/filesystem.js";
+import { StderrBaselineMaintenanceReporter } from "../../packages/mokly/dist/baseline/maintenance.js";
+import { NodeBaselineProcessRunner } from "../../packages/mokly/dist/baseline/process.js";
+import { CachedBaselineBuilder } from "../../packages/mokly/dist/baseline/rebuild.js";
 import type {
   BaselineBuildRequest,
   BaselineBuilder,
   RebuiltBaseline,
-} from "../../dist/baseline/types.js";
+} from "../../packages/mokly/dist/baseline/types.js";
 
 /** One observed preparation, with the signal Serve owns for it. */
 export interface ObservedBaselineBuild {

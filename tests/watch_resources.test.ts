@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { serve } from "../dist/server/serve.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 

@@ -7,15 +7,15 @@ import { setTimeout as delay } from "node:timers/promises";
 import {
   ExportIgnoredMatcher,
   isExportIgnoredPath,
-} from "../dist/export/ignored.js";
+} from "../packages/mokly/dist/export/ignored.js";
 import {
   EXPORT_MARKER,
   parseExportOwnership,
-} from "../dist/export/ownership.js";
-import { exportCatalogue } from "../dist/export/run.js";
-import { classifyWatchPath } from "../dist/server/watch_events.js";
-import { isPackageOwnedIgnoredWatchPath } from "../dist/server/watch_paths.js";
-import { ChokidarWatcherFactory } from "../dist/server/watcher.js";
+} from "../packages/mokly/dist/export/ownership.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
+import { classifyWatchPath } from "../packages/mokly/dist/server/watch_events.js";
+import { isPackageOwnedIgnoredWatchPath } from "../packages/mokly/dist/server/watch_paths.js";
+import { ChokidarWatcherFactory } from "../packages/mokly/dist/server/watcher.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 

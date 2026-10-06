@@ -1,5 +1,5 @@
-import type { ResolvedConfig } from "../../dist/config/types.js";
-import type { PublicationOptions } from "../../dist/publication/options.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
+import type { PublicationOptions } from "../../packages/mokly/dist/publication/options.js";
 
 /** Capture already-built output; callers must build/check before publication. */
 export function buildPreview(

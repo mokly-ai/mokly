@@ -4,7 +4,7 @@ import type {
   BaselineFileSystem,
   BaselineLockIdentity,
   BaselineStat,
-} from "../../dist/baseline/types.js";
+} from "../../packages/mokly/dist/baseline/types.js";
 
 interface MemoryFile extends BaselineStat {
   bytes: Uint8Array;

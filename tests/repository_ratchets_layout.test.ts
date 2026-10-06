@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { CLI_PACKAGE_PATH } from "../scripts/package/layout.mjs";
 import { GitWorkspace } from "../scripts/verification/ratchets/git.mjs";
 import {
   auditInternalExports,
@@ -18,6 +19,7 @@ import {
 const candidate = "packages/viewer/src/renamed.ts";
 const predecessor = "src/original.ts";
 const baselinePath = "xtask/unused-internal-exports.txt";
+const sourceRoot = path.posix.join(CLI_PACKAGE_PATH, "src");
 
 function movedException(name: string, paired = true) {
   return internalExportAudit({
@@ -63,8 +65,9 @@ test("internal-export baseline accepts viewer scripts and rejects invalid prefix
 
 test("a module moved into a source root keeps an outside-root predecessor", async (t) => {
   const fixture = await createPublicExportFixture({
+    packagePath: CLI_PACKAGE_PATH,
     sources: {
-      "src/index.ts": "export const kept = 1;\n",
+      [`${sourceRoot}/index.ts`]: "export const kept = 1;\n",
       "outside/legacy.ts": "void 0;\n".repeat(310),
     },
   });
@@ -72,15 +75,22 @@ test("a module moved into a source root keeps an outside-root predecessor", asyn
   git(fixture.root, "update-ref", "refs/remotes/origin/main", "HEAD");
   await fs.rename(
     path.join(fixture.root, "outside/legacy.ts"),
-    path.join(fixture.root, "src/legacy.ts"),
+    path.join(fixture.root, sourceRoot, "legacy.ts"),
   );
   git(fixture.root, "add", "--all");
   const workspace = new GitWorkspace(fixture.root);
-  assert.deepEqual(workspace.changedFiles(["src"]), [
-    { status: "R100", source: "outside/legacy.ts", path: "src/legacy.ts" },
+  assert.deepEqual(workspace.changedFiles([sourceRoot]), [
+    {
+      status: "R100",
+      source: "outside/legacy.ts",
+      path: `${sourceRoot}/legacy.ts`,
+    },
   ]);
   assert.deepEqual(auditTypeScriptLength(fixture.root, workspace).findings, []);
-  await fs.appendFile(path.join(fixture.root, "src/legacy.ts"), "void 1;\n");
+  await fs.appendFile(
+    path.join(fixture.root, sourceRoot, "legacy.ts"),
+    "void 1;\n",
+  );
   assert.match(
     auditTypeScriptLength(fixture.root, workspace).findings.join("\n"),
     /311.*310.*predecessor outside\/legacy.ts/u,
@@ -89,8 +99,9 @@ test("a module moved into a source root keeps an outside-root predecessor", asyn
 
 test("the workspace internal-export audit uses Git rename pairs and public manifests", async (t) => {
   const fixture = await createPublicExportFixture({
+    packagePath: CLI_PACKAGE_PATH,
     sources: {
-      "src/index.ts": "export const kept = 1;\n",
+      [`${sourceRoot}/index.ts`]: "export const kept = 1;\n",
       [predecessor]: "export const known = 1;\n",
       [baselinePath]: `${predecessor}#known\n`,
       "packages/viewer/package.json": JSON.stringify({

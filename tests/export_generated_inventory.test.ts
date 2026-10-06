@@ -3,9 +3,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { generatedHeader } from "../dist/build/ownership.js";
-import { capturePublicFiles } from "../dist/export/public_files.js";
-import { exportResourcePolicy } from "../dist/export/resource_policy.js";
+import { generatedHeader } from "../packages/mokly/dist/build/ownership.js";
+import { capturePublicFiles } from "../packages/mokly/dist/export/public_files.js";
+import { exportResourcePolicy } from "../packages/mokly/dist/export/resource_policy.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 

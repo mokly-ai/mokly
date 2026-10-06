@@ -3,8 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { componentRuntime } from "../dist/build/component_runtime.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+import { componentRuntime } from "../packages/mokly/dist/build/component_runtime.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 
 import { renderCapabilityFromShell } from "./helpers/component_controls_state.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";

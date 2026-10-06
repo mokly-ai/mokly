@@ -3,15 +3,21 @@ import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { isCancellation, MoklyError, isMoklyError } from "../dist/errors.js";
+import {
+  isCancellation,
+  MoklyError,
+  isMoklyError,
+} from "../packages/mokly/dist/errors.js";
 
-const authoring = path.resolve("src/authoring");
+import { packageRoot } from "./helpers/fixture.js";
+
+const authoring = path.join(packageRoot, "src/authoring");
 const facadeImports = [
   "src/index.ts",
   "src/errors.ts",
   "src/components/definition.ts",
   "src/build/consumer_entry.ts",
-];
+].map((file) => path.join(packageRoot, file));
 
 test("authoring and consumer facade modules never use private symbols across the bundle boundary", () => {
   const authoringFiles = readdirSync(authoring, { recursive: true })

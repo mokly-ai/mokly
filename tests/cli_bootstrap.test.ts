@@ -3,7 +3,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { bootstrapCli, isSupportedNodeVersion } from "../dist/cli/bootstrap.js";
+import {
+  bootstrapCli,
+  isSupportedNodeVersion,
+} from "../packages/mokly/dist/cli/bootstrap.js";
 
 import { cliBinPath, packageRoot } from "./helpers/fixture.js";
 

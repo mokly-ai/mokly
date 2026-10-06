@@ -3,20 +3,36 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { TestContext } from "node:test";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
-import { prepareReviewRepository } from "../../dist/review/prepare.js";
-import { committedReviewRepository } from "../../dist/review/repository.js";
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
+import { prepareReviewRepository } from "../../packages/mokly/dist/review/prepare.js";
+import {
+  committedReviewRepository,
+  type ReadOnlyReviewRepository,
+} from "../../packages/mokly/dist/review/repository.js";
 
-import { createFixture, removeFixture, validEntrySource } from "./fixture.js";
+import {
+  createFixture,
+  removeFixture,
+  validEntrySource,
+  type TestFixture,
+} from "./fixture.js";
+
+type ImportedChangesFixtureResult = TestFixture & {
+  config: ResolvedConfig;
+  cssPath: string;
+  git: (...arguments_: string[]) => NonSharedBuffer;
+  repository: ReadOnlyReviewRepository;
+};
 
 /** A Git branch point whose generated CSS is committed or reproducibly derived. */
 export async function importedChangesFixture(
   context: TestContext,
   mode: "committed" | "derived",
   kind: "plain" | "module" | "asset" | "new",
-) {
+): Promise<ImportedChangesFixtureResult> {
   const usesModule = kind === "module";
   const source = validEntrySource({
     body: usesModule

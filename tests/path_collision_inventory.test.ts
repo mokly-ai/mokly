@@ -3,10 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { runtimeGraph } from "../dist/build/component_runtime.js";
-import { DocumentCompiler } from "../dist/build/document_compiler.js";
-import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import { generatedHeader } from "../dist/build/ownership.js";
+import { runtimeGraph } from "../packages/mokly/dist/build/component_runtime.js";
+import { DocumentCompiler } from "../packages/mokly/dist/build/document_compiler.js";
+import { prepareLiveRuntime } from "../packages/mokly/dist/build/live_runtime.js";
+import { generatedHeader } from "../packages/mokly/dist/build/ownership.js";
 
 import { pageSource, pathFixture } from "./helpers/path_fixture.js";
 

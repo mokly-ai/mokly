@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import type { RunningServer } from "../../dist/server/http_types.js";
+import type { RunningServer } from "../../packages/mokly/dist/server/http_types.js";
 
 import {
   expectPresentedPane,

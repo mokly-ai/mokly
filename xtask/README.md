@@ -46,7 +46,8 @@ the exact scopes and exceptions. Length, protocol-cap, and
 unused-internal-export analysis compare against
 `git merge-base HEAD origin/main`; module analysis covers `.ts`, `.tsx`, `.mts`,
 `.cts`, `.js`, `.mjs`, and `.cjs` under the five source roots defined by the
-ratchet contract. The CLI roots derive from the package layout module. Git
+ratchet contract. The CLI roots derive from the package layout module's
+`packages/mokly` value. Git
 detects renames over the whole tree before filtering source candidates.
 Internal-export exceptions must retain the same export name at their paired
 predecessor path, or the same path if the module did not move. Protocol
@@ -61,7 +62,7 @@ fetch them with `git fetch --tags origin` and retry. All four checks belong to
 the repository suite and complete gate.
 
 The sole current unused-export exception is the component renderer imported by
-generated consumer-module source: `src/build/consumer_entry.ts` emits that
+generated consumer-module source: `packages/mokly/src/build/consumer_entry.ts` emits that
 re-export as source text, so there is no static module edge for the analyser to
 follow. Its exact entry lives in the shrink-only reviewed baseline. A comparison
 commit that predates the baseline file permits that one-time bootstrap; after

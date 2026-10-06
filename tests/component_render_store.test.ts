@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { RenderStore } from "../dist/server/controls/store.js";
-import type { TransientRender } from "../dist/server/controls/transient_assets.js";
+import { RenderStore } from "../packages/mokly/dist/server/controls/store.js";
+import type { TransientRender } from "../packages/mokly/dist/server/controls/transient_assets.js";
 
 const result: TransientRender = {
   route: "preview.html",

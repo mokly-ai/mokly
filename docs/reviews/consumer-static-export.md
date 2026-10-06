@@ -12,7 +12,7 @@ the original review context; they were not automatically fixed during review.
 
 ## 1. Medium: Case Aliases Can Bypass Export Serialization
 
-The reservation in [transaction.ts](../../src/export/transaction.ts) hashes a
+The reservation in [transaction.ts](../../packages/mokly/src/export/transaction.ts) hashes a
 projected real path. Missing output names such as `site` and `Site` produce
 different keys even when the filesystem treats them as one destination.
 Concurrent exports could both acquire reservations and replace or roll back over
@@ -38,7 +38,7 @@ replacement was attempted.
 
 ## 2. Medium: Nested Package Roots Can Enter Public Output
 
-[public_files.ts](../../src/export/public_files.ts) excludes configured source
+[public_files.ts](../../packages/mokly/src/export/public_files.ts) excludes configured source
 trees and specific config modules, but not `moduleResolution.packageRoots`.
 A valid package root inside `mockupsDir` can therefore contribute `package.json`
 and other non-source package files to hosted `static/...` output, contrary to the
@@ -63,7 +63,7 @@ excludes those roots. No private consumer files were copied during verification.
 
 ## 3. Medium: Watch Can Suppress Unowned Descendants
 
-[ignored.ts](../../src/export/ignored.ts) ignores every descendant of a directory
+[ignored.ts](../../packages/mokly/src/export/ignored.ts) ignores every descendant of a directory
 with a valid export marker, without consulting its inventory. The predicate also
 prunes directories in the real watcher. An added, unowned `site/notes.md` can be
 missed by a broad consumer watch rule even though replacement correctly rejects
@@ -87,7 +87,7 @@ pruning option. No user file was added to the artifact.
 
 ## 4. Low: Exported Fragment Links Are Not Fully Validated
 
-[references.ts](../../src/export/references.ts) verifies referenced files but
+[references.ts](../../packages/mokly/src/export/references.ts) verifies referenced files but
 discards URL fragments. Generated build outputs have anchor validation, while
 exported shell pages and additional public HTML do not receive equivalent
 coverage. A successful export can contain an in-page or cross-document link that
@@ -168,7 +168,7 @@ remain below as historical context. These were not fixed automatically by review
 
 ### 1. High: A Destination Race Can Delete Unowned Files
 
-In [transaction.ts](../../src/export/transaction.ts), `install()` checks output
+In [transaction.ts](../../packages/mokly/src/export/transaction.ts), `install()` checks output
 ownership before separately moving the destination to `backup/`, installing the
 stage, and deleting the backup. The reservation excludes other Mokabook writers,
 but an unrelated editor or process can introduce unowned destination contents
@@ -198,7 +198,7 @@ between the move and removal. No user files were changed to reproduce the race.
 
 ### 2. Medium: Cleanup Can Hide The Original Export Failure
 
-[run.ts](../../src/export/run.ts) awaits `transaction.close()` in `finally`.
+[run.ts](../../packages/mokly/src/export/run.ts) awaits `transaction.close()` in `finally`.
 When installation already failed with a rollback or backup-cleanup error,
 `close()` can throw its retained-backup error and replace the original exception.
 Existing transaction-level tests assert each error separately, not propagation
@@ -251,10 +251,10 @@ remain unchanged. Final plan/index/report edits are documentation-only.
 
 ### 1. Medium: Adapter Aliases Bypass Collision Validation
 
-The export engine accepts adapter aliases in [run.ts](../../src/export/run.ts).
-[references.ts](../../src/export/references.ts) checks path safety, an exact
+The export engine accepts adapter aliases in [run.ts](../../packages/mokly/src/export/run.ts).
+[references.ts](../../packages/mokly/src/export/references.ts) checks path safety, an exact
 alias/file match, and target existence, but does not apply the case-folded exact
-and prefix collision rules in [inventory.ts](../../src/export/inventory.ts).
+and prefix collision rules in [inventory.ts](../../packages/mokly/src/export/inventory.ts).
 The repository's [preview adapter](../../scripts/preview/catalogue.mjs) creates
 extensionless aliases for `view/*.html` and `static/*.html`.
 

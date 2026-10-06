@@ -4,8 +4,8 @@ import path from "node:path";
 import test from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 
-import { NodeChildFactory } from "../dist/server/child_process.js";
-import { ReadyProcessSupervisor } from "../dist/server/supervisor.js";
+import { NodeChildFactory } from "../packages/mokly/dist/server/child_process.js";
+import { ReadyProcessSupervisor } from "../packages/mokly/dist/server/supervisor.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { ObservedChildFactory } from "./helpers/observed_child.js";

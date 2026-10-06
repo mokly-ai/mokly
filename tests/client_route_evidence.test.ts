@@ -4,7 +4,7 @@ import test from "node:test";
 import { viewHref } from "@mokly/viewer/data";
 import { projectScopedCatalogue } from "@mokly/viewer/runtime";
 
-import { createReactViewerCapabilities } from "../dist/client/react_capabilities.js";
+import { createReactViewerCapabilities } from "../packages/mokly/dist/client/react_capabilities.js";
 
 import {
   catalogue,

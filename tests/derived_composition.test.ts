@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
 
-import { RebuiltBaselineReader } from "../dist/baseline/reader.js";
-import type { BaselineBuildRequest } from "../dist/baseline/types.js";
-import { loadConfig } from "../dist/config/load.js";
-import { CommittedBaselineReader } from "../dist/review/committed.js";
-import { prepareReviewRepository } from "../dist/review/prepare.js";
+import { RebuiltBaselineReader } from "../packages/mokly/dist/baseline/reader.js";
+import type { BaselineBuildRequest } from "../packages/mokly/dist/baseline/types.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { CommittedBaselineReader } from "../packages/mokly/dist/review/committed.js";
+import { prepareReviewRepository } from "../packages/mokly/dist/review/prepare.js";
 
 import { MemoryBaselineFileSystem } from "./helpers/baseline_memory.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";

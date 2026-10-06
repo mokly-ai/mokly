@@ -5,8 +5,8 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { writeCompilation } from "../dist/build/transaction.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
 import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
@@ -210,7 +210,7 @@ test("capture mutation aborts atomically and default replacement removes old rev
     "utf8",
   );
   const publisher =
-    'import fs from "node:fs"; import path from "node:path"; import { loadConfig } from "./dist/config/load.js"; import { buildPreview } from "./scripts/preview/catalogue.mjs"; const config = await loadConfig(process.argv[1]);';
+    'import fs from "node:fs"; import path from "node:path"; import { loadConfig } from "./packages/mokly/dist/config/load.js"; import { buildPreview } from "./scripts/preview/catalogue.mjs"; const config = await loadConfig(process.argv[1]);';
   await assert.rejects(
     execute(
       process.execPath,

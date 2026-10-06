@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { defineUseCase } from "../dist/authoring/definitions.js";
-import type { ResolvedRegistryEntry } from "../dist/authoring/types.js";
-import { rewriteMockLinks } from "../dist/build/mock_links.js";
+import { defineUseCase } from "../packages/mokly/dist/authoring/definitions.js";
+import type { ResolvedRegistryEntry } from "../packages/mokly/dist/authoring/types.js";
+import { rewriteMockLinks } from "../packages/mokly/dist/build/mock_links.js";
 
 test("logical links reject a use case without a screen first step", () => {
   const useCase = defineUseCase({

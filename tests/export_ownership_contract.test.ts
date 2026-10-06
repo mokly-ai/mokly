@@ -8,7 +8,7 @@ import {
   buildExportOwnership,
   parseExportOwnership,
   serializeExportOwnership,
-} from "../dist/export/ownership.js";
+} from "../packages/mokly/dist/export/ownership.js";
 
 import {
   createFixture,

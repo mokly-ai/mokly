@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { projectCatalogue } from "../dist/catalogue/projection.js";
+import { projectCatalogue } from "../packages/mokly/dist/catalogue/projection.js";
 import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { catalogueNavSections } from "../packages/viewer/dist/shell/nav_model.js";

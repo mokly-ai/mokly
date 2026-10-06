@@ -3,10 +3,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { exportCatalogue } from "../dist/export/run.js";
-import { computeCatalogueChanges } from "../dist/server/changed.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
+import { computeCatalogueChanges } from "../packages/mokly/dist/server/changed.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
 
 import { importedChangesFixture } from "./helpers/imported_changes_fixture.js";

@@ -3,9 +3,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { writeCompilation } from "../dist/build/transaction.js";
-import { compareReview } from "../dist/review/compare.js";
-import { computeCatalogueChanges } from "../dist/server/changed.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import { computeCatalogueChanges } from "../packages/mokly/dist/server/changed.js";
 
 import { componentGit } from "./helpers/component_review_fixture.js";
 import {

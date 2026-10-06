@@ -4,28 +4,31 @@ import { isDeepStrictEqual } from "node:util";
 
 import { viewHref } from "@mokly/viewer/data";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { componentRuntime } from "../../dist/build/component_runtime.js";
-import { generatedBytes } from "../../dist/build/generated_file.js";
-import { projectCatalogue } from "../../dist/catalogue/projection.js";
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import { componentRuntime } from "../../packages/mokly/dist/build/component_runtime.js";
+import { generatedBytes } from "../../packages/mokly/dist/build/generated_file.js";
+import { projectCatalogue } from "../../packages/mokly/dist/catalogue/projection.js";
 import {
   CATALOGUE_PATH,
   serializeCatalogue,
-} from "../../dist/catalogue/serialization.js";
-import { isInside, projectRealPath } from "../../dist/config/paths.js";
-import { errorMessage } from "../../dist/errors.js";
+} from "../../packages/mokly/dist/catalogue/serialization.js";
+import {
+  isInside,
+  projectRealPath,
+} from "../../packages/mokly/dist/config/paths.js";
+import { errorMessage } from "../../packages/mokly/dist/errors.js";
 import {
   externalizeCapturedShell,
   readCapturedShellCatalogue,
-} from "../../dist/export/captured_shell.js";
-import { withExportCleanup } from "../../dist/export/cleanup.js";
-import { assertExportOwnership } from "../../dist/export/ownership.js";
-import { resolveExportOutput } from "../../dist/export/paths.js";
-import { ExportTransaction } from "../../dist/export/transaction.js";
-import { publicationOptions } from "../../dist/publication/options.js";
-import { copyPublicFiles } from "../../dist/publication/resources.js";
-import { prepareReviewRepository } from "../../dist/review/prepare.js";
-import { startCatalogueServer } from "../../dist/server/http.js";
+} from "../../packages/mokly/dist/export/captured_shell.js";
+import { withExportCleanup } from "../../packages/mokly/dist/export/cleanup.js";
+import { assertExportOwnership } from "../../packages/mokly/dist/export/ownership.js";
+import { resolveExportOutput } from "../../packages/mokly/dist/export/paths.js";
+import { ExportTransaction } from "../../packages/mokly/dist/export/transaction.js";
+import { publicationOptions } from "../../packages/mokly/dist/publication/options.js";
+import { copyPublicFiles } from "../../packages/mokly/dist/publication/resources.js";
+import { prepareReviewRepository } from "../../packages/mokly/dist/review/prepare.js";
+import { startCatalogueServer } from "../../packages/mokly/dist/server/http.js";
 
 import { stagePreviewArtifact } from "./artifact.mjs";
 import { publicationSnapshot } from "./baseline.mjs";

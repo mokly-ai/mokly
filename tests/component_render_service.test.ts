@@ -4,11 +4,11 @@ import http from "node:http";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { componentRuntime } from "../dist/build/component_runtime.js";
-import { MANIFEST_NAME } from "../dist/registry/manifest.js";
-import { ComponentRenderService } from "../dist/server/controls/service.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { componentRuntime } from "../packages/mokly/dist/build/component_runtime.js";
+import { MANIFEST_NAME } from "../packages/mokly/dist/registry/manifest.js";
+import { ComponentRenderService } from "../packages/mokly/dist/server/controls/service.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 

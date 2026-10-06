@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { adaptLinkControls } from "../dist/build/link_controls.js";
+import { adaptLinkControls } from "../packages/mokly/dist/build/link_controls.js";
 
 const page = (body: string) =>
   `<!doctype html><html><head></head><body>${body}</body></html>`;

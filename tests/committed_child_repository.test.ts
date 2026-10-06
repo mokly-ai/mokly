@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { runServerChild } from "../dist/server/child.js";
+import { runServerChild } from "../packages/mokly/dist/server/child.js";
 
 import { nestedRepository } from "./helpers/nested_repository.js";
 

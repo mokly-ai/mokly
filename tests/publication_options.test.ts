@@ -5,10 +5,10 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import { compileCatalogue } from "../src/build/compile.js";
-import { writeCompilation } from "../src/build/transaction.js";
-import { loadConfig } from "../src/config/load.js";
-import { publicationOptions } from "../src/publication/options.js";
+import { compileCatalogue } from "../packages/mokly/src/build/compile.js";
+import { writeCompilation } from "../packages/mokly/src/build/transaction.js";
+import { loadConfig } from "../packages/mokly/src/config/load.js";
+import { publicationOptions } from "../packages/mokly/src/publication/options.js";
 
 import {
   createFixture,
@@ -55,7 +55,7 @@ test("ordinary publication needs no Git and omits review and watch artifacts", a
     [
       "--input-type=module",
       "--eval",
-      'import { loadConfig } from "./dist/config/load.js"; import { buildPreview } from "./scripts/preview/catalogue.mjs"; await buildPreview(await loadConfig(process.argv[1]), process.argv[2]);',
+      'import { loadConfig } from "./packages/mokly/dist/config/load.js"; import { buildPreview } from "./scripts/preview/catalogue.mjs"; await buildPreview(await loadConfig(process.argv[1]), process.argv[2]);',
       fixture.root,
       output,
     ],

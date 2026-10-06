@@ -1,12 +1,13 @@
-import { readCatalogueChanges } from "../../dist/server/component_changes.js";
-import { configuredServedReview } from "../../dist/server/configured_review.js";
-import { startCatalogueServer } from "../../dist/server/http.js";
+import { readCatalogueChanges } from "../../packages/mokly/dist/server/component_changes.js";
+import { configuredServedReview } from "../../packages/mokly/dist/server/configured_review.js";
+import { startCatalogueServer } from "../../packages/mokly/dist/server/http.js";
+import type { RunningServer } from "../../packages/mokly/dist/server/http_types.js";
 import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 
 /** Serve selected comparisons with real screen and saved-variant snapshots. */
 export async function selectedComparisonFixture(lifecycle: {
   after(dispose: () => Promise<void>): void;
-}) {
+}): Promise<RunningServer> {
   const fixture = await componentReviewFixture(lifecycle, (source) =>
     source
       .replaceAll("Continue", "Proceed")

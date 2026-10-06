@@ -4,8 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { RESERVATION_DIRECTORY } from "../dist/export/reservation.js";
-import { ExportTransaction } from "../dist/export/transaction.js";
+import { RESERVATION_DIRECTORY } from "../packages/mokly/dist/export/reservation.js";
+import { ExportTransaction } from "../packages/mokly/dist/export/transaction.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

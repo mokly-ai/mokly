@@ -4,7 +4,7 @@ import test from "node:test";
 import type {
   RemovedPagePreviewProvider,
   RemovedPagePreviewSource,
-} from "../dist/review/selection_types.js";
+} from "../packages/mokly/dist/review/selection_types.js";
 import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import {

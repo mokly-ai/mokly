@@ -1,13 +1,13 @@
 /** Reset only this fixture's pinned entry, holding the same lock as a real builder. */
-import { removePartialBaseline } from "../../dist/baseline/cache.js";
-import { cacheLayout } from "../../dist/baseline/cache_layout.js";
-import { SystemBaselineClock } from "../../dist/baseline/clock.js";
-import { ensureBaselineDirectory } from "../../dist/baseline/confinement.js";
-import { NodeBaselineFileSystem } from "../../dist/baseline/filesystem.js";
-import { tryBaselineLock } from "../../dist/baseline/lock.js";
-import { NodeBaselineProcessRunner } from "../../dist/baseline/process.js";
-import { ConfiguredGitCommandRunner } from "../../dist/config/git.js";
-import { GitRepositoryEvidence } from "../../dist/review/git_evidence.js";
+import { removePartialBaseline } from "../../packages/mokly/dist/baseline/cache.js";
+import { cacheLayout } from "../../packages/mokly/dist/baseline/cache_layout.js";
+import { SystemBaselineClock } from "../../packages/mokly/dist/baseline/clock.js";
+import { ensureBaselineDirectory } from "../../packages/mokly/dist/baseline/confinement.js";
+import { NodeBaselineFileSystem } from "../../packages/mokly/dist/baseline/filesystem.js";
+import { tryBaselineLock } from "../../packages/mokly/dist/baseline/lock.js";
+import { NodeBaselineProcessRunner } from "../../packages/mokly/dist/baseline/process.js";
+import { ConfiguredGitCommandRunner } from "../../packages/mokly/dist/config/git.js";
+import { GitRepositoryEvidence } from "../../packages/mokly/dist/review/git_evidence.js";
 
 export async function resetFixtureBaseline(config, dependencies = {}) {
   const fs = dependencies.fs ?? new NodeBaselineFileSystem();

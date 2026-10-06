@@ -5,7 +5,7 @@ user authorized all four fixes. Earlier findings and verification remain in
 [the catalogue review record](./catalogue-pages-and-publication.md).
 
 1. **Medium — imported asset bytes escape authoring-input tracking. Resolved.**
-   [Graph classification](../../src/build/source_inventory.ts) excluded loaders
+   [Graph classification](../../packages/mokly/src/build/source_inventory.ts) excluded loaders
    such as `dataurl` before forming the source inventory. A probe imported an SVG
    into a screen title: changing it changed the title from `25` to `72` after a
    manual build, but the asset had no source/resource watch, classified as
@@ -22,7 +22,7 @@ user authorized all four fixes. Earlier findings and verification remain in
    mixed-role protection contract unless that contract changes.
 
 2. **Medium — Changes misses edits behind a stable public alias. Resolved.**
-   [Resource matching](../../src/server/changed_resources.ts) compared only logical
+   [Resource matching](../../packages/mokly/src/server/changed_resources.ts) compared only logical
    reference routes to Git paths, while the watcher already recorded physical paths.
    Screen and page probes kept `image.svg -> assets/logo.svg` unchanged and
    edited only the target. Both physical/logical paths remained watched and the
@@ -38,7 +38,7 @@ user authorized all four fixes. Earlier findings and verification remain in
 
 3. **Medium — publication follows unconfined links and drops valid public aliases. Resolved.**
    [Fingerprint enumeration](../../scripts/preview/inputs.mjs) followed unrelated
-   symlinks when hashing, while [public copying](../../src/publication/resources.ts)
+   symlinks when hashing, while [public copying](../../packages/mokly/src/publication/resources.ts)
    skipped them before applying its public-file guard. Probes confirmed a read of
    a harmless file outside the configured consumer root, failure on an unrelated
    dangling link, and successful publication in both modes with an omitted image
@@ -56,7 +56,7 @@ user authorized all four fixes. Earlier findings and verification remain in
    The [package contract](../protocol/mokly-package.md) rejected `review` and
    `--out` but still described a Review CLI output override. Parser probes reject
    both `review` and `serve --out`, as the existing CLI tests require. The
-   [NestedChild comment](../../src/authoring/types.ts) also named only screens and
+   [NestedChild comment](../../packages/mokly/src/authoring/types.ts) also named only screens and
    collections although its union includes pages. Leaving these statements
    misdirects consumers and omits pages from generated API guidance.
    Options: **A.** Correct both statements and link CLI guidance to its canonical
@@ -128,7 +128,7 @@ selection under the repository's review rule.
 
 1. **Medium reported — nested page source attribution is lost. Invalid.**
    The reviewer inferred a missing copy of `definedIn` in
-   [page flattening](../../src/authoring/definitions.ts), comparing it with the
+   [page flattening](../../packages/mokly/src/authoring/definitions.ts), comparing it with the
    explicit assignments for screens and collections. The page branch already
    preserves the field through its rest/spread object, `definePage`, and branding.
    The root loader only supplies a fallback when attribution is absent.
@@ -140,8 +140,8 @@ selection under the repository's review rule.
    so no production change is justified.
 
 2. **Medium — no-watch startup computes Changes twice and can retain stale fallback routes. Fixed in the follow-up below.**
-   [Serve](../../src/server/serve.ts) precomputes a route list, then
-   [HTTP startup](../../src/server/http.ts) computes a complete catalogue-change
+   [Serve](../../packages/mokly/src/server/serve.ts) precomputes a route list, then
+   [HTTP startup](../../packages/mokly/src/server/http.ts) computes a complete catalogue-change
    snapshot again. Ordinarily the second result supersedes the first; duplicate
    work alone does not prove two conflicting snapshots are displayed. However,
    an independent probe removed a page and failed the second Git calculation:
@@ -160,7 +160,7 @@ selection under the repository's review rule.
 3. **Medium — preserved legacy-page comparison is promised but absent. Fixed in the follow-up below.**
    [The then-current migration plan](../../plans/unified-catalogue-pages.md) requires an
    exact-route historical adapter using the current page's ID and the legacy
-   document/source. [Document pairing](../../src/server/changed_content.ts)
+   document/source. [Document pairing](../../packages/mokly/src/server/changed_content.ts)
    looks only at historical entries by ID. A validated v3 fixture with a matching
    `legacyPages` route produced no historical-document reads or material paths;
    the new page appeared in Changes through its added metadata. The contract
@@ -238,7 +238,7 @@ findings. The reviewer checked the committed diff read-only and passed
 was then independently checked without changing product code.
 
 1. **High — failed-child cleanup can lose a running process. Valid, pre-existing.**
-   [The supervisor](../../src/server/supervisor.ts) clears its child handle on
+   [The supervisor](../../packages/mokly/src/server/supervisor.ts) clears its child handle on
    readiness failure or a post-ready error, sends SIGTERM, and does not await
    exit or escalate. A child that ignores termination can outlive `close()`;
    recovery can start another child before the old one releases its port. Three
@@ -257,7 +257,7 @@ was then independently checked without changing product code.
    [watched-child lifecycle follow-up](./watched-child-lifecycle.md).
 
 2. **Medium — nested pages lose helper attribution. Invalid, repeated.**
-   [Page flattening](../../src/authoring/definitions.ts) retains `definedIn` in
+   [Page flattening](../../packages/mokly/src/authoring/definitions.ts) retains `definedIn` in
    the rest object and spreads it into `definePage`; it does not discard that
    field. A fresh compiled consumer importing a nested page from `entries/shared.ts`
    produced that exact manifest source path and matching ownership header.

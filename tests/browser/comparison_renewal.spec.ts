@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import type { RunningServer } from "../../dist/server/http_types.js";
+import type { RunningServer } from "../../packages/mokly/dist/server/http_types.js";
 
 import { loadComparison, PANE_SOURCE } from "./comparison_actions.js";
 import { selectedComparisonFixture } from "./selected_comparison_fixture.js";

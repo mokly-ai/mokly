@@ -1,19 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
 import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
-} from "../dist/review/assets.js";
-import { CommittedBaselineReader } from "../dist/review/committed.js";
-import { classifyComponents } from "../dist/review/component_classification.js";
-import { CssResourceAnalysis } from "../dist/review/css/resource_analysis.js";
-import { LightningCssRuleParser } from "../dist/review/css/rules.js";
+} from "../packages/mokly/dist/review/assets.js";
+import { CommittedBaselineReader } from "../packages/mokly/dist/review/committed.js";
+import { classifyComponents } from "../packages/mokly/dist/review/component_classification.js";
+import { CssResourceAnalysis } from "../packages/mokly/dist/review/css/resource_analysis.js";
+import { LightningCssRuleParser } from "../packages/mokly/dist/review/css/rules.js";
 import {
   NodeGitCommandRunner,
   CommittedRepository,
-} from "../dist/review/git.js";
+} from "../packages/mokly/dist/review/git.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 

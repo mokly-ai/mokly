@@ -3,19 +3,19 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { loadConfig } from "../dist/config/load.js";
-import { exportCatalogue } from "../dist/export/run.js";
-import { referencedRoutes } from "../dist/review/asset_references.js";
-import { serve } from "../dist/server/serve.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
+import { referencedRoutes } from "../packages/mokly/dist/review/asset_references.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 import {
   classifyWatchPath,
   type WatchEvent,
-} from "../dist/server/watch_events.js";
-import { NotificationGate } from "../dist/server/watch_events.js";
+} from "../packages/mokly/dist/server/watch_events.js";
+import { NotificationGate } from "../packages/mokly/dist/server/watch_events.js";
 import {
   createSourceWatcher,
   ChokidarWatcherFactory,
-} from "../dist/server/watcher.js";
+} from "../packages/mokly/dist/server/watcher.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";

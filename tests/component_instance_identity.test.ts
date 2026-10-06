@@ -3,8 +3,8 @@ import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import { test } from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { loadConfig } from "../dist/config/load.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 import {
   instanceKey,
   slotKey,

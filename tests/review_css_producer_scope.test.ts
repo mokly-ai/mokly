@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { MoklyError } from "../dist/errors.js";
-import { classifyComponents } from "../dist/review/component_classification.js";
-import type { ResourceEvidence } from "../dist/review/css/resource_analysis.js";
-import { ResourceComparison } from "../dist/review/resource_comparison.js";
+import { MoklyError } from "../packages/mokly/dist/errors.js";
+import { classifyComponents } from "../packages/mokly/dist/review/component_classification.js";
+import type { ResourceEvidence } from "../packages/mokly/dist/review/css/resource_analysis.js";
+import { ResourceComparison } from "../packages/mokly/dist/review/resource_comparison.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 

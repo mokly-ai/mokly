@@ -6,7 +6,7 @@ import {
   type ManifestDocument,
 } from "@mokly/viewer/data";
 
-import { contentMoveSignals } from "../src/review/moves/content.js";
+import { contentMoveSignals } from "../packages/mokly/src/review/moves/content.js";
 
 import { moveReviewFixture as componentReviewFixture } from "./helpers/move_review_fixture.js";
 

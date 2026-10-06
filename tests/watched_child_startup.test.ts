@@ -4,11 +4,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { componentRuntime } from "../dist/build/component_runtime.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { MANIFEST_NAME } from "../dist/registry/manifest.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { componentRuntime } from "../packages/mokly/dist/build/component_runtime.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { MANIFEST_NAME } from "../packages/mokly/dist/registry/manifest.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture, cliBinPath } from "./helpers/fixture.js";

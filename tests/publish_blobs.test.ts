@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { uploadMissingBlobs } from "../dist/publish/blobs.js";
-import { ReplanRequired } from "../dist/publish/retry.js";
-import type { PlanResponse } from "../dist/publish/types.js";
+import { uploadMissingBlobs } from "../packages/mokly/dist/publish/blobs.js";
+import { ReplanRequired } from "../packages/mokly/dist/publish/retry.js";
+import type { PlanResponse } from "../packages/mokly/dist/publish/types.js";
 
 import { assertUploadRequest } from "./helpers/upload_request.js";
 

@@ -3,9 +3,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { validateGeneratedOutputPaths } from "../dist/build/output_paths.js";
-import { loadConfig } from "../dist/config/load.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { validateGeneratedOutputPaths } from "../packages/mokly/dist/build/output_paths.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 
 import {

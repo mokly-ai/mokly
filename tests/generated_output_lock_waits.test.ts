@@ -3,22 +3,22 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
 import {
   acquireOutputLock,
   assertOutputLockHeld,
   type OutputLock,
-} from "../dist/build/output_lock.js";
-import { FileSystemGeneratedOutputStore } from "../dist/build/output_store.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { runWithTimings } from "../dist/diagnostics/timings.js";
-import { isCancellation } from "../dist/errors.js";
-import { assertInputsUnchanged } from "../dist/export/inputs.js";
-import { capturePublicFiles } from "../dist/export/public_files.js";
-import { exportCatalogue } from "../dist/export/run.js";
-import { PlainServeReporter } from "../dist/server/reporter.js";
-import { serve } from "../dist/server/serve.js";
+} from "../packages/mokly/dist/build/output_lock.js";
+import { FileSystemGeneratedOutputStore } from "../packages/mokly/dist/build/output_store.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { runWithTimings } from "../packages/mokly/dist/diagnostics/timings.js";
+import { isCancellation } from "../packages/mokly/dist/errors.js";
+import { assertInputsUnchanged } from "../packages/mokly/dist/export/inputs.js";
+import { capturePublicFiles } from "../packages/mokly/dist/export/public_files.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
+import { PlainServeReporter } from "../packages/mokly/dist/server/reporter.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { screensSource } from "./helpers/generated_output_fixture.js";

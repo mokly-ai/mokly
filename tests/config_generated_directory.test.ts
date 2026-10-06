@@ -3,11 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { validateGeneratedOutputPaths } from "../dist/build/output_paths.js";
-import { normalizeSourceFiles } from "../dist/build/source_inventory.js";
-import { loadConfig } from "../dist/config/load.js";
-import { resolveConfig } from "../dist/config/validate.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { validateGeneratedOutputPaths } from "../packages/mokly/dist/build/output_paths.js";
+import { normalizeSourceFiles } from "../packages/mokly/dist/build/source_inventory.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { resolveConfig } from "../packages/mokly/dist/config/validate.js";
 
 import {
   createFixture,

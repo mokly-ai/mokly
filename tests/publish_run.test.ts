@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { publishCatalogue } from "../dist/publish/run.js";
+import { publishCatalogue } from "../packages/mokly/dist/publish/run.js";
 
 import {
   base,

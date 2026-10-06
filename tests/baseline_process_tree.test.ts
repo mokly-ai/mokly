@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { setTimeout } from "node:timers/promises";
 
-import { NodeBaselineProcessRunner } from "../dist/baseline/process.js";
+import { NodeBaselineProcessRunner } from "../packages/mokly/dist/baseline/process.js";
 
 import {
   killProcessIfPresent,

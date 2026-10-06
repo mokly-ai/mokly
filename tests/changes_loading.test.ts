@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { loadConfig } from "../dist/config/load.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

@@ -5,11 +5,14 @@ import path from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 
-import { compileCatalogue, type Compilation } from "../dist/build/compile.js";
-import { generatedBytes } from "../dist/build/generated_file.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { exportCatalogue } from "../dist/export/run.js";
+import {
+  compileCatalogue,
+  type Compilation,
+} from "../packages/mokly/dist/build/compile.js";
+import { generatedBytes } from "../packages/mokly/dist/build/generated_file.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
 
 import {
   createFixture,

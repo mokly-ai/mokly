@@ -1,7 +1,7 @@
 import {
   loadBrowserClientModules,
   loadBrowserNavigationModules,
-} from "../../dist/server/client_modules.js";
+} from "../../packages/mokly/dist/server/client_modules.js";
 
 import { inspectDeliveredBrowserGraph } from "./browser_graph_analysis.mjs";
 

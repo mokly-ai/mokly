@@ -3,10 +3,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { loadConsumerGraph } from "../dist/build/load_graph.js";
-import { loadConfig } from "../dist/config/load.js";
-import { classifyWatchPath } from "../dist/server/watch_events.js";
-import { watchTargets } from "../dist/server/watch_paths.js";
+import { loadConsumerGraph } from "../packages/mokly/dist/build/load_graph.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { classifyWatchPath } from "../packages/mokly/dist/server/watch_events.js";
+import { watchTargets } from "../packages/mokly/dist/server/watch_paths.js";
 
 import { removeFixture } from "./helpers/fixture.js";
 import { styleFixture } from "./helpers/imported_styles_fixture.js";

@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
 
-import { cacheLayout } from "../dist/baseline/cache_layout.js";
-import { CachedBaselineBuilder } from "../dist/baseline/rebuild.js";
+import { cacheLayout } from "../packages/mokly/dist/baseline/cache_layout.js";
+import { CachedBaselineBuilder } from "../packages/mokly/dist/baseline/rebuild.js";
 
 import { baselineFixture, success } from "./helpers/baseline_fixture.js";
 

@@ -3,8 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import { exportCatalogue } from "../dist/export/run.js";
+import { prepareLiveRuntime } from "../packages/mokly/dist/build/live_runtime.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { entryStyle } from "./helpers/imported_styles_fixture.js";

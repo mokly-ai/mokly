@@ -5,9 +5,9 @@ import { readCatalogue, type CatalogueReadModel } from "@mokly/viewer";
 import { parseReviewResult } from "@mokly/viewer/data";
 import { createCatalogue } from "@mokly/viewer/server";
 
-import { projectCatalogue } from "../dist/catalogue/projection.js";
-import { compareReview } from "../dist/review/compare.js";
-import { computeCatalogueChanges } from "../dist/server/changed.js";
+import { projectCatalogue } from "../packages/mokly/dist/catalogue/projection.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import { computeCatalogueChanges } from "../packages/mokly/dist/server/changed.js";
 
 import { movedCatalogueFixture } from "./helpers/move_catalogue.js";
 

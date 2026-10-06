@@ -4,11 +4,11 @@ import { Agent, request } from "node:http";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { startCatalogueServer } from "../dist/server/http.js";
-import { safeDecodePath } from "../dist/server/respond.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
+import { safeDecodePath } from "../packages/mokly/dist/server/respond.js";
 
 import {
   createFixture,

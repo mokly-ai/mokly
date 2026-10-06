@@ -7,7 +7,7 @@ import { promisify } from "node:util";
 
 import type { JSONReport } from "@playwright/test/reporter";
 
-import { parseManifest } from "../dist/registry/manifest.js";
+import { parseManifest } from "../packages/mokly/dist/registry/manifest.js";
 import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";

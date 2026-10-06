@@ -63,4 +63,4 @@ npx playwright test tests/browser/frame_adapter.spec.ts tests/browser/frame_adap
 
 See the [normative frame protocol](../../../../docs/protocol/mokly-frame-adapter.md),
 [published inspector contract](../../../../docs/protocol/mokly-published-inspector.md),
-[client adapters](../client/README.md), and [publication boundary](../../../../src/browse/README.md).
+[client adapters](../client/README.md), and [publication boundary](../../../mokly/src/browse/README.md).

@@ -1,16 +1,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { classifyComponents } from "../dist/review/component_classification.js";
+import { classifyComponents } from "../packages/mokly/dist/review/component_classification.js";
 import {
   ComponentDependencyPolicy,
   metadata,
-} from "../dist/review/component_metadata.js";
-import { ComponentMaterialReader } from "../dist/review/component_resources.js";
-import { compareComponentView } from "../dist/review/component_view.js";
-import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
-import { ResourceComparison } from "../dist/review/resource_comparison.js";
-import { computeChangedPaths } from "../dist/server/changed.js";
+} from "../packages/mokly/dist/review/component_metadata.js";
+import { ComponentMaterialReader } from "../packages/mokly/dist/review/component_resources.js";
+import { compareComponentView } from "../packages/mokly/dist/review/component_view.js";
+import type { ReadOnlyReviewRepository } from "../packages/mokly/dist/review/repository.js";
+import { ResourceComparison } from "../packages/mokly/dist/review/resource_comparison.js";
+import { computeChangedPaths } from "../packages/mokly/dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";

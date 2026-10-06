@@ -3,12 +3,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { FileSystemGeneratedOutputStore } from "../dist/build/output_store.js";
-import { GitTrackedGeneratedOutput } from "../dist/build/tracked_output.js";
-import { loadConfig } from "../dist/config/load.js";
-import { MANIFEST_NAME } from "../dist/registry/manifest.js";
-import { GitProcessError } from "../dist/review/git_process.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { FileSystemGeneratedOutputStore } from "../packages/mokly/dist/build/output_store.js";
+import { GitTrackedGeneratedOutput } from "../packages/mokly/dist/build/tracked_output.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { MANIFEST_NAME } from "../packages/mokly/dist/registry/manifest.js";
+import { GitProcessError } from "../packages/mokly/dist/review/git_process.js";
 
 import { derivedFixture } from "./helpers/derived_fixture.js";
 import { textOutput } from "./helpers/generated_text.js";

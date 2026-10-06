@@ -4,19 +4,22 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { checkCompilation } from "../dist/build/check.js";
-import { compileCatalogue } from "../dist/build/compile.js";
-import { validateGeneratedOutputPaths } from "../dist/build/output_paths.js";
+import { checkCompilation } from "../packages/mokly/dist/build/check.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { validateGeneratedOutputPaths } from "../packages/mokly/dist/build/output_paths.js";
 import {
   generatedOwnershipDenial,
   pendingGeneratedOrphanRoutes,
   unclaimedGeneratedRoutes,
-} from "../dist/build/ownership.js";
-import { assetRoute, stylesheetRoute } from "../dist/build/styles/routes.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { isPublicStaticFile } from "../dist/config/public_files.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+} from "../packages/mokly/dist/build/ownership.js";
+import {
+  assetRoute,
+  stylesheetRoute,
+} from "../packages/mokly/dist/build/styles/routes.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { isPublicStaticFile } from "../packages/mokly/dist/config/public_files.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

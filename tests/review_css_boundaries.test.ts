@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { diffCssRules } from "../src/review/css/diff.js";
-import { LightningCssRuleParser } from "../src/review/css/rules.js";
+import { diffCssRules } from "../packages/mokly/src/review/css/diff.js";
+import { LightningCssRuleParser } from "../packages/mokly/src/review/css/rules.js";
 
 const parser = new LightningCssRuleParser();
 

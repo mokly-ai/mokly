@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { defineScreen } from "../dist/authoring/definitions.js";
-import type { ResolvedRegistryEntry } from "../dist/authoring/types.js";
-import { defineComponent } from "../dist/components/definition.js";
-import { createManifest, parseManifest } from "../dist/registry/manifest.js";
+import { defineScreen } from "../packages/mokly/dist/authoring/definitions.js";
+import type { ResolvedRegistryEntry } from "../packages/mokly/dist/authoring/types.js";
+import { defineComponent } from "../packages/mokly/dist/components/definition.js";
+import {
+  createManifest,
+  parseManifest,
+} from "../packages/mokly/dist/registry/manifest.js";
 import { entryRoute } from "../packages/viewer/dist/data.js";
 import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
 

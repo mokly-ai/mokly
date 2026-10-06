@@ -5,7 +5,7 @@ import test from "node:test";
 import {
   recordModuleIdentities,
   scopeModule,
-} from "../dist/build/styles/modules.js";
+} from "../packages/mokly/dist/build/styles/modules.js";
 
 const relative = "entries/card.module.css";
 const prefix = `mokly_${createHash("sha256").update(relative).digest("hex").slice(0, 12)}_`;

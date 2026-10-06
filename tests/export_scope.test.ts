@@ -3,8 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { resolveExportOutput } from "../dist/export/paths.js";
-import { exportCatalogue } from "../dist/export/run.js";
+import { resolveExportOutput } from "../packages/mokly/dist/export/paths.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
 
 import {
   createExportFixture,

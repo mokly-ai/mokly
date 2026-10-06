@@ -5,11 +5,11 @@ import test from "node:test";
 
 import { parse } from "parse5";
 
-import { adaptBrowseDocument } from "../dist/browse/document_adapter.js";
-import { inspectorMarkup } from "../dist/browse/inspector_metadata.js";
-import { compileCatalogue } from "../dist/build/compile.js";
-import { loadConfig } from "../dist/config/load.js";
-import { exportCatalogue } from "../dist/export/run.js";
+import { adaptBrowseDocument } from "../packages/mokly/dist/browse/document_adapter.js";
+import { inspectorMarkup } from "../packages/mokly/dist/browse/inspector_metadata.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
 import {
   readMetadata,
   metadataKeys,

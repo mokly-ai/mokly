@@ -1,13 +1,23 @@
-import { execFile } from "node:child_process";
+import { execFile, type PromiseWithChild } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { promisify } from "node:util";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
 
-import { createFixture, removeFixture } from "./fixture.js";
+import { createFixture, removeFixture, type TestFixture } from "./fixture.js";
+
+type CreateExportFixtureResult = TestFixture & {
+  config: ResolvedConfig;
+  git: (
+    ...args: string[]
+  ) => PromiseWithChild<{ stdout: string; stderr: string }>;
+  output: string;
+  close: () => Promise<void>;
+};
 
 const execute = promisify(execFile);
 
@@ -15,7 +25,7 @@ const execute = promisify(execFile);
 export async function createExportFixture(
   source?: string,
   options?: { extraConfig?: string },
-) {
+): Promise<CreateExportFixtureResult> {
   const fixture = await createFixture(source, options);
   try {
     const config = await loadConfig(fixture.root);

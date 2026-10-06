@@ -4,9 +4,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { readCatalogueChanges } from "../dist/server/component_changes.js";
-import { configuredServedReview } from "../dist/server/configured_review.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+import { readCatalogueChanges } from "../packages/mokly/dist/server/component_changes.js";
+import { configuredServedReview } from "../packages/mokly/dist/server/configured_review.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 

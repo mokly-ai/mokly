@@ -38,8 +38,8 @@ jobs:
       issues: write
       pull-requests: write
     outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
+      release_created: ${{ steps.release.outputs['packages/mokly--release_created'] }}
+      tag_name: ${{ steps.release.outputs['packages/mokly--tag_name'] }}
       viewer_release_created: ${{ steps.release.outputs['packages/viewer--release_created'] }}
       viewer_tag_name: ${{ steps.release.outputs['packages/viewer--tag_name'] }}
     steps:

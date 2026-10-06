@@ -1,9 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "bootstrap-sha": "896a6ecfd26236b1695c7683e7acac73dc4efbc9",
-  "plugins": [{ "type": "node-workspace", "updateAllPackages": true }],
+  "plugins": [
+    {
+      "type": "node-workspace",
+      "updateAllPackages": true
+    }
+  ],
   "packages": {
-    ".": {
+    "packages/mokly": {
       "changelog-path": "CHANGELOG.md",
       "include-v-in-tag": true,
       "release-type": "node",
@@ -12,11 +17,16 @@
       "extra-files": [
         {
           "type": "generic",
-          "path": "docs/guides/start/install.md"
+          "path": "/docs/guides/start/install.md"
         },
         {
           "type": "generic",
-          "path": "docs/guides/ci/github-action.md"
+          "path": "/docs/guides/ci/github-action.md"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/mokly']['version']"
         }
       ]
     },
@@ -32,7 +42,12 @@
         {
           "type": "json",
           "path": "/package-lock.json",
-          "jsonpath": "$['packages']['']['dependencies']['@mokly/viewer']"
+          "jsonpath": "$['packages']['packages/mokly']['dependencies']['@mokly/viewer']"
+        },
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$['packages']['packages/viewer']['version']"
         }
       ]
     }

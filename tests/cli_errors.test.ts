@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { cliErrorPresentation } from "../dist/cli/errors.js";
-import { MoklyError, type MoklyErrorCode } from "../dist/errors.js";
+import { cliErrorPresentation } from "../packages/mokly/dist/cli/errors.js";
+import {
+  MoklyError,
+  type MoklyErrorCode,
+} from "../packages/mokly/dist/errors.js";
 
 const EXPECTED = new Map<MoklyErrorCode, RegExp>([
   ["baseline-history-unavailable", /history is unavailable/i],

@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { loadConfig } from "../dist/config/load.js";
-import { compareReview } from "../dist/review/compare.js";
-import { CommittedRepository } from "../dist/review/git.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import { CommittedRepository } from "../packages/mokly/dist/review/git.js";
 import {
   normalizeReviewPair,
   normalizeSingleDocument,
-} from "../dist/review/ignore.js";
+} from "../packages/mokly/dist/review/ignore.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";

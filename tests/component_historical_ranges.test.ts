@@ -3,14 +3,14 @@ import { test } from "node:test";
 
 import { ComponentValidationError } from "@mokly/viewer/data";
 
-import { validateComponentRanges } from "../dist/components/ranges.js";
-import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
-import { ComponentMaterialReader } from "../dist/review/component_resources.js";
+import { validateComponentRanges } from "../packages/mokly/dist/components/ranges.js";
+import { ComponentDependencyPolicy } from "../packages/mokly/dist/review/component_metadata.js";
+import { ComponentMaterialReader } from "../packages/mokly/dist/review/component_resources.js";
 import {
   compareComponentView,
   type ComponentViewContext,
-} from "../dist/review/component_view.js";
-import { ResourceComparison } from "../dist/review/resource_comparison.js";
+} from "../packages/mokly/dist/review/component_view.js";
+import { ResourceComparison } from "../packages/mokly/dist/review/resource_comparison.js";
 import type { ComponentRangeRecord } from "../packages/viewer/dist/components/manifest_types.js";
 import {
   generatedViews,

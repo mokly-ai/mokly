@@ -3,8 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test, { type TestContext } from "node:test";
 
-import { compileCatalogue, type Compilation } from "../dist/build/compile.js";
-import { loadConfig } from "../dist/config/load.js";
+import {
+  compileCatalogue,
+  type Compilation,
+} from "../packages/mokly/dist/build/compile.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";

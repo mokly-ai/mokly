@@ -1,15 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { PlainReporter } from "../dist/cli/reporter/plain.js";
-import { RichReporter } from "../dist/cli/reporter/rich.js";
-import { selectOutputMode } from "../dist/cli/reporter/select.js";
+import { PlainReporter } from "../packages/mokly/dist/cli/reporter/plain.js";
+import { RichReporter } from "../packages/mokly/dist/cli/reporter/rich.js";
+import { selectOutputMode } from "../packages/mokly/dist/cli/reporter/select.js";
 import {
   formatBytes,
   formatDuration,
   truncateTerminalLine,
-} from "../dist/cli/reporter/terminal.js";
-import { MoklyError } from "../dist/errors.js";
+} from "../packages/mokly/dist/cli/reporter/terminal.js";
+import { MoklyError } from "../packages/mokly/dist/errors.js";
 
 import { memoryTerminal } from "./helpers/terminal.js";
 

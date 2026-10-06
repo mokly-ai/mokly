@@ -1,5 +1,7 @@
 /** Served and public shell inputs for one shared branch-point fixture case. */
 
+import { projectCatalogue } from "../../packages/mokly/src/catalogue/projection.js";
+import { computeCatalogueChanges } from "../../packages/mokly/src/server/changed.js";
 import { readShellCatalogue } from "../../packages/viewer/src/catalogue/reader.js";
 import {
   createCatalogue,
@@ -14,8 +16,6 @@ import {
 } from "../../packages/viewer/src/viewer/projection.js";
 import { defaultSelection } from "../../packages/viewer/src/viewer/selection.js";
 import type { ViewerSelection } from "../../packages/viewer/src/viewer/types.js";
-import { projectCatalogue } from "../../src/catalogue/projection.js";
-import { computeCatalogueChanges } from "../../src/server/changed.js";
 
 import { branchPointFixture } from "./branch_point_fixture.js";
 import type { BranchPointCase } from "./branch_point_sources.js";

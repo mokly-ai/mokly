@@ -53,6 +53,11 @@ The CLI changelog is `packages/mokly/CHANGELOG.md`. Its guide `extra-files`
 are root-anchored `/docs/guides/start/install.md` and
 `/docs/guides/ci/github-action.md`. The viewer's lockfile updater targets
 `$['packages']['packages/mokly']['dependencies']['@mokly/viewer']`.
+Explicit root-lockfile JSON updaters also set
+`$['packages']['packages/mokly']['version']` from the CLI release and
+`$['packages']['packages/viewer']['version']` from the viewer release. The
+[release management contract](./npm-release-management.md#release-updates)
+defines why all three fields need explicit updaters.
 
 `publishConfig` targets the public npm registry with public access. The CLI
 package contains compiled runtime code, declarations, private host modules,
@@ -70,6 +75,12 @@ removes them. The copy runs in `build`, not only in `prepack`, so
 the complete package after a build. `prepack` also runs `npm run build`.
 Package-local paths remain `docs/guides` and `docs/protocol` in the published
 archive.
+
+The root build runs the viewer build before the CLI build, then runs
+`npm rebuild --workspace @mokly/mokly --ignore-scripts` to create the local
+executable link. A clean install can skip that link while the compiled bin is
+absent. After `npm ci` and `npm run build`, local `npx --no-install mokly`
+must resolve the built workspace CLI without a registry download.
 
 The other workspace member is `@mokly/viewer` at `packages/viewer`, initially
 version 0.1.0. Its MIT ESM distribution owns shell assets, public data readers,

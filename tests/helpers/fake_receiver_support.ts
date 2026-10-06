@@ -1,8 +1,8 @@
 import crypto from "node:crypto";
 import type http from "node:http";
 
-import type { ExportOwnershipEntry } from "../../dist/export/ownership.js";
-import type { UploadManifest } from "../../dist/publish/types.js";
+import type { ExportOwnershipEntry } from "../../packages/mokly/dist/export/ownership.js";
+import type { UploadManifest } from "../../packages/mokly/dist/publish/types.js";
 
 import type { ValidatedFakePlan } from "./fake_receiver_validation.js";
 

@@ -3,15 +3,18 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { compileRuntime } from "../dist/build/compile_runtime.js";
-import { runtimeGraph } from "../dist/build/component_runtime.js";
-import { DocumentCompiler } from "../dist/build/document_compiler.js";
-import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import { generatedHeader } from "../dist/build/ownership.js";
-import { loadConfig } from "../dist/config/load.js";
-import { parseCatalogueIndex } from "../dist/registry/catalogue_index.js";
-import { parseManifest, MANIFEST_NAME } from "../dist/registry/manifest.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { compileRuntime } from "../packages/mokly/dist/build/compile_runtime.js";
+import { runtimeGraph } from "../packages/mokly/dist/build/component_runtime.js";
+import { DocumentCompiler } from "../packages/mokly/dist/build/document_compiler.js";
+import { prepareLiveRuntime } from "../packages/mokly/dist/build/live_runtime.js";
+import { generatedHeader } from "../packages/mokly/dist/build/ownership.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { parseCatalogueIndex } from "../packages/mokly/dist/registry/catalogue_index.js";
+import {
+  parseManifest,
+  MANIFEST_NAME,
+} from "../packages/mokly/dist/registry/manifest.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import {

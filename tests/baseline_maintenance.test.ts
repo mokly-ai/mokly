@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { StderrBaselineMaintenanceReporter } from "../dist/baseline/maintenance.js";
+import { StderrBaselineMaintenanceReporter } from "../packages/mokly/dist/baseline/maintenance.js";
 
 test("maintenance diagnostics identify the entry and preserve the failure message", () => {
   const lines: string[] = [];

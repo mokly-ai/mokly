@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 
-import { VARIANT_PARENT } from "../../dist/authoring/markers.js";
+import { VARIANT_PARENT } from "../../packages/mokly/dist/authoring/markers.js";
 import type {
   EntryDefinition,
   ResolvedRegistryEntry,
-} from "../../dist/authoring/types.js";
+} from "../../packages/mokly/dist/authoring/types.js";
 
 /** Attach registry context to deliberately explicit-path unit definitions. */
 export function resolvedEntry(

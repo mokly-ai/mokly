@@ -3,9 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { discoverEntryModules } from "../dist/config/entry_discovery.js";
-import { loadConfig } from "../dist/config/load.js";
-import { resolveConfig } from "../dist/config/validate.js";
+import { discoverEntryModules } from "../packages/mokly/dist/config/entry_discovery.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { resolveConfig } from "../packages/mokly/dist/config/validate.js";
 
 import {
   createFixture,

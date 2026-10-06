@@ -4,28 +4,28 @@ import http from "node:http";
 import path from "node:path";
 import test from "node:test";
 
-import { checkCompilation } from "../dist/build/check.js";
-import { compileCatalogue } from "../dist/build/compile.js";
-import { componentRuntime } from "../dist/build/component_runtime.js";
+import { checkCompilation } from "../packages/mokly/dist/build/check.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { componentRuntime } from "../packages/mokly/dist/build/component_runtime.js";
 import {
   generatedBytes,
   generatedText,
   receiveGeneratedFile,
   transferGeneratedFile,
   type GeneratedFile,
-} from "../dist/build/generated_file.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { capturePublicFiles } from "../dist/export/public_files.js";
-import { CompilationAssetReader } from "../dist/review/compilation_assets.js";
-import { handleControls } from "../dist/server/controls/http.js";
+} from "../packages/mokly/dist/build/generated_file.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { capturePublicFiles } from "../packages/mokly/dist/export/public_files.js";
+import { CompilationAssetReader } from "../packages/mokly/dist/review/compilation_assets.js";
+import { handleControls } from "../packages/mokly/dist/server/controls/http.js";
 import {
   componentRuntimeMessage,
   parseRuntimeMessage,
-} from "../dist/server/controls/runtime_ipc.js";
-import { ComponentRenderService } from "../dist/server/controls/service.js";
-import { captureRenderBundle } from "../dist/server/controls/transient_assets.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+} from "../packages/mokly/dist/server/controls/runtime_ipc.js";
+import { ComponentRenderService } from "../packages/mokly/dist/server/controls/service.js";
+import { captureRenderBundle } from "../packages/mokly/dist/server/controls/transient_assets.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { screenView } from "./helpers/component_views.js";

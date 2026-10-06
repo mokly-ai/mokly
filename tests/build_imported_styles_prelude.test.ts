@@ -3,8 +3,8 @@ import test from "node:test";
 
 import type { Metafile } from "esbuild";
 
-import { stripSourcePathComments } from "../dist/build/styles/outputs.js";
-import { scanImportPrelude } from "../dist/build/styles/prelude.js";
+import { stripSourcePathComments } from "../packages/mokly/dist/build/styles/outputs.js";
+import { scanImportPrelude } from "../packages/mokly/dist/build/styles/prelude.js";
 
 test("CSS prelude scans comments, @charset, @layer, escaped strings and qualifiers", () => {
   const css =

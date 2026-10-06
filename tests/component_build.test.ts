@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { validateComponentRanges } from "../dist/components/ranges.js";
-import { loadConfig } from "../dist/config/load.js";
-import { parseManifest, serializeManifest } from "../dist/registry/manifest.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { validateComponentRanges } from "../packages/mokly/dist/components/ranges.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import {
+  parseManifest,
+  serializeManifest,
+} from "../packages/mokly/dist/registry/manifest.js";
 import { decodeProps } from "../packages/viewer/dist/components/codec.js";
 import {
   instanceKey,

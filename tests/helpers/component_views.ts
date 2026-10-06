@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import type { Compilation } from "../../dist/build/compile.js";
+import type { Compilation } from "../../packages/mokly/dist/build/compile.js";
 import type {
   ComponentViewRecord,
   ManifestComponent,

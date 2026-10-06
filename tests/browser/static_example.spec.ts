@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
-import { exportCatalogue } from "../../dist/export/run.js";
+import { exportCatalogue } from "../../packages/mokly/dist/export/run.js";
 import { createCommittedExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import {

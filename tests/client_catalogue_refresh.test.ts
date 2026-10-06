@@ -10,8 +10,8 @@ import type {
   ViewerCapabilityRequest,
 } from "@mokly/viewer/runtime";
 
-import type { ReactCapabilityEnvironment } from "../dist/client/react_capabilities.js";
-import { createReactUpdateCapability } from "../dist/client/react_capability_updates.js";
+import type { ReactCapabilityEnvironment } from "../packages/mokly/dist/client/react_capabilities.js";
+import { createReactUpdateCapability } from "../packages/mokly/dist/client/react_capability_updates.js";
 
 const catalogue = readCatalogue(
   JSON.parse(

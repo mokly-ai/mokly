@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { compareReview } from "../dist/review/compare.js";
-import { computeChangedPaths } from "../dist/server/changed.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import { computeChangedPaths } from "../packages/mokly/dist/server/changed.js";
 
 import { componentChangeCases } from "./helpers/component_change_cases.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";

@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import { parseArguments } from "../dist/cli/arguments.js";
+import { parseArguments } from "../packages/mokly/dist/cli/arguments.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { startFakeReceiver } from "./helpers/fake_receiver.js";

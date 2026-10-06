@@ -3,8 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { loadConsumerGraph } from "../dist/build/load_graph.js";
-import { loadConfig } from "../dist/config/load.js";
+import { loadConsumerGraph } from "../packages/mokly/dist/build/load_graph.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 
 import { removeFixture } from "./helpers/fixture.js";
 import {

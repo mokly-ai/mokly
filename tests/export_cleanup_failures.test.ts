@@ -3,10 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { runExport } from "../dist/cli/export.js";
-import { errorMessage, MoklyError } from "../dist/errors.js";
-import { fileExportOperations } from "../dist/export/operations.js";
-import { exportCatalogue } from "../dist/export/run.js";
+import { runExport } from "../packages/mokly/dist/cli/export.js";
+import { errorMessage, MoklyError } from "../packages/mokly/dist/errors.js";
+import { fileExportOperations } from "../packages/mokly/dist/export/operations.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 

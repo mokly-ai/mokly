@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { parseReviewResult } from "@mokly/viewer/data";
 
-import { compareReview } from "../dist/review/compare.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
 
 import { moveReviewFixture as componentReviewFixture } from "./helpers/move_review_fixture.js";
 

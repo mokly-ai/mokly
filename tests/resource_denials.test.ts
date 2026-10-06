@@ -6,18 +6,18 @@ import test from "node:test";
 import type { ComponentViewRecord } from "@mokly/viewer";
 import { ComponentValidationError } from "@mokly/viewer/data";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { stylesheetsFor } from "../dist/build/render.js";
-import { validateComponentResources } from "../dist/components/output_validation.js";
-import { loadConfig } from "../dist/config/load.js";
-import { MoklyError } from "../dist/errors.js";
-import { assembleExport } from "../dist/export/site.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { stylesheetsFor } from "../packages/mokly/dist/build/render.js";
+import { validateComponentResources } from "../packages/mokly/dist/components/output_validation.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { MoklyError } from "../packages/mokly/dist/errors.js";
+import { assembleExport } from "../packages/mokly/dist/export/site.js";
 import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
-} from "../dist/review/assets.js";
-import type { BaselineReader } from "../dist/review/git.js";
-import { CompiledReviewAssetReader } from "../dist/review/head_assets.js";
+} from "../packages/mokly/dist/review/assets.js";
+import type { BaselineReader } from "../packages/mokly/dist/review/git.js";
+import { CompiledReviewAssetReader } from "../packages/mokly/dist/review/head_assets.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

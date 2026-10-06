@@ -2,9 +2,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import type { Compilation } from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
+import type { Compilation } from "../../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
 
 const root = process.argv[2]!;
 const input = JSON.parse(

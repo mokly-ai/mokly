@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { RichReporter } from "../dist/cli/reporter/rich.js";
-import { formatCount } from "../dist/cli/reporter/terminal.js";
+import { RichReporter } from "../packages/mokly/dist/cli/reporter/rich.js";
+import { formatCount } from "../packages/mokly/dist/cli/reporter/terminal.js";
 import {
   publishCancelled,
   uploadTransportFailed,
-} from "../dist/publish/errors.js";
+} from "../packages/mokly/dist/publish/errors.js";
 
 import { emulateTerminal, memoryTerminal } from "./helpers/terminal.js";
 

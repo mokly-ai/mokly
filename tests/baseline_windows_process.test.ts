@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { setTimeout } from "node:timers/promises";
 
-import { NodeBaselineProcessRunner } from "../dist/baseline/process.js";
+import { NodeBaselineProcessRunner } from "../packages/mokly/dist/baseline/process.js";
 
 import { windowsProcessFixture } from "./helpers/windows_process.js";
 

@@ -5,9 +5,9 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import { RebuiltBaselineReader } from "../dist/baseline/reader.js";
-import { parseHistoricalManifest } from "../dist/registry/manifest.js";
-import { prepareReviewRepository } from "../dist/review/prepare.js";
+import { RebuiltBaselineReader } from "../packages/mokly/dist/baseline/reader.js";
+import { parseHistoricalManifest } from "../packages/mokly/dist/registry/manifest.js";
+import { prepareReviewRepository } from "../packages/mokly/dist/review/prepare.js";
 
 import { createExampleBaseline } from "./helpers/example_baseline.js";
 import { repositoryRoot } from "./helpers/fixture.js";

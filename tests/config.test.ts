@@ -3,9 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { discoverConfig, loadConfig } from "../dist/config/load.js";
-import { validateRelativeRoute } from "../dist/config/paths.js";
-import { resolveConfig } from "../dist/config/validate.js";
+import {
+  discoverConfig,
+  loadConfig,
+} from "../packages/mokly/dist/config/load.js";
+import { validateRelativeRoute } from "../packages/mokly/dist/config/paths.js";
+import { resolveConfig } from "../packages/mokly/dist/config/validate.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

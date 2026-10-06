@@ -3,14 +3,14 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { isPublicStaticFile } from "../dist/config/public_files.js";
-import { resolveExportOutput } from "../dist/export/paths.js";
-import { reviewChangedPaths } from "../dist/review/changed_paths.js";
-import { classifyWatchPath } from "../dist/server/watch_events.js";
+import { isPublicStaticFile } from "../packages/mokly/dist/config/public_files.js";
+import { resolveExportOutput } from "../packages/mokly/dist/export/paths.js";
+import { reviewChangedPaths } from "../packages/mokly/dist/review/changed_paths.js";
+import { classifyWatchPath } from "../packages/mokly/dist/server/watch_events.js";
 import {
   isPackageOwnedIgnoredWatchPath,
   watchTargets,
-} from "../dist/server/watch_paths.js";
+} from "../packages/mokly/dist/server/watch_paths.js";
 
 import { derivedFixture } from "./helpers/derived_fixture.js";
 

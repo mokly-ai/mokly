@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parseFrontMatter } from "../src/documents/front_matter.js";
-import { renderMarkdown } from "../src/documents/markdown.js";
+import { parseFrontMatter } from "../packages/mokly/src/documents/front_matter.js";
+import { renderMarkdown } from "../packages/mokly/src/documents/markdown.js";
 
 const location = "specs/example/README.md";
 

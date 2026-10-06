@@ -12,10 +12,10 @@ import type { Page } from "@playwright/test";
 
 import { readCatalogue } from "@mokly/viewer";
 
-import { writeCompilation } from "../../dist/build/transaction.js";
-import type { ResolvedConfig } from "../../dist/config/types.js";
-import { exportCatalogue } from "../../dist/export/run.js";
-import { serve } from "../../dist/server/serve.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
+import { exportCatalogue } from "../../packages/mokly/dist/export/run.js";
+import { serve } from "../../packages/mokly/dist/server/serve.js";
 import { pathFixture } from "../helpers/path_fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 

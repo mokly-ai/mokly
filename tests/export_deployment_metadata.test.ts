@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { exportCatalogue } from "../dist/export/run.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
 
 import {
   createExportFixture,

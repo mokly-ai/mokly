@@ -3,12 +3,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { readManifest } from "../dist/registry/manifest.js";
-import { FileSystemReviewAssetReader } from "../dist/review/assets.js";
-import { asChangeEvidence } from "../dist/review/change_evidence.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedPaths } from "../dist/server/changed.js";
-import { classifyChangedContent } from "../dist/server/changed_content.js";
+import { readManifest } from "../packages/mokly/dist/registry/manifest.js";
+import { FileSystemReviewAssetReader } from "../packages/mokly/dist/review/assets.js";
+import { asChangeEvidence } from "../packages/mokly/dist/review/change_evidence.js";
+import { committedReviewRepository } from "../packages/mokly/dist/review/repository.js";
+import { computeChangedPaths } from "../packages/mokly/dist/server/changed.js";
+import { classifyChangedContent } from "../packages/mokly/dist/server/changed_content.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";

@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { isCancellation } from "../dist/errors.js";
-import { validateUploadManifest } from "../dist/publish/manifest.js";
+import { isCancellation } from "../packages/mokly/dist/errors.js";
+import { validateUploadManifest } from "../packages/mokly/dist/publish/manifest.js";
 import {
   parseRepository,
   readHeadSha,
   readUploadIdentity,
-} from "../dist/publish/metadata.js";
-import type { GitCommandRunner } from "../dist/review/git.js";
+} from "../packages/mokly/dist/publish/metadata.js";
+import type { GitCommandRunner } from "../packages/mokly/dist/review/git.js";
 
 const head = "a".repeat(40);
 const manifest = {

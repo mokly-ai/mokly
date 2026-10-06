@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { parse } from "parse5";
 
-import { cssDocumentOptions } from "../src/review/css/document.js";
+import { cssDocumentOptions } from "../packages/mokly/src/review/css/document.js";
 
 import { analyze, documents, excluded, kept } from "./helpers/review_css.js";
 

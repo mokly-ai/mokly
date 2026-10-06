@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { resolvePublicExclude } from "../dist/config/public_exclusions.js";
-import { receiveComponentRuntimeStartup } from "../dist/server/controls/runtime_ipc.js";
+import { resolvePublicExclude } from "../packages/mokly/dist/config/public_exclusions.js";
+import { receiveComponentRuntimeStartup } from "../packages/mokly/dist/server/controls/runtime_ipc.js";
 
 function startup(publicExclude?: unknown): object {
   return {

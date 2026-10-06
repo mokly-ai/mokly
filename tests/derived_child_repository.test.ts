@@ -5,16 +5,16 @@ import test from "node:test";
 
 import ts from "typescript";
 
-import { CachedBaselineBuilder } from "../dist/baseline/rebuild.js";
-import { compileCatalogue } from "../dist/build/compile.js";
-import { prepareReviewRepository } from "../dist/review/prepare.js";
-import { runServerChild } from "../dist/server/child.js";
-import { childUpdateMessage } from "../dist/server/update_messages.js";
+import { CachedBaselineBuilder } from "../packages/mokly/dist/baseline/rebuild.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { prepareReviewRepository } from "../packages/mokly/dist/review/prepare.js";
+import { runServerChild } from "../packages/mokly/dist/server/child.js";
+import { childUpdateMessage } from "../packages/mokly/dist/server/update_messages.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import { derivedFixture } from "./helpers/derived_fixture.js";
-import { validEntrySource } from "./helpers/fixture.js";
+import { packageRoot, validEntrySource } from "./helpers/fixture.js";
 
 test("derived HTTP child rejects an unprepared unselected comparison without building", async (t) => {
   const fixture = await derivedFixture(t);
@@ -145,7 +145,7 @@ test("the HTTP child module graph cannot import the baseline builder", async () 
   async function visit(file: string): Promise<void> {
     if (visited.has(file)) return;
     visited.add(file);
-    assert.notEqual(file, path.resolve("src/baseline/rebuild.ts"));
+    assert.notEqual(file, path.join(packageRoot, "src/baseline/rebuild.ts"));
     const source = ts.createSourceFile(
       file,
       await fs.readFile(file, "utf8"),
@@ -183,6 +183,6 @@ test("the HTTP child module graph cannot import the baseline builder", async () 
       }
     }
   }
-  await visit(path.resolve("src/server/child.ts"));
-  assert.ok(visited.has(path.resolve("src/review/run.ts")));
+  await visit(path.join(packageRoot, "src/server/child.ts"));
+  assert.ok(visited.has(path.join(packageRoot, "src/review/run.ts")));
 });

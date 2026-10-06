@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { Compilation } from "../dist/build/compile.js";
+import type { Compilation } from "../packages/mokly/dist/build/compile.js";
 
 import { componentGit } from "./helpers/component_review_fixture.js";
 

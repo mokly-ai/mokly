@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { diffCssRules } from "../src/review/css/diff.js";
-import { LightningCssRuleParser } from "../src/review/css/rules.js";
-import { CssRuleParseError } from "../src/review/css/types.js";
-import type { CssRule, CssRuleParser } from "../src/review/css/types.js";
+import { diffCssRules } from "../packages/mokly/src/review/css/diff.js";
+import { LightningCssRuleParser } from "../packages/mokly/src/review/css/rules.js";
+import { CssRuleParseError } from "../packages/mokly/src/review/css/types.js";
+import type {
+  CssRule,
+  CssRuleParser,
+} from "../packages/mokly/src/review/css/types.js";
 
 const parser = new LightningCssRuleParser();
 const empty = { status: "resolved", added: [], removed: [], changed: [] };

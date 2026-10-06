@@ -1,11 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { errorMessage, isCancellation, MoklyError } from "../dist/errors.js";
+import {
+  errorMessage,
+  isCancellation,
+  MoklyError,
+} from "../packages/mokly/dist/errors.js";
 import {
   failAfterExportCleanup,
   withExportCleanup,
-} from "../dist/export/cleanup.js";
+} from "../packages/mokly/dist/export/cleanup.js";
 
 test("cleanup runs once after successful work and returns the original result", async () => {
   const events: string[] = [];

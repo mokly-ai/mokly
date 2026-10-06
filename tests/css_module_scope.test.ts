@@ -7,11 +7,11 @@ import postcss from "postcss";
 import {
   prepareModuleScopes,
   scanScopePrelude,
-} from "../dist/build/styles/module_scope.js";
+} from "../packages/mokly/dist/build/styles/module_scope.js";
 import {
   recordModuleIdentities,
   scopeModule,
-} from "../dist/build/styles/modules.js";
+} from "../packages/mokly/dist/build/styles/modules.js";
 
 const relative = "entries/scope.module.css";
 const prefix = `mokly_${createHash("sha256").update(relative).digest("hex").slice(0, 12)}_`;

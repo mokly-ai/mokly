@@ -5,22 +5,22 @@ import test from "node:test";
 
 import { createCatalogue } from "@mokly/viewer/server";
 
-import { adaptBrowseDocument } from "../dist/browse/document_adapter.js";
-import { checkCompilation } from "../dist/build/check.js";
-import { compileCatalogue } from "../dist/build/compile.js";
+import { adaptBrowseDocument } from "../packages/mokly/dist/browse/document_adapter.js";
+import { checkCompilation } from "../packages/mokly/dist/build/check.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
 import {
   generatedSource,
   hasGeneratedOwnershipHeader,
   isOwned,
   pendingGeneratedOrphanRoutes,
   unclaimedGeneratedRoutes,
-} from "../dist/build/ownership.js";
-import { packageOwnedPath } from "../dist/build/package_owned_paths.js";
-import { GitTrackedGeneratedOutput } from "../dist/build/tracked_output.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { ConfiguredGitCommandRunner } from "../dist/config/git.js";
-import { assertExportOwnership } from "../dist/export/ownership.js";
-import { normalizeReviewPair } from "../dist/review/ignore.js";
+} from "../packages/mokly/dist/build/ownership.js";
+import { packageOwnedPath } from "../packages/mokly/dist/build/package_owned_paths.js";
+import { GitTrackedGeneratedOutput } from "../packages/mokly/dist/build/tracked_output.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { ConfiguredGitCommandRunner } from "../packages/mokly/dist/config/git.js";
+import { assertExportOwnership } from "../packages/mokly/dist/export/ownership.js";
+import { normalizeReviewPair } from "../packages/mokly/dist/review/ignore.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { repositoryRoot } from "./helpers/fixture.js";

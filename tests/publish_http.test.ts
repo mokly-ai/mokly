@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { statusError } from "../dist/publish/errors.js";
-import { readBoundedBody, retryableResponse } from "../dist/publish/http.js";
-import { resolvePublishOptions } from "../dist/publish/options.js";
+import { statusError } from "../packages/mokly/dist/publish/errors.js";
+import {
+  readBoundedBody,
+  retryableResponse,
+} from "../packages/mokly/dist/publish/http.js";
+import { resolvePublishOptions } from "../packages/mokly/dist/publish/options.js";
 
 const options = {
   endpoint: "https://example.com/upload?scope=catalogue",

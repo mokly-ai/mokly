@@ -3,12 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { promisify } from "node:util";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
-import { committedReviewRepository } from "../../dist/review/repository.js";
-import { runReview } from "../../dist/review/run.js";
-import { startCatalogueServer } from "../../dist/server/http.js";
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import { committedReviewRepository } from "../../packages/mokly/dist/review/repository.js";
+import { runReview } from "../../packages/mokly/dist/review/run.js";
+import { startCatalogueServer } from "../../packages/mokly/dist/server/http.js";
 import {
   createFixture,
   removeFixture,

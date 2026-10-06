@@ -4,21 +4,21 @@ import path from "node:path";
 import {
   __attributeDefinition,
   defineScreen,
-} from "../../dist/authoring/definitions.js";
-import { unknownFields } from "../../dist/authoring/fields.js";
+} from "../../packages/mokly/dist/authoring/definitions.js";
+import { unknownFields } from "../../packages/mokly/dist/authoring/fields.js";
 import type {
   EntryDefinition,
   RegistryDefinition,
   ResolvedRegistryEntry,
   ScreenVariantInput,
-} from "../../dist/authoring/types.js";
-import { defineComponent } from "../../dist/components/definition.js";
-import { DEFAULT_PUBLIC_EXCLUDE } from "../../dist/config/public_exclusions.js";
-import type { ResolvedConfig } from "../../dist/config/types.js";
-import { defineUseCase } from "../../dist/index.js";
-import { validateEntry } from "../../dist/registry/entry_validation.js";
-import type { RegistryViolation } from "../../dist/registry/prepared_types.js";
-import { crossReferenceViolations } from "../../dist/registry/relationships.js";
+} from "../../packages/mokly/dist/authoring/types.js";
+import { defineComponent } from "../../packages/mokly/dist/components/definition.js";
+import { DEFAULT_PUBLIC_EXCLUDE } from "../../packages/mokly/dist/config/public_exclusions.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
+import { defineUseCase } from "../../packages/mokly/dist/index.js";
+import { validateEntry } from "../../packages/mokly/dist/registry/entry_validation.js";
+import type { RegistryViolation } from "../../packages/mokly/dist/registry/prepared_types.js";
+import { crossReferenceViolations } from "../../packages/mokly/dist/registry/relationships.js";
 
 import { repositoryRoot } from "./fixture.js";
 import { resolvedEntry } from "./resolved.js";

@@ -27,8 +27,8 @@ test("publication pins one baseline for Changes and comparisons when its ref adv
       "--input-type=module",
       "--eval",
       `import { execFileSync } from "node:child_process";
-       import { loadConfig } from "./dist/config/load.js";
-       import { GitRepositoryEvidence } from "./dist/review/git_evidence.js";
+       import { loadConfig } from "./packages/mokly/dist/config/load.js";
+       import { GitRepositoryEvidence } from "./packages/mokly/dist/review/git_evidence.js";
        import { buildPreview } from "./scripts/preview/catalogue.mjs";
        const config = await loadConfig(process.argv[1]);
        const original = GitRepositoryEvidence.prototype.mergeBase;

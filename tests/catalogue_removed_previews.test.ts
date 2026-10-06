@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { projectCatalogue } from "../dist/catalogue/projection.js";
-import { serializeCatalogue } from "../dist/catalogue/serialization.js";
-import { loadConfig } from "../dist/config/load.js";
-import { catalogueAtBaseline } from "../dist/server/baseline_catalogue.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { projectCatalogue } from "../packages/mokly/dist/catalogue/projection.js";
+import { serializeCatalogue } from "../packages/mokly/dist/catalogue/serialization.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { catalogueAtBaseline } from "../packages/mokly/dist/server/baseline_catalogue.js";
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";

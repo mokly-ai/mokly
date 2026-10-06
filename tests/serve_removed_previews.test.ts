@@ -10,7 +10,7 @@ import {
   viewRoute,
 } from "@mokly/viewer/data";
 
-import { serve } from "../dist/server/serve.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 
 import { createRemovedDeliveryFixture } from "./helpers/removed_delivery_fixture.js";
 

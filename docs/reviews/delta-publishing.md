@@ -20,7 +20,7 @@ the receiver to publish. The marker's format is "schema 2".
 1. **P2 / Medium — Export now fails on some file names it used to accept,
    without naming the file.** The schema 2 marker builder rejects paths with
    control characters, invalid Unicode or more than 1,024 UTF-8 bytes
-   ([`src/export/ownership.ts`](../../src/export/ownership.ts), lines 40–47),
+   ([`src/export/ownership.ts`](../../packages/mokly/src/export/ownership.ts), lines 40–47),
    but the inventory every file enters first (`src/export/path_index.ts`)
    still accepts them. On `origin/main` only `publish` rejected such paths;
    `export` succeeded. A reviewer reproduced it end to end: macOS writes an
@@ -69,9 +69,9 @@ the receiver to publish. The marker's format is "schema 2".
 3. **P2 / Medium — The success line's counts are misleading.** In the
    plain line
    `Published Mokly catalogue. <uploaded> files uploaded, <unchanged> unchanged.`
-   ([`src/cli/publish_output.ts`](../../src/cli/publish_output.ts)),
+   ([`src/cli/publish_output.ts`](../../packages/mokly/src/cli/publish_output.ts)),
    `<uploaded>` counts marker paths whose content went up as a blob
-   ([`src/publish/run.ts`](../../src/publish/run.ts), lines 216–222), so the
+   ([`src/publish/run.ts`](../../packages/mokly/src/publish/run.ts), lines 216–222), so the
    plan-archive files, which are sent on every run and never requested as
    blobs, always count as "unchanged": a first publish to an empty receiver
    prints "47 files uploaded, 1 unchanged" (the plan's own recorded smoke
@@ -117,8 +117,8 @@ the receiver to publish. The marker's format is "schema 2".
    manifest, which carries `headSha` and `exportedAt`, is an input to the
    deployment identity, and that identity is stamped into every page shell
    (`index.html`, `404.html`, `view/*`, `id/*/index.html`) and
-   `__mokly/catalogue.json` ([`src/publish/run.ts`](../../src/publish/run.ts),
-   lines 88–121; [`src/export/deployment.ts`](../../src/export/deployment.ts)).
+   `__mokly/catalogue.json` ([`src/publish/run.ts`](../../packages/mokly/src/publish/run.ts),
+   lines 88–121; [`src/export/deployment.ts`](../../packages/mokly/src/export/deployment.ts)).
    A reviewer exported the same catalogue three times with only those two
    manifest fields changed: 10 of 48 digests changed each time, and
    `tests/publish_receiver_delta.test.ts` expects every shell after a
@@ -136,7 +136,7 @@ the receiver to publish. The marker's format is "schema 2".
 
 6. **P3 / Low — Rich progress leaves stale characters when the label
    shrinks.** The in-place redraw writes `\r<label>` without erasing the line
-   ([`src/cli/reporter/rich_phase.ts`](../../src/cli/reporter/rich_phase.ts),
+   ([`src/cli/reporter/rich_phase.ts`](../../packages/mokly/src/cli/reporter/rich_phase.ts),
    lines 81–89). Labels only grew before; after a re-plan they shrink, and an
    emulated terminal showed `Uploading catalogue…iles · 1.1 MiB…` until the
    phase ended. **Impact of no change:** garbled output during 409, 410 and
@@ -147,7 +147,7 @@ the receiver to publish. The marker's format is "schema 2".
 
 7. **P3 / Low — The guides misstate the retry schedule.** The code and
    protocol make at most five attempts (four retries) with jitter caps of 1,
-   2, 4 and 8 seconds ([`src/publish/retry.ts`](../../src/publish/retry.ts)),
+   2, 4 and 8 seconds ([`src/publish/retry.ts`](../../packages/mokly/src/publish/retry.ts)),
    but [`cli/publish.md`](../guides/cli/publish.md) line 75 says "retried up
    to five times" and [`ci/the-upload.md`](../guides/ci/the-upload.md) line
    103 says "at most sixteen seconds"; the protocol's `min(16 s, …)` cap can
@@ -210,7 +210,7 @@ the receiver to publish. The marker's format is "schema 2".
     folder.** A folder holding an export from an earlier release now fails
     with "This export was created by an unsupported Mokly version. Remove
     `<dir>` before exporting again."
-    ([`src/export/ownership.ts`](../../src/export/ownership.ts), line 228),
+    ([`src/export/ownership.ts`](../../packages/mokly/src/export/ownership.ts), line 228),
     checked before the unowned-files check, so hand-added hosting files such
     as `CNAME` are deleted by users who follow it. "Unsupported" also
     misdescribes an earlier release. **Options:** **A)** reword to "This
@@ -220,7 +220,7 @@ the receiver to publish. The marker's format is "schema 2".
     unowned files first; **C)** leave it. **Recommended: A.**
 
 12. **P3 / Low — `blob:` URLs pass the same-origin check.** Plan validation
-    compares `URL.origin` ([`src/publish/plan.ts`](../../src/publish/plan.ts),
+    compares `URL.origin` ([`src/publish/plan.ts`](../../packages/mokly/src/publish/plan.ts),
     lines 161 and 173, mirrored in `scripts/package/upload_plan.mjs`), and
     `blob:https://api.example.com/…` reports the inner origin. Node refuses
     the request locally, so the token never leaves, but the CLI treats it as
@@ -231,7 +231,7 @@ the receiver to publish. The marker's format is "schema 2".
 
 13. **P3 / Low — Watch's export-ownership lookup is about 3.5 times slower.**
     The watcher's ignore check re-reads and fully validates the marker for
-    every path ([`src/export/ignored.ts`](../../src/export/ignored.ts)), and
+    every path ([`src/export/ignored.ts`](../../packages/mokly/src/export/ignored.ts)), and
     schema 2 entries are nearly three times larger: a watcher over a
     2,000-file export became ready in 30.5 s against 9.0 s on `origin/main`.
     `readMarker` skips markers over 8 MiB, about 43,000 schema 2 entries,
@@ -384,7 +384,7 @@ for finding 2, which are fixed (see **Second Review Follow-up**); findings
 3–11 stay open for the user's decision.
 
 1. **P2 / Medium — After Ctrl+C, publish hides where the previous site was
-   left.** [`src/cli/publish.ts`](../../src/cli/publish.ts) (lines 85–86)
+   left.** [`src/cli/publish.ts`](../../packages/mokly/src/cli/publish.ts) (lines 85–86)
    turns any error into "Publication was cancelled." once the abort signal has
    fired. `mokly publish` runs the same transactional export as
    `mokly export`, and if cancellation lands while the export swaps folders
@@ -419,7 +419,7 @@ for finding 2, which are fixed (see **Second Review Follow-up**); findings
 
 3. **P3 / Low — Rich errors still repeat their hint.** The 400, 401, 403 and
    422 messages and the default `uploadFailed()` message in
-   [`src/publish/errors.ts`](../../src/publish/errors.ts) end with exactly the
+   [`src/publish/errors.ts`](../../packages/mokly/src/publish/errors.ts) end with exactly the
    rich hint for their category, so a bad token prints "The service denied
    the upload. Check the token and repository access." and then "Check the
    token and repository access." The
@@ -457,7 +457,7 @@ for finding 2, which are fixed (see **Second Review Follow-up**); findings
    plus B.**
 
 6. **P3 / Low — "Earlier Mokly release" is shown for every unsupported
-   version.** [`src/export/ownership.ts`](../../src/export/ownership.ts)
+   version.** [`src/export/ownership.ts`](../../packages/mokly/src/export/ownership.ts)
    (lines 241–244) uses that copy for schema 3, `"2"` and `null` too, so a
    folder written by a newer Mokly is described as older and the user is told
    to delete it. **Options:** **A)** keep the copy for schema 1, use neutral
@@ -466,7 +466,7 @@ for finding 2, which are fixed (see **Second Review Follow-up**); findings
    version-neutral; **C)** leave it. **Recommended: A.**
 
 7. **P3 / Low — Watch caches a one-off marker read failure.** The finding 13
-   cache in [`src/export/ignored.ts`](../../src/export/ignored.ts) (lines
+   cache in [`src/export/ignored.ts`](../../packages/mokly/src/export/ignored.ts) (lines
    105–113) also stores "not an export" when reading throws (for example
    `EMFILE`), so the folder is treated as ordinary files until the marker
    changes; stale versions of one marker also occupy up to 64 entries
@@ -507,7 +507,7 @@ for finding 2, which are fixed (see **Second Review Follow-up**); findings
     **Recommended: A.**
 
 11. **P3 / Low — Byte sizes show "1024.0 KiB" below a unit boundary.**
-    `formatBytes` in [`src/cli/reporter/terminal.ts`](../../src/cli/reporter/terminal.ts)
+    `formatBytes` in [`src/cli/reporter/terminal.ts`](../../packages/mokly/src/cli/reporter/terminal.ts)
     picks the unit before rounding, so 1,048,575 bytes prints "1024.0 KiB".
     **Options:** **A)** move to the next unit when the rounded value reaches
     1024, with boundary tests; **B)** leave it. **Recommended: A.**
@@ -574,7 +574,7 @@ update the title test, which pins `chore(main): release 0.13.0`.
    the cancellation mark or named `AbortError`. Two paths break this. First,
    Git reader wrappers turn the Git runner's `AbortError` into plain
    `git-failed` or `review-invalid` errors without the mark
-   ([`src/review/git_commands.ts`](../../src/review/git_commands.ts),
+   ([`src/review/git_commands.ts`](../../packages/mokly/src/review/git_commands.ts),
    `src/review/git_batch.ts`, `src/review/assets.ts`), and the export passes
    typed errors through unchanged. Second, a terminal sends SIGINT to the
    whole foreground process group, which stops esbuild's service process, so
@@ -609,7 +609,7 @@ update the title test, which pins `chore(main): release 0.13.0`.
 2. **P2 / Medium — The new "tests never read `origin/main`" rule is already
    broken, and the static test cannot see it.** The example config sets no
    comparison base, so it defaults to `origin/main`
-   ([`src/config/validate.ts`](../../src/config/validate.ts)).
+   ([`src/config/validate.ts`](../../packages/mokly/src/config/validate.ts)).
    [`tests/preview.test.ts`](../../tests/preview.test.ts) builds the real
    example with `--include-changes`, and the browser suite's server
    ([`playwright.config.ts`](../../playwright.config.ts)) serves it, so both
@@ -720,7 +720,7 @@ Second-review findings 3–11 stay open.
 
 1. **P2 / Medium — Ctrl+C during an esbuild step can still print a build
    error.** `withPreInstallationCancellation` in
-   [`src/export/error.ts`](../../src/export/error.ts) decides "was this a
+   [`src/export/error.ts`](../../packages/mokly/src/export/error.ts) decides "was this a
    cancellation?" when a step fails, by reading the command's abort signal.
    A terminal Ctrl+C also kills esbuild, which shares the command's process
    group, and Node may notice esbuild's death before it runs the SIGINT
@@ -971,7 +971,7 @@ was corrected in the plan while recording this review. Second-review findings
 
 4. **P3 / Low — Some publish cancellations still replace the original
    error.** When a Git command is stopped by Ctrl+C, Node produces a platform
-   `AbortError`, and [`publish_failure.ts`](../../src/cli/publish_failure.ts)
+   `AbortError`, and [`publish_failure.ts`](../../packages/mokly/src/cli/publish_failure.ts)
    swaps it for a fresh `PublishCancelledError` with no cause (the test
    requires this). Now that `main.ts` substitutes the cancellation copy when
    rendering, the swap is redundant, and with `MOKLY_DIAGNOSTIC=1` a Ctrl+C

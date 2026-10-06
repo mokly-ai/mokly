@@ -6,7 +6,7 @@ import { viewerCapabilityRequest } from "@mokly/viewer/runtime";
 import {
   startReactHost,
   type ReactHostWindow,
-} from "../dist/client/react_host.js";
+} from "../packages/mokly/dist/client/react_host.js";
 
 const descriptor = {
   schemaVersion: 1,

@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { gzipSync } from "node:zlib";
 
-import { parseBaselineArchive } from "../dist/baseline/archive.js";
+import { parseBaselineArchive } from "../packages/mokly/dist/baseline/archive.js";
 import {
   baselineEnvironment,
   runBaselineCommands,
-} from "../dist/baseline/commands.js";
-import { BaselineCommandError } from "../dist/baseline/errors.js";
+} from "../packages/mokly/dist/baseline/commands.js";
+import { BaselineCommandError } from "../packages/mokly/dist/baseline/errors.js";
 
 import {
   archive,

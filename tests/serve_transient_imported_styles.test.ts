@@ -4,12 +4,12 @@ import http from "node:http";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { componentRuntime } from "../dist/build/component_runtime.js";
-import { loadConfig } from "../dist/config/load.js";
-import { handleControls } from "../dist/server/controls/http.js";
-import { ComponentRenderService } from "../dist/server/controls/service.js";
-import { captureRenderBundle } from "../dist/server/controls/transient_assets.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { componentRuntime } from "../packages/mokly/dist/build/component_runtime.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { handleControls } from "../packages/mokly/dist/server/controls/http.js";
+import { ComponentRenderService } from "../packages/mokly/dist/server/controls/service.js";
+import { captureRenderBundle } from "../packages/mokly/dist/server/controls/transient_assets.js";
 
 import { removeFixture } from "./helpers/fixture.js";
 import { entryStyle, styleFixture } from "./helpers/imported_styles_fixture.js";

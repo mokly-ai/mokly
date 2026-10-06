@@ -1,9 +1,10 @@
 import { execFileSync } from "node:child_process";
 import type { TestContext } from "node:test";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
 
 import {
   createFixture,
@@ -12,13 +13,19 @@ import {
   validEntrySource,
 } from "./fixture.js";
 
+type ChangedFixtureResult = TestFixture & {
+  build: () => Promise<void>;
+  config: ResolvedConfig;
+  git: (...args: string[]) => NonSharedBuffer;
+};
+
 /** Build a committed consumer with fixture-owned dependent cleanup. */
 export async function changedFixture(
   t: TestContext,
   source = validEntrySource(),
   options?: Parameters<typeof createFixture>[1],
   prepare?: (fixture: TestFixture) => Promise<void>,
-) {
+): Promise<ChangedFixtureResult> {
   const fixture = await createFixture(source, options);
   t.after(() => removeFixture(fixture));
   await prepare?.(fixture);

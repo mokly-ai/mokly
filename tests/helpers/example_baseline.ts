@@ -4,9 +4,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
 
 import { copyExampleSources } from "./example_sources.js";
 import { repositoryRoot } from "./fixture.js";
@@ -15,7 +16,9 @@ import { ordinaryPreviewFixtureSource } from "./ordinary_preview_source.js";
 const execute = promisify(execFile);
 
 /** Commit source and tooling so normal composition can rebuild the isolated baseline. */
-export async function createExampleBaseline(root: string) {
+export async function createExampleBaseline(
+  root: string,
+): Promise<ResolvedConfig> {
   await copyExampleRepository(root);
   const config = await loadConfig(root, "examples/basic/mokly.config.ts");
   await initializeRepository(root);
@@ -26,7 +29,7 @@ export async function createExampleBaseline(root: string) {
 export async function createCommittedExampleBaseline(
   root: string,
   profile: "design-library" | "ordinary-preview" | "static-example",
-) {
+): Promise<ResolvedConfig> {
   await copyExampleRepository(root);
   await configureFocusedExample(root, profile);
   const config = await loadConfig(root, "examples/basic/mokly.config.ts");
@@ -42,14 +45,15 @@ async function copyExampleRepository(root: string): Promise<void> {
     "package.json",
     "package-lock.json",
     "tsconfig.json",
-    "tsconfig.build.json",
-    "scripts/copy-assets.mjs",
+    "docs/guides",
+    "docs/protocol",
     "packages/viewer",
-    "src",
+    "packages/mokly",
   ])
     await fs.cp(path.join(repositoryRoot, name), path.join(root, name), {
       recursive: true,
       filter: (source) =>
+        !source.startsWith(path.join(repositoryRoot, "packages/mokly/docs")) &&
         !source
           .split(path.sep)
           .some((part) => part === "dist" || part === "node_modules"),

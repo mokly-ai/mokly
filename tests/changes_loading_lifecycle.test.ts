@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { setTimeout } from "node:timers/promises";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import type { ComponentChangeSnapshot } from "../dist/server/component_changes.js";
-import { BackgroundCompilation } from "../dist/server/demand/background.js";
-import { serve } from "../dist/server/serve.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import type { ComponentChangeSnapshot } from "../packages/mokly/dist/server/component_changes.js";
+import { BackgroundCompilation } from "../packages/mokly/dist/server/demand/background.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 

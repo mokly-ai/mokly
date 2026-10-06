@@ -3,8 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import test, { type TestContext } from "node:test";
 
-import { discoverEntryModules } from "../dist/config/entry_discovery.js";
-import { loadConfig } from "../dist/config/load.js";
+import { discoverEntryModules } from "../packages/mokly/dist/config/entry_discovery.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 
 import {
   createFixture,

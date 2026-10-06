@@ -4,13 +4,13 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { parseArguments } from "../dist/cli/arguments.js";
-import { HELP } from "../dist/cli/help.js";
-import { loadConfig } from "../dist/config/load.js";
-import { changedManifestPaths } from "../dist/registry/changed_paths.js";
-import { serve } from "../dist/server/serve.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { parseArguments } from "../packages/mokly/dist/cli/arguments.js";
+import { HELP } from "../packages/mokly/dist/cli/help.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { changedManifestPaths } from "../packages/mokly/dist/registry/changed_paths.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 

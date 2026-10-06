@@ -1,20 +1,20 @@
-import type { Compilation } from "../../dist/build/compile.js";
-import type { GeneratedOutputStore } from "../../dist/build/output_store.js";
-import type { ResolvedConfig } from "../../dist/config/types.js";
-import type { CatalogueServerFactory } from "../../dist/server/factory.js";
+import type { Compilation } from "../../packages/mokly/dist/build/compile.js";
+import type { GeneratedOutputStore } from "../../packages/mokly/dist/build/output_store.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
+import type { CatalogueServerFactory } from "../../packages/mokly/dist/server/factory.js";
 import type {
   RunningServer,
   ServerOptions,
-} from "../../dist/server/http_types.js";
+} from "../../packages/mokly/dist/server/http_types.js";
 import type {
   ProcessSupervisor,
   ProcessSupervisorFactory,
-} from "../../dist/server/supervisor.js";
-import type { WatchEvent } from "../../dist/server/watch_events.js";
+} from "../../packages/mokly/dist/server/supervisor.js";
+import type { WatchEvent } from "../../packages/mokly/dist/server/watch_events.js";
 import type {
   ConsumerWatcher,
   ConsumerWatcherFactory,
-} from "../../dist/server/watcher.js";
+} from "../../packages/mokly/dist/server/watcher.js";
 
 /** Return one replacement config and count configuration reloads. */
 export class FakeConfigLoader {

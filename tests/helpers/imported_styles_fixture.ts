@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { loadConfig } from "../../dist/config/load.js";
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
 
 import { createFixture, type TestFixture } from "./fixture.js";
 

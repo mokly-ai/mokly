@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { EXPORT_MARKER } from "../dist/export/ownership.js";
+import { EXPORT_MARKER } from "../packages/mokly/dist/export/ownership.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
 
 import { changedFixture } from "./helpers/changed_fixture.js";

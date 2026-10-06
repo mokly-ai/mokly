@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { cacheLayout } from "../dist/baseline/cache_layout.js";
+import { cacheLayout } from "../packages/mokly/dist/baseline/cache_layout.js";
 import { resetFixtureBaseline } from "../scripts/large/baseline.mjs";
 import {
   baselineMeasurement,

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { VARIANT_PARENT } from "../dist/authoring/markers.js";
-import { defineComponent } from "../dist/components/definition.js";
+import { VARIANT_PARENT } from "../packages/mokly/dist/authoring/markers.js";
+import { defineComponent } from "../packages/mokly/dist/components/definition.js";
 
 import { pathFixture } from "./helpers/path_fixture.js";
 

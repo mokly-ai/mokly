@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import { MoklyError } from "../../dist/errors.js";
+import { MoklyError } from "../../packages/mokly/dist/errors.js";
 
 export type ClassifierName = "screen-level" | "unified";
 export type RejectionKind =

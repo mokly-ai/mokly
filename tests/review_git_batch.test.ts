@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { CommittedRepository } from "../dist/review/git.js";
+import { CommittedRepository } from "../packages/mokly/dist/review/git.js";
 
 test("Git reads regular base files through two batch commands", async () => {
   const regularObject = "b".repeat(40);

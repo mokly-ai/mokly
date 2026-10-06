@@ -1,4 +1,4 @@
-import { fileExportOperations } from "../../dist/export/operations.js";
+import { fileExportOperations } from "../../packages/mokly/dist/export/operations.js";
 
 /** Process-isolated fault injection for exercising the real CLI error output. */
 const mode = process.env["MOKLY_TEST_EXPORT_FAILURE"];

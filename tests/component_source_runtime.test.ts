@@ -4,8 +4,8 @@ import { test } from "node:test";
 import { Fragment, type ReactElement } from "react";
 import { jsx, jsxs } from "react/jsx-runtime";
 
-import { createJsxDEV } from "../dist/build/jsx_dev_runtime.js";
-import { defineComponent } from "../dist/index.js";
+import { createJsxDEV } from "../packages/mokly/dist/build/jsx_dev_runtime.js";
+import { defineComponent } from "../packages/mokly/dist/index.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

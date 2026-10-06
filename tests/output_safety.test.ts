@@ -3,10 +3,16 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue, type Compilation } from "../dist/build/compile.js";
-import { generatedHeader, isOwned } from "../dist/build/ownership.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
+import {
+  compileCatalogue,
+  type Compilation,
+} from "../packages/mokly/dist/build/compile.js";
+import {
+  generatedHeader,
+  isOwned,
+} from "../packages/mokly/dist/build/ownership.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 
 import {
   createFixture,

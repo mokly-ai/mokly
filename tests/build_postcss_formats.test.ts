@@ -5,8 +5,8 @@ import test from "node:test";
 
 import postcss from "postcss";
 
-import { loadConfig } from "../dist/config/load.js";
-import { FileSystemPostcssConfigLoader } from "../dist/config/postcss_loader.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { FileSystemPostcssConfigLoader } from "../packages/mokly/dist/config/postcss_loader.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

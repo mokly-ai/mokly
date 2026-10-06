@@ -1,18 +1,32 @@
-import { execFile } from "node:child_process";
+import { execFile, type PromiseWithChild } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
+import { cliPackageRoot } from "../../scripts/package/layout.mjs";
 
 import {
   createFixture,
   removeFixture,
   repositoryRoot,
   packageRoot,
+  type TestFixture,
 } from "./fixture.js";
+
+type CreateRemovedDeliveryFixtureResult = TestFixture & {
+  baseCommit: string;
+  branchEditCommit: string;
+  config: ResolvedConfig;
+  git: (
+    ...args: string[]
+  ) => PromiseWithChild<{ stdout: string; stderr: string }>;
+  output: string;
+  close: () => Promise<void>;
+};
 
 const execute = promisify(execFile);
 
@@ -28,7 +42,7 @@ const REMOVED_BRANCH_EDIT_IMAGE_BYTES = Buffer.from(
 );
 
 /** Real Git fixture with removed content, ancestors, assets and prior branch edits. */
-export async function createRemovedDeliveryFixture() {
+export async function createRemovedDeliveryFixture(): Promise<CreateRemovedDeliveryFixtureResult> {
   const fixture = await createFixture(removedDeliverySource(false));
   try {
     await writeRemovedAssets(fixture.mockupsDir, "baseline");
@@ -86,10 +100,9 @@ export async function prepareRemovedPreviewEntrypoint(
     path.join(fixture.root, "scripts/preview"),
     { recursive: true },
   );
-  await fs.symlink(
-    path.join(packageRoot, "dist"),
-    path.join(fixture.root, "dist"),
-  );
+  const cliOutput = path.join(cliPackageRoot(fixture.root), "dist");
+  await fs.mkdir(path.dirname(cliOutput), { recursive: true });
+  await fs.symlink(path.join(packageRoot, "dist"), cliOutput);
   await fs.symlink(
     path.join(repositoryRoot, "node_modules"),
     path.join(fixture.root, "node_modules"),

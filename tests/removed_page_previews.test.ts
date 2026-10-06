@@ -8,7 +8,7 @@ import { parseRemovedPagePreview } from "@mokly/viewer/data";
 import {
   renderRemovedPagePreviewArtifact,
   RepositoryRemovedPagePreview,
-} from "../dist/review/page_preview.js";
+} from "../packages/mokly/dist/review/page_preview.js";
 
 import {
   PAGE_COMMIT,

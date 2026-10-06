@@ -3,11 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { exportCatalogue } from "../dist/export/run.js";
-import { PlainServeReporter } from "../dist/server/reporter.js";
-import { serve } from "../dist/server/serve.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
+import { PlainServeReporter } from "../packages/mokly/dist/server/reporter.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 
 import { movedCatalogueFixture } from "./helpers/move_catalogue.js";
 

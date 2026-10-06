@@ -3,8 +3,8 @@ import test from "node:test";
 
 import { parseFragment, type DefaultTreeAdapterMap } from "parse5";
 
-import { parseFrontMatter } from "../src/documents/front_matter.js";
-import { renderMarkdown } from "../src/documents/markdown.js";
+import { parseFrontMatter } from "../packages/mokly/src/documents/front_matter.js";
+import { renderMarkdown } from "../packages/mokly/src/documents/markdown.js";
 
 type Node = DefaultTreeAdapterMap["node"];
 function nodes(node: Node): Node[] {

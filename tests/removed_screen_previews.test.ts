@@ -12,17 +12,20 @@ import {
   type ReviewResultV5,
 } from "@mokly/viewer/data";
 
-import { compileCatalogue } from "../dist/build/compile.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
 import {
   generatedBytes,
   transferGeneratedFile,
   type GeneratedFile,
-} from "../dist/build/generated_file.js";
-import { loadConfig } from "../dist/config/load.js";
-import { parseHistoricalManifest } from "../dist/registry/manifest.js";
-import { compareReview } from "../dist/review/compare.js";
-import type { BaselineReader, GitFile } from "../dist/review/git.js";
-import { RepositorySelectedReview } from "../dist/review/selected.js";
+} from "../packages/mokly/dist/build/generated_file.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { parseHistoricalManifest } from "../packages/mokly/dist/registry/manifest.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import type {
+  BaselineReader,
+  GitFile,
+} from "../packages/mokly/dist/review/git.js";
+import { RepositorySelectedReview } from "../packages/mokly/dist/review/selected.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";

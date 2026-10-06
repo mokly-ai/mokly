@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { FileSystemGeneratedOutputStore } from "../dist/build/output_store.js";
+import { FileSystemGeneratedOutputStore } from "../packages/mokly/dist/build/output_store.js";
 
 import { derivedFixture } from "./helpers/derived_fixture.js";
 

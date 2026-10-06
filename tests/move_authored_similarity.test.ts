@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { acceptedGenerationFromCompilation } from "../dist/review/accepted_generation.js";
-import { readCatalogueChanges } from "../dist/server/component_changes.js";
-import { contentMoveSignals } from "../src/review/moves/content.js";
-import { readMoveMarkdown } from "../src/review/moves/markdown_sources.js";
-import { visiblePageText } from "../src/review/moves/visible_text.js";
+import { acceptedGenerationFromCompilation } from "../packages/mokly/dist/review/accepted_generation.js";
+import { readCatalogueChanges } from "../packages/mokly/dist/server/component_changes.js";
+import { contentMoveSignals } from "../packages/mokly/src/review/moves/content.js";
+import { readMoveMarkdown } from "../packages/mokly/src/review/moves/markdown_sources.js";
+import { visiblePageText } from "../packages/mokly/src/review/moves/visible_text.js";
 
 import { movedCatalogueFixture } from "./helpers/move_catalogue.js";
 

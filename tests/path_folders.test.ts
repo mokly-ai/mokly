@@ -3,8 +3,8 @@ import test from "node:test";
 
 import { analyzeHierarchy, projectTree } from "@mokly/viewer/data";
 
-import { projectCatalogue } from "../dist/catalogue/projection.js";
-import { validateFolderRecord } from "../dist/registry/folder_records.js";
+import { projectCatalogue } from "../packages/mokly/dist/catalogue/projection.js";
+import { validateFolderRecord } from "../packages/mokly/dist/registry/folder_records.js";
 import { readCatalogue } from "../packages/viewer/dist/catalogue/reader.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 

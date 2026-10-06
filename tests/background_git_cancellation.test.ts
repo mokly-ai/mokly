@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import { RepositoryCatalogueChangeClassifier } from "../dist/server/component_changes.js";
-import { BackgroundCompilation } from "../dist/server/demand/background.js";
-import { BackgroundGeneration } from "../dist/server/demand/generation.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { prepareLiveRuntime } from "../packages/mokly/dist/build/live_runtime.js";
+import { RepositoryCatalogueChangeClassifier } from "../packages/mokly/dist/server/component_changes.js";
+import { BackgroundCompilation } from "../packages/mokly/dist/server/demand/background.js";
+import { BackgroundGeneration } from "../packages/mokly/dist/server/demand/generation.js";
 
 import { blockingGit, processExists } from "./helpers/blocking_git.js";
 import { changedFixture } from "./helpers/changed_fixture.js";

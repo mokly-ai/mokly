@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
-import { parseManifest } from "../dist/registry/manifest.js";
-import { deriveEntryPath } from "../dist/registry/path_derivation.js";
+import { parseManifest } from "../packages/mokly/dist/registry/manifest.js";
+import { deriveEntryPath } from "../packages/mokly/dist/registry/path_derivation.js";
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 
 import { textOutput } from "./helpers/generated_text.js";

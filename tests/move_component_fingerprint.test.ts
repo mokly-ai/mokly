@@ -6,8 +6,8 @@ import type { ManifestEntry } from "@mokly/viewer/data";
 import {
   contentMoveSignals,
   moveDocuments,
-} from "../src/review/moves/content.js";
-import { pairMoves } from "../src/review/moves/pair.js";
+} from "../packages/mokly/src/review/moves/content.js";
+import { pairMoves } from "../packages/mokly/src/review/moves/pair.js";
 
 function catalogue(folder: string, count: number): ManifestEntry[] {
   return Array.from({ length: count }, (_, index) => {

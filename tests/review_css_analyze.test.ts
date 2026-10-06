@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { analyzeStylesheetChange } from "../src/review/css/analyze.js";
-import { CssRuleParseError } from "../src/review/css/types.js";
-import type { CssRuleParser } from "../src/review/css/types.js";
+import { analyzeStylesheetChange } from "../packages/mokly/src/review/css/analyze.js";
+import { CssRuleParseError } from "../packages/mokly/src/review/css/types.js";
+import type { CssRuleParser } from "../packages/mokly/src/review/css/types.js";
 
 import { analyze, documents, excluded, kept } from "./helpers/review_css.js";
 

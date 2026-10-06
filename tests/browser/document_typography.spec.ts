@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-import { documentTemplate } from "../../dist/documents/template.js";
+import { documentTemplate } from "../../packages/mokly/dist/documents/template.js";
 
 /** The design's Payment terms document, as the Markdown renderer emits it. */
 const body = `<h1 id="payment-terms">Payment terms</h1>

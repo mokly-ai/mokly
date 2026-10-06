@@ -151,7 +151,7 @@ path. Invalid or escaping supplied locations fail validation; unavailable
 locations are omitted, never guessed from definition attribution or stack traces.
 
 The approved build proposal sets esbuild `jsxDev: true` beside
-`jsx: "automatic"` in [`load_graph.ts`](../../src/build/load_graph.ts).
+`jsx: "automatic"` in [`load_graph.ts`](../../packages/mokly/src/build/load_graph.ts).
 Its consumer React plugin, implemented in `consumer_resolution.ts`, resolves
 `react/jsx-dev-runtime` to a Mokly-owned shim within the same consumer graph.
 The shim exports `Fragment` and `jsxDEV`; it forwards to that consumer's
@@ -187,7 +187,7 @@ The Mokly wrapper authors these exact inert React sentinels:
 
 `b-n` is allocated per collector boundary, starting at zero. Both attributes
 are package-reserved; consumers and transformers cannot author or forge them.
-[`ranges.ts`](../../src/components/ranges.ts) authenticates each token against
+[`ranges.ts`](../../packages/mokly/src/components/ranges.ts) authenticates each token against
 the collector, requires the exact empty template shape with one attribute,
 and serializes it as:
 

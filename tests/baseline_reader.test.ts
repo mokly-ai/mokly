@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { RebuiltBaselineReader } from "../dist/baseline/reader.js";
-import { MAX_BATCH_OUTPUT_BYTES } from "../dist/review/git_batch.js";
+import { RebuiltBaselineReader } from "../packages/mokly/dist/baseline/reader.js";
+import { MAX_BATCH_OUTPUT_BYTES } from "../packages/mokly/dist/review/git_batch.js";
 
 import { baselineCommit } from "./helpers/baseline_fixture.js";
 import { MemoryBaselineFileSystem } from "./helpers/baseline_memory.js";

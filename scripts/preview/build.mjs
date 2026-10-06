@@ -1,7 +1,7 @@
 import path from "node:path";
 
-import { loadConfig } from "../../dist/config/load.js";
-import { publicationArguments } from "../../dist/publication/options.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import { publicationArguments } from "../../packages/mokly/dist/publication/options.js";
 
 import { buildPreview } from "./catalogue.mjs";
 

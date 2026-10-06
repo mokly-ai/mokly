@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import { exportCatalogue } from "../dist/export/run.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
 
 import {
   createExportFixture,
@@ -26,7 +26,7 @@ for (const source of ["public documents"]) {
         [
           "--input-type=module",
           "--eval",
-          'import { loadConfig } from "./dist/config/load.js"; import { buildPreview } from "./scripts/preview/catalogue.mjs"; await buildPreview(await loadConfig(process.argv[1]), process.argv[2]);',
+          'import { loadConfig } from "./packages/mokly/dist/config/load.js"; import { buildPreview } from "./scripts/preview/catalogue.mjs"; await buildPreview(await loadConfig(process.argv[1]), process.argv[2]);',
           fixture.root,
           output,
         ],

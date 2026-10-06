@@ -4,8 +4,8 @@ import {
   capturePublicationPagePreviews,
   publicationComparisonMetadata,
   publishPublicationComparison,
-} from "../../dist/publication/removed_previews.js";
-import { configuredServedReview } from "../../dist/server/configured_review.js";
+} from "../../packages/mokly/dist/publication/removed_previews.js";
+import { configuredServedReview } from "../../packages/mokly/dist/server/configured_review.js";
 
 const comparisonRoute = "/__mokly/diffs/review.json";
 

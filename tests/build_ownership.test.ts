@@ -3,9 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { generatedHeader, generatedSource } from "../dist/build/ownership.js";
-import { loadConfig } from "../dist/config/load.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import {
+  generatedHeader,
+  generatedSource,
+} from "../packages/mokly/dist/build/ownership.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 
 import {
   createFixture,

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { verifyModuleScoping } from "../dist/build/styles/module_verify.js";
+import { verifyModuleScoping } from "../packages/mokly/dist/build/styles/module_verify.js";
 
 const file = "entries/check.module.css";
 const prefix = "mokly_123456789abc_";

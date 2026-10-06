@@ -4,9 +4,9 @@ import path from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 
-import { completeUpload } from "../dist/publish/complete.js";
-import { requestUploadPlan } from "../dist/publish/plan.js";
-import { ReplanRequired } from "../dist/publish/retry.js";
+import { completeUpload } from "../packages/mokly/dist/publish/complete.js";
+import { requestUploadPlan } from "../packages/mokly/dist/publish/plan.js";
+import { ReplanRequired } from "../packages/mokly/dist/publish/retry.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 import { assertUploadRequest } from "./helpers/upload_request.js";

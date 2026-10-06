@@ -1,21 +1,37 @@
-import { execFile } from "node:child_process";
+import { execFile, type PromiseWithChild } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { promisify } from "node:util";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
 
 import { comparisonEntrySource } from "./comparison_source.js";
-import { createFixture, removeFixture, repositoryRoot } from "./fixture.js";
+import {
+  createFixture,
+  removeFixture,
+  repositoryRoot,
+  type TestFixture,
+} from "./fixture.js";
+
+type CreatePreviewComparisonFixtureResult = TestFixture & {
+  config: ResolvedConfig;
+  output: string;
+  build: () => PromiseWithChild<{ stdout: string; stderr: string }>;
+  git: (
+    ...args: string[]
+  ) => PromiseWithChild<{ stdout: string; stderr: string }>;
+  close: () => Promise<void>;
+};
 
 const execute = promisify(execFile);
 
 /** Build a published catalogue against a real Git baseline and changed assets. */
 export async function createPreviewComparisonFixture(
   entrySource: (changed: boolean) => string = comparisonDocumentSource,
-) {
+): Promise<CreatePreviewComparisonFixtureResult> {
   const fixture = await createFixture(entrySource(false), {
     extraConfig:
       'colorSchemes: ["light", "dark"], stylesheets: [{ match: "**/*.html", stylesheets: ["styles.css"] }],',
@@ -64,7 +80,7 @@ export async function createPreviewComparisonFixture(
         [
           "--input-type=module",
           "--eval",
-          'import { loadConfig } from "./dist/config/load.js"; import { buildPreview } from "./scripts/preview/catalogue.mjs"; await buildPreview(await loadConfig(process.argv[1]), process.argv[2], { includeChanges: true });',
+          'import { loadConfig } from "./packages/mokly/dist/config/load.js"; import { buildPreview } from "./scripts/preview/catalogue.mjs"; await buildPreview(await loadConfig(process.argv[1]), process.argv[2], { includeChanges: true });',
           fixture.root,
           output,
         ],

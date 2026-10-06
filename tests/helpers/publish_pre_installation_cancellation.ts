@@ -1,18 +1,63 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { spawn, type PromiseWithChild } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import type { TestContext } from "node:test";
 import { pathToFileURL } from "node:url";
 
-import { exportCatalogue } from "../../dist/export/run.js";
+import type { Compilation } from "../../packages/mokly/dist/build/compile.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
+import { exportCatalogue } from "../../packages/mokly/dist/export/run.js";
 
 import { derivedFixture } from "./derived_fixture.js";
 import { esbuildCancellationEnvironment } from "./esbuild_cancellation.js";
 import { createExportFixture, directoryFiles } from "./export_fixture.js";
-import { startFakeReceiver } from "./fake_receiver.js";
-import { repositoryRoot, cliBinPath } from "./fixture.js";
+import { startFakeReceiver, type FakeReceiver } from "./fake_receiver.js";
+import { repositoryRoot, cliBinPath, type FixtureCleanup } from "./fixture.js";
+
+type CancellationScenarioResult = {
+  fixture:
+    | {
+        config: ResolvedConfig;
+        git: (
+          ...args: string[]
+        ) => PromiseWithChild<{ stdout: string; stderr: string }>;
+        output: string;
+        close: () => Promise<void>;
+        beforeRemove(cleanup: FixtureCleanup): void;
+        configPath: string;
+        entriesDir: string;
+        entryPath: string;
+        mockupsDir: string;
+        remove(): Promise<void>;
+        root: string;
+      }
+    | {
+        output: string;
+        config: ResolvedConfig;
+        baseline: Compilation;
+        git: (
+          ...args: string[]
+        ) => PromiseWithChild<{ stdout: string; stderr: string }>;
+        commit: string;
+        beforeRemove(cleanup: FixtureCleanup): void;
+        configPath: string;
+        entriesDir: string;
+        entryPath: string;
+        mockupsDir: string;
+        remove(): Promise<void>;
+        root: string;
+      };
+  previous: Map<string, Buffer<ArrayBufferLike>>;
+  receiver: FakeReceiver;
+  result: {
+    code: number | null;
+    signal: NodeJS.Signals | null;
+    stderr: string;
+    stdout: string;
+  };
+};
 
 const cli = cliBinPath;
 const preload = pathToFileURL(
@@ -38,7 +83,7 @@ export async function cancellationScenario(
   phase: CancellationPhase,
   outputMode: "plain" | "rich",
   diagnostic = false,
-) {
+): Promise<CancellationScenarioResult> {
   const fixture = await catalogueFixture(context, mode);
   await exportCatalogue(fixture.config, {
     outDir: "site",

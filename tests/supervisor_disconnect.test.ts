@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ReadyProcessSupervisor } from "../dist/server/supervisor.js";
+import { ReadyProcessSupervisor } from "../packages/mokly/dist/server/supervisor.js";
 
 import {
   ControlledChildFactory,

@@ -4,11 +4,11 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { checkCompilation } from "../dist/build/check.js";
-import { compileCatalogue } from "../dist/build/compile.js";
-import { generatedHeader } from "../dist/build/ownership.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
+import { checkCompilation } from "../packages/mokly/dist/build/check.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { generatedHeader } from "../packages/mokly/dist/build/ownership.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 
 import {
   createFixture,

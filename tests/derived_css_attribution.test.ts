@@ -3,11 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { compareReview } from "../dist/review/compare.js";
-import { prepareReviewRepository } from "../dist/review/prepare.js";
-import { RepositorySelectedReview } from "../dist/review/selected.js";
-import { computeCatalogueChanges } from "../dist/server/changed.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import { prepareReviewRepository } from "../packages/mokly/dist/review/prepare.js";
+import { RepositorySelectedReview } from "../packages/mokly/dist/review/selected.js";
+import { computeCatalogueChanges } from "../packages/mokly/dist/server/changed.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";

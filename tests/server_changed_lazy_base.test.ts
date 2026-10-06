@@ -3,19 +3,19 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { readManifest } from "../dist/registry/manifest.js";
+import { readManifest } from "../packages/mokly/dist/registry/manifest.js";
 import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
-} from "../dist/review/assets.js";
-import { asChangeEvidence } from "../dist/review/change_evidence.js";
-import { CommittedBaselineReader } from "../dist/review/committed.js";
+} from "../packages/mokly/dist/review/assets.js";
+import { asChangeEvidence } from "../packages/mokly/dist/review/change_evidence.js";
+import { CommittedBaselineReader } from "../packages/mokly/dist/review/committed.js";
 import {
   NodeGitCommandRunner,
   CommittedRepository,
-} from "../dist/review/git.js";
-import { classifyChangedContent } from "../dist/server/changed_content.js";
-import { ChangedResourceGraph } from "../dist/server/changed_resources.js";
+} from "../packages/mokly/dist/review/git.js";
+import { classifyChangedContent } from "../packages/mokly/dist/server/changed_content.js";
+import { ChangedResourceGraph } from "../packages/mokly/dist/server/changed_resources.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";

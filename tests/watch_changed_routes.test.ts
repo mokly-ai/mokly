@@ -5,9 +5,9 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import {

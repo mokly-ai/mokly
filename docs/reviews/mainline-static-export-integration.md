@@ -106,7 +106,7 @@ No further review cycle or automatic finding fix was performed.
    through the installed executable. Historical migration guidance maps a
    consumer `review.cjs` script to a public `mokabook review` command and labels
    the behavior as ported. The reviewed files were unchanged from main. The
-   [current command parser](../../src/cli/arguments.ts) rejects `review` and
+   [current command parser](../../packages/mokly/src/cli/arguments.ts) rejects `review` and
    `test`; the supported comparison surfaces are Browse's on-demand diffs and
    static export. A direct compiled-parser probe confirmed both rejections and
    retained a passing `export --out` control. Existing

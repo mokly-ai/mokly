@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { EXPORT_MARKER } from "../dist/export/ownership.js";
-import { exportCatalogue } from "../dist/export/run.js";
+import { EXPORT_MARKER } from "../packages/mokly/dist/export/ownership.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
 
 import { exportedDelivery } from "./helpers/export_delivery.js";
 import {

@@ -4,12 +4,12 @@ import test from "node:test";
 import {
   __attributeDefinition,
   defineScreen,
-} from "../dist/authoring/definitions.js";
-import type { ResolvedRegistryEntry } from "../dist/authoring/types.js";
-import { defineComponent } from "../dist/components/definition.js";
-import { validateEntry } from "../dist/registry/entry_validation.js";
-import { collectModuleExports } from "../dist/registry/export_collection.js";
-import { prepareRegistry } from "../dist/registry/prepare.js";
+} from "../packages/mokly/dist/authoring/definitions.js";
+import type { ResolvedRegistryEntry } from "../packages/mokly/dist/authoring/types.js";
+import { defineComponent } from "../packages/mokly/dist/components/definition.js";
+import { validateEntry } from "../packages/mokly/dist/registry/entry_validation.js";
+import { collectModuleExports } from "../packages/mokly/dist/registry/export_collection.js";
+import { prepareRegistry } from "../packages/mokly/dist/registry/prepare.js";
 
 import {
   allViolations,

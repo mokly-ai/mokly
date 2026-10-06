@@ -3,13 +3,13 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { loadConfig } from "../dist/config/load.js";
-import type { ResolvedConfig } from "../dist/config/types.js";
-import { classifyWatchPath } from "../dist/server/watch_events.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../packages/mokly/dist/config/types.js";
+import { classifyWatchPath } from "../packages/mokly/dist/server/watch_events.js";
 import {
   isEntryGlobCandidate,
   isPackageOwnedIgnoredWatchPath,
-} from "../dist/server/watch_paths.js";
+} from "../packages/mokly/dist/server/watch_paths.js";
 
 import {
   createFixture,

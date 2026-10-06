@@ -4,8 +4,8 @@ import path from "node:path";
 import test from "node:test";
 import { setTimeout } from "node:timers/promises";
 
-import { loadConfig } from "../dist/config/load.js";
-import { serve } from "../dist/server/serve.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 import { readCatalogue } from "../packages/viewer/dist/catalogue/reader.js";
 import type { CatalogueReadModel } from "../packages/viewer/dist/catalogue/types.js";
 

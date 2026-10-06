@@ -2,24 +2,44 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import type { ReviewResultV5 } from "@mokly/viewer/data";
+
 import {
   compileCatalogue,
   type Compilation,
-} from "../../dist/build/compile.js";
-import { generatedBytes } from "../../dist/build/generated_file.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
-import { classifyComponents } from "../../dist/review/component_classification.js";
-import type { ReadOnlyReviewRepository } from "../../dist/review/repository.js";
+} from "../../packages/mokly/dist/build/compile.js";
+import { generatedBytes } from "../../packages/mokly/dist/build/generated_file.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
+import { classifyComponents } from "../../packages/mokly/dist/review/component_classification.js";
+import type { ReadOnlyReviewRepository } from "../../packages/mokly/dist/review/repository.js";
 
 import { copyExampleSources } from "./example_sources.js";
 import { repositoryRoot } from "./fixture.js";
+
+type DesignLibraryFixtureResult = {
+  root: string;
+  config: ResolvedConfig;
+  before: Compilation;
+  resources: Map<string, string>;
+  edit: (file: string, change: (source: string) => string) => Promise<void>;
+  reset: () => Promise<void>;
+  compare: (
+    after?: Compilation,
+    changedPaths?: string[],
+  ) => Promise<ReviewResultV5>;
+  git: (changedPaths: readonly string[]) => ReadOnlyReviewRepository;
+  batches: string[][];
+  build: () => Promise<Compilation>;
+  write: (compilation: Compilation) => Promise<void>;
+};
 
 /** Copy the actual consumer so source-edit tests never mutate the working catalogue. */
 export async function designLibraryFixture(
   t: { after(fn: () => Promise<void>): void },
   mode?: "committed" | "derived",
-) {
+): Promise<DesignLibraryFixtureResult> {
   await fs.mkdir(path.join(repositoryRoot, ".context"), { recursive: true });
   const root = await fs.mkdtemp(
     path.join(repositoryRoot, ".context/design-library-test-"),

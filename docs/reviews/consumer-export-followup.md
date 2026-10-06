@@ -49,10 +49,10 @@ or new plan milestones. No PR merge or npm release was performed.
 
 Status: confirmed; Group: filesystem transactions; awaiting user decision.
 
-`ExportTransaction.open()` in [transaction.ts](../../src/export/transaction.ts)
+`ExportTransaction.open()` in [transaction.ts](../../packages/mokly/src/export/transaction.ts)
 validates output but does not retain its initial presence or identity.
 `install()` accepts the current state, and
-[ownership.ts](../../src/export/ownership.ts) permits an empty or valid
+[ownership.ts](../../packages/mokly/src/export/ownership.ts) permits an empty or valid
 marker-owned directory. Stage installation uses ordinary replacing rename.
 The reservation coordinates Mokabook writers, not unrelated filesystem edits.
 

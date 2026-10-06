@@ -7,18 +7,18 @@ import { readCatalogue, type CatalogueReadModel } from "@mokly/viewer";
 import { parseReviewResult, viewHref } from "@mokly/viewer/data";
 import { createCatalogue } from "@mokly/viewer/server";
 
-import type { Compilation } from "../../dist/build/compile.js";
-import { componentRuntime } from "../../dist/build/component_runtime.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { projectCatalogue } from "../../dist/catalogue/projection.js";
-import { ConfiguredGitCommandRunner } from "../../dist/config/git.js";
-import { loadConfig } from "../../dist/config/load.js";
-import type { ResolvedConfig } from "../../dist/config/types.js";
-import { exportCatalogue } from "../../dist/export/run.js";
-import { compareReview } from "../../dist/review/compare.js";
-import { CommittedRepository } from "../../dist/review/git.js";
-import { computeCatalogueChanges } from "../../dist/server/changed.js";
-import { startCatalogueServer } from "../../dist/server/http.js";
+import type { Compilation } from "../../packages/mokly/dist/build/compile.js";
+import { componentRuntime } from "../../packages/mokly/dist/build/component_runtime.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { projectCatalogue } from "../../packages/mokly/dist/catalogue/projection.js";
+import { ConfiguredGitCommandRunner } from "../../packages/mokly/dist/config/git.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
+import { exportCatalogue } from "../../packages/mokly/dist/export/run.js";
+import { compareReview } from "../../packages/mokly/dist/review/compare.js";
+import { CommittedRepository } from "../../packages/mokly/dist/review/git.js";
+import { computeCatalogueChanges } from "../../packages/mokly/dist/server/changed.js";
+import { startCatalogueServer } from "../../packages/mokly/dist/server/http.js";
 import { readShellCatalogue } from "../../packages/viewer/src/catalogue/reader.js";
 
 /** Record the real authoring files and accepted bytes before a fixture moves. */

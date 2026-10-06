@@ -3,8 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { loadConfig } from "../dist/config/load.js";
-import { classifyWatchPath } from "../dist/server/watch_events.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { classifyWatchPath } from "../packages/mokly/dist/server/watch_events.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

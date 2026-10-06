@@ -15,9 +15,9 @@ import {
   EXPORT_MARKER,
   ownedEntries,
   parseExportOwnership,
-} from "../dist/export/ownership.js";
-import { exportCatalogue } from "../dist/export/run.js";
-import { bundleUpload } from "../dist/publish/bundle.js";
+} from "../packages/mokly/dist/export/ownership.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
+import { bundleUpload } from "../packages/mokly/dist/publish/bundle.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
 
 import { assertPublishedPagePreview } from "./helpers/published_preview.js";

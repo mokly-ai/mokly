@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { capturePublicFiles } from "../dist/export/public_files.js";
-import { assembleExport } from "../dist/export/site.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeCatalogueChanges } from "../dist/server/changed.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { capturePublicFiles } from "../packages/mokly/dist/export/public_files.js";
+import { assembleExport } from "../packages/mokly/dist/export/site.js";
+import { committedReviewRepository } from "../packages/mokly/dist/review/repository.js";
+import { computeCatalogueChanges } from "../packages/mokly/dist/server/changed.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";

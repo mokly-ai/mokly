@@ -2,32 +2,35 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
 
-import type { Compilation } from "../dist/build/compile.js";
-import type { GeneratedOutputStore } from "../dist/build/output_store.js";
-import { FileSystemConfigLoader, loadConfig } from "../dist/config/load.js";
-import type { ResolvedConfig } from "../dist/config/types.js";
-import type { CatalogueServerFactory } from "../dist/server/factory.js";
+import type { Compilation } from "../packages/mokly/dist/build/compile.js";
+import type { GeneratedOutputStore } from "../packages/mokly/dist/build/output_store.js";
+import {
+  FileSystemConfigLoader,
+  loadConfig,
+} from "../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../packages/mokly/dist/config/types.js";
+import type { CatalogueServerFactory } from "../packages/mokly/dist/server/factory.js";
 import type {
   RunningServer,
   ServerOptions,
-} from "../dist/server/http_types.js";
-import { serve } from "../dist/server/serve.js";
-import { restartWithRecovery } from "../dist/server/serve_lifecycle.js";
+} from "../packages/mokly/dist/server/http_types.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
+import { restartWithRecovery } from "../packages/mokly/dist/server/serve_lifecycle.js";
 import {
   type ProcessSupervisor,
   type ProcessSupervisorFactory,
-} from "../dist/server/supervisor.js";
+} from "../packages/mokly/dist/server/supervisor.js";
 import {
   NotificationGate,
   WatchActionQueue,
   WatchDebouncer,
   classifyWatchPath,
   type DebounceClock,
-} from "../dist/server/watch_events.js";
+} from "../packages/mokly/dist/server/watch_events.js";
 import type {
   ConsumerWatcher,
   ConsumerWatcherFactory,
-} from "../dist/server/watcher.js";
+} from "../packages/mokly/dist/server/watcher.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { parse } from "parse5";
 
-import type { CssRuleParser } from "../src/review/css/types.js";
+import type { CssRuleParser } from "../packages/mokly/src/review/css/types.js";
 
 import { analyze, documents, excluded, kept } from "./helpers/review_css.js";
 

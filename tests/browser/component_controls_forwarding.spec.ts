@@ -2,8 +2,8 @@ import http from "node:http";
 
 import { expect, test } from "@playwright/test";
 
-import { componentRuntime } from "../../dist/build/component_runtime.js";
-import { startCatalogueServer } from "../../dist/server/http.js";
+import { componentRuntime } from "../../packages/mokly/dist/build/component_runtime.js";
+import { startCatalogueServer } from "../../packages/mokly/dist/server/http.js";
 import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 
 import { chooseVariant } from "./workspace_actions.js";

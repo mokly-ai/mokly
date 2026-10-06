@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import { loadConfig } from "../dist/config/load.js";
-import { BackgroundGeneration } from "../dist/server/demand/generation.js";
+import { prepareLiveRuntime } from "../packages/mokly/dist/build/live_runtime.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { BackgroundGeneration } from "../packages/mokly/dist/server/demand/generation.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

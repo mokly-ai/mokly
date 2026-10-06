@@ -301,7 +301,7 @@ renderer, and configured stylesheets. Open the printed URL; the browser reloads
 after watched edits. Forward Serve options with `npm run dev -- --port 0`.
 Imported consumer helpers, including this example's `theme.ts`, are tracked
 and trigger rebuilds automatically. Restart the command after changing
-Mokly's own `src/` files.
+Mokly's own `packages/mokly/src/` files.
 
 For one-off generation, verification, or publishing an artifact:
 
@@ -400,7 +400,7 @@ screen comparisons. Both options omit development update connections.
 For an ordinary static host, use the consumer command instead of the Pages adapter:
 
 ```bash
-node dist/cli/bin.js export --config examples/basic/mokly.config.ts --out ../../.context/mokly-site
+node packages/mokly/dist/cli/bin.js export --config examples/basic/mokly.config.ts --out ../../.context/mokly-site
 ```
 
 Output is config-relative. This command builds the example itself, with one
@@ -408,4 +408,4 @@ Output is config-relative. This command builds the example itself, with one
 The consumer export command requires the configured Git history and rebuilds its
 baseline with the recipe above. The default repository preview exports current
 content without a baseline; preview Changes uses the same cached rebuild.
-See the [consumer publishing recipe](../../README.md#review-and-share).
+See the [consumer publishing recipe](../../packages/mokly/README.md#review-and-share).

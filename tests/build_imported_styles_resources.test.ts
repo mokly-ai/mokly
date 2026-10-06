@@ -3,13 +3,13 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { runtimeGraph } from "../dist/build/component_runtime.js";
-import { DocumentCompiler } from "../dist/build/document_compiler.js";
-import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import { loadConfig } from "../dist/config/load.js";
-import { extractCssReferences } from "../dist/css_references.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { runtimeGraph } from "../packages/mokly/dist/build/component_runtime.js";
+import { DocumentCompiler } from "../packages/mokly/dist/build/document_compiler.js";
+import { prepareLiveRuntime } from "../packages/mokly/dist/build/live_runtime.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { extractCssReferences } from "../packages/mokly/dist/css_references.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import {

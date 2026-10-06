@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { defineComponent } from "../dist/components/definition.js";
+import { defineComponent } from "../packages/mokly/dist/components/definition.js";
 import {
   validateControls,
   validateControlledValues,

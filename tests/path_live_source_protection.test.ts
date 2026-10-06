@@ -3,9 +3,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { writeCompilation } from "../dist/build/transaction.js";
-import { startCatalogueServer } from "../dist/server/http.js";
-import { classifyWatchPath } from "../dist/server/watch_events.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
+import { classifyWatchPath } from "../packages/mokly/dist/server/watch_events.js";
 
 import { pageSource, pathFixture } from "./helpers/path_fixture.js";
 
@@ -63,9 +63,9 @@ test("new root matches stay private before a candidate can be accepted, includin
 
 test("historical resource protection uses the baseline inventory instead of current root membership", async (t) => {
   const { isAuthoringSource } =
-    await import("../dist/build/source_inventory.js");
+    await import("../packages/mokly/dist/build/source_inventory.js");
   const { baselineResourceConfig } =
-    await import("../dist/review/base_manifest.js");
+    await import("../packages/mokly/dist/review/base_manifest.js");
   const fixture = await pathFixture(
     {
       "generated/specs/main.mockup.ts": pageSource(),

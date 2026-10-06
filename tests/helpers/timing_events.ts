@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import type { TimingEvent } from "../../dist/diagnostics/timings.js";
+import type { TimingEvent } from "../../packages/mokly/dist/diagnostics/timings.js";
 
 const prefix = "[mokly:timing] ";
 export const reviewStages = [

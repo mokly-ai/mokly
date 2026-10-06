@@ -3,13 +3,13 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { loadConfig } from "../dist/config/load.js";
-import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
-import { prepareComponentProjection } from "../dist/review/component_projection_resources.js";
-import { ComponentMaterialReader } from "../dist/review/component_resources.js";
-import { compareComponentView } from "../dist/review/component_view.js";
-import { ResourceComparison } from "../dist/review/resource_comparison.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { ComponentDependencyPolicy } from "../packages/mokly/dist/review/component_metadata.js";
+import { prepareComponentProjection } from "../packages/mokly/dist/review/component_projection_resources.js";
+import { ComponentMaterialReader } from "../packages/mokly/dist/review/component_resources.js";
+import { compareComponentView } from "../packages/mokly/dist/review/component_view.js";
+import { ResourceComparison } from "../packages/mokly/dist/review/resource_comparison.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";

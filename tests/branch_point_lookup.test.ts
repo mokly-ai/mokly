@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { pairMoves } from "../packages/mokly/src/review/moves/pair.js";
 import { branchPoints } from "../packages/viewer/src/shell/catalogue_branch_point.js";
-import { pairMoves } from "../src/review/moves/pair.js";
 
 import {
   lookupCatalogue,

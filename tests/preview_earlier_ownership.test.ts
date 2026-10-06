@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { exportCatalogue } from "../dist/export/run.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
 
 import {

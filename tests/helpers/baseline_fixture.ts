@@ -5,15 +5,15 @@ import { Header } from "tar";
 import type {
   BaselineMaintenanceFailure,
   BaselineMaintenanceReporter,
-} from "../../dist/baseline/maintenance.js";
-import { CachedBaselineBuilder } from "../../dist/baseline/rebuild.js";
+} from "../../packages/mokly/dist/baseline/maintenance.js";
+import { CachedBaselineBuilder } from "../../packages/mokly/dist/baseline/rebuild.js";
 import type {
   BaselineBuildRequest,
   BaselineClock,
   BaselineProcessRequest,
   BaselineProcessResult,
   BaselineProcessRunner,
-} from "../../dist/baseline/types.js";
+} from "../../packages/mokly/dist/baseline/types.js";
 
 import { MemoryBaselineFileSystem } from "./baseline_memory.js";
 

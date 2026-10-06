@@ -3,12 +3,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import { loadConfig } from "../dist/config/load.js";
-import { startCatalogueServer } from "../dist/server/http.js";
-import { PlainServeReporter } from "../dist/server/reporter.js";
-import { serve } from "../dist/server/serve.js";
-import type { WatchEvent } from "../dist/server/watch_events.js";
+import { prepareLiveRuntime } from "../packages/mokly/dist/build/live_runtime.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
+import { PlainServeReporter } from "../packages/mokly/dist/server/reporter.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
+import type { WatchEvent } from "../packages/mokly/dist/server/watch_events.js";
 
 import { removeFixture } from "./helpers/fixture.js";
 import { entryStyle, styleFixture } from "./helpers/imported_styles_fixture.js";

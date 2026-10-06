@@ -14,6 +14,20 @@ the root lockfile and the release manifest. The CLI component is
 `viewer-vX.Y.Z`, with component `viewer` and `packages/viewer/CHANGELOG.md`.
 Both tags must identify the same reviewed release commit.
 
+## Commit Attribution
+
+Release Please attributes CLI release notes and version bumps only to commits
+that change files under `packages/mokly/`. Commits that change only root docs,
+tests, or scripts are not attributed to the CLI package. The special `.` path
+previously received every commit; a workspace package path does not.
+
+A change only to shipped root `docs/guides/` or `docs/protocol/` does not trigger
+a CLI release by itself or add a CLI changelog entry. Authors must let that
+change ship with the next CLI release. The package build copies the current
+documentation into that release's archive.
+
+## Release Updates
+
 The [Pull Request Title Contract](./ci-verification.md#pull-request-title-contract)
 checks every proposed squash title before merge because release-please reads
 that title from `main`. It accepts generated release titles such as
@@ -49,13 +63,19 @@ The `node-workspace` plugin uses `updateAllPackages: true` to propose both
 packages whenever either releases, including a patch of an otherwise unchanged
 package. It preserves the CLI's exact dependency (no caret or local link).
 Versions remain independent; `linked-versions` would incorrectly force them
-equal and is unnecessary for a combined PR. A viewer `extra-files` JSON updater
-also sets the root lockfile's
-`packages["packages/mokly"].dependencies["@mokly/viewer"]` through JSONPath
-`$['packages']['packages/mokly']['dependencies']['@mokly/viewer']`:
-release-please 17.6.0's workspace updater handles linked workspace versions but
-does not update that exact dependency edge. Release PR checks must pass `npm ci`
-and the same version-pair gate before merge.
+equal and is unnecessary for a combined PR. After the move, each Node strategy
+targets a package-local lockfile. Neither package has one, so no strategy owns
+the root lockfile. Root-anchored lockfile `extra-files` normalize to
+`package-lock.json`; their presence after candidates merge suppresses the
+workspace plugin's root-lockfile versions updater in release-please 17.6.0.
+
+Three explicit JSON `extra-files` updaters therefore keep the root lockfile in
+sync. The CLI component sets `$['packages']['packages/mokly']['version']` with
+its new version. The viewer component sets
+`$['packages']['packages/viewer']['version']` and
+`$['packages']['packages/mokly']['dependencies']['@mokly/viewer']` with its new
+version. These update both workspace versions and the CLI's exact viewer edge.
+Release PR checks must pass `npm ci` and the same version-pair gate before merge.
 
 The release workflow then:
 

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { PlanResponse } from "../dist/publish/types.js";
+import type { PlanResponse } from "../packages/mokly/dist/publish/types.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { startFakeReceiver } from "./helpers/fake_receiver.js";

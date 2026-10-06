@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   parseManifest,
   parseHistoricalManifest,
-} from "../dist/registry/manifest.js";
+} from "../packages/mokly/dist/registry/manifest.js";
 
 import { pathFixture, pageSource } from "./helpers/path_fixture.js";
 

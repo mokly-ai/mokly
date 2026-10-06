@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { loadConfig } from "../../dist/config/load.js";
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
 import { viewRoute } from "../../packages/viewer/dist/data.js";
 import type { ManifestScreen } from "../../packages/viewer/dist/registry/types.js";
 

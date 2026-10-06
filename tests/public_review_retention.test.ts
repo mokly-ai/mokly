@@ -4,9 +4,9 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import type { SelectedReviewSource } from "../src/review/selection_types.js";
-import { PublicReviewAliases } from "../src/server/public_review.js";
-import { ReviewGenerationStore } from "../src/server/review_generations.js";
+import type { SelectedReviewSource } from "../packages/mokly/src/review/selection_types.js";
+import { PublicReviewAliases } from "../packages/mokly/src/server/public_review.js";
+import { ReviewGenerationStore } from "../packages/mokly/src/server/review_generations.js";
 
 test("complete alias captures do not renew unused generation retention", async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-retention-"));

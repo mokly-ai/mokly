@@ -90,7 +90,8 @@ activation. Authored/generated files on disk and comparison document bytes
 remain unchanged; consumer content and portable links are not rewritten to
 implement inspection. Default local frames keep scripts disabled.
 
-Core export modules belong under `src/export` and compile into `dist`. Consumers
+Core export modules belong under `packages/mokly/src/export` and compile into
+`packages/mokly/dist`. Consumers
 must not deep-import package internals or copy repository scripts. The CLI is
 the supported interface for export; no public JavaScript export engine API is
 added. The [`@mokly/viewer`](./mokly-viewer.md) package is a separate supported

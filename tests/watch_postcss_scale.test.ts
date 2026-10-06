@@ -4,25 +4,25 @@ import path from "node:path";
 import { performance } from "node:perf_hooks";
 import test from "node:test";
 
-import { loadConfig } from "../dist/config/load.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 import {
   PlainServeReporter,
   type WatchReport,
-} from "../dist/server/reporter.js";
-import { serve } from "../dist/server/serve.js";
+} from "../packages/mokly/dist/server/reporter.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 import {
   classifyWatchPath,
   NotificationGate,
   type WatchEvent,
-} from "../dist/server/watch_events.js";
+} from "../packages/mokly/dist/server/watch_events.js";
 import {
   isPackageOwnedIgnoredWatchPath,
   watchTargets,
-} from "../dist/server/watch_paths.js";
+} from "../packages/mokly/dist/server/watch_paths.js";
 import {
   ChokidarWatcherFactory,
   createSourceWatcher,
-} from "../dist/server/watcher.js";
+} from "../packages/mokly/dist/server/watcher.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { version } from "./helpers/watched_catalogue.js";

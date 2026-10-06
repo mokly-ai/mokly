@@ -2,14 +2,14 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
+import { compileCatalogue } from "../packages/mokly/src/build/compile.js";
+import { loadConfig } from "../packages/mokly/src/config/load.js";
+import { changedManifestPaths } from "../packages/mokly/src/registry/changed_paths.js";
+import { removedManifestEntries } from "../packages/mokly/src/registry/changes.js";
+import { viewPage, homePage } from "../packages/mokly/src/server/pages.js";
 import { entryRoute } from "../packages/viewer/src/navigation/routes.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
 import { buildNavSections } from "../packages/viewer/src/shell/nav_tree.js";
-import { compileCatalogue } from "../src/build/compile.js";
-import { loadConfig } from "../src/config/load.js";
-import { changedManifestPaths } from "../src/registry/changed_paths.js";
-import { removedManifestEntries } from "../src/registry/changes.js";
-import { viewPage, homePage } from "../src/server/pages.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { documentText } from "./helpers/html.js";

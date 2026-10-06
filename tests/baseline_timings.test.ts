@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { loadConfig } from "../dist/config/load.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 import {
   runWithTimings,
   type TimingEvent,
-} from "../dist/diagnostics/timings.js";
-import { prepareReviewRepository } from "../dist/review/prepare.js";
+} from "../packages/mokly/dist/diagnostics/timings.js";
+import { prepareReviewRepository } from "../packages/mokly/dist/review/prepare.js";
 
 import { baselineFixture, success } from "./helpers/baseline_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";

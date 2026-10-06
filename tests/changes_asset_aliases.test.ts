@@ -3,8 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedPaths } from "../dist/server/changed.js";
+import { committedReviewRepository } from "../packages/mokly/dist/review/repository.js";
+import { computeChangedPaths } from "../packages/mokly/dist/server/changed.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";

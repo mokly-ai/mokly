@@ -9,7 +9,7 @@ import type {
 } from "@mokly/viewer/runtime";
 import type { WorkspaceData } from "@mokly/viewer/server";
 
-import type { ReactCapabilityEnvironment } from "../../dist/client/react_capabilities.js";
+import type { ReactCapabilityEnvironment } from "../../packages/mokly/dist/client/react_capabilities.js";
 
 export const catalogue = readCatalogue(
   JSON.parse(

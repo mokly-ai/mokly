@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { computeCatalogueChanges } from "../dist/server/changed.js";
-import { readCatalogueChanges } from "../dist/server/component_changes.js";
-import { homePage } from "../dist/server/pages.js";
+import { computeCatalogueChanges } from "../packages/mokly/dist/server/changed.js";
+import { readCatalogueChanges } from "../packages/mokly/dist/server/component_changes.js";
+import { homePage } from "../packages/mokly/dist/server/pages.js";
+import { projectCatalogue } from "../packages/mokly/src/catalogue/projection.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
-import { projectCatalogue } from "../src/catalogue/projection.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";

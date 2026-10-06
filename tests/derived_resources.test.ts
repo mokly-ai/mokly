@@ -3,10 +3,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { acceptedGenerationFromCompilation } from "../dist/review/accepted_generation.js";
-import { prepareReviewRepository } from "../dist/review/prepare.js";
-import { computeCatalogueChanges } from "../dist/server/changed.js";
-import { readCatalogueChanges } from "../dist/server/component_changes.js";
+import { acceptedGenerationFromCompilation } from "../packages/mokly/dist/review/accepted_generation.js";
+import { prepareReviewRepository } from "../packages/mokly/dist/review/prepare.js";
+import { computeCatalogueChanges } from "../packages/mokly/dist/server/changed.js";
+import { readCatalogueChanges } from "../packages/mokly/dist/server/component_changes.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { derivedFixture } from "./helpers/derived_fixture.js";

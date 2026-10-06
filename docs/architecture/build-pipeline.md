@@ -126,7 +126,7 @@ Background Git I/O is parent-owned over a private worker channel. Cancellation
 drains the actual subprocesses before worker termination, even if the worker cannot
 yield; CPU-intensive classification stays in the worker.
 See [on-demand Serve](../protocol/mokly-on-demand.md) and the
-[local rendering service](../../src/server/controls/README.md).
+[local rendering service](../../packages/mokly/src/server/controls/README.md).
 
 An esbuild resolver uses `createRequire(configPath)` for `react`, React
 subpaths, `react-dom`, and React DOM subpaths. Imports of `mokly` resolve to

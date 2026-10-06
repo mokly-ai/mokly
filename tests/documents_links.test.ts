@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { isPublicStaticFile } from "../dist/config/public_files.js";
+import { isPublicStaticFile } from "../packages/mokly/dist/config/public_files.js";
 
 import { pathFixture, pageSource } from "./helpers/path_fixture.js";
 

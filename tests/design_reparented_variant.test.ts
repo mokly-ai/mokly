@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import { parse, serializeOuter } from "parse5";
 
-import { homePage as renderHomePage } from "../dist/server/pages.js";
+import { homePage as renderHomePage } from "../packages/mokly/dist/server/pages.js";
 import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
 import type {
   ManifestEntry,

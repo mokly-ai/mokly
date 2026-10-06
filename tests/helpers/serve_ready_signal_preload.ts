@@ -1,6 +1,6 @@
 import fs from "node:fs";
 
-import { PlainReporter } from "../../dist/cli/reporter/plain.js";
+import { PlainReporter } from "../../packages/mokly/dist/cli/reporter/plain.js";
 
 const serveReady = PlainReporter.prototype.serveReady;
 const pause = new Int32Array(new SharedArrayBuffer(4));

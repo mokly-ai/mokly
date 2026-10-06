@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import type { AffectedUsageEvidence } from "@mokly/viewer/data";
 
-import { compareReview } from "../dist/review/compare.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import {
   type UsageLink,

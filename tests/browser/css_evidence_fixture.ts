@@ -2,10 +2,10 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
-import { serve } from "../../dist/server/serve.js";
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import { serve } from "../../packages/mokly/dist/server/serve.js";
 import { createFixture, removeFixture } from "../helpers/fixture.js";
 import { waitForClassifiedCount } from "../helpers/watched_catalogue.js";
 

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { cliErrorPresentation } from "../dist/cli/errors.js";
-import { MoklyError } from "../dist/errors.js";
+import { cliErrorPresentation } from "../packages/mokly/dist/cli/errors.js";
+import { MoklyError } from "../packages/mokly/dist/errors.js";
 
 import { pathFixture, pageSource } from "./helpers/path_fixture.js";
 

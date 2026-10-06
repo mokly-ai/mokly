@@ -3,10 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { loadConfig } from "../dist/config/load.js";
-import { ExportInventory } from "../dist/export/inventory.js";
-import { assertExportOwnership } from "../dist/export/ownership.js";
-import { resolveExportOutput } from "../dist/export/paths.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { ExportInventory } from "../packages/mokly/dist/export/inventory.js";
+import { assertExportOwnership } from "../packages/mokly/dist/export/ownership.js";
+import { resolveExportOutput } from "../packages/mokly/dist/export/paths.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { ownershipMarkerFromFiles } from "./helpers/ownership_marker.js";

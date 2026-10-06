@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { loadConfig } from "../dist/config/load.js";
-import { parseManifest } from "../dist/registry/manifest.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { parseManifest } from "../packages/mokly/dist/registry/manifest.js";
 import type {
   ManifestComponent,
   ManifestComponentVariant,

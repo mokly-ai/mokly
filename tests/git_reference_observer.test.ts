@@ -3,11 +3,11 @@ import path from "node:path";
 import test from "node:test";
 import { setImmediate } from "node:timers/promises";
 
-import { NodeGitCommandRunner } from "../dist/review/git.js";
+import { NodeGitCommandRunner } from "../packages/mokly/dist/review/git.js";
 import {
   GitReferenceObserver,
   RepositoryGitReferences,
-} from "../dist/server/demand/git_references.js";
+} from "../packages/mokly/dist/server/demand/git_references.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 

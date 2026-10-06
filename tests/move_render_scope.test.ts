@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { RenderMoveTargets } from "../src/server/render_moves.js";
+import { RenderMoveTargets } from "../packages/mokly/src/server/render_moves.js";
 
 test("accepted render moves are private to one runtime and clear when evidence is unavailable", () => {
   const targets = new RenderMoveTargets();

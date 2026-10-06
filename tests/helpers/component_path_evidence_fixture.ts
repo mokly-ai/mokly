@@ -1,15 +1,26 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
-import { compareReview } from "../../dist/review/compare.js";
+import {
+  compileCatalogue,
+  type Compilation,
+} from "../../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
+import { compareReview } from "../../packages/mokly/dist/review/compare.js";
 import type { ReviewResultV5 } from "../../packages/viewer/dist/review/component_types.js";
 
 import { componentEntrySource } from "./component_fixture.js";
 import { componentGit } from "./component_review_fixture.js";
 import { createFixture, removeFixture } from "./fixture.js";
+
+type PathEvidenceFixtureResult = {
+  before: Compilation;
+  after: Compilation;
+  config: ResolvedConfig;
+  result: ReviewResultV5;
+};
 
 export interface PathEvidenceCase {
   beforeSource: string;
@@ -57,7 +68,7 @@ export function withEntryPaths(
 export async function pathEvidenceFixture(
   t: { after: (cleanup: () => Promise<void>) => void },
   options: PathEvidenceCase,
-) {
+): Promise<PathEvidenceFixtureResult> {
   const fixture = await createFixture(options.beforeSource);
   t.after(() => removeFixture(fixture));
   for (const changed of options.changedPaths) {

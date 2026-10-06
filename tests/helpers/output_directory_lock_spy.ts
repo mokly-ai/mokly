@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import type { TestContext } from "node:test";
 
-import { outputLockPath } from "../../dist/build/output_lock.js";
-import { isInside } from "../../dist/config/paths.js";
-import type { ResolvedConfig } from "../../dist/config/types.js";
+import { outputLockPath } from "../../packages/mokly/dist/build/output_lock.js";
+import { isInside } from "../../packages/mokly/dist/config/paths.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
 
 /** Observe every output-tree mutation; the private lock directory lies outside that tree. */
 export function spyOutputDirectoryLock(t: TestContext, config: ResolvedConfig) {

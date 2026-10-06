@@ -23,7 +23,7 @@ or checked against the implemented API, and their resolutions are recorded below
 ## Findings
 
 1. **High — imports outside `repoRoot` escape the source inventory. Resolved.**
-   [The shared graph classifier](../../src/build/source_inventory.ts) silently
+   [The shared graph classifier](../../packages/mokly/src/build/source_inventory.ts) silently
    skipped executable inputs outside the repository. Independent probes confirmed
    that an entry helper outside `repoRoot` changes generated HTML without
    changing `sourceFiles`; an outside config helper is also accepted and omitted.
@@ -130,7 +130,7 @@ All three findings were independently checked and their recommended fixes were
 authorized by the user. They are resolved as described below.
 
 1. **Medium — public manifests expose the source-file inventory. Resolved.**
-   The [public asset classifier](../../src/config/public_files.ts) permitted
+   The [public asset classifier](../../packages/mokly/src/config/public_files.ts) permitted
    `mokabook-manifest.json`, and publication copied it into `static/`.
    A disposable probe confirmed a live HTTP 200 and published JSON containing
    an imported `mockups/private/renderer-helper.ts` path. Its source contents
@@ -150,7 +150,7 @@ authorized by the user. They are resolved as described below.
 
 2. **Medium — publication fingerprints miss an earlier manifest change. Resolved.**
    [The publisher](../../scripts/preview/catalogue.mjs) read a manifest before
-   its initial fingerprint; [the server](../../src/server/http.ts) read it again.
+   its initial fingerprint; [the server](../../packages/mokly/src/server/http.ts) read it again.
    A probe added a page after the first manifest read but before the fingerprint
    read its inputs. Publication succeeded with matching fingerprints and a new
    navigation link, but without that page's captured view or ID redirect.

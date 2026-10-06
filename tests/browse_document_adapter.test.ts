@@ -3,10 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { adaptBrowseDocument } from "../dist/browse/document_adapter.js";
-import { compileCatalogue } from "../dist/build/compile.js";
-import { generatedHeader } from "../dist/build/ownership.js";
-import { loadConfig } from "../dist/config/load.js";
+import { adaptBrowseDocument } from "../packages/mokly/dist/browse/document_adapter.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { generatedHeader } from "../packages/mokly/dist/build/ownership.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 
 import {

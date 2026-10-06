@@ -3,9 +3,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { exportCatalogue } from "../dist/export/run.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";

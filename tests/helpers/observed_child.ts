@@ -1,7 +1,7 @@
 import type {
   ChildFactory,
   ChildHandle,
-} from "../../dist/server/child_process.js";
+} from "../../packages/mokly/dist/server/child_process.js";
 
 interface ObservedChild {
   exited: boolean;

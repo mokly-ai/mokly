@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parseManifest } from "../dist/registry/manifest.js";
+import { parseManifest } from "../packages/mokly/dist/registry/manifest.js";
 
 import { pageSource, pathFixture } from "./helpers/path_fixture.js";
 

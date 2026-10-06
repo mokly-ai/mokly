@@ -1,0 +1,73 @@
+{
+  "name": "@mokly/mokly",
+  "version": "0.13.0",
+  "description": "App-independent static mockup catalogues, development browsing, and on-demand visual comparisons.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Mokly",
+  "homepage": "https://github.com/mokly-ai/mokly#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mokly-ai/mokly.git",
+    "directory": "packages/mokly"
+  },
+  "bugs": {
+    "url": "https://github.com/mokly-ai/mokly/issues"
+  },
+  "engines": {
+    "node": ">=22.14.0 <24.14.0 || >=24.19.0"
+  },
+  "bin": {
+    "mokly": "./dist/cli/bin.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "docs/guides",
+    "docs/protocol",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "dependencies": {
+    "@mokly/viewer": "0.4.0",
+    "chokidar": "^5.0.0",
+    "css-select": "^7.0.0",
+    "css-what": "^8.0.0",
+    "es-module-lexer": "^3.0.2",
+    "esbuild": "^0.28.1",
+    "icss-utils": "^5.1.0",
+    "koffi": "^3.2.1",
+    "lightningcss": "^1.33.0",
+    "marked": "^18.0.14",
+    "minimatch": "^10.2.6",
+    "parse5": "^8.0.1",
+    "postcss": "^8.5.28",
+    "postcss-modules-extract-imports": "^3.1.0",
+    "postcss-modules-local-by-default": "^4.2.0",
+    "postcss-modules-scope": "^3.2.1",
+    "postcss-selector-parser": "^7.1.6",
+    "postcss-value-parser": "^4.2.0",
+    "tar": "^7.5.22",
+    "tar-stream": "^3.2.1"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json && node scripts/build.mjs",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "prepack": "npm run build"
+  }
+}

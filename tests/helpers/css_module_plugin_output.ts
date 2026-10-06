@@ -1,7 +1,7 @@
 import postcss from "postcss";
 
-import { modulePlugins } from "../../dist/build/styles/module_plugins.js";
-import { prepareModuleScopes } from "../../dist/build/styles/module_scope.js";
+import { modulePlugins } from "../../packages/mokly/dist/build/styles/module_plugins.js";
+import { prepareModuleScopes } from "../../packages/mokly/dist/build/styles/module_scope.js";
 
 /** Run the four CSS Modules plugin calls without using Mokly's scopeModule. */
 export function pluginModuleOutput(

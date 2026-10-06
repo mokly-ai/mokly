@@ -3,20 +3,29 @@ import fs from "node:fs/promises";
 import {
   compileCatalogue,
   type Compilation,
-} from "../../dist/build/compile.js";
+} from "../../packages/mokly/dist/build/compile.js";
 import {
   generatedBytes,
   generatedText,
   type GeneratedFile,
-} from "../../dist/build/generated_file.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
-import type { ReadOnlyReviewRepository } from "../../dist/review/repository.js";
+} from "../../packages/mokly/dist/build/generated_file.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
+import type { ReadOnlyReviewRepository } from "../../packages/mokly/dist/review/repository.js";
 
 import { componentEntrySource } from "./component_fixture.js";
-import { createFixture, removeFixture } from "./fixture.js";
+import { createFixture, removeFixture, type TestFixture } from "./fixture.js";
 import { textOutput } from "./generated_text.js";
 import { assertMoveDelivery, commitMoveBaseline } from "./move_delivery.js";
+
+type ComponentReviewFixtureResult = TestFixture & {
+  config: ResolvedConfig;
+  before: Compilation;
+  after: Compilation;
+  git: ReadOnlyReviewRepository;
+  changedPaths: string[];
+};
 
 export async function componentReviewFixture(
   t: { after: (fn: () => Promise<void>) => void },
@@ -24,7 +33,7 @@ export async function componentReviewFixture(
   source = componentEntrySource(),
   extraConfig = 'colorSchemes: ["light", "dark"],',
   verifyMoveDelivery = false,
-) {
+): Promise<ComponentReviewFixtureResult> {
   const fixture = await createFixture(source, { extraConfig });
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);

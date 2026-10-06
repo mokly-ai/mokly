@@ -1,13 +1,13 @@
 import path from "node:path";
 
-import { GitReviewAssetReader } from "../../dist/review/assets.js";
+import { GitReviewAssetReader } from "../../packages/mokly/dist/review/assets.js";
 import {
   baselineResourceConfig,
   readBaseManifest,
-} from "../../dist/review/base_manifest.js";
-import { reviewChangedPaths } from "../../dist/review/changed_paths.js";
-import { EvidenceAssetReader } from "../../dist/review/evidence_assets.js";
-import { importedChangedPaths } from "../../dist/review/imported_changes.js";
+} from "../../packages/mokly/dist/review/base_manifest.js";
+import { reviewChangedPaths } from "../../packages/mokly/dist/review/changed_paths.js";
+import { EvidenceAssetReader } from "../../packages/mokly/dist/review/evidence_assets.js";
+import { importedChangedPaths } from "../../packages/mokly/dist/review/imported_changes.js";
 
 /** Share one pinned authored/generated evidence set across published Changes and Review. */
 export async function publicationChangeEvidence(

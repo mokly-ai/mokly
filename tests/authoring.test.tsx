@@ -11,9 +11,9 @@ import type {
   ScreenDefinition,
   ScreenInput,
   UseCaseInput,
-} from "../dist/authoring/types.js";
-import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
-import type { ResolvedConfig } from "../dist/config/types.js";
+} from "../packages/mokly/dist/authoring/types.js";
+import { DEFAULT_PUBLIC_EXCLUDE } from "../packages/mokly/dist/config/public_exclusions.js";
+import type { ResolvedConfig } from "../packages/mokly/dist/config/types.js";
 import {
   defineComponent,
   definePage,
@@ -23,10 +23,10 @@ import {
   ReviewIgnore,
   ReviewIgnoreScope,
   reviewMaterialKey,
-} from "../dist/index.js";
-import { validateEntry } from "../dist/registry/entry_validation.js";
-import type { RegistryViolation } from "../dist/registry/prepared_types.js";
-import { serializeReviewSentinels } from "../dist/renderer/sentinels.js";
+} from "../packages/mokly/dist/index.js";
+import { validateEntry } from "../packages/mokly/dist/registry/entry_validation.js";
+import type { RegistryViolation } from "../packages/mokly/dist/registry/prepared_types.js";
+import { serializeReviewSentinels } from "../packages/mokly/dist/renderer/sentinels.js";
 import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";

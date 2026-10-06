@@ -12,7 +12,7 @@ import {
 import {
   parseHistoricalManifest,
   parseManifest,
-} from "../src/registry/manifest.js";
+} from "../packages/mokly/src/registry/manifest.js";
 
 const sourcePath = "entries/home.mockup.tsx";
 

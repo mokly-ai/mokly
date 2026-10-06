@@ -4,8 +4,8 @@ import path from "node:path";
 import { performance } from "node:perf_hooks";
 import test from "node:test";
 
-import { collectPostcssDependencies } from "../dist/build/styles/dependency_inventory.js";
-import { loadConfig } from "../dist/config/load.js";
+import { collectPostcssDependencies } from "../packages/mokly/dist/build/styles/dependency_inventory.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

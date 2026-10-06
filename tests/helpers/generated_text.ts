@@ -1,5 +1,5 @@
-import type { GeneratedFile } from "../../dist/build/generated_file.js";
-import { generatedText } from "../../dist/build/generated_file.js";
+import type { GeneratedFile } from "../../packages/mokly/dist/build/generated_file.js";
+import { generatedText } from "../../packages/mokly/dist/build/generated_file.js";
 
 /** Read a text-only test document without silently decoding binary output. */
 export function textOutput(

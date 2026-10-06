@@ -3,9 +3,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedPaths } from "../dist/server/changed.js";
-import { serve } from "../dist/server/serve.js";
+import { committedReviewRepository } from "../packages/mokly/dist/review/repository.js";
+import { computeChangedPaths } from "../packages/mokly/dist/server/changed.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";

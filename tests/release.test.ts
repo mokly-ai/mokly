@@ -1,91 +1,17 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
-import path from "node:path";
 import test from "node:test";
-import { pathToFileURL } from "node:url";
 
 import { parse } from "yaml";
 
-import { repositoryRoot } from "./helpers/fixture.js";
+import { packageReport } from "./helpers/release_fixture.js";
 import {
-  packageReport,
-  type PackageReport,
-} from "./helpers/release_fixture.js";
-
-interface WorkflowStep {
-  env?: Readonly<Record<string, string>>;
-  id?: string;
-  if?: string;
-  name?: string;
-  run?: string;
-  uses?: string;
-  with?: Readonly<Record<string, unknown>>;
-}
-
-interface WorkflowJob {
-  env?: Readonly<Record<string, string>>;
-  environment?: string;
-  if?: string;
-  name?: string;
-  needs?: readonly string[];
-  outputs?: Readonly<Record<string, string>>;
-  permissions?: Readonly<Record<string, string>>;
-  "runs-on"?: string;
-  steps: readonly WorkflowStep[];
-  strategy?: {
-    "fail-fast"?: boolean;
-    matrix: Readonly<Record<string, readonly (string | number)[]>>;
-  };
-}
-
-interface Workflow {
-  concurrency: { "cancel-in-progress": boolean };
-  jobs: Readonly<Record<string, WorkflowJob>>;
-  on: Readonly<Record<string, unknown>>;
-  permissions: Readonly<Record<string, string>>;
-}
-
-interface WorkflowDispatch {
-  inputs: Readonly<
-    Record<
-      string,
-      {
-        default?: string;
-        options?: readonly string[];
-        required?: boolean;
-        type?: string;
-      }
-    >
-  >;
-}
-
-interface ReleaseContextModule {
-  remoteTagCommit(output: string, ref: string): string;
-  resolvePublishRefs(input: {
-    eventName: string;
-    manualRef: string;
-    manualViewerRef: string;
-    releaseCreated: string;
-    releaseTag: string;
-    viewerReleaseCreated: string;
-    viewerReleaseTag: string;
-  }): { cli: string; viewer: string } | undefined;
-  validateTagVersion(ref: string, version: string): void;
-}
-
-interface RegistryContractModule {
-  comparePublishedPackage(
-    local: PackageReport,
-    remote: PackageReport,
-    metadata: { gitHead?: string },
-    commit: string,
-  ): void;
-  isMissingPackage(result: {
-    code: number | null;
-    stderr: string;
-    stdout: string;
-  }): boolean;
-}
+  assertPinnedActions,
+  registryContract,
+  releaseContext,
+  workflowSource,
+  type Workflow,
+  type WorkflowDispatch,
+} from "./helpers/release_workflow.js";
 
 test("release workflow selects only releases and isolates OIDC publish", async () => {
   const source = await workflowSource("release.yml");
@@ -135,6 +61,14 @@ test("release workflow selects only releases and isolates OIDC publish", async (
   assert.match(source, /release-please-action@[a-f0-9]{40}/);
   assert.match(source, /outputs\['packages\/viewer--release_created'\]/);
   assert.match(source, /outputs\['packages\/viewer--tag_name'\]/);
+  assert.match(
+    source,
+    /release_created: \$\{\{ steps\.release\.outputs\['packages\/mokly--release_created'\] \}\}/,
+  );
+  assert.match(
+    source,
+    /tag_name: \$\{\{ steps\.release\.outputs\['packages\/mokly--tag_name'\] \}\}/,
+  );
   const names = publish.steps.map((step) => step.name);
   const gateOrder = [
     "Verify immutable tags",
@@ -310,32 +244,3 @@ test("published-version guard compares bytes, inventory, and commit", async () =
     false,
   );
 });
-
-async function workflowSource(name: string): Promise<string> {
-  return await fs.promises.readFile(
-    path.join(repositoryRoot, ".github", "workflows", name),
-    "utf8",
-  );
-}
-
-function assertPinnedActions(workflow: Workflow): void {
-  const actions = Object.values(workflow.jobs).flatMap((job) =>
-    job.steps.flatMap((step) => (step.uses ? [step.uses] : [])),
-  );
-  assert.ok(actions.length > 0);
-  for (const action of actions) assert.match(action, /@[a-f0-9]{40}$/);
-}
-
-async function releaseContext(): Promise<ReleaseContextModule> {
-  const url = pathToFileURL(
-    path.join(repositoryRoot, "scripts/release/context.mjs"),
-  ).href;
-  return (await import(url)) as ReleaseContextModule;
-}
-
-async function registryContract(): Promise<RegistryContractModule> {
-  const url = pathToFileURL(
-    path.join(repositoryRoot, "scripts/release/registry_contract.mjs"),
-  ).href;
-  return (await import(url)) as RegistryContractModule;
-}

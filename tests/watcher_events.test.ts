@@ -3,8 +3,8 @@ import type fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import type { WatchEvent } from "../dist/server/watch_events.js";
-import { ChokidarWatcherFactory } from "../dist/server/watcher.js";
+import type { WatchEvent } from "../packages/mokly/dist/server/watch_events.js";
+import { ChokidarWatcherFactory } from "../packages/mokly/dist/server/watcher.js";
 
 import { mockChokidar } from "./helpers/chokidar_watcher.js";
 

@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { parse } from "yaml";
 
-import { TESTED_NODE_VERSIONS } from "../dist/cli/bootstrap.js";
+import { TESTED_NODE_VERSIONS } from "../packages/mokly/dist/cli/bootstrap.js";
 
 import {
   assertFullHistoryCheckout,

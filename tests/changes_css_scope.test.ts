@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { analysisOwnsStylesheet } from "../dist/review/css/paths.js";
+import { analysisOwnsStylesheet } from "../packages/mokly/dist/review/css/paths.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 

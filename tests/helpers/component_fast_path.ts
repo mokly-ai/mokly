@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 
-import type { Compilation } from "../../dist/build/compile.js";
-import type { ResolvedConfig } from "../../dist/config/types.js";
-import { classifyComponents } from "../../dist/review/component_classification.js";
-import type { ComponentClassificationInput } from "../../dist/review/component_classification_input.js";
-import { classifyComponentsWithSources } from "../../dist/review/component_classification_sources.js";
+import type { Compilation } from "../../packages/mokly/dist/build/compile.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
+import { classifyComponents } from "../../packages/mokly/dist/review/component_classification.js";
+import type { ComponentClassificationInput } from "../../packages/mokly/dist/review/component_classification_input.js";
+import { classifyComponentsWithSources } from "../../packages/mokly/dist/review/component_classification_sources.js";
 import type { Manifest } from "../../packages/viewer/dist/registry/types.js";
 import type { ReviewResultV5 } from "../../packages/viewer/dist/review/component_types.js";
 

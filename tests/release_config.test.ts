@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { CLI_PACKAGE_PATH } from "../scripts/package/layout.mjs";
+import { CLI_PACKAGE_PATH, cliLockKey } from "../scripts/package/layout.mjs";
 
 import { repositoryRoot, packageRoot } from "./helpers/fixture.js";
 
@@ -21,6 +21,7 @@ test("scoped npm identity preserves the Mokly executable", async () => {
   assert.deepEqual(packageJson.repository, {
     type: "git",
     url: "git+https://github.com/mokly-ai/mokly.git",
+    directory: CLI_PACKAGE_PATH,
   });
   assert.deepEqual(packageJson.bugs, {
     url: "https://github.com/mokly-ai/mokly/issues",
@@ -35,9 +36,17 @@ test("scoped npm identity preserves the Mokly executable", async () => {
       "utf8",
     ),
   );
-  assert.equal(lock.name, packageJson.name);
-  assert.equal(lock.packages[""].name, packageJson.name);
-  assert.deepEqual(lock.packages[""].bin, { mokly: "dist/cli/bin.js" });
+  assert.equal(lock.name, "mokly-workspace");
+  assert.equal(lock.version, undefined);
+  assert.equal(lock.packages[""].name, "mokly-workspace");
+  assert.equal(lock.packages[cliLockKey()].version, packageJson.version);
+  assert.deepEqual(lock.packages[cliLockKey()].bin, {
+    mokly: "dist/cli/bin.js",
+  });
+  assert.deepEqual(lock.packages["node_modules/@mokly/mokly"], {
+    resolved: CLI_PACKAGE_PATH,
+    link: true,
+  });
 });
 
 test("release-please owns the Node manifest and first release state", async () => {
@@ -88,11 +97,16 @@ test("release-please owns the Node manifest and first release state", async () =
   assert.deepEqual(config.packages[CLI_PACKAGE_PATH]["extra-files"], [
     {
       type: "generic",
-      path: "docs/guides/start/install.md",
+      path: "/docs/guides/start/install.md",
     },
     {
       type: "generic",
-      path: "docs/guides/ci/github-action.md",
+      path: "/docs/guides/ci/github-action.md",
+    },
+    {
+      type: "json",
+      path: "/package-lock.json",
+      jsonpath: "$['packages']['packages/mokly']['version']",
     },
   ]);
   const packageVersion = JSON.parse(
@@ -130,7 +144,13 @@ test("release-please owns the Node manifest and first release state", async () =
       {
         type: "json",
         path: "/package-lock.json",
-        jsonpath: "$['packages']['']['dependencies']['@mokly/viewer']",
+        jsonpath:
+          "$['packages']['packages/mokly']['dependencies']['@mokly/viewer']",
+      },
+      {
+        type: "json",
+        path: "/package-lock.json",
+        jsonpath: "$['packages']['packages/viewer']['version']",
       },
     ],
   });

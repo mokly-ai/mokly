@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
-import { startCatalogueServer } from "../../dist/server/http.js";
-import type { RunningServer } from "../../dist/server/http_types.js";
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import { startCatalogueServer } from "../../packages/mokly/dist/server/http.js";
+import type { RunningServer } from "../../packages/mokly/dist/server/http_types.js";
 import type * as Geometry from "../../packages/viewer/dist/client/component_geometry.js";
 import { componentEntrySource } from "../helpers/component_fixture.js";
 import {

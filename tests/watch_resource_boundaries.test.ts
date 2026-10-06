@@ -3,11 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { ResourceWatcher } from "../dist/server/resource_watcher.js";
-import { serve } from "../dist/server/serve.js";
-import { discoverWatchResources } from "../dist/server/watch_resources.js";
-import { ChokidarWatcherFactory } from "../dist/server/watcher.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { ResourceWatcher } from "../packages/mokly/dist/server/resource_watcher.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
+import { discoverWatchResources } from "../packages/mokly/dist/server/watch_resources.js";
+import { ChokidarWatcherFactory } from "../packages/mokly/dist/server/watcher.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { mockChokidar } from "./helpers/chokidar_watcher.js";

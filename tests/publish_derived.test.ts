@@ -3,10 +3,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { exportCatalogue } from "../dist/export/run.js";
-import { publishCatalogue } from "../dist/publish/run.js";
-import type { UploadManifest } from "../dist/publish/types.js";
-import { NodeGitCommandRunner } from "../dist/review/git.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
+import { publishCatalogue } from "../packages/mokly/dist/publish/run.js";
+import type { UploadManifest } from "../packages/mokly/dist/publish/types.js";
+import { NodeGitCommandRunner } from "../packages/mokly/dist/review/git.js";
 
 import { derivedFixture } from "./helpers/derived_fixture.js";
 import { directoryFiles } from "./helpers/export_fixture.js";

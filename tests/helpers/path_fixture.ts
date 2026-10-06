@@ -1,16 +1,28 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { loadConfig } from "../../dist/config/load.js";
+import {
+  compileCatalogue,
+  type Compilation,
+} from "../../packages/mokly/dist/build/compile.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
 
 import { repositoryRoot } from "./fixture.js";
+
+type PathFixtureResult = {
+  root: string;
+  write: (name: string, content: string) => Promise<void>;
+  remove: () => Promise<void>;
+  config: () => Promise<ResolvedConfig>;
+  compile: () => Promise<Compilation>;
+};
 
 /** An isolated consumer of the path-based API, with no legacy test adapters. */
 export async function pathFixture(
   files: Readonly<Record<string, string>>,
   config = '{mockupsDir: "generated", roots: [{dir: "specs"}], generatedOutput: "committed"}',
-) {
+): Promise<PathFixtureResult> {
   const parent = path.join(repositoryRoot, ".context");
   await fs.mkdir(parent, { recursive: true });
   const root = await fs.mkdtemp(path.join(parent, "paths-"));

@@ -7,8 +7,8 @@ import test from "node:test";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
-import { bootstrapFixture } from "./helpers/bootstrap_fixture.js";
 import { repositoryRoot } from "./helpers/fixture.js";
+import { releaseRefsFixture } from "./helpers/release_refs_fixture.js";
 
 const execute = promisify(execFile);
 interface ReleaseSelection {
@@ -160,7 +160,7 @@ async function refsModule(): Promise<{
 }
 
 async function taggedFixture(t: test.TestContext) {
-  const fixture = await bootstrapFixture(t);
+  const fixture = await releaseRefsFixture(t);
   await fixture.git("tag", "v0.8.0");
   await fixture.git("tag", "-a", "viewer-v0.1.0", "-m", "test viewer tag");
   const remote = path.join(path.dirname(fixture.root), "origin.git");

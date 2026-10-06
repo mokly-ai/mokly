@@ -5,7 +5,7 @@ import path from "node:path";
 import test, { type TestContext } from "node:test";
 import { pathToFileURL } from "node:url";
 
-import { exportCatalogue } from "../dist/export/run.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
 
 import {
   createExportFixture,

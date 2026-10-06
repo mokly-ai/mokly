@@ -3,7 +3,7 @@ import { performance } from "node:perf_hooks";
 
 import { expect, test } from "@playwright/test";
 
-import { scopeModule } from "../../dist/build/styles/modules.js";
+import { scopeModule } from "../../packages/mokly/dist/build/styles/modules.js";
 import { pluginModuleOutput } from "../helpers/css_module_plugin_output.js";
 
 const seed = 0x30c55e1;

@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { Compilation } from "../dist/build/compile.js";
-import type { ResolvedConfig } from "../dist/config/types.js";
-import { compareReview } from "../dist/review/compare.js";
-import { validateComponentReviewSources } from "../dist/review/component_result_sources.js";
+import type { Compilation } from "../packages/mokly/dist/build/compile.js";
+import type { ResolvedConfig } from "../packages/mokly/dist/config/types.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import { validateComponentReviewSources } from "../packages/mokly/dist/review/component_result_sources.js";
 import { parseReviewResult } from "../packages/viewer/dist/data.js";
 
 import {

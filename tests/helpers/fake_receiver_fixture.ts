@@ -1,5 +1,8 @@
-import { bundleUpload } from "../../dist/publish/bundle.js";
-import type { PlanResponse, UploadManifest } from "../../dist/publish/types.js";
+import { bundleUpload } from "../../packages/mokly/dist/publish/bundle.js";
+import type {
+  PlanResponse,
+  UploadManifest,
+} from "../../packages/mokly/dist/publish/types.js";
 
 import { ownershipMarkerFromFiles } from "./ownership_marker.js";
 

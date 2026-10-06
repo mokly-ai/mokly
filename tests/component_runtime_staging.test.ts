@@ -2,17 +2,17 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
 import {
   componentRuntime,
   type ComponentRuntime,
-} from "../dist/build/component_runtime.js";
-import { loadConfig } from "../dist/config/load.js";
-import type { ChildHandle } from "../dist/server/child_process.js";
-import { serve } from "../dist/server/serve.js";
-import { ReadyProcessSupervisor } from "../dist/server/supervisor.js";
-import type { ChildCommand } from "../dist/server/update_messages.js";
-import type { WatchEvent } from "../dist/server/watch_events.js";
+} from "../packages/mokly/dist/build/component_runtime.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import type { ChildHandle } from "../packages/mokly/dist/server/child_process.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
+import { ReadyProcessSupervisor } from "../packages/mokly/dist/server/supervisor.js";
+import type { ChildCommand } from "../packages/mokly/dist/server/update_messages.js";
+import type { WatchEvent } from "../packages/mokly/dist/server/watch_events.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";

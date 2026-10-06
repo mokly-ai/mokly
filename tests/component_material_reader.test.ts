@@ -4,11 +4,11 @@ import { test } from "node:test";
 import {
   runWithTimings,
   type TimingEvent,
-} from "../dist/diagnostics/timings.js";
-import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
-import { ComponentMaterialReader } from "../dist/review/component_resources.js";
-import { compareComponentView } from "../dist/review/component_view.js";
-import { ResourceComparison } from "../dist/review/resource_comparison.js";
+} from "../packages/mokly/dist/diagnostics/timings.js";
+import { ComponentDependencyPolicy } from "../packages/mokly/dist/review/component_metadata.js";
+import { ComponentMaterialReader } from "../packages/mokly/dist/review/component_resources.js";
+import { compareComponentView } from "../packages/mokly/dist/review/component_view.js";
+import { ResourceComparison } from "../packages/mokly/dist/review/resource_comparison.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";

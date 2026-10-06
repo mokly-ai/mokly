@@ -1,6 +1,6 @@
 import type { ManifestV8 } from "@mokly/viewer/data";
 
-import type { ResolvedConfig } from "../../dist/config/types.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
 
 /** Fingerprint pinned authored inputs and the manifest's complete source inventory. */
 export function capturePublicationInputs(

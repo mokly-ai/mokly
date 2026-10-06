@@ -5,8 +5,8 @@ import test from "node:test";
 
 import koffi from "koffi";
 
-import { fileExportOperations } from "../dist/export/operations.js";
-import { ExportTransaction } from "../dist/export/transaction.js";
+import { fileExportOperations } from "../packages/mokly/dist/export/operations.js";
+import { ExportTransaction } from "../packages/mokly/dist/export/transaction.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

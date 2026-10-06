@@ -4,15 +4,15 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { checkCompilation } from "../dist/build/check.js";
-import { compileCatalogue } from "../dist/build/compile.js";
-import { loadConsumerGraph } from "../dist/build/load_graph.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
+import { checkCompilation } from "../packages/mokly/dist/build/check.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { loadConsumerGraph } from "../packages/mokly/dist/build/load_graph.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 import {
   runWithTimings,
   type TimingEvent,
-} from "../dist/diagnostics/timings.js";
+} from "../packages/mokly/dist/diagnostics/timings.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import {
@@ -154,7 +154,7 @@ test("stylesheet output and inventory repeat byte-identically", async (t) => {
   assert.equal(first.outputs.get(entryStyle), second.outputs.get(entryStyle));
   assert.deepEqual(first.manifest.sourceFiles, second.manifest.sourceFiles);
   const child =
-    'import { loadConfig } from "./dist/config/load.js"; import { compileCatalogue } from "./dist/build/compile.js"; const result = await compileCatalogue(await loadConfig(process.argv[1])); process.stdout.write(result.outputs.get("mokly-generated/styles/entries/fixture.mockup.tsx.css"));';
+    'import { loadConfig } from "./packages/mokly/dist/config/load.js"; import { compileCatalogue } from "./packages/mokly/dist/build/compile.js"; const result = await compileCatalogue(await loadConfig(process.argv[1])); process.stdout.write(result.outputs.get("mokly-generated/styles/entries/fixture.mockup.tsx.css"));';
   const run = () =>
     execFileSync(
       process.execPath,

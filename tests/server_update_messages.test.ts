@@ -5,7 +5,7 @@ import {
   childUpdateMessage,
   parseChildUpdateMessage,
   parseCatalogueCompleteMessage,
-} from "../dist/server/update_messages.js";
+} from "../packages/mokly/dist/server/update_messages.js";
 
 test("watch update messages preserve available and unavailable route state", () => {
   assert.deepEqual(childUpdateMessage(2, ["home"]), {

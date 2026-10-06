@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
 
-import { discoverEntries } from "../dist/config/entry_discovery.js";
-import { loadDocuments } from "../dist/documents/load.js";
+import { discoverEntries } from "../packages/mokly/dist/config/entry_discovery.js";
+import { loadDocuments } from "../packages/mokly/dist/documents/load.js";
 
 import { pathFixture } from "./helpers/path_fixture.js";
 

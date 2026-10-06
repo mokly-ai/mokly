@@ -6,7 +6,7 @@ import { gunzipSync } from "node:zlib";
 
 import { extract } from "tar-stream";
 
-import { ownedEntries } from "../../dist/export/ownership.js";
+import { ownedEntries } from "../../packages/mokly/dist/export/ownership.js";
 
 export async function archiveNames(
   compressed: Buffer,

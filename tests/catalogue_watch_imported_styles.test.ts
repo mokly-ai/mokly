@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import { setTimeout } from "node:timers/promises";
 
-import { serve } from "../dist/server/serve.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { version } from "./helpers/watched_catalogue.js";

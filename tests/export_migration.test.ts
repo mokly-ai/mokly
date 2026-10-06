@@ -3,8 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { EXPORT_MARKER } from "../dist/export/ownership.js";
-import { exportCatalogue } from "../dist/export/run.js";
+import { EXPORT_MARKER } from "../packages/mokly/dist/export/ownership.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
 
 import { directoryFiles } from "./helpers/export_fixture.js";
 import { createPreviewComparisonFixture } from "./helpers/preview_comparison_fixture.js";

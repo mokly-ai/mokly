@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { compareReview } from "../dist/review/compare.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
 import {
   affectedConsumerOrderKey,
   parseReviewResult,

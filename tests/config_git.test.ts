@@ -4,17 +4,17 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { FileSystemGeneratedOutputStore } from "../dist/build/output_store.js";
-import { ConfiguredGitCommandRunner } from "../dist/config/git.js";
-import { loadConfig } from "../dist/config/load.js";
-import { GitReviewAssetReader } from "../dist/review/assets.js";
-import { prepareReviewRepository } from "../dist/review/prepare.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { FileSystemGeneratedOutputStore } from "../packages/mokly/dist/build/output_store.js";
+import { ConfiguredGitCommandRunner } from "../packages/mokly/dist/config/git.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { GitReviewAssetReader } from "../packages/mokly/dist/review/assets.js";
+import { prepareReviewRepository } from "../packages/mokly/dist/review/prepare.js";
 import {
   baselineReaderForCommit,
   readOnlyRepositoryForCommit,
-} from "../dist/review/repository.js";
-import { RepositoryComponentChanges } from "../dist/server/component_changes.js";
+} from "../packages/mokly/dist/review/repository.js";
+import { RepositoryComponentChanges } from "../packages/mokly/dist/server/component_changes.js";
 
 import {
   createFixture,

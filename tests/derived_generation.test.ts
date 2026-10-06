@@ -2,13 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { setTimeout } from "node:timers/promises";
 
-import { BaselineError } from "../dist/baseline/errors.js";
-import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import { ConfiguredGitCommandRunner } from "../dist/config/git.js";
-import { GitRepositoryEvidence } from "../dist/review/git_evidence.js";
-import { RepositoryCatalogueChangeClassifier } from "../dist/server/component_changes.js";
-import { BackgroundBaseline } from "../dist/server/demand/baseline.js";
-import { BackgroundGeneration } from "../dist/server/demand/generation.js";
+import { BaselineError } from "../packages/mokly/dist/baseline/errors.js";
+import { prepareLiveRuntime } from "../packages/mokly/dist/build/live_runtime.js";
+import { ConfiguredGitCommandRunner } from "../packages/mokly/dist/config/git.js";
+import { GitRepositoryEvidence } from "../packages/mokly/dist/review/git_evidence.js";
+import { RepositoryCatalogueChangeClassifier } from "../packages/mokly/dist/server/component_changes.js";
+import { BackgroundBaseline } from "../packages/mokly/dist/server/demand/baseline.js";
+import { BackgroundGeneration } from "../packages/mokly/dist/server/demand/generation.js";
 
 import { GatedBaselineBuilder } from "./helpers/baseline_builders.js";
 import { derivedFixture } from "./helpers/derived_fixture.js";

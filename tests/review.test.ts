@@ -2,17 +2,17 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import type { Compilation } from "../dist/build/compile.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import type { Compilation } from "../packages/mokly/dist/build/compile.js";
 import {
   generatedBytes,
   generatedText,
   type GeneratedFile,
-} from "../dist/build/generated_file.js";
-import { loadConfig } from "../dist/config/load.js";
-import { renderReviewArtifact } from "../dist/review/artifact.js";
-import { compareReview } from "../dist/review/compare.js";
-import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
+} from "../packages/mokly/dist/build/generated_file.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { renderReviewArtifact } from "../packages/mokly/dist/review/artifact.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import type { ReadOnlyReviewRepository } from "../packages/mokly/dist/review/repository.js";
 import { generatedViews } from "../packages/viewer/dist/data.js";
 import type {
   ManifestScreen,

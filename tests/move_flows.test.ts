@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { compareReview } from "../dist/review/compare.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
 
 import { moveReviewFixture as componentReviewFixture } from "./helpers/move_review_fixture.js";
 

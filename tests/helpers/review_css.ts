@@ -1,10 +1,10 @@
 import { parse } from "parse5";
 
-import { analyzeStylesheetChange } from "../../src/review/css/analyze.js";
-import type { CssDocumentPair } from "../../src/review/css/document.js";
-import type { CssAnalysisOutcome } from "../../src/review/css/match_types.js";
-import { LightningCssRuleParser } from "../../src/review/css/rules.js";
-import type { CssRuleParser } from "../../src/review/css/types.js";
+import { analyzeStylesheetChange } from "../../packages/mokly/src/review/css/analyze.js";
+import type { CssDocumentPair } from "../../packages/mokly/src/review/css/document.js";
+import type { CssAnalysisOutcome } from "../../packages/mokly/src/review/css/match_types.js";
+import { LightningCssRuleParser } from "../../packages/mokly/src/review/css/rules.js";
+import type { CssRuleParser } from "../../packages/mokly/src/review/css/types.js";
 
 export const buttonDocument =
   '<!doctype html><button class="button">Save</button>';

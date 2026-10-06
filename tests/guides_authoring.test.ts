@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { generatedOutputMode } from "../dist/config/generated_output.js";
+import { generatedOutputMode } from "../packages/mokly/dist/config/generated_output.js";
 
 import { packageRoot } from "./helpers/fixture.js";
 import { GUIDES } from "./helpers/guides.js";

@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { PublishCancelledError } from "../dist/publish/errors.js";
+import { PublishCancelledError } from "../packages/mokly/dist/publish/errors.js";
 import {
   MAX_REQUEST_ATTEMPTS,
   RETRY_BASE_DELAY_MS,
   ReplanRequired,
   retryRequest,
   RetryableRequest,
-} from "../dist/publish/retry.js";
+} from "../packages/mokly/dist/publish/retry.js";
 
 const transportFailure =
   "[mokly/upload-failed] The catalogue upload did not complete. Check the endpoint and connection, then retry.";

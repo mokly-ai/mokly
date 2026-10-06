@@ -7,7 +7,7 @@ import {
   type RecoveryStorage,
   type ReloadLocation,
   type UpdateEventStream,
-} from "../dist/client/react_update_controller.js";
+} from "../packages/mokly/dist/client/react_update_controller.js";
 
 import { browseState } from "./helpers/browse_recovery_state.js";
 

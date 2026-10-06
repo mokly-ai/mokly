@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
 
-import { generatedBytes } from "../dist/build/generated_file.js";
-import { compareReview } from "../dist/review/compare.js";
-import { RepositorySelectedReview } from "../dist/review/selected.js";
+import { generatedBytes } from "../packages/mokly/dist/build/generated_file.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import { RepositorySelectedReview } from "../packages/mokly/dist/review/selected.js";
 import { selectedComparisonViews } from "../packages/viewer/src/shell/comparison_selection.js";
 
 import { movedCatalogueFixture } from "./helpers/move_catalogue.js";

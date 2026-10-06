@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
 
-import { readPublicCatalogue } from "../src/server/public_catalogue_model.js";
+import { readPublicCatalogue } from "../packages/mokly/src/server/public_catalogue_model.js";
 
 test("shell requests reuse only an unchanged validated public revision", () => {
   let bytes = fs.readFileSync(

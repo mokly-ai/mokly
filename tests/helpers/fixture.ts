@@ -5,7 +5,7 @@ import path from "node:path";
 export const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 
 /** Directory of the CLI package under test. */
-export const packageRoot = repositoryRoot;
+export const packageRoot = path.join(repositoryRoot, "packages/mokly");
 
 /** Built CLI executable for process and archive tests. */
 export const cliBinPath = path.join(packageRoot, "dist/cli/bin.js");

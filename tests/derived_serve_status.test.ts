@@ -3,23 +3,26 @@ import fs from "node:fs/promises";
 import test from "node:test";
 import { setTimeout } from "node:timers/promises";
 
-import { BaselineError } from "../dist/baseline/errors.js";
-import type { BaselineBuilder } from "../dist/baseline/types.js";
-import { FileSystemGeneratedOutputStore } from "../dist/build/output_store.js";
-import { FileSystemConfigLoader } from "../dist/config/load.js";
-import type { ResolvedConfig } from "../dist/config/types.js";
+import { BaselineError } from "../packages/mokly/dist/baseline/errors.js";
+import type { BaselineBuilder } from "../packages/mokly/dist/baseline/types.js";
+import { FileSystemGeneratedOutputStore } from "../packages/mokly/dist/build/output_store.js";
+import { FileSystemConfigLoader } from "../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../packages/mokly/dist/config/types.js";
 import {
   NodeCatalogueServerFactory,
   type CatalogueServerFactory,
-} from "../dist/server/factory.js";
+} from "../packages/mokly/dist/server/factory.js";
 import type {
   RunningServer,
   ServerOptions,
-} from "../dist/server/http_types.js";
-import { serve, type ServeDependencies } from "../dist/server/serve.js";
-import { NodeProcessSupervisorFactory } from "../dist/server/supervisor.js";
-import type { ChangesStatus } from "../dist/server/update_messages.js";
-import { ChokidarWatcherFactory } from "../dist/server/watcher.js";
+} from "../packages/mokly/dist/server/http_types.js";
+import {
+  serve,
+  type ServeDependencies,
+} from "../packages/mokly/dist/server/serve.js";
+import { NodeProcessSupervisorFactory } from "../packages/mokly/dist/server/supervisor.js";
+import type { ChangesStatus } from "../packages/mokly/dist/server/update_messages.js";
+import { ChokidarWatcherFactory } from "../packages/mokly/dist/server/watcher.js";
 
 import {
   GatedBaselineBuilder,

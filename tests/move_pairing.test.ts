@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { pairMoves } from "../src/review/moves/pair.js";
+import { pairMoves } from "../packages/mokly/src/review/moves/pair.js";
 
 import { moveEntry, moveSignals } from "./helpers/move_entries.js";
 

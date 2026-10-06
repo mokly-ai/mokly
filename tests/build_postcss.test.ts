@@ -4,9 +4,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { loadConsumerGraph } from "../dist/build/load_graph.js";
-import { loadConfig } from "../dist/config/load.js";
-import { serve } from "../dist/server/serve.js";
+import { loadConsumerGraph } from "../packages/mokly/dist/build/load_graph.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { removeFixture } from "./helpers/fixture.js";
@@ -193,8 +193,8 @@ test("PostCSS outputs agree across two separate consumer processes", async (t) =
     path.join(fixture.root, "postcss.config.mjs"),
     'export default { plugins: [{ postcssPlugin: "colors", Once(root) { root.walkRules(rule => rule.append({ prop: "padding", value: "8px" })); } }] };',
   );
-  const script = `import { compileCatalogue } from ${JSON.stringify(new URL("../dist/build/compile.js", import.meta.url).href)};
-    import { loadConfig } from ${JSON.stringify(new URL("../dist/config/load.js", import.meta.url).href)};
+  const script = `import { compileCatalogue } from ${JSON.stringify(new URL("../packages/mokly/dist/build/compile.js", import.meta.url).href)};
+    import { loadConfig } from ${JSON.stringify(new URL("../packages/mokly/dist/config/load.js", import.meta.url).href)};
     const compiled = await compileCatalogue(await loadConfig(${JSON.stringify(fixture.root)}));
     process.stdout.write(compiled.outputs.get(${JSON.stringify(entryStyle)}));`;
   const output = () =>

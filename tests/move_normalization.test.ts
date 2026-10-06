@@ -3,8 +3,8 @@ import test from "node:test";
 
 import type { ManifestEntry } from "@mokly/viewer/data";
 
-import { normalizeReviewPair } from "../src/review/ignore.js";
-import { catalogueLinkNormalizer } from "../src/review/moves/links.js";
+import { normalizeReviewPair } from "../packages/mokly/src/review/ignore.js";
+import { catalogueLinkNormalizer } from "../packages/mokly/src/review/moves/links.js";
 
 function page(path: string): ManifestEntry {
   return {

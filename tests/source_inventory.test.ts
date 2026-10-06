@@ -3,13 +3,13 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { assertFreshSourceInventory } from "../dist/build/source_freshness.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { isPublicStaticFile } from "../dist/config/public_files.js";
-import { FileSystemReviewAssetReader } from "../dist/review/assets.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { assertFreshSourceInventory } from "../packages/mokly/dist/build/source_freshness.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { isPublicStaticFile } from "../packages/mokly/dist/config/public_files.js";
+import { FileSystemReviewAssetReader } from "../packages/mokly/dist/review/assets.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";

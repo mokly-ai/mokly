@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { SelectedAssetReader } from "../dist/review/evidence_assets.js";
+import { SelectedAssetReader } from "../packages/mokly/dist/review/evidence_assets.js";
 
 test("resource hints can use filenames inherited by ordinary IPC objects", async () => {
   let reads = 0;

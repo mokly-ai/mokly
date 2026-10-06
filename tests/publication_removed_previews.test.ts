@@ -3,12 +3,12 @@ import test from "node:test";
 
 import type { ManifestPage, ReviewResult } from "@mokly/viewer/data";
 
-import { MoklyError } from "../dist/errors.js";
+import { MoklyError } from "../packages/mokly/dist/errors.js";
 import {
   publicationComparisonMetadata,
   staticRemovedPreviews,
-} from "../dist/publication/removed_previews.js";
-import { advertisePublicationPreview } from "../dist/publication/shell_previews.js";
+} from "../packages/mokly/dist/publication/removed_previews.js";
+import { advertisePublicationPreview } from "../packages/mokly/dist/publication/shell_previews.js";
 
 const page: ManifestPage = {
   declaredDependencies: [],

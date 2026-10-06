@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { BaselineCommandError } from "../dist/baseline/errors.js";
+import { BaselineCommandError } from "../packages/mokly/dist/baseline/errors.js";
 import {
   isCancellation,
   markCancellation,
   MoklyError,
-} from "../dist/errors.js";
-import { withPreInstallationCancellation } from "../dist/export/error.js";
+} from "../packages/mokly/dist/errors.js";
+import { withPreInstallationCancellation } from "../packages/mokly/dist/export/error.js";
 
 test("cancellation classification uses only explicit marks and AbortError", () => {
   const marked = new MoklyError("export-invalid", "cancelled", {

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
-import { projectCatalogue } from "../dist/catalogue/projection.js";
+import { projectCatalogue } from "../packages/mokly/dist/catalogue/projection.js";
 import type { CatalogueRecord } from "../packages/viewer/dist/catalogue/types.js";
 import {
   projectScopedCatalogue,

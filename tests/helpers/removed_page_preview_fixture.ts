@@ -5,16 +5,37 @@ import type { TestContext } from "node:test";
 import type {
   HistoricalManifest,
   HistoricalManifestPage,
+  ManifestV8,
+  ManifestPage,
 } from "@mokly/viewer/data";
 
-import { loadConfig } from "../../dist/config/load.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
 import type {
   BaselineReader,
   GitFile,
   GitFileKind,
-} from "../../dist/review/git.js";
+} from "../../packages/mokly/dist/review/git.js";
 
-import { createFixture, removeFixture } from "./fixture.js";
+import { createFixture, removeFixture, type TestFixture } from "./fixture.js";
+
+type RemovedPagePreviewFixtureResult = TestFixture & {
+  batches: string[][];
+  baseline: ManifestV8;
+  config: ResolvedConfig;
+  files: Map<string, BaselineFile>;
+  page: ManifestPage;
+  reader: BaselineReader;
+  source: {
+    movedEntries: never[];
+    baseline: ManifestV8;
+    baseCommit: string;
+    baseRef: string;
+    changedEntries: string[];
+    removedEntries: { entry: ManifestPage; folderTitles: never[] }[];
+    schemaVersion: 2;
+  };
+};
 
 export const PAGE_COMMIT = "b".repeat(40);
 export const PAGE_ROUTE = "guide/index.html";
@@ -24,7 +45,9 @@ interface BaselineFile {
   kind: GitFileKind;
 }
 
-export async function removedPagePreviewFixture(t: TestContext) {
+export async function removedPagePreviewFixture(
+  t: TestContext,
+): Promise<RemovedPagePreviewFixtureResult> {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);

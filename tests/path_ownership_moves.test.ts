@@ -3,8 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { writeCompilation } from "../dist/build/transaction.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
 
 import { pathFixture, pageSource } from "./helpers/path_fixture.js";
 
@@ -54,7 +54,7 @@ test("prior manifest proof is exact, config-scoped and invalidated when metadata
   );
   const after = await fixture.config();
   const { isOwned, generatedHeader } =
-    await import("../dist/build/ownership.js");
+    await import("../packages/mokly/dist/build/ownership.js");
   const owned = path.join(fixture.root, "generated/account/index.html");
   assert.equal(isOwned(owned, after), true);
   await fixture.write(

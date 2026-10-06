@@ -3,12 +3,12 @@ import test from "node:test";
 
 import type { ManifestV8 } from "@mokly/viewer/data";
 
-import type { ReviewAssetReader } from "../src/review/assets.js";
-import { ComponentDependencyPolicy } from "../src/review/component_metadata.js";
-import { ComponentMaterialReader } from "../src/review/component_resources.js";
-import { compareComponentView } from "../src/review/component_view.js";
-import { catalogueLinkNormalizer } from "../src/review/moves/links.js";
-import { ResourceComparison } from "../src/review/resource_comparison.js";
+import type { ReviewAssetReader } from "../packages/mokly/src/review/assets.js";
+import { ComponentDependencyPolicy } from "../packages/mokly/src/review/component_metadata.js";
+import { ComponentMaterialReader } from "../packages/mokly/src/review/component_resources.js";
+import { compareComponentView } from "../packages/mokly/src/review/component_view.js";
+import { catalogueLinkNormalizer } from "../packages/mokly/src/review/moves/links.js";
+import { ResourceComparison } from "../packages/mokly/src/review/resource_comparison.js";
 
 const html =
   '<html><head><link rel="stylesheet" href="../style.css"></head><body><a href="../target/index.html" data-mokly-link="target">Target</a></body></html>';

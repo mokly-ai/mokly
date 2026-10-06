@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { loadConfig } from "../../dist/config/load.js";
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
 import { removeFixture } from "../helpers/fixture.js";
 import {
   entryStyle,

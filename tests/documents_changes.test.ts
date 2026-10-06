@@ -3,19 +3,19 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { generatedText } from "../dist/build/generated_file.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { removedManifestEntries } from "../dist/registry/changes.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { generatedText } from "../packages/mokly/dist/build/generated_file.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { removedManifestEntries } from "../packages/mokly/dist/registry/changes.js";
 import {
   RepositoryRemovedPagePreview,
   captureRemovedPagePreviews,
   packageRemovedPagePreviews,
-} from "../dist/review/page_preview.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedPaths } from "../dist/server/changed.js";
-import { readCatalogueChanges } from "../dist/server/component_changes.js";
+} from "../packages/mokly/dist/review/page_preview.js";
+import { committedReviewRepository } from "../packages/mokly/dist/review/repository.js";
+import { computeChangedPaths } from "../packages/mokly/dist/server/changed.js";
+import { readCatalogueChanges } from "../packages/mokly/dist/server/component_changes.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";

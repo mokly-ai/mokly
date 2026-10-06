@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { compareReview } from "../dist/review/compare.js";
-import { computeCatalogueChanges } from "../dist/server/changed.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import { computeCatalogueChanges } from "../packages/mokly/dist/server/changed.js";
 
 import { movedCatalogueFixture } from "./helpers/move_catalogue.js";
 

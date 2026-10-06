@@ -4,9 +4,9 @@ import test from "node:test";
 import type {
   ChildFactory,
   ChildHandle,
-} from "../dist/server/child_process.js";
-import { ReadyProcessSupervisor } from "../dist/server/supervisor.js";
-import type { ChildCommand } from "../dist/server/update_messages.js";
+} from "../packages/mokly/dist/server/child_process.js";
+import { ReadyProcessSupervisor } from "../packages/mokly/dist/server/supervisor.js";
+import type { ChildCommand } from "../packages/mokly/dist/server/update_messages.js";
 
 test("supervisor waits for readiness and shuts down before restart", async () => {
   const factory = new ResponsiveChildFactory();

@@ -3,10 +3,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { loadConfig } from "../dist/config/load.js";
-import { extractCssReferences } from "../dist/css_references.js";
-import { classifyResourceUrl } from "../dist/resource_url.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { extractCssReferences } from "../packages/mokly/dist/css_references.js";
+import { classifyResourceUrl } from "../packages/mokly/dist/resource_url.js";
 
 import { removeFixture } from "./helpers/fixture.js";
 import { entryStyle, styleFixture } from "./helpers/imported_styles_fixture.js";

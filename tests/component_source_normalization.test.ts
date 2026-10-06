@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 
-import { normalizeComponentSource } from "../dist/build/component_source.js";
+import { normalizeComponentSource } from "../packages/mokly/dist/build/component_source.js";
 import { validateComponentSource } from "../packages/viewer/dist/components/source.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";

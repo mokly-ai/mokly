@@ -3,13 +3,13 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileRuntime } from "../dist/build/compile_runtime.js";
-import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import { loadConfig } from "../dist/config/load.js";
+import { compileRuntime } from "../packages/mokly/dist/build/compile_runtime.js";
+import { prepareLiveRuntime } from "../packages/mokly/dist/build/live_runtime.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 import {
   componentRuntimeMessage,
   parseRuntimeMessage,
-} from "../dist/server/controls/runtime_ipc.js";
+} from "../packages/mokly/dist/server/controls/runtime_ipc.js";
 
 import { removeFixture } from "./helpers/fixture.js";
 import { entryStyle, styleFixture } from "./helpers/imported_styles_fixture.js";

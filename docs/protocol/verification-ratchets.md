@@ -36,7 +36,7 @@ relative to the comparison commit:
 - `scripts/`.
 
 The CLI roots derive from `CLI_PACKAGE_PATH` in `scripts/package/layout.mjs`.
-Before the move, that path is `.`; the roots follow the current package layout.
+Its current value is `packages/mokly`; the roots follow that package layout.
 Changing the layout path updates both CLI roots without changing the rules.
 
 Normalize CRLF to LF and count LF-delimited physical lines; a final LF does not

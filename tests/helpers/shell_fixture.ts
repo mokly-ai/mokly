@@ -4,7 +4,7 @@ import {
   homePage as renderHomePage,
   notFoundPage as renderNotFoundPage,
   viewPage as renderViewPage,
-} from "../../dist/server/pages.js";
+} from "../../packages/mokly/dist/server/pages.js";
 import { parseViewHref } from "../../packages/viewer/dist/data.js";
 import type { ManifestV8 } from "../../packages/viewer/dist/registry/types.js";
 import type { Catalogue } from "../../packages/viewer/dist/shell/catalogue.js";

@@ -4,10 +4,10 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
-import { serve } from "../../dist/server/serve.js";
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import { serve } from "../../packages/mokly/dist/server/serve.js";
 import type { ReviewResultV5 } from "../../packages/viewer/dist/review/component_types.js";
 import { componentEntrySource } from "../helpers/component_fixture.js";
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";

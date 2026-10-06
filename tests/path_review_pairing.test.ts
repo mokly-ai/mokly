@@ -6,12 +6,12 @@ import test from "node:test";
 import type { ManifestDocument, ManifestV8 } from "@mokly/viewer/data";
 import { parseReviewResult } from "@mokly/viewer/data";
 
-import { entryChanges } from "../dist/catalogue/changes.js";
-import { exportCatalogue } from "../dist/export/run.js";
-import { removedManifestEntries } from "../dist/registry/changes.js";
-import { compareReview } from "../dist/review/compare.js";
-import { classifyComponents } from "../dist/review/component_classification.js";
-import { entryPairs } from "../dist/review/component_metadata.js";
+import { entryChanges } from "../packages/mokly/dist/catalogue/changes.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
+import { removedManifestEntries } from "../packages/mokly/dist/registry/changes.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import { classifyComponents } from "../packages/mokly/dist/review/component_classification.js";
+import { entryPairs } from "../packages/mokly/dist/review/component_metadata.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
 import { workspaceData } from "../packages/viewer/src/shell/workspace_data.js";
 

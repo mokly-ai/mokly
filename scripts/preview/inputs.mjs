@@ -1,13 +1,16 @@
 import crypto from "node:crypto";
 import path from "node:path";
 
-import { isOwned } from "../../dist/build/ownership.js";
+import { isOwned } from "../../packages/mokly/dist/build/ownership.js";
 import {
   publicationFiles,
   publicationInput,
   readPublicationFile,
-} from "../../dist/publication/files.js";
-import { MANIFEST_NAME, parseManifest } from "../../dist/registry/manifest.js";
+} from "../../packages/mokly/dist/publication/files.js";
+import {
+  MANIFEST_NAME,
+  parseManifest,
+} from "../../packages/mokly/dist/registry/manifest.js";
 
 /** Capture metadata and its exact input digest together, including private helpers. */
 export async function capturePublicationInputs(config, excludedRoots) {

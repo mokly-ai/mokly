@@ -2,11 +2,11 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import type { Compilation } from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { ConfiguredGitCommandRunner } from "../../dist/config/git.js";
-import type { ResolvedConfig } from "../../dist/config/types.js";
-import { CommittedRepository } from "../../dist/review/git.js";
+import type { Compilation } from "../../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { ConfiguredGitCommandRunner } from "../../packages/mokly/dist/config/git.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
+import { CommittedRepository } from "../../packages/mokly/dist/review/git.js";
 
 import {
   branchPointSources,

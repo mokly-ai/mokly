@@ -1,8 +1,8 @@
 import type {
   ExportOwnership,
   ExportOwnershipEntry,
-} from "../../dist/export/ownership.js";
-import type { UploadManifest } from "../../dist/publish/types.js";
+} from "../../packages/mokly/dist/export/ownership.js";
+import type { UploadManifest } from "../../packages/mokly/dist/publish/types.js";
 
 import { FakeReceiverRejection } from "./fake_receiver_archive.js";
 

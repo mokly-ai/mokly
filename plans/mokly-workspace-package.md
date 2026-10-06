@@ -1,8 +1,9 @@
 # Move `@mokly/mokly` Into `packages/mokly`
 
-Status: Active. Milestones 1 and 2 are complete. Milestone 3 is next and waits
-for the coordinating reviewer to approve Milestone 2. The reviewer owns
-Milestone 4.
+Status: Active. Milestones 1 and 2 are complete. Milestone 3 implementation and
+verification are complete; its commit and push are next. The coordinating
+reviewer owns Milestone 4. Maintainers must merge the pending release PR #127
+before this branch.
 
 Make the CLI package a real npm workspace member at `packages/mokly`, beside
 `packages/viewer`. The repository root becomes a private workspace root that
@@ -11,19 +12,21 @@ and the examples. The published `@mokly/mokly` tarball keeps the same file
 layout, the same `bin`, the same exports, and the same shipped guides and
 protocol documents. Created 2026-10-05.
 
-## Current Layout
+## Pre-move Layout
 
 - The root `package.json` is the published `@mokly/mokly` package. It compiles
   `src/` to `dist/`, exposes `bin: ./dist/cli/bin.js`, and ships `dist`,
   `docs/guides`, `docs/protocol`, `README.md`, `CHANGELOG.md`, and `LICENSE`.
 - `packages/viewer` is the only workspace member. The root depends on its exact
   version, and `node_modules/@mokly/viewer` is a workspace link.
-- `examples/basic`, the 89 tests that import `@mokly/mokly`, and the synthetic
-  test consumers under `.context/` resolve `@mokly/mokly` through Node's
-  package self-reference from the root `package.json`.
+- `examples/basic`, the 17 test and helper modules with direct imports of
+  `@mokly/mokly`, and the synthetic test consumers under `.context/` resolve
+  `@mokly/mokly` through Node's package self-reference from the root
+  `package.json`.
 - 553 test files import the built CLI through relative `../dist/...` or
-  `../../dist/...` specifiers. 43 test files and three `scripts/large/*.d.mts`
-  declarations import `../src/...` sources. 30 test files join
+  `../../dist/...` specifiers. 42 test files and two `scripts/large/*.d.mts`
+  declarations import root `src/` sources. Two `scripts/preview/*.d.mts`
+  declarations import root `dist/`. 30 test files join
   `repositoryRoot` with `dist/...` or `src/...`.
 - `scripts/package/pair.mjs` packs the CLI from the repository root.
   `scripts/package/manifest.mjs` validates the lockfile root entry.
@@ -36,8 +39,8 @@ protocol documents. Created 2026-10-05.
   source roots and `""` and `packages/viewer` as package roots.
   `xtask/unused-internal-exports.txt` lists one `src/...` path.
 - `tests/markdown_links.test.ts` validates every relative link in `docs/**` and
-  in every `README.md`. The 18 READMEs under `src/` contain 93 links that
-  climb two levels to `docs/`, `packages/viewer/`, or `plans/`.
+  in every `README.md`. The 18 READMEs under `src/` contain 93 upward links
+  to shared docs, the viewer, plans, the public Action, or another source module.
 - `tests/helpers/example_baseline.ts` copies the root manifest, lockfile,
   tsconfigs, `scripts/copy-assets.mjs`, `packages/viewer`, and `src` into an
   isolated repository, because derived baselines run `npm ci`, `npm run build`,
@@ -51,7 +54,7 @@ protocol documents. Created 2026-10-05.
    named `mokly-workspace` with `"private": true`,
    `workspaces: ["packages/viewer", "packages/mokly"]`, the repository-wide
    scripts, every `devDependencies` entry, `overrides`, `packageManager`, and
-   `engines`. The package `package.json` owns `name`, `version`, `description`,
+   `engines`. Both manifests retain `type: "module"`. The package `package.json` owns `name`, `version`, `description`,
    `license`, `author`, `homepage`, `repository` with
    `directory: "packages/mokly"`, `bugs`, `engines`, `bin`, `exports`, `types`,
    `files`, `publishConfig`, `dependencies`, `peerDependencies`, and the
@@ -84,7 +87,12 @@ protocol documents. Created 2026-10-05.
    tags stay `vX.Y.Z`. The CLI `extra-files` become root-anchored
    `/docs/guides/start/install.md` and `/docs/guides/ci/github-action.md`. The
    viewer's lockfile `extra-files` JSONPath becomes
-   `$['packages']['packages/mokly']['dependencies']['@mokly/viewer']`. The
+   `$['packages']['packages/mokly']['dependencies']['@mokly/viewer']`. Add
+   explicit root-lockfile JSON updaters for the CLI's
+   `$['packages']['packages/mokly']['version']` and the viewer's
+   `$['packages']['packages/viewer']['version']`. Package-local strategies do
+   not own the root lockfile, and its existing extra-file updater suppresses
+   the workspace plugin's automatic root updater. The
    release workflow reads `packages/mokly--release_created` and
    `packages/mokly--tag_name`. `CHANGELOG.md` moves with the package.
 8. **Historical bootstrap stays.** `scripts/release/bootstrap*.mjs`,
@@ -98,9 +106,11 @@ protocol documents. Created 2026-10-05.
    one-paragraph summary, Packages table, Documentation, Develop Mokly with the
    supported Node range and the `.node-version` link, Key code, Plans, and
    License. Tests that assert README sentences follow the sentence.
-10. **Historical records stay.** Path mentions inside `plans/*.md` other than
-    this plan, and inside `docs/reviews/*.md`, are dated records and
-    stay unchanged. Current docs, READMEs, and protocol documents change.
+10. **Historical records stay.** Wording is frozen; relative link targets are
+    maintained when files move. In `docs/reviews/*.md`, change only relative
+    targets for moved files or moved README sections. Preserve link text and
+    every other character. Other historical `plans/*.md` stay unchanged.
+    Current docs, READMEs, and protocol documents change.
 11. **Ratchet roots.** The source roots become `packages/mokly/src`,
     `packages/mokly/scripts`, `packages/viewer/src`, `packages/viewer/scripts`,
     and `scripts`. Every viewer script is already at or below 200 lines, so the
@@ -135,7 +145,7 @@ packages/mokly/
 
 Root scripts after the move:
 
-- `build`: `npm run -s build --workspace @mokly/viewer && npm run -s build --workspace @mokly/mokly`
+- `build`: `npm run -s build --workspace @mokly/viewer && npm run -s build --workspace @mokly/mokly && npm rebuild --workspace @mokly/mokly --ignore-scripts`
 - `dev`, `example:build`, `example:check`, and `playwright.config.ts` run
   `node packages/mokly/dist/cli/bin.js ...`
 - `typecheck:prepared` adds `npm run typecheck --workspace @mokly/mokly`
@@ -161,12 +171,25 @@ modules exactly as `scripts/copy-assets.mjs` does today.
   expected deletions are the renames listed in Milestone 3 and the root
   `tsconfig.build.json`.
 
+## Merge prerequisites
+
+Maintainers must merge the pending
+[release PR #127](https://github.com/mokly-ai/mokly/pull/127) before this branch.
+That releases the unreleased root-path changes under the old `.` configuration.
+Release Please attributes a non-root package only to commits that change files
+under its path, so the move can remove those earlier CLI commits from the
+regenerated release PR. If this branch merges first, the next release PR needs
+a manual `release-as` and a changelog correction. This is a maintainer action,
+not branch implementation work.
+
 ## Post-merge follow-up (non-blocking)
 
 - After the first `main` push, confirm the Release Please pull request bumps
   `packages/mokly/package.json`, `packages/mokly/CHANGELOG.md`, the root
   lockfile entries, and the two guide `extra-files`, and that the CLI tag is
   still `vX.Y.Z`.
+- Check all three root-lockfile fields in that PR: CLI workspace version,
+  viewer workspace version, and the CLI's exact viewer dependency edge.
 - After the next publish, confirm the npm provenance statement shows
   `packages/mokly` as the repository directory and that the mokly-cloud guide
   renderer still finds `docs/guides` in the tarball.
@@ -310,87 +333,248 @@ at the root. The gate stays green.
 
 Perform the move and every path update in one commit so the gate never breaks.
 
-- [ ] `git mv src packages/mokly/src`, `git mv CHANGELOG.md packages/mokly/CHANGELOG.md`,
+- [x] Integrate main's `781da7a` output-lock fix before moving files. Preserve
+      all 12 upstream paths and the approved replacement of the old directory
+      walk test. Review the two-parent merge and its remerge diff.
+- [x] After the current complete gate finishes, add explicit root-lockfile JSON
+      version updaters for both package roots. Test a simulated real release
+      update across all three lockfile fields and prove failure without the
+      version updaters. Update release tests, protocol rationale, Decision 7,
+      and the post-merge check. Run the complete repository, package, and unit
+      suites after the batch. Record that the pre-batch complete gate covers
+      browser and hydration. Record this split in the commit body.
+- [x] After the current complete gate finishes, fix root-run CLI commands in
+      the example and large-fixture READMEs. Update the example's CLI source
+      path wording. Audit all non-historical Markdown commands once more.
+- [x] Restore the local CLI executable link after the workspace build. npm
+      skips a missing compiled bin during clean install. Add a failing isolated
+      install/build regression before changing the root build script.
+- [x] Make `source-roots.mjs` duplicate-free in both CLI layouts. Test both
+      shapes. State the current `packages/mokly` path in the ratchet protocol
+      and xtask README after the flip.
+- [x] Scope the codemod by resolved path: change only specifiers that resolve
+      into the root `src/` or `dist/`. Preserve viewer-local and example-local
+      paths. Include large/preview `.d.mts` files and check all repository
+      relative specifiers with an ignored `.context/` script.
+- [x] After the running gate finishes, restore the unnecessary trailing-slash
+      edit in `client_modules.ts`. Confirm every moved production TS/JS source
+      matches its pre-move bytes, then rebuild and run the browser-module tests.
+- [x] Remove the ignored pre-move root `dist/` after the running gate finishes.
+      Recheck relative specifiers with both old root directories absent. Keep
+      the saved pack baseline and use only the workspace build outputs.
+- [x] Fix raw source-path readers and emitted subprocess import strings in
+      tests. Keep preview fixtures at the current CLI package path. Update
+      isolated ratchet fixtures to use the current source and package roots.
+      Preserve every failed assertion. The complete gate TODO below covers
+      the required rerun.
+- [x] Update the viewer boundary test's CLI browser-output directory. Preserve
+      its viewer-owned source imports and viewer browser-output path.
+- [x] Split every changed TS/JS file above 300 lines by responsibility. Keep
+      all tests and assertions, including the guide-CI and browser-preview
+      fixtures. Audit all moved source files too.
+- [x] Give inferred fixture results explicit portable return types. Workspace
+      resolution exposed private CLI types through the npm link; preserve the
+      declaration checks and each fixture's complete typed result.
+- [x] Preserve package README links to shared source docs with `../../docs/`.
+      Check brand-header HTML links by hand. Retarget the example README's
+      Review and share anchor. Preserve main's root `./plans/` link.
+- [x] Save the old lockfile under `.context/`. Use npm 11.7.0 and compare every
+      installed entry's version, resolution, and integrity after install.
+      Explain relocations. Prove a clean `npm ci` and build, then run the
+      dependency audit. Stop before editing any moved audit-exception path.
+- [x] After the running full gate finishes, restore all 22 mainline `libc`
+      fields. Build the lockfile from `HEAD` with only the workspace name/root,
+      CLI package entry, and CLI link changes. Prove a clean install and copied
+      lock-only regeneration, then rerun the repository and package suites.
+- [x] Reproduce the six optional bundled WASI additions from npm 11.7.0 on
+      both the pre-move and moved lockfiles. Follow the reviewer's decision:
+      retain the minimal lockfile and report this pre-existing regeneration
+      churn without committing the six entries.
+- [x] Remove the inherited CLI version from the private root's lockfile
+      metadata before regenerating. npm 11.7.0 kept that old value when the
+      manifest lost its version. Keep installed dependency tuples unchanged.
+- [x] Assert the private root manifest has both workspace members in order
+      and no CLI-only keys or version. Assert root/CLI Node-engine parity.
+- [x] Test docs-copy replacement, the viewer-built guard, and cleanup of the
+      CLI build output and copied docs.
+- [x] Use bracket syntax for CLI Release Please action outputs. Preserve job
+      output names and cover every workflow/config assertion.
+- [x] Document path-based Release Please commit attribution and docs-only
+      shipment behavior. Record the release PR #127 merge prerequisite outside
+      the milestones without changing the target release configuration.
+- [x] Restore all moved README material with its original wording and moved
+      paths. Compare every rewritten Markdown file with its HEAD source;
+      preserve sentences apart from obsolete root-layout descriptions.
+- [x] Update plain code paths and root-run CLI examples in moved source
+      READMEs. The Markdown link codemod does not cover inline code or shell
+      examples. Preserve all surrounding wording.
+- [x] Keep historical review wording byte-identical apart from approved
+      relative link targets. Record each file's changed-target count.
+- [ ] Confirm all four ratchets pass on the uncommitted and committed moved
+      trees. Keep the renamed internal-export baseline shrink-only.
+- [x] `git mv src packages/mokly/src`, `git mv CHANGELOG.md packages/mokly/CHANGELOG.md`,
       `git mv README.md packages/mokly/README.md`,
       `git mv scripts/copy-assets.mjs packages/mokly/scripts/build.mjs`, and
       copy `LICENSE` to `packages/mokly/LICENSE`.
-- [ ] Split `package.json` per Decision 2; write `packages/mokly/package.json`.
-- [ ] Add `packages/mokly/tsconfig.json` (extends `../../tsconfig.json`,
+- [x] Split `package.json` per Decision 2; write `packages/mokly/package.json`.
+- [x] Add `packages/mokly/tsconfig.json` (extends `../../tsconfig.json`,
       includes `src/**`) and `packages/mokly/tsconfig.build.json` (`rootDir`
       `src`, `outDir` `dist`, declarations and source maps, excludes tests);
       delete the root `tsconfig.build.json`; replace `src/**` with
       `packages/mokly/src/**` in the root `tsconfig.json`.
-- [ ] Finish `packages/mokly/scripts/build.mjs` per Target Layout, including
+- [x] Finish `packages/mokly/scripts/build.mjs` per Target Layout, including
       the viewer-built guard and the docs copy.
-- [ ] Update the root scripts per Target Layout, `playwright.config.ts`,
+- [x] Update the root scripts per Target Layout, `playwright.config.ts`,
       `scripts/clean.mjs`, `.gitignore` (`packages/mokly/docs/`),
       `.prettierignore` (`packages/mokly/CHANGELOG.md`, `packages/mokly/docs`),
       and `eslint.config.js` path globs.
-- [ ] Run `npm install` to regenerate `package-lock.json`; confirm
+- [x] Run `npm install` to regenerate `package-lock.json`; confirm
       `node_modules/@mokly/mokly` is a workspace link and that `examples/basic`
       still resolves `@mokly/mokly`.
-- [ ] Flip `scripts/package/layout.mjs` to `"packages/mokly"` and
+- [x] Flip `scripts/package/layout.mjs` to `"packages/mokly"` and
       `tests/helpers/fixture.ts` `packageRoot` to `packages/mokly`.
-- [ ] Codemod every relative `dist/` and `src/` specifier in `tests/**`,
+- [x] Codemod every relative `dist/` and `src/` specifier in `tests/**`,
       `scripts/large/**`, `scripts/preview/**`, and
       `scripts/package/browser_graph.mjs` to the new relative path; verify
       with `tsc --project tsconfig.json --noEmit`, `npm run typecheck:script-declarations`,
       and `npm run lint`.
-- [ ] Update the mixed reader in `tests/guides_ci.test.ts`: resolve its raw
+- [x] Update the mixed reader in `tests/guides_ci.test.ts`: resolve its raw
       `src/...` strings from `packageRoot` and docs from `repositoryRoot`.
       Split that oversized test file by responsibility without removing tests.
-- [ ] Give `tests/release_refs.test.ts` a fixture for the current CLI layout.
+- [x] Give `tests/release_refs.test.ts` a fixture for the current CLI layout.
       It now reuses the root-layout bootstrap fixture, while `verifyReleaseRefs`
       follows the layout module. Keep the protected bootstrap files unchanged.
-- [ ] Before moving files, resolve the historical-review link contract with
-      the coordinating reviewer. `tests/markdown_links.test.ts` checks
-      `docs/reviews/**`, whose old relative `src/` targets will disappear.
-      Keep Decision 10 and the link check intact unless the reviewer approves
-      a concrete way to preserve those historical references.
-- [ ] Confirm the layout flip updates both source-root and public-entrypoint
+- [x] Resolve the historical-review link contract with the coordinating
+      reviewer: maintain only relative targets for moved files and sections,
+      freeze all other bytes, and keep the link test unchanged.
+- [x] Confirm the layout flip updates both source-root and public-entrypoint
       ratchet roots. Update the path in `xtask/unused-internal-exports.txt`.
-- [ ] Update `release-please-config.json`, `.release-please-manifest.json`, and
+- [x] Update `release-please-config.json`, `.release-please-manifest.json`, and
       `.github/workflows/release.yml` per Decision 7.
-- [ ] Update `tests/release_config.test.ts` (package manifest location,
+- [x] Update `tests/release_config.test.ts` (package manifest location,
       `repository.directory`, lockfile keys, config keys and `extra-files`),
       `tests/release_packages.test.ts` (lockfile fixture entries), and
       `tests/ci_workflow_runtime.test.ts` (root and package `engines` parity, root
       README sentences).
-- [ ] Update `tests/helpers/example_baseline.ts` to copy `package.json`,
+- [x] Update `tests/helpers/example_baseline.ts` to copy `package.json`,
       `package-lock.json`, `tsconfig.json`, `docs/guides`, `docs/protocol`,
       `packages/viewer`, and `packages/mokly` while excluding `dist`,
       `node_modules`, and the copied `packages/mokly/docs`.
-- [ ] Update `tests/component_protocol_docs.test.ts` to read the moved README
+- [x] Update `tests/component_protocol_docs.test.ts` to read the moved README
       sentence from `packages/mokly/README.md`.
-- [ ] Confirm `tests/guides_versions.test.ts` reads the moved CLI version
+- [x] Confirm `tests/guides_versions.test.ts` reads the moved CLI version
       through `packageRoot`. The private root will not own that version.
-- [ ] Write the new root `README.md` and trim `packages/mokly/README.md` per
+- [x] Write the new root `README.md` and trim `packages/mokly/README.md` per
       Decision 9; update the Packages table link and every Key code link.
-- [ ] Fix the 93 upward links in the READMEs under `packages/mokly/src/` and
+- [x] Fix the 93 upward links in the READMEs under `packages/mokly/src/` and
       the links or prose in `docs/architecture/build-pipeline.md`,
       `docs/architecture/package-boundary.md`,
       `docs/protocol/mokly-instances.md`,
       `docs/protocol/mokly-export-public-files.md`, `xtask/README.md`, and
       `docs/protocol/npm-release.md`.
-- [ ] Update the CLI Browse README links in
+- [x] Update the CLI Browse README links in
       `packages/viewer/src/client/README.md` and
       `packages/viewer/src/inspector/README.md` after the move. Both currently
       link to `../../../../src/browse/README.md`; the new target is
       `../../../../packages/mokly/src/browse/README.md`.
-- [ ] Confirm the public export ratchet still resolves the `v0.13.0` baseline
+- [x] Confirm the public export ratchet still resolves the `v0.13.0` baseline
       tag for `packages/mokly`.
-- [ ] Compare `npm pack --dry-run --json --ignore-scripts` from
+- [x] Compare `npm pack --dry-run --json --ignore-scripts` from
       `packages/mokly` with `.context/pack-baseline.json`; the file lists must
       match.
-- [ ] Smoke-test: `npm run build`, `npm run example:build`,
+- [x] Smoke-test: `npm run build`, `npm run example:build`,
       `npm run example:check`, `npm run dev` with a page fetch, `mokly export`
       on the example, and install the packed tarball into a temporary consumer
       and run `npx mokly --version`.
-- [ ] Run `cargo xtask check` and fix every failure.
-- [ ] Audit `git diff --name-status origin/main` and
+- [x] Keep the 2,500-ms PostCSS collection limit. Run
+      `tests/postcss_dependency_review.test.ts` three times in sequence with
+      no other task running. Compare with the pre-move tree if any run fails.
+      Then rerun the complete unit suite alone and record the timings.
+- [x] Run `cargo xtask check` and fix every failure. Use the approved split:
+      the complete gate before the final batch, followed by complete repository,
+      package, and unit suites on the final implementation tree.
+- [x] Audit `git diff --name-status origin/main` and
       `git diff --diff-filter=D --name-status origin/main`; only the Milestone 3
       renames and the root `tsconfig.build.json` may be deleted.
 - [ ] Commit with Conventional Commits and push the branch.
+
+### Milestone 3 integration notes
+
+- Merge `a716e2099d2ae2058111c47be477f5947eb4ad5a` integrates main's
+  `781da7ae3261e6694a5ef5608a91f3e34061f6d0` from source tip
+  `5309791d4e2d73983b57a471345e354b822599cf`. Those tips are its two parents.
+  The remerge diff is empty for all 12 imported paths.
+- Preserve `docs/protocol/mokly-baseline-storage.md` and
+  `docs/protocol/mokly-rendering-generated.md` exactly. Move
+  `src/baseline/confinement.ts` and `src/build/output_lock_file.ts` unchanged.
+  Preserve every sentence in `src/build/README.md`; update only moved paths.
+- Preserve the imported tests and assertions in `tests/derived_build.test.ts`,
+  `tests/derived_cache_boundaries.test.ts`, `tests/export_current_derived.test.ts`,
+  `tests/generated_output_lock.test.ts`, `tests/path_transaction_regressions.test.ts`,
+  and `tests/helpers/output_directory_lock_spy.ts`. Update their CLI imports and
+  portable fixture result types. Keep main's approved deletion of
+  `tests/baseline_directory_walk.test.ts`; its replacement tests remain.
+- Correct the pre-move survey: 17 test/helper modules have direct CLI package
+  imports. There are 42 root-source importers, two large source declarations,
+  and two preview built declarations. The 18 source READMEs have 93 upward
+  links, including the public Action and one unchanged internal source link.
+- Scope the codemod by resolved targets. Its required edits cover 1,959
+  specifiers in 605 files. Remove its one unnecessary trailing-slash edit in
+  `client_modules.ts`; all 484 moved production TS/JS files retain their
+  original bytes. Viewer-local and example-local imports remain unchanged.
+- Retain `type: "module"` in both manifests. Remove the inherited private-root
+  lockfile version before regenerating; npm retained it after the manifest split.
+  Existing dependency versions, resolutions, and integrity values stay unchanged.
+- Extend the planned root build with an npm rebuild that relinks the compiled
+  CLI. A clean install skips a missing bin; the new regression failed before
+  this fix and passed after it. The rebuild does not run lifecycle scripts.
+- Restore all 22 `libc` fields that npm 11.7.0 removed. Every old installed
+  entry retains all metadata, beyond its version/resolution/integrity tuple.
+  A clean install passes. Lock-only regeneration also adds six optional bundled
+  entries below `node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/` on
+  the pre-move tree. The reviewer approved reporting that pre-existing churn
+  and keeping it out of this move's minimal lockfile.
+- The first full gate passed repository/package checks, then failed 13 unit
+  tests on old path readers and ratchet fixture roots. Fix the paths and
+  preserve every assertion. Remove the stale ignored root `dist/` so it cannot
+  hide old subprocess imports. The focused failure tests pass 53/53.
+- Split the now-changed 301-line `tests/repository_ratchets.test.ts` into
+  length/protocol and internal-export tests. Keep all 13 original test definitions.
+- The next full gate passed 4,235/4,236 unit tests. Its sole failure exposed
+  the viewer boundary test's raw CLI browser path after root `dist/` removal.
+  Update only that cross-package directory; its viewer-owned imports and viewer
+  browser directory stay unchanged.
+- The complete gate then passed before the final review batch: 15 Rust tests,
+  six packed-consumer scenarios, 4,236 unit/integration tests, 844 browser tests,
+  and 263 hydration tests. No tests were skipped or cancelled. Save its three
+  suite reports under `.context/pre-batch-reports/`.
+- The final batch adds two explicit root-lockfile version updaters beside the
+  viewer-edge updater, a release simulation regression, the corrected updater
+  rationale, and two README command paths. The positive regression fails with
+  the old configuration and passes with all three JSON updaters. Its negative
+  cases reject each missing version updater separately.
+- Verification uses the approved split. The complete repository suite passes
+  after the final batch, including all 15 Rust tests. The complete package suite
+  passes all six packed-consumer scenarios. The final complete unit suite
+  passes all 4,240 tests, with no skips or cancellations. The passing pre-batch
+  browser and hydration suites cover those unchanged areas. The commit body
+  records this split. The focused release, Markdown-link, and protocol-size
+  batch also passes all 59 tests; `npm run package:check` passes.
+- The first post-batch unit run passed 4,239/4,240 tests. Its only failure was
+  the unchanged PostCSS collection limit: 2,702.6 ms exceeded 2,500 ms while
+  tarball installs ran on the machine. Keep the limit. Three fresh isolated
+  runs pass at 1,899.5 ms, 1,621.7 ms, and 1,514.2 ms. No pre-move comparison
+  is needed because none fails. The final unit suite runs alone and measures
+  1,866.8 ms. The passing pre-batch complete gate measured 1,418.3 ms.
+- Preserve all original README material across the root/package split. The
+  Markdown audit checks 45 moved or rewritten documents against their source
+  at the pre-move `HEAD`. Historical reviews retain every non-target character.
+- The final relative-specifier check covers 8,976 specifiers with both old
+  root directories absent. All 46 changed Markdown files pass formatting.
+- The pre-staging deletion audit lists only `tsconfig.build.json`, replaced
+  by the identical package build project. Once every new file is staged,
+  Git identifies that replacement as a 100% rename. No deleted paths remain
+  in the staged diff against `origin/main`.
 
 ## Milestone 4: Review the complete diff
 

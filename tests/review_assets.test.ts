@@ -5,15 +5,15 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { copySnapshotDependencies } from "../dist/review/assets.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { copySnapshotDependencies } from "../packages/mokly/dist/review/assets.js";
 import {
   NodeGitCommandRunner,
   CommittedRepository,
-} from "../dist/review/git.js";
-import { runReview } from "../dist/review/run.js";
+} from "../packages/mokly/dist/review/git.js";
+import { runReview } from "../packages/mokly/dist/review/run.js";
 
 import {
   createFixture,

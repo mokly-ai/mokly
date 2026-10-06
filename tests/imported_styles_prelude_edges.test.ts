@@ -5,9 +5,9 @@ import test from "node:test";
 
 import { build } from "esbuild";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { scanImportPrelude } from "../dist/build/styles/prelude.js";
-import { loadConfig } from "../dist/config/load.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { scanImportPrelude } from "../packages/mokly/dist/build/styles/prelude.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

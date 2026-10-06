@@ -1,7 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 
-import { defineComponent } from "../dist/components/definition.js";
-import type { RenderInput } from "../dist/renderer/types.js";
+import { defineComponent } from "../packages/mokly/dist/components/definition.js";
+import type { RenderInput } from "../packages/mokly/dist/renderer/types.js";
 
 const metadata = {
   title: "Test",

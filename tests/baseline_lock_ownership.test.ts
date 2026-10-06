@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { cacheLayout } from "../dist/baseline/cache_layout.js";
-import { tryBaselineLock } from "../dist/baseline/lock.js";
+import { cacheLayout } from "../packages/mokly/dist/baseline/cache_layout.js";
+import { tryBaselineLock } from "../packages/mokly/dist/baseline/lock.js";
 
 import { baselineFixture } from "./helpers/baseline_fixture.js";
 

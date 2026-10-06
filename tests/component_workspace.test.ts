@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { removedManifestEntries } from "../dist/registry/changes.js";
-import { compareReview } from "../dist/review/compare.js";
-import { catalogueAtBaseline } from "../dist/server/baseline_catalogue.js";
+import { removedManifestEntries } from "../packages/mokly/dist/registry/changes.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import { catalogueAtBaseline } from "../packages/mokly/dist/server/baseline_catalogue.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { workspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { selectedVariant } from "../packages/viewer/dist/shell/workspace_selection.js";

@@ -5,7 +5,7 @@ import type {
   CliInput,
   CliOutput,
   TerminalEnvironment,
-} from "../../dist/cli/reporter/types.js";
+} from "../../packages/mokly/dist/cli/reporter/types.js";
 
 interface MemoryTerminalOptions {
   columns?: number;

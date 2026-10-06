@@ -3,8 +3,8 @@ import { test } from "node:test";
 
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { loadConfig } from "../dist/config/load.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 import type { ComponentViewRecord } from "../packages/viewer/dist/components/manifest_types.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
 

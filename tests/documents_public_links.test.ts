@@ -3,10 +3,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { writeCompilation } from "../dist/build/transaction.js";
-import { isPublicStaticFile } from "../dist/config/public_files.js";
-import { exportCatalogue } from "../dist/export/run.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { isPublicStaticFile } from "../packages/mokly/dist/config/public_files.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 
 import { pathFixture } from "./helpers/path_fixture.js";
 

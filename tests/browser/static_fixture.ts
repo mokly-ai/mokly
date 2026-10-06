@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { exportCatalogue } from "../../dist/export/run.js";
+import { exportCatalogue } from "../../packages/mokly/dist/export/run.js";
 import { comparisonEntrySource } from "../helpers/comparison_source.js";
 import {
   createExportFixture,

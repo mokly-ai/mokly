@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
 
-import { verifyModuleScoping } from "../dist/build/styles/module_verify.js";
-import { scopeModule } from "../dist/build/styles/modules.js";
+import { verifyModuleScoping } from "../packages/mokly/dist/build/styles/module_verify.js";
+import { scopeModule } from "../packages/mokly/dist/build/styles/modules.js";
 
 import { pluginModuleOutput } from "./helpers/css_module_plugin_output.js";
 

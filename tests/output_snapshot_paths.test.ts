@@ -3,8 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { projectRealPath } from "../dist/config/paths.js";
-import { isInternalCatalogueFile } from "../dist/config/public_files.js";
+import { projectRealPath } from "../packages/mokly/dist/config/paths.js";
+import { isInternalCatalogueFile } from "../packages/mokly/dist/config/public_files.js";
 
 import { pathFixture, pageSource } from "./helpers/path_fixture.js";
 

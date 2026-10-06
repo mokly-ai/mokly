@@ -4,7 +4,7 @@ import {
   runWithTimings,
   timeAsync,
   type TimingEvent,
-} from "../../dist/diagnostics/timings.js";
+} from "../../packages/mokly/dist/diagnostics/timings.js";
 
 const FIXTURE_TIMING_PREFIX = "[mokly:fixture-timing] ";
 

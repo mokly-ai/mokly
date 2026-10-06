@@ -3,9 +3,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { loadConfig } from "../dist/config/load.js";
-import { capturePublicFiles } from "../dist/export/public_files.js";
-import { exportCatalogue } from "../dist/export/run.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { capturePublicFiles } from "../packages/mokly/dist/export/public_files.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
 
 import { directoryFiles } from "./helpers/export_fixture.js";
 import { removeFixture } from "./helpers/fixture.js";

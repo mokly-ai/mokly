@@ -3,9 +3,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { loadConfig } from "../dist/config/load.js";
-import { validateComponentReviewSources } from "../dist/review/component_result_sources.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { validateComponentReviewSources } from "../packages/mokly/dist/review/component_result_sources.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import {

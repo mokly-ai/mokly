@@ -7,9 +7,9 @@ import {
   runWithTimings,
   timeSync,
   type TimingEvent,
-} from "../src/diagnostics/timings.js";
-import { analyzeStylesheetChange } from "../src/review/css/analyze.js";
-import type { CssRuleParser } from "../src/review/css/types.js";
+} from "../packages/mokly/src/diagnostics/timings.js";
+import { analyzeStylesheetChange } from "../packages/mokly/src/review/css/analyze.js";
+import type { CssRuleParser } from "../packages/mokly/src/review/css/types.js";
 
 for (const after of [
   ".private-selector { color: red; }",

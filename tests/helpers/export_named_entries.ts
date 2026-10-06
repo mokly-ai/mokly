@@ -3,10 +3,22 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { TestContext } from "node:test";
 
-import { generatedBytes } from "../../dist/build/generated_file.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
+import type { Compilation } from "../../packages/mokly/dist/build/compile.js";
+import { generatedBytes } from "../../packages/mokly/dist/build/generated_file.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
 
 import { pathFixture } from "./path_fixture.js";
+
+type NamedEntryFixtureResult = {
+  config: ResolvedConfig;
+  before: Compilation;
+  after: Compilation;
+  root: string;
+  write: (name: string, content: string) => Promise<void>;
+  remove: () => Promise<void>;
+  compile: () => Promise<Compilation>;
+};
 
 export const BUILD_NAMES = [
   "coverage",
@@ -19,7 +31,7 @@ export const BUILD_NAMES = [
 export async function namedEntryFixture(
   t: TestContext,
   mode: "committed" | "derived",
-) {
+): Promise<NamedEntryFixtureResult> {
   const sources: Record<string, string> = {};
   for (const name of BUILD_NAMES) {
     sources[`specs/${name === "README" ? "readme-entry" : name}.mockup.tsx`] =

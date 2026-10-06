@@ -4,7 +4,7 @@ import http from "node:http";
 import net from "node:net";
 import test from "node:test";
 
-import { closeCatalogueHttp } from "../src/server/http_shutdown.js";
+import { closeCatalogueHttp } from "../packages/mokly/src/server/http_shutdown.js";
 
 for (const completeHeaders of [false, true]) {
   test(`HTTP shutdown disconnects ${completeHeaders ? "an unfinished response" : "unfinished request headers"}`, async (t) => {

@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { serve } from "../dist/server/serve.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";

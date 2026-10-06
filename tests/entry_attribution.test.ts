@@ -3,17 +3,17 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
 import {
   generatedHeader,
   isAuthoredOwner,
   pendingGeneratedOrphanRoutes,
-} from "../dist/build/ownership.js";
-import { loadConfig } from "../dist/config/load.js";
-import { resolvePublicExclude } from "../dist/config/public_exclusions.js";
-import { resolveExportOutput } from "../dist/export/paths.js";
-import { receiveComponentRuntimeStartup } from "../dist/server/controls/runtime_ipc.js";
-import { classifyWatchPath } from "../dist/server/watch_events.js";
+} from "../packages/mokly/dist/build/ownership.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { resolvePublicExclude } from "../packages/mokly/dist/config/public_exclusions.js";
+import { resolveExportOutput } from "../packages/mokly/dist/export/paths.js";
+import { receiveComponentRuntimeStartup } from "../packages/mokly/dist/server/controls/runtime_ipc.js";
+import { classifyWatchPath } from "../packages/mokly/dist/server/watch_events.js";
 
 import {
   createFixture,

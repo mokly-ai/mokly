@@ -5,10 +5,10 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import { loadConfig } from "../dist/config/load.js";
-import { readManifest } from "../dist/registry/manifest.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeCatalogueChanges } from "../dist/server/changed.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { readManifest } from "../packages/mokly/dist/registry/manifest.js";
+import { committedReviewRepository } from "../packages/mokly/dist/review/repository.js";
+import { computeCatalogueChanges } from "../packages/mokly/dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 import { expectedStylesheetChanges } from "../scripts/large/browse.mjs";
 import { cliPackageRoot } from "../scripts/package/layout.mjs";

@@ -20,7 +20,7 @@ the metadata-only qualification for affected-consumer completeness. Its log is
 ## Findings
 
 1. **Medium — served Review snapshots follow symbolic links.**
-   [The response helper](../../src/server/review_responses.ts) confines paths
+   [The response helper](../../packages/mokly/src/server/review_responses.ts) confines paths
    lexically, then reads them with `fs.readFileSync`, which follows links. A
    tampered retained generation could expose files outside its artifact root
    through snapshot URLs. Doing nothing retains that request-time read gap.
@@ -32,7 +32,7 @@ the metadata-only qualification for affected-consumer completeness. Its log is
    does not cover artifacts altered later; leaf-only checks miss ancestor links.
 
 2. **Medium — affected-consumer validation accepts omitted records.**
-   [Source validation](../../src/review/component_result_sources.ts) validates
+   [Source validation](../../packages/mokly/src/review/component_result_sources.ts) validates
    supplied consumers against possible usage but does not require the complete
    expected set. A producer/export regression can therefore hide affected screens
    or components while still passing validation.
@@ -40,16 +40,16 @@ the metadata-only qualification for affected-consumer completeness. Its log is
    Options: **A**, derive and compare the complete implementation-impact set;
    **B**, use weaker length/subset checks; **C**, warn about omissions.
    **Recommended: A**, sharing the classification policy with
-   [generation](../../src/review/component_classification.ts) and adding both a
+   [generation](../../packages/mokly/src/review/component_classification.ts) and adding both a
    missing-consumer test and a metadata-only edit regression. Comparing against
    the current `possible` superset would be wrong: variant/control metadata
    changes intentionally do not make consumers affected. A shared policy avoids
    divergent definitions of impact.
 
 3. **Medium — watched restarts can mix runtime and catalogue generations.**
-   [Watched rebuild/reconfiguration](../../src/server/serve_watched.ts) replaces
+   [Watched rebuild/reconfiguration](../../packages/mokly/src/server/serve_watched.ts) replaces
    the component runtime before restarting the child. The
-   [supervisor](../../src/server/supervisor.ts) immediately sends it to the
+   [supervisor](../../packages/mokly/src/server/supervisor.ts) immediately sends it to the
    current child, which still has its startup catalogue. Doing nothing leaves a
    window for old control/variant metadata to use a new rendering generation,
    causing inconsistent previews or stale-generation failures.
@@ -62,10 +62,10 @@ the metadata-only qualification for affected-consumer completeness. Its log is
    leaves the lifecycle contract ambiguous.
 
 4. **Medium — malformed component definitions bypass registry validation.**
-   [Registry preparation](../../src/registry/prepare.ts) accepts forged or
+   [Registry preparation](../../packages/mokly/src/registry/prepare.ts) accepts forged or
    mutated component definitions, while full validation happens only inside
-   [the authoring helper](../../src/components/definition.ts).
-   [Manifest generation](../../src/components/manifest_build.ts) subsequently
+   [the authoring helper](../../packages/mokly/src/components/definition.ts).
+   [Manifest generation](../../packages/mokly/src/components/manifest_build.ts) subsequently
    assumes `variants.map` exists. Doing nothing leaves malformed exports with
    internal TypeErrors instead of useful build diagnostics.
 
@@ -75,7 +75,7 @@ the metadata-only qualification for affected-consumer completeness. Its log is
    every entry path and avoids drift; freezing and late guards alone do not.
 
 5. **Low — Review summaries insert authored titles as raw Markdown.**
-   [Schema-v3 summary generation](../../src/review/artifact.ts) interpolates
+   [Schema-v3 summary generation](../../packages/mokly/src/review/artifact.ts) interpolates
    change titles directly into Markdown. Newlines and Markdown syntax can make
    generated change summaries misleading. Doing nothing retains that ambiguity.
 

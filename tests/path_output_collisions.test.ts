@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { writeCompilation } from "../dist/build/transaction.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
 
 import { pathFixture, pageSource } from "./helpers/path_fixture.js";
 

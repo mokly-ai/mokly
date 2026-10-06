@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ConfiguredGitCommandRunner } from "../dist/config/git.js";
-import { CommittedRepository } from "../dist/review/git.js";
-import { configuredServedReview } from "../dist/server/configured_review.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+import { ConfiguredGitCommandRunner } from "../packages/mokly/dist/config/git.js";
+import { CommittedRepository } from "../packages/mokly/dist/review/git.js";
+import { configuredServedReview } from "../packages/mokly/dist/server/configured_review.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 

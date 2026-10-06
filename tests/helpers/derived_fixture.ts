@@ -1,13 +1,31 @@
-import { execFile } from "node:child_process";
+import { execFile, type PromiseWithChild } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { TestContext } from "node:test";
 import { promisify } from "node:util";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { loadConfig } from "../../dist/config/load.js";
+import {
+  compileCatalogue,
+  type Compilation,
+} from "../../packages/mokly/dist/build/compile.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
 
-import { createFixture, removeFixture, validEntrySource } from "./fixture.js";
+import {
+  createFixture,
+  removeFixture,
+  validEntrySource,
+  type TestFixture,
+} from "./fixture.js";
+
+type DerivedFixtureResult = TestFixture & {
+  config: ResolvedConfig;
+  baseline: Compilation;
+  git: (
+    ...args: string[]
+  ) => PromiseWithChild<{ stdout: string; stderr: string }>;
+  commit: string;
+};
 
 const execute = promisify(execFile);
 
@@ -16,7 +34,7 @@ export async function derivedFixture(
   t: TestContext,
   source = validEntrySource(),
   publicFiles: Readonly<Record<string, string>> = {},
-) {
+): Promise<DerivedFixtureResult> {
   const fixture = await createFixture(source);
   t.after(() => removeFixture(fixture));
   await fs.writeFile(

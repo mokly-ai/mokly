@@ -4,7 +4,7 @@ import { setImmediate } from "node:timers/promises";
 
 import { projectScopedCatalogue } from "@mokly/viewer/runtime";
 
-import { createReactViewerCapabilities } from "../dist/client/react_capabilities.js";
+import { createReactViewerCapabilities } from "../packages/mokly/dist/client/react_capabilities.js";
 
 import {
   actions,

@@ -14,11 +14,11 @@ no automatic review fixes were applied.
 ## Findings
 
 1. **Medium — a watched restart can mix catalogue and controls generations.**
-   In [serve_watched.ts](../../src/server/serve_watched.ts), the rebuild and
+   In [serve_watched.ts](../../packages/mokly/src/server/serve_watched.ts), the rebuild and
    reconfigure paths call `replaceComponentRuntime` before restarting the
-   child. [supervisor.ts](../../src/server/supervisor.ts) both retains that
+   child. [supervisor.ts](../../packages/mokly/src/server/supervisor.ts) both retains that
    runtime and sends it immediately to the current child. The child's existing
-   [HTTP server](../../src/server/http.ts) replaces its controls service while
+   [HTTP server](../../packages/mokly/src/server/http.ts) replaces its controls service while
    retaining the manifest/catalogue captured at startup. Reconfiguration also
    awaits the previous watcher closing before the restart, extending the window.
 

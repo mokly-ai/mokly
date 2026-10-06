@@ -4,6 +4,8 @@ import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { build } from "esbuild";
 
+import { packageRoot } from "../helpers/fixture.js";
+
 import {
   buildDevelopmentBundle,
   captureBrowserErrors,
@@ -27,7 +29,7 @@ test.beforeAll(async () => {
   const result = await build({
     bundle: true,
     define: { "process.env.NODE_ENV": '"development"' },
-    entryPoints: [path.resolve("src/client/react_host.ts")],
+    entryPoints: [path.join(packageRoot, "src/client/react_host.ts")],
     format: "esm",
     logLevel: "silent",
     platform: "browser",

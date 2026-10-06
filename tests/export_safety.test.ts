@@ -3,15 +3,15 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { runExport } from "../dist/cli/export.js";
-import { isCancellation } from "../dist/errors.js";
+import { runExport } from "../packages/mokly/dist/cli/export.js";
+import { isCancellation } from "../packages/mokly/dist/errors.js";
 import {
   RESERVATION_DIRECTORY,
   isReservationDirectory,
-} from "../dist/export/reservation.js";
-import { exportCatalogue } from "../dist/export/run.js";
-import { exportReservation } from "../dist/export/transaction.js";
-import { classifyWatchPath } from "../dist/server/watch_events.js";
+} from "../packages/mokly/dist/export/reservation.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
+import { exportReservation } from "../packages/mokly/dist/export/transaction.js";
+import { classifyWatchPath } from "../packages/mokly/dist/server/watch_events.js";
 
 import {
   createExportFixture,

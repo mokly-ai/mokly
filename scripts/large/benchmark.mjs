@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { chromium, expect } from "@playwright/test";
 
-import { loadConfig } from "../../dist/config/load.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
 import { cliPackageRoot } from "../package/layout.mjs";
 
 import { resetFixtureBaseline } from "./baseline.mjs";

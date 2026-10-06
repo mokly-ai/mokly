@@ -3,8 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { exportCatalogue } from "../dist/export/run.js";
-import { viewPage } from "../dist/server/pages.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
+import { viewPage } from "../packages/mokly/dist/server/pages.js";
 import { readPreviewDescriptor } from "../packages/viewer/dist/previews/descriptor.js";
 import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";

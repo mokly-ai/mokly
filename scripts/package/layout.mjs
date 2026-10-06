@@ -1,7 +1,7 @@
 import path from "node:path";
 
 /** Repository-relative directory of the published CLI package. */
-export const CLI_PACKAGE_PATH = ".";
+export const CLI_PACKAGE_PATH = "packages/mokly";
 
 /** Resolve the CLI package directory without changing the repository root. */
 export function cliPackageRoot(repositoryRoot, packagePath = CLI_PACKAGE_PATH) {

@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { summaryMarkdown } from "../dist/review/artifact.js";
-import { compareReview } from "../dist/review/compare.js";
-import { computeCatalogueChanges } from "../dist/server/changed.js";
+import { summaryMarkdown } from "../packages/mokly/dist/review/artifact.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import { computeCatalogueChanges } from "../packages/mokly/dist/server/changed.js";
 
 import { moveReviewFixture as componentReviewFixture } from "./helpers/move_review_fixture.js";
 import { pageSource } from "./helpers/path_fixture.js";

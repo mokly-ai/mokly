@@ -5,15 +5,15 @@ import path from "node:path";
 import test from "node:test";
 import type { Worker } from "node:worker_threads";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { IsolatedPostcssProcessor } from "../dist/build/styles/isolated_postcss.js";
-import { WorkerRequests } from "../dist/build/styles/worker_requests.js";
-import { loadConfig } from "../dist/config/load.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { IsolatedPostcssProcessor } from "../packages/mokly/dist/build/styles/isolated_postcss.js";
+import { WorkerRequests } from "../packages/mokly/dist/build/styles/worker_requests.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 import {
   PlainServeReporter,
   type WatchReport,
-} from "../dist/server/reporter.js";
-import { serve } from "../dist/server/serve.js";
+} from "../packages/mokly/dist/server/reporter.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 
 import { removeFixture } from "./helpers/fixture.js";
 import { styleFixture } from "./helpers/imported_styles_fixture.js";

@@ -5,8 +5,8 @@ import { parseReviewResult } from "@mokly/viewer/data";
 import {
   type ExportOwnership,
   type ExportOwnershipEntry,
-} from "../../dist/export/ownership.js";
-import type { UploadManifest } from "../../dist/publish/types.js";
+} from "../../packages/mokly/dist/export/ownership.js";
+import type { UploadManifest } from "../../packages/mokly/dist/publish/types.js";
 
 import {
   FakeReceiverRejection,

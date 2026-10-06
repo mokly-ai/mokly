@@ -2,13 +2,13 @@ import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
 import test from "node:test";
 
-import { DocumentCache } from "../dist/build/document_cache.js";
-import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import { loadConfig } from "../dist/config/load.js";
+import { DocumentCache } from "../packages/mokly/dist/build/document_cache.js";
+import { prepareLiveRuntime } from "../packages/mokly/dist/build/live_runtime.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 import {
   DocumentService,
   type DocumentWorkerRequest,
-} from "../dist/server/demand/service.js";
+} from "../packages/mokly/dist/server/demand/service.js";
 
 import {
   createFixture,

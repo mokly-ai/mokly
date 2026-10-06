@@ -4,10 +4,10 @@ import test from "node:test";
 import { readCatalogue } from "@mokly/viewer";
 import { createCatalogue } from "@mokly/viewer/server";
 
-import { projectCatalogue } from "../dist/catalogue/projection.js";
-import { summaryMarkdown } from "../dist/review/artifact.js";
-import { compareReview } from "../dist/review/compare.js";
-import { computeCatalogueChanges } from "../dist/server/changed.js";
+import { projectCatalogue } from "../packages/mokly/dist/catalogue/projection.js";
+import { summaryMarkdown } from "../packages/mokly/dist/review/artifact.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import { computeCatalogueChanges } from "../packages/mokly/dist/server/changed.js";
 
 import { movedCatalogueFixture } from "./helpers/move_catalogue.js";
 

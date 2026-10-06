@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { validateExportReferences } from "../dist/export/references.js";
+import { validateExportReferences } from "../packages/mokly/dist/export/references.js";
 
 test("export validates self, query-only, cross-document and directory fragment links", () => {
   for (const href of [

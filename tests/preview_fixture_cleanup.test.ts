@@ -11,7 +11,7 @@ import {
   NodeBaselineProcessScopeFactory,
   type BaselineProcessScope,
   type BaselineProcessScopeFactory,
-} from "../dist/baseline/process_scope.js";
+} from "../packages/mokly/dist/baseline/process_scope.js";
 
 import {
   servePreviewFixture,

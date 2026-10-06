@@ -3,11 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { runtimeGraph } from "../dist/build/component_runtime.js";
-import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import { loadConfig } from "../dist/config/load.js";
-import { ComponentRenderService } from "../dist/server/controls/service.js";
-import { renderTransient } from "../dist/server/controls/transient.js";
+import { runtimeGraph } from "../packages/mokly/dist/build/component_runtime.js";
+import { prepareLiveRuntime } from "../packages/mokly/dist/build/live_runtime.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { ComponentRenderService } from "../packages/mokly/dist/server/controls/service.js";
+import { renderTransient } from "../packages/mokly/dist/server/controls/transient.js";
 import type { ComponentRenderRequest } from "../packages/viewer/dist/components/render_types.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";

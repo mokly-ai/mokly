@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
 
-import { cacheLayout } from "../dist/baseline/cache_layout.js";
-import { BaselineCommandError } from "../dist/baseline/errors.js";
-import type { BaselineProgress } from "../dist/baseline/types.js";
-import { isCancellation } from "../dist/errors.js";
+import { cacheLayout } from "../packages/mokly/dist/baseline/cache_layout.js";
+import { BaselineCommandError } from "../packages/mokly/dist/baseline/errors.js";
+import type { BaselineProgress } from "../packages/mokly/dist/baseline/types.js";
+import { isCancellation } from "../packages/mokly/dist/errors.js";
 
 import { baselineFixture, success } from "./helpers/baseline_fixture.js";
 

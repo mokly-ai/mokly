@@ -4,10 +4,10 @@ import test from "node:test";
 import {
   componentRuntime,
   runtimeGraph,
-} from "../dist/build/component_runtime.js";
-import { DocumentCompiler } from "../dist/build/document_compiler.js";
-import { compareReview } from "../dist/review/compare.js";
-import { ComponentRenderService } from "../dist/server/controls/service.js";
+} from "../packages/mokly/dist/build/component_runtime.js";
+import { DocumentCompiler } from "../packages/mokly/dist/build/document_compiler.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import { ComponentRenderService } from "../packages/mokly/dist/server/controls/service.js";
 
 import { moveReviewFixture as componentReviewFixture } from "./helpers/move_review_fixture.js";
 import { pageSource, pathFixture } from "./helpers/path_fixture.js";

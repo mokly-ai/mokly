@@ -10,7 +10,7 @@ import {
   VERIFICATION_OWNER_ID_ENV,
   VERIFICATION_PROCESS_REGISTRY_ENV,
   VERIFICATION_RESOURCE_ROOT_ENV,
-} from "../dist/baseline/process_owner.js";
+} from "../packages/mokly/dist/baseline/process_owner.js";
 import {
   createVerificationProcessOwner,
   VERIFICATION_OWNER_ID_ENV as SCRIPT_OWNER_ID_ENV,

@@ -2,20 +2,31 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { TestContext } from "node:test";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { loadConfig } from "../../dist/config/load.js";
-import type { WatchEvent } from "../../dist/server/watch_events.js";
+import {
+  compileCatalogue,
+  type Compilation,
+} from "../../packages/mokly/dist/build/compile.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
+import type { WatchEvent } from "../../packages/mokly/dist/server/watch_events.js";
 import type {
   ConsumerWatcher,
   ConsumerWatcherFactory,
   ConsumerWatchOptions,
   WatchIgnorePredicate,
-} from "../../dist/server/watcher.js";
+} from "../../packages/mokly/dist/server/watcher.js";
 
-import { createFixture, removeFixture } from "./fixture.js";
+import { createFixture, removeFixture, type TestFixture } from "./fixture.js";
+
+type ResourceFixtureResult = TestFixture & {
+  config: ResolvedConfig;
+  compilation: Compilation;
+};
 
 /** Resource graph whose imported stylesheet can swap between existing leaves. */
-export async function resourceFixture(context: TestContext) {
+export async function resourceFixture(
+  context: TestContext,
+): Promise<ResourceFixtureResult> {
   const fixture = await createFixture(undefined, {
     extraConfig:
       'stylesheets: [{ match: "home/index.html", stylesheets: ["home.css"] }],',

@@ -12,10 +12,10 @@ import {
   acquireOutputLock,
   assertOutputLockHeld,
   outputLockPath,
-} from "../dist/build/output_lock.js";
-import { loadConfig } from "../dist/config/load.js";
-import { isCancellation } from "../dist/errors.js";
-import { isPackageOwnedIgnoredWatchPath } from "../dist/server/watch_paths.js";
+} from "../packages/mokly/dist/build/output_lock.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { isCancellation } from "../packages/mokly/dist/errors.js";
+import { isPackageOwnedIgnoredWatchPath } from "../packages/mokly/dist/server/watch_paths.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

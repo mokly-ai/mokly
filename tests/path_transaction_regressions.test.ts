@@ -3,8 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { outputLockPath } from "../dist/build/output_lock.js";
-import { writeCompilation } from "../dist/build/transaction.js";
+import { outputLockPath } from "../packages/mokly/dist/build/output_lock.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
 
 import { spyOutputDirectoryLock } from "./helpers/output_directory_lock_spy.js";
 import { pageSource, pathFixture } from "./helpers/path_fixture.js";

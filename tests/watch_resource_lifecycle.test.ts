@@ -3,10 +3,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { ResourceWatcher } from "../dist/server/resource_watcher.js";
-import { prepareWatchedOutput } from "../dist/server/serve_lifecycle.js";
-import { classifyWatchPath } from "../dist/server/watch_events.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { ResourceWatcher } from "../packages/mokly/dist/server/resource_watcher.js";
+import { prepareWatchedOutput } from "../packages/mokly/dist/server/serve_lifecycle.js";
+import { classifyWatchPath } from "../packages/mokly/dist/server/watch_events.js";
 
 import {
   resourceFixture,

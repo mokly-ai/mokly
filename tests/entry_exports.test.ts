@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { DEFINITION } from "../dist/authoring/markers.js";
-import { definePage, defineFolder } from "../dist/index.js";
-import { collectModuleExports } from "../dist/registry/export_collection.js";
+import { DEFINITION } from "../packages/mokly/dist/authoring/markers.js";
+import { definePage, defineFolder } from "../packages/mokly/dist/index.js";
+import { collectModuleExports } from "../packages/mokly/dist/registry/export_collection.js";
+import { projectCatalogue } from "../packages/mokly/src/catalogue/projection.js";
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
-import { projectCatalogue } from "../src/catalogue/projection.js";
 
 import { textOutput } from "./helpers/generated_text.js";
 import { pathFixture, pageSource } from "./helpers/path_fixture.js";

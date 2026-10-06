@@ -7,7 +7,7 @@ import {
   SUPPORTED_NODE_RANGE,
   TESTED_NODE_VERSIONS,
   isSupportedNodeVersion,
-} from "../dist/cli/bootstrap.js";
+} from "../packages/mokly/dist/cli/bootstrap.js";
 import { cliLockKey } from "../scripts/package/layout.mjs";
 
 import { packageRoot, repositoryRoot } from "./helpers/fixture.js";

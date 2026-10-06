@@ -3,10 +3,10 @@ import test from "node:test";
 
 import { parse, serialize } from "parse5";
 
-import { diffCssRules } from "../src/review/css/diff.js";
-import { matchCssRules } from "../src/review/css/match.js";
-import { LightningCssRuleParser } from "../src/review/css/rules.js";
-import type { CssRuleParser } from "../src/review/css/types.js";
+import { diffCssRules } from "../packages/mokly/src/review/css/diff.js";
+import { matchCssRules } from "../packages/mokly/src/review/css/match.js";
+import { LightningCssRuleParser } from "../packages/mokly/src/review/css/rules.js";
+import type { CssRuleParser } from "../packages/mokly/src/review/css/types.js";
 
 import {
   analyze,

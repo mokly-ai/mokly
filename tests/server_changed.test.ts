@@ -4,18 +4,18 @@ import fs from "node:fs";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { changedManifestPaths } from "../dist/registry/changed_paths.js";
-import { compareReview } from "../dist/review/compare.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { changedManifestPaths } from "../packages/mokly/dist/registry/changed_paths.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
 import {
   NodeGitCommandRunner,
   CommittedRepository,
-} from "../dist/review/git.js";
-import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
-import { computeChangedPaths } from "../dist/server/changed.js";
+} from "../packages/mokly/dist/review/git.js";
+import type { ReadOnlyReviewRepository } from "../packages/mokly/dist/review/repository.js";
+import { committedReviewRepository } from "../packages/mokly/dist/review/repository.js";
+import { computeChangedPaths } from "../packages/mokly/dist/server/changed.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
 
 import {

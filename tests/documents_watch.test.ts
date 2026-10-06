@@ -6,8 +6,8 @@ import { setTimeout } from "node:timers/promises";
 
 import { readCatalogue } from "@mokly/viewer";
 
-import { PlainServeReporter } from "../dist/server/reporter.js";
-import { serve } from "../dist/server/serve.js";
+import { PlainServeReporter } from "../packages/mokly/dist/server/reporter.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";

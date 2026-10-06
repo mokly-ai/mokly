@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
+import { projectCatalogue } from "../packages/mokly/src/catalogue/projection.js";
+import { serializeCatalogue } from "../packages/mokly/src/catalogue/serialization.js";
+import { removedManifestEntries } from "../packages/mokly/src/registry/changes.js";
 import { resolveCatalogueEntry } from "../packages/viewer/src/catalogue/entry_selection.js";
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import type { CatalogueReadModel } from "../packages/viewer/src/catalogue/types.js";
@@ -16,9 +19,6 @@ import {
   viewerCatalogue,
 } from "../packages/viewer/src/viewer/projection.js";
 import { publicWorkspace } from "../packages/viewer/src/viewer/public_workspace.js";
-import { projectCatalogue } from "../src/catalogue/projection.js";
-import { serializeCatalogue } from "../src/catalogue/serialization.js";
-import { removedManifestEntries } from "../src/registry/changes.js";
 
 type CurrentManifestScreen = ManifestScreen & {
   declaredDependencies: readonly string[];

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { pairMoves } from "../src/review/moves/pair.js";
-import type { MoveCandidate } from "../src/review/moves/types.js";
+import { pairMoves } from "../packages/mokly/src/review/moves/pair.js";
+import type { MoveCandidate } from "../packages/mokly/src/review/moves/types.js";
 
 import { moveEntry, moveSignals } from "./helpers/move_entries.js";
 
@@ -65,7 +65,8 @@ test("unique fingerprint groups keep full content comparisons linear", () => {
 });
 
 test("production fingerprints require linear full comparisons for unique rendered pages", async () => {
-  const { contentMoveSignals } = await import("../src/review/moves/content.js");
+  const { contentMoveSignals } =
+    await import("../packages/mokly/src/review/moves/content.js");
   const count = 200;
   const make = (folder: string) =>
     Array.from({ length: count }, (_, index) => ({
@@ -103,7 +104,8 @@ test("production fingerprints require linear full comparisons for unique rendere
 });
 
 test("different ignore contracts fall back to paired normalization before excluding a match", async () => {
-  const { contentMoveSignals } = await import("../src/review/moves/content.js");
+  const { contentMoveSignals } =
+    await import("../packages/mokly/src/review/moves/content.js");
   const entry = (path: string) => ({
     ...moveEntry(path, { kind: "page" }),
     kind: "page" as const,

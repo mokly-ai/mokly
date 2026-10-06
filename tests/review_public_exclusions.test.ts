@@ -5,10 +5,10 @@ import test from "node:test";
 
 import type { HistoricalManifest } from "@mokly/viewer/data";
 
-import { loadConfig } from "../dist/config/load.js";
-import { GitReviewAssetReader } from "../dist/review/assets.js";
-import { baselineResourceConfig } from "../dist/review/base_manifest.js";
-import type { BaselineReader } from "../dist/review/git.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { GitReviewAssetReader } from "../packages/mokly/dist/review/assets.js";
+import { baselineResourceConfig } from "../packages/mokly/dist/review/base_manifest.js";
+import type { BaselineReader } from "../packages/mokly/dist/review/git.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { excludedNames, permittedNames } from "./helpers/public_exclusions.js";

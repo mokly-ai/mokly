@@ -3,11 +3,15 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { compareReview } from "../dist/review/compare.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
-import { repositoryRoot, validEntrySource } from "./helpers/fixture.js";
+import {
+  packageRoot,
+  repositoryRoot,
+  validEntrySource,
+} from "./helpers/fixture.js";
 
 const read = (file: string) =>
   fs.readFile(path.join(repositoryRoot, file), "utf8");
@@ -71,5 +75,8 @@ test("delivered component contracts do not retain superseded status or version i
       /Keep `ReviewResult\.schemaVersion` at 2/,
       file,
     );
-  assert.match(await read("README.md"), /Current output uses manifest v8/);
+  assert.match(
+    await fs.readFile(path.join(packageRoot, "README.md"), "utf8"),
+    /Current output uses manifest v8/,
+  );
 });

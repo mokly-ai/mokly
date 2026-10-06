@@ -1,7 +1,7 @@
 import type {
   MoveCandidate,
   MoveSignals,
-} from "../../src/review/moves/types.js";
+} from "../../packages/mokly/src/review/moves/types.js";
 
 export function moveEntry(
   path: string,

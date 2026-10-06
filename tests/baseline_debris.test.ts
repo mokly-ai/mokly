@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
 
-import { cacheLayout } from "../dist/baseline/cache_layout.js";
+import { cacheLayout } from "../packages/mokly/dist/baseline/cache_layout.js";
 
 import { baselineFixture } from "./helpers/baseline_fixture.js";
 

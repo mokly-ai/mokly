@@ -1,4 +1,4 @@
-import { defineScreen, defineComponent } from "../dist/index.js";
+import { defineScreen, defineComponent } from "../packages/mokly/dist/index.js";
 const fields = {
   title: "Screen",
   description: "Screen",

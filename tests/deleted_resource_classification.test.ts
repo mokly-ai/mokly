@@ -3,18 +3,18 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { readManifest } from "../dist/registry/manifest.js";
+import { readManifest } from "../packages/mokly/dist/registry/manifest.js";
 import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
-} from "../dist/review/assets.js";
-import { asChangeEvidence } from "../dist/review/change_evidence.js";
-import { classifyComponents } from "../dist/review/component_classification.js";
+} from "../packages/mokly/dist/review/assets.js";
+import { asChangeEvidence } from "../packages/mokly/dist/review/change_evidence.js";
+import { classifyComponents } from "../packages/mokly/dist/review/component_classification.js";
 import {
   CommittedRepository,
   NodeGitCommandRunner,
-} from "../dist/review/git.js";
-import { classifyChangedContent } from "../dist/server/changed_content.js";
+} from "../packages/mokly/dist/review/git.js";
+import { classifyChangedContent } from "../packages/mokly/dist/server/changed_content.js";
 import { generatedViews } from "../packages/viewer/dist/data.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";

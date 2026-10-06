@@ -3,10 +3,10 @@ import fs from "node:fs/promises";
 import test from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { serve } from "../dist/server/serve.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 
 import { controlsEntrySource } from "./helpers/component_controls_fixture.js";
 import { settledRenderCapability } from "./helpers/component_controls_state.js";

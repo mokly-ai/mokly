@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { exportCatalogue } from "../../dist/export/run.js";
+import { exportCatalogue } from "../../packages/mokly/dist/export/run.js";
 import { createExportFixture } from "../helpers/export_fixture.js";
 import { validEntrySource } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";

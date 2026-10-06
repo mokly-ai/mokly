@@ -3,13 +3,13 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { MoklyError } from "../dist/errors.js";
-import { GitRepositoryEvidence } from "../dist/review/git_evidence.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
-import { configuredServedReview } from "../dist/server/configured_review.js";
-import { NodeCatalogueServerFactory } from "../dist/server/factory.js";
-import { startCatalogueServer } from "../dist/server/http.js";
-import { serve } from "../dist/server/serve.js";
+import { MoklyError } from "../packages/mokly/dist/errors.js";
+import { GitRepositoryEvidence } from "../packages/mokly/dist/review/git_evidence.js";
+import { committedReviewRepository } from "../packages/mokly/dist/review/repository.js";
+import { configuredServedReview } from "../packages/mokly/dist/server/configured_review.js";
+import { NodeCatalogueServerFactory } from "../packages/mokly/dist/server/factory.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 
 import { observeBackgroundClassification } from "./helpers/background_classification.js";
 import { changedFixture } from "./helpers/changed_fixture.js";

@@ -3,8 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 
-import { compareReview } from "../dist/review/compare.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 

@@ -5,7 +5,7 @@ import test from "node:test";
 import {
   cacheLayout,
   parseCompletionMarker,
-} from "../dist/baseline/cache_layout.js";
+} from "../packages/mokly/dist/baseline/cache_layout.js";
 
 import {
   baselineFixture,

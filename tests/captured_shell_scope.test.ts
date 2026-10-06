@@ -12,7 +12,7 @@ import {
 import {
   externalizeCapturedShell,
   readCapturedShellCatalogue,
-} from "../dist/export/captured_shell.js";
+} from "../packages/mokly/dist/export/captured_shell.js";
 
 const catalogue = readCatalogue(
   JSON.parse(

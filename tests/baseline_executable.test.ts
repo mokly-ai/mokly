@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { NodeBaselineExecutableResolver } from "../dist/baseline/executable.js";
+import { NodeBaselineExecutableResolver } from "../packages/mokly/dist/baseline/executable.js";
 
 for (const command of ["npm", "npx", "npm.cmd", "npx.cmd"]) {
   test(`Windows ${command} uses the selected installation and preserves literal argv`, async () => {

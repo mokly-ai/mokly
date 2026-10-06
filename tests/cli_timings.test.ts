@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
-import type { TimingEvent } from "../dist/diagnostics/timings.js";
+import type { TimingEvent } from "../packages/mokly/dist/diagnostics/timings.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { createFixture, removeFixture, cliBinPath } from "./helpers/fixture.js";

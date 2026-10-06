@@ -3,16 +3,19 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { isCancellation, MoklyError } from "../dist/errors.js";
-import { withPreInstallationCancellation } from "../dist/export/error.js";
-import { fileExportOperations } from "../dist/export/operations.js";
-import { exportCatalogue } from "../dist/export/run.js";
-import { exportReservation } from "../dist/export/transaction.js";
-import { GitReviewAssetReader } from "../dist/review/assets.js";
-import { CommittedBaselineReader } from "../dist/review/committed.js";
-import type { BaselineReader, GitCommandRunner } from "../dist/review/git.js";
-import { readGitFiles } from "../dist/review/git_batch.js";
-import { GitRepositoryEvidence } from "../dist/review/git_evidence.js";
+import { isCancellation, MoklyError } from "../packages/mokly/dist/errors.js";
+import { withPreInstallationCancellation } from "../packages/mokly/dist/export/error.js";
+import { fileExportOperations } from "../packages/mokly/dist/export/operations.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
+import { exportReservation } from "../packages/mokly/dist/export/transaction.js";
+import { GitReviewAssetReader } from "../packages/mokly/dist/review/assets.js";
+import { CommittedBaselineReader } from "../packages/mokly/dist/review/committed.js";
+import type {
+  BaselineReader,
+  GitCommandRunner,
+} from "../packages/mokly/dist/review/git.js";
+import { readGitFiles } from "../packages/mokly/dist/review/git_batch.js";
+import { GitRepositoryEvidence } from "../packages/mokly/dist/review/git_evidence.js";
 
 import {
   createExportFixture,

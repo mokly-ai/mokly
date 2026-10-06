@@ -1,4 +1,4 @@
-import { projectCatalogue } from "../../dist/catalogue/projection.js";
+import { projectCatalogue } from "../../packages/mokly/dist/catalogue/projection.js";
 import type { CatalogueReadModel } from "../../packages/viewer/dist/catalogue/types.js";
 import type { Catalogue } from "../../packages/viewer/dist/shell/catalogue.js";
 import type { ShellContext } from "../../packages/viewer/dist/shell/context.js";

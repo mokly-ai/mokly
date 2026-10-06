@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { buildPlanArchive, requestUploadPlan } from "../dist/publish/plan.js";
-import type { UploadManifest } from "../dist/publish/types.js";
+import {
+  buildPlanArchive,
+  requestUploadPlan,
+} from "../packages/mokly/dist/publish/plan.js";
+import type { UploadManifest } from "../packages/mokly/dist/publish/types.js";
 
 import { ownershipMarkerFromFiles } from "./helpers/ownership_marker.js";
 import { extractUploadArchive } from "./helpers/upload_archive.js";

@@ -3,15 +3,15 @@ import path from "node:path";
 
 import type { Page } from "@playwright/test";
 
-import { adaptBrowseDocument } from "../../dist/browse/document_adapter.js";
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { generatedText } from "../../dist/build/generated_file.js";
-import { projectCatalogue } from "../../dist/catalogue/projection.js";
-import { loadConfig } from "../../dist/config/load.js";
+import { adaptBrowseDocument } from "../../packages/mokly/dist/browse/document_adapter.js";
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import { generatedText } from "../../packages/mokly/dist/build/generated_file.js";
+import { projectCatalogue } from "../../packages/mokly/dist/catalogue/projection.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
 import {
   loadBrowserClientModules,
   loadBrowserNavigationModules,
-} from "../../dist/server/client_modules.js";
+} from "../../packages/mokly/dist/server/client_modules.js";
 import type {
   FrameEvent,
   MountedFrame,

@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { serveReviewArtifactFile } from "../dist/server/review_responses.js";
+import { serveReviewArtifactFile } from "../packages/mokly/dist/server/review_responses.js";
 
 test("snapshot serving permits regular files and rejects linked leaves and ancestors", async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-snapshots-"));

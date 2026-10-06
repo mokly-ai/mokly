@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { scopeModule } from "../dist/build/styles/modules.js";
+import { scopeModule } from "../packages/mokly/dist/build/styles/modules.js";
 
 import {
   createFixture,

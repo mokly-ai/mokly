@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { isCancellation, MoklyError } from "../dist/errors.js";
-import { publishCatalogue } from "../dist/publish/run.js";
+import { isCancellation, MoklyError } from "../packages/mokly/dist/errors.js";
+import { publishCatalogue } from "../packages/mokly/dist/publish/run.js";
 
 import {
   config,

@@ -4,9 +4,9 @@ import test from "node:test";
 import {
   publishOutput,
   publishProgressLabel,
-} from "../dist/cli/publish_output.js";
-import { PlainReporter } from "../dist/cli/reporter/plain.js";
-import { RichReporter } from "../dist/cli/reporter/rich.js";
+} from "../packages/mokly/dist/cli/publish_output.js";
+import { PlainReporter } from "../packages/mokly/dist/cli/reporter/plain.js";
+import { RichReporter } from "../packages/mokly/dist/cli/reporter/rich.js";
 
 import { memoryTerminal } from "./helpers/terminal.js";
 

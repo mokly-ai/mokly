@@ -82,7 +82,7 @@ unresolved, and the two code recommendations below need a user decision.
 
 ### 1. Medium — Deployment identity covers only comparison output
 
-The exporter hashes `comparisonFiles` in [site.ts](../../src/export/site.ts),
+The exporter hashes `comparisonFiles` in [site.ts](../../packages/mokly/src/export/site.ts),
 then adds shell HTML, navigation, public files, CSS, modules, fonts, and adapter
 output. The then-current `adoptStaticDelivery` used only `comparisonUrl` to
 decide whether a page belonged to the current deployment.

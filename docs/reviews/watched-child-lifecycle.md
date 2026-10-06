@@ -10,15 +10,15 @@ finding remains invalid; its compiled reproduction needs no production change.
 1. **High — failed-child cleanup. Fixed, option B.** Previously, the supervisor
    cleared its handle after readiness failure or a post-ready error and sent
    only SIGTERM. A surviving child could outlive `close()` and retain its port.
-   [ManagedChild](../../src/server/child_lifecycle.ts) now owns readiness,
+   [ManagedChild](../../packages/mokly/src/server/child_lifecycle.ts) now owns readiness,
    terminal state, and one cleanup operation per child. All failure, shutdown,
    and replacement paths retain ownership until that operation completes.
    Concurrent callers share its timers and terminal confirmation, and the first
    startup error remains the reported failure. Late ready messages are ignored.
-   [Native handles](../../src/server/child_process.ts) retain terminal results
+   [Native handles](../../packages/mokly/src/server/child_process.ts) retain terminal results
    for late subscribers, including failed process creation. Graceful-send errors
    do not bypass escalation. The
-   [supervisor](../../src/server/supervisor.ts) rejects a new start while cleanup
+   [supervisor](../../packages/mokly/src/server/supervisor.ts) rejects a new start while cleanup
    still owns the child and preserves resolved ports across successful restarts.
    This is broader than calling the old shutdown helper from additional catches:
    that helper could miss a prior exit and let competing callers return early.

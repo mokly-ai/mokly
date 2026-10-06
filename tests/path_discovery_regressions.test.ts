@@ -3,9 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { isAuthoringSource } from "../dist/build/source_inventory.js";
-import { discoverEntries } from "../dist/config/entry_discovery.js";
-import { isEntryGlobCandidate } from "../dist/server/watch_paths.js";
+import { isAuthoringSource } from "../packages/mokly/dist/build/source_inventory.js";
+import { discoverEntries } from "../packages/mokly/dist/config/entry_discovery.js";
+import { isEntryGlobCandidate } from "../packages/mokly/dist/server/watch_paths.js";
 
 import { pageSource, pathFixture } from "./helpers/path_fixture.js";
 

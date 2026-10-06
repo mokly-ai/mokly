@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { removedManifestEntries } from "../dist/registry/changes.js";
-import { viewPage } from "../dist/server/pages.js";
+import { removedManifestEntries } from "../packages/mokly/dist/registry/changes.js";
+import { viewPage } from "../packages/mokly/dist/server/pages.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
 import { workspaceData } from "../packages/viewer/dist/shell/workspace_data.js";

@@ -6,8 +6,8 @@ import type { ManifestDocument } from "@mokly/viewer/data";
 import {
   documentResourceIndex,
   linkedDocumentResources,
-} from "../src/documents/resource_references.js";
-import { normalizeReviewPair } from "../src/review/ignore.js";
+} from "../packages/mokly/src/documents/resource_references.js";
+import { normalizeReviewPair } from "../packages/mokly/src/review/ignore.js";
 
 const entry: ManifestDocument = {
   kind: "document",

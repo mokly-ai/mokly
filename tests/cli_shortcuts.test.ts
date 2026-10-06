@@ -4,15 +4,15 @@ import path from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 
-import { parseArguments } from "../dist/cli/arguments.js";
+import { parseArguments } from "../packages/mokly/dist/cli/arguments.js";
 import {
   browserCommand,
   openServedBrowser,
   type BrowserOpener,
-} from "../dist/cli/browser.js";
-import { PlainReporter } from "../dist/cli/reporter/plain.js";
-import { RichReporter } from "../dist/cli/reporter/rich.js";
-import { ServeShortcuts } from "../dist/cli/reporter/shortcuts.js";
+} from "../packages/mokly/dist/cli/browser.js";
+import { PlainReporter } from "../packages/mokly/dist/cli/reporter/plain.js";
+import { RichReporter } from "../packages/mokly/dist/cli/reporter/rich.js";
+import { ServeShortcuts } from "../packages/mokly/dist/cli/reporter/shortcuts.js";
 
 import {
   createFixture,

@@ -4,11 +4,11 @@ import path from "node:path";
 
 import { expect, test, type Page } from "@playwright/test";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
-import { exportCatalogue } from "../../dist/export/run.js";
-import { serve } from "../../dist/server/serve.js";
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import { exportCatalogue } from "../../packages/mokly/dist/export/run.js";
+import { serve } from "../../packages/mokly/dist/server/serve.js";
 import {
   createFixture,
   removeFixture,

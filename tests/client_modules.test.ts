@@ -7,7 +7,7 @@ import test from "node:test";
 import {
   loadBrowserClientModules,
   loadBrowserClientModulesFrom,
-} from "../dist/server/client_modules.js";
+} from "../packages/mokly/dist/server/client_modules.js";
 import { inspectBrowserGraph } from "../scripts/package/browser_graph.mjs";
 import {
   inspectDeliveredBrowserGraph,

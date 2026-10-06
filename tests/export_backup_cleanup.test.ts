@@ -3,11 +3,11 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { fileExportOperations } from "../dist/export/operations.js";
+import { fileExportOperations } from "../packages/mokly/dist/export/operations.js";
 import {
   ExportTransaction,
   TRANSACTION_MARKER,
-} from "../dist/export/transaction.js";
+} from "../packages/mokly/dist/export/transaction.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { writeOwnershipMarker } from "./helpers/ownership_marker.js";

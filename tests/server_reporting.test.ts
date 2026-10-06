@@ -3,24 +3,30 @@ import test from "node:test";
 
 import type { ManifestV8 } from "@mokly/viewer/data";
 
-import { FileSystemGeneratedOutputStore } from "../dist/build/output_store.js";
-import { FileSystemConfigLoader, loadConfig } from "../dist/config/load.js";
-import type { ChildHandle } from "../dist/server/child_process.js";
-import { NodeCatalogueServerFactory } from "../dist/server/factory.js";
-import type { ServeReporter, WatchReport } from "../dist/server/reporter.js";
-import { serve } from "../dist/server/serve.js";
+import { FileSystemGeneratedOutputStore } from "../packages/mokly/dist/build/output_store.js";
+import {
+  FileSystemConfigLoader,
+  loadConfig,
+} from "../packages/mokly/dist/config/load.js";
+import type { ChildHandle } from "../packages/mokly/dist/server/child_process.js";
+import { NodeCatalogueServerFactory } from "../packages/mokly/dist/server/factory.js";
+import type {
+  ServeReporter,
+  WatchReport,
+} from "../packages/mokly/dist/server/reporter.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 import {
   NodeProcessSupervisorFactory,
   ReadyProcessSupervisor,
-} from "../dist/server/supervisor.js";
-import type { ChildCommand } from "../dist/server/update_messages.js";
-import { parseChildDiagnosticMessage } from "../dist/server/update_messages.js";
+} from "../packages/mokly/dist/server/supervisor.js";
+import type { ChildCommand } from "../packages/mokly/dist/server/update_messages.js";
+import { parseChildDiagnosticMessage } from "../packages/mokly/dist/server/update_messages.js";
 import {
   WatchActionQueue,
   WatchDebouncer,
   type DebounceClock,
-} from "../dist/server/watch_events.js";
-import { ChokidarWatcherFactory } from "../dist/server/watcher.js";
+} from "../packages/mokly/dist/server/watch_events.js";
+import { ChokidarWatcherFactory } from "../packages/mokly/dist/server/watcher.js";
 
 import { nodeBaselineBuilder } from "./helpers/baseline_builders.js";
 import { derivedFixture } from "./helpers/derived_fixture.js";

@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { pathCollisions } from "../src/registry/path_collisions.js";
+import { pathCollisions } from "../packages/mokly/src/registry/path_collisions.js";
 import {
   deriveEntryPath,
   movedFromDiagnostic,
-} from "../src/registry/path_derivation.js";
+} from "../packages/mokly/src/registry/path_derivation.js";
 
 const location = "specs/account/invoice.mockup.tsx export default";
 
@@ -247,7 +247,8 @@ test("declared paths bypass file and directory grammar but retain explicit slug 
 });
 
 test("declared index paths retain their own-folder link base, including reserved documents", async () => {
-  const { entryLinkBase } = await import("../src/registry/path_derivation.js");
+  const { entryLinkBase } =
+    await import("../packages/mokly/src/registry/path_derivation.js");
   for (const input of [
     { file: "Bad Folder/index.mockup.tsx" },
     { file: "Bad Folder/a-->b.mockup.tsx", slug: "index" },

@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { timeAsync } from "../dist/diagnostics/timings.js";
+import { timeAsync } from "../packages/mokly/dist/diagnostics/timings.js";
 
 import {
   PREVIEW_ARTIFACT_MARKER,

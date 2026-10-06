@@ -3,11 +3,11 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { validateGeneratedOutputPaths } from "../dist/build/output_paths.js";
-import { generatedOwnershipDenial } from "../dist/build/ownership.js";
-import { isAuthoringSource } from "../dist/build/source_inventory.js";
-import { loadConfig } from "../dist/config/load.js";
-import { MANIFEST_NAME } from "../dist/registry/manifest.js";
+import { validateGeneratedOutputPaths } from "../packages/mokly/dist/build/output_paths.js";
+import { generatedOwnershipDenial } from "../packages/mokly/dist/build/ownership.js";
+import { isAuthoringSource } from "../packages/mokly/dist/build/source_inventory.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { MANIFEST_NAME } from "../packages/mokly/dist/registry/manifest.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

@@ -4,8 +4,8 @@ import test from "node:test";
 import {
   cssWhitespaceAt,
   scanCssText,
-} from "../dist/build/styles/module_css_scan.js";
-import { scanScopePrelude } from "../dist/build/styles/module_scope.js";
+} from "../packages/mokly/dist/build/styles/module_css_scan.js";
+import { scanScopePrelude } from "../packages/mokly/dist/build/styles/module_scope.js";
 
 for (const whitespace of [" ", "\t", "\n", "\r", "\f", "\r\n"])
   test(`CSS scanner recognizes ${JSON.stringify(whitespace)}`, () => {

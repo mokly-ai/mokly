@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parseArguments } from "../dist/cli/arguments.js";
+import { parseArguments } from "../packages/mokly/dist/cli/arguments.js";
 import {
   bindTimings,
   runWithTimings,
@@ -9,7 +9,7 @@ import {
   timeSync,
   timingCounts,
   type TimingEvent,
-} from "../dist/diagnostics/timings.js";
+} from "../packages/mokly/dist/diagnostics/timings.js";
 
 test("debug timings is an opt-in common CLI flag", () => {
   assert.equal(parseArguments([]).debugTimings, undefined);

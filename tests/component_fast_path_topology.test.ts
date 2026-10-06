@@ -4,12 +4,12 @@ import { test } from "node:test";
 import {
   generatedBytes,
   type GeneratedFile,
-} from "../dist/build/generated_file.js";
+} from "../packages/mokly/dist/build/generated_file.js";
 import {
   runWithTimings,
   type TimingEvent,
-} from "../dist/diagnostics/timings.js";
-import { classifyComponents } from "../dist/review/component_classification.js";
+} from "../packages/mokly/dist/diagnostics/timings.js";
+import { classifyComponents } from "../packages/mokly/dist/review/component_classification.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
 

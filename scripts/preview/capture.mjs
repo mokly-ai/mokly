@@ -5,7 +5,7 @@ import {
   loadBrowserClientModules,
   loadBrowserNavigationModules,
   loadShellFontAssets,
-} from "../../dist/server/client_modules.js";
+} from "../../packages/mokly/dist/server/client_modules.js";
 
 import { normalizeProviderHtmlAttributes } from "./html_paths.mjs";
 

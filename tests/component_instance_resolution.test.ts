@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { resolveInstance, reviewMaterialKey } from "../dist/index.js";
+import {
+  resolveInstance,
+  reviewMaterialKey,
+} from "../packages/mokly/dist/index.js";
 import { instanceKey } from "../packages/viewer/dist/components/keys.js";
 import type { ComponentInstanceRecord } from "../packages/viewer/dist/components/manifest_types.js";
 

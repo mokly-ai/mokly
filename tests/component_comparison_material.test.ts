@@ -5,8 +5,8 @@ import {
   componentUsageTopologyEqual,
   componentUsageSignals,
   stripComponentMarkers,
-} from "../dist/components/comparison_material.js";
-import { projectComponentPair } from "../dist/components/comparison_projection.js";
+} from "../packages/mokly/dist/components/comparison_material.js";
+import { projectComponentPair } from "../packages/mokly/dist/components/comparison_projection.js";
 import type { ComponentViewRecord } from "../packages/viewer/dist/components/manifest_types.js";
 
 test("component marker stripping removes only current valid boundaries", () => {

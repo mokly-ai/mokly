@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { resolveConfig } from "../dist/config/validate.js";
+import { resolveConfig } from "../packages/mokly/dist/config/validate.js";
 
 import { pathFixture, pageSource } from "./helpers/path_fixture.js";
 
@@ -112,7 +112,8 @@ test("failed candidate discovery cannot mutate the accepted config inventory", a
   });
   await fixture.write("specs/account/_folder.json", '{"hidden":true}');
   await fixture.write("specs/account/item.mockup.ts", "this is not a module");
-  const { compileCatalogue } = await import("../dist/build/compile.js");
+  const { compileCatalogue } =
+    await import("../packages/mokly/dist/build/compile.js");
   await assert.rejects(compileCatalogue(config));
   assert.deepEqual(
     { folders: config.folderRecords, files: config.resolvedFiles },
@@ -171,7 +172,7 @@ test("folder exclusions also exclude new watch candidates without hiding importe
   t.after(fixture.remove);
   const config = await fixture.config();
   const { isEntryGlobCandidate } =
-    await import("../dist/server/watch_paths.js");
+    await import("../packages/mokly/dist/server/watch_paths.js");
   assert.equal(
     isEntryGlobCandidate(
       path.join(fixture.root, "specs/account/drafts/new.mockup.ts"),
@@ -209,7 +210,7 @@ test("watch exclusions belong to their root and imported excluded modules remain
   t.after(fixture.remove);
   const config = await fixture.config();
   const { isEntryGlobCandidate } =
-    await import("../dist/server/watch_paths.js");
+    await import("../packages/mokly/dist/server/watch_paths.js");
   const child = path.join(fixture.root, "specs/account/drafts/next.mockup.ts");
   assert.equal(isEntryGlobCandidate(child, config), true);
   assert.equal(
@@ -220,7 +221,8 @@ test("watch exclusions belong to their root and imported excluded modules remain
   assert.ok(
     compiled.manifest.sourceFiles.includes("specs/account/drafts/helper.ts"),
   );
-  const { classifyWatchPath } = await import("../dist/server/watch_events.js");
+  const { classifyWatchPath } =
+    await import("../packages/mokly/dist/server/watch_events.js");
   assert.equal(
     classifyWatchPath(
       {

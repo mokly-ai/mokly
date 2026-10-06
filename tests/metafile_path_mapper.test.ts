@@ -6,9 +6,9 @@ import test from "node:test";
 
 import type { Metafile } from "esbuild";
 
-import { createMetafilePathMapper } from "../dist/build/metafile_paths.js";
-import { graphSourceFiles } from "../dist/build/source_inventory.js";
-import { orderedStyles } from "../dist/build/styles/order.js";
+import { createMetafilePathMapper } from "../packages/mokly/dist/build/metafile_paths.js";
+import { graphSourceFiles } from "../packages/mokly/dist/build/source_inventory.js";
+import { orderedStyles } from "../packages/mokly/dist/build/styles/order.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

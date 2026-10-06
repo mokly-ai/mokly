@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { publishFailure } from "../dist/cli/publish_failure.js";
-import { MoklyError } from "../dist/errors.js";
-import { PublishCancelledError } from "../dist/publish/errors.js";
+import { publishFailure } from "../packages/mokly/dist/cli/publish_failure.js";
+import { MoklyError } from "../packages/mokly/dist/errors.js";
+import { PublishCancelledError } from "../packages/mokly/dist/publish/errors.js";
 
 test("publish failure maps only real cancellations", () => {
   const marked = new MoklyError("export-invalid", "cancelled", {

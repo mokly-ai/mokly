@@ -4,12 +4,12 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
 import {
   isValidGeneratedRoute,
   stylesheetRoute,
-} from "../dist/build/styles/routes.js";
-import { loadConfig } from "../dist/config/load.js";
+} from "../packages/mokly/dist/build/styles/routes.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import {

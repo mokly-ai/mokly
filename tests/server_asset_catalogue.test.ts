@@ -4,8 +4,8 @@ import { test } from "node:test";
 
 import type { Catalogue } from "@mokly/viewer/server";
 
-import type { ResolvedConfig } from "../src/config/types.js";
-import { handleCatalogueRequest } from "../src/server/http_routes.js";
+import type { ResolvedConfig } from "../packages/mokly/src/config/types.js";
+import { handleCatalogueRequest } from "../packages/mokly/src/server/http_routes.js";
 
 for (const route of [
   "/__mokly/shell.css",

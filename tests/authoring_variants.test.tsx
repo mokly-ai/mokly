@@ -5,12 +5,12 @@ import test from "node:test";
 import {
   __attributeDefinition,
   defineScreen,
-} from "../dist/authoring/definitions.js";
-import type { ScreenInput } from "../dist/authoring/types.js";
-import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
-import type { ResolvedConfig } from "../dist/config/types.js";
-import { collectModuleExports } from "../dist/registry/export_collection.js";
-import { prepareRegistry } from "../dist/registry/prepare.js";
+} from "../packages/mokly/dist/authoring/definitions.js";
+import type { ScreenInput } from "../packages/mokly/dist/authoring/types.js";
+import { DEFAULT_PUBLIC_EXCLUDE } from "../packages/mokly/dist/config/public_exclusions.js";
+import type { ResolvedConfig } from "../packages/mokly/dist/config/types.js";
+import { collectModuleExports } from "../packages/mokly/dist/registry/export_collection.js";
+import { prepareRegistry } from "../packages/mokly/dist/registry/prepare.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 

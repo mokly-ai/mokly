@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { capturePublicFiles } from "../dist/export/public_files.js";
-import { assembleExport } from "../dist/export/site.js";
-import { asChangeEvidence } from "../dist/review/change_evidence.js";
-import { compareReview } from "../dist/review/compare.js";
-import { changedContentPaths } from "../dist/server/changed_content.js";
-import { readCatalogueChanges } from "../dist/server/component_changes.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+import { capturePublicFiles } from "../packages/mokly/dist/export/public_files.js";
+import { assembleExport } from "../packages/mokly/dist/export/site.js";
+import { asChangeEvidence } from "../packages/mokly/dist/review/change_evidence.js";
+import { compareReview } from "../packages/mokly/dist/review/compare.js";
+import { changedContentPaths } from "../packages/mokly/dist/server/changed_content.js";
+import { readCatalogueChanges } from "../packages/mokly/dist/server/component_changes.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";

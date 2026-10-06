@@ -3,9 +3,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { generatedText } from "../dist/build/generated_file.js";
-import { loadConfig } from "../dist/config/load.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { generatedText } from "../packages/mokly/dist/build/generated_file.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentViews, screenView } from "./helpers/component_views.js";

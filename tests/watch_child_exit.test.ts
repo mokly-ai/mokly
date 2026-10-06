@@ -2,33 +2,36 @@ import assert from "node:assert/strict";
 import { fork, type ChildProcess } from "node:child_process";
 import test from "node:test";
 
-import type { Compilation } from "../dist/build/compile.js";
-import { compileCatalogue } from "../dist/build/compile.js";
-import type { GeneratedOutputStore } from "../dist/build/output_store.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { FileSystemConfigLoader, loadConfig } from "../dist/config/load.js";
-import type { ResolvedConfig } from "../dist/config/types.js";
+import type { Compilation } from "../packages/mokly/dist/build/compile.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import type { GeneratedOutputStore } from "../packages/mokly/dist/build/output_store.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import {
+  FileSystemConfigLoader,
+  loadConfig,
+} from "../packages/mokly/dist/config/load.js";
+import type { ResolvedConfig } from "../packages/mokly/dist/config/types.js";
 import type {
   ChildFactory,
   ChildHandle,
-} from "../dist/server/child_process.js";
-import type { CatalogueServerFactory } from "../dist/server/factory.js";
+} from "../packages/mokly/dist/server/child_process.js";
+import type { CatalogueServerFactory } from "../packages/mokly/dist/server/factory.js";
 import type {
   RunningServer,
   ServerOptions,
-} from "../dist/server/http_types.js";
-import { serve } from "../dist/server/serve.js";
+} from "../packages/mokly/dist/server/http_types.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 import {
   ReadyProcessSupervisor,
   type ProcessSupervisor,
   type ProcessSupervisorFactory,
-} from "../dist/server/supervisor.js";
-import type { ChildCommand } from "../dist/server/update_messages.js";
-import type { WatchEvent } from "../dist/server/watch_events.js";
+} from "../packages/mokly/dist/server/supervisor.js";
+import type { ChildCommand } from "../packages/mokly/dist/server/update_messages.js";
+import type { WatchEvent } from "../packages/mokly/dist/server/watch_events.js";
 import type {
   ConsumerWatcher,
   ConsumerWatcherFactory,
-} from "../dist/server/watcher.js";
+} from "../packages/mokly/dist/server/watcher.js";
 
 import { createFixture, removeFixture, cliBinPath } from "./helpers/fixture.js";
 

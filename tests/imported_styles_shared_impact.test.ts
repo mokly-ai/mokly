@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { loadConfig } from "../dist/config/load.js";
-import { withoutDeliveredSourceImpact } from "../dist/review/imported_changes.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { withoutDeliveredSourceImpact } from "../packages/mokly/dist/review/imported_changes.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

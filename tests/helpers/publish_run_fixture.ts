@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 
-import type { ResolvedConfig } from "../../dist/config/types.js";
-import { type PublishDependencies } from "../../dist/publish/run.js";
+import type { ResolvedConfig } from "../../packages/mokly/dist/config/types.js";
+import { type PublishDependencies } from "../../packages/mokly/dist/publish/run.js";
 
 import { ownershipMarkerFromFiles } from "./ownership_marker.js";
 import { extractUploadArchive } from "./upload_archive.js";

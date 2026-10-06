@@ -6,9 +6,9 @@ import { expect, test } from "@playwright/test";
 import {
   compileCatalogue,
   type Compilation,
-} from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
+} from "../../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
 import { componentEntrySource } from "../helpers/component_fixture.js";
 import {
   createFixture,

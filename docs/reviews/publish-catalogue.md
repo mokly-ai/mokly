@@ -12,7 +12,7 @@ for the changes and verification.
    match its inventory to the archive. The linked export and delivery contracts
    describe a version and inventory but never define the JSON field names,
    field types, or unknown-field policy. Those details currently live in
-   [the internal ownership parser](../../src/export/ownership.ts), lines 10–14
+   [the internal ownership parser](../../packages/mokly/src/export/ownership.ts), lines 10–14
    and 32–65, and the internal staging writer. Independent receivers cannot
    implement this required validation from the documented artifacts alone;
    leaving it unchanged forces reverse engineering or inconsistent acceptance.
@@ -27,7 +27,7 @@ for the changes and verification.
    intended package-and-files boundary without exporting internal modules.
 
 2. **P2 / Medium — Valid bearer tokens beginning with a dash fail through the
-   advertised flag.** [The new token parser branch](../../src/cli/arguments.ts),
+   advertised flag.** [The new token parser branch](../../packages/mokly/src/cli/arguments.ts),
    line 62, uses `takeValue`, which rejects all values starting with `-` at
    lines 87–90. Upload v1's bearer grammar explicitly permits those tokens.
    An in-memory probe confirmed that `--token -review-synthetic-credential`

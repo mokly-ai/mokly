@@ -5,6 +5,6 @@
     "noEmit": true,
     "skipLibCheck": false
   },
-  "include": ["scripts/**/*.d.mts"],
+  "include": ["scripts/**/*.d.mts", "packages/mokly/scripts/**/*.d.mts"],
   "exclude": ["node_modules"]
 }

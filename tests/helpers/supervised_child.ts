@@ -1,8 +1,8 @@
 import type {
   ChildFactory,
   ChildHandle,
-} from "../../dist/server/child_process.js";
-import type { ChildCommand } from "../../dist/server/update_messages.js";
+} from "../../packages/mokly/dist/server/child_process.js";
+import type { ChildCommand } from "../../packages/mokly/dist/server/update_messages.js";
 
 /** Controllable child that retains exit state and otherwise ignores shutdown. */
 export class ControlledChild implements ChildHandle {

@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { analyzeHierarchy } from "@mokly/viewer/data";
 
-import { validateFolderRecord } from "../dist/registry/folder_records.js";
+import { validateFolderRecord } from "../packages/mokly/dist/registry/folder_records.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { buildNavSections } from "../packages/viewer/dist/shell/nav_tree.js";
 

@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
 
+import { projectCatalogue } from "../packages/mokly/src/catalogue/projection.js";
+import { removedManifestEntries } from "../packages/mokly/src/registry/changes.js";
 import {
   readCatalogue,
   readShellCatalogue,
@@ -9,8 +11,6 @@ import {
 import { projectScopedCatalogue } from "../packages/viewer/src/catalogue/scoped_projection.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
 import { viewerCatalogue } from "../packages/viewer/src/viewer/projection.js";
-import { projectCatalogue } from "../src/catalogue/projection.js";
-import { removedManifestEntries } from "../src/registry/changes.js";
 
 import { pathFixture } from "./helpers/path_fixture.js";
 

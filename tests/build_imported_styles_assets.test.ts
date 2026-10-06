@@ -3,10 +3,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { acceptStyleOutput } from "../dist/build/styles/outputs.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+import { acceptStyleOutput } from "../packages/mokly/dist/build/styles/outputs.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 
 import { removeFixture } from "./helpers/fixture.js";
 import {

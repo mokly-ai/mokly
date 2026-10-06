@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { projectCatalogue } from "../dist/catalogue/projection.js";
-import { removedManifestEntries } from "../dist/registry/changes.js";
+import { projectCatalogue } from "../packages/mokly/dist/catalogue/projection.js";
+import { removedManifestEntries } from "../packages/mokly/dist/registry/changes.js";
 import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
 import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";

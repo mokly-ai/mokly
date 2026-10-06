@@ -3,12 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
-import { NodeGitCommandRunner } from "../dist/review/git.js";
-import { loadCatalogueSnapshot } from "../dist/server/catalogue_snapshot.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { NodeGitCommandRunner } from "../packages/mokly/dist/review/git.js";
+import { loadCatalogueSnapshot } from "../packages/mokly/dist/server/catalogue_snapshot.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
 import { capturePublicationInputs } from "../scripts/preview/inputs.mjs";
 

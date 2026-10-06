@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 
 import { expect, test } from "@playwright/test";
 
-import { scopeModule } from "../../dist/build/styles/modules.js";
+import { scopeModule } from "../../packages/mokly/dist/build/styles/modules.js";
 
 const relative = "entries/advice.module.css";
 const prefix = `mokly_${createHash("sha256").update(relative).digest("hex").slice(0, 12)}_`;

@@ -2,10 +2,10 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
-import { readCatalogueChanges } from "../../dist/server/component_changes.js";
-import type { ServedReview } from "../../dist/server/configured_review.js";
-import { startCatalogueServer } from "../../dist/server/http.js";
-import type { RunningServer } from "../../dist/server/http_types.js";
+import { readCatalogueChanges } from "../../packages/mokly/dist/server/component_changes.js";
+import type { ServedReview } from "../../packages/mokly/dist/server/configured_review.js";
+import { startCatalogueServer } from "../../packages/mokly/dist/server/http.js";
+import type { RunningServer } from "../../packages/mokly/dist/server/http_types.js";
 import type { ReviewResultV5 } from "../../packages/viewer/dist/review/component_types.js";
 import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 

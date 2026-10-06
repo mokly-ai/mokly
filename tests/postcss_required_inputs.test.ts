@@ -3,10 +3,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { collectPostcssDependencies } from "../dist/build/styles/dependency_inventory.js";
-import { walkDependencyDirectory } from "../dist/build/styles/dependency_walk.js";
-import { loadConfig } from "../dist/config/load.js";
-import { classifyWatchPath } from "../dist/server/watch_events.js";
+import { collectPostcssDependencies } from "../packages/mokly/dist/build/styles/dependency_inventory.js";
+import { walkDependencyDirectory } from "../packages/mokly/dist/build/styles/dependency_walk.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
+import { classifyWatchPath } from "../packages/mokly/dist/server/watch_events.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 

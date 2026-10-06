@@ -1,1 +1,1 @@
-src/components/render.tsx#renderWithComponents
+packages/mokly/src/components/render.tsx#renderWithComponents

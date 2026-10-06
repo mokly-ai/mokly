@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parseArguments } from "../dist/cli/arguments.js";
-import { redactCliSecrets } from "../dist/cli/secrets.js";
+import { parseArguments } from "../packages/mokly/dist/cli/arguments.js";
+import { redactCliSecrets } from "../packages/mokly/dist/cli/secrets.js";
 
 test("all value options accept assignment with the same validation as separate values", () => {
   for (const [command, option, value] of [

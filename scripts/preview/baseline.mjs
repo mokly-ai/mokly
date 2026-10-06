@@ -1,10 +1,10 @@
 import {
   EARLIER_BASELINE_MESSAGE,
   isIncompatibleEarlierBaseline,
-} from "../../dist/baseline/compatibility.js";
-import { acceptedGenerationFromCompilation } from "../../dist/review/accepted_generation.js";
-import { loadCatalogueSnapshot } from "../../dist/server/catalogue_snapshot.js";
-import { computeCatalogueChanges } from "../../dist/server/changed.js";
+} from "../../packages/mokly/dist/baseline/compatibility.js";
+import { acceptedGenerationFromCompilation } from "../../packages/mokly/dist/review/accepted_generation.js";
+import { loadCatalogueSnapshot } from "../../packages/mokly/dist/server/catalogue_snapshot.js";
+import { computeCatalogueChanges } from "../../packages/mokly/dist/server/changed.js";
 
 import { publicationChangeEvidence } from "./change_evidence.mjs";
 

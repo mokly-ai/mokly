@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   renderReviewArtifact,
   summaryMarkdown,
-} from "../dist/review/artifact.js";
+} from "../packages/mokly/dist/review/artifact.js";
 import type {
   ReviewResult,
   ReviewState,

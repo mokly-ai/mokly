@@ -4,8 +4,8 @@ import path from "node:path";
 import test from "node:test";
 import { setTimeout } from "node:timers/promises";
 
-import { CachedBaselineBuilder } from "../dist/baseline/rebuild.js";
-import { serve } from "../dist/server/serve.js";
+import { CachedBaselineBuilder } from "../packages/mokly/dist/baseline/rebuild.js";
+import { serve } from "../packages/mokly/dist/server/serve.js";
 import { entryRoute, viewRoute } from "../packages/viewer/dist/data.js";
 import { parseRemovedPagePreview } from "../packages/viewer/dist/review/page_preview.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";

@@ -3,26 +3,26 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { compileCatalogue } from "../dist/build/compile.js";
-import { validateGeneratedOutputPaths } from "../dist/build/output_paths.js";
-import { writeCompilation } from "../dist/build/transaction.js";
-import { loadConfig } from "../dist/config/load.js";
+import { compileCatalogue } from "../packages/mokly/dist/build/compile.js";
+import { validateGeneratedOutputPaths } from "../packages/mokly/dist/build/output_paths.js";
+import { writeCompilation } from "../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../packages/mokly/dist/config/load.js";
 import {
   EARLIER_MANIFEST_NAMES,
   MANIFEST_NAME,
   parseManifest,
   readManifest,
-} from "../dist/registry/manifest.js";
+} from "../packages/mokly/dist/registry/manifest.js";
 import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
-} from "../dist/review/assets.js";
-import { readBaseManifest } from "../dist/review/base_manifest.js";
+} from "../packages/mokly/dist/review/assets.js";
+import { readBaseManifest } from "../packages/mokly/dist/review/base_manifest.js";
 import {
   NodeGitCommandRunner,
   CommittedRepository,
-} from "../dist/review/git.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+} from "../packages/mokly/dist/review/git.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
 
 import {

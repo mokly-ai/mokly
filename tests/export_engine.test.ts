@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { exportCatalogue } from "../dist/export/run.js";
+import { exportCatalogue } from "../packages/mokly/dist/export/run.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import {

@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
 
-import { NodeBaselineFileSystem } from "../dist/baseline/filesystem.js";
-import type { BaselineMaintenanceFailure } from "../dist/baseline/maintenance.js";
+import { NodeBaselineFileSystem } from "../packages/mokly/dist/baseline/filesystem.js";
+import type { BaselineMaintenanceFailure } from "../packages/mokly/dist/baseline/maintenance.js";
 
 for (const publication of ["acquired", "occupied", "failed"] as const) {
   test(`temporary cleanup preserves the ${publication} lock publication outcome`, async (t) => {

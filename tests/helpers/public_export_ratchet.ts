@@ -6,6 +6,7 @@ import path from "node:path";
 export interface PublicExportFixtureOptions {
   exports?: Readonly<Record<string, unknown>>;
   notes?: string;
+  packagePath?: string;
   sources?: Readonly<Record<string, string>>;
   tag?: string | null;
   version?: string;
@@ -27,14 +28,15 @@ export async function createPublicExportFixture(
   options: PublicExportFixtureOptions = {},
 ): Promise<PublicExportFixture> {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-exports-"));
+  const packagePath = options.packagePath ?? ".";
   await Promise.all([
     fs.mkdir(path.join(root, "docs/protocol"), { recursive: true }),
-    fs.mkdir(path.join(root, "src"), { recursive: true }),
+    fs.mkdir(path.join(root, packagePath, "src"), { recursive: true }),
   ]);
   await Promise.all([
     writeJson(root, "release-please-config.json", {
       packages: {
-        ".": {
+        [packagePath]: {
           "include-component-in-tag": false,
           "include-v-in-tag": true,
           "release-type": "node",
@@ -42,12 +44,15 @@ export async function createPublicExportFixture(
       },
     }),
     writeJson(root, ".release-please-manifest.json", {
-      ".": options.version ?? "1.0.0",
+      [packagePath]: options.version ?? "1.0.0",
     }),
-    writePackageExports(root, options.exports ?? defaultExports),
+    writePackageExports(root, options.exports ?? defaultExports, packagePath),
     writeNotes(root, options.notes ?? "# Release notes\n"),
     ...Object.entries(
-      options.sources ?? { "src/index.ts": "export const kept = 1;\n" },
+      options.sources ?? {
+        [path.posix.join(packagePath, "src/index.ts")]:
+          "export const kept = 1;\n",
+      },
     ).map(([file, source]) => writeFile(root, file, source)),
   ]);
   git(root, "init", "--quiet", "--initial-branch=feature");
@@ -63,8 +68,9 @@ export async function createPublicExportFixture(
 export async function writePackageExports(
   root: string,
   exports: Readonly<Record<string, unknown>>,
+  packagePath = ".",
 ): Promise<void> {
-  await writeJson(root, "package.json", {
+  await writeJson(root, path.posix.join(packagePath, "package.json"), {
     name: "@fixture/package",
     type: "module",
     version: "1.0.0",

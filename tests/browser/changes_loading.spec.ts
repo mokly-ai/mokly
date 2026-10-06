@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { writeCompilation } from "../../dist/build/transaction.js";
-import { loadConfig } from "../../dist/config/load.js";
-import { startCatalogueServer } from "../../dist/server/http.js";
-import type { CatalogueUpdate } from "../../dist/server/update_messages.js";
+import { compileCatalogue } from "../../packages/mokly/dist/build/compile.js";
+import { writeCompilation } from "../../packages/mokly/dist/build/transaction.js";
+import { loadConfig } from "../../packages/mokly/dist/config/load.js";
+import { startCatalogueServer } from "../../packages/mokly/dist/server/http.js";
+import type { CatalogueUpdate } from "../../packages/mokly/dist/server/update_messages.js";
 import { createFixture, removeFixture } from "../helpers/fixture.js";
 
 for (const mobile of [false, true]) {

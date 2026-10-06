@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { CLI_PACKAGE_PATH } from "../scripts/package/layout.mjs";
 import { runRepositoryRatchets } from "../scripts/verification/repository-ratchets.mjs";
 
 const legacyModule =
@@ -109,6 +110,7 @@ async function createDivergedRepository() {
     fs.mkdir(path.join(root, "docs/protocol"), { recursive: true }),
     fs.mkdir(path.join(root, "docs/protocol/fixtures"), { recursive: true }),
     fs.mkdir(path.join(root, "packages/viewer"), { recursive: true }),
+    fs.mkdir(path.join(root, CLI_PACKAGE_PATH), { recursive: true }),
     fs.mkdir(path.join(root, "scripts"), { recursive: true }),
     fs.mkdir(path.join(root, "tests"), { recursive: true }),
     fs.mkdir(path.join(root, "xtask"), { recursive: true }),
@@ -116,15 +118,24 @@ async function createDivergedRepository() {
   await Promise.all([
     fs.writeFile(
       path.join(root, "package.json"),
+      '{ "name": "ratchet-workspace", "private": true }\n',
+    ),
+    fs.writeFile(
+      path.join(root, CLI_PACKAGE_PATH, "package.json"),
       '{ "name": "ratchet-fixture", "exports": {} }\n',
     ),
     fs.writeFile(
       path.join(root, "release-please-config.json"),
-      '{ "packages": { ".": {}, "packages/viewer": {} } }\n',
+      JSON.stringify({
+        packages: { [CLI_PACKAGE_PATH]: {}, "packages/viewer": {} },
+      }),
     ),
     fs.writeFile(
       path.join(root, ".release-please-manifest.json"),
-      '{ ".": "0.0.0", "packages/viewer": "0.0.0" }\n',
+      JSON.stringify({
+        [CLI_PACKAGE_PATH]: "0.0.0",
+        "packages/viewer": "0.0.0",
+      }),
     ),
     fs.writeFile(
       path.join(root, "packages/viewer/package.json"),

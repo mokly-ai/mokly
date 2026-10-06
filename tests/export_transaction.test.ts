@@ -3,9 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { isCancellation } from "../dist/errors.js";
-import { fileExportOperations } from "../dist/export/operations.js";
-import { ExportTransaction } from "../dist/export/transaction.js";
+import { isCancellation } from "../packages/mokly/dist/errors.js";
+import { fileExportOperations } from "../packages/mokly/dist/export/operations.js";
+import { ExportTransaction } from "../packages/mokly/dist/export/transaction.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { writeOwnershipMarker } from "./helpers/ownership_marker.js";

@@ -9,10 +9,10 @@ import {
   viewRoute,
 } from "@mokly/viewer/data";
 
-import { committedReviewRepository } from "../dist/review/repository.js";
-import { readCatalogueChanges } from "../dist/server/component_changes.js";
-import { configuredServedReview } from "../dist/server/configured_review.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+import { committedReviewRepository } from "../packages/mokly/dist/review/repository.js";
+import { readCatalogueChanges } from "../packages/mokly/dist/server/component_changes.js";
+import { configuredServedReview } from "../packages/mokly/dist/server/configured_review.js";
+import { startCatalogueServer } from "../packages/mokly/dist/server/http.js";
 
 import {
   createRemovedDeliveryFixture,
@@ -25,7 +25,9 @@ test("Serve routes removed screens and pages without capture during browsing", a
   const repository = committedReviewRepository(fixture.config);
   const changes = await readCatalogueChanges(
     fixture.config,
-    (await import("../dist/registry/manifest.js")).readManifest(fixture.config),
+    (await import("../packages/mokly/dist/registry/manifest.js")).readManifest(
+      fixture.config,
+    ),
     "origin/main",
     repository,
     fixture.baseCommit,
@@ -43,9 +45,9 @@ test("Serve routes removed screens and pages without capture during browsing", a
     base: "origin/main",
     changesStatus: "ready",
     componentChanges: changes,
-    manifest: (await import("../dist/registry/manifest.js")).readManifest(
-      fixture.config,
-    ),
+    manifest: (
+      await import("../packages/mokly/dist/registry/manifest.js")
+    ).readManifest(fixture.config),
     port: 0,
     review: {
       ...configured,
