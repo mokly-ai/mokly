@@ -348,9 +348,10 @@ The separate title check runs when a PR opens, changes, or receives a push; see
 the [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).
 
 `npm test` runs `npm run prepare:unit` and then every Node unit test file.
-`prepare:unit` builds the package and the example, then compiles the example
-once more in memory and saves the result to
-`.context/verification/example-compilation.json`. Test files that read the
+`prepare:unit` builds the package and the example. When the saved snapshot is
+not fresh, it then compiles the example once more in memory and saves the
+result to `.context/verification/example-compilation.json`; when the snapshot
+is still fresh, it skips that compile. Test files that read the
 compiled example load this snapshot instead of compiling the example again. The
 snapshot stores a key of the example sources, the built package and the
 lockfile, and a test file uses it only while that key still matches. When you

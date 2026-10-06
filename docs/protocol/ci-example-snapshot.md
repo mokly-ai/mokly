@@ -27,18 +27,20 @@ Decoding requires the manifest object to serialize exactly to the snapshot's
 strict schema-v8 validation, so decoding does not repeat the validation, which
 costs seconds per test process. Diagnostics pass the build-warning validator.
 Decoding rejects another schema version, a malformed key, unknown fields,
-duplicate routes or document paths, and invalid binary transfer values. A decoded compilation equals the encoded one, with
-binary outputs as plain `Uint8Array` values like a fresh compile. It has no
-retained component runtime, so a test that needs `componentRuntime` compiles
-instead.
+duplicate routes or document paths, and invalid binary transfer values. A
+decoded compilation equals the encoded one, with binary outputs as plain
+`Uint8Array` values like a fresh compile. It has no retained component runtime,
+so a test that needs `componentRuntime` compiles instead.
 
 ## Freshness Key
 
-The freshness key is a SHA-256 digest of the schema version followed by one
-`[path, digest]` JSON line per input, in code-unit order of the
-repository-relative `/`-separated path. `digest` is the SHA-256 of the file
-bytes, `symlink:` plus the target of a symbolic link, or `missing` when the
-path is absent or is not a regular file. The inputs are:
+The freshness key is the SHA-256 digest of the line
+`mokly-example-compilation-snapshot 1`, where `1` is the schema version,
+followed by one `[path, digest]` JSON line per input, in code-unit order of the
+repository-relative `/`-separated path. Every line ends with a newline.
+`digest` is the SHA-256 of the file bytes, `symlink:` plus the target of a
+symbolic link, or `missing` when the path is absent or is not a regular file.
+The inputs are:
 
 - every file that `git ls-files --cached --others --exclude-standard` lists
   under `examples/basic`, `docs/protocol` and `README.md`, so a tracked file

@@ -1,9 +1,9 @@
 # Shared Example Compilation Snapshot
 
-Status: Active. All six milestones are complete on draft PR
-[#138](https://github.com/mokly-ai/mokly/pull/138); the plan closes when that
-PR merges. Three review findings stay open for the user to decide; Milestone
-6 lists them.
+Status: Active. Milestones 1 to 6 are complete on draft PR
+[#138](https://github.com/mokly-ai/mokly/pull/138); Milestone 7 applies the
+review-fix rule. The plan closes when the PR merges. Three review findings
+stay open for the user to decide; Milestone 7 lists them.
 
 ## Status And Outcome
 
@@ -356,25 +356,40 @@ the CI comparison with run 37354719684, the final local timings, and the
 complete local gate result. Full review report:
 `.context/shared-example-compilation-snapshot/review.md`.
 
-Review findings. The review used
+Review summary. The post-push review used
 [the implementation review prompt](../docs/implementation-review-prompt.md)
-on head `9d15e6d` against `origin/main` `f66c274`, after the push. It made no
-changes. The open findings, for the user to decide:
+on head `9d15e6d` and reported three findings; Milestone 7 applies the
+review-fix rule that main's #147 added.
 
-1. Medium: the codec copies `Compilation` fields by name, so a field that a
-   later change adds to `Compilation` would be dropped from the snapshot
-   without a failing test. Recommended: compare the field names in
-   `assertSameCompilation`, and make `encodeCompilation` throw on an unknown
-   field so `prepare:unit` fails closed.
-2. Low: a snapshot that is invalid or stale falls back silently, so a codec
-   disagreement or a key-input write during the gate could remove the saving
-   without a failure. Recommended: decode before writing in the producer, and
-   let the strict runner make the helper fail instead of compiling.
-3. Low: `docs/protocol/ci-suite-evidence.md` and
-   `docs/protocol/ci-verification.md` still say prepared output belongs to
-   one suite invocation, but a fresh snapshot can outlive a run; three
-   sentences also describe the snapshot loosely. Recommended: make the xtask
-   unit suite always write a new snapshot, and correct the wording.
+## Milestone 7: Apply the review-fix rule — in progress
+
+Main's #147 replaced the rule that review findings wait for the user. Findings
+that the reviewer tags `Auto-fix: yes` are fixed, the review runs once more on
+the fix, and the other findings wait for the user.
+
+- [x] Ask the reviewer to grade the findings under the new rule. Two wording
+      errors split from finding 3 became findings 4 and 5, both
+      `Auto-fix: yes`; findings 1, 2, and 3 are `Auto-fix: no`.
+- [x] Fix finding 4: the README now says that `prepare:unit` skips the
+      compile when the saved snapshot is still fresh.
+- [x] Fix finding 5: the snapshot contract now states the exact first hashed
+      line, `mokly-example-compilation-snapshot 1`.
+- [ ] Run `cargo xtask check`, commit with the fixed findings named in the
+      message, and push.
+- [ ] Re-run [the implementation review prompt](../docs/implementation-review-prompt.md)
+      once on the fix against `origin/main`. Fix new `Auto-fix: yes` findings
+      once, then stop and report.
+  - Open finding 1 (Medium, test): the codec names `Compilation` fields by
+    hand, so a new field can drop out of the snapshot while every test passes;
+    recommended: compare field sets in `assertSameCompilation` and make
+    `encodeCompilation` reject unknown fields.
+  - Open finding 2 (Low, performance): a broken or stale snapshot falls back
+    to a compile silently; recommended: decode before writing in the producer,
+    and make the strict runner fail instead of compiling.
+  - Open finding 3 (Low, docs or spec): two protocol sentences say prepared
+    output belongs to one run, but a fresh snapshot can outlive a run;
+    recommended: make the xtask unit suite always write a new snapshot, and
+    correct the docs.
 
 ## Post-merge follow-up (non-blocking)
 
@@ -392,8 +407,8 @@ changes. The open findings, for the user to decide:
    plan recommends no: the producer runs immediately before the runner, the
    helper falls back safely, and a strict check would need the runner to hash
    inputs in the wrapper harness. Per-file timings expose a silent fallback.
-   Review finding 2 reopens this question: the strict runner could set an
-   environment flag that makes the helper fail instead of compiling, which
+   Open review finding 2 reopens this question: the strict runner could set
+   an environment flag that makes the helper fail instead of compiling, which
    needs no input hashing in the runner.
 2. Should the committed-mode fixture call also use the snapshot? This plan
    recommends no. Only one call uses that mode, and `generatedOutput` changes
