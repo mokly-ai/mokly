@@ -12,8 +12,8 @@ import {
 } from "./comparison_alignment_helpers.js";
 import {
   expectRegionsAt,
+  expectRegionsAtRest,
   expectRegionsTogether,
-  passRenderingUpdates,
   regionOffsets,
   scrollRegion,
 } from "./comparison_regions_helpers.js";
@@ -40,11 +40,9 @@ function yRange(frame: Locator, selector: string): Promise<number> {
 }
 
 /**
- * Press a key, then wait until both versions of a region rest at the expected
- * offset, or at any new offset when none is given. The browser may animate
- * the scroll a key starts and every version follows each of its frames, so an
- * offset counts only once it holds while a few rendering updates pass; the
- * next key then starts where this one stopped.
+ * Press a key from the offset at which a region rests, then wait until both
+ * versions of the region rest at the expected offset, or at any new offset
+ * when none is given.
  */
 async function pressTogether(
   page: Page,
@@ -53,22 +51,15 @@ async function pressTogether(
   selector: string,
   expected?: (from: number) => number,
 ): Promise<number> {
-  const from = (await regionOffsets(section, selector)).after.y;
+  const from = await expectRegionsAtRest(section, selector, () => true);
   await page.keyboard.press(key);
-  let reached = from;
-  await expect
-    .poll(async () => {
-      const offsets = await regionOffsets(section, selector);
-      reached = offsets.after.y;
-      if (offsets.before.y !== reached) return false;
-      if (expected ? reached !== expected(from) : reached === from)
-        return false;
-      await passRenderingUpdates(page);
-      const later = await regionOffsets(section, selector);
-      return later.before.y === reached && later.after.y === reached;
-    }, key)
-    .toBe(true);
-  return reached;
+  return expectRegionsAtRest(
+    section,
+    selector,
+    (offset) => (expected ? offset === expected(from) : offset !== from),
+    "y",
+    key,
+  );
 }
 
 test("scroll keys after a click inside a panel scroll that panel in every version", async ({
