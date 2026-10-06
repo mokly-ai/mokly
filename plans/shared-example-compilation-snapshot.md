@@ -410,12 +410,17 @@ instead of writing a snapshot that drops the field.
       field sets in `tests/helpers/compilation_equality.ts`, and update the
       `.d.mts` declaration.
 - [x] Run the snapshot, loader, round-trip, and fixture equivalence tests.
-- [ ] Run `cargo xtask check`, commit with finding 1 named in the message, and
+- [x] Run `cargo xtask check`, commit with finding 1 named in the message, and
       push.
 - [ ] Only after the push, review the change with
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`, then apply the review-fix rule: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest.
+
+Evidence: `.context/shared-example-compilation-snapshot/milestone-6.md`
+(Milestone 8 section). Merge justifications:
+`.context/shared-example-compilation-snapshot/merges.md` and the PR #138
+description.
 
 ## Post-merge follow-up (non-blocking)
 
