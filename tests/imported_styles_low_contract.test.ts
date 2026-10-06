@@ -32,7 +32,7 @@ test("derived Check gives one directory ignore rule for tracked reserved routes"
     (error: Error) => {
       assert.equal(
         error.message,
-        `[mokly/build-invalid] derived output must not be tracked by Git:\n  - ${route}\nRemove these paths from the index with git rm --cached and add these rules to .gitignore:\n/mockups/mokly-generated/\n/.mokly-cache/`,
+        `[mokly/build-invalid] derived output must not be tracked by Git:\n  - ${route}\nRemove these paths from the index with git rm --cached and add these rules to .gitignore:\n/mockups/mokly-generated/`,
       );
       return true;
     },

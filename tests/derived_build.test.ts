@@ -61,7 +61,24 @@ test("derived check lists every tracked generated or cache path with ignore guid
       for (const name of tracked) assert.ok(error.message.includes(name), name);
       assert.match(error.message, /\.gitignore/);
       assert.match(error.message, /git rm --cached/);
+      assert.doesNotMatch(error.message, /^\/\.mokly-cache/mu);
       return true;
+    },
+  );
+});
+
+test("derived check asks only to untrack a cache path, which ignores itself", async (t) => {
+  const fixture = await derivedFixture(t);
+  const store = new FileSystemGeneratedOutputStore();
+  await store.write(fixture.baseline, fixture.config);
+  await fs.writeFile(path.join(fixture.root, ".mokly-cache", "forced.txt"), "");
+  await fixture.git("add", "-f", "--", ".mokly-cache/forced.txt");
+  await assert.rejects(
+    async () => store.check(fixture.baseline, fixture.config),
+    {
+      code: "build-invalid",
+      message:
+        "[mokly/build-invalid] derived output must not be tracked by Git:\n  - .mokly-cache/forced.txt\nRemove these paths from the index with git rm --cached.",
     },
   );
 });
