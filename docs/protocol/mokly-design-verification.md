@@ -129,8 +129,8 @@ After the push, use the
 
 ## Delivery Status
 
-The layer contract, non-empty catalogue selections, and static-check moves are
-delivered. Runtime-check moves, the raw-artboard directory, and the boundary
+The layer contract, non-empty catalogue selections, static-check moves, and
+runtime-check moves are delivered. The raw-artboard directory and boundary
 guard are pending. Current browser commands above use the existing spec locations.
 
 The approved migration drops only two checks: the served shell's tab order

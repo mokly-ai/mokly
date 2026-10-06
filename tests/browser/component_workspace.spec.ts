@@ -116,25 +116,3 @@ for (const viewport of ["desktop", "mobile"] as const) {
     });
   });
 }
-
-test("view controls and highlighting work inside sandboxed Browse frames", async ({
-  page,
-}) => {
-  await page.goto("/view/design/components/inspection/inspection-details/");
-  const frame = page.frameLocator(".mbk-frame-desktop iframe");
-  const toolbar = frame.getByRole("toolbar", { name: "Preview options" });
-  await toolbar
-    .getByRole("combobox", { name: "Preview viewport" })
-    .selectOption("both");
-  await toolbar.getByRole("switch", { name: "Highlight components" }).check();
-  await expect(
-    frame.locator(".ce-preview-view:visible .ce-highlight-layer:visible"),
-  ).toHaveCount(2);
-  await toolbar.getByRole("switch", { name: "Highlight components" }).uncheck();
-  await expect(frame.locator(".ce-highlight-layer:visible")).toHaveCount(0);
-  await expect(frame.locator("script")).toHaveCount(1);
-  await expect(frame.locator("script")).toHaveAttribute(
-    "src",
-    "/__mokly/client/inspector.js",
-  );
-});

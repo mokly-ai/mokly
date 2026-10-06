@@ -5,33 +5,7 @@ import { expect, test } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
-import { chooseViewport } from "./workspace_actions.js";
-
 for (const width of [390, 1280]) {
-  test(`phone decoration leaves the embedded preview hit-testable at ${width}px`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width, height: 1000 });
-    await page.goto("/view/example/screens/welcome/");
-    await chooseViewport(page, "mobile");
-    const home = page.locator(".mbk-frame-mobile > .phone-frame > .phone-home");
-    await home.scrollIntoViewIfNeeded();
-    const hit = await home.evaluate((node) => {
-      const bounds = node.getBoundingClientRect();
-      return document.elementFromPoint(
-        bounds.x + bounds.width / 2,
-        bounds.y + bounds.height / 2,
-      )?.tagName;
-    });
-    expect(hit).toBe("IFRAME");
-    await expect(home).toHaveCSS("pointer-events", "none");
-    await expect(home).toHaveAttribute("aria-hidden", "true");
-    await expect(page.locator(".mbk-frame-mobile .phone-notch")).toHaveCSS(
-      "pointer-events",
-      "none",
-    );
-  });
-
   test(`standalone phone designs retain non-interactive decoration at ${width}px`, async ({
     page,
   }) => {

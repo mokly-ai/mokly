@@ -25,7 +25,7 @@ export async function createExampleBaseline(root: string) {
 /** Build a current v8 committed baseline with current code for browser fixtures. */
 export async function createCommittedExampleBaseline(
   root: string,
-  profile: "design-library" | "ordinary-preview" | "static-example",
+  profile: "ordinary-preview" | "static-example",
 ) {
   await copyExampleRepository(root);
   await configureFocusedExample(root, profile);
@@ -79,7 +79,7 @@ async function initializeRepository(
 
 async function configureFocusedExample(
   root: string,
-  profile: "design-library" | "ordinary-preview" | "static-example",
+  profile: "ordinary-preview" | "static-example",
 ): Promise<void> {
   const configPath = path.join(root, "examples/basic/mokly.config.ts");
   let config = await fs.readFile(configPath, "utf8");
@@ -103,31 +103,6 @@ async function configureFocusedExample(
     if (source === focused)
       throw new Error("Static example fixture did not remove its design link");
     await fs.writeFile(entryPath, focused);
-  }
-  if (profile === "design-library") {
-    const roots = [
-      {
-        dir: "specs/design/library/chrome",
-        path: "design/library/chrome",
-        files: ["appearance-selector.mockup.ts", "top-bar.mockup.ts"],
-      },
-      {
-        dir: "specs/design/library/controls",
-        path: "design/library/controls",
-        files: ["tag-chip.mockup.ts", "tag-picker.mockup.ts"],
-      },
-      { dir: "browser-fixtures" },
-    ];
-    config = config.replace(
-      / {2}roots: \[[\s\S]*?\n {2}\],/,
-      `  roots: ${JSON.stringify(roots)},`,
-    );
-    const directory = path.join(root, "examples/basic/browser-fixtures");
-    await fs.mkdir(directory, { recursive: true });
-    await fs.writeFile(
-      path.join(directory, "catalogue.mockup.tsx"),
-      designLibraryFixtureSource,
-    );
   }
   if (profile === "ordinary-preview") {
     const roots = [
@@ -158,53 +133,3 @@ async function configureFocusedExample(
   }
   await fs.writeFile(configPath, config);
 }
-
-const designLibraryFixtureSource = `import React from "react";
-import { defineScreen } from "@mokly/mokly";
-import { topBar } from "../specs/design/library/chrome/top-bar.js";
-
-const metadata = { dependencies: [], relatedDocs: [] };
-const destinations = [
-  ["design/browse/views/home", "Home"],
-  ["design/browse/views/screen", "Welcome"],
-  ["design/browse/states/navigation", "Navigation"],
-  ["design/browse/views/screen/tag-forms", "Forms"],
-  ["design/browse/views/screen/tag-onboarding", "Onboarding"],
-] as const;
-const tags = [
-  { id: "forms", label: "forms", destination: "design/browse/views/screen/tag-forms" },
-  { id: "onboarding", label: "onboarding", destination: "design/browse/views/screen/tag-onboarding" },
-];
-const picker = (viewport: "mobile" | "desktop") => (
-  <main>
-    <topBar.Component
-      activeTag="forms"
-      appearance="light"
-      brandDestination="design/browse/views/home"
-      menu="open"
-      menuDestination="design/browse/states/navigation"
-      menuPresentation="text"
-      pickerDestination="design/browse/views/screen/tag-picker"
-      pickerOpen
-      placeholder="Search catalogue…"
-      query="tag:forms"
-      tags={tags}
-      viewport={viewport}
-    />
-  </main>
-);
-
-export const mockups = [
-  ...destinations.map(([path, title]) =>
-    defineScreen({ ...metadata, description: title, desktop: <main>{title}</main>, path, slug:"index", mobile: <main>{title}</main>, title }),
-  ),
-  defineScreen({
-    ...metadata,
-    description: "Tag picker",
-    desktop: picker("desktop"),
-    path: "design/browse/views/screen/tag-picker",
-    mobile: picker("mobile"),
-    title: "Tag picker",
-  }),
-];
-`;

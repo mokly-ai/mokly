@@ -75,6 +75,11 @@ deleted test beside its replacement, and the PR description lists them all.
 - Renamed in Milestone 4: `preview_design_links.spec.ts` becomes
   `preview_host_navigation.spec.ts`.
 
+- Related cleanup in Milestone 4: `tests/browser/design_test_helpers.ts` moves
+  its generic focus function to `tests/browser/link_focus.ts`. The removed
+  `design-library` profile and its embedded fixture source have no remaining
+  caller after `design_library_export.spec.ts` is removed.
+
 ### Accepted coverage losses
 
 - Tab order from the brand mark to a design link in the served shell. Unit
@@ -305,33 +310,33 @@ The direct-change screen keeps its count, changed marks, rows, and selected prop
 
 ## Milestone 4: Runtime checks move to runtime specs
 
-Move each check that only a runtime design spec makes into a runtime spec with
+Completed. Move each check that only a runtime design spec makes into a runtime spec with
 a non-design fixture. Then delete the design spec or test.
 
-- [ ] `tests/browser/example_links.spec.ts`: add that desktop keeps its
+- [x] `tests/browser/example_links.spec.ts`: add that desktop keeps its
       viewport after a frame link, that Back restores the frame source of a
       history entry that a frame link created, and a frame-link navigation
       whose stylesheet is held back. Delete `design_links.spec.ts` and
       `component_design_navigation.spec.ts`.
-- [ ] `tests/browser/browse_frames.spec.ts`: add that the current navigation
+- [x] `tests/browser/browse_frames.spec.ts`: add that the current navigation
       row stays selected after a scheme toggle. Add a raw-artboard check that
       the artboard shell paints `rgb(244, 244, 241)` in Light and
       `rgb(22, 21, 18)` in Dark, in a new
       `tests/browser/design_appearance.spec.ts`. Delete
       `design_appearance_toggle.spec.ts`.
-- [ ] `tests/browser/component_explorer_inspection.spec.ts`: add that
+- [x] `tests/browser/component_explorer_inspection.spec.ts`: add that
       expanding each nested-instance summary keeps the Components tab
       selected, and that choosing an instance from the Components list
       (`.mbk-instance-select`) shows its props. Delete
       `design_library_runtime.spec.ts`.
-- [ ] `tests/browser/component_static_runtime.spec.ts`: in the export, add
+- [x] `tests/browser/component_static_runtime.spec.ts`: in the export, add
       that a "Saved variants" link opens its variant, and that the revised
       Action marks its own row but not the Home row. The default
       `componentEntrySource()` already nests Action inside Pane on Home.
       Delete `design_library_export.spec.ts`, then remove the `design-library`
       profile and `designLibraryFixtureSource` from
       `tests/helpers/example_baseline.ts`.
-- [ ] Add `tests/browser/frame_native_controls.spec.ts`. Build a fixture
+- [x] Add `tests/browser/frame_native_controls.spec.ts`. Build a fixture
       screen with `createFixture` that holds a native select, a checkbox and a
       `details` element, and serve it with `startCatalogueServer`. Assert that
       each control works inside the served, sandboxed frame, and that the frame
@@ -339,27 +344,39 @@ a non-design fixture. Then delete the design spec or test.
       checks of `component_workspace.spec.ts:215` to
       `component_design_inspection.spec.ts` on the raw artboard. Then delete
       `component_workspace.spec.ts:215` and `component_inspector.spec.ts:50`.
-- [ ] Move `phone_chrome.spec.ts:11`, which opens a served example screen, to
+- [x] Move `phone_chrome.spec.ts:11`, which opens a served example screen, to
       `tests/browser/browse_chrome.spec.ts`.
-- [ ] `tests/browser/link_controls.spec.ts`: add a span-tier adapted link
+- [x] `tests/browser/link_controls.spec.ts`: add a span-tier adapted link
       (`a[data-mokly-link-control="span"]`) that keeps the height of its
       non-link sibling, and extend `link_controls_fixture.ts` with one. Remove
       that check and the unit-covered removed-route check from
       `design_portable.spec.ts:64`.
-- [ ] Rename `preview_design_links.spec.ts` to
+- [x] Rename `preview_design_links.spec.ts` to
       `preview_host_navigation.spec.ts`. Keep `:38` and `:161`. Rewrite `:62`
       against example screens: on the Pages host, navigation while Dark lands
       on the `.dark` page, and Enter activates a link control. Drop its
       design link-target checks.
-- [ ] Delete `design_index_entries.spec.ts:12` and `:52`, which
+- [x] Delete `design_index_entries.spec.ts:12` and `:52`, which
       `browse_navigation.spec.ts:43-107`, `browse_variants.spec.ts:93-97` and
       the Milestone 3 unit checks cover.
-- [ ] Delete test helpers that no file imports anymore, such as
+- [x] Delete test helpers that no file imports anymore, such as
       `tests/browser/design_test_helpers.ts`.
-- [ ] Run each changed runtime spec and
+- [x] Run each changed runtime spec and
       `node --import tsx --test tests/browser_shard_balance.test.ts`. Split a
       spec if a shard exceeds its limit.
-- [ ] Update the Delivery Status in the design verification protocol.
+- [x] Update the Delivery Status in the design verification protocol.
+- [x] Move shared native-link focus into `tests/browser/link_focus.ts`. Keep the
+      Example and Pages keyboard checks after the design helper is removed.
+- [x] Use the existing non-design `static-example` publication profile for the
+      Pages navigation worker. Keep the ordinary preview profile for its other
+      callers. Preserve the scheme-swap and comparison-pane assertions.
+- [x] Warm the commit's real baseline before the browser run. Keep the normal
+      Playwright setup and assertions unchanged.
+- [x] Wait for the complete Details frame before clicking its return button in
+      the existing Example navigation test. Keep every URL and source assertion.
+      The moved history test already waits for this readiness state.
+- [x] Run the milestone lint, formatting, and prepared type checks. Audit the
+      mainline diff and deletions. Commit with a Conventional Commit and push.
 
 ## Milestone 5: Mockup spec directory and boundary guard
 

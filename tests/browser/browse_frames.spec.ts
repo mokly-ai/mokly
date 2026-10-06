@@ -9,6 +9,7 @@ import {
   mobileFrame,
   overlayStyle,
   tourRow,
+  welcomeRow,
 } from "./browse_assertions.js";
 import {
   chooseScheme,
@@ -54,6 +55,10 @@ test("color scheme switch swaps device frames", async ({ page }) => {
     /example\/screens\/welcome\/index\.desktop\.dark\.html$/,
   );
   await expectSchemeSelected(page, "dark");
+  await expect(page.locator(welcomeRow)).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
 
   await chooseScheme(page, "light");
   await expect(page.locator("body")).toHaveAttribute(
@@ -69,6 +74,10 @@ test("color scheme switch swaps device frames", async ({ page }) => {
     /example\/screens\/welcome\/index\.desktop\.html$/,
   );
   await expectSchemeSelected(page, "light");
+  await expect(page.locator(welcomeRow)).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
 });
 
 test("dark device screens keep their surface and edge", async ({ page }) => {

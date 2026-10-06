@@ -59,7 +59,18 @@ for (const viewport of ["desktop", "mobile"] as const)
         ? { width: 1280, height: 900 }
         : { width: 390, height: 844 },
     );
-    await page.goto(`${site.url}/view/action/disabled/`);
+    await page.goto(`${site.url}/view/action/`);
+    await expect(
+      page.locator('[data-nav-row][data-route="action/index.html"]'),
+    ).toHaveAttribute("data-changed", "true");
+    await expect(
+      page.locator('[data-nav-row][data-route="home/index.html"]'),
+    ).not.toHaveAttribute("data-changed", "true");
+    await page
+      .getByRole("navigation", { name: "Saved variants" })
+      .getByRole("link", { name: "Disabled", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/view\/action\/disabled\/$/);
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     await expect(page.locator('[data-prop-control="label"]')).toBeDisabled();
     await expect(page.locator('[data-prop-control="disabled"]')).toBeChecked();

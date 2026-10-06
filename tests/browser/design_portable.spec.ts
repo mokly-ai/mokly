@@ -27,11 +27,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await page.goto(design("design/browse/views/screen", viewport));
     await page.goto(design("design/changes/diff-controls/current", viewport));
     const toolbar = page.getByRole("group", { name: "Comparison mode" });
-    const current = toolbar.getByText("Current", { exact: true });
     const side = toolbar.getByRole("link", { name: "Side by side" });
-    const currentBounds = await current.boundingBox();
     const sideBounds = await side.boundingBox();
-    expect(currentBounds?.height).toBe(sideBounds?.height);
     expect((sideBounds?.width ?? 0) > 70).toBe(true);
     await page.goto(design("design/browse/views/screen", viewport));
     if (viewport === "desktop") {
@@ -54,16 +51,5 @@ for (const viewport of ["mobile", "desktop"] as const) {
       path: `.context/design-dark-focus-${viewport}.png`,
       fullPage: true,
     });
-    for (const route of [
-      "design/changes/outcomes/removed",
-      "design/changes/impact/empty",
-    ]) {
-      await page.goto(design(route, viewport));
-      await expect(page.locator(".mbk-cmp-toolbar a")).toHaveCount(0);
-      for (const control of await page
-        .locator(".mbk-pathchip, .mbk-search-tag")
-        .all())
-        await expect(control).not.toHaveAttribute("tabindex");
-    }
   });
 }

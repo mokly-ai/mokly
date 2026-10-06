@@ -92,5 +92,29 @@ for (const viewport of ["desktop", "mobile"] as const) {
         page.getByText("No visible region", { exact: true }),
       ).toBeVisible();
     });
+
+    test("Both previews show and hide their highlight layers with the native switch", async ({
+      page,
+    }) => {
+      await page.goto(
+        componentDesignUrl(
+          "design/components/inspection/inspection-details",
+          viewport,
+        ),
+      );
+      const toolbar = page.getByRole("toolbar", { name: "Preview options" });
+      await toolbar
+        .getByRole("combobox", { name: "Preview viewport" })
+        .selectOption("both");
+      const toggle = toolbar.getByRole("switch", {
+        name: "Highlight components",
+      });
+      await toggle.check();
+      await expect(
+        page.locator(".ce-preview-view:visible .ce-highlight-layer:visible"),
+      ).toHaveCount(2);
+      await toggle.uncheck();
+      await expect(page.locator(".ce-highlight-layer:visible")).toHaveCount(0);
+    });
   });
 }

@@ -55,6 +55,13 @@ for (const viewport of ["mobile", "desktop"]) {
     });
     expect(styles.link).toEqual(styles.reference);
     expect(styles.blockLink).toEqual(styles.blockReference);
+    const span = frame.locator(
+      'a[data-mokly-link-control="span"][data-testid="span-continue"]',
+    );
+    await expect(span).toBeVisible();
+    const adapted = await span.boundingBox();
+    const sibling = await frame.getByTestId("span-reference").boundingBox();
+    expect(adapted!.height).toBe(sibling!.height);
     await page.screenshot({
       path: `.context/link-control-${viewport}.png`,
       fullPage: true,

@@ -30,24 +30,3 @@ for (const viewport of ["desktop", "mobile"] as const) {
     }
   });
 }
-
-test("the shared inspector opens and closes inside sandboxed Browse frames", async ({
-  page,
-}) => {
-  await page.goto("/view/design/components/overview/");
-  for (const viewport of ["desktop", "mobile"] as const) {
-    const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
-    const inspector = frame.getByRole("region", {
-      name: "Inspector",
-      exact: true,
-    });
-    await inspector.getByRole("button", { name: "Usage", exact: true }).click();
-    await inspector.getByRole("button", { name: "Usage", exact: true }).click();
-    await expect(inspector.locator(":scope > details[open]")).toHaveCount(0);
-    await expect(frame.locator("script")).toHaveCount(1);
-    await expect(frame.locator("script")).toHaveAttribute(
-      "src",
-      "/__mokly/client/inspector.js",
-    );
-  }
-});

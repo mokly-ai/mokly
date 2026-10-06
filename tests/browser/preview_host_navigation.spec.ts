@@ -5,16 +5,17 @@ import { FULL_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.js";
 import { createPreviewComparisonFixture } from "../helpers/preview_comparison_fixture.js";
 
 import { expectPresentedPane, PANE_SOURCE } from "./comparison_actions.js";
-import { focusDesignLink } from "./design_test_helpers.js";
-import { test } from "./ordinary_preview_fixture.js";
+import { focusLink } from "./link_focus.js";
+import { ordinaryPreviewTest } from "./ordinary_preview_fixture.js";
 import { servePreviewFixture, type PreviewFixture } from "./preview_fixture.js";
 import type { OwnedPreviewFixture } from "./preview_fixture_owner.js";
 import {
   chooseScheme,
   chooseViewport,
-  expectFrameLoaded,
   expectFrameSource,
 } from "./workspace_actions.js";
+
+const test = ordinaryPreviewTest("static-example");
 
 let comparisonFixture: Awaited<
   ReturnType<typeof createPreviewComparisonFixture>
@@ -59,70 +60,12 @@ test("published scheme swaps survive a redirected source replacement", async ({
 });
 
 for (const viewport of ["mobile", "desktop"] as const) {
-  test(`${viewport}: published design states and styled buttons use the same navigation`, async ({
+  test(`${viewport}: Pages navigation keeps Dark and Enter activates a link control`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
-    await page.goto(`${preview.url}/view/design/browse/views/home/`);
-    await chooseViewport(page, viewport);
-    await expect(page.locator("html")).toHaveAttribute(
-      "data-mokly-hydrated",
-      "",
-    );
-    await expect(page.locator(`.mbk-frame-${viewport} iframe`)).toHaveAttribute(
-      "data-mokly-frame-state",
-      "ready",
-    );
-    const frame = page.frameLocator(`.mbk-frame-${viewport} iframe`);
-    await frame.locator(".mbk-empty-link").click();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
-    await frame.locator(".mbk-shot-link").first().click();
-    await expect(page).toHaveURL(
-      /\/view\/design\/browse\/views\/details-screen\/$/,
-    );
-    await expect(
-      page.locator(
-        'a[data-route="design/browse/views/details-screen/index.html"]',
-      ),
-    ).toHaveAttribute("aria-current", "page");
-    await frame.locator(".mbk-shot-link").first().click();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
-    await frame.locator(".mbk-search-tag").click();
-    await expect(page).toHaveURL(
-      /\/view\/design\/browse\/views\/screen\/tag-picker\/$/,
-    );
-    await frame
-      .getByRole("group", { name: "Tags", exact: true })
-      .getByRole("link", { name: "onboarding", exact: true })
-      .click();
-    await expect(page).toHaveURL(
-      /\/view\/design\/browse\/views\/screen\/tag-onboarding\/$/,
-    );
-    await frame.locator(".mbk-search-tag").click();
-    await expect(page).toHaveURL(
-      /\/view\/design\/browse\/views\/screen\/tag-onboarding-picker\/$/,
-    );
-    await frame
-      .getByRole("group", { name: "Tags", exact: true })
-      .getByRole("link", { name: "onboarding", exact: true })
-      .click();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
-    await page.goto(`${preview.url}/view/design/browse/pages/view/`);
-    await frame.locator(".ce-inspector-link").click();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/details\/$/);
-    await frame.locator(".ce-inspector-link").click();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/pages\/view\/$/);
-    await expectFrameLoaded(
-      page.locator(`.mbk-frame-${viewport} iframe`),
-      new RegExp(
-        `/static/design/browse/pages/view/index\\.${viewport}(?:\\.html)?$`,
-      ),
-    );
-    await frame
-      .getByRole("link", { name: "Open Welcome", exact: true })
-      .click();
-    await expect(page).toHaveURL(/\/view\/design\/browse\/views\/screen\/$/);
     await page.goto(`${preview.url}/view/example/screens/welcome/`);
+    await chooseViewport(page, viewport);
     await expect(page.locator("html")).toHaveAttribute(
       "data-mokly-hydrated",
       "",
@@ -132,30 +75,33 @@ for (const viewport of ["mobile", "desktop"] as const) {
       "data-mokly-theme",
       "dark",
     );
+    const iframe = page.locator(`.mbk-frame-${viewport} iframe`);
     await expectFrameSource(
-      page.locator(`.mbk-frame-${viewport} iframe`),
+      iframe,
       new RegExp(`welcome/index\\.${viewport}\\.dark$`),
     );
-    await expect(page.locator(`.mbk-frame-${viewport} iframe`)).toHaveAttribute(
-      "data-mokly-frame-state",
-      "ready",
-    );
+    await expect(iframe).toHaveAttribute("data-mokly-frame-state", "ready");
+    const frame = iframe.contentFrame();
     await frame
       .getByRole("link", { name: "View details", exact: true })
       .click();
     await expect(page).toHaveURL(
       /\/view\/example\/screens\/details\/\?fragment=details$/,
     );
-    await expectFrameSource(
-      page.locator(`.mbk-frame-${viewport} iframe`),
-      /\.dark(?:\.html)?#details$/,
-    );
+    await expect(
+      page.locator('a[data-route="example/screens/details/index.html"]'),
+    ).toHaveAttribute("aria-current", "page");
+    await expectFrameSource(iframe, /\.dark(?:\.html)?#details$/);
     const back = frame
       .locator('a[data-mokly-link-control="button"]')
       .filter({ hasText: "Return to welcome" });
-    await focusDesignLink(back);
+    await focusLink(back);
     await page.keyboard.press("Enter");
     await expect(page).toHaveURL(/\/view\/example\/screens\/welcome\/$/);
+    await expectFrameSource(
+      iframe,
+      new RegExp(`welcome/index\\.${viewport}\\.dark$`),
+    );
   });
 
   test(`${viewport}: published comparison panes stay read-only`, async ({

@@ -83,6 +83,8 @@ function Controls() { return <>
 <MockLink asChild to="details"><Button busy testID="busy" onPress={noop}>Busy</Button></MockLink>
 <MockLink asChild to="details"><Button testID="no-handler">No handler</Button></MockLink>
 <MockLink asChild to="details"><button id="outline-reset" style={{outlineStyle:"none"}}>Focus me</button></MockLink>
+<MockLink asChild to="details"><span data-testid="span-continue" style={{display:"inline-flex",height:32,padding:"0 12px",alignItems:"center"}}>Continue</span></MockLink>
+<span data-testid="span-reference" style={{display:"inline-flex",height:32,padding:"0 12px",alignItems:"center"}}>Continue</span>
 <script>window.__consumerScriptRan = true;</script>
 </>; }`,
   );

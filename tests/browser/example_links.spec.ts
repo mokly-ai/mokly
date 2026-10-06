@@ -6,7 +6,7 @@ import { expect, test } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
-import { focusDesignLink } from "./design_test_helpers.js";
+import { focusLink } from "./link_focus.js";
 import {
   chooseScheme,
   chooseViewport,
@@ -58,6 +58,16 @@ for (const viewport of ["mobile", "desktop"] as const) {
           `example/screens/details/index\\.${viewport}${scheme === "dark" ? "\\.dark" : ""}\\.html#details$`,
         ),
       );
+      await expectFrameLoaded(
+        frameElement,
+        new RegExp(
+          `example/screens/details/index\\.${viewport}${scheme === "dark" ? "\\.dark" : ""}\\.html#details$`,
+        ),
+      );
+      await expect(frameElement).toHaveAttribute(
+        "data-mokly-frame-state",
+        "ready",
+      );
       await frame
         .locator('a[data-mokly-link-control="button"]')
         .filter({ hasText: "Return to welcome" })
@@ -84,7 +94,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
         .locator('a[data-mokly-link-control="button"]')
         .filter({ hasText: "Return to welcome" });
       await page.waitForLoadState("load");
-      await focusDesignLink(back);
+      await focusLink(back);
       await expect(back).toBeFocused();
       await expect(back).toHaveCSS("outline-style", "solid");
       await page.keyboard.press("Enter");
@@ -110,7 +120,7 @@ test("the real example tour reuses the styled buttons in both owning screens", a
         .filter({ hasText: step === 0 ? "View details" : "Return to welcome" });
       if (step === 0) await button.click();
       else {
-        await focusDesignLink(button);
+        await focusLink(button);
         await page.keyboard.press("Enter");
       }
       await expect(page).toHaveURL(
@@ -121,3 +131,76 @@ test("the real example tour reuses the styled buttons in both owning screens", a
     }
   }
 });
+
+for (const delayedStyles of [false, true])
+  test(`desktop frame-link history keeps its viewport and source${delayedStyles ? " while styles load" : ""}`, async ({
+    page,
+  }) => {
+    await page.goto("/view/example/screens/welcome/");
+    await chooseViewport(page, "desktop");
+    const iframe = page.locator(".mbk-frame-desktop iframe");
+    await expectFrameLoaded(
+      iframe,
+      /\/static\/example\/screens\/welcome\/index\.desktop\.html$/,
+    );
+    let delayedRequests = 0;
+    if (delayedStyles)
+      await page.route("**/static/example-components.css", async (route) => {
+        delayedRequests += 1;
+        await setTimeout(500);
+        await route.continue();
+      });
+    try {
+      await iframe
+        .contentFrame()
+        .getByRole("link", { name: "View details", exact: true })
+        .click();
+      await expect(page).toHaveURL(
+        /\/view\/example\/screens\/details\/\?fragment=details$/,
+      );
+      await expectFrameLoaded(
+        iframe,
+        /\/static\/example\/screens\/details\/index\.desktop\.html#details$/,
+      );
+      await expect(
+        page.locator(
+          '[data-nav-row][data-route="example/screens/details/index.html"]',
+        ),
+      ).toHaveAttribute("aria-current", "page");
+      await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
+        "data-viewport",
+        "desktop",
+      );
+      if (delayedStyles) expect(delayedRequests).toBeGreaterThan(0);
+      await iframe
+        .contentFrame()
+        .locator('a[data-mokly-link-control="button"]')
+        .filter({ hasText: "Return to welcome" })
+        .click();
+      await expect(page).toHaveURL(/\/view\/example\/screens\/welcome\/$/);
+      await page.goBack();
+      await expect(page).toHaveURL(
+        /\/view\/example\/screens\/details\/\?fragment=details$/,
+      );
+      await expectFrameSource(
+        iframe,
+        /\/static\/example\/screens\/details\/index\.desktop\.html#details$/,
+      );
+      await expect(page.locator("[data-mokly-stage]")).toHaveAttribute(
+        "data-viewport",
+        "desktop",
+      );
+      await page.goBack();
+      await expectFrameSource(
+        iframe,
+        /\/static\/example\/screens\/welcome\/index\.desktop\.html$/,
+      );
+      await page.goForward();
+      await expectFrameSource(
+        iframe,
+        /\/static\/example\/screens\/details\/index\.desktop\.html#details$/,
+      );
+    } finally {
+      await page.unrouteAll({ behavior: "ignoreErrors" });
+    }
+  });

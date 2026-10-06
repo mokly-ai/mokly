@@ -140,3 +140,25 @@ test("the inspector divider lights up like the navigation divider", async ({
     /mbk-inspector-resizing/,
   );
 });
+
+test("nested disclosures keep Components selected and choosing an instance shows its props", async ({
+  page,
+}) => {
+  await page.goto(`${server.url}/view/home/`);
+  const tab = page.getByRole("tab", { name: "Components", exact: true });
+  await tab.click();
+  const panel = page.getByRole("tabpanel", { name: "Components", exact: true });
+  const summaries = panel.locator("details > summary");
+  expect(await summaries.count()).toBeGreaterThan(0);
+  for (const summary of await summaries.all()) {
+    await summary.click();
+    await expect(tab).toHaveAttribute("aria-selected", "true");
+  }
+  await panel
+    .locator(".mbk-instance-select")
+    .filter({ hasText: "footer" })
+    .click();
+  await expect(
+    page.getByRole("tabpanel", { name: "Props", exact: true }),
+  ).toContainText("Finish");
+});
