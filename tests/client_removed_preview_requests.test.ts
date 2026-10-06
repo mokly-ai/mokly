@@ -41,7 +41,7 @@ test("a screen preview renders only its captured previous views", async () => {
     removedScreen,
     { endpoint: new URL(generation) },
     win,
-    AbortSignal.timeout(5_000),
+    AbortSignal.timeout(15_000),
   );
   assert.equal(loaded.url, generation);
   assert.equal(
@@ -83,7 +83,7 @@ test("a reused or stale generation is treated as unavailable", async () => {
       removedScreen,
       { endpoint: new URL(generation) },
       win,
-      AbortSignal.timeout(5_000),
+      AbortSignal.timeout(15_000),
     ),
     /previous version is unavailable/,
   );
@@ -103,7 +103,7 @@ test("a reused or stale generation is treated as unavailable", async () => {
       { ...removedScreen, path: "other" },
       { endpoint: new URL(generation) },
       missing.win,
-      AbortSignal.timeout(5_000),
+      AbortSignal.timeout(15_000),
     ),
     /previous version is unavailable/,
   );
@@ -130,7 +130,7 @@ test("a historical response must belong to the selected baseline", async () => {
     selected,
     { endpoint: new URL(generation) },
     exact.win,
-    AbortSignal.timeout(5_000),
+    AbortSignal.timeout(15_000),
   );
 
   const laterBaseline = respond(review(views, "d".repeat(40)), generation);
@@ -139,7 +139,7 @@ test("a historical response must belong to the selected baseline", async () => {
       selected,
       { endpoint: new URL(generation) },
       laterBaseline.win,
-      AbortSignal.timeout(5_000),
+      AbortSignal.timeout(15_000),
     ),
     /previous version is unavailable/,
   );
@@ -168,7 +168,7 @@ test("a generation-backed selection accepts only its immutable generation", asyn
       selected,
       { endpoint: new URL(endpoint) },
       response.win,
-      AbortSignal.timeout(5_000),
+      AbortSignal.timeout(15_000),
     ),
     /previous version is unavailable/,
   );
@@ -194,7 +194,7 @@ test("a page response cannot replace its selected baseline or generation", async
       selectedBaseline,
       { endpoint, generation },
       stale.win,
-      AbortSignal.timeout(5_000),
+      AbortSignal.timeout(15_000),
     ),
     /previous version is unavailable/,
   );
@@ -211,7 +211,7 @@ test("a page response cannot replace its selected baseline or generation", async
       selectedGeneration,
       { endpoint, generation },
       redirected.win,
-      AbortSignal.timeout(5_000),
+      AbortSignal.timeout(15_000),
     ),
     /previous version is unavailable/,
   );
@@ -234,7 +234,7 @@ test("a page preview must describe the entry that asked for it", async () => {
     removedPage,
     request,
     matching.win,
-    AbortSignal.timeout(5_000),
+    AbortSignal.timeout(15_000),
   );
   assert.deepEqual(loaded.content, {
     kind: "page",
@@ -248,7 +248,12 @@ test("a page preview must describe the entry that asked for it", async () => {
     url,
   );
   await assert.rejects(
-    requestPreview(removedPage, request, other.win, AbortSignal.timeout(5_000)),
+    requestPreview(
+      removedPage,
+      request,
+      other.win,
+      AbortSignal.timeout(15_000),
+    ),
     /previous version is unavailable/,
   );
 });
@@ -261,18 +266,18 @@ test("a generation that resolved elsewhere is not reused", async () => {
   } as const;
   const same = respond(null, loaded.url);
   assert.equal(
-    await renewPreview(loaded, same.win, AbortSignal.timeout(5_000)),
+    await renewPreview(loaded, same.win, AbortSignal.timeout(15_000)),
     true,
   );
   assert.deepEqual(same.calls, [{ url: loaded.url, method: "HEAD" }]);
   const moved = respond(null, "https://catalogue.test/elsewhere.json");
   assert.equal(
-    await renewPreview(loaded, moved.win, AbortSignal.timeout(5_000)),
+    await renewPreview(loaded, moved.win, AbortSignal.timeout(15_000)),
     false,
   );
   const failed = respond(null, loaded.url, false);
   assert.equal(
-    await renewPreview(loaded, failed.win, AbortSignal.timeout(5_000)),
+    await renewPreview(loaded, failed.win, AbortSignal.timeout(15_000)),
     false,
   );
 });

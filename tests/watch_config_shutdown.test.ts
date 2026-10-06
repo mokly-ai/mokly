@@ -234,7 +234,7 @@ async function completesWithin(operation: Promise<void>): Promise<void> {
       new Promise<void>((_resolve, reject) => {
         handle = setTimeout(
           () => reject(new Error("watched shutdown timed out")),
-          1_000,
+          10_000,
         );
       }),
     ]);

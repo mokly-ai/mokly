@@ -7,6 +7,8 @@
 - During development, run only tests that cover the change. Require a 100% pass
   rate. Follow the commands and rebuild rules in
   [developer test commands](./docs/protocol/developer-test-commands.md).
+- Tests must not assert elapsed wall-clock time. Use operation counts, captured inputs, event order or fake-clock time.
+  Follow [CI Test Timing](./docs/protocol/ci-test-timing.md).
 - Run `cargo xtask check --suite repository` early. Leave complete unit and
   browser suite runs to the complete gate.
 - Run the complete `cargo xtask check` once before saying work is complete.
