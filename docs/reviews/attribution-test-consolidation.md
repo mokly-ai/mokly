@@ -97,8 +97,9 @@ base and conditions as the after runs. Each file ran alone with
 `duration_ms`, including fixture setup and teardown. All baseline tests passed.
 
 The previous session measured 831.826 s and 154.260 s before the main merge.
-Those figures provide historical context only. The scripts and raw logs are
-local-only scratch artifacts and are not part of this repository.
+Its library subtests took 13–19 s each. Those figures provide historical
+context only. The scripts and raw logs are local-only scratch artifacts and
+are not part of this repository.
 
 | File                                              |   Before whole-file duration | Final after duration |
 | ------------------------------------------------- | ---------------------------: | -------------------: |
@@ -130,6 +131,33 @@ scratch artifacts. The operation figures below provide historical context.
 | All twenty-five stylesheets in one pass        |   21.5 s |
 | Rebuild after one source edit                  |   20.3 s |
 | Classification after that source edit          |   13.9 s |
+
+## Multi-Edit Pass Evidence
+
+These results came from the real fixture before the tests changed. They
+support the plan's decision to classify each stylesheet family once.
+
+Measured evidence from one pass over all sixteen library stylesheets:
+
+- `changes` equals exactly the sixteen library paths.
+- Every component's reasons equal exactly
+  `[{ kind: "dependency", path: <its stylesheet>, analysis: { status: "unresolved", selectors: ["body"] } }]`,
+  identical to the single-edit result. Its `sharedImpact` equals
+  `[<its stylesheet>]`.
+- The screen consumers per `changedComponentId` equal the manifest consumers
+  and equal the single-edit consumers for every sampled component.
+- The `changedComponentId` set equals the sixteen paths. The `tag-chip` to
+  `top-bar` evidence lists only the `tag-picker` variant. Its chain projection
+  includes `top-bar/tag-picker/tag-chip` from screen invocations and
+  `tag-picker/tag-chip` from the saved top-bar variant, whose root is the
+  context entry rather than an instance. Assert the exact pair in both passes.
+
+Measured evidence from one pass over the nine shared stylesheets:
+
+- For every stylesheet, the changed entries whose reasons name that stylesheet
+  equal the expected set exactly (39/69, 111/69, 11/69, 0/69 screens/components).
+- `sharedImpact` equals `["examples/basic/generated/design.css"]`; no change is
+  outside `design/`; no component becomes an affected-consumer source.
 
 ## Verification During Consolidation
 
@@ -262,3 +290,11 @@ Total complete-gate wall time: **4280.759 s**
 The dependency audit retained only the existing reviewed Braces exception; no
 new exception was added. The full run reported no functional failure, skip, or
 cancellation. The plan's local complete-gate TODO is checked.
+
+### Complete Gate After Merging Main
+
+The single unqualified `cargo xtask check` also passed on merge commit
+`ff357b56`, which brought in `main` at `80ceb445`. It took 3841 s on
+Node 22.14.0. Unit ran 4312 tests, browser 844, and hydration 263, with no
+failures, skips, or cancellations. The later merge of `main` at `4f2ff34f`
+brought in only an `AGENTS.md` rule change, so the gate did not run again.

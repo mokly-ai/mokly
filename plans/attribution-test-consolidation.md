@@ -27,14 +27,10 @@ Contract owners:
 
 The latest green main run,
 [GitHub Actions run 37354719684](https://github.com/mokly-ai/mokly/actions/runs/37354719684)
-on 2 vCPU runners, recorded these unit file durations in the
-`verification-unit-node-22.14.0-shard-*` reports:
-
-| File                                         | Tests | CI duration | Shard (index) | Shard wall time | Shard file time |
-| -------------------------------------------- | ----: | ----------: | ------------- | --------------: | --------------: |
-| `tests/design_library_attribution.test.ts`   |    33 |       615 s | 4 (339)       |           768 s |          1247 s |
-| `tests/component_design_attribution.test.ts` |    10 |       192 s | 1 (236)       |           691 s |          1201 s |
-| Shards 2 and 3 for comparison                |       |             |               |   331 s / 290 s |   552 s / 492 s |
+on 2 vCPU runners, set the baseline. `tests/design_library_attribution.test.ts`
+took 615 s in shard 4 and `tests/component_design_attribution.test.ts` took
+192 s in shard 1. Those shards took 768 s and 691 s; shards 2 and 3 took 331 s
+and 290 s.
 
 Unit shards take whole files by sorted index modulo four
 (`nodeShardFiles` in `scripts/verification/evidence.mjs`) and run two files at
@@ -43,24 +39,9 @@ unit critical path. The 33 tests are five top-level tests plus 28 subtests
 (16 + 5 + 5 + 2). The design library has sixteen components in
 `tests/helpers/design_library.ts`, not 23.
 
-Local measurements in this sandbox (Node 22.14.0, 8 cores) through the real
-fixture in `tests/helpers/design_library_fixture.ts`. The previous session
-measured 832 s and 154 s before the main merge. The unchanged current-merge
-runs took 612.961 s and 123.173 s with `node --import tsx --test <file>`;
-those are the primary local before figures. The earlier measurements below and
-library subtest times of 13–19 s remain context:
-
-| Operation                                       | Local time |
-| ----------------------------------------------- | ---------: |
-| Fixture (copy sources + `compileCatalogue`)     |     17.0 s |
-| `classifyComponents` with zero changed paths    |     12.0 s |
-| One library stylesheet (tag-chip, 45 consumers) |     11.1 s |
-| One library stylesheet (top-bar, 111 consumers) |     16.4 s |
-| All 16 library stylesheets in one pass          |     18.7 s |
-| All 9 shared design stylesheets in one pass     |     20.9 s |
-| All 25 stylesheets in one pass                  |     21.5 s |
-| Rebuild after one source edit (`fixture.build`) |     20.3 s |
-| `classifyComponents` after that source edit     |     13.9 s |
+The [measurement record](../docs/reviews/attribution-test-consolidation.md)
+holds the per-file and per-shard CI tables and the local timings measured
+through the real fixture in `tests/helpers/design_library_fixture.ts`.
 
 Cost model: every `classifyComponents` call pays about 12 s before it looks at
 a change, because `classificationContext` builds new readers and caches and
@@ -133,27 +114,9 @@ Code evidence:
   so the marker rule always keeps the stylesheet as evidence with
   `analysis: { status: "unresolved", selectors: ["body"] }`.
 
-Measured evidence from one pass over all sixteen library stylesheets:
-
-- `changes` equals exactly the sixteen library paths.
-- Every component's reasons equal exactly
-  `[{ kind: "dependency", path: <its stylesheet>, analysis: { status: "unresolved", selectors: ["body"] } }]`,
-  identical to the single-edit result. Its `sharedImpact` equals
-  `[<its stylesheet>]`.
-- The screen consumers per `changedComponentId` equal the manifest consumers
-  and equal the single-edit consumers for every sampled component.
-- The `changedComponentId` set equals the sixteen paths. The `tag-chip` to
-  `top-bar` evidence lists only the `tag-picker` variant. Its chain projection
-  includes `top-bar/tag-picker/tag-chip` from screen invocations and
-  `tag-picker/tag-chip` from the saved top-bar variant, whose root is the
-  context entry rather than an instance. Assert the exact pair in both passes.
-
-Measured evidence from one pass over the nine shared stylesheets:
-
-- For every stylesheet, the changed entries whose reasons name that stylesheet
-  equal the expected set exactly (39/69, 111/69, 11/69, 0/69 screens/components).
-- `sharedImpact` equals `["examples/basic/generated/design.css"]`; no change is
-  outside `design/`; no component becomes an affected-consumer source.
+The [measurement record](../docs/reviews/attribution-test-consolidation.md#multi-edit-pass-evidence)
+holds the measured one-pass results for all sixteen library stylesheets and
+all nine shared stylesheets. They support this conclusion.
 
 Conclusion: one pass preserves every per-component and per-stylesheet
 assertion, and the exact reason lists make isolation explicit. A stylesheet
@@ -385,24 +348,19 @@ file). Today's `affects` boolean becomes the exact `impactingIds` list.
 Prove the runtime reduction locally and in CI, record it, and close the plan
 with the required commit, push, and review steps.
 
-Local timing work is committed. The first complete gate stopped at the audit for
-source-map-js 1.2.1 (GHSA-68fv-2mgg-jv7q). This branch includes the compatible,
-lockfile-only 1.2.2 patch because the same advisory blocks main CI and the
-repository job gates unit shard measurement. Commit `a8bf3926` changes
-only the source-map-js entry's version, resolved URL, and integrity. Runtime
-PostCSS and development Tailwind both resolve 1.2.2 after a clean `npm ci`, and
-the live audit passes with the existing reviewed Braces exception. No new
-exception was added. The single unqualified `cargo xtask check` passed end to end
-on `e8369ec5`. The pull request description must flag the runtime dependency
-update for the user's review; draft PR #139 already includes that flag and the
-approved removals. `main` later merged the identical lockfile change in #140.
-Merge commit `ff357b56` brings in `main` at `80ceb445`, so the branch's
-lockfile diff against `main` is empty and the PR records #140 as superseding
-it. Required CI passed in run 37464638941 on merge commit `1cb28f09`. The
-library attribution file took 23.9 s, so its single-change
-control stays below the 60 s threshold. See the measurement record for suite
-results, CI shard timings, and the one-run comparison limits. The final push
-and post-push review stay open below.
+Decisions:
+
+- The branch carries a lockfile-only source-map-js 1.2.2 update for
+  GHSA-68fv-2mgg-jv7q, so the dependency audit that gates CI could pass.
+  `main` later merged the identical change in #140. After the branch merged
+  `main`, its lockfile diff against `main` is empty. The PR description
+  records this.
+- Keep the single-change `tag-chip` control. The library attribution file
+  stays below the 60 s CI threshold.
+
+The [measurement record](../docs/reviews/attribution-test-consolidation.md)
+holds the local and CI timings, the complete-gate results, and the dependency
+audit history.
 
 - [x] Apply the orchestrator's review corrections in follow-up commits.
   - [x] Separate same-file edits targeting different entries without adding a
@@ -445,9 +403,8 @@ are not applied here:
    README sentences describe the grouped proof as exact.
 2. Medium: `main` merged the identical source-map-js lockfile change in #140,
    so the branch's dependency commit and its notes are stale until `main` is
-   merged into the branch. Resolved at the user's request: merge commit
-   `ff357b56` brings in `main` at `80ceb445` without conflicts, and the
-   complete `cargo xtask check` passed on it.
+   merged into the branch. Resolved at the user's request: the branch merged
+   `main`, which includes #140, so its lockfile diff against `main` is empty.
 3. Low: a shared file-level fixture registers its teardown after two awaits,
    so a filtered run that selects none of the file's tests leaves its
    temporary directory behind.
