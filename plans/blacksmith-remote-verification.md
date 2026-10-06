@@ -1,6 +1,6 @@
 # Blacksmith Remote Verification
 
-Status: Active. Milestones 1 through 4 are complete; automatic selection is in progress.
+Status: Active. Milestones 1 through 5 are complete; close-out and review remain.
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
 Blacksmith key is available. Run it locally when no key is available. The key
@@ -335,7 +335,7 @@ Per-box cleanup and diagnostics follow the approved contract.
 
 Evidence: `.context/blacksmith-remote-verification/milestone-4-evidence.md`.
 
-## Milestone 5: Automatic selection
+## Milestone 5: Automatic selection — completed
 
 Make `auto` use the remote gate when a working key is present.
 
@@ -347,13 +347,13 @@ Make `auto` use the remote gate when a working key is present.
 - [x] Add `cargo xtask executor`. It prints `remote` or `local` with the
       reason. It does not warm up boxes.
 - [x] Update `xtask/README.md` and `README.md`.
-- [ ] Commit and push.
-- [ ] Smoke test `cargo xtask executor` in five states: key and CLI present;
+- [x] Commit and push.
+- [x] Smoke test `cargo xtask executor` in five states: key and CLI present;
       CLI hidden from `PATH`; key not set; `GITHUB_ACTIONS=true`; `HEAD` not
       pushed.
-- [ ] Smoke test one complete `cargo xtask check` with `auto`.
+- [x] Smoke test one complete `cargo xtask check` with `auto`.
 - [x] Run formatting, Clippy, Rust tests, length audits and focused Node tests.
-- [ ] Record all automatic selection smoke states before the final push.
+- [x] Record all automatic selection smoke states before the final push.
 
 Evidence: `.context/blacksmith-remote-verification/milestone-5-evidence.md`.
 

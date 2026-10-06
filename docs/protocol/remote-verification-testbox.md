@@ -10,7 +10,7 @@ and workflow are implemented. The wrapper selects `--executor local`.
 Workflow validation and both box suite smoke checks pass.
 Main's dependency fixes are merged. The complete explicit remote check passes.
 Automatic remote selection and `cargo xtask executor` are implemented.
-The complete automatic smoke check is pending.
+The complete automatic smoke check passes.
 
 ## Workflow
 

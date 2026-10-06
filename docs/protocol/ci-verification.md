@@ -14,7 +14,7 @@ Remote execution and automatic selection are implemented.
 `cargo xtask check` is the complete repository and release gate.
 The local executor runs every gate sequentially in one checkout.
 It starts with the live workspace dependency audit. The complete gate can
-instead run on Testboxes under the pending
+instead run on Testboxes under the implemented
 [remote verification contract](./remote-verification.md).
 Only active reviewed path exceptions cover findings.
 [Dependency security](./dependency-security.md) defines their UTC expiry and
