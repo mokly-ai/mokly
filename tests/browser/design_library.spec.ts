@@ -25,7 +25,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
           : { width: 1440, height: 1000 },
     });
 
-    test("every saved sample loads directly from disk with confined styles and links", async ({
+    test("every saved sample has bounded panel scrolling and fits its width", async ({
       page,
     }, testInfo) => {
       const failed: string[] = [];
@@ -152,6 +152,26 @@ for (const viewport of ["desktop", "mobile"] as const) {
           (await page.locator(selector!).boundingBox())!.width,
         ).toBeLessThan(150);
       }
+    });
+
+    test("the last flow step hides its trailing connector", async ({
+      page,
+    }) => {
+      await page.goto(
+        fileUrl(`design/browse/views/use-case/index.${viewport}.html`),
+      );
+      const steps = page.locator(".flow-step");
+      await expect(steps).toHaveCount(2);
+      expect(
+        await steps
+          .first()
+          .evaluate((node) => getComputedStyle(node, "::before").display),
+      ).not.toBe("none");
+      expect(
+        await steps
+          .last()
+          .evaluate((node) => getComputedStyle(node, "::before").display),
+      ).toBe("none");
     });
 
     test("the icon footer sample keeps its open content visible", async ({

@@ -32,11 +32,11 @@ function assertComponentHeader(
     expected.path,
     id,
   );
-  assert.equal(
-    textContent(byClass(document, "ce-change-status")[0]!).trim(),
-    expected.status,
-    id,
-  );
+  const heads = byClass(document, "mbk-screen-head");
+  assert.equal(heads.length, 1, id);
+  const statuses = byClass(heads[0]!, "ce-change-status");
+  assert.equal(statuses.length, 1, id);
+  assert.equal(textContent(statuses[0]!).trim(), expected.status, id);
   const inspector = byClass(document, "ce-inspector")[0];
   assert.ok(inspector, `${id}: missing inspector`);
   const details = textContent(inspector);
@@ -127,6 +127,15 @@ const componentPageHeaders = [
 ] as const;
 
 for (const viewport of ["mobile", "desktop"] as const) {
+  test(`${viewport}: empty inspection keeps Unmodified in its screen head`, async () => {
+    const { document } = await designDocument(
+      "design/components/states/empty",
+      viewport,
+    );
+    const heads = byClass(document, "mbk-screen-head");
+    assert.equal(heads.length, 1);
+    assert.match(textContent(heads[0]!), /Unmodified/u);
+  });
   test(`${viewport}: component page headers and Details describe the shown entry`, async () => {
     for (const [
       id,

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { namedRole } from "./helpers/design_assertions.js";
 import {
   attribute,
   byClass,
@@ -17,13 +18,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       "design/browse/views/use-case",
       viewport,
     );
-    assert.equal(
-      elements(
-        document,
-        (node) => attribute(node, "aria-label") === "Comparison mode",
-      ).length,
-      0,
-    );
+    assert.equal(namedRole(document, "group", "Comparison mode").length, 0);
     assert.equal(byClass(document, "flow-step-link").length, 2);
   });
 
@@ -72,13 +67,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
             "Farewell was removed from the catalogue.",
           ),
         );
-        assert.equal(
-          elements(
-            document,
-            (node) => attribute(node, "aria-label") === "Comparison mode",
-          ).length,
-          0,
-        );
+        assert.equal(namedRole(document, "group", "Comparison mode").length, 0);
         assert.deepEqual(byClass(document, "mbk-previous").map(textContent), [
           "Showing previous version",
         ]);
@@ -98,13 +87,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       viewport,
     );
     assert.equal(headTitle(document), "Welcome");
-    assert.equal(
-      elements(
-        document,
-        (node) => attribute(node, "aria-label") === "Comparison mode",
-      ).length,
-      0,
-    );
+    assert.equal(namedRole(document, "group", "Comparison mode").length, 0);
     assert.deepEqual(
       byClass(document, "mbk-nav-filter-count").map(textContent),
       ["0"],

@@ -11,6 +11,7 @@ import {
   welcomeModes,
 } from "../examples/basic/specs/design/parts/navigation_states.js";
 import { generatedViews, viewRoute } from "../packages/viewer/dist/data.js";
+import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 
 import {
   attribute,
@@ -38,15 +39,12 @@ test("the canonical documented inventory exactly matches the complete design pat
     .sort();
   const actual = (
     await designEntries(
-      (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+      (entry): entry is ManifestScreen =>
+        entry.kind === "screen" && entry.path.startsWith("design/"),
       "documented inventory",
     )
   )
-    .flatMap((entry) =>
-      entry.kind === "screen" && entry.path.startsWith("design/")
-        ? [entry.path]
-        : [],
-    )
+    .map((entry) => entry.path)
     .sort();
   assert.deepEqual(documented, actual);
 });
@@ -60,13 +58,13 @@ const COMPARISON_FAMILIES = [
 test("a dark fragment's links stay dark wherever the target has a dark render", async () => {
   const { outputs } = await designCatalogue;
   const designs = await designEntries(
-    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+    (entry): entry is ManifestScreen =>
+      entry.kind === "screen" && entry.path.startsWith("design/"),
     "all design links",
   );
   let checked = 0;
   for (const entry of designs) {
-    if (entry.kind !== "screen" || !entry.colorSchemes.includes("dark"))
-      continue;
+    if (!entry.colorSchemes.includes("dark")) continue;
     for (const viewport of ["mobile", "desktop"] as const) {
       const route = viewRoute(entry.path, viewport, "dark");
       assert.ok(route, `${entry.path} ${viewport}`);
@@ -141,10 +139,10 @@ test("a tag chip without a destination is a label, not a control", async () => {
       );
   let labels = 0;
   for (const entry of await designEntries(
-    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+    (entry): entry is ManifestScreen =>
+      entry.kind === "screen" && entry.path.startsWith("design/"),
     "tag chip artboards",
   )) {
-    if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
     for (const route of generatedViews(entry)
       .filter((view) => view.colorScheme === "light")
       .map((view) => view.path)) {

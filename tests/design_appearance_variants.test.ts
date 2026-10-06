@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { DUAL_SCHEME_SAMPLES } from "../examples/basic/specs/design/library/metadata.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
+import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 import { AppearanceSelect } from "../packages/viewer/dist/shell/appearance.js";
 
 import { componentVariants } from "./helpers/component_views.js";
@@ -45,14 +46,13 @@ function appearanceOf(html: string): string | undefined {
 
 test("appearance screens publish both schemes for both viewports", async () => {
   const screens = await designEntries(
-    (entry) =>
+    (entry): entry is ManifestScreen =>
       entry.kind === "screen" &&
       entry.path.startsWith("design/browse/appearance/"),
     "appearance screens",
   );
   assert.ok(screens.length > 0, "the appearance section exists");
   for (const entry of screens) {
-    assert.ok(entry.kind === "screen");
     assert.ok(
       entry.colorSchemes.includes("dark"),
       `${entry.path} has no dark fragment, so the preview toggle cannot switch it`,
@@ -64,13 +64,12 @@ test("appearance screens publish both schemes for both viewports", async () => {
 test("each generated appearance variant draws the scheme it was rendered for", async () => {
   const { outputs } = await designCatalogue;
   const screens = await designEntries(
-    (entry) =>
+    (entry): entry is ManifestScreen =>
       entry.kind === "screen" &&
       entry.path.startsWith("design/browse/appearance/"),
     "appearance screens",
   );
   for (const entry of screens) {
-    assert.ok(entry.kind === "screen");
     for (const viewport of ["mobile", "desktop"] as const) {
       const light = textOutput(
         outputs,
@@ -117,23 +116,20 @@ async function appearanceFragments(): Promise<
 > {
   const { outputs } = await designCatalogue;
   const entries = await designEntries(
-    (entry) =>
+    (entry): entry is ManifestScreen =>
       entry.kind === "screen" &&
       entry.path.startsWith("design/browse/appearance/"),
     "appearance fragments",
   );
   return entries.flatMap((entry) =>
-    entry.kind === "screen" &&
-    entry.path.startsWith("design/browse/appearance/")
-      ? (["mobile", "desktop"] as const).flatMap((viewport) =>
-          (["light", "dark"] as const).map((scheme) => ({
-            id: entry.path,
-            scheme,
-            viewport,
-            html: textOutput(outputs, viewRoute(entry.path, viewport, scheme))!,
-          })),
-        )
-      : [],
+    (["mobile", "desktop"] as const).flatMap((viewport) =>
+      (["light", "dark"] as const).map((scheme) => ({
+        id: entry.path,
+        scheme,
+        viewport,
+        html: textOutput(outputs, viewRoute(entry.path, viewport, scheme))!,
+      })),
+    ),
   );
 }
 
@@ -211,7 +207,8 @@ test("the Appearance selector reads Auto, or the scheme it rendered for", async 
 
 test("depicted previews follow the artboard's scheme", async () => {
   const entries = await designEntries(
-    (entry) => entry.kind === "screen" && previewScreens.includes(entry.path),
+    (entry): entry is ManifestScreen =>
+      entry.kind === "screen" && previewScreens.includes(entry.path),
     "appearance preview screens",
   );
   assert.equal(entries.length, 9);
@@ -226,7 +223,7 @@ test("depicted previews follow the artboard's scheme", async () => {
 
 test("the light-only subject keeps light frames and names its fallback under Dark", async () => {
   await designEntries(
-    (entry) =>
+    (entry): entry is ManifestScreen =>
       entry.kind === "screen" &&
       entry.path === "design/browse/appearance/states/light-only",
     "light-only appearance subject",

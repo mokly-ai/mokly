@@ -4,6 +4,7 @@ import test from "node:test";
 import { parse } from "parse5";
 
 import { generatedViews, viewRoute } from "../packages/viewer/dist/data.js";
+import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 
 import { accessibleName } from "./helpers/design_assertions.js";
 import {
@@ -32,10 +33,10 @@ function countClass(html: string, className: string): number {
 test("no design artboard depicts a scheme control", async () => {
   const { outputs } = await designCatalogue;
   for (const entry of await designEntries(
-    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+    (entry): entry is ManifestScreen =>
+      entry.kind === "screen" && entry.path.startsWith("design/"),
     "appearance control artboards",
   )) {
-    if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
     for (const route of generatedViews(entry).map((view) => view.path)) {
       const html = textOutput(outputs, route)!;
       assert.equal(countClass(html, "ce-theme-control"), 0, route);
@@ -88,10 +89,10 @@ test("every artboard with a top bar draws one Appearance control", async () => {
   const { outputs } = await designCatalogue;
   let checked = 0;
   for (const entry of await designEntries(
-    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+    (entry): entry is ManifestScreen =>
+      entry.kind === "screen" && entry.path.startsWith("design/"),
     "appearance control artboards",
   )) {
-    if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
     for (const route of generatedViews(entry).map((view) => view.path)) {
       const html = textOutput(outputs, route)!;
       if (countClass(html, "mbk-topbar") === 0) continue;
@@ -105,10 +106,10 @@ test("every artboard with a top bar draws one Appearance control", async () => {
 test("the depicted Appearance control names the scheme it rendered for", async () => {
   const { outputs } = await designCatalogue;
   for (const entry of await designEntries(
-    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+    (entry): entry is ManifestScreen =>
+      entry.kind === "screen" && entry.path.startsWith("design/"),
     "appearance control artboards",
   )) {
-    if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
     if (entry.path === "design/browse/appearance/states/auto") continue;
     for (const scheme of entry.colorSchemes) {
       const routes: string[] = generatedViews(entry)

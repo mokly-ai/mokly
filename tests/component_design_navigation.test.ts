@@ -8,7 +8,7 @@ import {
 } from "../examples/basic/specs/design/components/parts/destinations.js";
 import { actionModes } from "../examples/basic/specs/design/components/parts/navigation_states.js";
 
-import { named } from "./helpers/design_assertions.js";
+import { named, namedRole } from "./helpers/design_assertions.js";
 import {
   attribute,
   byClass,
@@ -107,7 +107,14 @@ for (const viewport of ["mobile", "desktop"] as const) {
           1,
           id,
         );
-      } else assert.equal(toolbar, undefined, id);
+      } else {
+        assert.equal(toolbar, undefined, id);
+        assert.equal(
+          namedRole(document, "group", "Comparison mode").length,
+          0,
+          id,
+        );
+      }
       assert.equal(
         attribute(byClass(document, "mbk-search-tag")[0]!, "href"),
         undefined,

@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 
-import { attribute, elements, type Element } from "./design_catalogue.js";
+import {
+  attribute,
+  byClass,
+  elements,
+  type Element,
+} from "./design_catalogue.js";
 
 type Node = Parameters<typeof elements>[0];
 
@@ -81,6 +86,33 @@ export function region(root: Node, name: string): Element {
   );
   assert.equal(matches.length, 1, `Expected one region named ${name}`);
   return matches[0]!;
+}
+
+/** Match named roles, including the native navigation and fieldset roles. */
+export function namedRole(
+  root: Node,
+  role: "group" | "navigation" | "switch",
+  name: string,
+): Element[] {
+  return elements(root, (node) => {
+    const nativeRole =
+      node.tagName === "nav"
+        ? "navigation"
+        : node.tagName === "fieldset"
+          ? "group"
+          : undefined;
+    return (
+      (attribute(node, "role") ?? nativeRole) === role &&
+      accessibleName(node, root) === name
+    );
+  });
+}
+
+/** Both authored previews must exist before their assertions run. */
+export function twoPreviews(root: Node): Element[] {
+  const previews = byClass(root, "ce-preview-view");
+  assert.equal(previews.length, 2, "one authored preview per viewport");
+  return previews;
 }
 
 /** The initial value a native field gets from generated HTML. */

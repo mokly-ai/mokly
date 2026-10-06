@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { description, named, region } from "./helpers/design_assertions.js";
+import {
+  description,
+  named,
+  region,
+  twoPreviews,
+} from "./helpers/design_assertions.js";
 import {
   attribute,
   byClass,
@@ -10,6 +15,7 @@ import {
   textContent,
 } from "./helpers/design_catalogue.js";
 import { rowLabel } from "./helpers/design_rows.js";
+import { openPanel } from "./helpers/design_stacks.js";
 
 for (const viewport of ["desktop", "mobile"] as const) {
   test(`${viewport}: usage links select the corresponding container or hidden instance`, async () => {
@@ -30,6 +36,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         target,
       );
       const selection = (await designDocument(target, viewport)).document;
+      assert.equal(openPanel(selection), "props");
       const details = textContent(region(selection, "Selected instance"));
       assert.ok(details.includes(title));
       assert.ok(details.includes(value));
@@ -65,7 +72,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
   test(`${viewport}: single-component inspection links name the selected instance`, async () => {
     const id = "design/components/inspection/inspection-consumer";
     const { document } = await designDocument(id, viewport);
-    for (const preview of byClass(document, "ce-preview-view"))
+    for (const preview of twoPreviews(document))
       assert.equal(
         attribute(
           named(preview, "Inspect Action, Continue", "a"),
@@ -88,6 +95,11 @@ for (const viewport of ["desktop", "mobile"] as const) {
       const ids = elements(document, (node) => node.tagName === "mask").map(
         (node) => attribute(node, "id"),
       );
+      for (const preview of twoPreviews(document))
+        assert.ok(
+          elements(preview, (node) => node.tagName === "mask").length > 0,
+          `${route}: each preview has its own masks`,
+        );
       assert.ok(ids.length > 0);
       assert.ok(ids.every(Boolean));
       assert.equal(new Set(ids).size, ids.length);

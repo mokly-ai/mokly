@@ -3,6 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
+
 import { designEntries } from "./helpers/design_catalogue.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
@@ -61,12 +63,11 @@ async function stated(file: string, pattern: RegExp): Promise<number[]> {
 }
 
 test("documented design-screen counts match the compiled catalogue", async () => {
-  const designs = (
-    await designEntries(
-      (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
-      "documented design screens",
-    )
-  ).flatMap((entry) => (entry.kind === "screen" ? [entry] : []));
+  const designs = await designEntries(
+    (entry): entry is ManifestScreen =>
+      entry.kind === "screen" && entry.path.startsWith("design/"),
+    "documented design screens",
+  );
   const components = designs.filter((entry) =>
     entry.path.startsWith("design/components/"),
   );

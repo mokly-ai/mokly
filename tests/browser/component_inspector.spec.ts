@@ -28,5 +28,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
         inspector.getByRole("region", { name, exact: true }),
       ).toBeVisible();
     }
+    await page.goto(componentDesignUrl("design/components/overview", viewport));
+    await page.getByRole("button", { name: "Usage", exact: true }).click();
+    await expect(
+      page.getByRole("region", { name: "Used by", exact: true }),
+    ).toBeVisible();
   });
 }

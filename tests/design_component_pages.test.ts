@@ -1,7 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { fieldValue, named, region } from "./helpers/design_assertions.js";
+import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
+
+import {
+  fieldValue,
+  named,
+  namedRole,
+  region,
+  twoPreviews,
+} from "./helpers/design_assertions.js";
 import {
   attribute,
   byClass,
@@ -15,7 +23,7 @@ import { headTitle, rowLabel } from "./helpers/design_rows.js";
 for (const viewport of ["desktop", "mobile"] as const) {
   test(`${viewport}: every owning component artboard has its shell and heading`, async () => {
     const entries = await designEntries(
-      (entry) =>
+      (entry): entry is ManifestScreen =>
         entry.kind === "screen" && entry.path.startsWith("design/components/"),
       "component owning artboards",
     );
@@ -30,11 +38,14 @@ for (const viewport of ["desktop", "mobile"] as const) {
         entry.path,
       );
       assert.ok(headTitle(document), entry.path);
+      const head = byClass(document, "mbk-screen-head")[0]!;
       assert.equal(
-        elements(
-          document,
-          (node) => attribute(node, "aria-label") === "Related design pages",
-        ).length,
+        elements(head, (node) => node.tagName === "h2").length,
+        1,
+        entry.path,
+      );
+      assert.equal(
+        namedRole(document, "navigation", "Related design pages").length,
         0,
         entry.path,
       );
@@ -63,7 +74,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
     const disabled = (
       await designDocument("design/components/pages/variants", viewport)
     ).document;
-    for (const preview of byClass(disabled, "ce-preview-view")) {
+    for (const preview of twoPreviews(disabled)) {
       assert.ok(
         attribute(named(preview, "Continue", "button"), "disabled") !==
           undefined,
@@ -130,7 +141,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
         );
       } else
         assert.match(
-          textContent(region(document, "Selected instance")),
+          textContent(
+            byClass(region(document, "Selected instance"), "ce-props")[0]!,
+          ),
           /Get started/u,
         );
     }

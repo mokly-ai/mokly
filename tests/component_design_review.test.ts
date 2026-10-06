@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
+
 import {
   attribute,
   byClass,
@@ -13,7 +15,7 @@ import {
 for (const viewport of ["mobile", "desktop"] as const) {
   test(`${viewport}: component current-page links identify the rendered artboard`, async () => {
     const entries = await designEntries(
-      (entry) =>
+      (entry): entry is ManifestScreen =>
         entry.kind === "screen" && entry.path.startsWith("design/components/"),
       "component owning artboards",
     );
@@ -36,7 +38,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
 
   test(`${viewport}: design-only footer navigation stays outside product artboards`, async () => {
     const entries = await designEntries(
-      (entry) =>
+      (entry): entry is ManifestScreen =>
         entry.kind === "screen" && entry.path.startsWith("design/components/"),
       "component footer artboards",
     );

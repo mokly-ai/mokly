@@ -378,6 +378,36 @@ a non-design fixture. Then delete the design spec or test.
 - [x] Run the milestone lint, formatting, and prepared type checks. Audit the
       mainline diff and deletions. Commit with a Conventional Commit and push.
 
+## Milestone 4A: Moved assertion equivalence
+
+Completed. Change request 1 restores each missing assertion before the browser directory
+move. Keep the original fact, its scope, and its viewport coverage.
+
+- [x] Restore hidden-instance selection visibility in the browser. Assert that
+      selection artboards open their Selected instance panel in unit tests.
+- [x] Restore number and checkbox input types at each original controls scope.
+- [x] Require relative local stylesheet URLs in library samples. Give the
+      browser sample test a title that describes its remaining checks.
+- [x] Check desktop pane resize while closed. Check the closed 49px mobile
+      inspector after expanding the sheet.
+- [x] Restore every removed computed-style and visibility assertion in raw
+      browser specs. Keep the corresponding unit checks and unique heading count.
+- [x] Match absent controls by role and accessible name. Check the actual named
+      comparison group and wrapping-label name of Scroll together.
+- [x] Restore exact head-status, empty-screen, and selected-props scopes.
+- [x] Check onboarding, the Tags group, and Close tag picker names in the owning
+      tag-picker unit checks.
+- [x] Guard every moved preview loop with its count. Require masks in each
+      preview and keep all mask ids unique.
+- [x] Verify neighboring protocol claims after the runtime move. Keep the moved
+      assertion guarantee aligned with the restored checks.
+- [x] Use typed designEntries predicates. Rewrap only the new verification
+      protocol. Keep the shell protocol at its exact 351-line cap.
+- [x] Run changed unit tests and browser specs. Run lint, changed-file Prettier,
+      and prepared type checks. Check shard balance after spec changes.
+- [x] Audit the complete mainline diff and deletions. Commit with Conventional
+      Commits and push before starting Milestone 5.
+
 ## Milestone 5: Mockup spec directory and boundary guard
 
 Put every browser mockup spec in one directory, and make the layer rules

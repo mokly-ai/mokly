@@ -1,19 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import type { ManifestComponentVariant } from "../packages/viewer/dist/components/manifest_types.js";
 import {
   generatedViews,
   isManifestComponentVariant,
 } from "../packages/viewer/dist/data.js";
+import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 
-import { named } from "./helpers/design_assertions.js";
+import { named, namedRole } from "./helpers/design_assertions.js";
 import {
   attribute,
   byClass,
   designCatalogue,
   designDocument,
   designEntries,
-  elements,
 } from "./helpers/design_catalogue.js";
 import { textOutput } from "./helpers/generated_text.js";
 
@@ -83,7 +84,7 @@ test("view options have one icon presentation and no view-controls scheme contro
 
 test("every owning design and shared sample omits legacy footer and view markup", async () => {
   const entries = await designEntries(
-    (entry) =>
+    (entry): entry is ManifestScreen | ManifestComponentVariant =>
       entry.path.startsWith("design/") &&
       (entry.kind === "screen" ||
         (entry.kind === "component" && isManifestComponentVariant(entry))),
@@ -91,20 +92,16 @@ test("every owning design and shared sample omits legacy footer and view markup"
   );
   assert.equal(entries.length, 180);
   for (const entry of entries) {
-    if (
-      entry.kind === "screen" ||
-      (entry.kind === "component" && isManifestComponentVariant(entry))
-    )
-      for (const file of generatedViews(entry).map((view) => view.path)) {
-        const html = textOutput(outputs, file);
-        assert.ok(html, file);
-        assert.doesNotMatch(html, /class="mbk-details(?:-bar|-hint)?"/, file);
-        assert.doesNotMatch(
-          html,
-          /role="group" aria-label="(?:Viewport|Preview color scheme)"/,
-          file,
-        );
-      }
+    for (const file of generatedViews(entry).map((view) => view.path)) {
+      const html = textOutput(outputs, file);
+      assert.ok(html, file);
+      assert.doesNotMatch(html, /class="mbk-details(?:-bar|-hint)?"/, file);
+      assert.doesNotMatch(
+        html,
+        /role="group" aria-label="(?:Viewport|Preview color scheme)"/,
+        file,
+      );
+    }
   }
 });
 
@@ -128,14 +125,8 @@ test("every selected screen uses one inspector and one preview toolbar", async (
       const { document } = await designDocument(entry.path, viewport);
       assert.equal(byClass(document, "mbk-details-bar").length, 0, entry.path);
       assert.equal(
-        elements(
-          document,
-          (node) =>
-            attribute(node, "role") === "group" &&
-            /^(Viewport|Preview color scheme)$/u.test(
-              attribute(node, "aria-label") ?? "",
-            ),
-        ).length,
+        namedRole(document, "group", "Viewport").length +
+          namedRole(document, "group", "Preview color scheme").length,
         0,
         entry.path,
       );

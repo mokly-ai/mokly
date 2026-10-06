@@ -19,6 +19,8 @@ for (const viewport of ["desktop", "mobile"] as const) {
     }, testInfo) => {
       for (const route of componentDesignRoutes) {
         await page.goto(componentDesignUrl(route, viewport));
+        await expect(page.locator(".mbk-screen-head h2"), route).toHaveCount(1);
+        await expect(page.locator(".mbk-screen-head h2"), route).toBeVisible();
         for (const panel of await page
           .locator(".ce-workspace details[open] > .ce-inspector-panel")
           .all())

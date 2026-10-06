@@ -44,6 +44,7 @@ test("desktop inspector uses a centered divider with real bounded resizing", asy
   await page.getByRole("button", { name: "Controls", exact: true }).click();
   await expect(divider).toBeHidden();
   await expect(inspector).toHaveCSS("height", "49px");
+  await expect(page.locator(".ce-preview-pane")).toHaveCSS("resize", "none");
   await page.getByRole("button", { name: "Controls", exact: true }).click();
   expect(await region.boundingBox()).toEqual(resized);
   await expect(page.locator(".ce-preview-pane")).toHaveCSS("resize", "none");
@@ -99,6 +100,11 @@ test.describe("mobile inspector sheet", () => {
     await toggle.focus();
     await page.keyboard.press("Space");
     expect(await dock.boundingBox()).toEqual(compact);
+    await toggle.tap();
+    await expect(toggle).toBeChecked();
+    await expect
+      .poll(async () => (await dock.boundingBox())!.height)
+      .toBeGreaterThan(compact.height + 80);
     await page.locator("details[open] [data-inspector-close]").click();
     await expect(toggle).toBeHidden();
     await expect(inspector).toHaveCSS("height", "49px");

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import type { ManifestComponent } from "../packages/viewer/dist/components/manifest_types.js";
 import { generatedViews, viewRoute } from "../packages/viewer/dist/data.js";
 
 import {
@@ -56,7 +57,7 @@ test("standalone variants emit only the exclusive child styles they actually ren
 
 test("ownership includes implementation and CSS, while variants stay outside impact dependencies", async () => {
   const entries = await designEntries(
-    (entry) =>
+    (entry): entry is ManifestComponent =>
       entry.kind === "component" &&
       !("variantOf" in entry) &&
       entry.path.startsWith("design/library/"),
@@ -64,7 +65,6 @@ test("ownership includes implementation and CSS, while variants stay outside imp
   );
   assert.equal(entries.length, 16);
   for (const entry of entries) {
-    assert.ok(entry.kind === "component" && !("variantOf" in entry));
     const slug = entry.path.split("/").at(-1)!;
     assert.ok(
       entry.ownedDependencies.some((file) =>

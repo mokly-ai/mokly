@@ -3,6 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
+
 import {
   byClass,
   designCatalogue,
@@ -42,12 +44,11 @@ test("a flow's last step is its last element child and has no trailing connector
 test("every owning artboard records its shared chrome and real component consumers", async () => {
   const { manifest } = await designCatalogue;
   assert.ok(manifest.schemaVersion === 8);
-  const screens = (
-    await designEntries(
-      (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
-      "shared chrome consumers",
-    )
-  ).flatMap((entry) => (entry.kind === "screen" ? [entry] : []));
+  const screens = await designEntries(
+    (entry): entry is ManifestScreen =>
+      entry.kind === "screen" && entry.path.startsWith("design/"),
+    "shared chrome consumers",
+  );
   assert.equal(screens.length, 111);
   for (const entry of screens) {
     assert.ok(entry.componentViews);

@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { fieldValue, named, region } from "./helpers/design_assertions.js";
+import {
+  fieldValue,
+  named,
+  namedRole,
+  region,
+  twoPreviews,
+} from "./helpers/design_assertions.js";
 import {
   attribute,
   byClass,
@@ -77,7 +83,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
     ]);
     const set = byClass(previous, "ce-preview-set")[0]!;
     assert.equal(attribute(set, "data-viewport"), viewport);
-    for (const view of byClass(previous, "ce-preview-view")) {
+    for (const view of twoPreviews(previous)) {
       assert.ok(
         textContent(view).includes("Come back whenever you are ready."),
       );
@@ -88,23 +94,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
           : "phone-frame";
       assert.equal(byClass(view, frame).length, 1);
     }
-    assert.equal(
-      elements(
-        previous,
-        (node) => attribute(node, "aria-label") === "Comparison mode",
-      ).length,
-      0,
-    );
+    assert.equal(namedRole(previous, "group", "Comparison mode").length, 0);
     assert.equal(byClass(previous, "mbk-pane-missing").length, 0);
-    assert.equal(
-      elements(
-        previous,
-        (node) =>
-          attribute(node, "role") === "switch" &&
-          attribute(node, "aria-label") === "Dark mode",
-      ).length,
-      0,
-    );
+    assert.equal(namedRole(previous, "switch", "Dark mode").length, 0);
     assert.equal(fieldValue(named(previous, "Appearance", "select")), "light");
     assert.ok(
       attribute(

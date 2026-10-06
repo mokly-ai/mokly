@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { named, region } from "./helpers/design_assertions.js";
+import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
+
+import {
+  named,
+  namedRole,
+  region,
+  twoPreviews,
+} from "./helpers/design_assertions.js";
 import {
   attribute,
   byClass,
@@ -38,12 +45,10 @@ function evidence(document: Document, where: string): Map<string, string> {
 test("component comparison captions follow the recorded change, never the depicted content", async () => {
   const captions = new Map<string, Set<string>>();
   for (const entry of await designEntries(
-    (entry) =>
+    (entry): entry is ManifestScreen =>
       entry.kind === "screen" && entry.path.startsWith("design/components/"),
     "component comparison artboards",
   )) {
-    if (entry.kind !== "screen" || !entry.path.startsWith("design/components/"))
-      continue;
     for (const { document, route } of await renders(entry.path)) {
       const compared = previews(document).filter(
         ([, preview]) => byClass(preview, "ce-component-comparison").length,
@@ -211,14 +216,8 @@ for (const viewport of ["desktop", "mobile"] as const) {
       "design/components/states/additions/added",
       viewport,
     );
-    assert.equal(
-      elements(
-        document,
-        (node) => attribute(node, "aria-label") === "Comparison mode",
-      ).length,
-      0,
-    );
-    for (const preview of byClass(document, "ce-preview-view")) {
+    assert.equal(namedRole(document, "group", "Comparison mode").length, 0);
+    for (const preview of twoPreviews(document)) {
       assert.equal(byClass(preview, "mbk-pane-missing").length, 0);
       assert.deepEqual(byClass(preview, "ce-badge").map(textContent), ["New"]);
     }

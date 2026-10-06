@@ -4,7 +4,9 @@ import test from "node:test";
 import { parse } from "parse5";
 
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import type { ManifestEntry } from "../packages/viewer/dist/registry/types.js";
 
+import { namedRole } from "./helpers/design_assertions.js";
 import {
   attribute,
   byClass,
@@ -170,14 +172,14 @@ const SCROLLING_APART = new Set([
 test("every diff-mode band draws Scroll together after its modes, and Current never does", async () => {
   const { outputs } = await designCatalogue;
   const entries = await designEntries(
-    (entry) =>
+    (
+      entry,
+    ): entry is Extract<ManifestEntry, { kind: "screen" | "component" }> =>
       entry.path.startsWith("design/") &&
       (entry.kind === "screen" || entry.kind === "component"),
     "comparison bands",
   );
   const views = entries.flatMap((entry) => {
-    if (entry.kind !== "screen" && entry.kind !== "component") return [];
-    if (!entry.path.startsWith("design/")) return [];
     return generatedViews(entry).map((view) => ({
       id: entry.path,
       route: view.path,
@@ -203,12 +205,7 @@ test("every diff-mode band draws Scroll together after its modes, and Current ne
         `${route}: Current has no Scroll together anywhere`,
       );
       assert.equal(
-        elements(
-          document,
-          (node) =>
-            attribute(node, "role") === "switch" &&
-            attribute(node, "aria-label") === "Scroll together",
-        ).length,
+        namedRole(document, "switch", "Scroll together").length,
         0,
         route,
       );

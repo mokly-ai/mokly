@@ -6,6 +6,7 @@ import {
   fieldValue,
   named,
   region,
+  twoPreviews,
 } from "./helpers/design_assertions.js";
 import {
   attribute,
@@ -34,6 +35,14 @@ for (const viewport of ["desktop", "mobile"] as const) {
       await designDocument("design/components/controls/controls", viewport)
     ).document;
     const controls = region(initial, "Controls");
+    assert.equal(
+      attribute(named(controls, "cornerRadius", "input"), "type"),
+      "number",
+    );
+    assert.equal(
+      attribute(named(controls, "disabled", "input"), "type"),
+      "checkbox",
+    );
     for (const [name, tag, value] of [
       ["label", "input", "Continue"],
       ["cornerRadius", "input", "8"],
@@ -59,7 +68,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         fieldValue(named(region(document, "Controls"), "label", "input")),
         value,
       );
-      for (const preview of byClass(document, "ce-preview-view"))
+      for (const preview of twoPreviews(document))
         assert.deepEqual(byClass(preview, "ce-action").map(textContent), [
           value,
         ]);
@@ -85,18 +94,26 @@ for (const viewport of ["desktop", "mobile"] as const) {
         `design/components/controls/${state}`,
         viewport,
       );
-      for (const preview of byClass(document, "ce-preview-view")) {
+      for (const preview of twoPreviews(document)) {
         const action = byClass(preview, "ce-action");
         assert.equal(action.length, 1);
         assert.ok(attribute(action[0]!, "disabled") !== undefined);
       }
-      if (state === "editing/variant")
+      if (state === "editing/variant") {
+        assert.equal(
+          attribute(
+            named(region(document, "Controls"), "disabled", "input"),
+            "type",
+          ),
+          "checkbox",
+        );
         assert.ok(
           attribute(
             named(region(document, "Controls"), "disabled", "input"),
             "checked",
           ) !== undefined,
         );
+      }
     }
   });
 
@@ -106,9 +123,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
       viewport,
     );
     const radius = named(region(document, "Controls"), "cornerRadius", "input");
+    assert.equal(attribute(radius, "type"), "number");
     assert.equal(attribute(radius, "aria-invalid"), "true");
     assert.equal(description(radius, document), "Enter a number from 0 to 24.");
-    for (const preview of byClass(document, "ce-preview-view"))
+    for (const preview of twoPreviews(document))
       assert.match(
         attribute(byClass(preview, "ce-action")[0]!, "style") ?? "",
         /(?:^|;)\s*border-radius:\s*8px(?:;|$)/u,
@@ -132,7 +150,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         viewport,
       )
     ).document;
-    for (const preview of byClass(pending, "ce-preview-view")) {
+    for (const preview of twoPreviews(pending)) {
       const status = elements(
         preview,
         (node) => attribute(node, "role") === "status",

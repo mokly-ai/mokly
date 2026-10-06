@@ -25,11 +25,17 @@ for (const viewport of ["desktop", "mobile"] as const) {
       "editing/variant",
       "editing/reset",
       "published/readonly-variant",
+      "states/invalid",
     ]) {
       await page.goto(
         componentDesignUrl(`design/components/controls/${route}`, viewport),
       );
       await expect(page.locator(".ce-canvas:visible")).toHaveCount(1);
+      if (route === "states/invalid")
+        await expect(page.locator(".ce-canvas:visible .ce-action")).toHaveCSS(
+          "border-radius",
+          "8px",
+        );
     }
   });
 

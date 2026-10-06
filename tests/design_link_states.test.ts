@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { named, namedRole } from "./helpers/design_assertions.js";
 import {
   attribute,
   byClass,
@@ -45,15 +46,7 @@ test("Changes artboards have named comparison modes and no separate modes naviga
           "Current",
         ]);
       }
-      assert.equal(
-        elements(
-          document,
-          (node) =>
-            node.tagName === "nav" &&
-            attribute(node, "aria-label") === "Mokly modes",
-        ).length,
-        0,
-      );
+      assert.equal(namedRole(document, "navigation", "Mokly modes").length, 0);
     }
   }
 });
@@ -198,6 +191,16 @@ for (const viewport of ["mobile", "desktop"] as const) {
         toggle,
         source,
       );
+      if (source.includes("picker")) {
+        const groups = namedRole(document, "group", "Tags");
+        assert.equal(groups.length, 1, source);
+        assert.ok(named(document, "Close tag picker", "a"), source);
+        if (source === "design/browse/views/screen/tag-picker")
+          assert.equal(
+            attribute(named(groups[0]!, "onboarding", "a"), "data-mokly-link"),
+            "design/browse/views/screen/tag-onboarding",
+          );
+      }
       const chips = byClass(document, "tag");
       for (const chip of chips) {
         const tag = textContent(chip).trim();

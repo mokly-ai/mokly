@@ -36,8 +36,17 @@ test("comparison designs use screen context instead of report chrome", async ({
         await page
           .getByRole("button", { name: "Details", exact: true })
           .click();
+        await expect(
+          page.getByText("Added to this branch.", { exact: true }),
+        ).toBeVisible();
       }
       await expect(comparisonDetails).toBeVisible();
+      if (route === "outcomes/removed")
+        await expect(
+          page.getByText("Farewell was removed from the catalogue.", {
+            exact: true,
+          }),
+        ).toBeVisible();
       await expect(page.locator(".mbk-nav .mbk-nav-resize")).toHaveCount(
         viewport === "desktop" ? 1 : 0,
       );

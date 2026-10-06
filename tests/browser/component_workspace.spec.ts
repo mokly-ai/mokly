@@ -41,6 +41,19 @@ for (const viewport of ["desktop", "mobile"] as const) {
       );
     });
 
+    test("an empty screen keeps its Components tab visible", async ({
+      page,
+    }) => {
+      await page.goto(
+        componentDesignUrl("design/components/states/empty", viewport),
+      );
+      await expect(
+        page
+          .getByRole("region", { name: "Inspector", exact: true })
+          .getByRole("button", { name: "Components", exact: true }),
+      ).toBeVisible();
+    });
+
     test("single-component highlighting fills the screen and remains selectable", async ({
       page,
     }) => {

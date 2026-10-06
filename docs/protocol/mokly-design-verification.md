@@ -27,9 +27,10 @@ depictions follow the same rule for the entry kind they show.
 Catalogue-wide selections use `designEntries(predicate, label)`. The helper
 returns matching manifest entries and fails with the supplied label if none
 match. Baseline tests can supply the copied catalogue's entries as a third
-argument to preserve the exact historical input. A path or kind change must fail a selection instead of silently skipping
-its assertions. Readers for one screen or component variant must also fail
-when the requested entry or output does not exist.
+argument to preserve the exact historical input. A path or kind change must
+fail a selection instead of silently skipping its assertions. Readers for one
+screen or component variant must also fail when the requested entry or output
+does not exist.
 
 `tests/design_links_inventory.test.ts` compares current screens with the
 documented design inventories. It is the only guard against a removed design

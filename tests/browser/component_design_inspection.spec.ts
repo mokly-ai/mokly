@@ -116,5 +116,63 @@ for (const viewport of ["desktop", "mobile"] as const) {
       await toggle.uncheck();
       await expect(page.locator(".ce-highlight-layer:visible")).toHaveCount(0);
     });
+
+    test("a selected hidden instance shows its missing-region description", async ({
+      page,
+    }) => {
+      await page.goto(
+        componentDesignUrl(
+          "design/components/inspection/selection/inspection-help",
+          viewport,
+        ),
+      );
+      await expect(
+        page
+          .getByRole("region", { name: "Selected instance" })
+          .getByText("No visible region", { exact: true }),
+      ).toBeVisible();
+    });
+
+    test("empty, unavailable, unused, and removed states show their own content", async ({
+      page,
+    }) => {
+      for (const [route, copy] of [
+        ["empty", "No registered components are used in this view."],
+        ["unavailable", "Component inspection is unavailable for this screen."],
+        ["unused", "No screens or components use Badge yet."],
+      ]) {
+        await page.goto(
+          componentDesignUrl(`design/components/states/${route}`, viewport),
+        );
+        await expect(page.getByText(copy!, { exact: true })).toBeVisible();
+      }
+      await page.goto(
+        componentDesignUrl("design/components/states/removed", viewport),
+      );
+      await expect(
+        page
+          .locator(".ce-preview-view:visible")
+          .getByText("This variant has been removed.", { exact: true }),
+      ).toBeVisible();
+      await page.goto(
+        componentDesignUrl(
+          "design/components/states/removed-consumer",
+          viewport,
+        ),
+      );
+      const preview = page.locator(".ce-preview-view:visible");
+      await expect(
+        preview.getByText("Come back whenever you are ready.", { exact: true }),
+      ).toBeVisible();
+      await expect(preview.locator(".ce-action--before")).toBeVisible();
+      await expect(
+        preview.locator(
+          viewport === "desktop" ? ".browser-frame" : ".phone-frame",
+        ),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Details", exact: true }),
+      ).toBeVisible();
+    });
   });
 }

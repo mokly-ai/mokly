@@ -21,7 +21,7 @@ import {
 } from "./helpers/design_catalogue.js";
 import { textOutput } from "./helpers/generated_text.js";
 
-test("shared library sample links use portable relative URLs", async () => {
+test("shared library sample links and stylesheets use relative local URLs", async () => {
   const { outputs } = await designCatalogue;
   const entries = await designEntries(
     (entry) =>
@@ -31,13 +31,16 @@ test("shared library sample links use portable relative URLs", async () => {
     "portable library samples",
   );
   let links = 0;
+  let stylesheets = 0;
   for (const entry of entries) {
     for (const view of generatedViews(entry)) {
       const html = textOutput(outputs, view.path);
       assert.ok(html, view.path);
       for (const link of elements(
         parse(html),
-        (node) => node.tagName === "a",
+        (node) =>
+          node.tagName === "a" ||
+          (node.tagName === "link" && attribute(node, "rel") === "stylesheet"),
       )) {
         const href = attribute(link, "href");
         assert.ok(href, view.path);
@@ -46,11 +49,13 @@ test("shared library sample links use portable relative URLs", async () => {
           /^(?:[a-z][a-z\d+.-]*:|\/)/iu,
           `${view.path}: ${href}`,
         );
-        links += 1;
+        if (link.tagName === "a") links += 1;
+        else stylesheets += 1;
       }
     }
   }
   assert.ok(links > 0, "library samples contain links");
+  assert.ok(stylesheets > 0, "library samples contain stylesheets");
 });
 
 for (const viewport of ["mobile", "desktop"] as const) {

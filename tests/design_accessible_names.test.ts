@@ -3,7 +3,11 @@ import test from "node:test";
 
 import { parse } from "parse5";
 
-import { accessibleName, named } from "./helpers/design_assertions.js";
+import {
+  accessibleName,
+  named,
+  namedRole,
+} from "./helpers/design_assertions.js";
 import { elements } from "./helpers/design_catalogue.js";
 
 test("mockup control names use labels, references, and explicit names", () => {
@@ -19,4 +23,17 @@ test("mockup control names use labels, references, and explicit names", () => {
   );
   assert.equal(named(document, "hint", "input"), controls[0]);
   assert.equal(named(document, /dark preview/giu, "input"), controls[2]);
+});
+
+test("named role checks include references and wrapping labels", () => {
+  const document =
+    parse(`<span id="group-name">Comparison mode</span><div role="group" aria-labelledby="group-name"></div>
+    <nav aria-label="Related design pages"></nav>
+    <label class="mbk-cmp-sync">Scroll together<input role="switch" type="checkbox"></label>`);
+  assert.equal(namedRole(document, "group", "Comparison mode").length, 1);
+  assert.equal(
+    namedRole(document, "navigation", "Related design pages").length,
+    1,
+  );
+  assert.equal(namedRole(document, "switch", "Scroll together").length, 1);
 });

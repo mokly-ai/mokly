@@ -4,6 +4,7 @@ import test from "node:test";
 import { parse } from "parse5";
 
 import { viewRoute } from "../packages/viewer/dist/data.js";
+import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 
 import {
   attribute,
@@ -18,10 +19,10 @@ test("every design artboard with a rendered document links the document styleshe
   const { outputs } = await designCatalogue;
   let documents = 0;
   for (const entry of await designEntries(
-    (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
+    (entry): entry is ManifestScreen =>
+      entry.kind === "screen" && entry.path.startsWith("design/"),
     "document artboards",
   )) {
-    if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
     for (const viewport of ["mobile", "desktop"] as const)
       for (const scheme of entry.colorSchemes) {
         const route = viewRoute(entry.path, viewport, scheme);
