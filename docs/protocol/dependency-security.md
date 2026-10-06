@@ -179,11 +179,12 @@ The current maintenance choices are:
 - `wrangler` 4.113.0 stays exactly pinned with its existing Miniflare/Workerd
   versions. It requires `esbuild` 0.28.1 exactly, so the lockfile nests that
   copy under Wrangler until a Wrangler update accepts Mokly's esbuild release.
-  The `miniflare`-scoped overrides select `sharp` 0.35.4 (including patched
-  native image libraries) and `undici` 7.29.1. Remove each override when a
-  deliberately upgraded Wrangler/Miniflare version resolves a patched version
-  without it and passes the complete gate. These overrides do not apply to
-  unrelated dependency parents.
+  The `miniflare`-scoped overrides select `undici` 7.29.1 and `sharp` 0.35.5,
+  whose bundled native image libraries include the librsvg fix for
+  [GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w).
+  Remove each override when a deliberately upgraded Wrangler/Miniflare version
+  resolves a patched version without it and passes the complete gate. These
+  overrides do not apply to unrelated dependency parents.
 - Compatible Browserslist, browser-baseline data, and Nano ID patches remain
   lockfile-only updates; they do not add direct runtime dependencies.
 - The PostCSS CSS Modules plugins and `icss-utils` are runtime dependencies
