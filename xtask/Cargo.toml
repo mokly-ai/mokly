@@ -8,9 +8,9 @@ publish = false
 
 [dependencies]
 chrono = { version = "0.4.45", features = ["clock"] }
-clap = { version = "4.6.2", features = ["derive"] }
+clap = { version = "4.6.7", features = ["derive"] }
 ctrlc = { version = "3.5.2", features = ["termination"] }
-thiserror = "2.0.19"
+thiserror = "2.0.21"
 
 [dev-dependencies]
 unimock = "0.6.8"
