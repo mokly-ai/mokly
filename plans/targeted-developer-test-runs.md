@@ -231,7 +231,7 @@ checks or starting a test process. Values still pass to Node unchanged.
 - [x] Update the Miniflare-scoped Sharp override to 0.35.5 and resolve a patched
       Shell Quote through React DevTools. Keep lockfile changes scoped, run
       `npm ci`, update the current security contract, and run the live audit.
-  Decision: PR #146 shipped the same fixes; use main's dependency files.
+      Decision: PR #146 shipped the same fixes; use main's dependency files.
 - [x] Pass `cargo xtask check --suite repository`.
 - [x] Review `git diff --stat` and the full working diff, including new files.
 - [x] Run `npm run lint`, `npm run format:check`, and the changed test files
@@ -242,6 +242,7 @@ checks or starting a test process. Values still pass to Node unchanged.
 Prove the commands with real runs, run the complete gate once, then commit,
 push, and hand the final review to the user.
 Merge evidence: `.context/targeted-developer-test-runs/merge-main.md`.
+Refresh evidence: `.context/targeted-developer-test-runs/after-refresh-verification.md`.
 Smoke evidence: `.context/targeted-developer-test-runs/smoke-tests.md`.
 Gate evidence: `.context/targeted-developer-test-runs/gate.md`.
 
@@ -250,9 +251,9 @@ Gate evidence: `.context/targeted-developer-test-runs/gate.md`.
 - [x] Merge fetched `origin/main`, preserve each main change, confirm two
       merge parents, and inspect every path in the remerge diff.
 - [x] Check this plan against the evidence-log rule after the main merge.
-- [ ] Merge PR #146 dependency updates, keep main's lockfile and policy,
+- [x] Merge PR #146 dependency updates, keep main's lockfile and policy,
       preserve the test scripts, confirm two parents, and run a clean install.
-- [ ] Rerun the changed verification test files after the dependency refresh.
+- [x] Rerun the changed verification test files after the dependency refresh.
 - [x] Smoke test from a fresh `npm run prepare:verification`:
       `npm test -- tests/ci_workflow.test.ts`,
       `npm test -- tests/ci_workflow.test.ts --test-name-pattern="lockfile"`,
@@ -263,7 +264,7 @@ Gate evidence: `.context/targeted-developer-test-runs/gate.md`.
       `npm run test:browser -- tests/browser/pages.spec.ts -g "retain metadata"`.
 - [x] Confirm that no selected run created or changed a file under
       `.context/verification-reports`.
-- [ ] Run `cargo xtask check --suite repository` first, then the complete
+- [x] Run `cargo xtask check --suite repository` first, then the complete
       `cargo xtask check`, and fix every finding.
 - [ ] Run `git add -A`, commit with Conventional Commits, and push the branch.
 - [ ] After the push, review the complete local diff against `origin/main`
