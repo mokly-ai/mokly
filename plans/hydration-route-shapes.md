@@ -220,7 +220,7 @@ yet.
   - [x] an empty string, array or object counts as absent;
   - [x] a variant (`variantOf`) and its base entry have different shapes; and
   - [x] the same input always gives the same keys in the same order.
-- [x] Use Node 24.21.0 from `.node-version`, and run
+- [x] Use Node 24.21.0 from `.nvmrc`, and run
       `npm run prepare:verification` once, because the helper imports built
       `dist` output. Then run
       `node --import tsx --test tests/hydration_shapes.test.ts`, ESLint on the
@@ -335,6 +335,15 @@ findings.
       `postcss` and `@tailwindcss/node` install. `npm update source-map-js`
       moved the lockfile to the patched 1.2.2, and `npm run dependencies:check`
       passes. Commit this lockfile change separately as `fix(deps)`.
+- [x] Merge `origin/main` again before the pull request opens: `ad2b3ece`
+      (#140) and `80ceb445` (#141). The merge `4b2d9258` has two parents, no
+      conflicts and an empty remerge diff. #140 makes the same
+      `source-map-js` 1.2.2 lockfile change as `ed1ee4b0`, so
+      `package-lock.json` merges to identical content and leaves the branch
+      diff; `ed1ee4b0` now has no net effect. #141 renames `.node-version` to
+      `.nvmrc`, so this plan's two references to the Node version file now
+      name `.nvmrc`. Neither commit changes viewer or example code, so the
+      coverage evidence above stays valid.
 - [ ] Run `cargo xtask check` and require a 100% pass rate.
 
 Local result on 2026-10-06 for the merged tree on Node 24.21.0: this VM runs
@@ -414,7 +423,7 @@ Write the measurement script outside the repository, for example under
    its text.
 2. Start the shared Serve and wait for its first comparison, as
    `playwright.config.ts` and `tests/browser/setup.ts` do. Use Node 24.21.0
-   from `.node-version`.
+   from `.nvmrc`.
 3. Use a new page for each route of the full list: the home route, the missing
    route and every unique `entryRoute`.
    1. Install the development bundle and open a CDP session.
