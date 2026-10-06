@@ -2,10 +2,10 @@
 
 ## Delivery Status
 
-On-demand rendering and background classification are implemented. The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
-[M3](../../plans/scalable-inline-style-analysis.md#milestone-3-bounded-memory)
-delivers committed-mode output release in the worker after transfer.
-On-demand startup, rendering and evidence completion are implemented. The
+On-demand rendering and background classification are implemented. Under the
+[scalable analysis plan](../../plans/scalable-inline-style-analysis.md),
+committed-mode workers release compiled output after transfer to the parent.
+On-demand startup and evidence completion are implemented. The
 route-evidence loading and failed Usage states are implemented by the
 [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
 

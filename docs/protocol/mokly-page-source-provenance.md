@@ -2,11 +2,11 @@
 
 ## Delivery Status
 
-Implemented by [M7 page analysis](./mokly-page-analysis.md). Adopted attributes
-and formatting-clone rules clarify its existing complete-inventory requirement;
-they are documentation-gap clarifications, not new behavior or permission to
-parse rewritten view materials. The second supervisor round clarifies direct
-token capture and creation offsets under the same rules, not new behavior.
+Implemented by [page analysis](./mokly-page-analysis.md). Adopted attributes,
+formatting clones, direct token capture and creation offsets follow its
+complete-inventory requirement. Resource records and selector subjects use
+original trees. The page contract's link-normalization exception never supplies
+provenance from rewritten materials.
 
 ## Reference Inventory
 

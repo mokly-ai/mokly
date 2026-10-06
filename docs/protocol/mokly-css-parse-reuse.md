@@ -2,13 +2,10 @@
 
 ## Delivery Status
 
-Delivered by the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
-the bounded whole-input cache is implemented in
-[M3](../../plans/scalable-inline-style-analysis.md#milestone-3-bounded-memory),
-verified segments, their cache and stored rule data in
-[M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse).
-[M5](../../plans/scalable-inline-style-analysis.md#milestone-5-changed-segment-analysis)
-implements cancellation, matched-copy references and stored-text composition.
+The bounded whole-input and verified-segment caches, stored rule data,
+identity-run cancellation, matched-copy references and stored-text composition
+are implemented under the
+[scalable analysis plan](../../plans/scalable-inline-style-analysis.md).
 Whole parsing remains the assembly oracle; captured M4 analysis tests pin
 the equality domains and approved occurrence/displacement differences below.
 

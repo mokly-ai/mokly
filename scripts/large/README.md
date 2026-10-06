@@ -4,7 +4,10 @@ These local tools prepare deterministic consumer catalogues and measure real
 Serve classification. Build Mokly first. The [fixture README](../../tests/fixtures/large/README.md)
 owns setup and historical results; the
 [benchmark contract](../../tests/fixtures/large/benchmark-contract.md) owns identity,
-scenarios, restoration and acceptance.
+scenarios, restoration and the procedure retained for later acceptance.
+The user deferred performance acceptance for the scalable analysis plan under
+its Decision 13 on 2026-10-06. Future limits require fresh same-session reference
+and candidate measurements; the M9A results are indicative only.
 
 ```bash
 npm run fixture:large
@@ -12,7 +15,7 @@ npm run benchmark:large -- --scenario no-changes --scenario linked-stylesheet
 node scripts/large/cli.mjs details --scenario linked-stylesheet
 ```
 
-`benchmark` records cold/warm samples using exactly the M8 core diagnostics.
+`benchmark` records cold/warm samples using core diagnostics only.
 It explicitly sets `MOKLY_MATERIAL_WORK=0` for Serve and inherited workers,
 even if the caller enables it. A detail event or material/companion field in a
 timed sample is a measurement error, and forbidden fields are omitted.

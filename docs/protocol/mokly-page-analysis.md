@@ -2,9 +2,10 @@
 
 ## Delivery Status
 
-[M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis) implements
-original analysis, derived references, matching and quick checks;
-[M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprinted-comparison-materials) implements fingerprints. [Timings](./mokly-timings.md#component-analysis-counts) owns work counters.
+Original-page analysis, derived references, matching, quick checks and
+fingerprints are implemented under the
+[scalable analysis plan](../../plans/scalable-inline-style-analysis.md).
+[Timings](./mokly-timings.md#component-analysis-counts) owns work counters.
 
 Performance acceptance is deferred under the plan's Decision 13 (2026-10-06).
 

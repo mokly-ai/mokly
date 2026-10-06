@@ -2,12 +2,12 @@
 
 ## Delivery Status
 
-Implemented in [M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
-of the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md),
+Implemented under the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md),
 including its differential test switch and `stylePath` counts.
-It uses [M7 page analysis](./mokly-page-analysis.md) and
-[parse reuse](./mokly-css-parse-reuse.md); later fingerprints do not change its
-result contract.
+It uses [page analysis](./mokly-page-analysis.md) and
+[parse reuse](./mokly-css-parse-reuse.md); fingerprints do not change its result
+contract. Performance acceptance is deferred under the plan's Decision 13
+by the user decision of 2026-10-06.
 
 ## Position And Scope
 
@@ -213,4 +213,6 @@ both `useStylePath` and `useFastPath`. This section owns M8's test obligations:
 The [timing counts](./mokly-timings.md#component-analysis-counts) increment
 `stylePath` once for each view settled here; attempted fallback increments
 `completePath` only when that view runs the full comparison. A successful quick
-check increments `fastPath` instead. Counts are opt-in diagnostics only.
+check increments `fastPath` instead. A settled style view uses one original head
+parse; link-normalization parses from a preceding quick attempt are counted
+separately under `linkNormalization`. Counts are opt-in diagnostics only.

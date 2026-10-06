@@ -19,15 +19,10 @@ parser, rule diff, keep list and matcher that this analysis reuses; the
 [CSS evidence presentation contract](./mokly-css-evidence-presentation.md) owns the
 presentation.
 
-Delivered by the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
-[M4](../../plans/scalable-inline-style-analysis.md#milestone-4-rule-segment-parse-reuse)
-implements verified parse reuse; [M5](../../plans/scalable-inline-style-analysis.md#milestone-5-changed-segment-analysis)
-implements cancellation, matched-copy pairing and stored-text composition;
-[M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
-implements original-page analysis/matching and removes fast-path inline work;
-[M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
-implements the equivalent route; [M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprinted-comparison-materials)
-implements fingerprinted material. These analysis/material rules are delivered.
+The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md)
+implements verified parse reuse, occurrence-aware cancellation, stored-text
+composition, original-page matching, an equivalent style route and fingerprinted
+materials. Quick checks run no inline analysis.
 
 Performance acceptance is deferred under the plan's Decision 13 (2026-10-06).
 

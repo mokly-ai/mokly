@@ -42,7 +42,7 @@ lexically by UTF-16 code units and duplicate-free. For `unresolved` reasons it
 lists the selectors that could be serialized and may be empty when the kept
 construct has no selector.
 
-A view also records whether its own normalized documents differ:
+A view also records whether its actual comparison materials differ:
 
 ```ts
 interface ViewReview {
@@ -145,4 +145,6 @@ in [CSS evidence in the shell](./mokly-css-evidence-shell.md).
 - Specificity, cascade order, or override detection.
 - Inheritance beyond the custom-property keep rule.
 - Pixel or screenshot comparison.
-- Inferring ownership from CSS Modules, CSS-in-JS, or bundled output.
+- Inferring ownership from linked stylesheet files, including CSS Modules,
+  CSS-in-JS, or bundled output. The separate [inline ownership](./mokly-inline-styles.md)
+  contract applies to eligible style elements.

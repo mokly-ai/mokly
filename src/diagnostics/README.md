@@ -47,8 +47,9 @@ paths; that field alone does not imply a markup implementation comparison.
 `material_timings.ts` owns a separate opt-in scope: `MOKLY_MATERIAL_WORK=1`
 alongside enabled timings creates `MaterialWork` and emits `review.material-work`
 once at comparison completion, including failure. Without that opt-in there is
-no detail collector or material counting call. The core collector and its timing
-helpers keep their exact M8 shape. Nested comparisons share details only within
+no detail collector or material counting call. The core collector and timing
+helpers stay independent of material details; their HTML counts include the
+link-normalization step. Nested comparisons share details only within
 the same core scope; disabled or different timing sessions cannot borrow them.
 Benchmark timing forces this detail level off; separate companion passes enable it.
 

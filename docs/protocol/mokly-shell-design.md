@@ -4,7 +4,7 @@
 
 This document records the approved design for the package-owned Browse shell
 and the optional in-place screen comparisons. The visual source of truth is the
-design catalogue in the basic example, whose entry names start with `design-`;
+design catalogue in the basic example, whose entry paths start with `design/`;
 this contract fixes the tokens, dimensions, and responsive behavior that
 implementation and tests must preserve. Runtime behavior stays in
 [mokly-runtime.md](./mokly-runtime.md).

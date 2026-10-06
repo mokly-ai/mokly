@@ -195,3 +195,74 @@ The evidence assertions cover 16 completed cells, two complete worker profiles,
 all counted paths/bytes/segments, one host/boot, four restored runs and both
 inventory populations. Documentation validation checks four Markdown files,
 133 relative file links and 34 anchors, plus verbatim M9 findings and arithmetic.
+
+## Candidate Proof Obligations
+
+These are the checkpoint's original, unimplemented candidate proofs. The
+[user outcome](./residual-sheet-cost-checkpoint.md#outcome--2026-10-06)
+supersedes their proposed implementation scope.
+
+**A proof.** Normalize with the delivered BOM/CRLF/CR/form-feed rules and retain
+coordinate mapping during the head pass. Restart base scanning at a safe boundary
+before the edit, including changed trivia; do not restart inside an atomic escape,
+string, identifier or URL without its state. Reuse the equal prefix, rescan until
+an aligned suffix checkpoint has the identical full scanner state, then shift and
+reuse suffix boundaries. Equal state plus equal remaining units gives equal
+future transitions by induction. Equal bracket depth alone is insufficient.
+Without convergence, continue scanning to the end. Uncertain coordinate mapping
+uses the original scan; anomalies retain whole-element fallback.
+Native verification, contextual-at-rule fallback, document ordinals and the
+base-then-head cache access/batch order remain unchanged. This bounds work by the
+enclosing scanner region and convergence distance, not every arbitrary edit's
+width. Lookup, cancellation and a head scan remain sheet-proportional.
+
+Test A against the unchanged scanner and whole parser: all edit positions,
+BOM/CRLF seams, empty windows, strings/comments/URLs/escapes/CDO, grouped rules,
+anomalies, injected failures, tiny/zero caches and committed/derived results.
+A code-unit work-bound test must grow unchanged prefixes/suffixes while keeping
+the edited region fixed; ordinary sheets and unique/Emotion cold cases must not regress.
+
+**B proof.** Use delivered occurrence selection/attribution. Equal retained residual
+multisets plus symmetric retention of cancelled occurrences imply equal complete
+sorted multisets. Prove actual and projected equality separately. A nonzero
+identity difference is not by itself proof of unequal concatenated canonical
+text: use delivered composition whenever the proof is insufficient. Preserve
+condition 5 over all relevant original and composed material, including cancelled
+rules; do not skip marker validation because residuals cancel. A streaming or
+stored-key safety proof needs its own proof against canonical text; otherwise
+compose. Keep grouped displacement, matched-reference copies, resource proof,
+errors and fallback counting. Tests need selected ordinals, duplicates, ownership,
+all M8 marker cases and a work bound forbidding cancelled-rule sorting/copying/
+joining for proven equality. No new cached safety metadata is implicitly approved.
+
+**C.** The recorded M5 probe found naive per-rule cancellation about 3 ms slower
+at 3000 rules, but whole-element fallback about 22 versus 1.3–1.5 ms. The M5
+checkpoint was 2.90 GHz; the finding does not retain an independent probe host
+snapshot, so no current-host conversion is claimed. This matrix has zero fallbacks
+and nearly flat runs: credit no saving. Approval would replace the grouped
+exception with exact full-diff pairing tests, including references and failures;
+it is a semantic choice, not a prerequisite assumed by this performance model.
+
+**D.** An untimed restored-source inventory verifies the routed populations and
+exact segment totals. Default has 5 distinct sheets in 368 elements / 184 routed
+views; potential repeated segment work is 98.06%. Cumulative has **5508 distinct
+sheets in 5520 elements**, only **0.299%** repeatable segment work even with an
+unbounded exact-key cache. Under the contract's two-bytes-per-unit accounting,
+unique base keys alone require **1157.76 MiB**, before run graphs.
+Existing segment hits therefore do not justify an element cache. D2 would need
+reuse between _different_ sheets, reliable locality, convergence and possibly
+persistent cancellation indexes. Never bulk-cancel a common suffix without
+proving earliest duplicate pairing survives. Tests must cover arbitrary source
+order, grouped displacement, reference-bearing pairs, different eligibility,
+cache limits/evictions/oversize values, detached strings and reachable run-graph
+accounting, production GC release and unique-sheet cold costs. No budget or
+index representation is selected here.
+
+**E.** Verified runs have reference ordinals; whole-element fallback runs currently
+synthesize an empty list even when they contain URLs. E1 must retain the current
+walk for those runs/pairs. E2 needs exact longest-prefix/suffix tests, including
+surrogates and empty windows. E3/E5 need byte/result/ordinal differentials and
+allocation/GC checks; they cannot change selected duplicate copies or Decision 5.
+E4 must preserve exact reasons versus directory-prefix evidence, overlapping
+owners, shared globs and path order; test against the current policy on seeded
+paths, with work bounds and no index construction on unchanged catalogues.

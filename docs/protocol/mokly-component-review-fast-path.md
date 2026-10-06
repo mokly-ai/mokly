@@ -2,16 +2,12 @@
 
 ## Delivery Status
 
-The fast path and its strict-v8 baseline boundary are implemented. Delivered by
-the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
-[M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
-implements the analysis-backed quick check below with no inline work;
-[M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
-implements the equivalent style-only attempt before complete fall-through.
-M7's ownership-only projection and stable discovery policy clarify existing
-rules, closing documentation gaps rather than introducing new behavior.
-The [M7 checkpoint](../dev/shared-page-analysis-measurements.md) records its
-same-host quick-check/complete-path work; performance acceptance is deferred under Decision 13.
+The fast path and its strict-v8 baseline boundary are implemented under the
+[scalable analysis plan](../../plans/scalable-inline-style-analysis.md).
+The analysis-backed quick check runs no inline work; an equivalent style-only
+attempt precedes complete fall-through. Ownership-only projection and stable
+discovery follow the rules below. Performance acceptance is deferred under
+Decision 13 by the user decision of 2026-10-06.
 
 This contract owns the unchanged-view decision used by component-aware Changes
 classification. Input ownership and materiality remain defined by
@@ -19,8 +15,8 @@ classification. Input ownership and materiality remain defined by
 
 ## Decision
 
-Classification cost follows the size of the change, not the catalogue. For a
-view present on both sides, the classifier first decides whether it can differ.
+The classifier tries to avoid full comparison for unchanged views. For a view
+present on both sides, it first decides whether that view can differ.
 It uses [page analysis](./mokly-page-analysis.md), and projects ownership only
 when usage can edit text through instances or entry-owned slots. Inline rule
 analysis and implementation diffing happen only after quick-check fall-through.

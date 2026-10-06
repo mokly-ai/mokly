@@ -8,11 +8,12 @@ Markdown files are documents, and moves are paired with their baseline.
 
 ## Delivery Status
 
-The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md) is
-the approved pending target: M2 diagnostics/fixture identity, M3 bounded memory,
-M4 parse reuse, M5 residual analysis, M7 page analysis, M8 the style-only route,
-and M9 fingerprints. Each owning contract below links its delivery step;
-M10 removes pending schedules after implementation and acceptance.
+The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md)
+delivers bounded caches, parse reuse, original-page analysis, the style-only
+route, fingerprinted materials and opt-in diagnostics. The owning contracts
+below define that behavior. The user deferred performance acceptance on
+2026-10-06 under the plan's Decision 13; integration and correctness checks
+remain required. The benchmark procedure is retained for a later plan.
 
 Protocol documents state the contract and current delivery status. Pending
 Delivery Status schedules may link future plan steps as `M2`, `M3`, etc.; remove

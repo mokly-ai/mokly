@@ -9,8 +9,8 @@ owns strict shapes and [presentation](./mokly-css-evidence-presentation.md) owns
 The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md)
 implements the following behavior. Decision 13 performance acceptance is
 deferred by the user decision of 2026-10-06.
-[M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
-implements identical evidence from the [style-only route](./mokly-style-only-route.md#result).
+The [style-only route](./mokly-style-only-route.md#result) emits the same evidence
+as complete comparison.
 No evidence shape, ordering, state coupling or delivery schema changes.
 
 ## Evidence Shape And Emission

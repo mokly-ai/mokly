@@ -1,5 +1,17 @@
 # Residual Sheet Cost Checkpoint
 
+## Outcome — 2026-10-06
+
+The user decided to **stop optimization; implement no candidate** and deferred
+performance acceptance. This supersedes this report's recommendation to start
+with B and its statement that the design TODO remains at a decision point.
+The two optimization scopes below were proposals; neither was selected.
+Their candidate labels A–E do not label the user's scope decision.
+A later plan must fit its limits to fresh reference and candidate measurements
+from one session and machine, in alternating order. The M9A ratios below are
+indicative only; they are not approved limits or a reusable reference.
+The analysis and measurements below remain the dated October 5 record.
+
 Cumulative component-style remains the clear residual failure: **232.152 s cold /
 222.292 s warm**, versus **75.810 / 76.477 s** for no-change. The same-session
 style/no-change ratios are **3.0623 / 2.9067**, against 1.25. Reaching that ratio
@@ -8,10 +20,11 @@ style cost. No remedy, cache semantics, Decision or contract change is approved
 or implemented by this checkpoint.
 
 The estimates below do not establish a combination that reaches every
-Decision 13 target. Recommend seeking approval for residual equality plus the
-bounded, cache-free work first; an exact-sheet cache cannot close this gap.
-Keeping 1.25 requires further design that removes more repeated work; incremental
-indexing is one unapproved candidate. Target changes and re-referencing remain open.
+Decision 13 target. The original recommendation was to seek approval for
+residual equality plus bounded, cache-free work; an exact-sheet cache cannot
+close this gap. Keeping 1.25 would require further design to remove repeated
+work; incremental indexing was one unapproved candidate. The dated outcome
+above supersedes that recommendation and defers targets and re-referencing.
 
 ## Measurement Set
 
@@ -173,81 +186,20 @@ where necessary. Existing review divergences are not silently repaired.
 
 | Candidate                                              | Saving ms/view / method                                          | Approval boundary                                                               |
 | ------------------------------------------------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| A: within-view bounded scan                            | 0.6–1.1; 25–45% of scanner cost, at most half removable          | Contract-preserving if the proof below holds; same cache semantics              |
+| A: within-view bounded scan                            | 0.6–1.1; 25–45% of scanner cost, at most half removable          | Contract-preserving if the linked proof holds; same cache semantics             |
 | B: residual material equality                          | 9.2–11.6; 75–95% of the 12.219 ms material budget                | User approval and route Result/proof contract amendment                         |
 | C: per-rule cancellation                               | 0–0 credited; no fallback work to recover here                   | Decision 5 change; potentially different grouped outcomes                       |
 | D1: exact element/run cache across views               | 0–0.024 gross upper bound; key/copy cost could make net negative | New cache semantics; not recommended for this bottleneck                        |
 | D2: incremental cross-view scan/run/cancellation index | 5.0–8.5 if 50–85% of its budget is removed; locality unproved    | New cache/index semantics and a further design/proof; not an approved algorithm |
-| E1: use verified reference ordinals                    | 0.9–1.4; remove 50–80% of the required-reference walk            | Contract-preserving with fallback handling below                                |
+| E1: use verified reference ordinals                    | 0.9–1.4; remove 50–80% of the required-reference walk            | Contract-preserving with the linked fallback handling                           |
 | E2: native chunked longest-window comparison           | 0.2–0.4; remove 50–90% of that loop                              | Contract-preserving exact UTF-16 comparison                                     |
 | E3: read rule data once during composition             | 2.3–3.4; 50–75% of its getter self-time                          | Per-view data only; overlaps B                                                  |
 | E4: lazy reverse dependency/path index                 | 0.4–0.7; 40–75% of metadata/path work                            | New classification-local index/cache semantics require approval                 |
 | E5: compact occurrence queues / cancellation masks     | 0.5–1.0; 25–50% of cancellation                                  | Preserve identity-run policy and earliest matching; overlaps D2                 |
 
-**A proof.** Normalize with the delivered BOM/CRLF/CR/form-feed rules and retain
-coordinate mapping during the head pass. Restart base scanning at a safe boundary
-before the edit, including changed trivia; do not restart inside an atomic escape,
-string, identifier or URL without its state. Reuse the equal prefix, rescan until
-an aligned suffix checkpoint has the identical full scanner state, then shift and
-reuse suffix boundaries. Equal state plus equal remaining units gives equal
-future transitions by induction. Equal bracket depth alone is insufficient.
-Without convergence, continue scanning to the end. Uncertain coordinate mapping
-uses the original scan; anomalies retain whole-element fallback.
-Native verification, contextual-at-rule fallback, document ordinals and the
-base-then-head cache access/batch order remain unchanged. This bounds work by the
-enclosing scanner region and convergence distance, not every arbitrary edit's
-width. Lookup, cancellation and a head scan remain sheet-proportional.
-
-Test A against the unchanged scanner and whole parser: all edit positions,
-BOM/CRLF seams, empty windows, strings/comments/URLs/escapes/CDO, grouped rules,
-anomalies, injected failures, tiny/zero caches and committed/derived results.
-A code-unit work-bound test must grow unchanged prefixes/suffixes while keeping
-the edited region fixed; ordinary sheets and unique/Emotion cold cases must not regress.
-
-**B proof.** Use delivered occurrence selection/attribution. Equal retained residual
-multisets plus symmetric retention of cancelled occurrences imply equal complete
-sorted multisets. Prove actual and projected equality separately. A nonzero
-identity difference is not by itself proof of unequal concatenated canonical
-text: use delivered composition whenever the proof is insufficient. Preserve
-condition 5 over all relevant original and composed material, including cancelled
-rules; do not skip marker validation because residuals cancel. A streaming or
-stored-key safety proof needs its own proof against canonical text; otherwise
-compose. Keep grouped displacement, matched-reference copies, resource proof,
-errors and fallback counting. Tests need selected ordinals, duplicates, ownership,
-all M8 marker cases and a work bound forbidding cancelled-rule sorting/copying/
-joining for proven equality. No new cached safety metadata is implicitly approved.
-
-**C.** The recorded M5 probe found naive per-rule cancellation about 3 ms slower
-at 3000 rules, but whole-element fallback about 22 versus 1.3–1.5 ms. The M5
-checkpoint was 2.90 GHz; the finding does not retain an independent probe host
-snapshot, so no current-host conversion is claimed. This matrix has zero fallbacks
-and nearly flat runs: credit no saving. Approval would replace the grouped
-exception with exact full-diff pairing tests, including references and failures;
-it is a semantic choice, not a prerequisite assumed by this performance model.
-
-**D.** An untimed restored-source inventory verifies the routed populations and
-exact segment totals. Default has 5 distinct sheets in 368 elements / 184 routed
-views; potential repeated segment work is 98.06%. Cumulative has **5508 distinct
-sheets in 5520 elements**, only **0.299%** repeatable segment work even with an
-unbounded exact-key cache. Under the contract's two-bytes-per-unit accounting,
-unique base keys alone require **1157.76 MiB**, before run graphs.
-Existing segment hits therefore do not justify an element cache. D2 would need
-reuse between _different_ sheets, reliable locality, convergence and possibly
-persistent cancellation indexes. Never bulk-cancel a common suffix without
-proving earliest duplicate pairing survives. Tests must cover arbitrary source
-order, grouped displacement, reference-bearing pairs, different eligibility,
-cache limits/evictions/oversize values, detached strings and reachable run-graph
-accounting, production GC release and unique-sheet cold costs. No budget or
-index representation is selected here.
-
-**E.** Verified runs have reference ordinals; whole-element fallback runs currently
-synthesize an empty list even when they contain URLs. E1 must retain the current
-walk for those runs/pairs. E2 needs exact longest-prefix/suffix tests, including
-surrogates and empty windows. E3/E5 need byte/result/ordinal differentials and
-allocation/GC checks; they cannot change selected duplicate copies or Decision 5.
-E4 must preserve exact reasons versus directory-prefix evidence, overlapping
-owners, shared globs and path order; test against the current policy on seeded
-paths, with work bounds and no index construction on unchanged catalogues.
+The [candidate proof obligations](./residual-sheet-cost-evidence.md#candidate-proof-obligations)
+retain the scanner convergence proof, fallback rules, approval boundaries and
+required tests for each unimplemented candidate.
 
 GC is 9.36 s style versus 6.66 s no-change in these profiles. The difference is
 only 0.489 ms/view and has no reliable allocating-owner attribution; no direct
@@ -286,12 +238,13 @@ Shared parsing improvements must move both numerator and denominator:
 `S'=S-cssSaving-H`, `N'=N-H`; the ratio gap increases by `0.25*H` when common
 work alone is removed. They cannot be counted as style-only savings.
 
-The user has two concrete scope choices; no target is changed by this report:
+The original report offered two scope choices below. Neither was selected;
+the [dated outcome](#outcome--2026-10-06) supersedes this decision point:
 
 - **Keep 2 and 1.25:** approve further design/proof for D2 or another measured
   remedy aimed at nearly eliminating repeated work, alongside B and cache-free steps.
-  Its replacement budget is extremely tight and success is unproven. Exact-source caching and per-rule
-  cancellation alone cannot provide it.
+  Its replacement budget is extremely tight and success is unproven.
+  Exact-source caching and per-rule cancellation alone cannot provide it.
 - **Cap scope at B + A + cache-free E:** if measurements confirm the model, consider
   changing only cumulative component-style `C/B` to **4.25** and cumulative
   style/no-change to **2.75**, covering the stated host-adjusted stress envelope.
@@ -299,11 +252,12 @@ The user has two concrete scope choices; no target is changed by this report:
   Leave default and other cumulative ratios unchanged. These are proposed user
   choices, not acceptance claims; re-reference must be decided separately.
 
-Recommend B plus the bounded cache-free work as the first reviewable implementation
-scope, followed by measurement before adopting weaker targets or a large new
-cache. A and E1/E2/E3/E5 are contract-preserving only with their stated proofs;
-B, C, D and E4 cross explicit approval boundaries. The plan's design TODO remains
-at that decision point. No review finding or candidate has been implemented.
+The original recommendation was B plus the bounded cache-free work as the first
+reviewable implementation scope, followed by measurement before adopting weaker
+targets or a large new cache. The dated outcome supersedes that recommendation. A and E1/E2/E3/E5 are contract-preserving only with their stated proofs;
+B, C, D and E4 cross explicit approval boundaries. The original statement that
+the plan's design TODO remained at that decision point is superseded. No
+performance candidate or recorded performance finding was implemented.
 
 ## Evidence And Validation
 

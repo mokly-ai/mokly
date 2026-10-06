@@ -1,11 +1,13 @@
 # Comparison Material Work Counts
 
-These M9 integer fields belong only to `review.material-work` under
+These integer fields belong only to `review.material-work` under
 [timings](./mokly-timings.md#component-analysis-counts). `MOKLY_MATERIAL_WORK=1`
 together with `--debug-timings` constructs a separate `MaterialWork` collector.
 It is off by default: no instance, material scope, byte-length calculation or
-material counting call runs. The core `DocumentWork` layout and behavior stay
-at M8: counts, fields, paths, HTML, inline, heap and exclusive timing.
+material counting call runs. The core `DocumentWork` collector independently
+owns path, HTML, inline, heap and exclusive-time counts, including the
+`linkNormalization` parse step. Material details add no field or counting work
+to its disabled-detail path.
 Collection is view/classification scoped and contains no document text, hashes or paths.
 Zero fields remain present. Bytes always mean UTF-8 input bytes, not UTF-16
 units, retained heap or RSS. Disabled collection computes no byte lengths.

@@ -7,10 +7,11 @@ Make inferred inline style ownership work, and work fast, on a full-size React
 Native Web catalogue. Mokly must stop retaining memory it does not need, bound
 the memory it caches, reuse repeated CSS parses, share each view-side page
 parse, and settle pages whose only difference is page style text without the
-full comparison. The target is that the React Native Web scale fixture
-classifies within twice the normal fixture's baseline time, and that one
-component style change costs at most 25% more than no change. The ownership
-contract, Changes membership, evidence and presentation stay as delivered,
+full comparison. The user stopped further optimization on 2026-10-06 and
+deferred performance acceptance under Decision 13. This plan has no active
+speed target; a later plan must fit limits to fresh same-session measurements.
+The ownership contract, Changes membership, evidence and presentation stay
+as delivered,
 apart from the documented cases in Decisions 4, 5, 9 and 10. The contracts
 linked below own the precise algorithms and exceptions, not this overview.
 
@@ -22,10 +23,11 @@ which is implemented but not yet merged, on branch `calummoore/irvine-v6` at
 `6a2ff27e`. Task 0 merged `origin/main` at `b4314fec` (pull
 request #123, which replaces collections with navigation paths, derives
 routes from entry ids, keeps Changes to recorded evidence and moves the
-manifest to schema v7) in merge commit `7fd34132`, before Milestone 1;
-verification fixes followed in `31ffae9b` and `b3cec159`. The contracts and code
-this plan changes now use main's identity and navigation model. That plan's Milestone 8 scale diagnosis is the
-evidence for this plan, and its review findings stay recorded there. This plan
+manifest to schema v7) in merge commit `7fd34132`, before Milestone 1.
+Verification fixes followed in `31ffae9b` and `b3cec159`. The later M10 merges
+adopt main's file-path identity, manifest v8, public read model v4 and review
+result v5. The prerequisite plan's Milestone 8 scale diagnosis is the evidence
+for this plan, and its review findings stay recorded there. This plan
 resolves these of them: Milestone 3 finding 1 (Decision 4), Milestone 4
 finding 1 and Milestone 5 finding 3 (Decision 9), Milestone 5 finding 2
 (Decision 5), and Milestone 8 findings 1, 2 and 4 (Decisions 7 and 8 and
@@ -44,9 +46,9 @@ and the scale fixture by [its README](../tests/fixtures/large/README.md),
 ## Problem
 
 These measurements are historical evidence from the prerequisite plan before
-the main merge, not performance references for this plan. The current default
-fixture has **1,590 entries and 5,550 documents**; Milestone 2 regenerates it
-and records the template-identified reference used for acceptance.
+the main merge, not performance references for this plan. At Milestone 2,
+the default fixture had **1,590 entries and 5,550 documents**. That milestone recorded a
+template-identified reference; Decision 13 now excludes its reuse for acceptance.
 
 ### Memory And CSS Parsing
 
@@ -1761,7 +1763,8 @@ Recorded for the user's decision.
 
 ## Milestone 9A: Residual Sheet Cost Checkpoint
 
-Summary: close the measured cost left by M7 to M9 before acceptance. M6's
+Summary: record the measured cost left by M7 to M9 and assess design options.
+The user then stopped optimization and deferred performance acceptance. M6's
 [model](../docs/dev/large-fixture-cost-model.md#plan-consequences) leaves
 sheet-proportional scanning, cache/run lookup and cancellation (about 63–72 s
 in the cumulative style envelope), even when full material composition is
@@ -1808,39 +1811,37 @@ contract's Result and proof sections before implementation (M6 finding 2).
       flat retention, ordinals, grouped displacement and pair-wide fallback.
       Ask for approval before any new cache semantics or Decision/contract
       change; the checkpoint does not choose an unapproved algorithm.
-      User decision (2026-10-06): option C. Stop optimization; no candidate or
-      finding is implemented. Because the speed test is removed for now, no
-      numeric targets are set. A later speed test must relax the cumulative
-      component-style limits to fit this code's measured results (M9A:
-      style/no-change 3.0623 cold / 2.9067 warm), using a fresh same-session reference.
+      User decision (2026-10-06): stop optimization; implement no candidate.
+      No performance remedy from a recorded finding is implemented. Acceptance is
+      deferred, so no numeric targets are set. A later plan must fit its
+      cumulative component-style limits to fresh same-session reference and
+      candidate measurements. M9A's style/no-change values of 3.0623 cold and
+      2.9067 warm are indicative only, not approved limits.
 - [x] Discovered: validate and commit/push this documentation-only analysis
       checkpoint, including the fixture README link and focused evidence.
-      The Markdown exception applies; runtime verification and the remaining
-      implementation/measurement TODOs below await the scope decision.
+      The Markdown exception applies. The later decision to stop optimization
+      makes the conditional implementation and measurement TODOs unnecessary.
 - [x] Implement an approved remedy only if required; add failing work-bound
       tests first, plus full-result differentials and production-path GC tests.
       Prove that unique-sheet/Emotion cold costs do not conceal a default
       regression; consider lazy derived data only if the breakdown supports it.
-      Not required: user decision C; no code change.
+      Not required: stop optimization; implement no candidate. No code change.
 - [x] Update relevant READMEs and delivered statuses if code changes; finish
       targeted/full unit/browser/static checks, commit the code checkpoint and
       stop for supervisor verification before measuring.
-      Not required: user decision C; no code change.
+      Not required: stop optimization; implement no candidate. No code change.
 - [x] Record supervisor-approved no-change/style cold/warm samples on both
       fixtures and unique-sheet cold-cost evidence, retaining every outcome;
       confirm which targets now hold and any remaining design decision.
-      Not required: user decision C; no code change.
+      Not required: stop optimization; implement no candidate. No code change.
 - [x] Validate documentation, run the suite and `cargo xtask check` on the
       measured result if implementation changed; documentation-only conclusions
       use the repository's Markdown validation exception.
-      Not required: user decision C; no code change.
+      Not required: stop optimization; implement no candidate. No code change.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
       The documentation checkpoint and the dated scope decisions are pushed.
-- [ ] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
-      to review the complete local diff against `origin/main`; report
-      numbered, severity-rated findings with options and recommendations
-      without changing the implementation.
+- [x] Read-only M9A review complete; graded findings and dispositions are at `.context/scalable-inline-style-analysis/m9a-review/findings.md`.
+      Finding 1 broader option (AGENTS.md rule for lettered decisions): pending the user's decision.
 
 ## Milestone 10: Mainline Integration And Final Alignment
 
@@ -1848,7 +1849,7 @@ Integrate current main while preserving delivered features from both sides.
 Performance acceptance is deferred under Decision 13. Complete correctness,
 package, browser and hydration verification before the local checkpoint.
 
-Evidence: `.context/scalable-inline-style-analysis/m10-prior-plan-evidence.md`, `m10-first-merge/`, `m10-fix-commits.json`, `m10-second-merge/`, and `m10-final-verification/`.
+Evidence: `.context/scalable-inline-style-analysis/m10-prior-plan-evidence.md`, `m10-first-merge/`, `m10-fix-commits.json`, `m10-second-merge/`, `m10-final-verification/`, and `m10-docs/validation.json`.
 
 - [x] Merge main's path identity, Markdown, imported CSS and publication changes
       with M1–M9. Preserve all original-tree, resource, route and fingerprint
@@ -1868,9 +1869,10 @@ Evidence: `.context/scalable-inline-style-analysis/m10-prior-plan-evidence.md`, 
       use path identity in the benchmark contracts. Keep every oracle and proof.
 - [x] Supervisor decision (2026-10-06), under the user's merge request: merge
       current main a second time after the seven fixes. Keep main's dependency
-      versions. Follow its evidence and review-fix rules from this merge forward. Do not migrate M1–M9A records.
+      versions. Follow its evidence and review-fix rules from this merge forward.
+      Do not migrate M1–M9A records.
       Preserve main's shape-based hydration tests and its five consumer smokes.
-- [ ] Re-read every document this plan touched against the implementation,
+- [x] Re-read every document this plan touched against the implementation,
       fix drift, and replace the approved-target sentences naming this plan
       with the Decision 13 deferral.
 - [x] Run the final full unit, pinned-Chromium browser and hydration suites,
@@ -1887,19 +1889,20 @@ Evidence: `.context/scalable-inline-style-analysis/m10-prior-plan-evidence.md`, 
       style route and markup edit, and a moved path with `previousPath`.
 - [x] Commit the local checkpoint and stop for the supervisor's check before
       the push.
-- [ ] After checks pass and push is permitted, `git add -A`, commit with
+- [x] After checks pass and push is permitted, `git add -A`, commit with
       Conventional Commits, and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`. Keep the review read-only. Then apply main's
       [review-fix rule](../AGENTS.md#general) to findings marked `Auto-fix: yes`,
       re-review once, and report fixed and open findings separately. Ask for
-      decisions when that rule requires them. Do not change older review records.
+      decisions when that rule requires them. Do not change older review records
+      without separate approval.
 
 ### Decisions and approvals
 
-- **User decision (2026-10-06):** Stop optimization (Decision 1 = C). Implement
-  no M9A candidate or recorded M1–M9A review finding.
+- **User decision (2026-10-06):** Stop optimization; implement no candidate.
+  Do not implement recorded M1–M9A review findings without a separate decision.
 - **User decision (2026-10-06):** Defer performance acceptance. Remove the speed
   test from this plan for now. Keep all harness code, fixtures and tests.
 - **User decision (2026-10-06):** Merge the latest `origin/main` and resolve
@@ -1933,7 +1936,9 @@ No option is selected by this merge.
 plan under #137. Leave those records in place until the user decides.
 
 **Pending user decisions:** Whether to grade the open M1–M9A review findings
-under #147. Do not grade or implement those findings without that decision.
+under #147, apart from the M9A findings graded by the supervisor for this
+checkpoint. Do not grade or implement the remaining findings without that
+decision.
 
 ## Post-merge follow-up (non-blocking)
 
@@ -1941,5 +1946,6 @@ under #147. Do not grade or implement those findings without that decision.
   renderer collects `getStyleElement()` output.
 - Restore performance acceptance in a later plan. Re-measure the reference in
   the same session as the candidate, on one machine, in alternating order.
-  Apply decision C's relaxed cumulative component-style limits to fit the
-  delivered code's measured results; no numeric targets are set in this plan.
+  Fit cumulative component-style limits to those fresh measurements of the
+  delivered code. M9A's values are indicative only; this plan sets no numeric
+  targets.

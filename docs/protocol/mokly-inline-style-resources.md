@@ -7,12 +7,10 @@ reference-bearing rules and resources absent from saved variants.
 The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md)
 implements the following behavior. Decision 13 performance acceptance is
 deferred by the user decision of 2026-10-06.
-[M5](../../plans/scalable-inline-style-analysis.md#milestone-5-changed-segment-analysis)
-implements the [matched-occurrence rule](./mokly-css-parse-reuse.md#unchanged-references-and-composition);
-[M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
-implements derived reference seeds, stored owner-group references and fast-path
-raw proof; [M9](../../plans/scalable-inline-style-analysis.md#milestone-9-fingerprinted-comparison-materials)
-implements stored references for fingerprints. Propagation rules stay unchanged;
+The [matched-occurrence rule](./mokly-css-parse-reuse.md#unchanged-references-and-composition),
+derived reference seeds, stored owner-group references and fast-path raw proof
+are implemented. Page analysis implements stored references for fingerprints.
+Propagation rules stay unchanged;
 the page contract owns the precise provenance-reference equality domain.
 
 This contract owns resource propagation for the attributions and canonical

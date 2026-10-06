@@ -3,8 +3,8 @@
 ## Delivery Status
 
 The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md)
-implements heap/document counts (M2), segments (M4), shared page parses (M7),
-`stylePath` (M8), and separate [material details](./mokly-material-work-counts.md) (M9).
+implements heap/document counts, segment counts, shared page parses,
+`stylePath`, and separate [material details](./mokly-material-work-counts.md).
 
 Performance acceptance is deferred under the plan's Decision 13 (2026-10-06).
 
@@ -176,7 +176,8 @@ Component-free/live loops emit no new records; build parses do not count.
 `MOKLY_MATERIAL_WORK=1` additionally enables separate `review.material-work`
 [detail counts](./mokly-material-work-counts.md) in this scope, including partial
 work on failure. Default-off constructs no detail collector, material scope or
-byte counts. Core fields, branches, clocks and heap sampling keep M8 behavior.
+material byte counts. Core fields, clocks and heap sampling remain independent
+of this opt-in.
 Details never enter `review.document-work` or leak across timing sessions.
 
 Document-work times sum exclusive local operation durations, rounded once to

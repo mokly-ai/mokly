@@ -2,14 +2,17 @@
 
 ## Delivery Status
 
-Approved target of the [scalable analysis plan](../../../plans/scalable-inline-style-analysis.md),
-Milestone 2 delivers template identity, stable values, the four-scenario matrix,
-filtering, restoration and report provenance; its reference measurements are
-recorded separately in the fixture README during Milestone 2.
-Milestone 10 applies the acceptance procedure below and removes pending
-schedules. Timing fields and their delivery are owned by
+Template identity, stable values, the four-scenario matrix, filtering,
+restoration and report provenance are implemented. The user deferred performance
+acceptance on 2026-10-06 under Decision 13 of the
+[scalable analysis plan](../../../plans/scalable-inline-style-analysis.md#decisions).
+That plan no longer runs acceptance. The procedure below stays available for a
+later plan, which must fit limits to fresh same-session reference and candidate
+measurements on one machine, in alternating order. The stored M2 reference is
+not reusable because main changed digest-covered path-identity templates.
+Timing fields and their delivery are owned by
 [timings](../../../docs/protocol/mokly-timings.md); setup, dimensions, cache
-behavior and measured results are described in the [fixture README](./README.md).
+behavior and historical results are described in the [fixture README](./README.md).
 
 ## Template Identity And Stable Values
 
@@ -127,6 +130,12 @@ failed navigation assertion into benchmark success.
 
 ## Classification Performance Acceptance
 
+This procedure and its original ratios are retained for a later plan. They are
+not an acceptance gate for the scalable analysis plan. Before using them, the
+later plan must approve its limits and measure the reference and candidate in
+one session on one machine, in alternating order. The M9A values are indicative
+only; neither they nor the stored M2 reference set the later limits.
+
 Use default dimensions (30/40/12, four sheets, share 0.5), all four scenarios
 and both states in **committed mode**. At the reference step run two complete
 default-fixture matrices after regeneration. Retain every sample, including
@@ -161,5 +170,5 @@ Different `moklyCommit`, `moklyDirty` or prepared-code identity values do not
 fail acceptance by themselves: the reference and optimized commits must differ.
 Segment counts added after the reference step are not required on reference
 samples. Do not drop a cold sample, substitute warm, average states, or replace
-a failed run with a faster retry. New measured-dominant work must be planned
-before claiming success; the plan's final acceptance remains open.
+a failed run with a faster retry. A later plan must account for newly dominant
+work before it claims that its approved performance limits pass.

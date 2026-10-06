@@ -381,14 +381,15 @@ Key code:
   style/reference traversal, outside the matcher catch boundary. Entrypoint-count
   tests still prove one parse; these assertions guard the internal Parser hook.
 - `page_projection.ts`, `page_reference_records.ts`: delivered string materials
-  with auxiliary kept/copy/producer recipes, never a reparsed material tree.
+  whose references come from kept/copy/producer recipes, without reparsing them
+  for resource discovery.
   Copies expose recorded template references, not parser-discarded tokens.
 - `page_inline_material.ts`: complete-path SHA-256/base64url comments replace
   canonical rule appendices or equal reference-free styles in place. Reserved
   authored prefixes, skipped source references/copies/rewrites and M8 marker guards keep text;
   parse failures stay verbatim. Producer references survive the representation
   change, and the route keeps its canonical comparison without fingerprint work.
-- `inline_link_material.ts`: keeps text when path/move normalization changes an
+- `inline_link_material.ts`: keeps text when path/move normalization changes a
   skipped style source without an identical-normalizer proof, or changes an
   actual/projected appendix equality outcome. Original open SVG/MathML EOF state
   also keeps text. Link-normalization parses use the counted `linkNormalization`

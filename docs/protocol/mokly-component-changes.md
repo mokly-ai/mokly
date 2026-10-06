@@ -2,12 +2,10 @@
 
 ## Delivery Status
 
-Delivered analysis from the [scalable analysis plan](../../plans/scalable-inline-style-analysis.md):
-[M7](../../plans/scalable-inline-style-analysis.md#milestone-7-shared-page-analysis)
-implements [page analysis](./mokly-page-analysis.md);
-[M8](../../plans/scalable-inline-style-analysis.md#milestone-8-style-only-route)
-implements the [equivalent route](./mokly-style-only-route.md);
-[fast-path](./mokly-component-review-fast-path.md) owns decision ordering.
+The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md)
+implements [page analysis](./mokly-page-analysis.md) and the
+[equivalent style route](./mokly-style-only-route.md).
+The [fast-path contract](./mokly-component-review-fast-path.md) owns decision ordering.
 
 The classifier, Browse/watch cache, artifacts and static exporter share this
 policy; the [explorer plan](../../plans/component-explorer.md) records delivery.
