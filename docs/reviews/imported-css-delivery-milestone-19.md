@@ -226,13 +226,18 @@ in findings 2 and 4.
      working directory.
    - Recommended: B, so no future internal PostCSS call can forget the option.
 
-   Resolved after the merge with option A: `scopeModule` parses with
-   `map: false`, so every internal PostCSS parse and process call passes it.
-   `tests/build_module_source_maps.test.ts` covers a broken inline map, an
-   unsupported inline encoding, an indexed map offset that source-map-js 1.2.2
-   rejects, a sibling map read from the working directory, and diagnostic
-   positions with a valid inline map. The shared helper of option B was not
-   adopted.
+   Resolved after the merge with option B. `src/build/styles/postcss_calls.ts`
+   is now the only module that uses PostCSS's parser and processor, and its
+   calls always pass `map: false`. The CSS Modules scoper, its verifier, the
+   consumer PostCSS step and plugin normalization use it. ESLint rejects other
+   `src/` imports of PostCSS's parser and processor, deep `postcss/` imports
+   and dynamic loads of `postcss`; `tests/eslint_postcss_calls.test.ts`
+   checks this rule for every source file. Build tests without consumer
+   PostCSS cover a broken inline map, an unsupported inline encoding, an
+   indexed map offset that source-map-js 1.2.2 rejects, a sibling map read
+   from the working directory, and diagnostic positions with a valid inline
+   map. Build tests with a no-op consumer plugin cover the broken inline map,
+   the indexed offset and a bad sibling map, for plain CSS and CSS Modules.
 
 7. **Low — every command, including `--help`, loads the Lightning CSS native
    package, contrary to the protocol.**

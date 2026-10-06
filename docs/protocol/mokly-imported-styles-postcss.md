@@ -46,7 +46,8 @@ serialized action queue waiting for a response.
 Run the consumer's plugins in order once for each distinct effective
 stylesheet input with `from` set to its physical source path, `map: false`,
 **after** renderer-exclusion pruning and **before** CSS Modules naming and
-esbuild CSS bundling. A plugin can inline nested local `@import`s directly
+esbuild CSS bundling. With `map: false`, a `sourceMappingURL` comment never
+loads a map or reads a file. A plugin can inline nested local `@import`s directly
 from disk, bypassing Mokly's pruning. For each processed input, walk the kept
 local prelude-import tree using the stylesheet resolver, without executing
 plugins. If an excluded renderer file is reachable at depth two or more through

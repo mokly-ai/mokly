@@ -78,8 +78,9 @@ passed the full gate and resolves that finding; other review findings remain
 open. Findings in the
 [Milestone 47 review record](../docs/reviews/imported-css-delivery-milestone-47.md)
 were resolved after the merge in `ec04332`; Milestone 19 finding 6 was
-resolved after the merge by parsing CSS Modules with `map: false`. Other review
-findings remain open for the user's decision.
+resolved after the merge: every Mokly PostCSS parse and process call now goes
+through one helper that passes `map: false`, and ESLint enforces this. Other
+review findings remain open for the user's decision.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite

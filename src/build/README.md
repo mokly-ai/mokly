@@ -27,8 +27,12 @@ rename local classes, IDs and keyframes by a path-only hash and expose default
 and named bindings to JavaScript. The module scoper never re-prints authored
 values, imports, URLs, comments or modern syntax; ordinary CSS and modules
 reach the same bundle and inventory. Consumer PostCSS still runs first.
-The scoper parses with `map: false`, so a `sourceMappingURL` comment never
-loads a map or moves a diagnostic position.
+`styles/postcss_calls.ts` is the only module that uses PostCSS's parser and
+processor. Its calls always pass `map: false`, so a `sourceMappingURL` comment
+never loads a map or moves a diagnostic position. In every other `src/` file,
+ESLint rejects value imports of `postcss`'s default export, `parse`,
+`Processor`, `Input` and `fromJSON`, deep `postcss/` value imports, and
+dynamic loads of `postcss`.
 `styles/module_scope.ts` handles real `@scope` preludes with temporary sourced
 selector rules while hiding every scope-suffixed at-rule from plugin heuristics.
 `styles/module_verify.ts` compares restored output with the authored PostCSS
@@ -49,7 +53,9 @@ Wrapper empty tails and comments follow the plugin output.
 
 CSS Modules mutation checklist:
 
-- Ignored source-map comments: `tests/build_module_source_maps.test.ts`.
+- Ignored source-map comments: `tests/build_module_source_maps.test.ts`,
+  `tests/build_postcss_source_maps.test.ts` and `tests/postcss_calls.test.ts`.
+  The lint guard: `tests/eslint_postcss_calls.test.ts`.
 - Scanner escapes, strings and Unicode spacing: `tests/css_module_css_scan.test.ts`.
 - Raw escape guard and meaning-preserving advice: `tests/css_module_escape_regressions.test.ts` and `tests/browser/css_module_escape_advice.spec.ts`.
 - Empty tails and exact comment boundaries: `tests/css_module_empty_tail.test.ts`.

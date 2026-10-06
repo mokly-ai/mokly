@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import postcss, { CssSyntaxError, type Root } from "postcss";
+import { CssSyntaxError, type Root } from "postcss";
 
 import { MoklyError } from "../../errors.js";
 
@@ -9,6 +9,7 @@ import { rejectUnsafeModuleEscapes } from "./module_escape_guard.js";
 import { modulePlugins } from "./module_plugins.js";
 import { prepareModuleScopes } from "./module_scope.js";
 import { verifyModuleScoping } from "./module_verify.js";
+import { parseCss, processRootSync } from "./postcss_calls.js";
 
 /** Rename-only CSS output shared by JavaScript imports and CSS bundling. */
 export interface ScopedStyle {
@@ -26,21 +27,23 @@ export function scopeModule(css: string, relative: string): ScopedStyle {
   const prefix = `mokly_${hash}_`;
   let root: Root | undefined;
   try {
-    root = postcss.parse(css, { from: relative, map: false });
+    root = parseCss(css, relative);
     rejectAuthoredICSS(root, relative);
     rejectUnsafeModuleEscapes(root, relative);
     const restoreScopes = prepareModuleScopes(root, relative);
     rejectEmptyModuleWrappers(root, relative);
     const plugins = modulePlugins();
-    const result = postcss([
-      plugins.localByDefault({ mode: "local" }),
-      plugins.extractImports(),
-      plugins.scope({
-        generateScopedName: (name: string) => `${prefix}${name}`,
-      }),
-    ])
-      .process(root, { from: relative, map: false })
-      .sync();
+    const result = processRootSync(
+      [
+        plugins.localByDefault({ mode: "local" }),
+        plugins.extractImports(),
+        plugins.scope({
+          generateScopedName: (name: string) => `${prefix}${name}`,
+        }),
+      ],
+      root,
+      relative,
+    );
     const { icssImports, icssExports } = plugins.extractICSS(result.root);
     restoreScopes();
     const specifier = Object.keys(icssImports).sort()[0];

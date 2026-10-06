@@ -11,38 +11,26 @@ import {
   entryStyle,
   styleFixture,
 } from "./helpers/imported_styles_fixture.js";
+import {
+  brokenInlineMap,
+  inlineSourceMap,
+  oversizedIndexedMap,
+  unsupportedEncodingMap,
+  unsupportedSiblingMap,
+  withSourceMap,
+} from "./helpers/source_map_comments.js";
 
 const scopedCard = /\.mokly_[a-f0-9]{12}_card\b/;
 
-function inlineMap(map: object): string {
-  const encoded = Buffer.from(JSON.stringify(map)).toString("base64");
-  return `data:application/json;base64,${encoded}`;
-}
-
 for (const [name, url] of [
-  ["a broken inline map", "data:application/json;base64,bm90IGpzb24="],
-  [
-    "an unsupported inline map encoding",
-    "data:application/json;charset=latin1,{}",
-  ],
-  [
-    "an indexed map offset above 10,000,000 lines",
-    inlineMap({
-      version: 3,
-      sections: [
-        {
-          offset: { line: 10_000_001, column: 0 },
-          map: { version: 3, sources: [], names: [], mappings: "" },
-        },
-      ],
-    }),
-  ],
+  ["a broken inline map", brokenInlineMap],
+  ["an unsupported inline map encoding", unsupportedEncodingMap],
+  ["an indexed map offset above 10,000,000 lines", oversizedIndexedMap],
 ] as const)
   test(`Build ignores ${name} in a CSS Module`, async (context) => {
-    const fixture = await styleFixture(
-      `.card{color:red}\n/*# sourceMappingURL=${url} */`,
-      { module: true },
-    );
+    const fixture = await styleFixture(withSourceMap(".card{color:red}", url), {
+      module: true,
+    });
     context.after(() => removeFixture(fixture));
     const stylesheet = (await compileFixture(fixture)).outputs.get(entryStyle);
     assert.ok(typeof stylesheet === "string");
@@ -51,13 +39,13 @@ for (const [name, url] of [
 
 test("Build does not read a CSS Module's sibling map from the working directory", async (context) => {
   const fixture = await styleFixture(
-    ".card{color:red}\n/*# sourceMappingURL=fixture.map */",
+    withSourceMap(".card{color:red}", "fixture.map"),
     { module: true },
   );
   context.after(() => removeFixture(fixture));
   await fs.writeFile(
     path.join(fixture.entriesDir, "fixture.map"),
-    '{"version":2,"sources":[],"names":[],"mappings":""}',
+    unsupportedSiblingMap,
   );
   const module = (file: string) =>
     JSON.stringify(pathToFileURL(path.join(repositoryRoot, "dist", file)).href);
@@ -71,7 +59,7 @@ test("Build does not read a CSS Module's sibling map from the working directory"
 });
 
 test("CSS Module diagnostics keep module positions despite a valid inline map", async (context) => {
-  const map = inlineMap({
+  const map = inlineSourceMap({
     version: 3,
     file: "fixture.module.css",
     sources: ["card.scss"],
@@ -79,7 +67,7 @@ test("CSS Module diagnostics keep module positions despite a valid inline map", 
     mappings: "AAuCA,KACE",
   });
   const fixture = await styleFixture(
-    `.a { composes: b }\n.b{}\n/*# sourceMappingURL=${map} */`,
+    withSourceMap(".a { composes: b }\n.b{}", map),
     { module: true },
   );
   context.after(() => removeFixture(fixture));
