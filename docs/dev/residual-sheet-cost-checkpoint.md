@@ -254,7 +254,8 @@ the [dated outcome](#outcome--2026-10-06) supersedes this decision point:
 
 The original recommendation was B plus the bounded cache-free work as the first
 reviewable implementation scope, followed by measurement before adopting weaker
-targets or a large new cache. The dated outcome supersedes that recommendation. A and E1/E2/E3/E5 are contract-preserving only with their stated proofs;
+targets or a large new cache. The dated outcome supersedes that recommendation.
+A and E1/E2/E3/E5 are contract-preserving only with their stated proofs;
 B, C, D and E4 cross explicit approval boundaries. The original statement that
 the plan's design TODO remained at that decision point is superseded. No
 performance candidate or recorded performance finding was implemented.

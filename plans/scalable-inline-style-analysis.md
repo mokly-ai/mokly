@@ -10,9 +10,8 @@ parse, and settle pages whose only difference is page style text without the
 full comparison. The user stopped further optimization on 2026-10-06 and
 deferred performance acceptance under Decision 13. This plan has no active
 speed target; a later plan must fit limits to fresh same-session measurements.
-The ownership contract, Changes membership, evidence and presentation stay
-as delivered,
-apart from the documented cases in Decisions 4, 5, 9 and 10. The contracts
+The ownership contract, Changes membership, evidence and presentation stay as
+delivered, apart from the documented cases in Decisions 4, 5, 9 and 10. The contracts
 linked below own the precise algorithms and exceptions, not this overview.
 
 ## Base And Prerequisites
@@ -47,8 +46,9 @@ and the scale fixture by [its README](../tests/fixtures/large/README.md),
 
 These measurements are historical evidence from the prerequisite plan before
 the main merge, not performance references for this plan. At Milestone 2,
-the default fixture had **1,590 entries and 5,550 documents**. That milestone recorded a
-template-identified reference; Decision 13 now excludes its reuse for acceptance.
+the default fixture had **1,590 entries and 5,550 documents**. That milestone
+recorded a template-identified reference; Decision 13 now excludes its reuse
+for acceptance.
 
 ### Memory And CSS Parsing
 
