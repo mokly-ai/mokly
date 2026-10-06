@@ -219,28 +219,28 @@ Evidence: `.context/deterministic-test-timing/milestone-2.md`.
 - [x] Run each new helper test file five times. Run `npm run lint` and
       `npm run typecheck`.
 
-## Milestone 3: PostCSS collection guards
+## Milestone 3: PostCSS collection guards — completed
 
 Convert the failing test and the directory-walk test to operation counts.
 
 Evidence: `.context/deterministic-test-timing/milestone-3.md`.
 
-- [ ] Rewrite the 20,000-report test in
+- [x] Rewrite the 20,000-report test in
       `tests/postcss_dependency_review.test.ts` as described in Replacements.
       Keep the Tailwind report shape and the inventory-size assertion. Report
       the larger run's duration with the helper. Rename the test after the
       contract that it asserts.
-- [ ] Rewrite the 8,000-file walk test in
+- [x] Rewrite the 8,000-file walk test in
       `tests/imported_styles_low_dependencies.test.ts` as described in
       Replacements. Keep the match-count assertion.
-- [ ] Prove that each new assertion fails when its regression returns:
+- [x] Prove that each new assertion fails when its regression returns:
       give `dependencyOwnership` no cached roots, sort inside the report loop,
       and build a `Minimatch` for each file. Confirm that each change fails
       the matching test, then revert it. Save the results in the evidence
       file.
-- [ ] Run both files five times in a row and confirm that the counts are the
+- [x] Run both files five times in a row and confirm that the counts are the
       same in each run.
-- [ ] Run `tests/*postcss*.test.ts` and `tests/imported_styles_*.test.ts`,
+- [x] Run `tests/*postcss*.test.ts` and `tests/imported_styles_*.test.ts`,
       then `npm run lint` and `npm run typecheck`.
 
 ## Milestone 4: Watch scale guards
@@ -288,6 +288,10 @@ Evidence: `.context/deterministic-test-timing/milestone-5.md`.
       from `timeoutMs: 5_000` to 15 seconds at the acquisitions that must succeed
       (near lines 93, 124, and 161). Audit every other test-supplied timeout
       option under `tests/` for expected-state waits below 10 seconds.
+- [ ] Audit direct timer guards in `tests/imported_styles_supervision_watch.test.ts`
+      (9 seconds for a watch event) and `tests/postcss_worker_failure.test.ts`
+      (the 2-second `bounded` helper) for successful expected-state waits below
+      10 seconds. Keep test-runner timeouts and timeout-outcome cases unchanged.
 - [ ] Move the duration text in
       `tests/browser/css_module_selector_oracle.spec.ts` and
       `tests/browser/css_module_escape_fuzz.spec.ts` to the helper.
