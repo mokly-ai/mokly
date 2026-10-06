@@ -163,11 +163,13 @@ the entry's direct Tailwind import is pruned and `@apply` needs `@reference`.
 
 Mokly ignores input source maps. Every Mokly PostCSS parse and process call,
 for consumer plugins and CSS Modules alike, passes `map: false`, and esbuild
-bundles CSS without source maps. Mokly never decodes an inline map or reads a
-file named by a `sourceMappingURL` comment. A missing, stale, malformed or
-oversized map therefore cannot change output, fail Build or move a diagnostic
-location, and no result depends on the process working directory. A map file
-is not an inventory input. PostCSS drops a map comment from the text it returns
-after consumer plugins, and esbuild omits any that remain, so delivered CSS has
-no map comment. A consumer plugin that parses CSS itself owns its own
-source-map options.
+bundles CSS without source maps. Mokly code inserts PostCSS nodes as objects,
+never as CSS text, because PostCSS parses inserted text without `map: false`.
+Mokly never decodes an inline map or reads a file named by a
+`sourceMappingURL` comment. A missing, stale, malformed or oversized map
+therefore cannot change output, fail Build or move a diagnostic location, and
+map handling never makes a result depend on the process working directory. A
+map file is not an inventory input. PostCSS drops a map comment from the text
+it returns after consumer plugins, and esbuild omits any that remain, so
+delivered CSS has no map comment. A consumer plugin that parses CSS itself owns
+its own source-map options.

@@ -366,7 +366,9 @@ review rules, and the temporary Braces exception.
   identity-derived logical-link targets and portable artifact URLs.
 - [`src/build/styles/postcss_boundary.ts`](./src/build/styles/postcss_boundary.ts)
   — the only module that parses or processes CSS with PostCSS; it ignores
-  input source maps, and ESLint rejects other PostCSS entry points.
+  input source maps. In other product sources, ESLint rejects the PostCSS
+  imports and loads that parse CSS; see the
+  [build pipeline](./docs/architecture/build-pipeline.md#2-one-consumer-graph).
 - [`src/components/manifest_entry_validation.ts`](./src/components/manifest_entry_validation.ts)
   — manifest-v8 component-entry validation.
 - [`src/registry/changed_paths.ts`](./src/registry/changed_paths.ts) and

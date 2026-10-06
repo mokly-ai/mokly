@@ -11,7 +11,9 @@ const postcssBoundary = "src/build/styles/postcss_boundary.ts";
 const postcssBoundaryMessage = `Parse and process CSS through ${postcssBoundary}, which disables PostCSS source maps.`;
 // esquery regular expressions cannot contain "/", so \u002F matches it. A
 // later no-restricted-syntax entry replaces earlier ones for the same file, so
-// every entry that covers product sources must include postcssLoads.
+// every entry that covers product sources outside the boundary must include
+// postcssLoads. tests/eslint_postcss_boundary.test.ts checks every tracked
+// product source.
 const postcssSpecifier = "/^postcss(?:$|\\u002F)/";
 const postcssLoads = [
   {
@@ -90,7 +92,7 @@ export default tseslint.config(
           paths: [
             {
               name: "postcss",
-              importNames: ["default", "parse", "Processor", "Input"],
+              importNames: ["default", "parse", "plugin", "Processor", "Input"],
               allowTypeImports: true,
               message: postcssBoundaryMessage,
             },
@@ -115,8 +117,15 @@ export default tseslint.config(
       "src/build/source_inventory.ts",
       "src/build/package_owned_paths.ts",
     ],
+    ignores: [postcssBoundary],
     rules: {
       "no-restricted-syntax": ["error", localePathSorting, ...postcssLoads],
+    },
+  },
+  {
+    files: [postcssBoundary],
+    rules: {
+      "no-restricted-syntax": ["error", localePathSorting],
     },
   },
 );

@@ -26,8 +26,6 @@ remain open for the user's decision, as do the other findings in the
 [Milestone 19 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-19.md)
 and unresolved findings in the
 [Milestone 21 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-21.md).
-A follow-up after PR #140 resolves M19-6: every Mokly PostCSS call now ignores
-input source maps through one ESLint-enforced boundary.
 Milestone 22 (`8a47cc5`) accepts the selector-list behavior from finding 3 of that review;
 its other parts and findings remain open.
 Milestone 24 (`7ba5628`) resolves the M23 findings: it accepts the plugins' compound join
@@ -80,7 +78,11 @@ passed the full gate and resolves that finding; other review findings remain
 open. Findings in the
 [Milestone 47 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-47.md)
 were resolved after the merge in `ec04332`; other review findings remain open
-for the user's decision.
+for the user's decision. After this plan closed, commit `36958be` resolves
+M19-6 from the
+[Milestone 19 review record](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/imported-css-delivery-milestone-19.md):
+every Mokly PostCSS call now ignores input source maps through one
+ESLint-enforced boundary.
 Imported CSS, CSS Modules, binary assets and
 optional consumer PostCSS ship through Build, Check, Serve, export,
 publication and Changes. Esbuild remains the only bundler; the optional Vite
