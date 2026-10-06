@@ -67,11 +67,12 @@ Planning evidence:
 
 ### Finding 4: fixed root resolution per metafile and per inventory (option C)
 
-- `createMetafilePathMapper` resolves its working directory once. It maps
-  every physical key to its logical path without resolving the root again,
-  also when the working directory is a symlink.
-- `normalizeSourceFiles` resolves `repoRoot` once per call. Its results do not
-  change. Its handling of missing, escaping and dangling paths does not change.
+- `createMetafilePathMapper` resolves its working directory a fixed number
+  of times per mapper. It maps every physical key to its logical path without
+  resolving the root again, also when the working directory is a symlink.
+- `normalizeSourceFiles` resolves `repoRoot` a fixed number of times per call.
+  Its results do not change. Its handling of missing, escaping and dangling
+  paths does not change.
 - The operation-count helper gains a combined selection,
   `{ operation: "realpath", path }`. It adds the `fs.realpathSync` and
   `fs.realpathSync.native` calls for one path. Every working-directory and
@@ -100,15 +101,15 @@ Planning evidence:
   decision.
 - Finding 6.
 
-## Milestone 1: Update the timing contract
+## Milestone 1: Update the timing contract — completed
 
 Write all five decisions into the protocol before any test or product change.
 
 Evidence: `.context/deterministic-test-timing-review-fixes/milestone-1.md`.
 
-- [ ] Fetch `origin/main`, record the source tip and the branch point, and
+- [x] Fetch `origin/main`, record the source tip and the branch point, and
       audit main's additions. Save the audit in the evidence file.
-- [ ] Update `docs/protocol/ci-test-timing.md` for all five decisions:
+- [x] Update `docs/protocol/ci-test-timing.md` for all five decisions:
       per-attempt waits in retry loops, the Playwright assertion timeout,
       `waitUntil` as the way to poll for an expected state, the combined
       `realpath` selection and fixed root resolution, and the shared guard
@@ -116,13 +117,17 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-1.md`.
       scope. State in Delivery Status that these rules are planned in this
       plan. If the page passes 250 lines, move the helper sections to a
       continuation page and index it.
-- [ ] Correct the working-directory sentence in
+- [x] Correct the working-directory sentence in
       `docs/protocol/mokly-imported-styles.md` to match the finding 4
       decision.
-- [ ] Update the guard sentence in
+- [x] Update the guard sentence in
       `docs/protocol/ci-verification-repository.md` to name the shared test
       roots.
-- [ ] Validate the changed Markdown with `npx prettier --check`. Run the
+- [x] Search protocol pages, guides, architecture pages and READMEs for stale
+      assertion-timeout, polling, guard-scope and root-resolution statements.
+      Correct each conflict. Keep the fixture-budget edit in
+      `docs/protocol/ci-suite-evidence.md` small.
+- [x] Validate the changed Markdown with `npx prettier --check`. Run the
       protocol tests and `tests/markdown_links.test.ts`. Review the diff.
 
 ## Milestone 2: Shared helpers
@@ -167,7 +172,8 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-3.md`.
 - [ ] Prove each new guard. Restore the per-edge projection in the mapper and
       the per-input `repoRoot` resolution, and confirm that the matching test
       fails. Save the results in the evidence file.
-- [ ] Update the mapper doc comment and `src/build/README.md`.
+- [ ] Update the mapper doc comment and `src/build/README.md`. Use fixed-count
+      wording for root resolutions instead of promising one resolution.
 - [ ] Run every test file that imports the changed modules, then
       `npm run lint` and `npm run typecheck`.
 
@@ -181,6 +187,12 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-4.md`.
 - [ ] Inventory every hand-written polling loop under the test roots, with
       its allowance, interval and expected state. Start from the planning
       inventory. It is a regex scan and misses some loops.
+- [ ] Include the loops missed by that scan in
+      `tests/watched_child_startup.test.ts`,
+      `tests/export_named_entries.test.ts`,
+      `tests/preview_fixture_cleanup.test.ts`,
+      `tests/helpers/blocking_git.ts`, `tests/helpers/watched_events.ts`
+      and `tests/browser/historical_selection_history_fixture.ts`.
 - [ ] Replace each loop with `waitUntil` as decided. Record each kept loop and
       its reason in the evidence file.
 - [ ] Drive the `demand_safety` job timer with `t.mock.timers` as decided.

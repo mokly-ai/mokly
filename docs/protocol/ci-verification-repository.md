@@ -5,8 +5,9 @@ starts with the live `npm run dependencies:check` audit, then Prettier, ESLint,
 changed source/protocol file-length audit, Rust formatting, workspace Clippy
 with warnings denied, Rust tests and the Rust file-length audit. The
 [test-timing guard](./ci-test-timing.md) adds elapsed-time and polling-deadline
-checks to ESLint under `tests/`. The live dependency audit fails before any later
-gate on an uncovered Low-or-higher advisory, invalid exception, or registry error.
+checks to ESLint in the shared test roots, `tests/` and `packages/viewer/tests/`.
+The live dependency audit fails before any later gate on an uncovered
+Low-or-higher advisory, invalid exception, or registry error.
 Reviewed path and expiry rules follow [Dependency Security](./dependency-security.md#reviewed-workspace-exceptions).
 
 The Rust file-length auditor is implemented inside `xtask` rather than as a

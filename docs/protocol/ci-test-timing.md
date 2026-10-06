@@ -1,7 +1,8 @@
 # CI Test Timing
 
 Required tests check correctness without depending on machine speed. This
-contract applies to the unit, browser, and hydration suites under `tests/`.
+contract applies to the unit, browser, and hydration suites in the test roots
+`tests/` and `packages/viewer/tests/`.
 It supplements [CI suite evidence](./ci-suite-evidence.md).
 
 ## Assertion Rule
@@ -34,8 +35,16 @@ resolution can remain linear while violating the once-per-run contract.
 Keep the operation's result assertions beside its count assertions.
 
 The [stylesheet collection contract](./mokly-imported-styles.md#roots-collection-and-deduplication)
-requires one working-directory resolution per metafile. Each root traversal
-reads a metafile input at most once.
+requires a fixed number of working-directory and `repoRoot` resolutions for
+one metafile or one source inventory. That number must not grow with the
+number of inputs or edges. This also holds when the working directory is a
+symlink or equals `repoRoot`. Each root traversal reads a metafile input at
+most once.
+
+Use the combined `{ operation: "realpath", path }` selection for a once-only
+check of a fixed root. This includes a working directory, `repoRoot`, and the
+mockups directory. Code can resolve these roots through `fs.realpathSync`
+or `fs.realpathSync.native`.
 
 ### Captured Watcher Targets
 
@@ -67,6 +76,12 @@ the frame mounts and before the request starts. The request must remain
 pending at 4,999 ms and return `timeout` at 5,000 ms. Its next request must
 return `disposed`. These values are fake-clock time, not elapsed wall time.
 
+For a Node product timer, use `t.mock.timers`. Enable the mock after setup.
+Mock only the APIs that the timer uses. In `tests/demand_safety.test.ts`,
+enable only `setTimeout` after runtime preparation. The `DocumentService`
+job must remain pending at fake 999 ms and fail at fake 1,000 ms. The later
+recovery read has no wall-clock limit.
+
 ## Allowed Clock Uses
 
 The following uses can still read a real clock:
@@ -87,6 +102,17 @@ can stay short if the test makes no elapsed-time assertion. For example,
 `acquireOutputLock(root, { timeoutMs: 100 })` inside `assert.rejects` can
 use a real timer to check the timeout outcome.
 
+A per-attempt wait inside a retry loop can stay short when the loop's own
+deadline allows at least 10 seconds. For example, a 1-second panel wait
+inside one Playwright `toPass` attempt lets its 15-second loop retry a click.
+
+`playwright.config.ts` sets the default assertion timeout, `expect.timeout`,
+to 15,000 ms. Web-first assertions and `expect.poll` therefore meet the
+10-second minimum by default. `tests/verification_concurrency.test.ts`
+keeps that default at 10,000 ms or more. An explicit Playwright assertion or
+action timeout below 10 seconds is allowed only for a timeout-outcome check
+or a per-attempt wait inside a retry loop.
+
 A polling deadline does not establish a speed contract.
 A test-runner timeout is a hang guard for the whole test.
 Keep it at least three times the test's typical duration.
@@ -98,76 +124,27 @@ The fixture setup budgets in `tests/helpers/fixture_timing.ts` stay unchanged.
 Fixture phase reporting continues to follow
 [CI suite evidence](./ci-suite-evidence.md).
 
+### Polling
+
+Hand-written waits must poll for an expected state only with `waitUntil`
+from `tests/helpers/wait_until.ts`. Do not write a counted loop of N pauses
+of M ms or a clock-deadline loop. Exported waits, including those in
+`tests/helpers/server_http.ts` and `tests/helpers/watched_catalogue.ts`,
+must use `waitUntil` and keep their public signatures. Each replacement wait
+allows at least the larger of 15 seconds and its current allowance.
+Keep its current poll interval.
+
+A loop whose attempts do more than check a state is not a polling wait.
+For example, a loop can retry an operation that has side effects.
+
 ## Shared Evidence Helpers
 
-### Operation Counting Helper
-
-`tests/helpers/operation_counts.ts` counts calls made by one synchronous
-callback. It counts these operations separately:
-
-- `fs.statSync`, `fs.lstatSync`, `fs.existsSync`, and `fs.readdirSync`.
-- `fs.realpathSync` and `fs.realpathSync.native`.
-- `path.relative`, `path.resolve`, and `Array.prototype.sort`.
-
-It records each operation's total. For operations with path arguments, it
-also records counts by the first path argument. Sort calls have no path
-argument and need only a total. The wrapped `fs.realpathSync` keeps its
-callable, counted `native` method attached.
-
-The helper restores every original function when the callback finishes.
-It also restores every original when the callback throws. A callback that
-returns a promise or another thenable must fail because asynchronous work can
-escape the counting window. Handle its rejection before reporting that error.
-Do not await it. Rejection must also restore the original functions.
-Reject nested counting calls before replacing any function.
-
-Use `countOperations(callback)` to get the callback's `result` and `counts`.
-Read totals from `counts.totals[operation]`.
-Read path counts from `counts.byPath[operation].get(path)`.
-The path maps use string keys. Convert other first arguments with `String`.
-Sort has a total only.
-
-The helper provides a two-size assertion with the acceptance relations in
-[Operation Counts](#operation-counts). Equal once-only counts pass. Growing
-once-only counts fail. A total above 4.5 times fails. Any asserted count
-that is zero at the smaller size fails.
-
-Use `assertOperationScaling(smaller, larger, onceOnly, scaledTotals)`.
-Pass the two counter results as `smaller` and `larger`.
-List once-only counts as `{ operation, path? }` objects.
-List scaled totals by operation name. Omit `path` for a total.
-Failure text names the operation, the selected path, and both counts.
-
-Counted code must call `fs` and `path` functions through their default
-imports. A named function import can escape the wrappers. The positive
-smaller-size count prevents that missed interception from passing silently.
-Count glob compilation with
-`context.mock.method(Minimatch.prototype, "make")`. Minimatch 10 calls
-`make` from its constructor. Count element reads of `config.sourceFiles`
-and `metafile.inputs` with a test-owned `Proxy`.
-
-### Duration Reporting Helper
-
-Required tests report durations only as text through
-`tests/helpers/durations.ts`. Use that text in `context.diagnostic` or a
-Playwright annotation. A reported duration must never be a failure condition.
-The helper is the only test module that directly subtracts clock reads.
-
-The helper returns the result of synchronous and asynchronous callbacks.
-It reports text once when the callback succeeds, throws, or rejects.
-It preserves the callback's failure and exposes no numeric duration.
-
-Use `reportDuration(label, report, callback)` for one report line.
-Pass the reporter as a function, for example `(text) => context.diagnostic(text)`.
-Await it to get the callback's result.
-The callback's error takes precedence if the reporter also throws.
-Use `startDuration()` to get a function that returns bare duration text.
-Call that function when the observation ends to combine the text with counts.
-Both forms use one decimal place followed by ` ms`.
+See [CI Test Timing Helpers](./ci-test-timing-helpers.md) for the polling,
+operation counting, and duration reporting contracts.
 
 ## Benchmark Boundary
 
-Opt-in benchmarks outside `tests/` are outside this assertion rule. They
+Opt-in benchmarks outside the test roots are outside this assertion rule. They
 can enforce millisecond thresholds. `scripts/large/benchmark.mjs` keeps
 `usableMs < 5000` for both cold and warm runs. The
 [startup benchmark contract](./mokly-timings.md) remains unchanged.
@@ -175,23 +152,28 @@ can enforce millisecond thresholds. `scripts/large/benchmark.mjs` keeps
 ## ESLint Guard
 
 Apply `no-restricted-syntax` in `eslint.config.js` to every JavaScript and
-TypeScript file under `tests/`, including browser and hydration specs.
-The only exempt file is `tests/helpers/durations.ts`. Files under `src/`
-and `scripts/` are outside the guard.
+TypeScript file in each test root listed by
+`scripts/verification/test-roots.mjs`: `tests/` and `packages/viewer/tests/`.
+This includes browser and hydration specs. Unit-test discovery reads the
+same list, so a new root gets the guard automatically. The only exempt file
+is `tests/helpers/durations.ts`. Product code and scripts outside the test
+roots are outside the guard.
 
 The guard rejects two patterns, including inside a `page.evaluate` callback:
 
 - A subtraction with a clock call on the left and a nonliteral operand on
-  the right. The clock calls are `performance.now()`, `Date.now()`, and
-  `process.hrtime.bigint()`.
-- `performance.now()` or `Date.now()` plus a number literal below 10,000.
+  the right. It applies to every clock form below.
+- A clock call plus a number literal below 10,000. It applies to every form
+  below except `process.hrtime.bigint()`.
 
-Use these selectors:
+The clock forms are `performance.now()`, `Date.now()`,
+`process.hrtime.bigint()`, member-expression clocks such as
+`window.performance.now()` and `globalThis.performance.now()`, and
+`new Date().getTime()` without constructor arguments. A parsed date such as
+`new Date(value).getTime()` is not a clock read and stays allowed.
 
-```text
-BinaryExpression[operator='-'][right.type!='Literal']:matches([left.type='CallExpression'][left.callee.property.name='now'][left.callee.object.name=/^(performance|Date)$/], [left.callee.property.name='bigint'][left.callee.object.property.name='hrtime'])
-BinaryExpression[operator='+'][left.callee.property.name='now'][left.callee.object.name=/^(performance|Date)$/][right.type='Literal'][right.value<10000]
-```
+`eslint.config.js` holds the selectors.
+`tests/test_timing_lint.test.ts` fixes the rejected and allowed forms.
 
 Deadlines of 10,000 ms or more, deadline comparisons, and literal timestamp
 offsets remain allowed. Examples include `performance.now() + 20_000`,
@@ -206,5 +188,14 @@ The lint message must name `docs/protocol/ci-test-timing.md`. Rule tests use
 
 ## Delivery Status
 
-Implemented. Required tests use deterministic assertions and the shared
-evidence helpers. The ESLint guard rejects the patterns above.
+The following rules are planned in
+[Deterministic Test Timing Review Fixes](../../plans/deterministic-test-timing-review-fixes.md):
+
+- Short per-attempt waits preserve retries inside loops with at least 10 seconds.
+- Playwright's default assertion timeout is 15,000 ms, with a 10,000 ms floor.
+- Shared polling waits use `waitUntil`, and Node product timers use mock timers.
+- Combined realpath counts keep root resolution fixed for metafiles and inventories.
+- The lint guard reads shared test roots and covers all stated clock forms.
+
+The other rules are implemented. Required tests use deterministic assertions,
+operation counts, duration text, and the existing lint guard.

@@ -49,8 +49,8 @@ and whether the operation itself is under test.
 Full-catalogue browser preparations share a five-minute setup budget in
 `tests/helpers/fixture_timing.ts`. Cold package/example builds, baseline
 exports, and ordinary publication fixtures use that budget independently of the
-default one-minute browser test timeout. Assertion deadlines and retries
-remain unchanged, worker counts follow [Test Concurrency](#test-concurrency),
+default one-minute browser test timeout. The setup budget does not change
+assertion deadlines or retries. Worker counts follow [Test Concurrency](#test-concurrency),
 and server readiness retains its own bound.
 
 Wrangler Pages fixtures pass port zero and adopt the exact readiness URL
