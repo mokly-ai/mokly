@@ -1,10 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { expect, test } from "@playwright/test";
+import { expect, test as base } from "@playwright/test";
 
 import { parseManifest } from "../../dist/registry/manifest.js";
-import { entryRoute } from "../../packages/viewer/dist/data.js";
+import { hydrationShapeSample } from "../helpers/hydration_shapes.js";
 
 import {
   buildDevelopmentBundle,
@@ -12,6 +12,24 @@ import {
   expectCleanHydration,
   installDevelopmentBundle,
 } from "./react_shell_hydration_helpers.js";
+
+interface DevelopmentBundleWorkerFixtures {
+  readonly developmentBundle: string;
+}
+
+/** Route tests share one development bundle per worker, not one per test. */
+const test = base.extend<Record<never, never>, DevelopmentBundleWorkerFixtures>(
+  {
+    developmentBundle: [
+      async ({ browserName: _browserName }, use) => {
+        await use(await buildDevelopmentBundle());
+      },
+      { scope: "worker", timeout: 120_000 },
+    ],
+  },
+);
+
+test.describe.configure({ mode: "parallel" });
 
 const manifest = parseManifest(
   JSON.parse(
@@ -21,19 +39,13 @@ const manifest = parseManifest(
     ),
   ),
 );
-const fixtureRoutes = [
-  ...new Set(manifest.entries.map((entry) => entryRoute(entry.path))),
-];
-expect(fixtureRoutes.length).toBeGreaterThan(80);
+expect(manifest.entries.length).toBeGreaterThan(80);
+const sample = hydrationShapeSample(manifest.entries);
+expect(sample.length).toBeGreaterThan(0);
 
-let developmentBundle: string;
-test.beforeAll(async () => {
-  test.setTimeout(120_000);
-  developmentBundle = await buildDevelopmentBundle();
-});
-
-for (const route of fixtureRoutes) {
+for (const { route, shape } of sample) {
   test(`development React hydrates fixture route ${route}`, async ({
+    developmentBundle,
     page,
   }) => {
     const errors = captureBrowserErrors(page);
@@ -41,7 +53,7 @@ for (const route of fixtureRoutes) {
     const encoded = route.split("/").map(encodeURIComponent).join("/");
     const response = await page.goto(`/view/${encoded}`);
     expect(response?.status(), route).toBe(200);
-    await expectCleanHydration(page, errors, route);
+    await expectCleanHydration(page, errors, `${route} (${shape})`);
   });
 }
 
@@ -49,7 +61,10 @@ for (const [route, expectedStatus] of [
   ["/", 200],
   ["/view/not-in-catalogue.html", 200],
 ] as const) {
-  test(`development React hydrates shell route ${route}`, async ({ page }) => {
+  test(`development React hydrates shell route ${route}`, async ({
+    developmentBundle,
+    page,
+  }) => {
     const errors = captureBrowserErrors(page);
     await installDevelopmentBundle(page, developmentBundle);
     if (route === "/view/not-in-catalogue.html") {

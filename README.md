@@ -301,8 +301,8 @@ generated output, and tests aligned.
 ## Develop Mokly
 
 For repository development, use the tested Node.js version in
-[`.node-version`](./.node-version), npm 11.7, Rust 1.95, and Chromium for the
-browser suite.
+[`.nvmrc`](./.nvmrc), npm 11.7, Rust 1.95, and Chromium for the browser suite.
+With nvm, run `nvm install` in the repository to install and use that version.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git
@@ -336,6 +336,17 @@ The planned [test assertion contract](./docs/protocol/ci-test-assertions.md)
 makes a unit test fail when it makes no assertion. Tests select catalogue
 entries through checked helpers. A moved or renamed spec must make its
 selection fail instead of leaving a test empty.
+
+Local test runs scale with the machine. Unit tests run half the available CPUs'
+worth of test files at once, never fewer than two, and the hydration suite uses
+half the CPUs as Playwright workers. Other browser runs use one worker. Set
+`MOKLY_UNIT_CONCURRENCY` or `MOKLY_PLAYWRIGHT_WORKERS` to a positive integer to
+choose a different value. Playwright worker N serves the example on port
+`MOKLY_PLAYWRIGHT_PORT` + N, and `MOKLY_PLAYWRIGHT_PORT` defaults to 4517:
+
+```bash
+MOKLY_PLAYWRIGHT_WORKERS=3 npm run test:browser
+```
 
 Pull request titles use Conventional Commits and at most 72 Unicode code points.
 The separate title check runs when a PR opens, changes, or receives a push; see

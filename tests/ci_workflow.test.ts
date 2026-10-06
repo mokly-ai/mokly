@@ -1,20 +1,41 @@
-/** Verify the CI job graph and native test entrypoints. */
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import path from "node:path";
 import test from "node:test";
 
 import { parse } from "yaml";
 
 import { TESTED_NODE_VERSIONS } from "../dist/cli/bootstrap.js";
 
-import {
-  assertFullHistoryCheckout,
-  assertPinnedActions,
-  setupNodeVersion,
-  workflowSource,
-  type Workflow,
-} from "./helpers/ci_workflow.js";
+import { repositoryRoot } from "./helpers/fixture.js";
 
 const [minimumTestedNode] = TESTED_NODE_VERSIONS;
+
+interface WorkflowStep {
+  name?: string;
+  run?: string;
+  uses?: string;
+  with?: Readonly<Record<string, unknown>>;
+}
+
+interface WorkflowJob {
+  if?: string;
+  name?: string;
+  needs?: readonly string[];
+  steps: readonly WorkflowStep[];
+  strategy?: {
+    "fail-fast"?: boolean;
+    matrix: Readonly<Record<string, readonly (string | number)[] | string>>;
+  };
+  "timeout-minutes"?: number;
+}
+
+interface Workflow {
+  concurrency: { "cancel-in-progress": boolean };
+  jobs: Readonly<Record<string, WorkflowJob>>;
+  on: Readonly<Record<string, unknown>>;
+  permissions: Readonly<Record<string, string>>;
+}
 
 test("every native Node test step loads the assertion guard after tsx", async () => {
   const workflow = parse(await workflowSource()) as Workflow;
@@ -218,3 +239,31 @@ test("CI shards complete verification behind one prerequisite", async () => {
   );
   assertPinnedActions(workflow);
 });
+
+async function workflowSource(): Promise<string> {
+  return await fs.readFile(
+    path.join(repositoryRoot, ".github/workflows/ci.yml"),
+    "utf8",
+  );
+}
+
+function assertPinnedActions(workflow: Workflow): void {
+  const actions = Object.values(workflow.jobs).flatMap((job) =>
+    job.steps.flatMap((step) => (step.uses ? [step.uses] : [])),
+  );
+  assert.ok(actions.length > 0);
+  for (const action of actions) assert.match(action, /@[a-f0-9]{40}$/);
+}
+
+function assertFullHistoryCheckout(job: WorkflowJob): void {
+  const checkout = job.steps.find((step) =>
+    step.uses?.startsWith("useblacksmith/checkout@"),
+  );
+  assert.ok(checkout);
+  assert.equal(checkout.with?.["fetch-depth"], 0);
+}
+
+function setupNodeVersion(job: WorkflowJob): unknown {
+  return job.steps.find((step) => step.uses?.startsWith("actions/setup-node@"))
+    ?.with?.["node-version"];
+}
