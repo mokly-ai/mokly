@@ -27,7 +27,66 @@ running concurrently in each shard.
 
 The two attribution files account for 807 s of 3492 s summed unit file time
 (23%). These figures describe the baseline only. Added files change later
-shard assignments. CI after figures and the control decision remain pending.
+shard assignments. The CI After section records the new layout and the decision
+to retain the single-change control.
+
+## CI After
+
+[PR run 37464638941](https://github.com/mokly-ai/mokly/actions/runs/37464638941)
+passed, including Required CI, for
+[draft PR #139](https://github.com/mokly-ai/mokly/pull/139). Unit reports record
+merge commit `1cb28f09`: branch head `f83efe0d` merged into main `f66c274d`.
+All four Node 22.14.0 reports completed successfully with no failures, skips,
+or cancellations. The baseline reports record `781da7ae` from run 37354719684.
+
+Durations below come from `observedFiles[].durationMs`, divided by 1000.
+Shard indices come from the reports; sorted file indices are zero-based.
+The new source-edit and committed-baseline files were part of the old library
+file. Their combined time must be compared with that original file's duration.
+
+| File                                              |              Before |   After | After shard (index) | After tests |
+| ------------------------------------------------- | ------------------: | ------: | ------------------- | ----------: |
+| `tests/design_library_attribution.test.ts`        |             615.1 s |  23.9 s | 2 (345)             |           2 |
+| `tests/component_design_attribution.test.ts`      |             192.1 s |  23.6 s | 3 (242)             |           1 |
+| `tests/design_library_source_edits.test.ts`       | In old library file |  87.4 s | 1 (348)             |           6 |
+| `tests/design_library_committed_baseline.test.ts` | In old library file |  47.7 s | 3 (346)             |           1 |
+| `tests/attribution_result_helpers.test.ts`        |         Not present | 0.012 s | 2 (77)              |           6 |
+
+The helper duration is 0.0 s when rounded to one decimal place (0.012 s shown
+above). The heaviest unit file is now `design_library_source_edits.test.ts` at
+87.4 s.
+
+Shard wall time comes from report `durationMs`. Summed file time is the sum of
+`observedFiles[].durationMs`; file count is that array's length; test count is
+the sum of `observedFiles[].tests`. All four shards run two files concurrently.
+
+| Shard | Period | Wall time | Summed file time | Files | Tests |
+| ----- | ------ | --------: | ---------------: | ----: | ----: |
+| 1     | Before |   690.7 s |         1201.0 s |   188 |  1071 |
+| 1     | After  |   305.2 s |          527.3 s |   192 |  1020 |
+| 2     | Before |   330.8 s |          552.4 s |   188 |   995 |
+| 2     | After  |   250.7 s |          424.5 s |   191 |  1076 |
+| 3     | Before |   290.5 s |          491.5 s |   188 |  1058 |
+| 3     | After  |   280.8 s |          476.0 s |   191 |  1042 |
+| 4     | Before |   768.0 s |         1246.6 s |   187 |  1090 |
+| 4     | After  |   330.5 s |          562.5 s |   191 |  1172 |
+
+Across shards, summed file time fell from **3491.5 s** to
+**1990.4 s**, a **1501.1 s** reduction. The observed inventory
+changed from 751 files / 4214 tests to 765 files / 4310 tests.
+The slowest shard fell from **768.0 s** to **330.5 s**, clearly below the
+baseline. The four attribution files account for **624.6 s** of the total
+reduction: **807.2 s → 182.6 s** (41.6% of the total drop).
+
+This is one run per side. Other files also ran faster:
+`example_baseline.test.ts` fell from 83.4 s to 34.2 s, and
+`publish_receiver_rejections.test.ts` fell from 64.7 s to 26.0 s. Part of the
+remaining drop likely comes from less CPU contention with the concurrent file
+and from runner variance. These reports do not separate those effects, so the
+full reduction must not be attributed only to this test restructure.
+
+**Control decision:** keep the single-change `tag-chip` control. The library
+attribution file takes 23.9 s in CI, below the plan's 60 s threshold.
 
 ## Local Baseline
 
@@ -126,7 +185,8 @@ All four files ran individually in sequence after the review corrections, with
 no other heavy work running. All ten tests passed. The library scenarios took
 244.537 s across the three files, versus 612.961 s before (60.1% less).
 All attribution scenarios took 277.228 s, versus 736.134 s before (62.3% less).
-These are summed isolated file times. CI shard wall times remain pending.
+These are summed isolated file times. The CI After section records shard wall
+times separately.
 
 ## Final Verification
 
@@ -173,8 +233,9 @@ The earlier complete-gate attempt failed at the audit. After the lockfile update
 and decision notes were committed, the single unqualified `cargo xtask check`
 ran on `e8369ec5` and passed end to end with exit code 0. The run used
 Node 22.14.0 and the installed Chrome channel. No suite filter or retry was used.
-CI timing, push, the control decision, PR status, and post-push review remain
-with the orchestrator. No push or PR was made.
+The orchestrator pushed `f83efe0d` and opened draft PR #139 after this local
+run. CI timing and the control decision are recorded above. The final push and
+post-push review remain with the orchestrator.
 
 ### Complete-Gate Measurement
 

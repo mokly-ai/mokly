@@ -1,6 +1,6 @@
 # Attribution Test Consolidation
 
-Status: Active
+Status: Active. [PR #139](https://github.com/mokly-ai/mokly/pull/139) is open as a draft.
 
 Restructure `tests/design_library_attribution.test.ts` and
 `tests/component_design_attribution.test.ts` so they keep every guarantee at a
@@ -392,8 +392,12 @@ PostCSS and development Tailwind both resolve 1.2.2 after a clean `npm ci`, and
 the live audit passes with the existing reviewed Braces exception. No new
 exception was added. The single unqualified `cargo xtask check` passed end to end
 on `e8369ec5`. The pull request description must flag the runtime dependency
-update for the user's review. See the measurement record for suite results and
-durations. CI measurements and the remaining delivery steps stay open below.
+update for the user's review; draft PR #139 already includes that flag and the
+approved removals. Required CI passed in run 37464638941 on merge commit
+`1cb28f09`. The library attribution file took 23.9 s, so its single-change
+control stays below the 60 s threshold. See the measurement record for suite
+results, CI shard timings, and the one-run comparison limits. The final push
+and post-push review stay open below.
 
 - [x] Apply the orchestrator's review corrections in follow-up commits.
   - [x] Separate same-file edits targeting different entries without adding a
@@ -410,17 +414,17 @@ durations. CI measurements and the remaining delivery steps stay open below.
       the baseline in `docs/reviews/attribution-test-consolidation.md`.
 - [x] Commit the recorded local timings without pushing.
 - [x] Run `cargo xtask check`.
-- [ ] Commit and push the branch. Wait for the CI run, then download the
+- [x] Commit and push the branch. Wait for the CI run, then download the
       `verification-unit-*` artifacts with
       `gh run download <run-id> --name verification-unit-node-22.14.0-shard-<n>`
       and record `durationMs` for the four files and the four shard wall
       times against 615 s, 192 s, and 768 / 691 / 331 / 290 s. If the heaviest
       shard is not clearly below the baseline, record the observed layout and
       the next heaviest files before closing the plan.
-- [ ] If `tests/design_library_attribution.test.ts` is above 60 s in CI,
+- [x] If `tests/design_library_attribution.test.ts` is above 60 s in CI,
       decide whether to drop the 13 s `tag-chip` control and record the
       decision in the measurement record.
-- [ ] Mark the plan status and record any approved removals in the PR
+- [x] Mark the plan status and record any approved removals in the PR
       description. Flag the lockfile-only source-map-js update for the user's
       review.
 - [ ] Run `git add -A`, commit with a Conventional Commits message, and push.
