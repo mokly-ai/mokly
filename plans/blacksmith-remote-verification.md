@@ -1,16 +1,12 @@
 # Blacksmith Remote Verification
 
-Status: Active. No pull request exists yet. Milestones 1 and 2 are complete.
-Milestone 3 is in progress. Workflow validation and the box package smoke
-check pass. The repository smoke check is blocked by advisories in `sharp`
-and `shell-quote`.
+Status: Active. Milestones 1 and 2 are complete; Milestone 3 remains blocked by the separate dependency fixes.
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
 Blacksmith key is available. Run it locally when no key is available. The key
 is the `BLACKSMITH_ORG_TOKEN` environment variable. The remote gate runs the
 same 11 commands as hosted CI on 11 boxes at the same time. Then it validates
-the same shard evidence. In the trial, it finished in about 10 minutes. The
-local gate runs the same suites one after another.
+the same shard evidence. The local gate runs the same suites one after another.
 
 This change covers xtask, verification scripts, one GitHub workflow and their
 documentation. It has no product UI or mockup work. The Conductor cloud
@@ -27,22 +23,7 @@ Contract owners:
 
 ## Trial Evidence
 
-The trial ran on 2026-10-06 with Blacksmith CLI 0.4.65. It used a
-dispatch-only workflow on the branch `calummoore/testbox-trial`, Node 22.14.0
-and the 2-vCPU runner tier. The CI times come from the green run
-[37390227144](https://github.com/mokly-ai/mokly/actions/runs/37390227144).
-
-| Measure                      | CI               | Testbox       |
-| ---------------------------- | ---------------- | ------------- |
-| Start to finish              | 13m33s           | 10m02s        |
-| Hydration suite (longest)    | 9m36s            | 8m36s         |
-| Slowest unit / browser shard | 7m14s / 8m26s    | 7m27s / 6m44s |
-| Box ready after warmup       | Not applicable   | 60–70 s       |
-| First sync of local changes  | Not applicable   | About 2 s     |
-| Runner minutes / cost        | About 75 / $0.30 | 129.9 / $0.52 |
-
-The local aggregate accepted all 9 reports with 5,444 test results. The
-repository suite failed for the same dependency advisory as `main`.
+Evidence: `.context/blacksmith-remote-verification/trial-evidence.md`.
 
 The design depends on these findings:
 
@@ -61,8 +42,8 @@ The design depends on these findings:
    new commits as uncommitted changes.
 5. `GITHUB_SHA`, `GITHUB_ACTIONS` and `CI` are not set in `testbox run`
    sessions.
-6. `blacksmith testbox stop` ends the GitHub run 15 seconds to 5 minutes
-   later. That delay was about 17% of the trial cost.
+6. `blacksmith testbox stop` does not end the GitHub run at once.
+   Cancel the GitHub run when `gh` is available.
 7. All 11 boxes became ready together. No box waited in a queue.
 8. The CLI sync fetches the local `HEAD` with
    `git fetch --no-tags --depth 50`. A local Git test showed that this fetch
@@ -213,16 +194,11 @@ valid. The fingerprint check covers the uncommitted changes.
 
 ## Prerequisites
 
-- The trial found advisory `GHSA-68fv-2mgg-jv7q` in `source-map-js` on
-  2026-10-06. The local live audit passed during Milestone 2. It now reports
-  `GHSA-wq5f-xc86-pv6w` in `sharp` and `GHSA-pqg4-j6r4-53mv` in `shell-quote`.
+- The live audit reports `GHSA-wq5f-xc86-pv6w` in `sharp` and
+  `GHSA-pqg4-j6r4-53mv` in `shell-quote`.
   Keep required dependency fixes in a separate change. The repository smoke
   test needs a passing live audit. Confirm the audit on `main` before
   Milestone 6.
-- Done on 2026-10-06: the Conductor cloud snapshot installs the Blacksmith
-  CLI. A new cloud workspace had CLI 0.4.65 in `/usr/local/bin`, `rsync`,
-  `openssh-clients`, no saved Blacksmith login and a working
-  `BLACKSMITH_ORG_TOKEN`.
 
 ## Milestone 1: Contract documentation — completed
 
@@ -246,13 +222,7 @@ Define the complete remote verification contract before any code changes.
       diff.
 - [x] Commit.
 
-Validation on 2026-10-06 used Node 22.14.0 and npm 11.7.0. `npm ci`,
-`npm run build`, `npm run example:build` and `npm run example:check` passed.
-Prettier formatting and checks passed. All 30 tests in the eight focused test
-files passed. The link test checked the new pages and their anchors.
-The first link test needed the ignored example output, so the example build
-created it. No authored example files changed. The diff contains only Markdown.
-This documentation-only work does not require `cargo xtask check`.
+Evidence: `.context/blacksmith-remote-verification/milestone-1-evidence.md`.
 
 ## Milestone 2: Fingerprint and suite wrapper scripts — completed
 
@@ -280,11 +250,7 @@ Add the two scripts that the boxes run. Nothing calls them yet.
       length audit and `cargo xtask check`. Record any existing gate blocker.
 - [x] Commit.
 
-The tests failed before implementation because both scripts were absent.
-All 59 focused tests pass on Node 22.14.0 and npm 11.7.0.
-ESLint, TypeScript, Prettier and command smoke checks pass.
-`cargo xtask check` passes with 4,368 unit tests, 844 browser tests and 263
-hydration tests. All 15 Rust tests pass. The source length audits pass.
+Evidence: `.context/blacksmith-remote-verification/milestone-2-evidence.md`.
 
 ## Milestone 3: Testbox workflow
 
@@ -314,34 +280,7 @@ Add the dispatch workflow and prove that it prepares a usable box.
 - [x] Record smoke durations, versions and run IDs. Update the delivery
       status. Commit and push the completed documentation.
 
-The six workflow tests failed before the workflow file existed.
-All 52 focused workflow and protocol tests pass. ESLint, TypeScript,
-Prettier, source audits and Clippy pass. Actionlint is not installed.
-`cargo xtask check` stops at the two dependency advisories listed above.
-The pinned checkout manifest declares `persist-credentials` as an input.
-
-### Smoke results
-
-The test used branch `calummoore/blacksmith-ci-remote-testing` at `5f33479b`.
-Blacksmith CLI 0.4.65 ran with automatic updates disabled.
-The box had Node v22.14.0, npm 11.7.0, Rust 1.95.0 and
-`PLAYWRIGHT_CHANNEL=chromium`.
-
-| Check                                                                                          | Result                                                   | Duration            |
-| ---------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------- |
-| Push validation, run [37491150327](https://github.com/mokly-ai/mokly/actions/runs/37491150327) | Passed in validation mode                                | 62 s                |
-| Warmup request                                                                                 | Box ID `tbx_01m48yt2kj9v8sy58s8y41k9dj`                  | 2.31 s              |
-| Box preparation, run [37491517281](https://github.com/mokly-ai/mokly/actions/runs/37491517281) | Ready                                                    | 60 s after dispatch |
-| Fingerprint and `HEAD` probe                                                                   | Both match the local checkout                            | 3.28 s              |
-| Repository suite                                                                               | Audit fails on `sharp` and `shell-quote`                 | 8.50 s              |
-| Repository history confirmation                                                                | History is complete during the suite; audit still fails  | 1.41 s              |
-| Package suite                                                                                  | Passed all six consumer scenarios                        | 173.99 s            |
-| Standalone repository ratchets                                                                 | All four pass; merge base and release tags are available | Not recorded        |
-
-The local fingerprint stayed unchanged through the smoke test.
-The box stopped. Its GitHub run completed with the requested cancellation.
-The CLI reports no active box. No remote contract rule changed.
-The repository smoke remains open until the separate dependency fixes land.
+Evidence: `.context/blacksmith-remote-verification/milestone-3-evidence.md`.
 
 ## Milestone 4: Explicit remote executor
 
