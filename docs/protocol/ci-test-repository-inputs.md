@@ -5,9 +5,9 @@ state. The example preview unit test copies the checked-out example and tooling
 into an isolated fixture repository, commits that fixture-owned baseline,
 applies one deterministic source edit and asserts its exact changed
 destinations and count. The browser suite's example server runs with
-`--base HEAD` and compares with the checked-out `HEAD`. A fixture repository may
-create and read its own remotes because those references are fixture-owned
-inputs inside the test tree.
+`--base HEAD` and compares with the checked-out `HEAD`; every worker's server
+uses that same command. A fixture repository may create and read its own
+remotes because those references are fixture-owned inputs inside the test tree.
 
 CI's package, unit, browser, and hydration jobs key npm's download cache from
 the checked-out `package-lock.json`. Their cache steps use local data: none

@@ -44,7 +44,8 @@ Ordinary preview fixtures may reuse their own setup only when preparation is
 not the test's operation.
 
 Keep `FULL_CATALOGUE_SETUP_TIMEOUT_MS = 600_000` unchanged. Keep assertion
-deadlines, workers, retries, sharding and the full gate unchanged. Removing
+deadlines, retries, sharding and the full gate unchanged. Preserve the
+[shared concurrency policy](./ci-suite-evidence.md#test-concurrency). Removing
 shared baseline setup does not remove baseline, lock, cancellation, source
 mutation or clean-install unit/integration coverage.
 

@@ -47,7 +47,7 @@ Complete branch work before review; merge remains the plan completion boundary.
 - [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md) to review the complete local diff against `origin/main`; report numbered, severity-rated findings with options/recommendations without changing the implementation.
 
 Implementation commit `e7d46d7` was pushed before the read-only review against
-`origin/main` (`5b4c647`). The [review report](../docs/reviews/publish-catalogue.md)
+`origin/main` (`5b4c647`). The [review report](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/publish-catalogue.md)
 records two P2 findings. The user approved fixing both after validation; the
 follow-up milestones below track that work. This plan stays active until merge.
 

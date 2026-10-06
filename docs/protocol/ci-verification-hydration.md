@@ -73,7 +73,9 @@ not report the document's own 404 as a console error.
 Playwright discovery time. It registers one test per representative with the
 title `development React hydrates fixture route <route>`. Each test keeps the
 normal Playwright deadline and the shared error assertions, so catalogue growth
-cannot exhaust a shared loop deadline.
+cannot exhaust a shared loop deadline. The spec runs these tests in Playwright
+parallel mode and builds the development bundle once per worker, as
+[Test Concurrency](./ci-suite-evidence.md#test-concurrency) defines.
 
 Each test opens `/view/<route>` with every path segment percent-encoded and
 requires status 200. It passes `<route> (<shape>)` as the failure context, so a

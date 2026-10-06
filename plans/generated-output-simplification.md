@@ -1781,7 +1781,7 @@ Evidence: `.context/generated-output-simplification/m22-final-validation.md`.
       and merge justifications under this plan's ignored evidence directory.
 - [x] Carry the warning-contract wording clarification into that integration;
       build warnings stay on stderr, while 18 A moves successful baseline notices.
-- [ ] Finish the pending gate and push through the user's additional main
+- [x] Finish the pending gate and push through the user's additional main
       integration below. Keep local merge `61a1ce3e` unchanged.
 - [x] Merge latest main once on top of `61a1ce3e` under the user's direct
       2026-10-06 instruction and decision 1 A. Capture both tips and the merge
@@ -1794,12 +1794,28 @@ Evidence: `.context/generated-output-simplification/m22-final-validation.md`.
 - [x] Restore the verified example-catalogue paragraph from `85f45a7b` while
       keeping every other main rule in `AGENTS.md`. Adapt the new audit to the
       generated tree and authored closure under the existing path contracts.
-- [ ] Run the full gate once on the combined tip. After it passes, commit
+- [x] Run the full gate once on the combined tip. After it passes, commit
       completion and push both local merges together. If main moves after this
       integration starts, report its new tip without merging again.
-- [ ] After the push, review the merge against `origin/main` using
-      `docs/implementation-review-prompt.md`; report numbered findings with
-      severities and recommendations without changing the implementation.
+- [x] After the passing gate and unchanged push of `61a1ce3e` and `e68c4dff`,
+      merge main once more under the user's latest-main instruction and
+      decision 1 A. Capture both tips and the merge base. Keep #147's review
+      rules, prompt and 33 deletions, the branch example paragraph, and the
+      #149/#150 documentation cleanup present at the captured tip. Repair any
+      relative link to a removed record without restoring it.
+- [x] Preserve #148's concurrency helpers, per-worker servers, parallel
+      hydration routes, worker-scoped bundle and every test. Combine its
+      all-server readiness with the branch's baseline setup and cleanup. Keep
+      the writer-only output lock and 600-second fixture limit. Record every
+      resolution and review exactly two parents, every remerge path and all
+      deletions before pushing.
+- [ ] Run the full gate because the captured tip includes #148 code/tests.
+      Commit and push only after it passes. Report later main movement without
+      another merge, then stop for the orchestrator's review.
+- [ ] After the push, the orchestrator reviews the merge against `origin/main`
+      using `docs/implementation-review-prompt.md`. Report severity, category,
+      effort, options and Auto-fix tags. Follow `AGENTS.md`'s review-fix rule
+      after the report. Keep findings 17 and 52 pending their existing user decisions.
 
 ### Current checkpoint and integration instructions
 
@@ -1957,6 +1973,33 @@ Merge justifications: `.context/generated-output-simplification/m23-142-146-just
 Validation: `.context/generated-output-simplification/m23-142-146-validation.md`.
 
 Remerge review: `.context/generated-output-simplification/m23-142-146-remerge-review.md`.
+
+### Review rules and latest-main integration
+
+The orchestrator directed one more main merge after the passing gate and push
+of `61a1ce3e` and `e68c4dff`, under the user's latest-main instruction and
+existing decision 1 A. At this step's fetch, main also included #149, #150 and
+#148. Preserve all four changes. The code and test changes require the full
+gate under the orchestrator's explicit validation rule.
+
+Keep #147's auto-fix eligibility, ask conditions, two-round limit, report rules,
+evidence storage and graceful handling. Keep the branch's verified example
+paragraph. Keep all 33 review records deleted and #149's removed historical
+spec deleted; preserve working history links. Keep #150's active dependency
+choices and all existing audit policy. #148 changes concurrency, while the
+600-second fixture deadline and all existing test deadlines/retries stay.
+Combine every worker's Serve readiness with this branch's current shared
+baseline setup, timing, environment restoration and cleanup. Plain Serve keeps
+compiled output in memory and takes no output write lock. Future fixture
+simplification stays in Milestone 27. The orchestrator owns the final review.
+
+Preservation record: `.context/generated-output-simplification/m23-147-preservation.md`.
+
+Merge justifications: `.context/generated-output-simplification/m23-147-justifications.md`.
+
+Validation: `.context/generated-output-simplification/m23-147-validation.md`.
+
+Remerge review: `.context/generated-output-simplification/m23-147-remerge-review.md`.
 
 ## Milestone 24: Shared watching and command output
 

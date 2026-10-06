@@ -15,6 +15,8 @@ import {
 import type { SharedExample } from "../helpers/shared_example.js";
 import { waitForInitialChanges } from "../helpers/watched_catalogue.js";
 
+import { exampleServerPorts } from "./example_servers.js";
+
 const environmentKeys = [
   VERIFICATION_OWNER_ID_ENV,
   VERIFICATION_PROCESS_REGISTRY_ENV,
@@ -26,6 +28,11 @@ const environmentKeys = [
 export default async function setup(
   config: FullConfig,
 ): Promise<() => Promise<void>> {
+  const ports = exampleServerPorts();
+  if (config.workers > ports.length)
+    throw new Error(
+      `Playwright runs ${config.workers} workers but starts ${ports.length} example server(s); set MOKLY_PLAYWRIGHT_WORKERS=${config.workers} instead of passing --workers`,
+    );
   const previous = new Map(
     environmentKeys.map((key) => [key, process.env[key]]),
   );
@@ -38,10 +45,12 @@ export default async function setup(
   let shared: SharedExample | undefined;
   try {
     await timeFixturePhase("browser-suite", "global-setup", false, async () => {
-      const url = config.projects[0]?.use.baseURL;
-      if (!url) throw new Error("The browser suite needs its example base URL");
       await timeFixturePhase("browser-suite", "serve-readiness", false, () =>
-        waitForInitialChanges(url, 180_000),
+        Promise.all(
+          ports.map((port) =>
+            waitForInitialChanges(`http://127.0.0.1:${port}`, 180_000),
+          ),
+        ),
       );
       shared = await prepareSharedExample();
       shared.signal.throwIfAborted();
