@@ -1,6 +1,7 @@
 # Deterministic Test Timing
 
-Status: Active. No PR is open yet. On 2026-10-06 the user chose option C:
+Status: Active. [PR #152](https://github.com/mokly-ai/mokly/pull/152) is
+open. On 2026-10-06 the user chose option C:
 convert every wall-clock limit in the required suites and add a guard against
 new ones. All seven milestones are complete. Six review findings under
 Milestone 7 await the user's decision.
