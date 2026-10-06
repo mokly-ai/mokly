@@ -1,0 +1,390 @@
+# Vacuous Test Prevention
+
+Status: Active; not started. Created 2026-10-06 with the user's consent after a
+report that four unit tests check nothing. The user chose four options: rewrite
+the empty checks with checked helpers, test-first; add a zero-assertion guard to
+the unit runner; add checked catalogue-selection helpers and a lint rule; and
+make no change to the review prompt.
+
+Make a test that checks nothing fail. A guard fails every unit test that makes
+no assertion. Checked helpers fail when a catalogue selection matches nothing,
+and a lint rule sends selections through them. Milestone 3 rewrites the nine
+checks that are empty today. Milestone 1 writes the contract into a new
+protocol page, `docs/protocol/ci-test-assertions.md`.
+
+## Background
+
+PR #131 (`c4138a0`, merged 2026-10-05) replaced entry ids such as
+`design-component-overview` with file-derived paths such as
+`design/components/overview`. It edited all seven affected test files. It
+updated the ids that made a test fail. It did not see the ids that made a test
+pass without checking anything: `entry.id === "design-review-dark-scheme"`
+became `entry.path === "design-review-dark-scheme"`.
+
+A filtered loop that matches nothing makes no assertion, and `node:test`
+reports the test as passed. An absence check on an id that cannot exist always
+passes. Nothing in the gate rejects either case.
+
+Measurements on 2026-10-06, with the example catalogue built from `f66c274`:
+
+- 0 of 210 manifest entries match `design-`, `design-component-`, or
+  `design-ui-`.
+- A prototype guard over all 762 unit test files failed 17 tests with zero
+  assertions: 7 runs of 5 empty test definitions, and 10 valid tests that only
+  complete without an error. No other test changed its result. Two timing tests,
+  `tests/postcss_dependency_review.test.ts` and
+  `tests/watch_postcss_scale.test.ts`, failed on the measurement machine with
+  and without the guard.
+- Four absence checks use ids that cannot exist. They assert, so the guard
+  cannot find them.
+- Copies of the five empty tests with current paths pass with real assertions.
+  No regression hid behind them.
+- A first prototype replaced methods on Node's `assert` object. On Node 22.14
+  this turned `assert.match` into `doesNotMatch`, because that release compares
+  its own function with the current `assert.match`. The guard therefore never
+  changes Node's `assert` object.
+
+## The Nine Empty Checks
+
+| Check                                                                       | Why it is empty                    | Replacement                                                                                                          |
+| --------------------------------------------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `tests/component_design_review.test.ts:14`, current-page links, two runs    | Filter `design-component-`         | `entriesUnder(manifest, "design/components", { kind: "screen" })`                                                    |
+| `tests/component_design_review.test.ts:37`, design-only footer, two runs    | Filter `design-component-`         | The same selection                                                                                                   |
+| `tests/design_modern_controls.test.ts:80`, legacy footer and view markup    | Filter `design-`                   | Screens and component variants under `design`                                                                        |
+| `tests/design_library_styles.test.ts:57`, ownership of implementation, CSS  | Filter `design-ui-`                | `entriesUnder(manifest, "design/library", { kind: "component", variants: "exclude" })`; the slug is the last segment |
+| `tests/design_appearance_variants.test.ts:204`, depicted previews           | Old ids in the list at `:24`       | The nine current paths below, read through `entriesAt`                                                               |
+| `tests/design_appearance_variants.test.ts:231`, removed fixed-theme screens | Old ids                            | `assertAbsent` for `design/browse/appearance/states/light-preview` and `.../states/dark-preview`                     |
+| `tests/design_screens.test.tsx:60`                                          | Old id `design-browse-tags`        | `assertAbsent(manifest, "design/browse/tags")`                                                                       |
+| `tests/design_appearance_controls.test.ts:69`                               | Old id `design-review-dark-scheme` | `assertAbsent(manifest, "design/changes/outcomes/dark-scheme")`                                                      |
+| `tests/design_library_inventory.test.ts:94`                                 | Old id `design-root`               | `assertAbsent(manifest, "design")`                                                                                   |
+
+The preview list maps each old `design-appearance-<name>` id to a path below
+`design/browse/appearance/`: `overview`, `states/auto`, `workspaces/props`,
+`workspaces/instance`, `status/loading`, `status/unavailable`,
+`workspaces/side-by-side`, `workspaces/difference`, and `status/flow`.
+
+A removed entry gets the path that it would have under file-path identity: the
+folder where `c4138a0` moved its siblings, plus its old name. For example,
+`design-review-changed` moved to `design/changes/outcomes/changed`, and
+`design-appearance-light-only` moved to
+`design/browse/appearance/states/light-only`. The two former collections,
+`design-root` and `design-browse-tags`, become the folder paths that they would
+occupy.
+
+## Decisions
+
+### Zero-assertion guard
+
+- `scripts/verification/assertion-guard.mjs` is the `--import` entry. Sibling
+  modules hold the resolve hook and the counting `assert` modules. Each file
+  stays under 300 lines.
+- `scripts/verification/unit-runner.mjs` passes
+  `--import tsx --import ./scripts/verification/assertion-guard.mjs` under both
+  policies. The three native-platform `node --test` steps in
+  `.github/workflows/ci.yml` pass the same flags. A direct run uses
+  `node --import tsx --import ./scripts/verification/assertion-guard.mjs --test <file>`.
+  A run without the guard is partial verification.
+- A resolve hook maps `node:assert`, `node:assert/strict`, `assert`, and
+  `assert/strict` to counting modules when a repository file outside
+  `node_modules` imports them. The counting modules import the real modules and
+  are not remapped. Each call of the default export or of an exported function
+  counts once. `AssertionError`, `Assert`, and `CallTracker` do not count.
+- Root `beforeEach` and `afterEach` hooks, registered before any test file
+  loads, open and close a frame for each test. A counted call adds one to every
+  open frame, so a parent test gets credit for its subtests. Assertions in the
+  test body, in its subtests, and in file `beforeEach` hooks count. Assertions
+  in `afterEach`, `after`, and `t.after()` callbacks do not count, because the
+  guard's `afterEach` hook runs first.
+- A test that closes with zero assertions fails with
+  `test made no assertions: <full test name>`.
+- Tests skipped by option, tests that call `t.skip()` or `t.todo()`, and todo
+  tests are exempt. The guard wraps the `skip` and `todo` methods of each test
+  context, because Node 22.14 does not run `afterEach` after a run-time skip.
+- A test that starts while a test that is not its ancestor is open fails with
+  `assertion guard needs sequential tests: <open test> is still running`. Node
+  runs the tests of one file sequentially by default, and no file opts out
+  today.
+- The guard acts only in the process that the test runner starts for a test
+  file. It records its process ID in an environment variable. A Node process
+  that a test forks with inherited `execArgv` sees the record of another process
+  and does nothing, so its stdout and exit code stay unchanged.
+- A failing assertion keeps its caller as the first stack frame. The counting
+  module removes its own frame from the stack.
+- A test whose claim is "completes without an error" states it with
+  `assert.doesNotThrow(...)` or `await assert.doesNotReject(...)`.
+- Playwright specs are out of scope. The helpers and the lint rule cover them.
+
+### Checked catalogue selection
+
+- `tests/helpers/catalogue_selection.ts` accepts any value with
+  `entries: readonly ManifestEntry[]`.
+- The selection helpers are preconditions. They throw `CatalogueSelectionError`
+  and never call `node:assert`, so a selection never counts as an assertion.
+  - `entryAt(manifest, path, kind?)` returns the entry at `path`. It throws when
+    the entry is missing or has another kind.
+  - `entriesAt(manifest, paths, kind?)` returns the entries in the given order.
+    It throws for a missing, duplicate, or wrong-kind path.
+  - `entriesUnder(manifest, folder, options?)` returns, in manifest order, the
+    entries whose path starts with `<folder>/`. The `kind` option is one kind or
+    a list. The `variants` option is `"include"` (default), `"exclude"`, or
+    `"only"`; an entry with `variantOf` is a variant. It throws when fewer than
+    `min` entries match; `min` defaults to 1.
+  - `entriesWhere(manifest, description, predicate, options?)` returns the
+    entries that satisfy `predicate`. It throws with `description` when fewer
+    than `min` entries match; `min` defaults to 1.
+- `assertAbsent(manifest, path)` is an assertion. It throws
+  `CatalogueSelectionError` when its anchor holds no entry. Then it asserts with
+  `node:assert/strict` that no entry has `path`. The anchor is the parent folder
+  of `path`, or `path` itself when `path` has no `/`. A live anchor proves that
+  the check still looks at a real area.
+- The helpers return the manifest's own entry objects, never copies.
+- Every error names the helper, the path or folder, the kind or variant filter,
+  and the match count.
+- The shared lookups use `entryAt`: `designDocument` in
+  `tests/helpers/design_catalogue.ts`, `componentParent` in
+  `tests/helpers/component_views.ts`, and the local `component()` in
+  `tests/design_modern_controls.test.ts`.
+
+### Lint rule
+
+`eslint.config.js` adds a `no-restricted-syntax` block for
+`tests/**/*.{ts,tsx}` and ignores `tests/helpers/catalogue_selection.ts`.
+`packages/viewer/tests` selects no catalogue entries and stays out of scope.
+Each message names the helper to use.
+
+1. Continue filter, Milestone 5:
+   `ForOfStatement[right.type='MemberExpression'][right.property.name='entries'] > BlockStatement > IfStatement:matches([consequent.type='ContinueStatement'], [consequent.type='BlockStatement'][consequent.body.length=1][consequent.body.0.type='ContinueStatement'])`.
+2. Prefix filter, Milestone 5:
+   `CallExpression[callee.object.property.name='entries'][callee.property.name=/^(filter|flatMap|find|findLast|findIndex|some|every)$/] CallExpression[callee.property.name=/^(startsWith|endsWith)$/][callee.object.property.name='path']`.
+3. Literal path, Milestone 6: the same selection calls, containing
+   `BinaryExpression[operator=/^[!=]==$/][left.property.name='path'][right.type=/^(Literal|TemplateLiteral)$/]`.
+
+Selectors 1 and 2 implement the approved rule without its false positives. An
+assertion such as `assert.ok(entry.path.startsWith(...))` and a filter on
+another `path` field stay allowed. Selector 3 goes beyond the approved rule. It
+sends literal-path lookups through `entryAt` and `assertAbsent`, so a future
+absence check cannot go stale silently. Milestone 6 holds selector 3 alone, so
+the user can drop it without changes to the other milestones.
+
+The rule sees syntax only. It does not see filters over arrays derived from
+`entries`, comparisons with variables, or content filters in inner loops. The
+guard still fails such a test when it makes no assertion.
+
+Measured on 2026-10-06: selectors 1 and 2 report 27 sites in 18 files.
+Milestone 3 rewrites 4 of them, which leaves 23 sites in 15 files for
+Milestone 5. Selector 3 reports 57 sites in 34 files. Milestone 3 rewrites 3 of
+them, which leaves 54 sites in 32 files for Milestone 6.
+
+## Milestone 1: Define the contract
+
+Write the guard, helper, and lint contracts into the documentation before any
+code changes.
+
+- [ ] Add `docs/protocol/ci-test-assertions.md` with the guard, the selection
+      helpers, the lint rule, and their limits, as decided above. Keep it under
+      250 lines. Set its Delivery Status to planned and link this plan.
+- [ ] Index the page in `docs/protocol/README.md` beside CI suite evidence.
+- [ ] Link the page from the Unit/integration and Repository rows of the gate
+      table in `docs/protocol/ci-verification.md`. Change only those table
+      rows, because the page has 247 of its 250 lines.
+- [ ] Add one paragraph to "Develop Mokly" in `README.md`: a unit test that
+      makes no assertion fails, and tests select catalogue entries through the
+      checked helpers.
+- [ ] Update the unit-suite text in `xtask/README.md`. In the test paragraph of
+      `examples/basic/README.md`, state that a moved or renamed spec makes a
+      test fail; it cannot leave the test empty.
+- [ ] Run `npx prettier --check` on the changed Markdown. Run
+      `tests/protocol_structure.test.ts`, `tests/protocol_doc_sizes.test.ts`,
+      and the guide tests. Review the diff.
+- [ ] Commit.
+
+## Milestone 2: Checked catalogue selection helpers
+
+Add the helpers and their tests. No existing test changes its behavior.
+
+- [ ] Add failing tests in `tests/catalogue_selection.test.ts` that use small
+      manifest literals:
+  - [ ] `entryAt`: a found entry, a missing path, and a wrong kind.
+  - [ ] `entriesAt`: the input order, and missing, duplicate, and wrong-kind
+        paths.
+  - [ ] `entriesUnder`: `design/components` does not match
+        `design/componentsx/a` or the folder's own entry; one kind and a list
+        of kinds; each `variants` value; the default `min` and a larger `min`.
+  - [ ] `entriesWhere`: a match, and too few matches with the description in
+        the message.
+  - [ ] `assertAbsent`: a present path raises `AssertionError`; an absent path
+        under a live anchor passes; a dead anchor raises
+        `CatalogueSelectionError`; a top-level path is its own anchor.
+  - [ ] Every helper returns the manifest's own objects.
+- [ ] Implement `tests/helpers/catalogue_selection.ts` with doc comments on
+      every export.
+- [ ] Route `designDocument`, `componentParent`, and the local `component()`
+      lookup through `entryAt`.
+- [ ] Run the new tests and every test file that imports a changed helper. Run
+      `npm run lint` and `npm run typecheck:prepared`.
+- [ ] Commit.
+
+## Milestone 3: Rewrite the nine empty checks, test-first
+
+Prove that each check is empty, then make it check the current catalogue.
+
+- [ ] Convert each check in the table to its helper, but keep the old id or
+      prefix. Run each file. Confirm that each converted check now fails with
+      `CatalogueSelectionError`. Record the failed test names in the commit
+      body.
+- [ ] Change each converted check to the current path in the table.
+- [ ] Run the seven changed files. Every test in them must pass.
+- [ ] Commit.
+
+## Milestone 4: Zero-assertion guard
+
+Fail every unit test that makes no assertion.
+
+- [ ] Add failing tests in `tests/verification_assertion_guard.test.ts`. Each
+      test starts Node with the guard flags and the repository reporter on a
+      fixture in `scripts/verification/_fixtures_/assertion-guard/`. Like
+      `tests/verification_process.test.ts`, it removes `NODE_TEST_CONTEXT` and
+      the guard's process record from the child environment. Then it reads the
+      event report. Cover these cases:
+  - [ ] A test without an assertion fails with the documented message. A test
+        with one passes.
+  - [ ] A subtest's assertion gives credit to its parent. A subtest without an
+        assertion fails.
+  - [ ] `describe` and `it` follow the same rules.
+  - [ ] A skip option, `t.skip()`, and a todo test do not fail the run, and the
+        tests after them still pass.
+  - [ ] `await assert.rejects(...)`, a direct `assert(value)` call, and an
+        import of `node:assert` each count.
+  - [ ] An assertion in a file `beforeEach` hook counts. An assertion only in
+        `afterEach` or `t.after()` does not.
+  - [ ] Concurrent sibling tests fail with the sequential message.
+  - [ ] `assert.match`, `assert.doesNotMatch`, and the `rejects` message
+        "Missing expected rejection" behave as they do without the guard.
+  - [ ] The first stack frame of a failing assertion is the fixture line.
+  - [ ] A Node child that a fixture forks with inherited `execArgv` keeps its
+        stdout and exit code.
+- [ ] Add a test to `tests/verification_entrypoints.test.ts` that the unit
+      runner loads the guard under both policies. Add a test to
+      `tests/ci_workflow.test.ts` that each native `node --test` step loads it.
+- [ ] Implement the guard modules as decided above.
+- [ ] Add the guard flag to `scripts/verification/unit-runner.mjs`, after
+      `tsx`, and to the three native steps in `.github/workflows/ci.yml`.
+- [ ] Make the ten tests that only complete without an error state that claim
+      with `assert.doesNotThrow` or `await assert.doesNotReject`:
+      `tests/baseline_timings.test.ts:97`,
+      `tests/build_gitignore_generated.test.ts:126`,
+      `tests/compatibility.test.ts:193`,
+      `tests/component_source_build.test.ts:118`,
+      `tests/export_module_references.test.ts:8`,
+      `tests/export_references.test.ts:27`,
+      `tests/export_references.test.ts:42`,
+      `tests/path_identity_review.test.ts:36`,
+      `tests/publication_input_confinement.test.ts:56`, and
+      `tests/verification_process_owner.test.ts:128`.
+- [ ] Run `npm run test:prepared` on the `.node-version` release and on Node
+      22.14.0, the CI minimum. If the guard fails another test, for example
+      after the Milestone 2 helper change, give that test an assertion that
+      states its claim. Both runs must pass. Record both suite durations, with
+      and without the guard, in the commit body.
+- [ ] Smoke test: add a temporary test file with one empty test, run
+      `npm run test:prepared`, and confirm the guard message and the failed
+      run. Then delete the file.
+- [ ] Commit.
+
+## Milestone 5: Lint prefix and continue filters
+
+Send catalogue selections through the checked helpers.
+
+- [ ] Add failing tests in `tests/eslint_catalogue_selection.test.ts` that call
+      `ESLint.lintText` with a `tests/` file path:
+  - [ ] Selectors 1 and 2 report each banned shape, including the braced
+        `continue` form, with the documented message.
+  - [ ] Helper calls, `entries.map`, an assertion on
+        `entry.path.startsWith(...)`, a `continue` in an inner loop, a loop over
+        `Object.entries(...)`, and a filter on another `path` field report
+        nothing.
+  - [ ] The helper module and files outside `tests/` report nothing.
+- [ ] Migrate the 23 remaining sites in 15 files to the helpers:
+      `tests/browser/component_design_fixture.ts`,
+      `tests/browser/design_comparison_eligibility.spec.ts`,
+      `tests/browser/design_library.spec.ts`,
+      `tests/component_design_attribution.test.ts`,
+      `tests/design_appearance_controls.test.ts`,
+      `tests/design_appearance_variants.test.ts`,
+      `tests/design_comparison_scrolling.test.ts`,
+      `tests/design_comparison_stacks.test.ts`,
+      `tests/design_component_comparison_states.test.ts`,
+      `tests/design_document_styles.test.ts`,
+      `tests/design_library_inventory.test.ts`,
+      `tests/design_library_usage.test.ts`, `tests/design_links.test.ts`,
+      `tests/design_links_inventory.test.ts`, and
+      `tests/design_screen_counts.test.ts`.
+- [ ] Add the ESLint block with selectors 1 and 2.
+- [ ] Run `npm run lint`, the changed unit test files, and the changed browser
+      specs with `npx playwright test <spec>`.
+- [ ] Commit.
+
+## Milestone 6: Lint literal path lookups
+
+This milestone extends the approved lint rule. Drop it if the user keeps the
+approved scope.
+
+- [ ] Extend the lint tests. Selector 3 reports a literal path compared with
+      `===` or `!==` in `find`, `some`, `filter`, and `every` calls on
+      `entries`. A comparison with a variable reports nothing.
+- [ ] Migrate the 54 sites in 32 files. A presence lookup becomes `entryAt`, an
+      absence check becomes `assertAbsent`, and a literal list becomes
+      `entriesAt`. When a migrated test then makes no assertion, add one that
+      states its claim. Today the sites are in
+      `tests/browser/design_library.spec.ts`,
+      `tests/browser/evidence_removed.spec.ts`,
+      `tests/browser/frame_adapter_fixture.ts`, `tests/build.test.ts`,
+      `tests/build_imported_styles_links.test.ts`,
+      `tests/catalogue_parent_title.test.ts`,
+      `tests/catalogue_projection.test.ts`,
+      `tests/catalogue_removed_previews.test.ts`, `tests/changes.test.ts`,
+      `tests/component_build.test.ts`,
+      `tests/component_fast_path_resources.test.ts`,
+      `tests/component_registry_validation.test.ts`,
+      `tests/component_rendering.test.ts`,
+      `tests/deleted_resource_classification.test.ts`,
+      `tests/design_library_usage.test.ts`, `tests/design_screens.test.tsx`,
+      `tests/entry_attribution.test.ts`, `tests/entry_discovery.test.ts`,
+      `tests/example_baseline.test.ts`,
+      `tests/example_imported_styles.test.ts`,
+      `tests/imported_asset_inputs.test.ts`, `tests/move_links.test.ts`,
+      `tests/page_model.test.ts`, `tests/public_exclusions.test.ts`,
+      `tests/removed_screen_previews.test.ts`, `tests/review.test.ts`,
+      `tests/review_basics.test.ts`, `tests/review_regressions.test.ts`,
+      `tests/server_changed.test.ts`,
+      `tests/server_changed_manifest.test.ts`,
+      `tests/server_route_scoped_bootstrap.test.ts`, and
+      `tests/watch_imported_assets.test.ts`.
+- [ ] Add selector 3. Run `npm run lint`, the changed unit test files, and the
+      changed browser specs.
+- [ ] Commit.
+
+## Milestone 7: Deliver and review
+
+Complete the required delivery sequence after validation passes.
+
+- [ ] Set the Delivery Status of `docs/protocol/ci-test-assertions.md` to
+      implemented.
+- [ ] Confirm that each remaining `"design-…"` literal in `tests/` names a
+      stylesheet, a fixture, or a baseline profile, not a catalogue entry.
+- [ ] Fetch `origin/main` and record the source tip. Audit main's additions
+      from the branch point. Merge one branch at a time, check the merge
+      parents and the remerge diff, and confirm that no file or feature on
+      `origin/main` is deleted without approval.
+- [ ] Run `cargo xtask check`. Fix every failure until it passes.
+- [ ] Run `git add -A`, commit with Conventional Commits, and push the branch.
+- [ ] After the push, review the complete local diff against `origin/main` with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+      Report each finding with a number, severity, plain explanation, impact
+      of doing nothing, lettered options, and a recommendation. Do not change
+      the implementation.
+
+## Post-merge follow-up (non-blocking)
+
+- Design a zero-assertion check for Playwright specs. Playwright has no
+  assertion counter, so the check needs its own design.
