@@ -161,9 +161,9 @@ and ends with a non-whitespace character, and contains no newline. Examples
 include `fix: preserve upload counts`, `chore(main): release 0.13.0` and
 `feat(publish)!: upload catalogue content deltas`.
 
-This type list is fixed. Its unit test checks that it covers the Conventional
-Commit examples in `AGENTS.md`; it does not derive policy from Git history or
-remote-tracking references.
+This type list is fixed. The unit test asserts the list directly; it does not
+derive policy from Git history, remote-tracking references, or the commit
+examples in `docs/dev/git.md`.
 
 An invalid title exits unsuccessfully and prints exactly:
 
