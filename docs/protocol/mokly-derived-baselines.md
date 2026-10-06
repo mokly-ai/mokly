@@ -101,7 +101,8 @@ index without requiring working-tree files; only its no-match exit status is
 accepted as empty evidence. Other Git failures remain `build-invalid`.
 Tracking is read from the Git index with NUL-delimited names, including both
 logical and physical output-root paths. Cache paths fail independently of the
-compiled route set. Diagnostics include `git rm --cached` and ignore rules.
+compiled route set. Diagnostics include `git rm --cached` and ignore rules,
+but no rule for a cache path, because the cache ignores itself.
 
 ### Head side
 

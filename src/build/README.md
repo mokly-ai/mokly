@@ -298,7 +298,10 @@ manifest rejection are tested with isolated consumers.
   must read the tree they wrote use `withOutputLock` with
   `writeLockedCompilation`; waiters reclaim only provably stopped holders.
   Release removes only the lock file and keeps `.mokly-cache/locks/`, so it
-  never races another writer that is creating its lock there.
+  never races another writer that is creating its lock there. Before each
+  acquisition, `config/cache_ignore.ts` creates `.mokly-cache/` and, unless it
+  is a symbolic link, its `.gitignore` when they are missing, so Git ignores the
+  cache in both modes.
 
 See [paths](../../docs/protocol/mokly-paths.md),
 [entry modules](../../docs/protocol/mokly-entry-modules.md),
