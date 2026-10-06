@@ -6,6 +6,8 @@ The active [Blacksmith remote verification plan](../../plans/blacksmith-remote-v
 defines this approved target. Explicit remote execution, the scripts and the
 Testbox workflow are implemented. Automatic remote selection and
 `cargo xtask executor` are pending. The default `auto` runs locally.
+The complete remote smoke check is blocked by box idle expiry.
+The idle timeout needs a contract decision.
 The [Testbox execution contract](./remote-verification-testbox.md) defines the
 workflow, commands, probe, suite wrapper and source-tree fingerprint.
 

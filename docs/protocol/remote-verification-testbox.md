@@ -10,6 +10,8 @@ and workflow are implemented. The wrapper selects `--executor local`.
 Workflow validation and the box package smoke check pass. The repository box
 smoke check is blocked by the live dependency audit. Automatic remote selection
 and `cargo xtask executor` are pending.
+The complete remote smoke check is blocked by box idle expiry.
+The idle timeout needs a contract decision.
 
 ## Workflow
 
