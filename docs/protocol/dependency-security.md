@@ -138,92 +138,46 @@ Do not use an override to replace an unpatched package. Document why it exists a
 the conditions for removing it. Audit every dependency category after an update;
 an old override is not proof that the current tree is clean.
 
+Record each hold below a compatible release with its reason and removal
+condition. Write locked versions as `` `package` X.Y.Z ``, or add "or newer"
+for a declared floor; `tests/dependency_security.test.ts` matches each one to
+a `package-lock.json` install.
+
+List only reviewed exceptions, overrides, exact pins and holds here, because
+later updates must respect them. Explain a one-time update in its pull request,
+and describe a runtime dependency's role in the protocol doc of the feature that
+uses it.
+
 The current maintenance choices are:
 
 - [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
   / CVE-2026-93687 affects `braces <=3.0.3`, with no patched release at review
   on 2026-10-03. The sole exception ends on 2026-11-03 UTC. Its exact dev-only
-  path is Metro File Map 0.84.6 → Micromatch 4.0.8 → Braces 3.0.3 at the three
-  top-level install locations above. Metro arrives through React Native peers
-  of development packages. Repository code does not run Metro and sends no
-  untrusted patterns to it. The tracking advisory records patched releases.
+  path is `metro-file-map` 0.84.6 → `micromatch` 4.0.8 → `braces` 3.0.3 at the
+  three top-level install locations above. Metro arrives through React Native
+  peers of development packages. Repository code does not run Metro and sends
+  no untrusted patterns to it. The tracking advisory records patched releases.
   Remove the record when Braces or Micromatch ships a fix that Metro resolves,
   or when Metro drops Micromatch. Re-run the live audit and complete gate after
   that dependency update. Remove a stale record; expiry requires removal or
   a new explicit risk review, not an automatic extension.
-- The runtime glob dependency is `minimatch` 10.2.6 or newer; the workspace
-  locks `brace-expansion` 5.0.12. A bounded behavioral regression checks total
-  padded output and preserves normal brace alternatives. The
-  [upstream advisory](https://github.com/advisories/GHSA-rgw5-rvv9-x895)
-  explains why the intermediate-allocation fix requires 5.0.9, not 5.0.8.
-- [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q)
-  / CVE-2026-93749 affects `source-map-js >=1.0.0 <1.2.2`: a huge section
-  offset in an indexed source map can block the event loop. Runtime `postcss`
-  and development `@tailwindcss/node` share one copy, and both accept `^1.2.1`.
-  The workspace therefore locks 1.2.2 as a lockfile-only update, with no
-  override or exception. Mokly disables PostCSS map output, so its builds did
-  not reach the blocking step. A bounded regression loads the copy that PostCSS
-  resolves. It keeps ordinary section offsets and rejects an offset line above
-  10,000,000.
-- [GHSA-pqg4-j6r4-53mv](https://github.com/advisories/GHSA-pqg4-j6r4-53mv)
-  affects `shell-quote >=1.8.4 <1.11.0`. React Devtools Core 6.1.5 accepts
-  `^1.6.1`, so the workspace locks 1.11.0 without an override or exception.
-  A bounded regression preserves ordinary words and comments and rejects line
-  terminators after a comment token. It quotes data without executing a shell.
-- React Native's compatible Metro 0.84 line is updated to 0.84.6, including its
-  coupled packages. The
-  [0.84.5 security fix](https://github.com/react/metro/releases/tag/v0.84.5)
-  removes `image-size` in favor of maintained parsers. Do not override the image
-  parser to another affected release or jump Metro compatibility lines just to
-  change the audit report.
-- Wrangler remains at 4.113.0 with its existing Miniflare/Workerd versions. The
-  `miniflare`-scoped overrides select `sharp` 0.35.5 for
-  [GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w)
-  and `undici` 7.29.1. Miniflare pins sharp exactly, so its override selects the
-  patched native image libraries. Remove each override when a deliberately
-  upgraded Wrangler/Miniflare version resolves a patched version without it and
-  passes the complete gate. These overrides do not apply to unrelated dependency
-  parents.
-- Compatible Browserslist, browser-baseline data, and Nano ID patches remain
-  lockfile-only updates; they do not add direct runtime dependencies.
-- The PostCSS CSS Modules plugins and `icss-utils` are runtime dependencies
-  for rename-only local selectors and exports. Their transitive
-  `postcss-selector-parser`, `cssesc`, `util-deprecate` and
-  `postcss-value-parser` dependencies are MIT or ISC; they do not evaluate
-  consumer code or choose browser targets. Consumer PostCSS packages still
-  run only in the isolated worker.
-  Mokly now declares `postcss-selector-parser` and `postcss-value-parser`
-  directly for its lazy rename-only verification. The lockfile deduplicates
-  each with the plugins' existing runtime copies.
-- Lightning CSS is a production dependency only for read-only stylesheet rule
-  analysis and transformer-only dependency inventory. Its
-  MPL-2.0 native packages and Apache-2.0 `detect-libc` dependency participate in
-  the workspace and packed-consumer audits. Retain every platform's optional
-  lockfile entry when updating it; ordinary Ubuntu and native macOS/Windows jobs
-  exercise the minimum Node 22.14 runtime, and the release-gated Ubuntu matrix
-  adds Node 24. Native binaries must remain installed; the Node package does not
-  automatically fall back to WASM. See the
-  [release platform contract](./npm-release.md#continuous-integration).
-- [`marked`](https://github.com/markedjs/marked) 18.0.14 is the production
-  CommonMark/GFM parser for Markdown documents. It is MIT licensed, pure
-  JavaScript, ESM compatible, and has no runtime dependencies. Its typed token
-  renderers support destination rewriting, escaped raw HTML, heading anchors
-  and fenced-code language classes without plugins. Front matter uses Mokly's
-  small pure grammar parser, not a YAML dependency. Both workspace and packed
-  consumer checks exercise the installed parser. Adding it leaves the existing
-  13 development-tree findings from GHSA-vfj7-8cjw-p6xm unchanged; it adds no
-  advisory. npm changed its downgrade suggestions to `fixAvailable: false`
-  for ten existing records; the affected versions, paths and advisory are unchanged.
-  The live audit remains mandatory. Marked adds no advisory; the only exception
-  is the reviewed Braces record above.
-- [`es-module-lexer`](https://github.com/guybedford/es-module-lexer) 3.0.2 is
-  the production parser for export's package-owned JavaScript import references.
-  Its MIT-licensed minimal ESM build decodes static and literal dynamic specifiers
-  without executing the scanned code. It has no runtime dependencies. Its inline
-  WebAssembly initializes synchronously on first use in Node, so export validation
-  keeps its synchronous API. The smaller JavaScript-only grammar avoids unneeded
-  TypeScript analysis. Workspace and packed-consumer checks exercise it; it adds
-  no advisory or exception to the reviewed Braces record above.
+- `wrangler` 4.113.0 stays exactly pinned with its existing Miniflare/Workerd
+  versions. It requires `esbuild` 0.28.1 exactly, so the lockfile nests that
+  copy under Wrangler until a Wrangler update accepts Mokly's esbuild release.
+  The `miniflare`-scoped overrides select `undici` 7.29.1 and `sharp` 0.35.5,
+  whose bundled native image libraries include the librsvg fix for
+  [GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w).
+  Remove each override when a deliberately upgraded Wrangler/Miniflare version
+  resolves a patched version without it and passes the complete gate. These
+  overrides do not apply to unrelated dependency parents.
+- `react-native-reanimated` 4.3.4 stays on its 4.3 line through a tilde range:
+  4.4 and later need `react-native-worklets` 0.9 or later, 4.7 needs React
+  Native 0.86, and the development `@firna/ui` 0.14 peer range ends below 0.86.
+  Lift the hold with a `@firna/ui` release that accepts both newer lines.
+- `@playwright/test` 1.61.1 stays locked. Playwright 1.62 and later exit with
+  status 1 when a reporter event write fails, but the wrapper test in
+  `tests/verification_wrapper.test.ts` expects the 1.61 status 0. Update that
+  test in a reviewed change before moving Playwright.
 
 ## Required Evidence
 
