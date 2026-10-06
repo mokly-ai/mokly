@@ -430,6 +430,8 @@ telemetry and forces release builds from the first Turbo use.
       gate on the integrated tree. Keep the original before-script evidence.
 - [x] Fix review finding 7: pass `MOKLY_DIAGNOSTIC` through strict-mode tasks,
       document it, and add the failing configuration regression before the fix.
+- [x] Fix review finding 10: mark local task caching, forced release builds,
+      and hosted telemetry opt-out as delivered in the index and CI contract.
 - [ ] Before merge, verify hosted workflow behavior after a PR exists. Confirm
       telemetry/local-only settings, release force behavior, and native macOS
       and Windows binary installation and execution. The Linux workspace cannot

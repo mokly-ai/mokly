@@ -37,8 +37,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   - [Development hydration coverage](./ci-verification-hydration.md) — one
     route per entry shape and the generated resource audit.
 - [CI workflow graph](./ci-workflow.md)
-- [CI task cache](./ci-remote-cache.md) — planned task graph, restore rules,
-  workflow delivery, and developer credentials.
+- [CI task cache](./ci-remote-cache.md) — implemented local task graph and
+  restore rules; planned remote workflow delivery and developer credentials.
   - [CI remote cache Worker](./ci-remote-cache-worker.md) — planned API, R2
     storage, deployment, and provisioning contract.
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard

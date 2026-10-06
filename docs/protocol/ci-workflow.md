@@ -134,6 +134,10 @@ report completeness, caching, and failure semantics. The
 [release verification evidence contract](./npm-release-evidence.md) defines when
 the dual-runtime aggregate can prove an immutable release tree.
 
+Release jobs force task execution with `TURBO_FORCE=true`, use
+`TURBO_CACHE=local:rw`, and have no remote credentials. CI, preview, and release
+workflows set `TURBO_TELEMETRY_DISABLED: "1"` at workflow scope.
+
 ## Planned Cached Preparation
 
 The [task cache contract](./ci-remote-cache.md#cache-correctness-and-ci-delivery)
@@ -150,9 +154,7 @@ when both values exist. Empty secrets leave both variables unset and select
 local cache only; forks therefore build independently in each job.
 Read-only developer clients select `local:rw,remote:r`. Tests, audits, installs,
 capture, deployment, and report validation remain outside task caching.
-Release jobs force builds and have no remote credentials. Eligible preview
-builds can read and write; native jobs remain local. Set telemetry opt-out in
-CI, preview, and release workflows when local task caching first lands.
+Eligible preview builds may read and write; native jobs remain local.
 
 `Required CI` adds `prepare` to its prerequisites and requires its exact success.
 The ordinary nine-report and Release Please eighteen-report aggregates remain
