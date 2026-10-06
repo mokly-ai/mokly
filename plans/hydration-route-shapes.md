@@ -2,10 +2,10 @@
 
 Status: Active. Created 2026-10-05. On 2026-10-05 the user approved option C:
 hydrate one route per entry shape instead of every example route, and add an
-audit of generated resource references. All five milestones are complete.
-[PR #142](https://github.com/mokly-ai/mokly/pull/142) is open, and its CI run
-passed every job. The plan stays Active until the pull request merges. Four
-review findings await the user's decision.
+audit of generated resource references. Milestones 1 to 5 are complete.
+[PR #142](https://github.com/mokly-ai/mokly/pull/142) is open. Milestone 6
+moves this plan's evidence logs out, as #137 requires. The plan stays Active
+until the pull request merges. Four review findings await the user's decision.
 
 ## Outcome
 
@@ -35,36 +35,16 @@ Contract owners:
 - [CI suite evidence](../docs/protocol/ci-suite-evidence.md).
 - [Local verification](../xtask/README.md).
 
-## Evidence
+## Decision
 
-These values were measured at `c4138a0`. `main` at `781da7a` changes no viewer
-or example code.
+The route only selects which entry the shell shows, and every route runs the
+same shell modules. A code coverage measurement of all routes showed that a
+small sample of routes runs all the shell code that the full route list runs
+during hydration. The user therefore approved option C on 2026-10-05: hydrate
+one route per entry shape. The [shape rule](#shape-rule) refines the measured
+sample, so that new data features create new shapes.
 
-- **CI time:** the route spec takes about 350 s per run. This is the sum of the
-  per-test medians over five Node 22.14 runs. On `main` run
-  [37305081457](https://github.com/mokly-ai/mokly/actions/runs/37305081457),
-  the hydration job took 519 s and was the longest job. The next job was unit
-  shard 1 at 485 s.
-- **Code coverage:** one local run recorded Chrome block coverage of the
-  development shell bundle for all 212 routes. The appendix gives the method.
-  Together, the routes run 889 shell functions and 253,698 non-whitespace code
-  characters. Every route runs 411 of these functions. A 32-route sample ran
-  100% of both. That sample took one route for each combination of kind, base
-  or variant, colour schemes, control kinds, slots, component instances,
-  slotted instances, tags and related docs, plus the home and missing routes.
-- **This rule:** the [shape rule](#shape-rule) refines the 32-route rule. It
-  gives 51 shapes, so the spec registers 53 tests, which take an estimated 77 s
-  in CI. Its sample contains every route of the 32-route sample, so it keeps
-  100% of the measured code. The extra dimensions make new data features create
-  new shapes. The 32-route rule ran the `rationale` text and the number-prop
-  formatting code only because a selected entry happened to have that data.
-- **Suite size:** the hydration suite drops from 263 to 104 tests: the 53 route
-  tests plus the 51 tests in the other hydration specs.
-- **Frames:** a probe confirmed that a failed resource load inside a
-  `sandbox="allow-same-origin"` frame reaches the page console. Today's sweep
-  therefore also fails on a missing mockup asset. The generated example output
-  has 465 HTML files and 35 stylesheets. They contain 6,056 local stylesheet
-  links, 2 image sources and 4 stylesheet `url()` references. None is missing.
+Planning measurements: `.context/hydration-route-shapes/planning.md`.
 
 ## Shape Rule
 
@@ -138,8 +118,7 @@ check them.
 The user approved these removals with option C on 2026-10-05. List them in the
 pull request description.
 
-- The route tests for entries that are not shape representatives: 159 of 210
-  at `c4138a0`. Milestone 4 records the current number.
+- The route tests for the 159 entries that are not shape representatives.
 - The rule "one browser test per unique generated catalogue route" in
   `docs/protocol/ci-verification.md`, and the acceptance wording "every fixture
   route" in `docs/protocol/mokly-viewer.md`.
@@ -255,11 +234,7 @@ that this protection never stops.
       file. Then run `npm run example:build` to restore the output.
 - [x] Run the new tests, ESLint on the changed files and `npm run typecheck`.
 
-Evidence: the example audit read 465 HTML files and 6,056 stylesheet links
-with no failures in about 4 s. After the generated
-`mokly-generated/styles/examples/basic/specs/example/screens/welcome.mockup.ts.css`
-was deleted, the test failed and named that file for each Welcome view.
-`npm run example:build` restored it, and the test passed again.
+Evidence: `.context/hydration-route-shapes/milestone-3.md`.
 
 ## Milestone 4: Hydrate one route per shape
 
@@ -289,91 +264,31 @@ Change the route spec and its inventory test to use the shape sample.
         the element fails with a hydration error that names its shape, and that
         the other tests pass; and
   - [x] revert the change, and confirm that the diff does not contain it.
-
-Evidence: the inventory test passes, and Playwright lists 53 route tests (51
-shapes plus the two shell routes). The route spec passed 53 of 53 locally in
-6.0 min; this VM ran each test in 3–9 s, about four times slower than CI. The
-probe added `data-hydration-probe` to the saved-variants bar, which only
-component workspaces render. All 36 component representatives failed with
-React's attribute mismatch error, and each message named its route and shape.
-The other 17 tests passed. The probe is reverted.
-
 - [x] Do the [coverage comparison](#appendix-coverage-comparison-method) again
-      on the current catalogue. Record the route counts and the function and
-      character totals in this plan. If the sample misses a function or a
-      character, stop. Extend the shape key in the protocol doc first, then the
-      helper and its tests, and measure again.
+      on the current catalogue, and record the route counts and the function
+      and character totals. If the sample misses a function or a character,
+      stop. Extend the shape key in the protocol doc first, then the helper and
+      its tests, and measure again.
+- [x] Run `cargo xtask check --suite hydration`, and record the test count and
+      the duration.
 
-Evidence: on 2026-10-06 the full list had 212 routes and the sample had 53
-routes (51 shapes plus the two shell routes). The full list ran 889 functions
-and 253,691 non-whitespace code characters. The sample ran all 889 functions
-and all 253,691 characters, so it missed none. One route's first measurement
-failed in the script's extra HTML fetch (`ECONNRESET`), not in hydration; a
-repeat of that route succeeded.
-
-- [x] Run `cargo xtask check --suite hydration`. Record the test count and the
-      duration in this plan.
-
-Evidence: `cargo xtask check --suite hydration` passed all 104 tests on Node
-24.21.0 in 13m03s, including preparation; the test run took 11m11s. The route
-spec took 338 s for its 53 tests on this VM. The same VM ran each route test
-about four times slower than CI, so the CI estimate of about 77 s still
-stands. Before the change, CI spent about 350 s on 212 route tests.
+Evidence: `.context/hydration-route-shapes/milestone-4.md`.
 
 ## Milestone 5: Verify and deliver
 
 Run the complete gate, deliver the branch, and review it. Do not apply review
 findings.
 
-- [x] Merge `origin/main` (`f66c274d`, #124) before the complete gate. The
-      merge `ae35bc2f` has two parents, no conflicts and an empty remerge diff.
-      #124 edits `docs/protocol/README.md` and `docs/protocol/ci-verification.md`
-      in other sections, so both sides stay intact. #124 changes no viewer or
-      example code, so the coverage evidence above stays valid.
-- [x] The live dependency audit at the start of `cargo xtask check` reported a
-      new high advisory, GHSA-68fv-2mgg-jv7q, in `source-map-js` 1.2.1, which
-      `postcss` and `@tailwindcss/node` install. `npm update source-map-js`
-      moved the lockfile to the patched 1.2.2, and `npm run dependencies:check`
-      passes. Commit this lockfile change separately as `fix(deps)`.
-- [x] Merge `origin/main` again before the pull request opens: `ad2b3ece`
-      (#140) and `80ceb445` (#141). The merge `4b2d9258` has two parents, no
-      conflicts and an empty remerge diff. #140 makes the same
-      `source-map-js` 1.2.2 lockfile change as `ed1ee4b0`, so
-      `package-lock.json` merges to identical content and leaves the branch
-      diff; `ed1ee4b0` now has no net effect. #141 renames `.node-version` to
-      `.nvmrc`, so this plan's two references to the Node version file now
-      name `.nvmrc`. Neither commit changes viewer or example code, so the
-      coverage evidence above stays valid.
-- [x] Run `cargo xtask check` and require a 100% pass rate. CI confirmed it:
-      run [37475751439](https://github.com/mokly-ai/mokly/actions/runs/37475751439)
-      on PR #142 at `99661ee0` passed every job, including `Required CI`.
-
-CI evidence: the Hydration job took 264 s. It took 596–597 s on the two
-`main` runs before this pull request (`ad2b3ece` and `80ceb445`) and 519 s at
-`c4138a0`. It is no longer the longest job. The change saves about 5.5
-runner minutes per run against the latest `main` runs. The wall time changes
-little: the slowest unit shard now sets it, and that shard took 595 s on
-`main` and 603 s in this run.
-
-Local result on 2026-10-06 for the merged tree on Node 24.21.0: this VM runs
-tests about four times slower than CI, and no single local run reached 100%.
-The CI run on the pull request must confirm the pass rate.
-
-- The repository and package suites passed.
-- The unit suite passed 4,348 of 4,350 tests in 70 min. Two tests timed out
-  under load: `plain Serve with piped stdin exits promptly on SIGINT`
-  (`tests/cli_shortcuts.test.ts`) and
-  `watched controls adopt only successful graphs and never publish edits or delay Browse`
-  (`tests/component_controls_watch.test.ts`). Both files passed when run
-  alone, in 3.6 s and 17.2 s.
-- The gate stops at the first failed suite, so the browser suite ran next with
-  `cargo xtask check --suite browser`. It passed 830 of 844 tests. The shared
-  ordinary-preview fixture exceeded its 300 s setup limit, so 2 tests timed
-  out and 12 were skipped in `preview_design_links.spec.ts` and
-  `preview_navigation.spec.ts`.
-  With the limit raised temporarily, and not committed, all 14 passed.
-- `cargo xtask check --suite hydration` passed all 104 tests in 8m30s.
-
+- [x] Merge `origin/main` (#124) before the complete gate.
+- [x] Fix the high advisory GHSA-68fv-2mgg-jv7q in `source-map-js` 1.2.1, which
+      the live dependency audit reported: update the lockfile to 1.2.2 in a
+      separate `fix(deps)` commit. #140 later made the same change on `main`.
+- [x] Merge `origin/main` again before the pull request opens (#140 and #141).
+      #141 renames `.node-version` to `.nvmrc`, so update this plan's
+      references to the Node version file.
+- [x] Run `cargo xtask check` and require a 100% pass rate. The local VM timed
+      out on tests that this change does not touch, so the CI run on PR #142
+      confirmed the pass rate.
 - [x] Before the commit, inspect the diff and the deletions against
       `origin/main` with `git diff --name-status origin/main` and
       `git diff --diff-filter=D --name-status origin/main`. Confirm that the only
@@ -381,49 +296,52 @@ The CI run on the pull request must confirm the pass rate.
 - [x] Run `git add -A` and commit the work with a Conventional Commit. Inspect
       `git diff --name-status origin/main..HEAD` again. Push the branch with
       every new file tracked. List the approved removals in the pull request
-      description. Pushed as `ed1ee4b0` (`fix(deps)`) and `e93f7aff` (`test`).
-      The diff against `origin/main` has no deletions. The `e93f7aff` commit
-      message lists the approved removals. PR #142 opened on 2026-10-06, and
-      its description lists the approved removals and the decisions of both
-      merges from `main`.
+      description.
 - [x] After the push, use `docs/implementation-review-prompt.md` to review the
       complete diff against `origin/main`. Report numbered findings with a
       severity, the impact, lettered options and a recommendation. Do not
       change the implementation.
 
-Review outcome: an independent read-only review found four findings. They
-await the user's decision, and nothing was changed.
+Review summary: four findings await the user's decision.
 
-1. Medium: the sample keeps full coverage partly by chance, and nothing
-   measures it again. The shape key reads only the entry's own data, but the
-   shell also renders data from other entries, such as the Variants row of a
-   screen that has variants. In 8 of the 51 shapes, other members run 39
-   functions that their representative does not run; other representatives
-   cover them today. Neither screen that has variants is a representative.
-   Representatives can change when entries change, and the protocol requires
-   a new measurement only when the shape key changes. Recommended: commit the
-   coverage comparison as a tool and run it automatically outside the pull
-   request path, and correct the protocol wording.
-2. Low: the build already rejects missing, escaping and root-absolute
-   resource targets, and the audit uses a different URL rule from the shared
-   Resource URL Classification for protocol-relative and `about:` values.
-   Recommended: use `classifyResourceUrl` in the audit and name the build
-   check in the protocol doc.
-3. Low: some new assertions cannot fail, such as the inventory test's
-   per-entry representative check, and the `kind` test case also changes
-   other properties. Recommended: replace them with property-order and
-   isolated `kind` tests.
-4. Low: the protocol doc gives 889 and 411 functions for the 210 entries, but
-   those totals include the home and missing routes. The 210 entry routes ran
-   875 functions, and every entry route ran 507. The doc also says that the
-   helper reads the manifest file, but the callers read it. Recommended:
-   correct both sentences.
+1. Medium: nothing measures the sample's coverage again after viewer or
+   catalogue changes. Recommended: run the coverage comparison automatically.
+2. Low: the audit's URL rule differs from `classifyResourceUrl`, and the build
+   already rejects missing targets. Recommended: use `classifyResourceUrl`.
+3. Low: some new assertions cannot fail. Recommended: add property-order and
+   `kind`-only tests.
+4. Low: two sentences in the new protocol doc are wrong. Recommended: correct
+   them.
+
+Evidence and the full review report:
+`.context/hydration-route-shapes/milestone-5.md`.
+
+## Milestone 6: Follow the plan evidence rule
+
+`main` gained #137 after PR #142 opened: plans must not hold evidence logs.
+Move this plan's logs to `.context/hydration-route-shapes/`. Change only this
+plan file.
+
+- [x] Merge `origin/main` (#137) into the branch.
+- [x] Move the planning measurements, the milestone evidence, the merge
+      records, the gate results and the full review report to
+      `.context/hydration-route-shapes/`. Keep one line per milestone that
+      names its file.
+- [x] Run `npx prettier --check` on the plan. Inspect the diff and the
+      deletions against `origin/main`.
+- [ ] Run `git add -A`, commit with a Conventional Commit, and push. Add the
+      #137 merge decision to the pull request description.
+- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
+      complete diff against `origin/main`. Report numbered findings with a
+      severity, the impact, lettered options and a recommendation. Do not
+      change the implementation.
+
+Evidence: `.context/hydration-route-shapes/milestone-6.md`.
 
 ## Post-merge follow-up (non-blocking)
 
 - Record the hydration job duration of the first `main` CI run after the merge.
-  Compare it with the 596–597 s of the last `main` runs before the merge, and
-  with the 264 s of the pull request run.
+  Compare it with the CI results in the PR #142 description.
 
 ## Appendix: Coverage Comparison Method
 
