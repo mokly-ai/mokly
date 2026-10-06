@@ -217,33 +217,33 @@ tests change. Documentation-only; validate the Markdown and review the diff.
       `node --import tsx --test tests/protocol_doc_sizes.test.ts tests/protocol_doc_history.test.ts`,
       and review the diff.
 
-## Milestone 2: Result projections and one fixture per file
+## Milestone 2: Result projections and one fixture per file (completed)
 
 Pure helpers that make the single-pass assertions readable, plus their own
 fast tests. No attribution test changes yet; the repository stays green.
 
-- [ ] Add `tests/helpers/attribution_result.ts` with documented pure
+- [x] Add `tests/helpers/attribution_result.ts` with documented pure
       projections over `ReviewResultV5`: `changedEntryPaths(result)`,
       `reasonsOf(result, path)`, `impactingIds(result)`,
       `screenConsumersOf(result, changedComponentId)`,
       `usageVariantsOf(result, changedComponentId, consumerPath)`,
       `usageChainsOf(result, changedComponentId, consumerPath)`, and
       `stylesheetScope(result, stylesheetPath)`. Keep it under 300 lines.
-- [ ] Add `manifestScreenConsumers(manifest, componentId)` beside those
+- [x] Add `manifestScreenConsumers(manifest, componentId)` beside those
       projections; it replaces the inline `generatedViews` loop in the test.
-- [ ] Add `tests/helpers/design_stylesheets.ts`: the nine shared stylesheet
+- [x] Add `tests/helpers/design_stylesheets.ts`: the nine shared stylesheet
       records with their expected screen and component counts, the library
       stylesheet path helper, and the two marker rules as named constants with
       a doc comment that `body` is a kept global selector.
-- [ ] Add `tests/attribution_result_helpers.test.ts`: unit tests of every
+- [x] Add `tests/attribution_result_helpers.test.ts`: unit tests of every
       projection against a small hand-built v5 result with two changed
       components, a nested consumer chain, a screen consumer, and two
       stylesheet reasons. No compilation; it must run in well under a second.
-- [ ] Document in `tests/helpers/design_library_fixture.ts` that a test file
+- [x] Document in `tests/helpers/design_library_fixture.ts` that a test file
       passes the module-level `after` hook from `node:test` to share one
       fixture across its top-level tests, and keep the `t.after` form for
       single-test use. Keep the file under 300 lines.
-- [ ] Run the new helper tests and both unchanged attribution files; all pass.
+- [x] Run the new helper tests and both unchanged attribution files; all pass.
 
 ## Milestone 3: One pass for the sixteen library stylesheets
 

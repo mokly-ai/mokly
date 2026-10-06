@@ -15,7 +15,12 @@ import type { ReadOnlyReviewRepository } from "../../dist/review/repository.js";
 import { copyExampleSources } from "./example_sources.js";
 import { repositoryRoot } from "./fixture.js";
 
-/** Copy the actual consumer so source-edit tests never mutate the working catalogue. */
+/**
+ * Copy the actual consumer so edits never mutate the working catalogue.
+ * Share one fixture across a file with `designLibraryFixture({ after })`,
+ * using the module-level `after` hook from `node:test` for file teardown.
+ * Pass `t` to `designLibraryFixture(t)` for a single test's lifetime instead.
+ */
 export async function designLibraryFixture(
   t: { after(fn: () => Promise<void>): void },
   mode?: "committed" | "derived",
@@ -82,8 +87,8 @@ export async function designLibraryFixture(
     );
     const read = async (_commit: string, file: string) => {
       const contents = files.get(file);
-      assert.notEqual(contents, undefined, file);
-      return Buffer.from(contents!);
+      assert.ok(contents !== undefined, file);
+      return Buffer.from(contents);
     };
     return {
       evidence: {
@@ -131,14 +136,15 @@ export async function designLibraryFixture(
   };
 }
 
+/** Read compiled documents and captured stylesheet bytes without disk reads. */
 export function snapshotReader(
   compilation: Compilation,
   resources: ReadonlyMap<string, string>,
 ) {
   const read = async (file: string) => {
     const value = compilation.outputs.get(file) ?? resources.get(file);
-    assert.notEqual(value, undefined, file);
-    return generatedBytes(value!);
+    assert.ok(value !== undefined, file);
+    return generatedBytes(value);
   };
   return {
     read,

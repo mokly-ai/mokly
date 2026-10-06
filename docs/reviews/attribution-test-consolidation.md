@@ -70,3 +70,12 @@ operation and single-edit evidence used to approve the grouping.
 
 Record intermediate file timings here. Final measurements run all four files
 individually, one after another, with no other heavy work running.
+
+| Step                                 | File or check                                |  Duration | Result                   |
+| ------------------------------------ | -------------------------------------------- | --------: | ------------------------ |
+| Helper verification                  | `tests/attribution_result_helpers.test.ts`   |   0.220 s | 6 passed; no compilation |
+| Unchanged current-merge verification | `tests/design_library_attribution.test.ts`   | 612.961 s | 33 passed                |
+| Unchanged current-merge verification | `tests/component_design_attribution.test.ts` | 123.173 s | 10 passed                |
+
+The unchanged files ran individually in this session after the merge. These
+verification runs do not replace the approved previous-session before figures.
