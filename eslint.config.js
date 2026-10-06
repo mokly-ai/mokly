@@ -7,6 +7,27 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 const gitignorePath = path.join(import.meta.dirname, ".gitignore");
+const postcssBoundary = "src/build/styles/postcss_boundary.ts";
+const postcssBoundaryMessage = `Parse and process CSS through ${postcssBoundary}, which disables PostCSS source maps.`;
+// esquery regular expressions cannot contain "/", so \u002F matches it. A
+// later no-restricted-syntax entry replaces earlier ones for the same file, so
+// every entry that covers product sources must include postcssLoads.
+const postcssSpecifier = "/^postcss(?:$|\\u002F)/";
+const postcssLoads = [
+  {
+    selector: `ImportExpression[source.value=${postcssSpecifier}]`,
+    message: postcssBoundaryMessage,
+  },
+  {
+    selector: `CallExpression[arguments.0.value=${postcssSpecifier}]`,
+    message: postcssBoundaryMessage,
+  },
+];
+const localePathSorting = {
+  selector: "CallExpression[callee.property.name='localeCompare']",
+  message:
+    "Sort source paths with compareCodeUnits to avoid locale-dependent inventories and diagnostics.",
+};
 
 export default tseslint.config(
   includeIgnoreFile(gitignorePath, "Repository .gitignore patterns"),
@@ -60,6 +81,33 @@ export default tseslint.config(
     },
   },
   {
+    files: ["src/**", "packages/*/src/**"],
+    ignores: [postcssBoundary],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "postcss",
+              importNames: ["default", "parse", "Processor", "Input"],
+              allowTypeImports: true,
+              message: postcssBoundaryMessage,
+            },
+          ],
+          patterns: [
+            {
+              group: ["postcss/**"],
+              allowTypeImports: true,
+              message: postcssBoundaryMessage,
+            },
+          ],
+        },
+      ],
+      "no-restricted-syntax": ["error", ...postcssLoads],
+    },
+  },
+  {
     files: [
       "src/config/**/*.ts",
       "src/build/discovery.ts",
@@ -68,14 +116,7 @@ export default tseslint.config(
       "src/build/package_owned_paths.ts",
     ],
     rules: {
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector: "CallExpression[callee.property.name='localeCompare']",
-          message:
-            "Sort source paths with compareCodeUnits to avoid locale-dependent inventories and diagnostics.",
-        },
-      ],
+      "no-restricted-syntax": ["error", localePathSorting, ...postcssLoads],
     },
   },
 );

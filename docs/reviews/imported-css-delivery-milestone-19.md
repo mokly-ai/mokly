@@ -33,8 +33,8 @@ The change works for the cases it targeted:
 The nine findings below were reproduced in scratch copies. The parent session
 independently confirmed findings 1, 2, 6 and 7 and the animation, custom
 property, view-transition and composition rules in finding 4. Finding 1 is
-resolved in `9bab3d7`; finding 2 is partly mitigated, and the other findings
-remain open for the user's decision.
+resolved in `9bab3d7`; finding 2 is partly mitigated; finding 6 is resolved
+after PR #140; the other findings remain open for the user's decision.
 
 Findings 1, 2 and 4 share one cause. The plugins find names with text
 heuristics instead of a CSS parser. Milestone 20 now verifies that their
@@ -225,6 +225,14 @@ in findings 2 and 4.
      loading, with tests for a sibling map, a bad inline map and a changed
      working directory.
    - Recommended: B, so no future internal PostCSS call can forget the option.
+
+   Resolved after PR #140 with option B: every Mokly PostCSS parse and process
+   call goes through `src/build/styles/postcss_boundary.ts`, which always
+   passes `map: false`, and ESLint rejects other PostCSS entry points in
+   `src/` and `packages/*/src/`. Tests cover a sibling map file, broken,
+   unsupported and out-of-range inline maps, error locations that a valid map
+   used to move, and Build from two working directories.
+
 7. **Low — every command, including `--help`, loads the Lightning CSS native
    package, contrary to the protocol.**
    - What happens: the protocol says the CLI does not load Lightning CSS

@@ -353,6 +353,9 @@ review rules, and the temporary Braces exception.
   for the stylesheet pass and binary output boundary.
 - [`src/build/mock_link_routes.ts`](./src/build/mock_link_routes.ts) —
   identity-derived logical-link targets and portable artifact URLs.
+- [`src/build/styles/postcss_boundary.ts`](./src/build/styles/postcss_boundary.ts)
+  — the only module that parses or processes CSS with PostCSS; it ignores
+  input source maps, and ESLint rejects other PostCSS entry points.
 - [`src/components/manifest_entry_validation.ts`](./src/components/manifest_entry_validation.ts)
   — manifest-v8 component-entry validation.
 - [`src/registry/changed_paths.ts`](./src/registry/changed_paths.ts) and

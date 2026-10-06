@@ -10,8 +10,10 @@ CSS Modules pipeline as css-loader and Vite's default: first
 `postcss-modules-local-by-default({ mode: "local" })`, then
 `postcss-modules-extract-imports()`, then
 `postcss-modules-scope({ generateScopedName })`, followed by
-`icss-utils.extractICSS(root)`. Load these packages lazily in the main process;
-the isolated worker is only for consumer PostCSS plugins. Run after renderer
+`icss-utils.extractICSS(root)`. Parsing, scoping and verification ignore
+[input source maps](./mokly-imported-styles-postcss.md#input-source-maps).
+Load these packages lazily in the main process; the isolated worker is only
+for consumer PostCSS plugins. Run after renderer
 pruning and consumer PostCSS, sharing the `(source, effective pruned set)`
 memo between the graph and stylesheet passes. The generated name is
 `mokly_<hash>_<local>` where `<hash>` is the first **12 lowercase hex** digits

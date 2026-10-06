@@ -32,8 +32,9 @@ with a `postcss` factory) or an insertion-ordered
 record mapping package names to plain option objects. Resolve object-form
 package names with the same Node ESM conditions from the PostCSS module's
 directory, instantiate with those options, and preserve declared order.
-`map` is accepted but ignored; Mokly emits no source maps. Reject any other
-keys, missing/invalid plugins, escaping paths and failed package resolution.
+`map` is accepted but ignored: Mokly emits no source maps and ignores
+[input source maps](#input-source-maps). Reject any other keys,
+missing/invalid plugins, escaping paths and failed package resolution.
 Let PostCSS normalize array elements instead of requiring `postcssPlugin`;
 map normalization failures to the indexed `config-invalid` diagnostic.
 The parent treats `error`, `messageerror`, and every unexpected worker exit
@@ -157,3 +158,16 @@ prefer `tailwindcss({ base: import.meta.dirname, optimize: false })`, or
 or CSS Module requiring Tailwind context (not emitted CSS) should use
 `@reference` rather than `@import`; if the renderer already delivers Tailwind,
 the entry's direct Tailwind import is pruned and `@apply` needs `@reference`.
+
+## Input Source Maps
+
+Mokly ignores input source maps. Every Mokly PostCSS parse and process call,
+for consumer plugins and CSS Modules alike, passes `map: false`, and esbuild
+bundles CSS without source maps. Mokly never decodes an inline map or reads a
+file named by a `sourceMappingURL` comment. A missing, stale, malformed or
+oversized map therefore cannot change output, fail Build or move a diagnostic
+location, and no result depends on the process working directory. A map file
+is not an inventory input. PostCSS drops a map comment from the text it returns
+after consumer plugins, and esbuild omits any that remain, so delivered CSS has
+no map comment. A consumer plugin that parses CSS itself owns its own
+source-map options.

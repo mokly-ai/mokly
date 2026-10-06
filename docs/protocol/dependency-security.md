@@ -161,10 +161,15 @@ The current maintenance choices are:
   offset in an indexed source map can block the event loop. Runtime `postcss`
   and development `@tailwindcss/node` share one copy, and both accept `^1.2.1`.
   The workspace therefore locks 1.2.2 as a lockfile-only update, with no
-  override or exception. Mokly disables PostCSS map output, so its builds did
-  not reach the blocking step. A bounded regression loads the copy that PostCSS
-  resolves. It keeps ordinary section offsets and rejects an offset line above
-  10,000,000.
+  override or exception. Mokly's PostCSS calls ignore
+  [input source maps](./mokly-imported-styles-postcss.md#input-source-maps)
+  and emit none, so Build never passes a stylesheet's map to source-map-js.
+  Until the [M19-6](../reviews/imported-css-delivery-milestone-19.md) fix, the
+  CSS Modules parse still read input maps, so a crafted map in a `.module.css`
+  file could reach the blocking step on 1.2.1. Consumer plugins and
+  development tools such as Tailwind still use the package; keep auditing it.
+  A bounded regression loads the copy that PostCSS resolves. It keeps ordinary
+  section offsets and rejects an offset line above 10,000,000.
 - React Native's compatible Metro 0.84 line is updated to 0.84.6, including its
   coupled packages. The
   [0.84.5 security fix](https://github.com/react/metro/releases/tag/v0.84.5)

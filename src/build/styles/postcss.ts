@@ -1,13 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import postcss, { CssSyntaxError } from "postcss";
+import { CssSyntaxError } from "postcss";
 
 import { toPosixPath } from "../../config/paths.js";
 import type { NormalizedPostcssPlugin } from "../../config/postcss_loader.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError, errorMessage } from "../../errors.js";
 
+import { processStylesheet } from "./postcss_boundary.js";
 import type { ProcessedStyleText, StyleTextProcessor } from "./preprocess.js";
 
 /** One raw plugin-reported dependency, pending inventory validation. */
@@ -38,10 +39,11 @@ export class PostcssStyleProcessor implements StyleTextProcessor {
   /** Run one physical stylesheet with source maps disabled. */
   async process(source: string, text: string): Promise<ProcessedStyleText> {
     const relative = toPosixPath(path.relative(this.config.repoRoot, source));
-    const pending = postcss([...this.plugins]).process(text, {
-      from: fs.realpathSync(source),
-      map: false,
-    });
+    const pending = processStylesheet(
+      this.plugins,
+      text,
+      fs.realpathSync(source),
+    );
     let result;
     try {
       result = await pending;

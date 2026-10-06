@@ -5,17 +5,16 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { build, transform, type Metafile, type Plugin } from "esbuild";
-import postcss, { type AcceptedPlugin } from "postcss";
+import type { AcceptedPlugin, Processor } from "postcss";
 
 import { graphSourceFiles } from "../build/source_inventory.js";
+import { normalizePostcssPlugin } from "../build/styles/postcss_boundary.js";
 import { MoklyError, errorMessage } from "../errors.js";
 
 import type { ResolvedConfig } from "./types.js";
 
 /** Normalized elements accepted by PostCSS's processor. */
-export type NormalizedPostcssPlugin = ReturnType<
-  typeof postcss
->["plugins"][number];
+export type NormalizedPostcssPlugin = Processor["plugins"][number];
 
 /** Analyze and evaluate PostCSS modules without changing Mokly config loading. */
 export interface PostcssConfigLoader {
@@ -236,7 +235,7 @@ async function normalizePlugins(
   if (Array.isArray(plugins))
     return plugins.flatMap((plugin: unknown, index: number) => {
       try {
-        return postcss([plugin as AcceptedPlugin]).plugins;
+        return normalizePostcssPlugin(plugin as AcceptedPlugin);
       } catch (error) {
         throw new MoklyError(
           "config-invalid",
@@ -264,7 +263,7 @@ async function normalizePlugins(
       if (typeof imported.default !== "function")
         throw new Error("package must default-export a plugin factory");
       const plugin: unknown = imported.default(options);
-      instances.push(...postcss([plugin as AcceptedPlugin]).plugins);
+      instances.push(...normalizePostcssPlugin(plugin as AcceptedPlugin));
     } catch (error) {
       throw new MoklyError(
         "config-invalid",

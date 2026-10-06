@@ -12,8 +12,9 @@ relative to `repoRoot` unless named `config-path` (config-relative), `url`
 repo-relative path order and report the first according to the precedence
 in the parent contract.
 For CSS Modules errors, `{line}:{column}` identifies the effective stylesheet
-text after renderer pruning and consumer PostCSS, not a synthetic bundle path;
-the message never includes a PostCSS plugin name or absolute filename.
+text after renderer pruning and consumer PostCSS, not a synthetic bundle path
+or a position from an input source map; the message never includes a PostCSS
+plugin name or absolute filename.
 
 ## Configuration (`config-invalid`)
 

@@ -95,8 +95,11 @@ import order, compute the full renderer CSS closure, and prune its files
 at any depth of entry imports _before_ PostCSS can inline them. PostCSS runs
 per effective stylesheet input; lazy CSS Modules plugins rename local
 classes, IDs and keyframes using a repo-relative path hash without rewriting
-other authored CSS. A second esbuild pass produces one CSS file per
-configured renderer/entry root and path-mirrored local assets. The
+other authored CSS. Every Mokly PostCSS parse and process call goes through
+`src/build/styles/postcss_boundary.ts`, which disables input and output source
+maps; ESLint rejects other PostCSS entry points in product sources. A second
+esbuild pass produces one CSS file per configured renderer/entry root and
+path-mirrored local assets. The
 compatibility transformer is a graph source, not a CSS delivery root;
 its CSS tree is inventoried without publishing a stylesheet. The union of
 both passes and plugin dependencies is used even by inventory-only freshness

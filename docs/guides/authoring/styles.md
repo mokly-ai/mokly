@@ -224,3 +224,7 @@ and Vite plugins are outside this workflow. JavaScript asset imports with a
 `binary` for those imports instead. `moduleResolution.loaders[".css"] =
 "empty"` deliberately opts out of both plain CSS and CSS Modules;
 `".module.css": "empty"` opts out only of CSS Modules.
+If you import CSS that another tool compiled, Mokly ignores its source map
+comments and inline maps. It does not read or check them, delivered CSS has no
+map comment, and Build error lines refer to the CSS, not to the files that a
+map names.

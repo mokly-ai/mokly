@@ -46,6 +46,8 @@ See the [configuration contract](../../docs/protocol/mokly-configuration.md),
 so newly created or invalid source files cannot become public during a rebuild.
 Historical resource reads retain their validated snapshot inventory.
 
-`postcss.ts` and `postcss_loader.ts` load the optional consumer PostCSS module;
+`postcss.ts` and `postcss_loader.ts` load the optional consumer PostCSS module.
+The loader normalizes plugins through `../build/styles/postcss_boundary.ts`,
+the only module ESLint allows to create a PostCSS processor.
 `reserved_paths.ts` keeps root directories, file-glob prefixes and authored styles
 outside `mokly-generated/`, including aliases. Broad roots skip that output tree.
