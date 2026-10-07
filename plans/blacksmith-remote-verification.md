@@ -1,6 +1,6 @@
 # Blacksmith Remote Verification
 
-Status: Active. Milestones 1 to 7 are complete. The review of the approved fixes found no new findings. Findings 4 to 14 await the user's decision. The plan closes when its PR merges.
+Status: Completed. [PR #160](https://github.com/mokly-ai/mokly/pull/160) merged on 2026-10-07. Open findings 4 to 14 move to the [review follow-up plan](./remote-verification-review-follow-up.md).
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
 Blacksmith key is available. Run it locally when no key is available. The key
