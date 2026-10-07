@@ -177,7 +177,9 @@ Cleanup warnings follow the
 [command error-text rule](./remote-verification-cleanup.md#command-error-text).
 They keep one redacted diagnostic line of at most 200 characters in the typed
 error. A failed close warns once and does not fail the check by itself.
-No open connection prints no close output.
+A missing control directory or socket prints
+`information: no shared SSH connection for <box-id>` once.
+A socket that disappears during a failed close prints no close output.
 
 ## Out Of Scope
 

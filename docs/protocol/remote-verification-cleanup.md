@@ -64,6 +64,11 @@ completion proof for a box. Keep the stop result as the other success proof.
 
 Blacksmith CLI 0.4.65 uses this control socket name:
 
+Read the home directory from `HOME` through the environment boundary.
+The CLI also uses `HOME` on Linux and macOS. Do not guess another directory.
+If `HOME` is unset or empty, print the close warning once with a typed error.
+Then continue with cancellation, status and stop.
+
 1. Hash the box ID's UTF-8 bytes with SHA-256. Add no newline.
 2. Encode the digest as lowercase hexadecimal. Keep its first 16 characters.
 3. Add `.sock`. Resolve that name under the local home directory's
@@ -74,7 +79,13 @@ processes, kill an SSH process or close another box's connection.
 The close step does not need `connection.json`, an address or a port.
 It must not read the CLI credential file or a private key.
 
-A missing control directory or socket is silent success. Start no process.
+A missing control directory or socket needs no process. Print this line once
+for the box, so a changed CLI socket name is visible:
+
+```text
+information: no shared SSH connection for <box-id>
+```
+
 When the socket exists, run exactly these arguments through the injected
 `Process` boundary, from the workspace root:
 
@@ -91,7 +102,7 @@ redaction. Give SSH failures their own typed operation for diagnostics.
 
 Exit 0 is success. Discard successful command output, including
 `Exit request sent.`. If a failed command's socket has disappeared, treat it
-as the same silent no-connection result. Any other command or file-read failure
+as closed and print nothing. Any other command or file-read failure
 prints one warning for the box. Do not retry close. Continue cancellation,
 status and stop. Use this warning format with the shared error formatter:
 

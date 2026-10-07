@@ -64,8 +64,13 @@ The design depends on these measurements from 2026-10-07:
    connection. Every cleanup path does this: cleanup after a suite,
    preparation failure, final cleanup, interrupts and the panic guard. Each
    box gets one close attempt.
-2. **A failed close only warns.** A box without an open connection needs no
-   action and prints nothing. A failed close prints one warning, and cleanup
+2. **A failed close only warns.** A missing control directory or socket
+   starts no process and prints
+   `information: no shared SSH connection for <box-id>` once. This makes a
+   changed CLI socket name visible. A socket that disappears during a failed
+   close counts as closed and prints nothing. Read `HOME` through the
+   environment boundary. An unset or empty `HOME` prints the close warning
+   once with a typed error. A failed close prints one warning, and cleanup
    continues. The job then ends when the connection times out, as it does
    today. A close failure never fails the check.
 3. **Cancel before stop.** When the run ID is known and `gh` is available,
@@ -103,8 +108,7 @@ The design depends on these measurements from 2026-10-07:
 ## Milestone 1: Spike, report and contract
 
 Completed. The spike confirms the close method and cancel-before-stop order.
-The protocol defines the full cleanup contract. Review must pass before
-Milestone 2 starts.
+The protocol defines the full cleanup contract.
 
 Evidence: `.context/testbox-prompt-shutdown/spike.md`.
 
@@ -168,8 +172,9 @@ action.
       it.
 - [ ] Add unit tests with unimock. Use event order and captured inputs, not
       elapsed time. Cover: close before status, stop and cancellation; one
-      close per box across suite, final and panic cleanup; no output without
-      a connection; one warning for a failed close, then normal cleanup; and
+      close per box across suite, final and panic cleanup; one information
+      line for an absent connection and no output for a closed connection;
+      one warning for a failed close, then normal cleanup; and
       the interrupt and preparation-failure paths.
 - [ ] Add adapter tests in the existing adapter test style. Cover the exact
       `ssh` arguments, the removed secret variables and no process for a
