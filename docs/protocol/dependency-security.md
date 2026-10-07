@@ -1,30 +1,46 @@
 # Dependency Security
 
+## Delivery Status
+
+Implemented. Baseline and strict audits share the reviewed exception rules.
+The scheduled workflow maintains the dependency update pull request.
+
 ## Verification Boundary
 
 `npm run dependencies:check` audits the workspace lockfile against the
 configured npm registry's current advisory database. It explicitly includes
 production, development, optional, and peer dependencies, even if local npm
 configuration would otherwise omit a category. The Node entry point is
-`scripts/verification/dependency-audit.mjs`. It runs `npm audit --json
---audit-level=low --include=prod --include=dev --include=optional --include=peer`
-against the live registry. Every Low, Moderate, High, or Critical advisory fails
-unless an active reviewed exception fully covers it. Registry or transport
-errors always fail.
+`scripts/verification/dependency-audit.mjs`. Both audit modes run `npm audit
+--json --audit-level=low --package-lock-only --include=prod --include=dev
+--include=optional --include=peer --prefix .` against the live registry.
+Strict mode fails on every uncovered Low-or-higher advisory or exception issue. Registry,
+transport, report, and input errors always fail. The
+[baseline audit contract](./dependency-audit-baseline.md) defines the
+implemented modes, CLI, JSON summary, and comparison rules.
 
-`cargo xtask check` runs this audit first and stops on failure. The release
-workflow always runs the live audit immediately after installing dependencies,
-before it selects reusable CI evidence or the complete fallback. Complete mode
-therefore repeats the audit when the full gate starts; evidence mode never
-relies on an earlier CI audit for time-sensitive security evidence. Parallel CI
-assigns the same live audit to the shared repository prerequisite, which must
-succeed before any package, unit, browser or native job starts. A cache hit
-never replaces an audit. Verification requires registry access and is
-deliberately sensitive to newly published advisories, even when source and
-lockfile have not changed. An audit is evidence about known advisories at
-execution time, not a guarantee that every dependency is safe. See the
-[CI workflow graph](./ci-workflow.md) for job ownership and the
-[CI verification contract](./ci-verification.md) for its fail-closed aggregate.
+`npm run dependencies:check` stays strict. Under this contract,
+`cargo xtask check` runs the baseline audit first by default. Ordinary pull
+requests and every push also use baseline mode in the shared repository
+prerequisite. It prints inherited findings and exception issues as notices;
+new issues fail. Release Please and dependency update pull requests use strict
+mode. The daily scheduled workflow audits `main` strictly and creates or
+refreshes the [dependency update pull request](./dependency-audit-update-pr.md).
+It closes that pull request when the strict audit of `main` passes and preserves
+branches with human commits. Audit command, registry, report, and input failures
+do not change pull requests.
+Dependency fixes, pinned-parent overrides, and reviewed exceptions land there.
+
+The release workflow retains its strict live audit immediately after install,
+before reusable evidence or the complete fallback. Complete mode runs
+`cargo xtask check --dependency-audit strict` and repeats the strict live audit
+when its gate starts. Evidence mode never reuses an earlier audit
+as time-sensitive security evidence. The CI repository prerequisite must pass
+before package, unit, browser, or native jobs start. A cache hit never replaces
+an audit. Both modes require registry access. An audit is evidence about known
+advisories at execution time, not a guarantee that every dependency is safe.
+See the [CI workflow graph](./ci-workflow.md) and
+[CI verification contract](./ci-verification.md) for job ownership and aggregation.
 
 The packed ESM-consumer smoke also audits its freshly resolved production,
 optional, and peer dependencies before exercising the installed CLI on every
@@ -92,9 +108,11 @@ calendar days after the current UTC date fails. Thus `2026-10-03` through
 `2026-11-03` is the maximum window. Renew only with a new risk review and a new
 end date in a reviewed change. Never extend a record automatically.
 
-Every record must be valid, active, and used. An expired record fails even when
-its advisory is gone. A stale record that matches no current finding also
-fails; remove it when the risk disappears. Any other advisory, including a
+Both modes evaluate every record with the same validity, expiry, and use
+rules. Baseline mode can inherit only an identical issue from the comparison
+commit; it does not relax exception coverage. An expired record remains an
+issue even when its advisory is gone. A stale record with no current finding
+also remains an issue; remove it when the risk disappears. Any other advisory, including a
 second advisory on the same package, fails. A changed path or production path
 fails. Malformed JSON, fields, dates, paths, and duplicate records fail.
 
@@ -197,4 +215,4 @@ After dependency updates, use a clean `npm ci`, run the complete
 tests. Review lockfile removals, package engines, native optional packages, and
 the packed artifact. Commit and push all completed changes before using the
 [implementation review prompt](../implementation-review-prompt.md) against
-`origin/main`; report new findings for a maintainer's decision.
+`origin/main`; apply the repository review-fix rule to its findings.

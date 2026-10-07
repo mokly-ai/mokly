@@ -50,10 +50,44 @@ export interface AuditLockfile {
   packages: Record<string, AuditLockfileEntry>;
 }
 
-/** All failures and every risk accepted by the evaluator. */
+/** An uncovered advisory with its exact dependency locations. */
+export interface AuditFindingIssue {
+  kind: "finding";
+  message: string;
+  package: string;
+  advisoryUrl: string;
+  advisoryId?: string;
+  severity: AuditSeverity;
+  title: string;
+  installLocations: string[];
+}
+
+/** An issue with one reviewed exception record. */
+export interface AuditExceptionIssue {
+  kind: "exception";
+  message: string;
+}
+
+/** Invalid registry output or an inconsistent npm status. */
+export interface AuditReportIssue {
+  kind: "report";
+  message: string;
+}
+
+/** Input, clock, process, Git, or filesystem failure. */
+export interface AuditInputIssue {
+  kind: "input";
+  message: string;
+}
+
+/** Each issue retains its kind; only findings have advisory fields. */
+export type AuditIssue =
+  AuditFindingIssue | AuditExceptionIssue | AuditReportIssue | AuditInputIssue;
+
+/** All failures and every risk accepted by the strict evaluator. */
 export interface AuditEvaluation {
   ok: boolean;
-  errors: string[];
+  issues: AuditIssue[];
   notices: string[];
 }
 

@@ -5,19 +5,35 @@
 The job graph and local Turbo caching are implemented. The parallel prepare job
 and remote credentials remain planned in the [task cache contract](./ci-remote-cache.md).
 Hosted telemetry opt-out is configured; release builds force execution.
+CI selects baseline or strict mode by event and pull request.
+The Dependency Audit workflow maintains strict findings on `main`.
 
 ## Workflow Boundary
 
 `.github/workflows/ci.yml` runs on pull requests and pushes to `main`. It has
 read-only repository contents permission and cancels superseded workflow runs.
 The repository job is every verification job's shared prerequisite and runs the
-audit-first repository suite.
+audit-first repository suite. The [baseline audit contract](./dependency-audit-baseline.md)
+sets `DEPENDENCY_AUDIT` to `baseline` for ordinary pull requests and every push.
+It sets `strict` for same-repository dependency update and Release Please pull
+requests. The suite receives `--dependency-audit "$DEPENDENCY_AUDIT"`.
+Fork branch names and labels cannot select strict mode.
+
+The baseline audit for a push to `main` compares the pushed commit with itself.
+It fails only on audit errors (report, input, or registry). The daily strict
+audit and the strict release audit own new advisories on `main`.
+
+`.github/workflows/dependency-audit.yml` runs a daily off-hour
+strict audit on `main` and supports manual dispatch. Its write permissions,
+JSON report, token, branch, and create, refresh, and close behavior follow the
+[dependency update pull request contract](./dependency-audit-update-pr.md).
 
 The repository job's full-history checkout uses `fetch-depth: 0`. It must fetch
 release tags for the public-package-export ratchet, plus `origin/main` and
-enough history for merge-base ratchets; it resolves `origin/main` for nothing
-else. The same-repository Preview deployment resolves `origin/main` for its
-branch comparison and branch-point lockfile. The package, unit, browser, and
+enough history for merge-base ratchets and the baseline dependency audit.
+The baseline audit reads the root manifest, lockfile, and exception file from
+that comparison commit. The same-repository Preview deployment resolves
+`origin/main` for its branch comparison and branch-point lockfile. The package, unit, browser, and
 hydration jobs keep complete history for fixture-owned historical baselines but
 never read remote-tracking references.
 
@@ -81,11 +97,14 @@ from its peers. Chromium is installed only in browser and hydration jobs. Rust
 formatting, Clippy, and tests run only in the repository job; selected suite
 jobs still compile xtask to dispatch their gate.
 
-Every npm-running job installs npm 11.21.0, the exact `packageManager` version
-in `package.json`, and runs `npm ci`. CI persists only npm downloads across
-jobs and runs; local Turbo outputs remain in each checkout. Every npm-running
-job keys npm's download cache from the checked-out
-`package-lock.json`; none reads a branch-point lockfile. The
+Every npm-running CI job installs npm 11.21.0, the exact `packageManager`
+version in `package.json`, and runs `npm ci`. The scheduled audit installs no
+dependencies before its strict lockfile-only audit; updates use
+`npm ci --ignore-scripts` and `npm update <package> --ignore-scripts`. CI persists
+only npm downloads across jobs and runs; local Turbo outputs remain in each checkout.
+Every cached CI job keys npm's download cache from
+the checked-out `package-lock.json`. Only the repository audit reads a
+comparison-commit lockfile, for baseline evaluation rather than a cache key. The
 [deterministic repository-input rule](./ci-verification.md#deterministic-test-repository-inputs)
 and [cache and security semantics](./ci-verification-security.md#dependency-cache-and-security)
 own these boundaries.
@@ -99,7 +118,7 @@ glibc or musl build of a native package
 npm pin equal to `packageManager`, requires CI and release jobs to set up that
 npm before `npm ci`, and rejects pins older than npm 11.11.0.
 
-Linux and Windows jobs across CI, preview, and release workflows use
+Linux and Windows jobs across CI, preview, release, and Dependency Audit workflows use
 Blacksmith's 2-vCPU tiers. Native macOS verification uses the provider's
 smallest available tier, which is 6 vCPUs. The one exception is any job that
 publishes to npm with trusted publishing, today only the release `publish` job:

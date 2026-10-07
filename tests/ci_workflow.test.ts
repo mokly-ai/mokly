@@ -12,6 +12,7 @@ import { repositoryRoot } from "./helpers/fixture.js";
 const [minimumTestedNode] = TESTED_NODE_VERSIONS;
 
 interface WorkflowStep {
+  env?: Readonly<Record<string, string>>;
   name?: string;
   run?: string;
   uses?: string;
@@ -101,11 +102,31 @@ test("CI shards complete verification behind one prerequisite", async () => {
     "blacksmith-6vcpu-macos-15",
     "blacksmith-2vcpu-windows-2025",
   ]);
-  assert.ok(
-    repository.steps.some((step) =>
-      step.run?.includes("cargo xtask check --suite repository"),
-    ),
+  const repositoryCheck = repository.steps.find(
+    (step) => step.name === "Run repository verification",
   );
+  assert.equal(
+    repositoryCheck?.run,
+    'cargo xtask check --suite repository --dependency-audit "$DEPENDENCY_AUDIT"',
+  );
+  assert.equal(
+    repositoryCheck?.env?.DEPENDENCY_AUDIT?.replace(/\s+/gu, " ").trim(),
+    [
+      "${{ github.event_name == 'pull_request' &&",
+      "github.event.pull_request.head.repo.full_name == github.repository && (",
+      "startsWith(github.event.pull_request.head.ref, 'dependency-audit/') ||",
+      "contains(github.event.pull_request.labels.*.name, 'dependency-audit') ||",
+      "startsWith(github.event.pull_request.head.ref, 'release-please--') ||",
+      "contains(join(github.event.pull_request.labels.*.name, ','), 'autorelease:')",
+      ") && 'strict' || 'baseline' }}",
+    ].join(" "),
+  );
+  for (const job of Object.values(workflow.jobs))
+    for (const step of job.steps)
+      assert.doesNotMatch(
+        step.run ?? "",
+        /\$\{\{[^}]*github\.event\.pull_request\.(?:head\.ref|labels)/u,
+      );
   assert.ok(
     packageJob.steps.some((step) =>
       step.run?.includes("cargo xtask check --suite package"),

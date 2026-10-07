@@ -79,12 +79,14 @@ platform tar executable or walking the output again.
 
 ## Local Verification
 
-`cargo xtask check` is the complete repository and release gate. It orchestrates
-npm, Node and Rust commands from the workspace root and includes:
+`cargo xtask check` is the complete repository gate. Release verification uses
+`cargo xtask check --dependency-audit strict`. Both orchestrate npm, Node and
+Rust commands from the workspace root and include:
 
-- a live audit of all workspace dependency categories, failing on any uncovered
-  Low-or-higher advisory, invalid exception, or registry error; reviewed path
-  exceptions follow [dependency security](./dependency-security.md);
+- a live audit of all workspace dependency categories: baseline mode fails on
+  new issues; strict mode fails on every uncovered Low-or-higher advisory or
+  invalid exception; both fail on audit errors. Mode selection and reviewed
+  path exceptions follow [dependency security](./dependency-security.md);
 - formatting and lint checks;
 - TypeScript typechecking with no unexplained source exclusions;
 - unit and integration tests with a 100% pass rate;

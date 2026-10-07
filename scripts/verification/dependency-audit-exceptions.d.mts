@@ -1,11 +1,15 @@
-import type { AuditException } from "./dependency-audit-evaluation.mjs";
+import type {
+  AuditException,
+  AuditExceptionIssue,
+  AuditInputIssue,
+} from "./dependency-audit-evaluation.mjs";
 
 /** Validated record with its review window and evaluation state. */
 export interface ReviewedAuditException {
   exception: AuditException;
   label: string;
   daysLeft: number;
-  errors: string[];
+  issues: Array<AuditExceptionIssue | AuditInputIssue>;
   matched: boolean;
   used: boolean;
 }
@@ -17,4 +21,7 @@ export function isHttpsUrl(value: unknown): value is string;
 export function validateAuditExceptions(
   input: unknown,
   now: Date,
-): { errors: string[]; records: ReviewedAuditException[] };
+): {
+  issues: Array<AuditExceptionIssue | AuditInputIssue>;
+  records: ReviewedAuditException[];
+};

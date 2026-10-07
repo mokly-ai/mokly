@@ -70,7 +70,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run repository verification
-        run: cargo xtask check --suite repository
+        env:
+          DEPENDENCY_AUDIT: >-
+            ${{
+              github.event_name == 'pull_request' &&
+              github.event.pull_request.head.repo.full_name == github.repository &&
+              (
+                startsWith(github.event.pull_request.head.ref, 'dependency-audit/') ||
+                contains(github.event.pull_request.labels.*.name, 'dependency-audit') ||
+                startsWith(github.event.pull_request.head.ref, 'release-please--') ||
+                contains(join(github.event.pull_request.labels.*.name, ','), 'autorelease:')
+              ) && 'strict' || 'baseline'
+            }}
+        run: cargo xtask check --suite repository --dependency-audit "$DEPENDENCY_AUDIT"
 
   package:
     name: Package (Node ${{ matrix.node }})

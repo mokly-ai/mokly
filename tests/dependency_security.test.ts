@@ -7,7 +7,7 @@ import { braceExpand, minimatch } from "minimatch";
 
 import { evaluateDependencyAudit } from "../scripts/verification/dependency-audit-evaluation.mjs";
 
-import { auditFixture } from "./helpers/dependency_audit.js";
+import { auditFixture, issueMessages } from "./helpers/dependency_audit.js";
 
 interface ShellQuoteModule {
   quote(tokens: readonly (string | { comment: string })[]): string;
@@ -143,7 +143,7 @@ test("reviewed exception data covers the captured report with the real lockfile"
     "node scripts/verification/dependency-audit.mjs",
   );
   const result = evaluateDependencyAudit(report, lockfile, exceptions, today);
-  assert.equal(result.ok, true, result.errors.join("\n"));
+  assert.equal(result.ok, true, issueMessages(result));
 });
 
 /** One `package` X.Y.Z claim; a floor also accepts newer releases. */
