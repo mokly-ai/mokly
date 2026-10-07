@@ -3,9 +3,10 @@
 Status: Active. No PR is open yet. On 2026-10-06 the user chose the
 recommended option for findings 1 to 5 of the
 [Deterministic Test Timing](./deterministic-test-timing.md) review. Finding 6
-needs no change: the squash title of PR #152 is within the limit. All seven
-milestones are complete. Three review findings under Milestone 7 await the
-user's decision.
+needs no change: the squash title of PR #152 is within the limit. All eight
+milestones are complete. After the merge with main in Milestone 8, review
+finding 1 no longer applies. Findings 2 and 3 under Milestone 7, and finding 4
+under Milestone 8, await the user's decision.
 
 Fix the five open findings from the PR #152 review. Keep browser retries
 working, give Playwright assertions the contract's 10-second minimum, replace
@@ -313,6 +314,34 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-7.md`.
   - 1 (Medium, docs or spec): PostCSS collection still projects each `config.roots[].dir` once per candidate under `mockupsDir`. Recommended: cache configured root projections per collection, and build the fixed-root test list from the config.
   - 2 (Low, test): `tests/browser/same_origin_reconnect.spec.ts` polls page state with an in-page `setInterval` loop. Recommended: wait with `page.waitForFunction` and a 15 s allowance.
   - 3 (Low, docs or spec): the lint guard misses `<object>.Date.now()` and `new <object>.Date().getTime()`. Recommended: extend the selectors, with rule tests.
+
+## Milestone 8: Integrate main at acac1c7 — completed
+
+Merge main after PR #156 removed whole-tree ownership. Keep the timing
+contract true for the tests that main added. Re-assess the open review
+findings against the merged tree.
+
+Evidence: `.context/deterministic-test-timing-review-fixes/merge-7d3b232.md`.
+
+- [x] Fetch `origin/main` and audit its additions from source tip `e0c6df4`
+      (branch point `dc56e3d`).
+- [x] Merge main at `7d3b232` path by path, and record each conflict decision
+      in the evidence file. Keep main's deletion of `src/build/ownership.ts`.
+- [x] Convert the four polling waits that PR #156 added to `waitUntil`, in
+      `tests/build_watch.test.ts`, `tests/catalogue_history_conflicts.test.ts`,
+      `tests/serve_snapshot.test.ts` and `tests/shared_example_lifecycle.test.ts`.
+- [x] Keep `docs/protocol/README.md` within its 250-line limit.
+- [x] Merge main again at `acac1c7` (PR #168), which landed during the gate.
+- [x] Run `cargo xtask check --suite repository`, then the complete gate, with
+      the CI toolchain (Rust 1.95.0) and the local executor.
+- [x] Commit and push the branch.
+- [x] After the push, re-assess the open review findings against the merged
+      tree, using the finding format in `docs/implementation-review-prompt.md`.
+      Report:
+      `.context/deterministic-test-timing-review-fixes/review-1-reassessment.md`.
+  - Finding 1 no longer applies: PR #156 removed the `isOwned` call chain, and every fixed root now resolves a constant number of times.
+  - Findings 2 and 3 still apply. Finding 3 also covers `performance.timeOrigin + performance.now() - started`, which main's `tests/helpers/browser_timing.ts` uses for fixture timing.
+  - 4 (Low, test): `tests/server_fixture.ts` is an unused copy of `tests/helpers/server_http.ts` from PR #156. It keeps a 12 s deadline loop and a 2 s request timeout. Recommended: delete it.
 
 ## Post-merge follow-up (non-blocking)
 
