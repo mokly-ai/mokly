@@ -737,6 +737,7 @@ Dependency-audit integration decisions: `.context/turborepo-cloudflare-remote-ca
 Developer-test integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-developer-main-decisions.md`.
 Review-guidance integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-agent-main-decisions.md`.
 Plan-history integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-history-main-decisions.md`.
+Remote-verification integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-remote-main-decisions.md`.
 
 ## Post-merge follow-up (non-blocking)
 

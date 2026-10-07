@@ -16,7 +16,7 @@ by rejecting the case-insensitive pattern `\bmilestones?\s+\d`.
 | Without registered components | 9                  | 6                 |
 | With registered components    | 9                  | 6                 |
 
-Current output uses manifest v9, comparison result v6, and public catalogue v5
+Current output uses manifest v9, review result v6, and public read model v5,
 with globally unique entry paths. The [format inventory](./mokly-format-versions.md)
 owns all public and private versions and their fields. Readers reject
 unsupported versions before content or path interpretation. Historical output
