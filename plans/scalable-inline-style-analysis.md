@@ -32,6 +32,11 @@ finding 1 and Milestone 5 finding 3 (Decision 9), Milestone 5 finding 2
 (Decision 5), and Milestone 8 findings 1, 2 and 4 (Decisions 7 and 8 and
 Milestone 2).
 
+Milestone 12 integrates manifest v9, public read model v5 and review result v6.
+Generated files now live under `mokly-generated/`; Git tracking selects the
+baseline source instead of a `generatedOutput` configuration mode. Earlier
+measurements and completed milestone records retain their historical formats.
+
 The analysis this plan changes lives under `src/review/css/` and is specified
 by [inline style ownership](../docs/protocol/mokly-inline-styles.md) and
 [CSS change attribution](../docs/protocol/mokly-css-attribution.md). The
@@ -2002,13 +2007,13 @@ User decision (2026-10-07): merge the latest `origin/main` and resolve its confl
 
 Evidence: `.context/scalable-inline-style-analysis/m12-merge/`.
 
-- [ ] Audit main's additions and merge once with two parents. Resolve each
+- [x] Audit main's additions and merge once with two parents. Resolve each
       conflict by responsibility, then review the complete remerge diff and
       deletion audit.
-- [ ] Discovered: main advanced during integration. Merge the dependency-audit,
+- [x] Discovered: main advanced during integration. Merge the dependency-audit,
       test-consolidation and targeted-runner additions after reviewing the
       first merge. Keep two parents and a separate audit for each merge.
-- [ ] Integrate the branch with manifest v9, catalogue v5, review v6 and the
+- [x] Integrate the branch with manifest v9, catalogue v5, review v6 and the
       generated-output layout. Preserve useful analysis and harness coverage.
 - [ ] Align the affected contracts and READMEs. Validate the merged code with
       targeted tests, real-server smoke checks and `cargo xtask check`.
