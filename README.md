@@ -362,6 +362,9 @@ A failed GitHub cancellation checks the run state. An ended run gets an
 information line. Logs stay under `.context/`.
 Availability checks name all missing programs with install hints.
 Every xtask child removes `BLACKSMITH_ORG_TOKEN` from its environment.
+The source check names any unsupported nested repository or worktree path.
+Ignore or remove that path before retrying. The repository ignores agent
+worktrees under `.claude/worktrees/`.
 `--executor local` skips remote checks. The default `auto` selects remote mode
 when an org key and all availability checks pass. It otherwise runs locally.
 Run `cargo xtask executor` to print `<executor>: <reason>` without warming boxes.

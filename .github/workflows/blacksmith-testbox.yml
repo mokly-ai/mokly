@@ -2,6 +2,7 @@ name: Blacksmith Testbox
 
 on:
   push:
+    branches: ["**"]
     paths: [.github/workflows/blacksmith-testbox.yml]
   workflow_dispatch:
     inputs:

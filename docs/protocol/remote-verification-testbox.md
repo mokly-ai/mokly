@@ -87,7 +87,7 @@ Use that name for its report and log.
 The wrapper accepts only the suite and shard forms from
 [CI verification](./ci-verification.md#verification-boundary).
 Invalid arguments fail before any suite starts.
-Both scripts use one exported fingerprint validator from `source-tree.mjs`.
+Both scripts use `validateFingerprint` from `source-tree.mjs`.
 Its error contains no usage text. Each script adds its own usage line.
 
 ## Readiness And Sync Probe

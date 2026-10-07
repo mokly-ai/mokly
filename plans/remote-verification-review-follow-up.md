@@ -1,7 +1,8 @@
 # Remote Verification Review Follow-Up
 
 Status: Active. No pull request exists yet. Milestones 1 and 2 are completed.
-The cleanup review changes and Milestone 3 are completed. Milestone 4 is next.
+The cleanup review changes and Milestone 3 are completed. Milestone 4 code
+and local checks are ready. Push and workflow validation are next.
 The user approved those changes and a push after the listed checks.
 
 Fix the eleven open findings from the post-push review of
@@ -170,15 +171,18 @@ Evidence: `.context/remote-verification-review-follow-up/milestone-3.md`.
 ## Milestone 4: Scripts and workflow
 
 Covers findings 6, 7 and 10.
+Evidence: `.context/remote-verification-review-follow-up/milestone-4.md`.
 
-- [ ] Finding 6: write the failing workflow test, then add the branch filter.
-- [ ] Finding 7: write failing tests for a nested worktree error that names
+- [x] Finding 6: write the failing workflow test, then add the branch filter.
+- [x] Finding 7: write failing tests for a nested worktree error that names
       its path and for an ignored `.claude/worktrees/` path, then implement
       the error text and the `.gitignore` entry.
-- [ ] Finding 10: write failing tests for each script's usage line, then add
+- [x] Finding 10: write failing tests for each script's usage line, then add
       the shared validator.
-- [ ] Run ESLint, prepared TypeScript, Prettier and the focused Node tests.
+- [x] Run ESLint, prepared TypeScript, Prettier and the focused Node tests.
       Commit.
+- [ ] Push the committed milestones. Confirm that the changed Testbox
+      workflow passes in validation mode on this branch.
 
 ## Milestone 5: Adapter tests
 
