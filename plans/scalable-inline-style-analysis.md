@@ -2080,12 +2080,16 @@ Evidence: `.context/scalable-inline-style-analysis/m13-duplicate-passes/`.
       22.14.0, which reads 0 records: the pre-existing M11 CI failure above.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits and
       push the branch. Pushed as a stacked PR onto `calummoore/irvine-v6`.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       on this milestone's diff from `calummoore/irvine-v6`; the M12 review
       covers the rest against `origin/main`. Keep the review read-only, then
       apply main's [review-fix rule](../AGENTS.md#general): fix `Auto-fix: yes`
       findings, re-review once and report fixed and open findings separately.
+      Review complete; report: `.context/scalable-inline-style-analysis/m13-duplicate-passes/review.md`. No `Auto-fix: yes` findings.
+      Finding 1 (Medium, test): same-input passes remain in component_style_resources, material_fingerprint_join_variants, page_analysis_materials, changes_inline_references_fast_path and page_analysis_scope; pending the user's decision.
+      Finding 2 (Low, docs): the replay claim covers generated-view Git evidence, but only 35 of 420 catalogues carry it; pending the user's decision.
+      Finding 3 (Low, test): three files still name a git/bytes split committed/derived; pending the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
