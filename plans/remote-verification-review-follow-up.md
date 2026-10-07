@@ -1,8 +1,8 @@
 # Remote Verification Review Follow-Up
 
 Status: Active. No pull request exists yet. Milestones 1 and 2 are completed.
-Milestone 3 is next. The user limited this turn to Milestones 1 and 2.
-The milestone commits stay local.
+The cleanup review changes are completed. Milestone 3 is next.
+The user approved those changes and a push after the listed checks.
 
 Fix the eleven open findings from the post-push review of
 [Blacksmith remote verification](./blacksmith-remote-verification.md)
@@ -79,7 +79,9 @@ The user approved these options on 2026-10-07.
 - **11.** Run `cargo add chrono --no-default-features --features now` in
   `xtask`. The `<run>` timestamp format stays `YYYYMMDDTHHMMSSZ`.
 - **12.** When `gh run cancel` fails, xtask reads the run state with
-  `gh run view <id> --json status`. A `completed` state prints an information
+  `gh run view <id> --json status --jq .status`. Trim the output. Map
+  `completed` to the typed completed state. Map every other nonempty value
+  to the other state. Empty output is a typed read error. A `completed` state prints an information
   line that the run already ended. Any other state, or a failed state read,
   prints the cancellation warning. Never decide from error text.
 - **13.** One function formats each warning line that embeds an error. Each
@@ -94,6 +96,8 @@ The user approved these options on 2026-10-07.
   the injected clock. After the final cleanup, print one warning for each box
   that is still not stopped, with `blacksmith testbox stop --id <box-id>` and
   a note that the 30-minute idle timeout ends it.
+  Clean up boxes in parallel. Each box keeps its own attempt order.
+  A panic in one cleanup worker must not stop cleanup of the other boxes.
 
 ## Milestone 1: Contract documentation
 
@@ -136,6 +140,19 @@ Evidence: `.context/remote-verification-review-follow-up/milestone-2.md`.
 - [x] Run Rust formatting, Clippy with `-D warnings`, the xtask tests and the
       Rust length lint.
 - [x] Commit.
+
+## Milestone 2 follow-up: Cleanup review changes
+
+Completed. Use the CLI's field selector without JSON packages. Keep each box's cleanup
+independent. The user approved these review changes on 2026-10-07.
+Evidence: `.context/remote-verification-review-follow-up/milestone-2-follow-up.md`.
+
+- [x] Write failing client tests for the field selector, trimmed run states
+      and empty output. Remove `serde` and `serde_json` with `cargo remove`.
+- [x] Write failing cleanup tests for independent boxes and worker panics.
+      Clean up boxes in scoped threads. Keep panic cleanup safe.
+- [x] Update the contract and README. Run the Rust and protocol checks.
+- [x] Commit these two review changes together.
 
 ## Milestone 3: Availability and subprocess environment
 

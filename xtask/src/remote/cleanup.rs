@@ -2,6 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::panic::{AssertUnwindSafe, catch_unwind};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, MutexGuard};
 use std::thread;
 use std::time::Duration;
@@ -37,6 +38,8 @@ struct BoxState {
 pub(super) struct CleanupGuard<'a> {
     dependencies: &'a Dependencies,
     remaining: Mutex<BTreeMap<String, BoxState>>,
+    /// Pass the parent runner's unwind state to cleanup worker threads.
+    unwinding: AtomicBool,
 }
 
 impl<'a> CleanupGuard<'a> {
@@ -45,6 +48,7 @@ impl<'a> CleanupGuard<'a> {
         Self {
             dependencies,
             remaining: Mutex::new(BTreeMap::new()),
+            unwinding: AtomicBool::new(false),
         }
     }
 
@@ -58,7 +62,16 @@ impl<'a> CleanupGuard<'a> {
 
     /// Keep diagnostics from interrupting cleanup during panic unwinding.
     fn report(&self, message: &str) {
-        during_unwind(|| self.dependencies.reporter.executor(message));
+        self.during_unwind(|| self.dependencies.reporter.executor(message));
+    }
+
+    /// Protect each call when the runner or current cleanup thread unwinds.
+    fn during_unwind<T>(&self, operation: impl FnOnce() -> T) -> Option<T> {
+        if self.unwinding.load(Ordering::Relaxed) || thread::panicking() {
+            catch_unwind(AssertUnwindSafe(operation)).ok()
+        } else {
+            Some(operation())
+        }
     }
 
     /// Use the shared formatter without letting output stop panic cleanup.
@@ -68,7 +81,7 @@ impl<'a> CleanupGuard<'a> {
 
     /// Read completion proof and prefer the current status run ID.
     fn status(&self, id: &str, recorded: Option<u64>) -> (bool, Option<u64>) {
-        match during_unwind(|| self.dependencies.blacksmith.status(id)) {
+        match self.during_unwind(|| self.dependencies.blacksmith.status(id)) {
             Some(Ok(status)) => {
                 if box_is_completed(&status, id) {
                     self.remaining().remove(id);
@@ -100,7 +113,7 @@ impl<'a> CleanupGuard<'a> {
         let run = loop {
             if state.attempts != 0 {
                 let seconds = if state.attempts == 1 { 5 } else { 10 };
-                during_unwind(|| self.dependencies.clock.wait(Duration::from_secs(seconds)));
+                self.during_unwind(|| self.dependencies.clock.wait(Duration::from_secs(seconds)));
             }
             let (completed, run) = self.status(id, state.run);
             if completed {
@@ -110,7 +123,7 @@ impl<'a> CleanupGuard<'a> {
             if let Some(record) = self.remaining().get_mut(id) {
                 record.attempts = state.attempts;
             }
-            match during_unwind(|| self.dependencies.blacksmith.stop(id)) {
+            match self.during_unwind(|| self.dependencies.blacksmith.stop(id)) {
                 Some(Ok(())) => {
                     self.remaining().remove(id);
                     break run;
@@ -139,9 +152,9 @@ impl<'a> CleanupGuard<'a> {
 
     /// Suppress a cancellation warning only when a typed read proves it ended.
     fn cancel(&self, run: u64) {
-        if let Some(Err(error)) = during_unwind(|| self.dependencies.github.cancel(run)) {
+        if let Some(Err(error)) = self.during_unwind(|| self.dependencies.github.cancel(run)) {
             if matches!(
-                during_unwind(|| self.dependencies.github.state(run)),
+                self.during_unwind(|| self.dependencies.github.state(run)),
                 Some(Ok(GithubRunState::Completed))
             ) {
                 self.report(&format!(
@@ -175,7 +188,7 @@ impl BoxCleanup for CleanupGuard<'_> {
         if boxes.is_empty() {
             return 0;
         }
-        let github = match during_unwind(|| self.dependencies.programs.find("gh")) {
+        let github = match self.during_unwind(|| self.dependencies.programs.find("gh")) {
             Some(Ok(available)) => available,
             Some(Err(error)) => {
                 self.warn("GitHub lookup failed", &error);
@@ -184,9 +197,20 @@ impl BoxCleanup for CleanupGuard<'_> {
             None => false,
         };
         let boxes: BTreeSet<_> = boxes.iter().collect();
-        for id in &boxes {
-            self.stop_one(id, github);
-        }
+        thread::scope(|scope| {
+            let workers: Vec<_> = boxes
+                .iter()
+                .map(|id| {
+                    let id = *id;
+                    (id, scope.spawn(move || self.stop_one(id, github)))
+                })
+                .collect();
+            for (id, worker) in workers {
+                if worker.join().is_err() {
+                    self.warn(&format!("cleanup worker for {id} failed"), &Error::Worker);
+                }
+            }
+        });
         let remaining = self.remaining();
         boxes
             .iter()
@@ -220,17 +244,9 @@ impl BoxCleanup for CleanupGuard<'_> {
 impl Drop for CleanupGuard<'_> {
     fn drop(&mut self) {
         if thread::panicking() {
+            self.unwinding.store(true, Ordering::Relaxed);
             let _ = catch_unwind(AssertUnwindSafe(|| self.finish()));
         }
-    }
-}
-
-/// Protect each cleanup call during unwind so later calls and boxes still run.
-fn during_unwind<T>(operation: impl FnOnce() -> T) -> Option<T> {
-    if thread::panicking() {
-        catch_unwind(AssertUnwindSafe(operation)).ok()
-    } else {
-        Some(operation())
     }
 }
 
@@ -241,3 +257,7 @@ mod cleanup_tests;
 #[cfg(test)]
 #[path = "_tests_/cleanup_retry_tests.rs"]
 mod cleanup_retry_tests;
+
+#[cfg(test)]
+#[path = "_tests_/cleanup_parallel_tests.rs"]
+mod cleanup_parallel_tests;

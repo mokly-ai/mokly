@@ -75,12 +75,9 @@ pub(crate) enum Error {
         /// Original system error.
         source: io::Error,
     },
-    /// GitHub did not return a valid typed run status.
-    #[error("[xtask/remote] could not read GitHub run state: {source}")]
-    GithubState {
-        /// Original JSON response error.
-        source: serde_json::Error,
-    },
+    /// GitHub's field selector returned no run status.
+    #[error("[xtask/remote] GitHub run state is empty")]
+    EmptyGithubState,
     /// A command returned a failed or signal exit.
     #[error("[xtask/remote] {operation:?} command failed with {}", termination(*code))]
     Command {

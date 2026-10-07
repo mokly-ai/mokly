@@ -153,6 +153,8 @@ Stop every warmed box on success, failure, Ctrl-C and SIGTERM.
 Track boxes as warmup requests complete. Cleanup must also cover boxes created
 during an interrupted or failed warmup. Stop launching suite commands after
 an interrupt. Attempt cleanup for all boxes even if one cleanup call fails.
+Clean up boxes in parallel. Each box keeps its own attempt order.
+A panic in one cleanup worker must not stop cleanup of the other boxes.
 Count each box once after its last cleanup attempt. Count only boxes that are
 neither stopped nor proven completed. A nonzero count fails the check and
 prevents local fallback. An interrupted check cannot pass or start fallback.
@@ -185,10 +187,12 @@ Read status again in final cleanup for any box whose attempts are exhausted.
 A completed status clears that box's failure without another stop.
 After the stop attempts, use `gh run cancel <github-run-id>` once when an ID
 and `gh` are available. A completed box status skips cancellation.
-If cancellation fails, read `gh run view <id> --json status` through a typed
-GitHub run state. For `completed`, print
+If cancellation fails, read `gh run view <id> --json status --jq .status`.
+Trim the output. Map `completed` to the typed completed state. Map every other
+nonempty value to the other state. Empty output is a typed read error.
+For `completed`, print
 `information: GitHub run=<id> already ended; cancellation not needed`.
-Any other state, invalid response or failed state read prints the cancellation
+Any other state, empty output or failed state read prints the cancellation
 warning. Never decide from error text. Cancellation failure alone does not
 fail the check or prove that a box completed.
 After final cleanup, print this warning once for each remaining box:

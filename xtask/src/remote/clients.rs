@@ -3,10 +3,9 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use serde::Deserialize;
-
 use crate::remote::contracts::{Blacksmith, Github, GithubRunState, Output};
 use crate::remote::error::{Error, Operation, Result};
+use crate::remote::parse::github_run_state;
 use crate::remote::process::{Process, Request};
 
 /// Blacksmith client backed by an injected process host.
@@ -165,6 +164,8 @@ impl Github for SystemGithub {
                 id.to_string(),
                 "--json".into(),
                 "status".into(),
+                "--jq".into(),
+                ".status".into(),
             ],
             cwd: self.workspace.clone(),
             operation: Operation::Github,
@@ -174,17 +175,8 @@ impl Github for SystemGithub {
             blacksmith: false,
         })?;
         success(&output, Operation::Github)?;
-        match serde_json::from_str::<RunStatus>(&output.stdout) {
-            Ok(run) => Ok(run.status),
-            Err(source) => Err(Error::GithubState { source }),
-        }
+        github_run_state(&output.stdout)
     }
-}
-
-/// The single requested field from GitHub's JSON response.
-#[derive(Deserialize)]
-struct RunStatus {
-    status: GithubRunState,
 }
 
 /// Convert process termination into a typed boundary failure.

@@ -4,8 +4,6 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
-use serde::Deserialize;
-
 use crate::executor::Decision;
 use crate::remote::error::Result;
 
@@ -100,13 +98,11 @@ pub(crate) trait Github: Send + Sync {
 }
 
 /// Run states that distinguish an ended workflow from all other responses.
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
-#[serde(rename_all = "snake_case")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum GithubRunState {
     /// The workflow run has ended.
     Completed,
     /// Any other status keeps the cancellation warning.
-    #[serde(other)]
     Other,
 }
 

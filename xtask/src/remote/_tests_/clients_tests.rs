@@ -111,25 +111,31 @@ fn github_cleanup_cannot_be_cancelled_by_the_same_interrupt() {
 
 #[test]
 fn github_state_uses_exact_arguments_and_a_typed_status() {
-    for (json, state) in [
-        ("{\"status\":\"completed\"}", GithubRunState::Completed),
-        ("{ \"status\": \"in_progress\" }\n", GithubRunState::Other),
-        ("{\"status\":\"new_status\"}", GithubRunState::Other),
+    for (text, state) in [
+        ("completed\n", GithubRunState::Completed),
+        (" \tcompleted\r\n", GithubRunState::Completed),
+        ("in_progress\n", GithubRunState::Other),
+        ("new_status", GithubRunState::Other),
+        ("completed-extra", GithubRunState::Other),
+        ("null", GithubRunState::Other),
     ] {
-        let json = json.to_owned();
+        let text = text.to_owned();
         let process = Arc::new(Unimock::new(
             ProcessExecuteMock
                 .next_call(matching!(_))
                 .answers_arc(Arc::new(move |_, request| {
                     assert_eq!(request.program, "gh");
-                    assert_eq!(request.args, ["run", "view", "123", "--json", "status"]);
+                    assert_eq!(
+                        request.args,
+                        ["run", "view", "123", "--json", "status", "--jq", ".status"]
+                    );
                     assert!(!request.cancellable);
                     assert!(!request.blacksmith);
                     assert!(request.input.is_none());
                     assert!(request.log.is_none());
                     assert_eq!(request.cwd.as_path(), Path::new("/workspace"));
                     Ok(Output {
-                        stdout: json.clone(),
+                        stdout: text.clone(),
                         code: Some(0),
                         ..Output::default()
                     })
@@ -148,20 +154,15 @@ fn github_state_uses_exact_arguments_and_a_typed_status() {
 }
 
 #[test]
-fn github_state_read_preserves_command_and_json_failures() {
-    for (code, json) in [
-        (1, "{\"status\":\"completed\"}"),
-        (0, "not json"),
-        (0, "{}"),
-        (0, "{\"status\":null}"),
-    ] {
-        let json = json.to_owned();
+fn github_state_read_preserves_command_failures_and_rejects_empty_output() {
+    for (code, text) in [(1, "completed\n"), (0, ""), (0, " \t\n")] {
+        let text = text.to_owned();
         let process = Arc::new(Unimock::new(
             ProcessExecuteMock
                 .next_call(matching!(_))
                 .answers_arc(Arc::new(move |_, _| {
                     Ok(Output {
-                        stdout: json.clone(),
+                        stdout: text.clone(),
                         code: Some(code),
                         ..Output::default()
                     })
@@ -182,7 +183,11 @@ fn github_state_read_preserves_command_and_json_failures() {
                 }
             ));
         } else {
-            assert!(matches!(error, Error::GithubState { .. }));
+            assert!(matches!(error, Error::EmptyGithubState));
+            assert_eq!(
+                error.to_string(),
+                "[xtask/remote] GitHub run state is empty"
+            );
         }
     }
 }

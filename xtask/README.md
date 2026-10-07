@@ -133,6 +133,7 @@ availability order, probe barrier, report aggregate and cleanup.
 Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
 Each command worker downloads its report and cleans up its box when it ends.
 It does not wait for other commands. Final cleanup covers only remaining boxes.
+Different boxes clean up in parallel. Each box keeps its own attempt order.
 The status table can prove a box already completed. That box needs no stop or
 GitHub cancellation. Cleanup keeps run IDs from warmup and probe output as a
 fallback when status fails or names no run. A failed stop gets retries after
@@ -141,7 +142,8 @@ Final cleanup counts each box once if it is neither stopped nor proven completed
 That count fails the check. A recovered stop does not fail it.
 An interrupt reports the same count. Each remaining box gets a warning with
 its manual stop command and the 30-minute idle timeout.
-After a failed GitHub cancellation, xtask reads the run state. A completed run
+After a failed GitHub cancellation, xtask reads the run state with
+`gh run view <id> --json status --jq .status`. A completed run
 gets an information line. Other states and failed reads keep the warning.
 The aggregate runs after all commands and cleanup end.
 Each check creates new report and log directories under `.context/`.
