@@ -263,3 +263,6 @@ fn each_report_download_precedes_its_box_stop() {
         );
     }
 }
+
+#[path = "panic_cleanup_tests.rs"]
+mod panic_cleanup_tests;

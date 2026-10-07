@@ -16,6 +16,7 @@ use super::harness_client_tests::client;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(super) enum Case {
     Success,
+    PanicSuites,
     Warmup,
     CleanupWarmup,
     MultipleIds,
@@ -152,6 +153,11 @@ pub(super) fn harness(case: Case) -> Harness {
             ReporterExecutorMock
                 .each_call(matching!(_))
                 .answers_arc(Arc::new(move |_, line| {
+                    if case == Case::PanicSuites
+                        && (line.contains("suite worker failed") || std::thread::panicking())
+                    {
+                        panic!("reporter panics during suite recovery and cleanup");
+                    }
                     print_events.lock().unwrap().push(format!("message:{line}"));
                 })),
         )))
@@ -177,7 +183,7 @@ pub(super) fn harness(case: Case) -> Harness {
     });
     let aggregate_events = events.clone();
     let aggregate = Arc::new(
-        if case.preparation_fails() || case == Case::InterruptSuites {
+        if case.preparation_fails() || matches!(case, Case::InterruptSuites | Case::PanicSuites) {
             Unimock::new(())
         } else {
             Unimock::new(

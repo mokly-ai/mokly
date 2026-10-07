@@ -3,6 +3,7 @@
 use std::collections::BTreeSet;
 use std::thread;
 
+use crate::remote::cleanup::BoxCleanup;
 use crate::remote::clients::success;
 use crate::remote::error::{Error, Operation, Result};
 use crate::remote::parse::{probe_identity, require_warmup_id, warmup_ids};
@@ -11,7 +12,12 @@ use crate::remote::runner::DefaultRemoteRunner;
 
 impl DefaultRemoteRunner {
     /// Collect every recoverable box even when another warmup fails or is interrupted.
-    pub(super) fn warmup(&self, reference: &str, boxes: &mut Vec<String>) -> Result<()> {
+    pub(super) fn warmup(
+        &self,
+        reference: &str,
+        boxes: &mut Vec<String>,
+        cleanup: &dyn BoxCleanup,
+    ) -> Result<()> {
         let dependencies = &self.dependencies;
         let results = thread::scope(|scope| {
             let workers: Vec<_> = (0..11)
@@ -20,7 +26,11 @@ impl DefaultRemoteRunner {
                         if dependencies.interrupt.requested() {
                             return Err(Error::Interrupted);
                         }
-                        dependencies.blacksmith.warmup(reference)
+                        let output = dependencies.blacksmith.warmup(reference)?;
+                        for id in warmup_ids(&output.combined()) {
+                            cleanup.track(&id);
+                        }
+                        Ok(output)
                     })
                 })
                 .collect();

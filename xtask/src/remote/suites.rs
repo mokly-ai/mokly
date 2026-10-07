@@ -3,6 +3,7 @@
 use std::path::{Path, PathBuf};
 use std::thread;
 
+use crate::remote::cleanup::BoxCleanup;
 use crate::remote::error::Error;
 use crate::remote::plan::{RunCommand, commands};
 
@@ -20,8 +21,6 @@ pub(super) struct Completion {
     pub(super) elapsed: u128,
     /// Whether the report download succeeded.
     pub(super) report_downloaded: bool,
-    /// Whether cleanup stopped the box or proved it already completed.
-    pub(super) stopped: bool,
     /// Whether the first cleanup attempt failed.
     pub(super) cleanup_failed: bool,
 }
@@ -33,6 +32,7 @@ impl DefaultRemoteRunner {
         boxes: &[String],
         fingerprint: &str,
         run: &str,
+        cleanup: &dyn BoxCleanup,
     ) -> Vec<Completion> {
         let dependencies = &self.dependencies;
         thread::scope(|scope| {
@@ -48,7 +48,6 @@ impl DefaultRemoteRunner {
                                 passed: false,
                                 elapsed: 0,
                                 report_downloaded: false,
-                                stopped: false,
                                 cleanup_failed: false,
                             };
                         }
@@ -96,14 +95,13 @@ impl DefaultRemoteRunner {
                         let report_downloaded = command.report
                             && !dependencies.interrupt.requested()
                             && self.download_one(id, &command.name, run);
-                        let cleanup_failed = self.stop_boxes(std::slice::from_ref(id)) != 0;
+                        let cleanup_failed = cleanup.stop_boxes(std::slice::from_ref(id)) != 0;
                         Completion {
                             command,
                             box_id: id.clone(),
                             passed,
                             elapsed,
                             report_downloaded,
-                            stopped: !cleanup_failed,
                             cleanup_failed,
                         }
                     })

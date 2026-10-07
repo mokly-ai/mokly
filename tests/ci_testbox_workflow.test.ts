@@ -126,7 +126,11 @@ test("Testbox toolchains and npm cache match the CI minimum runtime", async () =
 test("Testbox lockfile stamp contains only the lowercase digest and one newline", async (context) => {
   const { workflow } = await readTestboxWorkflow();
   const script = workflow.jobs.testbox!.steps[6]!.run!;
-  assert.ok(script.includes('"$HOME/.mokly-testbox/package-lock.sha256"'));
+  assert.equal(
+    script,
+    'mkdir -p "$HOME/.mokly-testbox"\nsha256sum package-lock.json | cut -d \' \' -f1 > "$HOME/.mokly-testbox/package-lock.sha256"\n',
+  );
+  if (process.platform !== "linux") return;
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-testbox-stamp-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));
   const lockfile = Buffer.from('{"lockfileVersion":3,"packages":{}}\n');
@@ -160,7 +164,13 @@ test("Testbox SSH environment replaces only PATH and PLAYWRIGHT_CHANNEL entries"
     /sudo sed -i '\/\^PATH=\/d;\/\^PLAYWRIGHT_CHANNEL=\/d' \/etc\/environment/u,
   );
   assert.match(original, /sudo tee -a \/etc\/environment >\/dev\/null/u);
+  assert.ok(
+    original.includes(
+      `printf 'PATH=%s\\nPLAYWRIGHT_CHANNEL=%s\\n' "$PATH" "$PLAYWRIGHT_CHANNEL"`,
+    ),
+  );
   assert.doesNotMatch(original, /\$\{\{/u);
+  if (process.platform !== "linux") return;
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-testbox-env-"));
   context.after(() => fs.rm(root, { recursive: true, force: true }));
   const file = path.join(root, "environment");

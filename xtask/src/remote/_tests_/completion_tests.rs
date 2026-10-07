@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
+use crate::remote::cleanup::{BoxCleanup, CleanupGuard};
 use crate::remote::contracts::*;
 use crate::remote::runner::DefaultRemoteRunner;
 
@@ -83,12 +84,20 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
             workspace: PathBuf::from("/workspace"),
         },
     };
-    let boxes = vec![
+    let boxes: Vec<String> = vec![
         "tbx_repository".into(),
         "tbx_package".into(),
         "tbx_unit".into(),
     ];
-    assert_eq!(runner.execute(&boxes, "sha256:test", "run").len(), 3);
+    let cleanup = CleanupGuard::new(&runner.dependencies);
+    for id in &boxes {
+        cleanup.track(id);
+    }
+    assert_eq!(
+        runner.execute(&boxes, "sha256:test", "run", &cleanup).len(),
+        3
+    );
+    assert!(cleanup.pending().is_empty());
     let events = events.lock().unwrap();
     assert!(events.iter().any(|event| event == "download:tbx_unit"));
     for id in boxes {

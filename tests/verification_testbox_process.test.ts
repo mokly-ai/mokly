@@ -66,7 +66,7 @@ test("the production command adapter streams both outputs and retains nonzero ex
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
   test(
     `the wrapper command adapter forwards ${signal} to its running child`,
-    { timeout: 20_000 },
+    { skip: process.platform === "win32", timeout: 20_000 },
     async (context) => {
       const root = await fs.mkdtemp(
         path.join(os.tmpdir(), "mokly-testbox-signal-"),

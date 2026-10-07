@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
+use crate::remote::cleanup::{BoxCleanup, CleanupGuard};
 use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
 use crate::remote::runner::DefaultRemoteRunner;
@@ -88,8 +89,9 @@ fn cleanup_continues_after_status_stop_and_optional_github_failures() {
                 workspace: PathBuf::from("/workspace"),
             },
         };
+        let cleanup = CleanupGuard::new(&runner.dependencies);
         assert_eq!(
-            runner.stop_boxes(&["tbx_b".into(), "tbx_a".into(), "tbx_b".into()]),
+            cleanup.stop_boxes(&["tbx_b".into(), "tbx_a".into(), "tbx_b".into()]),
             usize::from(case == 3)
         );
         let events = events.lock().unwrap();

@@ -1,6 +1,6 @@
 # Blacksmith Remote Verification
 
-Status: Active. The review is complete; 14 open findings await the user's decision. The plan closes when its PR merges.
+Status: Active. Milestones 1 to 6 are complete. The user approved findings 1 to 3 for Milestone 7. Findings 4 to 14 stay open. The separate reviewer will review Milestone 7 and open the PR. The plan closes when its PR merges.
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
 Blacksmith key is available. Run it locally when no key is available. The key
@@ -389,9 +389,9 @@ Leave the final review to the separate reviewer.
       Then stop and report the rest. Add each open finding as one line under
       this TODO.
   - Re-review of `d05a167d`: no new findings.
-  - Open finding 1 (High): Closed output can stop box cleanup.
-  - Open finding 2 (Medium): Local fallback can ignore stop signals.
-  - Open finding 3 (Medium): New verification tests fail on macOS.
+  - Open finding 1 (High): Closed output can stop box cleanup; approved, Milestone 7, option C: best-effort output and a panic cleanup guard.
+  - Open finding 2 (Medium): Local fallback can ignore stop signals; approved, Milestone 7, option A: release the signal handler before fallback.
+  - Open finding 3 (Medium): New verification tests fail on macOS; approved, Milestone 7, option A: guard Linux-only work inside each test without skip.
   - Open finding 4 (Medium): OS adapters need more test coverage.
   - Open finding 5 (Low): Cleanup counts attempts and can hide stop failures.
   - Open finding 6 (Low): Tag pushes start the Testbox workflow.
@@ -406,8 +406,58 @@ Leave the final review to the separate reviewer.
     cancellation, because cleanup reads run IDs only from `testbox status`.
 
 Evidence: `.context/blacksmith-remote-verification/milestone-6-evidence.md`.
-Evidence: `.context/blacksmith-remote-verification/review-fixes-evidence.md`.
-Evidence: `.context/blacksmith-remote-verification/npm-pin-evidence.md`.
+
+## Milestone 7: Approved review fixes
+
+Fix the three findings that the user approved on 2026-10-07. Keep findings 4
+through 14 open. Leave the final review and PR to the separate reviewer.
+
+User decisions:
+
+- Finding 1, option C: make terminal output best effort. Add a cleanup guard
+  that stops remaining boxes when a panic unwinds the runner.
+- Finding 2, option A: release the signal handler before local fallback.
+  Read the interrupt flag again after release.
+- Finding 3, option A: run Linux-only work only on Linux, inside each test.
+  Do not skip these tests. Use the existing Windows skip for POSIX signal tests.
+
+Required work:
+
+- [x] Update the remote contract and matching README text before implementation.
+- [x] Finding 1: write failing output and panic cleanup tests. Confirm the
+      failures. Make output best effort. Track remaining boxes in one guard.
+- [x] Finding 2: write failing signal decision and fallback order tests.
+      Confirm the failures. Release the handler before fallback and read the
+      flag again. Keep paths that never arm the handler unchanged.
+- [x] Finding 3: write failing platform coverage first. Confirm the failures.
+      Keep byte and script assertions on every platform. Run Linux-only file
+      and script work only on Linux. Guard signal tests on Windows.
+- [x] Run Rust formatting, Clippy with `-D warnings`, xtask tests, both length
+      lints, Prettier, ESLint, prepared TypeScript, protocol tests and the
+      focused verification and CI Node tests with the pinned Node and npm.
+- [x] Commit the fixes. Name findings 1 to 3 and their options in the body.
+- [ ] Fetch and merge `origin/main` with a merge commit. Follow Mainline
+      Feature Preservation. Confirm two parents. Review each path in the
+      remerge diff. Record all six merge resolutions in
+      `.context/blacksmith-remote-verification/merge-justifications.md`.
+- [ ] Inspect the diff and deletions against `origin/main`. Push the branch.
+- [ ] Run `cargo xtask check` in default mode with
+      `MOKLY_TESTBOX_REF=calummoore/blacksmith-ci-remote-testing`. Require
+      11/11 commands, 9/9 reports and no active box. If the API fails before
+      suites start, clean up and retry once. Record both attempts.
+- [ ] Update the plan after all checks pass. Run `git add -A`. Commit with
+      Conventional Commits and push the branch.
+- [ ] After the push, a reviewer uses
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main`. The reviewer
+      reports the findings. Keep the review read-only. The implementer then
+      applies the review-fix rule in `AGENTS.md`. Fix the `Auto-fix: yes`
+      findings. Run the checks. Commit and push. Re-review once. Fix any new
+      `Auto-fix: yes` findings once more. Run the checks. Commit and push.
+      Then stop and report the rest. Add each open finding as one line under
+      this TODO.
+
+Evidence: `.context/blacksmith-remote-verification/milestone-7-evidence.md`.
 
 ## Post-merge follow-up (non-blocking)
 

@@ -1,9 +1,8 @@
 //! Fail-closed complete remote verification orchestration.
 
-use std::collections::BTreeSet;
-
 use thiserror::Error;
 
+use crate::remote::cleanup::{BoxCleanup, CleanupGuard};
 use crate::remote::contracts::Dependencies;
 use crate::remote::error::{self, Result};
 
@@ -36,12 +35,13 @@ pub(crate) struct DefaultRemoteRunner {
 
 impl RemoteRunner for DefaultRemoteRunner {
     fn run(&self) -> RunResult {
+        let cleanup = CleanupGuard::new(&self.dependencies);
         let mut boxes = Vec::new();
-        let preparation = self.prepare(&mut boxes);
+        let preparation = self.prepare(&mut boxes, &cleanup);
         let (head, fingerprint, run) = match preparation {
             Ok(identity) => identity,
             Err(source) => {
-                let failures = self.stop_boxes(&boxes);
+                let failures = cleanup.stop_boxes(&cleanup.pending());
                 if self.dependencies.interrupt.requested()
                     || matches!(source, error::Error::Interrupted)
                 {
@@ -56,7 +56,7 @@ impl RemoteRunner for DefaultRemoteRunner {
                 return Err(Failure::Unavailable(source));
             }
         };
-        match self.finish(&boxes, &fingerprint, &run, &head) {
+        match self.finish(&boxes, &fingerprint, &run, &head, &cleanup) {
             Ok(()) => Ok(()),
             Err(source) => Err(Failure::Failed(source)),
         }
@@ -65,7 +65,11 @@ impl RemoteRunner for DefaultRemoteRunner {
 
 impl DefaultRemoteRunner {
     /// Prepare all boxes before the first suite, preserving recoverable IDs.
-    fn prepare(&self, boxes: &mut Vec<String>) -> Result<(String, String, String)> {
+    fn prepare(
+        &self,
+        boxes: &mut Vec<String>,
+        cleanup: &dyn BoxCleanup,
+    ) -> Result<(String, String, String)> {
         let dependencies = &self.dependencies;
         let head = dependencies.git.head()?;
         let fingerprint = self.fingerprint()?;
@@ -82,7 +86,7 @@ impl DefaultRemoteRunner {
         dependencies.reporter.executor(&format!(
             "information: run={run} ref={reference} HEAD={head}"
         ));
-        self.warmup(&reference, boxes)?;
+        self.warmup(&reference, boxes, cleanup)?;
         self.probe(boxes, &fingerprint, &head)?;
         dependencies
             .reporter
@@ -91,9 +95,16 @@ impl DefaultRemoteRunner {
     }
 
     /// Execute the complete remote gate after the fallback boundary.
-    fn finish(&self, boxes: &[String], fingerprint: &str, run: &str, head: &str) -> Result<()> {
+    fn finish(
+        &self,
+        boxes: &[String],
+        fingerprint: &str,
+        run: &str,
+        head: &str,
+        cleanup: &dyn BoxCleanup,
+    ) -> Result<()> {
         let dependencies = &self.dependencies;
-        let completed = self.execute(boxes, fingerprint, run);
+        let completed = self.execute(boxes, fingerprint, run, cleanup);
         let reports = dependencies
             .workspace
             .join(".context/verification-reports/remote")
@@ -102,21 +113,11 @@ impl DefaultRemoteRunner {
             .iter()
             .filter(|completion| completion.report_downloaded)
             .count();
-        let stopped: BTreeSet<_> = completed
-            .iter()
-            .filter(|completion| completion.stopped)
-            .map(|completion| &completion.box_id)
-            .collect();
-        let remaining: Vec<_> = boxes
-            .iter()
-            .filter(|id| !stopped.contains(id))
-            .cloned()
-            .collect();
         let cleanup = completed
             .iter()
             .filter(|completion| completion.cleanup_failed)
             .count()
-            + self.stop_boxes(&remaining);
+            + cleanup.stop_boxes(&cleanup.pending());
         if dependencies.interrupt.requested() {
             return Err(error::Error::Interrupted);
         }

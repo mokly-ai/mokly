@@ -2,11 +2,12 @@
 
 use std::env;
 use std::fs;
+use std::io::{self, Write};
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicU8, Ordering};
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -102,20 +103,28 @@ impl Clock for SystemClock {
 /// Shared interrupt flag owned by the signal adapter.
 #[derive(Default)]
 pub(crate) struct SystemInterrupt {
-    /// Flag retained by the installed callback.
-    flag: Arc<AtomicBool>,
+    /// One atomic orders signal requests with release to prevent a lost signal.
+    state: Arc<AtomicU8>,
 }
 
 impl Interrupt for SystemInterrupt {
     fn arm(&self) -> Result<()> {
-        let flag = Arc::clone(&self.flag);
-        match ctrlc::set_handler(move || flag.store(true, Ordering::SeqCst)) {
+        let state = Arc::clone(&self.state);
+        match ctrlc::set_handler(move || {
+            let previous = state.fetch_or(REQUESTED, Ordering::SeqCst);
+            if signal_action(previous & RELEASED != 0) == SignalAction::Exit {
+                std::process::exit(130);
+            }
+        }) {
             Ok(()) => Ok(()),
             Err(source) => Err(Error::Signal { source }),
         }
     }
+    fn release(&self) {
+        self.state.fetch_or(RELEASED, Ordering::SeqCst);
+    }
     fn requested(&self) -> bool {
-        self.flag.load(Ordering::SeqCst)
+        self.state.load(Ordering::SeqCst) & REQUESTED != 0
     }
 }
 
@@ -124,16 +133,41 @@ pub(crate) struct SystemReporter;
 
 impl Reporter for SystemReporter {
     fn decision(&self, decision: Decision) {
-        println!("{decision}");
+        let _ = writeln!(io::stdout().lock(), "{decision}");
     }
     fn executor(&self, message: &str) {
-        eprintln!("[xtask/executor] {message}");
+        let _ = writeln!(io::stderr().lock(), "[xtask/executor] {message}");
     }
     fn progress(&self, message: &str) {
-        eprintln!("[xtask/remote] {message}");
+        let _ = writeln!(io::stderr().lock(), "[xtask/remote] {message}");
     }
 }
 
 #[cfg(test)]
 #[path = "_tests_/runtime_programs_tests.rs"]
 mod runtime_programs_tests;
+
+/// Bit set by the callback before it observes the release state.
+const REQUESTED: u8 = 1;
+/// Bit set before the application reads the interrupt flag again.
+const RELEASED: u8 = 2;
+
+/// Signal behavior selected from the installed handler's release state.
+#[derive(Debug, Eq, PartialEq)]
+enum SignalAction {
+    Request,
+    Exit,
+}
+
+/// Pure decision shared by the callback and its regression test.
+fn signal_action(released: bool) -> SignalAction {
+    if released {
+        SignalAction::Exit
+    } else {
+        SignalAction::Request
+    }
+}
+
+#[cfg(test)]
+#[path = "_tests_/runtime_signal_tests.rs"]
+mod runtime_signal_tests;

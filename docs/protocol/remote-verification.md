@@ -61,6 +61,10 @@ One check must never mix local and remote suite results.
 Use a typed unavailable result for preparation failures before any suite.
 Use a typed failed result after the execution boundary.
 An interrupt or failed preparation cleanup must never start local fallback.
+Before local fallback after an armed signal handler, release the handler.
+After release, SIGINT, SIGTERM or SIGHUP ends xtask at once with exit status 130.
+Read the interrupt flag again after release. A signal received before release
+prevents fallback.
 
 `cargo xtask executor` accepts the same `--executor` flag and mode precedence.
 It uses the same availability checks.
@@ -180,6 +184,10 @@ an interrupt. Attempt cleanup for all boxes even if one cleanup call fails.
 Report cleanup failures. An interrupted check cannot pass or start local fallback.
 Track successful stops and already-completed boxes. Final cleanup processes
 only the remaining boxes. A failed stop stays eligible for final cleanup.
+One cleanup guard tracks every warmed box that is not yet stopped or proven
+completed. When a panic unwinds the runner, the guard stops those remaining
+boxes with the normal cleanup rules. The guard never panics itself.
+The guard does no cleanup on a normal return.
 
 Before stopping each box, run `blacksmith testbox status --id <box-id>`.
 Split table lines on ASCII whitespace. Find the header whose first column is
@@ -197,6 +205,9 @@ timeout limit cost if the local process is killed before cleanup.
 Do not reuse boxes between checks.
 
 ## Output And Logs
+
+Terminal output is best effort. A closed stdout or stderr never stops cleanup.
+Ignore terminal write errors. Keep each line's format unchanged.
 
 Print one progress line when each suite command starts and when it ends.
 Write each command's standard output and standard error to

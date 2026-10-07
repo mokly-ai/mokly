@@ -80,6 +80,7 @@ impl Xtask for Application {
                         match self.remote_runner.run() {
                             Ok(()) => Ok(()),
                             Err(Failure::Unavailable(source)) if mode == Executor::Auto => {
+                                self.interrupt.release();
                                 if self.interrupt.requested()
                                     || matches!(source, error::Error::Interrupted)
                                 {

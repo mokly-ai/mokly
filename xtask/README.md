@@ -147,6 +147,13 @@ Invalid or rejected modes exit nonzero.
 Automatic preparation failures stop their boxes before the full local fallback.
 Typed results prevent fallback after suites start or an interrupt arrives.
 Failed preparation cleanup also prevents fallback.
+Before fallback after an armed signal handler, xtask releases the handler.
+SIGINT, SIGTERM or SIGHUP after release ends xtask at once with exit status 130.
+Xtask reads the interrupt flag again after release. An earlier signal prevents
+fallback. Terminal output is best effort. Closed stdout or stderr cannot stop
+cleanup. A guard tracks boxes that are not yet stopped or proven completed.
+It uses the normal cleanup rules when a panic unwinds the runner.
+It never panics itself and does no cleanup on a normal return.
 
 ## Development
 

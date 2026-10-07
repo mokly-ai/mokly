@@ -1,5 +1,6 @@
 //! CLI parsing and dependency composition.
 
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::sync::Arc;
@@ -76,7 +77,7 @@ pub(crate) fn main() -> ExitCode {
     let workspace = match workspace_root() {
         Ok(workspace) => workspace,
         Err(error) => {
-            eprintln!("{error}");
+            let _ = writeln!(io::stderr().lock(), "{error}");
             return ExitCode::FAILURE;
         }
     };
@@ -106,7 +107,7 @@ pub(crate) fn main() -> ExitCode {
     match app.run(Cli::parse().command) {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
-            eprintln!("{error}");
+            let _ = writeln!(io::stderr().lock(), "{error}");
             ExitCode::FAILURE
         }
     }

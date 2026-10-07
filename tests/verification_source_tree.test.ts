@@ -138,11 +138,11 @@ test("a directory in place of a tracked file fails rather than disappearing", as
   await assert.rejects(readSourceTree(root), /file type/u);
 });
 
-test("paths with whitespace and invalid UTF-8 retain their original bytes", async (context) => {
+test("paths with whitespace and non-ASCII names retain their original bytes", async (context) => {
   const { root } = await repository(context);
   const name = Buffer.concat([
     Buffer.from(`${root}${path.sep}`),
-    Buffer.from([0xff]),
+    process.platform === "linux" ? Buffer.from([0xff]) : Buffer.from("é"),
   ]);
   await fs.writeFile(name, "one");
   await fs.writeFile(path.join(root, "space and\nnewline.txt"), "two");

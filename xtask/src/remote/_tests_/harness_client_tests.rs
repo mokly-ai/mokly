@@ -83,6 +83,9 @@ pub(super) fn client(
                     .contains("20261006T120000Z-42")
             );
             run_events.lock().unwrap().push(format!("suite:{id}"));
+            if case == Case::PanicSuites && id == "tbx_0" {
+                panic!("suite dependency failed");
+            }
             if case == Case::InterruptSuites {
                 run_signal.store(true, Ordering::SeqCst);
             }

@@ -125,10 +125,12 @@ pub(crate) trait Logs: Send + Sync {
 }
 
 /// Interrupt registration and cancellation state.
-#[cfg_attr(test, unimock::unimock(api = [InterruptArmMock, InterruptRequestedMock]))]
+#[cfg_attr(test, unimock::unimock(api = [InterruptArmMock, InterruptReleaseMock, InterruptRequestedMock]))]
 pub(crate) trait Interrupt: Send + Sync {
-    /// Install SIGINT and SIGTERM handling once at the composition root.
+    /// Install SIGINT, SIGTERM and SIGHUP handling once at the composition root.
     fn arm(&self) -> Result<()>;
+    /// Restore immediate signal exit before returning to local execution.
+    fn release(&self);
     /// Check whether cancellation was requested.
     fn requested(&self) -> bool;
 }
