@@ -1,8 +1,10 @@
+import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
+
 import { parseViewHref, viewHref } from "./routes.js";
 
 /** Trusted shell metadata needed to serve a catalogue from ordinary files. */
 export interface StaticDelivery {
-  schemaVersion: 3;
+  schemaVersion: 5;
   deploymentId: string;
   canonicalPath: string;
   /** Null explicitly disables comparisons for a current-only publication. */
@@ -16,16 +18,35 @@ function isCanonicalViewPath(value: unknown): value is string {
   return identity !== undefined && viewHref(identity) === value;
 }
 
-/** Validate static metadata before it can authorize browser requests. */
-export function parseStaticDelivery(
-  value: unknown,
-): StaticDelivery | undefined {
+/** Classify untrusted metadata without crossing a browser error boundary. */
+export type StaticDeliveryParseResult =
+  | { kind: "valid"; value: StaticDelivery }
+  | { kind: "unsupported-version"; version: unknown }
+  | { kind: "invalid" };
+
+export function parseStaticDelivery(value: unknown): StaticDeliveryParseResult {
+  try {
+    if (
+      value &&
+      typeof value === "object" &&
+      "schemaVersion" in value &&
+      value.schemaVersion !== 5
+    )
+      return { kind: "unsupported-version", version: value.schemaVersion };
+    const parsed = parseCurrentDelivery(value);
+    return parsed ? { kind: "valid", value: parsed } : { kind: "invalid" };
+  } catch {
+    return { kind: "invalid" };
+  }
+}
+
+function parseCurrentDelivery(value: unknown): StaticDelivery | undefined {
   if (
     !value ||
     typeof value !== "object" ||
     Object.keys(value).length !== 4 ||
     !("schemaVersion" in value) ||
-    value.schemaVersion !== 3 ||
+    value.schemaVersion !== 5 ||
     !("deploymentId" in value) ||
     typeof value.deploymentId !== "string" ||
     !/^[a-f0-9]{64}$/.test(value.deploymentId) ||
@@ -42,13 +63,13 @@ export function parseStaticDelivery(
   if (
     value.comparisonUrl !== null &&
     (typeof value.comparisonUrl !== "string" ||
-      !/^\/__mokly\/diffs\/__generations\/[a-f0-9]{64}\/review\.json$/.test(
-        value.comparisonUrl,
-      ))
+      !new RegExp(
+        `^\\/${VIEWER_DIRECTORY}\\/diffs\\/generations\\/[a-f0-9]{64}\\/review\\.json$`,
+      ).test(value.comparisonUrl))
   )
     return undefined;
   return {
-    schemaVersion: 3,
+    schemaVersion: 5,
     deploymentId: value.deploymentId,
     canonicalPath: value.canonicalPath as string,
     comparisonUrl: value.comparisonUrl,

@@ -15,7 +15,7 @@ headings, omits empty ids, retains code languages and delegates destinations.
 Parsing and rendering never read files. `template.ts` owns the script-free
 light/dark document; its stylesheet follows the `design/browse/pages/document`
 design, which `tests/browser/document_typography.spec.ts` compares property by
-property. After compatibility transforms, `safety.ts` parses the final
+property. After link rewriting, `safety.ts` parses the final
 HTML and enforces the element, attribute and URL allowlist independently. Serve's
 owned inspector still needs scripts, so the template adds no blanket CSP meta.
 
@@ -28,15 +28,18 @@ plain text and join the private source inventory, so direct HTTP requests
 cannot expose them. Copyable resources remain byte-exact and join source watching.
 Targets already public under the output root stay public and render as text.
 Proven Mokly-owned output and metadata are rejected before inventory. Copied
-resources use the same lexical public-name policy as export, including hidden
-and private directory names. Filesystem failures never expose absolute paths.
+resources retain their lexical public-name rules, including hidden and private
+directory names. Authored closure files use the separate shared public policy. Filesystem failures never expose absolute paths.
 `resource_paths.ts` reconstructs their public paths from manifest metadata so
-transactions can replace and remove only proven generated copies.
+compilation can validate copies before whole-tree replacement.
+
+Destination classification uses the shared privacy policy. Package-root equality
+is checked only by export capture; it does not reject Build or Serve.
 
 The graph retains documents and asset bytes for demand rendering and worker
-replay. Build applies the same ownership, compatibility, final-link, resource
-and transactional checks as pages. Manifest v8 records source resources; public
-catalogue v4 exposes documents without source bytes. Changes compares rendered
+replay. Build applies the same generated-tree, final-link, resource
+and transactional checks as pages. Manifest v9 records source resources; public
+catalogue v5 exposes documents without source bytes. Changes compares rendered
 documents in each scheme, resources and reviewable metadata. Removed previews
 capture historical schemes and resources through the existing baseline reader.
 `moved_resources.ts` proves equal bytes at corresponding resource references

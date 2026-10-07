@@ -8,14 +8,23 @@ import {
 import { validateDependencyDeclarations } from "./dependency_validation.js";
 import { validateVariantAgainstParent } from "./manifest_entry_validation.js";
 
-/** Validate every v7 per-view record against the complete component set. */
+/** Validate every v9 per-view record against the complete component set. */
 export function validateManifestComponentUsage(manifest: {
   entries: readonly Record<string, unknown>[];
   schemaVersion: number;
 }): void {
   exactKeys(
     manifest,
-    ["schemaVersion", "generatedBy", "entries", "folders", "sourceFiles"],
+    [
+      "schemaVersion",
+      "generatedBy",
+      "entries",
+      "folders",
+      "sourceFiles",
+      "assetClosure",
+      "blobHashAlgorithm",
+      "generatedFiles",
+    ],
     "$manifest",
   );
   const components = new Map<string, ManifestComponent>(

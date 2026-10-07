@@ -3,6 +3,7 @@ import {
   isIncompatibleEarlierBaseline,
 } from "../../dist/baseline/compatibility.js";
 import { acceptedGenerationFromCompilation } from "../../dist/review/accepted_generation.js";
+import { prepareReviewRepository } from "../../dist/review/prepare.js";
 import { loadCatalogueSnapshot } from "../../dist/server/catalogue_snapshot.js";
 import { computeCatalogueChanges } from "../../dist/server/changed.js";
 
@@ -46,5 +47,20 @@ export async function publicationSnapshot(
       incompatible: true,
       snapshot: await loadCatalogueSnapshot(config, undefined, manifest),
     };
+  }
+}
+
+/** Reject older prepared output without turning requested Changes into a failed publication. */
+export async function preparePublicationBaseline(config, base, includeChanges) {
+  if (!includeChanges) return { prepared: undefined, incompatible: false };
+  try {
+    return {
+      prepared: await prepareReviewRepository(config, base),
+      incompatible: false,
+    };
+  } catch (error) {
+    if (!isIncompatibleEarlierBaseline(error)) throw error;
+    process.stderr.write(`${EARLIER_BASELINE_MESSAGE}\n`);
+    return { prepared: undefined, incompatible: true };
   }
 }

@@ -34,7 +34,7 @@ export interface WatchConfig {
 
 /** Git comparison and artifact configuration. */
 export interface ReviewConfig {
-  /** Shell-free commands run using trusted historical code in derived mode. */
+  /** Shell-free commands run using trusted historical code for missing baselines. */
   baselineBuild?: readonly (readonly string[])[];
   /** Git ref whose merge base with HEAD is the comparison branch point. */
   base?: string;
@@ -42,12 +42,6 @@ export interface ReviewConfig {
   outDir?: string;
   /** Repository-relative POSIX globs whose changes can affect many screens. */
   sharedImpact?: readonly string[];
-}
-
-/** Temporary compatibility accepted during a consumer cutover. */
-export interface CompatibilityConfig {
-  /** Config-relative module applying a temporary deterministic document bridge. */
-  transformer?: string;
 }
 
 /** Esbuild loaders allowed for consumer-authored module extensions. */
@@ -83,16 +77,12 @@ export interface ModuleResolutionConfig {
 
 /** Public, serializable host configuration. */
 export interface MoklyConfig {
-  /** Rebuild historical output or retain generated files in Git; defaults to derived. */
-  generatedOutput?: "committed" | "derived";
   /** Color schemes rendered for screens; defaults to light only. */
   colorSchemes?: readonly ColorScheme[];
   /** Directories scanned for definitions; defaults to specs. */
   roots?: readonly RootConfig[];
-  /** Config-relative generated catalogue/output root. */
+  /** Config-relative authored catalogue directory. */
   mockupsDir: string;
-  /** Additional private POSIX globs relative to mockupsDir; extends shipped defaults. */
-  publicExclude?: readonly string[];
   /** Config-relative repository root; defaults to the config directory. */
   repoRoot?: string;
   /** Optional config-relative consumer renderer module. */
@@ -107,17 +97,11 @@ export interface MoklyConfig {
   review?: ReviewConfig;
   /** Watch settings. */
   watch?: WatchConfig;
-  /** Temporary manifest compatibility. */
-  compatibility?: CompatibilityConfig;
 }
 
 /** Absolute, validated configuration consumed by runtime engines. */
 export interface ResolvedConfig {
-  generatedOutput: "committed" | "derived";
   colorSchemes: readonly ColorScheme[];
-  compatibility: {
-    transformer?: string;
-  };
   configPath: string;
   /** Complete authoring inventory retained across compile and serving boundaries. */
   sourceFiles?: readonly string[];
@@ -136,8 +120,8 @@ export interface ResolvedConfig {
   /** Directory records retained by the same discovery pass. */
   folderRecords?: readonly FolderRecord[];
   mockupsDir: string;
-  /** Shipped defaults followed by validated consumer exclusions. */
-  readonly publicExclude: readonly string[];
+  /** Mokly-owned generated output, always inside the catalogue directory. */
+  generatedDir: string;
   moduleResolution: ResolvedModuleResolutionConfig;
   renderer?: string;
   /** Absolute PostCSS module path; plugin instances never cross IPC. */

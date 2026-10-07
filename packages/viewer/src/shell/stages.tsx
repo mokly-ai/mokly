@@ -5,10 +5,10 @@
 
 import { useContext, type ReactNode } from "react";
 
+import { currentDocumentPath } from "../catalogue/delivery_paths.js";
 import type { ManifestComponentVariant } from "../components/manifest_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
-import { encodeUrlPath } from "../data/paths.js";
 import { entryRoute, documentRoute } from "../navigation/routes.js";
 import { DisplaySelection } from "../viewer/display_context.js";
 import { routedEntries } from "../viewer/selection.js";
@@ -18,11 +18,11 @@ import { ComponentStage } from "./component_stage.js";
 import { FramesStage, UseCaseFlowStage } from "./manifest_stages.js";
 import { PublicStage } from "./public_stage.js";
 import { documentLightOnly, LightOnlyBand } from "./scheme_fallback.js";
+import { framePath } from "./stage_sources.js";
 import type { RouteTarget } from "./target.js";
 
 function fragmentSrc(route: string, fragment?: string): string {
-  const source = `/static/${encodeUrlPath(route)}`;
-  return fragment ? `${source}#${encodeURIComponent(fragment)}` : source;
+  return framePath(currentDocumentPath(route), fragment);
 }
 
 function EmbedStage(props: {

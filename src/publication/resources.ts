@@ -1,73 +1,56 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { entryRoute, documentRoute, generatedViews } from "@mokly/viewer/data";
+import {
+  GENERATED_DIRECTORY,
+  entryRoute,
+  documentRoute,
+  generatedViews,
+} from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../browse/document_adapter.js";
-import { generatedBytes, type GeneratedFile } from "../build/generated_file.js";
-import { isOwned } from "../build/ownership.js";
-import { GENERATED_DIRECTORY } from "../build/styles/routes.js";
+import type { GeneratedFile } from "../build/generated_file.js";
 import { locatePath } from "../config/file_locations.js";
-import { publicFileLocation } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { capturePublicFiles } from "../export/public_files.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
 import { referencedRoutes } from "../review/asset_references.js";
 
-import { publicationFiles, readPublicationFile } from "./files.js";
-
-/** Materialize public aliases as regular files and validate their exported resources. */
+/** Capture only the validated closure and in-memory generated documents. */
 export async function copyPublicFiles(
   config: ResolvedConfig,
   catalogue: Catalogue,
   stage: string,
-  excludedRoots: readonly string[],
-  generated?: ReadonlyMap<string, GeneratedFile>,
+  _excludedRoots: readonly string[],
+  generatedOutputs: ReadonlyMap<string, GeneratedFile>,
 ): Promise<void> {
   const root = path.join(stage, "static");
   const copied = new Set<string>();
-  const files = await publicationFiles(
+  const files = await capturePublicFiles(
     config,
-    config.mockupsDir,
-    generated
-      ? [...excludedRoots, path.join(config.mockupsDir, GENERATED_DIRECTORY)]
-      : excludedRoots,
-    true,
+    generatedOutputs,
+    "assetClosure" in catalogue.manifest ? catalogue.manifest.assetClosure : [],
   );
-  for (const file of files) {
-    if (file.kind !== "file") continue;
-    if (
-      generated &&
-      (generated.has(
-        path.relative(config.mockupsDir, file.path).split(path.sep).join("/"),
-      ) ||
-        isOwned(file.path, config))
-    )
-      continue;
-    const location = publicFileLocation(file.path, config);
-    if (!location) continue;
-    const relative = location.relativePath;
-    const target = path.join(root, relative);
-    const content = await readPublicationFile(file, config.repoRoot);
-    await fs.promises.mkdir(path.dirname(target), { recursive: true });
-    await fs.promises.writeFile(target, content);
-    copied.add(relative);
-  }
-  for (const [route, content] of generated ?? []) {
-    if (route === MANIFEST_NAME) continue;
+  for (const [route, content] of files) {
+    if (route === `${GENERATED_DIRECTORY}/${MANIFEST_NAME}`) continue;
     const target = path.join(root, route);
     await fs.promises.mkdir(path.dirname(target), { recursive: true });
-    await fs.promises.writeFile(target, generatedBytes(content));
+    await fs.promises.writeFile(target, content);
     copied.add(route);
   }
   for (const route of catalogueDocuments(catalogue)) {
-    if (!copied.has(route)) throw resourceError(route, "catalogue");
+    if (!copied.has(`${GENERATED_DIRECTORY}/${route}`))
+      throw resourceError(route, "catalogue");
   }
   const documents = new Map<string, string>();
   for (const route of copied) {
     const file = await exportedFile(root, stage, route);
     if (!/\.(?:html?|css)$/i.test(route)) continue;
     const content = await fs.promises.readFile(file);
+    const logical = route.startsWith(`${GENERATED_DIRECTORY}/`)
+      ? route.slice(GENERATED_DIRECTORY.length + 1)
+      : undefined;
     for (const resource of referencedRoutes(route, content)) {
       if (!copied.has(resource)) throw resourceError(resource, route);
       await exportedFile(root, stage, resource, route);
@@ -75,7 +58,7 @@ export async function copyPublicFiles(
     if (/\.html?$/i.test(route))
       documents.set(
         route,
-        adaptBrowseDocument(content.toString("utf8"), route, catalogue),
+        adaptBrowseDocument(content.toString("utf8"), logical, catalogue),
       );
   }
   for (const [route, html] of documents)

@@ -21,7 +21,7 @@ const catalogue = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v4.json",
+        "../../../docs/protocol/fixtures/catalogue-v5.json",
         import.meta.url,
       ),
       "utf8",
@@ -31,13 +31,14 @@ const catalogue = readCatalogue(
 
 test("static hydration adopts the finalized authenticated deployment", () => {
   const staged = readShellBootstrap({
+    schemaVersion: 2 as const,
     catalogue: { ...catalogue, deploymentId: "0".repeat(64) },
     context: {
       base: "main",
       comparisons: false,
       updateVersion: 0,
       delivery: {
-        schemaVersion: 3,
+        schemaVersion: 5,
         deploymentId: "0".repeat(64),
         canonicalPath: "/",
         comparisonUrl: null,
@@ -46,7 +47,7 @@ test("static hydration adopts the finalized authenticated deployment", () => {
     view: { kind: "home" },
   });
   const delivery: StaticDelivery = {
-    schemaVersion: 3,
+    schemaVersion: 5,
     deploymentId: "a".repeat(64),
     canonicalPath: "/",
     comparisonUrl: null,
@@ -96,7 +97,7 @@ test("external shell bootstrap retains only the shared catalogue identity", () =
   const external = externalShellBootstrap(bootstrap);
   assert.deepEqual(external.catalogue, {
     kind: "external",
-    path: "/__mokly/catalogue.json",
+    path: "/mokly-viewer/catalogue.json",
     identity: catalogue.identity.id,
     revision: catalogue.revision,
   });

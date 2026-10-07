@@ -13,7 +13,7 @@ test("default roots discover specs and render Markdown while retaining protected
       "specs/account/page.mockup.ts": pageSource(),
       "specs/account/README.md": "# Account",
     },
-    '{mockupsDir:"generated",generatedOutput:"committed"}',
+    '{mockupsDir:"generated",}',
   );
   t.after(fixture.remove);
   const config = await fixture.config();
@@ -33,7 +33,7 @@ test("roots support prefixes, arbitrary glob-selected modules, and transparent d
       "src/account/__mockups__/page.stories.ts": pageSource(),
       "src/account/not-selected.ts": "throw new Error('not selected')",
     },
-    '{mockupsDir:"generated",roots:[{dir:"src",files:["**/*.stories.ts"],path:"Specs",transparent:["__mockups__"]}],generatedOutput:"committed"}',
+    '{mockupsDir:"generated",roots:[{dir:"src",files:["**/*.stories.ts"],path:"Specs",transparent:["__mockups__"]}],}',
   );
   t.after(fixture.remove);
   assert.deepEqual(
@@ -123,7 +123,7 @@ test("failed candidate discovery cannot mutate the accepted config inventory", a
 test("review output cannot overlap the directory of a matched Markdown input", async (t) => {
   const fixture = await pathFixture(
     { "specs/README.md": "# Specs", "screens/item.mockup.ts": pageSource() },
-    '{mockupsDir:"generated",roots:[{dir:"specs"},{dir:"screens"}],review:{outDir:"specs/.review"},generatedOutput:"committed"}',
+    '{mockupsDir:"generated",roots:[{dir:"specs"},{dir:"screens"}],review:{outDir:"specs/.review"},}',
   );
   t.after(fixture.remove);
   await assert.rejects(fixture.config(), /review.outDir must not overlap/);
@@ -136,7 +136,7 @@ for (const extension of ["mockup.ts", "md"])
         [`src/feature/item.${extension}`]:
           extension === "md" ? "# Item" : pageSource(),
       },
-      '{mockupsDir:"generated",roots:[{dir:"src"},{dir:"src/feature"}],generatedOutput:"committed"}',
+      '{mockupsDir:"generated",roots:[{dir:"src"},{dir:"src/feature"}],}',
     );
     t.after(fixture.remove);
     await assert.rejects(
@@ -154,7 +154,7 @@ test("overlapping root directories with disjoint globs retain the actual matchin
       "src/feature/item.mockup.ts": pageSource(),
       "src/feature/other.other.ts": pageSource(),
     },
-    '{mockupsDir:"generated",roots:[{dir:"src",files:["**/*.mockup.ts"],path:"one"},{dir:"src/feature",files:["*.other.ts"],path:"two"}],generatedOutput:"committed"}',
+    '{mockupsDir:"generated",roots:[{dir:"src",files:["**/*.mockup.ts"],path:"one"},{dir:"src/feature",files:["*.other.ts"],path:"two"}],}',
   );
   t.after(fixture.remove);
   assert.deepEqual(
@@ -204,7 +204,7 @@ test("watch exclusions belong to their root and imported excluded modules remain
       "specs/account/drafts/helper.ts": 'export const text="Draft";',
       "specs/account/drafts/child.mockup.ts": pageSource(),
     },
-    '{mockupsDir:"generated",roots:[{dir:"specs",files:["account/*.mockup.ts"]},{dir:"specs/account/drafts",path:"drafts"}],generatedOutput:"committed"}',
+    '{mockupsDir:"generated",roots:[{dir:"specs",files:["account/*.mockup.ts"]},{dir:"specs/account/drafts",path:"drafts"}],}',
   );
   t.after(fixture.remove);
   const config = await fixture.config();

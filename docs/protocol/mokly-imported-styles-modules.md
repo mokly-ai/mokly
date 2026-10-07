@@ -172,8 +172,7 @@ prefix, polyfill or normalize other declarations, selectors, comments,
 conditions or modern CSS syntax. These reach esbuild as authored; plain and
 module bundles differ only in the scoped names. The authored quoted-local
 `image-set()` guard still runs before scoping. Lightning CSS remains a
-read-only parser for Changes and transformer-only inventory, never a module
-delivery transformer. Browserslist targets are the consumer's PostCSS concern,
+read-only parser for Changes, never a CSS Modules delivery transform. Browserslist targets are the consumer's PostCSS concern,
 not a Mokly CSS Modules input.
 
 Before the plugins run, reject authored `:import(...)`, `:export` and

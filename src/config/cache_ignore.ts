@@ -1,4 +1,4 @@
-/** The ignore file that keeps Mokly's private cache out of Git in every mode. */
+/** The ignore file that keeps Mokly's private cache out of Git. */
 import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";

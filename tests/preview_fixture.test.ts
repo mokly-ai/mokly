@@ -186,10 +186,65 @@ test("fixture timings separate install, build, baseline and export work", async 
   assert.ok(timings.every((timing) => (timing.durationMs ?? 0) > 0));
 });
 
+test("ordinary warm export timing reports absent commands and rejects hidden rebuilds", async () => {
+  const timings: FixturePhaseTiming[] = [];
+  const options = {
+    operationUnderTest: false,
+    expectWarmBaseline: true,
+    write: (timing: FixturePhaseTiming) => timings.push(timing),
+  };
+  await timeExportPreparation(
+    "warm-copy",
+    () =>
+      timeAsync(
+        "baseline",
+        async () => {},
+        () => ({ cacheHit: true }),
+      ),
+    options,
+  );
+  assert.deepEqual(
+    timings.filter(({ phase }) => ["install", "build"].includes(phase)),
+    [
+      {
+        schemaVersion: 1,
+        fixture: "warm-copy",
+        phase: "install",
+        operationUnderTest: false,
+        durationMs: null,
+        status: "not-observed",
+      },
+      {
+        schemaVersion: 1,
+        fixture: "warm-copy",
+        phase: "build",
+        operationUnderTest: false,
+        durationMs: null,
+        status: "not-observed",
+      },
+    ],
+  );
+  await assert.rejects(
+    timeExportPreparation(
+      "warm-copy",
+      () =>
+        timeAsync(
+          "baseline",
+          async () => {
+            await timeAsync("baseline.command[0]", async () => {});
+          },
+          () => ({ cacheHit: false }),
+        ),
+      options,
+    ),
+    /did not use its validated warm baseline/u,
+  );
+});
+
 async function writeFreshArtifact(artifact: string): Promise<void> {
   await fs.mkdir(artifact, { recursive: true });
   await fs.writeFile(
     path.join(artifact, PREVIEW_ARTIFACT_MARKER),
-    "schemaVersion=1\n",
+    JSON.stringify({ schemaVersion: 3, files: [] }),
   );
 }

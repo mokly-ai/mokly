@@ -4,6 +4,7 @@ import path from "node:path";
 import type { ViewReview } from "@mokly/viewer/data";
 import { isStylesheetPath } from "@mokly/viewer/data";
 
+import { isValidGeneratedRoute } from "../../build/styles/routes.js";
 import { isInside } from "../../config/paths.js";
 import { isPrivateStaticPath } from "../../config/public_files.js";
 import type { ResolvedConfig } from "../../config/types.js";
@@ -16,6 +17,10 @@ export function analysisOwnsStylesheet(
 ): boolean {
   if (!isStylesheetPath(repositoryPath)) return false;
   const candidate = path.resolve(config.repoRoot, repositoryPath);
+  if (isInside(config.generatedDir, candidate))
+    return isValidGeneratedRoute(
+      path.relative(config.generatedDir, candidate).split(path.sep).join("/"),
+    );
   return (
     isInside(config.mockupsDir, candidate) &&
     !isPrivateStaticPath(candidate, config)

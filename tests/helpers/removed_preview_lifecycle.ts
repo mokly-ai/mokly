@@ -15,6 +15,8 @@ import { entryRoute } from "../../packages/viewer/dist/data.js";
 import type { RemovedPagePreviewArtifact } from "../../packages/viewer/dist/review/page_preview.js";
 import type { ReviewArtifact } from "../../packages/viewer/dist/review/types.js";
 
+import { currentManifest } from "./current_manifest.js";
+
 export const page = {
   declaredDependencies: [],
   description: "Removed page",
@@ -27,13 +29,13 @@ export const page = {
   title: "Removed page",
 };
 
-export const baseline = {
+export const baseline = currentManifest({
   entries: [page],
   generatedBy: "mokly" as const,
-  schemaVersion: 8 as const,
+  schemaVersion: 9 as const,
   folders: [],
   sourceFiles: [page.sourcePath],
-};
+});
 
 export const pageSource: RemovedPagePreviewSource = {
   movedEntries: [],
@@ -42,17 +44,17 @@ export const pageSource: RemovedPagePreviewSource = {
   baseRef: "main",
   changedEntries: [page.path],
   removedEntries: [{ folderTitles: [], entry: page }],
-  schemaVersion: 2,
+  schemaVersion: 3,
 };
 
 export const reviewSource: SelectedReviewSource = {
-  after: {
+  after: currentManifest({
     entries: [],
     generatedBy: "mokly",
-    schemaVersion: 8 as const,
+    schemaVersion: 9 as const,
     folders: [],
     sourceFiles: [],
-  },
+  }),
   before: baseline,
   baseCommit: pageSource.baseCommit,
   baseRef: pageSource.baseRef,
@@ -66,7 +68,7 @@ export const reviewSource: SelectedReviewSource = {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     screens: [],
     sharedImpact: [],
   },
@@ -79,7 +81,7 @@ export function pageArtifact(
   return {
     files: new Map([
       [
-        `snapshots/before/${entryRoute(id)}`,
+        `snapshots/before/mokly-generated/${entryRoute(id)}`,
         Buffer.from(`<main>${source.baseCommit}</main>`),
       ],
     ]),
@@ -95,14 +97,17 @@ export function pageArtifact(
 export function reviewArtifact(): ReviewArtifact {
   return {
     files: new Map([
-      ["snapshots/before/removed/index.mobile.html", "before screen"],
+      [
+        "snapshots/before/mokly-generated/removed/index.mobile.html",
+        "before screen",
+      ],
     ]),
     result: {
       baseCommit: reviewSource.baseCommit,
       baseRef: reviewSource.baseRef,
       changedPaths: [],
       ignoredImpact: [],
-      schemaVersion: 5 as const,
+      schemaVersion: 6 as const,
       screens: [],
       sharedImpact: [],
       components: [],

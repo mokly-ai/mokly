@@ -32,7 +32,7 @@ export default definePage({
 ```
 
 The page is `documents/account-statement`, written at
-`documents/account-statement/index.html` under `mockupsDir` and opened at
+`documents/account-statement/index.html` under `mockupsDir/mokly-generated/` and opened at
 `/view/documents/account-statement/`. Name the file `index.mockup.tsx`, or
 declare `slug: "index"`, to make the page the folder's own page. Pages are one
 light document regardless of the catalogue's color schemes.
@@ -79,28 +79,30 @@ heading the file name is. The description is empty unless you set it.
 Mokly renders CommonMark with tables, strikethrough, task lists and automatic
 links, gives every heading an id built from its text, keeps the language of a
 code fence as a class, and shows raw HTML as literal text. The result is one
-document in the shell's typography at `<path>/index.html` under `mockupsDir`, with a dark
+document in the shell's typography at `<path>/index.html` under `mockupsDir/mokly-generated/`, with a dark
 rendering beside it when the catalogue enables dark. A document has no
 viewport, no variants and no helper to call; the file is the definition.
 Empty headings keep their place but have no anchor. Mokly checks the final body
-against its supported Markdown elements, attributes and URL schemes, so a
-transformer cannot introduce scripts, event handlers or inline body styles.
+against its supported Markdown elements, attributes and URL schemes. It rejects
+scripts, event handlers and inline body styles.
 
 A relative link to another Markdown file becomes a catalogue link to that
 document, and `mock:<path>` names any entry. A relative link or image with a
 `png`, `jpg`, `jpeg`, `gif`, `svg`, `webp`, `avif` or `pdf` destination copies
 that file beside the document's folder. For a folder README at `account/billing`,
-`../shared/flow.png` is served at `static/account/shared/flow.png`.
+`../shared/flow.png` is served at `static/mokly-generated/account/shared/flow.png`.
 The file must live inside the same root.
 Copied resources cannot use hidden path segments or private directory names such
 as `node_modules`, `dist` or `target`; use an ordinary folder such as `assets`.
 File links resolve from the Markdown source directory. Logical `mock:./...`
 links resolve from the catalogue folder, including a declared README path.
-Resource copies join generated output; ignore those paths too in derived mode.
+Resource copies join `mokly-generated/` and follow the tracking choice for that whole tree.
 A relative link to any other repository file renders as plain text, a link to
 a file that does not exist fails the build, and `http:`, `https:` and
 `mailto:` links are kept as they are.
-Existing public files under `mockupsDir` stay public and render as plain text.
+Links to existing ordinary files under `mockupsDir` render as plain text and
+do not add those files to the public closure. Other rendered resource references
+can make those files public.
 Links to Mokly-generated output or metadata fail; link to the source Markdown
 file or use a lower-case `mock:` destination instead. Character references in
 explicit link/image destinations and titles, such as `&amp;`, decode once.

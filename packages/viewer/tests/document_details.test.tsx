@@ -4,6 +4,7 @@ import test from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { currentManifest } from "../../../tests/helpers/current_manifest.js";
 import { readCatalogue } from "../src/catalogue/reader.js";
 import type { ManifestEntry } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
@@ -15,7 +16,7 @@ function catalogue() {
   const model = JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v4.json",
+        "../../../docs/protocol/fixtures/catalogue-v5.json",
         import.meta.url,
       ),
       "utf8",
@@ -81,22 +82,22 @@ const manifestEntry = (
     relatedDocs,
     sourcePath: `specs/${path}.${kind === "document" ? "md" : "mockup.tsx"}`,
     title,
-    ...(kind === "screen" ? { useCasePaths: [] } : {}),
+    ...(kind === "screen" ? { useCasePaths: [] } : { resources: [] }),
   }) as unknown as ManifestEntry;
 
 test("the served manifest's source path links its current document", () => {
   const related = ["specs/guide/terms.md", "specs/guide/old.md", "x.md"];
   const shell = createCatalogue(
-    {
+    currentManifest({
       entries: [
         manifestEntry("screen", "billing", "Billing", related),
         manifestEntry("document", "guide/terms", "Payment terms"),
       ],
       folders: [],
       generatedBy: "mokly",
-      schemaVersion: 8,
+      schemaVersion: 9,
       sourceFiles: [],
-    },
+    }),
     [
       {
         entry: manifestEntry("document", "guide/old", "Old terms"),
@@ -133,13 +134,15 @@ test("a served document lists its resources under Dependencies, as projection do
     ...manifestEntry("document", "guide/terms", "Payment terms"),
     resources: ["specs/guide/terms.svg"],
   } as ManifestEntry;
-  const shell = createCatalogue({
-    entries: [document],
-    folders: [],
-    generatedBy: "mokly",
-    schemaVersion: 8,
-    sourceFiles: [],
-  });
+  const shell = createCatalogue(
+    currentManifest({
+      entries: [document],
+      folders: [],
+      generatedBy: "mokly",
+      schemaVersion: 9,
+      sourceFiles: [],
+    }),
+  );
   assert.match(
     renderToStaticMarkup(
       <EntryDetailsBody catalogue={shell} entry={document} />,

@@ -52,7 +52,7 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  await navigation.close();
+  await navigation?.close();
 });
 
 /** Open the catalogue at a route whose variant list starts closed. */

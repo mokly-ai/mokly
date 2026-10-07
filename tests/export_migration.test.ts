@@ -13,25 +13,28 @@ test("consumer export and repository preview reject earlier ownership without mu
   const fixture = await createPreviewComparisonFixture();
   context.after(() => fixture.close());
   await fs.promises.rm(path.join(fixture.output, EXPORT_MARKER));
-  await fs.promises.rm(path.join(fixture.output, "__mokly/catalogue.json"));
-  const legacy = await directoryFiles(fixture.output);
+  await fs.promises.writeFile(
+    path.join(fixture.output, ".mokly-preview-artifact"),
+    "schemaVersion=1\n",
+  );
+  const before = await directoryFiles(fixture.output);
   await assert.rejects(
     exportCatalogue(fixture.config, { outDir: fixture.output }),
     /ownership is missing/,
   );
-  assert.deepEqual(await directoryFiles(fixture.output), legacy);
+  assert.deepEqual(await directoryFiles(fixture.output), before);
   await fixture.git("update-ref", "-d", "refs/remotes/origin/main");
   await assert.rejects(
     fixture.build,
     /unowned preview directory.*ownership is missing/,
   );
-  assert.deepEqual(await directoryFiles(fixture.output), legacy);
+  assert.deepEqual(await directoryFiles(fixture.output), before);
   await fixture.git("update-ref", "refs/remotes/origin/main", "HEAD");
   await assert.rejects(
     fixture.build,
     /unowned preview directory.*ownership is missing/,
   );
-  assert.deepEqual(await directoryFiles(fixture.output), legacy);
+  assert.deepEqual(await directoryFiles(fixture.output), before);
   await fs.promises.writeFile(
     path.join(fixture.output, ".mokly-preview-artifact"),
     "invalid\n",

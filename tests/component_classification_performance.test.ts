@@ -21,7 +21,7 @@ import { textOutput } from "./helpers/generated_text.js";
 test("component metadata reflects authored paths without a hierarchy projection", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const manifest = fixture.after.manifest;
-  assert.equal(manifest.schemaVersion, 8);
+  assert.equal(manifest.schemaVersion, 9);
   const entry = manifest.entries.find((item) => item.kind === "screen");
   assert.ok(entry);
   assert.notEqual(metadata(entry), metadata({ ...entry, path: "other/home" }));
@@ -30,7 +30,7 @@ test("component metadata reflects authored paths without a hierarchy projection"
 test("component dependency ownership is indexed once per changed path", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const sourceManifest = fixture.after.manifest;
-  assert.equal(sourceManifest.schemaVersion, 8);
+  assert.equal(sourceManifest.schemaVersion, 9);
   let ownershipReads = 0;
   const entries = sourceManifest.entries.map((entry) =>
     entry.kind === "component"
@@ -152,7 +152,9 @@ for (const baseline of ["screens", "components"] as const)
       expected,
     );
     const paths = fixture.before.manifest.entries.flatMap((entry) =>
-      generatedViews(entry).map((view) => `mockups/${view.path}`),
+      generatedViews(entry).map(
+        (view) => `mockups/mokly-generated/${view.path}`,
+      ),
     );
     assert.ok(paths.length >= 8);
     assert.equal(
@@ -228,7 +230,7 @@ test("shared classification batches both sides including removed dark variants",
   ].entries()) {
     const reader = readers[index]!;
     const paths = compilation.manifest.entries.flatMap((entry) =>
-      generatedViews(entry).map((view) => view.path),
+      generatedViews(entry).map((view) => `mokly-generated/${view.path}`),
     );
     assert.equal(reader.batches.length, 1);
     assert.deepEqual(

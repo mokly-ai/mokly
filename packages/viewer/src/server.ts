@@ -16,7 +16,7 @@ export function viewerAssetUrl(
   if (!/^[A-Za-z0-9_.-]+$/.test(filename))
     throw new Error("Invalid viewer asset name");
   return new URL(
-    `${kind === "fonts" ? "assets/fonts" : kind}/${filename}`,
+    `${kind === "fonts" ? "assets/fonts" : kind === "navigation" ? "browser-navigation" : kind}/${filename}`,
     import.meta.url,
   );
 }

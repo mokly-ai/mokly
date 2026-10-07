@@ -8,7 +8,7 @@ import type { LiveChangesStatus } from "../shell/metadata.js";
 
 /** Stored shell state consumed once after an automatic watched reload. */
 export interface BrowseRecoveryState {
-  changesStatus?: LiveChangesStatus;
+  changesStatus: LiveChangesStatus;
   changedOnly: boolean;
   disclosures: Readonly<Record<string, boolean>> | null;
   colorScheme: "dark" | "light";
@@ -35,8 +35,7 @@ export function parseBrowseRecoveryState(
   const changedOnly = value["changedOnly"];
   const changesStatus = value["changesStatus"];
   const colorScheme = value["colorScheme"];
-  const storedBaseline = value["filterBaselineDisclosures"];
-  const baseline = storedBaseline === undefined ? null : storedBaseline;
+  const baseline = value["filterBaselineDisclosures"];
   const query = value["query"];
   const viewport = value["viewport"];
   if (
@@ -59,7 +58,7 @@ export function parseBrowseRecoveryState(
     return undefined;
   return {
     changedOnly,
-    ...(changesStatus ? { changesStatus } : {}),
+    changesStatus,
     disclosures:
       value["disclosures"] === null
         ? null
@@ -76,11 +75,8 @@ export function parseBrowseRecoveryState(
   };
 }
 
-function validChangesStatus(
-  value: unknown,
-): value is LiveChangesStatus | undefined {
+function validChangesStatus(value: unknown): value is LiveChangesStatus {
   return (
-    value === undefined ||
     value === "preparing" ||
     value === "pending" ||
     value === "ready" ||

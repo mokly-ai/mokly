@@ -18,7 +18,7 @@ test("published updates replace or clear changed-route shell state", async (cont
     base: "main",
     snapshot: await loadCatalogueSnapshot(config, async () => ({
       movedEntries: [],
-      schemaVersion: 2,
+      schemaVersion: 3,
       baseRef: "main",
       baseCommit: "a".repeat(40),
       changedEntries: ["home"],

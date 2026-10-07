@@ -115,19 +115,25 @@ test("renamed screens keep one derived route without an alias", async (context) 
 test("missing baseline documents and absent history fail before installing output", async (context) => {
   const fixture = await createExportFixture();
   context.after(() => fixture.close());
-  await fixture.git("rm", "mockups/home/index.mobile.html");
+  await fixture.git("rm", "mockups/mokly-generated/home/index.mobile.html");
   await fixture.git("commit", "-qm", "test: missing baseline document");
+  const config = {
+    ...fixture.config,
+    review: {
+      ...fixture.config.review,
+      baselineBuild: [["node", "-e", "process.exit(7)"]],
+    },
+  };
   await assert.rejects(
-    exportCatalogue(fixture.config, { outDir: "site", base: "HEAD" }),
-    /not a regular Git file \(missing\)/,
+    exportCatalogue(config, { outDir: "site", base: "HEAD" }),
+    { code: "baseline-command-failed" },
   );
   assert.equal(fs.existsSync(fixture.output), false);
   await fixture.git("checkout", "--orphan", "unrelated");
   await fixture.git("commit", "-qm", "test: unrelated history");
-  await assert.rejects(
-    exportCatalogue(fixture.config, { outDir: "site" }),
-    /merge base/,
-  );
+  await assert.rejects(exportCatalogue(config, { outDir: "site" }), {
+    code: "baseline-history-unavailable",
+  });
   assert.equal(fs.existsSync(fixture.output), false);
 });
 

@@ -7,7 +7,7 @@ import {
 } from "../packages/viewer/dist/previews/presentation.js";
 
 const GENERATION =
-  "https://catalogue.test/__mokly/diffs/__generations/presentation/";
+  "https://catalogue.test/mokly-viewer/diffs/generations/presentation/";
 const SNAPSHOT = `${GENERATION}snapshots/before/archive/removed.html`;
 
 interface FetchCall {

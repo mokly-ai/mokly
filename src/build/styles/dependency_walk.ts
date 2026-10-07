@@ -59,11 +59,7 @@ export function walkDependencyDirectory(
   const realMockupsDir = cache.roots.mockups;
   const visit = (current: string): void => {
     const owned = dependencyOwnership(current, config, cache, true);
-    if (
-      blocksRequiredInput(owned, false) &&
-      (owned !== "generated" || config.generatedOutput === "derived")
-    )
-      return;
+    if (blocksRequiredInput(owned, false)) return;
     const insideMockups =
       isInside(config.mockupsDir, current) ||
       isInside(realMockupsDir, fs.realpathSync.native(current));
@@ -77,7 +73,14 @@ export function walkDependencyDirectory(
         entry.isFile() &&
         matcher.match(toPosixPath(path.relative(directory, candidate))) &&
         (!insideMockups ||
-          !["review", "cache", "denied", "package", "outside"].includes(
+          ![
+            "generated",
+            "review",
+            "cache",
+            "denied",
+            "package",
+            "outside",
+          ].includes(
             dependencyOwnership(candidate, config, cache, false) ?? "",
           ))
       ) {

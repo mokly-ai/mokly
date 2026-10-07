@@ -33,7 +33,7 @@ for (const direction of ["added", "removed"] as const)
         ...(direction === "added" ? { "nested.css": "head" } : {}),
       }),
       changedPaths: [],
-      config: { ...fixture.config, generatedOutput: "derived" },
+      config: fixture.config,
     });
     assert.ok(
       result.changes.some((entry) =>
@@ -42,8 +42,8 @@ for (const direction of ["added", "removed"] as const)
     );
   });
 
-for (const generatedOutput of ["derived", "committed"] as const)
-  test(`source-only formatting preserves component artifact paths in ${generatedOutput} mode`, async (t) => {
+for (const evidenceKind of ["bytes", "git"] as const)
+  test(`source-only formatting preserves component artifact paths with ${evidenceKind} evidence`, async (t) => {
     const fixture = await relocatedFixture(t);
     const beforePath = actionViewPath(fixture.before);
     const afterPath = actionViewPath(fixture.after);
@@ -53,42 +53,51 @@ for (const generatedOutput of ["derived", "committed"] as const)
       textOutput(fixture.after.outputs, afterPath),
     );
     const changedPaths = ["entries/fixture.mockup.tsx"];
-    if (generatedOutput === "committed")
+    if (evidenceKind === "git")
       changedPaths.push(
         "mockups/image.svg",
         "mockups/action/image.svg",
         "mockups/pane/image.svg",
       );
     const images = ["image.svg", "action/image.svg", "pane/image.svg"];
-    const beforeResources = Object.fromEntries(
-      images.map((image) => [image, "image"]),
-    );
-    const afterResources = Object.fromEntries(
-      images.map((image) => [
-        image,
-        generatedOutput === "committed" ? "updated" : "image",
-      ]),
-    );
+    const beforeResources = {
+      ...Object.fromEntries(images.map((image) => [image, "image"])),
+      "theme.css": 'button{background:url("image.svg")}',
+    };
+    const afterResources = {
+      "theme.css": 'button{background:url("image.svg")}',
+      ...Object.fromEntries(
+        images.map((image) => [
+          image,
+          evidenceKind === "git" ? "updated" : "image",
+        ]),
+      ),
+    };
     const result = await assertFastPathEquivalent({
       before: fixture.before.manifest,
       after: fixture.after.manifest,
       beforeFiles: compilationFiles(fixture.before, beforeResources),
       afterFiles: compilationFiles(fixture.after, afterResources),
       changedPaths,
-      config: { ...fixture.config, generatedOutput },
+      config: fixture.config,
     });
     assert.equal(
       result.components.find((component) => component.path === "action")?.state,
-      generatedOutput === "committed" ? "changed" : "unchanged",
+      evidenceKind === "git" ? "changed" : "unchanged",
     );
   });
 
 async function relocatedFixture(t: TestContext) {
   const source = componentEntrySource({
-    actionRender:
-      '(props) => <button>{props.label}<img src="../image.svg" /></button>',
+    actionRender: "(props) => <button>{props.label}</button>",
   });
-  const fixture = await createFixture(source);
+  const fixture = await createFixture(source, {
+    extraConfig: 'stylesheets: [{ match: "**", stylesheets: ["theme.css"] }],',
+  });
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "theme.css"),
+    'button{background:url("image.svg")}',
+  );
   t.after(() => removeFixture(fixture));
   for (const route of ["image.svg", "action/image.svg", "pane/image.svg"]) {
     await fs.mkdir(path.dirname(path.join(fixture.mockupsDir, route)), {

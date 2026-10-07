@@ -34,12 +34,12 @@ export type CancellationPhase =
 /** Run one detached CLI cancellation scenario against an untouched prior export. */
 export async function cancellationScenario(
   context: TestContext,
-  mode: "committed" | "derived",
+  storage: "blobs" | "rebuild",
   phase: CancellationPhase,
   outputMode: "plain" | "rich",
   diagnostic = false,
 ) {
-  const fixture = await catalogueFixture(context, mode);
+  const fixture = await catalogueFixture(context, storage);
   await exportCatalogue(fixture.config, {
     outDir: "site",
     noChanges: true,
@@ -72,9 +72,9 @@ export async function assertCancelledScenario(
 
 async function catalogueFixture(
   context: TestContext,
-  mode: "committed" | "derived",
+  storage: "blobs" | "rebuild",
 ) {
-  if (mode === "committed") {
+  if (storage === "blobs") {
     const fixture = await createExportFixture();
     context.after(() => fixture.close());
     return fixture;

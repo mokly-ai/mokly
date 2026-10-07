@@ -5,8 +5,11 @@ import { expect, test, type Locator } from "@playwright/test";
 import { reparentedEntrySource } from "../helpers/fixture.js";
 
 import { startWatchedServe, type WatchedServe } from "./watched_serve.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
-import { expectFrameSource } from "./workspace_actions.js";
+import {
+  chooseScheme,
+  chooseViewport,
+  expectFrameSource,
+} from "./workspace_actions.js";
 
 let server: WatchedServe;
 
@@ -43,7 +46,7 @@ test("watched serve rebuilds and reloads after an authored change", async ({
     releaseFirstEventRequest = resolve;
   });
   let blockFirstEventRequest = true;
-  await page.route(`${server.url}/__mokly/events`, async (route) => {
+  await page.route(`${server.url}/mokly-viewer/events`, async (route) => {
     if (blockFirstEventRequest) {
       blockFirstEventRequest = false;
       await firstEventRequestBlocked;
@@ -91,7 +94,7 @@ test("watched serve rebuilds and reloads after an authored change", async ({
         return (
           await (
             await fetch(
-              `${server.url}/static/fixture/screens/home/index.mobile.html`,
+              `${server.url}/static/mokly-generated/fixture/screens/home/index.mobile.html`,
             )
           ).text()
         ).includes('data-watch-version="2"');

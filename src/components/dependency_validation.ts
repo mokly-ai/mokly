@@ -1,5 +1,5 @@
 /** Declaration invariants apply before any rendered usage is available. */
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 import {
   invalidData,
   isManifestComponentVariant,
@@ -7,7 +7,7 @@ import {
 } from "@mokly/viewer/data";
 
 export function validateDependencyDeclarations(
-  entry: ManifestV8["entries"][number],
+  entry: ManifestV9["entries"][number],
 ): void {
   sortedStrings(
     entry.declaredDependencies,

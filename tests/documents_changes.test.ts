@@ -13,11 +13,11 @@ import {
   captureRemovedPagePreviews,
   packageRemovedPagePreviews,
 } from "../dist/review/page_preview.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeChangedPaths } from "../dist/server/changed.js";
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { validEntrySource } from "./helpers/fixture.js";
 import { baselineReader } from "./helpers/removed_page_preview_fixture.js";
 
@@ -139,7 +139,7 @@ test("derived document resource changes are compared from bytes without a change
   const after = await compileCatalogue(fixture.config);
   const outputs = new Map(after.outputs);
   outputs.set("diagram.png", new Uint8Array(Buffer.from("after")));
-  const config = { ...fixture.config, generatedOutput: "derived" as const };
+  const config = fixture.config;
   const evidence = await readCatalogueChanges(
     config,
     after.manifest,
@@ -187,7 +187,7 @@ test("removed documents capture both historical schemes and resource bytes with 
   assert.equal(removedEntries[0]!.entry.kind, "document");
   const files = new Map(
     [...before.outputs].map(([route, content]) => [
-      `mockups/${route}`,
+      `mockups/mokly-generated/${route}`,
       {
         kind: "regular" as const,
         bytes: typeof content === "string" ? Buffer.from(content) : content,
@@ -198,7 +198,7 @@ test("removed documents capture both historical schemes and resource bytes with 
     baseline: before.manifest,
     baseCommit: "b".repeat(40),
     baseRef: "main",
-    schemaVersion: 2 as const,
+    schemaVersion: 3 as const,
     changedEntries: ["guide"],
     movedEntries: [],
     removedEntries,
@@ -216,19 +216,19 @@ test("removed documents capture both historical schemes and resource bytes with 
   assert.ok(packaged.has("previews/guide/index.json"));
   assert.equal(
     Buffer.from(
-      packaged.get("snapshots/before/attachment.pdf") ?? [],
+      packaged.get("snapshots/before/mokly-generated/attachment.pdf") ?? [],
     ).toString(),
     "%PDF-before",
   );
   for (const scheme of ["light", "dark"]) {
     const route = `guide/index${scheme === "dark" ? ".dark" : ""}.html`;
     assert.deepEqual(
-      Buffer.from(packaged.get(`snapshots/before/${route}`)!),
+      Buffer.from(packaged.get(`snapshots/before/mokly-generated/${route}`)!),
       Buffer.from(before.outputs.get(route)!),
     );
   }
   assert.deepEqual(
-    Buffer.from(packaged.get("snapshots/before/diagram.png")!),
+    Buffer.from(packaged.get("snapshots/before/mokly-generated/diagram.png")!),
     Buffer.from([0, 255, 128, 1]),
   );
   assert.deepEqual(previews.get("guide")!.preview, {
@@ -237,7 +237,7 @@ test("removed documents capture both historical schemes and resource bytes with 
     baseRef: "main",
     path: "guide",
   });
-  files.delete("mockups/diagram.png");
+  files.delete("mockups/mokly-generated/diagram.png");
   await assert.rejects(
     captureRemovedPagePreviews(provider, source, new AbortController().signal),
     /missing|not.*regular|does not exist/,

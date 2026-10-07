@@ -11,7 +11,7 @@ import type {
   ComponentViewRecord,
   ManifestComponentVariant,
 } from "../components/manifest_types.js";
-import type { ManifestEntry, ManifestV8 } from "../registry/types.js";
+import type { ManifestEntry } from "../registry/types.js";
 import { catalogueRouteEntry, createCatalogue } from "../shell/catalogue.js";
 import type { ShellContext } from "../shell/context.js";
 import { toRouteTarget } from "../shell/target.js";
@@ -100,9 +100,9 @@ export function viewerCatalogue(model: ShellCatalogueReadModel) {
     ...model.useCases,
     ...model.components,
   ];
-  const manifest: ManifestV8 = {
-    schemaVersion: 8,
-    generatedBy: "mokly",
+  const manifest = {
+    schemaVersion: "live-index-2" as const,
+    generatedBy: "mokly" as const,
     folders: [],
     sourceFiles: [],
     entries: current.map((entry) => ({

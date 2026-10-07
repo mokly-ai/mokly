@@ -24,7 +24,7 @@ export async function createHarness(): Promise<string> {
   const files = new Map([
     ["dist/cli/bin.js", ""],
     ["packages/viewer/dist/browser/inspector.js", ""],
-    ["examples/basic/generated/mokly-manifest.json", "{}\n"],
+    ["examples/basic/mokly-generated/mokly-manifest.json", "{}\n"],
     [
       "playwright.config.mjs",
       "export default " +

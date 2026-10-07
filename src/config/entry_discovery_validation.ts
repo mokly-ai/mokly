@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import { MoklyError } from "../errors.js";
 
 import { isBaselineCachePath, MOKLY_CACHE } from "./cache_paths.js";
@@ -30,7 +32,7 @@ export function entryModuleDenial(
   if (isBaselineCachePath(module, repoRoot))
     return `is inside the private ${MOKLY_CACHE} directory`;
   if (paths.generatedOutput && isInside(paths.generatedOutput.lexical, module))
-    return "is inside mokly-generated/";
+    return `is inside ${GENERATED_DIRECTORY}/`;
   let real: string;
   try {
     real = projectRealPath(module);
@@ -41,7 +43,7 @@ export function entryModuleDenial(
   if (!isInside(repoRoot, module) || !isInside(realRepoRoot, real))
     return "resolves outside repoRoot through a symlink";
   if (paths.generatedOutput && isInside(paths.generatedOutput.projected, real))
-    return "is inside mokly-generated/";
+    return `is inside ${GENERATED_DIRECTORY}/`;
   if (
     isInside(reviewOutput.lexical, module) ||
     isInside(reviewOutput.projected, real)

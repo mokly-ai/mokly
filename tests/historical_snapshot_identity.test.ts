@@ -7,9 +7,9 @@ import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import type { CatalogueReadModel } from "../packages/viewer/src/catalogue/types.js";
 import type {
   ManifestScreen,
-  ManifestV8,
+  ManifestV9,
 } from "../packages/viewer/src/registry/types.js";
-import type { ReviewResultV5 } from "../packages/viewer/src/review/component_types.js";
+import type { ReviewResultV6 } from "../packages/viewer/src/review/component_types.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
 import {
   displayEntry,
@@ -19,6 +19,8 @@ import { publicWorkspace } from "../packages/viewer/src/viewer/public_workspace.
 import { projectCatalogue } from "../src/catalogue/projection.js";
 import { serializeCatalogue } from "../src/catalogue/serialization.js";
 import { removedManifestEntries } from "../src/registry/changes.js";
+
+import { currentManifest } from "./helpers/current_manifest.js";
 
 type CurrentManifestScreen = ManifestScreen & {
   declaredDependencies: readonly string[];
@@ -34,17 +36,16 @@ const currentScreen = screen(
   "current-screen/index.html",
 );
 const baseline = manifest([oldScreen]);
-const current = {
+const current = currentManifest({
   ...manifest([currentScreen]),
-  schemaVersion: 8 as const,
-  folders: [],
-};
+  schemaVersion: 9 as const,
+});
 
 test("projection publishes stable per-record identity before comparison generation", () => {
   const live = project(BASELINE_A);
   const pinned = project(
     BASELINE_A,
-    `__mokly/diffs/__generations/${GENERATION}/review.json`,
+    `mokly-viewer/diffs/generations/${GENERATION}/review.json`,
     { content: 1, evidence: 9 },
   );
   const replaced = project(BASELINE_B);
@@ -78,19 +79,15 @@ test("projection rejects conflicting accepted baseline identities", () => {
   );
 });
 
-test("reader safely derives older generation-backed identities", () => {
+test("reader requires published snapshot ids when a generation exists", () => {
   const legacy = projectCatalogue({
     ...projectionInput(undefined),
-    comparisonUrl: `__mokly/diffs/__generations/${GENERATION}/review.json`,
+    comparisonUrl: `mokly-viewer/diffs/generations/${GENERATION}/review.json`,
   });
   const value = JSON.parse(serializeCatalogue(legacy));
   delete value.removedEntries[0].snapshotId;
 
-  const first = readCatalogue(value);
-  const second = readCatalogue(structuredClone(value));
-  assert.match(snapshot(first), /^[a-f0-9]{64}$/);
-  assert.equal(snapshot(second), snapshot(first));
-
+  assert.throws(() => readCatalogue(value), /removed entry needs snapshotId/);
   value.comparisonUrl = null;
   const identityLess = readCatalogue(value);
   assert.equal(identityLess.removedEntries[0]?.snapshotId, undefined);
@@ -121,7 +118,7 @@ test("reader rejects malformed and duplicate published identities", () => {
 
 test("reader rejects current and removed records sharing an id", () => {
   const fixture = readCatalogue(
-    JSON.parse(requireFixture("../docs/protocol/fixtures/catalogue-v4.json")),
+    JSON.parse(requireFixture("../docs/protocol/fixtures/catalogue-v5.json")),
   );
   const current = fixture.screens[0]!;
   const removed = {
@@ -200,7 +197,7 @@ function snapshot(model: CatalogueReadModel): string {
   return model.removedEntries[0]?.snapshotId ?? "";
 }
 
-function review(baseCommit: string): ReviewResultV5 {
+function review(baseCommit: string): ReviewResultV6 {
   return {
     affectedConsumers: [],
     baseCommit,
@@ -209,22 +206,22 @@ function review(baseCommit: string): ReviewResultV5 {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     screens: [],
     sharedImpact: [],
   };
 }
 
-function manifest(entries: readonly CurrentManifestScreen[]): ManifestV8 {
-  return {
+function manifest(entries: readonly CurrentManifestScreen[]): ManifestV9 {
+  return currentManifest({
     entries,
     generatedBy: "mokly",
-    schemaVersion: 8 as const,
+    schemaVersion: 9,
     folders: [],
     sourceFiles: [
       ...new Set(entries.map(({ sourcePath }) => sourcePath)),
     ].sort(),
-  };
+  });
 }
 
 function screen(

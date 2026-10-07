@@ -13,11 +13,11 @@ export interface TestOwnershipEntry {
 }
 
 export interface TestOwnershipMarker {
-  schemaVersion: 2;
+  schemaVersion: 3;
   files: TestOwnershipEntry[];
 }
 
-/** Build a schema 2 ownership marker from exact in-memory file bytes. */
+/** Build a schema 3 ownership marker from exact in-memory file bytes. */
 export function ownershipMarkerFromFiles(
   files: ReadonlyMap<string, OwnershipContent>,
 ): TestOwnershipMarker {
@@ -25,7 +25,7 @@ export function ownershipMarkerFromFiles(
     .filter((name) => name !== EXPORT_MARKER)
     .sort();
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     files: names.map((name) => {
       const content = files.get(name);
       if (content === undefined) throw new Error(`Missing test file: ${name}`);
@@ -42,14 +42,14 @@ export function ownershipMarkerFromFiles(
   };
 }
 
-/** Build a schema 2 ownership marker from every regular file below a directory. */
+/** Build a schema 3 ownership marker from every regular file below a directory. */
 export async function ownershipMarkerFromDirectory(
   directory: string,
 ): Promise<TestOwnershipMarker> {
   return ownershipMarkerFromFiles(await directoryFileMap(directory));
 }
 
-/** Write a schema 2 marker for the regular files already present in a directory. */
+/** Write a schema 3 marker for the regular files already present in a directory. */
 export async function writeOwnershipMarker(directory: string): Promise<void> {
   const marker = await ownershipMarkerFromDirectory(directory);
   await fs.promises.writeFile(

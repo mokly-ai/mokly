@@ -32,12 +32,11 @@ export async function namedEntryFixture(
   sources["specs/removed.mockup.tsx"] =
     `import {defineScreen} from '@mokly/mokly'; export default [${BUILD_NAMES.map((name) => `defineScreen({path:'retired/${name}',title:'Retired ${name}',description:'Earlier screen',dependencies:[],relatedDocs:[],mobile:<p>Retired mobile ${name}</p>,desktop:<p>Retired desktop ${name}</p>})`).join(",")}];`;
   sources["specs/pages.mockup.ts"] =
-    `import {definePage} from '@mokly/mokly'; export default [${BUILD_NAMES.map((name) => `definePage({path:'guides/${name}',title:'Guide ${name}',description:'Earlier guide',dependencies:[],relatedDocs:[],render:()=>'<html><body>Guide ${name}<img src="../../public.svg" alt="Guide"></body></html>'})`).join(",")}];`;
+    `import {definePage} from '@mokly/mokly'; export default [${BUILD_NAMES.map((name) => `definePage({path:'guides/${name}',title:'Guide ${name}',description:'Earlier guide',dependencies:[],relatedDocs:[],render:()=>'<html><body>Guide ${name}<img src="../../../public.svg" alt="Guide"></body></html>'})`).join(",")}];`;
   const fixture = await pathFixture(
     sources,
     JSON.stringify({
       mockupsDir: "mockups",
-      generatedOutput: mode,
       review: {
         outDir: ".review",
         ...(mode === "derived"
@@ -72,7 +71,7 @@ export async function namedEntryFixture(
     );
     await fixture.write(
       "baseline.mjs",
-      `import fs from 'node:fs/promises'; import path from 'node:path'; for(const [route,bytes] of JSON.parse(await fs.readFile('baseline.json','utf8'))){const target=path.join('mockups',route);await fs.mkdir(path.dirname(target),{recursive:true});await fs.writeFile(target,Buffer.from(bytes,'base64'));}`,
+      `import fs from 'node:fs/promises'; import path from 'node:path'; for(const [route,bytes] of JSON.parse(await fs.readFile('baseline.json','utf8'))){const target=path.join('mockups','mokly-generated',route);await fs.mkdir(path.dirname(target),{recursive:true});await fs.writeFile(target,Buffer.from(bytes,'base64'));}`,
     );
   }
   await fixture.write(

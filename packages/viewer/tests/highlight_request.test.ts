@@ -57,7 +57,7 @@ function session(
     usageRevision: 0,
     ready: Promise.resolve(mounted),
     mounted,
-    source: `/static/home/index.${viewport}.html`,
+    source: `/static/mokly-generated/home/index.${viewport}.html`,
     status: "ready",
   };
 }

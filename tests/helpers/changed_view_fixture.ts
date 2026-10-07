@@ -1,4 +1,4 @@
-import type { ReviewResultV5 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV6 } from "../../packages/viewer/dist/review/component_types.js";
 import type { ViewReview } from "../../packages/viewer/dist/review/types.js";
 import type { ScreenViewChanges } from "../../packages/viewer/dist/shell/metadata.js";
 
@@ -40,7 +40,7 @@ function variantViews(changed: boolean): readonly ViewReview[] {
 }
 
 /** Component comparison where only the second saved variant changed in dark. */
-export function secondVariantDarkOnlyResult(): ReviewResultV5 {
+export function secondVariantDarkOnlyResult(): ReviewResultV6 {
   return {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
@@ -97,7 +97,7 @@ export function secondVariantDarkOnlyResult(): ReviewResultV5 {
       },
     ],
     ignoredImpact: [],
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     screens: [],
     sharedImpact: [],
   };

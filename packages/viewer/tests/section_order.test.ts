@@ -119,7 +119,7 @@ test("the public reader keeps valid folder orders and rejects repeated names", (
   const model = JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v4.json",
+        "../../../docs/protocol/fixtures/catalogue-v5.json",
         import.meta.url,
       ),
       "utf8",

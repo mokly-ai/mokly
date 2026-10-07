@@ -65,7 +65,7 @@ export function createArea(area: string, count: number, rows: number) {
       title: "Getting started",
       description: "A guide to workspace activity.",
       render: () =>
-        `<!doctype html><html><head><title>Getting started</title><link rel="stylesheet" href="../../assets/catalogue.css"></head><body><main><h1>Getting started</h1><p>Review activity and save your changes.</p><a href="mock:${screenPaths[0]}#summary">Open activity</a></main></body></html>`,
+        `<!doctype html><html><head><title>Getting started</title><link rel="stylesheet" href="../../../assets/catalogue.css"></head><body><main><h1>Getting started</h1><p>Review activity and save your changes.</p><a href="mock:${screenPaths[0]}#summary">Open activity</a></main></body></html>`,
     }),
   ];
 }

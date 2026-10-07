@@ -6,11 +6,10 @@ import test from "node:test";
 import { runtimeGraph } from "../dist/build/component_runtime.js";
 import { DocumentCompiler } from "../dist/build/document_compiler.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import { generatedHeader } from "../dist/build/ownership.js";
 
 import { pageSource, pathFixture } from "./helpers/path_fixture.js";
 
-test("demand output collision inventory is scanned once and renewed for each generation", async (t) => {
+test("demand routes are retained in memory and renewed for each generation", async (t) => {
   const fixture = await pathFixture({
     "specs/one.mockup.ts": pageSource(),
     "specs/two.mockup.ts": pageSource(),
@@ -18,7 +17,7 @@ test("demand output collision inventory is scanned once and renewed for each gen
   t.after(fixture.remove);
   await fixture.write(
     "generated/old/index.html",
-    generatedHeader("specs/one.mockup.ts") + "<html><body>Old</body></html>",
+    "<html><body>Old</body></html>",
   );
   const config = await fixture.config();
   const readdir = fs.readdirSync;
@@ -32,20 +31,17 @@ test("demand output collision inventory is scanned once and renewed for each gen
   const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime));
   compiler.render("one/index.html");
   const initial = scans;
-  assert.ok(initial > 0);
+  assert.equal(initial, 0);
   assert.equal(
     initial,
     captured,
     "demand rendering cannot scan a half-written tree",
   );
   compiler.render("two/index.html");
-  assert.equal(
-    scans,
-    initial,
-    "uncached documents must reuse the collision inventory",
-  );
+  assert.equal(scans, initial, "uncached documents must reuse accepted routes");
   await fixture.write("generated/ONE", "Conflicting resource");
-  await assert.rejects(prepareLiveRuntime(config), /collision/);
-  assert.ok(scans > initial);
+  const next = await prepareLiveRuntime(config);
+  assert.deepEqual(next.outputSnapshot.routes, runtime.outputSnapshot.routes);
+  assert.equal(scans, initial);
   assert.ok(fs.existsSync(path.join(config.mockupsDir, "ONE")));
 });

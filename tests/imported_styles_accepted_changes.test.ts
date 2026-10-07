@@ -8,11 +8,11 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import { acceptedGenerationFromCompilation } from "../dist/review/accepted_generation.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { loadCatalogueSnapshot } from "../dist/server/catalogue_snapshot.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { removeFixture } from "./helpers/fixture.js";
 import { styleFixture } from "./helpers/imported_styles_fixture.js";
 
@@ -44,7 +44,7 @@ async function baseline(
   return { fixture, config, compilation, commit, counter };
 }
 
-test("accepted committed classification does not rerun PostCSS", async (context) => {
+test("accepted classification does not rerun PostCSS", async (context) => {
   const { fixture, config, counter, commit } = await baseline(context, true);
   await fs.appendFile(
     path.join(fixture.entriesDir, "fixture.css"),
@@ -86,7 +86,7 @@ test("accepted generation stays classifiable after a newer CSS-importing entry a
   assert.deepEqual(snapshot.changedEntries, []);
 });
 
-test("catalogue freshness shares one inventory graph with committed Changes", async (context) => {
+test("catalogue freshness shares one inventory graph with Git-blob Changes", async (context) => {
   const { fixture, config, counter } = await baseline(context, true);
   await fs.appendFile(
     path.join(fixture.entriesDir, "fixture.css"),

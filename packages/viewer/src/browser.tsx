@@ -32,6 +32,7 @@ import {
   type LiveShellBootstrapState,
 } from "./standalone/scoped_bootstrap.js";
 import { staticWorkspaceEvidence } from "./standalone/static_workspace_evidence.js";
+import { reportVersionFailure } from "./standalone/version_failure.js";
 
 const hydratedDocuments = new WeakSet<Document>();
 const pendingDocuments = new WeakSet<Document>();
@@ -48,6 +49,17 @@ type ResolvedHydrationInput =
 /** Hydrate one complete standalone shell with optional live host capabilities. */
 export function hydrateMoklyShell(
   doc: Document = document,
+  capabilities?: ViewerHostCapabilities,
+): void {
+  try {
+    hydrateShell(doc, capabilities);
+  } catch (error) {
+    if (!reportVersionFailure(doc, error)) throw error;
+  }
+}
+
+function hydrateShell(
+  doc: Document,
   capabilities?: ViewerHostCapabilities,
 ): void {
   if (hydratedDocuments.has(doc) || pendingDocuments.has(doc)) return;
@@ -207,7 +219,8 @@ async function loadExternalBootstrap(
       resolveShellBootstrap(state, catalogue),
       delivery,
     );
-  } catch {
+  } catch (error) {
+    if (!signal.aborted) reportVersionFailure(win.document, error);
     return;
   }
 }

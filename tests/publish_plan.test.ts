@@ -12,7 +12,7 @@ const digestA = "1".repeat(64);
 const digestB = "2".repeat(64);
 const endpoint = "https://api.example.com/plan?project=team";
 const manifest: UploadManifest = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   moklyVersion: "1.2.3",
   repository: { host: "example.com", owner: "team", name: "catalogue" },
   branch: "main",
@@ -22,7 +22,7 @@ const manifest: UploadManifest = {
   pullRequest: null,
   configPath: "mokly.config.ts",
   exportedAt: "2026-09-26T12:00:00.000Z",
-  comparisonPath: `__mokly/diffs/__generations/${"c".repeat(64)}/review.json`,
+  comparisonPath: `mokly-viewer/diffs/generations/${"c".repeat(64)}/review.json`,
 };
 
 function files(selectedManifest = manifest): Map<string, Buffer> {

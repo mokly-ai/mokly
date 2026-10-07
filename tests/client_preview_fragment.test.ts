@@ -41,13 +41,13 @@ test("preview fragment routes update every applicable frame source", () => {
   );
 
   const expected = [
-    `/static/product/browse/home/index.mobile.html#${ENCODED_FRAGMENT}`,
-    `/static/product/browse/home/index.desktop.html#${ENCODED_FRAGMENT}`,
+    `/static/mokly-generated/product/browse/home/index.mobile.html#${ENCODED_FRAGMENT}`,
+    `/static/mokly-generated/product/browse/home/index.desktop.html#${ENCODED_FRAGMENT}`,
   ];
   assert.deepEqual(attributeValues(markup, "src"), expected);
   assert.deepEqual(attributeValues(markup, "data-fragment-light"), expected);
   assert.deepEqual(attributeValues(markup, "data-fragment-dark"), [
-    `/static/product/browse/home/index.mobile.dark.html#${ENCODED_FRAGMENT}`,
+    `/static/mokly-generated/product/browse/home/index.mobile.dark.html#${ENCODED_FRAGMENT}`,
   ]);
 });
 
@@ -71,9 +71,9 @@ test("only the first flow step receives a preview fragment", () => {
   );
   const sources = attributeValues(markup, "src");
   assert.deepEqual(sources, [
-    `/static/product/browse/home/index.desktop.html#${ENCODED_FRAGMENT}`,
-    "/static/product/browse/details/index.desktop.html",
-    "/static/product/browse/home/index.desktop.html",
+    `/static/mokly-generated/product/browse/home/index.desktop.html#${ENCODED_FRAGMENT}`,
+    "/static/mokly-generated/product/browse/details/index.desktop.html",
+    "/static/mokly-generated/product/browse/home/index.desktop.html",
   ]);
   assert.equal(sources.filter((source) => source.includes("#")).length, 1);
 });
@@ -103,8 +103,8 @@ test("a valid absent anchor retains its encoded hash without a DOM lookup", () =
     "absent",
   );
   assert.deepEqual(attributeValues(markup, "src"), [
-    "/static/product/browse/home/index.mobile.html#absent",
-    "/static/product/browse/home/index.desktop.html#absent",
+    "/static/mokly-generated/product/browse/home/index.mobile.html#absent",
+    "/static/mokly-generated/product/browse/home/index.desktop.html#absent",
   ]);
 });
 

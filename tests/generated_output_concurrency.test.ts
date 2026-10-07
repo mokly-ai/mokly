@@ -28,7 +28,7 @@ async function assertTree(
   compilation: Compilation,
 ): Promise<void> {
   assert.deepEqual(
-    await treeFiles(fixture.mockupsDir),
+    await treeFiles(fixture.generatedDir),
     [...compilation.outputs.keys()].sort(),
   );
   const screens = compilation.manifest.entries.filter(
@@ -40,13 +40,15 @@ async function assertTree(
     ),
   );
   assert.deepEqual(
-    (await fs.readdir(path.join(fixture.mockupsDir, "fixture/nested"))).sort(),
+    (
+      await fs.readdir(path.join(fixture.generatedDir, "fixture/nested"))
+    ).sort(),
     screens.map((entry) => path.posix.basename(entry.path)).sort(),
     "completed transactions prune every obsolete screen directory",
   );
   for (const [route, content] of compilation.outputs)
     assert.deepEqual(
-      await fs.readFile(path.join(fixture.mockupsDir, route)),
+      await fs.readFile(path.join(fixture.generatedDir, route)),
       generatedBytes(content),
       route,
     );
@@ -162,9 +164,7 @@ test(
       Buffer.alloc(2 * 1024 * 1024, 7),
     );
     const compilation = await compileCatalogue(await loadConfig(fixture.root));
-    assert.ok(
-      compilation.outputs.has("mokly-generated/assets/entries/large.png"),
-    );
+    assert.ok(compilation.outputs.has("assets/entries/large.png"));
     await writeCompilation(compilation, await loadConfig(fixture.root));
     let exporting = true;
     let writes = 0;

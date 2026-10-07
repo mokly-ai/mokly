@@ -4,8 +4,6 @@ import test from "node:test";
 
 import { historicalSnapshotId } from "../packages/viewer/src/catalogue/snapshot_identity.js";
 
-import { pageSource, pathFixture } from "./helpers/path_fixture.js";
-
 test("historical snapshot identity pins the v3 path namespace", () => {
   const expected = createHash("sha256")
     .update(
@@ -31,16 +29,4 @@ test("historical snapshot identity pins the v3 path namespace", () => {
     ),
     expected,
   );
-});
-
-test("transformer path routes have no inherited keys", async (t) => {
-  const fixture = await pathFixture(
-    {
-      "specs/constructor.mockup.ts": pageSource(),
-      "transform.ts": `export default ({content,logicalRoutes})=>{if(Object.getPrototypeOf(logicalRoutes)!==null || logicalRoutes.constructor!=="constructor/index.html" || logicalRoutes.__proto__!==undefined || logicalRoutes.toString!==undefined) throw new Error("Unsafe path dictionary"); return content;};`,
-    },
-    '{mockupsDir:"generated",roots:[{dir:"specs"}],compatibility:{transformer:"transform.ts"}}',
-  );
-  t.after(fixture.remove);
-  await fixture.compile();
 });

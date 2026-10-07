@@ -3,6 +3,7 @@ import path from "node:path";
 
 import {
   canonicalJson,
+  generatedResourcePath,
   documentRoute,
   previewMetadataPath,
   parseRemovedPagePreview,
@@ -25,7 +26,7 @@ import {
 import { MoklyError } from "../errors.js";
 
 import { addArtifactFile } from "./artifact_files.js";
-import { copySnapshotDependencies, GitReviewAssetReader } from "./assets.js";
+import { GitReviewAssetReader } from "./assets.js";
 import { baselineResourceConfig } from "./base_manifest.js";
 import { SelectedAssetReader } from "./evidence_assets.js";
 import type { BaselineReader } from "./git.js";
@@ -35,6 +36,7 @@ import type {
   RemovedPagePreviewSource,
   RemovedPageSelection,
 } from "./selection_types.js";
+import { copySnapshotDependencies } from "./snapshot_resources.js";
 
 /** Git-backed capture over a baseline reader pinned by the caller. */
 export class RepositoryRemovedPagePreview implements RemovedPagePreviewProvider {
@@ -74,6 +76,7 @@ export class RepositoryRemovedPagePreview implements RemovedPagePreviewProvider 
         toPosixPath(
           path.relative(this.config.repoRoot, this.config.mockupsDir),
         ),
+        source.baseline,
       ),
       signal,
     );
@@ -85,7 +88,9 @@ export class RepositoryRemovedPagePreview implements RemovedPagePreviewProvider 
     const documents = new Set<string>();
     const resources = documentResourceIndex([historical]);
     for (const scheme of schemes) {
-      const document = documentRoute(historical.path, scheme);
+      const document = generatedResourcePath(
+        documentRoute(historical.path, scheme),
+      );
       documents.add(document);
       const content = await reader.read(document);
       for (const resource of linkedDocumentResources(

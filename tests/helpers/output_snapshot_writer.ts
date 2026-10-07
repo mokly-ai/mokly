@@ -1,4 +1,4 @@
-/** A separate process that pauses a real locked transaction after output pruning. */
+/** A separate process that pauses a real locked transaction after moving the old tree. */
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -21,13 +21,10 @@ const compilations = input.map((value) => ({
 }));
 let resume: (() => void) | undefined;
 let shouldPause = false;
-const rmdir = fs.rmdir;
-fs.rmdir = async (...args: Parameters<typeof fs.rmdir>) => {
-  const result = await Reflect.apply(rmdir, fs, args);
-  if (
-    shouldPause &&
-    String(args[0]).startsWith(path.join(root, "mockups") + path.sep)
-  ) {
+const rename = fs.rename;
+fs.rename = async (...args: Parameters<typeof fs.rename>) => {
+  const result = await Reflect.apply(rename, fs, args);
+  if (shouldPause && String(args[0]) === config.generatedDir) {
     shouldPause = false;
     const waiting = new Promise<void>((resolve) => {
       resume = resolve;

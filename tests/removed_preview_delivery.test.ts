@@ -18,9 +18,7 @@ import {
 } from "../dist/export/ownership.js";
 import { exportCatalogue } from "../dist/export/run.js";
 import { bundleUpload } from "../dist/publish/bundle.js";
-import { buildPreview } from "../scripts/preview/catalogue.mjs";
 
-import { assertPublishedPagePreview } from "./helpers/published_preview.js";
 import {
   archiveNames,
   readArtifact,
@@ -47,7 +45,7 @@ test("Changes export packages removed previews into every delivery boundary", as
   const model = readCatalogue(
     JSON.parse(
       await fs.readFile(
-        path.join(fixture.output, "__mokly/catalogue.json"),
+        path.join(fixture.output, "mokly-viewer/catalogue.json"),
         "utf8",
       ),
     ),
@@ -83,7 +81,7 @@ test("Changes export packages removed previews into every delivery boundary", as
     preview.path,
     "fixture/deleted-archive/deleted-section/removed-page",
   );
-  const pageDocument = `snapshots/before/${entryRoute(preview.path)}`;
+  const pageDocument = `snapshots/before/mokly-generated/${entryRoute(preview.path)}`;
   const document = await fs.readFile(
     path.join(fixture.output, generationRoot, pageDocument),
     "utf8",
@@ -92,7 +90,7 @@ test("Changes export packages removed previews into every delivery boundary", as
   assert.doesNotMatch(document, /Branch edit/);
   for (const name of [
     pagePath,
-    `${generationRoot}/snapshots/before/fixture/deleted-archive/deleted-section/removed-page/index.html`,
+    `${generationRoot}/snapshots/before/mokly-generated/fixture/deleted-archive/deleted-section/removed-page/index.html`,
     `${generationRoot}/snapshots/before/assets/page.css`,
     `${generationRoot}/snapshots/before/assets/nested.css`,
     `${generationRoot}/snapshots/before/assets/past.png`,
@@ -138,7 +136,7 @@ test("Changes export packages removed previews into every delivery boundary", as
     path.join(
       fixture.output,
       generationRoot,
-      `snapshots/before/${viewRoute("fixture/deleted-archive/deleted-section/removed-screen", desktop.viewport, desktop.colorScheme)}`,
+      `snapshots/before/mokly-generated/${viewRoute("fixture/deleted-archive/deleted-section/removed-screen", desktop.viewport, desktop.colorScheme)}`,
     ),
     "utf8",
   );
@@ -174,13 +172,13 @@ test("current-only export replaces Changes without Git or historical files", asy
   assert.equal(result.comparisonUrl, null);
   assert.ok(
     (await ownedEntries(fixture.output)).files.every(
-      (name) => !name.startsWith("__mokly/diffs/"),
+      (name) => !name.startsWith("mokly-viewer/diffs/"),
     ),
   );
   const model = readCatalogue(
     JSON.parse(
       await fs.readFile(
-        path.join(fixture.output, "__mokly/catalogue.json"),
+        path.join(fixture.output, "mokly-viewer/catalogue.json"),
         "utf8",
       ),
     ),
@@ -213,74 +211,4 @@ test("an incomplete page closure preserves the previous export", async (t) => {
     /unavailable|resource|snapshot/i,
   );
   assert.deepEqual(await readArtifact(fixture.output), previous);
-});
-
-test("repository publication packages previews and default replacement removes them", async (t) => {
-  const fixture = await createRemovedDeliveryFixture();
-  t.after(() => fixture.close());
-  const output = path.join(fixture.root, ".context/published");
-  const originalFetch = globalThis.fetch;
-  const requests: { method: string; url: string }[] = [];
-  t.mock.method(
-    globalThis,
-    "fetch",
-    async (...args: Parameters<typeof originalFetch>) => {
-      requests.push({
-        method:
-          args[0] instanceof Request
-            ? args[0].method
-            : (args[1]?.method ?? "GET"),
-        url: args[0] instanceof Request ? args[0].url : String(args[0]),
-      });
-      return originalFetch(...args);
-    },
-  );
-  await buildPreview(fixture.config, output, {
-    base: "origin/main",
-    includeChanges: true,
-  });
-  const withChanges = readCatalogue(
-    JSON.parse(
-      await fs.readFile(path.join(output, "__mokly/catalogue.json"), "utf8"),
-    ),
-  );
-  const page = withChanges.removedEntries.find(
-    ({ entry }) =>
-      entry.path === "fixture/deleted-archive/deleted-section/removed-page",
-  );
-  assert.ok(page?.preview?.kind === "page");
-  await assertPublishedPagePreview(output, page.preview, page.entry.path);
-  await fs.access(path.join(output, "__mokly/client/react-shell.js"));
-  await fs.access(
-    path.join(
-      output,
-      path.posix.dirname(withChanges.comparisonUrl!),
-      "previews/fixture/deleted-archive/deleted-section/removed-page/index.json",
-    ),
-  );
-  await fs.access(
-    path.join(
-      output,
-      path.posix.dirname(withChanges.comparisonUrl!),
-      "snapshots/before/assets/past.png",
-    ),
-  );
-  assert.deepEqual(
-    requests.filter(({ method, url }) => {
-      const request = new URL(url);
-      return (
-        method === "HEAD" ||
-        request.searchParams.has("page") ||
-        request.pathname === "/__mokly/events"
-      );
-    }),
-    [],
-  );
-  await fs.rm(path.join(fixture.root, ".git"), { recursive: true });
-  await buildPreview(fixture.config, output);
-  assert.ok(
-    (await ownedEntries(output)).files.every(
-      (name) => !name.startsWith("__mokly/diffs/"),
-    ),
-  );
 });

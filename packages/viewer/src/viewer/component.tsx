@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
+import {
+  MoklyVersionError,
+  VERSION_ERROR_MESSAGE,
+} from "../catalogue/version_error.js";
 import { sameOriginAdapter } from "../client/same_origin_adapter.js";
 import { memoryScrollTogether } from "../shell/comparison_scroll_preference.js";
 
@@ -17,6 +22,10 @@ import type { MoklyViewerProps } from "./types.js";
 export function MoklyViewer(props: MoklyViewerProps) {
   const identifierPrefix = viewerIdentifierPrefix(props.viewerId);
   const source = useCatalogue(props.catalogue, props.baseUrl);
+  const versionError =
+    source.error?.cause instanceof MoklyVersionError
+      ? source.error.cause
+      : undefined;
   const [adapter] = useState(sameOriginAdapter);
   const [scrollTogether] = useState(memoryScrollTogether);
   const selectedAdapter = props.frameAdapter ?? adapter;
@@ -84,22 +93,35 @@ export function MoklyViewer(props: MoklyViewerProps) {
     reported.current = { key: source.key, invalid: invalidMode };
     if (source.error || invalidMode)
       callbacks.current.onError?.({
-        code: invalidMode ? "selection" : "catalogue",
+        code: invalidMode
+          ? "selection"
+          : versionError
+            ? "version"
+            : "catalogue",
         message: invalidMode
           ? "Remount the viewer to change how selection is managed."
-          : "The catalogue could not be loaded. Try again.",
+          : versionError
+            ? VERSION_ERROR_MESSAGE
+            : "The catalogue could not be loaded. Try again.",
+        ...(!invalidMode && versionError
+          ? { details: versionError.message }
+          : {}),
       });
-  }, [source.error, source.key, invalidMode]);
+  }, [source.error, source.key, invalidMode, versionError]);
   if (bridgeFailure?.drained) throw bridgeFailure.error;
   if (bridgeFailure) return null;
   if (source.error || invalidMode)
     return (
       <div
-        className="mokly-viewer mbk-empty"
+        className={`${VIEWER_DIRECTORY} mbk-empty`}
         role="alert"
         {...themeAttributes(props.theme)}
       >
-        <h2>The catalogue could not be loaded</h2>
+        <h2>
+          {!invalidMode && versionError
+            ? VERSION_ERROR_MESSAGE
+            : "The catalogue could not be loaded"}
+        </h2>
         <button type="button" onClick={source.retry}>
           Try again
         </button>
@@ -108,7 +130,7 @@ export function MoklyViewer(props: MoklyViewerProps) {
   if (!source.loaded)
     return (
       <div
-        className="mokly-viewer mbk-empty"
+        className={`${VIEWER_DIRECTORY} mbk-empty`}
         role="status"
         {...themeAttributes(props.theme)}
       >

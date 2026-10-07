@@ -11,3 +11,5 @@ export { sameOriginAdapter } from "./client/same_origin_adapter.js";
 export { postMessageAdapter } from "./client/post_message_adapter.js";
 export { MoklyViewer } from "./viewer/component.js";
 export type * from "./viewer/types.js";
+
+export { MoklyVersionError } from "./catalogue/version_error.js";

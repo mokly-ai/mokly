@@ -7,9 +7,7 @@ import {
   type TransferredGeneratedFile,
 } from "../../build/generated_file.js";
 import { isOutputSnapshot } from "../../build/output_snapshot.js";
-import { validatePublicExclude } from "../../config/public_exclusions.js";
 import type { ResolvedConfig } from "../../config/types.js";
-import { MoklyError } from "../../errors.js";
 
 /** Accepted configuration and manifest transferred before watched readiness. */
 export interface RuntimeStartupMessage {
@@ -54,7 +52,10 @@ export function componentRuntimeMessage(
 ): RuntimeMessage {
   return {
     runtime: {
-      outputSnapshot: runtime.outputSnapshot,
+      outputSnapshot: Object.freeze({
+        schemaVersion: 1,
+        routes: Object.freeze([...runtime.outputSnapshot.routes]),
+      }),
       bundle: runtime.bundle,
       generation: runtime.generation,
       outputs: runtime.outputs.map(
@@ -164,25 +165,15 @@ function parseRuntimeStartupMessage(
         !config.entryModules.every((module) => typeof module === "string"))) ||
     typeof config.mockupsDir !== "string" ||
     typeof config.repoRoot !== "string" ||
-    !Array.isArray(config.publicExclude) ||
+    typeof config.generatedDir !== "string" ||
     !manifest ||
     !Array.isArray(manifest.entries) ||
-    (manifest.schemaVersion !== 8 &&
-      manifest.schemaVersion !== "live-index-1") ||
+    (manifest.schemaVersion !== 9 &&
+      manifest.schemaVersion !== "live-index-2") ||
     !Array.isArray(manifest.sourceFiles)
   )
     return;
-  try {
-    const publicExclude = validatePublicExclude(config.publicExclude);
-    return {
-      config: { ...config, publicExclude },
-      manifest,
-      type: "component-runtime-startup",
-    };
-  } catch (error) {
-    if (error instanceof MoklyError) return;
-    throw error;
-  }
+  return { config, manifest, type: "component-runtime-startup" };
 }
 
 export function parseRuntimeMessage(
@@ -230,7 +221,10 @@ export function parseRuntimeMessage(
   return {
     type: "component-runtime",
     runtime: {
-      outputSnapshot: runtime.outputSnapshot,
+      outputSnapshot: Object.freeze({
+        schemaVersion: 1,
+        routes: Object.freeze([...runtime.outputSnapshot.routes]),
+      }),
       bundle: runtime.bundle,
       generation: runtime.generation,
       outputs,

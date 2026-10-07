@@ -1,12 +1,13 @@
 /** Screen and use-case stages rendered from the manifest-backed catalogue. */
 
+import { currentDocumentPath } from "../catalogue/delivery_paths.js";
 import type { Viewport } from "../data/axes.js";
-import { encodeUrlPath } from "../data/paths.js";
 import { entryRoute, viewHref, viewRoute } from "../navigation/routes.js";
 import type { ManifestScreen, ManifestUseCase } from "../registry/types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { BrowserFrame, PhoneFrame } from "./frames.js";
+import { framePath } from "./stage_sources.js";
 
 interface FragmentSources {
   dark: string | undefined;
@@ -14,8 +15,7 @@ interface FragmentSources {
 }
 
 function fragmentSrc(route: string, fragment?: string): string {
-  const source = `/static/${encodeUrlPath(route)}`;
-  return fragment ? `${source}#${encodeURIComponent(fragment)}` : source;
+  return framePath(currentDocumentPath(route), fragment);
 }
 
 function fragmentSources(

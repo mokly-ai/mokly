@@ -46,7 +46,7 @@ const messages: MessageBody[] = [
 ];
 const wire = (body: object) => ({
   channel: "mokly-inspector",
-  version: 1,
+  version: 2,
   nonce,
   ...body,
 });
@@ -58,7 +58,7 @@ for (const body of messages)
       { extra: true },
       { nonce: "f".repeat(32) },
       { channel: "other" },
-      { version: 2 },
+      { version: 3 },
       { nonce: "INVALID" },
       { type: "unknown" },
     ])
