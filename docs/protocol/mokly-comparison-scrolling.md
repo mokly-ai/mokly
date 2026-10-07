@@ -99,6 +99,12 @@ settled pair; the browser clamps a shorter region to its own x/y range. Never
 resize, translate, restyle, or move snapshot elements to compensate, so
 versions may differ visibly past a shorter region's end.
 
+The browser may animate a source scroll over several frames, for example the
+scroll that a scroll key starts. Each frame's scroll event reports a new
+offset, so, with Scroll together on, every counterpart follows each frame,
+clamped to its own range. A counterpart therefore stops no later than the
+source: at the source's final offset, or earlier at the end of its own range.
+
 The per-element echo rule is the page rule: an event equal to that element's
 last recorded value, written by the viewer or scrolled by the reader, is
 ignored; either coordinate differing makes it a new source. Nested regions
@@ -148,11 +154,12 @@ table's horizontal tests: ArrowRight can move when `scrollLeft < 0`, and
 ArrowLeft when `scrollLeft > -horizontal range`.
 
 When such a region exists, do not prevent the key and do not move a page
-viewport; the browser scrolls that region and its scroll event drives region
-mirroring. When none exists, prevent the key and move the applicable chrome
-viewport: a page is 87.5% of its visible height, an arrow is 40 CSS pixels,
-Home is zero, End is the range end, and every result is clamped. The page write
-then follows the current Scroll together mode.
+viewport; the browser scrolls that region and its scroll events drive
+[region mirroring](#region-writes-and-echoes). When none exists, prevent the
+key and move the applicable chrome viewport: a page is 87.5% of its visible
+height, an arrow is 40 CSS pixels, Home is zero, End is the range end, and
+every result is clamped. The page write then follows the current Scroll
+together mode.
 
 ## Anchors
 

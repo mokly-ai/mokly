@@ -573,12 +573,13 @@ in CI uses it yet, so the product stays functional.
   - [x] Fix finding 2: disable version preview URLs explicitly, assert the config, and document the old-version URL check after token rotation.
   - [x] Fix finding 4: log unexpected error names/messages through the injected logger while keeping client responses generic; capture the regression first.
   - [x] Fix finding 5: list every Worker module and copy the exact Wrangler configuration into the contract, with a drift regression.
-  - [ ] Merge main's browser helper change after the fixes; audit preservation, run the complete gate, commit, and push the fixes plus merge. The supervising agent owns the re-review.
+  - [x] Merge main's browser helper change after the fixes; audit preservation, run the complete gate, commit, and push the fixes plus merge. The supervising agent owns the re-review.
 
 Evidence: `.context/turborepo-cloudflare-remote-cache/m3-progress.md` and
 `.context/turborepo-cloudflare-remote-cache/m3-validation.md`.
 Main integration decisions: `.context/turborepo-cloudflare-remote-cache/m3-main-decisions.md`.
 Review-fix evidence: `.context/turborepo-cloudflare-remote-cache/m3-review-fix-validation.md`.
+Review-fix merge decisions: `.context/turborepo-cloudflare-remote-cache/m3-review-main-decisions.md`.
 
 ### Milestone 4: Cloudflare Provisioning And CI Wiring
 
