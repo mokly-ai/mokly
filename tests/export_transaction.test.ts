@@ -205,3 +205,33 @@ test("backup cleanup failure outranks a later cancellation", async (context) => 
   });
   await assert.rejects(transaction.close(), /recovery files retained/u);
 });
+
+for (const kind of ["file", "symlink"] as const)
+  test(`export transaction names a ${kind} destination before reservation`, async (context) => {
+    const fixture = await createFixture();
+    context.after(() => removeFixture(fixture));
+    const output = path.join(fixture.root, "site");
+    const target = path.join(fixture.root, "original");
+    const retained = kind === "file" ? output : path.join(target, "keep.txt");
+    if (kind === "symlink") {
+      await fs.promises.mkdir(target);
+      await fs.promises.symlink(target, output, "junction");
+    }
+    await fs.promises.writeFile(retained, "User-owned content");
+    const before = (await fs.promises.readdir(fixture.root)).sort();
+
+    await assert.rejects(ExportTransaction.open(output), {
+      code: "export-invalid",
+      message: `[mokly/export-invalid] Export ownership requires a real directory: ${output}.`,
+    });
+
+    assert.deepEqual((await fs.promises.readdir(fixture.root)).sort(), before);
+    assert.equal(
+      (await fs.promises.lstat(output)).isSymbolicLink(),
+      kind === "symlink",
+    );
+    assert.equal(
+      await fs.promises.readFile(retained, "utf8"),
+      "User-owned content",
+    );
+  });

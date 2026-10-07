@@ -187,6 +187,15 @@ export async function ownedEntries(
   return { files: files.sort(), directories: directories.sort() };
 }
 
+/** Reject non-directory destinations without losing their caller-visible path. */
+export function assertRealExportDirectory(
+  output: string,
+  stat: Pick<fs.Stats, "isDirectory" | "isSymbolicLink">,
+): void {
+  if (!stat.isDirectory() || stat.isSymbolicLink())
+    throw exportError(`Export ownership requires a real directory: ${output}.`);
+}
+
 /** Validate ownership and return the exact existing names authorized for cleanup. */
 export async function assertExportOwnership(
   output: string,
@@ -198,8 +207,7 @@ export async function assertExportOwnership(
       throw error;
     });
   if (!stat) return;
-  if (!stat.isDirectory() || stat.isSymbolicLink())
-    throw exportError(`Export ownership requires a real directory: ${output}.`);
+  assertRealExportDirectory(output, stat);
   const { files, directories } = await ownedEntries(output);
   if (files.length === 0 && directories.length === 0)
     return { files, directories };

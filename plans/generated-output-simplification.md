@@ -1,8 +1,8 @@
 # Generated Output Simplification
 
-Status: Active. Milestones 1–22 are implemented and verified. Milestone 23's
-main integrations, document audit and re-plan are complete. The orchestrator's
-re-review and decisions on open findings remain. The branch uses one
+Status: Active. Milestones 1–23 are complete, including the orchestrator's
+review, one re-review and both fix rounds. Decisions on open findings remain.
+The branch uses one
 generated tree, a referenced authored closure, writer-only output locks, current-format baselines and `mokly-viewer/`.
 The combined formats are manifest v9, catalogue v5 and review v6. Milestones
 24–28 contain the remaining review fixes. Findings 17 and 52 still await user
@@ -1812,7 +1812,7 @@ Evidence: `.context/generated-output-simplification/m22-final-validation.md`.
 - [x] Run the full gate because the captured tip includes #148 code/tests.
       Commit and push only after it passes. Report later main movement without
       another merge, then stop for the orchestrator's review.
-- [ ] After the push, the orchestrator reviews the merge against `origin/main`
+- [x] After the push, the orchestrator reviews the merge against `origin/main`
       using `docs/implementation-review-prompt.md`. Report severity, category,
       effort, options and Auto-fix tags. Follow `AGENTS.md`'s review-fix rule
       after the report. Keep findings 17 and 52 pending their existing user decisions.
@@ -1844,9 +1844,17 @@ Evidence: `.context/generated-output-simplification/m22-final-validation.md`.
   - Known 63 — Still open: ESLint names the deleted `src/build/discovery.ts`.
   - Known 65 — Unchanged: the planned test corrections remain.
 
+The review and one re-review are complete. Both fix rounds are complete:
+87–92 in the first round and 93–95 in the final round. No further re-review
+is required. The open findings and status notes above remain unchanged.
+
 Review reports: `.context/generated-output-simplification/m23-review/`.
 
 Review-fix validation: `.context/generated-output-simplification/m23-review/fixes-87-92-validation.md`.
+
+Re-review report: `.context/generated-output-simplification/m23-review/rereview-fix-87-92.md`.
+
+Final review-fix validation: `.context/generated-output-simplification/m23-review/fixes-93-95-validation.md`.
 
 ### Current checkpoint and integration instructions
 
@@ -1946,9 +1954,10 @@ Evidence: `.context/generated-output-simplification/m23-replan-validation.md`.
 
 Evidence: `.context/generated-output-simplification/m23-main-movement.md`.
 
-The orchestrator owns the remaining review TODO. No Milestone 24 implementation
-has started. The orchestrator directed the additional integration above before
-that review, under the user's existing decision 1 A.
+The orchestrator completed the review and one re-review. Both fix rounds are
+complete. No Milestone 24 implementation has started. The orchestrator directed
+the additional integration above before that review, under the user's existing
+decision 1 A.
 
 The incoming changes can affect the remaining plan as follows:
 

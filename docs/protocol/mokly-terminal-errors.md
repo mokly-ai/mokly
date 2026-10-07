@@ -3,6 +3,12 @@
 This document supplements [CLI Terminal Output](./mokly-terminal-output.md)
 with exact plain output and rich error presentation.
 
+## Delivery Status
+
+The paragraph labelled **Approved target** records pending notice-stream changes
+from [Generated Output Simplification](../../plans/generated-output-simplification.md).
+The remaining plain and rich output rules describe current behaviour.
+
 ## Plain Compatibility
 
 Successful plain commands retain these exact strings, including punctuation,
@@ -29,14 +35,19 @@ decimal counts as rich mode. A publish prints one counted line or the
 already-published line. `<viewer-url>` appears only when accepted and contains
 that normalized URL alone.
 
-Plain commands add no phase or watch-event lines. Baseline preparation notes
-and the exact earlier-version notice use stdout, under the
+Plain commands add no phase or watch-event lines. When reported, baseline
+preparation notes and the exact earlier-version notice currently use stderr.
+[Build warnings](./mokly-build-warnings.md) also use stderr. A successful plain
+command can therefore write to stderr without `--debug-timings`.
+Expected plain errors remain exactly `[mokly/<code>] <message>\n`. Timing mode
+retains the same stdout and adds its documented JSON lines to stderr alongside
+baseline notes, build warnings and existing failures.
+
+**Approved target:** successful baseline preparation notes and the exact
+earlier-version notice use stdout, under the
 [watch-writer contract](./mokly-watch-writers.md#summaries-and-plain-notices).
-Warning-free successful plain commands write nothing to stderr unless
-`--debug-timings` was requested. [Build warnings](./mokly-build-warnings.md) use
-stderr. Expected plain errors remain exactly `[mokly/<code>] <message>\n`.
-Timing mode retains the same stdout and writes its documented JSON lines plus
-build warnings and existing failures.
+Warning-free successful plain commands write nothing to stderr except requested
+timing JSON. Build warnings and errors remain on stderr.
 
 The
 [exchange cancellation rule](./mokly-upload-exchange.md#accounting-and-output)

@@ -169,6 +169,9 @@ resource or granting consumer documents root-relative resource access.
 `paths.ts`, `ownership.ts`, and `transaction.ts` constrain replacement to a
 validated, exclusively reserved output. `destination.ts` retains initial absence
 or exact bigint directory identity and checks it before and after capture.
+Capture and ownership validation share `assertRealExportDirectory` in
+`ownership.ts`; file and symlink refusals name the destination before any
+reservation or write.
 `rename.ts` lazily binds OS-enforced no-replace moves through Koffi for Linux,
 macOS, and Windows; capture, installation, and recovery share this boundary.
 There is no check-then-replacing-rename or copy fallback. Preserve optional
