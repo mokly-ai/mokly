@@ -29,25 +29,32 @@ const sourcePathRestriction = {
   message:
     "Sort source paths with compareCodeUnits to avoid locale-dependent inventories and diagnostics.",
 };
-const directNowClock =
-  "[left.type='CallExpression'][left.callee.property.name='now'][left.callee.object.name=/^(performance|Date)$/]";
-const memberPerformanceClock =
-  "[left.type='CallExpression'][left.callee.property.name='now'][left.callee.object.type='MemberExpression'][left.callee.object.property.name='performance']";
-const hrtimeClock =
-  "[left.type='CallExpression'][left.callee.property.name='bigint'][left.callee.object.property.name='hrtime']";
-const currentDateClock =
-  "[left.type='CallExpression'][left.callee.property.name='getTime'][left.callee.object.type='NewExpression'][left.callee.object.callee.name='Date'][left.callee.object.arguments.length=0]";
+const clockCalls = (at) => {
+  const callee = `${at}callee`;
+  return {
+    now: `[${at}type='CallExpression'][${callee}.property.name='now']:matches([${callee}.object.name=/^(performance|Date)$/], [${callee}.object.type='MemberExpression'][${callee}.object.property.name=/^(performance|Date)$/])`,
+    hrtime: `[${at}type='CallExpression'][${callee}.property.name='bigint'][${callee}.object.property.name='hrtime']`,
+    currentDate: `[${at}type='CallExpression'][${callee}.property.name='getTime'][${callee}.object.type='NewExpression'][${callee}.object.arguments.length=0]:matches([${callee}.object.callee.name='Date'], [${callee}.object.callee.property.name='Date'])`,
+  };
+};
+const leftClock = clockCalls("left.");
+const operandClock = clockCalls("");
 const elapsedClockSelector = `BinaryExpression[operator='-'][right.type!='Literal']:matches(${[
-  directNowClock,
-  memberPerformanceClock,
-  hrtimeClock,
-  currentDateClock,
+  leftClock.now,
+  leftClock.hrtime,
+  leftClock.currentDate,
+].join(", ")})`;
+const summedClockSelector = `BinaryExpression[operator='-'][right.type!='Literal'] > BinaryExpression.left[operator='+'] > CallExpression:matches(${[
+  operandClock.now,
+  operandClock.hrtime,
+  operandClock.currentDate,
 ].join(", ")})`;
 const shortDeadlineSelector = `BinaryExpression[operator='+'][right.type='Literal'][right.value<10000]:matches(${[
-  directNowClock,
-  memberPerformanceClock,
-  currentDateClock,
+  leftClock.now,
+  leftClock.currentDate,
 ].join(", ")})`;
+const elapsedClockMessage =
+  "Use operation counts, captured watcher targets, event order, or fake clocks in tests. Report duration text with tests/helpers/durations.ts. See docs/protocol/ci-test-timing.md.";
 
 export default tseslint.config(
   includeIgnoreFile(gitignorePath, "Repository .gitignore patterns"),
@@ -107,15 +114,12 @@ export default tseslint.config(
   },
   {
     files: TEST_ROOTS.map((root) => `${root}/**/*.{js,mjs,cjs,ts,tsx,mts,cts}`),
-    ignores: ["tests/helpers/durations.ts"],
+    ignores: ["tests/helpers/durations.ts", "tests/helpers/browser_timing.ts"],
     rules: {
       "no-restricted-syntax": [
         "error",
-        {
-          selector: elapsedClockSelector,
-          message:
-            "Use operation counts, captured watcher targets, event order, or fake clocks in tests. Report duration text with tests/helpers/durations.ts. See docs/protocol/ci-test-timing.md.",
-        },
+        { selector: elapsedClockSelector, message: elapsedClockMessage },
+        { selector: summedClockSelector, message: elapsedClockMessage },
         {
           selector: shortDeadlineSelector,
           message:

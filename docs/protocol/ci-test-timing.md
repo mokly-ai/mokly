@@ -159,21 +159,29 @@ Apply `no-restricted-syntax` in `eslint.config.js` to every JavaScript and
 TypeScript file in each test root listed by
 `scripts/verification/test-roots.mjs`: `tests/` and `packages/viewer/tests/`.
 This includes browser and hydration specs. Unit-test discovery reads the
-same list, so a new root gets the guard automatically. The only exempt file
-is `tests/helpers/durations.ts`. Product code and scripts outside the test
-roots are outside the guard.
+same list, so a new root gets the guard automatically. Two files are exempt:
+the duration helper `tests/helpers/durations.ts` and the fixture-timing
+helper `tests/helpers/browser_timing.ts`. Product code and scripts outside the
+test roots are outside the guard.
 
-The guard rejects two patterns, including inside a `page.evaluate` callback:
+The guard rejects three patterns, including inside a `page.evaluate`
+callback:
 
 - A subtraction with a clock call on the left and a nonliteral operand on
   the right. It applies to every clock form below.
+- A subtraction with a nonliteral operand on the right and a `+` expression
+  on the left that has a clock call as a direct operand. An example is
+  `performance.timeOrigin + performance.now() - started`. It applies to every
+  clock form below.
 - A clock call plus a number literal below 10,000. It applies to every form
   below except `process.hrtime.bigint()`.
 
 The clock forms are `performance.now()`, `Date.now()`,
-`process.hrtime.bigint()`, member-expression clocks such as
-`window.performance.now()` and `globalThis.performance.now()`, and
-`new Date().getTime()` without constructor arguments. A parsed date such as
+`process.hrtime.bigint()` and `new Date().getTime()` without constructor
+arguments. Member-expression forms are clocks too, such as
+`window.performance.now()`, `globalThis.performance.now()`,
+`globalThis.Date.now()`, `window.Date.now()` and
+`new globalThis.Date().getTime()`. A parsed date such as
 `new Date(value).getTime()` is not a clock read and stays allowed.
 
 `eslint.config.js` holds the selectors.
@@ -181,7 +189,8 @@ The clock forms are `performance.now()`, `Date.now()`,
 
 Deadlines of 10,000 ms or more, deadline comparisons, and literal timestamp
 offsets remain allowed. Examples include `performance.now() + 20_000`,
-`performance.now() < deadline`, and `new Date(Date.now() - 10_000)`.
+`performance.now() < deadline`, `new Date(Date.now() - 10_000)` and
+`performance.timeOrigin + performance.now() - 10_000`.
 Variable deadlines such as `Date.now() + timeoutMs` pass the syntax check.
 They must still allow at least 10 seconds when polling for an expected state.
 Indirect calls such as `clock() - started` also pass the selectors. They

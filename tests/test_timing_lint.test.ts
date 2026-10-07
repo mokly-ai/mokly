@@ -20,6 +20,11 @@ const elapsedExpressions = [
   "window.performance.now() - started",
   "globalThis.performance.now() - started",
   "new Date().getTime() - started",
+  "globalThis.Date.now() - started",
+  "window.Date.now() - started",
+  "new globalThis.Date().getTime() - started",
+  "performance.timeOrigin + performance.now() - started",
+  "Date.now() + offset - started",
 ];
 const rejectedExpressions = [
   ...elapsedExpressions,
@@ -27,6 +32,8 @@ const rejectedExpressions = [
   "performance.now() + 2000",
   "window.performance.now() + 2000",
   "new Date().getTime() + 9_999",
+  "globalThis.Date.now() + 5_000",
+  "new globalThis.Date().getTime() + 9_999",
 ];
 const allowedExpressions = [
   "performance.now() + 20_000",
@@ -39,6 +46,13 @@ const allowedExpressions = [
   "new Date(0).getTime() - started",
   "window.performance.now() + 10_000",
   "new Date().getTime() + 10_000",
+  "globalThis.Date.now() + 10_000",
+  "new globalThis.Date(value).getTime() - started",
+  "performance.timeOrigin + performance.now()",
+  "performance.timeOrigin + performance.now() - 10_000",
+  "performance.timeOrigin - started",
+  "timer.now() - started",
+  "first + second - started",
 ];
 
 for (const filePath of testPaths) {
@@ -75,6 +89,7 @@ for (const filePath of testPaths) {
 
 for (const filePath of [
   "tests/helpers/durations.ts",
+  "tests/helpers/browser_timing.ts",
   "src/example.ts",
   "scripts/large/example.mjs",
 ]) {

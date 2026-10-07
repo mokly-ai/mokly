@@ -90,7 +90,10 @@ and `metafile.inputs` with a test-owned `Proxy`.
 Required tests report durations only as text through
 `tests/helpers/durations.ts`. Use that text in `context.diagnostic` or a
 Playwright annotation. A reported duration must never be a failure condition.
-The helper is the only test module that directly subtracts clock reads.
+Apart from this helper, only the fixture-timing helpers subtract clock reads:
+`tests/helpers/fixture_timing.ts` and `tests/helpers/browser_timing.ts`.
+They report fixture phases as [CI suite evidence](./ci-suite-evidence.md)
+and never fail a test on a duration.
 
 The helper returns the result of synchronous and asynchronous callbacks.
 It reports text once when the callback succeeds, throws, or rejects.

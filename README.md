@@ -448,8 +448,13 @@ Unit discovery and the timing lint guard share the
 [test roots](./scripts/verification/test-roots.mjs): `tests/` and
 `packages/viewer/tests/`. The guard rejects elapsed clock subtraction and
 literal deadlines below 10,000 ms. It checks clocks such as
-`window.performance.now()` and `new Date().getTime()` too.
-Only [`tests/helpers/durations.ts`](./tests/helpers/durations.ts) is exempt.
+`window.performance.now()`, `globalThis.Date.now()` and
+`new Date().getTime()` too, and a clock inside a sum such as
+`performance.timeOrigin + performance.now() - started`. Only
+[`tests/helpers/durations.ts`](./tests/helpers/durations.ts) and the
+fixture-timing helper
+[`tests/helpers/browser_timing.ts`](./tests/helpers/browser_timing.ts) are
+exempt.
 
 Pull request titles use Conventional Commits and at most 72 Unicode code points.
 The separate title check runs when a PR opens, changes, or receives a push; see
