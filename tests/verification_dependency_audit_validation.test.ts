@@ -3,7 +3,11 @@ import test from "node:test";
 
 import { evaluateDependencyAudit } from "../scripts/verification/dependency-audit-evaluation.mjs";
 
-import { auditFixture, bracesAdvisory } from "./helpers/dependency_audit.js";
+import {
+  auditFixture,
+  bracesAdvisory,
+  issueMessages,
+} from "./helpers/dependency_audit.js";
 
 test("exception schema rejects unknown, missing, empty, and mistyped fields", () => {
   const { report, lockfile, exception, today } = auditFixture();
@@ -20,7 +24,7 @@ test("exception schema rejects unknown, missing, empty, and mistyped fields", ()
   for (const value of invalid) {
     const result = evaluateDependencyAudit(report, lockfile, [value], today);
     assert.equal(result.ok, false, JSON.stringify(value));
-    assert.match(result.errors.join("\n"), /Invalid exception/u);
+    assert.match(issueMessages(result), /Invalid exception/u);
   }
   for (const file of [null, {}, { exceptions: [exception] }, "", 1])
     assert.equal(
@@ -72,7 +76,7 @@ test("exception schema validates dates, identifiers, tracking URLs, and paths", 
       today,
     );
     assert.equal(result.ok, false, JSON.stringify(patch));
-    assert.match(result.errors.join("\n"), /Invalid exception/u);
+    assert.match(issueMessages(result), /Invalid exception/u);
   }
 });
 
@@ -85,7 +89,7 @@ test("duplicate exceptions fail even when review text differs", () => {
     today,
   );
   assert.equal(result.ok, false);
-  assert.match(result.errors.join("\n"), /duplicate/iu);
+  assert.match(issueMessages(result), /duplicate/iu);
 });
 
 test("all invalid exceptions are reported with actions", () => {
@@ -108,7 +112,7 @@ test("all invalid exceptions are reported with actions", () => {
     "review",
   ])
     assert.ok(
-      result.errors.join("\n").toLowerCase().includes(value.toLowerCase()),
+      issueMessages(result).toLowerCase().includes(value.toLowerCase()),
       value,
     );
 });
@@ -142,7 +146,7 @@ test("dangling via and effects references fail even with a covered advisory", ()
       today,
     );
     assert.equal(result.ok, false);
-    assert.match(result.errors.join("\n"), /missing-package/u);
+    assert.match(issueMessages(result), /missing-package/u);
   }
 });
 
@@ -222,9 +226,9 @@ test("invalid records do not hide uncovered advisories", () => {
     [{ ...exception, reason: "" }],
     today,
   );
-  assert.match(result.errors.join("\n"), /Invalid exception/u);
+  assert.match(issueMessages(result), /Invalid exception/u);
   assert.match(
-    result.errors.join("\n"),
+    issueMessages(result),
     /Uncovered advisory GHSA-vfj7-8cjw-p6xm/u,
   );
 });
@@ -234,5 +238,5 @@ test("effect cycles without any advisory object fail closed", () => {
   report.vulnerabilities.braces!.via = ["micromatch"];
   const result = evaluateDependencyAudit(report, lockfile, [exception], today);
   assert.equal(result.ok, false);
-  assert.match(result.errors.join("\n"), /no advisory objects/u);
+  assert.match(issueMessages(result), /no advisory objects/u);
 });

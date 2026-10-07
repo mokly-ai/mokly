@@ -239,7 +239,7 @@ unsupported versions before content or path interpretation.
   - [GitHub publishing protections](./npm-github-protections.md)
 - [Dependency security](./dependency-security.md) — advisory gates, targeted
   updates, temporary patched-release overrides, reviewed path exceptions, and
-  strict packed-consumer audit coverage.
+  strict packed-consumer audit coverage; see [baseline audit modes](./dependency-audit-baseline.md) and [dependency update pull requests](./dependency-audit-update-pr.md).
 
 - [Catalogue serialization](./mokly-catalogue-serialization.md) — canonical bytes,
   snapshot identity and strict current-format readers.
