@@ -126,7 +126,7 @@ already-planned post-review bookkeeping.
 
 5. **Severity: Low — delivery plan status is stale for a committed/pushed review diff.**
 
-   Context: [plans/mocklink-child-controls.md](https://github.com/mokly-ai/mokly/blob/c72e349/plans/mocklink-child-controls.md?plain=1#L49) says full validation passed, but [plans/mocklink-child-controls.md](https://github.com/mokly-ai/mokly/blob/c72e349/plans/mocklink-child-controls.md?plain=1#L55) leaves commit, push, review, and final plan recording unchecked; `plans/README.md` still lists the plan as active.
+   Context: [plans/mocklink-child-controls.md](https://github.com/mokly-ai/mokly/blob/09e9ec1/plans/mocklink-child-controls.md?plain=1#L49) says full validation passed, but [plans/mocklink-child-controls.md](https://github.com/mokly-ai/mokly/blob/09e9ec1/plans/mocklink-child-controls.md?plain=1#L55) leaves commit, push, review, and final plan recording unchecked; `plans/README.md` still lists the plan as active.
 
    Impact of doing nothing: reviewers cannot tell whether post-push review happened or whether the feature is complete.
 
@@ -232,7 +232,7 @@ original report.
 
 4. **Severity: Low — delivery plan still records review as pending.**
 
-   **Context:** [plans/mocklink-child-controls.md](https://github.com/mokly-ai/mokly/blob/5556c88/plans/mocklink-child-controls.md?plain=1#L165) leaves post-push `cargo xtask review` and final plan/index recording unchecked, and `plans/README.md` still lists the plan as active.
+   **Context:** [plans/mocklink-child-controls.md](https://github.com/mokly-ai/mokly/blob/d5ab08a/plans/mocklink-child-controls.md?plain=1#L165) leaves post-push `cargo xtask review` and final plan/index recording unchecked, and `plans/README.md` still lists the plan as active.
 
    **Impact of doing nothing:** reviewers cannot tell from committed docs whether the required post-push Review step completed for the final fix commit.
 
