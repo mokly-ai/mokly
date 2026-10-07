@@ -4,7 +4,7 @@ Status: Active. Created on 2026-10-06. No pull request yet. Milestone 1 was
 accepted at `7b70b7e`. Milestone 2 local implementation and checks are complete; hosted native
 verification remains a pre-merge requirement. The supervising agent owns formal
 reviews in another worktree. Milestone 3 implementation, local smokes, and the full gate are complete;
-its supervising-agent review is pending. CI policy remains open, with B recommended. The Worker is not deployed.
+Its supervising-agent review and final fix gate are complete; R2 and the open user decisions remain recorded. CI policy remains open, with B recommended. The Worker is not deployed.
 
 ## Summary
 
@@ -564,13 +564,14 @@ in CI uses it yet, so the product stays functional.
 - [x] Update the Delivery Status in `docs/protocol/ci-remote-cache-worker.md`.
 - [x] Run `cargo xtask check`.
 - [x] Run `git add -A`, commit with Conventional Commits, and push.
-- [ ] Review the complete local diff against `origin/main` with
+- [x] Review the complete local diff against `origin/main` with
       `docs/implementation-review-prompt.md` after the push. The supervising
       agent runs the review. Apply the `AGENTS.md` review-fix rule after it
       reports; keep the review itself read-only.
+  - Re-review of `39606e5`, `e4437ba`, `4a4f4e1`, and merge `865d37d`: R1 fixed in `9030e33`; R2, finding 1, and finding 3 wait for the user.
   - R2 (low, test): the finding-5 drift test in `tests/turbo_cache_workflow.test.ts` also reads the plan's "Repository layout" text, so a future Worker module would force edits to a completed plan; it runs in milliseconds and protects the contract's module list and config block. Recommended: keep the contract check and drop the plan check. Waiting for the user.
   - [x] Fix re-review finding R1: log every 500-or-higher response, including safe configuration-check diagnostics and invalid stored metadata; preserve client responses and capture failing regressions first.
-  - [ ] Run the final re-review gate, close the review with the R1 commit SHA, commit the plan, and push. Stop after this last fix round.
+  - [x] Run the final re-review gate, close the review with the R1 commit SHA, commit the plan, and push. Stop after this last fix round.
 
   - Finding 1 (high, security): the deploy workflow uses an account-wide Workers/R2 write token as a repository secret, which any branch workflow can read; recommend a main-only GitHub environment, reduced permissions, and a rule/test that no Workers/R2 write credential is a repository secret or reaches a pull_request workflow. Waiting for the user.
   - Finding 3 (low, missing test): no automated test runs the Workers runtime, so a broken FixedLengthStream path can deploy; recommend an unstable_startWorker integration test with local R2 in the deploy gate. Waiting for the user.
