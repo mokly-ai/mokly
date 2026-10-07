@@ -2,7 +2,7 @@
 
 Status: Active. Milestones 1 to 9 are complete on draft PR
 [#138](https://github.com/mokly-ai/mokly/pull/138); Milestone 10 merges main's
-#164 to #169. The plan closes when the PR merges. Review findings 2, 3, 10,
+#164, #165, and #167 to #169. The plan closes when the PR merges. Review findings 2, 3, 10,
 and 11 stay open for the user to decide; Milestones 7 and 9 list them. Main's
 #165 resolved finding 7.
 
@@ -493,7 +493,7 @@ and `.context/shared-example-compilation-snapshot/milestone-9.md`. Review
 reports: `.context/shared-example-compilation-snapshot/review.md`. Flaky test:
 `.context/shared-example-compilation-snapshot/flaky/report.md`.
 
-## Milestone 10: Merge main's #164 to #169 — in progress
+## Milestone 10: Merge main's #164, #165, and #167 to #169 — in progress
 
 Main fixed remote verification review findings (#164), made the real SIGINT
 test deterministic (#165), fixed the shared example copy on Node 24 (#167),
