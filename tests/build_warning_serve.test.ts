@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { fixtureWithSheets } from "./helpers/component_stylesheet_fixture.js";
+import { createExportFixture } from "./helpers/export_fixture.js";
 import {
   createFixture,
   removeFixture,
@@ -80,7 +81,7 @@ test(
       'path: "home",',
       'dependencies: undefined, path: "home",',
     );
-    const fixture = await createFixture(source);
+    const fixture = await createExportFixture(source);
     context.after(() => removeFixture(fixture));
     await fs.writeFile(
       fixture.configPath,

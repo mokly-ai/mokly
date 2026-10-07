@@ -1,10 +1,10 @@
 # Remove Source-Path Evidence
 
 Status: Active. Milestones 1 to 30 are implemented, verified and pushed.
-Milestone 30A combines the warning systems and integrates main through
-`6bf62517` in three local merges. The plan evidence has moved. The warning
-check remains open pending the user's Serve fixture decision. The full suite
-and gate are deferred. Milestones 31 and 32 remain. The branch must not be
+Milestone 30A is implemented and verified through main `6bf62517` in three
+local merges, with the approved isolated Serve fixture. Only its reviewer-owned
+push remains. Newer main changes await separate integration under the user's
+fetch-only instruction. Milestones 31 and 32 remain. The branch must not be
 pushed by this task.
 
 ## Status And Outcome
@@ -2207,6 +2207,9 @@ change or remove that fixture test while the answer is pending. Do not push.
 
 Merge `main` at `80ceb445` before Milestones 31 and 32.
 
+On 2026-10-06 the user approved option A: the first test in `tests/build_warning_serve.test.ts` gets its own Git repository through `createExportFixture`, with all assertions and time limits unchanged.
+
+- [x] Use the approved Git fixture, repeat the test alone and with concurrency three, audit similar fixtures without changing them, and complete the final checks and smoke tests.
 - [x] Audit main's additions from the source tip, merge `origin/main` with
       exactly two parents, resolve conflicts path by path and review every
       remerge-diff path.
@@ -2224,7 +2227,7 @@ Merge `main` at `80ceb445` before Milestones 31 and 32.
 - [x] Compare every line that main added since `781da7ae` with the merged tree.
       Classify each absent line as an intended migration, a move or a loss, and
       restore every loss before the push.
-- [ ] Run `cargo xtask check` at 100%, including the dependency audit. Inspect
+- [x] Run `cargo xtask check` at 100%, including the dependency audit. Inspect
       the diff and the deletions against `origin/main`, and record the result.
 - [x] Keep document compilation and CLI composition within 300 lines by moving
       transformed-view validation and Serve shutdown to named helper modules.
@@ -2233,7 +2236,7 @@ Merge `main` at `80ceb445` before Milestones 31 and 32.
 - [x] Keep main's requested-document link-control diagnostic scope when
       referenced documents render for validation. Preserve the branch's
       ignored-input coverage for those renders and test both boundaries.
-- [ ] Fence failure flushes as well as successful completion. An older worker
+- [x] Fence failure flushes as well as successful completion. An older worker
       failure must not flush a newer attempt's pending diagnostics. Add the
       regression before the fix and repeat the complete unit command.
 - [x] Commit the checked merge locally with exactly two parents. The reviewer
@@ -2259,9 +2262,8 @@ Merge `main` at `80ceb445` before Milestones 31 and 32.
       stale exceptions fail the existing guard, then run it again.
 - [x] Run build, typecheck, lint and focused export and #148 checks on the
       third merge, including the parallel route hydration tests.
-- [ ] Complete the focused warning and Serve checks after the user's fixture
-      decision. Leave the unwatched Serve fixture unchanged while the answer
-      is pending. Stop before the complete suite and gate.
+- [x] Complete the focused warning and Serve checks after the user's fixture
+      decision, then run the complete suite and gate with the approved fixture.
 - [ ] Push the branch after the reviewer checks the local merge.
 
 ### Integration decisions
@@ -2343,7 +2345,7 @@ from merging. No absolute checkout path decides the order.
   the new packed-fixture README describes rendered-resource changes instead of
   removed shared-impact globs. Main's five retained package scenarios stay.
 
-Evidence: `.context/remove-source-path-evidence/milestone-30a.md`; `.context/remove-source-path-evidence/third-merge-evidence.md`.
+Evidence: `.context/remove-source-path-evidence/milestone-30a.md`; `.context/remove-source-path-evidence/third-merge-evidence.md`; `.context/remove-source-path-evidence/fixture-approved-evidence.md`.
 
 ## Milestone 31: Keep the branch name in exported navigation
 
