@@ -148,7 +148,8 @@ export async function acquireSharedExample(
         },
       );
       await timeFixturePhase(fixture, "copy", false, async () => {
-        // Node 24 fs.cp with errorOnExist rejects an existing destination folder.
+        // Since Node 22.22.1 and 24.13.1, fs.cp rejects an existing
+        // destination folder when errorOnExist is set and force is not.
         await fs.rmdir(owned.root);
         await fs.cp(descriptor.repository, owned.root, {
           recursive: true,
