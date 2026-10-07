@@ -13,7 +13,7 @@ test("a blocked script in a viewer-owned sandboxed frame is an expected notice",
     "about:srcdoc",
     "http://127.0.0.1:4517/static/shop/cart/index.mobile.html",
     "http://127.0.0.1:4517/site/static/shop/cart/index.mobile.html",
-    "https://catalogue.example/__mokly/components/renders/0123/index.html",
+    "https://catalogue.example/mokly-viewer/components/renders/0123/index.html",
   ])
     assert.equal(viewerSandboxNotice(blocked(url), ""), true, url);
   assert.equal(

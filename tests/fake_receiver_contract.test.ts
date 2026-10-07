@@ -12,7 +12,7 @@ test("fake receiver independently matches every public ownership fixture case", 
     await fs.readFile(
       path.join(
         repositoryRoot,
-        "docs/protocol/fixtures/export-ownership-v2.json",
+        "docs/protocol/fixtures/export-ownership-v3.json",
       ),
       "utf8",
     ),
@@ -52,7 +52,7 @@ test("ownership rejection classes use the exchange contract statuses", async () 
     await fs.readFile(
       path.join(
         repositoryRoot,
-        "docs/protocol/fixtures/export-ownership-v2.json",
+        "docs/protocol/fixtures/export-ownership-v3.json",
       ),
       "utf8",
     ),

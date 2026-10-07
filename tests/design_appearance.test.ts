@@ -168,7 +168,7 @@ test("preview tokens stay independent of the interface appearance", async () => 
       `${name} belongs with the preview tokens, not the interface palette`,
     );
   const stage = await fs.readFile(
-    path.join(repositoryRoot, "examples/basic/generated/design-stage.css"),
+    path.join(repositoryRoot, "examples/basic/design-stage.css"),
     "utf8",
   );
   for (const name of [

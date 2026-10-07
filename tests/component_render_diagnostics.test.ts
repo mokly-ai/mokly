@@ -10,17 +10,17 @@ import { renderCapabilityFromShell } from "./helpers/component_controls_state.js
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
-test("preview-resource exclusions reach stderr without exposing the cause in HTTP", async (t) => {
+test("preview-resource source denials reach stderr without exposing the cause in HTTP", async (t) => {
   const fixture = await componentReviewFixture(
     t,
     (source) => source,
     componentEntrySource({
       actionRender:
-        '(props) => props.label === "Private" ? <img src="../README.svg" /> : <button>{props.label}</button>',
+        '(props) => props.label === "Private" ? <img src="../../../secret.source.html" /> : <button>{props.label}</button>',
     }),
   );
   await fs.writeFile(
-    path.join(fixture.mockupsDir, "README.svg"),
+    path.join(fixture.mockupsDir, "secret.source.html"),
     '<svg xmlns="http://www.w3.org/2000/svg" />',
   );
   const server = await startCatalogueServer(fixture.config, {
@@ -37,7 +37,7 @@ test("preview-resource exclusions reach stderr without exposing the cause in HTT
     stderr.push(String(chunk));
     return true;
   });
-  const response = await fetch(`${server.url}/__mokly/components/render`, {
+  const response = await fetch(`${server.url}/mokly-viewer/components/render`, {
     method: "POST",
     headers: {
       origin: server.url,
@@ -62,16 +62,14 @@ test("preview-resource exclusions reach stderr without exposing the cause in HTT
   });
   assert.doesNotMatch(
     body,
-    /README\.svg|publicExclude|exclusion|referenced by/,
+    /secret\.source\.html|reserved source|referenced by/,
   );
   assert.ok(
     stderr.some(
       (line) =>
-        /README\.svg/.test(line) &&
+        /secret\.source\.html/.test(line) &&
         /action\/default\/index/.test(line) &&
-        /matches public exclusion.*\*\*\/README\.\*.*publicExclude/.test(
-          line,
-        ) &&
+        /reserved source basename/.test(line) &&
         line.endsWith("\n"),
     ),
     `expected a server diagnostic containing the exclusion cause, got ${JSON.stringify(stderr)}`,

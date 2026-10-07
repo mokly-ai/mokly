@@ -1,7 +1,7 @@
 import type {
   ComponentChangeSnapshot,
   ComponentChangeSource,
-} from "./component_changes.js";
+} from "./component_change_types.js";
 
 /** Retain one immutable classification; resolving the baseline never creates Review artifacts. */
 export class ComponentChangeCache {

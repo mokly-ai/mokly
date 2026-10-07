@@ -7,6 +7,7 @@ import type {
   GeneratedComponentView,
   RenderCapability,
 } from "@mokly/viewer/data";
+import { VIEWER_DIRECTORY, generatedResourcePath } from "@mokly/viewer/data";
 import { localFramePath } from "@mokly/viewer/runtime";
 import type { WorkspaceData } from "@mokly/viewer/server";
 
@@ -17,7 +18,7 @@ export async function requestComponentPreview(
   view: GeneratedComponentView,
   signal: AbortSignal,
 ): Promise<ComponentRenderSuccess> {
-  const response = await fetch("/__mokly/components/render", {
+  const response = await fetch(`/${VIEWER_DIRECTORY}/components/render`, {
     method: "POST",
     credentials: "same-origin",
     signal,
@@ -48,7 +49,7 @@ export async function requestComponentPreview(
     !/^[a-f0-9]{48}\.[a-f0-9]{64}$/.test(result.renderId) ||
     result.generation !== capability.generation ||
     result.previewUrl !==
-      `/__mokly/components/renders/${result.renderId}/${view.path.split("/").map(encodeURIComponent).join("/")}` ||
+      `/${VIEWER_DIRECTORY}/components/renders/${result.renderId}/${generatedResourcePath(view.path).split("/").map(encodeURIComponent).join("/")}` ||
     result.view?.viewport !== view.viewport ||
     result.view.colorScheme !== view.colorScheme ||
     !Array.isArray(result.view.instances) ||
@@ -90,7 +91,7 @@ export function workspaceLoader(
       if (view.usage || requested.has(view.path)) continue;
       requested.add(view.path);
       const route = view.path.split("/").map(encodeURIComponent).join("/");
-      const url = `/__mokly/views/${route}?generation=${data.previewGeneration}`;
+      const url = `/${VIEWER_DIRECTORY}/views/${route}?generation=${data.previewGeneration}`;
       void fetch(url, { signal })
         .then(async (response) => {
           if (!response.ok) return;

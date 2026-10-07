@@ -3,7 +3,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { consumerPackage } from "./consumer_package.mjs";
-import { copyFixture, installConsumer, runBin } from "./fixture.mjs";
+import {
+  copyFixture,
+  initializeDerivedGit,
+  installConsumer,
+  runBin,
+} from "./fixture.mjs";
 
 /** Build a real installed consumer with scoped CSS, a binary asset and local PostCSS. */
 export async function smokeImportedStylesConsumer(context) {
@@ -19,7 +24,7 @@ export async function smokeImportedStylesConsumer(context) {
     configPath,
     (await fs.readFile(configPath, "utf8")).replace(
       "export default defineConfig({",
-      'export default defineConfig({\n  generatedOutput: "committed",\n  postcss: "postcss.config.mjs",',
+      'export default defineConfig({\n  postcss: "postcss.config.mjs",',
     ),
   );
   await fs.writeFile(
@@ -43,6 +48,7 @@ export async function smokeImportedStylesConsumer(context) {
   );
   const bytes = Buffer.from([0, 255, 42]);
   await fs.writeFile(path.join(root, "entries/tiny.png"), bytes);
+  await initializeDerivedGit(root, "mockups");
   await runBin(root, ["build"]);
   await runBin(root, ["check"]);
   const stylesheet = await fs.readFile(
@@ -63,9 +69,9 @@ export async function smokeImportedStylesConsumer(context) {
   );
   assert.match(
     await fs.readFile(
-      path.join(root, "mockups/packed-home/index.desktop.html"),
+      path.join(root, "mockups/mokly-generated/packed-home/index.desktop.html"),
       "utf8",
     ),
-    /mokly-generated\/styles\/entries\/catalogue\.mockup\.tsx\.css/u,
+    /\.\.\/styles\/entries\/catalogue\.mockup\.tsx\.css/u,
   );
 }

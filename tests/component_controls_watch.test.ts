@@ -39,7 +39,7 @@ test(
     };
     const first = await capabilities();
     const render = async (capability: typeof first, label: string) =>
-      fetch(`${server.url}/__mokly/components/render`, {
+      fetch(`${server.url}/mokly-viewer/components/render`, {
         method: "POST",
         headers: {
           origin: server.url,
@@ -57,7 +57,7 @@ test(
         }),
       });
     const generated = await fs.readFile(
-      `${fixture.mockupsDir}/mokly-manifest.json`,
+      `${config.generatedDir}/mokly-manifest.json`,
       "utf8",
     );
     const edited = await render(first, "Edited");
@@ -65,7 +65,7 @@ test(
     await delay(150);
     assert.deepEqual(await capabilities(), first);
     assert.equal(
-      await fs.readFile(`${fixture.mockupsDir}/mokly-manifest.json`, "utf8"),
+      await fs.readFile(`${config.generatedDir}/mokly-manifest.json`, "utf8"),
       generated,
     );
     await fs.writeFile(fixture.entryPath, "syntax error candidate");

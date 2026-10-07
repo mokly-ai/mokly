@@ -85,7 +85,7 @@ export type HostMessage = Message & {
 };
 export type Message = MessageBody & {
   channel: "mokly-inspector";
-  version: 1;
+  version: 2;
   nonce: string;
 };
 export const envelope = (
@@ -94,7 +94,7 @@ export const envelope = (
 ): value is Record<string, unknown> =>
   object(value) &&
   value.channel === "mokly-inspector" &&
-  value.version === 1 &&
+  value.version === 2 &&
   typeof value.nonce === "string" &&
   /^[a-f0-9]{32}$/.test(value.nonce) &&
   (nonce === undefined || value.nonce === nonce);
@@ -222,7 +222,7 @@ export const validMessage = (
 export const encodeMessage = (nonce: string, body: MessageBody): string =>
   JSON.stringify({
     channel: "mokly-inspector",
-    version: 1,
+    version: 2,
     nonce,
     ...body,
   });

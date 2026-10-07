@@ -96,7 +96,7 @@ export function installFrameHookHarness(): void {
       const host = requiredHost(id);
       host.documentIdentity++;
       if (kind === "source")
-        host.source = `/static/frame-hook-${host.documentIdentity}/index.html`;
+        host.source = `/static/mokly-generated/frame-hook-${host.documentIdentity}/index.html`;
       renderHost(host);
     },
     remove: (id) => {
@@ -170,7 +170,7 @@ export function installFrameHookHarness(): void {
         pendingUpdates: [],
         registry: undefined,
         root: createRoot(element),
-        source: "/static/frame-hook/index.html",
+        source: "/static/mokly-generated/frame-hook/index.html",
         status: "unavailable",
         strict: options.strict ?? false,
         supportsUsageUpdates: options.supportsUsageUpdates ?? true,
@@ -196,7 +196,7 @@ function renderHost(host: HookHost): void {
           host.previewUsage
             ? generatedUsage({
                 colorScheme: "light",
-                path: "/__mokly/components/renders/preview.html",
+                path: "/mokly-viewer/components/renders/preview.html",
                 usage: host.previewUsage,
                 viewport: "desktop",
               })

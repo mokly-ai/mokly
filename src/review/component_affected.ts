@@ -1,7 +1,6 @@
 import {
   affectedConsumerOrderKey,
   canonicalJson,
-  generatedViews,
   isManifestComponentVariant,
 } from "@mokly/viewer/data";
 import type {
@@ -14,6 +13,7 @@ import type {
 import { address, lexical } from "./component_metadata.js";
 import { baselinePathMapper } from "./moves/identity.js";
 import type { EntryMove } from "./moves/types.js";
+import { reviewViews } from "./views.js";
 
 /** Derive consumer chains from input ownership, including slots and removed occurrences. */
 export function affectedConsumers(
@@ -46,7 +46,7 @@ export function affectedConsumers(
         (contextEntry.kind !== "screen" && contextEntry.kind !== "component")
       )
         continue;
-      for (const view of generatedViews(entry)) {
+      for (const view of reviewViews(entry)) {
         if (!view.usage) continue;
         const context: ComponentUsageContext =
           entry.kind === "screen"

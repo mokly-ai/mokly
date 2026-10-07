@@ -58,7 +58,9 @@ result. `run.ts` prints them through the reporter after the rendering phase.
 `build`, `check`, `export`, and `publish` accept `--strict`, which reports every
 warning and then fails before the next write, comparison, staging, or upload
 boundary. Serve refuses the flag. Plain and rich warning lines both use stderr,
-so plain stdout and rich summaries retain their established bytes.
+so plain stdout and rich summaries retain their established bytes. Watched Build
+reports each compilation before writing; strict warning failures retain the
+last-good output and follow the existing watch error/recovery path.
 
 Rich presentation never changes `MoklyError`, generated output, HTTP responses,
 or timing JSON. The supervised Serve child stays plain and forwards diagnostics
@@ -103,3 +105,8 @@ ordinary test runners pipe stdout and intentionally select plain mode.
 - [Package and CLI contract](../../docs/protocol/mokly-package.md)
 - [Timing diagnostics](../../docs/protocol/mokly-timings.md)
 - [Watched development](../../docs/protocol/mokly-watch.md)
+
+The approved [watch-writer contract](../../docs/protocol/mokly-watch-writers.md)
+shares summaries across writing commands and sends successful plain baseline
+notes to stdout. [Check boundaries](../../docs/protocol/mokly-boundary-results.md#git-state-for-check)
+use machine-readable Git results without matching localized messages.

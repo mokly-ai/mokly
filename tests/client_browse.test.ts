@@ -25,7 +25,7 @@ test("shell route resolution accepts catalogue routes and rejects other paths", 
       path,
     );
   for (const path of [
-    "/static/product/browse/home/index.html",
+    "/static/mokly-generated/product/browse/home/index.html",
     "/review",
     "/id/home",
     "/id/home/index.html",

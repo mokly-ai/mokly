@@ -4,7 +4,7 @@ import test from "node:test";
 
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
 import type { CatalogueNode } from "../packages/viewer/dist/catalogue/types.js";
-import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV9 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import { projectCatalogue } from "../src/catalogue/projection.js";
@@ -86,9 +86,9 @@ test("projection exposes real usage and attribution without private evidence", a
   assert.equal(
     projectCatalogue({
       ...input,
-      comparisonUrl: `__mokly/diffs/__generations/${"a".repeat(64)}/review.json`,
+      comparisonUrl: `mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`,
     }).comparisonUrl,
-    `__mokly/diffs/__generations/${"a".repeat(64)}/review.json`,
+    `mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`,
   );
 });
 
@@ -188,14 +188,14 @@ test("removed variants keep baseline authored order at a surviving parent's posi
   );
 });
 
-test("public v4 fixture conforms and compatible readers ignore additive fields", async () => {
+test("public v5 fixture conforms and compatible readers ignore additive fields", async () => {
   const json = await fs.readFile(
-    "docs/protocol/fixtures/catalogue-v4.json",
+    "docs/protocol/fixtures/catalogue-v5.json",
     "utf8",
   );
   const fixture = JSON.parse(json);
   const model = readCatalogue(fixture);
-  assert.equal(model.schemaVersion, 4);
+  assert.equal(model.schemaVersion, 5);
   assert.deepEqual(
     model.removedEntries.map(({ entry, preview }) => [entry.kind, preview]),
     [
@@ -215,13 +215,13 @@ test("public v4 fixture conforms and compatible readers ignore additive fields",
   assert.deepEqual(readCatalogue(fixture), model);
   assert.throws(
     () => readCatalogue({ ...fixture, schemaVersion: 3 }),
-    /unsupported schemaVersion/,
+    /Unsupported Mokly catalogue version/,
   );
   assert.throws(() => readCatalogue({ ...fixture, schemaVersion: 2 }));
   assert.throws(() => readCatalogue({ ...fixture, schemaVersion: 1 }));
   assert.throws(() =>
     readCatalogue({
-      schemaVersion: 5 as const,
+      schemaVersion: 6 as const,
       generatedBy: "mokly",
       entries: [],
     }),
@@ -230,7 +230,7 @@ test("public v4 fixture conforms and compatible readers ignore additive fields",
 
 test("reader rejects unsafe paths, private extensions and broken known references", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
   );
   const mutations = [
     (value: typeof fixture) => {
@@ -249,7 +249,7 @@ test("reader rejects unsafe paths, private extensions and broken known reference
       value.screens[0].views[0].colorScheme = "sepia";
     },
     (value: typeof fixture) => {
-      value.comparisonUrl = "__mokly/diffs/review.json";
+      value.comparisonUrl = "mokly-viewer/diffs/review.json";
     },
     (value: typeof fixture) => {
       value.sourceFiles = ["entries/source.tsx"];
@@ -289,6 +289,6 @@ function findNode(
 }
 
 type CurrentManifestScreen = Extract<
-  ManifestV8["entries"][number],
+  ManifestV9["entries"][number],
   { kind: "screen" }
 >;

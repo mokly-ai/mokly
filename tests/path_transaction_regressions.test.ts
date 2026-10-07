@@ -22,8 +22,10 @@ for (const next of ["account/invoice", "Billing/Invoice"])
       pageSource(`path:${JSON.stringify(next)},`),
     );
     await writeCompilation(await fixture.compile(), config);
-    assert.ok(!fs.readdirSync(config.mockupsDir).includes("billing"));
-    assert.ok(fs.existsSync(path.join(config.mockupsDir, next, "index.html")));
+    assert.ok(!fs.readdirSync(config.generatedDir).includes("billing"));
+    assert.ok(
+      fs.existsSync(path.join(config.generatedDir, next, "index.html")),
+    );
     assert.ok(fs.existsSync(config.mockupsDir));
   });
 
@@ -54,8 +56,8 @@ test("rollback removes new directories and restores pruned ancestors and files",
       );
       if (
         !failed &&
-        String(args[0]).split(path.sep).includes("stage") &&
-        String(args[1]).endsWith("mokly-manifest.json")
+        path.basename(String(args[0])) === "stage" &&
+        String(args[1]) === config.generatedDir
       ) {
         failed = true;
         throw new Error("install failed");
@@ -64,24 +66,23 @@ test("rollback removes new directories and restores pruned ancestors and files",
     },
   );
   await assert.rejects(writeCompilation(after, config), /install failed/);
-  for (const [operation, relative] of [
-    ["rmdir", "billing/invoice"],
-    ["mkdir", "account/invoice"],
-    ["rmdir", "account/invoice"],
-    ["mkdir", "billing/invoice"],
-  ] as const)
-    assert.ok(
-      calls.some(
-        (call) =>
-          call.operation === operation &&
-          call.directory === path.join(config.mockupsDir, relative),
-      ),
-      `${operation} ${relative} was covered`,
-    );
-  assert.equal(fs.existsSync(path.join(config.mockupsDir, "account")), false);
+  assert.ok(
+    calls.some(
+      (call) =>
+        call.operation === "rename" && call.directory === config.generatedDir,
+    ),
+  );
+  assert.ok(
+    calls.some(
+      (call) =>
+        call.operation === "rm" &&
+        path.basename(call.directory).startsWith(".mokly-write-"),
+    ),
+  );
+  assert.equal(fs.existsSync(path.join(config.generatedDir, "account")), false);
   assert.equal(
     fs.readFileSync(
-      path.join(config.mockupsDir, "billing/invoice/index.html"),
+      path.join(config.generatedDir, "billing/invoice/index.html"),
       "utf8",
     ),
     before.outputs.get("billing/invoice/index.html"),
@@ -92,13 +93,13 @@ test("rollback removes new directories and restores pruned ancestors and files",
   );
 });
 
-test("unchanged output directories survive replacement without directory watch events", async (t) => {
+test("whole-tree replacement keeps the catalogue parent and authored siblings", async (t) => {
   const fixture = await pathFixture({
     "specs/account/item.mockup.ts": pageSource(),
+    "generated/notes.txt": "Authored",
   });
   t.after(fixture.remove);
   const config = await fixture.config();
-  await writeCompilation(await fixture.compile(), config);
   const removed: string[] = [];
   const rmdir = fs.promises.rmdir;
   t.mock.method(
@@ -109,15 +110,34 @@ test("unchanged output directories survive replacement without directory watch e
       return rmdir(...args);
     },
   );
+  await writeCompilation(await fixture.compile(), config);
+  const parent = fs.statSync(config.mockupsDir);
+  const sibling = fs.statSync(path.join(config.mockupsDir, "notes.txt"));
   await fixture.write(
     "specs/account/item.mockup.ts",
     pageSource("", "<html><body>Changed</body></html>"),
   );
   await writeCompilation(await fixture.compile(), config);
+  assert.equal(fs.statSync(config.mockupsDir).ino, parent.ino);
+  assert.equal(
+    fs.statSync(path.join(config.mockupsDir, "notes.txt")).ino,
+    sibling.ino,
+  );
+  assert.equal(
+    fs.readFileSync(path.join(config.mockupsDir, "notes.txt"), "utf8"),
+    "Authored",
+  );
+  assert.match(
+    fs.readFileSync(
+      path.join(config.generatedDir, "account/item/index.html"),
+      "utf8",
+    ),
+    /Changed/,
+  );
   assert.deepEqual(removed, []);
 });
 
-test("final reserved-directory pruning runs while the output lock remains held", async (t) => {
+test("whole-tree cleanup runs while the output lock remains held", async (t) => {
   const fixture = await pathFixture({ "specs/item.mockup.ts": pageSource() });
   t.after(fixture.remove);
   const config = await fixture.config(),
@@ -128,24 +148,22 @@ test("final reserved-directory pruning runs while the output lock remains held",
   );
   const calls = spyOutputDirectoryLock(t, config);
   await writeCompilation(compilation, config);
-  for (const relative of [
-    "mokly-generated/assets/empty",
-    "mokly-generated/assets",
-    "mokly-generated",
-  ])
-    assert.ok(
-      calls.some(
-        (call) =>
-          call.operation === "rmdir" &&
-          call.directory === path.join(config.mockupsDir, relative),
-      ),
-      `${relative} final pruning was covered`,
-    );
   assert.ok(
     calls.some(
       (call) =>
-        call.operation === "mkdir" &&
-        call.directory === path.join(config.mockupsDir, "item"),
+        call.operation === "rename" && call.directory === config.generatedDir,
     ),
   );
+  assert.ok(
+    calls.some(
+      (call) =>
+        call.operation === "rm" &&
+        path.basename(call.directory).startsWith(".mokly-write-"),
+    ),
+  );
+  assert.equal(
+    fs.existsSync(path.join(config.generatedDir, "assets/empty")),
+    false,
+  );
+  assert.ok(fs.existsSync(path.join(config.generatedDir, "item/index.html")));
 });

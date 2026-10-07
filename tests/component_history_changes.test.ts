@@ -22,7 +22,7 @@ test("registering unrelated components does not add unchanged screens to Changes
     fixture.git,
     "main",
   );
-  if (result.schemaVersion !== 5) assert.fail("Expected component comparison");
+  if (result.schemaVersion !== 6) assert.fail("Expected component comparison");
   assert.ok(result.changes.every((entry) => entry.kind === "component"));
   assert.equal(result.screens[0]?.state, "unchanged");
 });
@@ -37,7 +37,7 @@ test("dependency declarations alone do not invent screen or component changes", 
     fixture.git,
     "main",
   );
-  if (result.schemaVersion !== 5) assert.fail("Expected component comparison");
+  if (result.schemaVersion !== 6) assert.fail("Expected component comparison");
   assert.deepEqual(result.changes, []);
 });
 
@@ -50,15 +50,15 @@ test("one-sided registration retains real screen content edits", async (t) => {
       }),
     unregistered("<p>Before adoption</p>"),
   );
-  assert.equal(fixture.before.manifest.schemaVersion, 8);
+  assert.equal(fixture.before.manifest.schemaVersion, 9);
   const { result } = await compareReview(
     fixture.after,
     fixture.config,
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   assert.ok(
     result.changes.some(
       (entry) =>
@@ -72,15 +72,15 @@ test("removed components retain variants, missing sides, and baseline consuming 
   const fixture = await componentReviewFixture(t, () =>
     unregistered("<p>Now standalone</p>"),
   );
-  assert.equal(fixture.after.manifest.schemaVersion, 8);
+  assert.equal(fixture.after.manifest.schemaVersion, 9);
   const { result } = await compareReview(
     fixture.after,
     fixture.config,
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   assert.equal(result.components.length, 2);
   assert.ok(
     result.components.every(
@@ -122,8 +122,8 @@ test("variant removal retains authored current order followed by explicit remove
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   const action = result.components.find((entry) => entry.path === "action")!;
   assert.deepEqual(
     action.variants.map((variant) => variant.path),
@@ -153,8 +153,8 @@ test("removed consumers retain their previous usage when a component changes", a
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   const removed = result.screens.find((screen) => screen.path === "home")!;
   assert.equal(removed.state, "removed");
   assert.ok(
@@ -196,8 +196,8 @@ for (const edit of ["component", "screen"] as const)
       fixture.git,
       "main",
     );
-    assert.equal(result.schemaVersion, 5);
-    if (result.schemaVersion !== 5) return;
+    assert.equal(result.schemaVersion, 6);
+    if (result.schemaVersion !== 6) return;
     const flow = result.changes.find((entry) => entry.kind === "use-case");
     if (edit === "component") assert.equal(flow, undefined);
     else

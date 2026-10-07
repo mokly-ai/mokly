@@ -11,17 +11,19 @@ order: 5
 npx mokly export --out .context/mokly-site
 ```
 
-Export builds first, then packages the complete catalogue: one shell page per
+Export compiles in memory, then packages the complete catalogue: one shell page per
 entry at `view/<path>/index.html`, the generated views and documents under
-`static/`, assets and Git comparisons. `--out` is required and is resolved
+`static/mokly-generated/`, referenced authored assets under `static/` and Git comparisons. `--out` is required and is resolved
 beside the config, not beside your working directory; an absolute path must
 stay inside the repository root.
 
 `--base` overrides the configured base ref for that run. The branch point must
-be present in the checkout, with the authored assets and either the committed
-generated output or the tooling your derived baseline recipe needs, so a CI
-job should check out the full history. Export never fetches history for you
-and never silently omits comparisons.
+be present in the checkout. Mokly reads a complete verified v9 inventory from
+that commit or runs the commit's own baseline recipe when output is absent or
+incomplete. Check out full history in CI. Export never fetches history for you.
+A base built by an earlier Mokly version makes Changes unavailable; export
+prints the reason and still packages the current catalogue. Other invalid
+comparison inputs fail the export.
 
 ## Deploy it
 

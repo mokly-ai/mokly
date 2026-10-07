@@ -36,7 +36,7 @@ test("React host updates connect recovery, reload, and shutdown", async () => {
     },
     subscription.signal,
   );
-  assert.equal(environment.requestedEventUrl, "/__mokly/events");
+  assert.equal(environment.requestedEventUrl, "/mokly-viewer/events");
   environment.source.emit("ready", "1");
   environment.source.emit("update", "2");
   await setImmediate();
@@ -52,6 +52,32 @@ test("React host updates connect recovery, reload, and shutdown", async () => {
   );
   environment.pageHide?.();
   assert.equal(environment.source.closed, true);
+});
+
+test("the watched host does not store Browse state without a live status", async () => {
+  const environment = new FakeEnvironment();
+  const current = descriptor(1);
+  const subscription = new AbortController();
+  createReactUpdateCapability(current, environment).subscribe(
+    request(current),
+    {
+      adoptEvidence: async () => false,
+      captureRecovery: () => {
+        const { changesStatus: _status, ...snapshot } = shellState();
+        return snapshot;
+      },
+    },
+    subscription.signal,
+  );
+  environment.source.emit("update", "2");
+  await setImmediate();
+  await setImmediate();
+  assert.equal(environment.location.reloads, 1);
+  const stored = JSON.parse(
+    environment.storage.getItem("mokly:live-update-recovery")!,
+  );
+  assert.equal(Object.hasOwn(stored, "browse"), false);
+  subscription.abort();
 });
 
 test("React host updates consume stale-URL recovery without applying it", () => {
@@ -76,7 +102,7 @@ test("React host updates consume stale-URL recovery without applying it", () => 
 
 function descriptor(updateVersion: number): ViewerCapabilityDescriptor {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     source: {
       base: "origin/main",
       catalogueId: "a".repeat(64),
@@ -98,6 +124,7 @@ function shellState(): ShellRecoverySnapshot {
 
 function browseState(): BrowseRecoveryState {
   return {
+    changesStatus: "ready",
     changedOnly: false,
     disclosures: { "folder:specs:fixture": false },
     colorScheme: "dark",

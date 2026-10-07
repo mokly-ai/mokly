@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
+import { parseArguments } from "../dist/cli/arguments.js";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 import { GUIDES } from "./helpers/guides.js";
 
@@ -112,6 +114,22 @@ test("documented and parsed public options agree with CLI help", () => {
   }
 });
 
+test("watching and writing flags apply only to their documented commands", () => {
+  assert.equal(parseArguments(["build", "--watch"]).watch, true);
+  assert.equal(parseArguments(["serve", "--build"]).build, true);
+  for (const command of ["check", "export", "publish"])
+    for (const option of ["--watch", "--no-watch", "--build"])
+      assert.throws(() => parseArguments([command, option]), {
+        code: "cli-invalid",
+      });
+  assert.throws(() => parseArguments(["build", "--build"]), {
+    code: "cli-invalid",
+  });
+  assert.throws(() => parseArguments(["build", "--no-watch"]), {
+    code: "cli-invalid",
+  });
+});
+
 test("exit status and every public error category are documented", () => {
   const source = sources.get("cli/options-and-exit-status") ?? "";
   const documented = firstCells(source)
@@ -131,12 +149,12 @@ test("exit status and every public error category are documented", () => {
   assert.ok(source.includes("[mokly/"));
 });
 
-test("build guides explain the cache that Git ignores in both modes", () => {
+test("build guides explain the cache that Git ignores", () => {
   for (const id of ["cli/build", "start/build"]) {
     const guide = GUIDES.find((page) => page.id === id)?.source ?? "";
     assert.match(
       guide.replace(/\s+/gu, " "),
-      /In both modes, Mokly keeps private state in `\.mokly-cache\/` at the repository root and writes a `\.gitignore` file inside it, so Git never shows or adds that folder\./u,
+      /Mokly keeps private state in `\.mokly-cache\/` at the repository root and writes a `\.gitignore` file inside it, so Git never shows or adds that folder\./u,
       id,
     );
   }

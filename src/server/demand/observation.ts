@@ -1,9 +1,12 @@
 /** Generation-tagged generated inputs for incremental resource watch discovery. */
-import { isSafeCatalogueRoute } from "@mokly/viewer/data";
+import { isSafeCatalogueRoute, isSafeRepositoryPath } from "@mokly/viewer/data";
+
+import type { ResourceSeed } from "../../build/html_links.js";
 
 export interface PreviewObservation {
   generation: string;
   documents: readonly (readonly [string, string])[];
+  resourceSeeds?: readonly ResourceSeed[];
 }
 
 export function parsePreviewObservation(
@@ -15,6 +18,19 @@ export function parsePreviewObservation(
     typeof candidate.generation !== "string" ||
     !/^[a-f0-9]{32}$/.test(candidate.generation) ||
     !Array.isArray(candidate.documents)
+  )
+    return;
+  if (
+    candidate.resourceSeeds !== undefined &&
+    (!Array.isArray(candidate.resourceSeeds) ||
+      candidate.resourceSeeds.some(
+        (seed) =>
+          !seed ||
+          typeof seed.path !== "string" ||
+          !isSafeRepositoryPath(seed.path) ||
+          typeof seed.sourceRoute !== "string" ||
+          !isSafeCatalogueRoute(seed.sourceRoute),
+      ))
   )
     return;
   let bytes = 0;

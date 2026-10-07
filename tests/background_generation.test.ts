@@ -37,6 +37,7 @@ test(
         assert.equal(snapshot, undefined);
         unavailable.resolve();
       },
+      { writeOutput: true },
     );
     t.after(() => background.close());
     background.start(runtime, "main");
@@ -75,6 +76,7 @@ test(
       },
       () => completed++,
       () => {},
+      { writeOutput: true },
     );
     t.after(() => background.close());
     background.start(runtime, "main");

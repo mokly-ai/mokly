@@ -3,7 +3,7 @@
 The inspector is a dependency-free browser IIFE for the optional cross-origin
 frame adapter. The viewer package build emits `dist/browser/inspector.js`, and the root
 `scripts/package-check.mjs` enforces its 9,216-byte minified, uncompressed budget.
-Serve and export publish it at `/__mokly/client/inspector.js`.
+Serve and export publish it at `/mokly-viewer/client/inspector.js`.
 The build uses esbuild, then [`scripts/inspector-pool.mjs`](../../scripts/inspector-pool.mjs) shares repeated strings
 and native references before Terser minification. The output is ordinary
 JavaScript with no runtime imports, decoder or evaluator. Only explicitly named

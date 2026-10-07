@@ -11,11 +11,11 @@ import {
   NodeGitCommandRunner,
   CommittedRepository,
 } from "../dist/review/git.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeChangedPaths } from "../dist/server/changed.js";
 import { changedContentPaths } from "../dist/server/changed_content.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import {
   createExportFixture,
   directoryFiles,
@@ -147,9 +147,12 @@ test("material Changes can use captured documents without reading current file b
   const manifest = readManifest(fixture.config);
   const captured = await directoryFiles(fixture.mockupsDir);
   const fragment = "home/index.mobile.html";
+  const generatedFragment = `mokly-generated/${fragment}`;
   captured.set(
-    fragment,
-    Buffer.from(captured.get(fragment)!.toString().replace("Details", "Next")),
+    generatedFragment,
+    Buffer.from(
+      captured.get(generatedFragment)!.toString().replace("Details", "Next"),
+    ),
   );
   const git = new CommittedRepository(new NodeGitCommandRunner(fixture.root));
   const commit = await git.evidence.mergeBase("HEAD", "HEAD");
@@ -160,20 +163,22 @@ test("material Changes can use captured documents without reading current file b
     fixture.config,
     git.reader,
     commit,
-    asChangeEvidence([`mockups/${fragment}`]),
+    asChangeEvidence([`mockups/${generatedFragment}`]),
     {
       ...capturedAssetReader(captured, fixture.config),
       read: async (route) => {
         reads.push(route);
-        const bytes = captured.get(route);
+        const bytes =
+          captured.get(`mokly-generated/${route}`) ?? captured.get(route);
         assert.ok(bytes);
         return bytes;
       },
-      readIfExists: async (route) => captured.get(route),
+      readIfExists: async (route) =>
+        captured.get(`mokly-generated/${route}`) ?? captured.get(route),
     },
   );
-  assert.deepEqual(result, [`mockups/${fragment}`]);
-  assert.ok(reads.includes(fragment));
+  assert.deepEqual(result, [`mockups/${generatedFragment}`]);
+  assert.ok(reads.includes(generatedFragment));
 });
 
 test("review export retains a removed variant route and parent context", async (context) => {
@@ -207,7 +212,7 @@ test("review export retains a removed variant route and parent context", async (
 
   const catalogue = JSON.parse(
     await fs.readFile(
-      path.join(fixture.output, "__mokly/catalogue.json"),
+      path.join(fixture.output, "mokly-viewer/catalogue.json"),
       "utf8",
     ),
   ) as {

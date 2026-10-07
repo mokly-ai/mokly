@@ -52,8 +52,14 @@ test(
     try {
       let html = await waitForClassifiedCount(running.url, 0);
       assert.match(html, /class="mbk-nav-filter-count">0</);
-      let comparison = await fetch(`${running.url}/__mokly/diffs/review.json`);
-      assert.equal(comparison.status, 200);
+      let comparison = await fetch(
+        `${running.url}/mokly-viewer/diffs/review.json`,
+      );
+      assert.equal(
+        comparison.status,
+        200,
+        comparison.status === 200 ? "" : await comparison.text(),
+      );
       await comparison.arrayBuffer();
       for (const [file, content] of [
         ["nested.css", `${nestedCss} main { color: red; }`],
@@ -64,8 +70,14 @@ test(
         await fs.writeFile(path.join(fixture.mockupsDir, file), content);
         html = await waitForChangedCount(running.url, previousVersion, 2);
         assert.match(html, /class="mbk-nav-filter-count">2</);
-        const fresh = await fetch(`${running.url}/__mokly/diffs/review.json`);
-        assert.equal(fresh.status, 200);
+        const fresh = await fetch(
+          `${running.url}/mokly-viewer/diffs/review.json`,
+        );
+        assert.equal(
+          fresh.status,
+          200,
+          fresh.status === 200 ? "" : await fresh.text(),
+        );
         assert.notEqual(
           fresh.url,
           comparison.url,
@@ -75,14 +87,65 @@ test(
         const view = result.screens.find((screen) => screen.path === "home")
           ?.views[0];
         assert.ok(view);
-        const afterPath = `snapshots/after/${viewRoute("home", view.viewport, view.colorScheme)}`;
+        const afterPath = `snapshots/after/mokly-generated/${viewRoute("home", view.viewport, view.colorScheme)}`;
         const asset = await fetch(
-          new URL(`../${file}`, new URL(afterPath, fresh.url)),
+          new URL(`../../${file}`, new URL(afterPath, fresh.url)),
         );
         assert.equal(asset.status, 200);
         assert.equal(await asset.text(), content);
         comparison = fresh;
       }
+    } finally {
+      await running.close();
+    }
+  },
+);
+
+test(
+  "Serve refreshes static closure when CSS references change without rebuilding",
+  { timeout: 180_000 },
+  async (context) => {
+    const fixture = await changedFixture(
+      context,
+      validEntrySource(),
+      {
+        extraConfig:
+          'stylesheets: [{ match: "home/index.html", stylesheets: ["home.css"] }], watch: { debounceMs: 0 },',
+      },
+      async ({ mockupsDir }) => {
+        await fs.writeFile(
+          path.join(mockupsDir, "home.css"),
+          "main { color: red; }",
+        );
+        await fs.writeFile(
+          path.join(mockupsDir, "new.svg"),
+          '<svg xmlns="http://www.w3.org/2000/svg"/>',
+        );
+      },
+    );
+    const running = await serve(fixture.config, {
+      base: "main",
+      port: 0,
+      watch: true,
+    });
+    const url = `${running.url}/static/new.svg`;
+    try {
+      await waitForClassifiedCount(running.url, 0);
+      assert.equal((await fetch(url)).status, 404);
+      const original = version(await catalogue(running.url));
+      await fs.writeFile(
+        path.join(fixture.mockupsDir, "home.css"),
+        'main { background: url("new.svg"); }',
+      );
+      await waitForChangedCount(running.url, original, 2);
+      assert.equal((await fetch(url)).status, 200);
+      const changed = version(await catalogue(running.url));
+      await fs.writeFile(
+        path.join(fixture.mockupsDir, "home.css"),
+        "main { color: blue; }",
+      );
+      await waitForChangedCount(running.url, changed, 2);
+      assert.equal((await fetch(url)).status, 404);
     } finally {
       await running.close();
     }

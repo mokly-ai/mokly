@@ -4,7 +4,7 @@ This continues [Markdown Documents](./mokly-documents.md#rendering).
 
 ## Structural Validation
 
-After logical-link rewriting and any compatibility transformer, parse each final
+After logical-link rewriting, parse each final
 document with parse5. Validate its parsed body independently of the Markdown
 renderer. Validate outer wrappers too, so an injected HTML/body start tag cannot
 hide an event attribute by merging it onto an existing wrapper. Build, Check,
@@ -27,7 +27,7 @@ The template additionally owns its direct-body `main` wrapper with no attributes
 Every other body element or attribute is rejected, including `script`, `style`,
 `iframe`, `object`, `embed`, `svg`, `math`, `form`, any `on*` attribute and any
 body `style` attribute. Comments are inert and may retain validated Review-ignore
-markers introduced by a compatibility transformer.
+authored markers.
 
 `href` and `src` permit only `http:`, `https:` and `mailto:` schemes, or portable
 relative/fragment URLs. Reject other schemes, controls, backslashes, leading or

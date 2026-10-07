@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import { VIEWER_DIRECTORY } from "@mokly/viewer/data";
+
 import {
   capturePublicationPagePreviews,
   publicationComparisonMetadata,
@@ -7,7 +9,7 @@ import {
 } from "../../dist/publication/removed_previews.js";
 import { configuredServedReview } from "../../dist/server/configured_review.js";
 
-const comparisonRoute = "/__mokly/diffs/review.json";
+const comparisonRoute = `/${VIEWER_DIRECTORY}/diffs/review.json`;
 
 /** Keep publishing isolated from another server's configured comparison output. */
 export function previewComparisonProvider(
@@ -38,9 +40,9 @@ export async function captureComparison(serverUrl) {
   const url = new URL(response.url);
   if (
     url.origin !== new URL(serverUrl).origin ||
-    !/^\/__mokly\/diffs\/__generations\/[A-Za-z0-9-]+\/review\.json$/.test(
-      url.pathname,
-    )
+    !new RegExp(
+      `^\\/${VIEWER_DIRECTORY}\\/diffs\\/generations\\/[A-Za-z0-9-]+\\/review\\.json$`,
+    ).test(url.pathname)
   )
     throw new Error(
       "preview comparison did not resolve an immutable generation",

@@ -2,10 +2,13 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { VERIFICATION_RESOURCE_ROOT_ENV } from "../../dist/baseline/process_owner.js";
+import {
+  EXPORT_MARKER,
+  parseExportOwnership,
+} from "../../dist/export/ownership.js";
 
-export const PREVIEW_ARTIFACT_MARKER = ".mokly-preview-artifact";
+export const PREVIEW_ARTIFACT_MARKER = EXPORT_MARKER;
 
-const PREVIEW_ARTIFACT_MARKER_CONTENTS = "schemaVersion=1\n";
 const FILESYSTEM_TIMESTAMP_TOLERANCE_MS = 2_000;
 
 /** Setup failure proving a live endpoint may still own the artifact path. */
@@ -104,7 +107,7 @@ async function artifactFreshness(
   if (!marker.isFile() || marker.isSymbolicLink())
     throw new Error("preview artifact marker is not a regular file");
   if (
-    (await fs.readFile(markerPath, "utf8")) !== PREVIEW_ARTIFACT_MARKER_CONTENTS
+    parseExportOwnership(await fs.readFile(markerPath, "utf8")).kind !== "valid"
   )
     throw new Error("preview artifact marker has unexpected contents");
   if (

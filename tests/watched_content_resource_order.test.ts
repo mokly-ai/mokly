@@ -37,7 +37,7 @@ test(
     context.after(() => server.close());
     const controller = new AbortController();
     context.after(() => controller.abort());
-    const stream = await fetch(`${server.url}/__mokly/events`, {
+    const stream = await fetch(`${server.url}/mokly-viewer/events`, {
       signal: controller.signal,
     });
     assert.equal(stream.status, 200);
@@ -46,7 +46,7 @@ test(
     const decoder = new TextDecoder();
     const ready = await reader.read();
     assert.match(decoder.decode(ready.value), /event: ready\ndata: 1/u);
-    const stylesheet = `${server.url}/static/${entryStyle}`;
+    const stylesheet = `${server.url}/static/mokly-generated/${entryStyle}`;
     assert.match(await (await fetch(stylesheet)).text(), /color: red/u);
 
     await fs.writeFile(
@@ -98,10 +98,10 @@ test(
     fixture.beforeRemove(() => running.close());
     const controller = new AbortController();
     context.after(() => controller.abort());
-    const stylesheet = `${running.url}/static/${entryStyle}`;
+    const stylesheet = `${running.url}/static/mokly-generated/${entryStyle}`;
     let edited = false;
     for await (const event of watchedEvents(
-      await fetch(`${running.url}/__mokly/events`, {
+      await fetch(`${running.url}/mokly-viewer/events`, {
         signal: controller.signal,
       }),
     )) {

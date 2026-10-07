@@ -1,13 +1,14 @@
 /** Public repository identity asserted by the uploader and authorized by a receiver. */
+
 export interface UploadRepository {
   host: string;
   owner: string;
   name: string;
 }
 
-/** Upload envelope v1, documented independently of internal module paths. */
+/** Upload envelope v2, documented independently of internal module paths. */
 export interface UploadManifest {
-  schemaVersion: 1;
+  schemaVersion: 2;
   moklyVersion: string;
   repository: UploadRepository;
   branch: string;

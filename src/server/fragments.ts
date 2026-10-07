@@ -1,8 +1,5 @@
 /** Request-visible logical-fragment validation for served Browse routes. */
 
-import fs from "node:fs";
-import path from "node:path";
-
 import type { ManifestComponentVariant } from "@mokly/viewer";
 import {
   generatedViews,
@@ -14,8 +11,7 @@ import {
 import type { ManifestEntry, ManifestScreen } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 
-import { isPublicStaticFile } from "../config/public_files.js";
-import type { ResolvedConfig } from "../config/types.js";
+import type { GeneratedFile } from "../build/generated_file.js";
 import { extractHtmlReferences } from "../html_references.js";
 
 import type { DocumentService } from "./demand/service.js";
@@ -25,8 +21,8 @@ export async function requestedFragment(
   url: URL,
   entry: ManifestEntry | undefined,
   catalogue: Catalogue,
-  config: ResolvedConfig,
   documents?: DocumentService,
+  generatedOutputs?: ReadonlyMap<string, GeneratedFile>,
 ): Promise<string | null | undefined> {
   const values = url.searchParams.getAll("fragment");
   if (values.length === 0) return undefined;
@@ -39,8 +35,8 @@ export async function requestedFragment(
           containsFragment(
             documentRoute(entry.path, scheme),
             fragment,
-            config,
             documents,
+            generatedOutputs,
           ),
         ),
       )
@@ -51,13 +47,16 @@ export async function requestedFragment(
     return (await containsFragment(
       entryRoute(entry.path),
       fragment,
-      config,
       documents,
+      generatedOutputs,
     ))
       ? fragment
       : null;
   const screen = destinationScreen(entry, catalogue);
-  if (!screen || !(await allViewsContain(screen, fragment, config, documents)))
+  if (
+    !screen ||
+    !(await allViewsContain(screen, fragment, documents, generatedOutputs))
+  )
     return null;
   return fragment;
 }
@@ -80,14 +79,14 @@ function destinationScreen(
 async function allViewsContain(
   screen: ManifestScreen | ManifestComponentVariant,
   fragment: string,
-  config: ResolvedConfig,
   documents?: DocumentService,
+  generatedOutputs?: ReadonlyMap<string, GeneratedFile>,
 ): Promise<boolean> {
   const routes = generatedViews(screen).map((view) => view.path);
   return (
     await Promise.all(
       routes.map((route) =>
-        containsFragment(route, fragment, config, documents),
+        containsFragment(route, fragment, documents, generatedOutputs),
       ),
     )
   ).every(Boolean);
@@ -96,18 +95,20 @@ async function allViewsContain(
 async function containsFragment(
   route: string,
   fragment: string,
-  config: ResolvedConfig,
   documents?: DocumentService,
+  generatedOutputs?: ReadonlyMap<string, GeneratedFile>,
 ): Promise<boolean> {
   try {
     if (documents)
       return extractHtmlReferences(
         (await documents.read(route)).html,
       ).anchors.has(fragment);
-    const file = path.join(config.mockupsDir, route);
-    if (!isPublicStaticFile(file, config)) return false;
-    return extractHtmlReferences(fs.readFileSync(file, "utf8")).anchors.has(
-      fragment,
+    const html = generatedOutputs?.get(route);
+    return (
+      html !== undefined &&
+      extractHtmlReferences(Buffer.from(html).toString("utf8")).anchors.has(
+        fragment,
+      )
     );
   } catch {
     return false;

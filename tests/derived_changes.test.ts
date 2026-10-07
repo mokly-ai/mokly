@@ -17,26 +17,28 @@ test("derived Changes and selected comparisons use compiled source when generate
     validEntrySource({ body: "Source-only change" }),
   );
   await fs.rm(fixture.mockupsDir, { recursive: true });
+  const prepared = await prepareReviewRepository(fixture.config, "HEAD");
   const changes = await computeCatalogueChanges(
     fixture.config,
     "HEAD",
-    await prepareReviewRepository(fixture.config, "HEAD"),
+    prepared,
   );
   assert.deepEqual(changes.changedEntries, ["home", "tour"]);
-  assert.equal(changes.schemaVersion, 2);
+  assert.equal(changes.schemaVersion, 3);
   assert.deepEqual(changes.movedEntries, []);
   const snapshot = changes.componentChanges!;
   assert.ok(snapshot.comparison);
   assert.ok(snapshot.comparison.headOutputs);
   const { compileCatalogue } = await import("../dist/build/compile.js");
   const current = await compileCatalogue(fixture.config);
-  await fs.mkdir(path.join(fixture.mockupsDir, "home"), { recursive: true });
+  await fs.mkdir(path.join(fixture.generatedDir, "home"), { recursive: true });
   await fs.writeFile(
-    path.join(fixture.mockupsDir, "home/index.mobile.html"),
+    path.join(fixture.generatedDir, "home/index.mobile.html"),
     "wrong local bytes",
   );
   const comparison = await new RepositorySelectedReview(
     fixture.config,
+    prepared.reader,
   ).generate(
     {
       ...snapshot.comparison,
@@ -48,11 +50,19 @@ test("derived Changes and selected comparisons use compiled source when generate
     new AbortController().signal,
   );
   assert.match(
-    String(comparison.files.get("snapshots/after/home/index.mobile.html")),
+    String(
+      comparison.files.get(
+        "snapshots/after/mokly-generated/home/index.mobile.html",
+      ),
+    ),
     /Source-only change/,
   );
   assert.doesNotMatch(
-    String(comparison.files.get("snapshots/before/home/index.mobile.html")),
+    String(
+      comparison.files.get(
+        "snapshots/before/mokly-generated/home/index.mobile.html",
+      ),
+    ),
     /Source-only change/,
   );
 });

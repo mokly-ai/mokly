@@ -43,6 +43,7 @@ export function shellBootstrap(
   context: ShellContext,
 ): ShellBootstrap {
   return {
+    schemaVersion: 2,
     catalogue,
     context: {
       base: context.base,

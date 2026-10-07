@@ -6,7 +6,7 @@ import type { CatalogueMetadata } from "../registry/catalogue_index.js";
 import { removedManifestEntries } from "../registry/changes.js";
 import type { EntryMove } from "../review/moves/types.js";
 
-import type { ComponentChangeSnapshot } from "./component_changes.js";
+import type { ComponentChangeSnapshot } from "./component_change_types.js";
 
 /** Preserve baseline leaves without inserting them into current ownership. */
 export function catalogueAtBaseline(

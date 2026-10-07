@@ -34,7 +34,7 @@ async function holdRenewal(page: Page) {
   const release = gate();
   const finished = gate();
   let requests = 0;
-  await page.route("**/__generations/selected-*/review.json", async (route) => {
+  await page.route("**/generations/selected-*/review.json", async (route) => {
     if (route.request().method() !== "HEAD") {
       await route.continue();
       return;
@@ -137,7 +137,7 @@ test("renewal failure offers a retry that reacquires the selected comparison", a
   await chooseViewport(page, "desktop");
   await loadComparison(page, "Overlay");
   await page.route(
-    "**/__generations/selected-*/review.json",
+    "**/generations/selected-*/review.json",
     (route) => route.abort("failed"),
     { times: 1 },
   );
@@ -196,7 +196,7 @@ test("new evidence cancels renewal in place and the next comparison uses fresh s
 }) => {
   const requests: string[] = [];
   page.on("request", (request) => {
-    if (new URL(request.url()).pathname === "/__mokly/diffs/review.json")
+    if (new URL(request.url()).pathname === "/mokly-viewer/diffs/review.json")
       requests.push(request.url());
   });
   await page.goto(`${server.url}/view/home/`);

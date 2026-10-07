@@ -14,6 +14,8 @@ import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { runReview } from "../dist/review/run.js";
 import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
+import { currentManifest } from "./helpers/current_manifest.js";
 import {
   createFixture,
   removeFixture,
@@ -62,7 +64,12 @@ test("Review validates malformed markers on added and removed panes", async (con
         { ...compilation, outputs: addedOutputs },
         config,
         fakeGit(
-          new Map([["mockups/mokly-manifest.json", JSON.stringify(emptyBase)]]),
+          new Map([
+            [
+              "mockups/mokly-generated/mokly-manifest.json",
+              JSON.stringify(emptyBase),
+            ],
+          ]),
         ),
         "HEAD",
       ),
@@ -79,9 +86,15 @@ test("Review validates malformed markers on added and removed panes", async (con
     useCasePaths: [],
   };
   const removedFiles = new Map([
-    ["mockups/mokly-manifest.json", JSON.stringify(manifest([removed]))],
-    ["mockups/removed/index.mobile.html", malformed],
-    ["mockups/removed/index.desktop.html", "<html><body>Old</body></html>"],
+    [
+      "mockups/mokly-generated/mokly-manifest.json",
+      JSON.stringify(manifest([removed])),
+    ],
+    ["mockups/mokly-generated/removed/index.mobile.html", malformed],
+    [
+      "mockups/mokly-generated/removed/index.desktop.html",
+      "<html><body>Old</body></html>",
+    ],
   ]);
 
   await assert.rejects(
@@ -112,7 +125,7 @@ test("Review excludes its active artifact directory from changed paths", async (
   await git(fixture.root, ["add", "review-link"]);
   await git(fixture.root, ["commit", "-qm", "test: add review link"]);
   const outDir = path.join(reviewLink, "artifact");
-  const client = new CommittedRepository({
+  const client = committedReviewRepository(config, {
     run: (arguments_) => gitOutput(fixture.root, arguments_),
     runBytes: (arguments_) => gitBytes(fixture.root, arguments_),
   });
@@ -202,13 +215,13 @@ function fakeGit(files: ReadonlyMap<string, string>): ReadOnlyReviewRepository {
 }
 
 function manifest(entries: readonly ManifestScreen[]) {
-  return {
+  return currentManifest({
     entries,
     generatedBy: "mokly",
-    schemaVersion: 8 as const,
+    schemaVersion: 9 as const,
     folders: [],
     sourceFiles: [...new Set(entries.map((entry) => entry.sourcePath))].sort(),
-  };
+  });
 }
 
 async function git(cwd: string, arguments_: readonly string[]): Promise<void> {

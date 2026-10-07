@@ -13,12 +13,12 @@ import type { ReactCapabilityEnvironment } from "../../dist/client/react_capabil
 
 export const catalogue = readCatalogue(
   JSON.parse(
-    fs.readFileSync("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
+    fs.readFileSync("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
   ),
 );
 
 export const descriptor: ViewerCapabilityDescriptor = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   source: {
     base: "origin/main",
     catalogueId: catalogue.identity.id,
@@ -51,6 +51,7 @@ export function actions() {
 
 export function shellRecovery() {
   return {
+    changesStatus: "ready" as const,
     disclosures: { "folder:specs:fixture": false },
     colorScheme: "dark" as const,
     detailsOpen: true,
@@ -164,6 +165,7 @@ export class FakeEnvironment implements ReactCapabilityEnvironment {
         ...catalogue.components,
       ].find((entry) => entry.path === entryPath);
     return {
+      schemaVersion: 2 as const,
       catalogue: this.publicCatalogue,
       context: {
         base: source.base,
