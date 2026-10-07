@@ -366,10 +366,11 @@ failing tests after a gate failure.
 ## Milestone 5: Main Merge And Review 3 Fixes
 
 This milestone integrates main and fixes selected-run warnings, file evidence,
-failure groups, interruption reports, and literal pattern messages. The
-implementation is ready for post-push review.
+failure groups, interruption reports, and literal pattern messages. Completed.
+Review 4 found no auto-fixable findings, so no fix round ran.
 Evidence: `.context/targeted-developer-test-runs/milestone-5.md`.
 Merge audit: `.context/targeted-developer-test-runs/merge-main.md`.
+Review 4: `.context/targeted-developer-test-runs/review-4.md`.
 
 Decision: The user selected option A for Review 3 findings 1, 2, 3, 4, and 6.
 Keep complete and strict report schemas unchanged. Leave post-push review to
@@ -398,6 +399,9 @@ the orchestrating agent.
 - [x] Run the complete auto gate once. Record executor and duration. Use the
       targeted failure rules and report repeated unrelated failures.
 - [x] Tick completed tasks, commit, run deletion checks, and push the branch.
-- [ ] After the push, review the complete diff against `origin/main` using
+- [x] After the push, review the complete diff against `origin/main` using
       `docs/implementation-review-prompt.md`, report findings, then apply the
       review-fix rule in `AGENTS.md`. The orchestrating agent runs this review.
+  - Review 4 finding 1, High: the real-signal test is flaky under load; recommend A (fix the test).
+  - Review 4 finding 2, Medium: early `process.exit(0)` passes a selected run; recommend C.
+  - Review 4 finding 3, Low: no test covers the signal message without its suffix; recommend A.
