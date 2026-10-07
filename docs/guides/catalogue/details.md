@@ -21,8 +21,9 @@ it.
 - The changed paths behind its status, including comparison evidence for an
   unchanged screen opened from All.
 - The branch point that Changes compares with, when the catalogue knows its
-  name. A catalogue embedded in another product has no name, so its details
-  leave that sentence out and keep the rest.
+  name. The sentence stays while the next screen's details load. A catalogue
+  embedded in another product has no name, so its details leave that sentence
+  out and keep the rest.
 
 Catalogue-wide usage is explicitly unavailable until the background check has
 finished; it is never shown as zero consumers.

@@ -42,7 +42,9 @@ changed stylesheet once, with its sentences and selectors under it, as the
 contract defines. A whole-document page's Details show its own evidence the
 same way, with page wording and its status beside its title. A public
 catalogue has no branch name, so embedded Details leave out the “Compared with
-the branch point” sentence and keep the rest of the evidence.
+the branch point” sentence and keep the rest of the evidence. Serve and an
+exported catalogue know their branch name, so their Details keep that
+sentence, also while another screen's data loads after navigation.
 
 > Need to create a catalogue? Use
 > [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly). The viewer is a

@@ -1,7 +1,8 @@
 # Remove Source-Path Evidence
 
 Status: Active. Milestones 1 to 30B are implemented, verified and pushed;
-the branch contains main `dc56e3d4`. Milestones 31 and 32 remain.
+the branch contains main `dc56e3d4`. Milestone 31 is implemented and verified
+in one local commit. Milestone 32 remains.
 
 ## Status And Outcome
 
@@ -2378,14 +2379,47 @@ Evidence: `.context/remove-source-path-evidence/milestone-30b.md`.
 
 Tags: ui
 
-- [ ] Failure-first viewer and browser tests: in an exported catalogue, the
+- [x] Failure-first viewer and browser tests: in an exported catalogue, the
       temporary view during navigation shows "Compared with the branch point
       on <name>." when the export knows the name. An embedded catalogue
       without a name still shows no sentence. Pass the known name to the
       public-data fallback.
-- [ ] Check that the viewer's excluded-only screen state matches the Milestone
+- [x] Check that the viewer's excluded-only screen state matches the Milestone
       27 mockup at both widths, and fix any difference in the viewer.
-- [ ] Run the viewer and browser tests, and smoke-test at both widths.
+- [x] Run the viewer and browser tests, and smoke-test at both widths.
+- [x] Hold the destination's data read in the browser test, and record the
+      first Details paragraph after every DOM change. The sentence must not
+      leave and return when the data arrives.
+- [x] Check a nameless embedded catalogue after navigation too, through the
+      existing embedded viewer harness at both widths.
+- [x] Update the READMEs near the changed code, the Details guide and both
+      Delivery Status notes.
+- [x] Run build, typecheck, lint, changed-file Prettier, the docs tests, the
+      complete unit suite and the complete `cargo xtask check`. Inspect the
+      diff and deletions against `origin/main`. Make one local commit; the
+      reviewer owns the push.
+
+Implementation notes:
+
+- `workspaceData` passes the shell context's `base` to `publicWorkspace`,
+  which no longer writes an empty name. After client navigation in an export,
+  the temporary view names the export's branch point. Serve's temporary view
+  keeps its name in the same way. `viewerContext` gives the embedded viewer an
+  empty name, so embedded Details still omit the sentence.
+- Before the fix, the new viewer test failed for the exported screen, the saved
+  view and the fallback name. The page case passed, because a page reads the
+  shell context directly. The new browser test failed at both widths: while the
+  held read was pending, Details started with "No changes to this screen.". A
+  copy without the held-state check failed on the paragraph record, which saw
+  the sentence leave and return.
+- The viewer's excluded-only state matched the M27 mockup at both widths. It is
+  not in Changes, shows Unmodified, has no comparison toolbar or stage heading,
+  and shows the mockup's Details card with its final line. The viewer needed no
+  change. A browser test now checks the card text in order and the hidden
+  comparison controls.
+- The temporary view still omits "Changed component" lines until the
+  destination's data loads, because the public catalogue has no affected
+  consumers. This is outside M31 and is reported for the review.
 
 Evidence: `.context/remove-source-path-evidence/milestone-31.md`.
 

@@ -15,7 +15,7 @@ Omitting the branch-point sentence when its name is unknown is implemented in
 [M24](../../plans/remove-source-path-evidence.md#milestone-24-hide-the-branch-point-sentence-when-the-name-is-unknown).
 The known-name rule needs no new mockup; existing mockups already show a name.
 
-Retaining the export's known branch name during navigation is planned for
+Retaining the export's known branch name during navigation is implemented in
 [M31](../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
 The excluded-only screen mockup and the shared Excluded/Matched Details card
 are implemented in [M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state).
@@ -83,8 +83,10 @@ During navigation in an exported catalogue, the temporary workspace built from
 public catalogue data uses the branch name that the export already knows.
 Show the same sentence while the destination's full workspace data loads and
 after it loads. Pass the known name to that fallback; do not infer it from a
-route or invent a default. An embedded catalogue without a name still shows
-no sentence and keeps its other Details.
+route or invent a default. The fallback takes the name from the shell
+context, so Serve's temporary view keeps its known name in the same way. An
+embedded catalogue without a name still shows no sentence and keeps its other
+Details.
 
 For a component entry, the shared wording helper selects:
 

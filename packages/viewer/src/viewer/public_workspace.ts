@@ -57,12 +57,19 @@ function variantStatus(entry: ShellCatalogueVariant): EntryStatus | undefined {
     : compared;
 }
 
+/**
+ * The routed entry's workspace from the public catalogue alone. That
+ * catalogue has no branch name, so `base` is the name that the shell already
+ * knows, such as an export's. It stays empty when the shell knows none, as
+ * for an embedded catalogue.
+ */
 export function publicWorkspace(
   catalogue: Catalogue,
   model: ShellCatalogueReadModel,
   entry: WorkspaceData["entry"],
   comparisons = model.comparisonUrl !== null,
   snapshotId?: string,
+  base = "",
 ): WorkspaceData {
   const selected = resolveCatalogueSelection(model, entry.path, snapshotId);
   const original =
@@ -194,7 +201,7 @@ export function publicWorkspace(
     variants,
     usedBy,
     affected: [],
-    base: "",
+    base,
     comparisons,
     comparisonEligible:
       original.kind === "screen"

@@ -13,12 +13,14 @@ Omitting the branch-point sentence when its name is unknown is implemented in
 [M24](../../plans/remove-source-path-evidence.md#milestone-24-hide-the-branch-point-sentence-when-the-name-is-unknown).
 The known-name rule needs no new mockup; existing mockups already show a name.
 
-Keeping the export's known branch name during navigation is planned for
+Keeping the export's known branch name during navigation is implemented in
 [M31](../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
 The excluded-only screen depiction, the linked child pages and the shared
 Excluded/Matched Details card are implemented in
 [M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state).
-Viewer alignment with these depictions at both widths is planned for M31.
+M31 checked the viewer's excluded-only state against that depiction at both
+widths. The viewer already matched it, and a browser test now keeps them
+aligned.
 
 This document owns visual rules for evidence defined by
 [CSS change attribution](./mokly-css-attribution.md); the

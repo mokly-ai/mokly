@@ -11,6 +11,7 @@ import {
   INSPECTOR_VIEWPORTS,
   SCREEN_TERMINAL,
   VARIANT_TERMINAL,
+  openCatalogue,
   openEvidence,
 } from "./css_evidence_page.js";
 import type {} from "./viewer_harness.js";
@@ -130,6 +131,25 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         VARIANT_EXCLUDED_LEAD,
         EXAMINED_LEAD,
         VARIANT_TERMINAL,
+      ]);
+      await expect(evidence.locator("li")).toHaveText([EXCLUDED_PATH]);
+    });
+
+    test("an embedded screen reached by navigation stays without the branch-point sentence", async ({
+      page,
+    }) => {
+      await embeddedEvidence(page, "action/default");
+      await openCatalogue(page, name);
+      await page
+        .locator('#one a[data-nav-row][data-route="home/index.html"]')
+        .click();
+      await expect(page.locator("#one .mbk-screen-head h2")).toHaveText("Home");
+      const evidence = await openEvidence(page);
+      await expect(evidence.locator("h3")).toHaveText(["Comparison details"]);
+      await expect(evidence.locator("p")).toHaveText([
+        EXCLUDED_LEAD,
+        EXAMINED_LEAD,
+        SCREEN_TERMINAL,
       ]);
       await expect(evidence.locator("li")).toHaveText([EXCLUDED_PATH]);
     });

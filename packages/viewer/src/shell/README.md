@@ -4,8 +4,8 @@
 
 The [React Browse shell plan](../../../../plans/react-browse-shell.md) records
 how Serve, export and the public viewer converged on this tree.
-Retaining the known branch name in the exported navigation fallback is planned
-for [M31](../../../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
+Retaining the known branch name in the exported navigation fallback is
+implemented in [M31](../../../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
 The [presentation contract](../../../../docs/protocol/mokly-css-evidence-presentation.md#details-copy)
 keeps the sentence during loading; a nameless embedded catalogue still omits it.
 
@@ -230,10 +230,11 @@ exclusions block, so `workspace_evidence.tsx` and a page's Details render the
 same markup; `workspace_evidence.tsx` keeps ignored content and the status
 lines separate. The heading names the branch point only when its name is
 known; an empty or blank name leaves the heading alone. An embedded catalogue
-has no name, because `viewerContext` and `publicWorkspace` supply an empty
-one, so its Details keep the rest of the evidence without that sentence. A
-workspace that a served or exported shell builds from public data, before its
-private or inert workspace arrives, has no name either.
+has no name, because `viewerContext` supplies an empty one, so its Details
+keep the rest of the evidence without that sentence. `workspace_data.ts`
+passes the shell's known name to `publicWorkspace`. A workspace that a served
+or exported shell builds from public data, before its private or inert
+workspace arrives, therefore keeps the sentence while that data loads.
 A workspace built from the published catalogue projects the
 selected views' catalogue `resourceEvidence` through
 `../viewer/public_workspace_views.ts`. A whole-document page has no workspace:

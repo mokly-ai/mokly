@@ -100,6 +100,7 @@ export function workspaceData(
       entry,
       context.comparisons ?? catalogue.publicModel.comparisonUrl !== null,
       context.snapshotId,
+      context.base,
     );
   const snapshot = context.componentChanges;
   const result = snapshot?.result;
