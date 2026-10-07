@@ -6,7 +6,9 @@ This is the approved service contract for the
 [remote-cache plan](../../plans/turborepo-cloudflare-remote-cache.md).
 The R2 bucket in WEUR and its expiry rule are provisioned. Worker code,
 tests, deployment workflow, and local signed-client verification are implemented.
-The Worker is not deployed; client wiring remains planned.
+The Worker is deployed at `https://mokly-turbo-cache.calum-785.workers.dev`
+without access tokens, so it answers 401 to every request. Secrets and client
+wiring remain planned.
 The [task contract](./ci-remote-cache.md) owns builds and client credentials.
 
 ## Compatibility And Routing
@@ -215,8 +217,10 @@ The dedicated `turbo-cache.yml` uses manual dispatch and `main` pushes touching
 `scripts/turbo-cache/**`. It uses immutable action revisions, npm 11.21.0,
 `npm ci`, the repository's pinned Wrangler, and a 30-minute timeout.
 Validate `vars.CLOUDFLARE_ACCOUNT_ID` and
-`secrets.CLOUDFLARE_WORKERS_API_TOKEN`; give that token account-scoped Workers
-Scripts and Workers R2 Storage write permissions. Run Worker typecheck/tests
+`secrets.CLOUDFLARE_WORKERS_API_TOKEN`; give that account API token only the
+Workers `Editor` role scoped to the `mokly-turbo-cache` Worker. A deploy needs
+no R2 permission. Per-Worker scope requires an existing Worker, so an admin's
+own login creates the Worker with the first deploy. Run Worker typecheck/tests
 before `npx --no-install wrangler deploy --config scripts/turbo-cache/wrangler.jsonc`.
 Never deploy from a fork or supply Cloudflare credentials to build-cache clients.
 

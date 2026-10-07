@@ -40,7 +40,7 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
 - [CI task cache](./ci-remote-cache.md) — implemented local task graph and
   restore rules; planned remote workflow delivery and developer credentials.
   - [CI remote cache Worker](./ci-remote-cache-worker.md) — implemented API,
-    R2 storage, and deployment workflow; production deployment remains planned.
+    R2 storage, and deployment workflow; deployed without access tokens.
   - [CI remote cache access](./ci-remote-cache-access.md) — implemented
     principals and namespaces; pending CI policy and recovery runbook.
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard

@@ -7,7 +7,9 @@ adapter and fetch entry contain the platform-specific boundary.
 ## Delivery Status
 
 The core, R2 adapter, configuration, tests, and local curl/signed-client
-verification are implemented. The Worker is not deployed. Hosted cache wiring
+verification are implemented. The first deploy ran on 2026-10-07 from the
+admin's login at commit `11b207d`: `https://mokly-turbo-cache.calum-785.workers.dev`. It has no access
+tokens yet, so it answers 401 to every request. Hosted cache wiring
 and CI policy selection remain Milestone 4 work.
 
 ## Development
@@ -131,8 +133,9 @@ npx --no-install wrangler deploy --config scripts/turbo-cache/wrangler.jsonc
 
 Generate four independent values: three tokens and the Turbo signature key.
 The Worker never receives the signature key. The workflow uses
-`vars.CLOUDFLARE_ACCOUNT_ID` and `secrets.CLOUDFLARE_WORKERS_API_TOKEN`, with
-account-scoped Workers Scripts and Workers R2 Storage write permissions.
+`vars.CLOUDFLARE_ACCOUNT_ID` and `secrets.CLOUDFLARE_WORKERS_API_TOKEN`. That
+account API token has only the Workers `Editor` role, scoped to the
+`mokly-turbo-cache` Worker; deploys need no R2 permission.
 It deploys only from main in this repository, after Worker typecheck/tests and
 the dependency audit. A new dispatch workflow is unavailable before it enters
 the default branch; the authorized first deployment can use the checked pinned

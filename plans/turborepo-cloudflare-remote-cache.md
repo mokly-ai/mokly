@@ -4,7 +4,7 @@ Status: Active. Created on 2026-10-06. No pull request yet. Milestone 1 was
 accepted at `7b70b7e`. Milestone 2 local implementation and checks are complete; hosted native
 verification remains a pre-merge requirement. The supervising agent owns formal
 reviews in another worktree. Milestone 3 implementation, local smokes, and the full gate are complete;
-Its supervising-agent review and final fix gate are complete; R2 and the open user decisions remain recorded. CI policy remains open, with B recommended. The Worker is not deployed.
+Its supervising-agent review and final fix gate are complete; R2 and the open user decisions remain recorded. CI policy remains open, with B recommended. The Worker is deployed at `https://mokly-turbo-cache.calum-785.workers.dev` without access tokens; it answers 401 to every request.
 
 ## Summary
 
@@ -229,8 +229,8 @@ already a ratchet source root, so the length and export ratchets cover the
 Worker. The deployment workflow `.github/workflows/turbo-cache.yml` runs
 `wrangler deploy` on `workflow_dispatch` and on `main` pushes that touch
 `scripts/turbo-cache/**`. It uses `vars.CLOUDFLARE_ACCOUNT_ID` and a new
-`secrets.CLOUDFLARE_WORKERS_API_TOKEN` with Workers Scripts and Workers R2
-Storage write permissions.
+`secrets.CLOUDFLARE_WORKERS_API_TOKEN`: an account API token with only the
+Workers `Editor` role, scoped to the `mokly-turbo-cache` Worker.
 
 ## CI Wiring
 
@@ -599,8 +599,12 @@ before the merge.
       `.context/turborepo-cloudflare-remote-cache/provisioning-2026-10-06.md`.
 - [x] Admin: add the 30-day expiry lifecycle rule `expire-artifacts`. Done on
       2026-10-06.
-- [ ] Admin: create the `CLOUDFLARE_WORKERS_API_TOKEN` repository secret with
-      Workers Scripts and Workers R2 Storage write permissions.
+- [ ] Admin: create the account API token `github-actions-mokly-turbo-cache-deploy`
+      with only the Workers `Editor` role, scoped to the `mokly-turbo-cache`
+      Worker. Store it as `CLOUDFLARE_WORKERS_API_TOKEN`. Where GitHub stores
+      it follows the decision on Milestone 3 review finding 1.
+- [ ] Run one deploy with that token from the admin's machine before merge to
+      prove the permission is enough.
 - [ ] Admin: choose CI policy A, B (recommended), or C. Restrict the trusted
       writer GitHub environment to main for A/B; apply the same choice to PR
       previews. Record B's shared-PR-token residual risk or C's accepted risk.
@@ -611,11 +615,13 @@ before the merge.
 - [ ] Verify the rotation runbook changes the Worker team, all client team
       settings, and the 7-day PR lifecycle prefix together, preserving old
       namespace expiry.
-- [ ] Admin: set the Worker secrets with `wrangler secret put`, then run the
-      first deploy from this branch. Use `workflow_dispatch` if the workflow
-      is already registered; otherwise use the documented pinned-Wrangler
-      deploy command after its checks. A new dispatch-only workflow is not on
-      the default branch yet. Record the Worker URL before merging.
+- [x] Admin: run the first deploy from this branch with pinned Wrangler 4.113.0
+      and the admin's login. Done on 2026-10-07 at `11b207d`:
+      `https://mokly-turbo-cache.calum-785.workers.dev`. With no secrets it answers 401 to every
+      request; the version preview URL returns 404. See
+      `.context/turborepo-cloudflare-remote-cache/provisioning-2026-10-07.md`.
+- [ ] Admin: set the Worker secrets for the chosen principals with
+      `wrangler secret put`.
 - [ ] Admin: add repository secrets with the selected principal token names and
       `TURBO_CACHE_SIGNATURE_KEY`.
 - [ ] Admin: give approved developers the read-only token and signature key
