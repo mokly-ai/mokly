@@ -242,7 +242,7 @@ export async function smokeConsumerPublish(context, root) {
         files.includes("static/mokly-generated/mokly-manifest.json"),
         false,
       );
-      await inspectPublicCatalogue(unpacked, manifest.comparisonPath);
+      await inspectPublicCatalogue(root, unpacked, manifest.comparisonPath);
       if (noChanges) {
         assert.equal(manifest.comparisonPath, null);
         assert.equal(manifest.baseSha, null);

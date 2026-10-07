@@ -11,10 +11,11 @@ scenarios work differently. The sections below describe them.
 
 The scenarios run Mokly only from the archives. Checks that read a protocol
 document or a protocol fixture read the copy in the installed package, so they
-test the files that users get. The checks use repository code in one place:
-[`scripts/package/catalogue.mjs`](../../../scripts/package/catalogue.mjs)
-imports `@mokly/viewer/data` from this repository's viewer build. The Export and
-Publish checks use it to calculate the expected routes.
+test the files that users get. Checks that need a viewer function, such as the
+route helpers that the Export and Publish checks use, load it from the test
+project's installed `@mokly/viewer` through
+[`scripts/package/installed_viewer.mjs`](../../../scripts/package/installed_viewer.mjs).
+They never import this repository's viewer build.
 
 ```bash
 npm run package:smoke
@@ -78,5 +79,5 @@ fixture only when the behavior depends on the packed package: its file list,
 exports, declarations, binaries or install-time dependency resolution. Test
 configuration and path behavior, such as a config file in a subdirectory, with
 unit tests under [`tests/`](../..) instead. A new check must read protocol
-documents and fixtures from the installed package, as the current checks do.
-Describe each new fixture here.
+documents, fixtures and viewer functions from the installed packages, as the
+current checks do. Describe each new fixture here.

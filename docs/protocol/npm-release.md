@@ -104,8 +104,9 @@ npm, Node and Rust commands from the workspace root and includes:
 
 Tests that mutate files use isolated temporary directories and clean up child
 processes. Package smokes execute the packed artifact, not the source tree or a
-workspace symlink. Smoke checks read protocol documents and protocol fixtures
-from the installed package, not from the source tree; the packed NodeNext
+workspace symlink. Smoke checks read protocol documents and protocol fixtures,
+and load package functions such as the viewer route helpers, from the installed
+packages, not from the source tree or a workspace symlink; the packed NodeNext
 consumer type-checks the renderer contract that its installed
 `mokly-rendering.md` declares. Historical cross-repository parity audits are
 release evidence rather than recurring CI dependencies on other repositories.
