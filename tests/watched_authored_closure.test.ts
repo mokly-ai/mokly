@@ -3,7 +3,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { compileCatalogue } from "../dist/build/compile.js";
+import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import { loadConfig } from "../dist/config/load.js";
+import { startCatalogueServer } from "../dist/server/http.js";
 import { serve } from "../dist/server/serve.js";
 
 import {
@@ -86,3 +89,63 @@ test(
     );
   },
 );
+
+/** Start the child server in-process on a live index whose page links a PDF. */
+async function childWithLinkedPdf(t: test.TestContext) {
+  const fixture = await createFixture(
+    validEntrySource({ body: '<a href="../../spec.pdf">PDF</a>' }),
+  );
+  t.after(() => removeFixture(fixture));
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "spec.pdf"),
+    "%PDF-1.4\nfirst",
+  );
+  const config = await loadConfig(fixture.root);
+  const runtime = await prepareLiveRuntime(config);
+  const server = await startCatalogueServer(config, {
+    base: "main",
+    componentRuntime: runtime,
+    manifest: runtime.manifest,
+    port: 0,
+  });
+  fixture.beforeRemove(() => server.close());
+  return {
+    config,
+    fixture,
+    pdf: `${server.url}/static/spec.pdf`,
+    runtime,
+    server,
+  };
+}
+
+test("the in-process child keeps its checked authored closure when a reload adopts a new generation", async (t) => {
+  const { config, fixture, pdf, runtime, server } = await childWithLinkedPdf(t);
+  const complete = await compileCatalogue(config);
+  assert.equal(
+    server.completeCatalogue!(complete.manifest, runtime.generation),
+    true,
+  );
+  assert.equal(await (await fetch(pdf)).text(), "%PDF-1.4\nfirst");
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "spec.pdf"),
+    "%PDF-1.4\nsecond",
+  );
+  server.replaceComponentRuntime({ ...runtime, generation: "b".repeat(32) });
+  server.publishUpdate({ version: 2 });
+  assert.equal(await (await fetch(pdf)).text(), "%PDF-1.4\nsecond");
+  server.publishUpdate({ assetClosure: [], kind: "evidence", version: 3 });
+  assert.equal((await fetch(pdf)).status, 404);
+});
+
+test("the in-process child drops on-demand closure additions with their generation", async (t) => {
+  const { pdf, runtime, server } = await childWithLinkedPdf(t);
+  assert.equal((await fetch(pdf)).status, 404);
+  assert.equal(
+    (await fetch(`${server.url}/static/mokly-generated/home/index.mobile.html`))
+      .status,
+    200,
+  );
+  assert.equal(await (await fetch(pdf)).text(), "%PDF-1.4\nfirst");
+  server.replaceComponentRuntime({ ...runtime, generation: "b".repeat(32) });
+  assert.equal((await fetch(pdf)).status, 404);
+});

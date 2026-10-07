@@ -290,7 +290,10 @@ rechecks each listed file without following symlinks. The approved
 keep a confined path observable but cannot grant HTTP access. The resource
 watcher retains the previous checked closure on failure. Static and transient
 reads use `PublicFilePolicy.read`, which rechecks components and the open file
-without following symbolic links.
+without following symbolic links. In the child, `served_closure.ts` holds the
+read authority: the last checked closure plus on-demand additions from the
+current generation. A reloaded runtime keeps the checked closure, so its update
+cannot hide a listed file before the background pass completes.
 
 The approved [path/output integration](../../docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
 Markdown documents and moves inside one generated tree. It introduces manifest
