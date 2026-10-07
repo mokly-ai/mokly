@@ -2,7 +2,7 @@
 
 Status: Active. Milestones 1 to 9 are complete on draft PR
 [#138](https://github.com/mokly-ai/mokly/pull/138); Milestone 10 merges main's
-#164, #165, and #167 to #169. The plan closes when the PR merges. Review findings 2, 3, 10,
+#163 to #165 and #167 to #169. The plan closes when the PR merges. Review findings 2, 3, 10,
 and 11 stay open for the user to decide; Milestones 7 and 9 list them. Main's
 #165 resolved finding 7.
 
@@ -493,12 +493,13 @@ and `.context/shared-example-compilation-snapshot/milestone-9.md`. Review
 reports: `.context/shared-example-compilation-snapshot/review.md`. Flaky test:
 `.context/shared-example-compilation-snapshot/flaky/report.md`.
 
-## Milestone 10: Merge main's #164, #165, and #167 to #169 — in progress
+## Milestone 10: Merge main's #163 to #165 and #167 to #169 — in progress
 
 Main fixed remote verification review findings (#164), made the real SIGINT
 test deterministic (#165), fixed the shared example copy on Node 24 (#167),
-made publish require a clean checkout (#168), and closed a plan (#169). This
-milestone merges main and confirms that the snapshot needs no change.
+made publish require a clean checkout (#168), and closed a plan (#169). After
+the review, main also changed the README setup steps (#163). This milestone
+merges main and confirms that the snapshot needs no change.
 
 - [x] Merge `origin/main` at `fa8be322` with the preservation checks, and
       record the justifications in the PR description.
@@ -509,10 +510,16 @@ milestone merges main and confirms that the snapshot needs no change.
 - [x] Record that main's #165 resolves open finding 7: the test now writes its
       ready marker through a temporary file and a rename.
 - [x] Run `cargo xtask check`, commit, and push.
+- [x] Merge `origin/main` at `4727cecc` (#163, README setup steps only) with
+      the preservation checks, validate the Markdown, and run the repository
+      suite.
 - [ ] Only after the push, review the change with
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`, then apply the review-fix rule: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest.
+  - [x] Fix finding 14 (Low, docs): the status paragraph and the heading no
+        longer include #166, which is not on main.
+  - [ ] Re-run the review once on the fix.
 
 Evidence: `.context/shared-example-compilation-snapshot/merge-13-audit.txt`,
 `.context/shared-example-compilation-snapshot/merges.md` (merge 13), and
