@@ -9,8 +9,13 @@ import { withPreInstallationCancellation } from "../export/error.js";
 import type { exportCatalogue } from "../export/run.js";
 import type { GitCommandRunner } from "../review/git.js";
 
+import { assertCleanCheckout, publishCheckoutPaths } from "./checkout.js";
 import { invalidBundle, publishIdentityFailed } from "./errors.js";
 import { exchangeUpload } from "./exchange.js";
+import {
+  assertCommittedGeneration,
+  readPublishGeneratedState,
+} from "./generated.js";
 import { UPLOAD_MANIFEST, validateUploadManifest } from "./manifest.js";
 import { readHeadSha, readUploadIdentity } from "./metadata.js";
 import type { RetryDependencies } from "./retry.js";
@@ -48,15 +53,44 @@ export async function publishCatalogue(
   dependencies: PublishDependencies,
   signal?: AbortSignal,
 ): Promise<PublishResult> {
-  const identity = await withProgress(dependencies, "prepare", () =>
-    withPreInstallationCancellation(signal, () =>
-      readUploadIdentity(dependencies.git, env, options.repository),
-    ),
+  const out = options.out ?? ".context/mokly-publish";
+  const { identity, paths, generated } = await withProgress(
+    dependencies,
+    "prepare",
+    () =>
+      withPreInstallationCancellation(signal, async () => {
+        const identity = await readUploadIdentity(
+          dependencies.git,
+          env,
+          options.repository,
+        );
+        const paths = publishCheckoutPaths(config, identity.gitRoot, out);
+        const generated = await readPublishGeneratedState(
+          dependencies.git,
+          paths,
+        );
+        await assertCleanCheckout(
+          dependencies.git,
+          paths,
+          false,
+          generated.ignoreRules,
+        );
+        return { identity, paths, generated };
+      }),
   );
   let snapshot: UploadSnapshot | undefined;
   await withProgress(dependencies, "export", () =>
     dependencies.export(config, {
-      outDir: options.out ?? ".context/mokly-publish",
+      outDir: out,
+      onCompilation: (compilation) =>
+        withPreInstallationCancellation(signal, () =>
+          assertCommittedGeneration(
+            dependencies.git,
+            identity.headSha,
+            generated,
+            compilation,
+          ),
+        ),
       ...(options.base === undefined ? {} : { base: options.base }),
       ...(signal === undefined ? {} : { signal }),
       noChanges: options.noChanges ?? false,
@@ -115,6 +149,7 @@ export async function publishCatalogue(
       throw publishIdentityFailed(
         "HEAD changed during export. Retry publication from a stable checkout.",
       );
+    await assertCleanCheckout(dependencies.git, paths, true);
     if (!snapshot)
       throw invalidBundle("The export did not produce an upload snapshot.");
     return exchangeUpload(snapshot, options, dependencies, signal);
