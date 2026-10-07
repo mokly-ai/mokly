@@ -642,11 +642,21 @@ docs, mockups, plans, migrations, or schema—without explicit user approval.
   Stop unless each deletion or feature-wide reduction is authorized, and record
   every approved removal plus related cleanup in the commit or PR description.
 
-- When a change removes or renames a feature, test, fixture, scenario, command,
-  or file, search the active plans, `docs/`, and every `README.md` for its name.
-  Update each stale reference in the same change and record each plan edit in
-  the commit or PR description. Leave completed plans unchanged because they
-  record history.
+- When a change removes or renames a feature, test, fixture, scenario,
+  command, or file, search `docs/`, `plans/`, and every `README.md` for its
+  name. Update each stale reference in live content in the same change.
+  Record each plan edit in the commit or PR description.
+- `docs/` and every `README.md` are live content. In an active plan,
+  completed milestones and checked TODOs are history; all other content is
+  live. In a completed plan, open review findings and unchecked post-merge
+  follow-ups are live; all other content is history. Do not change the
+  words of history.
+- `tests/markdown_links.test.ts` checks the local links in `docs/`, `plans/`,
+  and every `README.md`. If a history link fails this check, replace it with
+  a GitHub permalink at a commit where the target still matches the text.
+  Start with the commit that wrote the link. For a squash-merged PR, look for
+  that commit in `refs/pull/<number>/head`. For a line in a Markdown file,
+  put `?plain=1` before `#L<number>`.
 
 ### Rules
 
