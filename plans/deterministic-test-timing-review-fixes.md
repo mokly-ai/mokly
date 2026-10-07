@@ -1,6 +1,7 @@
 # Deterministic Test Timing Review Fixes
 
-Status: Active. No PR is open yet. On 2026-10-06 the user chose the
+Status: Active. [PR #174](https://github.com/mokly-ai/mokly/pull/174) is
+open. On 2026-10-06 the user chose the
 recommended option for findings 1 to 5 of the
 [Deterministic Test Timing](./deterministic-test-timing.md) review. Finding 6
 needs no change: the squash title of PR #152 is within the limit. Milestones 1
@@ -378,7 +379,7 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-9.md`.
       steps in `AGENTS.md`.
 - [x] Run `cargo xtask check --suite repository`, then the complete gate, with
       the CI toolchain (Rust 1.95.0) and the local executor.
-- [ ] Commit and push the branch, and open the pull request.
+- [x] Commit and push the branch, and open the pull request.
 - [ ] After the push, use `docs/implementation-review-prompt.md` to review
       the complete local diff against `origin/main` and report the findings.
       Then apply the review-fix rule: fix the `Auto-fix: yes` findings,
