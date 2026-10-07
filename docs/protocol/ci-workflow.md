@@ -129,7 +129,7 @@ the dual-runtime aggregate can prove an immutable release tree.
 
 ## Testbox Workflow Target
 
-The active [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
+The [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
 approves `.github/workflows/blacksmith-testbox.yml`. The workflow is implemented.
 Validation mode and both box suite smoke checks pass.
 The complete explicit remote check also passes.

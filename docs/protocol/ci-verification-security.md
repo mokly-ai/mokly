@@ -29,7 +29,7 @@ measurement follow the separate
 ## Testbox Key And Secret Boundary
 
 The [remote verification contract](./remote-verification.md) is an approved
-target under the active [plan](../../plans/blacksmith-remote-verification.md).
+target under the [plan](../../plans/blacksmith-remote-verification.md).
 The workflow secret boundary and executor key handling are implemented.
 Explicit and automatic modes use the same key handling.
 

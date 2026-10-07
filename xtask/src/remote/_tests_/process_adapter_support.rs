@@ -4,10 +4,11 @@ use std::path::Path;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
-use std::time::Duration;
 
-use crate::remote::contracts::{Clock, Interrupt, Logs};
-use crate::remote::error::{Operation, Result};
+use unimock::{MockFn, Unimock, matching};
+
+use crate::remote::contracts::{ClockSleepMock, InterruptRequestedMock, Logs};
+use crate::remote::error::Operation;
 use crate::remote::process::{Request, SystemProcess};
 
 pub(super) fn request(directory: &Path, script: &str) -> Request {
@@ -28,39 +29,22 @@ pub(super) fn process(
     logs: Arc<dyn Logs + Send + Sync>,
 ) -> SystemProcess {
     SystemProcess {
-        interrupt: Arc::new(InterruptFlag(interrupted)),
-        clock: Arc::new(PollClock),
+        interrupt: Arc::new(
+            Unimock::new(
+                InterruptRequestedMock
+                    .each_call(matching!())
+                    .answers_arc(Arc::new(move |_| interrupted.load(Ordering::SeqCst))),
+            )
+            .no_verify_in_drop(),
+        ),
+        clock: Arc::new(
+            Unimock::new(
+                ClockSleepMock
+                    .each_call(matching!())
+                    .answers(&|_| thread::yield_now()),
+            )
+            .no_verify_in_drop(),
+        ),
         logs,
-    }
-}
-
-struct InterruptFlag(Arc<AtomicBool>);
-
-impl Interrupt for InterruptFlag {
-    fn arm(&self) -> Result<()> {
-        panic!("the process adapter must not install signal handlers");
-    }
-    fn release(&self) {
-        panic!("the process adapter must not release signal handlers");
-    }
-    fn requested(&self) -> bool {
-        self.0.load(Ordering::SeqCst)
-    }
-}
-
-struct PollClock;
-
-impl Clock for PollClock {
-    fn stamp(&self) -> String {
-        panic!("process polling must not read a timestamp");
-    }
-    fn millis(&self) -> u128 {
-        panic!("process polling must not read elapsed time");
-    }
-    fn sleep(&self) {
-        thread::yield_now();
-    }
-    fn wait(&self, _: Duration) {
-        panic!("process polling must not request a cleanup retry wait");
     }
 }

@@ -9,7 +9,8 @@ Testbox workflow are implemented. Automatic remote selection and
 The approved idle timeout is 30 minutes. Per-box cleanup and diagnostics are
 implemented. The complete explicit remote smoke check passes.
 The [Testbox execution contract](./remote-verification-testbox.md) defines the
-workflow, commands, probe, suite wrapper and source-tree fingerprint.
+workflow, commands, probe, suite wrapper, source-tree fingerprint, report
+download and aggregation.
 
 ## Executor Selection
 

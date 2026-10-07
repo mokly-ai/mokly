@@ -3,8 +3,9 @@
 Status: Active. No pull request exists yet. Milestones 1 through 5 and the
 cleanup review changes are completed and pushed. Milestone 6 verification and
 close-out are completed. The full local gate and the default remote gate pass.
-This gate has no active box. Its GitHub runs have ended. Claude owns the open
-final review. The user approved both gates for this work.
+This gate has no active box. Its GitHub runs have ended. The post-push review
+reported D1, D2 and R4 for automatic fixes. Six findings wait for user decisions.
+Claude owns the open re-review. The user approved both gates for this work.
 
 Fix the eleven open findings from the post-push review of
 [Blacksmith remote verification](./blacksmith-remote-verification.md)
@@ -197,8 +198,8 @@ Evidence: `.context/remote-verification-review-follow-up/milestone-5.md`.
 
 ## Milestone 6: Verification, close-out and review
 
-Verification and close-out are completed. The final review remains open for Claude.
-Evidence: `.context/remote-verification-review-follow-up/milestone-6.md` and `merge-justifications.md` in the same directory.
+Verification and close-out are completed. The re-review remains open for Claude.
+Evidence: `.context/remote-verification-review-follow-up/milestone-6.md`, `merge-justifications.md` and `review-fixes.md` in the same directory.
 
 - [x] Fetch `origin/main` and merge new commits under the mainline
       preservation rules, if needed.
@@ -219,3 +220,9 @@ Evidence: `.context/remote-verification-review-follow-up/milestone-6.md` and `me
       the checks, commit and push, re-review once, fix any new
       `Auto-fix: yes` findings once more, then stop and report the rest. Add
       each open finding as one line under this TODO.
+  - scripts/docs #3 (Low, process): The snapshot workspace, executor output and three timed runs with cost remain open.
+  - Rust #1 (Low, product bug): A late interrupt can lose the real box cleanup count or return a fingerprint error.
+  - Rust #2 (Low, test): The grandchild termination test counts a zombie as a live process.
+  - Rust #3 (Low, test): The isolated environment tests can pass when the child matches no test.
+  - Rust #5 (Low, test): No test checks the real `SystemClock::stamp()` format.
+  - Rust #6 (Low, UX wording): The missing-program message puts a comma after the install command.
