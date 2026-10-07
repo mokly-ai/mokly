@@ -324,9 +324,12 @@ receiver and viewer update before publication. Progress remains in the
 
 For repository development, use the tested Node.js version in
 [`.nvmrc`](./.nvmrc), npm 11.21.0 (the `packageManager` version in
-`package.json`), Rust 1.95, and Chromium for the browser suite. With nvm, run
-`nvm install` in the repository to install and use that Node.js version. Use
-the pinned npm version for dependency changes.
+`package.json`), the Rust toolchain in
+[`rust-toolchain.toml`](./rust-toolchain.toml) (Rust 1.95.0 with rustfmt and
+Clippy), and Chromium for the browser suite. With nvm, run `nvm install` in
+the repository to install and use that Node.js version. rustup reads the
+toolchain file and installs the pinned Rust the first time `cargo` runs in the
+repository. Use the pinned npm version for dependency changes.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git

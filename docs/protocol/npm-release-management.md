@@ -53,8 +53,8 @@ The release workflow then:
 2. Checks out the CLI tag with history on GitHub-hosted `ubuntu-24.04`.
 3. Resolves the latest available Node 24 patch for the single publish job and
    installs npm 11.21.0, the `packageManager` version, without a package cache.
-   Rust 1.95.0 and Chromium are installed only when complete verification is
-   selected.
+   Rust 1.95.0 (the `rust-toolchain.toml` pin) and Chromium are installed only
+   when complete verification is selected.
 4. Verifies both local and remote tags identify `HEAD`, the source tree is clean
    including untracked files, and each tag matches its package version.
 5. Runs `npm ci`, performs the live workspace dependency audit, then selects
