@@ -7,7 +7,7 @@ This is the approved service contract for the
 The R2 bucket in WEUR and its expiry rule are provisioned. Worker code,
 tests, deployment workflow, and local signed-client verification are implemented.
 The Worker is deployed at `https://mokly-turbo-cache.calum-785.workers.dev`
-with the three policy B access tokens. Client wiring remains planned.
+with the three policy B access tokens. Policy B client and CI wiring are implemented; hosted checks remain open.
 The [task contract](./ci-remote-cache.md) owns builds and client credentials.
 
 ## Compatibility And Routing
@@ -22,7 +22,7 @@ No browser CORS or OPTIONS preflight support is required for this CLI service.
 Authenticate every request with one bearer token. The
 [access contract](./ci-remote-cache-access.md) defines the three principals,
 constant-time digest checks, configuration failures, namespace validation,
-PR read fallback, and pending CI policy. Reject forbidden uploads before body
+PR read fallback, and selected policy B. Reject forbidden uploads before body
 consumption. All principals may submit discarded events. Mokly uses slug-only
 requests with an empty actual team ID; the contract retains the teamId alias.
 Ignore unrelated query parameters. Preserve hash spelling in storage and URLs.
@@ -222,8 +222,8 @@ Workers `Editor` role scoped to the `mokly-turbo-cache` Worker, plus Workers
 `workers.dev` subdomain after each deploy. A deploy needs no R2 permission.
 Per-Worker scope requires an existing Worker, so an admin's own login creates
 the Worker with the first deploy. The token is stored only in the GitHub
-environment `turbo-cache-deploy`, which allows only `main`; the deploy job must
-declare that environment. Run Worker typecheck/tests
+environment `turbo-cache-deploy`, which allows only `main`; the deploy job
+declares that environment. Run Worker typecheck/tests
 before `npx --no-install wrangler deploy --config scripts/turbo-cache/wrangler.jsonc`.
 Never deploy from a fork or supply Cloudflare credentials to build-cache clients.
 

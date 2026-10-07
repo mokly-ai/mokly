@@ -6,7 +6,8 @@ This is the approved access contract for the
 [remote-cache plan](../../plans/turborepo-cloudflare-remote-cache.md).
 The three-principal authorization, namespace fallback, and local verification
 are implemented. The user selected policy B on 2026-10-07; its Worker secrets,
-GitHub secrets, and PR expiry rule are provisioned. Current workflows remain local only.
+GitHub secrets, and PR expiry rule are provisioned. Policy B CI and preview
+wiring is implemented. Hosted confirmation and developer sharing remain open.
 The [Worker contract](./ci-remote-cache-worker.md) owns routes and wire formats.
 
 ## Principals And Namespaces
@@ -63,39 +64,94 @@ use the matching flat and wrapped fields in the Worker contract. Turbo treats
 configuration/storage errors as cache errors and continues builds. Forbidden
 access can disable remote reads and writes for the rest of that Turbo run.
 
-## CI Policy
+## CI Policy B
 
-The user selected B on 2026-10-07. The table keeps A and C for reference.
-The Worker implements all three principals; CI credential wiring is planned.
-All authorized remote clients also receive the shared signature key.
+The user selected scoped PR writes. The deployed origin is
+`https://mokly-turbo-cache.calum-785.workers.dev`; trusted team is `mokly`.
+Keep `TURBO_TEAMID` and `remoteCache.teamId` unset. Turbo signs the empty team
+ID, so one signature key verifies trusted fallback across PR namespaces.
 
-| Policy              | Main jobs                                                                                            | Same-repository PR jobs                                                  |
-| ------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| A: main-only writes | Trusted token through a GitHub environment restricted to `main`; `local:rw,remote:rw`, team `mokly`. | Reader token; `local:rw,remote:r`, team `mokly`.                         |
-| B: scoped PR writes | Same as A.                                                                                           | PR token; `local:rw,remote:rw`, `TURBO_TEAM=mokly-pr-<number>`.          |
-| C: shared writes    | Trusted token; `local:rw,remote:rw`, team `mokly`.                                                   | Trusted token and trusted namespace; explicitly accepted poisoning risk. |
+| Event              | Principal and namespace                 | GitHub secret scope                                    |
+| ------------------ | --------------------------------------- | ------------------------------------------------------ |
+| Push to main       | Trusted writer; committed team mokly    | TURBO_CACHE_TRUSTED_WRITE_TOKEN in turbo-cache-trusted |
+| Same-repository PR | PR writer; TURBO_TEAM=mokly-pr-<number> | TURBO_CACHE_PR_WRITE_TOKEN in repository scope         |
+| Fork PR            | Local cache only                        | No cache credentials                                   |
 
-The preview workflow follows the same rule: its main job is a trusted writer
-under every policy; its PR job follows the selected PR column. Forks receive no
-cache secrets. Release jobs force execution; native jobs use local cache only.
-Use repository/environment secret names matching the Worker principal secrets;
-map the chosen value to `TURBO_TOKEN`. The signature secret remains
-`TURBO_CACHE_SIGNATURE_KEY`, mapped to `TURBO_REMOTE_CACHE_SIGNATURE_KEY`.
-Never select a remote mode unless both token and signature key are available.
+The signature key is the repository secret `TURBO_CACHE_SIGNATURE_KEY`.
+The five CI preparation jobs and both preview build jobs configure credentials
+only after `npm ci`. Main and PR steps have separate event guards. Each calls
+`scripts/verification/turbo-cache-env.mjs` with private candidate values.
+It writes `TURBO_TOKEN`, `TURBO_REMOTE_CACHE_SIGNATURE_KEY`, and
+`TURBO_CACHE=local:rw,remote:rw` to `$GITHUB_ENV` only when both candidates exist.
+Only the PR step writes `TURBO_TEAM`. Missing either candidate writes local:rw
+and leaves both credential variables unset. Forks skip both credential steps.
+No value is printed. The root launcher also removes incomplete credential pairs
+before calling the installed Turbo entry; otherwise even local mode can probe
+status with a token alone. Native, release, and Testbox jobs get no cache token.
 
-Under A, a PR job can restore trusted hits but cannot upload its new task hashes.
-Each job must execute those misses. B lets one PR job populate its scoped cache
-for later jobs on that PR; C permits the same reuse in the trusted namespace.
+CI jobs select the trusted environment through this exact expression:
 
-B protects trusted objects from PR writes. Its shared PR token still lets one
-PR job write another PR's namespace. Per-PR tokens or identity-bound tokens
-would close that residual boundary and require a separate decision. C lets any
-eligible PR job seed signed trusted artifacts for later main, preview, and
-developer reads. Write-once storage and signatures do not prevent that attack.
+```yaml
+environment:
+  name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'turbo-cache-trusted' || '' }}
+  deployment: false
+```
 
-Turbo 2.11.7 signs the team ID, not the slug. Keep the team ID empty in every
-client, including PR clients, so one key verifies trusted fallback across
-namespaces. Do not set `TURBO_TEAMID` or configure `remoteCache.teamId`.
+PRs resolve the name to empty and request no environment. Preview main uses the
+literal trusted name; preview PR declares no environment. GitHub permits
+[name expressions](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idenvironment)
+and [deployment: false](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/control-deployments#using-environments-without-deployments).
+Branch policies still apply; no deployment record is created for cache use.
+Custom GitHub App protection rules require deployment records and are incompatible
+with false. The configured environments use main-only branch policies.
+The first main push must confirm access and suppression of deployment records.
+A hosted PR run must confirm the empty-name path is accepted.
+
+The PR writer reads its namespace before trusted and populates only its own
+namespace for later jobs. Its shared PR token still permits another PR's
+namespace. Per-PR or identity-bound tokens require a separate decision.
+Signatures and write-once storage do not close that residual boundary.
+
+## Deployment Credential Boundary
+
+No Cloudflare account/API credential with Workers or R2 write permission may
+be a repository secret or reach a pull_request or pull_request_target job.
+`CLOUDFLARE_WORKERS_API_TOKEN` exists only in `turbo-cache-deploy`; the deploy
+job declares that main-only environment and accepts only main refs.
+`TURBO_CACHE_TRUSTED_WRITE_TOKEN` exists only in `turbo-cache-trusted` and only
+main-push steps in jobs using that environment may reference it. Neither token
+may be a workflow-wide value or a fallback for PRs.
+The PR service bearer remains repository-scoped; the Worker confines its writes
+to PR namespaces. The signature key remains repository-scoped too.
+
+The Pages secret `CLOUDFLARE_PAGES_API_TOKEN` may reach eligible preview jobs.
+The admin must keep its permissions free of Workers and R2 writes, including
+inherited roles. On 2026-10-07 the user replaced it with
+`github-actions-mokly-preview-pages`, limited to Pages Read and Pages Write.
+Mac checks verified project/deployment access and upload-token creation, with
+cache Worker settings and R2 bucket listing denied. This boundary is delivered;
+future token replacements must preserve it.
+The deploy token uses Workers Editor scoped to this Worker plus Workers Metadata
+Read-Only. The environment branch policies are administrator-owned controls;
+workflow tests check references and guards, not the live GitHub secret inventory.
+
+## Forbidden Repository Secret Aliases
+
+These legacy or broad aliases are forbidden repository credentials and must
+never appear in any workflow secret reference. Use the exact scoped names above.
+
+| Secret name               | Rule                                        |
+| ------------------------- | ------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`    | No workflow reference or repository secret  |
+| `CLOUDFLARE_R2_API_TOKEN` | No workflow reference or repository secret  |
+| `TURBO_CACHE_TOKEN`       | No shared writer alias or repository secret |
+
+`tests/workflow_cache_credentials.test.ts` checks every workflow and rejects
+protected tokens outside their matching environments or exposed PR steps.
+It also rejects every alias listed here. Administrators must apply the same
+permission rule to newly named credentials; changing a name cannot grant access.
+The guard normalizes secret names to uppercase because GitHub
+[references them without regard to case](https://docs.github.com/en/actions/reference/security/secrets#naming-your-secrets).
 
 ## Expiry And Recovery Runbook
 

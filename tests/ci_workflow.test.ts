@@ -39,7 +39,7 @@ interface Workflow {
   permissions: Readonly<Record<string, string>>;
 }
 
-test("CI shards complete verification behind one prerequisite", async () => {
+test("CI shards complete verification behind repository and preparation", async () => {
   const source = await workflowSource();
   const workflow = parse(source) as Workflow;
   assert.deepEqual(Object.keys(workflow.on).sort(), ["pull_request", "push"]);
@@ -54,6 +54,7 @@ test("CI shards complete verification behind one prerequisite", async () => {
     "hydration",
     "native",
     "package",
+    "prepare",
     "repository",
     "required",
     "unit",
@@ -76,6 +77,7 @@ test("CI shards complete verification behind one prerequisite", async () => {
     assert.equal(job["timeout-minutes"], 30);
   assert.deepEqual(required.needs, [
     "repository",
+    "prepare",
     "package",
     "unit",
     "browser",
@@ -84,8 +86,9 @@ test("CI shards complete verification behind one prerequisite", async () => {
   ]);
   assert.equal(required.name, "Required CI");
   assert.equal(required.if, "always()");
-  for (const job of [packageJob, unit, browser, hydration, native])
-    assert.deepEqual(job.needs, ["repository"]);
+  for (const job of [packageJob, unit, browser, hydration])
+    assert.deepEqual(job.needs, ["repository", "prepare"]);
+  assert.deepEqual(native.needs, ["repository"]);
   const selectedNodeMatrix =
     "${{ fromJSON(needs.repository.outputs.node-matrix) }}";
   assert.equal(packageJob.strategy?.matrix.node, selectedNodeMatrix);

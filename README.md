@@ -341,8 +341,9 @@ restarting the command so the CLI is rebuilt.
 
 Turbo runs build and verification preparation through the
 [CI task cache contract](./docs/protocol/ci-remote-cache.md). Unchanged tasks
-restore from the ignored local cache in `.turbo/`. Remote access remains planned. Linked Git worktrees share the main
-worktree's `.turbo/cache`. After remote delivery, approved developers receive a
+restore from the ignored local cache in `.turbo/`. CI uses signed remote cache
+with scoped PR writes. Linked Git worktrees share the main worktree cache.
+Approved developers receive a
 read-only token and the shared signature key through a private password-manager
 share. Load both into the shell and set `TURBO_CACHE=local:rw,remote:r`.
 Without both values, use local caching only. Set `TURBO_TELEMETRY_DISABLED=1`
@@ -517,8 +518,9 @@ for the review rules and temporary Braces exception.
   catalogue.
 
 The repository-owned [cache Worker](./scripts/turbo-cache/README.md) has local
-R2 development and runtime-neutral tests. Deployment and CI cache policy remain
-planned; no remote credentials are part of the local build.
+R2 development and runtime-neutral tests. The deployed Worker and policy B CI
+wiring use protected main environments and scoped PR credentials. Developer
+sharing and hosted verification remain open; local builds need no credentials.
 
 ## License
 

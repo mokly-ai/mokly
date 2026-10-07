@@ -4,7 +4,7 @@ Status: Active. Created on 2026-10-06. No pull request yet. Milestone 1 was
 accepted at `7b70b7e`. Milestone 2 local implementation and checks are complete; hosted native
 verification remains a pre-merge requirement. The supervising agent owns formal
 reviews in another worktree. Milestone 3 implementation, local smokes, and the full gate are complete;
-Its supervising-agent review and final fix gate are complete; R2 and the open user decisions remain recorded. The user selected CI policy B on 2026-10-07. The Worker is deployed at `https://mokly-turbo-cache.calum-785.workers.dev` with policy B credentials; CI does not use it yet.
+its supervising-agent review and final fix gate are complete. R2 and the open user decisions remain recorded. The user selected CI policy B on 2026-10-07. The Worker is deployed at `https://mokly-turbo-cache.calum-785.workers.dev`; Milestone 4 code, documentation and local verification are complete. The approved Node 24 shared-example copy fix and direct cold-baseline recipe checks pass the final gate. Hosted checks, token retirement, developer sharing and the supervising-agent review remain open.
 
 ## Summary
 
@@ -15,7 +15,7 @@ tests, and its deployment workflow. `cargo xtask check` stays the complete
 gate; its existing npm preparation calls will run through `turbo`.
 
 The change avoids repeated task execution in authorized hosted CI.
-Today the package job, four unit shards, four browser shards, and the hydration
+Before this change the package job, four unit shards, four browser shards, and the hydration
 job each run `npm run prepare:verification` on an identical tree, so one pull
 request runs the same build ten times. A Release Please pull request runs it
 twenty times. With writes enabled for an event, one prepare job builds and uploads
@@ -44,7 +44,7 @@ suite boundaries, shard evidence, and fail-closed aggregate stay unchanged.
 | Release        | `release.yml` forces task execution with `TURBO_FORCE=true`, local cache only, and no remote credentials. Force can refresh local entries.                      |
 | Native CI jobs | The macOS and Windows jobs keep building from source with no remote token.                                                                                      |
 | Agent guidance | `agentGuidance: false`, so `turbo` never edits `AGENTS.md`.                                                                                                     |
-| Expiry         | Trusted artifacts expire after 30 days; a 7-day PR-prefix rule is planned for Milestone 4.                                                                      |
+| Expiry         | Trusted artifacts expire after 30 days; the PR-prefix rule expires at 7 days; effective expiry is a post-merge follow-up.                                       |
 | Node in hashes | Exclude the Node version only after proving declared outputs match on Node 22.14 and Node 24. The prepare job must serve both Linux profiles.                   |
 | Telemetry      | Disable Turbo telemetry at workflow scope in CI, preview, and release from Milestone 2. Developers can export `TURBO_TELEMETRY_DISABLED=1` or `DO_NOT_TRACK=1`. |
 | Team identity  | Trusted/read clients use mokly; scoped PR clients use mokly-pr-<number>. Keep teamId empty across namespaces; rotate the team when rotating the key.            |
@@ -69,13 +69,13 @@ contract before implementation:
   task graph, inputs, outputs, environment handling, cache sources per
   environment, and local use.
 - New [`docs/protocol/ci-remote-cache-access.md`](../docs/protocol/ci-remote-cache-access.md):
-  three principals, namespaces, pending CI policy, expiry, and recovery.
+  three principals, namespaces, selected policy B, credential boundaries, expiry, and recovery.
 - New
   [`docs/protocol/ci-remote-cache-worker.md`](../docs/protocol/ci-remote-cache-worker.md):
   Worker HTTP contract, token classes, write-once storage, limits, deployment,
   and the provisioning runbook.
 - [`docs/protocol/ci-verification.md`](../docs/protocol/ci-verification.md):
-  current per-suite preparation and the planned restore contract, linked to
+  current per-suite preparation and restore contract, linked to
   the new task-cache owner without growing beyond 250 lines.
 - [`docs/protocol/ci-workflow.md`](../docs/protocol/ci-workflow.md): the
   prepare job, job dependencies, token gating, and the release and native
@@ -85,7 +85,7 @@ contract before implementation:
   fork behavior.
 - [`docs/protocol/npm-release.md`](../docs/protocol/npm-release.md) and
   [`docs/protocol/npm-release-evidence.md`](../docs/protocol/npm-release-evidence.md):
-  planned release builds bypass reads and never use the remote cache.
+  release builds bypass reads and never use the remote cache.
 - [`docs/protocol/npm-preview-deployments.md`](../docs/protocol/npm-preview-deployments.md):
   same-repository preview builds may read and write the cache.
 - [`docs/protocol/README.md`](../docs/protocol/README.md): index entries.
@@ -97,24 +97,24 @@ contract before implementation:
 
 ## Task Graph
 
-Root `package.json` scripts change as follows. Other public commands keep their
-boundaries. `example:build` clears its four generated output patterns, then calls the CLI directly. Root prepack uses silent npm, and
+Root `package.json` scripts use these boundaries. `example:build` calls the CLI
+directly, which transactionally replaces its disposable generated tree. Root prepack uses silent npm, and
 viewer prepack redirects build output to stderr, preserving pack JSON.
 
 | Script                 | Before                                       | After                                                                                                                |
 | ---------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `build`                | viewer build, then `tsc`, then `copy-assets` | `turbo run build:package 1>&2`                                                                                       |
+| `build`                | viewer build, then `tsc`, then `copy-assets` | `node scripts/turbo-run.mjs build:package 1>&2`                                                                      |
 | `build:package`        | none                                         | `node scripts/clean.mjs --package @mokly/mokly && tsc --project tsconfig.build.json && node scripts/copy-assets.mjs` |
-| `example:build`        | direct CLI build                             | `node scripts/clean.mjs --example && node dist/cli/bin.js build --config examples/basic/mokly.config.ts`             |
-| `prepare:verification` | `npm run build && npm run example:build`     | `turbo run example:build`                                                                                            |
+| `example:build`        | direct CLI build                             | `node dist/cli/bin.js build --config examples/basic/mokly.config.ts`                                                 |
+| `prepare:verification` | `npm run build && npm run example:build`     | `node scripts/turbo-run.mjs example:build`                                                                           |
 
 `turbo.json` registers these tasks:
 
-| Task               | Depends on            | Inputs                                                          | Outputs                                                                                                                                                                               |
-| ------------------ | --------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `build` (viewer)   | `^build`              | `$TURBO_DEFAULT$`, root tsconfig and cleanup script             | `dist/**`                                                                                                                                                                             |
-| `//#build:package` | `@mokly/viewer#build` | `src/**`, asset-copy/cleanup scripts, both root tsconfigs       | `dist/**`                                                                                                                                                                             |
-| `//#example:build` | `//#build:package`    | `examples/basic/**` and referenced protocol docs, minus outputs | `examples/basic/generated/**/*.html`, `examples/basic/generated/mokly-manifest.json`, `examples/basic/generated/example/workspace.svg`, `examples/basic/generated/mokly-generated/**` |
+| Task               | Depends on            | Inputs                                                            | Outputs                             |
+| ------------------ | --------------------- | ----------------------------------------------------------------- | ----------------------------------- |
+| `build` (viewer)   | `^build`              | `$TURBO_DEFAULT$`, root tsconfig and cleanup script               | `dist/**`                           |
+| `//#build:package` | `@mokly/viewer#build` | `src/**`, asset-copy/cleanup scripts, both root tsconfigs         | `dist/**`                           |
+| `//#example:build` | `//#build:package`    | `examples/basic/**`, imported assets, protocol docs, minus output | `examples/basic/mokly-generated/**` |
 
 `package.json`, `turbo.json`, and package manager lockfiles are always task
 inputs, even with explicit `inputs`. The root manifest, lockfile, and source
@@ -124,8 +124,8 @@ task hashes. They also reach `//#build:package` through its viewer dependency
 hash. Viewer default inputs include `scripts/browser.mjs` and `src/runtime.ts`,
 which `scripts/copy-assets.mjs` consumes directly. These paths cover the reads
 without duplicate root globs. The inherited root tsconfig is not a default
-global input; keep its explicit viewer input. Example inputs exclude all four
-generated output globs with `!`; explicit inputs bypass `.gitignore` filtering.
+global input; keep its explicit viewer input. Example inputs exclude the
+generated output tree with `!`; explicit inputs bypass `.gitignore` filtering.
 
 Global settings: `envMode: "strict"`, `agentGuidance: false`,
 `noUpdateNotifier: true`, `ui: "stream"`, `cacheMaxAge: "14d"`,
@@ -133,8 +133,8 @@ Global settings: `envMode: "strict"`, `agentGuidance: false`,
 uploadTimeout: 60, preflight: false }`, and
 `futureFlags: { longerSignatureKey: true }`. Do not set deprecated `daemon`
 or explicit `cacheDir`; linked worktrees share the main worktree's cache.
-`remoteCache.apiUrl` and `remoteCache.teamSlug` are committed once the Worker
-URL exists. The URL is the origin without `/v8`; `teamId` stays unset.
+`remoteCache.apiUrl` commits `https://mokly-turbo-cache.calum-785.workers.dev`
+and `remoteCache.teamSlug` commits `mokly`. The URL has no trailing slash or `/v8`; `teamId` stays unset.
 
 Strict mode hides every environment variable that is not listed in `env`,
 `passThroughEnv`, or the built-in system list. The example build runs the
@@ -153,14 +153,15 @@ or send Turbo telemetry. No repository code reads `MOKLY_BASELINE_COMMIT`.
 
 Cache sources per environment:
 
-| Environment                                  | Local cache    | Remote read | Remote write |
-| -------------------------------------------- | -------------- | ----------- | ------------ |
-| Developer without both credentials           | yes            | no          | no           |
-| Developer with read-only token and key       | yes            | yes         | no           |
-| Same-repository pull request and `main` push | yes            | yes         | policy A/B/C |
-| Fork pull request                            | yes            | no          | no           |
-| Release workflow                             | forced rebuild | no          | no           |
-| Native macOS and Windows jobs                | yes            | no          | no           |
+| Environment                            | Local cache    | Remote read | Remote write |
+| -------------------------------------- | -------------- | ----------- | ------------ |
+| Developer without both credentials     | yes            | no          | no           |
+| Developer with read-only token and key | yes            | yes         | no           |
+| Same-repository pull request           | yes            | yes         | PR namespace |
+| `main` push                            | yes            | yes         | trusted      |
+| Fork pull request                      | yes            | no          | no           |
+| Release workflow                       | forced rebuild | no          | no           |
+| Native macOS and Windows jobs          | yes            | no          | no           |
 
 Give approved developers the reader and signature key through a private
 password-manager share; they set `TURBO_CACHE=local:rw,remote:r`. With either
@@ -169,7 +170,7 @@ must pass with neither value. A short supplied key is a configuration error.
 
 ## Remote Cache Worker
 
-The planned Worker implements API `v8` from the
+The deployed Worker implements API `v8` from the
 [published OpenAPI specification](https://turborepo.dev/api/remote-cache-spec)
 and the verified 2.11.7 client. The
 [Worker contract](../docs/protocol/ci-remote-cache-worker.md) owns exact headers,
@@ -237,9 +238,9 @@ scoped to the `mokly-turbo-cache` Worker plus Workers `Metadata Read-Only`.
 
 - A new `prepare` job on Node 22.14.0 runs in parallel with `repository`. It
   runs `npm ci` and `npm run prepare:verification` with the selected access policy
-  and uploads only when that policy grants writes. It does not need Rust or Chromium.
+  and uploads only when both credentials exist. It does not need Rust or Chromium.
 - `package`, `unit`, `browser`, and `hydration` add `prepare` to `needs` and
-  receive the token selected by policy A/B/C. Their unchanged `cargo xtask check` call
+  receive the policy B token. Their unchanged `cargo xtask check` call
   restores the outputs through `turbo`.
 - `Required CI` adds `prepare` to its `needs`.
 - Token variables follow the [access policy](../docs/protocol/ci-remote-cache-access.md).
@@ -311,7 +312,7 @@ documentation-only: validate the Markdown and review the diff instead of running
       `docs/implementation-review-prompt.md` after the push. Report findings
       without changing the implementation.
   - Baseline rebuilds reused another commit's Turbo output — fixed in Milestone 2 with direct baseline commands.
-  - Same-repository PR jobs can poison shared cache — open, user decision; access model supports A, B, and C.
+  - Same-repository PR jobs can poison shared cache — resolved by the user's policy B choice on 2026-10-07 and scoped CI wiring in Milestone 4. The shared PR token can still write another PR's namespace.
   - Turbo stdout broke `npm pack --json` — fixed in Milestone 2.
   - Ignored files under example inputs — fixed in Milestone 2.
   - Preview wording claimed example caching — fixed in Milestone 2.
@@ -382,8 +383,8 @@ telemetry and forces release builds from the first Turbo use.
       and `//#build:package` hashes; the root tsconfig is not a global input.
       Check which viewer files the global hash covers, including README and
       tests, and record the result in `ci-remote-cache.md`.
-- [x] Change the root scripts: `build` to `turbo run build:package 1>&2`, a new
-      `build:package`, and `prepare:verification` to `turbo run example:build`.
+- [x] Change the root scripts: `build` to `node scripts/turbo-run.mjs build:package 1>&2`, a new
+      `build:package`, and `prepare:verification` to `node scripts/turbo-run.mjs example:build`.
 - [x] Add `turbo.json` to the fixed copy list in
       `tests/helpers/example_baseline.ts`. Test historical reconstruction in
       the isolated example repository after the root build script changes.
@@ -574,7 +575,8 @@ in CI uses it yet, so the product stays functional.
   - [x] Fix re-review finding R1: log every 500-or-higher response, including safe configuration-check diagnostics and invalid stored metadata; preserve client responses and capture failing regressions first.
   - [x] Run the final re-review gate, close the review with the R1 commit SHA, commit the plan, and push. Stop after this last fix round.
 
-  - Finding 1 (high, security): the deploy workflow uses an account-wide Workers/R2 write token as a repository secret, which any branch workflow can read; recommend a main-only GitHub environment, reduced permissions, and a rule/test that no Workers/R2 write credential is a repository secret or reaches a pull_request workflow. Partly resolved on 2026-10-07: the token lives in the main-only environment `turbo-cache-deploy` with Worker-scoped permissions. The rule, the workflow test, and a check of the preview token's permissions wait for the user.
+  - Finding 1 (high, security): the deploy workflow used an account-wide Workers/R2 write token as a repository secret, which any branch workflow could read. Admin moved the Worker-scoped token into main-only `turbo-cache-deploy` on 2026-10-07. The user approved the credential rule and workflow test for Milestone 4; both are implemented.
+    - Pages token check completed on 2026-10-07: the replacement `github-actions-mokly-preview-pages` has only Pages Read/Write; Worker settings and R2 listing are denied. Provisioning evidence is under `.context/turborepo-cloudflare-remote-cache/provisioning-2026-10-07.md`.
   - Finding 3 (low, missing test): no automated test runs the Workers runtime, so a broken FixedLengthStream path can deploy; recommend an unstable_startWorker integration test with local R2 in the deploy gate. Waiting for the user.
   - [x] Fix finding 2: disable version preview URLs explicitly, assert the config, and document the old-version URL check after token rotation.
   - [x] Fix finding 4: log unexpected error names/messages through the injected logger while keeping client responses generic; capture the regression first.
@@ -612,7 +614,41 @@ before the merge.
       typecheck and Testbox executor. Resolve conflicts path by path. Update
       Turbo outputs, imported-asset inputs, baseline fixtures and cleanup tests
       for the disposable mokly-generated tree; keep baselines outside Turbo.
-- [ ] Add `environment: turbo-cache-deploy` to the deploy job in
+- [x] Preserve main's baseline dependency audit and daily update workflow from
+      6bb64219. Keep audit mode selection, release strict mode, all incoming
+      tests and the xtask module split; combine the audit and cache docs.
+- [x] Preserve main's attribution fixture consolidation and targeted developer
+      test commands through 088fadb4, including its AGENTS.md update. Keep
+      every incoming test, reporter, selection rule and protocol link.
+- [x] Align main's cold-baseline browser recipe assertion with the accepted
+      direct build commands. Keep its real cold install/build, warm-cache
+      validation, export, comparison and UI assertions.
+- [x] Preserve main's c451f24c review-guidance changes without local AGENTS.md
+      edits. Audit both incoming documentation files and the two-parent merge.
+- [x] Preserve main's 2013d289 plan-history rules, seven historical plan
+      permalink updates and expanded Markdown link test. Keep the completed
+      CI performance plan's main wording; describe supersession in this live plan.
+- [x] Resolve the existing Node 24 shared-example copy failure from main, with
+      user approval. The owner creates an empty root that exclusive fs.cp rejects;
+      keep collision checks and all fixture/cache assertions.
+      The user approved removal of only that empty placeholder on 2026-10-07.
+- [x] Capture the token-only status-probe regression. Add a root launcher that
+      removes incomplete credential pairs and keeps builds local, including
+      Windows. Copy it into isolated fixtures and repeat real local-only proofs.
+- [x] Implement and test policy B main-only environments with deployment: false,
+      separate trusted/PR event guards, and silent GITHUB_ENV mapping after installs.
+- [x] Add the approved credential rule and workflow tests; remove legacy broad
+      token aliases. Keep the Pages credential free of Workers/R2 writes.
+- [x] Match GitHub's case-insensitive secret references in the workflow guard.
+      Capture a failing lowercase-reference regression and keep dot/bracket
+      forms covered for forbidden aliases and protected credentials.
+- [x] Admin: confirm CLOUDFLARE_PAGES_API_TOKEN has no Workers or R2 write
+      permissions. The user replaced and verified the Pages-only token on
+      2026-10-07; workflow code still cannot inspect live token permissions.
+- [ ] Admin: retire the old Pages token after its Last used time stops changing.
+- [x] Repeat Node 22.14/24 output equality after the main output/dependency
+      migration before the Node 22 prepare job serves Node 24 suites.
+- [x] Add `environment: turbo-cache-deploy` to the deploy job in
       `turbo-cache.yml` and assert it in `tests/turbo_cache_workflow.test.ts`.
       The token is not a repository secret, so the job cannot deploy without it.
 - [x] Admin: choose CI policy A, B (recommended), or C. The user chose B on
@@ -655,23 +691,23 @@ before the merge.
       1,024-hash PR batch returned 500, and Turbo falls back to HEAD.
 - [ ] Decide whether to cap batch queries below the subrequest budget, so a
       large batch gets 413 instead of 500. Turbo falls back to HEAD either way.
-- [ ] Confirm the configured apiUrl has no trailing slash. Verify requests use
+- [x] Confirm the configured apiUrl has no trailing slash. Verify requests use
       /v8 paths, since a trailing slash can produce //v8 paths and silent misses.
 - [x] Confirm production R2 conditional behavior: absent-key PUT succeeds,
       repeated and concurrent PUTs keep one complete body and its original
       metadata, and a failed condition returns null. Compare with local
       simulation; resolve any difference before enabling remote writes.
       Done on 2026-10-07; matches local simulation.
-- [ ] Commit `remoteCache.apiUrl` and `remoteCache.teamSlug` in `turbo.json`.
-- [ ] Add the `prepare` job to `ci.yml`. Add it to the `needs` of `package`,
+- [x] Commit `remoteCache.apiUrl` and `remoteCache.teamSlug` in `turbo.json`.
+- [x] Add the `prepare` job to `ci.yml`. Add it to the `needs` of `package`,
       `unit`, `browser`, `hydration`, and `Required CI`. Add the token
       environment only when both secrets exist; otherwise leave both unset
       and use local cache only, including forks.
-- [ ] Keep the forced release and telemetry settings from Milestone 2. Map main preview to the trusted writer and PR preview to the chosen policy. Keep release
+- [x] Keep the forced release and telemetry settings from Milestone 2. Map main preview to the trusted writer and PR preview to policy B. Keep release
       and native jobs without remote credentials.
-- [ ] Update `tests/ci_workflow.test.ts` and the related workflow tests for the
+- [x] Update `tests/ci_workflow.test.ts` and the related workflow tests for the
       new job graph and environment.
-- [ ] Verify fork behavior locally: run `npm run prepare:verification` with
+- [x] Verify fork behavior locally: run `npm run prepare:verification` with
       the Worker URL configured, both credentials unset, and local cache only.
       Confirm exit 0 and no remote requests. Test either credential missing too.
 - [ ] Verify the remote path in an isolated checkout with an empty private
@@ -687,18 +723,26 @@ before the merge.
       ten ordinary downstream jobs report cache hits. Record
       per-job durations before and after, and the R2 object count, in
       `.context/turborepo-cloudflare-remote-cache/measurements.md`.
-- [ ] Update the Delivery Status sections and the Contract Owners documents to
+- [x] Update the Delivery Status sections and the Contract Owners documents to
       implemented.
-- [ ] Run `cargo xtask check`.
-- [ ] Run `git add -A`, commit with Conventional Commits, and push.
+- [x] Run `cargo xtask check`.
+- [x] Run `git add -A`, commit with Conventional Commits, and push.
 - [ ] Review the complete local diff against `origin/main` with
       `docs/implementation-review-prompt.md` after the push. Report findings
       without changing the implementation.
 
 Evidence: `.context/turborepo-cloudflare-remote-cache/m4-validation.md`.
 Main integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-main-decisions.md`.
+Dependency-audit integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-audit-main-decisions.md`.
+Developer-test integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-developer-main-decisions.md`.
+Review-guidance integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-agent-main-decisions.md`.
+Plan-history integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-history-main-decisions.md`.
 
 ## Post-merge follow-up (non-blocking)
+
+- Confirm the first main push accepts the conditional trusted environment,
+  enforces the branch restriction, grants its token, and creates no deployment
+  records for cache-only jobs (deployment: false). No main push exists before merge.
 
 - Measure the first Release Please pull request's twenty downstream jobs after
   this change merges. Release Please creates that pull request from main, so

@@ -44,7 +44,7 @@ Before enabling publish, maintainers must configure and verify:
 - the branch rule requires the exact `Required CI` status;
 - the direct-upload Cloudflare Pages project `mokabook` exists with production
   branch `main`, repository variable `CLOUDFLARE_ACCOUNT_ID` is set, and
-  repository secret `CLOUDFLARE_PAGES_API_TOKEN` or `CLOUDFLARE_API_TOKEN` holds
+  repository secret `CLOUDFLARE_PAGES_API_TOKEN` holds
   a least-privilege token with Pages write access;
 - the protected `npm` environment allows only the workflow's `main` branch, has
   no required reviewer or wait timer, and disables administrator bypass, without

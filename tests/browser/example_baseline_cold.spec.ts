@@ -26,8 +26,21 @@ test("a real cold example baseline installs and builds v9 before comparison", as
   try {
     expect(prepared.config.review.baselineBuild).toEqual([
       ["npm", "ci"],
-      ["npm", "run", "build"],
-      ["npm", "run", "example:build"],
+      ["npm", "run", "--silent", "build", "--workspace", "@mokly/viewer"],
+      [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--project",
+        "tsconfig.build.json",
+      ],
+      ["node", "scripts/copy-assets.mjs"],
+      [
+        "node",
+        "dist/cli/bin.js",
+        "build",
+        "--config",
+        "examples/basic/mokly.config.ts",
+      ],
     ]);
     await validateWarmExample(prepared.config, prepared.commit);
     const output = path.join(prepared.root, "site");

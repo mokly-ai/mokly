@@ -19,6 +19,7 @@ interface Workflow {
   jobs: {
     deploy: {
       if: string;
+      environment: string;
       "runs-on": string;
       "timeout-minutes": number;
       steps: {
@@ -49,6 +50,7 @@ test("cache Worker deployment is main-only, credential-checked and validated bef
   assert.equal(workflow.env.TURBO_TELEMETRY_DISABLED, "1");
   assert.equal(workflow.env.TURBO_CACHE, "local:rw");
   const job = workflow.jobs.deploy;
+  assert.equal(job.environment, "turbo-cache-deploy");
   assert.equal(
     job.if,
     "github.repository == 'mokly-ai/mokly' && github.ref == 'refs/heads/main'",
@@ -93,7 +95,7 @@ test("cache Worker deployment is main-only, credential-checked and validated bef
   );
 });
 
-test("cache bindings are local in development and committed client settings remain unset", async () => {
+test("cache bindings stay local in development and client origin is configured", async () => {
   const source = await fs.readFile(
     path.join(repositoryRoot, "scripts/turbo-cache/wrangler.jsonc"),
     "utf8",
@@ -118,11 +120,17 @@ test("cache bindings are local in development and committed client settings rema
     await fs.readFile(path.join(repositoryRoot, "turbo.json"), "utf8"),
   ) as {
     agentGuidance: boolean;
-    remoteCache: { apiUrl?: string; teamSlug?: string };
+    remoteCache: { apiUrl?: string; teamSlug?: string; teamId?: string };
   };
   assert.equal(turbo.agentGuidance, false);
-  assert.equal(turbo.remoteCache.apiUrl, undefined);
-  assert.equal(turbo.remoteCache.teamSlug, undefined);
+  assert.equal(
+    turbo.remoteCache.apiUrl,
+    "https://mokly-turbo-cache.calum-785.workers.dev",
+  );
+  assert.equal(new URL(turbo.remoteCache.apiUrl!).pathname, "/");
+  assert.ok(!turbo.remoteCache.apiUrl!.endsWith("/"));
+  assert.equal(turbo.remoteCache.teamSlug, "mokly");
+  assert.equal(turbo.remoteCache.teamId, undefined);
 });
 
 test("the Worker contract lists all modules and copies its exact Wrangler config", async () => {

@@ -25,7 +25,9 @@
     "signature": true,
     "timeout": 30,
     "uploadTimeout": 60,
-    "preflight": false
+    "preflight": false,
+    "apiUrl": "https://mokly-turbo-cache.calum-785.workers.dev",
+    "teamSlug": "mokly"
   },
   "tasks": {
     "build": {

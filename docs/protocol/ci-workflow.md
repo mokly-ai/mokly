@@ -2,8 +2,9 @@
 
 ## Delivery Status
 
-The job graph and local Turbo caching are implemented. The parallel prepare job
-and remote credentials remain planned in the [task cache contract](./ci-remote-cache.md).
+The job graph, parallel prepare job, and policy B remote task caching are
+implemented under the [task cache contract](./ci-remote-cache.md). Hosted
+verification remains open until the branch has a pull request.
 Hosted telemetry opt-out is configured; release builds force execution.
 CI selects baseline or strict mode by event and pull request.
 The Dependency Audit workflow maintains strict findings on `main`.
@@ -12,8 +13,9 @@ The Dependency Audit workflow maintains strict findings on `main`.
 
 `.github/workflows/ci.yml` runs on pull requests and pushes to `main`. It has
 read-only repository contents permission and cancels superseded workflow runs.
-The repository job is every verification job's shared prerequisite and runs the
-audit-first repository suite. The [baseline audit contract](./dependency-audit-baseline.md)
+The repository and prepare jobs run in parallel. Repository owns the audit-first
+suite. Package, unit, browser, and hydration require both; native requires repository.
+The [baseline audit contract](./dependency-audit-baseline.md)
 sets `DEPENDENCY_AUDIT` to `baseline` for ordinary pull requests and every push.
 It sets `strict` for same-repository dependency update and Release Please pull
 requests. The suite receives `--dependency-audit "$DEPENDENCY_AUDIT"`.
@@ -100,8 +102,8 @@ jobs still compile xtask to dispatch their gate.
 Every npm-running CI job installs npm 11.21.0, the exact `packageManager`
 version in `package.json`, and runs `npm ci`. The scheduled audit installs no
 dependencies before its strict lockfile-only audit; updates use
-`npm ci --ignore-scripts` and `npm update <package> --ignore-scripts`. CI persists
-only npm downloads across jobs and runs; local Turbo outputs remain in each checkout.
+`npm ci --ignore-scripts` and `npm update <package> --ignore-scripts`. CI caches
+npm downloads for installs and Turbo task outputs for preparation.
 Every cached CI job keys npm's download cache from
 the checked-out `package-lock.json`. Only the repository audit reads a
 comparison-commit lockfile, for baseline evaluation rather than a cache key. The
@@ -157,10 +159,10 @@ Release jobs force task execution with `TURBO_FORCE=true`, use
 `TURBO_CACHE=local:rw`, and have no remote credentials. CI, preview, and release
 workflows set `TURBO_TELEMETRY_DISABLED: "1"` at workflow scope.
 
-## Planned Cached Preparation
+## Cached Preparation
 
 The [task cache contract](./ci-remote-cache.md#cache-correctness-and-ci-delivery)
-adds one Node 22.14.0 `prepare` job beside `repository`. It uses npm 11.21.0,
+defines one Node 22.14.0 `prepare` job beside `repository`. It uses npm 11.21.0,
 `npm ci`, and `npm run prepare:verification`, without Rust or Chromium.
 The repository job still owns profile selection and audit-first verification.
 Package, unit, browser, and hydration jobs require both prerequisites. Native
@@ -169,15 +171,18 @@ Every suite still calls preparation; unchanged tasks restore from cache.
 The prepare job uses the selected [access policy](./ci-remote-cache-access.md);
 only authorized writers upload through Turbo.
 
-Same-repository jobs map the selected principal and signature secrets only
+Main jobs use the main-only turbo-cache-trusted environment with deployment: false;
+PRs select no environment. Guarded steps map the trusted or scoped PR token
+and signature key through `$GITHUB_ENV` only
 when both values exist. Empty secrets leave both variables unset and select
 local cache only; forks therefore build independently in each job.
 Read-only developer clients select `local:rw,remote:r`. Tests, audits, installs,
 capture, deployment, and report validation remain outside task caching.
-Preview main jobs use the trusted writer; PR jobs follow the chosen policy.
+Preview main uses the trusted writer; same-repository PR preview uses mokly-pr-<number>.
+The [access contract](./ci-remote-cache-access.md) owns scopes and hosted follow-ups.
 Native jobs remain local.
 
-`Required CI` adds `prepare` to its prerequisites and requires its exact success.
+`Required CI` includes `prepare` in its prerequisites and requires its exact success.
 The ordinary nine-report and Release Please eighteen-report aggregates remain
 unchanged. A restored task never substitutes for executed suite evidence.
 

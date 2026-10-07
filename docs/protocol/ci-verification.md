@@ -10,7 +10,7 @@ Public argument forwarding, cancellation and title validation are implemented.
 Remote execution and automatic selection are implemented. Dependency audit
 modes and scheduled update pull requests are implemented under the
 [audit contracts](./dependency-audit-update-pr.md).
-[Task caching](./ci-remote-cache.md) defines local preparation and the planned hosted prepare job.
+[Task caching](./ci-remote-cache.md) defines local preparation and policy B hosted preparation.
 
 ## Verification Boundary
 

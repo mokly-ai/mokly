@@ -6,7 +6,7 @@ Breaking-change notes: [npm release notes](./npm-release-notes.md).
 
 Package, verification, publishing, and preview boundaries below are implemented.
 Local Turbo preparation and forced release builds are implemented under
-[CI Task Cache](./ci-remote-cache.md). Remote credentials remain planned.
+[CI Task Cache](./ci-remote-cache.md). Policy B remote credentials are configured only for CI preparation and eligible previews.
 
 ## Package Metadata
 

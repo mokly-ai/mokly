@@ -2,14 +2,12 @@
 
 ## Delivery Status
 
-This is the approved target of the
-[remote-cache plan](../../plans/turborepo-cloudflare-remote-cache.md).
-The local task graph, strict environment, cache exclusions, and workflow
-telemetry/release-force settings are implemented. Worker code and local signed
-verification are implemented. The Worker is deployed with policy B credentials;
-CI does not use it yet. The hosted prepare job and CI credentials remain planned. The R2 bucket and expiry rules exist.
-Tests, reports, and `npm run example:check` stay uncached;
-the check revalidates referenced paths and Git state outside the build hash.
+The task graph, strict environment, local cache, signed remote configuration,
+and policy B CI/preview wiring are implemented. The Worker, credentials, bucket,
+and expiry rules are provisioned. Hosted runs, developer sharing, and production
+follow-ups remain open in the [plan](../../plans/turborepo-cloudflare-remote-cache.md).
+Tests, reports, and `npm run example:check` stay uncached; check revalidates
+referenced paths and Git state outside the build hash.
 
 ## Task Graph And Files
 
@@ -20,23 +18,14 @@ Keep the lockfile and `packageManager: "npm@11.21.0"`. Register these tasks:
 | --------------------- | --------------------- | --------------------------------------------------------- | --------------------------------------- |
 | `@mokly/viewer#build` | `^build`              | `$TURBO_DEFAULT$`, root tsconfig and cleanup script       | `dist/**` relative to `packages/viewer` |
 | `//#build:package`    | `@mokly/viewer#build` | `src/**`, asset-copy/cleanup scripts, both root tsconfigs | `dist/**` relative to the root          |
-| `//#example:build`    | `//#build:package`    | `examples/basic/**` with the exclusions below             | The four generated patterns below       |
+| `//#example:build`    | `//#build:package`    | `examples/basic/**`, imported assets, exclusions below    | `examples/basic/mokly-generated/**`     |
 
-The example output patterns are exactly:
-
-```text
-examples/basic/generated/**/*.html
-examples/basic/generated/mokly-manifest.json
-examples/basic/generated/example/workspace.svg
-examples/basic/generated/mokly-generated/**
-```
-
-Its input array contains `examples/basic/**` and the same four patterns with a
-leading `!`. Authored CSS in `generated/` remains an input. This includes the
-specs, imported components, renderer, config, PostCSS config, and source assets.
-Explicit input globs do not inherit `.gitignore` exclusions.
-Do not include generated HTML, the manifest, copied SVG, or generated assets as
-inputs. Do not cache `.mokly-cache`, review output, reports, or preview exports.
+The example owns one disposable output tree: `examples/basic/mokly-generated/**`.
+Inputs include `examples/basic/**` and `examples/imported-assets/**`, excluding
+that output tree with `!`. Authored CSS stays at the catalogue root. Specs,
+components, renderer, config, PostCSS/Browserslist, and the relocated imported
+image are inputs. Explicit globs do not inherit `.gitignore` filtering.
+Do not cache `.mokly-cache`, review output, reports, or preview exports.
 
 Example inputs also include the ten protocol files listed in
 [`turbo.json`](../../turbo.json). Two appear in the compilation source inventory;
@@ -61,16 +50,21 @@ These root scripts select the cached tasks:
 
 | Script                 | Command                                                                                                              |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `build`                | `turbo run build:package 1>&2`                                                                                       |
+| `build`                | `node scripts/turbo-run.mjs build:package 1>&2`                                                                      |
 | `build:package`        | `node scripts/clean.mjs --package @mokly/mokly && tsc --project tsconfig.build.json && node scripts/copy-assets.mjs` |
-| `prepare:verification` | `turbo run example:build`                                                                                            |
+| `prepare:verification` | `node scripts/turbo-run.mjs example:build`                                                                           |
 
-`example:build` runs `node scripts/clean.mjs --example && node dist/cli/bin.js build --config examples/basic/mokly.config.ts`.
-Turbo runs it as a root task; it must not call Turbo recursively. Root `prepack` uses
-cleanup followed by `npm run --silent build`; Turbo stdout routes to stderr. Viewer
-`prepack` uses `npm run --silent build 1>&2`. Lifecycle builds still run, while
-stdout stays empty so real `npm pack --json` remains parseable. `1>&2` works in
-POSIX shells and Windows npm's `cmd.exe`; it is not PowerShell syntax.
+`example:build` calls the CLI directly and must not invoke Turbo recursively. Its transaction replaces the disposable
+output tree and removes unexpected files there without touching authored CSS.
+Each uncached package task clears its owned dist directory before building.
+Prepack must keep stdout empty; build output goes to stderr so real
+`npm pack --json` lifecycle output remains parseable. POSIX and Windows cmd.exe
+both support the build script's `1>&2` redirection.
+
+The launcher uses the installed Turbo Node entry in both POSIX and Windows.
+It removes both credential variables and selects local:rw when either is absent.
+This prevents the 2.11.7 client's token-only status probe even in local mode.
+Direct Turbo invocations must apply the same shell setup; do not supply half a pair.
 
 ## Global Settings And Environment
 
@@ -86,6 +80,8 @@ The root configuration uses this shape, in addition to `tasks`:
   "cacheMaxAge": "14d",
   "futureFlags": { "longerSignatureKey": true },
   "remoteCache": {
+    "apiUrl": "https://mokly-turbo-cache.calum-785.workers.dev",
+    "teamSlug": "mokly",
     "enabled": true,
     "signature": true,
     "timeout": 30,
@@ -95,9 +91,8 @@ The root configuration uses this shape, in addition to `tasks`:
 }
 ```
 
-Do not set deprecated `daemon` or an explicit `cacheDir`. Add `apiUrl` with the
-deployed HTTPS Worker origin and `teamSlug: "mokly"` only when remote wiring
-is delivered. Keep `teamId` unset for every writer and reader.
+Do not set deprecated `daemon` or an explicit `cacheDir`. The committed `apiUrl` is `https://mokly-turbo-cache.calum-785.workers.dev`,
+without a trailing slash or /v8. The committed `teamSlug` is `mokly`. Keep `teamId` unset for every writer and reader.
 The signature binds the hash, team ID, and artifact bytes; slug-only clients
 use the same empty team ID. Local task caching requires no signature key.
 
@@ -127,32 +122,21 @@ Developers can export `TURBO_TELEMETRY_DISABLED=1` or `DO_NOT_TRACK=1`.
 
 ## Cache Sources And Credentials
 
-Remote access in this table remains planned. Current jobs use local cache only.
-
-| Environment                             | Local            | Remote read | Remote write |
-| --------------------------------------- | ---------------- | ----------- | ------------ |
-| Developer with neither credential       | read/write       | no          | no           |
-| Developer with read-only token and key  | read/write       | yes         | no           |
-| Same-repository CI and eligible preview | read/write       | yes         | policy A/B/C |
-| Fork pull request                       | read/write       | no          | no           |
-| Release publishing                      | forced execution | no          | no           |
-| Native macOS and Windows                | read/write       | no          | no           |
-
-The [access contract](./ci-remote-cache-access.md) defines three principals and
-pending CI policy A/B/C (B recommended). The shared key is `secrets.TURBO_CACHE_SIGNATURE_KEY`. Jobs map these to
-`TURBO_TOKEN` and `TURBO_REMOTE_CACHE_SIGNATURE_KEY` only when both are nonempty.
-Use the selected policy's read/write mode and namespace for those jobs. With either value absent,
-leave both Turbo credentials unset and use `TURBO_CACHE=local:rw`.
-A fork or developer with neither value must build successfully with local
-caching only. Prove this before and after the Worker URL is configured.
-A supplied key shorter than 32 bytes is a configuration error, not an opt-out.
+Policy B uses local and remote reads/writes for main and same-repository PRs.
+Main uses the trusted namespace; PRs use `mokly-pr-<number>` with trusted fallback.
+Forks, native jobs, and clients without both credentials use local:rw only.
+Release forces local execution. Approved developers use local:rw,remote:r.
+The [access contract](./ci-remote-cache-access.md#ci-policy-b) owns exact secret
+scopes, event/environment guards, `$GITHUB_ENV` mapping, and permission rules.
+Missing either credential leaves both unset. Local-only builds must pass with
+the deployed URL configured. A supplied short key is a configuration error.
 
 The admin gives approved developers the read-only token and the same signature
 key through a private password-manager share. Do not send the writer token.
 Do not commit credentials, place them in task inputs, or print them in logs.
 The key permits verification and signing; the Worker token still controls
 uploads. A read-only token alone cannot verify signed downloads.
-After remote delivery, load both values from that private share into the shell:
+When approved, load both values from that private share into the shell:
 
 ```bash
 export TURBO_CACHE=local:rw,remote:r
@@ -174,7 +158,7 @@ cache in tests; removing a linked checkout's cache path may clear shared data.
 
 Each package, unit, browser, and hydration suite still calls
 `npm run prepare:verification`. Unchanged tasks restore from local cache; misses
-execute. Remote restoration remains planned. Every prepared consumer and suite
+execute. Authorized hosted jobs can restore from the remote cache. Every prepared consumer and suite
 assertion still executes.
 
 Restore semantics verified against the local client:
@@ -185,8 +169,8 @@ directory clean. Authored CSS is never an output and must survive unchanged.
 Test this with missing, corrupted, and extra files. Tests that require an empty
 output tree must clean their own output first; they must not infer cleanup from
 a cache hit. Task execution cleans each package distribution first; packing
-cleans both before restoring/building. Example execution clears all four ignored
-output patterns first, preserving authored CSS; unowned HTML must not enter cache.
+cleans both before restoring/building. Example execution transactionally replaces its disposable generated tree,
+preserving authored CSS; unowned HTML must not enter cache.
 Fresh baseline extraction needs no task
 cleanup. Tests must not mutate the shared prepared checkout.
 
@@ -220,7 +204,7 @@ Fix any hidden input or keep the affected task uncached until the contract holds
 Input-mutation checks cover specs, config, authored CSS, root source, viewer
 runtime/helper, and the inherited root tsconfig.
 
-The planned hosted `prepare` job uses Node 22.14.0 and npm 11.21.0. It runs in
+The hosted `prepare` job uses Node 22.14.0 and npm 11.21.0. It runs in
 parallel with `repository`, installs with `npm ci`, and runs preparation once.
 It needs neither Rust nor Chromium. `package`, `unit`, `browser`, and
 `hydration` depend on both jobs. Each keeps its suite preparation call and
@@ -233,8 +217,8 @@ remote cache with `TURBO_CACHE=local:rw`. Every build executes, including
 `prepack`; forced execution can still refresh local cache entries. Live audits,
 exact archives, installs, provenance, and registry checks stay independent.
 Preview package preparation uses Turbo; its direct `example:build` executes
-without a task-cache restore. Future same-repository previews may share package
-artifacts remotely. Capture, comparisons, publication, and deployment execute.
+without a task-cache restore. Main and same-repository PR previews share package
+artifacts under policy B. Capture, comparisons, publication, and deployment execute.
 See the [workflow graph](./ci-workflow.md),
 [release evidence](./npm-release-evidence.md), and
 [Worker contract](./ci-remote-cache-worker.md).

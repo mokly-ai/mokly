@@ -5,13 +5,14 @@
 The main-branch and pull-request preview workflows, static capture, publication,
 replacement, and cleanup behavior are implemented.
 Local package preparation uses the [task cache contract](./ci-remote-cache.md).
-The direct example build, capture, and deployment remain uncached; remote package
-cache access is planned.
+The direct example build, capture, and deployment remain uncached; policy B
+remote package preparation is configured. Hosted verification remains open.
 
 ## Deployment Contract
 
-After remote delivery, main preview uses a trusted writer. PR preview follows
-the pending [access policy](./ci-remote-cache-access.md), with B recommended. Jobs map the policy-selected principal and signature secrets only when
+Main preview uses the trusted writer environment; same-repository PR preview
+uses its scoped PR namespace under [policy B](./ci-remote-cache-access.md).
+Guarded steps map the selected token and signature key through GITHUB_ENV when
 both exist; otherwise they use local cache only. Fork gating stays unchanged.
 Hosted Turbo telemetry is disabled. Historical comparison rebuilds use the
 commit's source and lockfile with the configured direct build recipe. They never

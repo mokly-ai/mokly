@@ -5,13 +5,13 @@ Continuation of [CI Verification](./ci-verification.md).
 ## Delivery Status
 
 The npm download cache, local task cache, and audit rules are implemented.
-Remote signing and credentials remain planned in [CI Task Cache](./ci-remote-cache.md).
+Signed remote task-cache wiring is implemented under [CI Task Cache](./ci-remote-cache.md).
 Baseline and strict modes share the live lockfile audit.
 Scheduled strict failures use the dependency update pull request workflow.
 
 ## Dependency Cache And Security
 
-CI persists only npm's download cache across jobs and runs. `actions/setup-node` keys it from the
+CI caches npm downloads for dependency installation. `actions/setup-node` keys it from the
 committed `package-lock.json`. `npm ci` always runs, including after a cache
 hit, and every platform's optional native package remains available. A cache
 miss is an ordinary cold install and never permits a skipped command.
@@ -41,13 +41,16 @@ exact-artifact checks.
 ## Task Cache Security And Remote Target
 
 The local task cache stores viewer, package, and example outputs. The remote
-Worker is deployed with policy B credentials, but CI does not use it yet; it
+Worker and policy B CI/preview wiring are delivered; the Worker
 uses the repository R2 bucket. It does not cache `npm ci`, audits, tests, or reports.
 Every job keeps its lockfile-keyed download cache and fresh install. Missing,
 unavailable, or rejected artifacts require task execution, not skipped checks.
 
 The [access contract](./ci-remote-cache-access.md) defines trusted writers,
-scoped PR writers, and readers. CI policy A/B/C awaits the user; B is recommended.
+scoped PR writers, and readers. The user selected policy B. The trusted writer and deploy credential remain in
+main-only environments; PR jobs use the repository PR bearer. No Workers/R2
+write API credential may be a repository secret or reach a PR job. Pages
+credentials must lack those permissions; the admin owns permission verification.
 Developers receive the reader and signature key through a private password-manager share.
 They set `TURBO_CACHE=local:rw,remote:r` to prevent forbidden upload attempts.
 The signing key alone does not grant Worker write access. The Worker stores

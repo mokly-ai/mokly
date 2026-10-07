@@ -9,8 +9,8 @@ adapter and fetch entry contain the platform-specific boundary.
 The core, R2 adapter, configuration, tests, and local curl/signed-client
 verification are implemented. The first deploy ran on 2026-10-07 from the
 admin's login at commit `11b207d`: `https://mokly-turbo-cache.calum-785.workers.dev`. The policy B
-access tokens were set on 2026-10-07. Hosted cache wiring remains Milestone 4
-work.
+access tokens were set on 2026-10-07. Policy B CI and preview wiring are
+implemented; hosted checks and developer sharing remain open.
 
 ## Development
 
@@ -87,8 +87,8 @@ Client responses stay unchanged. Never log request headers, tokens, or bodies.
 
 Use a separate clone with an independent Git directory and npm install.
 Do not use a linked worktree, which shares the main checkout's Turbo cache.
-Keep committed `turbo.json` without `apiUrl` and `teamSlug` during Milestone 3.
-Set these values only in the clone's process environment:
+The committed client config points to the deployed origin and team mokly.
+Override only the clone process to use local R2:
 
 ```bash
 export TURBO_API=http://127.0.0.1:8799
@@ -111,10 +111,10 @@ trusted fallback, then change one declared input and verify new writes occur
 only under the PR namespace. A PR token with team `mokly` must get 403.
 Keep transcripts under `.context/turborepo-cloudflare-remote-cache/`.
 
-## Authorized Provisioning And Deployment
+## Provisioning And Protected Deployment
 
 These commands are documentation only for Milestone 4. An administrator must
-choose policy A, B, or C first. B is recommended. Read the
+use the selected policy B. Read the
 [access contract](../../docs/protocol/ci-remote-cache-access.md) for the policy,
 namespace boundaries, GitHub environment restrictions, and residual risk.
 Inspect the existing bucket and all-prefix 30-day rule before changing them.
@@ -132,7 +132,8 @@ npx --no-install wrangler deploy --config scripts/turbo-cache/wrangler.jsonc
 
 Generate four independent values: three tokens and the Turbo signature key.
 The Worker never receives the signature key. The workflow uses
-`vars.CLOUDFLARE_ACCOUNT_ID` and `secrets.CLOUDFLARE_WORKERS_API_TOKEN`. That
+`vars.CLOUDFLARE_ACCOUNT_ID` and the turbo-cache-deploy environment secret
+`CLOUDFLARE_WORKERS_API_TOKEN`. That
 account API token has the Workers `Editor` role scoped to the
 `mokly-turbo-cache` Worker, plus Workers `Metadata Read-Only` for all Workers
 so that Wrangler can read the account's `workers.dev` subdomain. Deploys need

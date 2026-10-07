@@ -40,7 +40,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "build": "turbo run build:package 1>&2",
+    "build": "node scripts/turbo-run.mjs build:package 1>&2",
     "clean": "node scripts/clean.mjs",
     "dependencies:check": "node scripts/verification/dependency-audit.mjs",
     "dev": "npm run -s build && node dist/cli/bin.js serve --config examples/basic/mokly.config.ts",
@@ -57,7 +57,7 @@
     "package:check:prepared": "node scripts/verification/prepared.mjs package && node scripts/package-check.mjs",
     "package:smoke": "npm run build && npm run package:smoke:prepared --",
     "package:smoke:prepared": "node scripts/verification/prepared.mjs package && node scripts/package-smoke.mjs",
-    "prepare:verification": "turbo run example:build",
+    "prepare:verification": "node scripts/turbo-run.mjs example:build",
     "prepack": "node scripts/clean.mjs && npm run --silent build",
     "preview:build": "npm run build && npm run example:build && node scripts/preview/build.mjs",
     "test": "npm run test:unit --",

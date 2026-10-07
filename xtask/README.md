@@ -122,7 +122,8 @@ Turbo preparation. Each suite keeps its `npm run prepare:verification` call and
 restores unchanged tasks from cache. Tests and reports still run. `.turbo/`
 holds the ignored local cache;
 linked Git worktrees share the main worktree's `.turbo/cache` automatically.
-After remote delivery, load the read-only token and signature key from the
+Hosted suites use policy B remote caching; tests and reports still execute.
+Approved developers load the read-only token and signature key from the
 admin's private password-manager share. Set `TURBO_CACHE=local:rw,remote:r`.
 Without both values, use `TURBO_CACHE=local:rw`. See the contract for setup,
 restore limits, forced release builds, and telemetry opt-out.

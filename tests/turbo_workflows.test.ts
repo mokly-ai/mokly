@@ -12,7 +12,7 @@ interface Workflow {
   jobs: Readonly<Record<string, { env?: Readonly<Record<string, string>> }>>;
 }
 
-test("every hosted Turbo workflow opts out of telemetry and stays local", async () => {
+test("hosted Turbo workflows default to local cache and opt out of telemetry", async () => {
   for (const file of [
     "ci.yml",
     "preview.yml",

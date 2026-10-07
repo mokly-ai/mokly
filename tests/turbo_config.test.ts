@@ -24,7 +24,12 @@ interface TurboConfiguration {
   agentGuidance: boolean;
   envMode: string;
   globalPassThroughEnv: string[];
-  remoteCache: { signature: boolean; apiUrl?: string; teamSlug?: string };
+  remoteCache: {
+    signature: boolean;
+    apiUrl?: string;
+    teamSlug?: string;
+    teamId?: string;
+  };
   futureFlags: { longerSignatureKey: boolean };
   tasks: Record<string, TaskDefinition>;
 }
@@ -38,8 +43,12 @@ test("Turbo configuration preserves guidance, integrity, and generated ownership
   assert.ok(config.globalPassThroughEnv.includes("MOKLY_DIAGNOSTIC"));
   assert.equal(config.remoteCache.signature, true);
   assert.equal(config.futureFlags.longerSignatureKey, true);
-  assert.equal(config.remoteCache.apiUrl, undefined);
-  assert.equal(config.remoteCache.teamSlug, undefined);
+  assert.equal(
+    config.remoteCache.apiUrl,
+    "https://mokly-turbo-cache.calum-785.workers.dev",
+  );
+  assert.equal(config.remoteCache.teamSlug, "mokly");
+  assert.equal(config.remoteCache.teamId, undefined);
   const ignored = (
     await fs.readFile(path.join(repositoryRoot, ".gitignore"), "utf8")
   )

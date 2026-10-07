@@ -51,12 +51,12 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
 - [Remote verification](./remote-verification.md) — implemented explicit and automatic execution.
   - [Testbox execution](./remote-verification-testbox.md) — workflow, commands, sync probe, suite wrapper and source-tree fingerprint.
 - [CI workflow graph](./ci-workflow.md)
-- [CI task cache](./ci-remote-cache.md) — implemented local task graph and
-  restore rules; planned remote workflow delivery and developer credentials.
+- [CI task cache](./ci-remote-cache.md) — implemented local/remote task graph and restore rules; hosted checks and
+  developer credential sharing remain open.
   - [CI remote cache Worker](./ci-remote-cache-worker.md) — implemented API,
     R2 storage, and deployment workflow; deployed with policy B credentials.
   - [CI remote cache access](./ci-remote-cache-access.md) — implemented
-    principals and namespaces; policy B provisioned; CI wiring planned.
+    principals and namespaces; policy B provisioned and wired; credential boundaries and recovery.
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, test concurrency, unit shard balance and scenario grouping, browser shard balance and acceptance measurement.
 - [CI test timing](./ci-test-timing.md) — deterministic assertions, duration reporting and lint guard.
 - [Repository verification ratchets](./verification-ratchets.md)
