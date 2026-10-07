@@ -192,14 +192,7 @@ The lint message must name `docs/protocol/ci-test-timing.md`. Rule tests use
 
 ## Delivery Status
 
-The following rules are planned in
-[Deterministic Test Timing Review Fixes](../../plans/deterministic-test-timing-review-fixes.md):
-
-- Short per-attempt waits preserve retries inside loops with at least 10 seconds.
-- Playwright's default assertion timeout is 15,000 ms, with a 10,000 ms floor.
-- Shared polling waits use `waitUntil`, and Node product timers use mock timers.
-- Combined realpath counts keep root resolution fixed for metafiles and inventories.
-- The lint guard reads shared test roots and covers all stated clock forms.
-
-The other rules are implemented. Required tests use deterministic assertions,
-operation counts, duration text, and the existing lint guard.
+Implemented. Required tests use deterministic assertions, operation counts,
+duration text, shared polling waits, and fake clocks. Playwright assertions
+use the stated default timeout. The lint guard reads the shared test roots
+and covers all clock forms listed above.

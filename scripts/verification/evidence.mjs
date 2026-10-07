@@ -3,6 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 
+import { TEST_ROOTS } from "./test-roots.mjs";
+
 const execute = promisify(execFile);
 
 export function parseShardArgument(args) {
@@ -24,10 +26,10 @@ export function parseShardArgument(args) {
   return { index, total };
 }
 
+/** Discover unit test files recursively in the shared test roots. */
 export async function discoverUnitFiles(repositoryRoot) {
-  const roots = ["tests", "packages/viewer/tests"];
   const files = [];
-  for (const root of roots)
+  for (const root of TEST_ROOTS)
     await collectFiles(path.join(repositoryRoot, root), repositoryRoot, files);
   return files.filter((file) => /\.test\.tsx?$/.test(file)).sort();
 }

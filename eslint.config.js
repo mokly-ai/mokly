@@ -6,7 +6,28 @@ import importPlugin from "eslint-plugin-import-x";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
+import { TEST_ROOTS } from "./scripts/verification/test-roots.mjs";
+
 const gitignorePath = path.join(import.meta.dirname, ".gitignore");
+const directNowClock =
+  "[left.type='CallExpression'][left.callee.property.name='now'][left.callee.object.name=/^(performance|Date)$/]";
+const memberPerformanceClock =
+  "[left.type='CallExpression'][left.callee.property.name='now'][left.callee.object.type='MemberExpression'][left.callee.object.property.name='performance']";
+const hrtimeClock =
+  "[left.type='CallExpression'][left.callee.property.name='bigint'][left.callee.object.property.name='hrtime']";
+const currentDateClock =
+  "[left.type='CallExpression'][left.callee.property.name='getTime'][left.callee.object.type='NewExpression'][left.callee.object.callee.name='Date'][left.callee.object.arguments.length=0]";
+const elapsedClockSelector = `BinaryExpression[operator='-'][right.type!='Literal']:matches(${[
+  directNowClock,
+  memberPerformanceClock,
+  hrtimeClock,
+  currentDateClock,
+].join(", ")})`;
+const shortDeadlineSelector = `BinaryExpression[operator='+'][right.type='Literal'][right.value<10000]:matches(${[
+  directNowClock,
+  memberPerformanceClock,
+  currentDateClock,
+].join(", ")})`;
 
 export default tseslint.config(
   includeIgnoreFile(gitignorePath, "Repository .gitignore patterns"),
@@ -60,20 +81,18 @@ export default tseslint.config(
     },
   },
   {
-    files: ["tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}"],
+    files: TEST_ROOTS.map((root) => `${root}/**/*.{js,mjs,cjs,ts,tsx,mts,cts}`),
     ignores: ["tests/helpers/durations.ts"],
     rules: {
       "no-restricted-syntax": [
         "error",
         {
-          selector:
-            "BinaryExpression[operator='-'][right.type!='Literal']:matches([left.type='CallExpression'][left.callee.property.name='now'][left.callee.object.name=/^(performance|Date)$/], [left.callee.property.name='bigint'][left.callee.object.property.name='hrtime'])",
+          selector: elapsedClockSelector,
           message:
             "Use operation counts, captured watcher targets, event order, or fake clocks in tests. Report duration text with tests/helpers/durations.ts. See docs/protocol/ci-test-timing.md.",
         },
         {
-          selector:
-            "BinaryExpression[operator='+'][left.callee.property.name='now'][left.callee.object.name=/^(performance|Date)$/][right.type='Literal'][right.value<10000]",
+          selector: shortDeadlineSelector,
           message:
             "Use polling deadlines of at least 10,000 ms. See docs/protocol/ci-test-timing.md.",
         },

@@ -349,6 +349,12 @@ Required tests follow [CI test timing](./docs/protocol/ci-test-timing.md).
 Use [`waitUntil`](./tests/helpers/wait_until.ts) for polling.
 Use the [shared evidence helpers](./docs/protocol/ci-test-timing-helpers.md)
 for operation counts and duration text.
+Unit discovery and the timing lint guard share the
+[test roots](./scripts/verification/test-roots.mjs): `tests/` and
+`packages/viewer/tests/`. The guard rejects elapsed clock subtraction and
+literal deadlines below 10,000 ms. It checks clocks such as
+`window.performance.now()` and `new Date().getTime()` too.
+Only [`tests/helpers/durations.ts`](./tests/helpers/durations.ts) is exempt.
 
 Pull request titles use Conventional Commits and at most 72 Unicode code points.
 The separate title check runs when a PR opens, changes, or receives a push; see

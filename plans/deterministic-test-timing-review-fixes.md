@@ -258,25 +258,32 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-5.md`.
       `tests/verification_concurrency.test.ts`. Run `npm run lint` and
       `npm run typecheck`.
 
-## Milestone 6: Lint guard roots and clock forms (finding 5)
+## Milestone 6: Lint guard roots and clock forms (finding 5) — completed
 
 Read the guard roots from the shared list and reject the missed clock forms.
 
 Evidence: `.context/deterministic-test-timing-review-fixes/milestone-6.md`.
 
-- [ ] Write failing rule tests in `tests/test_timing_lint.test.ts` for each
+- [x] Write failing rule tests in `tests/test_timing_lint.test.ts` for each
       root in the shared list, the member-expression clocks, and
       `new Date().getTime()`, plus the allowed `new Date(value).getTime()`.
       Split the file if it passes 300 lines.
-- [ ] Add `scripts/verification/test-roots.mjs` and its declaration file. Use
+- [x] Add `scripts/verification/test-roots.mjs` and its declaration file. Use
       the list in `discoverUnitFiles` and `eslint.config.js`.
-- [ ] Extend both selectors as decided.
-- [ ] Run `npm run lint` on the whole repository and fix any new finding.
+- [x] Extend both selectors as decided.
+- [x] Run `npm run lint` on the whole repository and fix any new finding.
       Smoke-test the message on a temporary file in `packages/viewer/tests/`.
-- [ ] Set the Delivery Status in `docs/protocol/ci-test-timing.md` to
+- [x] Set the Delivery Status in `docs/protocol/ci-test-timing.md` to
       Implemented.
-- [ ] Run the rule tests, the verification script tests, `npm run lint` and
-      `npm run typecheck`.
+- [x] Confirm that the timing contract,
+      `docs/protocol/ci-verification-repository.md` and `README.md` describe
+      the final guard.
+- [x] Run the repository ratchets. Check the shared module's script
+      declaration and the changed file sizes.
+- [x] Run the rule tests five times, `tests/import_order.test.ts`,
+      `tests/eslint_gitignore.test.ts`, every `tests/verification_*.test.ts`
+      file, the protocol tests, `tests/markdown_links.test.ts`, `npm run lint`
+      and `npm run typecheck`.
 
 ## Milestone 7: Deliver and review
 
