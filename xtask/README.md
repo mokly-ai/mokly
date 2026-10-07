@@ -146,7 +146,11 @@ before it merges.
 It does not change the required source fingerprint or `HEAD`.
 
 The [remote contract](../docs/protocol/remote-verification.md) defines the
-availability order, probe barrier, report aggregate and cleanup.
+availability order, probe barrier and report aggregate.
+The [cleanup contract](../docs/protocol/remote-verification-cleanup.md) defines
+cleanup rules. Closing the shared SSH connection, cancelling before stop and
+retaining command error text are approved targets under the
+[prompt shutdown plan](../plans/testbox-prompt-shutdown.md).
 Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
 Each command worker downloads its report and cleans up its box when it ends.
 It does not wait for other commands. Final cleanup covers only remaining boxes.

@@ -22,7 +22,7 @@ Baseline evidence: `.context/testbox-prompt-shutdown/baseline.md`.
 Contract owners:
 
 - [Remote verification](../docs/protocol/remote-verification.md).
-- `docs/protocol/remote-verification-cleanup.md`, a new page from Milestone 1.
+- [Cleanup and interrupts](../docs/protocol/remote-verification-cleanup.md).
 - [Testbox execution](../docs/protocol/remote-verification-testbox.md).
 - [CI dependency cache and security](../docs/protocol/ci-verification-security.md).
 - The [xtask README](../xtask/README.md).
@@ -102,52 +102,55 @@ The design depends on these measurements from 2026-10-07:
 
 ## Milestone 1: Spike, report and contract
 
-Confirm how to close the connection and how a stop behaves after a cancel.
-Then define the complete contract. The spike uses at most two boxes.
+Completed. The spike confirms the close method and cancel-before-stop order.
+The protocol defines the full cleanup contract. Review must pass before
+Milestone 2 starts.
 
-- [ ] Warm up one box from `main` with
+Evidence: `.context/testbox-prompt-shutdown/spike.md`.
+
+- [x] Warm up one box from `main` with
       `blacksmith testbox warmup blacksmith-testbox.yml --ref main --idle-timeout 30`.
       Run `true` on it with `blacksmith testbox run`.
-- [ ] Find the shared connection: the `ssh` master process, its control
+- [x] Find the shared connection: the `ssh` master process, its control
       socket and how the socket name maps to the box ID or to
       `connection.json`.
-- [ ] Close the connection with `ssh -O exit` and that socket. Check that
+- [x] Close the connection with `ssh -O exit` and that socket. Check that
       `ssh -O check` then fails and that a new `blacksmith testbox run` still
       works. Close the connection again after that run.
-- [ ] Cancel the box's GitHub run with `gh run cancel`. Record the time until
+- [x] Cancel the box's GitHub run with `gh run cancel`. Record the time until
       the job ends, the "Complete runner" log, the box status and the result
       of a `blacksmith testbox stop` after the cancel.
-- [ ] Warm up a second box. Run `true`, close the connection and stop the box
+- [x] Warm up a second box. Run `true`, close the connection and stop the box
       with `blacksmith testbox stop` only. Record how long the stop command
       takes and the time until the job ends.
-- [ ] Record the billed minutes of both jobs with `blacksmith jobs list`.
+- [x] Record the billed minutes of both jobs with `blacksmith jobs list`.
       Save the spike evidence in `.context/testbox-prompt-shutdown/spike.md`.
-- [ ] Choose the close method that needs only the box ID and files that the
+- [x] Choose the close method that needs only the box ID and files that the
       CLI already writes. If no method closes the connection reliably, stop
       and ask the user before Milestone 2.
-- [ ] Apply the rule of Decision 3 to choose the cleanup order.
-- [ ] Draft the Blacksmith report in
+- [x] Apply the rule of Decision 3 to choose the cleanup order.
+- [x] Draft the Blacksmith report in
       `.context/testbox-prompt-shutdown/blacksmith-report.md`. Include the
       SSH wait, its cost, the run links and two requests: close the shared
       connection in `blacksmith testbox stop`, or skip the wait for a stopped
       box. Give the draft to the user.
-- [ ] Move `## Cleanup And Interrupts` from `remote-verification.md` to the
+- [x] Move `## Cleanup And Interrupts` from `remote-verification.md` to the
       new `docs/protocol/remote-verification-cleanup.md`, so both pages stay
       at or below 250 lines. Add the page to the protocol index. Update the
       link in `remote-verification-testbox.md` and every other link to the
       moved section.
-- [ ] Define the close step, the cleanup order, the no-connection case, the
+- [x] Define the close step, the cleanup order, the no-connection case, the
       close warning and the error-text rule in the cleanup page. Keep the
       attempt limit, the waits, the failure count and the guard rules.
-- [ ] Update step 5 of the remote run sequence and the output rules in
+- [x] Update step 5 of the remote run sequence and the output rules in
       `remote-verification.md`.
-- [ ] Add findings 2, 3 and 6 to the workflow section of
+- [x] Add findings 2, 3 and 6 to the workflow section of
       `remote-verification-testbox.md`.
-- [ ] Confirm that the close step reads no credential and sends no key.
+- [x] Confirm that the close step reads no credential and sends no key.
       Update `ci-verification-security.md` only if the chosen method changes
       the key boundary.
-- [ ] Run the Markdown link test, the protocol size test and the format
-      check. Commit.
+- [x] Run the Markdown link test, the protocol size test and the format
+      check. Commit and push.
 
 ## Milestone 2: Close the connection during cleanup
 
