@@ -149,7 +149,9 @@ New `tests/ci_workflow_policies.test.ts`:
 1. Every `uses:` in `.github/workflows/*.yml` and
    `.github/actions/*/action.yml` ends with a 40-character hex revision.
 2. The Decision 8 interpolation rules.
-3. Every `ci.yml` and `preview.yml` job that checks out uses `fetch-depth: 0`.
+3. Every `ci.yml` and `preview.yml` job that checks out and installs
+   dependencies uses `fetch-depth: 0`. The `required` job checks out only the
+   report validator and is outside this rule.
 4. The `ci.yml` package, unit, browser and hydration jobs contain no
    `git merge-base HEAD origin/main`, branch-point or baseline lockfile
    command, and `ci.yml` never mentions `origin/main`.
@@ -165,8 +167,10 @@ New `tests/ci_workflow_scripts.test.ts`. Each test locates its step by name
 and fails with a clear message when the step is absent:
 
 1. Runs the "Select Node verification profile" script with
-   `RELEASE_PULL_REQUEST` true and false. Expected outputs derive from
-   `TESTED_NODE_VERSIONS` and `RELEASE_VERIFICATION_RUNTIMES`.
+   `RELEASE_PULL_REQUEST` true and false. The ordinary matrix derives from
+   the first `TESTED_NODE_VERSIONS` entry; the release matrix and both
+   runtime outputs derive from `RELEASE_VERIFICATION_RUNTIMES`, because CI
+   runs a floating Node 24 rather than the exact tested patch.
 2. Runs the Testbox "Stamp installed lockfile" script in a temporary
    directory on Linux and checks the digest file.
 3. Runs the Testbox "Expose job environment to Testbox sessions" script with
@@ -322,6 +326,13 @@ Evidence: `.context/meta-test-reduction/milestone-2.md`, with deviations.
 
 ## Milestone 4: Final gate, commit, push and review
 
+- [ ] `origin/main` moved after the branch point. Follow the Mainline Feature
+      Preservation rule: fetch `origin/main`, capture the source tip, audit
+      main's additions with `git diff --name-status <base>..origin/main`,
+      merge main (never bulk-take a side), confirm the merge commit has
+      exactly two parents, review `git show --remerge-diff` for every listed
+      path, and record the justifications under
+      `.context/meta-test-reduction/merge-main.md`.
 - [ ] Run `cargo xtask check`. Save output under
       `.context/meta-test-reduction/final-check.md`.
 - [ ] Inspect `git diff --name-status origin/main` and
