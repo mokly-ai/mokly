@@ -2018,8 +2018,9 @@ Evidence: `.context/scalable-inline-style-analysis/m12-merge/`.
       after the implementation checks. Keep the recorded gate blockers pending.
 - [x] Integrate the branch with manifest v9, catalogue v5, review v6 and the
       generated-output layout. Preserve useful analysis and harness coverage.
-- [ ] Align the affected contracts and READMEs. Validate the merged code with
+- [x] Align the affected contracts and READMEs. Validate the merged code with
       targeted tests, real-server smoke checks and `cargo xtask check`.
+      Evidence: `.context/scalable-inline-style-analysis/m12-merge/fifth/final-verification.md`.
 - [x] Discovered: main's `renderer_closure` error-text assertion conflicts with
       the string-only renderer's shared closure diagnostic. The proposed regex
       change is pending approval under the prior main-test expectation rule.
@@ -2034,7 +2035,7 @@ Evidence: `.context/scalable-inline-style-analysis/m12-merge/`.
 - [x] Discovered: classify the viewer failure with isolated branch/main reruns,
       then merge main #168 with two parents and review the remerge/deletion audit.
       Evidence: `.context/scalable-inline-style-analysis/m12-merge/fifth/` and `fourth/viewer-repeat-summary.md` in the same evidence root.
-- [ ] After checks pass, `git add -A`, commit with Conventional Commits and
+- [x] After checks pass, `git add -A`, commit with Conventional Commits and
       push the branch.
       User instruction (2026-10-07): commit locally and stop for the supervisor's check before the push.
       Superseded by the supervisor's rerun instruction (2026-10-07): push after the required verification and smoke checks pass.
