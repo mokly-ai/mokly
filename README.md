@@ -362,7 +362,10 @@ are partial verification. See [developer test commands](./docs/protocol/develope
 for the argument and report rules.
 Selected unit runs print the number of tests that ran. They print a warning
 for each named file that reports zero tests; skipped and todo tests count
-as reported tests. A pattern-only run warns once if no file reports a test.
+as reported tests. A pattern-only run warns once if files report results but
+no test.
+A selected file that reports no test results, for example because a test ends
+the process early, fails the run.
 Argument errors and selected-run failures print a short
 report without a stack trace. Internal faults keep the full error report.
 

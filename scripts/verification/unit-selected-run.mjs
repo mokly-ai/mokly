@@ -51,6 +51,7 @@ export async function runSelectedUnitVerification(repositoryRoot, selection) {
           );
       if (
         selection.files.length === 0 &&
+        observed.size > 0 &&
         [...observed.values()].every((tests) => tests === 0)
       )
         console.log("warning: no test matched --test-name-pattern");
@@ -80,6 +81,10 @@ function validateSelectedRun(result, files) {
     result.outcome.signal !== null
   )
     throw new ExpectedFailure(processFailureMessage(result));
+  const noResults = new Set(result.filesWithNoResults);
+  const filesWithNoResults = files.filter((file) => noResults.has(file));
+  if (filesWithNoResults.length > 0)
+    throw new ExpectedFailure(noTestResultsMessage(filesWithNoResults));
   const observed = new Set(result.observedFiles.map(({ file }) => file));
   const selected = new Set(files);
   const missing = files.filter((file) => !observed.has(file));
@@ -95,6 +100,21 @@ function validateSelectedRun(result, files) {
         "; unexpected: " +
         (unexpected.join(", ") || "none"),
     );
+}
+
+function noTestResultsMessage(files) {
+  const lines = [
+    files.length +
+      " selected unit test " +
+      (files.length === 1 ? "file" : "files") +
+      " reported no test results:",
+    ...files.slice(0, 20).map((file) => "✖ " + file),
+  ];
+  if (files.length > 20) lines.push("… and " + (files.length - 20) + " more");
+  lines.push(
+    "Possible causes: the file registers no tests, or a test ended the process early (for example with process.exit).",
+  );
+  return lines.join("\n");
 }
 
 function processFailureMessage(result) {

@@ -135,8 +135,8 @@ complete normally.
 
 The [selected-run result contract](./developer-test-results.md) defines exact
 counts, warnings, classified failure reports, and interrupted-process messages.
-Selected runs recognize top-level file passes without summaries as zero-test
-files. Complete and strict runs still require per-file summaries.
+Selected runs fail files with a top-level pass but no per-file summary.
+Complete and strict runs still require per-file summaries.
 
 Selected runs never create, remove, or change any file under
 `.context/verification-reports`. They ignore `MOKLY_VERIFICATION_REPORT`, even
