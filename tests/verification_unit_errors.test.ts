@@ -83,6 +83,25 @@ test("invalid regex reports the value and Node's syntax error before usage", asy
   );
 });
 
+test("invalid pattern values preserve typed backslashes inside quotes", async (context) => {
+  const harness = await createSelectedHarness(context);
+  const value = String.raw`foo\.bar(`;
+  await assert.rejects(
+    runSelected(harness, ["--test-name-pattern=" + value]),
+    (error: FailedChild) => {
+      assert.ok(
+        error.stderr.startsWith(
+          'invalid --test-name-pattern value "' + value + '": ',
+        ),
+      );
+      assert.match(error.stderr, /Unterminated group/u);
+      assert.match(error.stderr, /\nusage:/u);
+      assert.doesNotMatch(error.stderr, / {4}at |Node\.js v/u);
+      return true;
+    },
+  );
+});
+
 test("selected test failure ends with its count and reporter names without a stack", async (context) => {
   const harness = await createSelectedHarness(context);
   await assert.rejects(

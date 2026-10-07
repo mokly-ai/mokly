@@ -112,7 +112,9 @@ function requirePattern(value) {
       "invalid " +
         patternFlag +
         " value " +
-        JSON.stringify(value) +
+        '"' +
+        value +
+        '"' +
         ": " +
         cause.message +
         "\n" +

@@ -388,8 +388,8 @@ the orchestrating agent.
       failed and cancelled groups without changing written report entries.
 - [x] Fix finding 3: prefer process errors over missing or incomplete reporter
       output on process failure. Test a real signal and temporary cleanup.
-- [ ] Fix finding 6: show the pattern exactly as typed inside double quotes.
-- [ ] Commit each finding separately and name its review number in the body.
+- [x] Fix finding 6: show the pattern exactly as typed inside double quotes.
+- [x] Commit each finding separately and name its review number in the body.
 - [ ] Pass lint, formatting, declarations, affected tests on both Node versions,
       and the repository suite. Push the tested code before the auto gate.
 - [ ] Run the complete auto gate once. Record executor and duration. Use the
