@@ -1,9 +1,10 @@
 # Remote Verification Review Follow-Up
 
 Status: Active. No pull request exists yet. Milestones 1 through 5 and the
-cleanup review changes are completed. Milestone 6 focused checks and the full
-local gate pass. The default remote smoke check is next. Claude owns the final
-review. The user approved the local and default remote gates for this work.
+cleanup review changes are completed and pushed. Milestone 6 verification and
+close-out are completed. The full local gate and the default remote gate pass.
+This gate has no active box. Its GitHub runs have ended. Claude owns the open
+final review. The user approved both gates for this work.
 
 Fix the eleven open findings from the post-push review of
 [Blacksmith remote verification](./blacksmith-remote-verification.md)
@@ -196,6 +197,7 @@ Evidence: `.context/remote-verification-review-follow-up/milestone-5.md`.
 
 ## Milestone 6: Verification, close-out and review
 
+Verification and close-out are completed. The final review remains open for Claude.
 Evidence: `.context/remote-verification-review-follow-up/milestone-6.md` and `merge-justifications.md` in the same directory.
 
 - [x] Fetch `origin/main` and merge new commits under the mainline
@@ -203,11 +205,11 @@ Evidence: `.context/remote-verification-review-follow-up/milestone-6.md` and `me
 - [x] Run all tests for this change with a 100% pass rate. Run
       `cargo fmt --all -- --check`, Clippy and the length lints.
 - [x] Run `cargo xtask check --executor local`.
-- [ ] Push, then run the default `cargo xtask check` with the `main` Testbox
+- [x] Push, then run the default `cargo xtask check` with the `main` Testbox
       workflow. Require 11/11 commands, 9/9 reports and no active box. This
       also covers the post-merge smoke check of the earlier plan.
-- [ ] Inspect the diff and the deletions against `origin/main`.
-- [ ] After the checks pass, run `git add -A`, commit with Conventional
+- [x] Inspect the diff and the deletions against `origin/main`.
+- [x] After the checks pass, run `git add -A`, commit with Conventional
       Commits and push the branch.
 - [ ] After the push, a reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)
