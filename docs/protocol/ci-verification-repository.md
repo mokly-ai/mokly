@@ -1,13 +1,30 @@
 # Repository Gate And Length Audits
 
-Continuation of [CI Verification](./ci-verification.md). The repository suite
-starts with the live `npm run dependencies:check` audit, then Prettier, ESLint,
+Continuation of [CI Verification](./ci-verification.md).
+
+## Delivery Status
+
+Implemented. The repository suite selects baseline or strict mode.
+The separate scheduled workflow handles strict findings on `main`.
+
+## Repository Boundary
+
+The repository suite
+starts with the live lockfile-only workspace audit, then Prettier, ESLint,
 changed source/protocol file-length audit, Rust formatting, workspace Clippy
 with warnings denied, Rust tests and the Rust file-length audit. The
 [test-timing guard](./ci-test-timing.md) adds elapsed-time and polling-deadline
-checks to ESLint under `tests/`. The live dependency audit fails before any later
-gate on an uncovered Low-or-higher advisory, invalid exception, or registry error.
-Reviewed path and expiry rules follow [Dependency Security](./dependency-security.md#reviewed-workspace-exceptions).
+checks to ESLint under `tests/`. The live
+dependency audit defaults to baseline mode for local checks, ordinary pull
+requests, and every push. New findings or exception issues fail; inherited
+issues print as notices. Report, input, and registry errors always fail.
+`--dependency-audit strict` selects strict mode for this suite or the complete
+gate. An explicit mode flag with any other suite returns a typed error before
+subprocesses start. Release Please and dependency update pull requests select
+strict mode; the scheduled `main` audit and release publish step also stay
+strict. The [baseline contract](./dependency-audit-baseline.md) defines the
+implemented mode selection and comparison rules. Reviewed path and expiry
+rules follow [Dependency Security](./dependency-security.md#reviewed-workspace-exceptions).
 
 The Rust file-length auditor is implemented inside `xtask` rather than as a
 subprocess in the command list; it has the same failure semantics as the

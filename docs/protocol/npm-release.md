@@ -73,12 +73,14 @@ platform tar executable or walking the output again.
 
 ## Local Verification
 
-`cargo xtask check` is the complete repository and release gate. It orchestrates
-npm, Node and Rust commands from the workspace root and includes:
+`cargo xtask check` is the complete repository gate. Release verification uses
+`cargo xtask check --dependency-audit strict`. Both orchestrate npm, Node and
+Rust commands from the workspace root and include:
 
-- a live audit of all workspace dependency categories, failing on any uncovered
-  Low-or-higher advisory, invalid exception, or registry error; reviewed path
-  exceptions follow [dependency security](./dependency-security.md);
+- a live audit of all workspace dependency categories: baseline mode fails on
+  new issues; strict mode fails on every uncovered Low-or-higher advisory or
+  invalid exception; both fail on audit errors. Mode selection and reviewed
+  path exceptions follow [dependency security](./dependency-security.md);
 - formatting and lint checks;
 - TypeScript typechecking with no unexplained source exclusions;
 - unit and integration tests with a 100% pass rate;
@@ -104,10 +106,13 @@ npm, Node and Rust commands from the workspace root and includes:
 
 Tests that mutate files use isolated temporary directories and clean up child
 processes. Package smokes execute the packed artifact, not the source tree or a
-workspace symlink. Historical cross-repository parity audits are release
-evidence rather than recurring CI dependencies on other repositories. The
-independent suite and shard commands, including their complete command mapping
-and fail-closed inventory evidence, are defined by the
+workspace symlink. Smoke checks read protocol documents and protocol fixtures
+from the installed package, not from the source tree; the packed NodeNext
+consumer type-checks the renderer contract that its installed
+`mokly-rendering.md` declares. Historical cross-repository parity audits are
+release evidence rather than recurring CI dependencies on other repositories.
+The independent suite and shard commands, including their complete command
+mapping and fail-closed inventory evidence, are defined by the
 [CI verification contract](./ci-verification.md). Selected suites and shards are
 partial checks; the unqualified command remains the complete release gate. The
 release workflow's `complete` verification mode always runs the local gate.

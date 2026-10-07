@@ -76,7 +76,7 @@ test("test repository inputs are deterministic and title types stay fixed", () =
   assert.match(release, /CI workflow graph contract.*owns checkout history/u);
   assert.match(
     workflow,
-    /It must fetch release tags for the public-package-export ratchet, plus `origin\/main` and enough history for merge-base ratchets; it resolves `origin\/main` for nothing else/u,
+    /It must fetch release tags for the public-package-export ratchet, plus `origin\/main` and enough history for merge-base ratchets and the baseline dependency audit\. The baseline audit reads the root manifest, lockfile, and exception file from that comparison commit/u,
   );
   assert.match(
     workflow,
@@ -88,7 +88,7 @@ test("test repository inputs are deterministic and title types stay fixed", () =
   );
   assert.match(
     workflow,
-    /Every npm-running job keys npm's download cache from the checked-out `package-lock\.json`; none reads a branch-point lockfile/u,
+    /Every cached CI job keys npm's download cache from the checked-out `package-lock\.json`\. Only the repository audit reads a comparison-commit lockfile, for baseline evaluation rather than a cache key/u,
   );
   assert.match(
     verification,

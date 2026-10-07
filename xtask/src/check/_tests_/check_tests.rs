@@ -10,15 +10,15 @@ use crate::command::CommandRunnerRunMock;
 use crate::error::Error;
 use crate::rust_file_length::RustFileLengthAuditorRunMock;
 
-use super::{
-    CheckRequest, CheckRunner, DefaultCheckRunner, Shard, VerificationSuite, commands_for,
-};
+use super::commands::commands_for;
+use super::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
+use super::runner::{CheckRunner, DefaultCheckRunner};
 
 #[test]
 fn complete_gate_is_the_ordered_union_of_every_suite() {
     let complete = VerificationSuite::ALL
         .into_iter()
-        .flat_map(|suite| commands_for(suite, None))
+        .flat_map(|suite| commands_for(suite, None, DependencyAudit::Baseline))
         .collect::<Vec<_>>();
 
     assert_eq!(
@@ -27,7 +27,7 @@ fn complete_gate_is_the_ordered_union_of_every_suite() {
             .map(|command| command.display())
             .collect::<Vec<_>>(),
         [
-            "npm run dependencies:check",
+            "npm run dependencies:check -- --baseline",
             "npm run format:check",
             "npm run lint",
             "node scripts/verification/source-file-length.mjs",
@@ -68,6 +68,7 @@ fn selected_unit_shard_prepares_then_propagates_the_shard() {
     let request = CheckRequest::new(
         Some(VerificationSuite::Unit),
         Some(Shard::from_str("2/4").expect("valid shard")),
+        None,
     )
     .expect("unit suites support shards");
 
@@ -82,7 +83,7 @@ fn only_the_unit_suite_prepares_the_example_compilation_snapshot() {
         (VerificationSuite::Browser, "npm run prepare:verification"),
         (VerificationSuite::Hydration, "npm run prepare:verification"),
     ] {
-        let commands = commands_for(suite, None)
+        let commands = commands_for(suite, None, DependencyAudit::Baseline)
             .iter()
             .map(|command| command.display())
             .collect::<Vec<_>>();
@@ -101,10 +102,14 @@ fn only_the_unit_suite_prepares_the_example_compilation_snapshot() {
 #[test]
 fn selected_hydration_suite_prepares_then_runs_its_project() {
     assert_eq!(
-        commands_for(VerificationSuite::Hydration, None)
-            .iter()
-            .map(|command| command.display())
-            .collect::<Vec<_>>(),
+        commands_for(
+            VerificationSuite::Hydration,
+            None,
+            DependencyAudit::Baseline
+        )
+        .iter()
+        .map(|command| command.display())
+        .collect::<Vec<_>>(),
         [
             "npm run prepare:verification",
             "npm run test:hydration:prepared",
@@ -116,7 +121,7 @@ fn selected_hydration_suite_prepares_then_runs_its_project() {
 fn repository_suite_runs_audit_first_and_includes_file_length() {
     let command_runner = Arc::new(Unimock::new((
         CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "npm run dependencies:check"))
+            .next_call(matching!((command) if command.display() == "npm run dependencies:check -- --baseline"))
             .returns(Ok(())),
         CommandRunnerRunMock
             .next_call(matching!((command) if command.display() == "npm run format:check"))
@@ -146,7 +151,7 @@ fn repository_suite_runs_audit_first_and_includes_file_length() {
             .returns(Ok(())),
     ));
     let runner = DefaultCheckRunner::new(command_runner, auditor, workspace());
-    let request = CheckRequest::new(Some(VerificationSuite::Repository), None)
+    let request = CheckRequest::new(Some(VerificationSuite::Repository), None, None)
         .expect("repository request is valid");
 
     runner.run(request).expect("repository suite succeeds");
@@ -175,19 +180,19 @@ fn source_length_audit_supports_changed_and_all_modes() {
 fn dependency_check_failure_stops_verification() {
     let command_runner = Arc::new(Unimock::new(
         CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "npm run dependencies:check"))
+            .next_call(matching!((command) if command.display() == "npm run dependencies:check -- --baseline"))
             .returns(Err(Error::CommandFailed {
-                command: "npm run dependencies:check".to_owned(),
+                command: "npm run dependencies:check -- --baseline".to_owned(),
                 status: "1".to_owned(),
             })),
     ));
     let auditor = Arc::new(Unimock::new(()));
     let runner = DefaultCheckRunner::new(command_runner, auditor, workspace());
-    let request = CheckRequest::new(None, None).expect("complete request is valid");
+    let request = CheckRequest::new(None, None, None).expect("complete request is valid");
 
     assert!(matches!(
         runner.run(request),
-        Err(Error::CommandFailed { command, .. }) if command == "npm run dependencies:check"
+        Err(Error::CommandFailed { command, .. }) if command == "npm run dependencies:check -- --baseline"
     ));
 }
 
@@ -203,7 +208,7 @@ fn subprocess_failure_is_propagated_from_a_selected_suite() {
     ));
     let auditor = Arc::new(Unimock::new(()));
     let runner = DefaultCheckRunner::new(command_runner, auditor, workspace());
-    let request = CheckRequest::new(Some(VerificationSuite::Package), None)
+    let request = CheckRequest::new(Some(VerificationSuite::Package), None, None)
         .expect("package request is valid");
 
     assert!(matches!(
@@ -239,7 +244,7 @@ fn malformed_and_out_of_range_shards_fail() {
 fn shard_requires_a_supported_selected_suite() {
     let shard = Shard::from_str("1/4").expect("valid shard");
     assert!(matches!(
-        CheckRequest::new(None, Some(shard)),
+        CheckRequest::new(None, Some(shard), None),
         Err(Error::ShardRequiresSuite)
     ));
     for suite in [
@@ -248,7 +253,7 @@ fn shard_requires_a_supported_selected_suite() {
         Some(VerificationSuite::Hydration),
     ] {
         assert!(matches!(
-            CheckRequest::new(suite, Some(shard)),
+            CheckRequest::new(suite, Some(shard), None),
             Err(Error::UnsupportedShard { .. })
         ));
     }

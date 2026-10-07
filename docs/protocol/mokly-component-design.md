@@ -221,18 +221,18 @@ small gap above an intact rounded outline, shared by all three region layouts.
 
 Use the real generator; never hand-edit generated HTML. Six shared component
 stylesheets are hand-authored public inputs, scoped to the component design
-entries' generated documents.
-Route-scoped stylesheet matching links them only from the thirty-nine component design routes;
-Changes follows those rendered resources. Shared metadata supplies dependency
-lists to each definition. Controls extends that list with its own stylesheet,
-scoped to eleven entries with a matching watch rule. Keep those stylesheets out
-of global `review.sharedImpact`; watched rules still reload their edits.
-Shared fixtures and reusable screen parts live beside the owning screen modules.
+entries' generated documents. Route-scoped stylesheet matching links them only
+from the thirty-nine component design routes; Changes follows those resources.
+Shared metadata supplies dependency lists to each definition. Controls extends
+that list with its own stylesheet, scoped to eleven entries with a matching
+watch rule. Keep those stylesheets out of global `review.sharedImpact`; watched
+rules still reload their edits. Shared fixtures and reusable screen parts live
+beside the owning screen modules.
 
-`tests/component_design_attribution.test.ts` exercises each component stylesheet
-against the real example configuration and current compiled manifest through the rendered-resource graph and changed-entry projection. It requires exact
-Changes membership for the component design entries, excluding unrelated design screens,
-product screens, and their use case.
+`tests/component_design_attribution.test.ts` classifies all nine sheets once.
+Manifest links pin scopes: 39, 11, 0, or all `design/` screens; 69 components.
+Entry reasons contain only exact linked-sheet dependencies with unresolved `body` analysis.
+The exact union stays in `design/`, affects no consumers, and keeps `design.css` shared impact.
 
 Run `npm run example:build`, `npm run example:check`, and
 `npx playwright test tests/browser/component*.spec.ts tests/browser/design_component_stacks.spec.ts`.

@@ -8,7 +8,8 @@ use std::sync::Arc;
 use clap::{Parser, Subcommand};
 
 use crate::application::{Application, Xtask};
-use crate::check::{DefaultCheckRunner, Shard, VerificationSuite};
+use crate::check::request::{DependencyAudit, Shard, VerificationSuite};
+use crate::check::runner::DefaultCheckRunner;
 use crate::command::{CommandRunner, SystemCommandRunner};
 use crate::error::{Error, Result};
 use crate::executor::Executor;
@@ -48,6 +49,9 @@ pub(crate) enum Command {
         /// Run one one-based whole-file shard of a unit or browser suite.
         #[arg(long, value_name = "INDEX/TOTAL")]
         shard: Option<Shard>,
+        /// Select the workspace audit policy for complete or repository checks.
+        #[arg(long, value_enum)]
+        dependency_audit: Option<DependencyAudit>,
         /// Select auto, local or explicit remote execution.
         #[arg(long, value_enum)]
         executor: Option<Executor>,

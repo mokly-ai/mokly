@@ -59,7 +59,7 @@ The release workflow then:
    including untracked files, and each tag matches its package version.
 5. Runs `npm ci`, performs the live workspace dependency audit, then selects
    applicable complete CI evidence for the tag's exact tree or falls back to the
-   complete `cargo xtask check` gate. The
+   complete `cargo xtask check --dependency-audit strict` gate. The
    [release verification evidence contract](./npm-release-evidence.md) defines
    candidate selection, validation and failure semantics.
 6. Packs viewer then CLI, validates both packed manifests and inventories plus
