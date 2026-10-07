@@ -444,13 +444,13 @@ Evidence: `.context/baseline-relative-dependency-audit/milestone-4-checks.md`.
 Prove the complete local gate passes, then deliver the whole branch.
 The implementer stops after the commit and push. Claude runs the final review.
 
-- [ ] Run a clean `npm ci`, then `cargo xtask check` and require a 100% pass
+- [x] Run a clean `npm ci`, then `cargo xtask check` and require a 100% pass
       rate; store the summary in `.context/`.
-- [ ] Inspect `git diff --name-status origin/main` and
+- [x] Inspect `git diff --name-status origin/main` and
       `git diff --diff-filter=D --name-status origin/main`; no feature removals
       are expected. The authorized Milestone 3 split replaces
       `xtask/src/check.rs` with modules under `xtask/src/check/`.
-- [ ] Run `git add -A`, commit the completed work with a Conventional Commit,
+- [x] Run `git add -A`, commit the completed work with a Conventional Commit,
       and push the current branch with every new file tracked.
 - [ ] Claude: after the push, review the complete diff against `origin/main`
       using `docs/implementation-review-prompt.md`. Keep the review read-only.
@@ -459,6 +459,8 @@ The implementer stops after the commit and push. Claude runs the final review.
       review-fix rule: fix `Auto-fix: yes` findings, check, commit, push, and
       re-review once; fix new eligible findings once more, then stop and
       report the rest. The implementer does not run this review TODO.
+
+Evidence: `.context/baseline-relative-dependency-audit/milestone-5-checks.md`.
 
 ## Post-merge follow-up (non-blocking)
 
