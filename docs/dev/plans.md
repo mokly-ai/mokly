@@ -4,6 +4,8 @@ Rules for the implementation plan files under `plans/`. A plan records the
 work needed to align the implementation with the protocol docs, its
 milestones, and its TODOs. [`AGENTS.md`](../../AGENTS.md) holds the always-on
 rule to tick TODOs as you complete them; this document holds the rest.
+[`git.md`](./git.md#mainline-feature-preservation) defines which plan content
+is live and which is history.
 
 - Plans should only be created with consent from the user and after the relevant
   protocol docs provide enough context to plan the work safely
@@ -15,14 +17,9 @@ rule to tick TODOs as you complete them; this document holds the rest.
   `Status: Active` while the plan is open, or with `Status: Completed` when it
   is closed. List the open plans with `grep -l '^Status: Active' plans/*.md`
 - When creating a new plan file, start it with a `Status: Active` paragraph
-- When a plan's PR merges, change its status paragraph to start with the
-  text below, and keep any open review findings or follow-up owners in that
-  paragraph:
-
-  ```text
-  Status: Completed. [PR #<number>](<url>) merged on <YYYY-MM-DD>.
-  ```
-
+- When a plan's PR merges, change its status paragraph to start with
+  `Status: Completed. [PR #<number>](<url>) merged on <YYYY-MM-DD>.` and keep
+  any open review findings or follow-up owners in that paragraph
 - Each plan describes work needed to ensure complete alignment with the protocol docs
 - The PR merge is the completion boundary for a plan. Every milestone and its
   required TODOs must be completable on the branch before the PR merges or by

@@ -28,8 +28,10 @@ and when to read it. Read the doc at that point instead of guessing the rule.
   and freezing, the migration lock, and `*-store-pg` crate boundaries. Read
   it before you touch migrations, Diesel, or store crates.
 - [Git](./docs/dev/git.md): Conventional Commits, title limits, commit
-  examples, and the mainline feature preservation procedure with its merge
-  audit commands. Read it before you commit, merge, rebase, or open a PR.
+  examples, the mainline feature preservation procedure with its merge audit
+  commands, the stale-reference and history rules for removals and renames,
+  and the permalink fix for failed history links. Read it before you commit,
+  merge, rebase, or open a PR.
 - [Product UI](./docs/dev/product-ui.md): where screens live, component
   reuse, forbidden visual patterns, environment labels, real data, and
   user-facing copy. Read it before you implement or change a user-facing
@@ -146,11 +148,19 @@ The full rules, commit examples, and the mainline preservation procedure are in
 - Use the **Conventional Commits** format for every commit message and pull request title. Commit titles use at most 50 characters; pull request titles and their squash commit titles use at most 72 Unicode code points. A commit may hold multiple entries separated by blank lines, ordered by type priority
 - Do not delete or override anything already on `origin/main`, including code, APIs, tests, docs, mockups, plans, migrations, and schema, without explicit user approval
 - Before you merge or rebase, and before and after you commit, run the mainline preservation audit in [`docs/dev/git.md`](./docs/dev/git.md); resolve conflicts path-by-path, and verify the worktree before saying a merge is complete
-- When a change removes or renames a feature, test, fixture, scenario, command,
-  or file, search the active plans, `docs/`, and every `README.md` for its name
-  and update each stale reference in the same change, and record each plan
-  edit in the commit or PR description. Leave completed plans unchanged; they
-  record history
+- When a change removes or renames a feature, test, fixture, scenario,
+  command, or file, search `docs/`, `plans/`, and every `README.md` for its
+  name. Update each stale reference in live content in the same change.
+  Record each plan edit in the commit or PR description.
+- `docs/` and every `README.md` are live content. In an active plan,
+  completed milestones and checked TODOs are history; all other content is
+  live. In a completed plan, open review findings and unchecked post-merge
+  follow-ups are live; all other content is history. Do not change the
+  words of history.
+- `tests/markdown_links.test.ts` checks the local links in `AGENTS.md`,
+  `docs/`, `plans/`, and every `README.md`. If a history link fails this
+  check, do not change the words of history; replace the link with a GitHub
+  permalink as described in [`docs/dev/git.md`](./docs/dev/git.md).
 
 ## Bash Tool Timeout Configuration
 

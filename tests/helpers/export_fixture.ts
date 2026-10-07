@@ -14,7 +14,7 @@ const execute = promisify(execFile);
 /** Independent consumer with a committed baseline and unignored export target. */
 export async function createExportFixture(
   source?: string,
-  options?: { extraConfig?: string },
+  options?: { extraConfig?: string; gitObjectFormat?: "sha256" },
 ) {
   const fixture = await createFixture(source, options);
   try {
@@ -22,7 +22,13 @@ export async function createExportFixture(
     await writeCompilation(await compileCatalogue(config), config);
     const git = (...args: string[]) =>
       execute("git", args, { cwd: fixture.root });
-    await git("init", "-q");
+    await git(
+      "init",
+      "-q",
+      ...(options?.gitObjectFormat ? ["--object-format=sha256"] : []),
+    );
+    if (options?.gitObjectFormat)
+      await writeCompilation(await compileCatalogue(config), config);
     await git("config", "user.email", "test@example.invalid");
     await git("config", "user.name", "Test");
     await git("add", ".");
