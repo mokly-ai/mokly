@@ -52,6 +52,7 @@ export interface BaselinePreparationOptions {
   readonly builder?: BaselineBuilder;
   readonly filesystem?: BaselineFileSystem;
   readonly diagnostic?: (message: string) => void;
+  readonly notice?: (message: string) => void;
   /** Already resolved by a caller that owns this baseline's lifetime. */
   readonly commit?: string;
 }
@@ -125,8 +126,8 @@ export async function prepareReviewRepository(
       const issue = incompleteGeneratedInventory(tree, descriptor, manifest);
       if (issue) {
         const line = inventoryDiagnostic(commit, issue);
-        if (options.diagnostic) options.diagnostic(line);
-        else process.stderr.write(`${line}\n`);
+        if (options.notice) options.notice(line);
+        else process.stdout.write(`${line}\n`);
       } else selection = "blobs";
     } catch (error) {
       if (error instanceof MoklyError) throw error;

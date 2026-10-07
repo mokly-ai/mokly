@@ -1,9 +1,8 @@
-import path from "node:path";
-
 import type { BaselineBuilder, BaselineProgress } from "../baseline/types.js";
 import type { Compilation } from "../build/compile.js";
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { GeneratedOutputStore } from "../build/output_store.js";
+import { generatedOutputSummary } from "../build/output_summary.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import type { CatalogueChangeClassifier } from "./component_change_types.js";
@@ -15,6 +14,7 @@ import type { ProcessSupervisor } from "./supervisor.js";
 interface WatchedBackgroundOptions {
   readonly baselineBuilder?: BaselineBuilder;
   readonly base?: string;
+  readonly invocationDirectory?: string;
   readonly classifier: CatalogueChangeClassifier;
   readonly config: () => ResolvedConfig;
   readonly outputStore: GeneratedOutputStore;
@@ -99,6 +99,8 @@ export class WatchedBackground {
           ),
         baselineProgress: (event) => this.reportBaseline(event),
         diagnostic: options.report,
+        baselineNotice: (message) => options.reporter.baselineNotice(message),
+        baselineAccepted: (commit) => options.reporter.baselineAccepted(commit),
         incompatibleBaseline: (commit) =>
           options.reporter.incompatibleBaseline(commit),
         resources: options.resources,
@@ -106,10 +108,10 @@ export class WatchedBackground {
         writeOutput: options.writeOutput,
         outputWritten: (compilation, duration) =>
           options.reporter.outputWritten?.(
-            compilation.outputs.size,
-            path.relative(
-              options.config().repoRoot,
-              options.config().mockupsDir,
+            generatedOutputSummary(
+              compilation,
+              options.config(),
+              options.invocationDirectory ?? options.config().repoRoot,
             ),
             duration,
           ),
@@ -140,7 +142,7 @@ export class WatchedBackground {
     return this.generation.invalidate(config);
   }
 
-  schedule(existing?: Compilation): void {
+  schedule(existing?: Compilation, refreshOutput = false): void {
     this.generationStartedAt = Date.now();
     this.changesStartedAt = this.generationStartedAt;
     this.reportCatalogue = existing === undefined;
@@ -149,6 +151,7 @@ export class WatchedBackground {
       this.options.runtime(),
       this.options.base ?? config.review.base,
       existing,
+      refreshOutput,
     );
   }
 

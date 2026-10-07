@@ -212,8 +212,9 @@ is delivered; superseded generations never become resource fallbacks.
 The classification worker uses
 structured-clone byte transfer instead of JSON.
 The CLI injects the terminal reporter's server-facing subset into both Serve
-compositions. Plain mode emits only the historical readiness and diagnostic
-bytes. Rich mode presents accepted catalogue, baseline, Changes, reference, and
+compositions. Plain mode sends readiness, completed writer summaries and
+successful baseline notices to stdout; warnings and failures use stderr.
+Rich mode presents accepted catalogue, baseline, Changes, reference, and
 watch-action boundaries. Diagnostics originating in a supervised child cross a
 validated IPC message so the parent remains the sole terminal owner; a child
 without IPC retains direct diagnostic output. A generation's
@@ -282,9 +283,14 @@ check. This avoids a second PostCSS pass merely to recover accepted head bytes.
 
 The implemented [shared closure](../../docs/protocol/mokly-public-closure.md)
 replaces the separate Watch list with checked serving membership. Serve still
-rechecks each listed file without following symlinks. The approved
-[shared watch setup](../../docs/protocol/mokly-watch-writers.md) will also supply
-`build --watch`, including initial edits and interruptible lock waits.
+rechecks each listed file without following symlinks.
+`watch_setup.ts` supplies the [shared watch setup](../../docs/protocol/mokly-watch-writers.md)
+to Serve and `build --watch`. It resolves inventory before readiness, gates
+initial edits and retains old watches through candidate replacement.
+`resource_compilation.ts` refreshes accepted manifest closure membership without
+mutating the prior compilation. An authored stylesheet reload can write the
+refreshed manifest in `serve --build`; evidence-only work and plain Serve never
+write. Workers retain the same checked route set.
 
 `watch_resources.ts` uses Build's closure builder. Invalid recovery edges can
 keep a confined path observable but cannot grant HTTP access. The resource

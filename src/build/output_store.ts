@@ -31,11 +31,14 @@ export class FileSystemGeneratedOutputStore implements GeneratedOutputStore {
     compilation: Compilation,
     config: ResolvedConfig,
   ): Promise<GeneratedOutputTracking> {
+    let indexedRoot: string | undefined;
     const state = await (
       this.tracked ??
       new GitTrackedGeneratedOutput(new NodeGitCommandRunner(config.repoRoot))
-    ).state(compilation, config);
-    if (state === "tracked") checkCompilation(compilation, config);
+    ).state(compilation, config, (root) => {
+      indexedRoot = root;
+    });
+    if (state === "tracked") checkCompilation(compilation, config, indexedRoot);
     return state;
   }
 

@@ -93,7 +93,7 @@ export class WatchDebouncer {
   #handle: ReturnType<typeof setTimeout> | undefined;
 
   constructor(
-    private readonly delay: number,
+    private readonly delay: number | (() => number),
     private readonly callback: (
       action: RuntimeWatchAction,
       paths: readonly string[],
@@ -106,7 +106,10 @@ export class WatchDebouncer {
     this.#actions.add(action);
     if (action !== "ignore" && candidate) this.#paths.add(candidate);
     if (this.#handle) this.clock.clear(this.#handle);
-    this.#handle = this.clock.schedule(() => this.flush(), this.delay);
+    this.#handle = this.clock.schedule(
+      () => this.flush(),
+      typeof this.delay === "function" ? this.delay() : this.delay,
+    );
   }
 
   /** Cancel pending work. */

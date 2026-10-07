@@ -27,6 +27,7 @@ export async function bundleStyles(
   graphInputs: ReadonlySet<string>,
   preprocessor: StylePreprocessor,
   graphClassMaps: ReadonlyMap<string, Readonly<Record<string, string>>>,
+  signal?: AbortSignal,
 ): Promise<BundledStyles> {
   const outputs = new Map<string, GeneratedFile>();
   const routes = new Map<string, string>();
@@ -92,6 +93,7 @@ export async function bundleStyles(
         graphInputs,
         preprocessor,
         graphClassMaps,
+        signal,
       ),
     );
     for (const file of pass.closures.get(root.path) ?? [])
@@ -112,6 +114,7 @@ export async function bundleStyles(
         graphInputs,
         preprocessor,
         graphClassMaps,
+        signal,
       ),
     );
     accept(pass, entries);

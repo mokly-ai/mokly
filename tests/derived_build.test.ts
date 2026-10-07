@@ -129,6 +129,7 @@ test("index read failures never masquerade as absent tracking", async (t) => {
   for (const exitCode of [1, 128]) {
     const tracking = new GitTrackedGeneratedOutput({
       async run(argv) {
+        if (argv.includes("--is-inside-work-tree")) return "true\n";
         if (argv[0] === "rev-parse") return fixture.root;
         if (argv[0] === "ls-files")
           throw new GitProcessError(exitCode, null, "index read failed");

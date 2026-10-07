@@ -5,9 +5,9 @@ with exact plain output and rich error presentation.
 
 ## Delivery Status
 
-The paragraph labelled **Approved target** records pending notice-stream changes
-from [Generated Output Review Fixes](../../plans/generated-output-review-fixes.md).
-The remaining plain and rich output rules describe current behaviour.
+The plain and rich output rules describe current behaviour, including the
+notice-stream changes from
+[Generated Output Review Fixes](../../plans/generated-output-review-fixes.md).
 
 ## Plain Compatibility
 
@@ -35,19 +35,14 @@ decimal counts as rich mode. A publish prints one counted line or the
 already-published line. `<viewer-url>` appears only when accepted and contains
 that normalized URL alone.
 
-Plain commands add no phase or watch-event lines. When reported, baseline
-preparation notes and the exact earlier-version notice currently use stderr.
-[Build warnings](./mokly-build-warnings.md) also use stderr. A successful plain
-command can therefore write to stderr without `--debug-timings`.
-Expected plain errors remain exactly `[mokly/<code>] <message>\n`. Timing mode
-retains the same stdout and adds its documented JSON lines to stderr alongside
-baseline notes, build warnings and existing failures.
-
-**Approved target:** successful baseline preparation notes and the exact
-earlier-version notice use stdout, under the
+Plain commands add no phase or watch-event lines. Successful baseline
+preparation notes and the exact earlier-version notice use stdout, under the
 [watch-writer contract](./mokly-watch-writers.md#summaries-and-plain-notices).
 Warning-free successful plain commands write nothing to stderr except requested
-timing JSON. Build warnings and errors remain on stderr.
+timing JSON. [Build warnings](./mokly-build-warnings.md) and errors remain on
+stderr. Expected plain errors remain exactly `[mokly/<code>] <message>\n`.
+Timing mode retains the same stdout and adds its documented JSON lines to
+stderr alongside build warnings and existing failures.
 
 The
 [exchange cancellation rule](./mokly-upload-exchange.md#accounting-and-output)

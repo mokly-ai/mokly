@@ -16,6 +16,7 @@ import {
   waitForInitialChanges,
   waitForUpdate,
 } from "./helpers/watched_catalogue.js";
+import { waitFor } from "./server_fixture.js";
 
 test(
   "watched Serve keeps authored page and PDF links after background and resource updates",
@@ -86,3 +87,58 @@ test(
     );
   },
 );
+
+for (const build of [false, true]) {
+  test(
+    `watched Serve refreshes its authored closure after CSS additions and removals (build=${build})`,
+    { timeout: 60_000 },
+    async (t) => {
+      const fixture = await createFixture(undefined, {
+        extraConfig:
+          'stylesheets: [{ match: "**", stylesheets: ["theme.css"] }], watch: { debounceMs: 0 },',
+      });
+      t.after(() => removeFixture(fixture));
+      const stylesheet = path.join(fixture.mockupsDir, "theme.css");
+      await fs.writeFile(stylesheet, 'main{background:url("a.svg")}');
+      await fs.writeFile(path.join(fixture.mockupsDir, "a.svg"), "<svg/>");
+      await fs.writeFile(
+        path.join(fixture.mockupsDir, "b.svg"),
+        '<svg width="42"/>',
+      );
+      const running = await serve(await loadConfig(fixture.root), {
+        watch: true,
+        build,
+        port: 0,
+      });
+      fixture.beforeRemove(() => running.close());
+      await waitForInitialChanges(running.url);
+      const manifest = path.join(fixture.generatedDir, "mokly-manifest.json");
+      const checkClosure = async (expected: string[]) => {
+        if (build)
+          assert.deepEqual(
+            JSON.parse(await fs.readFile(manifest, "utf8")).assetClosure,
+            expected,
+          );
+        else
+          await assert.rejects(fs.stat(fixture.generatedDir), {
+            code: "ENOENT",
+          });
+      };
+      await checkClosure(["a.svg", "theme.css"]);
+      for (const target of ["b.svg", undefined]) {
+        const before = version(await (await fetch(running.url)).text());
+        await fs.writeFile(
+          stylesheet,
+          target ? `main{background:url("${target}")}` : "main{color:green}",
+        );
+        await waitForUpdate(running.url, before);
+        await waitFor(
+          async () =>
+            (await fetch(running.url + "/static/b.svg")).status ===
+            (target ? 200 : 404),
+        );
+        await checkClosure(target ? [target, "theme.css"] : ["theme.css"]);
+      }
+    },
+  );
+}

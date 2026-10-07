@@ -14,6 +14,7 @@ import { assertSafeGeneratedTree } from "./reserved_tree.js";
 export function checkCompilation(
   compilation: Compilation,
   config: ResolvedConfig,
+  indexedRoot?: string,
 ): void {
   validateGeneratedRoot(config);
   assertSafeGeneratedTree(config);
@@ -37,7 +38,9 @@ export function checkCompilation(
     .filter((route) => !compilation.outputs.has(route))
     .map((route) => (route === "." ? prefix : `${prefix}/${route}`));
   if (!missing.length && !stale.length && !extra.length) return;
-  const root = toPosixPath(path.relative(config.repoRoot, config.generatedDir));
+  const root =
+    indexedRoot ??
+    toPosixPath(path.relative(config.repoRoot, config.generatedDir));
   throw new MoklyError(
     "build-invalid",
     [

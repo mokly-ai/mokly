@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-This is the approved target in
+Implemented under
 [Generated Output Review Fixes](../../plans/generated-output-review-fixes.md).
 It extends [Watch](./mokly-watch.md) and the
 [output transaction](./mokly-generated-output.md#tracked-state-and-commands).

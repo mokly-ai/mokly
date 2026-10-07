@@ -1,11 +1,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { build, type BuildFailure, type Metafile, type Plugin } from "esbuild";
+import type { BuildFailure, Metafile, Plugin } from "esbuild";
 
 import { toPosixPath } from "../../config/paths.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError, errorMessage } from "../../errors.js";
+import { buildWithSignal } from "../cancellable_bundle.js";
 import { packageNodePaths } from "../consumer_resolution.js";
 import type { GeneratedFile } from "../generated_file.js";
 import {
@@ -44,6 +45,7 @@ export async function bundleStylePass(
   graphInputs: ReadonlySet<string>,
   preprocessor: StylePreprocessor,
   graphClassMaps: ReadonlyMap<string, Readonly<Record<string, string>>>,
+  signal?: AbortSignal,
 ): Promise<StylePass> {
   const virtual = roots.map((_, index) => `mokly:styles:${index}`);
   const virtualRoots = new Map(
@@ -136,38 +138,43 @@ export async function bundleStylePass(
   let metafile: Metafile;
   const outputs = new Map<string, GeneratedFile>();
   try {
-    const built = await build({
-      absWorkingDir: config.repoRoot,
-      alias: config.moduleResolution.aliases,
-      assetNames: "../assets/[dir]/[name]",
-      bundle: true,
-      conditions: ["style", ...(config.moduleResolution.conditions ?? [])],
-      entryPoints: roots.map((root, index) => ({
-        in: virtual[index]!,
-        out: toPosixPath(path.relative(config.repoRoot, root.path)),
-      })),
-      loader: Object.fromEntries(
-        [...ASSET_EXTENSIONS].map((ext) => [ext, "file" as const]),
-      ),
-      logLevel: "silent",
-      mainFields: [
-        "style",
-        ...(config.moduleResolution.mainFields ?? ["main", "module"]),
-      ],
-      metafile: true,
-      minify: false,
-      nodePaths: packageNodePaths(config),
-      outbase: config.repoRoot,
-      outdir: path.join(config.generatedDir, "styles"),
-      platform: "node",
-      plugins: [plugin, resolution.plugin],
-      preserveSymlinks: true,
-      ...(config.moduleResolution.resolveExtensions
-        ? { resolveExtensions: [...config.moduleResolution.resolveExtensions] }
-        : {}),
-      target: "esnext",
-      write: false,
-    });
+    const built = await buildWithSignal(
+      {
+        absWorkingDir: config.repoRoot,
+        alias: config.moduleResolution.aliases,
+        assetNames: "../assets/[dir]/[name]",
+        bundle: true,
+        conditions: ["style", ...(config.moduleResolution.conditions ?? [])],
+        entryPoints: roots.map((root, index) => ({
+          in: virtual[index]!,
+          out: toPosixPath(path.relative(config.repoRoot, root.path)),
+        })),
+        loader: Object.fromEntries(
+          [...ASSET_EXTENSIONS].map((ext) => [ext, "file" as const]),
+        ),
+        logLevel: "silent",
+        mainFields: [
+          "style",
+          ...(config.moduleResolution.mainFields ?? ["main", "module"]),
+        ],
+        metafile: true,
+        minify: false,
+        nodePaths: packageNodePaths(config),
+        outbase: config.repoRoot,
+        outdir: path.join(config.generatedDir, "styles"),
+        platform: "node",
+        plugins: [plugin, resolution.plugin],
+        preserveSymlinks: true,
+        ...(config.moduleResolution.resolveExtensions
+          ? {
+              resolveExtensions: [...config.moduleResolution.resolveExtensions],
+            }
+          : {}),
+        target: "esnext",
+        write: false,
+      },
+      signal,
+    );
     metafile = built.metafile!;
     for (const file of built.outputFiles ?? []) {
       const route = toPosixPath(path.relative(config.generatedDir, file.path));
@@ -179,6 +186,7 @@ export async function bundleStylePass(
       );
     }
   } catch (error) {
+    signal?.throwIfAborted();
     for (const [index, root] of roots.entries()) {
       const closure = closures.get(root.path)!;
       for (const file of [virtual[index]!, ...[...closure].sort()]) {

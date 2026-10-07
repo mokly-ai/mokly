@@ -168,6 +168,14 @@ Second merge justifications: `.context/generated-output-simplification/m24-main-
 
 Second merge validation: `.context/generated-output-simplification/m24-main-160-validation.md`.
 
+Test-first evidence: `.context/generated-output-review-fixes/m2-test-first.md`.
+
+Implementation evidence: `.context/generated-output-review-fixes/m2-implementation.md`.
+
+Smoke evidence: `.context/generated-output-review-fixes/m2-smoke.md`.
+
+Gate evidence: `.context/generated-output-review-fixes/m2-gate.md`.
+
 - [ ] Write failing lifecycle tests first. Extract one watch-setup owner from
       `server/serve_watched.ts`, `watch_inventory.ts`, `watch_paths.ts`,
       `watcher.ts` and `resource_watcher.ts`; use it from `cli/build_watch.ts`.

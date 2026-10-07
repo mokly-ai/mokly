@@ -1,7 +1,5 @@
 import path from "node:path";
 
-import { build } from "esbuild";
-
 import type { ComponentGraphRenderer } from "../components/render.js";
 import {
   discoverEntries,
@@ -17,6 +15,7 @@ import { loadDocuments, type ResolvedDocument } from "../documents/load.js";
 import { MoklyError, errorMessage, isMoklyError } from "../errors.js";
 import type { Renderer } from "../renderer/types.js";
 
+import { buildWithSignal } from "./cancellable_bundle.js";
 import { evaluateBundle, rememberBundle } from "./consumer_bundle.js";
 import {
   CONSUMER_ENTRY_PATH,
@@ -61,9 +60,10 @@ export async function loadConsumerGraph(
   config: ResolvedConfig,
   evaluate = true,
   postcssLoader: PostcssConfigLoader = new FileSystemPostcssConfigLoader(),
+  signal?: AbortSignal,
 ): Promise<LoadedGraph> {
   return timeAsync(evaluate ? "graph.load" : "graph.inventory", () =>
-    loadGraph(config, evaluate, postcssLoader),
+    loadGraph(config, evaluate, postcssLoader, signal),
   );
 }
 
@@ -71,7 +71,9 @@ async function loadGraph(
   config: ResolvedConfig,
   evaluate: boolean,
   postcssLoader: PostcssConfigLoader,
+  signal?: AbortSignal,
 ): Promise<LoadedGraph> {
+  signal?.throwIfAborted();
   const discovery = timeSync("graph.discover", () => discoverEntries(config));
   const entrySources = discovery.entryModules;
   config = { ...config, ...discovery };
@@ -81,50 +83,55 @@ async function loadGraph(
     path.dirname(config.configPath),
     ".mokly-consumer.cjs",
   );
-  const processor = await createStyleProcessor(config, postcssLoader);
+  const processor = await createStyleProcessor(config, postcssLoader, signal);
   const styles = new GraphStyles(config, processor.preprocessor);
   try {
     const built = await timeAsync("graph.bundle", () =>
-      build({
-        write: false,
-        metafile: true,
-        preserveSymlinks: true,
-        absWorkingDir: path.dirname(config.configPath),
-        alias: config.moduleResolution.aliases,
-        bundle: true,
-        ...(config.moduleResolution.conditions
-          ? { conditions: [...config.moduleResolution.conditions] }
-          : {}),
-        entryPoints: [CONSUMER_ENTRY_PATH],
-        format: "cjs",
-        jsx: "automatic",
-        jsxDev: true,
-        loader: {
-          ...config.moduleResolution.loaders,
-          ...(config.moduleResolution.loaders[".css"] === "empty"
-            ? { ".module.css": "empty" as const }
+      buildWithSignal(
+        {
+          write: false,
+          metafile: true,
+          preserveSymlinks: true,
+          absWorkingDir: path.dirname(config.configPath),
+          alias: config.moduleResolution.aliases,
+          bundle: true,
+          ...(config.moduleResolution.conditions
+            ? { conditions: [...config.moduleResolution.conditions] }
             : {}),
+          entryPoints: [CONSUMER_ENTRY_PATH],
+          format: "cjs",
+          jsx: "automatic",
+          jsxDev: true,
+          loader: {
+            ...config.moduleResolution.loaders,
+            ...(config.moduleResolution.loaders[".css"] === "empty"
+              ? { ".module.css": "empty" as const }
+              : {}),
+          },
+          logLevel: "silent",
+          ...(config.moduleResolution.mainFields
+            ? { mainFields: [...config.moduleResolution.mainFields] }
+            : {}),
+          nodePaths: packageNodePaths(config),
+          outfile: outputPath,
+          platform: "node",
+          plugins: [
+            consumerEntryPlugin(config, entrySources),
+            packageApiPlugin(config),
+            consumerReactPlugin(config),
+            styles.plugin,
+          ],
+          ...(config.moduleResolution.resolveExtensions
+            ? {
+                resolveExtensions: [
+                  ...config.moduleResolution.resolveExtensions,
+                ],
+              }
+            : {}),
+          target: "node22",
         },
-        logLevel: "silent",
-        ...(config.moduleResolution.mainFields
-          ? { mainFields: [...config.moduleResolution.mainFields] }
-          : {}),
-        nodePaths: packageNodePaths(config),
-        outfile: outputPath,
-        platform: "node",
-        plugins: [
-          consumerEntryPlugin(config, entrySources),
-          packageApiPlugin(config),
-          consumerReactPlugin(config),
-          styles.plugin,
-        ],
-        ...(config.moduleResolution.resolveExtensions
-          ? {
-              resolveExtensions: [...config.moduleResolution.resolveExtensions],
-            }
-          : {}),
-        target: "node22",
-      }),
+        signal,
+      ),
     );
     const extraOutputs = built.outputFiles!.filter(
       (file) => file.path !== outputPath,
@@ -160,12 +167,14 @@ async function loadGraph(
           graphInputs,
           styles.preprocessor,
           styles.classMaps,
+          signal,
         )
       : {
           outputs: new Map<string, GeneratedFile>(),
           routes: new Map<string, string>(),
           sourceFiles: new Set<string>(),
         };
+    signal?.throwIfAborted();
     const dependencies = collectPostcssDependencies(
       config,
       styles.preprocessor.reports,
@@ -242,6 +251,7 @@ async function loadGraph(
     rememberBundle(graph, bundle);
     return graph;
   } catch (error) {
+    signal?.throwIfAborted();
     if (styles.failure) throw styles.failure;
     if (error instanceof MoklyError) throw error;
     if (isMoklyError(error))

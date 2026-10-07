@@ -8,9 +8,9 @@ import { projectRealPath, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import type { GitCommandRunner } from "../review/git.js";
-import { GitProcessError } from "../review/git_process.js";
 
 import type { Compilation } from "./compile.js";
+import { insideGitWorkTree, type GitWorkTreeOptions } from "./git_work_tree.js";
 
 export type GeneratedOutputTracking = "tracked" | "untracked";
 
@@ -19,17 +19,24 @@ export interface TrackedGeneratedOutput {
   state(
     compilation: Compilation,
     config: ResolvedConfig,
+    indexedRoot?: (root: string) => void,
   ): Promise<GeneratedOutputTracking>;
 }
 
 export class GitTrackedGeneratedOutput implements TrackedGeneratedOutput {
-  constructor(private readonly runner: GitCommandRunner) {}
+  constructor(
+    private readonly runner: GitCommandRunner,
+    private readonly probe?: GitWorkTreeOptions,
+  ) {}
 
   async state(
     compilation: Compilation,
     config: ResolvedConfig,
+    indexedRoot?: (root: string) => void,
   ): Promise<GeneratedOutputTracking> {
     try {
+      if (!(await insideGitWorkTree(config.repoRoot, this.runner, this.probe)))
+        return "untracked";
       await requireGitTopLevel(config, this.runner);
       const prefixes = [
         ...new Set([
@@ -80,16 +87,23 @@ export class GitTrackedGeneratedOutput implements TrackedGeneratedOutput {
         ),
       );
       if (!tracked.length) return "untracked";
+      const root = [...prefixes]
+        .reverse()
+        .find((prefix) =>
+          tracked.some(
+            (name) => name === prefix || name.startsWith(`${prefix}/`),
+          ),
+        )!;
+      indexedRoot?.(root);
       const missing = [...compilation.outputs.keys()]
         .filter((route) =>
           prefixes.every(
             (prefix) => !tracked.includes(pathForRoute(prefix, route)),
           ),
         )
-        .map((route) => pathForRoute(prefixes[0]!, route))
+        .map((route) => pathForRoute(root, route))
         .sort();
       if (!missing.length) return "tracked";
-      const root = prefixes[0] || GENERATED_DIRECTORY;
       throw new MoklyError(
         "build-invalid",
         `generated output is partly tracked by Git:\ntracked:\n${tracked
@@ -101,21 +115,25 @@ export class GitTrackedGeneratedOutput implements TrackedGeneratedOutput {
       );
     } catch (error) {
       if (
-        error instanceof GitProcessError &&
-        error.exitCode === 128 &&
-        /not a git repository/i.test(error.message)
-      )
-        return "untracked";
-      if (
         error instanceof MoklyError &&
         (error.code === "build-invalid" || error.code === "config-invalid")
       )
         throw error;
       throw new MoklyError(
         "build-invalid",
-        `could not check tracked generated output: ${errorMessage(error)}`,
+        `could not check tracked generated output: ${missingGit(error) ? "Git executable was not found; install Git and retry." : errorMessage(error)}`,
         { cause: error },
       );
     }
   }
+}
+
+function missingGit(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    "code" in error &&
+    error.code === "ENOENT" &&
+    "syscall" in error &&
+    error.syscall === "spawn git"
+  );
 }

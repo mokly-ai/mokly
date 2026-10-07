@@ -1,7 +1,9 @@
 import type { ManifestV9 } from "@mokly/viewer/data";
 
 import { EARLIER_BASELINE_MESSAGE } from "../../baseline/compatibility.js";
+import { BaselineNoticeState } from "../../baseline/notice_state.js";
 import { formatBuildDiagnostic } from "../../build/build_warnings.js";
+import type { GeneratedOutputSummary } from "../../build/output_summary.js";
 import { errorMessage } from "../../errors.js";
 import type { ServeReadyReport, WatchReport } from "../../server/reporter.js";
 import { cliErrorPresentation } from "../errors.js";
@@ -37,7 +39,7 @@ export class RichReporter implements CliReporter {
   readonly #success;
   #serveReport: ServeReadyReport | undefined;
   #servePhase: ReporterPhase | undefined;
-  readonly #incompatible = new Set<string>();
+  readonly #baseline = new BaselineNoticeState();
 
   constructor(readonly environment: TerminalEnvironment) {
     this.#glyphs = terminalGlyphs(environment.platform, environment.env);
@@ -55,12 +57,15 @@ export class RichReporter implements CliReporter {
     );
   }
 
-  outputWritten(count: number, directory: string, durationMs: number): void {
-    this.summary(
-      `Generated ${count} Mokly files.\n`,
-      `Generated ${count} files in ${directory}`,
-      durationMs,
-    );
+  outputWritten(summary: GeneratedOutputSummary, durationMs: number): void {
+    this.summary(summary.plain, summary.rich, durationMs);
+  }
+
+  baselineAccepted(commit: string): void {
+    this.#baseline.accept(commit);
+  }
+  baselineNotice(message: string): void {
+    this.diagnostic(message);
   }
 
   close(): void {
@@ -82,6 +87,7 @@ export class RichReporter implements CliReporter {
   }
 
   baselineReady(commit: string, cacheHit: boolean, durationMs: number): void {
+    this.baselineAccepted(commit);
     this.settleServePhase();
     this.line(
       this.environment.stdout,
@@ -132,8 +138,7 @@ export class RichReporter implements CliReporter {
   gitReferenceRefresh(_base: string): void {}
 
   incompatibleBaseline(commit: string): void {
-    if (this.#incompatible.has(commit)) return;
-    this.#incompatible.add(commit);
+    if (!this.#baseline.take(commit)) return;
     this.clearPhase();
     this.environment.stderr.write(`${EARLIER_BASELINE_MESSAGE}\n`);
   }

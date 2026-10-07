@@ -4,7 +4,6 @@ import { fileURLToPath } from "node:url";
 import type { ResolvedConfig } from "../config/types.js";
 import { timingArguments } from "../diagnostics/timings.js";
 
-import type { ResourceWatcher } from "./resource_watcher.js";
 import type { ServeOptions } from "./serve.js";
 import type {
   ProcessSupervisor,
@@ -47,15 +46,13 @@ export async function watcherReadyBeforeShutdown(
 /** Close queued work, active watchers, and child while preserving first failure. */
 export async function closeWatched(
   actionQueue: WatchActionQueue,
-  currentWatcher: () => ConsumerWatcher,
-  resources: ResourceWatcher,
+  watches: Pick<ConsumerWatcher, "close">,
   supervisor: ProcessSupervisor,
 ): Promise<void> {
   let firstError: unknown;
   for (const close of [
     () => actionQueue.close(),
-    () => currentWatcher().close(),
-    () => resources.close(),
+    () => watches.close(),
     () => supervisor.close(),
   ]) {
     try {

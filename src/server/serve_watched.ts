@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import { prepareLiveRuntime } from "../build/live_runtime.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { bindTimings, timeAsync } from "../diagnostics/timings.js";
+import { timeAsync } from "../diagnostics/timings.js";
 
 import { RepositoryCatalogueChangeClassifier } from "./component_changes.js";
 import {
@@ -13,28 +13,24 @@ import {
 } from "./demand/git_references.js";
 import { PreviewResources } from "./demand/resources.js";
 import { PlainServeReporter } from "./reporter.js";
-import { ResourceWatcher } from "./resource_watcher.js";
 import type { RunningServe, ServeDependencies, ServeOptions } from "./serve.js";
 import {
   closeWatched,
   createWatchedSupervisor,
   restartWatchedGeneration,
-  watcherReadyBeforeShutdown,
 } from "./serve_lifecycle.js";
 import type { ProcessSupervisor } from "./supervisor.js";
 import {
-  classifyWatchPath,
   NotificationGate,
   type RuntimeWatchAction,
   WatchActionQueue,
   WatchDebouncer,
   type WatchEvent,
 } from "./watch_events.js";
-import { hydrateWatchInventory } from "./watch_inventory.js";
 import { watchTargets } from "./watch_paths.js";
 import { reportedWatchProcessor } from "./watch_reporting.js";
+import { WatchSetup } from "./watch_setup.js";
 import { WatchedBackground } from "./watched_background.js";
-import { createSourceWatcher } from "./watcher.js";
 
 /** Serve accepted generations while watching typed source and resource changes. */
 export async function serveWatched(
@@ -57,24 +53,23 @@ export async function serveWatched(
     signalShutdown = resolve;
   });
   const report = (error: unknown) => reporter.runtimeDiagnostic(error);
-  const gate = new NotificationGate<WatchEvent>(report);
   const failures = new NotificationGate<Error>(report);
-  await hydrateWatchInventory(config);
+  const watches = new WatchSetup(config, watcherFactory, shutdown, report);
   let activeConfig = config;
-  let watcher = createSourceWatcher(watcherFactory, config, gate, report);
-  const resources = new ResourceWatcher(
-    watcherFactory,
-    (event) => gate.notify(event),
-    report,
-  );
+  const resources = watches.resources;
   let runtime: ComponentRuntime;
   let signature: string;
   let supervisor: ProcessSupervisor | undefined;
   let port: number;
   try {
-    await timeAsync("watch.source-ready", () => watcher.ready());
-    runtime = await prepareLiveRuntime(config);
+    const initial = (await watches.prepare(config))!;
+    initial.adopt();
+    await initial.close();
+    runtime = await prepareLiveRuntime(watches.config);
     activeConfig = runtime.config;
+    const inputs = (await watches.prepare(activeConfig, false))!;
+    inputs.adopt(activeConfig);
+    await inputs.close();
     signature = JSON.stringify(runtime.manifest);
     supervisor = createWatchedSupervisor(
       activeConfig,
@@ -85,18 +80,14 @@ export async function serveWatched(
     supervisor.replaceComponentRuntime(runtime, "stage");
     port = await timeAsync("child.ready", () => supervisor!.start());
   } catch (error) {
-    await Promise.allSettled([
-      watcher.close(),
-      resources.close(),
-      supervisor?.close(),
-    ]);
+    await Promise.allSettled([watches.close(), supervisor?.close()]);
     throw error;
   }
   const running = supervisor;
   running.onDiagnostic?.((message) => reporter.runtimeDiagnostic(message));
   const previews = new PreviewResources(
     watcherFactory,
-    (event) => gate.notify(event),
+    (event) => watches.notify(event),
     () => runtime,
     shutdown,
     report,
@@ -117,16 +108,14 @@ export async function serveWatched(
     runtime: () => runtime,
     shutdown,
     writeOutput: options.build ?? false,
+    ...(options.invocationDirectory
+      ? { invocationDirectory: options.invocationDirectory }
+      : {}),
   });
   running.onForeground?.((active) => background.foreground(active));
-  let debouncer: WatchDebouncer | undefined;
   const notify = (event: WatchEvent) => {
-    const action = classifyWatchPath(
-      event,
-      activeConfig,
-      new Set([...resources.paths, ...previews.paths]),
-    );
-    debouncer?.notify(action, event.path);
+    const action = watches.classify(event, previews.paths);
+    debouncer.notify(action, event.path);
   };
 
   const restart = () =>
@@ -135,23 +124,15 @@ export async function serveWatched(
   const reconfigure = async (candidate?: ResolvedConfig): Promise<void> => {
     const nextConfig =
       candidate ?? (await configLoader.load(activeConfig.configPath));
-    await hydrateWatchInventory(nextConfig);
-    const nextGate = new NotificationGate<WatchEvent>(report);
-    const replacement = createSourceWatcher(
-      watcherFactory,
-      nextConfig,
-      nextGate,
-      report,
-    );
-    let adopted = false;
+    let replacement = await watches.prepare(nextConfig, true, true);
+    if (!replacement) return;
     try {
-      if (!(await watcherReadyBeforeShutdown(replacement, shutdown)) || closed)
-        return;
-      const next = await prepareLiveRuntime(nextConfig);
       if (closed) return;
+      const next = await prepareLiveRuntime(replacement.config);
+      replacement = await watches.refine(next.config, replacement);
+      if (!replacement || closed) return;
       await background.invalidate(next.config);
       if (closed) return;
-      const previous = watcher;
       activeConfig = next.config;
       runtime = next;
       background.clearCompilation();
@@ -161,21 +142,14 @@ export async function serveWatched(
       );
       signature = JSON.stringify(next.manifest);
       running.replaceComponentRuntime(next, "stage");
-      watcher = replacement;
-      adopted = true;
-      debouncer?.close();
-      debouncer = new WatchDebouncer(
-        activeConfig.watch.debounceMs,
-        (action, paths) => queue.notify(action, paths),
-      );
-      nextGate.open(bindTimings(notify));
+      replacement.adopt(activeConfig);
       try {
-        await previous.close();
+        await replacement.close();
       } finally {
         if (!closed) await restart();
       }
     } finally {
-      if (!adopted) await replacement.close();
+      await replacement?.close();
     }
   };
 
@@ -208,6 +182,9 @@ export async function serveWatched(
       await background.invalidate();
       if (closed) return;
       activeConfig = next.config;
+      const inputs = (await watches.prepare(activeConfig, false))!;
+      inputs.adopt(activeConfig);
+      await inputs.close();
       runtime = next;
       background.clearCompilation();
       const nextSignature = JSON.stringify(next.manifest);
@@ -233,7 +210,7 @@ export async function serveWatched(
     );
     if (action === "reload") {
       running.notifyUpdate(undefined, undefined, background.changesStatus);
-      background.schedule(background.compilation);
+      background.schedule(background.compilation, true);
     } else await restart();
   };
   const queue = new WatchActionQueue(
@@ -252,8 +229,8 @@ export async function serveWatched(
       queue.notify("evidence", initial ? [] : [base]);
     },
   );
-  debouncer = new WatchDebouncer(
-    activeConfig.watch.debounceMs,
+  const debouncer = new WatchDebouncer(
+    () => activeConfig.watch.debounceMs,
     (action, paths) => queue.notify(action, paths),
   );
   failures.open((error) => {
@@ -262,7 +239,7 @@ export async function serveWatched(
       queue.notify("restart");
     }
   });
-  gate.open(bindTimings(notify));
+  watches.open(notify);
   background.schedule();
   references.replace(
     activeConfig.repoRoot,
@@ -276,11 +253,11 @@ export async function serveWatched(
       if (closed) return;
       closed = true;
       signalShutdown();
-      debouncer?.close();
+      debouncer.close();
       await references.close();
       await background.close();
       await previews.close();
-      await closeWatched(queue, () => watcher, resources, running);
+      await closeWatched(queue, watches, running);
     },
   };
 }

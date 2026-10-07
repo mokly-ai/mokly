@@ -26,7 +26,11 @@ test("Serve reports an earlier v7 baseline once and keeps All available", async 
   const running = await serve(
     fixture.config,
     { base: "HEAD", port: 0, watch: false },
-    { reporter: new PlainServeReporter((value) => output.push(value)) },
+    {
+      reporter: new PlainServeReporter(undefined, (value) =>
+        output.push(value),
+      ),
+    },
   );
   t.after(() => running.close());
 

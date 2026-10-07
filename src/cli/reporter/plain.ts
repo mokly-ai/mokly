@@ -1,10 +1,12 @@
 import type { ManifestV9 } from "@mokly/viewer/data";
 
 import { EARLIER_BASELINE_MESSAGE } from "../../baseline/compatibility.js";
+import { BaselineNoticeState } from "../../baseline/notice_state.js";
 import {
   formatBuildDiagnostic,
   type BuildDiagnostic,
 } from "../../build/build_warnings.js";
+import type { GeneratedOutputSummary } from "../../build/output_summary.js";
 import { errorMessage } from "../../errors.js";
 import type { ServeReadyReport, WatchReport } from "../../server/reporter.js";
 
@@ -23,7 +25,7 @@ const INACTIVE_PHASE: ReporterPhase = {
 /** Compatibility reporter whose bytes match the historical CLI output. */
 export class PlainReporter implements CliReporter {
   readonly mode = "plain" as const;
-  readonly #incompatible = new Set<string>();
+  readonly #baseline = new BaselineNoticeState();
 
   constructor(readonly environment: TerminalEnvironment) {}
 
@@ -31,13 +33,17 @@ export class PlainReporter implements CliReporter {
 
   clearServe(): void {}
 
+  baselineAccepted(commit: string): void {
+    this.#baseline.accept(commit);
+  }
+  baselineNotice(message: string): void {
+    this.write(`${message}\n`);
+  }
   baselinePreparing(_base: string): void {}
 
-  baselineReady(
-    _commit: string,
-    _cacheHit: boolean,
-    _durationMs: number,
-  ): void {}
+  baselineReady(commit: string, _cacheHit: boolean, _durationMs: number): void {
+    this.baselineAccepted(commit);
+  }
 
   buildWarnings(diagnostics: readonly BuildDiagnostic[]): void {
     for (const diagnostic of diagnostics)
@@ -48,8 +54,8 @@ export class PlainReporter implements CliReporter {
 
   catalogueReady(_manifest: ManifestV9, _durationMs: number): void {}
 
-  outputWritten(count: number): void {
-    this.write(`Generated ${count} Mokly files.\n`);
+  outputWritten(summary: GeneratedOutputSummary, durationMs: number): void {
+    this.summary(summary.plain, summary.rich, durationMs);
   }
 
   changesReady(_changed: number, _durationMs: number): void {}
@@ -63,9 +69,8 @@ export class PlainReporter implements CliReporter {
   gitReferenceRefresh(_base: string): void {}
 
   incompatibleBaseline(commit: string): void {
-    if (this.#incompatible.has(commit)) return;
-    this.#incompatible.add(commit);
-    this.environment.stderr.write(`${EARLIER_BASELINE_MESSAGE}\n`);
+    if (this.#baseline.take(commit))
+      this.baselineNotice(EARLIER_BASELINE_MESSAGE);
   }
 
   renderError(error: unknown, redact: (value: string) => string): void {

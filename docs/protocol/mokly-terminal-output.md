@@ -233,7 +233,7 @@ is a warning and does not stop Serve.
 
 ## Writing Watch Commands
 
-The approved writer target makes `build --watch` and `serve --build` use one summary helper
-as `build`, with `.` for an empty relative catalogue path. Report completed
+`build --watch`, `serve --build` and `build` use one summary helper,
+with `.` for an empty invocation-relative catalogue path. Report completed
 writes only. The [watch-writer contract](./mokly-watch-writers.md) defines
 cancellation and plain stdout notices; plain Serve performs no write.

@@ -1,3 +1,5 @@
+import { setImmediate } from "node:timers/promises";
+
 import type { ComponentViewRecord } from "@mokly/viewer";
 import type { ManifestV9, ArtifactView } from "@mokly/viewer/data";
 
@@ -79,12 +81,24 @@ async function compileMeasured(
   },
   signal?: AbortSignal,
 ): Promise<Compilation> {
-  const graph = accepted?.graph ?? (await loadConsumerGraph(config));
+  signal?.throwIfAborted();
+  const checkpoint = async () => {
+    signal?.throwIfAborted();
+    if (signal) await setImmediate();
+    signal?.throwIfAborted();
+    await accepted?.checkpoint();
+    signal?.throwIfAborted();
+  };
+  const graph =
+    accepted?.graph ??
+    (await loadConsumerGraph(config, true, undefined, signal));
+  await checkpoint();
   config = {
     ...config,
     ...graph.discovery,
     entryModules: graph.entrySources,
     sourceFiles: graph.sourceFiles,
+    postcssWatchDirectories: graph.postcssWatchDirectories ?? [],
   };
   const registry = timeSync("registry.prepare", () =>
     prepareRegistry(graph.definitions, config, graph.documents),
@@ -113,34 +127,35 @@ async function compileMeasured(
   const componentViews = new Map<string, ComponentViewRecord>();
   const pending = new PendingGeneratedFiles(graph.styleOutputs);
   const policy = new PublicFilePolicy(config);
-  const outputs = accepted
-    ? await timeAsync("render", () =>
-        renderCooperatively(
-          registry.entries,
-          graph,
-          config,
-          fragmentViews,
-          componentViews,
-          accepted.checkpoint,
-          pending,
-          policy,
-        ),
-      )
-    : timeSync("render", () =>
-        renderFragments(
-          registry.entries,
-          graph.renderer,
-          config,
-          fragmentViews,
-          graph.renderWithComponents,
-          componentViews,
-          undefined,
-          { routes: graph.stylesheetRoutes, pending, policy },
-        ),
-      );
+  const outputs =
+    accepted || signal
+      ? await timeAsync("render", () =>
+          renderCooperatively(
+            registry.entries,
+            graph,
+            config,
+            fragmentViews,
+            componentViews,
+            checkpoint,
+            pending,
+            policy,
+          ),
+        )
+      : timeSync("render", () =>
+          renderFragments(
+            registry.entries,
+            graph.renderer,
+            config,
+            fragmentViews,
+            graph.renderWithComponents,
+            componentViews,
+            undefined,
+            { routes: graph.stylesheetRoutes, pending, policy },
+          ),
+        );
   pending.addHtmlMap(outputs);
   const beforeLinks = new Map(outputs);
-  await accepted?.checkpoint();
+  await checkpoint();
   const resolvedLinks = timeSync("html.links", () =>
     resolveDocumentLinks(outputs, registry.entries, config, fragmentViews),
   );
@@ -167,7 +182,7 @@ async function compileMeasured(
       config,
     ),
   );
-  await accepted?.checkpoint();
+  await checkpoint();
   timeSync("html.ignore-rules", () => {
     for (const [route, content] of outputs) {
       normalizeSingleDocument(content, route);
@@ -185,7 +200,7 @@ async function compileMeasured(
   timeSync("components.validate-resources", () =>
     validateComponentResources(componentViews, config, pending, policy),
   );
-  await accepted?.checkpoint();
+  await checkpoint();
   const resourceSeeds = componentResourceSeeds(componentViews);
   const assetClosure = timeSync("html.links-and-resources", () =>
     validateHtmlLinks(
@@ -253,5 +268,6 @@ async function compileMeasured(
       0,
     ),
   }));
+  await checkpoint();
   return compilation;
 }

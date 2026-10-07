@@ -13,13 +13,27 @@ import { StylePreprocessor } from "./preprocess.js";
 export async function createStyleProcessor(
   config: ResolvedConfig,
   loader: PostcssConfigLoader,
+  signal?: AbortSignal,
 ): Promise<{ preprocessor: StylePreprocessor; close: () => Promise<void> }> {
+  signal?.throwIfAborted();
   const isolated =
     config.postcss && loader instanceof FileSystemPostcssConfigLoader
       ? new IsolatedPostcssProcessor(config)
       : undefined;
+  let cancellation: Promise<void> | undefined;
+  const abort = () => {
+    cancellation ??= isolated?.close();
+    void cancellation?.catch(() => {});
+  };
+  signal?.addEventListener("abort", abort, { once: true });
+  const close = async () => {
+    signal?.removeEventListener("abort", abort);
+    await (cancellation ?? isolated?.close());
+  };
   try {
+    signal?.throwIfAborted();
     await isolated?.start();
+    signal?.throwIfAborted();
     const plugins =
       config.postcss && !isolated ? await loader.load(config) : [];
     return {
@@ -30,12 +44,11 @@ export async function createStyleProcessor(
             ? new PostcssStyleProcessor(config, plugins)
             : undefined),
       ),
-      close: async () => {
-        await isolated?.close();
-      },
+      close,
     };
   } catch (error) {
-    await isolated?.close();
+    await close();
+    signal?.throwIfAborted();
     throw error;
   }
 }

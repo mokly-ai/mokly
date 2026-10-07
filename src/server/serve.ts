@@ -1,11 +1,10 @@
-import path from "node:path";
-
 import type { BaselineBuilder } from "../baseline/types.js";
 import { prepareLiveRuntime } from "../build/live_runtime.js";
 import {
   FileSystemGeneratedOutputStore,
   type GeneratedOutputStore,
 } from "../build/output_store.js";
+import { generatedOutputSummary } from "../build/output_summary.js";
 import { FileSystemConfigLoader, type ConfigLoader } from "../config/load.js";
 import type { ResolvedConfig } from "../config/types.js";
 
@@ -36,6 +35,7 @@ import {
 /** Public Serve options after CLI validation. */
 export interface ServeOptions {
   base?: string;
+  invocationDirectory?: string;
   build?: boolean;
   port: number;
   watch: boolean;
@@ -143,12 +143,17 @@ export async function serve(
             );
         },
         diagnostic: (error) => reporter.runtimeDiagnostic(error),
+        baselineNotice: (message) => reporter.baselineNotice(message),
+        baselineAccepted: (commit) => reporter.baselineAccepted(commit),
         incompatibleBaseline: (commit) => reporter.incompatibleBaseline(commit),
         writeOutput: options.build ?? false,
         outputWritten: (compilation, duration) =>
           reporter.outputWritten?.(
-            compilation.outputs.size,
-            path.relative(config.repoRoot, config.mockupsDir),
+            generatedOutputSummary(
+              compilation,
+              config,
+              options.invocationDirectory ?? config.repoRoot,
+            ),
             duration,
           ),
         ...(dependencies.baselineBuilder

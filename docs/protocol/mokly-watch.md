@@ -188,7 +188,7 @@ The [disclosure persistence contract](./mokly-disclosure-persistence.md#recovery
 owns these checks. The watched host stores no Browse record when a captured
 general shell snapshot has no live status.
 
-The approved [shared watch setup](./mokly-watch-writers.md) will extend Serve
-and `build --watch` with one setup module, initial-edit retention and
-compile/lock cancellation. The current Build watcher shares classification
-helpers but does not yet share Serve's full inventory and resource lifecycle.
+The [shared watch setup](./mokly-watch-writers.md) supplies Serve and
+`build --watch` with one inventory and resource lifecycle. It retains initial
+edits across watcher replacement. Watched Build cancels compilation and lock
+waits when shutdown begins; both commands drain active work before closing.

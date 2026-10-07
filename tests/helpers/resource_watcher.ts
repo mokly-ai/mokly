@@ -77,6 +77,9 @@ export class ResourceTestWatcher implements ConsumerWatcher {
   async ready(): Promise<void> {
     await this.onReady(this);
   }
+  emit(event: WatchEvent): void {
+    this.changed?.(event);
+  }
   change(candidate: string): void {
     this.changed?.({ path: candidate, kind: "change" });
   }

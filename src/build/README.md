@@ -103,6 +103,9 @@ CSS Modules mutation checklist:
   whole-tree transaction. Plain Serve, export and publication read memory.
   Existing generated trees cannot contain symlinks or special files at a writer
   or tracked-check boundary. No command checks Git-ignore committability.
+  `git_work_tree.ts` proves work-tree absence from Git's machine status and
+  metadata checks; it never matches localized diagnostics. `tracked_output.ts`
+  carries the actual indexed prefix into Check remedies for catalogue aliases.
   Imported CSS requires a portable module path even when an entry overrides
   its identity with `path`; the diagnostic names that module under the
   [imported-styles error contract](../../docs/protocol/mokly-imported-styles-errors.md).
@@ -121,6 +124,12 @@ returns a new inventory and cannot mutate an accepted runtime after a failed bui
 in one consumer React graph. React and React
 DOM resolve from consumer package roots, including npx installations. The graph
 stays in memory and retains its complete private source inventory.
+
+Signal-aware compilation checks cancellation before graph work, between views
+and at phase boundaries. `cancellable_bundle.ts` drains esbuild cancellation
+and disposes its contexts; the isolated PostCSS processor closes on abort.
+Watched Build uses this path from inventory through its output-lock wait.
+The whole-tree writer retains its existing rollback boundary once writes start.
 
 `consumer_entry.ts` collects branded default and named exports, one array level,
 and component registrations. Aliases of one object within a module register once;

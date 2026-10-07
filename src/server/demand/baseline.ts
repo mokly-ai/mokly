@@ -30,6 +30,7 @@ export class BackgroundBaseline {
     private readonly builder?: BaselineBuilder,
     private readonly progressChanged?: (event: BaselineProgress) => void,
     private readonly diagnostic?: (message: string) => void,
+    private readonly notice?: (message: string) => void,
   ) {}
 
   get commit(): string | undefined {
@@ -73,6 +74,7 @@ export class BackgroundBaseline {
         onProgress: (event) => this.progress(controller, event),
         ...(this.builder ? { builder: this.builder } : {}),
         ...(this.diagnostic ? { diagnostic: this.diagnostic } : {}),
+        ...(this.notice ? { notice: this.notice } : {}),
       });
       this.active = { key, commit, controller, result };
       void result.catch((error: unknown) => {

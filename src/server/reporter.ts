@@ -1,11 +1,13 @@
 import type { ManifestV9 } from "@mokly/viewer/data";
 
 import { EARLIER_BASELINE_MESSAGE } from "../baseline/compatibility.js";
+import { BaselineNoticeState } from "../baseline/notice_state.js";
 import {
   formatBuildDiagnostic,
   type BuildDiagnostic,
 } from "../build/build_warnings.js";
 import type { Compilation } from "../build/compile.js";
+import type { GeneratedOutputSummary } from "../build/output_summary.js";
 import { errorMessage } from "../errors.js";
 
 import type { RuntimeWatchAction } from "./watch_events.js";
@@ -29,7 +31,9 @@ export interface WatchReport {
 
 /** Presentation boundary for Serve lifecycle, watch, and runtime diagnostics. */
 export interface ServeReporter {
-  outputWritten?(count: number, directory: string, durationMs: number): void;
+  outputWritten?(summary: GeneratedOutputSummary, durationMs: number): void;
+  baselineAccepted(commit: string): void;
+  baselineNotice(message: string): void;
   baselinePreparing(base: string): void;
   baselineReady(commit: string, cacheHit: boolean, durationMs: number): void;
   buildWarnings(diagnostics: readonly BuildDiagnostic[]): void;
@@ -57,18 +61,24 @@ export function reportCatalogueReady(
 
 /** Default server reporter: lifecycle events stay silent and errors keep old bytes. */
 export class PlainServeReporter implements ServeReporter {
-  private readonly incompatible = new Set<string>();
+  private readonly baseline = new BaselineNoticeState();
   constructor(
     private readonly write: (value: string) => void = (value) =>
       process.stderr.write(value),
+    private readonly writeNotice: (value: string) => void = (value) =>
+      process.stdout.write(value),
   ) {}
 
+  baselineAccepted(commit: string): void {
+    this.baseline.accept(commit);
+  }
+  baselineNotice(message: string): void {
+    this.writeNotice(`${message}\n`);
+  }
   baselinePreparing(_base: string): void {}
-  baselineReady(
-    _commit: string,
-    _cacheHit: boolean,
-    _durationMs: number,
-  ): void {}
+  baselineReady(commit: string, _cacheHit: boolean, _durationMs: number): void {
+    this.baselineAccepted(commit);
+  }
   buildWarnings(diagnostics: readonly BuildDiagnostic[]): void {
     for (const diagnostic of diagnostics)
       this.write(`[mokly/warning] ${formatBuildDiagnostic(diagnostic)}\n`);
@@ -78,9 +88,8 @@ export class PlainServeReporter implements ServeReporter {
   changesUnavailable(_durationMs: number): void {}
   gitReferenceRefresh(_base: string): void {}
   incompatibleBaseline(commit: string): void {
-    if (this.incompatible.has(commit)) return;
-    this.incompatible.add(commit);
-    this.write(`${EARLIER_BASELINE_MESSAGE}\n`);
+    if (this.baseline.take(commit))
+      this.baselineNotice(EARLIER_BASELINE_MESSAGE);
   }
   runtimeDiagnostic(error: unknown): void {
     this.write(`${errorMessage(error)}\n`);

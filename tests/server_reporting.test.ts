@@ -215,6 +215,11 @@ class RecordingReporter implements ServeReporter {
     });
   }
 
+  baselineAccepted(_commit: string): void {}
+  baselineNotice(message: string): void {
+    this.events.push(`notice:${message}`);
+  }
+
   baselinePreparing(base: string): void {
     this.events.push(`baseline-preparing:${base}`);
   }

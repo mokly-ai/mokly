@@ -21,6 +21,7 @@ test("partly tracked Check gives one directory ignore rule for tracked reserved 
   const route = "mockups/mokly-generated/styles/entries/fixture.mockup.tsx.css";
   const tracked = new GitTrackedGeneratedOutput({
     async run(args: readonly string[]) {
+      if (args.includes("--is-inside-work-tree")) return "true\n";
       if (args[0] === "rev-parse") return fixture.root;
       if (args[0] === "ls-files") return `${route}\0`;
       if (args[0] === "grep") return "";

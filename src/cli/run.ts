@@ -3,6 +3,7 @@ import path from "node:path";
 import { enforceStrictBuildWarnings } from "../build/build_warnings.js";
 import { compileCatalogue } from "../build/compile.js";
 import { FileSystemGeneratedOutputStore } from "../build/output_store.js";
+import { generatedOutputSummary } from "../build/output_summary.js";
 import { loadConfig } from "../config/load.js";
 import { runWithTimings, timeAsync } from "../diagnostics/timings.js";
 import { runServerChild } from "../server/child.js";
@@ -91,6 +92,7 @@ async function execute(
         timeAsync("export", () =>
           runExport(config, {
             diagnostic: (message) => reporter.runtimeDiagnostic(message),
+            baselineNotice: (message) => reporter.baselineNotice(message),
             incompatibleBaseline: (commit) =>
               reporter.incompatibleBaseline(commit),
             onBuildDiagnostics: (diagnostics) => {
@@ -146,9 +148,8 @@ async function execute(
       "Generated output written",
       () => outputStore.write(compilation, config),
     );
-    reporter.summary(
-      `Generated ${compilation.outputs.size} Mokly files.\n`,
-      `Generated ${compilation.outputs.size} files in ${relativeOutput(cwd, config.mockupsDir)}`,
+    reporter.outputWritten?.(
+      generatedOutputSummary(compilation, config, cwd),
       environment.now() - startedAt,
     );
     return 0;
@@ -206,6 +207,7 @@ async function execute(
       {
         ...(arguments_.base !== undefined ? { base: arguments_.base } : {}),
         port,
+        invocationDirectory: cwd,
         build: arguments_.build ?? false,
         watch: arguments_.watch ?? true,
       },
@@ -230,10 +232,6 @@ async function execute(
     await openServedBrowser(environment.browserOpener, reporter, running.url);
   await shutdown;
   return 0;
-}
-
-function relativeOutput(cwd: string, output: string): string {
-  return path.relative(cwd, output) || ".";
 }
 
 function waitForShutdown(

@@ -72,6 +72,12 @@ pairs routes and authored assets; Git changed paths remain repository-relative. 
 [baseline addressing](../../docs/protocol/mokly-baseline-addressing.md).
 Only that factory constructs the prepared type.
 
+Preparation's `notice` callback carries the successful inventory/rebuild note.
+Its separate `diagnostic` callback retains maintenance failures. The command
+reporter sends plain notices to stdout and failures to stderr. Git process
+failures preserve exit status, signal and both streams for callers such as
+Check that interpret machine-readable results; no human message is classified.
+
 `repository.ts` contains read-only factories and has no import path to the
 builder. `baselineReaderForCommit` and `readOnlyRepositoryForCommit` open an
 already prepared commit without rebuilding. Comparison and

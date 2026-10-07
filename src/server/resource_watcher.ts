@@ -17,6 +17,8 @@ import type { ConsumerWatcher, ConsumerWatcherFactory } from "./watcher.js";
 
 /** Ready resource inputs adopted only after the matching output succeeds. */
 export interface PreparedResourceWatch {
+  readonly closure: ReadonlySet<string>;
+  readonly valid: boolean;
   adopt(): void;
   close(): Promise<void>;
 }
@@ -63,6 +65,8 @@ export class ResourceWatcher {
     );
     if (sameWatch(snapshot, this.#snapshot)) {
       return {
+        closure: snapshot.closure,
+        valid: snapshot.invalid.size === 0,
         adopt: () => {
           if (!this.#closed)
             this.#snapshot = acceptedSnapshot(this.#snapshot, snapshot);
@@ -115,6 +119,8 @@ export class ResourceWatcher {
         let disposed = false;
         let previous: ConsumerWatcher | undefined;
         return {
+          closure: snapshot.closure,
+          valid: snapshot.invalid.size === 0,
           adopt: () => {
             if (this.#closed || adopted || disposed) return;
             previous = this.#watcher;

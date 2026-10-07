@@ -20,6 +20,7 @@ export async function prepareExportBaseline(
       : await prepareReviewRepository(config, base, {
           ...(options.signal ? { signal: options.signal } : {}),
           ...(options.diagnostic ? { diagnostic: options.diagnostic } : {}),
+          ...(options.baselineNotice ? { notice: options.baselineNotice } : {}),
         });
   } catch (error) {
     if (!isIncompatibleEarlierBaseline(error)) throw error;

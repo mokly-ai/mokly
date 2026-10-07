@@ -2,14 +2,14 @@
 
 ## Delivery Status
 
-Static-delivery parsing and export refusals are implemented. Git-state and
-frame-identity changes are approved targets in
+Git-state checks, static-delivery parsing and export refusals are implemented.
+Frame-identity changes remain an approved target in
 [Generated Output Review Fixes](../../plans/generated-output-review-fixes.md).
 Format gates detect unsupported data; they do not convert it.
 
 ## Git State For Check
 
-Status: Approved target.
+Status: Implemented.
 
 After successful compilation, Check asks Git whether the configured directory
 is inside a work tree. Use `git rev-parse --is-inside-work-tree` and interpret

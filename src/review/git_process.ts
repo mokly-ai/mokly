@@ -9,7 +9,8 @@ export class GitProcessError extends Error {
   constructor(
     readonly exitCode: number | null,
     readonly signal: NodeJS.Signals | null,
-    stderr: string,
+    readonly stderr: string,
+    readonly stdout = "",
   ) {
     super(`Git exited with ${exitCode ?? signal}: ${stderr}`);
     this.name = "GitProcessError";
@@ -71,6 +72,7 @@ export async function executeGit(
             code,
             signalName,
             Buffer.concat(stderr).toString("utf8"),
+            Buffer.concat(stdout).toString("utf8"),
           ),
         );
       else resolve(Buffer.concat(stdout));

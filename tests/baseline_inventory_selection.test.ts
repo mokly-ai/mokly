@@ -42,7 +42,7 @@ for (const variant of ["complete", "missing", "stale", "extra"] as const) {
           return runner.run(args);
         },
       },
-      diagnostic: (message) => diagnostics.push(message),
+      notice: (message) => diagnostics.push(message),
     });
     assert.equal(treeReads, 1);
     assert.equal(selected.descriptor.layout, "generated-v9");

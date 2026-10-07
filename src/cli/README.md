@@ -106,7 +106,12 @@ ordinary test runners pipe stdout and intentionally select plain mode.
 - [Timing diagnostics](../../docs/protocol/mokly-timings.md)
 - [Watched development](../../docs/protocol/mokly-watch.md)
 
-The approved [watch-writer contract](../../docs/protocol/mokly-watch-writers.md)
-shares summaries across writing commands and sends successful plain baseline
-notes to stdout. [Check boundaries](../../docs/protocol/mokly-boundary-results.md#git-state-for-check)
+`build_watch.ts` uses Serve's `watch_setup.ts` for graph/PostCSS inventory,
+source gates and checked authored-resource watches. It passes shutdown through
+compilation and the writer lock, then drains work before closing watchers.
+The [watch-writer contract](../../docs/protocol/mokly-watch-writers.md) shares
+`build/output_summary.ts` across writing commands. Successful plain baseline
+notes use stdout; warnings and failures retain stderr. Earlier-version notices
+reset when the accepted base changes, including a successful blob base.
+[Check boundaries](../../docs/protocol/mokly-boundary-results.md#git-state-for-check)
 use machine-readable Git results without matching localized messages.

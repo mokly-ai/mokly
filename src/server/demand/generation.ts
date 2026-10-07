@@ -6,9 +6,11 @@ import type {
 } from "../../baseline/types.js";
 import type { Compilation } from "../../build/compile.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
+import type { GeneratedFile } from "../../build/generated_file.js";
 import type { GeneratedOutputStore } from "../../build/output_store.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { timeAsync, timingCounts } from "../../diagnostics/timings.js";
+import { MANIFEST_NAME } from "../../registry/manifest.js";
 import { acceptedGenerationFromCompilation } from "../../review/accepted_generation.js";
 import type { PreparedReviewRepository } from "../../review/prepare.js";
 import {
@@ -21,6 +23,7 @@ import type {
 } from "../component_change_types.js";
 import { RepositoryCatalogueChangeClassifier } from "../component_changes.js";
 import { PlainServeReporter } from "../reporter.js";
+import { refreshResourceCompilation } from "../resource_compilation.js";
 import type {
   PreparedResourceWatch,
   ResourceWatcher,
@@ -49,6 +52,8 @@ export interface BackgroundGenerationOptions {
   readonly baselineProgress?: (event: BaselineProgress) => void;
   /** Route background failures through the process's sole terminal owner. */
   readonly diagnostic?: (error: unknown) => void;
+  readonly baselineNotice?: (message: string) => void;
+  readonly baselineAccepted?: (commit: string) => void;
   /** Report the expected earlier-version outcome once per baseline commit. */
   readonly incompatibleBaseline?: (commit: string) => void;
   /** Injected by tests; the composition root builds the real one on demand. */
@@ -62,6 +67,8 @@ export interface BackgroundGenerationOptions {
 
 export class BackgroundGeneration {
   private worker: BackgroundCompilation | undefined;
+  private written:
+    { directory: string; manifest: GeneratedFile | undefined } | undefined;
   private adoption: Promise<void> = Promise.resolve();
   private sequence = 0;
   private closed = false;
@@ -90,20 +97,26 @@ export class BackgroundGeneration {
       options.diagnostic
         ? (message) => options.diagnostic?.(message)
         : undefined,
+      options.baselineNotice,
     );
   }
 
-  start(runtime: ComponentRuntime, base: string, existing?: Compilation): void {
+  start(
+    runtime: ComponentRuntime,
+    base: string,
+    existing?: Compilation,
+    refreshOutput = false,
+  ): void {
     if (this.closed) return;
     const sequence = ++this.sequence;
     const controller = (this.controller = new AbortController());
-    const worker = (this.worker = new BackgroundCompilation(runtime, existing));
+    let worker = (this.worker = new BackgroundCompilation(runtime, existing));
     worker.foreground(this.busy);
     const current = () => !this.closed && sequence === this.sequence;
     this.adoption = (async () => {
       let prepared: PreparedResourceWatch | undefined;
       try {
-        const compilation = await worker.compilation;
+        let compilation = await worker.compilation;
         if (!current()) return;
         prepared = await this.options.resources?.prepare(
           runtime.config,
@@ -112,13 +125,35 @@ export class BackgroundGeneration {
           existing !== undefined,
         );
         if (!current()) return;
-        if (!existing && this.options.writeOutput) {
+        const refreshed = refreshResourceCompilation(compilation, prepared);
+        if (refreshed !== compilation) {
+          compilation = refreshed;
+          await worker.close();
+          if (!current()) return;
+          worker = this.worker = new BackgroundCompilation(
+            runtime,
+            compilation,
+          );
+          worker.foreground(this.busy);
+        }
+        const written = {
+          directory: runtime.config.generatedDir,
+          manifest: compilation.outputs.get(MANIFEST_NAME),
+        };
+        const changed =
+          written.directory !== this.written?.directory ||
+          written.manifest !== this.written?.manifest;
+        if (
+          (!existing || (refreshOutput && changed)) &&
+          this.options.writeOutput
+        ) {
           const started = Date.now();
           await this.store.write(
             compilation,
             runtime.config,
             controller.signal,
           );
+          this.written = written;
           this.options.outputWritten?.(compilation, Date.now() - started);
         }
         if (!current()) return;
@@ -133,7 +168,10 @@ export class BackgroundGeneration {
               )
             : undefined;
         if (!current()) return;
-        if (baseline) this.options.baselinePrepared?.(baseline);
+        if (baseline) {
+          this.options.baselineAccepted?.(baseline.commit);
+          this.options.baselinePrepared?.(baseline);
+        }
         const classification = await timeAsync("changes.classify", () =>
           this.classifier instanceof RepositoryCatalogueChangeClassifier
             ? worker.classify(base, baseline)
