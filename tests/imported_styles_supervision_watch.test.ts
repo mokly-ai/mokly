@@ -54,15 +54,23 @@ test(
     context.after(() => watcher.close());
     await watcher.ready();
     await fs.writeFile(file, ".b{}");
-    assert.equal(
-      await Promise.race([
-        observed,
-        new Promise<string>((_, reject) =>
-          setTimeout(() => reject(new Error("watch event timed out")), 9000),
-        ),
-      ]),
-      file,
-    );
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    try {
+      assert.equal(
+        await Promise.race([
+          observed,
+          new Promise<string>((_, reject) => {
+            timeout = setTimeout(
+              () => reject(new Error("watch event timed out")),
+              10_000,
+            );
+          }),
+        ]),
+        file,
+      );
+    } finally {
+      clearTimeout(timeout);
+    }
   },
 );
 

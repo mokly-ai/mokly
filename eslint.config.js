@@ -60,6 +60,27 @@ export default tseslint.config(
     },
   },
   {
+    files: ["tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}"],
+    ignores: ["tests/helpers/durations.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "BinaryExpression[operator='-'][right.type!='Literal']:matches([left.type='CallExpression'][left.callee.property.name='now'][left.callee.object.name=/^(performance|Date)$/], [left.callee.property.name='bigint'][left.callee.object.property.name='hrtime'])",
+          message:
+            "Use operation counts, captured watcher targets, event order, or fake clocks in tests. Report duration text with tests/helpers/durations.ts. See docs/protocol/ci-test-timing.md.",
+        },
+        {
+          selector:
+            "BinaryExpression[operator='+'][left.callee.property.name='now'][left.callee.object.name=/^(performance|Date)$/][right.type='Literal'][right.value<10000]",
+          message:
+            "Use polling deadlines of at least 10,000 ms. See docs/protocol/ci-test-timing.md.",
+        },
+      ],
+    },
+  },
+  {
     files: [
       "src/config/**/*.ts",
       "src/build/discovery.ts",

@@ -46,10 +46,10 @@ hydration suite fail before any subprocess starts.
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Repository       | Live dependency audit first; Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                                                                                                          |
 | Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; every clean consumer smoke using that pair. Real `prepack` builds remain part of packing. |
-| Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most two files active. A shard runs its whole-file partition.                                                                                                                                                                                                                            |
-| Browser          | One ordinary package/example preparation followed by every non-hydration Playwright spec, with `fullyParallel: false`, one worker, existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                                                                          |
-| Hydration        | One ordinary package/example preparation followed by every Playwright spec whose filename contains `hydration`, using the same browser settings without sharding.                                                                                                                                                                                                                      |
-| Native platforms | On macOS and Windows, build once and run export transaction and destination-race tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                                                        |
+| Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. A shard runs its whole-file partition.                                                                                                                                                               |
+| Browser          | One ordinary package/example preparation followed by every non-hydration Playwright spec, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                  |
+| Hydration        | One ordinary package/example preparation followed by every Playwright spec whose filename contains `hydration`, using the same browser settings without sharding and with the [hydration worker default](./ci-suite-evidence.md#test-concurrency). Its route-inventory spec runs its independent route tests in parallel mode.                                                         |
+| Native platforms | On macOS and Windows, build once and run export transaction, destination-race, writer-lock and cache-ignore tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                             |
 | Required CI      | Evaluate the result and evidence from the repository job, every package runtime selected for this event, all selected unit, browser, and hydration runtime combinations, and both native platforms.                                                                                                                                                                                    |
 
 Complete and selected suites share gate definitions; adding a suite command adds
@@ -79,7 +79,7 @@ The public `npm test` and `npm run test:browser` commands prepare package and
 example output; the latter runs both Playwright projects and every spec.
 Filtering or selecting a project is partial verification. `npm test` and
 `test:prepared` share recursive discovery of `.test.ts` and `.test.tsx` files
-under `tests/` and `packages/viewer/tests/`, with two-file concurrency. The
+under `tests/` and `packages/viewer/tests/`, with the same file concurrency. The
 developer runner fails on failures, cancellations, and unreported files; it
 tolerates skipped and todo tests (including intentional Windows skips) and
 prints their count. The prepared runner and every `cargo xtask check` suite
@@ -106,9 +106,9 @@ state. The example preview unit test copies the checked-out example and tooling
 into an isolated fixture repository, commits that fixture-owned baseline,
 applies one deterministic source edit and asserts its exact changed
 destinations and count. The browser suite's example server runs with
-`--base HEAD` and compares with the checked-out `HEAD`. A fixture repository may
-create and read its own remotes because those references are fixture-owned
-inputs inside the test tree.
+`--base HEAD` and compares with the checked-out `HEAD`; every worker's server
+uses that same command. A fixture repository may create and read its own
+remotes because those references are fixture-owned inputs inside the test tree.
 
 CI's package, unit, browser, and hydration jobs key npm's download cache from
 the checked-out `package-lock.json`; none resolves `origin/main` or reads a

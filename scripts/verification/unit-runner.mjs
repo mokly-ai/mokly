@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
 
+import { unitTestConcurrency } from "./concurrency.mjs";
 import {
   defaultReportPath,
   discoverUnitFiles,
@@ -22,6 +23,7 @@ export async function runUnitVerification(policy, argv) {
   if (policy !== "strict" && policy !== "developer")
     throw new Error(`unknown unit verification policy ${policy}`);
   const shard = parseShardArgument(argv);
+  const concurrency = unitTestConcurrency();
   const identity = await verificationIdentity(repositoryRoot);
   const reportPath =
     process.env.MOKLY_VERIFICATION_REPORT ??
@@ -38,12 +40,13 @@ export async function runUnitVerification(policy, argv) {
   if (assignedFiles.length === 0)
     throw new Error("unit shard assignment was empty");
   await requirePrepared(repositoryRoot);
+  console.log(`unit test files active at once: ${concurrency}`);
   const started = performance.now();
   const args = [
     "--import",
     "tsx",
     "--test",
-    "--test-concurrency=2",
+    `--test-concurrency=${concurrency}`,
     "--test-reporter=./scripts/verification/node-reporter.mjs",
   ];
   if (shard) args.push(`--test-shard=${shard.index}/${shard.total}`);

@@ -301,8 +301,10 @@ generated output, and tests aligned.
 ## Develop Mokly
 
 For repository development, use the tested Node.js version in
-[`.nvmrc`](./.nvmrc), npm 11.7, Rust 1.95, and Chromium for the browser suite.
-With nvm, run `nvm install` in the repository to install and use that version.
+[`.nvmrc`](./.nvmrc), npm 11.21.0 (the `packageManager` version in
+`package.json`), Rust 1.95, and Chromium for the browser suite. With nvm, run
+`nvm install` in the repository to install and use that Node.js version. Use
+the pinned npm version for dependency changes.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git
@@ -331,6 +333,21 @@ suite, dependency checks, and Rust checks. See the
 functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
+
+Local test runs scale with the machine. Unit tests run half the available CPUs'
+worth of test files at once, never fewer than two, and the hydration suite uses
+half the CPUs as Playwright workers. Other browser runs use one worker. Set
+`MOKLY_UNIT_CONCURRENCY` or `MOKLY_PLAYWRIGHT_WORKERS` to a positive integer to
+choose a different value. Playwright worker N serves the example on port
+`MOKLY_PLAYWRIGHT_PORT` + N, and `MOKLY_PLAYWRIGHT_PORT` defaults to 4517:
+
+```bash
+MOKLY_PLAYWRIGHT_WORKERS=3 npm run test:browser
+```
+
+Required tests follow [CI test timing](./docs/protocol/ci-test-timing.md).
+Use the shared helpers in `tests/helpers/operation_counts.ts` and
+`tests/helpers/durations.ts` for operation counts and duration text.
 
 Pull request titles use Conventional Commits and at most 72 Unicode code points.
 The separate title check runs when a PR opens, changes, or receives a push; see

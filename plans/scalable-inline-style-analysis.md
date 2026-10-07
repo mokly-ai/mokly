@@ -1961,6 +1961,30 @@ under #147, apart from the M9A findings graded by the supervisor for this
 checkpoint. Do not grade or implement the remaining findings without that
 decision.
 
+## Milestone 11: Latest Mainline Integration
+
+Integrate current main while preserving both sides' delivered behavior. Apply
+the deterministic test-timing contract and default test concurrency. Keep all
+open findings and user decisions pending.
+
+User decision (2026-10-07): merge the latest `origin/main` and resolve its conflicts.
+
+Evidence: `.context/scalable-inline-style-analysis/m11-merge/`.
+
+- [ ] Merge `origin/main` once with two parents. Review every remerge path and
+      audit deletions. Preserve main's package files and agent rules exactly.
+- [ ] Integrate #152's deterministic test rules and #148's parallel workers.
+      Check #145's self-ignoring cache behavior and the protocol index.
+- [ ] Run the complete pinned-Chromium gate and real-server smoke tests.
+      Record the CPU and boot ID around browser and hydration verification.
+- [ ] Commit with Conventional Commits and push after the supervisor's check.
+      Stop before the push for this integration checkpoint.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against `origin/main`. Keep the review read-only, then apply main's
+      [review-fix rule](../AGENTS.md#general): fix `Auto-fix: yes` findings,
+      re-review once, and report fixed and open findings separately.
+
 ## Post-merge follow-up (non-blocking)
 
 - Smoke the published package against a React Native Web catalogue whose
