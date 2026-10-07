@@ -83,17 +83,15 @@ ESLint derives global ignores from `.gitignore` before adding its broader
 ESLint-only ignores. Ignored build, cache, report, and tool scratch paths,
 including Wrangler scratch, cannot make a later complete gate fail.
 
-The public `npm test` and `npm run test:browser` commands prepare package and
-example output; the latter runs both Playwright projects and every spec.
-Filtering or selecting a project is partial verification. `npm test` and
-`test:prepared` share recursive discovery of `.test.ts` and `.test.tsx` files
-under `tests/` and `packages/viewer/tests/`, with the same file concurrency. The
-developer runner fails on failures, cancellations, and unreported files; it
-tolerates skipped and todo tests (including intentional Windows skips) and
-prints their count. The prepared runner and every `cargo xtask check` suite
-reject skips and todos. Node unit tests stay outside Playwright's
-`tests/browser/` directory. Playwright matches only `**/*.spec.ts`; `chromium`
-ignores filenames containing `hydration`, while `hydration` matches only them.
+The [developer test commands](./developer-test-commands.md) define public unit
+and browser entrypoints, selection, preparation, and the developer skip policy.
+Strict unit discovery recursively includes `.test.ts` and `.test.tsx` files
+under `tests/` and `packages/viewer/tests/`, with the
+[shared file concurrency](./ci-suite-evidence.md#test-concurrency).
+The prepared runners and every `cargo xtask check` suite reject skips and todos.
+Node unit tests stay outside Playwright's `tests/browser/` directory.
+Playwright matches only `**/*.spec.ts`; `chromium` ignores filenames containing
+`hydration`, while `hydration` matches only them.
 
 Public `package:check` and `package:smoke` preserve caller arguments, including
 `--artifacts DIR`, across nested npm. Prepared test commands skip preparation,
@@ -157,7 +155,7 @@ The hosted job graph, checkout ownership, runtime profiles, runner policy,
 30-minute timeouts, and stable `Required CI` status follow the separate
 [CI workflow graph contract](./ci-workflow.md).
 The suites below own the report evidence that status validates.
-Inventory and evidence rules remain here because local selected suites and
+Inventory and evidence rules remain here because local xtask suites and
 hosted jobs share them.
 
 ## Inventory And Report Evidence
@@ -176,11 +174,11 @@ owns the generated resource audit. Browser error assertions accept only Chrome's
 report that a viewer-owned sandboxed frame (`/static/`, a temporary render, or
 `about:srcdoc`) blocked a script, as `tests/browser/console_notices.ts` defines.
 
-Each runner records the commit SHA, runtime, suite, optional shard, complete
-discovered file inventory, assigned file inventory, observed executed files,
-per-file timing, process outcome, and skipped/cancelled evidence. Browser and
-hydration reports also record the all-project spec inventory and every test by
-stable project, relative file, line, column and title path; the Playwright
+Each suite report records the commit SHA, runtime, suite, optional shard,
+complete discovered file inventory, assigned file inventory, observed executed
+files, per-file timing, process outcome, and skipped/cancelled evidence. Browser
+and hydration reports also record the all-project spec inventory and every test
+by stable project, relative file, line, column and title path; the Playwright
 reporter records each observed test's result, duration, and serialized errors.
 Unit reports retain the Node reporter's failure names and diagnostics. Once
 execution starts, the wrapper writes a report after the test process exits on
@@ -188,19 +186,19 @@ success or failure, then validates it. A discovery or preparation failure before
 execution may leave no report; the shard job and aggregate still fail. Reporter
 callback failures or missing output can therefore never turn into success.
 
-For an unsharded run, the observed file set must equal independent discovery
-exactly. For sharded CI, the aggregate requires all four reports for each
-runtime and sharded suite, proves assignments are non-empty and pairwise
-disjoint, and compares their union and observed execution against a separately
-discovered complete suite inventory. Browser evidence also requires the observed
-test IDs across the four shards to equal independent unsharded discovery exactly
-once. Each runtime requires one unsharded hydration report; every browser-like
-report must carry the same all-project inventory, and the browser and hydration
-file inventories must be disjoint and exhaust it. A missing file or test,
-duplicate assignment or observed test, unexpected file or test, skipped or
-cancelled test, non-zero exit, signal exit, or absent/invalid report fails
-verification. Per-file and per-test durations are retained so imbalance can be
-measured without changing whole-file partitioning.
+For an unsharded report for a complete suite, the observed file set must equal
+independent discovery exactly. For sharded CI, the aggregate requires all four
+reports for each runtime and sharded suite, proves assignments are non-empty and
+pairwise disjoint, and compares their union and observed execution against a
+separately discovered complete suite inventory. Browser evidence also requires
+the observed test IDs across the four shards to equal independent unsharded
+discovery exactly once. Each runtime requires one unsharded hydration report;
+every browser-like report must carry the same all-project inventory, and the
+browser and hydration file inventories must be disjoint and exhaust it. A
+missing file or test, duplicate assignment or observed test, unexpected file or
+test, skipped or cancelled test, non-zero exit, signal exit, or absent/invalid
+report fails verification. Per-file and per-test durations are retained so
+imbalance can be measured without changing whole-file partitioning.
 
 Report artifacts have stable, unique suite, runtime and shard names and use
 replacement uploads. A failed-job rerun can therefore replace its own report
