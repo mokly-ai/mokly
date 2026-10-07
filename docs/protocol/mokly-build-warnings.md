@@ -130,6 +130,11 @@ Each command reports the diagnostics of exactly one compilation:
 | `publish`       | The export's compilation, before any upload                   |
 | `serve`         | Each generation's exhaustive compilation, once, when it lands |
 
+Publish applies the [checkout rules](./mokly-upload.md) before starting export.
+A checkout refusal can prevent compilation. Diagnostics already produced still
+flush through the invocation sink. Accepted checkouts retain every warning
+producer and the existing strict boundary before capture or upload.
+
 Internal compilation callers have an explicit transport decision:
 
 | Caller                     | Decision                                           |

@@ -2550,6 +2550,36 @@ link validation). Their changes stay in the same two-parent merge. Main's
 targeted development commands apply. This task's explicit separate complete
 unit command still runs before the complete gate.
 
+After the system shutdown, the user directed a separate second merge of latest
+main, now `acac1c73`. It adds #164 (remote verification fixes), #165 (the
+deterministic real SIGINT test), #167 (the Node 24 shared example copy fix) and
+#168 (clean-checkout Publish). The first merge's package fixture fixes are
+amended with its two parents unchanged. The second merge keeps main's fixes
+and removes the duplicate copy cleanup where both sides cover the same input.
+Development now follows the current targeted-test commands and early repository
+suite. The complete gate supplies final unit and browser verification; no extra
+standalone complete unit run is required. A final fetch reports any later main
+movement without another merge. The branch stays local.
+
+- [x] Amend the first merge with the three pending package/plan changes.
+      Confirm its two captured parents and review the changed remerge paths.
+- [ ] Audit and merge latest main after `2013d289` as a second two-parent
+      merge. Resolve every path, preserve #164/#165/#167/#168, review all remerge
+      paths, and classify every main-added nonblank line. Remove the duplicate
+      Node 24 copy cleanup while retaining main's fix and all controls.
+- [x] Preserve #168 on clean committed inputs. Migrate Publish fixtures while
+      pinning their earlier comparison refs; keep warning, CSS, move, baseline,
+      strict and cancellation assertions and all test allowances.
+- [x] Add one exact docs-guard exception for Publish’s Git porcelain v1 argv.
+      Keep the incoming statement and the fail-closed scanner unchanged.
+- [x] Align clean-Publish docs and release notes. Keep ordinary archive preview
+      capture, plain memory Serve/export and the combined 9/5/6 records.
+- [ ] Run the early repository suite and targeted changed-area tests at 100%.
+      Then run the complete gate once on the final tree; rerun only failed
+      files or suites before a new complete gate. Report unrelated flaky tests.
+- [ ] Fetch main for the final diff check without another merge. Record any
+      later movement and verify the four approved deletions.
+
 - [x] Preserve the added #139, #155, #162 and #161 changes. Keep grouped
       attribution checks and their single-change control, with this branch's
       own-page CSS rule and saved-view evidence. Preserve source-edit and
@@ -2740,5 +2770,13 @@ They are evidence logs under main #137 and #147, not the other historical plans
 that the task protects. Their bytes remain unchanged. No permalink patch is
 applied. The old directory is removed with `git rm`; it is absent from main,
 so this adds no main-relative deletion. Milestone 16 names the new location.
+
+The second merge keeps #168’s clean-checkout and committed-generation rules.
+The warning and baseline fixture migrations prepare committed current inputs
+while keeping the earlier comparison ref fixed. Their assertions remain.
+Clean-Publish wording applies to the CLI; ordinary repository preview capture
+keeps its no-Git rule. The old “Only Check” index claims now include Publish.
+One exact docs-guard exception admits Git’s porcelain v1 status argv. Main’s
+#167 copy cleanup appears once. No unresolved conflict of meaning remains.
 
 Evidence: `.context/remove-source-path-evidence/milestone-33.md`.

@@ -156,7 +156,8 @@ The [remote verification contract](./remote-verification.md) defines
 Validation mode and both box suite smoke checks pass.
 The complete explicit remote check also passes.
 The workflow has `workflow_dispatch` with an optional `testbox_id` input.
-It also has `push`, limited to changes of its own workflow file.
+It also has `push` with `branches: ["**"]` and a path filter for its own
+workflow file. Branch pushes must match both filters. Tag pushes do not run it.
 An empty `testbox_id` makes `begin-testbox` use validation mode.
 The push run registers the workflow before merge.
 

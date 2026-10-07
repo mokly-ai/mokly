@@ -8,7 +8,7 @@ Continuation of the [protocol index](./README.md).
   approved signature reports, release-note gate and member ratchet.
 
 - [Remote verification](./remote-verification.md) — implemented explicit and automatic execution.
-  - [Testbox execution](./remote-verification-testbox.md) — workflow, commands, sync probe, suite wrapper and source-tree fingerprint.
+  - [Testbox execution](./remote-verification-testbox.md) — workflow, commands, sync probe, suite wrapper, source-tree fingerprint, report download and aggregation.
 
 - [CI workflow graph](./ci-workflow.md)
 

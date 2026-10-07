@@ -50,11 +50,13 @@ catalogue; only referenced assets are served and exported.
 
 ## Git tracking and watching
 
-Only `check` reads the Git index to decide whether to compare generated files;
+`check` reads the Git index to decide whether to compare generated files;
 `build` never reads head tracking or refuses to write a new route. Either
 commit the **entire** `mokly-generated/` tree, or ignore that directory. After building a new entry in a tracked catalogue, `check`
 lists its route under `untracked:` until it is staged. Only `check` reports
 partial tracking, with instructions for both choices.
+`publish` requires a clean checkout. It compares committed generated files with
+the compilation and requires derived output to be ignored by Git.
 
 `build --watch` performs an initial build and then watches configured inputs with debounced
 rebuilds. Every successful complete compilation replaces `mokly-generated/`;

@@ -12,6 +12,8 @@ use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
 
 use super::harness_client_tests::client;
+use super::harness_clock_tests::clock;
+use super::harness_github_tests::github;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(super) enum Case {
@@ -33,6 +35,20 @@ pub(super) enum Case {
     InterruptSuites,
     Cancel,
     MissingRun,
+    RetryStop,
+    CleanupSuites,
+    CompletedOnRetry,
+    InterruptCleanupWarmup,
+    InterruptCleanupSuites,
+    WarmupRunId,
+    WarmupRunIdFailure,
+    ProbeRunId,
+    ProbeRunIdFailure,
+    CancelCompleted,
+    CancelReadFailure,
+    LogUnavailable,
+    StatusRunId,
+    CompletedOnFinal,
 }
 
 impl Case {
@@ -48,6 +64,9 @@ impl Case {
                 | Self::Head
                 | Self::Fingerprint
                 | Self::InterruptWarmup
+                | Self::InterruptCleanupWarmup
+                | Self::WarmupRunIdFailure
+                | Self::ProbeRunIdFailure
         )
     }
 }
@@ -104,26 +123,25 @@ pub(super) fn harness(case: Case) -> Harness {
             .each_call(matching!())
             .answers_arc(Arc::new(move |_| interrupted.load(Ordering::SeqCst))),
     )));
-    let stamp = ClockStampMock
-        .each_call(matching!())
-        .returns("20261006T120000Z".to_owned());
-    let clock = Arc::new(if case.preparation_fails() {
-        Unimock::new(stamp)
-    } else {
-        Unimock::new((
-            stamp,
-            ClockMillisMock.each_call(matching!()).returns(1000u128),
-        ))
-    });
+    let clock = clock(case, events.clone());
     let prepare = LogsPrepareMock
         .each_call(matching!("20261006T120000Z-42"))
         .answers(&|_, _| Ok(()));
-    let logs = Arc::new(if case == Case::Suite {
+    let logs = Arc::new(if matches!(case, Case::Suite | Case::LogUnavailable) {
         Unimock::new((
             prepare,
             LogsTailMock
                 .each_call(matching!(_))
-                .answers(&|_, _| Ok("failed command tail".into())),
+                .answers_arc(Arc::new(move |_, _| {
+                    if case == Case::LogUnavailable {
+                        Err(Error::Command {
+                            operation: Operation::Logs,
+                            code: Some(1),
+                        })
+                    } else {
+                        Ok("failed command tail".into())
+                    }
+                })),
         ))
     } else {
         Unimock::new(prepare)
@@ -162,28 +180,15 @@ pub(super) fn harness(case: Case) -> Harness {
                 })),
         )))
     };
-    let cancel_events = events.clone();
-    let github = Arc::new(if case == Case::MissingRun {
-        Unimock::new(())
-    } else {
-        Unimock::new(
-            GithubCancelMock
-                .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, id| {
-                    cancel_events.lock().unwrap().push(format!("cancel:{id}"));
-                    if case == Case::Cancel {
-                        return Err(Error::Command {
-                            operation: Operation::Github,
-                            code: Some(1),
-                        });
-                    }
-                    Ok(())
-                })),
-        )
-    });
+    let github = github(case, events.clone());
     let aggregate_events = events.clone();
     let aggregate = Arc::new(
-        if case.preparation_fails() || matches!(case, Case::InterruptSuites | Case::PanicSuites) {
+        if case.preparation_fails()
+            || matches!(
+                case,
+                Case::InterruptSuites | Case::InterruptCleanupSuites | Case::PanicSuites
+            )
+        {
             Unimock::new(())
         } else {
             Unimock::new(

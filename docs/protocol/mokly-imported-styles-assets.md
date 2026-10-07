@@ -16,10 +16,12 @@ CSS `url()` values beginning `data:`, `http:`, `https:` (schemes matched
 case-insensitively), `//` or `#` remain unchanged. A root-absolute `/...`
 URL is invalid.
 
-Only Check reads index tracking for the complete generated tree. A tracked
+Check reads index tracking for the complete generated tree. A tracked
 Check compares every expected file and byte; a partly tracked tree fails with
 both tracking remedies. An untracked Check validates compilation without
 reading old generated output. Build writes the tree regardless of ignore rules.
+CLI Publish separately checks committed or ignored generated output under the
+[upload contract](./mokly-upload.md).
 See [the command contract](./mokly-generated-output.md#tracked-state-and-commands).
 
 Quoted local string URLs inside `image-set()` are not validated by esbuild's

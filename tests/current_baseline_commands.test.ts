@@ -34,7 +34,7 @@ for (const baseline of earlierBaselines) {
       const messages: string[] = [];
       const running = await serve(
         fixture.config,
-        { base: "HEAD", port: 0, watch },
+        { base: "origin/main", port: 0, watch },
         {
           reporter: new PlainServeReporter((line) => messages.push(line)),
         },
@@ -65,7 +65,7 @@ for (const baseline of earlierBaselines) {
     const messages: string[] = [];
     const result = await exportCatalogue(fixture.config, {
       outDir: "site",
-      base: "HEAD",
+      base: "origin/main",
       incompatibleBaseline: () => messages.push(EARLIER_BASELINE_MESSAGE),
     });
     const catalogue = JSON.parse(
@@ -101,7 +101,7 @@ for (const baseline of earlierBaselines) {
         endpoint: receiver.endpoint,
         token: "fixture-token",
         repository: "github.com/example/catalogue",
-        base: "HEAD",
+        base: "origin/main",
         out: "site",
       },
       "0.13.0",

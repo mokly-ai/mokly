@@ -63,10 +63,11 @@ setting and path; imported authoring sources fail with their path. See
 Before reading Git, `repoRoot` must resolve through symlinks to the same path
 as `git rev-parse --show-toplevel` run from that directory. A nested root fails
 with `config-invalid`, naming both paths. This validation belongs to config's
-Git boundary, not unconditional config loading: Build, Check, Serve, and
-publication without comparisons work without Git. Only Check inspects the
-current index (never `.gitignore`), treating no Git as untracked; Build and
-Serve never decide their behavior from head tracking.
+Git boundary, not unconditional config loading. Build, Check, Serve and
+repository preview without comparisons work without Git. Check reads the index,
+never `.gitignore`, and treats no Git as untracked. CLI publish requires a clean
+checkout under the [upload contract](./mokly-upload.md). Build and Serve never
+decide their behavior from head tracking.
 Serve's parent, classifier and
 HTTP child, comparison export and preview all validate before their first Git
 read. All remains usable when history is unavailable; an explicit comparison
@@ -165,11 +166,12 @@ per-commit selection follow [baseline selection](./mokly-derived-baselines.md).
 The removed keys fail `config-invalid` with their exact guidance:
 `generatedOutput was removed; use Git tracking for check and run mokly build to write output`
 and `publicExclude was removed; remove it; only referenced authored assets are public`.
-Only Check, after compilation, uses index paths under `<mockupsDir>/mokly-generated/` to classify
+Check, after compilation, uses index paths under `<mockupsDir>/mokly-generated/` to classify
 tracked, untracked or mixed output; mixed output fails `build-invalid` with
 both remedies as specified in [generated output](./mokly-generated-output.md).
 Tracked Check compares the entire tree with disk; untracked Check ignores
-local output. Build writes transactionally. Serve and export await preparation
+local output. Publish separately validates committed or ignored generated output.
+Build writes transactionally. Serve and export await preparation
 before classification; Serve publishes `preparing` when a rebuild is needed,
 then `pending` while classification runs. Cache hits skip `preparing`.
 `watch.rules[].paths` are repository-relative POSIX globs, while stylesheet

@@ -142,6 +142,12 @@ test("publish collects warnings through export and still uploads successfully", 
   context.after(() => fixture.close());
   await fs.writeFile(fixture.entryPath, sourceWithRemovedField());
   await addRemovedConfigField(fixture.configPath);
+  await fixture.git("add", "-A");
+  await fixture.git(
+    "commit",
+    "-qm",
+    "test: commit removed-input warning fixture",
+  );
   const receiver = await startFakeReceiver(context);
   const result = await execute(fixture.root, fixture.configPath, [
     "publish",

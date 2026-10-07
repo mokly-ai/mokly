@@ -82,6 +82,7 @@ test("Build, Check, export and publish warn once per CSS file and route without 
       ]),
     ),
   );
+  await fs.writeFile(path.join(fixture.root, ".gitignore"), "site/\n");
   const receiver = await startFakeReceiver(t);
   const outputs: string[][] = [];
   for (const command of [
@@ -101,6 +102,14 @@ test("Build, Check, export and publish warn once per CSS file and route without 
       "github.com/example/catalogue",
     ],
   ]) {
+    if (command[0] === "publish") {
+      await fixture.git("add", "-A");
+      await fixture.git(
+        "commit",
+        "-qm",
+        "test: commit CSS owner warning fixture",
+      );
+    }
     const terminal = memoryTerminal({
       isTTY: false,
       env: { ...process.env, MOKLY_OUTPUT: "plain", NO_COLOR: "1" },

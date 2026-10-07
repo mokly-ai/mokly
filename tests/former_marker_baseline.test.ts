@@ -23,7 +23,7 @@ for (const watch of [false, true])
     const diagnostics: string[] = [];
     const running = await serve(
       fixture.config,
-      { base: "HEAD", port: 0, watch },
+      { base: "origin/main", port: 0, watch },
       { reporter: new PlainServeReporter((line) => diagnostics.push(line)) },
     );
     context.after(() => running.close());
@@ -58,7 +58,7 @@ test("export rejects invalid baseline ranges safely and retains the previous sit
   const file = path.join(fixture.output, "mokly-viewer/catalogue.json");
   const before = await fs.readFile(file);
   await assert.rejects(
-    exportCatalogue(fixture.config, { outDir: "site", base: "HEAD" }),
+    exportCatalogue(fixture.config, { outDir: "site", base: "origin/main" }),
     (error) =>
       isMoklyError(error) &&
       error.code === "export-invalid" &&
@@ -77,7 +77,7 @@ test("publish rejects invalid baseline ranges safely before uploading", async (c
         endpoint: receiver.endpoint,
         token: "fixture-token",
         repository: "github.com/example/catalogue",
-        base: "HEAD",
+        base: "origin/main",
         out: "site",
       },
       "0.13.0",

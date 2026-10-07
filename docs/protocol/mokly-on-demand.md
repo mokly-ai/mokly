@@ -29,7 +29,8 @@ It describes available views, not completed rendering or usage evidence. A v9
 manifest still requires every view's validated records. Build, Check and Export
 remain exhaustive and produce the same portable artifacts regardless of
 Git tracking; only explicit Build and `serve --build` write them to disk, and
-neither reads head tracking. Only Check consults the current Git index.
+neither reads head tracking. Check consults the current Git index. CLI publish
+separately checks the checkout under the [upload contract](./mokly-upload.md).
 
 The scale target is command start to searchable navigation and a real selected
 preview visible in under five seconds, cold and warm on the default large fixture.

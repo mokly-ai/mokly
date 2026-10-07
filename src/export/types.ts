@@ -1,6 +1,7 @@
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import type { BuildDiagnostic } from "../build/build_warnings.js";
+import type { Compilation } from "../build/compile.js";
 
 /** Immutable route information available before an adapter finishes staging. */
 export interface ExportRoutes {
@@ -41,6 +42,8 @@ export interface ExportOptions {
   noChanges?: boolean;
   /** Observe the packaged compilation before generated or staged bytes are written. */
   onBuildDiagnostics?: (diagnostics: readonly BuildDiagnostic[]) => void;
+  /** Check compiled bytes before capture; publication checks committed generation. */
+  onCompilation?: (compilation: Compilation) => Promise<void>;
   /** Consume finalized bytes before installation, while the output is reserved. */
   capture?: (
     files: ReadonlyMap<string, ReviewArtifactContent>,

@@ -64,11 +64,30 @@ explicit `--base`. Both modes build and validate the catalogue.
 Publish requires a Git checkout with a commit even without comparisons, to
 identify the uploaded revision. With comparisons enabled, the pinned base uses
 verified v9 blobs or its own rebuild recipe. `--no-changes` requires neither
-that history nor a historical install or build. Uncommitted authoring changes are
-permitted: `headSha` identifies checkout context, not a claim that every
-exported byte exists at that commit. A receiver keeps the first publication it
-completes for a `headSha` and `configPath`; publishing a dirty tree is not a
-supported way to change a published commit.
+that history nor a historical install or build. Publish requires a clean
+checkout. `headSha` names the commit whose tracked files produced the catalogue.
+Dependencies and other ignored build products come from the local environment.
+The CLI enforces this rule; a receiver cannot verify it. A receiver keeps the
+first publication it completes for a `headSha` and `configPath`.
+
+Publish checks HEAD and repository status before export, then checks both again
+before Plan. Either status check fails before any receiver request. Status uses
+fixed Git argv without a shell, `--porcelain=v1 -z`, `--untracked-files=all`,
+and `--ignore-submodules=none`. Modified, staged, deleted, renamed, type-changed,
+unmerged, untracked non-ignored paths and submodule changes anywhere in the
+repository count, regardless of user Git settings. Git-ignored files, this
+run's `--out` directory, and Mokly-owned caches and temporary paths never count.
+The output exclusion never hides committed generated files.
+
+Git tracking selects committed or derived generated output; `generatedOutput`
+is no longer a config option. Committed generated files always count as tracked
+inputs. Publish compares the compiled generated paths and bytes with the commit
+before export capture, without writing the generated tree. Missing, extra, or
+stale committed generated files fail with `build-stale`. Derived generated
+output must be ignored by Git, even when its directory is absent. Missing ignore
+rules fail with `git-uncommitted` and name the rules to add. Other uncommitted
+changes fail with `git-uncommitted`. Both errors follow the
+[terminal error contract](./mokly-terminal-errors.md).
 
 ## Repository And Revision Identity
 

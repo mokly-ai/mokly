@@ -16,7 +16,7 @@ imports, while proving installed dependencies outside the root still load.
 Exercise the same fixtures through GET/HEAD `/static`, resource validation,
 current and historical Review reads, and both publication options. Verify that
 CSS, fonts, images, and public scripts still work. Test watcher reclassification
-after dependency changes and prove default publication validation uses no Git.
+after dependency changes and prove default repository preview validation uses no Git.
 Cover internal manifests, their symlink aliases, generated links/resources,
 ordinary public JSON, v9 internal reads and earlier-envelope rejection.
 Cover unreferenced files at root and nested paths, aliases in either direction,

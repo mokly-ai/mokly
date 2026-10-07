@@ -31,6 +31,10 @@ for (const command of ["export", "publish"] as const) {
         'review: { outDir: ".review", sharedImpact: [] }',
       ),
     );
+    if (command === "publish") {
+      await fixture.git("add", "-A");
+      await fixture.git("commit", "-qm", "test: commit strict warning fixture");
+    }
     const receiver = await startFakeReceiver(t);
     const terminal = memoryTerminal({ isTTY: false });
     const reporter = new PlainReporter(terminal.environment);

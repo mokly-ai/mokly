@@ -106,6 +106,8 @@ ordinary test runners pipe stdout and intentionally select plain mode.
 - `reporter/` contains mode selection, terminal helpers, plain/rich output, and
   interactive controls.
 - `errors.ts` maps every typed Mokly error to rich headline and hint copy.
+- Publish's `git-uncommitted` and `build-stale` errors retain headline, bounded
+  path detail, and recovery hint in both plain and rich output.
 - `bin.ts` is the minimal executable that runs the compatibility bootstrap.
 - `export.ts` and `publish.ts` own signal-aware one-shot command lifecycles.
 

@@ -4,7 +4,7 @@ use std::io;
 
 use thiserror::Error;
 
-use crate::remote::contracts::Output;
+use crate::remote::contracts::{Output, RequiredProgram};
 
 /// Remote verification result.
 pub(crate) type Result<T> = std::result::Result<T, Error>;
@@ -16,7 +16,7 @@ pub(crate) enum Operation {
     Git,
     /// Authenticate or manage a Testbox.
     Blacksmith,
-    /// Cancel a GitHub workflow run.
+    /// Read or cancel a GitHub workflow run.
     Github,
     /// Compute the source fingerprint.
     Fingerprint,
@@ -45,27 +45,25 @@ pub(crate) enum Error {
         operation: Operation,
     },
     /// Invalid effective executor value.
-    #[error("[xtask/executor] invalid executor `{value}`; use auto, local or remote")]
+    #[error("[xtask/remote] invalid executor `{value}`; use auto, local or remote")]
     InvalidExecutor {
         /// Rejected mode value.
         value: String,
     },
     /// Remote requests cannot select a partial suite.
-    #[error("[xtask/executor] remote execution requires the complete gate; remove --suite")]
+    #[error("[xtask/remote] remote execution requires the complete gate; remove --suite")]
     SelectedSuite,
     /// Hosted workflows must use the local gate.
-    #[error("[xtask/executor] remote execution is unavailable in GitHub Actions")]
+    #[error("[xtask/remote] remote execution is unavailable in GitHub Actions")]
     GithubActions,
-    /// Required executable is absent.
-    #[error("[xtask/executor] missing executable `{program}`; {hint}")]
-    MissingProgram {
-        /// Missing program name.
-        program: &'static str,
-        /// Installation instruction.
-        hint: &'static str,
+    /// One or more required executables are absent.
+    #[error("[xtask/remote] missing executables: {}", missing_programs(programs))]
+    MissingPrograms {
+        /// Every missing program in required lookup order.
+        programs: Vec<RequiredProgram>,
     },
     /// GitHub does not contain the local commit.
-    #[error("[xtask/executor] local HEAD is not published; push the branch first")]
+    #[error("[xtask/remote] local HEAD is not published; push the branch first")]
     UnpublishedHead,
     /// A system operation failed before returning an exit status.
     #[error("[xtask/remote] {operation:?} operation failed: {source}")]
@@ -75,6 +73,9 @@ pub(crate) enum Error {
         /// Original system error.
         source: io::Error,
     },
+    /// GitHub's field selector returned no run status.
+    #[error("[xtask/remote] GitHub run state is empty")]
+    EmptyGithubState,
     /// A command returned a failed or signal exit.
     #[error("[xtask/remote] {operation:?} command failed with {}", termination(*code))]
     Command {
@@ -84,7 +85,7 @@ pub(crate) enum Error {
         code: Option<i32>,
     },
     /// Preserve both script streams alongside the original typed failure.
-    #[error("[xtask/scripts] {source}")]
+    #[error("[xtask/remote] {}", remote_message(source))]
     Captured {
         /// Original command or identity error.
         source: Box<Error>,
@@ -104,11 +105,14 @@ pub(crate) enum Error {
         id: String,
     },
     /// Preparation cannot fall back when a box stop still failed.
-    #[error("[xtask/remote] preparation cleanup failed for {failures} stop attempts: {source}")]
+    #[error(
+        "[xtask/remote] preparation cleanup failed for {failures} boxes: {}",
+        remote_message(source)
+    )]
     PreparationCleanup {
         /// Original preparation error.
         source: Box<Error>,
-        /// Failed cleanup attempts.
+        /// Boxes that remain neither stopped nor proven completed.
         failures: usize,
     },
     /// Probe lines or local fingerprint output are invalid.
@@ -123,8 +127,11 @@ pub(crate) enum Error {
     #[error("[xtask/remote] verification worker did not return a result")]
     Worker,
     /// The user interrupted the check.
-    #[error("[xtask/remote] verification interrupted; boxes were stopped")]
-    Interrupted,
+    #[error("[xtask/remote] verification interrupted; cleanup={cleanup} boxes remain")]
+    Interrupted {
+        /// Boxes that remain neither stopped nor proven completed.
+        cleanup: usize,
+    },
     /// Signal handling could not be installed.
     #[error("[xtask/remote] could not install interrupt handler: {source}")]
     Signal {
@@ -144,9 +151,27 @@ pub(crate) enum Error {
         aggregate_failed: bool,
         /// Local source tree changed.
         changed: bool,
-        /// Failed box stops.
+        /// Boxes that remain neither stopped nor proven completed.
         cleanup: usize,
     },
+}
+
+/// List each missing program beside its own installation guidance.
+fn missing_programs(programs: &[RequiredProgram]) -> String {
+    programs
+        .iter()
+        .map(|program| format!("`{}`; {}", program.name(), program.install_hint()))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// Keep this module's prefix once when an error wraps another remote error.
+fn remote_message(error: &Error) -> String {
+    let message = error.to_string();
+    match message.strip_prefix("[xtask/remote] ") {
+        Some(message) => message.to_owned(),
+        None => message,
+    }
 }
 
 /// Clear termination wording without Rust's Option debug notation.

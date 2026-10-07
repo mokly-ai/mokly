@@ -46,5 +46,11 @@ export async function formerMarkerBaselineFixture(context: TestContext) {
   await fixture.git("commit", "-qm", "test: former component marker baseline");
   await fixture.git("update-ref", "refs/remotes/origin/main", "HEAD");
   await writeCompilation(compilation, fixture.config);
+  await fixture.git("add", "mockups/mokly-generated");
+  await fixture.git(
+    "commit",
+    "-qm",
+    "test: commit current marker fixture output",
+  );
   return { ...fixture, compilation };
 }

@@ -17,6 +17,7 @@ The existing released-export-name check remains independent.
   below.
 - `b39d89a4 feat!: simplify generated output and delivery` — generated output,
   removed options, current-only formats and the portable namespace below.
+- `acac1c73 feat(publish)!: require a clean checkout` — the Publish note below.
 
 ## Generated Output And Manifest API
 
@@ -35,6 +36,17 @@ Only the complete combined v9 shape is readable as baseline content. Former
 manifest filenames no longer act as sentinels. Missing canonical output uses
 normal absence and rebuild selection. Earlier-version detection returns the
 existing unavailable outcome, which is never cached.
+
+## Breaking Publish Checkout Release Note
+
+`mokly publish` requires a clean checkout before export and before upload.
+Commit, stash or ignore uncommitted files. Git-ignored files, this run's `--out`
+directory, and Mokly caches and temporary files are excluded. Committed generated
+files must match the build; rebuild and commit them when stale. Derived output
+must be ignored by Git. Failures use `git-uncommitted` or `build-stale`.
+`--no-changes` still needs a committed HEAD but needs no comparison history.
+See the [upload contract](./mokly-upload.md). Local export and repository preview
+capture keep their existing checkout rules.
 
 ## Removed Public Options And Types
 

@@ -86,6 +86,9 @@ for (const [route, encoded] of JSON.parse(await fs.readFile("baseline.json", "ut
       await writeCompilation(await compileCatalogue(config), config);
     }
 
+    await fixture.git("add", ".");
+    await fixture.git("commit", "-qm", "test: publish changed scoped asset");
+
     await runPublishedCli(fixture.root, receiver.endpoint, token);
     const ownership = receiver.plans.at(-1)!.ownership.files;
     const byPath = new Map(ownership.map((entry) => [entry.path, entry]));

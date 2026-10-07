@@ -93,6 +93,7 @@ async function generateExport(
     );
     assertExportActive(options.signal);
     options.onBuildDiagnostics?.(compilation.diagnostics);
+    await options.onCompilation?.(compilation);
     config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
     assertExportActive(options.signal);
     const publicFiles = await capturePublicFiles(

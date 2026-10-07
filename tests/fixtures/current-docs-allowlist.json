@@ -326,6 +326,11 @@
   },
   {
     "file": "docs/protocol/mokly-upload.md",
+    "statement": "Status uses fixed Git argv without a shell, `--porcelain=v1 -z`, `--untracked-files=all`, and `--ignore-submodules=none`.",
+    "reason": "Git porcelain v1 is the stable status-output protocol required by clean-checkout Publish, not a former Mokly data format."
+  },
+  {
+    "file": "docs/protocol/mokly-upload.md",
     "statement": "The `mokly-upload.json` envelope uses `schemaVersion: 2`; the ownership marker is [schema 3](./mokly-export-ownership.md), and the Plan response is independently versioned as v1.",
     "reason": "Current upload metadata is v2, export ownership is v3 and the content-delta Plan exchange stays v1."
   },

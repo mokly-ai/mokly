@@ -37,8 +37,9 @@ the service and try again." It does not retry or downgrade the artifact.
 
 ## Warnings
 
-Publish reports the export's build warnings the same way `export` does. With
-`--strict` it prints them and stops before uploading. The failure says
+After the checkout passes its first check, Publish reports the export's build
+warnings the same way `export` does. With `--strict` it prints them and stops
+before uploading. The failure says
 `1 build warning with --strict` for one warning and
 `<n> build warnings with --strict` otherwise.
 
@@ -109,8 +110,12 @@ re-plan restarts the round label; an empty missing set shows no progress label.
 A service keeps the first publication it completed for a commit and config
 path. Publishing that commit again prints
 `Mokly catalogue already published for this commit.` with the existing
-catalogue's address, and uncommitted changes in the working tree are not a
-way to replace a published commit.
+catalogue's address. Publish requires a clean checkout before export and again
+before upload. Commit, stash or ignore uncommitted files first. Git-ignored
+files, this run's `--out` directory, and Mokly's own caches and temporary files
+never count. Committed generated files count. If they are out of date, run
+`mokly build` and commit the result. Derived generated output must be ignored;
+the error names the `.gitignore` rules to add.
 
 A failed publish leaves the complete local export in place for you to inspect,
 and running it again resumes from whatever the service already stored.

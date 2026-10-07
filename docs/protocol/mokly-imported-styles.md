@@ -34,8 +34,10 @@ must be a real directory and descendants must be real directories or regular
 files. Reject the first sorted repo-relative symlink, FIFO, socket or device
 without following it. A successful Build replaces the whole tree and removes
 stale files and empty directories. Plain Serve, export, publication and
-untracked Check do not inspect old output. No Git-ignore committability check
-remains; [tracking rules](./mokly-generated-output.md#tracked-state-and-commands)
+untracked Check do not inspect old output. CLI Publish separately checks the
+checkout and committed generation or requires ignored derived output under the
+[upload contract](./mokly-upload.md). The
+[tracking rules](./mokly-generated-output.md#tracked-state-and-commands)
 apply equally to generated CSS, assets, HTML and the manifest.
 
 Reject root directories and `roots[].files` static prefixes, renderer,

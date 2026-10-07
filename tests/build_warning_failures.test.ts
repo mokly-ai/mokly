@@ -98,6 +98,14 @@ for (const mode of ["plain", "rich"] as const) {
             'renderer: "broken-renderer.ts", review: { outDir: ".review", sharedImpact: ["notes.md"] }',
           ),
         );
+        if (command === "publish") {
+          await fixture.git("add", "-A");
+          await fixture.git(
+            "commit",
+            "-qm",
+            "test: commit renderer failure fixture",
+          );
+        }
         const child = spawn(
           process.execPath,
           [
