@@ -139,7 +139,8 @@ loaded. The window covers these operations:
    recheck.
 
 `mokly publish` installs its listener earlier, so the same window additionally
-covers publish configuration loading and repository identity. Opening the export transaction
+covers publish configuration loading, repository identity and comparison of
+compiled generated output with committed files. Opening the export transaction
 remains outside it because its failures carry separate reservation recovery
 guarantees. Export never writes the catalogue generated tree.
 

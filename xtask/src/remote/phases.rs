@@ -7,6 +7,7 @@ use crate::remote::cleanup::BoxCleanup;
 use crate::remote::clients::success;
 use crate::remote::error::{Error, Operation, Result};
 use crate::remote::parse::{probe_identity, require_warmup_id, warmup_ids};
+use crate::remote::reporting::warning;
 
 use crate::remote::runner::DefaultRemoteRunner;
 
@@ -24,11 +25,13 @@ impl DefaultRemoteRunner {
                 .map(|_| {
                     scope.spawn(|| {
                         if dependencies.interrupt.requested() {
-                            return Err(Error::Interrupted);
+                            return Err(Error::Interrupted { cleanup: 0 });
                         }
                         let output = dependencies.blacksmith.warmup(reference)?;
-                        for id in warmup_ids(&output.combined()) {
+                        let text = output.combined();
+                        for id in warmup_ids(&text) {
                             cleanup.track(&id);
+                            cleanup.record_run(&id, &text);
                         }
                         Ok(output)
                     })
@@ -59,7 +62,7 @@ impl DefaultRemoteRunner {
                     {
                         dependencies
                             .reporter
-                            .executor(&format!("warning: warmup failed: {error}"));
+                            .executor(&warning("warmup failed", &error));
                         for line in text.lines() {
                             dependencies
                                 .reporter
@@ -74,7 +77,7 @@ impl DefaultRemoteRunner {
             }
         }
         if dependencies.interrupt.requested() {
-            return Err(Error::Interrupted);
+            return Err(Error::Interrupted { cleanup: 0 });
         }
         match failure {
             Some(error) => Err(error),
@@ -83,7 +86,13 @@ impl DefaultRemoteRunner {
     }
 
     /// Probe every box exactly once, with the CLI's ten-minute readiness wait.
-    pub(super) fn probe(&self, boxes: &[String], fingerprint: &str, head: &str) -> Result<()> {
+    pub(super) fn probe(
+        &self,
+        boxes: &[String],
+        fingerprint: &str,
+        head: &str,
+        cleanup: &dyn BoxCleanup,
+    ) -> Result<()> {
         let dependencies = &self.dependencies;
         let command = format!(
             "node scripts/verification/source-tree.mjs --expect {fingerprint} --print-head"
@@ -96,12 +105,13 @@ impl DefaultRemoteRunner {
                     scope.spawn(move || {
                         let output = dependencies.blacksmith.run(id, command, None)?;
                         let text = output.combined();
+                        cleanup.record_run(id, &text);
                         let identity = success(&output, Operation::Blacksmith)
                             .and_then(|()| probe_identity(&text, fingerprint, head));
                         if let Err(error) = &identity {
                             dependencies
                                 .reporter
-                                .executor(&format!("warning: probe box={id} failed: {error}"));
+                                .executor(&warning(&format!("probe box={id} failed"), error));
                             for line in text.lines() {
                                 dependencies.reporter.executor(&format!(
                                     "information: probe box={id} output: {line}"
@@ -121,7 +131,7 @@ impl DefaultRemoteRunner {
                 .collect::<Vec<_>>()
         });
         if dependencies.interrupt.requested() {
-            return Err(Error::Interrupted);
+            return Err(Error::Interrupted { cleanup: 0 });
         }
         for result in results {
             result?;
