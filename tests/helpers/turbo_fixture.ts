@@ -94,7 +94,10 @@ export async function gitInputFiles(
   return stdout.split("\0").filter(Boolean);
 }
 
-/** Own every input mutation and cache directory inside an isolated repository. */
+/**
+ * Own every input mutation and cache directory inside an isolated repository.
+ * Automatic Git maintenance is off, so no detached repack races cleanup.
+ */
 export async function createTurboFixture(
   context: TestContext,
   install = false,
@@ -132,6 +135,11 @@ export async function createTurboFixture(
       "junction",
     );
   await execute("git", ["init", "-q", "-b", "main"], { cwd: root });
+  for (const [name, value] of [
+    ["maintenance.auto", "false"],
+    ["gc.auto", "0"],
+  ] as const)
+    await execute("git", ["config", name, value], { cwd: root });
   await fs.appendFile(
     path.join(root, ".git/info/exclude"),
     "\n/node_modules\n",

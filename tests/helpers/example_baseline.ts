@@ -60,12 +60,15 @@ async function copyExampleRepository(root: string): Promise<void> {
     });
 }
 
+/** Commit the fixture without detached Git maintenance that could race cleanup. */
 async function initializeRepository(
   root: string,
   generated = false,
 ): Promise<void> {
   const git = (...args: string[]) => execute("git", args, { cwd: root });
   await git("init", "-q", "-b", "main");
+  await git("config", "maintenance.auto", "false");
+  await git("config", "gc.auto", "0");
   await git("config", "user.name", "Mokly Test");
   await git("config", "user.email", "mokly@example.invalid");
   await git("add", ".");
