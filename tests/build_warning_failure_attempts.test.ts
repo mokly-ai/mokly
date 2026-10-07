@@ -5,33 +5,18 @@ import test from "node:test";
 import { FileSystemConfigLoader } from "../dist/config/load.js";
 
 import { warningFixture } from "./helpers/warning_generations.js";
-import { FakeOutputStore } from "./helpers/watch_config.js";
 
 test(
   "an older background failure cannot flush a newer attempt's pending warnings",
   { timeout: 15000 },
   async (t) => {
     const fixture = await warningFixture(t);
-    fixture.gate.releaseAll();
-    let rejectOld = () => {};
     let releaseCandidate = () => {};
     const candidate = new Promise<void>((resolve) => {
       releaseCandidate = resolve;
     });
-    let first = true;
-    class Store extends FakeOutputStore {
-      override async write(): Promise<void> {
-        if (!first) return;
-        first = false;
-        await new Promise<void>((_resolve, reject) => {
-          rejectOld = () => reject(new Error("old-output-failure"));
-          fixture.journal.record("old-write");
-        });
-      }
-    }
     const loader = new FileSystemConfigLoader();
     await fixture.start({
-      outputStore: new Store(),
       configLoader: {
         async load(config, onWarning) {
           const next = await loader.load(config, onWarning);
@@ -41,11 +26,14 @@ test(
         },
       },
     });
+    const first = await fixture.gate.next("background");
+    first.release();
+    await fixture.journal.wait("collected");
+    const old = await fixture.gate.next("background", first.index + 1);
     fixture.beforeRemove(() => {
-      rejectOld();
+      old.fail();
       releaseCandidate();
     });
-    await fixture.journal.wait("old-write");
     await fixture.fixRenderer();
     await fs.writeFile(
       fixture.configPath,
@@ -59,7 +47,7 @@ test(
     const pending = fixture.sink.additions.at(-1)!;
     assert.equal(pending.code, "removed-shared-impact");
     assert.deepEqual(fixture.emitted, []);
-    rejectOld();
+    old.fail();
     await fixture.journal.wait("classified");
     assert.deepEqual(fixture.emitted, []);
     const boundary = fixture.journal.events.length;

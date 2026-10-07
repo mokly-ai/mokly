@@ -18,7 +18,7 @@ Acceptance after a registered baseline exists:
 | A screen changes query, title, target, status or a field value | That screen                                                                                                       | Actual usage updates                      |
 | A screen changes supplied slot content or instance order       | That screen                                                                                                       | Actual usage updates                      |
 | A variant entry's props change                                 | That variant entry                                                                                                | No automatic consumer change              |
-| Global tokens or screen layout change                          | Rendered screens when output changes; see [path rule](./mokly-component-changes.md#rendered-resources-and-styles) | Shared-file evidence                      |
+| Global tokens or screen layout change                          | Rendered screens when output changes; see [path rule](./mokly-component-changes.md#rendered-resources-and-styles) | Rendered-resource evidence                |
 | Temporary local prop edit or Reset                             | None                                                                                                              | Preview only                              |
 
 | CSS delivery                | Direct Changes                                                                        | Secondary evidence              |
@@ -31,6 +31,6 @@ Acceptance after a registered baseline exists:
 The initial registration migration may create legitimate one-time structural
 changes against an unregistered baseline. Do not add blanket Review ignores to
 hide them. Prove steady-state attribution with two fully registered snapshots.
-Update existing legacy style-attribution tests deliberately: retain meaningful
+Style-attribution tests cover the current rule: retain meaningful
 global/layout assertions and use the shared component-aware classifier for
 CSS kept own-page matches and owned document styles, not the old raw changed-path helper.

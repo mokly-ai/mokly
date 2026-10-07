@@ -134,7 +134,7 @@ errors, not a fourth resolution state.
 
 ## Optional Invocation Source
 
-Manifest v8 includes this optional instance field:
+Manifest v9 includes this optional instance field:
 
 ```ts
 interface ComponentSourceLocation {
@@ -173,7 +173,7 @@ The name is reserved from authored data props and slots. Capture it in the
 collector only; do not emit DOM attributes, source maps, or debug markup.
 Programmatic `createElement` calls and transformed modules without invocation
 information may omit `source`. Replayed slots retain the original invocation
-location; manifest-v8 readers accept records with or without the optional field.
+location; manifest-v9 readers accept records with or without the optional field.
 
 `source` is excluded from instance/slot keys, `propsKey`, direct-input comparison,
 and every Changes projection. Line shifts and source moves alone are not material.
@@ -192,7 +192,7 @@ The Mokly wrapper authors these exact inert React sentinels:
 ```
 
 `b-n` is allocated per collector boundary, starting at zero. Both attributes
-are package-reserved; consumers and transformers cannot author or forge them.
+are package-reserved; consumers cannot author or forge them.
 [`ranges.ts`](../../src/components/ranges.ts) authenticates each token against
 the collector, requires the exact empty template shape with one attribute,
 and serializes it as:
@@ -221,9 +221,9 @@ Reject unknown, forged, missing, duplicate, crossing, reordered, or mismatched
 markers and incorrect range parentage. No template sentinel survives final
 serialization. Review-ignore regions cannot enclose instance or caller-slot
 boundaries. The root-only pair preserves existing ignore admission under the
-[root output contract](./mokly-component-usage-records.md#root-output-boundary). Compatibility transforms must preserve validated pairs; adapters
+[root output contract](./mokly-component-usage-records.md#root-output-boundary). Generated documents must preserve validated pairs; adapters
 inspect current views using these comments without adding layout wrappers.
-Accepted baseline and current v8 documents use the same marker spelling and
+Accepted baseline and current v9 documents use the same marker spelling and
 validation; historical marker translation is not supported.
 
 On both baseline and current sides, a comment with the former `mokabook-`

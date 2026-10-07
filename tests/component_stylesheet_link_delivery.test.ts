@@ -26,9 +26,9 @@ import {
   waitForInitialChanges,
 } from "./helpers/watched_catalogue.js";
 
-for (const generatedOutput of ["committed", "derived"] as const)
+for (const storage of ["blobs", "rebuild"] as const)
   test(
-    `${generatedOutput} ignored inserted links agree in Browse, watch, selected, export and publication`,
+    `${storage} ignored inserted links agree in Browse, watch, selected, export and publication`,
     { timeout: 60_000 },
     async (t) => {
       const fixture = await changedFixture(
@@ -43,22 +43,18 @@ for (const generatedOutput of ["committed", "derived"] as const)
           await fs.writeFile(
             path.join(item.root, ".gitignore"),
             ".mokly-cache/\n.context/\n" +
-              (generatedOutput === "derived"
-                ? "mockups/**/*.html\nmockups/mokly-manifest.json\n"
-                : ""),
+              (storage === "rebuild" ? "mockups/mokly-generated/\n" : ""),
           );
           await fs.writeFile(
             item.configPath,
-            (await fs.readFile(item.configPath, "utf8"))
-              .replace('"committed"', JSON.stringify(generatedOutput))
-              .replace(
-                'outDir: ".review"',
-                generatedOutput === "derived"
-                  ? 'outDir: ".review", baselineBuild: [["node", "baseline.mjs"]]'
-                  : 'outDir: ".review"',
-              ),
+            (await fs.readFile(item.configPath, "utf8")).replace(
+              'outDir: ".review"',
+              storage === "rebuild"
+                ? 'outDir: ".review", baselineBuild: [["node", "baseline.mjs"]]'
+                : 'outDir: ".review"',
+            ),
           );
-          if (generatedOutput === "derived") {
+          if (storage === "rebuild") {
             const baseline = await compileCatalogue(
               await loadConfig(item.root),
             );
@@ -71,7 +67,7 @@ for (const generatedOutput of ["committed", "derived"] as const)
               `import fs from "node:fs/promises";
 import path from "node:path";
 for (const [route, content] of JSON.parse(await fs.readFile("baseline-output.json", "utf8"))) {
-  const target = path.join("mockups", route);
+  const target = path.join("mockups", "mokly-generated", route);
   await fs.mkdir(path.dirname(target), {recursive:true});
   await fs.writeFile(target, content);
 }`,
@@ -88,7 +84,9 @@ for (const [route, content] of JSON.parse(await fs.readFile("baseline-output.jso
       fixture.beforeRemove(() => running.close());
       const initial = await waitForInitialChanges(running.url);
       const beforeCatalogue = readCatalogue(
-        await (await fetch(`${running.url}/__mokly/catalogue.json`)).json(),
+        await (
+          await fetch(`${running.url}/mokly-viewer/catalogue.json`)
+        ).json(),
       );
       assert.ok(
         beforeCatalogue.screens.every(
@@ -137,7 +135,7 @@ for (const [route, content] of JSON.parse(await fs.readFile("baseline-output.jso
         (screen) => screen.path === "checkout",
       )!;
       const selectedResponse = await fetch(
-        `${running.url}/__mokly/diffs/review.json?path=checkout`,
+        `${running.url}/mokly-viewer/diffs/review.json?path=checkout`,
       );
       assert.equal(
         selectedResponse.status,
@@ -147,7 +145,9 @@ for (const [route, content] of JSON.parse(await fs.readFile("baseline-output.jso
       const selected = parseReviewResult(await selectedResponse.json());
       assert.deepEqual(selected.screens, [expected]);
       const live = readCatalogue(
-        await (await fetch(`${running.url}/__mokly/catalogue.json`)).json(),
+        await (
+          await fetch(`${running.url}/mokly-viewer/catalogue.json`)
+        ).json(),
       );
       const evidence = (catalogue: typeof live) =>
         catalogue.screens
@@ -158,7 +158,7 @@ for (const [route, content] of JSON.parse(await fs.readFile("baseline-output.jso
         expected.views.map((view) => ({ reasons: view.reasons })),
       );
       const preview = await fetch(
-        `${running.url}/static/checkout/index.mobile.html`,
+        `${running.url}/static/mokly-generated/checkout/index.mobile.html`,
       );
       assert.equal(preview.status, 200);
       assert.match(
@@ -184,7 +184,7 @@ for (const [route, content] of JSON.parse(await fs.readFile("baseline-output.jso
         const catalogue = readCatalogue(
           JSON.parse(
             await fs.readFile(
-              path.join(output, "__mokly/catalogue.json"),
+              path.join(output, "mokly-viewer/catalogue.json"),
               "utf8",
             ),
           ),

@@ -111,8 +111,8 @@ test("Review README retains generated-byte and frozen-source boundaries", async 
   const text = await read("src/review/README.md");
   for (const rule of [
     /`imported_changes\.ts` compares accepted generated CSS and binary asset bytes/u,
-    /even when Git ignores derived output/u,
-    /Committed classification never reloads the graph or reruns PostCSS/u,
+    /even when Git ignores generated output/u,
+    /Accepted-generation classification never reloads the graph or reruns PostCSS/u,
     /without an accepted generation performs one inventory load/u,
     /Source validation accepts dependency reasons only from that record/u,
     /never trusts result view records as sources/u,

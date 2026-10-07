@@ -67,8 +67,16 @@ not remove it from this list. Links can open the actual before/current screen
 comparison even when the screen has no row in Changes.
 
 Affected describes dependency/usage evidence, not proof of a visual regression.
-In derived mode, a resource-byte difference without a changed Git path is a
-material change. It does not invent a Git dependency reason or changed path.
+For any baseline source, pair generated views by route and authored assets by
+their side's catalogue-relative path, using the
+[baseline descriptor](./mokly-baseline-addressing.md#comparison-namespaces).
+Git changed-path evidence remains repository-relative; it does not translate
+historical roots. A non-CSS resource-byte difference without a changed Git path
+is a material change. Preserve actual public-pipeline CSS rule evidence. Without
+Git evidence, CSS byte differences retain the material-reason and view-state
+fallback only when that stylesheet is linked on both actual sides. One-sided
+inserted-link membership and projection-only CSS cannot grant it. The fallback
+does not invent a Git dependency reason or changed path.
 No pixel counts or layout-safety claims are inferred. A changed component can
 alter surrounding layout without changing any screen-owned markup.
 
@@ -89,8 +97,8 @@ screen.
 
 Lightweight Browse classification reads the current compiled manifest and usage
 metadata together with the baseline manifest and required fragment material.
-Committed mode reads the baseline side from Git branch-point blobs; derived mode
-reads it from the validated rebuilt cache. It does not generate snapshots or copy
+Per-commit selection reads complete Git blobs or the validated rebuilt cache.
+It does not generate snapshots or copy
 comparison assets. Opening All/Changes, navigating, changing viewport/theme in
 Current, and watch notifications retain the no-eager-comparison-generation
 contract. Cache classification by catalogue generation and resolved baseline;
@@ -99,8 +107,8 @@ that affect its inputs. No-watch Serve and publication instead reuse their
 validated startup snapshot, including ownership evidence and unavailable-history
 state, for the lifetime of that capture.
 
-The comparison artifact is the review result v5 with component/variant records
-and explicit affected-consumer evidence. Readers accept only review result v5.
+The comparison artifact is the review result v6 with component/variant records
+and explicit affected-consumer evidence. Readers accept only review result v6.
 Every record addresses its entry by path. Screen entries retain their actual view
 results, with affected-only evidence separate from direct Changes membership.
 All comparisons keep accepted before/after bytes and isolated assets.
@@ -201,7 +209,7 @@ and unrendered files supply no ownership or evidence.
 
 Renderer `styles` records still identify exact document material ranges, such
 as component-generated text in a head style element. These records do not own
-stylesheet files. Validate offsets against the final compatibility output.
+stylesheet files. Validate offsets against the final rendered output.
 Only proven owned document material is excluded from a consumer projection;
 mixed or unclaimed head material stays material.
 

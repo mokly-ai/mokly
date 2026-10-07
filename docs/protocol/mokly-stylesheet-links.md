@@ -21,18 +21,20 @@ starting point. Do not descend into its content when finding active links.
 A stylesheet link has an ASCII-case-insensitive `stylesheet` token in its
 ASCII-whitespace-delimited `rel` value. Other tokens, such as `alternate`, do
 not disqualify it. Resolve local hrefs relative to the document route. Apply
-the existing public-file confinement and alias checks. Query and fragment
+the [shared public-file policy](./mokly-public-closure.md#one-policy-per-compilation).
+A symbolic link at any public path component is invalid, including a renderer
+link to declared CSS. Query and fragment
 suffixes stay in HTML but do not change the public resource path or real-file
 identity. Resource hints alone do not load a stylesheet for Changes.
 
 ## Scope At Each Step
 
-| Step                | Document and scope                                                                                                                                                                                                                                                                                     |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Placement anchors   | Renderer output before insertion and compatibility transformation. Only active stylesheet links in the logical head whose hrefs match configured hrefs qualify. Review-ignore markers do not change placement. Generated renderer/entry links never qualify merely because the renderer receives them. |
-| Renderer-link reuse | The same renderer output, across the active head and body, before Review-ignore normalization. Reuse every link to a declared real file that resource discovery can find. Do not move, remove or duplicate it.                                                                                         |
-| Provenance          | Final output after compatibility transformation, across the active head and body, before Review-ignore normalization. Only retained, valid transient tokens on active stylesheet links produce inserted-link spans.                                                                                    |
-| Resource discovery  | Final output across the active head and body. Build, delivery and watch use the actual linked document. Review applies paired Review-ignore to authored content, then also includes the links proved by final-document `insertedStylesheets` spans.                                                    |
+| Step                | Document and scope                                                                                                                                                                                                                                                                                    |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Placement anchors   | Renderer output before insertion and ordinary package link edits. Only active stylesheet links in the logical head whose hrefs match configured hrefs qualify. Review-ignore markers do not change placement. Generated renderer/entry links never qualify merely because the renderer receives them. |
+| Renderer-link reuse | The same renderer output, across the active head and body, before Review-ignore normalization. Reuse every link to a declared real file that resource discovery can find. Do not move, remove or duplicate it.                                                                                        |
+| Provenance          | Final output after ordinary package link edits, across the active head and body, before Review-ignore normalization. Only links issued by the insertion pass produce recorded full-link spans.                                                                                                        |
+| Resource discovery  | Final output across the active head and body. Build, delivery and watch use the actual linked document. Review applies paired Review-ignore to authored content, then also includes the links proved by final-document `insertedStylesheets` spans.                                                   |
 
 The [placement contract](./mokly-component-stylesheets.md#document-linking)
 owns the nearest configured link, tie, repeated href and logical-head fallback
@@ -42,25 +44,17 @@ the complete input list. These lists serve different purposes.
 For reuse, a declared file linked in the body prevents another Mokly link in
 the head. A link only inside a template does not prevent insertion. When
 several authored links name one real file, keep all of them and insert none.
-Prefer the first present href in configured order when choosing its public
-alias; otherwise use the first document occurrence. Reuse gives no provenance
+Prefer the first valid present href in configured order; otherwise use the
+first valid document occurrence. Reuse gives no provenance
 span and does not exempt the author's link from Review-ignore.
 
-## Token Validation
+## Final Inserted Links
 
 The [provenance contract](./mokly-component-stylesheet-ownership.md#provenance-and-comparison-material)
-owns issued-token identity, original real-file matching, offset rebasing and
-the root-component exception. Validate reserved attributes across all parsed
-elements, including template content. Renderer-authored attributes, unknown
-tokens, duplicate tokens, tokens on non-stylesheet elements and reassignment
-to another real file still fail. This attribute validation is distinct from
-finding active links and must not make inert content a resource.
-
-If a transformer moves a valid marked link into a template, remove its token
-but record no span. If it removes the active link and leaves only an unmarked
-template link, that file has no active resource starting point. A retained
-active body link keeps its provenance. Strip validated transient attributes
-from final HTML, including inert content, without reserializing other bytes.
+owns real-file matching, final full-link spans, offset rebasing and the
+root-component exception. No transient token is used. Match issued insertions
+against active final links. Inert template content supplies no span or resource
+starting point. A reused active renderer link remains authored content.
 
 ## Review Resource And Rule Scope
 
@@ -79,6 +73,6 @@ component and affect consumers even when its head anchor was ignored. Selector
 matching still uses the Review-ignore-normalized document: the exception does
 not restore ignored authored markup, styles or links. Page material separately
 removes the recorded links under the provenance contract. Template content and
-unmarked replacements receive no exception. Complete and selected artifacts
+reused renderer links receive no exception. Complete and selected artifacts
 retain the same private spans until snapshot-resource validation finishes.
 This proof is not written into public comparison JSON or snapshot files.

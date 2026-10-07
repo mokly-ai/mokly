@@ -5,12 +5,12 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { exportCatalogue } from "../dist/export/run.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
 import { readCatalogue } from "../packages/viewer/dist/index.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { membershipSource } from "./helpers/css_membership_fixture.js";
 
 test("whole-document page evidence shares component facts across live and exported catalogues", async (t) => {
@@ -18,7 +18,7 @@ test("whole-document page evidence shares component facts across live and export
     membershipSource +
     `
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({path:"guide", title:"Guide", description:"Guide", relatedDocs:[], render: () => '<html><head><link rel="stylesheet" href="../rule.css"></head><body><b class="action">Guide action</b></body></html>'}));`;
+mockups.push(definePage({path:"guide", title:"Guide", description:"Guide", relatedDocs:[], render: () => '<html><head><link rel="stylesheet" href="../../rule.css"></head><body><b class="action">Guide action</b></body></html>'}));`;
   const fixture = await changedFixture(
     t,
     source,
@@ -65,7 +65,10 @@ mockups.push(definePage({path:"guide", title:"Guide", description:"Guide", relat
   await exportCatalogue(fixture.config, { outDir: output, base: "HEAD" });
   const catalogue = readCatalogue(
     JSON.parse(
-      await fs.readFile(path.join(output, "__mokly/catalogue.json"), "utf8"),
+      await fs.readFile(
+        path.join(output, "mokly-viewer/catalogue.json"),
+        "utf8",
+      ),
     ),
   );
   assert.deepEqual(catalogue.pages[0]!.resourceEvidence, {
@@ -81,7 +84,10 @@ mockups.push(definePage({path:"guide", title:"Guide", description:"Guide", relat
   });
   const publication = readCatalogue(
     JSON.parse(
-      await fs.readFile(path.join(published, "__mokly/catalogue.json"), "utf8"),
+      await fs.readFile(
+        path.join(published, "mokly-viewer/catalogue.json"),
+        "utf8",
+      ),
     ),
   );
   assert.deepEqual(

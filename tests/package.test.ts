@@ -86,7 +86,7 @@ test("CLI defaults to watched serve and rejects misplaced options", () => {
   );
   assert.throws(
     () => parseArguments(["build", "--port", "1234"]),
-    /belong to serve/,
+    /belongs to serve/,
   );
   assert.throws(
     () => parseArguments(["serve", "--update-version", "2"]),
@@ -120,7 +120,7 @@ test("packed package contains only the declared public surface", async () => {
   assert.ok(files.has("docs/protocol/mokly-upload-exchange.md"));
   assert.ok(files.has("docs/protocol/mokly-upload-validation.md"));
   assert.ok(files.has("docs/protocol/mokly-export-ownership.md"));
-  assert.ok(files.has("docs/protocol/fixtures/export-ownership-v2.json"));
+  assert.ok(files.has("docs/protocol/fixtures/export-ownership-v3.json"));
   assert.ok(files.has("docs/protocol/fixtures/upload-plan-v1.json"));
   for (const guidePath of GUIDE_PATHS) assert.ok(files.has(guidePath));
   assert.ok(files.has("docs/guides/authoring/styles.md"));

@@ -4,17 +4,12 @@ import path from "node:path";
 import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
-import {
-  generatedHeader,
-  isAuthoredOwner,
-  pendingGeneratedOrphanRoutes,
-} from "../dist/build/ownership.js";
 import { loadConfig } from "../dist/config/load.js";
-import { resolvePublicExclude } from "../dist/config/public_exclusions.js";
 import { resolveExportOutput } from "../dist/export/paths.js";
 import { receiveComponentRuntimeStartup } from "../dist/server/controls/runtime_ipc.js";
 import { classifyWatchPath } from "../dist/server/watch_events.js";
 
+import { currentManifest } from "./helpers/current_manifest.js";
 import {
   createFixture,
   removeFixture,
@@ -146,70 +141,6 @@ export const packaged = defineScreen({ relatedDocs: [], useCasePaths: [], path: 
   });
 });
 
-test("ownership trusts resolved, inventoried, and glob-matched sources", async (t) => {
-  const fixture = await coLocatedFixture();
-  t.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
-  const inventoried = {
-    ...config,
-    sourceFiles: (await compileCatalogue(config)).manifest.sourceFiles,
-  };
-  const rootGlob = {
-    ...inventoried,
-    roots: [
-      {
-        dir: path.resolve(config.repoRoot, "."),
-        files: ["**/*.mockup.{ts,tsx}"],
-        transparent: [],
-      },
-    ],
-  };
-  const scopedGlob = {
-    ...rootGlob,
-    roots: [
-      {
-        dir: path.join(fixture.root, "src"),
-        files: ["**/*.mockup.{ts,tsx}"],
-        transparent: [],
-      },
-    ],
-  };
-  assert.equal(
-    isAuthoredOwner("other/catalogue/thing.mockup.tsx", rootGlob),
-    true,
-  );
-  assert.equal(isAuthoredOwner("docs/notes.md", rootGlob), false);
-  assert.equal(
-    isAuthoredOwner("other/catalogue/thing.mockup.tsx", scopedGlob),
-    false,
-  );
-  assert.equal(isAuthoredOwner("docs/notes.md", scopedGlob), false);
-  assert.equal(
-    isAuthoredOwner("src/components/button/button.mockup.tsx", inventoried),
-    true,
-  );
-  assert.equal(
-    isAuthoredOwner("src/components/button/button.mokly.tsx", inventoried),
-    true,
-  );
-  assert.equal(
-    isAuthoredOwner("src/components/button/button.mokly.tsx", {
-      ...inventoried,
-      sourceFiles: [],
-    }),
-    false,
-  );
-  const stale = path.join(fixture.mockupsDir, "stale/index.html");
-  await fs.promises.mkdir(path.dirname(stale), { recursive: true });
-  await fs.promises.writeFile(
-    stale,
-    `${generatedHeader("src/components/button/old-name.mockup.tsx")}<html></html>\n`,
-  );
-  assert.deepEqual(pendingGeneratedOrphanRoutes(inventoried, []), [
-    "stale/index.html",
-  ]);
-});
-
 test("watch rebuilds for a new co-located entry module and export refuses its directory", async (t) => {
   const fixture = await coLocatedFixture();
   t.after(() => removeFixture(fixture));
@@ -270,15 +201,15 @@ test("runtime startup rejects missing or invalid resolved roots", async () => {
         { dir: "/repo/src", files: ["**/*.mockup.{ts,tsx}"], transparent: [] },
       ],
       mockupsDir: "/repo/generated",
+      generatedDir: "/repo/generated/mokly-generated",
       repoRoot: "/repo",
-      publicExclude: resolvePublicExclude([]),
     },
-    manifest: {
+    manifest: currentManifest({
       entries: [],
-      schemaVersion: 8 as const,
       folders: [],
+      schemaVersion: 9,
       sourceFiles: [],
-    },
+    }),
   };
   process.emit("message", {
     ...valid,

@@ -9,6 +9,7 @@ import {
   assertFastPathEquivalent,
   compilationFiles,
 } from "./helpers/component_fast_path.js";
+import { currentManifest } from "./helpers/current_manifest.js";
 import { stylesheetMoveFixture } from "./helpers/move_review_fixture.js";
 import { pathFixture } from "./helpers/path_fixture.js";
 
@@ -71,7 +72,7 @@ export default defineScreen({title:'Home',description:'Home',relatedDocs:[],
   });
   t.after(fixture.remove);
   const built = await fixture.compile();
-  assert.equal(parseManifest(built.manifest).schemaVersion, 8);
+  assert.equal(parseManifest(built.manifest).schemaVersion, 9);
   assert.deepEqual(
     built.diagnostics?.map((warning) => [warning.subject?.path]),
     [["library/action"], ["library/action"]],
@@ -181,8 +182,8 @@ test("a moved whole-document page retains Unmodified evidence status", async () 
     await import("../packages/viewer/dist/shell/catalogue.js");
   const { pageComparisonEvidence } =
     await import("../packages/viewer/dist/shell/page_evidence_data.js");
-  const before = {
-    schemaVersion: 8 as const,
+  const before = currentManifest({
+    schemaVersion: 9 as const,
     generatedBy: "mokly" as const,
     folders: [],
     sourceFiles: ["specs/page.mockup.ts"],
@@ -196,11 +197,11 @@ test("a moved whole-document page retains Unmodified evidence status", async () 
         sourcePath: "specs/page.mockup.ts",
       },
     ],
-  };
-  const after = {
+  });
+  const after = currentManifest({
     ...before,
     entries: before.entries.map((entry) => ({ ...entry, path: "docs/guide" })),
-  };
+  });
   const pairing = {
     moves: [
       { kind: "page" as const, path: "docs/guide", previousPath: "old/guide" },

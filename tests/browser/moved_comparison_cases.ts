@@ -12,7 +12,7 @@ import { ACTION, INVOICE, showDetails } from "./moved_rows.js";
 /** The comparison panes for one side, named by the snapshot path they show. */
 function panes(page: Page, side: "after" | "before", path: string) {
   return page.locator(
-    `iframe[data-mokly-comparison-frame][data-mokly-preview-source*="/snapshots/${side}/${path}/"]`,
+    `iframe[data-mokly-comparison-frame][data-mokly-preview-source*="/snapshots/${side}/mokly-generated/${path}/"]`,
   );
 }
 

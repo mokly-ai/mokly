@@ -7,7 +7,6 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { componentRuntime } from "../dist/build/component_runtime.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { acceptedGenerationFromCompilation } from "../dist/review/accepted_generation.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { ComponentChangeCache } from "../dist/server/component_change_cache.js";
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
 import { configuredServedReview } from "../dist/server/configured_review.js";
@@ -15,6 +14,7 @@ import { startCatalogueServer } from "../dist/server/http.js";
 import { parseReviewResult } from "../packages/viewer/dist/data.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 
 test("selected generations replace own-page CSS facts without evaluating consumer code", async (t) => {
   const source = `import React from "react"; import fs from "node:fs"; import {defineComponent,defineScreen} from "@mokly/mokly";
@@ -75,7 +75,7 @@ export const mockups=[...action.entries,defineScreen({path:'checkout',title:'Che
   fixture.beforeRemove(() => server.close());
   const select = async () => {
     const response = await fetch(
-      `${server.url}/__mokly/diffs/review.json?path=checkout`,
+      `${server.url}/mokly-viewer/diffs/review.json?path=checkout`,
     );
     assert.equal(response.status, 200, await response.clone().text());
     return {

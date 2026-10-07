@@ -23,11 +23,7 @@ test("accepted runtime recompilation retains stylesheet routes and binary assets
   const compiled = await compileRuntime(runtime, async () => {});
   assert.match(compiled.outputs.get(entryStyle) as string, /\.a/);
   assert.deepEqual(
-    Buffer.from(
-      compiled.outputs.get(
-        "mokly-generated/assets/entries/image.png",
-      ) as Uint8Array,
-    ),
+    Buffer.from(compiled.outputs.get("assets/entries/image.png") as Uint8Array),
     image,
   );
 });
@@ -47,9 +43,7 @@ test("watched-runtime IPC transfers binary stylesheet assets and root routes", a
     entryStyle,
   );
   assert.deepEqual(
-    new Map(decoded.runtime.styleOutputs).get(
-      "mokly-generated/assets/entries/image.png",
-    ),
+    new Map(decoded.runtime.styleOutputs).get("assets/entries/image.png"),
     image,
   );
 });

@@ -8,8 +8,8 @@ import { catalogueNavSections } from "../packages/viewer/dist/shell/nav_model.js
 
 import { pathFixture } from "./helpers/path_fixture.js";
 
-const invoice = `import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'Invoice',description:'Invoice',dependencies:[],relatedDocs:[],mobile:'Invoice',desktop:'Invoice',variants:[{slug:'overdue',title:'Overdue',description:'Overdue',mobile:'Overdue',desktop:'Overdue'}]});`;
-const plans = `import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'Plans',description:'Plans',dependencies:[],relatedDocs:[],mobile:'Plans',desktop:'Plans'});`;
+const invoice = `import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'Invoice',description:'Invoice',relatedDocs:[],mobile:'Invoice',desktop:'Invoice',variants:[{slug:'overdue',title:'Overdue',description:'Overdue',mobile:'Overdue',desktop:'Overdue'}]});`;
+const plans = `import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'Plans',description:'Plans',relatedDocs:[],mobile:'Plans',desktop:'Plans'});`;
 
 /** Compile one file layout through the registry and project its rows. */
 async function compiled(t: test.TestContext, file: string) {

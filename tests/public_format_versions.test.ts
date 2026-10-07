@@ -11,7 +11,7 @@ import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { cssSchemaFixture } from "./helpers/review_css_schema.js";
 
-test("catalogue v4 omits dependencies and rejects v1 to v3", async (t) => {
+test("catalogue v5 omits dependencies and rejects v1 to v4", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const model = projectCatalogue({
     configPath: "mokly.config.ts",
@@ -20,7 +20,7 @@ test("catalogue v4 omits dependencies and rejects v1 to v3", async (t) => {
     comparisonUrl: null,
     revision: { content: 0, evidence: 0 },
   });
-  assert.equal(model.schemaVersion, 4);
+  assert.equal(model.schemaVersion, 5);
   for (const entry of [
     ...model.screens,
     ...model.pages,
@@ -31,7 +31,7 @@ test("catalogue v4 omits dependencies and rejects v1 to v3", async (t) => {
     assert.equal(Object.hasOwn(entry.details, "dependencies"), false);
   assert.deepEqual(readCatalogue(JSON.parse(JSON.stringify(model))), model);
   const publicFixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
   );
   assert.deepEqual(readCatalogue(publicFixture), publicFixture);
   for (const entry of [
@@ -44,10 +44,10 @@ test("catalogue v4 omits dependencies and rejects v1 to v3", async (t) => {
     ),
   ])
     assert.equal(Object.hasOwn(entry.details, "dependencies"), false);
-  for (const version of [1, 2, 3])
+  for (const version of [1, 2, 3, 4])
     assert.throws(
       () => readCatalogue({ ...publicFixture, schemaVersion: version }),
-      /unsupported schemaVersion/,
+      /Unsupported Mokly catalogue version/,
     );
   const legacyField = structuredClone(model) as unknown as {
     screens: { details: Record<string, unknown> }[];
@@ -59,8 +59,8 @@ test("catalogue v4 omits dependencies and rejects v1 to v3", async (t) => {
   );
 });
 
-test("comparison v5 omits legacy evidence and rejects v4 and earlier", async (t) => {
-  for (const oldVersion of [1, 2, 3, 4] as const) {
+test("comparison v6 omits legacy evidence and rejects v5 and earlier", async (t) => {
+  for (const oldVersion of [1, 2, 3, 4, 5] as const) {
     const legacy = {
       ...cssSchemaFixture(),
       schemaVersion: oldVersion,
@@ -79,7 +79,7 @@ test("comparison v5 omits legacy evidence and rejects v4 and earlier", async (t)
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 5);
+  assert.equal(result.schemaVersion, 6);
   assert.equal(Object.hasOwn(result, "sharedImpact"), false);
   for (const entry of [
     ...result.screens,
@@ -103,7 +103,7 @@ test("comparison v5 omits legacy evidence and rejects v4 and earlier", async (t)
       withEntryField.screens[0][field] = [];
       assert.throws(() => parseReviewResult(withEntryField), /review/i);
     }
-    if (current.schemaVersion === 5 && current.components.length) {
+    if (current.schemaVersion === 6 && current.components.length) {
       const withComponentField = JSON.parse(JSON.stringify(current));
       withComponentField.components[0].dependencies = [];
       assert.throws(() => parseReviewResult(withComponentField), /review/i);

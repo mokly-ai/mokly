@@ -41,7 +41,7 @@ function exportContext(screenPath: string): ShellContext {
     changedEntries: [],
     changesStatus: "ready",
     delivery: {
-      schemaVersion: 3,
+      schemaVersion: 5,
       deploymentId: DEPLOYMENT,
       canonicalPath: `/view/${screenPath}/`,
       comparisonUrl: null,

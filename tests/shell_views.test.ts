@@ -80,11 +80,11 @@ test("screen stage carries per-frame scheme fragment data", () => {
     const suffix = `example/screens/welcome/index.${viewport}`;
     assertAttributes(workspaceFrame(screen, viewport), {
       class: "mbk-frag",
-      "data-fragment-dark": `/static/${suffix}.dark.html`,
-      "data-fragment-light": `/static/${suffix}.html`,
+      "data-fragment-dark": `/static/mokly-generated/${suffix}.dark.html`,
+      "data-fragment-light": `/static/mokly-generated/${suffix}.html`,
       "data-mokly-fragment-frame": "",
       sandbox: "allow-same-origin",
-      src: `/static/${suffix}.html`,
+      src: `/static/mokly-generated/${suffix}.html`,
       title: `Welcome — ${viewport}`,
     });
   }
@@ -104,10 +104,11 @@ test("screen stage carries per-frame scheme fragment data", () => {
   assertAttributes(workspaceFrame(fallback, "mobile"), {
     class: "mbk-frag",
     "data-fragment-dark": undefined,
-    "data-fragment-light": "/static/example/screens/details/index.mobile.html",
+    "data-fragment-light":
+      "/static/mokly-generated/example/screens/details/index.mobile.html",
     "data-mokly-fragment-frame": "",
     sandbox: "allow-same-origin",
-    src: "/static/example/screens/details/index.mobile.html",
+    src: "/static/mokly-generated/example/screens/details/index.mobile.html",
     title: "Details — mobile",
   });
   assert.equal(fallback.includes("data-fragment-dark"), false);
@@ -129,18 +130,20 @@ test("screen stage carries per-frame scheme fragment data", () => {
   );
   assertAttributes(flowFrames[0]!, {
     "data-fragment-dark":
-      "/static/example/screens/welcome/index.desktop.dark.html",
-    "data-fragment-light": "/static/example/screens/welcome/index.desktop.html",
+      "/static/mokly-generated/example/screens/welcome/index.desktop.dark.html",
+    "data-fragment-light":
+      "/static/mokly-generated/example/screens/welcome/index.desktop.html",
     "data-mokly-fragment-frame": "",
     sandbox: "allow-same-origin",
-    src: "/static/example/screens/welcome/index.desktop.html",
+    src: "/static/mokly-generated/example/screens/welcome/index.desktop.html",
   });
   assertAttributes(flowFrames[1]!, {
     "data-fragment-dark": undefined,
-    "data-fragment-light": "/static/example/screens/details/index.desktop.html",
+    "data-fragment-light":
+      "/static/mokly-generated/example/screens/details/index.desktop.html",
     "data-mokly-fragment-frame": undefined,
     sandbox: "allow-same-origin",
-    src: "/static/example/screens/details/index.desktop.html",
+    src: "/static/mokly-generated/example/screens/details/index.desktop.html",
   });
   assert.equal(flow.includes("mbk-frame-scheme-note"), false);
   assertLightSrcMatchesAttribute(flow, 2);
@@ -167,7 +170,7 @@ test("screen stage carries per-frame scheme fragment data", () => {
     "data-fragment-light": undefined,
     "data-mokly-fragment-frame": "",
     sandbox: "allow-same-origin",
-    src: "/static/example/screens/welcome/index.mobile.html",
+    src: "/static/mokly-generated/example/screens/welcome/index.mobile.html",
     title: "Welcome — mobile",
   });
   assert.equal(lightScreen.includes("data-fragment-"), false);

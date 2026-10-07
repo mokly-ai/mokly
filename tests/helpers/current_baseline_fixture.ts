@@ -3,32 +3,40 @@ import path from "node:path";
 import type { TestContext } from "node:test";
 
 import type { ComponentViewRecord } from "@mokly/viewer";
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 import { generatedViews } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../../dist/build/compile.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
+import { loadConfig } from "../../dist/config/load.js";
 
 import { componentEntrySource } from "./component_fixture.js";
 import { createExportFixture } from "./export_fixture.js";
 
 export const earlierBaselines = [
-  { name: "main v7", version: 7 },
+  { name: "previous v8", version: 8 },
+  { name: "v7", version: 7 },
   { name: "v3", version: 3 },
   { name: "v4", version: 4 },
   { name: "v5", version: 5 },
   { name: "v6", version: 6 },
-  { name: "mokabook sentinel", filename: "mokabook-manifest.json" },
-  { name: "mockbook sentinel", filename: "mockbook-manifest.json" },
+  {
+    name: "former mokabook filename without canonical output",
+    filename: "mokabook-manifest.json",
+  },
+  {
+    name: "former mockbook filename without canonical output",
+    filename: "mockbook-manifest.json",
+  },
 ] as const;
 
-export type EarlierV8Shape =
+export type InvalidCurrentShape =
   "missing root" | "missing provenance" | "CSS owners";
 
-export function earlierV8Manifest(
-  manifest: ManifestV8,
-  shape: EarlierV8Shape,
-): ManifestV8 {
+export function invalidCurrentManifest(
+  manifest: ManifestV9,
+  shape: InvalidCurrentShape,
+): ManifestV9 {
   const alter = (view: ComponentViewRecord): ComponentViewRecord => {
     if (shape === "missing root") return { ...view, ranges: [] };
     if (shape === "CSS owners")
@@ -54,26 +62,63 @@ export function earlierV8Manifest(
 export async function currentBaselineFixture(
   context: TestContext,
   baseline:
-    { version: number } | { filename: string } | { shape: EarlierV8Shape },
+    { version: number } | { filename: string } | { shape: InvalidCurrentShape },
 ) {
   const fixture = await createExportFixture(componentEntrySource());
   context.after(() => fixture.close());
-  const compilation = await compileCatalogue(fixture.config);
-  const canonical = path.join(fixture.mockupsDir, "mokly-manifest.json");
   if ("filename" in baseline) {
+    await fs.writeFile(
+      fixture.configPath,
+      (await fs.readFile(fixture.configPath, "utf8")).replace(
+        'review: { outDir: ".review" }',
+        'review: { outDir: ".review", baselineBuild: [["node", "baseline.mjs"]] }',
+      ),
+    );
+    await fs.appendFile(path.join(fixture.root, ".gitignore"), ".context/\n");
+    fixture.config = await loadConfig(fixture.root);
+  }
+  const compilation = await compileCatalogue(fixture.config);
+  const canonical = path.join(
+    fixture.config.generatedDir,
+    "mokly-manifest.json",
+  );
+  if ("filename" in baseline) {
+    const rebuildLog = path.join(fixture.root, ".context/baseline-rebuild.log");
+    await fs.mkdir(path.dirname(rebuildLog), { recursive: true });
     await fs.rename(
       canonical,
       path.join(fixture.mockupsDir, baseline.filename),
     );
     await fs.writeFile(
       path.join(fixture.mockupsDir, baseline.filename),
-      "not JSON; sentinel only",
+      "not JSON; not a canonical manifest",
+    );
+    await fs.writeFile(
+      path.join(fixture.root, "baseline-output.json"),
+      JSON.stringify(
+        [...compilation.outputs].map(([route, value]) => [
+          route,
+          Buffer.from(value).toString("base64"),
+        ]),
+      ),
+    );
+    await fs.writeFile(
+      path.join(fixture.root, "baseline.mjs"),
+      `import fs from "node:fs/promises";
+import path from "node:path";
+for (const [route, encoded] of JSON.parse(await fs.readFile("baseline-output.json", "utf8"))) {
+  const target = path.join("mockups/mokly-generated", route);
+  await fs.mkdir(path.dirname(target), { recursive: true });
+  await fs.writeFile(target, Buffer.from(encoded, "base64"));
+}
+await fs.appendFile(${JSON.stringify(rebuildLog)}, "build\\n");
+`,
     );
   } else {
     const manifest =
       "version" in baseline
         ? { ...compilation.manifest, schemaVersion: baseline.version }
-        : earlierV8Manifest(compilation.manifest, baseline.shape);
+        : invalidCurrentManifest(compilation.manifest, baseline.shape);
     await fs.writeFile(canonical, JSON.stringify(manifest));
     if ("shape" in baseline && baseline.shape === "missing root") {
       const entry = compilation.manifest.entries.find(
@@ -84,7 +129,7 @@ export async function currentBaselineFixture(
         if (typeof content !== "string")
           throw new Error("fixture needs an HTML view");
         await fs.writeFile(
-          path.join(fixture.mockupsDir, view.path),
+          path.join(fixture.config.generatedDir, view.path),
           content.replace(/<!--mokly-component:(?:start|end):r-0-->/g, ""),
         );
       }
@@ -94,5 +139,17 @@ export async function currentBaselineFixture(
   await fixture.git("commit", "-qm", "test: selected baseline contract");
   await fixture.git("update-ref", "refs/remotes/origin/main", "HEAD");
   await writeCompilation(compilation, fixture.config);
-  return { ...fixture, compilation };
+  return {
+    ...fixture,
+    compilation,
+    rebuilds: async () =>
+      (
+        await fs.readFile(
+          path.join(fixture.root, ".context/baseline-rebuild.log"),
+          "utf8",
+        )
+      )
+        .split("\n")
+        .filter(Boolean).length,
+  };
 }

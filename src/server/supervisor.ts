@@ -1,15 +1,17 @@
 /** Restart supervision retains ownership until each child's cleanup completes. */
 
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 
+import type { BaselineCatalogue } from "../baseline/catalogue.js";
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { GenerationWarning } from "../build/warning_generation.js";
 import { bindTimings, timeSync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
+import type { BaselineSelection } from "../review/repository.js";
 
 import { ManagedChild, type ChildShutdownTimings } from "./child_lifecycle.js";
 import { NodeChildFactory, type ChildFactory } from "./child_process.js";
-import type { ComponentChangeSnapshot } from "./component_changes.js";
+import type { ComponentChangeSnapshot } from "./component_change_types.js";
 import { componentRuntimeMessage } from "./controls/runtime_ipc.js";
 import {
   parsePreviewObservation,
@@ -25,7 +27,7 @@ import {
 
 /** Restartable child interface used by watched Serve. */
 export interface ProcessSupervisor {
-  completeCatalogue?(manifest: ManifestV8, generation: string): void;
+  completeCatalogue?(manifest: ManifestV9, generation: string): void;
   onForeground?(callback: (active: boolean) => void): void;
   onDiagnostic?(callback: (message: string) => void): void;
   onWarning?(callback: (event: GenerationWarning) => void): void;
@@ -44,6 +46,9 @@ export interface ProcessSupervisor {
     changesStatus?: ChangesStatus,
     kind?: CatalogueUpdateKind,
     baselineCommit?: string | null,
+    baselineSelection?: BaselineSelection,
+    baselineDescriptor?: BaselineCatalogue,
+    assetClosure?: readonly string[],
   ): void;
   /** Register the watched-runtime handler for a post-readiness child failure. */
   onUnexpectedExit(callback: (error: Error) => void): void;
@@ -215,6 +220,9 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     changesStatus?: ChangesStatus,
     kind?: CatalogueUpdateKind,
     baselineCommit?: string | null,
+    baselineSelection?: BaselineSelection,
+    baselineDescriptor?: BaselineCatalogue,
+    assetClosure?: readonly string[],
   ): void {
     const child = this.#child;
     if (!child || child.stopping || child.exited) return;
@@ -227,11 +235,14 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
         changesStatus,
         kind,
         baselineCommit,
+        baselineSelection,
+        baselineDescriptor,
+        assetClosure,
       ),
     );
   }
 
-  completeCatalogue(manifest: ManifestV8, generation: string): void {
+  completeCatalogue(manifest: ManifestV9, generation: string): void {
     if (
       this.#runtime?.generation !== generation ||
       !this.#child ||

@@ -8,7 +8,7 @@ import { compileCatalogue } from "../../dist/build/compile.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
 import { serve } from "../../dist/server/serve.js";
-import type { ReviewResultV5 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV6 } from "../../packages/viewer/dist/review/component_types.js";
 import { componentEntrySource } from "../helpers/component_fixture.js";
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 import { createFixture, removeFixture } from "../helpers/fixture.js";
@@ -112,10 +112,10 @@ function pathOnlyEntrySource(): string {
   return componentEntrySource();
 }
 
-function sourceOnlyResult(): ReviewResultV5 {
+function sourceOnlyResult(): ReviewResultV6 {
   const address = { path: "home", title: "Home" };
   return {
-    schemaVersion: 5,
+    schemaVersion: 6,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: ["notes.md"],

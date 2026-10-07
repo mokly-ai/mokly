@@ -21,8 +21,8 @@ test("Browse responds before separately computed component evidence arrives", as
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   const server = await startCatalogueServer(fixture.config, {
     base: "main",
     port: 0,
@@ -58,13 +58,14 @@ test("ordinary Browse serves cached component evidence without generating or wri
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   let comparisons = 0;
   const server = await startCatalogueServer(fixture.config, {
     base: "main",
     port: 0,
     componentChanges: { baseline: fixture.before.manifest, result },
+    generatedOutputs: fixture.after.outputs,
     review: {
       base: "main",
       outDir: path.join(fixture.root, ".review"),
@@ -78,7 +79,7 @@ test("ordinary Browse serves cached component evidence without generating or wri
   for (const route of [
     "/",
     "/view/home/",
-    "/static/home/index.mobile.html",
+    "/static/mokly-generated/home/index.mobile.html",
     "/view/home/",
   ])
     assert.equal((await fetch(server.url + route)).status, 200);
@@ -95,7 +96,10 @@ test("ordinary Browse serves cached component evidence without generating or wri
   });
   for (const [route, html] of fixture.after.outputs)
     assert.equal(
-      await fs.readFile(path.join(fixture.mockupsDir, route), "utf8"),
+      await fs.readFile(
+        path.join(fixture.mockupsDir, "mokly-generated", route),
+        "utf8",
+      ),
       html,
     );
 });

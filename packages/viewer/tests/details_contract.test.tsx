@@ -3,7 +3,8 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { ManifestV8 } from "../src/registry/types.js";
+import { currentManifest } from "../../../tests/helpers/current_manifest.js";
+import type { ManifestV9 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { EntryDetailsBody } from "../src/shell/details.js";
 
@@ -14,7 +15,7 @@ const common = {
   sourcePath: "entries/fixture.mockup.tsx",
   title: "Example",
 };
-const manifest: ManifestV8 = {
+const manifest: ManifestV9 = currentManifest({
   folders: [],
   entries: [
     { ...common, path: "page", kind: "page" },
@@ -45,9 +46,9 @@ const manifest: ManifestV8 = {
     },
   ],
   generatedBy: "mokly",
-  schemaVersion: 8,
+  schemaVersion: 9,
   sourceFiles: [common.sourcePath],
-};
+});
 
 test("details omit authoring dependencies for every routed entry kind", () => {
   const catalogue = createCatalogue(manifest);

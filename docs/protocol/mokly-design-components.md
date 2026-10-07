@@ -32,11 +32,11 @@ Example Action/Toolbar components, miniature subject screens and pictured usage
 fixtures keep their separate roles. New usage in the outer inspector comes from
 the real generated manifest, not from those pictured fixtures.
 
-All existing design entries, relationships, mobile/desktop artboards, copy,
-links and supported native controls remain. The requested normalization replaces
-the legacy Details disclosure and segmented viewport/theme controls throughout
-the catalogue with the shared icon inspector and view toolbar. The legacy footer
-variant and its presentation/behavior fields are removed, not retained as options.
+Preserve existing entries, relationships, both artboard sizes, copy, links and
+supported controls. Each screen uses the shared Details inspector and viewport
+toolbar. Top-bar Appearance owns the scheme.
+The footer has one current form; no alternative disclosure, presentation or
+behavior fields are supported. Comparison-mode controls keep their segments.
 New component entry metadata belongs outside the rendered sample;
 samples contain no implementation notes, environment badges or extra footers.
 
@@ -63,7 +63,7 @@ For inventory group `G` and slug `S`:
 - Registration/schema/variants: `specs/design/library/G/S.tsx`, split into
   short metadata siblings if needed. Render logic: `G/S.view.tsx` and its
   exclusive implementation helpers. Source and visible hierarchy must agree.
-- Public stylesheet: `generated/design-library/G/S.css` when styles are owned
+- Public stylesheet: `design-library/G/S.css` when styles are owned
   exclusively by that component. It is authored CSS, not generated HTML.
 - Variant entry slugs and exposed props are defined by the inventory. Each
   variant entry renders in both actual viewport contexts; the parent's page

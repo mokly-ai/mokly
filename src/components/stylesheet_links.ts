@@ -1,33 +1,10 @@
-import { parse, type DefaultTreeAdapterMap } from "parse5";
+import type { DefaultTreeAdapterMap } from "parse5";
 
 import { type BuildDiagnostic } from "../build/build_warnings.js";
 import { missingConfiguredStylesheetLink } from "../build/warnings.js";
 import { localStylesheetHref } from "../config/stylesheet_hrefs.js";
 import { MoklyError } from "../errors.js";
 import { parseHtmlLinks } from "../html_links.js";
-
-type Node = DefaultTreeAdapterMap["node"];
-const PROVENANCE_ATTRIBUTE = "data-mokly-component-stylesheet";
-
-/** Reserve the transient marker only when authored as an actual HTML attribute. */
-export function assertNoAuthoredStylesheetToken(
-  html: string,
-  route: string,
-): void {
-  function visit(node: Node): void {
-    if (
-      "attrs" in node &&
-      node.attrs.some((attribute) => attribute.name === PROVENANCE_ATTRIBUTE)
-    )
-      throw new MoklyError(
-        "build-invalid",
-        `${route}: renderer authored reserved ${PROVENANCE_ATTRIBUTE} attribute`,
-      );
-    if ("childNodes" in node) for (const child of node.childNodes) visit(child);
-    if ("content" in node) visit(node.content);
-  }
-  visit(parse(html));
-}
 
 function headEndOffset(
   head: DefaultTreeAdapterMap["element"],
@@ -63,15 +40,15 @@ export function insertComponentStylesheets(
   configured: readonly string[],
   position: number,
   declared: readonly string[],
-  provenance = false,
   onWarning?: (warning: BuildDiagnostic) => void,
+  diagnosticRoute = route,
 ): string {
   if (!declared.length) return html;
   const { document, head, links } = parseHtmlLinks(html);
   if (!head)
     throw new MoklyError(
       "build-invalid",
-      `${route}: cannot insert component stylesheets: missing <head>`,
+      `${diagnosticRoute}: cannot insert component stylesheets: missing <head>`,
     );
   const anchors = configured.flatMap((href, index) => {
     const match = links.find(
@@ -80,7 +57,8 @@ export function insertComponentStylesheets(
         link.stylesheet &&
         link.attributes.get("href") === href,
     );
-    if (!match) onWarning?.(missingConfiguredStylesheetLink(route, href));
+    if (!match)
+      onWarning?.(missingConfiguredStylesheetLink(diagnosticRoute, href));
     return match?.location ? [{ index, location: match.location }] : [];
   });
   anchors.sort((left, right) => {
@@ -104,8 +82,8 @@ export function insertComponentStylesheets(
     : headEndOffset(head, document, html);
   const insertion = declared
     .map(
-      (file, index) =>
-        `<link rel="stylesheet" href="${localStylesheetHref(route, file).replaceAll("&", "&amp;").replaceAll('"', "&quot;")}"${provenance ? ` data-mokly-component-stylesheet="${index}"` : ""}>`,
+      (file) =>
+        `<link rel="stylesheet" href="${localStylesheetHref(route, file).replaceAll("&", "&amp;").replaceAll('"', "&quot;")}">`,
     )
     .join("");
   return html.slice(0, offset) + insertion + html.slice(offset);

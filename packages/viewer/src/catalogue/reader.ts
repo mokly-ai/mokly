@@ -7,10 +7,6 @@ import type {
   ShellCatalogueReadModel,
   ShellCatalogueRoutedEntry,
 } from "./scoped_types.js";
-import {
-  comparisonGeneration,
-  historicalSnapshotId,
-} from "./snapshot_identity.js";
 import type {
   CatalogueNode,
   CatalogueReadModel,
@@ -27,8 +23,9 @@ import {
   object,
   text,
 } from "./values.js";
+import { MoklyVersionError } from "./version_error.js";
 
-/** Parse known v4 fields; ignore compatible additions without exposing private data. */
+/** Parse known v5 fields; ignore compatible additions without exposing private data. */
 export function readCatalogue(value: unknown): CatalogueReadModel {
   const model = readCatalogueModel(value, readEntry);
   validateCatalogueReferences(model);
@@ -71,14 +68,13 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
   readRoutedEntry: (value: unknown) => Entry,
 ): ParsedCatalogue<Entry> {
   const input = object(value);
-  if (input.schemaVersion !== 4)
-    invalidData("$catalogue", "unsupported schemaVersion");
+  if (input.schemaVersion !== 5)
+    throw new MoklyVersionError("catalogue", input.schemaVersion, 5);
   assertPublicCatalogue(input);
   const identity = object(input.identity),
     revision = object(input.revision);
   const catalogueIdentity = hash(identity.id);
   const comparisonUrl = comparisonPath(input.comparisonUrl);
-  const generation = comparisonGeneration(comparisonUrl);
   const treeOrder = readOrder(input.treeOrder);
   const entries = <Kind extends Entry["kind"]>(field: string, kind: Kind) =>
     array(input[field]).map((raw) => {
@@ -88,7 +84,7 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
       return entry as Extract<Entry, { kind: Kind }>;
     });
   return {
-    schemaVersion: 4,
+    schemaVersion: 5,
     identity: { id: catalogueIdentity, title: text(identity.title) },
     deploymentId: hash(input.deploymentId),
     revision: {
@@ -107,18 +103,15 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
     removedEntries: array(input.removedEntries).map((raw) => {
       const removed = object(raw);
       const entry = readRoutedEntry(removed.entry);
+      if (removed.snapshotId === undefined && comparisonUrl !== null)
+        invalidData(
+          "$catalogue",
+          "removed entry needs snapshotId when comparisonUrl is non-null",
+        );
+      const snapshotId =
+        removed.snapshotId === undefined ? undefined : hash(removed.snapshotId);
       if (entry.previousPath !== undefined)
         invalidData("$catalogue", "removed entry cannot have previousPath");
-      const snapshotId =
-        removed.snapshotId === undefined
-          ? generation
-            ? historicalSnapshotId(
-                catalogueIdentity,
-                { kind: "generation", identity: generation },
-                entry,
-              )
-            : undefined
-          : hash(removed.snapshotId);
       return {
         entry,
         folderTitles: array(removed.folderTitles).map(text),

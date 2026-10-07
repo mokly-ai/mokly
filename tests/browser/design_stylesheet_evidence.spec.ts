@@ -12,7 +12,7 @@ function shellDesignUrl(id: string, viewport: string): string {
   return pathToFileURL(
     path.join(
       repositoryRoot,
-      `examples/basic/generated/${id}/index.${viewport}.html`,
+      `examples/basic/mokly-generated/${id}/index.${viewport}.html`,
     ),
   ).href;
 }

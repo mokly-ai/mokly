@@ -20,7 +20,7 @@ class OwnershipMarkerError extends Error {
 export function assertOwnershipMarker(value) {
   if (!isRecord(value) || !Object.hasOwn(value, "schemaVersion"))
     throw new OwnershipMarkerError("invalid");
-  if (value.schemaVersion !== 2)
+  if (value.schemaVersion !== 3)
     throw new OwnershipMarkerError("unsupported-version");
   if (!Object.hasOwn(value, "files") || !Array.isArray(value.files))
     throw new OwnershipMarkerError("invalid");
@@ -79,7 +79,7 @@ export async function verifyOwnershipFiles(value, directory) {
 export async function checkOwnershipFixtures(packageRoot) {
   const fixtures = JSON.parse(
     await fs.readFile(
-      path.join(packageRoot, "docs/protocol/fixtures/export-ownership-v2.json"),
+      path.join(packageRoot, "docs/protocol/fixtures/export-ownership-v3.json"),
       "utf8",
     ),
   );

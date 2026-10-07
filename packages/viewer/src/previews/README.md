@@ -19,7 +19,7 @@ generation. Pages use the light `snapshotDocumentPath`; Markdown documents use
 each historical scheme. `content.ts` derives these paths, and selection loads
 only the requested document scheme, with a light fallback.
 Screen documents use `snapshotViewPath("before", ...)` only for views whose
-review state is `removed`; review v5 carries no stored before/after paths.
+review state is `removed`; review v6 carries no stored before/after paths.
 Before accepting either kind, the request recomputes the selected historical
 identity from the metadata's baseline commit. A generation-backed selection
 must resolve from the immutable generation named by request and final response.

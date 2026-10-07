@@ -8,7 +8,7 @@ import {
   COMPONENT_STYLE_COPY,
   SCREEN_STYLE_COPY,
 } from "../examples/basic/specs/design/parts/stylesheet_evidence.js";
-import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 import type { ViewReview } from "../packages/viewer/dist/review/types.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
@@ -244,8 +244,8 @@ function componentWorkspace(
 
 function loadedScreen(views: readonly ViewReview[]) {
   const address = { path: "home", title: "Home" };
-  const result: ReviewResultV5 = {
-    schemaVersion: 5,
+  const result: ReviewResultV6 = {
+    schemaVersion: 6,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: [RULES],

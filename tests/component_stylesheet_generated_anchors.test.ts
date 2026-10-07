@@ -55,24 +55,26 @@ for (const configured of [false, true])
         fixture.beforeRemove(() => running.close());
         documents = [];
         for (const route of routes) {
-          const response = await fetch(`${running.url}/static/${route}`);
+          const response = await fetch(
+            `${running.url}/static/mokly-generated/${route}`,
+          );
           assert.equal(response.status, 200);
           documents.push(await response.text());
         }
         await assert.rejects(
-          fs.access(path.join(fixture.mockupsDir, "mokly-manifest.json")),
+          fs.access(path.join(config.generatedDir, "mokly-manifest.json")),
         );
       }
       for (const [index, html] of documents.entries()) {
         const prefix = "../".repeat(
-          path.posix.dirname(routes[index]!).split("/").length,
+          path.posix.dirname(routes[index]!).split("/").length + 1,
         );
         const links = [...html.matchAll(/<link\b[^>]*href="([^"]+)"/g)].map(
           (match) => match[1],
         );
         const generated = [
-          `${prefix}mokly-generated/styles/renderer.tsx.css`,
-          `${prefix}mokly-generated/styles/entries/fixture.mockup.tsx.css`,
+          `${prefix.slice(3)}styles/renderer.tsx.css`,
+          `${prefix.slice(3)}styles/entries/fixture.mockup.tsx.css`,
         ];
         assert.deepEqual(
           links,

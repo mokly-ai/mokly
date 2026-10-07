@@ -4,6 +4,7 @@ import { Worker } from "node:worker_threads";
 
 import { entryRoute, documentRoute, generatedViews } from "@mokly/viewer/data";
 
+import { isLinkControlDiagnostic } from "../../build/build_warnings.js";
 import { compactRuntime } from "../../build/compact_runtime.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { DocumentCache } from "../../build/document_cache.js";
@@ -13,6 +14,7 @@ import type {
   AcceptedMoveTargets,
   MoveTargetsProvider,
 } from "../../build/move_targets.js";
+import type { GenerationWarning } from "../../build/warning_generation.js";
 import { timeAsync } from "../../diagnostics/timings.js";
 import { MoklyError } from "../../errors.js";
 
@@ -35,16 +37,24 @@ export interface DocumentWorkerRequest {
   moveTargets?: AcceptedMoveTargets;
 }
 
-/** Admit foreground rendering only for an accepted lightweight generation. */
+/** Keep preview warnings tied to the accepted build attempt that rendered them. */
 export function liveDocumentService(
   runtime: ComponentRuntime,
   busy: (active: boolean) => void,
   onDocument: (document: CompiledDocument) => void,
   moveTargets?: MoveTargetsProvider,
+  onWarning?: (event: GenerationWarning) => void,
 ): DocumentService | undefined {
-  return runtime.manifest.schemaVersion === "live-index-1"
+  return runtime.manifest.schemaVersion === "live-index-2"
     ? new DocumentService(runtime, busy, {
-        onDocument,
+        onDocument: (document) => {
+          document.diagnostics
+            .filter((warning) => !isLinkControlDiagnostic(warning))
+            .forEach((warning) =>
+              onWarning?.({ generation: runtime.warningGeneration, warning }),
+            );
+          onDocument(document);
+        },
         ...(moveTargets ? { moveTargets } : {}),
       })
     : undefined;

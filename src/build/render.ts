@@ -1,10 +1,9 @@
-import path from "node:path";
-
 import { minimatch } from "minimatch";
 
 import type { ColorScheme, ComponentViewRecord } from "@mokly/viewer";
 import type { ArtifactView } from "@mokly/viewer/data";
 import {
+  GENERATED_DIRECTORY,
   entryRoute,
   documentRoute,
   effectiveColorSchemes,
@@ -23,10 +22,7 @@ import {
   isComponentVariantDefinition,
   type ComponentDefinition,
 } from "../components/types.js";
-import {
-  isPublicStaticFile,
-  publicFileFailureReason,
-} from "../config/public_files.js";
+import { PublicFilePolicy } from "../config/public_policy.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { documentTemplate } from "../documents/template.js";
 import { MoklyError, errorMessage } from "../errors.js";
@@ -34,7 +30,8 @@ import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { Renderer } from "../renderer/types.js";
 
 import type { BuildDiagnostic } from "./build_warnings.js";
-import { generatedHeader } from "./ownership.js";
+import { GENERATED_MARKER } from "./generated_marker.js";
+import type { ResourceSeed } from "./html_links.js";
 import { renderPage } from "./render_page.js";
 import { rendererWithoutCssOwners } from "./renderer_resources.js";
 import { stylesheetHref, type StyleDelivery } from "./styles/links.js";
@@ -56,6 +53,7 @@ export function renderFragments(
   styles?: StyleDelivery,
   onWarning?: (warning: BuildDiagnostic) => void,
   stylesheetLinks?: Map<string, readonly LinkedComponentStylesheet[]>,
+  resourceSeeds?: ResourceSeed[],
 ): Map<string, string> {
   const outputs = new Map<string, string>();
   const components = entries.filter(
@@ -76,7 +74,7 @@ export function renderFragments(
         addOutput(
           outputs,
           route,
-          generatedHeader(entry.sourceRelativePath) +
+          `${GENERATED_MARKER}\n` +
             documentTemplate(entry.title, entry.body, colorScheme),
         );
         fragmentViews.set(route, { colorScheme, viewport: "desktop" });
@@ -126,6 +124,7 @@ export function renderFragments(
             config,
             styles?.pending,
             onWarning,
+            (seed) => resourceSeeds?.push(seed),
           );
           try {
             const componentProps =
@@ -146,7 +145,8 @@ export function renderFragments(
             };
             if (components.length) {
               const output = graphRenderer(input, safeRenderer, components, {
-                route,
+                route: `${GENERATED_DIRECTORY}/${route}`,
+                diagnosticRoute: route,
                 position: placement.position,
                 configuredHrefs: placement.configuredHrefs,
                 mockupsDir: config.mockupsDir,
@@ -158,7 +158,7 @@ export function renderFragments(
                 ...output.view,
                 styles: rebaseStyleOwnership(
                   rendered,
-                  generatedHeader(entry.sourceRelativePath) + rendered,
+                  GENERATED_MARKER + rendered,
                   output.view.styles,
                 ),
               });
@@ -189,7 +189,7 @@ export function renderFragments(
           addOutput(
             outputs,
             route,
-            `${generatedHeader(entry.sourceRelativePath)}${serializeReviewSentinels(rendered)}`,
+            `${GENERATED_MARKER}${serializeReviewSentinels(rendered)}`,
           );
           fragmentViews.set(route, { colorScheme, viewport });
         }
@@ -240,18 +240,20 @@ export function stylesheetPlacementFor(
   ];
   const local = configured.map((stylesheet) => {
     if (/^https?:\/\//.test(stylesheet)) return stylesheet;
-    const absolute = path.resolve(config.mockupsDir, stylesheet);
-    if (
-      !styles?.pending.has(stylesheet) &&
-      (isGeneratedRoute(stylesheet) || !isPublicStaticFile(absolute, config))
-    ) {
-      const denial = publicFileFailureReason(absolute, config);
-      throw new MoklyError(
-        "build-invalid",
-        `${catalogueRoute}: ${denial ? `stylesheet ${stylesheet} ${denial}` : `stylesheet does not exist: ${stylesheet}`}`,
+    if (!styles?.pending.has(stylesheet)) {
+      const decision = (styles?.policy ?? new PublicFilePolicy(config)).inspect(
+        stylesheet,
       );
+      if (isGeneratedRoute(stylesheet) || decision.kind !== "public") {
+        const denial =
+          decision.kind === "private" ? decision.reason : undefined;
+        throw new MoklyError(
+          "build-invalid",
+          `${catalogueRoute}: ${denial ? `stylesheet ${stylesheet} ${denial}` : `stylesheet does not exist: ${stylesheet}`}`,
+        );
+      }
     }
-    return stylesheetHref(viewPath, stylesheet);
+    return stylesheetHref(`${GENERATED_DIRECTORY}/${viewPath}`, stylesheet);
   });
   const configuredHrefs = [...local];
   for (const root of [config.renderer, entryRoot]) {

@@ -30,7 +30,7 @@ test("inspector ignores wrong-origin/source/nonce, unknown fields and oversized 
   const key = fixture.usage.instances[0]!.key;
   const request = {
     channel: "mokly-inspector",
-    version: 1,
+    version: 2,
     nonce,
     type: "highlight",
     requestId: 100,
@@ -48,7 +48,7 @@ test("inspector ignores wrong-origin/source/nonce, unknown fields and oversized 
           window.parent,
         ],
         [JSON.stringify({ ...request, extra: true }), host, window.parent],
-        [JSON.stringify({ ...request, version: 2 }), host, window.parent],
+        [JSON.stringify({ ...request, version: 3 }), host, window.parent],
         [
           JSON.stringify({
             ...request,
@@ -122,7 +122,7 @@ test("host rejects forged frame events and accepts only its active subscribed se
     const nonce = state.wire.find((message) => message.type === "ready")!.nonce;
     const event = {
       channel: "mokly-inspector",
-      version: 1,
+      version: 2,
       nonce,
       type: "geometry",
     };
@@ -170,7 +170,9 @@ test("host rejects forged frame events and accepts only its active subscribed se
 test("loading the published script directly never starts inspection or navigation interception", async ({
   page,
 }) => {
-  await page.goto(`${fixture.frames.url}/static/home/index.mobile.html`);
+  await page.goto(
+    `${fixture.frames.url}/static/mokly-generated/home/index.mobile.html`,
+  );
   const facts = await page.evaluate(() => ({
     maps: document.querySelectorAll("template[data-mokly-inspector]").length,
     overlays: document.querySelectorAll("[data-mokly-overlay]").length,
@@ -181,6 +183,6 @@ test("loading the published script directly never starts inspection or navigatio
     page.getByRole("button", { name: "Continue", exact: true }),
   ).toBeVisible();
   await expect(page).toHaveURL(
-    /\/static\/action\/default\/index\.mobile\.html$/,
+    /\/static\/mokly-generated\/action\/default\/index\.mobile\.html$/,
   );
 });

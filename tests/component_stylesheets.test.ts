@@ -33,7 +33,7 @@ test("rendered components link their files in first-render order and record only
     [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(
       (match) => match[1],
     ),
-    ["../base.css", "../pane.css", "../action.css"],
+    ["../../base.css", "../../pane.css", "../../action.css"],
   );
   assert.deepEqual(
     screen
@@ -95,7 +95,7 @@ test("null markup still links the declared root stylesheet without configured li
   )!;
   assert.match(
     html,
-    /<link rel="stylesheet" href="\.\.\/\.\.\/action\.css"><\/head>/,
+    /<link rel="stylesheet" href="\.\.\/\.\.\/\.\.\/action\.css"><\/head>/,
   );
   assert.deepEqual(
     action.componentViews[0]!.insertedStylesheets!.map(
@@ -109,7 +109,7 @@ test("null markup still links the declared root stylesheet without configured li
     result.outputs,
     viewRoute(screen.path, "mobile", "light"),
   )!;
-  assert.match(screenHtml, /href="\.\.\/action\.css"/);
+  assert.match(screenHtml, /href="\.\.\/\.\.\/action\.css"/);
   assert.doesNotMatch(screenHtml, /<button/);
 });
 
@@ -128,7 +128,8 @@ test("shared declarations merge declaring ids and encode public hrefs without do
   assert.ok(screen?.kind === "screen");
   const html = textOutput(outputs, viewRoute(screen.path, "mobile", "light"))!;
   assert.equal(
-    [...html.matchAll(/href="\.\.\/shared%20%26%20encoded\.css"/g)].length,
+    [...html.matchAll(/href="\.\.\/\.\.\/shared%20%26%20encoded\.css"/g)]
+      .length,
     1,
   );
   assert.deepEqual(
@@ -141,7 +142,7 @@ test("shared declarations merge declaring ids and encode public hrefs without do
   );
 });
 
-test("insertion rebases renderer-owned style offsets through the source header", async (t) => {
+test("insertion rebases renderer-owned style offsets through the generated marker", async (t) => {
   const fixture = await fixtureWithSheets(
     declared(),
     'renderer: "renderer.tsx", stylesheets: [{ match: "**", stylesheets: ["base.css"] }],',

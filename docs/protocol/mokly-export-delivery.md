@@ -5,16 +5,16 @@
 Implemented portable serving for [consumer export](./mokly-export.md), with
 Cloudflare normalization confined to its repository adapter. Public catalogue,
 viewer, inspector, and [removed previews](./mokly-removed-previews.md) share
-delivery descriptor v3 and one path-derived `/view/<path>/` shell page per entry.
+delivery descriptor v5 and one path-derived `/view/<path>/` shell page per entry.
 
 ## Hosting Contract
 
 Deploy the export directory's contents as the HTTP(S) origin's document root.
 The host must serve ordinary files with their correct MIME types, index.html
 directory indexes, query-insensitive file lookup, and normal missing-file
-responses. It must serve the double-underscore package asset directories.
-No SPA fallback, extension-removal rule, redirect interpreter, worker, API,
-or server-side rendering is required for catalogue functionality.
+responses. Serve `mokly-viewer/` and `static/` under the
+[portable-name rules](./mokly-viewer-namespace.md#names-and-acceptance).
+No SPA fallback, URL rewriting, worker, API or server-side rendering is required.
 
 The artifact includes a `404.html` catalogue page. Hosts may configure it as
 their error document; producing the HTTP 404 status for arbitrary unknown URLs
@@ -28,8 +28,10 @@ provider adapters may emit the host's metadata files for them. Correctness must
 not depend on a generic static server interpreting `_headers` or `_redirects`.
 
 For cross-origin catalogue and viewer consumers, public fetch paths are
-`__mokly/catalogue.json`, `static/**`, `__mokly/client/**`, `__mokly/shell.css`,
-`__mokly/fonts/**` and `__mokly/diffs/__generations/**`. Send correct MIME types,
+`mokly-viewer/catalogue.json`, `static/mokly-generated/<route>`,
+`static/<referenced closure path>`,
+`mokly-viewer/client/**`, `mokly-viewer/shell.css`,
+`mokly-viewer/fonts/**` and `mokly-viewer/diffs/generations/**`. Send correct MIME types,
 `Access-Control-Allow-Origin: <exact app origin>` and
 `X-Content-Type-Options: nosniff`, including GET/HEAD and error responses. Use
 `Vary: Origin` when dynamically selecting an allowed origin. No wildcard CORS,
@@ -58,16 +60,16 @@ Paths below are relative to the export directory. Every file name derives from
 its entry's path under the [artifact path contract](./mokly-artifact-paths.md)
 and keeps the authored case of each segment when written into URLs.
 
-| Path                          | Meaning                                                               |
-| ----------------------------- | --------------------------------------------------------------------- |
-| `index.html`                  | Full catalogue home                                                   |
-| `view/<path>/index.html`      | Full shell for current and removed entries, served at `/view/<path>/` |
-| `static/<public-path>`        | Adapted current views, documents, and public consumer resources       |
-| `__mokly/`                    | Required shell CSS, fonts, browser modules, and comparison generation |
-| `__mokly/catalogue.json`      | Public catalogue read model v4                                        |
-| `__mokly/client/inspector.js` | Inert cross-origin frame inspector                                    |
-| `404.html`                    | Existing catalogue not-found view                                     |
-| `.mokly-export-artifact`      | Public-safe versioned ownership inventory with per-file digests       |
+| Path                               | Meaning                                                               |
+| ---------------------------------- | --------------------------------------------------------------------- |
+| `index.html`                       | Full catalogue home                                                   |
+| `view/<path>/index.html`           | Full shell for current and removed entries, served at `/view/<path>/` |
+| `static/<public-path>`             | Adapted current views, documents, and public consumer resources       |
+| `mokly-viewer/`                    | Required shell CSS, fonts, browser modules, and comparison generation |
+| `mokly-viewer/catalogue.json`      | Public catalogue read model v5                                        |
+| `mokly-viewer/client/inspector.js` | Inert cross-origin frame inspector                                    |
+| `404.html`                         | Existing catalogue not-found view                                     |
+| `.mokly-export-artifact`           | Public-safe versioned ownership inventory with per-file digests       |
 
 Shell documents are `index.html` files, so `/view/<path>/` needs no rewrite;
 `static/` views and documents keep their validated `.html` suffixes, and public
@@ -111,7 +113,7 @@ exporting and at the client boundary. All targets must stay same-origin under th
 expected Mokly prefixes. Consumer markup cannot supply or override this
 descriptor; serialize it safely in HTML. The root `html` element carries
 `data-mokly-static=""` and an escaped `data-mokly-delivery` JSON attribute with
-exactly `schemaVersion: 3`, `canonicalPath`, `comparisonUrl`, and `deploymentId`.
+exactly `schemaVersion: 5`, `canonicalPath`, `comparisonUrl`, and `deploymentId`.
 `canonicalPath` is `/`, `/404.html`, or the page's own `/view/<path>/`. Static
 mode with missing, malformed, or other-version metadata fails closed instead of
 requesting a development endpoint. Both identity values use 64 lowercase SHA-256
@@ -122,13 +124,10 @@ exports always include their validated generation URL when Changes is ready; an
 incompatible base uses null. The descriptor carries no path-to-file map: the shell
 derives every URL from the entry's path through the shared path module.
 
-Static frame-link enhancement resolves a validated logical path through the
-catalogue read model to its canonical `/view/<path>/` URL before fetching or
-opening a browsing context; development Browse resolves the same way. This
-applies to primary/keyboard clicks, modifier clicks, middle-clicks, and named
-targets. Do not follow a JS redirect document inside a fetch and mistake it for
-a page. There is no alias page or redirect in either delivery; the canonical
-`/view/<path>/` URL is stable because only a move of the entry can change it.
+Static frame-link enhancement uses the same canonical path and activation
+rules as [Browse navigation](./mokly-navigation.md#browse-presentation).
+Canonical `/view/<path>/` pages need no alias or redirect. A fetched redirect
+document cannot stand in for the real shell page.
 
 Every shell page embeds consistent shell metadata. In-shell navigation, reload,
 Back/Forward, new tabs, and browser-normalized response URLs retain the same
@@ -146,7 +145,7 @@ Unknown, stale, and mismatched identities remain unavailable.
 
 An exported page embeds a compact shell bootstrap containing its path, shell
 context, catalogue identity, and content/evidence revisions. It references the
-single owned `/__mokly/catalogue.json`; it does not repeat the catalogue read
+single owned `/mokly-viewer/catalogue.json`; it does not repeat the catalogue read
 model in every HTML document. Before hydration, the standalone entry first
 validates the root delivery descriptor, then fetches that exact same-origin path
 with `cache: no-store` and omitted credentials. The response must remain on that
@@ -195,7 +194,7 @@ Each export packages one complete comparison, with all referenced before/after
 documents and transitive resources under the same generation root:
 
 ```text
-__mokly/diffs/__generations/<generation>/review.json
+mokly-viewer/diffs/generations/<generation>/review.json
 ```
 
 Retain the engine's JSON and document bytes and relative snapshot paths.
@@ -204,7 +203,7 @@ Do not change the review schema or rebase only some of its resource references.
 The static descriptor points directly to this immutable JSON URL. Shell
 [`diffs.tsx`](../../packages/viewer/src/shell/diffs.tsx) requests it only for a
 selected diff and resolves snapshots from the actual response URL. Generic
-export needs no redirect from `/__mokly/diffs/review.json`. Development keeps
+export needs no redirect from `/mokly-viewer/diffs/review.json`. Development keeps
 its stable endpoint; the repository's Cloudflare adapter keeps its stable
 redirect for compatibility.
 

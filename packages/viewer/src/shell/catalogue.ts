@@ -1,9 +1,7 @@
 import type { ShellCatalogueReadModel } from "../catalogue/scoped_types.js";
 import { isManifestComponentVariant } from "../components/manifest_types.js";
-import {
-  analyzeHierarchy,
-  type CatalogueHierarchy,
-} from "../registry/hierarchy.js";
+import type { CatalogueHierarchy } from "../registry/hierarchy.js";
+import { analyzeHierarchy } from "../registry/hierarchy.js";
 import type {
   HistoricalManifestEntry,
   HistoricalManifestScreen,
@@ -11,8 +9,7 @@ import type {
   ManifestScreen,
 } from "../registry/types.js";
 
-import type { CatalogueMetadata } from "./metadata.js";
-import { type RemovedEntrySnapshot } from "./metadata.js";
+import type { CatalogueMetadata, RemovedEntrySnapshot } from "./metadata.js";
 
 /** Validated lookup model used by server routes. */
 export interface Catalogue {
@@ -37,7 +34,7 @@ export interface Catalogue {
   previousPaths: ReadonlyMap<string, string>;
 }
 
-/** Current and baseline-v8 entries share identity and display metadata. */
+/** Current and baseline-v9 entries share identity and display metadata. */
 export type CatalogueManifestEntry = ManifestEntry | HistoricalManifestEntry;
 
 /** Resolve an entry identity, giving current content precedence over history. */

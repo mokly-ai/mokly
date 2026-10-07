@@ -1,6 +1,6 @@
 {
   "changesStatus": "ready",
-  "comparisonUrl": "__mokly/diffs/__generations/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc/review.json",
+  "comparisonUrl": "mokly-viewer/diffs/generations/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc/review.json",
   "components": [
     {
       "changes": {
@@ -17,6 +17,10 @@
         }
       },
       "details": {
+        "dependencies": [
+          "packages/ui/src/action/index.mockup.tsx",
+          "packages/ui/src/action/action.tsx"
+        ],
         "description": "The primary action.",
         "relatedDocs": [],
         "sourcePath": "packages/ui/src/action/index.mockup.tsx"
@@ -50,6 +54,10 @@
         "status": "unavailable"
       },
       "details": {
+        "dependencies": [
+          "packages/ui/src/action/index.mockup.tsx",
+          "packages/ui/src/action/action.tsx"
+        ],
         "description": "The primary action.",
         "relatedDocs": [],
         "sourcePath": "packages/ui/src/action/index.mockup.tsx"
@@ -74,24 +82,9 @@
             "kind": "unmodified",
             "status": "ready"
           },
-          "resourceEvidence": {
-            "excludedResources": [
-              {
-                "path": "mockups/action.css",
-                "reason": "no-matching-rule"
-              }
-            ]
-          },
           "usage": {
             "instances": [],
-            "ranges": [
-              {
-                "id": "r-0",
-                "target": {
-                  "kind": "root"
-                }
-              }
-            ],
+            "ranges": [],
             "slots": [],
             "status": "ready"
           },
@@ -104,24 +97,9 @@
             "kind": "unmodified",
             "status": "ready"
           },
-          "resourceEvidence": {
-            "excludedResources": [
-              {
-                "path": "mockups/action.css",
-                "reason": "no-matching-rule"
-              }
-            ]
-          },
           "usage": {
             "instances": [],
-            "ranges": [
-              {
-                "id": "r-0",
-                "target": {
-                  "kind": "root"
-                }
-              }
-            ],
+            "ranges": [],
             "slots": [],
             "status": "ready"
           },
@@ -142,6 +120,10 @@
         "light"
       ],
       "details": {
+        "dependencies": [
+          "specs/product/README.md",
+          "specs/product/images/map.png"
+        ],
         "description": "",
         "relatedDocs": [],
         "sourcePath": "specs/product/README.md"
@@ -164,20 +146,15 @@
         "status": "ready"
       },
       "details": {
+        "dependencies": [
+          "specs/guide.mockup.tsx"
+        ],
         "description": "The printable guide.",
         "relatedDocs": [],
         "sourcePath": "specs/guide.mockup.tsx"
       },
       "kind": "page",
       "path": "guide",
-      "resourceEvidence": {
-        "excludedResources": [
-          {
-            "path": "mockups/page.css",
-            "reason": "no-matching-rule"
-          }
-        ]
-      },
       "tags": [],
       "title": "Guide"
     }
@@ -191,6 +168,9 @@
           "status": "ready"
         },
         "details": {
+          "dependencies": [
+            "specs/product/removed-page.mockup.tsx"
+          ],
           "description": "A page that no longer exists.",
           "relatedDocs": [],
           "sourcePath": "specs/product/removed-page.mockup.tsx"
@@ -219,6 +199,9 @@
           "light"
         ],
         "details": {
+          "dependencies": [
+            "specs/product/browse/home.mockup.tsx"
+          ],
           "description": "A screen that no longer exists.",
           "relatedDocs": [],
           "sourcePath": "specs/product/browse/home.mockup.tsx"
@@ -289,6 +272,9 @@
         "light"
       ],
       "details": {
+        "dependencies": [
+          "specs/product/browse/details.mockup.tsx"
+        ],
         "description": "Details for one item.",
         "relatedDocs": [],
         "sourcePath": "specs/product/browse/details.mockup.tsx"
@@ -308,14 +294,6 @@
             "eligible": false,
             "kind": "unmodified",
             "status": "ready"
-          },
-          "resourceEvidence": {
-            "excludedResources": [
-              {
-                "path": "mockups/action.css",
-                "reason": "no-matching-rule"
-              }
-            ]
           },
           "usage": {
             "instances": [],
@@ -352,6 +330,9 @@
         "light"
       ],
       "details": {
+        "dependencies": [
+          "specs/product/browse/home.mockup.tsx"
+        ],
         "description": "The landing screen.",
         "relatedDocs": [],
         "sourcePath": "specs/product/browse/home.mockup.tsx"
@@ -408,6 +389,9 @@
         "light"
       ],
       "details": {
+        "dependencies": [
+          "specs/product/browse/home.mockup.tsx"
+        ],
         "description": "The landing screen with no items.",
         "relatedDocs": [],
         "sourcePath": "specs/product/browse/home.mockup.tsx"
@@ -522,6 +506,9 @@
         "status": "ready"
       },
       "details": {
+        "dependencies": [
+          "specs/tour.mockup.tsx"
+        ],
         "description": "A walk through the product.",
         "relatedDocs": [],
         "sourcePath": "specs/tour.mockup.tsx"

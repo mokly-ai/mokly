@@ -15,6 +15,7 @@ export interface TestFixture {
   entriesDir: string;
   entryPath: string;
   mockupsDir: string;
+  generatedDir: string;
   /** Drain registered dependents once, then remove the workspace. */
   remove(): Promise<void>;
   root: string;
@@ -40,7 +41,6 @@ export async function createFixture(
     configPath,
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
-  generatedOutput: "committed",
   roots: [{ dir: "entries" }],
   mockupsDir: "mockups",
   repoRoot: ".",
@@ -60,6 +60,7 @@ ${options?.extraConfig ? `  ${options.extraConfig}\n` : ""}  review: { outDir: "
     entriesDir,
     entryPath,
     mockupsDir,
+    generatedDir: path.join(mockupsDir, "mokly-generated"),
     remove() {
       removal ??= removeOwnedFixture(root, cleanups);
       return removal;

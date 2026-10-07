@@ -11,7 +11,7 @@ dependencies. Their transitive selector/value parser, `cssesc` and
 `util-deprecate` packages join the package license and audit scope. The
 selector and value parsers are also direct lazy runtime dependencies for
 post-scoping verification; the packed graph retains one copy of each.
-Lightning CSS remains a read-only rule and transformer-only inventory parser.
+Lightning CSS remains a read-only rule parser for Changes.
 Packed-consumer smoke exercises CSS Modules, binary `url()` assets and a
 consumer PostCSS plugin through the URL-loaded `postcss_worker.js`; package
 inspection requires that worker file in the archive. See
@@ -47,7 +47,7 @@ version dependency. Root build, clean, formatting, lint, typecheck and package
 gates cover both packages. Pack the viewer first; local smoke and release
 fixtures install both tarballs explicitly so an unpublished viewer is never
 resolved from the registry. Consumer fixtures exercise every public viewer
-entry, SSR of the [public v4 fixture](./fixtures/catalogue-v4.json) in
+entry, SSR of the [public v5 fixture](./fixtures/catalogue-v5.json) in
 `scripts/package/viewer.mjs` (`smokeViewer`), browser bundle boundaries and
 NodeNext declarations. Both manifests, packed metadata, export targets,
 allowlists, licenses, React peers and the exact viewer dependency are checked.
@@ -73,18 +73,20 @@ platform tar executable or walking the output again.
 
 ## Local Verification
 
-`cargo xtask check` is the complete repository and release gate. It orchestrates
-npm, Node and Rust commands from the workspace root and includes:
+`cargo xtask check` is the complete repository gate. Release verification uses
+`cargo xtask check --dependency-audit strict`. Both orchestrate npm, Node and
+Rust commands from the workspace root and include:
 
-- a live audit of all workspace dependency categories, failing on any uncovered
-  Low-or-higher advisory, invalid exception, or registry error; reviewed path
-  exceptions follow [dependency security](./dependency-security.md);
+- a live audit of all workspace dependency categories: baseline mode fails on
+  new issues; strict mode fails on every uncovered Low-or-higher advisory or
+  invalid exception; both fail on audit errors. Mode selection and reviewed
+  path exceptions follow [dependency security](./dependency-security.md);
 - formatting and lint checks;
 - TypeScript typechecking with no unexplained source exclusions;
 - unit and integration tests with a 100% pass rate;
 - production build and declaration generation;
-- an example `check` that validates the derived compilation and rejects tracked
-  generated output;
+- an example `check` that validates compilation, compares disk only when the
+  whole generated tree is tracked, and rejects partly tracked output;
 - package-file inspection with `npm pack --dry-run --json`;
 - packed-tarball installs in clean ESM, NodeNext, and themed consumers;
 - a strict production-dependency audit of the freshly resolved packed ESM
@@ -104,14 +106,19 @@ npm, Node and Rust commands from the workspace root and includes:
 
 Tests that mutate files use isolated temporary directories and clean up child
 processes. Package smokes execute the packed artifact, not the source tree or a
-workspace symlink. Historical cross-repository parity audits are release
-evidence rather than recurring CI dependencies on other repositories. The
-independent suite and shard commands, including their complete command mapping
-and fail-closed inventory evidence, are defined by the
+workspace symlink. Smoke checks read protocol documents and protocol fixtures
+from the installed package, not from the source tree; the packed NodeNext
+consumer type-checks the renderer contract that its installed
+`mokly-rendering.md` declares. Historical cross-repository parity audits are
+release evidence rather than recurring CI dependencies on other repositories.
+The independent suite and shard commands, including their complete command
+mapping and fail-closed inventory evidence, are defined by the
 [CI verification contract](./ci-verification.md). Selected suites and shards are
 partial checks; the unqualified command remains the complete release gate. The
-release workflow's `complete` verification mode runs this command directly. Its
-default `evidence` mode may instead consume a validated aggregate that proves
+release workflow's `complete` verification mode always runs the local gate.
+It runs in GitHub Actions, where `GITHUB_ACTIONS=true` forbids the remote
+executor under the [remote verification contract](./remote-verification.md).
+Its default `evidence` mode may instead consume a validated aggregate that proves
 the same tree under the
 [release verification evidence contract](./npm-release-evidence.md).
 

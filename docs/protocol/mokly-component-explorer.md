@@ -43,8 +43,9 @@ space without implying it is a whole phone screen. Mobile/desktop still select
 distinct viewport contexts; controls must not fake scaling or modify consumer
 props to fit. Long or full-width components remain inspectable by scrolling.
 
-One icon toolbar beside the title groups a Mobile/Desktop/Both dropdown and a
-light/dark toggle. Screen views add the Highlight components toggle there. Both
+One icon toolbar beside the title contains a Mobile/Desktop/Both dropdown.
+Screen views add the Highlight components toggle there. Standalone uses one
+top-bar Appearance selector; embedded hosts retain a separate preview toggle. Both
 renders both real viewport contexts. The shell and title stay fixed. On desktop,
 the preview and vertically resizable inspector are sibling panes whose contents
 scroll, with the navigation divider's centered short-line grip. Runtime resizing
@@ -66,7 +67,6 @@ Comparison modes apply to the shown variant and view axes. Sibling-mode
 retention, read-only Props, disabled highlighting, and response fencing follow
 [variant navigation](./mokly-variant-navigation.md). A removed component
 variant remains eligible with a missing current side; Added stays in Current.
-Fresh page loads start in Current in served and published catalogues.
 
 Only expose comparison modes when the shown status is Changed or when a
 component variant entry's shown status is Removed. A known selection shows

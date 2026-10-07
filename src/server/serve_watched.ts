@@ -17,8 +17,8 @@ import { ResourceWatcher } from "./resource_watcher.js";
 import type { RunningServe, ServeDependencies, ServeOptions } from "./serve.js";
 import {
   closeWatched,
-  restartWatchedRuntime,
   startWatchedSupervisor,
+  restartWatchedGeneration,
 } from "./serve_lifecycle.js";
 import {
   classifyWatchPath,
@@ -114,6 +114,7 @@ export async function serveWatched(
     running,
     runtime: () => runtime,
     shutdown,
+    writeOutput: options.build ?? false,
   });
   running.onForeground?.((active) => background.foreground(active));
   let debouncer: WatchDebouncer | undefined;
@@ -127,7 +128,7 @@ export async function serveWatched(
   };
 
   const restart = () =>
-    restartWatchedRuntime(running, background, () => closed);
+    restartWatchedGeneration(running, background, () => closed);
 
   const reconfigure = async (
     generation: string,

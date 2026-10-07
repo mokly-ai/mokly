@@ -86,11 +86,14 @@ for (const width of [390, 1280]) {
       .getByRole("link", { name: "Home", exact: true })
       .click();
     await expect(page.locator(".mbk-screen-head h2")).toHaveText("Home");
-    expect(requests.filter((url) => /\/__mokly\/events\//.test(url))).toEqual(
-      [],
-    );
     expect(
-      requests.filter((url) => /\/__mokly\/diffs\/review\.json/.test(url)),
+      requests.filter((url) => /\/mokly-viewer\/events\//.test(url)),
+    ).toEqual([]);
+    expect(
+      requests.filter((url) => /\/mokly-viewer\/events\//.test(url)),
+    ).toEqual([]);
+    expect(
+      requests.filter((url) => /\/mokly-viewer\/diffs\/review\.json/.test(url)),
     ).toEqual([]);
     expect(
       requests.filter((url) => /\/removed-document\/index\.json$/.test(url)),

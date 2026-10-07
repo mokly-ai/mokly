@@ -26,7 +26,6 @@ export async function classificationContext(
   const afterReader = new ComponentMaterialReader(input.afterReader);
   const changed = new Set(changedPaths);
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
-  const compareResourceBytes = config.generatedOutput === "derived";
   const moves = input.pairing?.moves ?? [];
   const mapBefore = baselinePathMapper(
     input.before.entries,
@@ -51,10 +50,8 @@ export async function classificationContext(
       changed,
       prefix,
       input.cssAnalysis ?? new CssResourceAnalysis(input.cssParser),
-      compareResourceBytes,
       input.resources,
     ),
-    compareResourceBytes,
     ...(input.resources ? { resourceIdentity: input.resources } : {}),
     ...(input.useFastPath === undefined
       ? {}

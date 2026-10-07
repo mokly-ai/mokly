@@ -20,15 +20,6 @@ function linkRelTokens(element: Element): readonly string[] {
     .split(/[\t\n\f\r ]+/);
 }
 
-/** A stylesheet link can also carry other rel tokens, including alternate. */
-export function stylesheetLink(node: Node): node is Element {
-  return (
-    "tagName" in node &&
-    node.tagName === "link" &&
-    linkRelTokens(node).includes("stylesheet")
-  );
-}
-
 /** Find active links once, without treating template or noscript text as resources. */
 export function parseHtmlLinks(html: string): {
   document: DefaultTreeAdapterMap["document"];

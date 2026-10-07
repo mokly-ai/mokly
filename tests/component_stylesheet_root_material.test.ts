@@ -44,7 +44,9 @@ for (const shared of [false, true])
       parseHtmlLinks(material.html).links.map((link) =>
         link.attributes.get("href"),
       ),
-      shared ? ["../../pane.css", "../../action.css"] : ["../../pane.css"],
+      shared
+        ? ["../../../pane.css", "../../../action.css"]
+        : ["../../../pane.css"],
     );
     assert.match(material.html, /Inside/);
   });

@@ -113,7 +113,7 @@ test("component ownedDependencies warns without granting ownership", async (cont
     ),
   );
   const source = componentEntrySource({
-    body: '<action.Component label="Go" /><img src="../asset.svg" />',
+    body: '<action.Component label="Go" /><img src="../../asset.svg" />',
   }).replace(
     'path: "action",',
     'path: "action", ownedDependencies: ["mockups/asset.svg"],',

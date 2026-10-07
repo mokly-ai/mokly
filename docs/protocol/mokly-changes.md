@@ -10,7 +10,7 @@ The remaining contract is implemented.
 The implemented [component attribution extension](./mokly-component-changes.md)
 keeps affected-only consumers out of Changes and links them from the component.
 Screen and Review-ignore behavior remains below. Pairing uses kind and path,
-then the move signals; review result v5 carries `previousPath` on paired moves.
+then the move signals; review result v6 carries `previousPath` on paired moves.
 Documents use the page material rules. The viewer presents paired entries under
 the [move contract](./mokly-moves.md).
 
@@ -30,7 +30,7 @@ Changes-only rows with baseline folder titles, and an entry the
 labelled Moved. Review reads follow the [source policy](./mokly-source-protection.md).
 
 Opt into [Published Changes](./mokly-publication.md) with
-`npm run preview:build -- --include-changes`; default publication omits Changes,
+`npm run preview:build -- --include-changes`; default repository-preview publication omits Changes,
 comparisons, history, and removals. Both options omit live updates. Strict
 baseline admission and pairing/order fixes run in Serve, export, and publish.
 
@@ -61,7 +61,7 @@ variants with it under the [move contract](./mokly-moves.md). A flow is
 propagated only when its `screenPath` step names the exact changed screen,
 including a variant.
 
-Before marking an existing fragment, compare its branch-point and working-tree
+Before marking an existing fragment, compare its branch-point and in-memory
 documents with the same paired ignore normalization and material-key rules as
 the comparison engine. Ignored-only changes are excluded from Changes; real
 content changes, material-key changes, and one-sided ignored-region adoption
@@ -69,7 +69,7 @@ with changed content remain eligible. Both viewports and every available color
 scheme participate. Metadata includes address, titles, descriptions,
 rationale, tags, related-doc links, flow steps and memberships, and view
 structure; it excludes folder titles, source locations, and dependencies.
-Valid generated ownership headers are excluded from document comparison, so a
+The plain generated marker is excluded from document comparison, so a
 source move alone stays unchanged. Resource URLs compare by their resolved route;
 accepted source moves map generated styles/assets and copied document resources
 under the [move normalisation rule](./mokly-moves.md#normalisation). Equal mapped
@@ -77,7 +77,7 @@ resource bytes do not add material or rendered-resource reasons. CSS URL
 spellings use that same map; real resource edits retain normal attribution.
 Inventoried owned sources relocated with their defining module compare by
 logical path and confined bytes; only byte-identical moves lose dependency
-reasons. Stored snapshots retain the original headers, paths and resource URLs.
+reasons. Stored snapshots retain the original markers, paths and resource URLs.
 
 Changes to local resources referenced by a fragment supply resource evidence.
 Direct rows follow CSS rule attribution and non-CSS ownership below. Follow CSS imports, CSS URLs, and embedded-document resources
@@ -92,20 +92,20 @@ edges. Added screens, newly available views, and existing material fragment
 changes do not bypass resource validation. Pages and documents use these same
 rules for their generated documents and rendered resources; they do not gain
 screen comparison controls or viewport variants.
-For public file and directory aliases, compare changed Git paths against both
-the referenced route and its validated physical path relative to the real
-`mockupsDir`. Editing a target marks its consumers even when the alias itself
-is unchanged. Obtain both identities from the same confined reader used by
-resource watching; source, internal-metadata, and escape checks still apply.
+For configured catalogue-root aliases, compare changed Git paths against both
+the logical route and its validated physical path relative to the real
+`mockupsDir`. Authored file and descendant-directory symlinks are not public.
+Obtain root identities from the same confined reader used by resource watching;
+source, internal-metadata, and escape checks still apply.
 Historical snapshot reads continue to require regular Git files and reject
 symlink blobs; detecting current impact does not relax baseline validation.
 Both comparison paths share one rule. A resource is a verified deletion in
-committed and derived modes, for every type including embedded HTML, only when
+all baseline selections, for every type including embedded HTML, only when
 it was a regular file at the branch point, is now deleted, and remains
 referenced by a current document. It marks consumers changed and never makes
-Changes unavailable. Reject resources absent at the branch point, dangling or
-escaping symlinks, unsafe or source-root paths, and newly missing files that are
-not verified deletions. Snapshot generation still requires current references
+Changes unavailable. A missing current resource that was also absent at the branch point is not a
+verified deletion. Reject dangling or escaping symlinks, unsafe or source-root
+paths, and newly missing files that are not verified deletions. Snapshot generation still requires current references
 to resolve.
 Live classification walks a changed or moved document's branch-point resource
 graph whenever the document changed or one of its current stylesheets changed,
@@ -132,14 +132,14 @@ The shell receives this per-view resource evidence for screen-only catalogues
 as well as component catalogues, including in Current before snapshots exist.
 Live screen-only classification retains its analysis as `screenEvidence`, keyed
 by entry path; the workspace selects its `resourceEvidence` slice without a
-second analysis pass. Static exports select that slice from their packaged v5
+second analysis pass. Static exports select that slice from their packaged v6
 comparison. Details merge the loaded comparison's evidence
 with classification evidence, preserving retained stylesheet selectors,
 exclusions and ignored-content details without duplicate cards.
 See [CSS evidence presentation](./mokly-css-evidence-presentation.md).
 
 Classification reads baseline files without writing snapshots or a comparison;
-derived mode uses the completed cache entry. Baseline reads are batched, shared
+per-commit selection uses verified Git blobs or a completed rebuilt v9 cache. Baseline reads are batched, shared
 resource edges are cached, and cycles terminate. Apart from verified deletions,
 an unavailable or invalid input makes Changes unavailable while preserving the
 tabs and access through All in live Serve.
@@ -153,8 +153,8 @@ complete generated output has been adopted, never during a shell request.
 The watched parent publishes the result. Until the immutable changed-entry, baseline, and
 component-evidence snapshot arrives, Browse keeps both tabs without inventing a
 Changes count. A spinner occupies the reserved count slot, and selecting Changes
-shows a loading sidebar. Derived mode publishes a distinct `preparing` state
-before `pending` while its baseline rebuild runs; see the
+shows a loading sidebar. A baseline rebuild publishes a distinct `preparing`
+state before `pending` while it runs; see the
 [derived baselines contract](./mokly-derived-baselines.md). Content updates clear the previous snapshot and publish
 pending status before notifying the browser, then publish a terminal ready or
 unavailable status only when the latest sequence finishes. Empty ready results

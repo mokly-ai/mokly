@@ -43,16 +43,15 @@ reload their current durable URL and restore search, changed-only selection,
 current folder disclosure, the disclosure baseline captured before active
 filtering, details disclosure, viewport and color-scheme selection, responsive
 drawer, catalogue scroll, and per-region stage scroll once. Recovery is strictly
-parsed with one compatibility rule: a payload from before filter-baseline
-capture treats that missing baseline as unavailable while restoring its other
-valid state. Browse applies durable preferences and initial active-route
+parsed. Both `filterBaselineDisclosures` and `changesStatus` are required;
+missing or invalid values reject the complete stored snapshot. Browse applies durable preferences and initial active-route
 selection before one-shot recovery. It then re-establishes active-route
 visibility, promoting a recovered pre-filter baseline only when a closed
 ancestor must be opened. A non-null baseline without active search or Changes
 filtering is invalid. Recovery applies only when its durable URL exactly matches
 the reloaded page and is removed before application; a later manual refresh
-cannot resurrect stale state. Recovery also retains an optional validated Changes
-status (older payloads omit it). A selected Changes filter survives pending or
+cannot resurrect stale state. Recovery retains its validated Changes
+status. A selected Changes filter survives pending or
 unavailable states and their completion rather than switching to All to reveal an
 unchanged current preview. Explicit navigation still reveals its destination.
 
@@ -88,9 +87,8 @@ catalogue shell carries the update version captured when its request began. The 
 seeds its page baseline from that stamp: an equal event-stream `ready` version
 is a no-op, while a higher `ready` version or `update` event requests the current
 shell snapshot. Equal content versions adopt evidence without navigation recovery;
-a newer content version triggers reload and one-shot state recovery. A document without a valid stamp retains
-compatibility behavior in which its first `ready` version establishes the
-baseline.
+a newer content version triggers reload and one-shot state recovery. A controller with no valid supplied page stamp uses its first `ready` version
+as its initial baseline; later higher events use the same refresh rules.
 
 In rich mode, the [terminal reporter](./mokly-terminal-output.md) presents the
 existing accepted-catalogue, baseline, Changes, reference-refresh, rebuild,

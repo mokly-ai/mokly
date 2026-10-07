@@ -5,8 +5,9 @@ receivers use the installed npm executable and the
 [catalogue upload protocol](../../docs/protocol/mokly-upload.md) and
 [exchange contract](../../docs/protocol/mokly-upload-exchange.md), never deep
 imports. Both protocol documents are included in the npm package. Publishing
-uses the content-addressed Plan → Blobs → Complete exchange over a schema 2
-ownership marker.
+uses the content-addressed Plan → Blobs → Complete exchange over a schema 3
+ownership marker and upload v2 envelope. HTTP 426 reports the fixed viewer
+namespace compatibility message and stops without retry or downgrade.
 
 Publish forwards the exporter's primary build diagnostics to its CLI reporter
 before bundle capture and upload. With `--strict`, that callback raises the
@@ -58,8 +59,8 @@ marks the original `MoklyError` without replacing its class, fields, message or
 stack. The cancellation mark uses a shared symbol as well as the local registry,
 so the CLI recognizes the same typed failure after a package or bundle-copy
 boundary. Every recovery or cleanup failure passes through unchanged with its
-recovery paths; export transaction setup and generated-output writes keep their
-own errors. `runPublish` keeps a referenced handle from signal listener
+recovery paths; export transaction setup keeps its own reservation errors.
+Publication never writes the catalogue generated tree. `runPublish` keeps a referenced handle from signal listener
 installation through completion, so helper shutdown still reaches the Mokly
 reporter and status 1. Outside that one window, cancellation is never inferred
 from causes, aggregate members, messages or a later command signal.

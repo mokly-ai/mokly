@@ -38,7 +38,7 @@ export async function compareStylesheetSources(
       "entries/fixture.mockup.tsx",
       ...[...after.outputs]
         .filter(([route, html]) => before.outputs.get(route) !== html)
-        .map(([route]) => `mockups/${route}`),
+        .map(([route]) => `mockups/mokly-generated/${route}`),
     ],
     config,
   });

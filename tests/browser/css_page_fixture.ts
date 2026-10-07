@@ -22,7 +22,7 @@ const action = defineComponent({ ...metadata, path: "action", title: "Action", d
   variants: [{ slug: "default", title: "Default", props: {} }] });
 const documentPage = (entryPath, title, sheets, body) => definePage({ ...metadata, path: entryPath, title, description: title,
   render: () => '<!doctype html><html><head><title>' + title + '</title>' +
-    sheets.map((href) => '<link rel="stylesheet" href="' + '../'.repeat(entryPath.split('/').length) + href + '">').join('') +
+    sheets.map((href) => '<link rel="stylesheet" href="' + '../'.repeat(entryPath.split('/').length + 1) + href + '">').join('') +
     '</head><body>' + body + '</body></html>' });
 export const mockups = [...action.entries,
   documentPage("example/handbook", "Getting started", ["actions.css", "handbook.css"],

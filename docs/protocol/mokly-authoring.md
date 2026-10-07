@@ -35,7 +35,7 @@ The root also exports the input and definition types `EntryInput`,
 `ScreenInput`, `ScreenVariantInput`, `ScreenDefinition`, `PageInput`,
 `PageDefinition`, `UseCaseInput`, `UseCaseStep`, `UseCaseDefinition`,
 `FolderInput`, `FolderDefinition`, and `RegistryDefinition`, plus the
-configuration, renderer, and compatibility-transformer interfaces.
+configuration and renderer interfaces.
 `ColorScheme` is exactly `"dark" | "light"`; `Viewport` is
 `"desktop" | "mobile"`. There is no nested tree API: `defineRoot`, `folder`,
 nested `screen`, nested `page`, and their input types do not exist. Folders
@@ -62,6 +62,7 @@ interface EntryInput {
   rationale?: string;
   relatedDocs: readonly string[];
   slug?: string;
+  tags?: readonly string[];
   title: string;
 }
 ```
@@ -177,8 +178,7 @@ defines fallback matching when a valid name is absent on either side.
 
 This is consumer metadata in the rendered document, not a TypeScript authoring
 field or Mokly-owned build marker. Mokly does not validate, rewrite, or remove
-it and imposes no special preservation rule on a consumer-supplied
-compatibility transformer. Viewer-owned shell elements also use the name
+it; the consumer renderer owns that metadata. Viewer-owned shell elements also use the name
 outside pane documents for history restoration; the separate DOM scopes keep
 those meanings independent.
 
@@ -220,17 +220,17 @@ native HTML/SVG links so Browse can open the canonical catalogue page without
 changing standalone or Review behavior. Metadata-only references use
 `data-nav-href`, and resource elements must keep real resource URLs. A
 document with an activatable logical `href` must not contain `<base href>`;
-the builder rejects that combination before and after compatibility
-transformation while continuing to support `<base target>`. The complete
+the builder rejects that combination during final validation while continuing to support `<base target>`. The complete
 behavior is defined by the [catalogue navigation contract](./mokly-navigation.md).
 `MockLink asChild` explicitly adapts one consumer-styled control into that
 native-link contract during static generation under
 [Styled catalogue link controls](./mokly-link-controls.md). Local resource
 URLs in HTML source attributes, `srcset`, inline/style-block CSS, and
-transitively referenced HTML/CSS must likewise resolve to public static files
-beneath `mockupsDir` that remain after the pending build. An owned generated
-file absent from the next output set is a pending orphan, never a valid link
-or resource target merely because it still exists before commit.
+transitively referenced HTML/CSS must likewise resolve to regular, unprotected
+files in the referenced closure beneath `mockupsDir`. Generated links target
+the accepted in-memory `mokly-generated/` tree, never stale on-disk output.
+Closure collection and href computation follow
+[generated output](./mokly-generated-output.md).
 
 All public exports ship ESM JavaScript and declarations usable by NodeNext and
 bundler TypeScript resolution. The package export map and packed-tarball tests

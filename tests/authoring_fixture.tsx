@@ -7,7 +7,6 @@ import type {
   ScreenInput,
   UseCaseInput,
 } from "../dist/authoring/types.js";
-import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
 import { defineScreen, defineUseCase } from "../dist/index.js";
 import { validateEntry } from "../dist/registry/entry_validation.js";
@@ -18,10 +17,7 @@ import { repositoryRoot } from "./helpers/fixture.js";
 export const sourceRelativePath = "tests/authoring.test.tsx";
 
 export const validationConfig: ResolvedConfig = {
-  generatedOutput: "committed",
-  publicExclude: DEFAULT_PUBLIC_EXCLUDE,
   colorSchemes: ["light"],
-  compatibility: {},
   configPath: path.join(repositoryRoot, "mokly.config.ts"),
   roots: [
     {
@@ -30,6 +26,7 @@ export const validationConfig: ResolvedConfig = {
       transparent: [],
     },
   ],
+  generatedDir: path.join(repositoryRoot, "mockups/mokly-generated"),
   mockupsDir: path.join(repositoryRoot, "mockups"),
   moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
   repoRoot: repositoryRoot,
@@ -56,7 +53,6 @@ export const useCaseBase: UseCaseInput = {
   steps: [{ screenPath: "tagged-screen" }],
   title: "Tagged journey",
 };
-
 export function tagViolations(tags: unknown): RegistryViolation[] {
   const input = { ...screenBase, tags } as ScreenInput;
   return validateEntry(

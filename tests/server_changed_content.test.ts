@@ -3,12 +3,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeChangedPaths } from "../dist/server/changed.js";
 import { serve } from "../dist/server/serve.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { validEntrySource } from "./helpers/fixture.js";
 import { waitForClassifiedCount } from "./helpers/watched_catalogue.js";
 
@@ -41,7 +41,7 @@ test("Changes excludes ignored-only edits while comparisons retain their evidenc
   assert.match(page, /class="mbk-nav-filter-count">0</);
   await assert.rejects(fs.access(fixture.config.review.outDir));
   const result = (await (
-    await fetch(`${running.url}/__mokly/diffs/review.json`)
+    await fetch(`${running.url}/mokly-viewer/diffs/review.json`)
   ).json()) as ReviewResult;
   assert.equal(
     result.screens.find((s) => s.path === "home")?.state,
@@ -86,20 +86,24 @@ test("unrendered source-only edits produce neither Changes nor evidence", async 
     watch: false,
   });
   fixture.beforeRemove(() => running.close());
+  await waitForClassifiedCount(running.url, 0);
   await assert.rejects(fs.access(fixture.config.review.outDir));
   const result = (await (
-    await fetch(`${running.url}/__mokly/diffs/review.json`)
+    await fetch(`${running.url}/mokly-viewer/diffs/review.json`)
   ).json()) as ReviewResult;
   const home = result.screens.find((s) => s.path === "home");
   assert.equal(home?.state, "unchanged");
   assert.equal(Object.hasOwn(home!, "sharedImpact"), false);
 });
 
-test("Changes includes a dark-only material edit", async (t) => {
+test("Changes ignores a stale generated dark view when the source is unchanged", async (t) => {
   const fixture = await changedFixture(t, validEntrySource(), {
     extraConfig: 'colorSchemes: ["light", "dark"],',
   });
-  const file = path.join(fixture.mockupsDir, "home/index.mobile.dark.html");
+  const file = path.join(
+    fixture.config.generatedDir,
+    "home/index.mobile.dark.html",
+  );
   const document = await fs.readFile(file, "utf8");
   await fs.writeFile(file, document.replaceAll(">Details<", ">Dark details<"));
   assert.deepEqual(
@@ -108,7 +112,7 @@ test("Changes includes a dark-only material edit", async (t) => {
       "HEAD",
       committedReviewRepository(fixture.config),
     ),
-    ["home", "tour"],
+    [],
   );
 });
 
@@ -154,15 +158,19 @@ test("moving a source module preserves an unchanged review list", async (t) => {
     watch: false,
   });
   fixture.beforeRemove(() => running.close());
+  await waitForClassifiedCount(running.url, 0);
   const result = (await (
-    await fetch(`${running.url}/__mokly/diffs/review.json`)
+    await fetch(`${running.url}/mokly-viewer/diffs/review.json`)
   ).json()) as ReviewResult;
   assert.ok(result.screens.every((screen) => screen.state === "unchanged"));
 });
 
 test("invalid baseline ignore markers leave the filter unavailable", async (t) => {
   const fixture = await changedFixture(t);
-  const fragment = path.join(fixture.mockupsDir, "home/index.mobile.html");
+  const fragment = path.join(
+    fixture.config.generatedDir,
+    "home/index.mobile.html",
+  );
   const original = await fs.readFile(fragment, "utf8");
   await fs.writeFile(
     fragment,

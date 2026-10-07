@@ -24,7 +24,7 @@ test("v8 combines pages and component usage at both manifest boundaries", async 
   const current = parseManifest(compilation.manifest);
   const historical = parseHistoricalManifest(compilation.manifest);
   assert.deepEqual(historical, current);
-  assert.equal(current.schemaVersion, 8);
+  assert.equal(current.schemaVersion, 9);
   assert.ok(current.sourceFiles.includes("entries/handbook.mockup.ts"));
   assert.ok(current.entries.some((entry) => entry.kind === "page"));
   assert.ok(current.entries.some((entry) => entry.kind === "component"));

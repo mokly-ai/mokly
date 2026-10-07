@@ -2,9 +2,9 @@
 
 ## Delivery Status
 
-Implemented: Serve uses a serialize-once scoped model and strict reader; static
-delivery validates captured pages and keeps the public catalogue v4 and
-application-owned `MoklyViewer` sources complete.
+Serve uses a serialize-once scoped model and strict reader. Static delivery and
+application-owned viewers use complete catalogue v5. Both bootstrap forms require
+root `schemaVersion: 2`; missing or other versions fail with a version error.
 
 ## Purpose And Boundary
 
@@ -18,7 +18,7 @@ inventories never enter it.
 - **Live Serve** embeds an entry-scoped projection of the accepted public read
   model together with the page view and shell context.
 - **Static export and repository preview** embed the existing compact external
-  reference: `kind: "external"`, the fixed `/__mokly/catalogue.json` path, and
+  reference: `kind: "external"`, the fixed `/mokly-viewer/catalogue.json` path, and
   its identity and revision. The browser resolves it against the one complete,
   finalized deployment catalogue before hydration.
 
@@ -51,15 +51,15 @@ its axes and comparison state; its document path remains derivable from path, vi
 
 Derive the exact retained scope from the bootstrap's own resolved view:
 
-| Bootstrap view                                | Usage that must be retained                                     |
-| --------------------------------------------- | --------------------------------------------------------------- |
-| Current screen, including a screen variant    | Every view of that selected screen                              |
-| Current component parent or component variant | Every variant view belonging to that component parent           |
-| Current use case                              | Every view of each screen named by its steps                    |
-| Selected removed screen                       | Every view on that exact historical record                      |
-| Selected removed component parent or variant  | Every retained variant view belonging to that historical parent |
-| Selected removed page or use case             | None; those records own no view usage                           |
-| Current page, home, or missing entry          | None                                                            |
+| Bootstrap view                                 | Usage that must be retained                                     |
+| ---------------------------------------------- | --------------------------------------------------------------- |
+| Current screen, including a screen variant     | Every view of that selected screen                              |
+| Current component parent or component variant  | Every variant view belonging to that component parent           |
+| Current use case                               | Every view of each screen named by its steps                    |
+| Selected removed screen                        | Every view on that exact historical record                      |
+| Selected removed component parent or variant   | Every retained variant view belonging to that historical parent |
+| Selected removed page, document or use case    | None; those records own no view usage                           |
+| Current page, document, home, or missing entry | None                                                            |
 
 Duplicate use-case steps do not duplicate data. In-scope views preserve their
 real `ready`, `pending`, or `unavailable` value byte-for-byte. Every other
@@ -72,10 +72,10 @@ in-scope use-case step may change it.
 
 ## Readers And Validation
 
-The public `readCatalogue` boundary accepts only complete catalogue v4. It
+The public `readCatalogue` boundary accepts only complete catalogue v5. It
 rejects `omitted` at any current or historical screen/component view. The
-public types, schema version, canonical serializer, and
-`docs/protocol/fixtures/catalogue-v4.json` bytes do not change.
+public canonical serializer and `docs/protocol/fixtures/catalogue-v5.json`
+cover that complete v5 contract, with one fixed generated-tree layout.
 
 The live reader validates context and view fields, parses the shell catalogue
 with ordinary value, hierarchy, snapshot, and reference checks, resolves entry
@@ -204,10 +204,10 @@ scoped model directly with the complete published model, ignore extra retained
 usage, or accept missing entry-owned usage.
 
 For identical catalogue, consumer, and comparison inputs,
-`__mokly/catalogue.json`, canonical shell HTML, workspace JSON,
+`mokly-viewer/catalogue.json`, canonical shell HTML, workspace JSON,
 ownership inventory, and comparison files remain byte-identical to the
 pre-scope export after replacing each tree's deployment identity with 64
-zeroes. Files under `__mokly/client/` may change when checked, type-checked
+zeroes. Files under `mokly-viewer/client/` may change when checked, type-checked
 viewer source changes. Across the route-scoping switch, the final deployment
 identity may therefore change only because those client bytes changed; all
 other identity inputs must match after normalization. Static pages still
@@ -235,7 +235,7 @@ Acceptance requires:
   missing, and every selected removed entry kind;
 - rejection of leaked, missing, misplaced, malformed, and public-catalogue
   `omitted` usage;
-- canonical scoped-bootstrap round trips and unchanged public v4 fixture bytes;
+- canonical scoped-bootstrap round trips and exact public v5 fixture bytes;
 - server/hydration serializer call counts of one/zero after initial creation;
 - no hydration mismatch in development React and no iframe remount on usage
   adoption;

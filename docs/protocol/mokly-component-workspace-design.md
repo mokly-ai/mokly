@@ -12,9 +12,10 @@ the [removed content previews plan](../../plans/removed-content-previews.md).
 ## View Controls
 
 Place one compact icon toolbar beside the page title. It contains a native
-viewport dropdown (Mobile, Desktop, Both), a light/dark toggle, and, on consuming
-screens, a Highlight components toggle. Do not repeat the theme control in the
-top bar or give highlighting a separate horizontal band. Icons have accessible
+viewport dropdown (Mobile, Desktop, Both) and, on consuming screens, a Highlight
+components toggle. Standalone artboards use the single top-bar Appearance
+selector for interface and preview scheme. Embedded hosts retain their separate
+preview scheme control. Highlighting has no separate horizontal band. Icons have accessible
 names, hover tooltips, selected states, and visible keyboard focus.
 
 Use centered SVGs for the menu and dropdown chevron, avoiding text baselines.

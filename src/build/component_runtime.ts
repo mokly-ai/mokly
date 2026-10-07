@@ -1,7 +1,7 @@
 /** The last successfully compiled consumer graph, passed to Serve only in memory. */
 import { randomBytes } from "node:crypto";
 
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 
 import type { ResolvedConfig } from "../config/types.js";
 import type { CatalogueIndex } from "../registry/catalogue_index.js";
@@ -24,13 +24,17 @@ export interface ComponentRuntime {
   generation: string;
   /** Build attempt identity; resource reloads retain it while replacing caches. */
   warningGeneration: string;
-  manifest: ManifestV8 | CatalogueIndex;
+  manifest: ManifestV9 | CatalogueIndex;
   outputs: readonly (readonly [string, GeneratedFile])[];
   stylesheetRoutes: readonly (readonly [string, string])[];
   styleOutputs: readonly (readonly [string, GeneratedFile])[];
   deliveredStyleSources: readonly string[];
 }
 const runtimes = new WeakMap<Compilation, ComponentRuntime>();
+const accepted = new WeakMap<
+  ManifestV9,
+  { compilation: Compilation; config: string }
+>();
 export function rememberRuntime(
   compilation: Compilation,
   graph: LoadedGraph,
@@ -38,6 +42,10 @@ export function rememberRuntime(
   outputSnapshot: OutputSnapshot,
 ): void {
   const generation = randomBytes(16).toString("hex");
+  accepted.set(compilation.manifest, {
+    compilation,
+    config: configKey(config),
+  });
   runtimes.set(compilation, {
     outputSnapshot,
     bundle: consumerBundle(graph),
@@ -70,4 +78,22 @@ export function componentRuntime(compilation: Compilation): ComponentRuntime {
   const runtime = runtimes.get(compilation);
   if (!runtime) throw new Error("Compilation has no retained consumer runtime");
   return runtime;
+}
+
+/** Reuse the exact accepted bytes when a snapshot receives its producer's manifest. */
+export function compilationForManifest(
+  manifest: ManifestV9,
+  config: ResolvedConfig,
+): Compilation | undefined {
+  const found = accepted.get(manifest);
+  return found?.config === configKey(config) ? found.compilation : undefined;
+}
+
+function configKey(config: ResolvedConfig): string {
+  const inputs = { ...config };
+  delete inputs.sourceFiles;
+  delete inputs.componentStylesheetPaths;
+  delete inputs.configSourceFiles;
+  delete inputs.postcssWatchDirectories;
+  return JSON.stringify(inputs);
 }

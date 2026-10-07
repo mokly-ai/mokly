@@ -13,7 +13,6 @@ import type {
   ScreenVariantInput,
 } from "../../dist/authoring/types.js";
 import { defineComponent } from "../../dist/components/definition.js";
-import { DEFAULT_PUBLIC_EXCLUDE } from "../../dist/config/public_exclusions.js";
 import type { ResolvedConfig } from "../../dist/config/types.js";
 import { defineUseCase } from "../../dist/index.js";
 import { validateEntry } from "../../dist/registry/entry_validation.js";
@@ -26,10 +25,7 @@ import { resolvedEntry } from "./resolved.js";
 export const sourceRelativePath = "tests/variant_validation.test.ts";
 
 export const config: ResolvedConfig = {
-  generatedOutput: "committed",
-  publicExclude: DEFAULT_PUBLIC_EXCLUDE,
   colorSchemes: ["light"],
-  compatibility: {},
   configPath: path.join(repositoryRoot, "mokly.config.ts"),
   roots: [
     {
@@ -38,6 +34,7 @@ export const config: ResolvedConfig = {
       transparent: [],
     },
   ],
+  generatedDir: path.join(repositoryRoot, "mockups/mokly-generated"),
   mockupsDir: path.join(repositoryRoot, "mockups"),
   moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
   repoRoot: repositoryRoot,
@@ -171,7 +168,6 @@ export function invalidNonScreen(
 ): ResolvedRegistryEntry {
   const common = {
     __viaDefine: true as const,
-    dependencies: [],
     description: `${kind} entry`,
     path: `${kind}-entry`,
     kind,

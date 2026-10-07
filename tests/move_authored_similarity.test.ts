@@ -33,8 +33,8 @@ test("page similarity ignores matching generated head and raw markup formatting"
     contentMoveSignals(
       [before],
       [after],
-      new Map([["old/index.html", left]]),
-      new Map([["new/index.html", right]]),
+      new Map([["mokly-generated/old/index.html", left]]),
+      new Map([["mokly-generated/new/index.html", right]]),
     );
   assert.equal(
     signal(
@@ -77,7 +77,15 @@ test("Markdown similarity retains accepted body bytes after the source changes",
   );
   assert.ok(snapshot.pairing?.moves.some((move) => move.path === "new/guide"));
   assert.ok(snapshot.changedEntries?.includes("new/guide"));
-  assert.ok(!JSON.stringify(snapshot).includes("Read the updated guide."));
+  assert.ok(snapshot.comparison?.headOutputs?.length);
+  const { headOutputs: _rendered, ...comparison } = snapshot.comparison!;
+  assert.ok(
+    !JSON.stringify({ ...snapshot, comparison }).includes(
+      "Read the updated guide.",
+    ),
+  );
+  assert.equal(Object.hasOwn(snapshot, "documentMarkdown"), false);
+  assert.equal(Object.hasOwn(comparison, "documentMarkdown"), false);
 });
 
 test("an incomplete accepted body map never falls back to a later filesystem generation", async (t) => {

@@ -18,13 +18,13 @@ resolution.
 
 The public catalogue is the shell's portable read model. A live page embeds its
 [route-scoped bootstrap projection](./mokly-shell-bootstrap.md), while the
-complete model remains available at `__mokly/catalogue.json`. Local Serve adds
+complete model remains available at `mokly-viewer/catalogue.json`. Local Serve adds
 a private descriptor in a separate `application/json` script with
 `data-mokly-host-capability-state`. Private workspace evidence and the
 temporary-render token never enter the public catalogue or shell bootstrap.
 
 The live document has `data-mokly-host-capabilities` and loads
-`/__mokly/client/react-host.js`. The live host imports the shared
+`/mokly-viewer/client/react-host.js`. The live host imports the shared
 `react-shell.js`, creates CLI-owned capabilities, and calls
 `hydrateMoklyShell(document, capabilities)`. That shared, type-checked entry
 accepts exact route scope for live pages and the compact external form for
@@ -35,7 +35,7 @@ auto-hydrates.
 
 The descriptor contains:
 
-- schema version `1`;
+- schema version `2`;
 - the base ref, catalogue identity, content and evidence revisions, update
   version, optional on-demand preview generation, and optional temporary
   renderer generation;
@@ -170,7 +170,7 @@ They retain the full reload lifecycle.
 ## Recovery And Optional Transports
 
 Reload recovery uses the existing one-shot session-storage payload. The host
-converts between the legacy `changedOnly` value and the shell's `view` value,
+converts between the stored `changedOnly` value and the shell's `view` value,
 and accepts recovery only for the current URL and a version no newer than the
 rendered page. Reading removes the payload.
 

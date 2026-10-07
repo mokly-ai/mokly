@@ -33,12 +33,13 @@ for (const watch of [false, true]) {
     assert.match(home, /data-entry-id="broken"/);
     assert.match(home, /Search catalogue/);
     const preview = await fetch(
-      `${running.url}/static/home/index.desktop.html`,
+      `${running.url}/static/mokly-generated/home/index.desktop.html`,
     );
     assert.equal(preview.status, 200);
     assert.match(await preview.text(), /id="home"/);
     assert.equal(
-      (await fetch(`${running.url}/static/broken/index.html`)).status,
+      (await fetch(`${running.url}/static/mokly-generated/broken/index.html`))
+        .status,
       500,
     );
     assert.equal((await fetch(running.url)).status, 200);
@@ -62,7 +63,9 @@ test("demand rendering validates logical anchors without rendering navigation-on
     port: 0,
   });
   fixture.beforeRemove(() => running.close());
-  const response = await fetch(`${running.url}/static/home/index.desktop.html`);
+  const response = await fetch(
+    `${running.url}/static/mokly-generated/home/index.desktop.html`,
+  );
   assert.equal(response.status, 500);
   assert.match(await response.text(), /missing/);
   assert.equal(
@@ -70,7 +73,7 @@ test("demand rendering validates logical anchors without rendering navigation-on
     400,
   );
   await assert.rejects(
-    fs.access(path.join(fixture.mockupsDir, "mokly-manifest.json")),
+    fs.access(path.join(fixture.generatedDir, "mokly-manifest.json")),
   );
 });
 
@@ -79,7 +82,9 @@ test(
   { timeout: 20000 },
   async (t) => {
     const fixture = await createFixture(
-      validEntrySource({ body: '<img src="../image.svg" alt="Example" />' }) +
+      validEntrySource({
+        body: '<img src="../../image.svg" alt="Example" />',
+      }) +
         `
     import { definePage } from "@mokly/mokly";
     mockups.push(definePage({ path: "broken", title: "Broken", description: "Broken page",
@@ -96,7 +101,11 @@ test(
     });
     fixture.beforeRemove(() => running.close());
     assert.equal(
-      (await fetch(`${running.url}/static/home/index.desktop.html`)).status,
+      (
+        await fetch(
+          `${running.url}/static/mokly-generated/home/index.desktop.html`,
+        )
+      ).status,
       200,
     );
     const before = version(await (await fetch(running.url)).text());
@@ -104,11 +113,15 @@ test(
     await fs.writeFile(asset, '<svg width="20"/>');
     await waitForUpdate(running.url, before);
     assert.equal(
-      (await fetch(`${running.url}/static/home/index.desktop.html`)).status,
+      (
+        await fetch(
+          `${running.url}/static/mokly-generated/home/index.desktop.html`,
+        )
+      ).status,
       200,
     );
     await assert.rejects(
-      fs.access(path.join(fixture.mockupsDir, "mokly-manifest.json")),
+      fs.access(path.join(fixture.generatedDir, "mokly-manifest.json")),
     );
   },
 );

@@ -7,12 +7,13 @@ import { validateComponentRanges } from "../components/ranges.js";
 import type { LinkedComponentStylesheet } from "../components/render.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
 import { finalizeComponentStylesheets } from "../components/stylesheet_provenance.js";
+import type { PublicFilePolicy } from "../config/public_policy.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
 import type { PendingGeneratedFiles } from "./pending_generated.js";
 
-/** Finalize transformed document provenance before validating its captured view. */
+/** Record final link provenance before validating the captured view. */
 export function finalizeDocumentView(input: {
   route: string;
   entry: ResolvedRegistryEntry;
@@ -23,6 +24,7 @@ export function finalizeDocumentView(input: {
   links: readonly LinkedComponentStylesheet[];
   components: Parameters<typeof validateComponentViewRecord>[1];
   pending: PendingGeneratedFiles;
+  policy?: PublicFilePolicy;
 }): { html: string; view?: ComponentViewRecord } {
   const {
     route,
@@ -41,7 +43,6 @@ export function finalizeDocumentView(input: {
       `${route}: unexpected component view`,
     );
   const finalized = finalizeComponentStylesheets(
-    original,
     input.html,
     captured,
     route,
@@ -61,6 +62,11 @@ export function finalizeDocumentView(input: {
       ? entry.variantOf
       : undefined,
   );
-  validateComponentResources(new Map([[route, view]]), config, pending);
+  validateComponentResources(
+    new Map([[route, view]]),
+    config,
+    pending,
+    input.policy,
+  );
   return { html: finalized.html, view };
 }

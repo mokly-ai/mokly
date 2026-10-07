@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -42,31 +43,21 @@ export const source = () => '<!doctype html><html><head><title>Warning</title></
   );
 }
 
-/** Warn before a later resource or transformer failure in the real pipeline. */
+/** Warn before a later resource failure in the real pipeline. */
 export async function linkWarningFailureFixture(
-  outcome: "resource" | "transform" | "success",
+  outcome: "resource" | "success",
 ) {
   const fixture = await createFixture(
     `import {defineScreen,MockLink} from '@mokly/mokly';
-const body=<main><button><MockLink asChild to='target'><span>Next</span></MockLink></button><img src='../image.png'/></main>;
+const body=<main><button><MockLink asChild to='target'><span>Next</span></MockLink></button><img src='../../image.png'/></main>;
 export default [defineScreen({path:'home',title:'Home',description:'Home',relatedDocs:[],dependencies:[],mobile:body,desktop:body}),
 defineScreen({path:'target',title:'Target',description:'Target',relatedDocs:[],mobile:<main>Target</main>,desktop:<main>Target</main>})];`,
-    {
-      extraConfig:
-        outcome === "transform"
-          ? 'compatibility:{transformer:"transformer.ts"},'
-          : "",
-    },
   );
+  execFileSync("git", ["init", "-q"], { cwd: fixture.root });
   if (outcome !== "resource")
     await fs.writeFile(
       path.join(fixture.mockupsDir, "image.png"),
       Buffer.from([1, 2, 3]),
-    );
-  if (outcome === "transform")
-    await fs.writeFile(
-      path.join(fixture.root, "transformer.ts"),
-      `export default ({content,route}) => { if(route === 'home/index.mobile.html') throw new Error('warning-transform-failure'); return content; };`,
     );
   const diagnostics: BuildDiagnostic[] = [
     {
@@ -74,14 +65,12 @@ defineScreen({path:'target',title:'Target',description:'Target',relatedDocs:[],m
       subject: { kind: "entry", path: "home" },
       message: "dependencies has been removed; ignoring it. Delete the field.",
     },
-    ...(outcome === "transform" ? ["mobile"] : ["desktop", "mobile"]).map(
-      (viewport) => ({
-        code: "link-control-ancestor" as const,
-        route: `home/index.${viewport}.html`,
-        message:
-          "MockLink child control is inside <button>; one click or key press has two targets",
-      }),
-    ),
+    ...["desktop", "mobile"].map((viewport) => ({
+      code: "link-control-ancestor" as const,
+      route: `home/index.${viewport}.html`,
+      message:
+        "MockLink child control is inside <button>; one click or key press has two targets",
+    })),
   ];
   return {
     ...fixture,
@@ -89,6 +78,6 @@ defineScreen({path:'target',title:'Target',description:'Target',relatedDocs:[],m
     failure:
       outcome === "resource"
         ? /missing target .*image\.png/
-        : /warning-transform-failure/,
+        : /unexpected successful fixture failure/,
   };
 }

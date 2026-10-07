@@ -19,7 +19,7 @@ import {
 import { removeFixture } from "./helpers/fixture.js";
 import { linkWarningFailureFixture } from "./helpers/link_control_warning_fixture.js";
 
-for (const outcome of ["resource", "transform", "success"] as const) {
+for (const outcome of ["resource", "success"] as const) {
   test(`compilation forwards each link warning before ${outcome}`, async (t) => {
     const fixture = await linkWarningFailureFixture(outcome);
     t.after(() => fixture.remove());

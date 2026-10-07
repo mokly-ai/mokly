@@ -1,6 +1,12 @@
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 import { createCatalogue, type Catalogue } from "@mokly/viewer/server";
 
+import { compileCatalogue } from "../build/compile.js";
+import {
+  compilationForManifest,
+  componentRuntime,
+} from "../build/component_runtime.js";
+import type { GeneratedFile } from "../build/generated_file.js";
 import { assertFreshSourceInventory } from "../build/source_freshness.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync } from "../diagnostics/timings.js";
@@ -10,9 +16,10 @@ import {
   type CatalogueIndex,
 } from "../registry/catalogue_index.js";
 import type { CatalogueChangeSnapshot } from "../registry/changes.js";
-import { parseManifest, readManifest } from "../registry/manifest.js";
+import { parseManifest } from "../registry/manifest.js";
 import {
   acceptedGenerationFromInventory,
+  acceptedGenerationFromCompilation,
   type AcceptedGeneration,
 } from "../review/accepted_generation.js";
 import type { ReadOnlyReviewRepository } from "../review/repository.js";
@@ -21,8 +28,7 @@ import {
   computeCatalogueChanges,
   type ResolvedCatalogueChanges,
 } from "./changed.js";
-import type { ComponentChangeSnapshot } from "./component_changes.js";
-import type { ServerOptions } from "./http_types.js";
+import type { ComponentChangeSnapshot } from "./component_change_types.js";
 
 const configIdentity = Symbol("validated catalogue config");
 
@@ -30,6 +36,7 @@ const configIdentity = Symbol("validated catalogue config");
 export interface CatalogueSnapshot {
   readonly [configIdentity]: ResolvedConfig;
   readonly catalogue: Catalogue;
+  readonly outputs?: ReadonlyMap<string, GeneratedFile>;
   readonly changes?: CatalogueChangeSnapshot;
   readonly componentChanges?: ComponentChangeSnapshot;
 }
@@ -38,24 +45,47 @@ export interface CatalogueSnapshot {
 export async function loadCatalogueSnapshot(
   config: ResolvedConfig,
   resolveChanges?: (
-    manifest: ManifestV8,
+    manifest: ManifestV9,
     accepted: AcceptedGeneration,
   ) => Promise<ResolvedCatalogueChanges | undefined>,
-  manifest: ManifestV8 = readManifest(config),
+  manifest?: ManifestV9,
 ): Promise<CatalogueSnapshot> {
-  timeSync("catalogue.validate", () => parseManifest(manifest));
-  const inventory = await timeAsync("catalogue.source-freshness", () =>
-    assertFreshSourceInventory(config, manifest),
-  );
+  const supplied = manifest !== undefined;
+  const compilation = manifest
+    ? compilationForManifest(manifest, config)
+    : await compileCatalogue(config);
+  manifest ??= compilation!.manifest;
+  const acceptedManifest = manifest;
+  timeSync("catalogue.validate", () => parseManifest(acceptedManifest));
+  const inventory = supplied
+    ? await timeAsync("catalogue.source-freshness", () =>
+        assertFreshSourceInventory(config, acceptedManifest),
+      )
+    : undefined;
+  if (!supplied && compilation) {
+    config.sourceFiles = acceptedManifest.sourceFiles;
+    config.postcssWatchDirectories =
+      componentRuntime(compilation).config.postcssWatchDirectories ?? [];
+  }
   const changes = resolveChanges
     ? await timeAsync("changes.classify", () =>
-        resolveChanges(manifest, acceptedGenerationFromInventory(inventory)),
+        resolveChanges(
+          acceptedManifest,
+          compilation
+            ? acceptedGenerationFromCompilation(compilation)
+            : acceptedGenerationFromInventory(inventory!),
+        ),
       )
     : undefined;
   return {
     [configIdentity]: config,
+    ...(compilation ? { outputs: compilation.outputs } : {}),
     catalogue: timeSync("catalogue.index", () =>
-      createCatalogue(manifest, changes?.removedEntries, changes?.movedEntries),
+      createCatalogue(
+        acceptedManifest,
+        changes?.removedEntries,
+        changes?.movedEntries,
+      ),
     ),
     ...(changes ? { changes } : {}),
     ...(changes?.componentChanges
@@ -65,7 +95,7 @@ export async function loadCatalogueSnapshot(
 }
 
 /** Validate the distinct live index without claiming uncomputed render evidence. */
-async function loadLiveCatalogueSnapshot(
+export async function loadLiveCatalogueSnapshot(
   config: ResolvedConfig,
   index: CatalogueIndex,
 ): Promise<CatalogueSnapshot> {
@@ -75,10 +105,10 @@ async function loadLiveCatalogueSnapshot(
 }
 
 /** Validate startup metadata once, retaining Browse when optional history is unavailable. */
-function loadServedCatalogueSnapshot(
+export function loadServedCatalogueSnapshot(
   config: ResolvedConfig,
   base?: string,
-  manifest?: ManifestV8,
+  manifest?: ManifestV9,
   repository?: () => ReadOnlyReviewRepository,
 ): Promise<CatalogueSnapshot> {
   return loadCatalogueSnapshot(
@@ -109,7 +139,7 @@ function loadServedCatalogueSnapshot(
 }
 
 /** Reject snapshots from another configuration or outside the validation factory. */
-function catalogueSnapshotForConfig(
+export function catalogueSnapshotForConfig(
   snapshot: CatalogueSnapshot,
   config: ResolvedConfig,
 ): CatalogueSnapshot {
@@ -119,28 +149,4 @@ function catalogueSnapshotForConfig(
       "catalogue snapshot does not belong to this configuration",
     );
   return snapshot;
-}
-
-/** Select and validate the initial accepted snapshot before the HTTP server starts. */
-export async function initialCatalogueSnapshot(
-  config: ResolvedConfig,
-  options: ServerOptions,
-): Promise<ReturnType<typeof catalogueSnapshotForConfig>> {
-  const snapshot =
-    options.snapshot ??
-    (options.manifest?.schemaVersion === "live-index-1"
-      ? await loadLiveCatalogueSnapshot(config, options.manifest)
-      : await loadServedCatalogueSnapshot(
-          config,
-          options.manifest ||
-            options.componentChanges ||
-            options.componentChangeSource
-            ? undefined
-            : options.review
-              ? options.base
-              : undefined,
-          options.manifest,
-          options.review?.repository,
-        ));
-  return catalogueSnapshotForConfig(snapshot, config);
 }

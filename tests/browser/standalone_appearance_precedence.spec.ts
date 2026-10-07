@@ -113,7 +113,7 @@ test("a restored dark appearance swaps each frame at most once", async ({
     const url = new URL(request.url());
     // Only the frame documents; the shell's own view fetches are not swaps.
     if (
-      /^\/static\/example\/screens\/welcome\/index\.(mobile|desktop)/u.test(
+      /^\/static\/mokly-generated\/example\/screens\/welcome\/index\.(mobile|desktop)/u.test(
         url.pathname,
       )
     )

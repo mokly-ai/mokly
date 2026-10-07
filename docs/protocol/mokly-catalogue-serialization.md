@@ -28,9 +28,9 @@ generation from `comparisonUrl` may supply `sourceKind: "generation"`. With
 neither real source, projection omits the field instead of deriving it from
 revisions, `deploymentId`, metadata, time, or randomness.
 
-Readers validate supplied snapshot ids and require uniqueness. When the field
-is absent but one immutable comparison generation is advertised, the reader
-derives a generation-backed identity. Path-only selection of a removed record
+Readers validate supplied snapshot ids and require uniqueness. They never derive missing ids. A removed record with non-null `comparisonUrl`
+must supply `snapshotId`; absence is invalid. Without a comparison URL or
+immutable identity, the field can remain absent. Path-only selection of a removed record
 normalizes to its safe identity when present. A baseline or generation change
 produces different ids, so an unknown, stale, or cross-catalogue selection
 fails closed rather than retargeting content.
@@ -41,20 +41,20 @@ normalizes this owned JSON's top-level `deploymentId` to 64 zeroes before hashin
 and stamps it afterward, alongside shell descriptors. Other catalogue bytes
 participate unchanged. Export revisions are `{ content: 0, evidence: 0 }`.
 
-Readers require `schemaVersion: 4` and reject older and unknown versions;
-writers remain allowlisted. Version 4 keys every record by path, adds
+Readers require `schemaVersion: 5` and reject older and unknown versions;
+writers remain allowlisted. Version 5 keys every record by path, adds
 documents, folder titles, `previousPath`, and one tree, and removes `id`,
 `navPath`, `useCaseIds`, `screenId`, and the per-section trees. Removed variants
-require `parentTitle`. These v4 fields are one unreleased contract; readers
-do not translate earlier catalogue v4 drafts. Optional
+require `parentTitle`. Readers accept only catalogue v5 and
+do not translate earlier output. Optional
 fields are additive; removals, required additions, changed meaning, new union
 discriminants or incompatible paths require a new version. This file and the
-inspector asset are additive inventory entries: ownership v2 and upload v1
+inspector asset are additive inventory entries: ownership v3 and upload v2
 remain unchanged; the review result and delivery descriptor follow the
 [Changes](./mokly-changes.md) and [static delivery](./mokly-export-delivery.md)
 contracts.
 
-The [public v4 fixture](./fixtures/catalogue-v4.json) ships in the npm package
+The [public v5 fixture](./fixtures/catalogue-v5.json) ships in the npm package
 and is checked by the reader/projection conformance tests.
 
 The reader requires `tree`; `[]` is valid when the catalogue has no current entries. A nonempty tree must follow the [path contract](./mokly-paths.md):

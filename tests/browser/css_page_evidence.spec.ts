@@ -43,7 +43,7 @@ function documentDesignUrl(viewport: string): string {
   return pathToFileURL(
     path.join(
       repositoryRoot,
-      `examples/basic/generated/design/changes/impact/styles/page/index.${viewport}.html`,
+      `examples/basic/mokly-generated/design/changes/impact/styles/page/index.${viewport}.html`,
     ),
   ).href;
 }

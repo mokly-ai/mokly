@@ -8,37 +8,18 @@ import { MoklyError } from "../errors.js";
 import { toPosixPath } from "./paths.js";
 import type { MoklyConfig } from "./types.js";
 
-/** Validate the explicit mode before resolving mode-dependent filesystem paths. */
-export function generatedOutputMode(value: unknown): "committed" | "derived" {
-  if (value === undefined) return "derived";
-  if (value === "committed" || value === "derived") return value;
-  throw new MoklyError(
-    "config-invalid",
-    'generatedOutput must be "committed" or "derived"',
-  );
-}
-
 /** Resolve an exact, shell-free build recipe; explicit recipes have no implicit suffix. */
 export function baselineBuildCommands(
   input: MoklyConfig,
-  generatedOutput: "committed" | "derived",
   repoRoot: string,
   configPath: string,
 ): readonly (readonly string[])[] | undefined {
   const commands = input.review?.baselineBuild;
-  if (generatedOutput !== "derived") {
-    if (commands !== undefined)
-      throw new MoklyError(
-        "config-invalid",
-        "review.baselineBuild is valid only with generatedOutput: derived",
-      );
-    return;
-  }
   const relativeConfig = toPosixPath(path.relative(repoRoot, configPath));
   if (!isSafeRepositoryPath(relativeConfig))
     throw new MoklyError(
       "config-invalid",
-      "derived config must be a repository-relative file",
+      "baseline config must be a repository-relative file",
     );
   if (commands === undefined)
     return [

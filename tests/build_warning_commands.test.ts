@@ -75,8 +75,8 @@ async function execute(
 }
 
 test("build and check ignore removed fields, warn once and keep plain success bytes", async (context) => {
-  const fixture = await createFixture(sourceWithRemovedField());
-  context.after(() => removeFixture(fixture));
+  const fixture = await createExportFixture(sourceWithRemovedField());
+  context.after(() => fixture.close());
   await addRemovedConfigField(fixture.configPath);
   const built = await execute(fixture.root, fixture.configPath, ["build"]);
   assert.equal(built.code, 0);
@@ -192,7 +192,7 @@ export default (input) => ({ html: '<html><head></head><body>' + renderToStaticM
   assert.equal(
     lines.filter((line) =>
       line.includes(
-        'home/index.mobile.html: configured stylesheet link "../base.css" is absent',
+        'home/index.mobile.html: configured stylesheet link "../../base.css" is absent',
       ),
     ).length,
     1,

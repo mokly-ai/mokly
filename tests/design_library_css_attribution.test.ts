@@ -16,7 +16,7 @@ test("each exclusive library stylesheet changes its component and only affects r
     await t.test(slug, async () => {
       await fixture.reset();
       await fixture.edit(
-        `examples/basic/generated/design-library/${group}/${slug}.css`,
+        `examples/basic/design-library/${group}/${slug}.css`,
         (source) => source + `\n${selectors[slug]} { outline-width: 3px; }\n`,
       );
       const result = await fixture.compare();
@@ -91,7 +91,7 @@ test("example CSS changes components with own-page matches and reports consumers
     await t.test(file, async () => {
       await fixture.reset();
       await fixture.edit(
-        `examples/basic/generated/${file}`,
+        `examples/basic/${file}`,
         (source) => source + `\n${selector} { outline-width: 3px; }\n`,
       );
       const result = await fixture.compare();

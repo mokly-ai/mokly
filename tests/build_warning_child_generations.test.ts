@@ -29,7 +29,9 @@ for (const fails of [false, true]) {
         },
       });
       await fixture.gate.next("background");
-      const current = fetch(`${running.url}/static/home/index.mobile.html`);
+      const current = fetch(
+        `${running.url}/static/mokly-generated/home/index.mobile.html`,
+      );
       const first = await fixture.gate.next("preview");
       first.release();
       assert.equal((await current).status, 200);
@@ -37,7 +39,9 @@ for (const fails of [false, true]) {
       assert.equal(fixture.emitted.length, 0);
       assert.equal(fixture.sink.additions[0]!.route, "home/index.mobile.html");
       const accepted = [...fixture.emitted];
-      const response = fetch(`${running.url}/static/home/index.desktop.html`);
+      const response = fetch(
+        `${running.url}/static/mokly-generated/home/index.desktop.html`,
+      );
       const preview = await fixture.gate.next("preview", first.index + 1);
       const lock = await acquireOutputLock(fixture.root);
       fixture.beforeRemove(() => lock.release());

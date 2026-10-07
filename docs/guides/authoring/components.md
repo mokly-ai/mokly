@@ -123,8 +123,8 @@ export const propSchema = {
 `stylesheets` names existing public CSS files relative to `mockupsDir`, in
 authored order. Mokly links them only where the component actually renders,
 including an empty render, and records the links it inserts. HTTP(S),
-missing or non-public CSS paths fail validation. A repeated file or alias is
-linked once with a warning. Two components may share a file. Changed rules
+missing or non-public CSS paths fail validation. Public paths must contain no
+symbolic links. A repeated valid file is linked once with a warning. Two components may share a file. Changed rules
 are checked against component output on the component's own saved pages.
 A component keeps only matches outside a different nested component that has
 its own-page matches for the same rule. Self-nesting does not remove matches.

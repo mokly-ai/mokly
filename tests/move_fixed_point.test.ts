@@ -79,7 +79,7 @@ test("production fingerprints require linear full comparisons for unique rendere
   const documents = (entries: typeof before) =>
     new Map(
       entries.map((entry, index) => [
-        `${entry.path}/index.html`,
+        `mokly-generated/${entry.path}/index.html`,
         `<h1>Page ${index}</h1><p>${"Long unique content ".repeat(300)}</p>`,
       ]),
     );
@@ -116,8 +116,8 @@ test("different ignore contracts fall back to paired normalization before exclud
   const signals = contentMoveSignals(
     [before],
     [after],
-    new Map([["old/index.html", base]]),
-    new Map([["new/index.html", "same"]]),
+    new Map([["mokly-generated/old/index.html", base]]),
+    new Map([["mokly-generated/new/index.html", "same"]]),
   );
   assert.equal(pairMoves([before], [after], signals).moves.length, 1);
 });

@@ -39,7 +39,7 @@ for (const components of [false, true])
       }),
       false,
     );
-    assert.equal(result.schemaVersion, 5);
+    assert.equal(result.schemaVersion, 6);
     assert.equal(Object.hasOwn(result, "sharedImpact"), false);
     for (const screen of result.screens) {
       assert.equal(Object.hasOwn(screen, "sharedImpact"), false);

@@ -5,13 +5,15 @@ import type {
   ChangedEntry,
   ComponentVariantReview,
   EntryChangeReason,
-  ReviewResultV5,
+  ReviewResultV6,
 } from "../../packages/viewer/dist/review/component_types.js";
 import {
   createCatalogue,
   type Catalogue,
 } from "../../packages/viewer/dist/shell/catalogue.js";
 import type { ShellContext } from "../../packages/viewer/dist/shell/context.js";
+
+import { currentManifest } from "./current_manifest.js";
 
 /** Light views whose entry supplies a glyph Icon named `name`. */
 function iconViews(componentId: string, name: string) {
@@ -164,7 +166,7 @@ const result = {
     },
   ],
   screens: [],
-} as unknown as ReviewResultV5;
+} as unknown as ReviewResultV6;
 
 /**
  * The shell catalogue and server context for the moved library, as Serve and
@@ -179,13 +181,13 @@ export function movedComponentEvidence(): {
     (entry) => entry.path === "components/action/secondary",
   )!;
   const catalogue = createCatalogue(
-    {
+    currentManifest({
       entries: library("ui", "chevron", true),
       folders: [],
       generatedBy: "mokly",
-      schemaVersion: 8,
+      schemaVersion: 9,
       sourceFiles: [],
-    },
+    }),
     [{ entry: secondary, folderTitles: ["Components"], parentTitle: "Action" }],
     MOVED.map((path) => ({
       path: `ui/${path}`,

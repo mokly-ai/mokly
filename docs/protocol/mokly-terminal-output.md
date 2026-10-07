@@ -7,7 +7,7 @@ This contract is implemented. The [source-path removal plan](../../plans/remove-
 ## Scope
 
 This contract defines the user-visible terminal behavior of the `mokly` CLI.
-It covers output-mode selection, rich progress, plain compatibility, warnings,
+It covers reporter selection, rich progress, plain compatibility, warnings,
 errors, watched Serve events, and interactive shortcuts. It does not change
 catalogue HTTP errors, `MoklyError` messages, generated files, or timing records.
 
@@ -81,7 +81,7 @@ Watch timestamps use the local `HH:mm:ss` clock.
 
 ## Serve layout
 
-Rich Serve begins with the installed version, generation mode, comparison base,
+Rich Serve begins with the installed version, comparison base,
 and config path, followed by its stable URL in a compact bordered panel. The
 panel contains only the address so it remains the primary action; watch state
 and shortcut guidance are dim secondary copy beneath it:
@@ -91,7 +91,7 @@ the ready layout or opens the browser. Once a URL is visible, an immediate
 interrupt must close Serve cleanly rather than terminate it by signal.
 
 ```text
-  mokly 0.10.0                          derived · comparing against origin/main
+  mokly 0.10.0                          comparing against origin/main
   examples/basic/mokly.config.ts
 
   ┌─────────────────────────┐
@@ -117,7 +117,7 @@ watched catalogue then reports existing lifecycle boundaries:
 
 Catalogue counts come from accepted manifest entries. Zero-valued kinds are
 omitted. A baseline cache hit says `Baseline ready · reused <short-sha>`; a
-committed catalogue omits baseline preparation. Unavailable Changes says
+complete committed v9 output omits rebuild progress. Unavailable Changes says
 `! Changes unavailable` and preserves All browsing. Serve reports each
 generation's build warnings immediately before `Catalogue ready`; on-demand
 previews never repeat them. Typed non-page subjects and current-attempt
@@ -182,7 +182,7 @@ line and durable `Catalogue uploaded` line.
 Completion summaries are:
 
 ```text
-  ✔ Generated 278 files in examples/basic/generated (5.9s)
+  ✔ Generated 278 files in examples/basic (5.9s)
   ✔ Mokly output is valid and untracked · 278 files (5.9s)
   ✔ Mokly output is current · 278 files (5.9s)
   ✔ Exported Mokly to .context/mokly-site (8.1s)
@@ -231,7 +231,14 @@ state is restored on close. Mokly removes listeners and pauses stdin during
 shutdown so a piped or spawned process cannot be kept alive by shortcuts.
 
 `serve --open` invokes the same browser opener once, after the URL is ready. It
-works in either output mode and with `--no-watch`; the flag is rejected for
+works regardless of Git tracking and with `--no-watch`; the flag is rejected for
 other commands. macOS uses `open`, Linux uses `xdg-open`, and Windows uses
 `cmd.exe /d /s /c start "" <url>`, detached with ignored stdio. A launch failure
 is a warning and does not stop Serve.
+
+## Writing Watch Commands
+
+The approved writer target makes `build --watch` and `serve --build` use one summary helper
+as `build`, with `.` for an empty relative catalogue path. Report completed
+writes only. The [watch-writer contract](./mokly-watch-writers.md) defines
+cancellation and plain stdout notices; plain Serve performs no write.

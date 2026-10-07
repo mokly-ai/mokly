@@ -9,7 +9,7 @@ import { repositoryRoot } from "./fixture.js";
 /** An isolated consumer of the path-based API, with no legacy test adapters. */
 export async function pathFixture(
   files: Readonly<Record<string, string>>,
-  config = '{mockupsDir: "generated", roots: [{dir: "specs"}], generatedOutput: "committed"}',
+  config = '{mockupsDir: "generated", roots: [{dir: "specs"}]}',
 ) {
   const parent = path.join(repositoryRoot, ".context");
   await fs.mkdir(parent, { recursive: true });

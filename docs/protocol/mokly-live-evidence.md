@@ -5,9 +5,8 @@
 Live evidence updates and bounded affected-usage deduplication are implemented.
 Deduplication verification is recorded in the
 [dependency patch upstreaming plan](../../plans/mokabook-dependency-patch-upstreaming.md).
-The path-named link fields below are the approved contract; the current
-implementation still carries `entryId` until the
-[path identity plan](../../plans/path-identity.md) delivers them.
+Affected-usage links use `entryPath`, matching the implemented
+[path identity contract](./mokly-paths.md).
 Adoption of the current entry's scoped bootstrap with its complete private
 workspace when applicable, exact-scoped Serve responses, and rejection of
 complete live catalogues are implemented.
@@ -22,7 +21,7 @@ Changes status and workspace evidence from one request snapshot.
 
 Content version starts at the server's initial update version. A content update
 advances both versions; an evidence update advances only the update version.
-An omitted update kind means content, including legacy parent/child messages.
+An omitted update kind means content, including parent/child messages without that optional field.
 Explicit kinds are `content` and `evidence`; invalid IPC kinds are rejected.
 Child restarts retain the supervisor's monotonically increasing version boundary.
 
@@ -60,7 +59,7 @@ removed screens/components in All and removed pages and documents only in
 Changes still apply.
 Changes preparing, loading and empty/unavailable states use the existing
 sidebar design; `preparing` precedes loading only in
-[derived mode](./mokly-derived-baselines.md). A status-only evidence update
+[a per-commit rebuild](./mokly-derived-baselines.md). A status-only evidence update
 carries no changed paths or snapshot, so entering and leaving `preparing` replaces the
 count slot and the selected-Changes sidebar without touching the tree, the
 current documents, or the focused control. The tree stays `aria-busy` while

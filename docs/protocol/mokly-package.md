@@ -3,7 +3,7 @@
 ## Scope
 
 Mokly is shared developer tooling for repositories that keep visual mockups
-as code with committed or derived static artifacts. The package owns catalogue definitions,
+as code with optional Git-tracked static artifacts. The package owns catalogue definitions,
 generation, validation, browsing, and on-demand comparisons. A consumer owns all product
 screens, product copy, product components, styling, theme setup, and generated
 product output.
@@ -22,7 +22,7 @@ the completed
 This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 [Whole-document pages](./mokly-pages.md) use the same paths and hierarchy as
 screens and flows, and [Markdown documents](./mokly-documents.md) join them by
-file. Current and comparison-base manifests require v8; consumers use ordinary
+file. Current and comparison-base manifests require v9; consumers use ordinary
 page definitions. Path identity, `roots` discovery, Markdown documents, and move
 detection are implemented. The earlier
 co-located layout was delivered by the
@@ -41,7 +41,7 @@ co-located layout was delivered by the
   workflow.
 - The unscoped `mokly`, `mokabook`, and `mockbook` names are not package aliases.
   The latter two are not executable aliases either. Config discovery continues
-  to use `mokly.config.*`; generator identities, ownership markers, and
+  to use `mokly.config.*`; generator identities, plain generated markers, and
   `MOKLY_*` environment variables do not include the npm scope.
 
 The supported runtime is Node.js `>=22.14.0 <24.14.0` or `>=24.19.0`. CI tests
@@ -59,7 +59,8 @@ The public commands are:
 mokly                 Alias for `mokly serve`
 mokly serve           Serve the catalogue and diffs; watch by default
 mokly build           Generate static artifacts and the manifest
-mokly check           Validate source and generated output for the configured mode
+mokly build --watch   Generate and update output when inputs change
+mokly check           Validate source; compare disk only when output is tracked
 mokly export --out <path>  Build a complete static catalogue for hosting
 mokly publish         Export and upload to a configured catalogue service
 mokly --help          Show commands, options, and config discovery
@@ -72,7 +73,8 @@ in [Build Warnings](./mokly-build-warnings.md).
 
 Common options include `--config <path>` and opt-in `--debug-timings`
 ([diagnostic contract](./mokly-timings.md)). Serve accepts `--port`, `--base`,
-`--watch`, `--no-watch`, and `--open`. Export requires `--out` and accepts `--base`;
+`--watch`, `--no-watch`, `--build`, and `--open`. Build accepts `--watch`.
+Export requires `--out` and accepts `--base`;
 Publish accepts an optional `--out` and the options in the
 [upload contract](./mokly-upload.md). `--out` on other commands and the removed
 `review` command are rejected.
@@ -87,7 +89,8 @@ boolean flags (including `--help=false`) fail. The same value validation and
 command restrictions apply to both forms; short flags do not take assignments.
 
 The consumer `export` command and its config-relative `--out` option follow the
-[static export contract](./mokly-export.md). It builds first, packages
+[static export contract](./mokly-export.md). It compiles without writing to
+the catalogue, packages
 comparisons using the configured or overridden Git base, and never uploads.
 It adds no public JavaScript API or hosting-provider dependency.
 
@@ -113,10 +116,8 @@ Mokly searches upward for `mokly.config.ts`, `.mts`, `.js`, or `.mjs`, unless
 The [configuration contract](./mokly-configuration.md) defines the complete typed
 shape, path validation, source/output boundaries, and individual field behavior.
 
-`publicExclude` defaults and validation follow the
-[configuration contract](./mokly-public-exclusions.md),
-with matching and public access defined by the
-[source-protection contract](./mokly-source-protection.md#public-exclusions).
+Only referenced, validated closure assets are served and exported; see
+[generated output](./mokly-generated-output.md#closure-urls-and-publication).
 
 Two layouts are recommended. A dedicated spec tree uses the default `specs`
 root for screens, pages, Markdown documents, and flows by product area, with
@@ -143,22 +144,17 @@ input types, path identity, derived file names, and catalogue links.
 The [rendering contract](./mokly-rendering.md#rendering-boundary) defines the
 consumer renderer, React resolution, stylesheet application, and validation.
 
-### Temporary Document Compatibility
-
-The [temporary transformer contract](./mokly-rendering.md#temporary-document-compatibility)
-defines the consumer cutover adapter and its ownership constraints.
-
 ## Generated Contract
 
 The [generated-output contract](./mokly-rendering.md#generated-contract) defines
-fragments, manifest v8, deterministic ordering, and generated-file ownership;
+fragments, manifest v9, deterministic ordering, and generated-file ownership;
 the [imported-styles contract](./mokly-imported-styles.md) defines binary CSS
 assets and per-root stylesheet routes in that output.
 
 ## Pages And Baseline Comparisons
 
 Register complete synchronous HTML with `definePage`; Markdown documents need
-no registration. Current reads require canonical manifest v8 and validate the
+no registration. Current reads require canonical manifest v9 and validate the
 [resolved source inventory](./mokly-source-protection.md). Git comparisons use
 the same version boundary; the
 [baseline compatibility contract](./mokly-baseline-compatibility.md) defines
@@ -190,7 +186,7 @@ literals, and package boundary.
 
 ## Related Docs
 
-- [Generated output and manifest v8](./mokly-rendering-generated.md#generated-contract)
+- [Generated output and manifest v9](./mokly-rendering-generated.md#generated-contract)
 - [Build, Browse, and Review runtime](./mokly-runtime.md)
 - [Packaged CLI guides](./mokly-guides.md)
 - [CI and npm release](./npm-release.md)

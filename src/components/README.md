@@ -26,10 +26,13 @@ Callers render the returned `Component` and export the registration or its
 the registration retains its defining module as source attribution. Mokly renders
 the wrapper in the consumer's existing React/provider graph.
 
-Current output uses manifest v8. Mokly groups declarations by real file, merges
-all rendered declarers, and reuses renderer-authored links without exposing declarations through
+Current output uses manifest v9. Mokly groups declarations by validated file,
+merges rendered declarers and reuses valid renderer links without exposing
+declarations through
 `RenderInput.entry`. The first rendered declaration determines a new link's
-public path; a renderer-authored link keeps its own path and position.
+public path; a valid renderer-authored link keeps its path and position. The
+[public-file policy](../../docs/protocol/mokly-public-closure.md) rejects a symbolic
+link at every public path component for declarations and renderer links.
 
 ```tsx
 import { defineComponent } from "@mokly/mokly";
@@ -85,7 +88,7 @@ real href values for resource traversal and CSS selector matching. Move pairing
 aligns component identities without changing captured bytes or instance offsets.
 
 Compiled JSX invocations record optional `source: { path, line, column }` in
-manifest v8. The path identifies the caller inside the repository, with 1-based
+manifest v9. The path identifies the caller inside the repository, with 1-based
 coordinates. Programmatic or already-compiled calls can omit it. The internal
 `__moklySource` prop is reserved from data schemas and slots and stripped before
 validation, hashing and rendering. Source metadata never affects identity or
@@ -133,15 +136,14 @@ provenance, without creating CSS resource ownership records. A configured link t
 records for every stylesheet are ignored with a warning. Duplicate declarations
 are linked once with a warning. The comparison omits Mokly-inserted links from
 consumer page material but retains a component page's own links; final
-post-transform links determine which inserted spans remain.
+rendered links determine which inserted spans remain.
 See [component stylesheets](../../docs/protocol/mokly-component-stylesheets.md).
 The [ownership and comparison contract](../../docs/protocol/mokly-component-stylesheet-ownership.md)
 defines final-link validation and private link provenance.
 `../html_links.ts` finds active head and body links with decoded attributes
 and source spans. Placement uses only configured head links. Reuse keeps body
-links in place. Template content supplies no active link, but reserved tokens
-inside templates still undergo validation and removal.
-`stylesheet_provenance.ts` strips transient tokens from final HTML, while
+links in place. Template content supplies no active link.
+`stylesheet_provenance.ts` records the inserted links' final full-link spans, while
 `comparison_stylesheets.ts` removes only proven inserted links from review
 material. `stylesheet_spans.ts` validates each span against an active full link
 in the original final HTML. Review reads inserted resources before it removes
@@ -150,7 +152,7 @@ links or ignored regions. Ignored author links and markup stay ignored.
 file checks and emits the stylesheet warning. `render.tsx` returns temporary
 link declarations separately from the private usage record. Build, Check, export, publish and Serve now report those warnings
 through the shared invocation sink.
-Current and baseline v8 manifests require complete usage records, including
+Current and baseline v9 manifests require complete usage records, including
 root ranges on component saved views and an `insertedStylesheets` array even
 when it is empty. Public inspection omits that private provenance. Missing
 baseline fields are invalid; comparison never fills them in.
@@ -161,7 +163,7 @@ ranges that its document cannot prove follow the
 [invalid-baseline contract](../../docs/protocol/mokly-baseline-compatibility.md#invalid-or-missing-data).
 Historical marker translation is not supported. The frozen instance and slot
 key domain strings are unchanged.
-Compatible v8 baselines preserve each document’s UTF-16 coordinates when
+Compatible v9 baselines preserve each document’s UTF-16 coordinates when
 applying recorded style ownership.
 
 Comparison projection can expose caller-owned slot material that HTML parsing
@@ -174,7 +176,7 @@ resource exclusion policy as the complete comparison.
 ## Development
 
 Stylesheet regressions check exact link positions, root and child comparison
-material, and compatibility token validation. The consumer type fixtures use
+material and final inserted-link spans. The consumer type fixtures use
 spread inputs so excess-property checks cannot hide a missing removed-field
 guard. Run the package suite to compile those fixtures with NodeNext.
 
@@ -187,7 +189,7 @@ node --import tsx --test tests/component_*.test.ts
   boundary and inference.
 - [`manifest_build.ts`](./manifest_build.ts) and
   [`manifest_entry_validation.ts`](./manifest_entry_validation.ts): flattened
-  parent/variant records and manifest-v8 validation.
+  parent/variant records and manifest-v9 validation.
 - Viewer [`props.ts`](../../packages/viewer/src/components/props.ts),
   [`schema.ts`](../../packages/viewer/src/components/schema.ts), and
   [`codec.ts`](../../packages/viewer/src/components/codec.ts): declarative

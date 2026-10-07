@@ -162,13 +162,22 @@ small gap above an intact rounded outline, shared by all three region layouts.
 Use the real generator; never hand-edit generated HTML. Six shared component
 stylesheets are hand-authored public inputs, scoped to the
 `design/components/**/index.html` documents.
-Route-scoped rules link the required mixed/global sheets from the forty-one component design routes. Registered components declare exclusive CSS through `stylesheets`; the `componentStylesheets` marker keeps their links between base and layout sheets. Shared metadata supplies related docs and folder records supply navigation, without source-path evidence. The controls stylesheet remains scoped to its eleven owning entries. Watched Serve reloads configured and declared CSS.
-Shared fixtures and reusable screen parts live beside the owning screen modules.
+Route-scoped rules link the required mixed/global sheets from the forty-one
+component design routes. Registered components declare exclusive CSS through
+`stylesheets`; the `componentStylesheets` marker keeps those links between base
+and layout sheets. Shared metadata supplies related docs, while folder records
+supply navigation. Source paths supply no comparison evidence. The controls
+stylesheet stays scoped to its eleven owning entries. Watched Serve reloads
+configured and declared CSS. Shared fixtures and screen parts live beside their
+owning screen modules.
 
-`tests/component_design_attribution.test.ts` exercises each component stylesheet
-against the real example configuration and current compiled manifest through the rendered-resource graph and changed-entry projection. It requires exact
-Changes membership for the component design entries, excluding unrelated design screens,
-product screens, and their use case.
+`tests/component_design_attribution.test.ts` classifies all nine shared sheets
+once per scenario. Manifest links pin 41, 11, 0, or all `design/` screens and
+69 component saved-variant entries. Parent components have no generated views.
+The test keeps exact per-entry rendered-resource reasons and rule analysis, the exact
+changed-entry union, and no affected consumers for unresolved shared rules.
+It excludes unrelated design screens, product screens and their use case.
+`design.css` remains rendered-resource evidence; it supplies no shared impact.
 
 Run `npm run example:build`, `npm run example:check`, and
 `npx playwright test tests/browser/component*.spec.ts tests/browser/design_component_stacks.spec.ts`.

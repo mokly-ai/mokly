@@ -8,9 +8,9 @@ import { compileCatalogue } from "../../dist/build/compile.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
 
+import { configureFocusedExample } from "./example_profiles.js";
 import { copyExampleSources } from "./example_sources.js";
 import { repositoryRoot } from "./fixture.js";
-import { ordinaryPreviewFixtureSource } from "./ordinary_preview_source.js";
 
 const execute = promisify(execFile);
 
@@ -22,7 +22,7 @@ export async function createExampleBaseline(root: string) {
   return config;
 }
 
-/** Build a current v8 committed baseline with current code for browser fixtures. */
+/** Build a focused v9 committed baseline with current code for browser fixtures. */
 export async function createCommittedExampleBaseline(
   root: string,
   profile: "design-library" | "ordinary-preview" | "static-example",
@@ -44,6 +44,7 @@ async function copyExampleRepository(root: string): Promise<void> {
     "tsconfig.json",
     "tsconfig.build.json",
     "scripts/copy-assets.mjs",
+    "scripts/preview",
     "packages/viewer",
     "src",
   ])
@@ -65,7 +66,7 @@ async function initializeRepository(
   await git("config", "user.name", "Mokly Test");
   await git("config", "user.email", "mokly@example.invalid");
   await git("add", ".");
-  if (generated) await git("add", "-f", "examples/basic/generated");
+  if (generated) await git("add", "-f", "examples/basic/mokly-generated");
   await git(
     "-c",
     "core.hooksPath=/dev/null",
@@ -77,134 +78,14 @@ async function initializeRepository(
   );
 }
 
-async function configureFocusedExample(
+/** Keep real build commands and commit source only for historical reconstruction. */
+export async function createSourceExampleBaseline(
   root: string,
-  profile: "design-library" | "ordinary-preview" | "static-example",
-): Promise<void> {
-  const configPath = path.join(root, "examples/basic/mokly.config.ts");
-  let config = await fs.readFile(configPath, "utf8");
-  config = config
-    .replace(
-      "export default defineConfig({",
-      'export default defineConfig({\n  generatedOutput: "committed",',
-    )
-    .replace(/ {4}baselineBuild: \[[\s\S]*? {4}\],\n/, "");
-  if (profile === "static-example") {
-    config = config.replace(
-      / {2}roots: \[[\s\S]*?\n {2}\],/,
-      `  roots: [{dir:"specs/example",path:"example"},{dir:"src/components",path:"example/components"}],`,
-    );
-    const entryPath = path.join(root, "examples/basic/specs/catalogue.tsx");
-    const source = await fs.readFile(entryPath, "utf8");
-    const focused = source.replace(
-      / {6}<p>\n {8}<MockLink to="design\/browse\/views\/home">[\s\S]*?<\/MockLink>\n {6}<\/p>\n/,
-      "",
-    );
-    if (source === focused)
-      throw new Error("Static example fixture did not remove its design link");
-    await fs.writeFile(entryPath, focused);
-  }
-  if (profile === "design-library") {
-    const roots = [
-      {
-        dir: "specs/design/library/chrome",
-        path: "design/library/chrome",
-        files: ["appearance-selector.mockup.ts", "top-bar.mockup.ts"],
-      },
-      {
-        dir: "specs/design/library/controls",
-        path: "design/library/controls",
-        files: ["tag-chip.mockup.ts", "tag-picker.mockup.ts"],
-      },
-      { dir: "browser-fixtures" },
-    ];
-    config = config.replace(
-      / {2}roots: \[[\s\S]*?\n {2}\],/,
-      `  roots: ${JSON.stringify(roots)},`,
-    );
-    const directory = path.join(root, "examples/basic/browser-fixtures");
-    await fs.mkdir(directory, { recursive: true });
-    await fs.writeFile(
-      path.join(directory, "catalogue.mockup.tsx"),
-      designLibraryFixtureSource,
-    );
-  }
-  if (profile === "ordinary-preview") {
-    const roots = [
-      { dir: "specs/example", path: "example" },
-      { dir: "src/components", path: "example/components" },
-      { dir: "specs/design/library", path: "design/library" },
-      { dir: "specs/design/browse/views", path: "design/browse/views" },
-      { dir: "specs/design/browse/pages", path: "design/browse/pages" },
-      { dir: "browser-fixtures" },
-    ];
-    config = config.replace(
-      / {2}roots: \[[\s\S]*?\n {2}\],/,
-      `  roots: ${JSON.stringify(roots)},`,
-    );
-    await fs.rm(
-      path.join(
-        root,
-        "examples/basic/specs/design/browse/pages/previous-version",
-      ),
-      { recursive: true },
-    );
-    const directory = path.join(root, "examples/basic/browser-fixtures");
-    await fs.mkdir(directory, { recursive: true });
-    await fs.writeFile(
-      path.join(directory, "destinations.mockup.tsx"),
-      ordinaryPreviewFixtureSource,
-    );
-  }
-  await fs.writeFile(configPath, config);
+  profile: "shared-export" | "static-example" = "shared-export",
+) {
+  await copyExampleRepository(root);
+  await configureFocusedExample(root, profile, true);
+  const config = await loadConfig(root, "examples/basic/mokly.config.ts");
+  await initializeRepository(root);
+  return config;
 }
-
-const designLibraryFixtureSource = `import React from "react";
-import { defineScreen } from "@mokly/mokly";
-import { topBar } from "../specs/design/library/chrome/top-bar.js";
-
-const metadata = { relatedDocs: [] };
-const destinations = [
-  ["design/browse/views/home", "Home"],
-  ["design/browse/views/screen", "Welcome"],
-  ["design/browse/states/navigation", "Navigation"],
-  ["design/browse/views/screen/tag-forms", "Forms"],
-  ["design/browse/views/screen/tag-onboarding", "Onboarding"],
-] as const;
-const tags = [
-  { id: "forms", label: "forms", destination: "design/browse/views/screen/tag-forms" },
-  { id: "onboarding", label: "onboarding", destination: "design/browse/views/screen/tag-onboarding" },
-];
-const picker = (viewport: "mobile" | "desktop") => (
-  <main>
-    <topBar.Component
-      activeTag="forms"
-      appearance="light"
-      brandDestination="design/browse/views/home"
-      menu="open"
-      menuDestination="design/browse/states/navigation"
-      menuPresentation="text"
-      pickerDestination="design/browse/views/screen/tag-picker"
-      pickerOpen
-      placeholder="Search catalogue…"
-      query="tag:forms"
-      tags={tags}
-      viewport={viewport}
-    />
-  </main>
-);
-
-export const mockups = [
-  ...destinations.map(([path, title]) =>
-    defineScreen({ ...metadata, description: title, desktop: <main>{title}</main>, path, slug:"index", mobile: <main>{title}</main>, title }),
-  ),
-  defineScreen({
-    ...metadata,
-    description: "Tag picker",
-    desktop: picker("desktop"),
-    path: "design/browse/views/screen/tag-picker",
-    mobile: picker("mobile"),
-    title: "Tag picker",
-  }),
-];
-`;

@@ -19,8 +19,11 @@ import {
 import { startFakeReceiver } from "./helpers/fake_receiver.js";
 
 for (const baseline of earlierBaselines) {
+  const rebuilt = "filename" in baseline;
   const watchModes =
-    "version" in baseline && baseline.version === 7 ? [false, true] : [false];
+    "version" in baseline && (baseline.version === 7 || baseline.version === 8)
+      ? [false, true]
+      : [false];
   for (const watch of watchModes)
     test(`Serve and Build keep the catalogue usable with ${baseline.name}, watch=${watch}`, async (context) => {
       const fixture = await currentBaselineFixture(context, baseline);
@@ -40,23 +43,24 @@ for (const baseline of earlierBaselines) {
       let catalogue;
       for (let attempt = 0; attempt < 200; attempt++) {
         catalogue = await (
-          await fetch(`${running.url}/__mokly/catalogue.json`)
+          await fetch(`${running.url}/mokly-viewer/catalogue.json`)
         ).json();
         if (["unavailable", "ready"].includes(catalogue.changesStatus)) break;
         await setTimeout(25);
       }
-      assert.equal(catalogue.changesStatus, "unavailable");
-      assert.equal(catalogue.comparisonUrl, null);
+      assert.equal(catalogue.changesStatus, rebuilt ? "ready" : "unavailable");
+      if (rebuilt) assert.equal(await fixture.rebuilds(), 1);
+      else assert.equal(catalogue.comparisonUrl, null);
       assert.deepEqual(catalogue.removedEntries, []);
       assert.equal((await fetch(`${running.url}/view/home/`)).status, 200);
       assert.equal(
         messages.filter((line) => line.trim() === EARLIER_BASELINE_MESSAGE)
           .length,
-        1,
+        rebuilt ? 0 : 1,
       );
     });
 
-  test(`export succeeds without Changes for ${baseline.name}`, async (context) => {
+  test(`export uses ${rebuilt ? "rebuilt comparisons" : "current-only output"} for ${baseline.name}`, async (context) => {
     const fixture = await currentBaselineFixture(context, baseline);
     const messages: string[] = [];
     const result = await exportCatalogue(fixture.config, {
@@ -66,22 +70,28 @@ for (const baseline of earlierBaselines) {
     });
     const catalogue = JSON.parse(
       await fs.readFile(
-        path.join(result.outDir, "__mokly/catalogue.json"),
+        path.join(result.outDir, "mokly-viewer/catalogue.json"),
         "utf8",
       ),
     );
-    assert.equal(result.comparisonUrl, null);
-    assert.equal(catalogue.changesStatus, "unavailable");
+    if (rebuilt) {
+      assert.match(
+        result.comparisonUrl!,
+        /^\/mokly-viewer\/diffs\/generations\/[a-f0-9]{64}\/review\.json$/,
+      );
+      assert.equal(await fixture.rebuilds(), 1);
+    } else assert.equal(result.comparisonUrl, null);
+    assert.equal(catalogue.changesStatus, rebuilt ? "ready" : "unavailable");
     assert.deepEqual(catalogue.removedEntries, []);
     assert.ok(
-      !(await fs.readdir(path.join(result.outDir, "__mokly"))).includes(
+      (await fs.readdir(path.join(result.outDir, "mokly-viewer"))).includes(
         "diffs",
-      ),
+      ) === rebuilt,
     );
-    assert.deepEqual(messages, [EARLIER_BASELINE_MESSAGE]);
+    assert.deepEqual(messages, rebuilt ? [] : [EARLIER_BASELINE_MESSAGE]);
   });
 
-  test(`publish succeeds with current-only output for ${baseline.name}`, async (context) => {
+  test(`publish uses ${rebuilt ? "rebuilt comparisons" : "current-only output"} for ${baseline.name}`, async (context) => {
     const fixture = await currentBaselineFixture(context, baseline);
     const receiver = await startFakeReceiver(context);
     const messages: string[] = [];
@@ -114,13 +124,23 @@ for (const baseline of earlierBaselines) {
     assert.equal(receiver.publications.size, 1);
     const files = receiver.plans[0]!.files;
     const upload = JSON.parse(files.get("mokly-upload.json")!.toString("utf8"));
-    assert.equal(upload.comparisonPath, null);
-    assert.equal(upload.baseSha, null);
-    assert.ok(
+    if (rebuilt) {
+      assert.match(
+        upload.comparisonPath,
+        /^mokly-viewer\/diffs\/generations\/[a-f0-9]{64}\/review\.json$/,
+      );
+      assert.match(upload.baseSha, /^[a-f0-9]{40}$/);
+      assert.equal(await fixture.rebuilds(), 1);
+    } else {
+      assert.equal(upload.comparisonPath, null);
+      assert.equal(upload.baseSha, null);
+    }
+    assert.equal(
       [...files.keys()].every(
         (file) => !file.includes("/snapshots/") && !file.includes("/diffs/"),
       ),
+      !rebuilt,
     );
-    assert.deepEqual(messages, [EARLIER_BASELINE_MESSAGE]);
+    assert.deepEqual(messages, rebuilt ? [] : [EARLIER_BASELINE_MESSAGE]);
   });
 }

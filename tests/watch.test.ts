@@ -119,7 +119,7 @@ test("Serve orchestration accepts fake filesystem, server, and watcher boundarie
   const serverFactory = new FakeServerFactory();
   const running = await serve(
     config,
-    { base: "origin/main", port: 0, watch: false },
+    { base: "origin/main", build: true, port: 0, watch: false },
     {
       configLoader: new FileSystemConfigLoader(),
       outputStore,

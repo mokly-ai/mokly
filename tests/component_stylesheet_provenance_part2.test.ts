@@ -16,7 +16,7 @@ import { componentGit } from "./helpers/component_review_fixture.js";
 import { fixtureWithSheets } from "./helpers/component_stylesheet_fixture.js";
 import { removeFixture } from "./helpers/fixture.js";
 
-test("renderer-authored CSS links remain page comparison material", async (context) => {
+test("renderer-authored CSS links remain page material and symlinked aliases are refused", async (context) => {
   const source = componentEntrySource({
     body: '<action.Component label="Go" />',
   }).replace('path: "action",', 'path: "action", stylesheets: ["action.css"],');
@@ -25,12 +25,15 @@ test("renderer-authored CSS links remain page comparison material", async (conte
     'renderer: "renderer.tsx", stylesheets: [],',
   );
   context.after(() => removeFixture(fixture));
-  await fs.symlink("action.css", path.join(fixture.mockupsDir, "alias.css"));
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "alias.css"),
+    ".action{color:red}",
+  );
   const rendererPath = path.join(fixture.root, "renderer.tsx");
   const renderer = (
     file: string,
   ) => `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => '<html><head>' + (input.entry.path === "home" ? '<link rel="stylesheet" href="../${file}">' : '') + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
+export default (input) => '<html><head>' + (input.entry.path === "home" ? '<link rel="stylesheet" href="../../${file}">' : '') + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
   await fs.writeFile(rendererPath, renderer("action.css"));
   const config = await loadConfig(fixture.root);
   const before = await compileCatalogue(config);
@@ -58,7 +61,33 @@ export default (input) => '<html><head>' + (input.entry.path === "home" ? '<link
   );
   const screen = after.manifest.entries.find((entry) => entry.path === "home");
   assert.ok(screen?.kind === "screen");
-  assert.deepEqual(screen.componentViews![0]!.insertedStylesheets, []);
+  const previous = before.manifest.entries.find(
+    (entry) => entry.path === "home",
+  );
+  assert.ok(previous?.kind === "screen");
+  assert.deepEqual(previous.componentViews![0]!.insertedStylesheets, []);
+  assert.deepEqual(
+    screen.componentViews![0]!.insertedStylesheets!.map(
+      ({ path, componentPaths }) => ({ path, componentPaths }),
+    ),
+    [{ path: "action.css", componentPaths: ["action"] }],
+  );
+  assert.equal(
+    screen.componentViews![0]!.insertedStylesheets!.some(
+      (span) => span.path === "alias.css",
+    ),
+    false,
+  );
+  await fs.unlink(path.join(fixture.mockupsDir, "alias.css"));
+  await fs.symlink("action.css", path.join(fixture.mockupsDir, "alias.css"));
+  await assert.rejects(compileCatalogue(config), {
+    code: "build-invalid",
+    message:
+      "[mokly/build-invalid] document links and resources are invalid:\n" +
+      "- alias.css: protected target alias.css: is a symlink or non-regular file\n" +
+      "- mokly-generated/home/index.desktop.html: protected target ../../alias.css: is a symlink or non-regular file\n" +
+      "- mokly-generated/home/index.mobile.html: protected target ../../alias.css: is a symlink or non-regular file",
+  });
 });
 
 test("ignored renderer ownership cannot turn an unrelated CSS edit into a component change", async (context) => {
@@ -78,7 +107,7 @@ test("ignored renderer ownership cannot turn an unrelated CSS edit into a compon
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
     `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => { const home = input.entry.path === "home"; const html = '<html><head>' + (home ? '<link rel="stylesheet" href="../action.css">' : '') + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return home ? { html, resources: [{path: "action.css", componentIds: ["pane"]}] } : { html }; };`,
+export default (input) => { const home = input.entry.path === "home"; const html = '<html><head>' + (home ? '<link rel="stylesheet" href="../../action.css">' : '') + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return home ? { html, resources: [{path: "action.css", componentIds: ["pane"]}] } : { html }; };`,
   );
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
@@ -108,8 +137,8 @@ export default (input) => { const home = input.entry.path === "home"; const html
     componentGit(baseline, ["mockups/action.css"]),
     "main",
   );
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   assert.deepEqual(
     result.changes.map((entry) => entry.after?.path),
     ["home"],

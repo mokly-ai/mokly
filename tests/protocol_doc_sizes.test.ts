@@ -9,13 +9,13 @@ import { repositoryRoot } from "./helpers/fixture.js";
 const protocolDirectory = path.join(repositoryRoot, "docs/protocol");
 const oversizedCaps: Readonly<Record<string, number>> = {
   "mokly-design-links.md": 327,
-  "mokly-export-delivery.md": 263,
+  "mokly-export-delivery.md": 262,
   "mokly-frame-adapter.md": 380,
-  "mokly-navigation.md": 382,
-  "mokly-runtime.md": 426,
+  "mokly-navigation.md": 372,
+  "mokly-runtime.md": 423,
   "mokly-shell-design.md": 337,
-  "mokly-viewer-appearance.md": 382,
-  "mokly-viewer.md": 453,
+  "mokly-viewer-appearance.md": 381,
+  "mokly-viewer.md": 452,
 };
 
 function sizeIssue(name: string, lines: number, cap: number | undefined) {

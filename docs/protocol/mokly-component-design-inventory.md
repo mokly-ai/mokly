@@ -5,7 +5,7 @@ Continuation of [mokly-component-design](./mokly-component-design.md).
 ## Owning Catalogue
 
 Source lives under `examples/basic/specs/design/components/`; generated
-artboards live under `examples/basic/generated/<path>/` as their path-derived
+artboards live under `examples/basic/mokly-generated/<path>/` as their path-derived
 `index.<viewport>.html` views. The existing
 Specs → Design → Component explorer folder reaches every
 screen.

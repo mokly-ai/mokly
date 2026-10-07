@@ -3,16 +3,16 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 import { cssSummary } from "./helpers/css_evidence.js";
 
 for (const components of [false, true]) {
   test(`v5 (components=${components}) paired ignored content in embedded documents cannot keep CSS`, async (t) => {
     const fixture = await cssAttributionFixture(t, components, {
-      body: '<iframe src="../embedded.html" title="Guide" />',
+      body: '<iframe src="../../embedded.html" title="Guide" />',
       prepare: ({ mockupsDir }) =>
         fs.writeFile(
           path.join(mockupsDir, "embedded.html"),
@@ -33,7 +33,7 @@ for (const components of [false, true]) {
   });
   test(`v5 (components=${components}) matches styles inside embedded documents`, async (t) => {
     const fixture = await cssAttributionFixture(t, components, {
-      body: '<iframe src="../embedded.html" title="Guide" />',
+      body: '<iframe src="../../embedded.html" title="Guide" />',
       prepare: ({ mockupsDir }) =>
         fs.writeFile(
           path.join(mockupsDir, "embedded.html"),
@@ -56,7 +56,7 @@ for (const components of [false, true]) {
         selectors: [".inside-frame"],
       });
     }
-    if (result.schemaVersion === 5)
+    if (result.schemaVersion === 6)
       assert.deepEqual(live.componentChanges?.result, result);
   });
 
@@ -86,7 +86,7 @@ for (const components of [false, true]) {
       assert.deepEqual(view.excludedResources, [
         { path: "mockups/nested.css", reason: "no-matching-rule" },
       ]);
-    if (result.schemaVersion === 5)
+    if (result.schemaVersion === 6)
       assert.deepEqual(live.componentChanges?.result, result);
   });
 

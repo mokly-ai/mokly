@@ -135,15 +135,15 @@ export function docStatements(file: string, source: string): DocStatement[] {
 export function restrictedStatement(text: string): boolean {
   text = normalizeStatement(text);
   if (
-    /\b(?:manifest[ -](?:schema[ -])?v[1-7]|v[1-7][ -]manifest|schema[ -]v[1-7]|(?:catalogue(?: read model)?|read model)[ -]v[1-3]|(?:comparison(?: result)?|review(?:[ -]result)?)[ -]v[1-4]|v[1-4][ -](?:comparison|review result))\b/i.test(
+    /\b(?:manifest[ -](?:schema[ -])?v[1-8]|v[1-8][ -]manifest|schema[ -]v[1-8]|(?:catalogue(?: read model)?|read model)[ -]v[1-4]|(?:comparison(?: result)?|review(?:[ -]result)?)[ -]v[1-5]|v[1-5][ -](?:comparison|review result))\b/i.test(
       text,
     )
   )
     return true;
   const currentNames =
-    /\b(?:manifest[ -](?:schema )?v8|catalogue[ -](?:read model )?v4|read model v4|(?:comparison(?: result)?|review(?:[ -]result)?) (?:is )?v5|(?:ReviewResultV|ScreenReviewV)5|(?:public|catalogue) v4|v5 (?:comparison|result|reason|assembly)|v4 (?:model|catalogues?|fixture|fields)|read model remains v4|review result schema is v5)\b/gi;
+    /\b(?:manifest[ -](?:schema )?v9|catalogue[ -](?:read model )?v5|read model v5|(?:comparison(?: result)?|review(?:[ -]result)?) (?:is )?v6|(?:ReviewResultV|ScreenReviewV)6|(?:public|catalogue) v5|v6 (?:comparison|result|reason|assembly)|v5 (?:model|catalogues?|fixture|fields)|read model remains v5|review result schema is v6)\b/gi;
   const independentNames =
-    /\b(?:Tailwind v4|actions\/(?:checkout|setup-node)@v6|(?:catalogue )?upload(?: exchange| validation)?[ -]v1|(?:export[ -])?ownership[ -]v2|(?:wire|inspector)[ -]protocol[ -]v1|delivery(?: descriptors?)?(?: remain)? v3|(?:private )?catalogue-change snapshot is v2|removed page preview metadata is v3)\b/gi;
+    /\b(?:Tailwind v4|actions\/(?:checkout|setup-node)@v6|(?:catalogue )?upload(?: exchange| validation)?[ -]v1|(?:export[ -])?ownership[ -]v3|(?:wire|inspector)[ -]protocol[ -]v2|delivery(?: descriptors?)?(?: remain)? v5|(?:private )?catalogue-change snapshot is v3|removed page preview metadata is v3)\b/gi;
   const value = normalizeStatement(text)
     .replace(currentNames, "")
     .replace(independentNames, "")
@@ -154,7 +154,7 @@ export function restrictedStatement(text: string): boolean {
     /(?:validates any missing configured neighbour|planned diagnostic channel|remaining review fixes|current code rejects the removed field|builds the local CLI, generates the catalogue, and watches entries)/i.test(
       value,
     ) ||
-    /\b(?:v[1-7]|(?:ManifestV|ReviewResultV|ScreenReviewV)[1-7]|version [1-7] manifest)\b/i.test(
+    /\b(?:v[1-8]|(?:ManifestV|ReviewResultV|ScreenReviewV)[1-8]|version [1-8] manifest)\b/i.test(
       value,
     ) ||
     /\b(?:ownedDependencies|declaredDependencies|sharedImpact)\b|`(?:[a-zA-Z]+\.)?dependencies`|["']dependencies["']\s*:|\bentry['’]s dependencies|\bdependencies\s*\??\s*:|\bdependencies has been removed|\bentry\s+dependencies\b|\bshared[ -]impact\s+(?:paths?|files|patterns?|globs?|evidence|reasons)\b/i.test(

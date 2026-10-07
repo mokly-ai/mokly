@@ -14,6 +14,8 @@ import {
   parseManifest,
 } from "../src/registry/manifest.js";
 
+import { currentManifest } from "./helpers/current_manifest.js";
+
 const sourcePath = "entries/home.mockup.tsx";
 
 function currentScreen() {
@@ -31,25 +33,25 @@ function currentScreen() {
   };
 }
 
-function currentManifest() {
-  return {
+function identityManifest() {
+  return currentManifest({
     entries: [currentScreen()],
     generatedBy: "mokly" as const,
-    schemaVersion: 8 as const,
+    schemaVersion: 9 as const,
     folders: [],
     sourceFiles: [sourcePath],
-  };
+  });
 }
 
-test("manifest v8 carries paths and configuration but no derived artifact names", () => {
-  const parsed = parseManifest(currentManifest());
-  assert.deepEqual(parsed, currentManifest());
+test("manifest v9 carries paths and configuration but no derived artifact names", () => {
+  const parsed = parseManifest(identityManifest());
+  assert.deepEqual(parsed, identityManifest());
   assert.throws(
-    () => parseManifest({ ...currentManifest(), schemaVersion: 7 }),
+    () => parseManifest({ ...identityManifest(), schemaVersion: 7 }),
     {
       code: "manifest-invalid",
       message:
-        "[mokly/manifest-invalid] expected Mokly manifest schema version 8; run mokly build",
+        "[mokly/manifest-invalid] expected Mokly manifest schema version 9; run mokly build",
     },
   );
 
@@ -63,7 +65,7 @@ test("manifest v8 carries paths and configuration but no derived artifact names"
     ["viewports", ["mobile", "desktop"]],
     ["dependencies", [sourcePath]],
   ] as const) {
-    const manifest = currentManifest() as Record<string, unknown> & {
+    const manifest = identityManifest() as Record<string, unknown> & {
       entries: Record<string, unknown>[];
     };
     manifest.entries[0] = { ...manifest.entries[0], [field]: value };
@@ -75,13 +77,13 @@ test("manifest v8 carries paths and configuration but no derived artifact names"
 });
 
 test("baseline parsing rejects lower versions and derives current view paths", () => {
-  for (const schemaVersion of [2, 3, 4, 5, 6, 7])
+  for (const schemaVersion of [2, 3, 4, 5, 6, 7, 8])
     assert.throws(
       () => parseHistoricalManifest({ schemaVersion }),
       (error: unknown) =>
         (error as { code?: string }).code === "baseline-incompatible-earlier",
     );
-  const current = parseHistoricalManifest(currentManifest());
+  const current = parseHistoricalManifest(identityManifest());
   const [entry] = current.entries;
   assert.ok(entry?.kind === "screen");
   assert.deepEqual(
@@ -102,12 +104,12 @@ test("review v5 is the only accepted comparison result", () => {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     screens: [],
   };
   assert.deepEqual(parseReviewResult(result), result);
   assert.throws(
-    () => parseReviewResult({ ...result, schemaVersion: 4 }),
+    () => parseReviewResult({ ...result, schemaVersion: 5 }),
     /unsupported schemaVersion/,
   );
 });

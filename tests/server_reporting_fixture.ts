@@ -1,4 +1,4 @@
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 
 import type { BuildDiagnostic } from "../dist/build/build_warnings.js";
 import type { ChildHandle } from "../dist/server/child_process.js";
@@ -49,7 +49,7 @@ export class RecordingReporter implements ServeReporter {
     for (const diagnostic of diagnostics)
       this.events.push(`warning:${diagnostic.route}`);
   }
-  catalogueReady(manifest: ManifestV8): void {
+  catalogueReady(manifest: ManifestV9): void {
     const screens = manifest.entries.filter(
       (entry) => entry.kind === "screen",
     ).length;

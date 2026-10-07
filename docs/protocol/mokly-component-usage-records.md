@@ -5,17 +5,17 @@
 Removal of baseline compatibility is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
-Implemented for manifest v8. Root output ranges, non-CSS-only resource records and independent
+Implemented for manifest v9. Root output ranges, non-CSS-only resource records and independent
 stylesheet provenance are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
-[source-path removal plan](../../plans/remove-source-path-evidence.md), within v8.
+[source-path removal plan](../../plans/remove-source-path-evidence.md), within v9.
 
 The rule for comments with the former spelling is implemented in
 [M23](../../plans/remove-source-path-evidence.md#milestone-23-remove-the-historical-marker-rename).
-Implemented for manifest v8, including strict admission of baseline usage
+Implemented for manifest v9, including strict admission of baseline usage
 records. `componentId` names a component parent by its path.
 
 This contract owns the per-view component instance, slot, range, style, and
-resource records stored by [manifest v8](./mokly-component-manifest.md).
+resource records stored by [manifest v9](./mokly-component-manifest.md).
 Stable instance-key behavior is defined separately by
 [Component Instance Identity](./mokly-instances.md).
 
@@ -153,7 +153,7 @@ The root is not an instance, slot, prop owner or Used by occurrence. Preserve
 existing instance keys, caller ownership and inspection behavior. Strip its
 markers as package markers for document comparison, so the new marker pair
 alone is not material. Keep it when validating containment for CSS. Rebase
-coordinates through compatibility, provenance removal and Review-ignore using
+coordinates through package link edits, provenance projection and Review-ignore using
 the same validated range policy as other boundaries; never infer its output
 from a body element or a common selector.
 
@@ -168,7 +168,7 @@ Missing required root bounds are invalid data. They do not become page evidence
 or trigger a guessed root around the document. An absent view on one side of an
 added or removed entry is still valid and supplies no document or matches.
 
-Catalogue v4 usage ranges carry this new target in place. Readers and inspection
+Catalogue v5 usage ranges carry this new target in place. Readers and inspection
 accept it as a boundary without presenting it as a nested component or adding
 an instance count. Public evidence carries no range offsets or DOM elements.
 
@@ -184,13 +184,13 @@ one record per path. Every owner list is nonempty, sorted, duplicate-free, and
 names components that actually render in the view, including the component root
 when applicable. These records own only non-stylesheet files. Renderer CSS
 records are ignored with a warning; Mokly derives no CSS resource records.
-Current and baseline v8 records reject CSS owners. Renderer `styles`
+Current and baseline v9 records reject CSS owners. Renderer `styles`
 remain exact document ranges. CSS rule membership uses element containment,
 not these assertions.
 
 `insertedStylesheets` records final-document full-link UTF-16 spans, decoded
 public paths and rendered declaring paths. It is private provenance, not file
-ownership. Each persisted v8 usage record must contain this array, even when
+ownership. Each persisted v9 usage record must contain this array, even when
 empty. A missing array is invalid data; readers never guess provenance or
 normalize its absence to an empty array. Public inspection still omits this
 private field. It needs no corresponding `resources` record. The
@@ -199,7 +199,7 @@ defines final-link validation and the root-link comparison exception.
 
 ## Validation
 
-Every current screen and component variant has one `ComponentViewRecord` for
+When components are registered, every current screen and component variant has one `ComponentViewRecord` for
 each effective view, ordered mobile/light, mobile/dark, desktop/light,
 desktop/dark. A view with no instances still has an explicit empty record;
 missing usage is never normalized to empty.

@@ -20,8 +20,8 @@ import {
 import { removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
-test("realpath aliases share one first-declaration link and both rendered declarers", async (context) => {
-  const source = declared("action.css", "alias.css")
+test("regular shared declarations retain both declarers and symlinked declarations are refused", async (context) => {
+  const source = declared("action.css", "action.css")
     .replace(
       '<pane.Component><action.Component label="Go" /></pane.Component><action.Component moklyInstance="hidden" label="Hidden" hidden />',
       '<action.Component label="Go" /><pane.Component />',
@@ -32,7 +32,6 @@ test("realpath aliases share one first-declaration link and both rendered declar
     );
   const fixture = await fixtureWithSheets(source, "stylesheets: [],");
   context.after(() => removeFixture(fixture));
-  await fs.symlink("action.css", path.join(fixture.mockupsDir, "alias.css"));
   const config = await loadConfig(fixture.root);
   const before = await compileCatalogue(config);
   const screen = before.manifest.entries.find((entry) => entry.path === "home");
@@ -41,8 +40,8 @@ test("realpath aliases share one first-declaration link and both rendered declar
     before.outputs,
     viewRoute(screen.path, "mobile", "light"),
   )!;
-  assert.equal((html.match(/href="\.\.\/action\.css"/g) ?? []).length, 1);
-  assert.doesNotMatch(html, /href="\.\.\/alias\.css"/);
+  assert.equal((html.match(/href="\.\.\/\.\.\/action\.css"/g) ?? []).length, 1);
+  assert.doesNotMatch(html, /href="\.\.\/\.\.\/alias\.css"/);
   assert.deepEqual(
     screen.componentViews![0]!.insertedStylesheets!.map(
       ({ path, componentPaths }) => ({ path, componentPaths }),
@@ -70,8 +69,8 @@ test("realpath aliases share one first-declaration link and both rendered declar
     componentGit(baseline, ["mockups/action.css"]),
     "main",
   );
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   assert.deepEqual(result.changes.map((entry) => entry.after?.path).sort(), [
     "action",
     "action/default",
@@ -87,19 +86,35 @@ test("realpath aliases share one first-declaration link and both rendered declar
       (consumer) => consumer.changedComponentId === "pane",
     ),
   );
+  await fs.symlink("action.css", path.join(fixture.mockupsDir, "alias.css"));
+  await fs.writeFile(
+    fixture.entryPath,
+    source.replace(
+      'path: "pane", stylesheets: ["action.css"],',
+      'path: "pane", stylesheets: ["alias.css"],',
+    ),
+  );
+  await assert.rejects(compileCatalogue(config), {
+    code: "build-invalid",
+    message:
+      "[mokly/build-invalid] component pane: stylesheet alias.css is not a public file (is a symlink or non-regular file)",
+  });
 });
 
-test("renderer-authored aliases stay in place without inserted provenance or CSS owners", async (context) => {
+test("renderer-authored regular links stay in place and symlinked aliases are refused", async (context) => {
   const fixture = await fixtureWithSheets(
     declared("action.css", "alias.css"),
     'renderer: "renderer.tsx", stylesheets: [],',
   );
   context.after(() => removeFixture(fixture));
-  await fs.symlink("action.css", path.join(fixture.mockupsDir, "alias.css"));
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "alias.css"),
+    ".action{color:red}",
+  );
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
     `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => { const prefix = "../".repeat(input.entry.path.split("/").length); return '<html><head><meta name="first"><link rel="alternate stylesheet" href="' + prefix + 'alias.css"><link rel="stylesheet" href="' + prefix + 'action.css"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; };`,
+export default (input) => { const prefix = "../".repeat(input.entry.path.split("/").length + 1); return '<html><head><meta name="first"><link rel="alternate stylesheet" href="' + prefix + 'alias.css"><link rel="stylesheet" href="' + prefix + 'action.css"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; };`,
   );
   const result = await compileCatalogue(await loadConfig(fixture.root));
   const screen = result.manifest.entries.find((entry) => entry.path === "home");
@@ -108,23 +123,51 @@ export default (input) => { const prefix = "../".repeat(input.entry.path.split("
     result.outputs,
     viewRoute(screen.path, "mobile", "light"),
   )!;
-  assert.equal((html.match(/href="\.\.\/alias\.css"/g) ?? []).length, 1);
-  assert.equal((html.match(/href="\.\.\/action\.css"/g) ?? []).length, 1);
+  assert.equal((html.match(/href="\.\.\/\.\.\/alias\.css"/g) ?? []).length, 1);
+  assert.equal((html.match(/href="\.\.\/\.\.\/action\.css"/g) ?? []).length, 1);
   assert.ok(html.indexOf('name="first"') < html.indexOf("alias.css"));
   assert.deepEqual(screen.componentViews![0]!.resources, []);
+  await fs.writeFile(fixture.entryPath, declared());
+  await fs.unlink(path.join(fixture.mockupsDir, "alias.css"));
+  await fs.symlink("action.css", path.join(fixture.mockupsDir, "alias.css"));
+  await assert.rejects(compileCatalogue(await loadConfig(fixture.root)), {
+    code: "build-invalid",
+    message:
+      "[mokly/build-invalid] document links and resources are invalid:\n" +
+      [
+        "alias.css",
+        "mokly-generated/action/default/index.desktop.html",
+        "mokly-generated/action/default/index.mobile.html",
+        "mokly-generated/action/disabled/index.desktop.html",
+        "mokly-generated/action/disabled/index.mobile.html",
+        "mokly-generated/home/index.desktop.html",
+        "mokly-generated/home/index.mobile.html",
+        "mokly-generated/pane/default/index.desktop.html",
+        "mokly-generated/pane/default/index.mobile.html",
+      ]
+        .map((route) =>
+          route === "alias.css"
+            ? "- alias.css: protected target alias.css: is a symlink or non-regular file"
+            : `- ${route}: protected target ${route.includes("/home/") ? "../../" : "../../../"}alias.css: is a symlink or non-regular file`,
+        )
+        .join("\n"),
+  });
 });
 
-test("dot-prefixed alias filenames inside the public root remain reusable", async (context) => {
+test("dot-prefixed regular stylesheet filenames inside the public root remain reusable", async (context) => {
   const fixture = await fixtureWithSheets();
   context.after(() => removeFixture(fixture));
-  await fs.symlink("action.css", path.join(fixture.mockupsDir, "..alias.css"));
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "..alias.css"),
+    ".action{color:red}",
+  );
   const physical = await fs.realpath(
-    path.join(fixture.mockupsDir, "action.css"),
+    path.join(fixture.mockupsDir, "..alias.css"),
   );
   assert.equal(
     rendererStylesheetPaths(
-      '<html><head><link rel="stylesheet" href="../..alias.css"></head><body></body></html>',
-      "home/index.html",
+      '<html><head><link rel="stylesheet" href="../../..alias.css"></head><body></body></html>',
+      "mokly-generated/home/index.html",
       fixture.mockupsDir,
       new Set([physical]),
     ).get(physical),
@@ -140,8 +183,8 @@ test("renderer link query and fragment still identify the same public file", asy
   );
   assert.equal(
     rendererStylesheetPaths(
-      '<html><head><link rel="stylesheet" href="../action.css?v=1#theme"></head><body></body></html>',
-      "home/index.html",
+      '<html><head><link rel="stylesheet" href="../../action.css?v=1#theme"></head><body></body></html>',
+      "mokly-generated/home/index.html",
       fixture.mockupsDir,
       new Set([physical]),
     ).get(physical),
@@ -172,30 +215,33 @@ export default (input) => '<html><head><link rel="stylesheet" href="' + input.st
 test("configured alternate stylesheet tokens anchor declared links", () => {
   const warnings: BuildDiagnostic[] = [];
   const html =
-    '<html><head><link rel="alternate Stylesheet" href="../base.css"><meta name="after-anchor"></head><body>Content</body></html>';
+    '<html><head><link rel="alternate Stylesheet" href="../../base.css"><meta name="after-anchor"></head><body>Content</body></html>';
   assert.equal(
     insertComponentStylesheets(
       html,
-      "home/index.html",
-      ["../base.css"],
+      "mokly-generated/home/index.html",
+      ["../../base.css"],
       1,
       ["action.css"],
-      false,
       (warning) => warnings.push(warning),
     ),
-    '<html><head><link rel="alternate Stylesheet" href="../base.css"><link rel="stylesheet" href="../action.css"><meta name="after-anchor"></head><body>Content</body></html>',
+    '<html><head><link rel="alternate Stylesheet" href="../../base.css"><link rel="stylesheet" href="../../action.css"><meta name="after-anchor"></head><body>Content</body></html>',
   );
   assert.deepEqual(warnings, []);
 });
 
 test("configured links anchor insertion without an explicit head end tag", () => {
   const html =
-    '<html><head><link rel="alternate stylesheet" href="../base.css"><body>Content</body></html>';
+    '<html><head><link rel="alternate stylesheet" href="../../base.css"><body>Content</body></html>';
   assert.match(
-    insertComponentStylesheets(html, "home/index.html", ["../base.css"], 1, [
-      "action.css",
-    ]),
-    /base\.css"><link rel="stylesheet" href="\.\.\/action\.css"><body>/,
+    insertComponentStylesheets(
+      html,
+      "mokly-generated/home/index.html",
+      ["../../base.css"],
+      1,
+      ["action.css"],
+    ),
+    /base\.css"><link rel="stylesheet" href="\.\.\/\.\.\/action\.css"><body>/,
   );
 });
 
@@ -203,24 +249,28 @@ for (const [name, html, expected] of [
   [
     "head with elements",
     '<html><head><meta name="last"><body>Content</body></html>',
-    '<meta name="last"><link rel="stylesheet" href="../action.css"><body>',
+    '<meta name="last"><link rel="stylesheet" href="../../action.css"><body>',
   ],
   [
     "empty head",
     "<html><head><body>Content</body></html>",
-    '<head><link rel="stylesheet" href="../action.css"><body>',
+    '<head><link rel="stylesheet" href="../../action.css"><body>',
   ],
   [
     "implicit head",
     "<html><body>Content</body></html>",
-    '<html><link rel="stylesheet" href="../action.css"><body>',
+    '<html><link rel="stylesheet" href="../../action.css"><body>',
   ],
 ] as const)
   test(`links before body when ${name} has no closing head tag`, () => {
     assert.match(
-      insertComponentStylesheets(html, "home/index.html", [], 0, [
-        "action.css",
-      ]),
+      insertComponentStylesheets(
+        html,
+        "mokly-generated/home/index.html",
+        [],
+        0,
+        ["action.css"],
+      ),
       new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
     );
   });

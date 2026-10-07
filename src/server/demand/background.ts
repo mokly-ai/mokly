@@ -8,6 +8,7 @@ import {
   type GenerationWarning,
 } from "../../build/warning_generation.js";
 import { timingArguments } from "../../diagnostics/timings.js";
+import type { PreparedReviewRepository } from "../../review/prepare.js";
 import type { CatalogueChangeClassification } from "../classification_result.js";
 
 import { BackgroundGitHost } from "./git_host.js";
@@ -45,9 +46,7 @@ export class BackgroundCompilation {
             ...(existing
               ? {
                   existingManifest: existing.manifest,
-                  ...(runtime.config.generatedOutput === "derived"
-                    ? { existingOutputs: existing.outputs }
-                    : {}),
+                  existingOutputs: existing.outputs,
                 }
               : {}),
           },
@@ -103,7 +102,10 @@ export class BackgroundCompilation {
   }
   classify(
     base: string,
-    commit?: string,
+    prepared?: Pick<
+      PreparedReviewRepository,
+      "commit" | "selection" | "descriptor"
+    >,
   ): Promise<CatalogueChangeClassification> {
     if (this.closed) return Promise.resolve(undefined);
     return new Promise((resolve, reject) => {
@@ -111,7 +113,13 @@ export class BackgroundCompilation {
       this.worker.postMessage({
         type: "classify",
         base,
-        ...(commit ? { commit } : {}),
+        ...(prepared
+          ? {
+              commit: prepared.commit,
+              selection: prepared.selection,
+              descriptor: prepared.descriptor,
+            }
+          : {}),
       });
     });
   }

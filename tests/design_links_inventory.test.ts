@@ -118,7 +118,7 @@ test("a tag chip without a destination is a label, not a control", async () => {
   const chipStyles = await fs.readFile(
     path.join(
       repositoryRoot,
-      "examples/basic/generated/design-library/controls/tag-chip.css",
+      "examples/basic/design-library/controls/tag-chip.css",
     ),
     "utf8",
   );

@@ -6,7 +6,7 @@ import { parseManifest } from "../dist/registry/manifest.js";
 import { pageSource, pathFixture } from "./helpers/path_fixture.js";
 
 const fields =
-  "title:'Invoice',description:'An invoice',dependencies:[],relatedDocs:[],mobile:'Invoice',desktop:'Invoice'";
+  "title:'Invoice',description:'An invoice',relatedDocs:[],mobile:'Invoice',desktop:'Invoice'";
 const variants =
   "[{slug:'first',title:'First',description:'First state',mobile:'First',desktop:'First'},{slug:'second',title:'Second',description:'Second state',mobile:'Second',desktop:'Second'}]";
 
@@ -75,7 +75,7 @@ for (const [helper, field] of [
   test(`unknown ${helper} field ${field} has one general diagnostic`, async (t) => {
     const input =
       helper === "definePage"
-        ? "title:'Page',description:'Page',dependencies:[],relatedDocs:[],render:()=>'<html><body>Page</body></html>'"
+        ? "title:'Page',description:'Page',relatedDocs:[],render:()=>'<html><body>Page</body></html>'"
         : helper === "defineScreen"
           ? fields
           : "path:'group'";
@@ -113,7 +113,7 @@ test("non-string use-case paths fail with attributed metadata errors", async (t)
 
 test("persisted flow steps reject every undeclared key", async (t) => {
   const fixture = await pathFixture({
-    "specs/invoice.mockup.ts": `import {defineScreen,defineUseCase} from '@mokly/mokly';export default defineScreen({${fields},useCasePaths:['tour']});export const tour=defineUseCase({slug:'tour',title:'Tour',description:'Tour',dependencies:[],relatedDocs:[],steps:[{screenPath:'invoice'}]});`,
+    "specs/invoice.mockup.ts": `import {defineScreen,defineUseCase} from '@mokly/mokly';export default defineScreen({${fields},useCasePaths:['tour']});export const tour=defineUseCase({slug:'tour',title:'Tour',description:'Tour',relatedDocs:[],steps:[{screenPath:'invoice'}]});`,
   });
   t.after(fixture.remove);
   const manifest = (await fixture.compile()).manifest;
@@ -153,7 +153,7 @@ test("raw internal-looking reference tokens are not authored paths", async (t) =
 test("unexported typed links name the referenced title and defining module", async (t) => {
   const fixture = await pathFixture({
     "helpers/hidden.ts": pageSource('title:"Hidden page",'),
-    "specs/links.mockup.ts": `import {definePage,mockLink} from '@mokly/mokly';import hidden from '../helpers/hidden';const href=mockLink(hidden);export default definePage({title:'Links',description:'Links',dependencies:[],relatedDocs:[],render:()=>'<html><body><a href="'+href+'">Hidden</a></body></html>'});`,
+    "specs/links.mockup.ts": `import {definePage,mockLink} from '@mokly/mokly';import hidden from '../helpers/hidden';const href=mockLink(hidden);export default definePage({title:'Links',description:'Links',relatedDocs:[],render:()=>'<html><body><a href="'+href+'">Hidden</a></body></html>'});`,
   });
   t.after(fixture.remove);
   await assert.rejects(

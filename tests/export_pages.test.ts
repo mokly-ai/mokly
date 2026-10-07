@@ -23,7 +23,7 @@ test("consumer export builds unified pages and preserves a removed page's baseli
     fs.readFile(path.join(fixture.output, name), "utf8");
   await assert.rejects(fs.access(path.join(fixture.output, "id")));
   assert.match(
-    await read("static/library/handbook/index.html"),
+    await read("static/mokly-generated/library/handbook/index.html"),
     /data-mokly-link="home"/,
   );
   assert.doesNotMatch(

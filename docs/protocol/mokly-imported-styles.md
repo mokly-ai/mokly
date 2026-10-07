@@ -13,30 +13,38 @@ Custom renderers must emit the supplied stylesheet links; pages link CSS
 themselves. This contract extends
 [configuration](./mokly-configuration.md),
 [rendering](./mokly-rendering.md), and [source protection](./mokly-source-protection.md)
-without changing manifest v8. [Exact diagnostics](./mokly-imported-styles-errors.md)
+without changing manifest v9. [Exact diagnostics](./mokly-imported-styles-errors.md)
 are normative.
 
 ## Routes And Ownership
 
-`<mockupsDir>/mokly-generated/` is wholly Mokly-owned. Generated routes are
-`mokly-generated/styles/<repository-relative root module path>.css` and
-`mokly-generated/assets/<repository-relative asset path>`. Identical asset routes
-from multiple roots must carry identical bytes; disagreeing bytes fail Build.
-Preserve the module
-extension before `.css`: `src/home.mockup.tsx` becomes
-`mokly-generated/styles/src/home.mockup.tsx.css`. Shared assets have one route
-and identical bytes. Sources stay private. Every file in the reserved tree is
-owned output, including unknown orphans, for Check and public classification.
-Graph loading checks the tree before inventory (including the graph load that
-precedes derived Check); committed Check checks again before output comparison:
-the root must be a real directory, descendants real directories/files; reject the first
-sorted repo-relative symlink (even dangling), FIFO, socket or device without
-following it. Derived Check uses Git tracking for output ownership after its
-graph load. Successful Build prunes empty
-directories beneath the root (including it), never during rollback. Catalogue
-paths cannot have a first segment equal to `mokly-generated`, compared
-case-insensitively; only portable `styles/**.css` and
-supported `assets/**` can be generated inside it, never HTML.
+`<mockupsDir>/mokly-generated/` is wholly Mokly-owned. Its output map uses
+`styles/<repository-relative root module path>.css` and
+`assets/<repository-relative asset path>`, relative to that generated root.
+Pages, screen/component views and the private v9 manifest share the same tree.
+Preserve the module extension before `.css`: `src/home.mockup.tsx` becomes
+`styles/src/home.mockup.tsx.css`. Identical asset routes from multiple roots
+must carry identical bytes; disagreeing bytes fail Build. Sources stay private.
+The [unified layout](./mokly-unified-output.md#one-owned-tree) reserves `styles`
+and `assets` as the first segment of generated HTML routes. Path-derived HTML routes use `<path>/index[.<axes>].html`; the generated
+root prefix is not part of those routes.
+
+Only a writer or tracked Check inspects the existing generated tree. Its root
+must be a real directory and descendants must be real directories or regular
+files. Reject the first sorted repo-relative symlink, FIFO, socket or device
+without following it. A successful Build replaces the whole tree and removes
+stale files and empty directories. Plain Serve, export, publication and
+untracked Check do not inspect old output. No Git-ignore committability check
+remains; [tracking rules](./mokly-generated-output.md#tracked-state-and-commands)
+apply equally to generated CSS, assets, HTML and the manifest.
+
+Reject root directories and `roots[].files` static prefixes, renderer,
+package roots, PostCSS inputs, local `stylesheets` and `review.outDir` that
+violate the generated-tree boundary, including physical aliases. Discovery
+skips this tree; broad entry globs remain valid. Entry modules below
+`mockupsDir` remain protected sources, but a root directory equal to `mockupsDir` is
+invalid. `publicExclude` is removed. Other authored files become public only
+through the validated [asset closure](./mokly-generated-output.md#closure-urls-and-publication).
 
 Generated route segments allow a leading letter, digit, underscore or hyphen;
 subsequent characters may also include dot and tilde. Device-name stems and
@@ -46,30 +54,12 @@ fails with `cannot deliver imported CSS for {module}: the module path is not URL
 where `{module}` is repository-relative. Entry identity and CSS delivery routes
 have distinct inputs; the override changes only entry identity.
 
-Reject root directories and `roots[].files` static prefixes, and `review.outDir`,
-at or inside the reserved tree, and local `stylesheets` (shared/light/dark) paths
-inside it. Resolve existing symlink aliases for these configured path boundaries.
-Discovery skips it like Review output; broad roots and file globs remain valid.
-A root directory cannot equal `mockupsDir`: otherwise every public file could
-become authored source. Reject a consumer `publicExclude` only if
-a brace-expanded alternative's first segment is literally `mokly-generated`.
-Build rejects generated stylesheet/asset routes matching **any** exclusion,
-defaults included, naming the route and glob. Reject authored inputs through
-logical/physical reserved aliases and generated routes colliding with sources;
-public files elsewhere under `mockupsDir` remain consumer-owned.
-
 ## Roots, Collection And Deduplication
 
 Delivery roots are **only** the configured `renderer` module (the built-in
 renderer has no stylesheet), followed by each resolved entry module sorted by
-repository-relative POSIX path. A compatibility transformer still participates
-in the JavaScript graph: CSS it imports is inventoried, including its local
-`@import` closure and local `url()` assets, but transformer-only CSS has no
-stylesheet route or link. Analyze transformer-only CSS imports and URLs without
-running a stylesheet bundle; when a stylesheet is already delivered by a root,
-do not parse it again for the transformer. For transformer-only syntax
-use parser recovery, and never parse or inventory package CSS under
-`node_modules` solely for the transformer. Metafile input and output keys
+repository-relative POSIX path. There are no other delivery or inventory-only
+consumer roots. Metafile input and output keys
 are relative to esbuild's real working directory even when the configured
 repository root is a symlink; map all keys back to the logical root before
 ordering roots or recording sources. Resolve esbuild's working directory once
@@ -121,7 +111,7 @@ the same aliases, conditions, main fields, package roots, extension and
 symlink policy as the graph pass; it does not evaluate consumer JavaScript.
 The CLI does not eagerly load CSS Modules plugins or Lightning CSS. The
 former load only when a module is scoped; Lightning remains a read-only parser
-for Changes and transformer-only inventory.
+for Changes.
 For CSS `@import` resolution in both the prelude scan and the CSS pass,
 prepend `style` to the consumer's conditions and main fields (or esbuild's
 Node defaults `main,module` when unset): neither the `style` export condition

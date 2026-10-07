@@ -36,7 +36,7 @@ test("real Git baseline lifecycle: reuse, interruption, failure and confinement"
   );
   await fs.writeFile(
     path.join(root, "mokly.config.ts"),
-    'export default { roots: [{ dir: "entries" }], mockupsDir: "generated/catalogue", generatedOutput: "derived" };\n',
+    'export default { roots: [{ dir: "entries" }], mockupsDir: "generated/catalogue" };\n',
   );
   await fs.writeFile(path.join(root, ".gitignore"), ".mokly-cache/\n");
   await fs.writeFile(path.join(root, "baseline-build.cjs"), buildScript);
@@ -97,7 +97,7 @@ test("real Git baseline lifecycle: reuse, interruption, failure and confinement"
   assert.match(
     await reader.readFile(
       request.commit,
-      "generated/catalogue/page/index.html",
+      "generated/catalogue/mokly-generated/page/index.html",
     ),
     /Historical page/,
   );
@@ -133,12 +133,15 @@ test("real Git baseline lifecycle: reuse, interruption, failure and confinement"
   await fs.writeFile(path.join(layout.source, "partial"), "interrupted");
   assert.equal((await builder.build(request)).cacheHit, false);
   assert.equal(await filesystem.stat(layout.source), undefined);
-  await fs.symlink("page.html", path.join(first.outputDir, "alias.html"));
+  await fs.symlink(
+    "page.html",
+    path.join(first.outputDir, "generated/catalogue/alias.html"),
+  );
   await assert.rejects(
     reader.readFile(request.commit, "generated/catalogue/alias.html"),
     /symlink/,
   );
-  await fs.rm(path.join(first.outputDir, "alias.html"));
+  await fs.rm(path.join(first.outputDir, "generated/catalogue/alias.html"));
 
   const interrupted = { ...request, commit: await commit("wait") };
   const controller = new AbortController();
@@ -213,11 +216,12 @@ if (mode === "wait") {
   console.error("failure from consumer");
   process.exit(17);
 } else {
-  const root = "generated/catalogue";
+  const root = "generated/catalogue/mokly-generated";
   fs.mkdirSync(root, { recursive: true });
   const sourcePath = "entries/page.mockup.tsx";
   fs.writeFileSync(root + "/mokly-manifest.json", JSON.stringify({
-    schemaVersion: 8, folders: [], generatedBy: "mokly", sourceFiles: ["catalogue.json", sourcePath, "mokly.config.ts"],
+    schemaVersion: 9, folders: [], generatedBy: "mokly", sourceFiles: ["catalogue.json", sourcePath, "mokly.config.ts"],
+    assetClosure: [], blobHashAlgorithm: "sha1", generatedFiles: [{ path: "page/index.html", blobHash: require("node:crypto").createHash("sha1").update("blob " + Buffer.byteLength("<!doctype html><html><body>Historical page</body></html>") + "\\0").update("<!doctype html><html><body>Historical page</body></html>").digest("hex") }],
     entries: [{ path: "page", kind: "page", title: "Historical page", description: "A tiny consumer catalogue", sourcePath, relatedDocs: [], }]
   }));
   fs.mkdirSync(root + "/page", { recursive: true });

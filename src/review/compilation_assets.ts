@@ -1,3 +1,5 @@
+import { generatedResourceRoute } from "@mokly/viewer/data";
+
 import { generatedBytes, type GeneratedFile } from "../build/generated_file.js";
 
 import type { ReviewAssetReader } from "./assets.js";
@@ -10,14 +12,14 @@ export class CompilationAssetReader implements ReviewAssetReader {
   ) {}
 
   async read(route: string): Promise<Uint8Array> {
-    const generated = this.outputs.get(route);
+    const generated = this.outputs.get(generatedResourceRoute(route) ?? "");
     return generated === undefined
       ? this.resources.read(route)
       : generatedBytes(generated);
   }
 
   async readIfExists(route: string): Promise<Uint8Array | undefined> {
-    const generated = this.outputs.get(route);
+    const generated = this.outputs.get(generatedResourceRoute(route) ?? "");
     return generated === undefined
       ? this.resources.readIfExists?.(route)
       : generatedBytes(generated);

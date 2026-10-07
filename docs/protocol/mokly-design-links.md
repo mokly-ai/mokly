@@ -282,12 +282,12 @@ The real outer shell continues to provide its implemented runtime controls.
 
 ## Basic Example And Portability
 
-In `entries/catalogue.mockup.tsx`, convert the primary fixture button into
-an explicitly named `View details` action using
-`<MockLink asChild to="example/screens/details" fragment="details">`. Convert the
-secondary button into `Return to welcome` targeting `example/screens/welcome`.
-Retain the existing text links and renderer-required `onPress={noop}` props;
-navigation comes from the generated anchor. These labels promise navigation,
+In `examples/basic/specs/catalogue.tsx`, the `View details` action targets
+`example/screens/details` with fragment `details`; `Return to welcome` targets
+`example/screens/welcome`. The registered Action wrapper in
+`examples/basic/src/components/action/action.mokly.tsx` uses `MockLink asChild` for these props.
+Text links and renderer-required `onPress={noop}` remain; navigation comes from
+the generated anchor. These labels promise navigation,
 not workspace creation or a synthetic business operation. Exercise both
 viewports and light/dark generation without changing fixture paths.
 
@@ -321,7 +321,7 @@ normal enhanced navigation. Do not equate these two contexts.
   preview test helper. Cover actual Review snapshot link fallback separately.
 - Use a small semantic expectation set per control family plus catalogue-wide
   target validation. A positive total-link count alone does not prove adoption.
-- Run the relevant suites and complete `cargo xtask check`, then commit and push
-  all changes. After the push, use the
+- Run the relevant suites and complete `cargo xtask check`, then commit all
+  authored source and documentation changes and push. Keep generated output ignored. After the push, use the
   [implementation review prompt](../implementation-review-prompt.md) against
   `origin/main`; report findings without automatically fixing them.

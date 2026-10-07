@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
+import { currentManifest } from "../../../tests/helpers/current_manifest.js";
 import { readCatalogue } from "../src/catalogue/reader.js";
-import type { ManifestEntry, ManifestV8 } from "../src/registry/types.js";
+import type { ManifestEntry, ManifestV9 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 
@@ -20,13 +21,13 @@ const screen = (path: string) =>
     useCasePaths: [],
   }) as unknown as ManifestEntry;
 
-const manifest: ManifestV8 = {
+const manifest: ManifestV9 = currentManifest({
   entries: [screen("account/billing/invoice"), screen("home")],
   folders: [],
   generatedBy: "mokly",
-  schemaVersion: 8,
+  schemaVersion: 9,
   sourceFiles: [],
-};
+});
 
 test("a catalogue keeps the previous path of each current entry a move paired", () => {
   const catalogue = createCatalogue(
@@ -48,7 +49,7 @@ test("the public viewer reads each paired entry's previous path from the read mo
   const model = JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v4.json",
+        "../../../docs/protocol/fixtures/catalogue-v5.json",
         import.meta.url,
       ),
       "utf8",

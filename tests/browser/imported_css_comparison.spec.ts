@@ -36,7 +36,7 @@ export const mockups = [defineScreen({
   const image = await fs.readFile(
     path.join(
       repositoryRoot,
-      "examples/basic/src/components/workspace-note/signal.png",
+      "examples/imported-assets/workspace-note-signal.png",
     ),
   );
   imageSize = image.length;

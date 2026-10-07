@@ -36,7 +36,16 @@ export class PreviewResources {
         if (!valid()) return;
         const prepared = await this.resources.prepare(
           runtime.config,
-          { outputs: new Map(observation.documents) },
+          {
+            outputs: new Map([
+              ...runtime.styleOutputs,
+              ...observation.documents,
+            ]),
+            manifest: runtime.manifest,
+            ...(observation.resourceSeeds
+              ? { resourceSeeds: observation.resourceSeeds }
+              : {}),
+          },
           this.shutdown,
           true,
           this.generation === observation.generation,

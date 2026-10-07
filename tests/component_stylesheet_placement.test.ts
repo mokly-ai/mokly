@@ -56,24 +56,24 @@ test("missing configured link places component links at the end of the head", as
     result.outputs,
     viewRoute(screen.path, "mobile", "light"),
   )!;
-  assert.doesNotMatch(html, /href="\.\.\/base\.css"/);
+  assert.doesNotMatch(html, /href="\.\.\/\.\.\/base\.css"/);
   assert.match(
     html,
-    /<meta name="last"><link rel="stylesheet" href="\.\.\/pane\.css"><link rel="stylesheet" href="\.\.\/action\.css"><\/head><body>/,
+    /<meta name="last"><link rel="stylesheet" href="\.\.\/\.\.\/pane\.css"><link rel="stylesheet" href="\.\.\/\.\.\/action\.css"><\/head><body>/,
   );
 });
 
 test("a configured link away from the insertion position may be absent", () => {
   const html = insertComponentStylesheets(
     '<html><head><link rel="stylesheet" href="b.css"><link rel="stylesheet" href="c.css"></head><body></body></html>',
-    "home/index.html",
+    "mokly-generated/home/index.html",
     ["a.css", "b.css", "c.css"],
     2,
     ["action.css"],
   );
   assert.match(
     html,
-    /href="b\.css"><link rel="stylesheet" href="\.\.\/action\.css"><link rel="stylesheet" href="c\.css"/,
+    /href="b\.css"><link rel="stylesheet" href="\.\.\/\.\.\/action\.css"><link rel="stylesheet" href="c\.css"/,
   );
 });
 
@@ -120,19 +120,23 @@ for (const [name, head] of [
       link.attributes.get("href"),
     ]);
     const componentLinks = [
-      ["head", "../pane.css"],
-      ["head", "../action.css"],
+      ["head", "../../pane.css"],
+      ["head", "../../action.css"],
     ];
     assert.deepEqual(
       links,
       name === "duplicate"
-        ? [["head", "../base.css"], ...componentLinks, ["head", "../base.css"]]
+        ? [
+            ["head", "../../base.css"],
+            ...componentLinks,
+            ["head", "../../base.css"],
+          ]
         : name === "out of order"
           ? [
-              ["head", "../extra.css"],
+              ["head", "../../extra.css"],
               ...componentLinks,
-              ["head", "../base.css"],
+              ["head", "../../base.css"],
             ]
-          : [...componentLinks, ["body", "../base.css"]],
+          : [...componentLinks, ["body", "../../base.css"]],
     );
   });

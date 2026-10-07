@@ -23,10 +23,11 @@ npx mokly export --out .context/mokly-site
 
 ## What it produces
 
-Export builds first, then packages the catalogue: one shell page per entry at
-`view/<path>/index.html`, the generated views and documents under `static/`,
-assets and Git comparisons. The result is a directory of static files. Export
-never uploads anything.
+Export compiles without writing generated files to your catalogue, then
+packages generated views, Markdown documents, CSS and assets under `static/mokly-generated/`,
+referenced authored assets under `static/`, one shell per entry at `view/<path>/index.html`,
+and available Git comparisons under `mokly-viewer/`.
+It does not copy unrelated files or upload anything.
 
 Deploy the directory's contents at the root of an HTTP(S) origin. Hosting
 requirements are on the Catalogue page for export and hosting.
@@ -42,7 +43,8 @@ and `<n> build warnings with --strict` otherwise.
 
 `--out` resolves beside the loaded config rather than your working directory,
 and an absolute path must stay inside the repository root. Choose a directory
-that is missing or empty and outside your source, generated, dependency and
+that is missing or empty and neither contains nor is contained by
+`mokly-generated/`; it must also stay outside source, dependency and
 comparison roots, and keep unrelated files out of it.
 
 A re-export replaces only the output it owns, and restores the previous site
@@ -60,9 +62,11 @@ deleting that folder and exporting again.
 ## History
 
 `--base` overrides `review.base`, which defaults to `origin/main`. The branch
-point must exist in the checkout together with the authored assets and either
-the committed generated output or the tooling a derived baseline rebuild
-needs. In CI, check out the full history.
+point must exist in the checkout with enough history to read its complete
+generated tree or rebuild it using that commit's own dependencies and tooling.
+In CI, check out the full history and use a trusted base for rebuilds. A base
+built by an earlier Mokly version makes Changes unavailable; export prints the
+reason and still packages current content. Other invalid baseline inputs fail.
 
 Warnings name a generated page, an entry, a component, a folder or the
 configuration file. Strict mode counts all warnings, including ignored inputs.

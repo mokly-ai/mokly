@@ -192,46 +192,44 @@ export async function compareComponentView(
       ),
     ],
   );
-  const byteChanges = context.compareResourceBytes
-    ? await changedResourceBytes(
-        await context.beforeReader.resources(
-          before!.path,
-          resourceBefore,
-          excluded,
-        ),
-        await context.afterReader.resources(
-          after!.path,
-          resourceAfter,
-          excluded,
-        ),
-        context.beforeReader,
-        context.afterReader,
-        context.resourceIdentity,
-      )
-    : new Set<string>();
-  const actualByteChanges = context.compareResourceBytes
-    ? await changedResourceBytes(
-        await context.beforeReader.resources(
-          before!.path,
-          actualBefore,
-          undefined,
-          baseStylesheets,
-        ),
-        await context.afterReader.resources(
-          after!.path,
-          actualAfter,
-          undefined,
-          headStylesheets,
-        ),
-        context.beforeReader,
-        context.afterReader,
-        context.resourceIdentity,
-      )
-    : new Set<string>();
+  const byteChanges = await changedResourceBytes(
+    await context.beforeReader.resources(
+      before!.path,
+      resourceBefore,
+      excluded,
+    ),
+    await context.afterReader.resources(after!.path, resourceAfter, excluded),
+    context.beforeReader,
+    context.afterReader,
+    context.resourceIdentity,
+  );
+  const actualBeforeResources = await context.beforeReader.resources(
+    before!.path,
+    actualBefore,
+    undefined,
+    baseStylesheets,
+  );
+  const actualAfterResources = await context.afterReader.resources(
+    after!.path,
+    actualAfter,
+    undefined,
+    headStylesheets,
+  );
+  const actualByteChanges = await changedResourceBytes(
+    actualBeforeResources,
+    actualAfterResources,
+    context.beforeReader,
+    context.afterReader,
+    context.resourceIdentity,
+  );
+  const actualByteImpact = (route: string) =>
+    !isStylesheetPath(route) ||
+    (actualBeforeResources.has(route) && actualAfterResources.has(route));
   if (
     [...byteChanges].some(
       (route) =>
-        (!isStylesheetPath(route) || actualByteChanges.has(route)) &&
+        (!isStylesheetPath(route) ||
+          (actualByteChanges.has(route) && actualByteImpact(route))) &&
         !context.changed.has(repoPath(route)),
     )
   )
@@ -239,7 +237,8 @@ export async function compareComponentView(
   const actualResourceChange =
     Boolean(actualEvidence.reasons?.length) ||
     [...actualByteChanges].some(
-      (route) => !context.changed.has(repoPath(route)),
+      (route) =>
+        actualByteImpact(route) && !context.changed.has(repoPath(route)),
     );
   return {
     comparisonPath: "complete",

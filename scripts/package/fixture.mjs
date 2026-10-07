@@ -73,21 +73,25 @@ export async function smokeServer(root, args = [], inspect) {
     if (!response.ok) throw new Error(`server returned ${response.status}`);
     const html = await response.text();
     if (
-      !html.includes("/__mokly/client/react-host.js") ||
-      html.includes('src="/__mokly/client/react-shell.js"') ||
-      html.includes("/__mokly/client/browse.js") ||
-      html.includes("/__mokly/client/browser.js")
+      !html.includes("/mokly-viewer/client/react-host.js") ||
+      html.includes('src="/mokly-viewer/client/react-shell.js"') ||
+      html.includes("/mokly-viewer/client/browse.js") ||
+      html.includes("/mokly-viewer/client/browser.js")
     )
       throw new Error("server did not deliver the hydrated live shell");
-    const hydration = await fetch(`${match[1]}/__mokly/client/react-shell.js`);
+    const hydration = await fetch(
+      `${match[1]}/mokly-viewer/client/react-shell.js`,
+    );
     if (!hydration.ok)
       throw new Error(`hydration bundle returned ${hydration.status}`);
-    const host = await fetch(`${match[1]}/__mokly/client/react-host.js`);
+    const host = await fetch(`${match[1]}/mokly-viewer/client/react-host.js`);
     if (!host.ok || !(await host.text()).includes("./react-shell.js"))
       throw new Error(
         "React host bundle did not load the shared hydration bundle",
       );
-    const inspector = await fetch(`${match[1]}/__mokly/client/inspector.js`);
+    const inspector = await fetch(
+      `${match[1]}/mokly-viewer/client/inspector.js`,
+    );
     if (!inspector.ok || (await inspector.arrayBuffer()).byteLength > 9216)
       throw new Error("inspector bundle exceeded its delivery budget");
     if (inspect) {
@@ -142,10 +146,10 @@ export async function initializeGit(root) {
   });
 }
 
-export async function initializeDerivedGit(root, generatedRoot) {
+export async function initializeDerivedGit(root, catalogueRoot) {
   await fs.promises.appendFile(
     path.join(root, ".gitignore"),
-    `.mokly-cache/\n${generatedRoot}/**/*.html\n${generatedRoot}/mokly-manifest.json\n`,
+    `.mokly-cache/\n${catalogueRoot}/mokly-generated/\n`,
   );
   await initializeGit(root);
 }

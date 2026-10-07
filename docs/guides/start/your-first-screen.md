@@ -50,9 +50,9 @@ screen is the page of its folder.
 
 ## Where it is written
 
-Each screen owns one directory under `mockupsDir` named by its path. This one
+Each screen owns one directory under `mockupsDir/mokly-generated/` named by its path. This one
 is written as `account/account-home/index.mobile.html` and
-`account/account-home/index.desktop.html` under `mockupsDir`, with `.dark` before `.html`
+`account/account-home/index.desktop.html` under `mockupsDir/mokly-generated/`, with `.dark` before `.html`
 once the catalogue renders a dark scheme. Moving the file to another folder
 moves the screen, its files and its address together. Changes pairs a moved
 screen with its earlier version when it finds one unique match. Declare

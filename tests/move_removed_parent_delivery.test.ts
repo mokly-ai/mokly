@@ -22,7 +22,7 @@ import { pathFixture } from "./helpers/path_fixture.js";
 
 function component(title: string, variants: string): string {
   return `import {defineComponent} from '@mokly/mokly';
-export default defineComponent({title:'${title}',description:'A control',dependencies:[],relatedDocs:[],propSchema:{kind:'object',properties:{label:{schema:{kind:'string'}}}},render:(props)=><button>{props.label}</button>,variants:[${variants}]});`;
+export default defineComponent({title:'${title}',description:'A control',relatedDocs:[],propSchema:{kind:'object',properties:{label:{schema:{kind:'string'}}}},render:(props)=><button>{props.label}</button>,variants:[${variants}]});`;
 }
 const primary = "{slug:'primary',title:'Primary',props:{label:'Continue'}}";
 const initial = "{slug:'default',title:'Default',props:{label:'Save'}}";
@@ -34,7 +34,7 @@ for (const boundary of ["reader", "Serve", "export"])
         "specs/old.mockup.tsx": component("Old", primary),
         "specs/new.mockup.tsx": component("New", initial),
       },
-      '{mockupsDir:"mockups",roots:[{dir:"specs"}],generatedOutput:"committed"}',
+      '{mockupsDir:"mockups",roots:[{dir:"specs"}],}',
     );
     t.after(() => fixture.remove());
     await fs.mkdir(path.join(fixture.root, "mockups"));
@@ -127,7 +127,9 @@ for (const boundary of ["reader", "Serve", "export"])
             route,
           );
         const model = readCatalogue(
-          await (await fetch(`${server.url}/__mokly/catalogue.json`)).json(),
+          await (
+            await fetch(`${server.url}/mokly-viewer/catalogue.json`)
+          ).json(),
         );
         assert.deepEqual(
           model.removedEntries.map(({ entry }) => entry.path),
@@ -141,7 +143,7 @@ for (const boundary of ["reader", "Serve", "export"])
       const model = readCatalogue(
         JSON.parse(
           await fs.readFile(
-            path.join(fixture.root, "site/__mokly/catalogue.json"),
+            path.join(fixture.root, "site/mokly-viewer/catalogue.json"),
             "utf8",
           ),
         ),

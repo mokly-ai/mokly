@@ -9,11 +9,11 @@ import { inspectDeliveredBrowserGraph } from "./browser_graph_analysis.mjs";
 export function inspectBrowserGraph() {
   const modules = new Map([
     ...[...loadBrowserClientModules()].map(([name, bytes]) => [
-      `/__mokly/client/${name}`,
+      `/mokly-viewer/client/${name}`,
       bytes,
     ]),
     ...[...loadBrowserNavigationModules()].map(([name, bytes]) => [
-      `/__mokly/navigation/${name}`,
+      `/mokly-viewer/navigation/${name}`,
       bytes,
     ]),
   ]);

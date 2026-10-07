@@ -7,7 +7,7 @@ Continuation of [Changes And Screen Comparisons](./mokly-changes.md).
 Removal of baseline compatibility is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
-The expanded v5 per-rule and page evidence is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+The expanded v6 per-rule and page evidence is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md); its comparison details for screens and component saved views are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
 
 ## Generation and serving
@@ -26,14 +26,11 @@ and [shell](./mokly-shell-design.md) contracts own each state.
 Live background classification, complete comparison generation, and publishing
 with `--include-changes` compare the workspace with a configured base ref, defaulting
 to `origin/main`. It resolves the merge base shared by `HEAD` and that ref, then
-reads the `mockupsDir` tree at that branch point without checking it out. In
-committed mode those are Git blobs; in
-[derived mode](./mokly-derived-baselines.md) they come from the cached
-rebuild of that commit produced with the commit's own code. The baseline is
+reads the `mockupsDir` tree at that branch point without checking it out. [Per-commit selection](./mokly-derived-baselines.md) uses verified v9 Git blobs
+or a cached rebuild produced with that commit's own code. The baseline is
 never rendered with the current tree's code. Commits reachable only from the
 configured base do not enter the comparison. Head generated artifacts come from
-the validated compilation. Committed mode additionally checks their working-tree
-bytes; derived mode retains compiled bytes through selected comparisons and
+the validated in-memory compilation. Every command retains compiled bytes through selected comparisons and
 compares all generated views even without changed Git output paths. Selected live
 diffs reuse the accepted manifest and pinned classification; checked-input digests
 reject changed snapshot inputs without repeating an exhaustive build.
@@ -56,7 +53,7 @@ is emitted. Views pair by viewport and color scheme within each paired entry.
 Each side's view set is its entry's effective `colorSchemes`: a dark view
 present only in head is `added`, and one present only in base is `removed`.
 Mobile and desktop still classify separately from their own documents. The
-compatibility gate runs before pairing, so both sides use manifest v8.
+compatibility gate runs before pairing, so both sides use manifest v9.
 Source paths and retired declarations do not add reasons.
 The configured comparison directory, including its symlink-resolved in-repository target, is excluded before changed-path evidence
 is calculated.
@@ -97,7 +94,7 @@ memory.
 
 ```ts
 interface ReviewResult {
-  schemaVersion: 5;
+  schemaVersion: 6;
   baseRef: string;
   baseCommit: string; // merge base shared by HEAD and baseRef
   changedPaths: readonly string[];
@@ -132,7 +129,8 @@ interface ReviewResult {
 }
 ```
 
-Version 5 addresses every entry and view by path and view axes, with `screenPath` wherever a step names a screen,
+Version 6 addresses every entry and view by path and view
+axes, with `screenPath` wherever a step names a screen,
 optional `previousPath` on an entry the [move contract](./mokly-moves.md)
 paired, and documents classified like pages: neither kind has a record here,
 and the [catalogue change snapshot](./mokly-catalogue-changes.md) classifies
@@ -142,9 +140,9 @@ entry; a side the view's state lacks (`added` has no `before`, `removed` has
 no `after`) has no document. Component catalogues add component, variant,
 use-case, and affected-consumer records addressed by entry path, defined by
 the [component comparison schema](./mokly-component-review.md). Readers accept
-only version 5.
+only version 6.
 
-Every catalogue emits the complete `ReviewResultV5` shape defined by the
+Every catalogue emits the complete `ReviewResultV6` shape defined by the
 [component comparison schema](./mokly-component-review.md), which extends the
 screen fields above with `components`, `changes`, and `affectedConsumers`; a
 catalogue without registered components emits empty `components` and

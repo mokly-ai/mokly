@@ -3,7 +3,6 @@ import path from "node:path";
 
 import type { InsertedComponentStylesheet } from "@mokly/viewer";
 import {
-  generatedViews,
   isManifestComponentVariant,
   parseReviewResult,
   snapshotViewPath,
@@ -18,30 +17,31 @@ import {
   receiveGeneratedFile,
   type GeneratedFile,
 } from "../build/generated_file.js";
-import { ConfiguredGitCommandRunner } from "../config/git.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
 import { addArtifactFile } from "./artifact_files.js";
 import type { StylesheetReviewArtifact } from "./artifact_stylesheets.js";
-import { copySnapshotDependencies, GitReviewAssetReader } from "./assets.js";
+import { GitReviewAssetReader } from "./assets.js";
 import { baselineResourceConfig } from "./base_manifest.js";
 import { SelectedAssetReader } from "./evidence_assets.js";
 import type { BaselineReader } from "./git.js";
 import { CompiledReviewAssetReader } from "./head_assets.js";
-import { baselineReaderForCommit } from "./repository.js";
+import { comparisonNotPrepared } from "./repository.js";
 import { selectedComponentResult } from "./selection_result.js";
 import type {
   ReviewSelection,
   SelectedReviewProvider,
   SelectedReviewSource,
 } from "./selection_types.js";
+import { copySnapshotDependencies } from "./snapshot_resources.js";
+import { reviewViews } from "./views.js";
 
 export class RepositorySelectedReview implements SelectedReviewProvider {
   constructor(
     private readonly config: ResolvedConfig,
-    private readonly git?: BaselineReader,
+    private readonly git?: BaselineReader | (() => BaselineReader),
   ) {}
 
   async generate(
@@ -49,19 +49,13 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
     selection: ReviewSelection,
     signal: AbortSignal,
   ): Promise<ReviewArtifact> {
-    if (this.config.generatedOutput === "derived" && !source.headOutputs)
+    if (!source.headOutputs)
       throw new MoklyError(
         "review-invalid",
         "Compiled comparison input is unavailable",
       );
-    const git =
-      this.git ??
-      baselineReaderForCommit(
-        this.config,
-        source.baseCommit,
-        new ConfiguredGitCommandRunner(this.config, signal),
-        signal,
-      );
+    if (!this.git) throw comparisonNotPrepared();
+    const git = typeof this.git === "function" ? this.git() : this.git;
     const before = new SelectedAssetReader(
       new GitReviewAssetReader(
         baselineResourceConfig(this.config, source.before),
@@ -70,6 +64,7 @@ export class RepositorySelectedReview implements SelectedReviewProvider {
         toPosixPath(
           path.relative(this.config.repoRoot, this.config.mockupsDir),
         ),
+        source.before,
       ),
       signal,
     );
@@ -170,7 +165,7 @@ function selectedArtifacts(
   );
   if (!entry || (entry.kind !== "screen" && entry.kind !== "component"))
     return [];
-  return generatedViews(entry).map((view) => ({
+  return reviewViews(entry).map((view) => ({
     route: view.path,
     insertedStylesheets: view.usage?.insertedStylesheets ?? [],
     snapshot: snapshotViewPath(

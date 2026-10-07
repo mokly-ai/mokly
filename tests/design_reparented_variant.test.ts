@@ -21,8 +21,10 @@ import {
 } from "../packages/viewer/dist/shell/nav_tree.js";
 import { defaultSelection } from "../packages/viewer/dist/viewer/selection.js";
 
-import { attribute, byClass, textContent } from "./helpers/design_catalogue.js";
 import {
+  attribute,
+  byClass,
+  textContent,
   designCatalogue,
   designDocument,
   elements,

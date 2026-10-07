@@ -1,17 +1,12 @@
 /** Shutdown and child-restart helpers for watched Serve orchestration. */
 import { fileURLToPath } from "node:url";
 
-import type { Compilation } from "../build/compile.js";
 import type { ComponentRuntime } from "../build/component_runtime.js";
-import type { GeneratedOutputStore } from "../build/output_store.js";
 import type { GenerationWarning } from "../build/warning_generation.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timingArguments } from "../diagnostics/timings.js";
 
-import type {
-  PreparedResourceWatch,
-  ResourceWatcher,
-} from "./resource_watcher.js";
+import type { ResourceWatcher } from "./resource_watcher.js";
 import type { ServeOptions } from "./serve.js";
 import type {
   ProcessSupervisor,
@@ -81,32 +76,6 @@ export async function watcherReadyBeforeShutdown(
   ]);
 }
 
-/** Write candidate output only after its resource watches are ready. */
-export async function prepareWatchedOutput(
-  config: ResolvedConfig,
-  compilation: Compilation,
-  resources: ResourceWatcher,
-  outputStore: GeneratedOutputStore,
-  shutdownStarted: Promise<void>,
-  isClosed: () => boolean,
-): Promise<PreparedResourceWatch | undefined> {
-  const prepared = await resources.prepare(
-    config,
-    compilation,
-    shutdownStarted,
-  );
-  if (!prepared) return undefined;
-  try {
-    if (!isClosed()) await outputStore.write(compilation, config);
-    if (!isClosed()) return prepared;
-  } catch (error) {
-    await prepared.close();
-    throw error;
-  }
-  await prepared.close();
-  return undefined;
-}
-
 /** Close queued work, active watchers, and child while preserving first failure. */
 export async function closeWatched(
   actionQueue: WatchActionQueue,
@@ -146,21 +115,21 @@ export async function restartWithRecovery(
   }
 }
 
-/** Restore the child and resume background evidence for the accepted inputs. */
-export async function restartWatchedRuntime(
-  running: ProcessSupervisor,
+/** Reattach current evidence and resume background work after child recovery. */
+export async function restartWatchedGeneration(
+  supervisor: ProcessSupervisor,
   background: WatchedBackground,
-  isClosed: () => boolean,
+  closed: () => boolean,
 ): Promise<void> {
   try {
-    await restartWithRecovery(running);
-    running.notifyUpdate(
+    await restartWithRecovery(supervisor);
+    supervisor.notifyUpdate(
       undefined,
       undefined,
       background.changesStatus,
       "evidence",
     );
   } finally {
-    if (!isClosed()) background.schedule(background.compilation);
+    if (!closed()) background.schedule(background.compilation);
   }
 }

@@ -1,7 +1,6 @@
 export { defineConfig } from "./config/define.js";
 export { componentStylesheets } from "./config/component_stylesheets.js";
 export type {
-  CompatibilityConfig,
   ModuleLoader,
   ModuleResolutionConfig,
   MoklyConfig,
@@ -70,7 +69,3 @@ export type {
   ComponentResourceOwnership,
 } from "@mokly/viewer";
 export type { Renderer, RenderInput, RenderResult } from "./renderer/types.js";
-export type {
-  CompatibilityTransformer,
-  CompatibilityTransformInput,
-} from "./compatibility/types.js";

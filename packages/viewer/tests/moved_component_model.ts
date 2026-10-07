@@ -6,7 +6,7 @@ import { readCatalogue } from "../src/catalogue/reader.js";
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
 
 const fixture = new URL(
-  "../../../docs/protocol/fixtures/catalogue-v4.json",
+  "../../../docs/protocol/fixtures/catalogue-v5.json",
   import.meta.url,
 );
 
@@ -55,6 +55,7 @@ export function movedComponentModel(): CatalogueReadModel {
     },
     folderTitles: ["Components"],
     parentTitle: parent.title,
+    snapshotId: "d".repeat(64),
   });
   model.tree[0] = {
     children: [

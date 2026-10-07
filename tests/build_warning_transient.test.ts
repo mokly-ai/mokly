@@ -51,7 +51,7 @@ export default (input) => { const html = '<html><head></head><body>' + renderToS
   const address = server.address();
   assert.ok(address && typeof address !== "string");
   const origin = `http://127.0.0.1:${address.port}`;
-  const response = await fetch(`${origin}/__mokly/components/render`, {
+  const response = await fetch(`${origin}/mokly-viewer/components/render`, {
     method: "POST",
     headers: {
       origin,

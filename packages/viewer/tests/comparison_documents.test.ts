@@ -14,7 +14,7 @@ import {
 } from "../src/shell/comparison_selection.js";
 import type { ComparisonPresentation } from "../src/shell/use_comparison.js";
 
-const GENERATION = "https://catalogue.test/__mokly/diffs/__generations/one/";
+const GENERATION = "https://catalogue.test/mokly-viewer/diffs/generations/one/";
 
 function view(
   viewport: "desktop" | "mobile",
@@ -44,7 +44,7 @@ function comparison(
     baseRef: "origin/main",
     changedPaths: [],
     ignoredImpact: [],
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     screens: [
       {
         after: address,
@@ -108,10 +108,10 @@ test("selected views resolve both sides beneath the comparison generation", () =
     "home",
   );
   assert.deepEqual(selectedComparisonDocuments(both), [
-    `${GENERATION}snapshots/before/home/index.mobile.html`,
-    `${GENERATION}snapshots/after/home/index.mobile.html`,
-    `${GENERATION}snapshots/before/home/index.desktop.html`,
-    `${GENERATION}snapshots/after/home/index.desktop.html`,
+    `${GENERATION}snapshots/before/mokly-generated/home/index.mobile.html`,
+    `${GENERATION}snapshots/after/mokly-generated/home/index.mobile.html`,
+    `${GENERATION}snapshots/before/mokly-generated/home/index.desktop.html`,
+    `${GENERATION}snapshots/after/mokly-generated/home/index.desktop.html`,
   ]);
   const dark = selectedComparisonViews(
     loaded,
@@ -121,7 +121,7 @@ test("selected views resolve both sides beneath the comparison generation", () =
   );
   assert.equal(dark?.[0]?.mode, "side");
   assert.deepEqual(selectedComparisonDocuments(dark), [
-    `${GENERATION}snapshots/before/home/index.desktop.dark.html`,
+    `${GENERATION}snapshots/before/mokly-generated/home/index.desktop.dark.html`,
   ]);
   const fallback = selectedComparisonViews(
     loaded,

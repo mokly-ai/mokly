@@ -90,7 +90,7 @@ export async function assertMoveDelivery(
   });
   try {
     const served = readCatalogue(
-      await (await fetch(`${server.url}/__mokly/catalogue.json`)).json(),
+      await (await fetch(`${server.url}/mokly-viewer/catalogue.json`)).json(),
     );
     assert.deepEqual(identities(served), expected);
     for (const route of [
@@ -105,7 +105,10 @@ export async function assertMoveDelivery(
   await exportCatalogue(config, { outDir, base: "main" });
   const exported = readCatalogue(
     JSON.parse(
-      await fs.readFile(path.join(outDir, "__mokly/catalogue.json"), "utf8"),
+      await fs.readFile(
+        path.join(outDir, "mokly-viewer/catalogue.json"),
+        "utf8",
+      ),
     ),
   );
   assert.deepEqual(identities(exported), expected);
@@ -209,7 +212,9 @@ export async function assertSchemeMoveDelivery(
       assert.equal(await settled, "ready", messages.join(""));
       check(
         readCatalogue(
-          await (await fetch(`${running.url}/__mokly/catalogue.json`)).json(),
+          await (
+            await fetch(`${running.url}/mokly-viewer/catalogue.json`)
+          ).json(),
         ),
       );
       assert.equal(
@@ -217,8 +222,11 @@ export async function assertSchemeMoveDelivery(
         200,
       );
       assert.equal(
-        (await fetch(`${running.url}/static/${current}/index.mobile.html`))
-          .status,
+        (
+          await fetch(
+            `${running.url}/static/mokly-generated/${current}/index.mobile.html`,
+          )
+        ).status,
         200,
       );
     } finally {
@@ -230,7 +238,10 @@ export async function assertSchemeMoveDelivery(
     const outDir = path.join(fixture.config.repoRoot, "site");
     const model = readCatalogue(
       JSON.parse(
-        await fs.readFile(path.join(outDir, "__mokly/catalogue.json"), "utf8"),
+        await fs.readFile(
+          path.join(outDir, "mokly-viewer/catalogue.json"),
+          "utf8",
+        ),
       ),
     );
     check(model);
@@ -245,7 +256,7 @@ export async function assertSchemeMoveDelivery(
         for (const scheme of ["light", "dark"]) {
           const route = `${side === "before" ? baseline : current}/index.${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
           const expected = fixture[side].outputs.get(route);
-          const file = path.join(snapshots, side, route);
+          const file = path.join(snapshots, side, "mokly-generated", route);
           if (expected === undefined)
             await assert.rejects(fs.readFile(file), { code: "ENOENT" });
           else assert.equal(await fs.readFile(file, "utf8"), expected, route);

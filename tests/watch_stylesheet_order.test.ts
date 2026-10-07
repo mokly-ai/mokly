@@ -97,7 +97,7 @@ async function setup(context: test.TestContext) {
   const supervisor = new RecordingSupervisor(events);
   const running = await serve(
     config,
-    { port: 0, watch: true },
+    { port: 0, build: true, watch: true },
     {
       configLoader: new FileSystemConfigLoader(),
       outputStore: output,

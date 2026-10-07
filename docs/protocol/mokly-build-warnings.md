@@ -49,7 +49,7 @@ type BuildDiagnostic = {
 
 - `code` is a stable kebab-case identifier that automation may branch on.
 - `route` is the generated route of the document that produced the warning,
-  relative to `mockupsDir`, following the
+  relative to `mockupsDir/mokly-generated`, following the
   [generated artifact-path contract](./mokly-artifact-paths.md).
 - `subject` replaces `route` for a warning that does not concern one page.
   Exactly one is present. Entry and component subjects use their complete
@@ -98,7 +98,7 @@ contract.
 ## Producers And Transport
 
 The child-control adapter returns its adapted HTML together with the
-diagnostics it raised. The compatibility transform returns its logical records
+diagnostics it raised. The direct document-link resolver returns its logical records
 together with every document's diagnostics. The exhaustive compilation result
 carries the sorted list as `diagnostics` beside the manifest and outputs, and
 the on-demand single-document result carries the diagnostics of that document
@@ -111,8 +111,8 @@ carries them to the Serve parent unchanged. Configuration and registry producers
 use the same record before rendering. The compilation includes their diagnostics
 as well as render diagnostics. During exhaustive compilation, forward each
 adapter's diagnostics through the compilation callback as soon as the adapter
-returns, before logical-link rewriting or the consumer transformer runs. A
-later validation or transform failure retains those warnings without inventing
+returns, before logical-link rewriting and later resource validation. A
+later validation or link-edit failure retains those warnings without inventing
 a result. Keep the successful result sorted and deduplicate at the sink.
 They are never written into generated files, never included in
 `check` comparisons, never served over HTTP, and never uploaded.
@@ -121,13 +121,14 @@ They are never written into generated files, never included in
 
 Each command reports the diagnostics of exactly one compilation:
 
-| Command   | Reported compilation                                          |
-| --------- | ------------------------------------------------------------- |
-| `build`   | The compilation whose output is written                       |
-| `check`   | The compilation whose bytes are compared                      |
-| `export`  | The compilation that is packaged                              |
-| `publish` | The export's compilation, before any upload                   |
-| `serve`   | Each generation's exhaustive compilation, once, when it lands |
+| Command         | Reported compilation                                          |
+| --------------- | ------------------------------------------------------------- |
+| `build`         | The compilation whose output is written                       |
+| `build --watch` | Each complete compilation before its write                    |
+| `check`         | The compilation whose bytes are compared                      |
+| `export`        | The compilation that is packaged                              |
+| `publish`       | The export's compilation, before any upload                   |
+| `serve`         | Each generation's exhaustive compilation, once, when it lands |
 
 Internal compilation callers have an explicit transport decision:
 
@@ -137,13 +138,11 @@ Internal compilation callers have an explicit transport decision:
 | `server/changed.ts`        | Discard secondary Changes evidence                 |
 | `export/inputs.ts`         | Discard the final freshness comparison             |
 | `review/run.ts`            | Discard; standalone Review has no warning reporter |
-| `review/head_assets.ts`    | Discard the fallback derived-head evidence         |
+| `review/head_assets.ts`    | Discard direct-call head evidence                  |
 
-Secondary compilations discard their diagnostics: the Changes evidence
-compilation for derived output and the freshness comparison inside export.
-The standalone Review orchestration and its derived-head asset fallback also
-discard diagnostics: Review has no command reporter, and its compilation exists
-only to produce comparison evidence. `compileRuntime` is the exception among
+Secondary compilations discard diagnostics: Changes evidence, export freshness,
+and direct-call head evidence when accepted output was not supplied. Review has
+no command reporter, and its compilation exists only for comparison evidence. `compileRuntime` is the exception among
 internal callers because it is Serve's primary exhaustive compilation and
 preserves diagnostics on its result. Baseline preparation captures a historical
 tree's command output only for bounded failure diagnostics, so successful
@@ -220,10 +219,13 @@ command counts every producer, still prints every warning, then fails with `buil
 message `1 build warning with --strict` for one warning or
 `<n> build warnings with --strict` otherwise. This failure is the immediate
 next action after reporting: `build` fails before `outputStore.write`, `check`
-before comparison, `export` before generated or staged export bytes are
+before tracking/comparison, `export` before capture or staged export bytes are
 written, and `publish` before bundle capture or upload. The last-good generated
 and export trees therefore remain unchanged. Without warnings, `--strict`
-changes nothing.
+changes nothing. Watched Build applies this check before every write. A rejected
+compilation preserves the last-good tree and reports the error through the
+existing watch failure path; watching continues so the author can repair it.
+Only explicit writers take the generated-output lock; warnings add no reader lock.
 
 ## Verification
 

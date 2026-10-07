@@ -17,16 +17,20 @@ import { validEntrySource } from "./helpers/fixture.js";
 
 for (const components of [false, true]) {
   test(`derived CSS evidence keeps rule attribution across live and retained comparisons (components=${components})`, async (t) => {
-    const markup =
-      '<link rel="stylesheet" href="../shared.css" /><button className="auth">Sign in</button>';
+    const markup = '<button className="auth">Sign in</button>';
     const source = components
       ? componentEntrySource({ actionRender: `() => <>${markup}</>` })
       : validEntrySource({ body: markup });
-    const fixture = await derivedFixture(t, source, {
-      "shared.css": ".auth { color: black; } .guide { color: black; }",
-      "action/shared.css": ".auth { color: black; } .guide { color: black; }",
-      "pane/shared.css": ".auth { color: black; } .guide { color: black; }",
-    });
+    const fixture = await derivedFixture(
+      t,
+      source,
+      {
+        "shared.css": ".auth { color: black; } .guide { color: black; }",
+        "action/shared.css": ".auth { color: black; } .guide { color: black; }",
+        "pane/shared.css": ".auth { color: black; } .guide { color: black; }",
+      },
+      'stylesheets: [{ match: "action/**", stylesheets: ["action/shared.css"] }, { match: "pane/**", stylesheets: ["pane/shared.css"] }, { match: "**", stylesheets: ["shared.css"] }],',
+    );
     const repository = await prepareReviewRepository(fixture.config, "HEAD");
     const cssPaths = ["shared.css", "action/shared.css", "pane/shared.css"].map(
       (route) => path.join(fixture.mockupsDir, route),
@@ -73,7 +77,7 @@ for (const components of [false, true]) {
       );
       const result = parseReviewResult(selected.result);
       const views =
-        components && result.schemaVersion === 5
+        components && result.schemaVersion === 6
           ? result.components[0]!.variants[0]!.views
           : result.screens.find((screen) => screen.path === id)!.views;
       assert.ok(views.length > 0);

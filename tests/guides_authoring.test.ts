@@ -3,8 +3,6 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { generatedOutputMode } from "../dist/config/generated_output.js";
-
 import { repositoryRoot } from "./helpers/fixture.js";
 import { GUIDES } from "./helpers/guides.js";
 
@@ -72,19 +70,15 @@ test("the Config guide and MoklyConfig fields agree", () => {
     assert.ok(fields.includes(field), `${field} is not a configuration field`);
 });
 
-test("the generated-output guides agree with the runtime default", () => {
-  assert.equal(generatedOutputMode(undefined), "derived");
-  assert.match(
-    sources.get("authoring/config") ?? "",
-    /\| `generatedOutput`\s+\| `"derived"` \(default\).*`"committed"`/u,
-  );
+test("the generated-output guides agree with index-derived tracking", () => {
+  assert.match(sources.get("authoring/config") ?? "", /head Git tracking/u);
   assert.match(
     GUIDES.find((guide) => guide.id === "start/build")?.source ?? "",
-    /By default generated files stay out of Git/u,
+    /Git/u,
   );
   assert.match(
     GUIDES.find((guide) => guide.id === "cli/build")?.source ?? "",
-    /With the default `generatedOutput: "derived"`/u,
+    /--watch/u,
   );
 });
 

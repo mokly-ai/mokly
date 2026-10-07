@@ -92,8 +92,8 @@ test("missing baseline roots fail instead of becoming page evidence", async (t) 
   for (const view of generatedViews(entry)) {
     Object.assign(view.usage!, { ranges: [] });
     files.set(
-      view.path,
-      String(files.get(view.path)).replace(
+      `mokly-generated/${view.path}`,
+      String(files.get(`mokly-generated/${view.path}`)).replace(
         /<!--mokly-component:(start|end):r-0-->/g,
         "",
       ),
@@ -147,8 +147,8 @@ test("the unchanged fast path validates an explicit root boundary", async (t) =>
     input.before.entries.find((entry) => entry.path === "action/default")!,
   ))
     files.set(
-      view.path,
-      String(files.get(view.path)).replace(
+      `mokly-generated/${view.path}`,
+      String(files.get(`mokly-generated/${view.path}`)).replace(
         "<!--mokly-component:start:r-0-->",
         "",
       ),

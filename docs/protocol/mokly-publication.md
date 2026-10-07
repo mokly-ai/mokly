@@ -44,9 +44,11 @@ same contract for JavaScript callers. With changes enabled, `base` overrides
 branch names, and an existing review configuration never enable the option
 implicitly. This extends the repository script, not the npm package CLI.
 
-The npm command rebuilds; direct callers build/check first. Capture validates
-inputs but does not render or repair output. `mokly export` builds and requests
-Changes under [baseline compatibility](./mokly-baseline-compatibility.md).
+Publication capture compiles and validates in memory; it never writes the
+consumer generated tree. The repository npm wrapper explicitly builds tooling
+and the example before capture. Direct callers need no local generated tree;
+source inventory and input stability are checked by the capture boundary.
+Consumer `mokly export` also compiles in memory and includes Changes by default.
 
 ## Current Catalogue By Default
 
@@ -71,7 +73,7 @@ In both publication options, strip the watched-server live-update entrypoint
 from every captured shell page and omit its watch-only assets. Keep the browser
 modules needed for ordinary navigation and optional comparison controls. Never
 start an EventSource, poll for development updates, or publish/redirect an
-`/__mokly/events` endpoint. On static hosting that URL has the ordinary
+`/mokly-viewer/events` endpoint. On static hosting that URL has the ordinary
 not-found response. This preserves the existing static-export invariant, also
 for home, missing-route, and removed-entry pages.
 
@@ -88,66 +90,49 @@ The destination must retain its captured identity until installation; an unowned
 replacement is preserved, including one introduced during capture. Retain the
 writer reservation, OS-enforced non-replacing moves, and safe backup recovery
 defined by the [export recovery contract](./mokly-export-recovery.md).
-The repository adapter also rejects prior preview markers as replacement proof
-under the [current ownership rule](./mokly-export-safety.md).
+The repository adapter has the same current-marker ownership requirement.
 The [generated inventory rule](./mokly-export-public-files.md#generated-inventory)
-keeps exact generated routes public while private/source names stay denied.
+keeps exact generated routes public while protected source names stay denied.
 Its owned reservation namespace remains after cleanup, with no active locks.
 Each entry's shell is written once at `view/<path>/index.html`; current-only
 shell metadata explicitly sets `comparisonUrl: null` and never requests a
 development comparison endpoint.
 
-Use the shared confined file enumeration for input fingerprints and public
+Use the shared confined file enumeration for input fingerprints, not public
 copying. Resolve each logical path inside the real repository before reading
 target bytes or traversing a linked directory. Hash symlink text; unrelated
 escaping, dangling, and cyclic links contribute only that metadata and do not
 abort publication. Explicit manifest and authoring inputs must resolve to
 confined regular files before their bytes are read. Directory walks terminate
-when a target repeats in the current ancestor chain, while independent aliases
-to the same directory retain their own logical routes.
+when a target repeats in the current ancestor chain; independent aliases to
+the same directory still contribute their own logical fingerprint paths.
 
-Copy eligible public file and directory aliases as regular files at their
-logical routes. Every copied target must also stay inside the real `mockupsDir`
-and pass the shared source/internal-metadata policy. Apply generated-artifact
-and staging/destination exclusions to both identities. After copying, validate
-the presence of every current page, document, and light/dark screen view
-derived from the manifest's paths, independently of the enumerated file list.
-Validate every exported
-HTML/CSS resource reference against confined regular files in
-the staged static tree, including transitive references. An unavailable resource,
-including a reference through a skipped cycle or excluded alias, fails before
-installation and preserves the previous artifact.
-Repository discovery may skip dependency/build directories, but the public walk
-must retain valid catalogue routes under names such as `target` and
-`node_modules`. Git administrative directories, generated artifacts, protected
-inputs, and confined staging/destination paths remain excluded.
+Copy compiled current documents under `static/mokly-generated/` and exactly the
+manifest's referenced authored closure under `static/` as regular files;
+never publish a directory merely because it is under `mockupsDir`. Each
+selected closure file must be a confined regular file outside `mokly-generated/`,
+not a symlink or protected input; apply staging/destination exclusions to
+both logical and resolved identities. Validate the presence of every current
+page, document and light/dark screen view named by the manifest. Validate every
+exported HTML/CSS resource reference against confined regular files in the
+staged static tree, including transitive references. An unavailable resource
+fails before installation and preserves the previous artifact. Repository
+discovery can skip dependency/build directories for inputs; publication never
+uses a directory-based public walk. Git administrative directories, protected
+inputs, and confined staging/destination paths stay excluded.
 
 ## Consistent Publication Snapshot
 
-Include accepted `mokly-generated/styles/` and `mokly-generated/assets/`
-routes in publication. Committed mode captures checked disk bytes; derived
-mode captures validated compilation bytes, including binary images and fonts,
-without enumerating the reserved output tree on disk. Private CSS and
-PostCSS-scanned inputs never publish. The CSS/PostCSS inventory pass runs for
-freshness before publication; generated links are validated against captured
-bytes, including `%40`-encoded scoped asset links. Only the accepted
-compilation's CSS and asset routes can enter `static/mokly-generated/` in
-derived mode. A missing accepted route fails validation even when a stale disk
-copy could satisfy the link. Committed capture uses checked bytes, not a
-recompiled replacement.
+Capture one validated in-memory compilation, including generated HTML, CSS,
+opaque assets, manifest and authored closure. No local generated tree is read or
+written. A missing accepted route fails even if disk output contains it.
+The CSS/PostCSS inventory freshness pass and scoped npm URL checks remain required.
+Fingerprint exact generated bytes and authored inputs; include every inventoried
+helper even beneath otherwise excluded `.context` directories. Recompile and
+fingerprint before installation; any input or byte drift aborts capture.
 
-The preview fingerprints authored inputs and the checked manifest. In derived
-mode it compiles once, requires that compilation's manifest to match the
-captured one, and uses its generated HTML, CSS and asset bytes for capture.
-The fingerprint ignores generated fragments and the entire reserved tree in
-derived mode. Before installation, fingerprint again and recompile to reject
-changed accepted output bytes. Both passes use the captured manifest's pinned
-`sourceFiles` for ownership filtering, even if freshness hydrates a mutable
-configuration inventory between them. This does not turn preview into a repair
-command for a stale manifest.
-
-Both options begin input capture before loading the current catalogue. Read
-the manifest bytes once and hash those exact bytes together with its inventoried
+Both options begin input capture before loading the current catalogue. Use
+the compilation's manifest bytes and hash them together with its inventoried
 inputs and public resources. Include inventoried helpers even beneath otherwise
 excluded `.context` directories. Construct one validated catalogue snapshot
 from that captured manifest and use it for the capture server, page capture

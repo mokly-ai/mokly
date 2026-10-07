@@ -12,14 +12,14 @@ import {
   baselineManifest,
 } from "./helpers/baseline_fixture.js";
 
-test("an earlier manifest sentinel is retained for the compatibility gate", async () => {
+test("an unrecognized rebuilt filename cannot identify output", async () => {
   const fixture = baselineFixture();
   const run = fixture.runner.run;
   fixture.runner.run = async (command) => {
     const result = await run(command);
     if (command.argv[0] !== "git") {
       await fixture.fs.remove(
-        path.join(command.cwd, "mockups/mokly-manifest.json"),
+        path.join(command.cwd, "mockups/mokly-generated/mokly-manifest.json"),
       );
       await fixture.fs.write(
         path.join(command.cwd, "mockups/mokabook-manifest.json"),
@@ -30,41 +30,48 @@ test("an earlier manifest sentinel is retained for the compatibility gate", asyn
     }
     return result;
   };
-  const result = await fixture.builder.build(fixture.request);
-  assert.equal(result.marker.manifestVersion, 6);
+  await assert.rejects(fixture.builder.build(fixture.request), {
+    code: "baseline-output-invalid",
+  });
+  assert.equal(
+    await fixture.fs.stat(
+      cacheLayout(fixture.request.repoRoot, fixture.request.commit).marker,
+    ),
+    undefined,
+  );
 });
 
-test("current v8 baselines remain reusable after marker validation", async () => {
+test("current v9 baselines remain reusable after marker validation", async () => {
   const fixture = baselineFixture();
   const run = fixture.runner.run;
   fixture.runner.run = async (command) => {
     const result = await run(command);
     if (command.argv[0] !== "git") {
       await fixture.fs.remove(
-        path.join(command.cwd, "mockups/mokly-manifest.json"),
+        path.join(command.cwd, "mockups/mokly-generated/mokly-manifest.json"),
       );
       await fixture.fs.write(
-        path.join(command.cwd, "mockups/mokly-manifest.json"),
-        Buffer.from(JSON.stringify({ ...baselineManifest, schemaVersion: 8 })),
+        path.join(command.cwd, "mockups/mokly-generated/mokly-manifest.json"),
+        Buffer.from(JSON.stringify({ ...baselineManifest, schemaVersion: 9 })),
       );
     }
     return result;
   };
   const first = await fixture.builder.build(fixture.request);
-  assert.equal(first.marker.manifestVersion, 8);
+  assert.equal(first.marker.manifestVersion, 9);
   const second = await fixture.builder.build(fixture.request);
   assert.equal(second.cacheHit, true);
   assert.deepEqual(second.marker, first.marker);
 });
 
-test("the oldest manifest sentinel is cached without parsing its contents", async () => {
+test("an unrecognized malformed rebuilt filename is never parsed", async () => {
   const fixture = baselineFixture();
   const run = fixture.runner.run;
   fixture.runner.run = async (command) => {
     const result = await run(command);
     if (command.argv[0] !== "git") {
       await fixture.fs.remove(
-        path.join(command.cwd, "mockups/mokly-manifest.json"),
+        path.join(command.cwd, "mockups/mokly-generated/mokly-manifest.json"),
       );
       await fixture.fs.write(
         path.join(command.cwd, "mockups/mockbook-manifest.json"),
@@ -79,12 +86,18 @@ test("the oldest manifest sentinel is cached without parsing its contents", asyn
     }
     return result;
   };
-  const result = await fixture.builder.build(fixture.request);
-  assert.equal(result.marker.manifestVersion, 6);
-  assert.equal((await fixture.builder.build(fixture.request)).cacheHit, true);
+  await assert.rejects(fixture.builder.build(fixture.request), {
+    code: "baseline-output-invalid",
+  });
+  assert.equal(
+    await fixture.fs.stat(
+      cacheLayout(fixture.request.repoRoot, fixture.request.commit).marker,
+    ),
+    undefined,
+  );
 });
 
-test("invalid cache markers are partial entries and cannot hide corrupt manifests", async () => {
+test("corrupt completed cache data rebuilds after marker validation", async () => {
   const { builder, request, fs } = baselineFixture();
   const result = await builder.build(request);
   assert.equal(
@@ -105,7 +118,10 @@ test("invalid cache markers are partial entries and cannot hide corrupt manifest
     ),
     undefined,
   );
-  const manifest = path.join(result.outputDir, "mokly-manifest.json");
+  const manifest = path.join(
+    result.outputDir,
+    "mockups/mokly-generated/mokly-manifest.json",
+  );
   fs.put(manifest, "regular", Buffer.from("{}"));
   assert.equal((await builder.build(request)).cacheHit, false);
   const layout = cacheLayout(request.repoRoot, request.commit);

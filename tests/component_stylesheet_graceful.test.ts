@@ -15,7 +15,7 @@ import {
 import { removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
-const route = "home/index.html";
+const route = "mokly-generated/home/index.html";
 const link = (href: string) => `<link rel="stylesheet" href="${href}">`;
 const head = (content: string) =>
   `<html><head>${content}</head><body>Content</body></html>`;
@@ -30,63 +30,63 @@ for (const [name, configured, position, markup, expected] of [
     ["a.css", "b.css"],
     0,
     link("a.css") + link("b.css"),
-    ["../action.css", "a.css", "b.css"],
+    ["../../action.css", "a.css", "b.css"],
   ],
   [
     "middle marker",
     ["a.css", "b.css"],
     1,
     link("a.css") + link("b.css"),
-    ["a.css", "../action.css", "b.css"],
+    ["a.css", "../../action.css", "b.css"],
   ],
   [
     "default position",
     ["a.css", "b.css"],
     2,
     link("a.css") + link("b.css"),
-    ["a.css", "b.css", "../action.css"],
+    ["a.css", "b.css", "../../action.css"],
   ],
   [
     "nearest following",
     ["a.css", "b.css", "c.css"],
     2,
     link("a.css") + link("c.css"),
-    ["a.css", "../action.css", "c.css"],
+    ["a.css", "../../action.css", "c.css"],
   ],
   [
     "nearest preceding",
     ["a.css", "b.css", "c.css"],
     2,
     link("a.css") + link("b.css"),
-    ["a.css", "b.css", "../action.css"],
+    ["a.css", "b.css", "../../action.css"],
   ],
   [
     "first repeated anchor",
     ["a.css", "b.css"],
     2,
     link("a.css") + link("b.css") + link("b.css"),
-    ["a.css", "b.css", "../action.css", "b.css"],
+    ["a.css", "b.css", "../../action.css", "b.css"],
   ],
   [
     "reordered anchors",
     ["a.css", "b.css"],
     1,
     link("b.css") + link("a.css"),
-    ["../action.css", "b.css", "a.css"],
+    ["../../action.css", "b.css", "a.css"],
   ],
   [
     "unequal distances with reordered separated anchors",
     ["a.css", "b.css", "c.css"],
     1,
     link("c.css") + '<meta name="between">' + link("a.css"),
-    ["c.css", "a.css", "../action.css"],
+    ["c.css", "a.css", "../../action.css"],
   ],
   [
     "no present anchor",
     ["a.css", "b.css"],
     1,
     '<meta name="last">',
-    ["../action.css"],
+    ["../../action.css"],
   ],
 ] as const)
   test(`component placement uses ${name}`, () => {
@@ -107,7 +107,7 @@ test("fallback follows all logical head content", () => {
     insertComponentStylesheets(head(markup), route, ["missing.css"], 0, [
       "action.css",
     ]),
-    head(markup + link("../action.css")),
+    head(markup + link("../../action.css")),
   );
 });
 
@@ -115,17 +115,17 @@ for (const [name, shared, expected] of [
   [
     "first",
     '[componentStylesheets, "base.css"]',
-    ["../pane.css", "../action.css", "../base.css"],
+    ["../../pane.css", "../../action.css", "../../base.css"],
   ],
   [
     "middle",
     '["base.css", componentStylesheets, "extra.css"]',
-    ["../base.css", "../pane.css", "../action.css", "../extra.css"],
+    ["../../base.css", "../../pane.css", "../../action.css", "../../extra.css"],
   ],
   [
     "missing",
     '["base.css", "extra.css"]',
-    ["../base.css", "../extra.css", "../pane.css", "../action.css"],
+    ["../../base.css", "../../extra.css", "../../pane.css", "../../action.css"],
   ],
 ] as const)
   test(`configured marker ${name} places declared CSS`, async (context) => {
@@ -156,7 +156,7 @@ for (const [name, shared, expected] of [
   });
 
 for (const duplicate of ["action.css", "alias.css"])
-  test(`duplicate declared real file ${duplicate} links once`, async (context) => {
+  test(`duplicate declarations link once only for regular files (${duplicate})`, async (context) => {
     const source = declared().replace(
       'stylesheets: ["action.css"]',
       `stylesheets: ["action.css", ${JSON.stringify(duplicate)}]`,
@@ -165,6 +165,15 @@ for (const duplicate of ["action.css", "alias.css"])
     context.after(() => removeFixture(fixture));
     if (duplicate === "alias.css")
       await fs.symlink("action.css", path.join(fixture.mockupsDir, duplicate));
+    const config = await loadConfig(fixture.root);
+    if (duplicate === "alias.css") {
+      await assert.rejects(compileCatalogue(config), {
+        code: "build-invalid",
+        message:
+          "[mokly/build-invalid] component action: stylesheet alias.css is not a public file (is a symlink or non-regular file)",
+      });
+      return;
+    }
     const result = await compileCatalogue(await loadConfig(fixture.root));
     const screen = result.manifest.entries.find(
       (entry) => entry.path === "home",
@@ -174,7 +183,10 @@ for (const duplicate of ["action.css", "alias.css"])
       result.outputs,
       viewRoute(screen.path, "mobile", "light"),
     )!;
-    assert.equal((html.match(/href="\.\.\/action\.css"/g) ?? []).length, 1);
+    assert.equal(
+      (html.match(/href="\.\.\/\.\.\/action\.css"/g) ?? []).length,
+      1,
+    );
     assert.deepEqual(
       screen.componentViews![0]!.insertedStylesheets!.find(
         (item) => item.path === "action.css",
@@ -196,7 +208,7 @@ test("configured and declared real file keeps the configured link without owners
     result.outputs,
     viewRoute(screen.path, "mobile", "light"),
   )!;
-  assert.equal((html.match(/href="\.\.\/action\.css"/g) ?? []).length, 1);
+  assert.equal((html.match(/href="\.\.\/\.\.\/action\.css"/g) ?? []).length, 1);
   assert.deepEqual(
     screen.componentViews![0]!.insertedStylesheets!.find(
       (item) => item.path === "action.css",

@@ -3,13 +3,14 @@ import path from "node:path";
 import type { ReviewArtifact, PageResourceEvidence } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../build/compile.js";
-import { withOutputLock } from "../build/output_lock.js";
-import { writeLockedCompilation } from "../build/transaction.js";
 import { projectRealPath, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { errorMessage, isCancellation, isMoklyError } from "../errors.js";
 import { removedManifestEntries } from "../registry/changes.js";
-import { parseHistoricalManifest } from "../registry/manifest.js";
+import {
+  parseHistoricalManifest,
+  parseManifest,
+} from "../registry/manifest.js";
 import { GitReviewAssetReader } from "../review/assets.js";
 import { baselineResourceConfig } from "../review/base_manifest.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
@@ -23,6 +24,7 @@ import {
 } from "../review/page_preview.js";
 import { classifyChangedContent } from "../server/changed_content.js";
 
+import { prepareExportBaseline } from "./baseline.js";
 import { withExportCleanup } from "./cleanup.js";
 import {
   assertExportActive,
@@ -33,7 +35,6 @@ import {
   assertInputsUnchanged,
   capturedAssetReader,
   pinnedEvidence,
-  prepareExportBaseline,
 } from "./inputs.js";
 import { resolveExportOutput } from "./paths.js";
 import { capturePublicFiles } from "./public_files.js";
@@ -82,11 +83,10 @@ async function generateExport(
 ): Promise<ExportResult> {
   try {
     const base = options.base ?? config.review.base;
-    const { baseline, incompatible, prepared } = await prepareExportBaseline(
-      config,
-      base,
-      options,
-    );
+    const { baseline, incompatible, prepared } =
+      await withPreInstallationCancellation(options.signal, () =>
+        prepareExportBaseline(config, options, base),
+      );
     const compilation = await withPreInstallationCancellation(
       options.signal,
       () => compile(config, undefined, options.signal, options.onWarning),
@@ -95,15 +95,10 @@ async function generateExport(
     options.onBuildDiagnostics?.(compilation.diagnostics);
     config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
     assertExportActive(options.signal);
-    const publicFiles = await withOutputLock(
-      config.repoRoot,
-      options.signal ? { signal: options.signal } : {},
-      async (lock) => {
-        await writeLockedCompilation(lock, compilation, config);
-        return withPreInstallationCancellation(options.signal, () =>
-          capturePublicFiles(config, compilation.outputs),
-        );
-      },
+    const publicFiles = await capturePublicFiles(
+      config,
+      compilation.outputs,
+      parseManifest(compilation.manifest).assetClosure,
     );
     const result = await withPreInstallationCancellation(
       options.signal,
@@ -133,6 +128,7 @@ async function generateExport(
             prepared.reader,
             prepared.commit,
             prefix,
+            baseline,
           );
           const changeEvidence = await importedChangedPaths(
             config,
@@ -182,7 +178,7 @@ async function generateExport(
           const pagePreviews = await captureRemovedPagePreviews(
             new RepositoryRemovedPagePreview(config, prepared.reader),
             {
-              schemaVersion: 2,
+              schemaVersion: 3,
               movedEntries:
                 comparison.pairing?.moves.map(({ path, previousPath }) => ({
                   path,

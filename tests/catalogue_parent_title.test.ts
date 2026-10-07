@@ -17,7 +17,7 @@ import { pathFixture } from "./helpers/path_fixture.js";
 for (const kind of ["screen", "component"] as const) {
   test(`removed ${kind} variants keep their baseline parent title before selection`, async (t) => {
     const metadata =
-      "title:'Former title',description:'Example',dependencies:[],relatedDocs:[]";
+      "title:'Former title',description:'Example',relatedDocs:[]";
     const fixture = await pathFixture({
       "specs/library/action.mockup.tsx":
         kind === "screen"
@@ -104,7 +104,7 @@ for (const [name, reader] of [
   for (const kind of ["screen", "component"] as const) {
     test(`${name} reader requires parentTitle exactly on removed ${kind} variants`, async () => {
       const model = JSON.parse(
-        await fs.readFile("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
+        await fs.readFile("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
       );
       const source = kind === "screen" ? model.screens[0] : model.components[1];
       const entry = {
@@ -124,7 +124,12 @@ for (const [name, reader] of [
         ...view,
         comparison,
       }));
-      const record = { entry, folderTitles: [], parentTitle: "Former title" };
+      const record = {
+        entry,
+        folderTitles: [],
+        parentTitle: "Former title",
+        snapshotId: "d".repeat(64),
+      };
       model.removedEntries = [record];
       assert.equal(
         reader(model).removedEntries[0]?.parentTitle,

@@ -66,26 +66,17 @@ test("reported nested renderer CSS fails before inlining can duplicate it", asyn
   assert.doesNotMatch(entry, /\.token/);
 });
 
-test("explicit generated output fails in both modes before public file validation", async (t) => {
+test("explicit generated output fails before public file validation", async (t) => {
   const fixture = await pluginFixture(
     ".x{color:red}",
     `result.messages.push({ type: "dependency", plugin: "fixture-deps", file: new URL("./mockups/mokly-generated/styles/stray.css", import.meta.url).pathname });`,
   );
   t.after(() => removeFixture(fixture));
-  for (const mode of ["committed", "derived"]) {
-    if (mode === "derived")
-      await fs.writeFile(
-        fixture.configPath,
-        (await fs.readFile(fixture.configPath, "utf8")).replace(
-          '"committed"',
-          '"derived"',
-        ),
-      );
-    await assert.rejects(
-      compileFixture(fixture),
-      /PostCSS plugin fixture-deps scanned Mokly-generated output in entries\/fixture\.css: mockups\/mokly-generated\/styles\/stray\.css; exclude mockupsDir from the plugin's sources \(Tailwind: @source not "\.\.\/mockups"\)/,
-    );
-  }
+
+  await assert.rejects(
+    compileFixture(fixture),
+    /PostCSS plugin fixture-deps scanned Mokly-generated output in entries\/fixture\.css: mockups\/mokly-generated\/styles\/stray\.css; exclude mockupsDir from the plugin's sources \(Tailwind: @source not "\.\.\/mockups"\)/,
+  );
 });
 
 test("plugin dependency on a public mockups file fails rather than hiding it", async (t) => {
@@ -146,7 +137,7 @@ test("outside-root and node_modules dependency files are ignored before normaliz
   );
 });
 
-test("committed directory dependency rejects generated CSS before public files; derived skips generated", async (t) => {
+test("directory reports skip generated output while preserving public-file rejection", async (t) => {
   const fixture = await pluginFixture(
     ".x{color:red}",
     `result.messages.push({ type: "dir-dependency", plugin: "fixture-deps", dir: new URL("./mockups", import.meta.url).pathname, glob: "**/*.css" });`,
@@ -161,18 +152,14 @@ test("committed directory dependency rejects generated CSS before public files; 
   await fs.writeFile(path.join(fixture.mockupsDir, "public.css"), ".public{}");
   await assert.rejects(
     compileFixture(fixture),
-    /PostCSS plugin fixture-deps directory dependency scans Mokly-generated output in entries\/fixture\.css: mockups\/mokly-generated\/styles\/stale\.css; exclude mockupsDir by excluding the matching scan root \(Tailwind: @source not "\.\.\/mockups" or source\(none\) with explicit @source\)/,
+    /directory dependency scans a public mockups file.*mockups\/public\.css/,
   );
-  await fs.writeFile(
-    fixture.configPath,
-    (await fs.readFile(fixture.configPath, "utf8")).replace(
-      '"committed"',
-      '"derived"',
+  await fs.rm(path.join(fixture.mockupsDir, "public.css"));
+  const compiled = await compileFixture(fixture);
+  assert.ok(
+    compiled.manifest.sourceFiles.every(
+      (file) => !file.includes("mokly-generated"),
     ),
-  );
-  await assert.rejects(
-    compileFixture(fixture),
-    /PostCSS plugin fixture-deps directory dependency scans a public mockups file in entries\/fixture\.css: mockups\/public\.css; exclude mockupsDir by excluding the matching scan root \(Tailwind: @source not "\.\.\/mockups" or source\(none\) with explicit @source\)/,
   );
 });
 
@@ -183,13 +170,6 @@ test("parent directory globs still reach public mockups CSS unless explicitly sc
   );
   t.after(() => removeFixture(fixture));
   await fs.writeFile(path.join(fixture.mockupsDir, "public.css"), ".public{}");
-  await fs.writeFile(
-    fixture.configPath,
-    (await fs.readFile(fixture.configPath, "utf8")).replace(
-      '"committed"',
-      '"derived"',
-    ),
-  );
   await assert.rejects(
     compileFixture(fixture),
     /directory dependency scans a public mockups file in entries\/fixture\.css: mockups\/public\.css; exclude mockupsDir by excluding the matching scan root \(Tailwind: @source not "\.\." or source\(none\) with explicit @source\)/,

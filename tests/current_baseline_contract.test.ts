@@ -13,15 +13,18 @@ import { readBaseManifest } from "../dist/review/base_manifest.js";
 import type { BaselineReader } from "../dist/review/git.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
-import { earlierV8Manifest } from "./helpers/current_baseline_fixture.js";
+import { invalidCurrentManifest } from "./helpers/current_baseline_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 const current = () => ({
-  schemaVersion: 8,
+  schemaVersion: 9,
   folders: [],
   generatedBy: "mokly",
   sourceFiles: [],
   entries: [],
+  assetClosure: [],
+  generatedFiles: [],
+  blobHashAlgorithm: "sha1",
 });
 
 test("comparison requires explicit provenance on a present private usage record", () => {
@@ -47,7 +50,7 @@ test("comparison requires explicit provenance on a present private usage record"
   assert.equal(comparisonStylesheetMaterial(html, undefined).html, html);
 });
 
-for (const version of [3, 4, 5, 6, 7])
+for (const version of [3, 4, 5, 6, 7, 8])
   test(`baseline v${version} is incompatible without metadata conversion`, () => {
     assert.throws(
       () => parseHistoricalManifest({ ...current(), schemaVersion: version }),
@@ -55,12 +58,12 @@ for (const version of [3, 4, 5, 6, 7])
     );
   });
 
-test("current v8 uses the same validation at both manifest boundaries", () => {
+test("current v9 uses the same validation at both manifest boundaries", () => {
   assert.deepEqual(
     parseHistoricalManifest(current()),
     parseManifest(current()),
   );
-  for (const schemaVersion of [9, 8.5, 7.5, "7", null]) {
+  for (const schemaVersion of [10, 9.5, 8.5, 7.5, "7", null]) {
     assert.throws(
       () => parseHistoricalManifest({ ...current(), schemaVersion }),
       { code: "manifest-invalid" },
@@ -73,25 +76,26 @@ for (const shape of [
   "missing provenance",
   "CSS owners",
 ] as const)
-  test(`earlier v8 with ${shape} is invalid at both boundaries`, async (context) => {
+  test(`earlier v9 with ${shape} is invalid at both boundaries`, async (context) => {
     const fixture = await createFixture(componentEntrySource());
     context.after(() => removeFixture(fixture));
     const { manifest } = await compileCatalogue(await loadConfig(fixture.root));
-    const invalid = earlierV8Manifest(manifest, shape);
+    const invalid = invalidCurrentManifest(manifest, shape);
     assert.throws(() => parseHistoricalManifest(invalid));
     assert.throws(() => parseManifest(invalid));
     assert.deepEqual(parseHistoricalManifest(manifest), manifest);
   });
 
 for (const filename of ["mokabook-manifest.json", "mockbook-manifest.json"])
-  test(`${filename} is a sentinel and its contents are never read`, async (context) => {
+  test(`${filename} does not supply canonical output and its contents are never read`, async (context) => {
     const fixture = await createFixture();
     context.after(() => removeFixture(fixture));
     const config = await loadConfig(fixture.root);
     const reads: string[] = [];
     const reader: BaselineReader = {
       fileExists: async (_commit, route) => route === `mockups/${filename}`,
-      fileKind: async () => "regular",
+      fileKind: async (_commit, route) =>
+        route === `mockups/${filename}` ? "regular" : "missing",
       readFile: async (_commit, route) => {
         reads.push(route);
         return JSON.stringify(current());
@@ -100,14 +104,13 @@ for (const filename of ["mokabook-manifest.json", "mockbook-manifest.json"])
         assert.fail("no resource read is allowed");
       },
     };
-    await assert.rejects(
-      readBaseManifest(reader, "base", config),
-      isIncompatibleEarlierBaseline,
-    );
+    await assert.rejects(readBaseManifest(reader, "base", config), {
+      code: "manifest-invalid",
+    });
     assert.deepEqual(reads, []);
   });
 
-test("invalid canonical v8 never falls back to a former filename", async (context) => {
+test("invalid canonical v9 never falls back to a former filename", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -126,5 +129,5 @@ test("invalid canonical v8 never falls back to a former filename", async (contex
   await assert.rejects(readBaseManifest(reader, "base", config), {
     code: "manifest-invalid",
   });
-  assert.deepEqual(reads, ["mockups/mokly-manifest.json"]);
+  assert.deepEqual(reads, ["mockups/mokly-generated/mokly-manifest.json"]);
 });

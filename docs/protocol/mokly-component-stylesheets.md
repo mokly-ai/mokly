@@ -50,13 +50,15 @@ schemes, HTTP(S) URLs, non-CSS files, missing files, directories, protected
 source, internal metadata and paths whose real targets escape the public root.
 CSS parse failures remain unresolved rule-analysis evidence, not an input-path
 validation failure.
-Apply the existing public-file confinement and configured exclusion rules,
-including symlinks, before accepting a declaration. Do not treat a CSS source
-module or an imported source as a public stylesheet.
+Apply the [shared public-file policy](./mokly-public-closure.md#one-policy-per-compilation)
+before accepting a declaration. It rejects symbolic links at every component
+of a public path, even when their targets remain confined. This applies to
+declared CSS, configured CSS and renderer-authored stylesheet links. Do not
+treat a CSS source module or an imported source as a public stylesheet.
 
 Preserve authored order and group paths by resolved real file. If one component
-lists a file twice, by the same path or an alias, keep its first path and
-position, link it once and issue the
+lists the same validated file twice, keep its first position,
+link it once and issue the
 [duplicate warning](#warning-messages). Different
 components may declare the same file. Validate input shape at authoring and
 registry boundaries, including untyped inputs; check existence, realpath
@@ -100,7 +102,7 @@ insert after all shared links and before the matching scheme-specific links.
 No marker emits a literal `<link>`. A rule for another route has no effect.
 
 Configured stylesheet URL support is unchanged. A local file may be both
-configured and declared, including through aliases of one real file. On a
+configured and declared through the same validated public file. On a
 matching route, keep the configured link at the renderer's position, add no
 second Mokly link, and retain the rendered declarations for link provenance. If the renderer omitted that configured link, insert one component
 link under the fallback rule and warn about the missing configured href. A
@@ -119,23 +121,24 @@ do not gain component links; their current stylesheet behavior is unchanged.
 
 Walk the actual registered render occurrences in first-render order (root
 first for a component document). Within each first-seen component append its
-authored stylesheet list. Group declarations by resolved real file, not by
-their lexical paths: two components may name that file through different
-public aliases. Emit one link per real file that Mokly must link. The first
+authored stylesheet list. Group repeated declarations by their validated file.
+Different components may declare the same file. Emit one link per file that
+Mokly must link. The first
 occurrence determines its link position and the declared public path used for
 its href; retain all rendered declaring paths for inserted-link provenance. Do not
 link the union of registered or saved-variant components: a component absent
 from this render contributes neither a link nor provenance. This order is stable
 in Build, Check, on-demand Serve and transient comparison renders.
 
-Resolve each href relative to this document's output route, with the same
+Resolve each href from this document's actual location under
+`<mockupsDir>/mokly-generated/`, with the same
 per-segment URL encoding as configured local stylesheet links. Emit a normal
 `<link rel="stylesheet" href="...">` inside `<head>`. The path recorded for
 provenance is the decoded, `mockupsDir`-relative public path used by that link,
 not its encoded href or the real filesystem path. For a Mokly-inserted link,
-the pre-transform href uses the first rendered declaration's lexical public
-path, even when later declarers use aliases of the same real file. The final
-provenance path follows the retained final link, including a transform's alias.
+the href uses the first rendered declaration's validated public path. Repeated
+declarations do not add another link. The final provenance path
+follows that active link after ordinary package edits.
 Shared/scheme configured link ordering otherwise stays unchanged.
 
 The [renderer stylesheet contract](./mokly-rendering.md#renderer-stylesheets)
@@ -145,9 +148,10 @@ component declarations add no hrefs to this list. Its component
 emits the supplied links. Use the [shared link finder](./mokly-stylesheet-links.md)
 for placement, reuse, provenance and resource discovery, with the scope defined
 for each step. If resource discovery finds a renderer-authored local stylesheet
-link to the same real file as a declaration, including in `<body>`, keep its
-authored position and insert no second link. Its decoded, `mockupsDir`-relative href
-path identifies the reused link even when an alias was declared first. A
+link to the same validated public file as a declaration, including in `<body>`,
+keep its authored position and insert no second link. Validate the link through
+the shared public-file policy before reuse. Its decoded, `mockupsDir`-relative
+href path identifies the reused link. A
 reused authored link gets no inserted-link span.
 Query and fragment suffixes on a renderer-authored local href do not change
 real-file identity; keep them on that link but omit them from resource paths.
@@ -183,7 +187,7 @@ See the [graceful-handling rule](./README.md#graceful-handling).
 ## Ownership And Comparison
 
 The linked [ownership and comparison contract](./mokly-component-stylesheet-ownership.md)
-defines transient provenance, the removal of CSS owner records, comparison-only
+defines private inserted-link provenance, the removal of CSS owner records, comparison-only
 link projection and Changes attribution. It retains renderer-authored links as
 page content and keeps CSS evidence based on final linked documents.
 

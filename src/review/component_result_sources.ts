@@ -1,5 +1,4 @@
 import {
-  generatedViews,
   isManifestComponentVariant,
   parseReviewResult,
   requireEqual,
@@ -8,7 +7,7 @@ import {
 } from "@mokly/viewer/data";
 import type {
   Manifest,
-  ReviewResultV5,
+  ReviewResultV6,
   ViewReview,
   DependencyReason,
 } from "@mokly/viewer/data";
@@ -31,6 +30,7 @@ import { groupedVariantPairs } from "./component_variant_pairs.js";
 import type { CssAttribution } from "./css/attribution.js";
 import { baselinePathMapper } from "./moves/identity.js";
 import { previousPathFields, type EntryMove } from "./moves/types.js";
+import { reviewViews } from "./views.js";
 
 /** Classifier evidence that can justify an entry's `dependency` reasons. */
 export interface DependencyReasonSources {
@@ -42,7 +42,7 @@ export interface DependencyReasonSources {
 
 /** Validate result coverage, addresses, dependency sources, and usage against both manifests. */
 export function validateComponentReviewSources(
-  result: ReviewResultV5,
+  result: ReviewResultV6,
   before: Manifest,
   after: Manifest,
   implementationImpact: ReadonlySet<string>,
@@ -124,8 +124,8 @@ export function validateComponentReviewSources(
     if ("views" in record) {
       validateViews(
         record.views,
-        pair.before ? generatedViews(pair.before) : [],
-        pair.after ? generatedViews(pair.after) : [],
+        pair.before ? reviewViews(pair.before) : [],
+        pair.after ? reviewViews(pair.after) : [],
       );
       continue;
     }
@@ -162,8 +162,8 @@ export function validateComponentReviewSources(
       );
       validateViews(
         variant.views,
-        base ? generatedViews(base) : [],
-        head ? generatedViews(head) : [],
+        base ? reviewViews(base) : [],
+        head ? reviewViews(head) : [],
       );
     }
   }
@@ -174,7 +174,7 @@ export function validateComponentReviewSources(
 }
 
 function validateChange(
-  result: ReviewResultV5,
+  result: ReviewResultV6,
   beforeEntry: ReviewEntry | undefined,
   afterEntry: ReviewEntry | undefined,
   sources: DependencyReasonSources,
@@ -260,8 +260,8 @@ function validateChange(
 
 function validateViews(
   views: readonly ViewReview[],
-  before: ReturnType<typeof generatedViews>,
-  after: ReturnType<typeof generatedViews>,
+  before: ReturnType<typeof reviewViews>,
+  after: ReturnType<typeof reviewViews>,
 ): void {
   const key = (view: { viewport: string; colorScheme: string }) =>
     `${view.viewport}:${view.colorScheme}`;

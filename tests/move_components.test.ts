@@ -64,7 +64,9 @@ for (const scenario of schemeMoveCases)
               for (const colorScheme of ["light", "dark"]) {
                 const route = `${routeRoot}/index.${viewport}${colorScheme === "dark" ? ".dark" : ""}.html`;
                 assert.equal(
-                  artifact.files.get(`snapshots/${side}/${route}`),
+                  artifact.files.get(
+                    `snapshots/${side}/mokly-generated/${route}`,
+                  ),
                   fixture[side].outputs.get(route),
                   route,
                 );
@@ -83,7 +85,7 @@ function component(
   variants: string,
   extraSchema = "",
 ): string {
-  return `defineComponent({path:'${name}',title:'${title}',description:'A control',dependencies:[],relatedDocs:[],propSchema:{kind:'object',properties:{label:{schema:{kind:'string'}}${extraSchema}}},render:(props)=><button>{props.label}</button>,variants:[${variants}]})`;
+  return `defineComponent({path:'${name}',title:'${title}',description:'A control',relatedDocs:[],propSchema:{kind:'object',properties:{label:{schema:{kind:'string'}}${extraSchema}}},render:(props)=><button>{props.label}</button>,variants:[${variants}]})`;
 }
 const primary = "{slug:'primary',title:'Primary',props:{label:'Continue'}}";
 const secondary = "{slug:'secondary',title:'Secondary',props:{label:'Back'}}";
@@ -185,7 +187,7 @@ for (const edited of [false, true])
   test(`a moved component keeps real before/after consumer evidence: edited=${edited}`, async (t) => {
     const source = `${header} import {defineScreen} from '@mokly/mokly';
       export const action = ${component("old/action", "Action", primary)};
-      export const consumer = defineScreen({path:'consumer',title:'Consumer',description:'Uses the action',dependencies:[],relatedDocs:[],mobile:<action.Component label='Continue'/>,desktop:<action.Component label='Continue'/>});`;
+      export const consumer = defineScreen({path:'consumer',title:'Consumer',description:'Uses the action',relatedDocs:[],mobile:<action.Component label='Continue'/>,desktop:<action.Component label='Continue'/>});`;
     const fixture = await componentReviewFixture(
       t,
       (text) => {

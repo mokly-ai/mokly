@@ -89,7 +89,7 @@ export default [...action.entries,defineScreen({${entry("screen")}title:'Home',d
       ),
       "specs/entry.mockup.tsx": source(false),
     },
-    `{mockupsDir:"generated",roots:[{dir:"specs"}],generatedOutput:"committed"${schemes ? ',colorSchemes:["light","dark"]' : ""}}`,
+    `{mockupsDir:"generated",roots:[{dir:"specs"}]${schemes ? ',colorSchemes:["light","dark"]' : ""}}`,
   );
   t.after(fixture.remove);
   const config = await fixture.config();

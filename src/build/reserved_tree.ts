@@ -1,13 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
-import { GENERATED_DIRECTORY } from "./styles/routes.js";
-
-/** Refuse symlinks and special files before ownership walks or output writes. */
+/** Refuse symlinks and special files before output writes or tracked checks. */
 export function assertSafeGeneratedTree(config: ResolvedConfig): void {
   const root = path.join(config.mockupsDir, GENERATED_DIRECTORY);
   const unsafe: { candidate: string; error: MoklyError }[] = [];
@@ -43,21 +43,6 @@ export function assertSafeGeneratedTree(config: ResolvedConfig): void {
   }
 }
 
-/** Validate just one output path's ancestors without rescanning all sibling files. */
-export function assertSafeGeneratedPath(
-  candidate: string,
-  config: ResolvedConfig,
-): void {
-  const root = path.join(config.mockupsDir, GENERATED_DIRECTORY);
-  let current = root;
-  checkedEntry(current, config, true);
-  const relative = path.relative(root, candidate);
-  for (const segment of relative ? relative.split(path.sep) : []) {
-    current = path.join(current, segment);
-    checkedEntry(current, config, false);
-  }
-}
-
 function checkedEntry(
   candidate: string,
   config: ResolvedConfig,
@@ -77,38 +62,8 @@ function checkedEntry(
     const file = toPosixPath(path.relative(config.repoRoot, candidate));
     throw new MoklyError(
       "build-invalid",
-      `mokly-generated/ contains a symlink or non-regular entry: ${file}; delete it before building or checking`,
+      `${GENERATED_DIRECTORY}/ contains a symlink or non-regular entry: ${file}; delete it before building or checking`,
     );
   }
   return stats;
-}
-
-/** Remove only empty package-owned directories after the entire write succeeds. */
-export async function pruneEmptyGeneratedDirectories(
-  config: ResolvedConfig,
-): Promise<void> {
-  const root = path.join(config.mockupsDir, GENERATED_DIRECTORY);
-  await prune(root);
-
-  async function prune(candidate: string): Promise<void> {
-    let entries: fs.Dirent[];
-    try {
-      entries = await fs.promises.readdir(candidate, { withFileTypes: true });
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return;
-      throw error;
-    }
-    for (const entry of entries) {
-      if (entry.isDirectory()) await prune(path.join(candidate, entry.name));
-    }
-    try {
-      await fs.promises.rmdir(candidate);
-    } catch (error) {
-      if (
-        (error as NodeJS.ErrnoException).code !== "ENOTEMPTY" &&
-        (error as NodeJS.ErrnoException).code !== "ENOENT"
-      )
-        throw error;
-    }
-  }
 }

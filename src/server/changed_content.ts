@@ -4,10 +4,10 @@ import path from "node:path";
 
 import type {
   HistoricalManifest,
-  ManifestV8,
+  ManifestV9,
   ScreenResourceEvidence,
   PageResourceEvidence,
-  ReviewResultV5,
+  ReviewResultV6,
   ViewResourceEvidence,
 } from "@mokly/viewer/data";
 
@@ -17,8 +17,8 @@ import { timeAsync } from "../diagnostics/timings.js";
 import { documentResourceIndex } from "../documents/resource_references.js";
 import { MoklyError } from "../errors.js";
 import {
-  FileSystemReviewAssetReader,
   GitReviewAssetReader,
+  FileSystemReviewAssetReader,
   type OptionalReviewAssetReader,
   type ReviewAssetReader,
 } from "../review/assets.js";
@@ -40,6 +40,7 @@ import type { MovePairing } from "../review/moves/types.js";
 import {
   publicChangedRoutes,
   documentPairs,
+  markChangedDocumentBytes,
   type DocumentPair,
 } from "./changed_document_pairs.js";
 import { ChangedResourceGraph } from "./changed_resources.js";
@@ -61,11 +62,11 @@ export interface ChangedContentComparison {
 }
 
 /**
- * Find material document/resource changes using live files or a captured reader.
+ * Find material document/resource changes using an accepted captured reader.
  * Exclude authoring paths lexically so retargeted public aliases still reach validation.
  */
 export async function changedContentPaths(
-  manifest: ManifestV8,
+  manifest: ManifestV9,
   baseline: HistoricalManifest,
   config: ResolvedConfig,
   git: BaselineReader,
@@ -94,7 +95,7 @@ export async function changedContentPaths(
 
 /** Preserve rendered-resource evidence from membership without repeating analysis. */
 export async function classifyChangedContent(
-  manifest: ManifestV8,
+  manifest: ManifestV9,
   baseline: HistoricalManifest,
   config: ResolvedConfig,
   git: BaselineReader,
@@ -106,18 +107,11 @@ export async function classifyChangedContent(
   documents: "all" | "pages" = "all",
   comparison?: ChangedContentComparison,
   css: CssResourceAnalysis = new CssResourceAnalysis(),
-  classified?: ReviewResultV5,
+  classified?: ReviewResultV6,
 ): Promise<ChangedContent> {
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const repoPath = (route: string) => (prefix ? `${prefix}/${route}` : route);
   const publicChanges = publicChangedRoutes(changedPaths, config);
-  const derived = config.generatedOutput === "derived";
-  if (
-    !derived &&
-    publicChanges.size === 0 &&
-    !comparison?.pairing?.moves.length
-  )
-    return { changedPaths: [], screens: [], pages: [] };
   const moves = comparison?.pairing?.moves ?? [];
   const pairs = documentPairs(
     manifest,
@@ -126,7 +120,7 @@ export async function classifyChangedContent(
     documents,
     moves,
   );
-  if (derived) for (const pair of pairs) pair.changed = true;
+  markChangedDocumentBytes(pairs, manifest, baseline);
   const baseReader =
     comparison?.beforeReader ??
     new GitReviewAssetReader(
@@ -134,6 +128,7 @@ export async function classifyChangedContent(
       git,
       commit,
       prefix,
+      baseline,
     );
   const identities =
     comparison?.resources ??
@@ -200,7 +195,7 @@ export async function classifyChangedContent(
       );
       if (normalized.base !== normalized.head) {
         result.add(repoPath(pair.head));
-        if (derived) publicChanges.add(pair.head);
+        publicChanges.add(pair.head);
       } else if (pair.base === pair.head) publicChanges.delete(pair.head);
     }
   };
@@ -208,8 +203,6 @@ export async function classifyChangedContent(
     for (let offset = 0; offset < changedPairs.length; offset += 32)
       await readBases(changedPairs.slice(offset, offset + 32));
   });
-  if (!derived && publicChanges.size === 0)
-    return { changedPaths: [...result].sort(), screens: [], pages: [] };
   const screens = new Map<string, ViewResourceEvidence[]>();
   const pages: PageResourceEvidence[] = [];
   const resources = new ChangedResourceGraph(
@@ -218,7 +211,6 @@ export async function classifyChangedContent(
     publicChanges,
     normalizedDocuments,
     css,
-    derived,
     {
       before: documentResourceIndex(baseline.entries),
       after: documentResourceIndex(manifest.entries),
@@ -238,7 +230,7 @@ export async function classifyChangedContent(
           normalizedDocuments.set(
             pair.head,
             pair.base
-              ? normalizeReviewPair(after, after, pair.context).head
+              ? normalizeReviewPair(after, after, pair.head).head
               : normalizeSingleDocument(after, pair.context),
           );
         }

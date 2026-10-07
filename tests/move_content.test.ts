@@ -30,12 +30,12 @@ test("identical document content requires the complete scheme set while similari
     [before],
     [after],
     new Map([
-      ["old/index.html", "one\ntwo\nthree\nfour\n"],
-      ["old/index.dark.html", "dark before\n"],
+      ["mokly-generated/old/index.html", "one\ntwo\nthree\nfour\n"],
+      ["mokly-generated/old/index.dark.html", "dark before\n"],
     ]),
     new Map([
-      ["new/index.html", "one\ntwo\nchanged\nlast\n"],
-      ["new/index.dark.html", "unrelated dark after\n"],
+      ["mokly-generated/new/index.html", "one\ntwo\nchanged\nlast\n"],
+      ["mokly-generated/new/index.dark.html", "unrelated dark after\n"],
     ]),
     {
       before: new Map([[before.sourcePath, "one\ntwo\nthree\nfour\n"]]),
@@ -49,10 +49,10 @@ test("identical document content requires the complete scheme set while similari
     [before],
     [lightOnly],
     new Map([
-      ["old/index.html", "same"],
-      ["old/index.dark.html", "same"],
+      ["mokly-generated/old/index.html", "same"],
+      ["mokly-generated/old/index.dark.html", "same"],
     ]),
-    new Map([["new/index.html", "same"]]),
+    new Map([["mokly-generated/new/index.html", "same"]]),
     {
       before: new Map([[before.sourcePath, "same"]]),
       after: new Map([[after.sourcePath, "same"]]),
@@ -64,7 +64,7 @@ test("identical document content requires the complete scheme set while similari
 
 test("identical component content requires evidence for every variant, not only schema and slugs", async (t) => {
   const source =
-    "import {defineComponent} from '@mokly/mokly'; export default defineComponent({path:'old/action',title:'Action',description:'An action',dependencies:[],relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> <button>Continue</button>,variants:[{slug:'primary',title:'Primary',props:{}}]});";
+    "import {defineComponent} from '@mokly/mokly'; export default defineComponent({path:'old/action',title:'Action',description:'An action',relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> <button>Continue</button>,variants:[{slug:'primary',title:'Primary',props:{}}]});";
   const fixture = await componentReviewFixture(
     t,
     (text) =>
@@ -79,7 +79,9 @@ test("identical component content requires evidence for every variant, not only 
   const text = (outputs: typeof fixture.before.outputs) =>
     new Map(
       [...outputs].flatMap(([route, content]) =>
-        typeof content === "string" ? [[route, content] as const] : [],
+        typeof content === "string"
+          ? [[`mokly-generated/${route}`, content] as const]
+          : [],
       ),
     );
   const signals = contentMoveSignals(

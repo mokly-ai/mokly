@@ -6,15 +6,16 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { readBaseManifest } from "../dist/review/base_manifest.js";
 import { asChangeEvidence } from "../dist/review/change_evidence.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
+import { CompiledReviewAssetReader } from "../dist/review/head_assets.js";
 import { computeChangedPaths } from "../dist/server/changed.js";
 import { changedContentPaths } from "../dist/server/changed_content.js";
 
-import { changedFixture } from "./helpers/changed_fixture.js";
+import { changedFixture, retainedChanges } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { validEntrySource } from "./helpers/fixture.js";
 
 const document =
-  '<html><head><link rel="stylesheet" href="../document.css"></head><body><!--mokly-review-ignore:start:nav--><nav>Old navigation</nav><!--mokly-review-ignore:end:nav--><main>Document content</main></body></html>';
+  '<html><head><link rel="stylesheet" href="../../document.css"></head><body><!--mokly-review-ignore:start:nav--><nav>Old navigation</nav><!--mokly-review-ignore:end:nav--><main>Document content</main></body></html>';
 const source =
   validEntrySource() +
   `
@@ -93,17 +94,18 @@ test("v8 page resource evidence uses the merged changed-path set", async (contex
     commit,
     fixture.config,
   );
-  const current = (await compileCatalogue(fixture.config)).manifest;
+  const current = await compileCatalogue(fixture.config);
   assert.deepEqual(
     await changedContentPaths(
-      current,
+      current.manifest,
       baseline,
       fixture.config,
       repository.reader,
       commit,
       asChangeEvidence(["mockups/document.css"]),
+      new CompiledReviewAssetReader(fixture.config, current.outputs),
     ),
-    ["mockups/handbook/index.html"],
+    ["mockups/mokly-generated/handbook/index.html"],
   );
 });
 
@@ -111,32 +113,25 @@ test("Changes cannot treat a historical authoring input as a deleted public reso
   const fixture = await changedFixture(
     context,
     validEntrySource() +
-      '\nimport { label } from "../mockups/helper.js"; mockups[0].title = label;',
+      '\nimport settings from "../mockups/helper.json"; mockups[0].title = settings.label;',
     undefined,
     async (fixture) => {
       await fs.writeFile(
-        path.join(fixture.mockupsDir, "helper.js"),
-        'export const label = "Fixture";',
+        path.join(fixture.mockupsDir, "helper.json"),
+        '{"label":"Fixture"}',
       );
     },
   );
-  await fs.writeFile(fixture.entryPath, validEntrySource());
-  await fixture.build();
-  await fs.rm(path.join(fixture.mockupsDir, "helper.js"));
-  const fragment = path.join(fixture.mockupsDir, "home/index.mobile.html");
   await fs.writeFile(
-    fragment,
-    (await fs.readFile(fragment, "utf8")).replace(
-      "</head>",
-      '<script src="../helper.js"></script></head>',
-    ),
+    fixture.entryPath,
+    validEntrySource({
+      body: '<img src="../../helper.json" alt="Resource" />',
+    }),
   );
-  assert.equal(
-    await computeChangedPaths(
-      fixture.config,
-      "HEAD",
-      committedReviewRepository(fixture.config),
-    ),
-    undefined,
+  await fixture.build();
+  await fs.rm(path.join(fixture.mockupsDir, "helper.json"));
+  await assert.rejects(
+    retainedChanges(fixture),
+    /not a public static file|source inventory/,
   );
 });

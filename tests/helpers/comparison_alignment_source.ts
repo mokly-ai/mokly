@@ -58,7 +58,7 @@ function blocks(changed: boolean): string {
 
 function tallScreen(changed: boolean): string {
   const version = changed ? "Current" : "Previous";
-  return `<main className="al-page"><header className="al-header">Alignment header</header><section className="al-hero"><h1>${version} tall</h1><p><a id="al-jump" href="#al-target">Jump to target</a> <a id="al-away" href="mock:short">Open short</a></p><p><input id="al-field" aria-label="Note" /></p></section>${blocks(changed)}<section className="al-target" id="al-target">Target section</section><img className="al-late" id="al-late" src="../alignment-late.svg" alt="" /><footer className="al-bar">Fixed bar</footer></main>`;
+  return `<main className="al-page"><header className="al-header">Alignment header</header><section className="al-hero"><h1>${version} tall</h1><p><a id="al-jump" href="#al-target">Jump to target</a> <a id="al-away" href="mock:short">Open short</a></p><p><input id="al-field" aria-label="Note" /></p></section>${blocks(changed)}<section className="al-target" id="al-target">Target section</section><img className="al-late" id="al-late" src="../../alignment-late.svg" alt="" /><footer className="al-bar">Fixed bar</footer></main>`;
 }
 
 function shortScreen(changed: boolean): string {

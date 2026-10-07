@@ -80,6 +80,7 @@ export class WarningRenderGate {
       index,
       name: request.name,
       release: () => request.response.end("ok"),
+      fail: () => request.response.destroy(),
     };
   }
   async close(): Promise<void> {

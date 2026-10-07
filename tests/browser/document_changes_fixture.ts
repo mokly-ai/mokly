@@ -37,7 +37,7 @@ const REMOVED_DOCUMENT = {
 /** Profile is its folder's own page, listing a variant and two members. */
 const SOURCE = `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: [], relatedDocs: [] };
+const metadata = { relatedDocs: [] };
 const shot = (id: string) => ({ ...metadata, mobile: <main id={id}>{id}</main>, desktop: <main id={id}>{id}</main> });
 export const profile = defineScreen({ ...shot("profile"), path: "account/profile", slug: "index", title: "Profile", description: "Profile", relatedDocs: ["entries/guide/terms.md"], variants: [{ ...shot("unverified"), slug: "unverified", title: "Unverified email", description: "Unverified email" }] });
 export const security = defineScreen({ ...shot("security"), path: "account/profile/security", title: "Security", description: "Security" });
@@ -79,7 +79,7 @@ export async function startDocumentChangesFixture(): Promise<DocumentChangesFixt
       base: "origin/main",
       snapshot: await loadCatalogueSnapshot(config, async () => ({
         movedEntries: [],
-        schemaVersion: 2,
+        schemaVersion: 3,
         baseRef: "origin/main",
         baseCommit: "a".repeat(40),
         changedEntries: ["account/profile/security", "guide/old-terms"],

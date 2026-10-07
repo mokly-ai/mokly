@@ -34,7 +34,7 @@ export async function branchPointFixture(
   const sources = branchPointSources(name);
   const fixture = await pathFixture(
     sources.before,
-    '{mockupsDir:"mockups",roots:[{dir:"specs"}],generatedOutput:"committed",colorSchemes:["light","dark"]}',
+    '{mockupsDir:"mockups",roots:[{dir:"specs"}],colorSchemes:["light","dark"]}',
   );
   try {
     await fs.mkdir(path.join(fixture.root, "mockups"));

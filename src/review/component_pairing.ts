@@ -3,11 +3,12 @@ import type {
   GeneratedComponentView,
   ReviewVariantAddress,
 } from "@mokly/viewer/data";
-import { generatedViews, isManifestComponentVariant } from "@mokly/viewer/data";
+import { isManifestComponentVariant } from "@mokly/viewer/data";
 
 import type { ReviewEntry } from "./component_metadata.js";
 import { groupedVariantPairs } from "./component_variant_pairs.js";
 import type { EntryMove } from "./moves/types.js";
+import { reviewViews } from "./views.js";
 
 export function variantAddress(
   variant: ManifestComponentVariant,
@@ -78,17 +79,17 @@ export function entryViewPairs(
     views: viewPairs(
       variants
         ? variants.flatMap((variant) =>
-            variant.before ? generatedViews(variant.before) : [],
+            variant.before ? reviewViews(variant.before) : [],
           )
         : pair.before
-          ? generatedViews(pair.before)
+          ? reviewViews(pair.before)
           : [],
       variants
         ? variants.flatMap((variant) =>
-            variant.after ? generatedViews(variant.after) : [],
+            variant.after ? reviewViews(variant.after) : [],
           )
         : pair.after
-          ? generatedViews(pair.after)
+          ? reviewViews(pair.after)
           : [],
       moves,
     ),

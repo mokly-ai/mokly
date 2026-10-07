@@ -37,9 +37,12 @@ export async function smokeRegisteredComponents(
   await runBin(root, ["build"]);
   await runBin(root, ["check"]);
   const manifest = JSON.parse(
-    await fs.readFile(path.join(root, output, "mokly-manifest.json"), "utf8"),
+    await fs.readFile(
+      path.join(root, output, "mokly-generated/mokly-manifest.json"),
+      "utf8",
+    ),
   );
-  assert.equal(manifest.schemaVersion, 8);
+  assert.equal(manifest.schemaVersion, 9);
   const componentEntries = manifest.entries.filter(
     (entry) => entry.kind === "component",
   );
@@ -74,17 +77,21 @@ export async function smokeRegisteredComponents(
       view.ranges.filter((range) => range.target.kind === "root").length,
       1,
     );
-    const { viewRoute } = await import(
+    const { generatedResourcePath, viewRoute } = await import(
       pathToFileURL(path.join(root, "node_modules/@mokly/viewer/dist/data.js"))
         .href
     );
     const html = await fs.readFile(
-      path.join(root, output, viewRoute(variant.path, "mobile", "light")),
+      path.join(
+        root,
+        output,
+        generatedResourcePath(viewRoute(variant.path, "mobile", "light")),
+      ),
       "utf8",
     );
     assert.match(
       html,
-      /<link rel="stylesheet" href="\.\.\/\.\.\/component\.css">/,
+      /<link rel="stylesheet" href="\.\.\/\.\.\/\.\.\/component\.css">/,
     );
   }
   for (const view of consumer.componentViews) {
@@ -98,7 +105,7 @@ export async function smokeRegisteredComponents(
     }
   }
   const before = await fs.readFile(
-    path.join(root, output, "mokly-manifest.json"),
+    path.join(root, output, "mokly-generated/mokly-manifest.json"),
     "utf8",
   );
   await smokeServer(root, ["--base", "HEAD"], async (url) => {
@@ -109,7 +116,7 @@ export async function smokeRegisteredComponents(
     assert.ok(state);
     const capability = JSON.parse(state[1]).renderCapability;
     assert.ok(capability);
-    const response = await fetch(`${url}/__mokly/components/render`, {
+    const response = await fetch(`${url}/mokly-viewer/components/render`, {
       method: "POST",
       headers: {
         origin: url,
@@ -133,7 +140,10 @@ export async function smokeRegisteredComponents(
     if (crossPlatform) assert.match(html, /data-theme="fixture-theme"/);
   });
   assert.equal(
-    await fs.readFile(path.join(root, output, "mokly-manifest.json"), "utf8"),
+    await fs.readFile(
+      path.join(root, output, "mokly-generated/mokly-manifest.json"),
+      "utf8",
+    ),
     before,
   );
   await runBin(root, ["export", "--out", "published", "--base", "HEAD"]);
@@ -142,7 +152,7 @@ export async function smokeRegisteredComponents(
     "published",
     "HEAD",
     ["view/packed-action/index.html", "view/packed-panel/index.html"],
-    5,
+    6,
   );
   assert.equal(review.components.length, 2);
   const published = await fs.readFile(

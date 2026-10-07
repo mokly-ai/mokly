@@ -4,6 +4,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
+import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import { loadConfig } from "../dist/config/load.js";
 import { componentStylesheets } from "../dist/index.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
@@ -48,11 +49,11 @@ test("a marker from a separately bundled config places links and retains its sin
     [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(
       (match) => match[1],
     ),
-    ["../base.css", "../pane.css", "../action.css", "../light.css"],
+    ["../../base.css", "../../pane.css", "../../action.css", "../../light.css"],
   );
 });
 
-test("realpath aliases deduplicate declarations and reuse configured links", async (t) => {
+test("symlinked declarations fail before deduplication and configured aliases are refused", async (t) => {
   const fixture = await fixtureWithSheets(declared());
   t.after(() => removeFixture(fixture));
   await fs.symlink("action.css", path.join(fixture.mockupsDir, "alias.css"));
@@ -63,20 +64,14 @@ test("realpath aliases deduplicate declarations and reuse configured links", asy
       'stylesheets: ["action.css", "alias.css"]',
     ),
   );
-  const deduplicated = await compileCatalogue(await loadConfig(fixture.root));
-  const first = deduplicated.manifest.entries.find(
-    (entry) => entry.path === "home",
-  );
-  assert.ok(first?.kind === "screen");
-  assert.equal(
-    (
-      textOutput(
-        deduplicated.outputs,
-        viewRoute(first.path, "mobile", "light"),
-      )!.match(/href="\.\.\/action\.css"/g) ?? []
-    ).length,
-    1,
-  );
+  const config = await loadConfig(fixture.root);
+  const declarationError = {
+    code: "build-invalid",
+    message:
+      "[mokly/build-invalid] component action: stylesheet alias.css is not a public file (is a symlink or non-regular file)",
+  };
+  await assert.rejects(prepareLiveRuntime(config), declarationError);
+  await assert.rejects(compileCatalogue(config), declarationError);
   await fs.writeFile(fixture.entryPath, declared());
   await fs.writeFile(
     fixture.configPath,
@@ -85,27 +80,14 @@ test("realpath aliases deduplicate declarations and reuse configured links", asy
       '"alias.css"',
     ),
   );
-  const reused = await compileCatalogue(await loadConfig(fixture.root));
-  const screen = reused.manifest.entries.find((entry) => entry.path === "home");
-  assert.ok(screen?.kind === "screen");
-  assert.equal(
-    (
-      textOutput(
-        reused.outputs,
-        viewRoute(screen.path, "mobile", "light"),
-      )!.match(/href="\.\.\/alias\.css"/g) ?? []
-    ).length,
-    1,
-  );
-  assert.deepEqual(
-    screen.componentViews![0]!.resources.find(
-      (resource) => resource.path === "alias.css",
-    )?.componentIds,
-    undefined,
-  );
+  await assert.rejects(compileCatalogue(await loadConfig(fixture.root)), {
+    code: "build-invalid",
+    message:
+      "[mokly/build-invalid] action/default/index.html: stylesheet alias.css is a symlink or non-regular file",
+  });
 });
 
-test("renderer CSS aliases are ignored and declarations retain inserted provenance", async (t) => {
+test("renderer CSS owners are ignored after safety checks and unlinked aliases are refused", async (t) => {
   const fixture = await fixtureWithSheets(
     declared(),
     'renderer: "renderer.tsx",',
@@ -114,7 +96,7 @@ test("renderer CSS aliases are ignored and declarations retain inserted provenan
   await fs.symlink("action.css", path.join(fixture.mockupsDir, "alias.css"));
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
-    `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => ({ html: '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>', resources: [{path: "alias.css", componentIds: ["action"]}] });`,
+    `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => ({ html: '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>', resources: input.entry.path === "home" ? [{path: "action.css", componentIds: ["action"]}] : [] });`,
   );
   const result = await compileCatalogue(await loadConfig(fixture.root));
   const screen = result.manifest.entries.find((entry) => entry.path === "home");
@@ -127,18 +109,42 @@ test("renderer CSS aliases are ignored and declarations retain inserted provenan
   );
   assert.ok(
     result.diagnostics?.some((warning) =>
-      warning.message.includes("alias.css"),
+      warning.message.includes("action.css"),
     ),
+  );
+  const rendererPath = path.join(fixture.root, "renderer.tsx");
+  await fs.writeFile(
+    rendererPath,
+    (await fs.readFile(rendererPath, "utf8")).replace(
+      'path: "action.css"',
+      'path: "alias.css"',
+    ),
+  );
+  await assert.rejects(
+    compileCatalogue(await loadConfig(fixture.root)),
+    (error: unknown) => {
+      assert.ok(error instanceof Error);
+      assert.equal((error as { code?: string }).code, "build-invalid");
+      assert.equal(
+        error.message,
+        "[mokly/build-invalid] renderer failed for home (mobile, light): [mokly/components] home/index.mobile.html: component resource is not a public file: alias.css (is a symlink or non-regular file)",
+      );
+      return true;
+    },
   );
 });
 
-test("an excluded renderer alias cannot bypass public-file protection", async (context) => {
+test("a renderer alias outside the catalogue cannot bypass public-file protection", async (context) => {
   const fixture = await fixtureWithSheets(
     declared(),
-    'renderer: "renderer.tsx", publicExclude: ["private.css"],',
+    'renderer: "renderer.tsx",',
   );
   context.after(() => removeFixture(fixture));
-  await fs.symlink("action.css", path.join(fixture.mockupsDir, "private.css"));
+  await fs.writeFile(path.join(fixture.entriesDir, "source.css"), ".action{}");
+  await fs.symlink(
+    "../entries/source.css",
+    path.join(fixture.mockupsDir, "private.css"),
+  );
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
     `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => ({ html: '<html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>', resources: [{path: "private.css", componentIds: ["action"]}] });`,

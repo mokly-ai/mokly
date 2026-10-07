@@ -2,17 +2,15 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
+import { setTimeout } from "node:timers/promises";
 
 import { readCatalogue } from "@mokly/viewer";
 import type { CatalogueReadModel, CatalogueUsage } from "@mokly/viewer";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
-import { ConfiguredGitCommandRunner } from "../dist/config/git.js";
 import { exportCatalogue } from "../dist/export/run.js";
-import { CommittedRepository } from "../dist/review/git.js";
-import { configuredServedReview } from "../dist/server/configured_review.js";
-import { startCatalogueServer } from "../dist/server/http.js";
+import { serve } from "../dist/server/serve.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 
@@ -79,7 +77,7 @@ for (const delivery of ["Serve", "export"] as const) {
     const oldModel = readCatalogue(
       JSON.parse(
         await fs.readFile(
-          path.join(before.outDir, "__mokly/catalogue.json"),
+          path.join(before.outDir, "mokly-viewer/catalogue.json"),
           "utf8",
         ),
       ),
@@ -88,27 +86,29 @@ for (const delivery of ["Serve", "export"] as const) {
       (entry) => entry.path === "home",
     )!.views[0]!.usage;
     await fs.writeFile(fixture.entryPath, source(true));
-    let model: CatalogueReadModel;
+    let model: CatalogueReadModel | undefined;
     let holderHtml: string;
     if (delivery === "Serve") {
       await writeCompilation(
         await compileCatalogue(fixture.config),
         fixture.config,
       );
-      const review = configuredServedReview(
-        fixture.config,
-        "origin/main",
-        new CommittedRepository(new ConfiguredGitCommandRunner(fixture.config)),
-      );
-      const server = await startCatalogueServer(fixture.config, {
+      const server = await serve(fixture.config, {
         port: 0,
         base: "origin/main",
-        review,
+        watch: false,
       });
       t.after(() => server.close());
-      const response = await fetch(`${server.url}/__mokly/catalogue.json`);
-      assert.equal(response.status, 200);
-      model = (await response.json()) as CatalogueReadModel;
+      for (let attempt = 0; attempt < 100; attempt++) {
+        const response = await fetch(
+          `${server.url}/mokly-viewer/catalogue.json`,
+        );
+        assert.equal(response.status, 200);
+        model = (await response.json()) as CatalogueReadModel;
+        if (model.changesStatus === "ready") break;
+        await setTimeout(25);
+      }
+      assert.equal(model?.changesStatus, "ready");
       const holder = await fetch(`${server.url}/view/holder/`);
       assert.equal(holder.status, 200);
       holderHtml = await holder.text();
@@ -116,7 +116,7 @@ for (const delivery of ["Serve", "export"] as const) {
       await exportCatalogue(fixture.config, { outDir: "site" });
       model = JSON.parse(
         await fs.readFile(
-          path.join(fixture.output, "__mokly/catalogue.json"),
+          path.join(fixture.output, "mokly-viewer/catalogue.json"),
           "utf8",
         ),
       ) as CatalogueReadModel;

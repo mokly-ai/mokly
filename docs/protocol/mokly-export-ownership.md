@@ -1,12 +1,12 @@
-# Export Ownership v2
+# Export Ownership v3
 
 ## Delivery Status
 
-Schema 2 is implemented by the exporter and every local ownership reader.
+Schema 3 is implemented by the exporter and every local ownership reader.
 [Delta Publishing](../../plans/delta-publishing.md) records the completed
 exporter, CLI and receiver-side compatibility work. Receivers built against
-this document accept only schema 2. The schema 1 shape is retired and no
-longer documented.
+this document accept only schema 3. Schemas 1 and 2 are unsupported. Version 3
+retains v2 digests and limits while gating the new `mokly-viewer/` paths.
 
 ## Boundary
 
@@ -24,7 +24,7 @@ The exporter writes UTF-8 JSON without a BOM, with these two fields:
 
 ```json
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "files": [
     { "path": "404.html", "sha256": "<64 lowercase hex>", "size": 1834 },
     { "path": "index.html", "sha256": "<64 lowercase hex>", "size": 20991 },
@@ -37,8 +37,8 @@ The shortened example illustrates the marker shape, not a complete catalogue.
 Its exact field types are:
 
 ```ts
-interface ExportOwnershipV2 {
-  schemaVersion: 2;
+interface ExportOwnershipV3 {
+  schemaVersion: 3;
   files: ExportOwnershipEntry[];
 }
 
@@ -50,9 +50,9 @@ interface ExportOwnershipEntry {
 ```
 
 Both root fields are required. The root must be an object. A missing
-`schemaVersion` is invalid. Any present value other than the number `2`,
-including string `"2"`, is an unsupported version; readers classify it before
-inspecting `files`. For version 2, `files` is an array containing only entry
+`schemaVersion` is invalid. Any present value other than the number `3`,
+including string `"3"`, is an unsupported version; readers classify it before
+inspecting `files`. For version 3, `files` is an array containing only entry
 objects. Each entry requires all three fields:
 
 - `path` is nonempty, slash-separated and relative to the export root, with at
@@ -83,7 +83,7 @@ duplicate JSON keys. Readers do not require sorted entries; writers sort by
 `path` using JavaScript's default string sort (UTF-16 code-unit order).
 
 Classification order is deterministic. Check a present root version before
-`files`. For version 2, require each field's documented primitive type, then
+`files`. For version 3, require each field's documented primitive type, then
 classify an integer size above 64 MiB or a string path above 1,024 UTF-8 bytes
 as too large before applying the remaining entry grammar. Wrong field types,
 including a nonnumeric size or non-string path, remain invalid.
@@ -101,17 +101,19 @@ collisions with the root marker. Inventory order is not significant.
 The marker describes generated files; it is not proof of origin or permission
 to delete, overwrite, extract, or serve them. Local export recovery can tolerate
 missing owned files but rejects unexpected files. The exporter accepts only
-schema 2 in an existing output directory: a directory holding a schema 1 marker
-from an earlier release fails with an `export-invalid` message that tells the
-user to move files they added before deleting the named directory. Upload
-acceptance requires the complete inventory with
+schema 3 in an existing output directory. A regular marker that parses as
+invalid, too large or unsupported, including an earlier version, fails with
+`[mokly/export-invalid] Invalid export ownership inventory: <output>.` Missing ownership
+and unsafe filesystem entries retain their separate errors. There is no
+version-specific local recovery path. Before clearing a destination manually,
+move any files that must be kept. Upload acceptance requires the complete inventory with
 neither missing nor unexpected files and every stored blob matching its entry.
 
 Receivers validate the marker before answering a plan request:
 
 | Violation                                                           | Result                           |
 | ------------------------------------------------------------------- | -------------------------------- |
-| Present `schemaVersion` other than the number `2`                   | 426 `upload-unsupported-version` |
+| Present `schemaVersion` other than the number `3`                   | 426 `upload-unsupported-version` |
 | Malformed root, missing version, entry shape or wrongly typed field | 400 or 422 invalid bundle        |
 | `sha256` not 64 lowercase hexadecimal characters                    | 400 or 422 invalid bundle        |
 | `size` negative, fractional, non-finite or nonnumeric               | 400 or 422 invalid bundle        |
@@ -129,7 +131,7 @@ inventory is a valid marker shape but cannot be a valid upload: `index.html`,
 
 ## Public Compatibility Fixtures
 
-[The versioned fixture file](./fixtures/export-ownership-v2.json) ships under
+[The versioned fixture file](./fixtures/export-ownership-v3.json) ships under
 `docs/protocol/fixtures` in the npm package. Its root is an object with
 `schemaVersion: 1` (fixture format) and `cases`, an array of objects with:
 
@@ -137,14 +139,14 @@ inventory is a valid marker shape but cannot be a valid upload: `index.html`,
 - `valid`: whether the parsed `document` has the ownership marker shape above.
 - `document`: the JSON value to validate; serialize it when testing a text parser.
 - `rejection`: present only when `valid` is false; `"unsupported-version"` for
-  a present version other than number 2 (426), `"too-large"` for an over-limit
+  a present version other than number 3 (426), `"too-large"` for an over-limit
   integer size or path byte length (413), and `"invalid"` for every other
   rejection (400/422).
 
 Cases cover a valid complete inventory, an empty inventory, unsorted entries,
 ignored unknown fields, Unicode paths, an accepted U+200D, and a path of
 exactly 1,024 UTF-8 bytes. Rejections cover a missing version, schema 1, string
-`"2"` and other versions; missing entry fields; uppercase or short hex;
+`"3"` and other versions; missing entry fields; uppercase or short hex;
 negative, fractional, nonnumeric and over-limit sizes; duplicate, case and
 exact/case-folded prefix collisions; marker ownership; invalid Unicode; DEL,
 U+0085 and other category Cc characters; a multibyte path over 1,024 bytes;
@@ -153,3 +155,7 @@ They test marker shape, not gzip/tar parsing, raw JSON decoding, archive
 completeness, digest verification, authorization or all upload limits. The
 packed-consumer smoke checks these installed fixtures with an independent
 reader, then verifies an actual published inventory against the extracted bytes.
+
+The approved [refusal contract](./mokly-boundary-results.md#export-refusals)
+names the output folder in every refusal and lists unexpected files when known.
+It adds no adoption or upgrade path and preserves every existing file.

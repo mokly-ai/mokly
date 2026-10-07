@@ -29,7 +29,7 @@ test("a page renders exactly one complete document even with dark screens enable
     "handbook/index.html",
     "mokly-manifest.json",
   ]);
-  assert.equal(result.manifest.schemaVersion, 8);
+  assert.equal(result.manifest.schemaVersion, 9);
   assert.match(
     textOutput(result.outputs, "handbook/index.html") ?? "",
     /Whole document/,
@@ -82,7 +82,7 @@ test("legacy configuration is rejected even when explicitly undefined", async (c
     );
     await assert.rejects(
       loadConfig(fixture.root),
-      /unknown configuration field: legacy/,
+      /legacy configuration was removed/,
     );
   }
 });
@@ -142,6 +142,16 @@ test("pages share relationship and identity validation with screen entries", asy
     );
     await assert.rejects(compileCatalogue(config), pattern, mutation);
   }
+  await fs.promises.writeFile(
+    path.join(fixture.mockupsDir, "handbook.html"),
+    "<!doctype html><p>Authored source stays private</p>",
+  );
+  await fs.promises.writeFile(
+    fixture.entryPath,
+    `${original}\nimport { definePage } from "@mokly/mokly"; mockups.push(${declaration});`,
+  );
+  const compiled = await compileCatalogue(config);
+  assert.ok(compiled.outputs.has("handbook/index.html"));
 });
 
 test("page logical links validate final page anchors and preserve native child controls", async (context) => {

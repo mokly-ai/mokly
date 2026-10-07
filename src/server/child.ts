@@ -28,7 +28,7 @@ export async function runServerChild(
   onWarning?: (warning: BuildDiagnostic) => void,
 ): Promise<void> {
   const initial =
-    retainedRuntime && manifest?.schemaVersion === "live-index-1"
+    retainedRuntime && manifest?.schemaVersion === "live-index-2"
       ? await receiveRequestedRuntime()
       : undefined;
   if (initial?.version) updateVersion = initial.version;
@@ -119,7 +119,12 @@ function waitForChildShutdown(
       }
       const update = parseChildUpdateMessage(message);
       if (update) {
-        repository.accept(update.baselineCommit, update.version);
+        repository.accept(
+          update.baselineCommit,
+          update.version,
+          update.baselineSelection,
+          update.baselineDescriptor,
+        );
         server.publishUpdate({
           ...(update.kind ? { kind: update.kind } : {}),
           changesStatus:
@@ -127,6 +132,7 @@ function waitForChildShutdown(
             (update.changedEntries === null ? "pending" : "ready"),
           changedEntries: update.changedEntries,
           componentChanges: update.componentChanges,
+          ...(update.assetClosure ? { assetClosure: update.assetClosure } : {}),
           version: update.version,
         });
       }

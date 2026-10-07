@@ -10,7 +10,7 @@ export const head = "a".repeat(40);
 
 export const base = "b".repeat(40);
 
-export const comparisonPath = `__mokly/diffs/__generations/${"c".repeat(64)}/review.json`;
+export const comparisonPath = `mokly-viewer/diffs/generations/${"c".repeat(64)}/review.json`;
 
 export const config = {
   configPath: "/repo/tools/mokly.config.ts",
@@ -46,7 +46,7 @@ export function dependencies(duplicate = false) {
         [
           comparisonPath,
           JSON.stringify({
-            schemaVersion: 5 as const,
+            schemaVersion: 6 as const,
             baseRef: "origin/main",
             baseCommit: base,
             changedPaths: [],

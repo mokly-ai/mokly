@@ -3,6 +3,7 @@ import { execFile } from "node:child_process";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { baselineCatalogue } from "../dist/baseline/catalogue.js";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
@@ -13,6 +14,7 @@ import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { generatedViews } from "../packages/viewer/dist/data.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
@@ -27,12 +29,15 @@ test("Review batches base viewport reads", async (context) => {
     (entry) => entry.kind === "screen",
   );
   const files = new Map<string, string>([
-    ["mockups/mokly-manifest.json", JSON.stringify(compilation.manifest)],
+    [
+      "mockups/mokly-generated/mokly-manifest.json",
+      JSON.stringify(compilation.manifest),
+    ],
   ]);
   for (const screen of screens) {
     for (const fragment of generatedViews(screen).map((view) => view.path)) {
       files.set(
-        `mockups/${fragment}`,
+        `mockups/mokly-generated/${fragment}`,
         textOutput(compilation.outputs, fragment) ?? "",
       );
     }
@@ -41,11 +46,13 @@ test("Review batches base viewport reads", async (context) => {
   let individualReads = 0;
   let batchedPathCount = 0;
   const git: ReadOnlyReviewRepository = {
+    descriptor: baselineCatalogue("a".repeat(40), "mockups", "generated-v9"),
     evidence: {
       changedPaths: async () => [],
       mergeBase: async () => "a".repeat(40),
     },
     reader: {
+      catalogue: baselineCatalogue("a".repeat(40), "mockups", "generated-v9"),
       fileExists: async (_commit, repoPath) => files.has(repoPath),
       fileKind: async (_commit, repoPath) =>
         files.has(repoPath) ? "regular" : "missing",
@@ -91,7 +98,7 @@ test("Review batches dark base fragments through CommittedRepository", async (co
   await git(fixture.root, ["add", "."]);
   await git(fixture.root, ["commit", "-qm", "test: dark base catalogue"]);
   const calls: string[][] = [];
-  const client = new CommittedRepository({
+  const client = committedReviewRepository(config, {
     run: async (arguments_) => {
       calls.push([...arguments_]);
       return gitOutput(fixture.root, arguments_);
@@ -109,7 +116,9 @@ test("Review batches dark base fragments through CommittedRepository", async (co
   );
   const expected = screens.flatMap((screen) => {
     assert.ok(screen.colorSchemes.includes("dark"));
-    return generatedViews(screen).map((view) => `mockups/${view.path}`);
+    return generatedViews(screen).map(
+      (view) => `mockups/mokly-generated/${view.path}`,
+    );
   });
   const batchedPathspecs = calls
     .filter((arguments_) => arguments_[0] === "ls-tree")
@@ -211,7 +220,7 @@ test("Comparison metadata has no per-screen HTML or navigation copies", () => {
     baseRef: "origin/main",
     changedPaths: [],
     ignoredImpact: [],
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     screens,
     components: [],
     changes: [],

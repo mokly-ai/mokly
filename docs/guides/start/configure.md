@@ -9,7 +9,7 @@ order: 2
 
 Create `mokly.config.ts` at the root of the repository and export the result
 of `defineConfig`. One field is required: `mockupsDir`, the folder that
-receives the generated catalogue. Everything Mokly reads comes from a `specs`
+holds the generated catalogue in its `mokly-generated/` child. Everything Mokly reads comes from a `specs`
 folder beside the config file unless you say otherwise.
 
 ```ts
@@ -75,8 +75,9 @@ export default defineConfig({
 ```
 
 A stylesheet rule matches an entry's route, `<path>/index.html`, so
-`account/**/index.html` reaches everything under `account`. Keep public assets
-such as `app.css` inside `mockupsDir` so the catalogue can serve them. Entry
+`account/**/index.html` reaches everything under `account`. Keep referenced authored assets
+such as `app.css` inside `mockupsDir` but outside `mokly-generated/` so the catalogue can serve them.
+Unreferenced files stay private. Entry
 modules, documents and the helpers they import are never served, even when a
 root reaches into a folder below `mockupsDir`.
 To place registered components' declared public CSS among configured links,

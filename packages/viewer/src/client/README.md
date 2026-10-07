@@ -143,6 +143,11 @@ Related boundaries: [inspector](../inspector/README.md),
 [logical navigation](../../../../docs/protocol/mokly-navigation.md),
 [standalone bootstrap](../../../../docs/protocol/mokly-shell-bootstrap.md).
 
+The approved [frame identity boundary](../../../../docs/protocol/mokly-boundary-results.md#delivered-frame-identity)
+uses one same-origin URL comparison for readiness and later inspection. It
+accepts the provider's final `.html` removal and decodes each path only once;
+no cross-origin response-path access is assumed.
+
 ## Delivery Status
 
 See the [implementation plans](../../../../plans/).

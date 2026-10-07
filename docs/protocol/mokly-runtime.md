@@ -1,20 +1,15 @@
 # Mokly Build And Browse Runtime
 
 [Whole-document pages](./mokly-pages.md) share the same path-derived folder
-hierarchy as screens and flows. Current and baseline output use manifest v8
+hierarchy as screens and flows. Current and baseline output use manifest v9
 under the [compatibility contract](./mokly-baseline-compatibility.md).
 
 ## Source Of Truth
 
-Consumer-authored registry modules and imported render helpers are the source of
-truth. In the default [derived mode](./mokly-derived-baselines.md), generated
-fragments, page HTML, and the manifest are local artifacts and the baseline is
-rebuilt from the merge-base commit. Explicit committed mode instead keeps those
-artifacts in Git so they can be reviewed without executing historical code.
-Browsing and comparisons consume the same rendered documents and definitions;
-neither may introduce a second screen renderer or catalogue. This repository's
-basic example uses the default derived mode: only its authored inputs,
-including public CSS, are tracked. Build generates its local HTML and manifest.
+Authored entry modules, Markdown and imported helpers define the catalogue.
+Build writes the whole `mokly-generated/` tree. Serve and comparisons consume
+the accepted generation without another renderer. Git tracking and per-commit
+baselines follow [generated output](./mokly-generated-output.md).
 
 ## Delivery Status
 
@@ -25,10 +20,10 @@ automation, and Playwright browser coverage are implemented. Both npm packages
 have completed their [initial registration](./npm-bootstrap.md); subsequent
 versions follow the [coordinated release contract](./npm-release.md).
 Canonical outer navigation from links inside fragment frames, request-visible
-fragment transport, ownership-aware preview adaptation, and active-tree
+fragment transport, manifest-bound preview adaptation, and active-tree
 disclosure are implemented. Their delivery history is recorded in the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
-Path identity, manifest v8, Markdown documents, and move detection are
+Path identity, manifest v9, Markdown documents, and move detection are
 implemented.
 
 This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
@@ -53,16 +48,17 @@ Changes. Screen-owned prop and slot changes still count as screen changes.
 `mokly build` performs this transaction:
 
 1. Load and validate config.
-2. Walk the configured roots; bundle entry, renderer, transformer, and imported
+2. Walk the configured roots; bundle entry, renderer, and imported
    helper modules and read Markdown documents and folder records.
 3. Validate registry metadata, relationships, derived paths, and output
    collisions.
 4. Render screen views, whole-document pages, and Markdown documents in
    deterministic order.
 5. Resolve path links and validate document links and anchors.
-6. Build the version 8 manifest and resolved source inventory.
-7. Stage every generated file before changing the last-good output.
-8. Atomically replace generated files and remove proven generated orphans.
+6. Build the version 9 manifest, asset closure, generated-file inventory and
+   resolved source inventory; validate closure and hrefs from `mokly-generated/`.
+7. Stage the entire `mokly-generated/` tree before changing the last-good output.
+8. Replace that tree transactionally; restore it on failure.
 
 An error leaves the last-good generated tree unchanged. Build output and
 diagnostics use repo-relative paths and deterministic ordering. Non-fatal
@@ -75,14 +71,18 @@ remain available for registry validation even when their values are `undefined`.
 
 ## Check
 
-`mokly check` computes expected output without mutating files. In
-derived mode it fails when Git tracks generated routes, the manifest or cache
-contents, and does not require generated output to exist or match on disk. It
+`mokly check` computes expected output without mutating files. When the index
+tracks all expected output it compares the entire `mokly-generated/` tree, including
+missing, stale, and extra files. When no output is indexed it ignores local
+output. A mixture fails `build-invalid` with both remedies; indexed cache
+contents fail independently, only under Check. Build and Serve never read
+head tracking or run the cache index guard; adding an entry builds before it
+can be staged. It
 fails for:
 
 - invalid config or registry metadata;
 - duplicate or case-colliding paths, or a derived view or document that
-  collides with another generated or public file;
+  collides with another generated file;
 - [path](./mokly-paths.md#diagnostics), [folder](./mokly-folders.md#diagnostics),
   and [entry module](./mokly-entry-modules.md#diagnostics) violations, unknown
   or moved link targets, missing use-case screens, or reciprocal memberships;
@@ -93,17 +93,15 @@ fails for:
   color-scheme subsets unsupported by the catalogue config;
 - missing `lightStylesheets` / `darkStylesheets` files, or a stylesheet path one
   rule would link twice into the same fragment;
-- stale, missing, proven-orphan, or unclaimed generated output in committed
-  mode; unclaimed means Mokly-headered HTML whose owner is not a resolved file,
-  an inventoried source, or a file below a configured root matching its globs;
+- missing, stale, or extra generated files when output is tracked;
 - malformed Review-ignore markers or material keys;
 - protected-source or source-inventory violations.
 
-The committed failure report groups missing, stale, orphan, and unclaimed paths.
-Run `mokly build` for the first three. Build does not alter unclaimed files;
-delete them or restore their source below a configured root. Consumer HTML
-without a valid Mokly ownership header is authored public content and is not an
-unclaimed-file error. `check` never rewrites output.
+The tracked failure report groups missing, stale, and extra paths. Run
+`mokly build` and commit the whole tree, or untrack and ignore `mokly-generated/`.
+`check` never rewrites output; plain Serve, export, and publication never write it.
+Only `build`, `build --watch`, and `serve --build` write after a complete
+successful compilation, as specified in [generated output](./mokly-generated-output.md).
 
 ## Catalogue And Routes
 
@@ -116,7 +114,7 @@ static delivery metadata, and lazy immutable comparisons are defined by
 No server or watcher is started for export; served behavior below is unchanged.
 
 Serve validates its distinct live catalogue index and independently resolves both
-source graphs before binding. Full-manifest consumers still require validated v8
+source graphs before binding. Full-manifest consumers still require validated v9
 output and a current source inventory. These scans never render pages or rewrite
 output. The [on-demand contract](./mokly-on-demand.md) defines completeness,
 worker isolation and generation-local caches. Browse exposes:
@@ -125,15 +123,15 @@ worker isolation and generation-local caches. Browse exposes:
 - `/view/<path>/` for every current or removed entry, where the path is the
   entry's identity under the [path contract](./mokly-paths.md#urls);
   `/view/<path>` and `/view/<path>/index.html` answer with the same shell;
-- `/static/<file>` for generated views, page and Markdown documents, document
-  resources, and consumer assets, always delivered with
+- `/static/<file>` for generated views, page and Markdown documents and copied
+  resources under `mokly-generated/`, plus referenced authored assets, always delivered with
   `Cache-Control: no-store` because watched rebuilds replace bytes at stable
   URLs;
-- `/__mokly/diffs/review.json` for explicitly requested comparisons, with
+- `/mokly-viewer/diffs/review.json` for explicitly requested comparisons, with
   redirects to immutable generations and snapshot files beneath the same prefix;
-- package-owned client and update endpoints under `/__mokly/`.
+- package-owned client and update endpoints under `/mokly-viewer/`.
 
-Serve also exposes [`/__mokly/catalogue.json`](./mokly-catalogue.md)
+Serve also exposes [`/mokly-viewer/catalogue.json`](./mokly-catalogue.md)
 as the public read model, refreshed atomically on watched content/evidence
 updates. It keeps the private manifest and on-demand readiness boundary intact.
 
@@ -163,10 +161,10 @@ backslash separators introduced by decoding one original URL segment before
 any filesystem resolution.
 
 Browse projects one [catalogue tree](./mokly-catalogue.md#tree) from validated
-manifest v8 paths and folder records and splits it into the Components and
-Specs sections. The serve-mode `live-index-1` retains that literal
-`schemaVersion` but carries the v8 entry shape and folder records (with
-unrendered usage metadata omitted), validated through the v8 metadata schema.
+manifest v9 paths and folder records and splits it into the Components and
+Specs sections. The serve-mode `live-index-2` retains that literal
+`schemaVersion` but carries the v9 entry shape and folder records (with
+unrendered usage metadata omitted), validated through the v9 metadata schema.
 
 ## Browse Shell
 
@@ -192,7 +190,7 @@ inspector. Current and comparison views share the same navigation and saved
 width. The package build records every browser output in a generated manifest;
 Serve validates exact manifest/directory equality and export copies that same
 inventory. `navigation-resize.js` and `appearance-startup.js` are classic
-pre-hydration bundles under `/__mokly/client/`. They capture native disclosure
+pre-hydration bundles under `/mokly-viewer/client/`. They capture native disclosure
 and width choices and restore appearance before React hydrates; the React shell
 then adopts those values and owns ongoing navigation, selection and rendering.
 The appearance controller remains responsible for its stored preference and
@@ -201,7 +199,7 @@ drawer does not expose the separator.
 Consumer brand chrome does not appear in the shell. A small set of documented
 CSS custom properties may tune the shell accent without replacing its
 structural styles. The shell serves its packaged Inter variable font from
-`/__mokly/fonts/`. The All/Changes filter lives at the top of the navigation
+`/mokly-viewer/fonts/`. The All/Changes filter lives at the top of the navigation
 column, shows the changed count, and derives from Git changes between the
 current workspace and the merge base shared by `HEAD` and the serve base ref.
 Commits reachable only from the base ref are not branch changes. Staged,
@@ -236,33 +234,32 @@ fragments is affected too and remains visible in the changed-only filter.
 
 A screen embeds its generated mobile and desktop fragments inside package-owned
 device frames. A use case renders ordered steps that reference those same
-fragments and link back to their standalone screens. A page or Markdown document
-embeds its complete generated document without viewport or comparison controls.
-The details inspector may show description, rationale, source and fragment paths
-including dark renders, the schemes a screen renders in, the tags the entry
-declares, related docs, use cases, and comparison context. Default
-Browse fragments and document pages are sandboxed without script permission so
-they cannot alter the same-origin Browse shell. Package-owned same-origin
-inspection permits parent-owned outer navigation after explicit user activation.
-Browse does not grant either top-navigation sandbox token, so direct and nested
-consumer contexts retain the active restriction that prevents them from
-replacing the shell. The served/preview adapter authenticates markers only for
-current-manifest screen fragments and generated document pages whose ownership
-header names that entry's manifest `sourcePath`. The versioned header stores
-that identity as canonical base64, keeping arbitrary repository filename bytes
-out of the HTML comment grammar. The adapter shares the strict build/cleanup
-decoder under the [current ownership rule](./mokly-rendering-generated.md#ownership);
-earlier headers prove no ownership. Unowned HTML loses reserved metadata in the adapted
-copy; a trusted route with missing/mismatched ownership, invalid markers, or a
-marker/portable-href mismatch fails closed. One strict typed target parser
-supplies inert metadata only to trusted parent enhancement. A trusted document
-that carries an activatable marker and `<base href>` also fails closed,
-including if post-build tampering introduced the base URL; consumer-authored
-`href`, `<base target>`, `target`, and `formtarget` values otherwise remain
-portable and sandbox-confined. Consumer scripts, forms, popups, downloads, and
-top navigation remain forbidden in this default mode. The explicit cross-origin
-host exception is confined to the frame-adapter contract. Comparison panes keep
-byte-unmodified files and no script permission.
+fragments and link back to their standalone screens. A page or Markdown document embeds its complete generated document without viewport or comparison
+controls. The details inspector may show description, rationale,
+source and fragment paths including dark renders, the schemes a screen renders
+in, the tags the entry declares, related docs, use cases, and
+comparison context.
+Default Browse fragments and document pages are sandboxed without script permission
+so they cannot alter the same-origin Browse shell. Package-owned same-origin
+inspection permits parent-owned outer navigation after explicit user
+activation. Browse does not grant either
+top-navigation sandbox token, so direct and nested consumer contexts retain the
+active restriction that prevents them from replacing the shell. The
+served/preview adapter authenticates logical markers only for current-manifest
+screen fragments and generated document pages present in the accepted
+in-memory compilation and validated manifest. Only the current plain notice
+is stripped with LF or CRLF, without granting access or validating ownership.
+Former source-path headers stay ordinary text. Other HTML loses package-reserved
+metadata in the adapted copy; a trusted route with invalid logical markers or a
+marker/portable-href mismatch fails closed. One strict typed
+target parser supplies inert metadata only to trusted parent enhancement. A
+trusted document that carries an activatable marker and `<base href>` also
+fails closed, including if post-build tampering introduced the base URL;
+consumer-authored `href`, `<base target>`, `target`, and `formtarget` values
+otherwise remain portable and sandbox-confined. Consumer scripts, forms,
+popups, downloads, and top navigation remain forbidden in this default mode. The
+explicit cross-origin host exception is confined to the frame-adapter contract.
+Comparison panes keep byte-unmodified files and no script permission.
 
 Stored disclosure rules are in the [persistence contract](./mokly-disclosure-persistence.md).
 

@@ -1,5 +1,7 @@
 /** Design tokens, font, and base element styles for the served shell. */
 
+import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
+
 /**
  * The Light half of the one semantic palette, recorded in
  * `docs/protocol/mokly-viewer-palette.md`. Every themed role is declared here
@@ -14,7 +16,7 @@ export const SHELL_TOKENS_CSS = `
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
-  src: url("/__mokly/fonts/InterVariable.woff2") format("woff2");
+  src: url("/${VIEWER_DIRECTORY}/fonts/InterVariable.woff2") format("woff2");
 }
 
 :root {

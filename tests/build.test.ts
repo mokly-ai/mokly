@@ -6,7 +6,6 @@ import test from "node:test";
 
 import { checkCompilation } from "../dist/build/check.js";
 import { compileCatalogue } from "../dist/build/compile.js";
-import { generatedHeader } from "../dist/build/ownership.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 
@@ -27,7 +26,7 @@ test("build renders deterministic fragments, resolves id links, and checks commi
   await writeCompilation(first, config);
   checkCompilation(await compileCatalogue(config), config);
   const home = await fs.promises.readFile(
-    path.join(fixture.mockupsDir, "home/index.mobile.html"),
+    path.join(config.generatedDir, "home/index.mobile.html"),
     "utf8",
   );
   assert.match(home, /href="\.\.\/details\/index\.mobile\.html"/);
@@ -109,18 +108,20 @@ test("check groups missing, stale, and proven orphan output", async (context) =>
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
   await writeCompilation(compilation, config);
-  await fs.promises.rm(path.join(fixture.mockupsDir, "home/index.mobile.html"));
+  await fs.promises.rm(
+    path.join(config.generatedDir, "home/index.mobile.html"),
+  );
   await fs.promises.writeFile(
-    path.join(fixture.mockupsDir, "home/index.desktop.html"),
+    path.join(config.generatedDir, "home/index.desktop.html"),
     "stale\n",
   );
   await fs.promises.writeFile(
-    path.join(fixture.mockupsDir, "orphan.html"),
-    generatedHeader("entries/old.mockup.tsx") + "<html></html>\n",
+    path.join(config.generatedDir, "extra.html"),
+    "<html></html>\n",
   );
   assert.throws(
     () => checkCompilation(compilation, config),
-    /missing generated files[\s\S]*stale generated files[\s\S]*orphan generated files/,
+    /missing generated files:[\s\S]*mokly-generated\/home\/index\.mobile\.html[\s\S]*stale generated files:[\s\S]*extra generated files:[\s\S]*mokly-generated\/extra\.html[\s\S]*Run mokly build and commit/,
   );
 });
 

@@ -13,6 +13,7 @@ import {
 import { baselineResourceConfig, readBaseManifest } from "./base_manifest.js";
 import type { ChangeEvidence } from "./change_evidence.js";
 import { reviewChangedPaths } from "./changed_paths.js";
+import { CompilationAssetReader } from "./compilation_assets.js";
 import { compareComponentCatalogue } from "./component_compare.js";
 import type { CssResourceAnalysis } from "./css/resource_analysis.js";
 import { importedChangedPaths } from "./imported_changes.js";
@@ -34,7 +35,10 @@ export async function compareReview(
   git: ReadOnlyReviewRepository,
   baseRef: string,
   outDir = config.review.outDir,
-  assetReader: ReviewAssetReader = new FileSystemReviewAssetReader(config),
+  assetReader: ReviewAssetReader = new CompilationAssetReader(
+    compilation.outputs,
+    new FileSystemReviewAssetReader(config),
+  ),
   changedPathExclusions: readonly string[] = [],
   options: CompareReviewOptions = {},
 ): Promise<StylesheetReviewArtifact> {
@@ -57,6 +61,7 @@ export async function compareReview(
     git.reader,
     baseCommit,
     mockupsPrefix,
+    baseManifest,
   );
   const changedPaths =
     options.changeEvidence ??

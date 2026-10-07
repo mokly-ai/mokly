@@ -136,7 +136,7 @@ export async function cssMembershipFixture(
       delivery === "javascript"
         ? [...after.outputs.keys()]
             .filter((route) => route.endsWith(".css"))
-            .map((route) => `mockups/${route}`)
+            .map((route) => `mockups/mokly-generated/${route}`)
         : [`mockups/${path.basename(rulePath)}`],
   };
   const result = await assertFastPathEquivalent(input);

@@ -2,6 +2,7 @@ import type { ComponentViewRecord } from "@mokly/viewer";
 import type { ArtifactView } from "@mokly/viewer/data";
 
 import type { BuildDiagnostic } from "./build_warnings.js";
+import type { ResourceSeed } from "./html_links.js";
 import type { LogicalReferenceRecord } from "./logical_record_types.js";
 
 export interface CompiledDocument {
@@ -10,6 +11,8 @@ export interface CompiledDocument {
   html: string;
   view?: ComponentViewRecord;
   watchDocuments?: readonly (readonly [string, string])[];
+  assetClosure?: readonly string[];
+  resourceSeeds?: readonly ResourceSeed[];
 }
 
 export interface PreparedDocument extends CompiledDocument {

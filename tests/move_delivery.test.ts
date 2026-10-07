@@ -84,7 +84,7 @@ for (const kind of ["screen", "component"] as const)
               check(
                 readCatalogue(
                   await (
-                    await fetch(`${running.url}/__mokly/catalogue.json`)
+                    await fetch(`${running.url}/mokly-viewer/catalogue.json`)
                   ).json(),
                 ),
               );
@@ -104,7 +104,7 @@ for (const kind of ["screen", "component"] as const)
             const catalogue = readCatalogue(
               JSON.parse(
                 await fs.readFile(
-                  path.join(fixture.root, "site/__mokly/catalogue.json"),
+                  path.join(fixture.root, "site/mokly-viewer/catalogue.json"),
                   "utf8",
                 ),
               ),
@@ -151,7 +151,7 @@ test("Serve and export retain all moves without old routes or removed document p
   });
   fixture.beforeRemove(() => server.close());
   const served = readCatalogue(
-    await (await fetch(`${server.url}/__mokly/catalogue.json`)).json(),
+    await (await fetch(`${server.url}/mokly-viewer/catalogue.json`)).json(),
   );
   assert.deepEqual(served.removedEntries, []);
   assert.equal(
@@ -161,14 +161,18 @@ test("Serve and export retain all moves without old routes or removed document p
   const html = await (await fetch(`${server.url}/view/new/`)).text();
   assert.ok(!/<a\b[^>]*href="\/view\/old(?:\/|\?|")/.test(html));
   assert.equal(
-    (await fetch(`${server.url}/static/old/screen/index.mobile.html`)).status,
+    (
+      await fetch(
+        `${server.url}/static/mokly-generated/old/screen/index.mobile.html`,
+      )
+    ).status,
     404,
   );
   await exportCatalogue(fixture.config, { outDir: "site", base: "HEAD" });
   const exported = readCatalogue(
     JSON.parse(
       await fs.readFile(
-        path.join(fixture.root, "site/__mokly/catalogue.json"),
+        path.join(fixture.root, "site/mokly-viewer/catalogue.json"),
         "utf8",
       ),
     ),
@@ -193,7 +197,10 @@ test("Serve and export retain all moves without old routes or removed document p
   assert.ok(
     (
       await fs.stat(
-        path.join(directory, "snapshots/before/old/screen/index.mobile.html"),
+        path.join(
+          directory,
+          "snapshots/before/mokly-generated/old/screen/index.mobile.html",
+        ),
       )
     ).isFile(),
   );
@@ -206,12 +213,7 @@ for (const derived of [false, true])
         resource: true,
         resourceChanged,
       });
-      const config = {
-        ...fixture.config,
-        generatedOutput: derived
-          ? ("derived" as const)
-          : ("committed" as const),
-      };
+      const config = fixture.config;
       const evidence = await readCatalogueChanges(
         config,
         fixture.after.manifest,

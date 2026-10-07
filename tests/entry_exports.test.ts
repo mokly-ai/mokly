@@ -59,7 +59,7 @@ test("export collection accepts default, named and array definitions and ignores
 
 test("several exports derive distinct slugs without assigning meaning to export names", async (t) => {
   const fixture = await pathFixture({
-    "specs/account/index.mockup.tsx": `import {definePage} from '@mokly/mokly'; const fields={title:'Account',description:'The account',dependencies:[],relatedDocs:[],render:()=>'<html><body>Account</body></html>'}; export default definePage(fields); export const other=definePage({...fields,slug:'settings'}); export const helper=42;`,
+    "specs/account/index.mockup.tsx": `import {definePage} from '@mokly/mokly'; const fields={title:'Account',description:'The account',relatedDocs:[],render:()=>'<html><body>Account</body></html>'}; export default definePage(fields); export const other=definePage({...fields,slug:'settings'}); export const helper=42;`,
   });
   t.after(fixture.remove);
   const built = await fixture.compile();
@@ -88,9 +88,9 @@ test("a copied branded export fails with its export location", async (t) => {
 
 test("component registrations collect their entries and typed links resolve before rendering", async (t) => {
   const fixture = await pathFixture({
-    "specs/components/action.mockup.tsx": `import {defineComponent} from '@mokly/mokly'; export default defineComponent({title:'Action',description:'An action',dependencies:[],relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> 'Action',variants:[{slug:'primary',title:'Primary',props:{}}]});`,
-    "specs/account/invoice.mockup.tsx": `import {defineScreen,MockLink} from '@mokly/mokly'; export default defineScreen({title:'Invoice',description:'An invoice',dependencies:[],relatedDocs:[],mobile:'Invoice',desktop:'Invoice',variants:[{slug:'overdue',title:'Overdue',description:'Overdue invoice',mobile:<MockLink to='./invoice'>Invoice</MockLink>,desktop:'Overdue'}]});`,
-    "specs/account/links.mockup.tsx": `import {definePage,mockLink} from '@mokly/mokly'; import invoice from './invoice.mockup'; export default definePage({title:'Links',description:'Links to invoices',dependencies:[],relatedDocs:[],render:()=> '<html><body><a href="'+mockLink(invoice)+'">Invoice</a></body></html>'});`,
+    "specs/components/action.mockup.tsx": `import {defineComponent} from '@mokly/mokly'; export default defineComponent({title:'Action',description:'An action',relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> 'Action',variants:[{slug:'primary',title:'Primary',props:{}}]});`,
+    "specs/account/invoice.mockup.tsx": `import {defineScreen,MockLink} from '@mokly/mokly'; export default defineScreen({title:'Invoice',description:'An invoice',relatedDocs:[],mobile:'Invoice',desktop:'Invoice',variants:[{slug:'overdue',title:'Overdue',description:'Overdue invoice',mobile:<MockLink to='./invoice'>Invoice</MockLink>,desktop:'Overdue'}]});`,
+    "specs/account/links.mockup.tsx": `import {definePage,mockLink} from '@mokly/mokly'; import invoice from './invoice.mockup'; export default definePage({title:'Links',description:'Links to invoices',relatedDocs:[],render:()=> '<html><body><a href="'+mockLink(invoice)+'">Invoice</a></body></html>'});`,
   });
   t.after(fixture.remove);
   const built = await fixture.compile();
@@ -108,7 +108,7 @@ test("component registrations collect their entries and typed links resolve befo
     textOutput(built.outputs, "account/links/index.html")!,
     /href="\.\.\/invoice\/index.desktop.html" data-mokly-link="account\/invoice"/,
   );
-  assert.equal(built.manifest.schemaVersion, 8);
+  assert.equal(built.manifest.schemaVersion, 9);
   assert.equal(JSON.stringify(built.manifest).includes('"navPath"'), false);
 });
 
@@ -139,11 +139,11 @@ test("one module collects aliases once and two modules cannot export one object"
 
 test("index component defaults use resolved path slugs and registration links resolve", async (t) => {
   const registration = (title: string) =>
-    `import {defineComponent} from '@mokly/mokly'; export default defineComponent({title:${JSON.stringify(title)},description:'A reusable control',dependencies:[],relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=>${JSON.stringify(title)},variants:[{slug:'primary',title:'Primary',props:{}}]});`;
+    `import {defineComponent} from '@mokly/mokly'; export default defineComponent({title:${JSON.stringify(title)},description:'A reusable control',relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=>${JSON.stringify(title)},variants:[{slug:'primary',title:'Primary',props:{}}]});`;
   const fixture = await pathFixture({
     "specs/components/alpha/index.mockup.tsx": registration("Alpha"),
     "specs/components/beta/index.mockup.tsx": registration("Beta"),
-    "specs/home.mockup.tsx": `import {defineScreen,MockLink} from '@mokly/mokly'; import alpha from './components/alpha/index.mockup'; import beta from './components/beta/index.mockup'; const content=<main><alpha.Component/><beta.Component/></main>; export default defineScreen({title:'Home',description:'Both controls',dependencies:[],relatedDocs:[],mobile:content,desktop:content});`,
+    "specs/home.mockup.tsx": `import {defineScreen,MockLink} from '@mokly/mokly'; import alpha from './components/alpha/index.mockup'; import beta from './components/beta/index.mockup'; const content=<main><alpha.Component/><beta.Component/></main>; export default defineScreen({title:'Home',description:'Both controls',relatedDocs:[],mobile:content,desktop:content});`,
   });
   t.after(fixture.remove);
   const result = await fixture.compile();
@@ -154,7 +154,7 @@ test("index component defaults use resolved path slugs and registration links re
   );
   await fixture.write(
     "specs/links.mockup.tsx",
-    `import {definePage,mockLink} from '@mokly/mokly'; import alpha from './components/alpha/index.mockup'; const href=mockLink(alpha); export default definePage({title:'Links',description:'A component link',dependencies:[],relatedDocs:[],render:()=>'<html><body><a href="'+href+'">Alpha</a></body></html>'});`,
+    `import {definePage,mockLink} from '@mokly/mokly'; import alpha from './components/alpha/index.mockup'; const href=mockLink(alpha); export default definePage({title:'Links',description:'A component link',relatedDocs:[],render:()=>'<html><body><a href="'+href+'">Alpha</a></body></html>'});`,
   );
   assert.match(
     textOutput((await fixture.compile()).outputs, "links/index.html")!,
@@ -164,7 +164,7 @@ test("index component defaults use resolved path slugs and registration links re
 
 test("component variant field errors name the final path from the exporting module", async (t) => {
   const fixture = await pathFixture({
-    "helpers/action.ts": `import {defineComponent} from '@mokly/mokly'; export default defineComponent({title:'Action',description:'An action',dependencies:[],relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> 'Action',variants:[{slug:'primary',title:'Primary',props:{},unexpected:undefined}]});`,
+    "helpers/action.ts": `import {defineComponent} from '@mokly/mokly'; export default defineComponent({title:'Action',description:'An action',relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> 'Action',variants:[{slug:'primary',title:'Primary',props:{},unexpected:undefined}]});`,
     "specs/library/action/index.mockup.ts":
       "export {default} from '../../../helpers/action';",
   });
@@ -178,7 +178,7 @@ test("component variant field errors name the final path from the exporting modu
 for (const field of ["id", "navPath", "variantOf", "unexpected"])
   test(`unknown screen field ${field} is rejected like every other unknown input`, async (t) => {
     const fixture = await pathFixture({
-      "specs/account/item.mockup.ts": `import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'Item',description:'Item',dependencies:[],relatedDocs:[],mobile:'Item',desktop:'Item',${field}:undefined});`,
+      "specs/account/item.mockup.ts": `import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'Item',description:'Item',relatedDocs:[],mobile:'Item',desktop:'Item',${field}:undefined});`,
     });
     t.after(fixture.remove);
     await assert.rejects(
@@ -200,7 +200,7 @@ for (const helper of ["definePage", "defineUseCase", "defineComponent"])
           ? "steps:[{screenPath:'screen'}]"
           : "propSchema:{kind:'object',properties:{}},render:()=>null,variants:[{slug:'primary',title:'Primary',props:{}}]";
     const fixture = await pathFixture({
-      "specs/entry.mockup.ts": `import {${helper},defineScreen} from '@mokly/mokly'; const fields={title:'Entry',description:'Entry',dependencies:[],relatedDocs:[]}; export default ${helper}({...fields,unexpected:undefined,${specific}}); export const screen=defineScreen({...fields,slug:'screen',mobile:'Screen',desktop:'Screen',useCasePaths:${helper === "defineUseCase" ? "['entry']" : "[]"}});`,
+      "specs/entry.mockup.ts": `import {${helper},defineScreen} from '@mokly/mokly'; const fields={title:'Entry',description:'Entry',relatedDocs:[]}; export default ${helper}({...fields,unexpected:undefined,${specific}}); export const screen=defineScreen({...fields,slug:'screen',mobile:'Screen',desktop:'Screen',useCasePaths:${helper === "defineUseCase" ? "['entry']" : "[]"}});`,
     });
     t.after(fixture.remove);
     await assert.rejects(
@@ -218,7 +218,7 @@ for (const [step, message] of [
 ])
   test(`flow step validation stays attributed: ${step}`, async (t) => {
     const fixture = await pathFixture({
-      "specs/flow.mockup.ts": `import {defineUseCase,defineScreen} from '@mokly/mokly'; const fields={title:'Entry',description:'Entry',dependencies:[],relatedDocs:[]}; export default defineUseCase({...fields,steps:[${step}]}); export const screen=defineScreen({...fields,slug:'screen',mobile:'Screen',desktop:'Screen',useCasePaths:['flow']});`,
+      "specs/flow.mockup.ts": `import {defineUseCase,defineScreen} from '@mokly/mokly'; const fields={title:'Entry',description:'Entry',relatedDocs:[]}; export default defineUseCase({...fields,steps:[${step}]}); export const screen=defineScreen({...fields,slug:'screen',mobile:'Screen',desktop:'Screen',useCasePaths:['flow']});`,
     });
     t.after(fixture.remove);
     await assert.rejects(
@@ -230,7 +230,7 @@ for (const [step, message] of [
 
 test("explicit instance names keep their own kebab grammar independently of entry paths", async (t) => {
   const fixture = await pathFixture({
-    "specs/controls.mockup.tsx": `import {defineComponent,defineScreen} from '@mokly/mokly'; const fields={title:'Action',description:'Action',dependencies:[],relatedDocs:[]}; const action=defineComponent({...fields,slug:'Action_Control',propSchema:{kind:'object',properties:{}},render:()=> 'Action',variants:[{slug:'default',title:'Default',props:{}}]}); export const components=action.entries; export default defineScreen({...fields,slug:'screen',mobile:<action.Component moklyInstance='con'/>,desktop:<action.Component/>});`,
+    "specs/controls.mockup.tsx": `import {defineComponent,defineScreen} from '@mokly/mokly'; const fields={title:'Action',description:'Action',relatedDocs:[]}; const action=defineComponent({...fields,slug:'Action_Control',propSchema:{kind:'object',properties:{}},render:()=> 'Action',variants:[{slug:'default',title:'Default',props:{}}]}); export const components=action.entries; export default defineScreen({...fields,slug:'screen',mobile:<action.Component moklyInstance='con'/>,desktop:<action.Component/>});`,
   });
   t.after(fixture.remove);
   const manifest = (await fixture.compile()).manifest;
@@ -259,7 +259,7 @@ test("a declared path bypasses only its own file-derived identity", async (t) =>
   await fixture.write(
     "specs/Bad Folder/Bad Name.mockup.ts",
     pageSource('path:"account/item",') +
-      "\nexport const other=definePage({title:'Other',description:'Other',dependencies:[],relatedDocs:[],render:()=>'<html></html>'});",
+      "\nexport const other=definePage({title:'Other',description:'Other',relatedDocs:[],render:()=>'<html></html>'});",
   );
   await assert.rejects(
     fixture.compile(),

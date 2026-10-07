@@ -30,7 +30,7 @@ for (const watch of [false, true])
     let catalogue;
     for (let attempt = 0; attempt < 200; attempt++) {
       catalogue = await (
-        await fetch(`${running.url}/__mokly/catalogue.json`)
+        await fetch(`${running.url}/mokly-viewer/catalogue.json`)
       ).json();
       if (["unavailable", "ready"].includes(catalogue.changesStatus)) break;
       await setTimeout(25);
@@ -55,7 +55,7 @@ for (const watch of [false, true])
 test("export rejects invalid baseline ranges safely and retains the previous site", async (context) => {
   const fixture = await formerMarkerBaselineFixture(context);
   await exportCatalogue(fixture.config, { outDir: "site", noChanges: true });
-  const file = path.join(fixture.output, "__mokly/catalogue.json");
+  const file = path.join(fixture.output, "mokly-viewer/catalogue.json");
   const before = await fs.readFile(file);
   await assert.rejects(
     exportCatalogue(fixture.config, { outDir: "site", base: "HEAD" }),

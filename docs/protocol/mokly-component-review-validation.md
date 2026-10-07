@@ -2,7 +2,7 @@
 
 This spec validates and emits the [component comparison result schema](./mokly-component-review.md).
 Canonical order enforcement and the shared affected-consumer key are
-implemented by both the producer and strict path-keyed review result v5 reader.
+implemented by both the producer and strict path-keyed review result v6 reader.
 
 ## Delivery Status
 
@@ -97,7 +97,7 @@ arrays remain explicit. Emit two-space JSON and a final LF, with no timestamp,
 absolute checkout path, or transient controls result. Serve no-store/nosniff
 headers and retain immutable snapshot generations and unmodified documents.
 
-Emit review result v5 for every catalogue. Readers accept only review result v5;
+Emit review result v6 for every catalogue. Readers accept only review result v6;
 older and unknown versions fail. Shared fixture tests must
 cover valid/invalid schemas, deterministic round trips, current and removed
 variants/consumers, metadata-only changes, zero Changes with affected screens,
@@ -113,9 +113,9 @@ records retain the views belonging to each component side.
 
 ## Baselines
 
-Baseline and current documents come from validated manifest-v8 output and
+Baseline and current documents come from validated manifest-v9 output and
 retain their original bytes. Style offsets and component ranges share each
-document's UTF-16 coordinate space. Only a canonical, valid v8 baseline reaches
+document's UTF-16 coordinate space. Only a canonical, valid v9 baseline reaches
 attribution, under the [baseline compatibility contract](./mokly-baseline-compatibility.md).
 
 Use the existing merge base with `origin/main` or the configured base; staged,

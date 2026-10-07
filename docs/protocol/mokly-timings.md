@@ -42,14 +42,19 @@ every replacement child; the child reports startup transfer, source-inventory
 validation, catalogue preparation, and listening separately.
 
 Build phases distinguish discovery, bundling, evaluation, registry validation,
-rendering, compatibility transformation, component metadata validation, logical
-links, ignore rules, manifest construction/validation, resource validation,
-HTML links, output-path checks and runtime retention. Watcher attachment,
+rendering, component metadata validation, `html.links` for control adaptation
+and logical-link rewriting, ignore rules, manifest construction/validation,
+resource validation, output-path checks and runtime retention. Watcher attachment,
 resource discovery, transactional output, and Changes have separate spans;
-`output.lock` measures the wait for the generated-output writer lock, including
-short output-validation snapshot reads. `output.paths` measures snapshot checks.
+`output.lock` measures only a writer's wait for the generated-output lock.
+`output.paths` measures validation of the in-memory route set.
 Graph work for watcher inventory and source-freshness validation is deliberately
-visible even when it repeats compilation's graph work.
+visible even when it repeats compilation's graph work. Output spans are
+`output.write` (parent), `output.validate-targets` (routes and inventory),
+`output.stage` (complete sibling tree), `output.install` (old-tree rename and
+new-tree rename), `output.rollback` (only after failed installation), and
+`output.cleanup` (only after success or rollback). There are no per-file
+backup, orphan-discovery, or generated-header validation phases.
 
 Review phases use the same session, role and parent context as their caller:
 
@@ -57,7 +62,7 @@ Review phases use the same session, role and parent context as their caller:
   Pinned readers reuse the resolved commit without another Git span.
 - `review.changed-paths` covers output exclusions, tracked/untracked discovery,
   deduplication and sorting, including later input-freshness checks.
-- `review.base-manifest` covers canonical baseline reading, v8 validation, and
+- `review.base-manifest` covers canonical baseline reading, v9 validation, and
   incompatible-version detection.
 - `review.base-documents` covers each bulk baseline-document read, including
   live component prefetch and bounded live document-comparison batches. It does
@@ -80,9 +85,9 @@ Review phases use the same session, role and parent context as their caller:
   inventory keeps its own stages.
   For fast-path-eligible views in a component-aware classification where no
   view differs, the loop emits at most one actual occurrence per paired view
-  in committed mode and two in derived mode. Views with instances, styles, or
-  entry-owned slots may add one committed or two derived projected occurrences. One-sided views add
-  one occurrence. A repeated discovery for the same side,
+  on each side, for both Git-blob and rebuilt baselines. Views with instances,
+  styles, or entry-owned slots may add one projected occurrence on each side.
+  One-sided views add one occurrence. A repeated discovery for the same side,
   route, content digest, and exclusion callback identity is a defect.
 - `review.css-analysis` measures the synchronous parse/diff/match/reduce pass
   for one changed, reachable stylesheet and one before/after document pair.
@@ -156,11 +161,11 @@ zero-count/share cases and the separate complete-export measurement.
 `fixture:large` explicitly prepares and records an isolated baseline under
 `.context`; setup time includes exhaustive Build and Git and is reported separately.
 `dev:large` and `benchmark:large` reuse that fixture without compiling the package.
-Rebuild Mokly explicitly after package-source edits. Committed mode reuses the
-generated files in Git. Pass `--derived` to setup, Serve and benchmark to select
-a separate record for the same dimensions. Derived setup archives a packaged
-Mokly version and a consumer lockfile, installs the head dependencies, and
-commits only source, authored resources and tooling. Serve rebuilds the archived
+Rebuild Mokly explicitly after package-source edits. A fixture whose generated
+output is tracked reuses complete Git blobs. To benchmark rebuilding, configure
+the fixture with `mokly-generated/` ignored and commit only source, authored
+resources and tooling. Its setup archives a packaged Mokly version and a
+consumer lockfile and installs the head dependencies. Serve rebuilds the archived
 commit through its `baselineBuild` recipe; no cached or committed HTML stands in
 for that build.
 The benchmark launches Chrome before timing a fresh Serve subprocess and measures
@@ -169,7 +174,7 @@ and browser context for an OS-warm restart. “Cold” means application-cold, n
 flushed OS page cache. It also verifies theme/viewport changes, a real Props edit,
 whole-document pages and eventual Changes. Stdout reports each measurement as JSON.
 
-For derived mode, the benchmark clears only the pinned cache entry under the
+For the rebuilt-baseline fixture, the benchmark clears only the pinned cache entry under the
 builder's exclusive lock before the cold run. A locked entry fails setup; stop
 other fixture servers before benchmarking. The warm run retains that output.
 Both runs enforce `usableMs < 5000` and require successful baseline timings with

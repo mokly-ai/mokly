@@ -1,16 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import { type BuildDiagnostic } from "../build/build_warnings.js";
 import { removedSharedImpact } from "../build/warnings.js";
 import { MoklyError } from "../errors.js";
 
 import { isBaselineCachePath } from "./cache_paths.js";
 import { discoverEntries } from "./entry_discovery.js";
-import {
-  baselineBuildCommands,
-  generatedOutputMode,
-} from "./generated_output.js";
+import { baselineBuildCommands } from "./generated_output.js";
 import { resolveModuleResolution } from "./module_resolution.js";
 import {
   optionalModule,
@@ -18,9 +17,8 @@ import {
   validateReviewOut,
   validateSourceRoots,
 } from "./path_validation.js";
-import { resolveInside } from "./paths.js";
+import { isInside, projectRealPath, resolveInside } from "./paths.js";
 import { validatePostcssPath } from "./postcss.js";
-import { resolvePublicExclude } from "./public_exclusions.js";
 import {
   isReservedConfiguredPath,
   validateStylesheetAliases,
@@ -35,6 +33,18 @@ import {
 import { validateStylesheets } from "./stylesheet_rules.js";
 import type { MoklyConfig, ResolvedConfig } from "./types.js";
 
+const REMOVED_CONFIG_KEYS = [
+  { key: "compatibility", guidance: "author portable links directly" },
+  {
+    key: "generatedOutput",
+    guidance: "use Git tracking for check and run mokly build to write output",
+  },
+  {
+    key: "publicExclude",
+    guidance: "remove it; only referenced authored assets are public",
+  },
+] as const;
+
 /** Validate an imported config and resolve every filesystem path. */
 export function resolveConfig(
   value: unknown,
@@ -47,29 +57,33 @@ export function resolveConfig(
       `${configPath} must export an object`,
     );
   }
-  for (const key of Object.keys(value)) {
+  if (Object.hasOwn(value, "legacy"))
+    throw new MoklyError(
+      "config-invalid",
+      "legacy configuration was removed; register whole documents with definePage",
+    );
+  for (const { key, guidance } of REMOVED_CONFIG_KEYS)
+    if (Object.hasOwn(value, key))
+      throw new MoklyError("config-invalid", `${key} was removed; ${guidance}`);
+  for (const key of Object.keys(value))
     if (
       ![
         "roots",
         "mockupsDir",
         "repoRoot",
         "colorSchemes",
-        "generatedOutput",
-        "publicExclude",
         "renderer",
         "postcss",
         "moduleResolution",
         "stylesheets",
         "review",
         "watch",
-        "compatibility",
       ].includes(key)
     )
       throw new MoklyError(
         "config-invalid",
         `unknown configuration field: ${key}`,
       );
-  }
   const removedReviewField =
     isRecord(value.review) && Object.hasOwn(value.review, "sharedImpact")
       ? removedSharedImpact(
@@ -81,19 +95,12 @@ export function resolveConfig(
       : undefined;
   if (removedReviewField) onWarning?.(removedReviewField);
   const input = value as unknown as MoklyConfig;
-  const publicExclude = resolvePublicExclude(input.publicExclude);
-  const generatedOutput = generatedOutputMode(input.generatedOutput);
   requireString(input.mockupsDir, "mockupsDir");
   if (input.repoRoot !== undefined) requireString(input.repoRoot, "repoRoot");
   const configDir = path.dirname(configPath);
   const repoRoot = path.resolve(configDir, input.repoRoot ?? ".");
   requireDirectory(repoRoot, "repoRoot");
-  const baselineBuild = baselineBuildCommands(
-    input,
-    generatedOutput,
-    repoRoot,
-    configPath,
-  );
+  const baselineBuild = baselineBuildCommands(input, repoRoot, configPath);
   const mockupsDir = resolveInside(
     repoRoot,
     configDir,
@@ -101,18 +108,13 @@ export function resolveConfig(
     "mockupsDir",
   );
   const roots = resolveRoots(input.roots, repoRoot, configDir, mockupsDir);
-  if (generatedOutput === "committed" || fs.existsSync(mockupsDir))
-    requireDirectory(mockupsDir, "mockupsDir");
+  if (fs.existsSync(mockupsDir)) requireDirectory(mockupsDir, "mockupsDir");
   if (isBaselineCachePath(mockupsDir, repoRoot))
     throw new MoklyError(
       "config-invalid",
       "mockupsDir must not be inside .mokly-cache",
     );
-  if (generatedOutput === "derived" && mockupsDir === repoRoot)
-    throw new MoklyError(
-      "config-invalid",
-      "derived mockupsDir must be a directory below repoRoot",
-    );
+  const generatedDir = path.join(mockupsDir, GENERATED_DIRECTORY);
   const renderer = optionalModule(
     repoRoot,
     configDir,
@@ -120,22 +122,42 @@ export function resolveConfig(
     "renderer",
   );
   const postcss = validatePostcssPath(input.postcss, repoRoot, configDir);
-  const compatibilityTransformer = optionalModule(
-    repoRoot,
-    configDir,
-    input.compatibility?.transformer,
-    "compatibility.transformer",
-  );
   const moduleResolution = resolveModuleResolution(
     input.moduleResolution,
     repoRoot,
     configDir,
   );
-  for (const [index, root] of roots.entries())
+  for (const [index, root] of roots.entries()) {
     validateSourceRoots(repoRoot, root.dir, mockupsDir, `roots[${index}].dir`);
+    rejectGeneratedInput(root.dir, generatedDir, `roots[${index}].dir`);
+  }
+  for (const [label, candidate] of [
+    ["renderer", renderer],
+    ["postcss", postcss],
+    ...moduleResolution.packageRoots.map((root, index) => [
+      `moduleResolution.packageRoots[${index}]`,
+      root,
+    ]),
+  ] as const)
+    if (candidate) rejectGeneratedInput(candidate, generatedDir, label);
   const colorSchemes = validateColorSchemes(input.colorSchemes);
   const stylesheets = validateStylesheets(input.stylesheets ?? []);
   validateStylesheetAliases(stylesheets, mockupsDir);
+  for (const [index, rule] of stylesheets.entries())
+    for (const stylesheet of [
+      ...rule.stylesheets,
+      ...(rule.lightStylesheets ?? []),
+      ...(rule.darkStylesheets ?? []),
+    ]) {
+      if (/^https?:\/\//.test(stylesheet)) continue;
+      const candidate = path.resolve(mockupsDir, stylesheet);
+      if (!isInside(mockupsDir, candidate))
+        throw new MoklyError(
+          "config-invalid",
+          `stylesheets[${index}] must stay outside ${GENERATED_DIRECTORY} and inside mockupsDir: ${stylesheet}`,
+        );
+      rejectGeneratedInput(candidate, generatedDir, `stylesheets[${index}]`);
+    }
   const watchRules = validateWatchRules(input.watch?.rules ?? []);
   if (input.review?.base !== undefined)
     requireString(input.review.base, "review.base");
@@ -148,7 +170,7 @@ export function resolveConfig(
   if (isReservedConfiguredPath(reviewOut, mockupsDir))
     throw new MoklyError(
       "config-invalid",
-      "review.outDir must not be at or inside mokly-generated/; choose a separate artifact directory",
+      `review.outDir must not be at or inside ${GENERATED_DIRECTORY}/; choose a separate artifact directory`,
     );
   validateReviewOut(reviewOut, {
     entryRoots: [],
@@ -157,14 +179,8 @@ export function resolveConfig(
   });
   const resolved: ResolvedConfig = {
     ...(removedReviewField ? { diagnostics: [removedReviewField] } : {}),
-    publicExclude,
-    generatedOutput,
+    generatedDir,
     colorSchemes,
-    compatibility: {
-      ...(compatibilityTransformer
-        ? { transformer: compatibilityTransformer }
-        : {}),
-    },
     configPath,
     roots,
     mockupsDir,
@@ -184,10 +200,42 @@ export function resolveConfig(
     },
   };
   const discovered = { ...resolved, ...discoverEntries(resolved) };
+  for (const candidate of discovered.resolvedFiles)
+    rejectGeneratedInput(candidate, generatedDir, "entry source");
   validateReviewOut(reviewOut, discovered);
   return discovered;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function rejectGeneratedInput(
+  candidate: string,
+  generatedDir: string,
+  label: string,
+): void {
+  let inside = isInside(generatedDir, candidate);
+  if (!inside) {
+    try {
+      inside = isInside(
+        path.join(
+          projectRealPath(path.dirname(generatedDir)),
+          GENERATED_DIRECTORY,
+        ),
+        projectRealPath(candidate),
+      );
+    } catch (cause) {
+      throw new MoklyError(
+        "config-invalid",
+        `${label} has an invalid filesystem path: ${candidate}`,
+        { cause },
+      );
+    }
+  }
+  if (inside)
+    throw new MoklyError(
+      "config-invalid",
+      `${label} must not be inside ${GENERATED_DIRECTORY}: ${candidate}`,
+    );
 }

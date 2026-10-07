@@ -27,8 +27,8 @@ test("unrendered source files do not affect component Changes", async (t) => {
   await writeCompilation(before, config);
   const git = componentGit(before, ["shared/button.ts"]);
   const { result } = await compareReview(before, config, git, "main");
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   const expected: string[] = [];
   assert.deepEqual(
     result.changes.map((entry) => entry.after!.path),
@@ -87,8 +87,8 @@ for (const ownership of ["renderer", "declared", "unowned"] as const)
     await writeCompilation(after, config);
     const git = componentGit(baseline, ["mockups/action.css"]);
     const artifact = await compareReview(after, config, git, "main");
-    assert.equal(artifact.result.schemaVersion, 5);
-    if (artifact.result.schemaVersion !== 5) return;
+    assert.equal(artifact.result.schemaVersion, 6);
+    if (artifact.result.schemaVersion !== 6) return;
     const expected = ["action", "action/default", "action/disabled"];
     assert.deepEqual(
       artifact.result.changes.map((entry) => entry.after!.path),
@@ -132,8 +132,8 @@ for (const owned of [false, true])
     await writeCompilation(after, config);
     const git = componentGit(before, ["renderer.tsx"]);
     const { result } = await compareReview(after, config, git, "main");
-    assert.equal(result.schemaVersion, 5);
-    if (result.schemaVersion !== 5) return;
+    assert.equal(result.schemaVersion, 6);
+    if (result.schemaVersion !== 6) return;
     assert.deepEqual(
       result.changes.map((entry) => entry.after!.path),
       owned ? ["action"] : ["action", "pane", "home"],

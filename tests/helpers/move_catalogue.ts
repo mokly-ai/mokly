@@ -21,7 +21,7 @@ export async function movedCatalogueFixture(
   const sources = moveCatalogueSources(options);
   const fixture = await pathFixture(
     sources,
-    `{mockupsDir:"mockups",roots:[{dir:"specs"}],generatedOutput:"committed",colorSchemes:["light","dark"]${options.styles === "configured" ? ',stylesheets:[{match:"**/*.html",stylesheets:["theme.css"]}]' : ""}}`,
+    `{mockupsDir:"mockups",roots:[{dir:"specs"}],colorSchemes:["light","dark"]${options.styles === "configured" ? ',stylesheets:[{match:"**/*.html",stylesheets:["theme.css"]}]' : ""}}`,
   );
   const cleanups: (() => Promise<void>)[] = [];
   t.after(async () => {

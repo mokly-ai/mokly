@@ -19,8 +19,8 @@ const digest = (bytes: Buffer) =>
 const assetRoute =
   "mokly-generated/assets/entries/node_modules/@scope/pkg/mark.png";
 
-for (const mode of ["committed", "derived"] as const)
-  test(`${mode} publish retains exact scoped binary bytes on both snapshot sides`, async (context) => {
+for (const storage of ["blobs", "rebuild"] as const)
+  test(`${storage} publish retains exact scoped binary bytes on both snapshot sides`, async (context) => {
     const fixture = await createExportFixture();
     context.after(() => fixture.close());
     const receiver = await startFakeReceiver(context, { token });
@@ -39,15 +39,13 @@ for (const mode of ["committed", "derived"] as const)
       '.auth { background-image: url("./node_modules/@scope/pkg/mark.png"); color: red; }',
     );
     await fs.writeFile(path.join(scoped, "mark.png"), before);
-    if (mode === "derived") {
+    if (storage === "rebuild") {
       await fs.writeFile(
         fixture.configPath,
-        (await fs.readFile(fixture.configPath, "utf8"))
-          .replace('"committed"', '"derived"')
-          .replace(
-            'review: { outDir: ".review" }',
-            'review: { outDir: ".review", baselineBuild: [["node", "baseline.mjs"]] }',
-          ),
+        (await fs.readFile(fixture.configPath, "utf8")).replace(
+          'review: { outDir: ".review" }',
+          'review: { outDir: ".review", baselineBuild: [["node", "baseline.mjs"]] }',
+        ),
       );
       const config = await loadConfig(fixture.root);
       const compiled = await compileCatalogue(config);
@@ -65,7 +63,7 @@ for (const mode of ["committed", "derived"] as const)
         `import fs from "node:fs/promises";
 import path from "node:path";
 for (const [route, encoded] of JSON.parse(await fs.readFile("baseline.json", "utf8"))) {
-  const target = path.join("mockups", route);
+  const target = path.join("mockups/mokly-generated", route);
   await fs.mkdir(path.dirname(target), { recursive: true });
   await fs.writeFile(target, Buffer.from(encoded, "base64"));
 }\n`,
@@ -83,7 +81,7 @@ for (const [route, encoded] of JSON.parse(await fs.readFile("baseline.json", "ut
     await fixture.git("commit", "-qm", "test: baseline with scoped asset");
     await fixture.git("update-ref", "refs/remotes/origin/main", "HEAD");
     await fs.writeFile(path.join(scoped, "mark.png"), after);
-    if (mode === "committed") {
+    if (storage === "blobs") {
       const config = await loadConfig(fixture.root);
       await writeCompilation(await compileCatalogue(config), config);
     }

@@ -8,8 +8,8 @@ import {
   generatedViews,
   viewRoute,
   type ManifestScreen,
-  type ManifestV8,
-  type ReviewResultV5,
+  type ManifestV9,
+  type ReviewResultV6,
 } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../dist/build/compile.js";
@@ -25,13 +25,14 @@ import type { BaselineReader, GitFile } from "../dist/review/git.js";
 import { RepositorySelectedReview } from "../dist/review/selected.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
+import { currentManifest } from "./helpers/current_manifest.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
 const commit = "a".repeat(40);
 
-for (const mode of ["committed", "derived"] as const) {
-  test(`removed screen selected capture retains every historical view in ${mode} mode`, async (t) => {
+{
+  test("removed screen selected capture retains every historical view", async (t) => {
     const fixture = await screenFixture(t);
     const source = {
       after: fixture.current.manifest,
@@ -41,17 +42,15 @@ for (const mode of ["committed", "derived"] as const) {
       changedPaths: [],
       headDigests: {},
       result: removedScreenResult(fixture.screen),
-      ...(mode === "derived"
-        ? {
-            headOutputs: [...fixture.current.outputs].map(
-              ([route, content]) =>
-                [route, transferGeneratedFile(content)] as const,
-            ),
-          }
-        : {}),
+      ...{
+        headOutputs: [...fixture.current.outputs].map(
+          ([route, content]) =>
+            [route, transferGeneratedFile(content)] as const,
+        ),
+      },
     };
     const artifact = await new RepositorySelectedReview(
-      { ...fixture.config, generatedOutput: mode },
+      fixture.config,
       fixture.reader,
     ).generate(
       source,
@@ -59,13 +58,13 @@ for (const mode of ["committed", "derived"] as const) {
       new AbortController().signal,
     );
 
-    assert.equal(artifact.result.schemaVersion, 5);
+    assert.equal(artifact.result.schemaVersion, 6);
     const screen = artifact.result.screens[0]!;
     assert.equal(screen.state, "removed");
     assert.equal(screen.views.length, 4);
     for (const view of screen.views) {
       assert.equal(view.state, "removed");
-      const snapshot = `snapshots/before/${viewRoute(screen.path, view.viewport, view.colorScheme)}`;
+      const snapshot = `snapshots/before/mokly-generated/${viewRoute(screen.path, view.viewport, view.colorScheme)}`;
       assert.match(String(artifact.files.get(snapshot)), /baseline view/);
     }
     assert.equal(
@@ -74,19 +73,19 @@ for (const mode of ["committed", "derived"] as const) {
     );
   });
 
-  test(`component-aware removed screen stays before-only in ${mode} mode`, async (t) => {
+  test("component-aware removed screen stays before-only", async (t) => {
     const fixture = await componentReviewFixture(t, (source) =>
       source.replace(/ {2}defineScreen\([^\n]+\)\n/, ""),
     );
     const complete = await compareReview(
       fixture.after,
-      { ...fixture.config, generatedOutput: mode },
+      fixture.config,
       fixture.git,
       "main",
     );
-    assert.equal(complete.result.schemaVersion, 5);
+    assert.equal(complete.result.schemaVersion, 6);
     const selected = await new RepositorySelectedReview(
-      { ...fixture.config, generatedOutput: mode },
+      fixture.config,
       fixture.git.reader,
     ).generate(
       {
@@ -96,21 +95,19 @@ for (const mode of ["committed", "derived"] as const) {
         baseRef: "main",
         changedPaths: fixture.changedPaths,
         headDigests: digestOutputs(fixture.after.outputs),
-        ...(mode === "derived"
-          ? {
-              headOutputs: [...fixture.after.outputs].map(
-                ([route, content]) =>
-                  [route, transferGeneratedFile(content)] as const,
-              ),
-            }
-          : {}),
+        ...{
+          headOutputs: [...fixture.after.outputs].map(
+            ([route, content]) =>
+              [route, transferGeneratedFile(content)] as const,
+          ),
+        },
         result: complete.result,
       },
       { path: "home" },
       new AbortController().signal,
     );
 
-    assert.equal(selected.result.schemaVersion, 5);
+    assert.equal(selected.result.schemaVersion, 6);
     const screen = selected.result.screens[0]!;
     assert.equal(screen.state, "removed");
     assert.ok(screen.views.length > 0);
@@ -119,7 +116,7 @@ for (const mode of ["committed", "derived"] as const) {
       assert.deepEqual(
         Buffer.from(
           selected.files.get(
-            `snapshots/before/${viewRoute(screen.path, view.viewport, view.colorScheme)}`,
+            `snapshots/before/mokly-generated/${viewRoute(screen.path, view.viewport, view.colorScheme)}`,
           )!,
         ),
         Buffer.from(
@@ -148,7 +145,9 @@ test("removed screen capture never substitutes current files for deleted history
 
 test("removed screen capture fails when a historical view is missing", async (t) => {
   const fixture = await screenFixture(t);
-  fixture.files.delete("mockups/removed/index.desktop.dark.html");
+  fixture.files.delete(
+    "mockups/mokly-generated/removed/index.desktop.dark.html",
+  );
 
   await assert.rejects(
     new RepositorySelectedReview(fixture.config, fixture.reader).generate(
@@ -156,7 +155,7 @@ test("removed screen capture fails when a historical view is missing", async (t)
       { path: fixture.screen.path },
       new AbortController().signal,
     ),
-    /Snapshot file is missing: removed\/index\.desktop\.dark\.html/,
+    /Snapshot file is missing: mokly-generated\/removed\/index\.desktop\.dark\.html/,
   );
 });
 
@@ -177,29 +176,31 @@ async function screenFixture(t: test.TestContext) {
     title: "Removed",
     useCasePaths: [],
   };
-  const storedBaseline: ManifestV8 = {
-    entries: [
-      {
-        ...screen,
-      },
-    ],
-    generatedBy: "mokly",
-    schemaVersion: 8 as const,
-    folders: [],
-    sourceFiles: current.manifest.sourceFiles,
+  const storedBaseline: ManifestV9 = {
+    ...currentManifest({
+      entries: [
+        {
+          ...screen,
+        },
+      ],
+      generatedBy: "mokly",
+      schemaVersion: 9,
+      sourceFiles: current.manifest.sourceFiles,
+    }),
+    assetClosure: ["assets/removed.css"],
   };
   const files = new Map<string, Uint8Array>([
     [
-      "mockups/mokly-manifest.json",
+      "mockups/mokly-generated/mokly-manifest.json",
       Buffer.from(JSON.stringify(storedBaseline)),
     ],
     ["mockups/assets/removed.css", Buffer.from("body { color: baseline; }")],
   ]);
   for (const route of generatedViews(screen).map((view) => view.path))
     files.set(
-      `mockups/${route}`,
+      `mockups/mokly-generated/${route}`,
       Buffer.from(
-        '<!doctype html><link rel="stylesheet" href="../assets/removed.css"><main>baseline view</main>',
+        '<!doctype html><link rel="stylesheet" href="../../assets/removed.css"><main>baseline view</main>',
       ),
     );
   await fs.mkdir(path.join(fixture.mockupsDir, "assets"), { recursive: true });
@@ -220,11 +221,14 @@ function selectedSource(fixture: Awaited<ReturnType<typeof screenFixture>>) {
     baseRef: "main",
     changedPaths: [],
     headDigests: {},
+    headOutputs: [...fixture.current.outputs].map(
+      ([route, content]) => [route, transferGeneratedFile(content)] as const,
+    ),
     result: removedScreenResult(fixture.screen),
   };
 }
 
-function removedScreenResult(screen: ManifestScreen): ReviewResultV5 {
+function removedScreenResult(screen: ManifestScreen): ReviewResultV6 {
   return {
     affectedConsumers: [],
     baseCommit: commit,
@@ -233,7 +237,7 @@ function removedScreenResult(screen: ManifestScreen): ReviewResultV5 {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     screens: [
       {
         before: { path: screen.path, title: screen.title },

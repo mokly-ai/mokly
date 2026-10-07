@@ -30,7 +30,7 @@ for (const directory of ["target", "node_modules"])
     for (const id of ["target", "node-modules"])
       assert.match(
         await fs.readFile(
-          path.join(output, "static", id, "index.html"),
+          path.join(output, "static/mokly-generated", id, "index.html"),
           "utf8",
         ),
         /Handbook/,
@@ -40,7 +40,9 @@ for (const directory of ["target", "node_modules"])
       true,
     );
     assert.equal(
-      (await fs.stat(path.join(output, "__mokly/catalogue.json"))).isFile(),
+      (
+        await fs.stat(path.join(output, "mokly-viewer/catalogue.json"))
+      ).isFile(),
       true,
     );
   });

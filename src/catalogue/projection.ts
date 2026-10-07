@@ -36,6 +36,14 @@ export function projectCatalogue(
   input: CatalogueProjectionInput,
 ): CatalogueReadModel {
   const { catalogue } = input;
+  if (
+    catalogue.manifest.schemaVersion !== 9 &&
+    catalogue.manifest.schemaVersion !== "live-index-2"
+  )
+    invalidData(
+      "$catalogue",
+      "current projection requires manifest v9 or live metadata",
+    );
   const comparisonUrl = comparisonPath(input.comparisonUrl);
   const identity = catalogueIdentity(input.configPath);
   const snapshotSource = historicalSource(input, comparisonUrl);
@@ -52,14 +60,6 @@ export function projectCatalogue(
       )
       .map((entry) => entry.path),
   );
-  if (
-    catalogue.manifest.schemaVersion !== 8 &&
-    catalogue.manifest.schemaVersion !== "live-index-1"
-  )
-    invalidData(
-      "$catalogue",
-      "current projection requires manifest v8 or live metadata",
-    );
   const documentReference = relatedDocumentReferences(
     catalogue.manifest.entries,
   );
@@ -193,7 +193,7 @@ export function projectCatalogue(
     if (!removedPaths.has(id))
       invalidData("$catalogue", "preview path is not a removed entry");
   return {
-    schemaVersion: 4,
+    schemaVersion: 5,
     identity,
     deploymentId: ZERO_DEPLOYMENT_ID,
     revision: {

@@ -1,5 +1,4 @@
 import {
-  generatedViews,
   isManifestComponentVariant,
   snapshotViewPath,
 } from "@mokly/viewer/data";
@@ -11,11 +10,7 @@ import { timeAsync } from "../diagnostics/timings.js";
 
 import { addArtifactFile } from "./artifact_files.js";
 import type { StylesheetReviewArtifact } from "./artifact_stylesheets.js";
-import {
-  copySnapshotDependencies,
-  type GitReviewAssetReader,
-  type ReviewAssetReader,
-} from "./assets.js";
+import { type GitReviewAssetReader, type ReviewAssetReader } from "./assets.js";
 import { CompilationAssetReader } from "./compilation_assets.js";
 import { classifyComponents } from "./component_classification.js";
 import { baselineForCurrentIdentities } from "./component_metadata.js";
@@ -23,6 +18,8 @@ import type { CssResourceAnalysis } from "./css/resource_analysis.js";
 import type { BaselineReader } from "./git.js";
 import type { MarkdownMoveSources } from "./moves/markdown_sources.js";
 import { prepareMoveClassification } from "./moves/prepare.js";
+import { copySnapshotDependencies } from "./snapshot_resources.js";
+import { reviewViews } from "./views.js";
 
 /** Retain every component variant and affected screen, then classify the same immutable bytes. */
 export async function compareComponentCatalogue(
@@ -107,8 +104,12 @@ export async function compareComponentCatalogue(
     (route) => beforeReader.read(route),
     (routes) => baseReader.readMany(routes),
   );
-  await copySnapshotDependencies(files, "after", new Set(headPaths), (route) =>
-    afterReader.read(route),
+  await copySnapshotDependencies(
+    files,
+    "after",
+    new Set(headPaths),
+    (route) => afterReader.read(route),
+    undefined,
   );
   const insertedStylesheets = new Map([
     ...baseArtifacts.map(
@@ -137,7 +138,7 @@ function artifactViews(manifest: Manifest) {
       !(entry.kind === "component" && isManifestComponentVariant(entry))
     )
       return [];
-    return generatedViews(entry).map((view) => ({
+    return reviewViews(entry).map((view) => ({
       route: view.path,
       insertedStylesheets: view.usage?.insertedStylesheets ?? [],
       snapshot: {

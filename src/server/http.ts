@@ -2,8 +2,8 @@ import http, { type ServerResponse } from "node:http";
 
 import { createCatalogue } from "@mokly/viewer/server";
 
-import { isLinkControlDiagnostic } from "../build/build_warnings.js";
 import type { ComponentRuntime } from "../build/component_runtime.js";
+import type { GeneratedFile } from "../build/generated_file.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
@@ -11,19 +11,17 @@ import { parseManifest } from "../registry/manifest.js";
 import { includeMovedEntries } from "../review/moves/entries.js";
 
 import { catalogueWithChanges } from "./baseline_catalogue.js";
-import { initialCatalogueSnapshot } from "./catalogue_snapshot.js";
+import { catalogueSnapshotForConfig } from "./catalogue_snapshot.js";
 import { advanceCatalogueState } from "./catalogue_update.js";
 import { loadServeBrowserAssets } from "./client_modules.js";
 import { ComponentChangeCache } from "./component_change_cache.js";
 import { ComponentRenderService } from "./controls/service.js";
 import { ForegroundActivity } from "./demand/activity.js";
 import { liveDocumentService } from "./demand/service.js";
-import {
-  acceptedGeneratedStatic,
-  initialGeneratedStatic,
-} from "./generated_static.js";
+import { acceptedGeneratedStatic } from "./generated_static.js";
 import { catalogueRequestHandler } from "./http_request_handler.js";
 import { closeCatalogueHttp } from "./http_shutdown.js";
+import { initialHttpSnapshot } from "./http_snapshot.js";
 import type { RunningServer, ServerOptions } from "./http_types.js";
 import { listenOnAvailablePort } from "./ports.js";
 import { LivePublicCatalogue } from "./public_catalogue.js";
@@ -42,14 +40,18 @@ export async function startCatalogueServer(
   config: ResolvedConfig,
   options: ServerOptions,
 ): Promise<RunningServer> {
-  const validated = await initialCatalogueSnapshot(config, options);
+  const snapshot = await initialHttpSnapshot(config, options);
+  const validated = catalogueSnapshotForConfig(snapshot, config);
   const changes = validated.changes;
   let catalogue = validated.catalogue;
   let manifest = catalogue.manifest;
-  let acceptedGenerated = await initialGeneratedStatic(
-    config,
-    options.componentRuntime,
+  let assetClosure: ReadonlySet<string> = new Set(
+    "assetClosure" in manifest ? manifest.assetClosure : [],
   );
+  let acceptedGenerated: ReadonlyMap<string, GeneratedFile> =
+    options.generatedOutputs ??
+    snapshot.outputs ??
+    acceptedGeneratedStatic(options.componentRuntime);
   const movedLinks = new RenderMoveTargets();
   let controls = options.componentRuntime
     ? new ComponentRenderService(
@@ -64,14 +66,8 @@ export async function startCatalogueServer(
       runtime,
       activity.channel(),
       (document) => {
-        document.diagnostics
-          ?.filter((warning) => !isLinkControlDiagnostic(warning))
-          .forEach((warning) =>
-            options.onBuildWarning?.({
-              generation: runtime.warningGeneration,
-              warning,
-            }),
-          );
+        if (document.assetClosure)
+          assetClosure = new Set([...assetClosure, ...document.assetClosure]);
         if (runtime.generation === controls?.capability().generation)
           publicCatalogue.acceptDocument(
             document,
@@ -80,6 +76,9 @@ export async function startCatalogueServer(
           );
         options.onPreviewResources?.({
           generation: runtime.generation,
+          ...(document.resourceSeeds
+            ? { resourceSeeds: document.resourceSeeds }
+            : {}),
           documents: [
             [document.route, document.html],
             ...(document.watchDocuments ?? []),
@@ -87,6 +86,7 @@ export async function startCatalogueServer(
         });
       },
       movedLinks.read,
+      options.onBuildWarning,
     );
   let documents = options.componentRuntime
     ? createDocuments(options.componentRuntime)
@@ -174,6 +174,7 @@ export async function startCatalogueServer(
       activeCatalogue: () => activeCatalogue,
       assets: { clientModules, fontAssets, navigationModules },
       acceptedGenerated: () => acceptedGenerated,
+      assetClosure: () => assetClosure,
       changedEntries: () => changedEntries,
       changesStatus: () => changesStatus,
       componentChanges: () => componentChanges,
@@ -212,6 +213,7 @@ export async function startCatalogueServer(
         contentVersion,
       );
       manifest = complete;
+      assetClosure = new Set(complete.assetClosure);
       catalogue = nextCatalogue;
       activeCatalogue = nextActive;
       return true;
@@ -226,11 +228,14 @@ export async function startCatalogueServer(
     port: address.port,
     replaceComponentRuntime(runtime): void {
       movedLinks.clear();
-      acceptedGenerated = acceptedGeneratedStatic(config, runtime);
+      acceptedGenerated = acceptedGeneratedStatic(runtime);
       publicCatalogue.clearUsage();
+      assetClosure = new Set(
+        "assetClosure" in runtime.manifest ? runtime.manifest.assetClosure : [],
+      );
       void documents?.close();
       documents = createDocuments(runtime);
-      if (runtime.manifest.schemaVersion === "live-index-1") {
+      if (runtime.manifest.schemaVersion === "live-index-2") {
         manifest = runtime.manifest;
         catalogue = createCatalogue(manifest);
         activeCatalogue = catalogue;
@@ -244,6 +249,7 @@ export async function startCatalogueServer(
         );
     },
     publishUpdate(update = {}): void {
+      if (update.assetClosure) assetClosure = new Set(update.assetClosure);
       const next = advanceCatalogueState(
         {
           catalogue,

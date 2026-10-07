@@ -9,11 +9,11 @@ import {
   viewRoute,
 } from "@mokly/viewer/data";
 
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
 import { configuredServedReview } from "../dist/server/configured_review.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import {
   createRemovedDeliveryFixture,
   REMOVED_BASELINE_IMAGE_BYTES,
@@ -69,20 +69,20 @@ test("Serve routes removed screens and pages without capture during browsing", a
     "/",
     "/?filter=changes&search=removed",
     "/view/current/",
-    "/__mokly/catalogue.json",
+    "/mokly-viewer/catalogue.json",
   ])
     assert.equal((await fetch(`${server.url}${route}`)).status, 200, route);
   assert.equal(pageCaptures, 0);
   assert.equal(screenCaptures, 0);
 
   const beforeCapture = readCatalogue(
-    await (await fetch(`${server.url}/__mokly/catalogue.json`)).json(),
+    await (await fetch(`${server.url}/mokly-viewer/catalogue.json`)).json(),
   );
   assert.equal(beforeCapture.comparisonUrl, null);
   assert.ok(beforeCapture.removedEntries.every((entry) => !entry.preview));
 
   const screenResponse = await fetch(
-    `${server.url}/__mokly/diffs/review.json?path=fixture/deleted-archive/deleted-section/removed-screen`,
+    `${server.url}/mokly-viewer/diffs/review.json?path=fixture/deleted-archive/deleted-section/removed-screen`,
   );
   assert.equal(screenResponse.status, 200, await screenResponse.clone().text());
   const screen = parseReviewResult(await screenResponse.json()).screens[0]!;
@@ -93,7 +93,7 @@ test("Serve routes removed screens and pages without capture during browsing", a
     await (
       await fetch(
         new URL(
-          `snapshots/before/${viewRoute(screen.path, firstView.viewport, firstView.colorScheme)}`,
+          `snapshots/before/mokly-generated/${viewRoute(screen.path, firstView.viewport, firstView.colorScheme)}`,
           screenResponse.url,
         ),
       )
@@ -103,7 +103,7 @@ test("Serve routes removed screens and pages without capture during browsing", a
   assert.equal(screenCaptures, 1);
 
   const pageResponse = await fetch(
-    `${server.url}/__mokly/diffs/review.json?page=fixture/deleted-archive/deleted-section/removed-page`,
+    `${server.url}/mokly-viewer/diffs/review.json?page=fixture/deleted-archive/deleted-section/removed-page`,
   );
   assert.equal(pageResponse.status, 200, await pageResponse.clone().text());
   const preview = parseRemovedPagePreview(await pageResponse.json());
@@ -112,7 +112,7 @@ test("Serve routes removed screens and pages without capture during browsing", a
     await (
       await fetch(
         new URL(
-          `snapshots/before/${entryRoute(preview.path)}`,
+          `snapshots/before/mokly-generated/${entryRoute(preview.path)}`,
           pageResponse.url,
         ),
       )
@@ -131,10 +131,10 @@ test("Serve routes removed screens and pages without capture during browsing", a
   );
   assert.equal(pageCaptures, 1);
 
-  const complete = await fetch(`${server.url}/__mokly/diffs/review.json`);
+  const complete = await fetch(`${server.url}/mokly-viewer/diffs/review.json`);
   assert.equal(complete.status, 200, await complete.clone().text());
   const advertised = readCatalogue(
-    await (await fetch(`${server.url}/__mokly/catalogue.json`)).json(),
+    await (await fetch(`${server.url}/mokly-viewer/catalogue.json`)).json(),
   );
   assert.ok(advertised.comparisonUrl);
   assert.deepEqual(
@@ -149,7 +149,7 @@ test("Serve routes removed screens and pages without capture during browsing", a
   );
   server.publishUpdate({ kind: "evidence", changesStatus: "pending" });
   const pending = readCatalogue(
-    await (await fetch(`${server.url}/__mokly/catalogue.json`)).json(),
+    await (await fetch(`${server.url}/mokly-viewer/catalogue.json`)).json(),
   );
   assert.equal(pending.comparisonUrl, null);
   assert.deepEqual(pending.removedEntries, []);

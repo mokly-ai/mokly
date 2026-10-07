@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
 
-import type { ReviewResultV5 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV6 } from "../../packages/viewer/dist/review/component_types.js";
 import type { RemovedPreviewData } from "../../packages/viewer/dist/shell/previews.js";
 
 export const GENERATION = "b".repeat(64);
 
-export const COMPARISON = `/__mokly/diffs/__generations/${GENERATION}/review.json`;
+export const COMPARISON = `/mokly-viewer/diffs/generations/${GENERATION}/review.json`;
 
 export const removedPage: RemovedPreviewData = {
   path: "removed-page",
@@ -19,14 +19,14 @@ export const removedScreen: RemovedPreviewData = {
   title: "Removed screen",
 };
 
-export const pagePath = `__mokly/diffs/__generations/${GENERATION}/previews/removed-page/index.json`;
+export const pagePath = `mokly-viewer/diffs/generations/${GENERATION}/previews/removed-page/index.json`;
 
 export function review(
-  views: ReviewResultV5["screens"][number]["views"],
+  views: ReviewResultV6["screens"][number]["views"],
   baseCommit = "a".repeat(40),
 ) {
   return {
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     baseRef: "origin/main",
     baseCommit,
     changedPaths: [],
@@ -46,7 +46,7 @@ export function review(
         views,
       },
     ],
-  } satisfies ReviewResultV5;
+  } satisfies ReviewResultV6;
 }
 
 export function snapshotId(

@@ -43,9 +43,7 @@ for (const module of [false, true]) {
     for (const name of assets) {
       assert.deepEqual(
         Buffer.from(
-          compiled.outputs.get(
-            `mokly-generated/assets/entries/${name}`,
-          ) as Uint8Array,
+          compiled.outputs.get(`assets/entries/${name}`) as Uint8Array,
         ),
         Buffer.from([0, 255, 17]),
         name,
@@ -71,7 +69,7 @@ test("an unrelated on-demand view is valid when another entry uses module image-
   );
   await fs.writeFile(
     path.join(fixture.entriesDir, "other.mockup.ts"),
-    'import classes from "./hero.module.css"; import { definePage } from "@mokly/mokly"; export default definePage({ title: "Other", description: "Module stylesheet root", dependencies: [], relatedDocs: [], render: () => `<html><body class="${classes.hero}">Other</body></html>` });',
+    'import classes from "./hero.module.css"; import { definePage } from "@mokly/mokly"; export default definePage({ title: "Other", description: "Module stylesheet root", relatedDocs: [], render: () => `<html><body class="${classes.hero}">Other</body></html>` });',
   );
   const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
   assert.ok(

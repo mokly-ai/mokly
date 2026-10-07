@@ -1,3 +1,5 @@
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import { isGeneratedRoute } from "../build/styles/routes.js";
 import { MoklyError } from "../errors.js";
 
@@ -157,7 +159,7 @@ function validateStylesheetPaths(
     if (isGeneratedRoute(normalized))
       throw new MoklyError(
         "config-invalid",
-        `stylesheets[${index}].${field} must not reference mokly-generated/: ${normalized}; link imported CSS through the renderer instead`,
+        `stylesheets[${index}].${field} must not reference ${GENERATED_DIRECTORY}/: ${normalized}; link imported CSS through the renderer instead`,
       );
     return normalized;
   });

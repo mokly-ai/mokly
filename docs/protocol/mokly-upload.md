@@ -1,4 +1,4 @@
-# Catalogue Upload v1
+# Catalogue Upload v2
 
 ## Delivery Status
 
@@ -14,8 +14,10 @@ Receivers, hosted or self-hosted, need only the published `@mokly/mokly`
 package and its protocol documents and fixtures; Mokly Cloud has no private
 protocol. `mokly export` remains local-only. `mokly publish` exports, then runs
 the exchange so a receiver stores only content it lacks. The
-`mokly-upload.json` envelope keeps `schemaVersion: 1`; the ownership marker is
-[schema 2](./mokly-export-ownership.md), and the upload v1 Plan response has its own version.
+`mokly-upload.json` envelope uses `schemaVersion: 2`; the ownership marker is
+[schema 3](./mokly-export-ownership.md), and the Plan response is independently
+versioned as v1. Earlier receivers reject this format with 426 under the
+[namespace compatibility contract](./mokly-viewer-namespace.md#compatibility-failure).
 
 ## CLI
 
@@ -60,9 +62,9 @@ including removed entries and comparison assets and controls. It rejects an
 explicit `--base`. Both modes build and validate the catalogue.
 
 Publish requires a Git checkout with a commit even without comparisons, to
-identify the uploaded revision. Derived catalogues rebuild the pinned baseline
-only when comparisons are enabled; `--no-changes` requires neither that
-history nor a historical install or build. Uncommitted authoring changes are
+identify the uploaded revision. With comparisons enabled, the pinned base uses
+verified v9 blobs or its own rebuild recipe. `--no-changes` requires neither
+that history nor a historical install or build. Uncommitted authoring changes are
 permitted: `headSha` identifies checkout context, not a claim that every
 exported byte exists at that commit. A receiver keeps the first publication it
 completes for a `headSha` and `configPath`; publishing a dirty tree is not a
@@ -93,8 +95,8 @@ out the head explicitly as in the action guide.
 `mokly-upload.json` is UTF-8 JSON at the export root with exactly these fields:
 
 ```ts
-interface MoklyUploadV1 {
-  schemaVersion: 1;
+interface MoklyUploadV2 {
+  schemaVersion: 2;
   moklyVersion: string;
   repository: { host: string; owner: string; name: string };
   branch: string;
@@ -112,7 +114,7 @@ Readers reject missing/extra upload-manifest fields and duplicate JSON keys.
 
 - `moklyVersion` is the installed package's exact SemVer, including prerelease
   or build metadata, at most 255 UTF-8 bytes. `schemaVersion` versions this
-  envelope independently of catalogue manifest v8 and review result v5.
+  envelope independently of catalogue manifest v9 and review result v6.
 - `repository` obeys the identity grammar above; it is an assertion to authorize,
   not proof of repository ownership. `host` is at most 253 bytes; owner and name
   are each at most 255 bytes.
@@ -135,7 +137,7 @@ Readers reject missing/extra upload-manifest fields and duplicate JSON keys.
 - `exportedAt` is UTC ISO 8601, exactly `YYYY-MM-DDTHH:mm:ss.sssZ`, recorded
   while finalizing the export. It is client-reported time, not authorization.
 - `comparisonPath` is null or
-  `__mokly/diffs/__generations/<64 lowercase hex characters>/review.json`, the
+  `mokly-viewer/diffs/generations/<64 lowercase hex characters>/review.json`, the
   single pinned review file; never search for a newest file.
 
 The manifest is written before ownership finalization. Publish declares it as

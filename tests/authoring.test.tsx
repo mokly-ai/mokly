@@ -19,6 +19,7 @@ import { entryRoute } from "../packages/viewer/dist/data.js";
 
 import {
   resolved,
+  sourceRelativePath,
   screenBase,
   tagProblem,
   tagViolations,
@@ -183,4 +184,28 @@ test("entry validation accepts declared tags on screens and use cases", () => {
       "tagged-journey",
     ),
   ]);
+});
+
+test("empty tags are valid and equivalent to absent tags", () => {
+  const empty = defineScreen({ ...screenBase, tags: [] });
+
+  assert.deepEqual(empty.tags, []);
+  assert.deepEqual(validateEntry(resolved(empty), validationConfig), []);
+  assert.deepEqual(
+    validateEntry(resolved(defineScreen(screenBase)), validationConfig),
+    [],
+  );
+});
+
+test("entry validation rejects Windows device names without changing tag grammar", () => {
+  const definition = defineScreen({ ...screenBase, path: "con" });
+  assert.deepEqual(validateEntry(resolved(definition), validationConfig), [
+    {
+      code: "invalid-path",
+      path: "con",
+      message: "path must be a valid catalogue path",
+      sourceRelativePath,
+    },
+  ]);
+  assert.deepEqual(tagViolations(["con"]), []);
 });

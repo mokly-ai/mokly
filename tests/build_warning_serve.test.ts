@@ -126,7 +126,11 @@ export default (input) => { const html = '<html><head></head><body>' + renderToS
       '[mokly/warning] home/index.mobile.html: Stylesheet ownership for "action.css" is ignored. Changes follow the elements that each changed rule matches.';
     for (let attempt = 0; attempt < 2; attempt += 1)
       assert.equal(
-        (await fetch(`${running.url}/static/home/index.mobile.html`)).status,
+        (
+          await fetch(
+            `${running.url}/static/mokly-generated/home/index.mobile.html`,
+          )
+        ).status,
         200,
       );
     await waitFor(

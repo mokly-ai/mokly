@@ -3,8 +3,8 @@
 This contract expands the [package contract](./mokly-package.md) for the
 [authoring API](./mokly-authoring.md) and
 [configuration](./mokly-configuration.md). Public-resource eligibility follows
-[source protection](./mokly-source-protection.md), including configured
-public exclusions.
+[source protection](./mokly-source-protection.md) and the
+[referenced closure](./mokly-generated-output.md#closure-urls-and-publication).
 
 ## Delivery Status
 
@@ -13,7 +13,7 @@ output boundaries are implemented in [M19](../../plans/remove-source-path-eviden
 
 The remaining contract is implemented.
 Rendering and the generated-output lifecycle use path-derived file names and
-manifest v8. Mokly renders discovered Markdown definitions under the
+manifest v9. Mokly renders discovered Markdown definitions under the
 [document contract](./mokly-documents.md); source Markdown stays private.
 
 ## Rendering Boundary
@@ -65,7 +65,12 @@ rendered on its own, and `RenderInput` has no `variantId` field.
 
 The string or `html` field must contain a complete `<html>` document. Optional
 document-style and non-CSS resource records provide exact ownership; unclaimed or mixed
-material stays conservative. The [component contract](./mokly-components.md)
+material stays conservative. Every renderer resource path also declares a
+checked closure resource, including a stylesheet with no HTML link. CSS
+ownership claims are ignored after public-file validation, with the documented
+warning; their paths remain private closure seeds for delivery and watching.
+A seed supplies no component reason, inserted-link span or CSS rule proof.
+The [component contract](./mokly-components.md)
 and [attribution contract](./mokly-component-changes.md) define validation. Mokly
 serializes Review-ignore markers, adapts opt-in `MockLink asChild` controls,
 and rewrites every complete
@@ -74,8 +79,8 @@ and rewrites every complete
 both attributes. The rewrite
 is element-aware and applies to complete page output: logical `href` is valid only on
 native HTML/SVG links, every other owner fails the build, documents with an
-activatable logical link reject `<base href>`, and final compatibility output
-is checked through that fail-closed contract. The
+activatable logical link reject `<base href>`. Final rendered documents
+receive the same link and resource validation. The
 package declares `react` and `react-dom` `>=19.0.0` as peers and does not ship a
 private runtime. The builder resolves both peers and their subpaths from
 consumer config, then bundles every React-bearing input in one internal graph.
@@ -94,42 +99,7 @@ Config dependencies are bundled from the config directory before the temporary
 module is evaluated, so bare workspace/package imports never resolve from the
 operating-system temporary directory or npx cache.
 
-### Temporary Document Compatibility
-
-A consumer with already-authored output may configure one synchronous
-`compatibility.transformer` module. It is bundled into the same consumer graph
-and default-exports this contract:
-
-```ts
-interface CompatibilityTransformInput {
-  availableRoutes: readonly string[];
-  colorScheme: "dark" | "light";
-  content: string;
-  logicalRoutes: Readonly<Record<string, string>>;
-  outputPath: string;
-  route: string;
-  viewport: "mobile" | "desktop";
-}
-
-type CompatibilityTransformer = (input: CompatibilityTransformInput) => string;
-```
-
-`availableRoutes` contains the complete pending output plus retained existing
-public static files; generated files scheduled for orphan removal are excluded.
-`logicalRoutes` maps complete entry paths (`<path>`)
-to concrete artifacts for the current viewport and color scheme. A dark document targets dark fragments
-when the destination supports them and otherwise falls back to the light
-fragment. `outputPath` is repository-relative; no absolute checkout path is
-exposed. Mokly applies the transformer after `mock:` links resolve and before
-Review-marker, link, resource, and ownership validation. It must return a
-complete document, retain the exact generated source owner, remain
-deterministic, and stay consumer-owned. The shared ownership parser accepts LF
-or CRLF after the header and strictly decodes its versioned canonical-base64
-source field, but a missing or changed source identity fails before write. This
-keeps source filenames out of HTML comment syntax. Earlier headers prove no
-ownership under the [current header rule](./mokly-rendering-generated.md#ownership).
-A transformer cannot weaken final validation. New catalogues should author portable links
-directly and leave this option unset.
+## Stylesheet Selection
 
 ## Renderer Stylesheets
 
@@ -148,8 +118,9 @@ and every enabled scheme.
 
 Generated links exist even without a configured rule. Resolve local paths
 relative to each fragment route and URL-encode each segment. For example, from
-`home/index.mobile.html` to `mokly-generated/styles/src/home.mockup.tsx.css`
-the href is `../mokly-generated/styles/src/home.mockup.tsx.css`. The same order
+`mokly-generated/home/index.mobile.html` to
+`mokly-generated/styles/src/home.mockup.tsx.css` the href is
+`../styles/src/home.mockup.tsx.css`. The same order
 applies to dark views, component variants and saved viewports. The
 [imported stylesheet contract](./mokly-imported-styles-assets.md) defines the
 exporting entry root and generated resources. The built-in renderer contributes
@@ -165,17 +136,19 @@ declared component stylesheets beside the renderer's configured links after
 rendering; see the
 [component stylesheet contract](./mokly-component-stylesheets.md) for marker
 placement and nearest-present-link fallback, and the linked
-[ownership contract](./mokly-component-stylesheet-ownership.md) for transient comparison provenance,
-final-link validation and style-offset rebasing. The compatibility transform
-may remove a declared link; only retained inserted links receive provenance.
-No CSS resource owners are derived. Renderer stylesheet owner records are
-ignored with a warning; document `styles` and non-CSS owners retain their meaning. A transform retaining an inserted link preserves
-its transient provenance token, which Mokly removes before writing HTML.
+[ownership contract](./mokly-component-stylesheet-ownership.md) for private
+inserted-link provenance, final-link validation and style-offset rebasing.
+Only links that Mokly inserts receive recorded spans after the package
+finishes ordinary link edits. No transient token is written. No CSS resource
+owners are derived. Renderer stylesheet ownership is ignored with a warning;
+the validated resource declaration remains in the checked closure. CSS
+attribution still needs actual linked rule proof. Document `styles` and
+non-CSS owners retain their meaning.
 Shell and device-frame CSS is package-owned and self-contained; product CSS is
 never copied into the npm package.
 
 ## Generated Contract
 
-The deterministic generated views, manifest v8 shape, CSS/assets and ownership
+The deterministic generated views, manifest v9 shape, CSS/assets and ownership
 rules are defined in the linked [Generated Rendering Contract](./mokly-rendering-generated.md).
 Exact identity-derived routes follow [Artifact Paths](./mokly-artifact-paths.md).

@@ -4,10 +4,11 @@ import test from "node:test";
 import { defineScreen } from "../dist/authoring/definitions.js";
 import type { ResolvedRegistryEntry } from "../dist/authoring/types.js";
 import { defineComponent } from "../dist/components/definition.js";
-import { createManifest, parseManifest } from "../dist/registry/manifest.js";
+import { parseManifest } from "../dist/registry/manifest.js";
 import { entryRoute } from "../packages/viewer/dist/data.js";
 import { analyzeHierarchy } from "../packages/viewer/dist/registry/hierarchy.js";
 
+import { fixtureManifest } from "./helpers/current_manifest.js";
 import { resolvedEntry } from "./helpers/resolved.js";
 
 test("manifest emits variantOf only for screen variants", () => {
@@ -20,14 +21,14 @@ test("manifest emits variantOf only for screen variants", () => {
     variant?.kind === "screen" ? variant.variantOf : undefined,
     "welcome",
   );
-  assert.equal(parseManifest(manifest).schemaVersion, 8);
+  assert.equal(parseManifest(manifest).schemaVersion, 9);
 });
 
 test("manifest and hierarchy keep authored sibling variant order", () => {
   const parent = resolvedScreen("welcome");
   const zeta = resolvedScreen("welcome-zeta", parent.path);
   const alpha = resolvedScreen("welcome-alpha", parent.path);
-  const manifest = createManifest([parent, zeta, alpha], [], ["light"]);
+  const manifest = fixtureManifest([parent, zeta, alpha], [], ["light"]);
 
   assert.deepEqual(
     manifest.entries.map(({ path }) => path),
@@ -146,7 +147,7 @@ test("current non-screen manifest entries reject variant fields", () => {
 });
 
 function variantManifest() {
-  return createManifest(
+  return fixtureManifest(
     [resolvedScreen("welcome"), resolvedScreen("welcome/empty", "welcome")],
     [],
     ["light"],
@@ -171,7 +172,7 @@ function componentVariantManifest() {
       },
     ],
   }).entries.map((entry) => resolvedEntry(entry, "entries/action.mockup.tsx"));
-  return createManifest(
+  return fixtureManifest(
     definitions,
     [],
     ["light"],

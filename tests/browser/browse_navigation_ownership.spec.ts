@@ -42,7 +42,7 @@ test("an unowned frame document stays frame-owned during shell replacement", asy
     releaseRequest = resolve;
   });
   await page.route(
-    "**/static/fixture/nested/home/index.mobile.dark.html",
+    "**/static/mokly-generated/fixture/nested/home/index.mobile.dark.html",
     async (route) => {
       reportRequest();
       await requestReleased;

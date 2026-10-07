@@ -9,6 +9,8 @@ import type {
 } from "../dist/review/selection_types.js";
 import { SelectedReviewRoutes } from "../dist/server/selected_review_routes.js";
 
+import { currentManifest } from "./helpers/current_manifest.js";
+
 const id = "removed-page";
 const page = {
   description: "Removed page",
@@ -22,18 +24,18 @@ const page = {
 };
 const source: RemovedPagePreviewSource = {
   movedEntries: [],
-  baseline: {
+  baseline: currentManifest({
     entries: [page],
     generatedBy: "mokly",
-    schemaVersion: 8 as const,
+    schemaVersion: 9,
     folders: [],
     sourceFiles: [page.sourcePath],
-  },
+  }),
   baseCommit: "a".repeat(40),
   baseRef: "main",
   changedEntries: [id],
   removedEntries: [{ folderTitles: [], entry: page }],
-  schemaVersion: 2,
+  schemaVersion: 3,
 };
 
 async function start(
@@ -73,7 +75,7 @@ async function start(
   const origin = `http://127.0.0.1:${address.port}`;
   return (selected: string) =>
     fetch(
-      `${origin}/__mokly/diffs/review.json?page=${encodeURIComponent(selected)}`,
+      `${origin}/mokly-viewer/diffs/review.json?page=${encodeURIComponent(selected)}`,
     );
 }
 
@@ -81,7 +83,7 @@ function artifact(selected: string, bytes = 16) {
   return {
     files: new Map([
       [
-        `snapshots/before/${selected}/index.html`,
+        `snapshots/before/mokly-generated/${selected}/index.html`,
         Buffer.alloc(bytes, selected),
       ],
     ]),

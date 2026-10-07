@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import type { ColorScheme, ComponentViewRecord } from "@mokly/viewer";
-import type { ManifestV8, HistoricalManifest } from "@mokly/viewer/data";
+import type { ManifestV9, HistoricalManifest } from "@mokly/viewer/data";
 import {
   canonicalJson,
   effectiveColorSchemes,
@@ -27,11 +27,11 @@ import { validateManifest } from "./manifest_validation.js";
 /** Canonical generated manifest filename. */
 export const MANIFEST_NAME = "mokly-manifest.json";
 
-/** Earlier names retained only as incompatibility sentinels and stale output. */
-export const EARLIER_MANIFEST_NAMES = [
-  "mokabook-manifest.json",
-  "mockbook-manifest.json",
-] as const;
+/** Entry/source metadata before a complete compilation supplies its inventory. */
+export type ManifestMetadata = Pick<
+  ManifestV9,
+  "entries" | "folders" | "generatedBy" | "schemaVersion" | "sourceFiles"
+>;
 
 /** Create deterministic manifest data from prepared entries and the source inventory. */
 export function createManifest(
@@ -40,7 +40,7 @@ export function createManifest(
   catalogueSchemes: readonly ColorScheme[],
   componentViews: ReadonlyMap<string, ComponentViewRecord> = new Map(),
   folders: readonly FolderRecord[] = [],
-): ManifestV8 {
+): ManifestMetadata {
   return {
     entries: entries.map((entry) =>
       toManifestEntry(entry, catalogueSchemes, componentViews, entries),
@@ -56,24 +56,24 @@ export function createManifest(
         ...folders.map((folder) => folder.sourcePath),
       ]),
     ].sort(),
-    schemaVersion: 8,
+    schemaVersion: 9,
   };
 }
 
 /** Serialize the current manifest with canonical object-key ordering. */
-export function serializeManifest(manifest: ManifestV8): string {
+export function serializeManifest(manifest: ManifestV9): string {
   return `${canonicalJson(manifest, 2)}\n`;
 }
 
-/** Read strictly current schema-v8 canonical output. */
-export function readManifest(config: ResolvedConfig): ManifestV8 {
-  const canonicalPath = path.join(config.mockupsDir, MANIFEST_NAME);
+/** Read strictly current schema-v9 canonical output. */
+export function readManifest(config: ResolvedConfig): ManifestV9 {
+  const canonicalPath = path.join(config.generatedDir, MANIFEST_NAME);
   const manifest = readManifestFile(canonicalPath);
   config.sourceFiles = manifest.sourceFiles;
   return manifest;
 }
 
-function readManifestFile(candidate: string): ManifestV8 {
+function readManifestFile(candidate: string): ManifestV9 {
   let value: unknown;
   try {
     value = JSON.parse(fs.readFileSync(candidate, "utf8"));
@@ -89,12 +89,12 @@ function readManifestFile(candidate: string): ManifestV8 {
   return parseManifest(value);
 }
 
-/** Validate manifest-shaped JSON against the current v8 contract. */
-export function parseManifest(value: unknown): ManifestV8 {
+/** Validate manifest-shaped JSON against the current v9 contract. */
+export function parseManifest(value: unknown): ManifestV9 {
   return validateManifest(value);
 }
 
-/** Apply the earlier/newer version gate, then fully validate baseline v8. */
+/** Apply the earlier/newer version gate, then fully validate historical v9. */
 export function parseHistoricalManifest(value: unknown): HistoricalManifest {
   return validateManifest(value, true);
 }
@@ -104,7 +104,7 @@ function toManifestEntry(
   catalogueSchemes: readonly ColorScheme[],
   componentViews: ReadonlyMap<string, ComponentViewRecord>,
   entries: readonly ResolvedRegistryEntry[],
-): ManifestV8["entries"][number] {
+): ManifestV9["entries"][number] {
   const common = {
     description: entry.description,
     path: entry.path,

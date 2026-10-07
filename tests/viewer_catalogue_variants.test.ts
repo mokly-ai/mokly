@@ -11,6 +11,8 @@ import type {
 } from "../packages/viewer/dist/shell/nav_tree.js";
 import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
 
+import { currentManifest } from "./helpers/current_manifest.js";
+
 test("viewer rebuilds current and removed screen variant relationships", () => {
   const parent = screen("welcome", "welcome/index.html");
   const current = screen(
@@ -23,13 +25,13 @@ test("viewer rebuilds current and removed screen variant relationships", () => {
     "welcome-error/index.html",
     parent.path,
   );
-  const manifest = {
+  const manifest = currentManifest({
     entries: [parent, current],
     generatedBy: "mokly" as const,
-    schemaVersion: 8 as const,
+    schemaVersion: 9 as const,
     folders: [],
     sourceFiles: [parent.sourcePath, current.sourcePath].sort(),
-  };
+  });
   const model = projectCatalogue({
     catalogue: createCatalogue(manifest, [
       { folderTitles: [], entry: removed, parentTitle: parent.title },

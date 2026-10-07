@@ -1,10 +1,16 @@
 import { execFileSync } from "node:child_process";
 import type { TestContext } from "node:test";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
+import {
+  compileCatalogue,
+  type Compilation,
+} from "../../dist/build/compile.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
+import { acceptedGenerationFromCompilation } from "../../dist/review/accepted_generation.js";
+import { computeCatalogueChanges } from "../../dist/server/changed.js";
 
+import { committedReviewRepository } from "./committed_repository.js";
 import {
   createFixture,
   removeFixture,
@@ -23,8 +29,12 @@ export async function changedFixture(
   t.after(() => removeFixture(fixture));
   await prepare?.(fixture);
   const config = await loadConfig(fixture.root);
-  const build = async () =>
-    writeCompilation(await compileCatalogue(config), config);
+  let compilation: Compilation;
+  const build = async () => {
+    const next = await compileCatalogue(config);
+    await writeCompilation(next, config);
+    compilation = next;
+  };
   const git = (...args: string[]) =>
     execFileSync("git", args, { cwd: fixture.root, stdio: "pipe" });
   await build();
@@ -33,5 +43,27 @@ export async function changedFixture(
   git("config", "user.email", "mokly@example.invalid");
   git("add", ".");
   git("commit", "-qm", "test: catalogue baseline");
-  return { ...fixture, build, config, git };
+  return {
+    ...fixture,
+    build,
+    config,
+    git,
+    get compilation() {
+      return compilation;
+    },
+  };
+}
+
+/** Classify resource changes using the last accepted generation, as live Serve does. */
+export async function retainedChanges(
+  fixture: Awaited<ReturnType<typeof changedFixture>>,
+) {
+  return computeCatalogueChanges(
+    fixture.config,
+    "HEAD",
+    committedReviewRepository(fixture.config),
+    fixture.compilation.manifest,
+    undefined,
+    acceptedGenerationFromCompilation(fixture.compilation),
+  );
 }

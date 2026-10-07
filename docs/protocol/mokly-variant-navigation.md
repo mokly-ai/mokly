@@ -110,8 +110,8 @@ with an explicit missing current side.
 
 ## View And Scheme Availability
 
-Catalogue-wide Dark availability is true when any current screen or component
-variant, removed screen, or removed component variant has a dark view. Component
+Catalogue-wide Dark availability is true when any current or removed screen,
+component variant, or Markdown document has a dark render. Component
 parents have no views and do not affect this result. A removed variant therefore
 keeps Dark available even if no current entry uses it. Per-entry fallback still
 uses the selected entry's own effective views.

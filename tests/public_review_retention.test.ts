@@ -8,6 +8,8 @@ import type { SelectedReviewSource } from "../src/review/selection_types.js";
 import { PublicReviewAliases } from "../src/server/public_review.js";
 import { ReviewGenerationStore } from "../src/server/review_generations.js";
 
+import { currentManifest } from "./helpers/current_manifest.js";
+
 test("complete alias captures do not renew unused generation retention", async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-retention-"));
   t.after(() => fs.rm(root, { force: true, recursive: true }));
@@ -16,20 +18,18 @@ test("complete alias captures do not renew unused generation retention", async (
     baseRef: "origin/main",
     changedPaths: [],
     headDigests: {},
-    before: {
-      schemaVersion: 8 as const,
-      folders: [],
+    before: currentManifest({
+      schemaVersion: 9,
       generatedBy: "mokly",
       sourceFiles: [],
       entries: [],
-    },
-    after: {
-      schemaVersion: 8 as const,
-      folders: [],
+    }),
+    after: currentManifest({
+      schemaVersion: 9,
       generatedBy: "mokly",
       sourceFiles: [],
       entries: [],
-    },
+    }),
     result: {
       affectedConsumers: [],
       baseCommit: "a".repeat(40),
@@ -38,7 +38,7 @@ test("complete alias captures do not renew unused generation retention", async (
       changes: [],
       components: [],
       ignoredImpact: [],
-      schemaVersion: 5 as const,
+      schemaVersion: 6 as const,
       screens: [],
     },
   };
@@ -55,7 +55,7 @@ test("complete alias captures do not renew unused generation retention", async (
       await fs.writeFile(
         path.join(outDir, "review.json"),
         JSON.stringify({
-          schemaVersion: 5 as const,
+          schemaVersion: 6 as const,
           baseCommit: source.baseCommit,
           baseRef: source.baseRef,
           changedPaths: [`capture-${generation++}.txt`],

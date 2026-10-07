@@ -35,7 +35,7 @@ test("a page preview must describe the entry that asked for it", async () => {
   );
   assert.deepEqual(loaded.content, {
     kind: "page",
-    url: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/snapshots/before/removed-page/index.html`,
+    url: `https://catalogue.test/mokly-viewer/diffs/generations/${GENERATION}/snapshots/before/mokly-generated/removed-page/index.html`,
   });
   const other = respond(
     {
@@ -58,7 +58,7 @@ test("a page preview must describe the entry that asked for it", async () => {
 test("a generation that resolved elsewhere is not reused", async () => {
   const loaded = {
     content: { kind: "page", url: "https://catalogue.test/old.html" },
-    generation: `https://catalogue.test/__mokly/diffs/__generations/${GENERATION}/`,
+    generation: `https://catalogue.test/mokly-viewer/diffs/generations/${GENERATION}/`,
     url: `https://catalogue.test${COMPARISON}`,
   } as const;
   const same = respond(null, loaded.url);

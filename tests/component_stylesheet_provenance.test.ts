@@ -101,26 +101,6 @@ test("a parent starts showing a styled child without changing its screen consume
   );
 });
 
-test("renderer-authored provenance attribute is reserved", async (context) => {
-  const source = componentEntrySource({
-    body: '<action.Component label="Go" />',
-  }).replace('path: "action",', 'path: "action", stylesheets: ["action.css"],');
-  const fixture = await fixtureWithSheets(
-    source,
-    'renderer: "renderer.tsx", stylesheets: [],',
-  );
-  context.after(() => removeFixture(fixture));
-  await fs.writeFile(
-    path.join(fixture.root, "renderer.tsx"),
-    `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => '<html><head><link rel="stylesheet" data-mokly-component-stylesheet="0" href="../base.css"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
-  );
-  await assert.rejects(
-    compileCatalogue(await loadConfig(fixture.root)),
-    /data-mokly-component-stylesheet|provenance|reserved/,
-  );
-});
-
 test("renderer text may mention the reserved attribute without authoring it", async (context) => {
   const source = componentEntrySource({
     body: '<action.Component label="Go" />',
@@ -142,52 +122,4 @@ export default (input) => '<html><head></head><body><p>data-mokly-component-styl
     textOutput(result.outputs, viewRoute(screen.path, "mobile", "light"))!,
     /<p>data-mokly-component-stylesheet=<\/p>/,
   );
-});
-
-test("compatibility removal discards links and final provenance", async (context) => {
-  const fixture = await fixtureWithSheets(
-    undefined,
-    'stylesheets: [], compatibility: { transformer: "transform.ts" },',
-  );
-  context.after(() => removeFixture(fixture));
-  await fs.writeFile(
-    path.join(fixture.root, "transform.ts"),
-    `export default (input) => input.content.replace(/<link\\b[^>]*data-mokly-component-stylesheet[^>]*>/g, "");`,
-  );
-  const result = await compileCatalogue(await loadConfig(fixture.root));
-  const screen = result.manifest.entries.find((entry) => entry.path === "home");
-  assert.ok(screen?.kind === "screen");
-  assert.deepEqual(screen.componentViews![0]!.resources, []);
-  assert.deepEqual(screen.componentViews![0]!.insertedStylesheets, []);
-  assert.doesNotMatch(
-    textOutput(result.outputs, viewRoute(screen.path, "mobile", "light"))!,
-    /action\.css|pane\.css/,
-  );
-});
-
-test("compatibility placement retains final-document provenance offsets", async (context) => {
-  const fixture = await fixtureWithSheets(
-    undefined,
-    'stylesheets: [], compatibility: { transformer: "transform.ts" },',
-  );
-  context.after(() => removeFixture(fixture));
-  await fs.writeFile(
-    path.join(fixture.root, "transform.ts"),
-    'export default (input) => input.content.replace("<head>", \'<head><meta name="shifted">\');',
-  );
-  const result = await compileCatalogue(await loadConfig(fixture.root));
-  const screen = result.manifest.entries.find((entry) => entry.path === "home");
-  assert.ok(screen?.kind === "screen");
-  const html = textOutput(
-    result.outputs,
-    viewRoute(screen.path, "mobile", "light"),
-  )!;
-  assert.match(html, /<meta name="shifted">/);
-  assert.doesNotMatch(html, /data-mokly-component-stylesheet/);
-  assert.equal(screen.componentViews![0]!.insertedStylesheets?.length, 2);
-  for (const span of screen.componentViews![0]!.insertedStylesheets ?? [])
-    assert.match(
-      html.slice(span.startOffset, span.endOffset),
-      /<link\b[^>]*\.css/,
-    );
 });

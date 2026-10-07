@@ -8,7 +8,6 @@ import { validateGeneratedOutputPaths } from "../dist/build/output_paths.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import {
-  EARLIER_MANIFEST_NAMES,
   MANIFEST_NAME,
   parseManifest,
   readManifest,
@@ -19,8 +18,8 @@ import {
 } from "../dist/review/assets.js";
 import { readBaseManifest } from "../dist/review/base_manifest.js";
 import {
-  NodeGitCommandRunner,
   CommittedRepository,
+  NodeGitCommandRunner,
 } from "../dist/review/git.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
@@ -30,29 +29,22 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { metadataRoutes, publicJson } from "./private_metadata_fixture.js";
 
-const [FORMER_MANIFEST_NAME, LEGACY_MANIFEST_NAME] = EARLIER_MANIFEST_NAMES;
-
-const metadataRoutes = [
-  MANIFEST_NAME,
-  FORMER_MANIFEST_NAME,
-  LEGACY_MANIFEST_NAME,
-  "metadata.json",
-];
-const publicJson = '{"theme":"light"}';
-
-test("a stale historical-manifest alias does not prevent ordinary public resources", async (context) => {
-  const fixture = await createFixture();
+test("a dangling canonical-manifest alias does not prevent ordinary public resources", async (context) => {
+  const fixture = await createFixture(
+    validEntrySource({ body: '<a href="../../public.json">Public</a>' }),
+  );
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
-  await writeCompilation(await compileCatalogue(config), config);
-  await fs.promises.symlink(
-    "missing.json",
-    path.join(fixture.mockupsDir, LEGACY_MANIFEST_NAME),
-  );
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, "public.json"),
     publicJson,
+  );
+  await writeCompilation(await compileCatalogue(config), config);
+  await fs.promises.symlink(
+    "missing.json",
+    path.join(fixture.mockupsDir, MANIFEST_NAME),
   );
   const server = await startCatalogueServer(config, { base: "HEAD", port: 0 });
   fixture.beforeRemove(() => server.close());
@@ -61,7 +53,7 @@ test("a stale historical-manifest alias does not prevent ordinary public resourc
     publicJson,
   );
   assert.equal(
-    (await fetch(`${server.url}/static/${LEGACY_MANIFEST_NAME}`)).status,
+    (await fetch(`${server.url}/static/${MANIFEST_NAME}`)).status,
     404,
   );
 });
@@ -73,12 +65,15 @@ test("a pending manifest is not a public resource on the first build", async (co
     }),
   );
   context.after(() => removeFixture(fixture));
-  await assert.rejects(
-    compileCatalogue(await loadConfig(fixture.root)),
-    /target .*mokly-manifest.json.*internal catalogue metadata/,
-  );
+  await assert.rejects(compileCatalogue(await loadConfig(fixture.root)), {
+    code: "build-invalid",
+    message:
+      "[mokly/build-invalid] document links and resources are invalid:\n- mokly-generated/home/index.desktop.html: protected target ../mokly-manifest.json: targets internal catalogue metadata\n- mokly-generated/home/index.mobile.html: protected target ../mokly-manifest.json: targets internal catalogue metadata",
+  });
   assert.equal(
-    fs.existsSync(path.join(fixture.mockupsDir, MANIFEST_NAME)),
+    fs.existsSync(
+      path.join(fixture.mockupsDir, "mokly-generated", MANIFEST_NAME),
+    ),
     false,
   );
 });
@@ -87,40 +82,37 @@ test("generated page routes cannot overwrite a manifest through an alias", async
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
-  await writeCompilation(await compileCatalogue(config), config);
-  await fs.promises.mkdir(path.join(fixture.mockupsDir, "page"));
-  await fs.promises.symlink(
-    `../${MANIFEST_NAME}`,
-    path.join(fixture.mockupsDir, "page/index.html"),
-  );
-  assert.throws(
-    () => validateGeneratedOutputPaths(["page/index.html"], config),
-    /targets internal catalogue metadata/,
+  const compilation = await compileCatalogue(config);
+  await writeCompilation(compilation, config);
+  const fragment = path.join(config.generatedDir, "home/index.mobile.html");
+  await fs.promises.rm(fragment);
+  await fs.promises.symlink("../mokly-manifest.json", fragment);
+  await assert.rejects(
+    writeCompilation(compilation, config),
+    /contains a symlink or non-regular entry/,
   );
   validateGeneratedOutputPaths([MANIFEST_NAME], config);
 });
 
 test("HTTP and current Review deny internal manifests and aliases but allow public JSON", async (context) => {
-  const fixture = await createFixture();
+  const fixture = await createFixture(
+    validEntrySource({ body: '<a href="../../public.json">Public</a>' }),
+  );
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
-  const compilation = await compileCatalogue(config);
-  await writeCompilation(compilation, config);
-  await fs.promises.copyFile(
-    path.join(fixture.mockupsDir, MANIFEST_NAME),
-    path.join(fixture.mockupsDir, LEGACY_MANIFEST_NAME),
-  );
-  await fs.promises.copyFile(
-    path.join(fixture.mockupsDir, MANIFEST_NAME),
-    path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
-  );
-  await fs.promises.symlink(
-    MANIFEST_NAME,
-    path.join(fixture.mockupsDir, "metadata.json"),
-  );
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, "public.json"),
     publicJson,
+  );
+  const compilation = await compileCatalogue(config);
+  await writeCompilation(compilation, config);
+  await fs.promises.copyFile(
+    path.join(config.generatedDir, MANIFEST_NAME),
+    path.join(fixture.mockupsDir, MANIFEST_NAME),
+  );
+  await fs.promises.symlink(
+    `mokly-generated/${MANIFEST_NAME}`,
+    path.join(fixture.mockupsDir, "metadata.json"),
   );
   const server = await startCatalogueServer(config, { base: "HEAD", port: 0 });
   fixture.beforeRemove(() => server.close());
@@ -152,20 +144,16 @@ for (const route of metadataRoutes) {
     const config = await loadConfig(fixture.root);
     await writeCompilation(await compileCatalogue(config), config);
     await fs.promises.copyFile(
+      path.join(config.generatedDir, MANIFEST_NAME),
       path.join(fixture.mockupsDir, MANIFEST_NAME),
-      path.join(fixture.mockupsDir, LEGACY_MANIFEST_NAME),
-    );
-    await fs.promises.copyFile(
-      path.join(fixture.mockupsDir, MANIFEST_NAME),
-      path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
     );
     await fs.promises.symlink(
-      MANIFEST_NAME,
+      `mokly-generated/${MANIFEST_NAME}`,
       path.join(fixture.mockupsDir, "metadata.json"),
     );
     for (const body of [
-      `<a href="../${route}">Metadata</a>`,
-      `<img alt="Metadata" src="../${route}" />`,
+      `<a href="../../${route}">Metadata</a>`,
+      `<img alt="Metadata" src="../../${route}" />`,
     ]) {
       await fs.promises.writeFile(
         fixture.entryPath,
@@ -182,25 +170,23 @@ for (const route of metadataRoutes) {
 
 for (const includeChanges of [false, true]) {
   test(`publication omits internal metadata and preserves public JSON (changes: ${includeChanges})`, async (context) => {
-    const fixture = await createFixture();
+    const fixture = await createFixture(
+      validEntrySource({ body: '<a href="../../public.json">Public</a>' }),
+    );
     context.after(() => removeFixture(fixture));
     const config = await loadConfig(fixture.root);
-    await writeCompilation(await compileCatalogue(config), config);
-    await fs.promises.copyFile(
-      path.join(fixture.mockupsDir, MANIFEST_NAME),
-      path.join(fixture.mockupsDir, LEGACY_MANIFEST_NAME),
-    );
-    await fs.promises.copyFile(
-      path.join(fixture.mockupsDir, MANIFEST_NAME),
-      path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
-    );
-    await fs.promises.symlink(
-      MANIFEST_NAME,
-      path.join(fixture.mockupsDir, "metadata.json"),
-    );
     await fs.promises.writeFile(
       path.join(fixture.mockupsDir, "public.json"),
       publicJson,
+    );
+    await writeCompilation(await compileCatalogue(config), config);
+    await fs.promises.copyFile(
+      path.join(config.generatedDir, MANIFEST_NAME),
+      path.join(fixture.mockupsDir, MANIFEST_NAME),
+    );
+    await fs.promises.symlink(
+      `mokly-generated/${MANIFEST_NAME}`,
+      path.join(fixture.mockupsDir, "metadata.json"),
     );
     if (includeChanges) {
       const runner = new NodeGitCommandRunner(fixture.root);
@@ -241,11 +227,12 @@ for (const includeChanges of [false, true]) {
   });
 }
 
-test("an unsupported earlier-named v2 baseline stays unavailable and private", async (context) => {
+test("a former manifest filename cannot supply canonical baseline output or enter an unrelated asset closure", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
+  const formerFilename = "mokabook-manifest.json";
   const formerManifest = {
     ...compilation.manifest,
     schemaVersion: 2,
@@ -253,10 +240,10 @@ test("an unsupported earlier-named v2 baseline stays unavailable and private", a
   };
   assert.throws(
     () => parseManifest(formerManifest),
-    /expected Mokly manifest schema version 8/,
+    /expected Mokly manifest schema version 9/,
   );
   await fs.promises.writeFile(
-    path.join(fixture.mockupsDir, FORMER_MANIFEST_NAME),
+    path.join(fixture.mockupsDir, formerFilename),
     JSON.stringify(formerManifest),
   );
   const runner = new NodeGitCommandRunner(fixture.root);
@@ -272,19 +259,18 @@ test("an unsupported earlier-named v2 baseline stays unavailable and private", a
     "test: former Mokabook metadata",
   ]);
   const git = new CommittedRepository(runner);
-  await assert.rejects(
-    readBaseManifest(git.reader, "HEAD", config),
-    (error: unknown) =>
-      (error as { code?: string }).code === "baseline-incompatible-earlier",
-  );
+  await assert.rejects(readBaseManifest(git.reader, "HEAD", config), {
+    code: "manifest-invalid",
+  });
   const reader = new GitReviewAssetReader(
     config,
     git.reader,
     "HEAD",
     "mockups",
+    compilation.manifest,
   );
   await assert.rejects(
-    reader.read(FORMER_MANIFEST_NAME),
-    /not a public static file/,
+    reader.read(formerFilename),
+    /outside historical asset closure/,
   );
 });

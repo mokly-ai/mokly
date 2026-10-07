@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { ManifestDocument, ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestDocument, ManifestV9 } from "@mokly/viewer/data";
 import { parseReviewResult } from "@mokly/viewer/data";
 
 import { entryChanges } from "../dist/catalogue/changes.js";
@@ -16,13 +16,14 @@ import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
 import { workspaceData } from "../packages/viewer/src/shell/workspace_data.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
+import { currentManifest } from "./helpers/current_manifest.js";
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { pageSource } from "./helpers/path_fixture.js";
 
 const screen = (path: string) =>
-  `import {defineScreen} from '@mokly/mokly';export default defineScreen({path:'${path}',title:'Billing',description:'Billing',dependencies:[],relatedDocs:[],mobile:'Billing',desktop:'Billing'});`;
+  `import {defineScreen} from '@mokly/mokly';export default defineScreen({path:'${path}',title:'Billing',description:'Billing',relatedDocs:[],mobile:'Billing',desktop:'Billing'});`;
 const component = (parent: string, variant: string) =>
-  `import {defineComponent} from '@mokly/mokly';export default defineComponent({path:'${parent}',title:'Component',description:'Component',dependencies:[],relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> 'Control',variants:[{slug:'${variant}',title:'State',props:{}}]});`;
+  `import {defineComponent} from '@mokly/mokly';export default defineComponent({path:'${parent}',title:'Component',description:'Component',relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> 'Control',variants:[{slug:'${variant}',title:'State',props:{}}]});`;
 
 for (const reversed of [false, true])
   test(`component parent and variant at one path have one Changed record (${reversed})`, async (t) => {
@@ -139,13 +140,13 @@ test("reserved documents are not component review pairs", async (t) => {
     relatedDocs: [],
     resources: [],
   };
-  const manifest: ManifestV8 = {
-    schemaVersion: 8,
+  const manifest: ManifestV9 = currentManifest({
+    schemaVersion: 9,
     generatedBy: "mokly",
     folders: [],
     sourceFiles: ["specs/guide.md"],
     entries: [document],
-  };
+  });
   assert.deepEqual(entryPairs(manifest, manifest), []);
   const reader = {
     read: async () => {
@@ -179,7 +180,7 @@ for (const kind of ["page", "screen"] as const)
     await exportCatalogue(fixture.config, { outDir: "site", base: "HEAD" });
     const model = JSON.parse(
       await fs.readFile(
-        path.join(fixture.output, "__mokly/catalogue.json"),
+        path.join(fixture.output, "mokly-viewer/catalogue.json"),
         "utf8",
       ),
     );

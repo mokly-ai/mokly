@@ -16,8 +16,11 @@ const listed = execFileSync(
 const markdown = listed.filter(
   (file) =>
     file.endsWith(".md") &&
-    (file.startsWith("docs/") || path.basename(file) === "README.md"),
+    (file.startsWith("docs/") ||
+      file.startsWith("plans/") ||
+      path.basename(file) === "README.md"),
 );
+const codeSpan = /(?<!`)(`+)(?!`)(.+?)(?<!`)\1(?!`)/g;
 const contents = new Map<string, string>();
 
 async function read(file: string): Promise<string> {
@@ -39,20 +42,22 @@ function links(text: string): string[] {
       continue;
     }
     if (fenced) continue;
+    const prose = line.replace(codeSpan, (span) => " ".repeat(span.length));
     for (
-      let start = line.indexOf("](");
+      let start = prose.indexOf("](");
       start !== -1;
-      start = line.indexOf("](", start + 2)
+      start = prose.indexOf("](", start + 2)
     ) {
       let depth = 1;
       let end = start + 2;
-      for (; end < line.length && depth; end++) {
-        if (line[end] === "(" && line[end - 1] !== "\\") depth++;
-        if (line[end] === ")" && line[end - 1] !== "\\") depth--;
+      for (; end < prose.length && depth; end++) {
+        if (prose[end] === "(" && prose[end - 1] !== "\\") depth++;
+        if (prose[end] === ")" && prose[end - 1] !== "\\") depth--;
       }
-      if (!depth) result.push(line.slice(start + 2, end - 1).split(/\s+"/)[0]!);
+      if (!depth)
+        result.push(prose.slice(start + 2, end - 1).split(/\s+"/)[0]!);
     }
-    const definition = /^\s*\[[^\]]+\]:\s*<?([^>\s]+)>?/.exec(line);
+    const definition = /^\s*\[[^\]]+\]:\s*<?([^>\s]+)>?/.exec(prose);
     if (definition) result.push(definition[1]!);
   }
   return result;
@@ -85,9 +90,15 @@ function anchors(text: string): Set<string> {
   return found;
 }
 
-test("local documentation links resolve and anchors match GitHub headings", async () => {
+test("Markdown inside code spans is not read as a link", () => {
+  assert.deepEqual(links("`[a](a.md)` ``[b](`b`)`` [c](c.md)"), ["c.md"]);
+  assert.deepEqual(links("an unclosed ` [d](d.md)"), ["d.md"]);
+});
+
+test("local documentation and plan links resolve and anchors match GitHub headings", async () => {
   const failures: string[] = [];
   let protocolLinks = 0;
+  let planLinks = 0;
   for (const source of markdown) {
     for (const destination of links(await read(source))) {
       if (/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(destination)) continue;
@@ -110,6 +121,7 @@ test("local documentation links resolve and anchors match GitHub headings", asyn
         target = path.posix.join(target, "README.md");
       }
       if (target.startsWith("docs/protocol/")) protocolLinks++;
+      if (source.startsWith("plans/")) planLinks++;
       const exists = await fs
         .stat(path.join(repositoryRoot, target))
         .catch(() => undefined);
@@ -129,5 +141,6 @@ test("local documentation links resolve and anchors match GitHub headings", asyn
     protocolLinks > 100,
     `only ${protocolLinks} protocol links checked`,
   );
+  assert.ok(planLinks > 100, `only ${planLinks} plan links checked`);
   assert.deepEqual(failures, []);
 });

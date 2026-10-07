@@ -17,10 +17,7 @@ import { componentInputs } from "./inputs.js";
 import { serializeComponentSentinels } from "./ranges.js";
 import { ComponentContext } from "./render_context.js";
 import { rebaseStyleOwnership } from "./style_ownership.js";
-import {
-  assertNoAuthoredStylesheetToken,
-  insertComponentStylesheets,
-} from "./stylesheet_links.js";
+import { insertComponentStylesheets } from "./stylesheet_links.js";
 import { rendererStylesheetPaths } from "./stylesheet_reuse.js";
 import type {
   ComponentDefinition,
@@ -44,6 +41,7 @@ export type ComponentGraphRenderer = (
   definitions: readonly ComponentDefinition[],
   placement: {
     route: string;
+    diagnosticRoute?: string;
     position: number;
     configuredHrefs: readonly string[];
     mockupsDir: string;
@@ -97,7 +95,6 @@ export const renderWithComponents: ComponentGraphRenderer = (
       collector.label,
       "renderer must return a complete HTML document",
     );
-  assertNoAuthoredStylesheetToken(rendered.html, placement.route);
   const serialized = serializeComponentSentinels(
     serializeReviewSentinels(rendered.html),
     collector.boundaries,
@@ -142,8 +139,8 @@ export const renderWithComponents: ComponentGraphRenderer = (
     [...declarations]
       .filter(([physical]) => !rendererLinks.has(physical))
       .map(([, declaration]) => declaration.file),
-    true,
     (warning) => warnings.push(warning),
+    placement.diagnosticRoute,
   );
   const view: ComponentViewRecord = {
     viewport: input.viewport,
@@ -163,10 +160,12 @@ export const renderWithComponents: ComponentGraphRenderer = (
   return {
     html,
     view,
-    stylesheetLinks: [...declarations].map(([physical, { paths }]) => ({
-      physical,
-      componentPaths: [...paths].sort(),
-    })),
+    stylesheetLinks: [...declarations]
+      .filter(([physical]) => !rendererLinks.has(physical))
+      .map(([physical, { paths }]) => ({
+        physical,
+        componentPaths: [...paths].sort(),
+      })),
     ...(warnings.length ? { diagnostics: warnings } : {}),
   };
 };

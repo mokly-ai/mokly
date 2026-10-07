@@ -6,7 +6,7 @@ import { readCatalogueChanges } from "../../dist/server/component_changes.js";
 import type { ServedReview } from "../../dist/server/configured_review.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 import type { RunningServer } from "../../dist/server/http_types.js";
-import type { ReviewResultV5 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV6 } from "../../packages/viewer/dist/review/component_types.js";
 import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 
 const cleanup: (() => Promise<void>)[] = [];
@@ -28,7 +28,7 @@ test.beforeAll(async () => {
   );
   const outDir = path.join(fixture.root, ".review");
   const result = {
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     baseCommit: "a".repeat(40),
     baseRef: "origin/main",
     changedPaths: [],
@@ -37,7 +37,7 @@ test.beforeAll(async () => {
     components: [],
     changes: [],
     affectedConsumers: [],
-  } satisfies ReviewResultV5;
+  } satisfies ReviewResultV6;
   const review: ServedReview = {
     base: "origin/main",
     async generate(): Promise<void> {
@@ -71,7 +71,7 @@ test("a watched update resets failed diffs to Current without generating", async
 }) => {
   const eventStream = page.waitForResponse(
     (response) =>
-      new URL(response.url()).pathname === "/__mokly/events" &&
+      new URL(response.url()).pathname === "/mokly-viewer/events" &&
       response.status() === 200,
   );
   await page.goto(`${server.url}/view/home/`);

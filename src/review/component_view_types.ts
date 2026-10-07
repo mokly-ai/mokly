@@ -26,7 +26,6 @@ export interface ComponentViewContext {
   changed: ReadonlySet<string>;
   prefix: string;
   resources: ResourceComparison;
-  compareResourceBytes?: boolean;
   useFastPath?: boolean;
   links?: (beforeRoute: string, afterRoute: string) => ReviewLinkNormalization;
   beforeUsage?: (usage: ComponentViewRecord) => ComponentViewRecord;

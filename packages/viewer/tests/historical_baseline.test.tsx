@@ -37,7 +37,7 @@ function renderedBaselineHash(details: CatalogueDetails): string {
     pages: [],
     removedEntries: [{ folderTitles: [], entry }],
     revision: { content: 1, evidence: 1 },
-    schemaVersion: 4 as const,
+    schemaVersion: 5 as const,
     screens: [],
     tree: [],
     useCases: [],

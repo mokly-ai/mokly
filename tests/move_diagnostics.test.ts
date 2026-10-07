@@ -48,7 +48,7 @@ test("an unmatched movedFrom remains added and records the exact comparison diag
 for (const declared of [false, true])
   test(`ambiguous identical screens require an explicit declaration: declared=${declared}`, async (t) => {
     const screen = (path: string, extra = "") =>
-      `defineScreen({path:'${path}',title:'Same',description:'A screen',dependencies:[],relatedDocs:[],mobile:'Content',desktop:'Content',${extra}})`;
+      `defineScreen({path:'${path}',title:'Same',description:'A screen',relatedDocs:[],mobile:'Content',desktop:'Content',${extra}})`;
     const before = `import {defineScreen} from '@mokly/mokly'; export default [${screen("a")},${screen("b")}];`;
     const after = `import {defineScreen} from '@mokly/mokly'; export default [${screen("new", declared ? "movedFrom:'a'," : "")}];`;
     const fixture = await componentReviewFixture(t, () => after, before);

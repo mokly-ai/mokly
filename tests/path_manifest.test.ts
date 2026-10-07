@@ -6,6 +6,7 @@ import {
   parseHistoricalManifest,
 } from "../dist/registry/manifest.js";
 
+import { currentManifest } from "./helpers/current_manifest.js";
 import { pathFixture, pageSource } from "./helpers/path_fixture.js";
 
 test("manifest v8 retains both folder sources and validates carrier fields", async (t) => {
@@ -41,24 +42,24 @@ test("manifest v8 retains both folder sources and validates carrier fields", asy
 });
 
 test("reserved document metadata permits an empty description but no stored routes", () => {
-  const manifest = {
-    schemaVersion: 8,
+  const manifest = currentManifest({
+    schemaVersion: 9,
     generatedBy: "mokly",
     folders: [],
     sourceFiles: ["specs/guide.md"],
     entries: [
       {
-        kind: "document",
+        kind: "document" as const,
         path: "guide",
         title: "Guide",
         description: "",
         sourcePath: "specs/guide.md",
         relatedDocs: [],
         resources: [],
-        colorSchemes: ["light"],
+        colorSchemes: ["light"] as const,
       },
     ],
-  };
+  });
   assert.deepEqual(parseManifest(manifest), manifest);
   assert.throws(
     () =>
@@ -95,7 +96,7 @@ test("manifest paths reject different spellings of the same folder", () => {
     relatedDocs: [],
   };
   const manifest = {
-    schemaVersion: 8,
+    schemaVersion: 9,
     generatedBy: "mokly",
     folders: [],
     sourceFiles: [entry.sourcePath],
@@ -116,7 +117,7 @@ test("persisted variants cannot become folder indexes", () => {
     useCasePaths: [],
   };
   const manifest = {
-    schemaVersion: 8,
+    schemaVersion: 9,
     generatedBy: "mokly",
     folders: [],
     sourceFiles: [entry.sourcePath],

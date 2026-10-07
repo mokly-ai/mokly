@@ -1,9 +1,11 @@
 # Remove Source-Path Evidence
 
 Status: Active. Milestones 1 to 32 are implemented, verified and pushed through
-`300e407d`. Milestone 32's review and both fix rounds are complete; its open
-findings wait for the user. Milestone 33 merges main `f8ab241f` (#160, #156 and
-#144), as the user asked on 2026-10-07.
+`506baeb5`. Milestone 32's review and both fix rounds are complete; its open
+findings wait for the user. Milestone 33 integrates latest main, including
+#160, #156 and #144, as the user asked on 2026-10-07. It is in progress locally.
+The reviewer resolved the CSS alias and former-manifest sentinel conflicts
+under the user's main integration instruction. Push and post-push review remain open.
 
 ## Status And Outcome
 
@@ -131,8 +133,9 @@ milestone.
 - Component stylesheets replace the stylesheet role of `ownedDependencies`:
   - `defineComponent` accepts `stylesheets`: `mockupsDir`-relative public CSS
     files in authored order. HTTP(S) URLs are rejected, because Mokly must
-    compare the files. Repeating one real file, including through an alias,
-    links it once at its first occurrence and warns.
+    compare the files. The public-file policy rejects a symlink in any path
+    component. Repeating one accepted regular file links it once at its first
+    occurrence and warns.
   - When a screen or component document renders at least one instance of a
     component, even an instance with no markup, Mokly links each of that
     component's stylesheets once. Links follow the order in which components
@@ -158,7 +161,7 @@ milestone.
     `styles` retain their current meaning.
   - Page comparison omits Mokly-inserted declared-stylesheet links except a
     component page's root-owned links. A private final-document provenance
-    record identifies those links through compatibility and Review-ignore;
+    record identifies those links after link rewriting and through Review-ignore;
     renderer-authored links remain page content. Resource and CSS evidence
     remains based on the actual linked files.
   - Serve reloads declared stylesheets like configured ones. Exports and
@@ -179,28 +182,32 @@ milestone.
   Without `--strict`, warnings do not affect exit codes. Strict commands count
   every producer. Plain and rich CLI reporting follows the
   [warning contract](../docs/protocol/mokly-build-warnings.md).
-- Versions after the 0.13.0 integration: manifest v8 is main's v7 without
+- The combined current formats are main's unreleased manifest v9, catalogue
+  read model v5 and review result v6, with no extra version. Manifest v9 omits
   `dependencies`, `declaredDependencies` or `ownedDependencies`, and retains
-  declared-stylesheet provenance. Baselines require canonical, valid v8 output
-  with the same validation as current output. Lower integer versions and former
-  manifest names without the canonical file are incompatible earlier output;
-  former names are sentinels only and their contents are never read. No schema,
-  removed-field, variant or stored-layout conversion remains. Catalogue read model v4
-  is main's v3 without `details.dependencies`. Unified comparison result v5 is
-  main's v4 without result `sharedImpact` or entry `dependencies` and
+  declared-stylesheet provenance, `assetClosure`, `generatedFiles` and
+  `blobHashAlgorithm`. Baselines require canonical, valid v9 output with the
+  same validation as current output. A lower integer canonical version is
+  incompatible earlier output. Missing canonical generated metadata selects
+  main's absence and own-recipe rebuild behavior. Former manifest names are
+  ordinary files and never supply metadata or prove incompatibility. No schema,
+  removed-field, variant or stored-layout conversion remains. Catalogue read model v5
+  omits `details.dependencies`. Unified comparison result v6 omits result
+  `sharedImpact` or entry `dependencies` and
   `sharedImpact`. All catalogues use that one classifier and format. Public
-  readers reject catalogue v1 to v3 and comparison v4 and earlier; regenerate
-  older exports. The process-local live index adopts the v8 entry shape.
-  The unreleased versions change in place for CSS: v8 adds an explicit root
-  output range and stops writing CSS resource owners; v5 adds rule identity,
-  changed component ids and page evidence; v4 carries the same public evidence
+  readers reject catalogue v1 to v4 and comparison v5 and earlier; regenerate
+  older exports. The process-local live index adopts the v9 entry shape.
+  The unreleased versions retain this branch's CSS fields: v9 has an explicit root
+  output range and no CSS resource owners; v6 has rule identity,
+  changed component paths and page evidence; v5 carries the same public evidence
   on views and whole-document pages. Every accepted component saved view has its
   root range. Every persisted usage record has an `insertedStylesheets` array,
-  including an empty array. V8 records with CSS owners, missing roots or missing
+  including an empty array. V9 records with CSS owners, missing roots or missing
   provenance are invalid, including earlier output from this branch. Keep main's
   fixed pane paths and unchanged snapshot bytes. Incompatible earlier output
   makes Changes unavailable with the existing message while Build, Serve, export
-  and publish succeed. Invalid v8 follows the existing invalid-baseline path.
+  and publish succeed, and is never cached. Invalid v9 follows the existing
+  invalid-baseline path.
 - Rendered-resource reasons keep the wire kind `dependency`, because they name
   resources a view depends on. Renaming them is out of scope.
 - The Shared impact design screen is deleted because the state no longer
@@ -233,11 +240,11 @@ milestone.
 
 - Consider an opt-in check that warns when a changed or existing component
   stylesheet rule matches elements outside its component.
-- Upgrade `@mokly/viewer` in mokly-cloud to catalogue v4 and comparison v5,
+- Upgrade `@mokly/viewer` in mokly-cloud to catalogue v5 and comparison v6,
   then re-export and re-publish stored catalogues.
 - Migrate consumer catalogues such as Accounting: delete the three inputs,
   declare component CSS with `stylesheets` instead of `ownedDependencies` and
-  route rules, and rebuild committed output once for manifest v8.
+  route rules, and rebuild committed output once for manifest v9.
 
 ## Milestone 1: Define the contract
 
@@ -934,6 +941,7 @@ Four deletions and one fixture rename against main are approved:
 - `tests/design_library_style_collector.test.tsx`: retain its unique checks in the declaration tests.
 
 Evidence: `.context/remove-source-path-evidence/milestone-16.md`.
+Preservation audit: `.context/remove-source-path-evidence/m16-preservation-audit/`.
 
 ## Milestone 17: Document the CSS change rule
 
@@ -2512,19 +2520,105 @@ on 2026-10-05 for the same situation, the merged branch keeps main's unreleased
 format numbers and adds no version: they carry main's records and this branch's
 records together.
 
+On 2026-10-07 the reviewer resolved two conflicts of meaning in the Milestone
+33 merge under the user's instruction to merge the latest `main`. Both follow
+#156. First, declared component stylesheets follow main's public-file policy:
+a public path with a symlink in any component is refused, so symlinked
+stylesheet aliases and renderer alias links are no longer accepted. Second,
+baseline preparation follows main's canonical-only rule: former manifest
+names are not sentinels; a base without the canonical manifest follows main's
+absence and rebuild behavior. The 2026-10-04 decision returned the branch to
+main's baseline rule; main has since changed that rule, and the branch
+follows the new one. The user may still choose otherwise.
+
 ## Milestone 33: Integrate `main` #160, #156 and #144
 
 Merge `main` at `f8ab241f` (or the latest `main` at merge time).
+The user directed implementation to continue with main's rules for both
+conflicts. No push or post-push review is part of this task.
+
+The required later fetch advanced main to `6bb64219`, adding #159 (in-range
+lockfile updates), #154 (installed renderer-contract type checking) and #157
+(baseline-relative audits and daily dependency update requests). The single
+merge includes that audited descendant. Its original source tip and
+merge base stay unchanged. The final second parent is latest main.
+
+The next required fetch advanced main to `2013d289`. It also adds #139
+(attribution test consolidation), #155 (targeted developer tests), #162
+(the review rule for flaky tests in the diff) and #161 (plan history and plan
+link validation). Their changes stay in the same two-parent merge. Main's
+targeted development commands apply. This task's explicit separate complete
+unit command still runs before the complete gate.
+
+- [x] Preserve the added #139, #155, #162 and #161 changes. Keep grouped
+      attribution checks and their single-change control, with this branch's
+      own-page CSS rule and saved-view evidence. Preserve source-edit and
+      committed-baseline checks at their new owners. Keep the new test commands
+      and plan-link checks. Resolve every incoming path separately.
+- [x] Restore optional CSS traversal only after a verified deletion, and the
+      controls README's ordinary link rewriting description. Keep all deleted,
+      missing-baseline and unsafe-resource assertions.
+- [x] Remove `src/html_links.ts`'s unused `stylesheetLink` export. Its only
+      callers validated transformer tokens. Keep the shared active link finder
+      and rel-token recognition. Repeat the export ratchet and link controls.
+- [x] Migrate the packed component smoke's generated document path and CSS
+      href depth in `scripts/package/components.mjs`. Keep all installed API,
+      provenance, root, source-coordinate, Props and export assertions. Repeat
+      the package suite and complete gate after the captured failure.
+- [x] Migrate `scripts/package/consumer_cases/themed.mjs`'s review version
+      assertion to v6. Keep independent upload, ownership, Plan and catalogue
+      versions, all exact change/evidence assertions and all five consumer cases.
+- [x] Migrate the remaining CSS-owner alias fixture, newer-schema mutation,
+      shell generated URLs, unconditional document-read expectation and Watch
+      writer setup. Keep refusal controls, assertions and test allowances.
+- [x] Move this branch's six Milestone 16 audit records from
+      `plans/remove-source-path-evidence-audit/` to the Git-ignored
+      `.context/remove-source-path-evidence/m16-preservation-audit/` with
+      identical bytes, under the user's 2026-10-07 decision. Main #137 and #147
+      require audit evidence outside the repository. Keep main's full link
+      check and add the new location beside Milestone 16's evidence line.
+
+- [x] Preserve the added #159, #154 and #157 changes. Resolve their one index
+      conflict at the existing protocol owner. Keep the new dependency and
+      renderer checks. Refresh installed packages from the incoming lockfile
+      and repeat all required checks on the final tree.
+- [x] Preserve renderer CSS resource declarations as private public-closure
+      seeds while ignoring CSS ownership and attribution. Repeat main's full,
+      requested, Serve, Watch and public-file safety controls. Add no CSS owner
+      or inserted-link record for an unlinked renderer assertion.
+- [x] Fix the deterministic Node24 shared example copy failure. Remove only
+      the newly owned empty destination before copying. Keep no-overwrite flags,
+      isolated copies, warm-cache validation and every test allowance.
+
+- [x] Apply main's public-file rule to declared CSS and renderer links. Keep
+      all five alias tests and assert the exact symlink refusal. Remove alias
+      acceptance from the stylesheet, link and provenance contracts. Record
+      each changed test and doc below.
+- [x] Apply main's canonical-only baseline preparation. Migrate former-name
+      sentinel controls to absence and rebuild cases. Keep main's former-name
+      rejection tests and strict current-shape validation. Record each changed
+      test and doc below.
+- [x] Fix accepted-compilation reuse. Exclude derived
+      `componentStylesheetPaths` from `configKey`, as for `sourceFiles`.
+      Audit every other derived config field that registry preparation adds.
+      Keep the captured failing regression and verify it passes after the fix.
+- [x] Finish fixture migrations, the fail-closed docs allowlist, exact protocol
+      size caps and Markdown checks. Preserve assertions and test allowances.
+- [x] Keep inserted-link resource membership out of raw CSS material/state
+      fallback. Retain unconditional reads and the existing byte-only fallback
+      for CSS linked on both actual sides when Git evidence is absent. Keep
+      rule evidence, projection-only CSS filtering, root/authored links and
+      non-CSS behavior. Repeat the import, declaration-only and full/fast controls.
 
 - [ ] Audit main's additions from the source tip, merge `origin/main` with
       exactly two parents, resolve conflicts path by path and review every
       remerge-diff path.
-- [ ] Combine the formats: main's unreleased manifest v9, catalogue read model
+- [x] Combine the formats: main's unreleased manifest v9, catalogue read model
       v5 and review result v6 carry this branch's records (component
       stylesheet declarations, inserted-stylesheet provenance, root output
       ranges, per-rule CSS evidence and page resource evidence). Record each
       renamed field or message and every conflict of meaning here.
-- [ ] Port this branch's behavior to #156: generated output, in-memory Serve
+- [x] Port this branch's behavior to #156: generated output, in-memory Serve
       and export, the asset closure and the removed compatibility transformer
       and ownership headers. Remove this branch's code, tests and docs that
       exist only for the removed transformer or headers, and record each
@@ -2532,8 +2626,19 @@ Merge `main` at `f8ab241f` (or the latest `main` at merge time).
 - [ ] Compare every line that main added since `dc56e3d4` with the merged tree.
       Classify each absent line as an intended migration, a move or a loss,
       and restore every loss before the push.
+- [ ] Run build, typecheck, lint, example build/check, docs tests, main's new
+      tests and the branch's focused tests. Run the exact complete unit suite
+      before the complete gate. Keep every assertion and test allowance.
+- [ ] Smoke-test `npm run dev` and the CLI at 390 and 1440 px. Cover Build,
+      Check, component-only and screen CSS rules, a moved component, exported
+      Details, a removed-field warning and `build --strict`. Save Chrome
+      screenshots under `.context/`. Restore every temporary edit.
 - [ ] Run `cargo xtask check` at 100%. Inspect the diff and the deletions
-      against `origin/main`, record the result, and push the branch.
+      against `origin/main` and record the result.
+- [ ] Run `git add -A` and make the checked local merge commit. Confirm both
+      captured parents. Review every remerge path with `GIT_NO_LAZY_FETCH=1`.
+      Amend any restoration, keep both parents and review again.
+- [ ] Push the branch after the reviewer checks the local commits.
 - [ ] After the push, use `docs/implementation-review-prompt.md` to review the
       complete diff against `origin/main` and report findings. Keep the review
       read-only. Then apply the review-fix rule in `AGENTS.md`: fix
@@ -2542,5 +2647,98 @@ Merge `main` at `f8ab241f` (or the latest `main` at merge time).
       rest. Ask the user for findings tagged `Auto-fix: no`. Add each open
       finding as one line under this TODO. Keep reports and evidence under
       `.context/`.
+
+### Approved migrations
+
+Both conflicts follow the new dated decision above. Main rejects public
+symlinks and prepares baselines only from canonical metadata. No unresolved
+conflict of meaning remains from those two cases.
+
+Alias refusal tests remain in these five files. Regular-file controls remain.
+Each file asserts the main error where the symlink enters the public boundary:
+
+- `tests/component_stylesheet_edges.test.ts`: shared declarations and renderer links.
+- `tests/component_stylesheet_link_scope.test.ts`: authored body-link order and reuse.
+- `tests/component_stylesheet_provenance_part2.test.ts`: authored link material and inserted-link separation.
+- `tests/component_stylesheet_validation.test.ts`: declaration deduplication, live preparation, configured links and ignored renderer records.
+- `tests/component_stylesheet_graceful.test.ts`: valid repeated files and refused symlink duplicates.
+
+Alias contracts change in `docs/protocol/mokly-component-stylesheets.md`,
+`mokly-stylesheet-links.md`, `mokly-component-stylesheet-ownership.md` and
+`mokly-source-protection-acceptance.md`. The same boundary is in
+`docs/guides/authoring/components.md`, `src/components/README.md` and
+`src/build/README.md`. Query/fragment reuse,
+active body links, marker placement, root retention and Review-ignore spans
+keep their meaning for accepted regular files.
+
+Former-name controls change in `tests/current_baseline_contract.test.ts`,
+`tests/current_baseline_commands.test.ts`,
+`tests/helpers/current_baseline_fixture.ts` and `tests/private_metadata.test.ts`.
+Missing canonical metadata selects a real current-format rebuild. Former files
+supply no metadata and their contents are never read. Main's former-name
+rejection tests remain. The matching current rules are in
+`docs/protocol/mokly-baseline-compatibility.md`, `mokly-generated-manifest.md`,
+`mokly-derived-baselines.md`, `mokly-baseline-storage.md`,
+`mokly-baseline-addressing.md` and `src/baseline/README.md`.
+`docs/protocol/npm-release-notes.md` names both approved breaking migrations.
+
+Transformer/header removals are intended migrations. Remove the branch-only
+`src/build/transformed_view.ts` and `tests/component_stylesheet_tokens.test.ts`.
+Remove transformer-only cases from `component_stylesheet_provenance.test.ts`,
+`component_stylesheet_link_scope.test.ts`, `component_stylesheet_link_validation.test.ts`,
+`build_warning_background.test.ts` and `build_warning_failures.test.ts`.
+Main's transformer/header modules and tests stay removed. Token handling,
+transform diagnostics and owner pruning after transforms have no remaining
+runtime. Final spans, root links, ignored-link discovery, early missing-resource
+diagnostics and non-CSS ownership remain tested.
+The standalone `stylesheetLink` predicate also leaves `src/html_links.ts`:
+only the removed transformer-token checks used it. The active shared finder
+retains stylesheet rel-token parsing.
+
+The combined types are `ManifestV9`, `ScreenReviewV6` and `ReviewResultV6`.
+The public catalogue stays v5. Existing stylesheet declarations, inserted spans,
+root ranges, rule keys, changed component paths, page selectors/evidence and
+page resource evidence retain their names. Main's closure, file inventory and
+blob algorithm join those records. No extra version or converter is added.
+The format table stays at its M30B owner with the current 9/6 numbers.
+Renderer CSS resource declarations retain private closure seeds even when their
+ownership is ignored. They add no owner, inserted span or source-path evidence.
+The early renderer-resource refusal keeps main's component-resource message,
+path and symlink cause. The new unlinked-owner test uses that exact message.
+Docs splits preserve content and lower exact caps. The fail-closed guard updates
+its exact exceptions without a whole-file bypass.
+
+Further fixture migrations are in `tests/component_css_owner_filter.test.ts`
+(regular duplicate control and exact alias refusal), `component_manifest.test.ts`
+(current v9 and rejected v10), `shell_views.test.ts` (generated URLs),
+`server_changed_resource_validation.test.ts` (main's four document reads),
+`watch_config.test.ts` and `watch_stylesheet_order.test.ts` (explicit writers).
+The controls README again names ordinary link rewriting. Verified deleted CSS
+remains eligible for Changes without weakening missing or unsafe resource checks.
+
+The incoming grouped attribution checks live in
+`tests/component_design_attribution.test.ts` and `design_library_attribution.test.ts`.
+Their helpers, pure projection fixture and source-edit fixture use the combined
+CSS records and rendered-resource reasons. All 69 saved variants remain checked;
+Tag picker Empty and Metadata row Code have no match for their rule and remain
+unchanged. Direct entry reasons use kept root matches. View reasons retain the
+full rendered document, including nested changed components. The source edits
+and committed baseline batch checks move to main's separate files. Independent
+branch CSS controls remain. The design protocol and example library README name
+these grouped checks and the component stylesheet declarations.
+
+Main's developer-test, flake and history policies remain. The protocol index
+keeps its new test links. The documentation policy's exact milestone definition
+has one reviewed docs-guard exception. No cap increases or whole-file bypasses
+are added. The live scope and non-blocking consumer follow-ups now name the
+combined 9/5/6 formats and adopted baseline/public-file rules. Earlier dated
+paragraphs and completed milestone text remain unchanged.
+
+The user resolved the history-link question by moving the six branch-only
+Milestone 16 audit records to `.context/remove-source-path-evidence/m16-preservation-audit/`.
+They are evidence logs under main #137 and #147, not the other historical plans
+that the task protects. Their bytes remain unchanged. No permalink patch is
+applied. The old directory is removed with `git rm`; it is absent from main,
+so this adds no main-relative deletion. Milestone 16 names the new location.
 
 Evidence: `.context/remove-source-path-evidence/milestone-33.md`.

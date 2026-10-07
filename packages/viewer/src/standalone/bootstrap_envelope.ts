@@ -1,6 +1,6 @@
 /** Shared shell-bootstrap envelope types and context/view parsing. */
-
 import { isHistoricalSnapshotId } from "../catalogue/snapshot_identity.js";
+import { MoklyVersionError } from "../catalogue/version_error.js";
 import {
   parseStaticDelivery,
   type StaticDelivery,
@@ -34,6 +34,7 @@ export interface BootstrapContext {
 
 /** Common envelope accepted by canonical standalone bootstrap serialization. */
 export interface ShellBootstrapEnvelope<Catalogue> {
+  schemaVersion: 2;
   catalogue: Catalogue;
   context: BootstrapContext;
   view: BootstrapView;
@@ -43,9 +44,16 @@ export interface ShellBootstrapEnvelope<Catalogue> {
 export function readShellBootstrapEnvelope(
   value: unknown,
 ): ShellBootstrapEnvelope<unknown> {
-  if (!isRecord(value) || !isRecord(value.context) || !isRecord(value.view))
+  if (!isRecord(value) || value.schemaVersion !== 2)
+    throw new MoklyVersionError(
+      "bootstrap",
+      isRecord(value) ? value.schemaVersion : undefined,
+      2,
+    );
+  if (!isRecord(value.context) || !isRecord(value.view))
     throw new Error("Invalid shell hydration state.");
   return {
+    schemaVersion: 2,
     catalogue: value.catalogue,
     context: readContext(value.context),
     view: readView(value.view),
@@ -76,12 +84,15 @@ function readContext(value: Record<string, unknown>): BootstrapContext {
     theme !== "light"
   )
     throw new Error("Invalid shell appearance.");
-  const delivery =
+  const parsedDelivery =
     value["delivery"] === undefined
       ? undefined
       : parseStaticDelivery(value["delivery"]);
-  if (value["delivery"] !== undefined && !delivery)
+  if (parsedDelivery?.kind === "unsupported-version")
+    throw new MoklyVersionError("delivery", parsedDelivery.version, 5);
+  if (parsedDelivery?.kind === "invalid")
     throw new Error("Invalid shell delivery metadata.");
+  const delivery = parsedDelivery?.value;
   return {
     base: value["base"],
     updateVersion: value["updateVersion"],

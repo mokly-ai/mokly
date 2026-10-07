@@ -7,17 +7,19 @@ import { defineScreen, defineUseCase } from "../dist/authoring/definitions.js";
 import type { ResolvedRegistryEntry } from "../dist/authoring/types.js";
 import { checkCompilation } from "../dist/build/check.js";
 import { compileCatalogue } from "../dist/build/compile.js";
-import { pendingGeneratedOrphanRoutes } from "../dist/build/ownership.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import {
-  createManifest,
   MANIFEST_NAME,
   parseManifest,
   readManifest,
   serializeManifest,
 } from "../dist/registry/manifest.js";
 
+import {
+  fixtureManifest,
+  currentManifest,
+} from "./helpers/current_manifest.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { resolvedEntry } from "./helpers/resolved.js";
 test("current filesystem reads reject an earlier-name manifest sentinel", async (context) => {
@@ -37,8 +39,9 @@ test("filesystem manifest loading never accepts v2 under the canonical filename"
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const legacy = toV2Manifest((await compileCatalogue(config)).manifest);
+  await fs.promises.mkdir(config.generatedDir, { recursive: true });
   await fs.promises.writeFile(
-    path.join(fixture.mockupsDir, MANIFEST_NAME),
+    path.join(config.generatedDir, MANIFEST_NAME),
     JSON.stringify(legacy),
   );
   await fs.promises.writeFile(
@@ -46,7 +49,7 @@ test("filesystem manifest loading never accepts v2 under the canonical filename"
     JSON.stringify(legacy),
   );
 
-  assert.throws(() => readManifest(config), /schema version 8/);
+  assert.throws(() => readManifest(config), /schema version 9/);
 });
 
 test("manifest loading rejects stored routes", async (context) => {
@@ -66,7 +69,7 @@ test("manifest validates retained color schemes and rejects stored view paths", 
   const screen = manifest.entries[0];
   if (!screen || screen.kind !== "screen") throw new Error("screen missing");
   screen.colorSchemes = ["light", "dark"];
-  assert.doesNotThrow(() => parseManifest(manifest));
+  assert.doesNotThrow(() => parseManifest(currentManifest(manifest)));
 
   const invalidShape = structuredClone(manifest);
   Object.assign(invalidShape.entries[0]!, { colorSchemes: ["dark"] });
@@ -81,7 +84,7 @@ test("manifest validation accepts tags and rejects invalid ones", () => {
   const screen = manifest.entries[0];
   if (!screen || screen.kind !== "screen") throw new Error("screen missing");
   screen.tags = ["forms", "onboarding"];
-  assert.doesNotThrow(() => parseManifest(manifest));
+  assert.doesNotThrow(() => parseManifest(currentManifest(manifest)));
 
   for (const invalidTags of [["forms", 7], [""], "forms"]) {
     const invalid = structuredClone(manifest);
@@ -92,35 +95,39 @@ test("manifest validation accepts tags and rejects invalid ones", () => {
 
 test("light-only manifests remain deterministic without variant metadata", () => {
   const entry = resolvedScreen();
-  const expected = serializeManifest({
-    entries: [
-      {
-        colorSchemes: ["light"],
-        description: "A screen",
-        path: "a",
-        kind: "screen",
+  const expected = serializeManifest(
+    currentManifest({
+      entries: [
+        {
+          colorSchemes: ["light"],
+          description: "A screen",
+          path: "a",
+          kind: "screen",
 
-        relatedDocs: [],
-        sourcePath: "entries/a.mockup.tsx",
-        title: "A",
-        useCasePaths: [],
-      },
-    ],
-    generatedBy: "mokly",
-    sourceFiles: ["entries/a.mockup.tsx"],
-    schemaVersion: 8 as const,
-    folders: [],
+          relatedDocs: [],
+          sourcePath: "entries/a.mockup.tsx",
+          title: "A",
+          useCasePaths: [],
+        },
+      ],
+      generatedBy: "mokly",
+      sourceFiles: ["entries/a.mockup.tsx"],
+      schemaVersion: 9 as const,
+      folders: [],
+    }),
+  );
+
+  const serialized = serializeManifest({
+    ...fixtureManifest([entry], [], ["light"]),
   });
-
-  const serialized = serializeManifest(createManifest([entry], [], ["light"]));
   assert.equal(serialized, expected);
   assert.equal(serialized.includes("darkFragments"), false);
   assert.equal(serialized.includes("tags"), false);
 });
 
 test("manifest serializes declared tags and omits absent ones", () => {
-  const serialized = serializeManifest(
-    createManifest(
+  const serialized = serializeManifest({
+    ...fixtureManifest(
       [
         resolvedScreen("a", {
           tags: ["onboarding", "forms"],
@@ -134,7 +141,7 @@ test("manifest serializes declared tags and omits absent ones", () => {
       [],
       ["light"],
     ),
-  );
+  });
   const entries = parseManifest(JSON.parse(serialized)).entries;
 
   assert.deepEqual(
@@ -152,7 +159,7 @@ test("manifest serializes declared tags and omits absent ones", () => {
   }
 });
 
-test("disabling dark orphans committed dark fragments", async (context) => {
+test("disabling dark removes obsolete generated fragments on rebuild", async (context) => {
   const fixture = await createFixture(undefined, {
     extraConfig: 'colorSchemes: ["light", "dark"],',
   });
@@ -166,24 +173,23 @@ test("disabling dark orphans committed dark fragments", async (context) => {
   );
   const lightConfig = await loadConfig(fixture.root);
   const lightCompilation = await compileCatalogue(lightConfig);
-  const orphans = pendingGeneratedOrphanRoutes(
-    lightConfig,
-    lightCompilation.outputs.keys(),
-  );
-  assert.deepEqual(orphans, [
+  const extra = [
     "details/index.desktop.dark.html",
     "details/index.mobile.dark.html",
     "home/index.desktop.dark.html",
     "home/index.mobile.dark.html",
-  ]);
+  ];
   assert.throws(
     () => checkCompilation(lightCompilation, lightConfig),
-    /orphan generated files[\s\S]*\.dark\.html/,
+    /extra generated files[\s\S]*\.dark\.html/,
   );
 
   await writeCompilation(lightCompilation, lightConfig);
-  for (const route of orphans) {
-    assert.equal(fs.existsSync(path.join(fixture.mockupsDir, route)), false);
+  for (const route of extra) {
+    assert.equal(
+      fs.existsSync(path.join(lightConfig.generatedDir, route)),
+      false,
+    );
   }
 });
 
@@ -197,7 +203,7 @@ function toV2Manifest(manifest: unknown): Record<string, unknown> {
 }
 
 function manifestWithScreen(id: string) {
-  return createManifest([resolvedScreen(id)], [], ["light"]);
+  return fixtureManifest([resolvedScreen(id)], [], ["light"]);
 }
 
 function resolvedUseCase(

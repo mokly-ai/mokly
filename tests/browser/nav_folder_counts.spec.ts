@@ -8,7 +8,7 @@ import {
 
 const screen = (title: string, body: string, tags: readonly string[] = []) =>
   `import {defineScreen} from '@mokly/mokly';
-export default defineScreen({title:${JSON.stringify(title)},description:${JSON.stringify(title)},dependencies:[],relatedDocs:[],tags:${JSON.stringify(tags)},mobile:<main><h1>${body}</h1></main>,desktop:<main><h1>${body}</h1></main>});`;
+export default defineScreen({title:${JSON.stringify(title)},description:${JSON.stringify(title)},relatedDocs:[],tags:${JSON.stringify(tags)},mobile:<main><h1>${body}</h1></main>,desktop:<main><h1>${body}</h1></main>});`;
 
 /**
  * A Shop folder whose Cart (tagged `sale`) changed on the branch, beside the
@@ -25,7 +25,7 @@ function shopCatalogue() {
       "specs/shop/archive/_folder.json": '{"title":"Archive"}',
       "specs/shop/archive/orders.mockup.tsx": screen("Orders", "Orders"),
     },
-    '{mockupsDir:"mockups",roots:[{dir:"specs"}],generatedOutput:"committed",colorSchemes:["light"]}',
+    '{mockupsDir:"mockups",roots:[{dir:"specs"}],colorSchemes:["light"]}',
     async (fixture) => {
       await fixture.write(
         "specs/shop/cart.mockup.tsx",

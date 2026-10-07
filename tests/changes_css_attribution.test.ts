@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { renderReviewArtifact } from "../dist/review/artifact.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 import { resourceReasonSummaries } from "./helpers/css_evidence.js";
 
@@ -57,7 +57,7 @@ for (const components of [false, true]) {
         ),
         included,
       );
-      if (artifact.result.schemaVersion === 5) {
+      if (artifact.result.schemaVersion === 6) {
         assert.deepEqual(live.componentChanges?.result, artifact.result);
         assert.equal(
           artifact.result.changes.some((entry) => entry.after?.path === "home"),
@@ -66,7 +66,7 @@ for (const components of [false, true]) {
       }
       if (status === "unresolved") {
         const views = artifact.result.screens.flatMap((entry) => entry.views);
-        if (artifact.result.schemaVersion === 5)
+        if (artifact.result.schemaVersion === 6)
           views.push(
             ...artifact.result.components.flatMap((entry) =>
               entry.variants.flatMap((variant) => variant.views),
@@ -86,7 +86,7 @@ for (const components of [false, true]) {
       assert.ok(files.has("snapshots/after/shared.css"));
       assert.match(
         String(files.get("summary.md")),
-        artifact.result.schemaVersion === 5
+        artifact.result.schemaVersion === 6
           ? new RegExp(`Changes: ${artifact.result.changes.length};`)
           : new RegExp(
               `output changes: ${artifact.result.screens.filter((screen) => screen.state === "changed").length};`,

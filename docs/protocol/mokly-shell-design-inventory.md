@@ -5,7 +5,7 @@
 Implemented in the path-addressed design catalogue. The designs depict the approved path-identity shell: the Specs
 section, browse-only folder rows, `Overview` rows, a folder's own screen
 listing the folder's members, path chips, Markdown documents, and `Moved`
-Changes rows, which the shell renders once that plan delivers them.
+Changes rows, which the shell renders.
 
 This document is the inventory of Browse and Changes design screens for the
 [shell design contract](./mokly-shell-design.md), which owns their tokens,
@@ -14,7 +14,7 @@ dimensions, and responsive rules.
 ## Inventory
 
 The approved screens are authored in `examples/basic/specs/design/` and
-generated under `examples/basic/generated/<path>/` as each entry's path-derived
+generated under `examples/basic/mokly-generated/<path>/` as each entry's path-derived
 `index.<viewport>.html` views. This Browse/Changes table and the
 [component design inventory](./mokly-component-design.md#owning-catalogue)
 together define the complete set of Mokly shell design screens, matching the
@@ -174,7 +174,7 @@ Additional owning groups keep each new page at no more than five screens:
   Changes states that carry no comparison data yet, keeping the impact group
   to its own two aggregate outcomes.
 - `design/browse/appearance/overview` is the canonical appearance screen; the
-  `Appearance states` folder beneath it owns three screens and
+  `Appearance states` folder beneath it owns four screens and
   `Panels and comparisons` and `Status and recovery` own five each. Their previews follow the artboard. They specify the
   delivered Auto/Light/Dark interface appearance from
   [viewer appearance](./mokly-viewer-appearance.md). Every one of them renders in

@@ -7,14 +7,14 @@ import { compileCatalogue } from "../../dist/build/compile.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
 import { prepareReviewRepository } from "../../dist/review/prepare.js";
-import { committedReviewRepository } from "../../dist/review/repository.js";
 
+import { committedReviewRepository } from "./committed_repository.js";
 import { createFixture, removeFixture, validEntrySource } from "./fixture.js";
 
 /** A Git branch point whose generated CSS is committed or reproducibly derived. */
 export async function importedChangesFixture(
   context: TestContext,
-  mode: "committed" | "derived",
+  storage: "blobs" | "rebuild",
   kind: "plain" | "module" | "asset" | "new",
 ) {
   const usesModule = kind === "module";
@@ -79,16 +79,14 @@ export const mockups = [defineScreen({
     );
   await fs.writeFile(
     fixture.configPath,
-    (await fs.readFile(fixture.configPath, "utf8"))
-      .replace('"committed"', JSON.stringify(mode))
-      .replace(
-        'review: { outDir: ".review" }',
-        `review: { outDir: ".review"${mode === "derived" ? ', baselineBuild: [["node", "baseline.mjs"]]' : ""} }`,
-      ),
+    (await fs.readFile(fixture.configPath, "utf8")).replace(
+      'review: { outDir: ".review" }',
+      `review: { outDir: ".review"${storage === "rebuild" ? ', baselineBuild: [["node", "baseline.mjs"]]' : ""} }`,
+    ),
   );
   const config = await loadConfig(fixture.root);
   const baseline = await compileCatalogue(config);
-  if (mode === "committed") await writeCompilation(baseline, config);
+  if (storage === "blobs") await writeCompilation(baseline, config);
   else {
     await fs.writeFile(
       path.join(fixture.root, "baseline.json"),
@@ -104,7 +102,7 @@ export const mockups = [defineScreen({
       `import fs from "node:fs/promises";
 import path from "node:path";
 for (const [route, encoded] of JSON.parse(await fs.readFile("baseline.json", "utf8"))) {
-  const target = path.join("mockups", route);
+  const target = path.join("mockups/mokly-generated", route);
   await fs.mkdir(path.dirname(target), { recursive: true });
   await fs.writeFile(target, Buffer.from(encoded, "base64"));
 }\n`,
@@ -122,7 +120,7 @@ for (const [route, encoded] of JSON.parse(await fs.readFile("baseline.json", "ut
   git("add", ".");
   git("commit", "-qm", "test: imported styles baseline");
   const repository =
-    mode === "derived"
+    storage === "rebuild"
       ? await prepareReviewRepository(config, "HEAD")
       : committedReviewRepository(config);
   return { ...fixture, config, cssPath, git, repository };

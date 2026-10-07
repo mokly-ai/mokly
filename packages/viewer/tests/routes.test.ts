@@ -75,11 +75,11 @@ test("artifact names derive from paths and validated axes", () => {
   );
   assert.equal(
     snapshotViewPath("before", "account/invoice", "mobile", "light"),
-    "snapshots/before/account/invoice/index.mobile.html",
+    "snapshots/before/mokly-generated/account/invoice/index.mobile.html",
   );
   assert.equal(
     snapshotDocumentPath("before", "account/guide", "light"),
-    "snapshots/before/account/guide/index.html",
+    "snapshots/before/mokly-generated/account/guide/index.html",
   );
   assert.equal(
     previewMetadataPath("account/guide"),
@@ -156,19 +156,19 @@ test("provider normalization confines shell and static artifact paths", () => {
     ["/view/account/Invoice/index.html", "/view/account/Invoice/"],
     ["/static/account/Invoice/index.html", "/static/account/Invoice/"],
     [
-      "/static/account/Invoice/index.mobile.html",
-      "/static/account/Invoice/index.mobile",
+      "/static/mokly-generated/account/Invoice/index.mobile.html",
+      "/static/mokly-generated/account/Invoice/index.mobile",
     ],
   ] as const)
     assert.equal(providerNormalizedHtmlPath(value), expected);
   for (const value of [
     "/view/account/Invoice",
     "/static/../secret.html",
-    "/static/./secret.html",
-    "/static/%2e%2e/secret.html",
-    "/static/a%2fb.html",
-    "/static/a.html?query=1",
-    "/static/a.html#id",
+    "/static/mokly-generated/./secret.html",
+    "/static/mokly-generated/%2e%2e/secret.html",
+    "/static/mokly-generated/a%2fb.html",
+    "/static/mokly-generated/a.html?query=1",
+    "/static/mokly-generated/a.html#id",
     "/other/a.html",
   ])
     assert.equal(providerNormalizedHtmlPath(value), undefined, value);

@@ -5,9 +5,9 @@
 Removal of baseline compatibility is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
-Root output ranges and removal of CSS resource owners are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md). Manifest v8 changes in place.
+Root output ranges and removal of CSS resource owners are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md). The combined manifest v9 retains these proof fields.
 
-Builds emit manifest v8 with paths, folder records, and rendered Markdown
+Builds emit manifest v9 with paths, folder records, and rendered Markdown
 documents. Copied document resources also remain private watched source inputs.
 
 These are the normative interfaces for the generated `mokly-manifest.json`.
@@ -20,21 +20,24 @@ These are the normative interfaces for the generated `mokly-manifest.json`.
 [usage-record contract](./mokly-component-usage-records.md).
 
 The optional instance `source` follows the [usage-record contract](./mokly-component-usage-records.md). Readers accept instances with or without it.
-Version 8 carries paths and authored data only: no entry stores a route, view
+Version 9 carries paths and authored data only: no entry stores a route, view
 path, or other value derivable from its path, kind, and configuration.
 
 ## Entries, Folders, And Variants
 
 ```ts
-interface ManifestV8 {
-  schemaVersion: 8;
+interface ManifestV9 {
+  schemaVersion: 9;
   generatedBy: "mokly";
-  entries: readonly ManifestEntryV8[];
+  entries: readonly ManifestEntry[];
   folders: readonly ManifestFolder[];
   sourceFiles: readonly string[];
+  assetClosure: readonly string[];
+  generatedFiles: readonly { path: string; blobHash: string }[];
+  blobHashAlgorithm: "sha1" | "sha256";
 }
 
-type ManifestEntryV8 =
+type ManifestEntry =
   | ManifestUseCase
   | ManifestPage
   | ManifestDocument
@@ -191,10 +194,10 @@ JSON object keys sort lexically; arrays follow their stated order. Omit absent
 optional fields; emit required empty arrays and objects. Serialize with
 two-space indentation and a final LF.
 
-Emit v8 for every catalogue, including one without components or documents.
+Emit v9 for every catalogue, including one without components or documents.
 Its sorted private `sourceFiles` inventory, explicit page and document
 entries, folder records, component records, and usage proof are required.
-Current and baseline readers accept only v8; the
+Current and baseline readers accept only v9; the
 [baseline compatibility contract](./mokly-baseline-compatibility.md) owns the
 clean unavailable outcome for earlier output. Contract fixtures, schema round
 trips, deterministic output, and ownership and path regressions cover these

@@ -1,9 +1,8 @@
-import { generatedViews } from "@mokly/viewer/data";
-
 import { timeAsync } from "../diagnostics/timings.js";
 
 import type { ComponentClassificationInput } from "./component_classification_input.js";
 import type { ComponentViewContext } from "./component_view_types.js";
+import { reviewViews } from "./views.js";
 
 /** Prefetch all current and baseline views before pair classification starts. */
 export async function prefetchClassificationViews(
@@ -15,7 +14,7 @@ export async function prefetchClassificationViews(
   const prefetchBefore = () =>
     context.beforeReader.prefetch(
       before.entries.flatMap((entry) =>
-        generatedViews(entry).map((view) => view.path),
+        reviewViews(entry).map((view) => view.path),
       ),
     );
   await Promise.all([
@@ -24,7 +23,7 @@ export async function prefetchClassificationViews(
       : prefetchBefore(),
     context.afterReader.prefetch(
       after.entries.flatMap((entry) =>
-        generatedViews(entry).map((view) => view.path),
+        reviewViews(entry).map((view) => view.path),
       ),
     ),
   ]);

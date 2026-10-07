@@ -4,10 +4,21 @@
 
 - When adding new packages or services, always attempt to build them to check for errors
 - Everything must be fully tested
-- Search for and run relevant tests after making changes, ensure all tests pass (100% pass rate required)
+- During development, run only tests that cover the change. Require a 100% pass
+  rate. Follow the commands and rebuild rules in
+  [developer test commands](./docs/protocol/developer-test-commands.md).
 - Tests must not assert elapsed wall-clock time. Use operation counts, captured inputs, event order or fake-clock time.
   Follow [CI Test Timing](./docs/protocol/ci-test-timing.md).
-- Run `cargo xtask check` before saying work is complete; if it cannot be run, explain the blocker and the checks already run
+- Run `cargo xtask check --suite repository` early. Leave complete unit and
+  browser suite runs to the complete gate.
+- Run the complete `cargo xtask check` once before saying work is complete.
+  A local run stops at the first failed suite. A remote run reports every
+  failed suite. After a failure, fix it. Rerun only the
+  failing tests or the failed repository or package suite. Then rerun the
+  complete gate. If it cannot run, explain the blocker and the checks already run.
+  If a test that the diff does not touch fails and then passes on the rerun,
+  it is an unrelated flaky test. Do not fix it in this branch. Report it under
+  the flaky-test rule below.
 - After tests and `cargo xtask check` pass, run `git add -A`, commit the
   completed work using Conventional Commits, and push the branch; newly created
   files must be tracked and included in the commit, push, and review diff
@@ -24,6 +35,7 @@
   small or medium effort findings in these categories: product bugs
   (including edge cases, races, and platform differences), security issues,
   docs or spec drift, mockup mismatches that a protocol doc already settles,
+  flaky tests that the diff adds or changes under the flaky-test rule below,
   and repository-rule violations such as file size, lint, and layout. Effort
   grades: small is one change in one or two files with no new module,
   dependency, migration, protocol section, or test file; medium is a few files
@@ -42,9 +54,28 @@
   limit; or the fix needs an audit exception, credentials, or infrastructure.
   Findings about missing tests, performance, code structure, UX wording, and
   process always wait for the user
-- Do not fix a flaky, slow, custom, or low-value test, gate, lint, or check
-  automatically. Ask the user whether to fix it or remove it, and state what
-  it protects and how long it runs
+- Flaky-test rule: a flaky test that the diff adds or changes may be tagged
+  `Auto-fix: yes` only when all of these conditions hold. The fixer reproduces
+  the flake by repeating the test, and records the pass counts before and
+  after the fix under `.context/`. The finding names the nondeterminism
+  source, for example real timers, real signals, watcher readiness, port or
+  path reuse, async ordering, shared fixture state, or locale and platform
+  differences. The fix makes the test deterministic with the methods in
+  [CI Test Timing](./docs/protocol/ci-test-timing.md): a fake clock, event
+  order, captured inputs, operation counts, an explicit readiness signal, or
+  isolated state. The fix keeps every existing assertion. The fix adds no
+  retry, sleep, repeat, skip, quarantine, or longer time limit. A source in
+  `src/` is a product bug: add the failing test first, then fix it under the
+  product-bug category. An unreproducible failure, an unknown source, or a
+  proposed removal stays `Auto-fix: no`
+- A flaky test that the diff does not touch is an unrelated flaky test. Do not
+  fix it in this branch, so that one fix in a separate branch reaches every
+  open branch quickly. Report it in the final message and, when a plan exists,
+  as one line under the plan's review TODO. Give the test name, the failure
+  text, the rerun outcome, and the suspected source. Slow, custom, or
+  low-value tests, gates, lints, and checks also stay `Auto-fix: no`. Ask the
+  user whether to fix or remove each one, and state what it protects and how
+  long it runs
 - Keep the review itself read-only. After it reports, fix the `Auto-fix: yes`
   findings, run the checks, commit, push, and re-run the review once on the
   fix. Fix any new `Auto-fix: yes` findings once more, then stop and report.
@@ -202,7 +233,7 @@
 - Mockup screens must not contain implementation hints, engineering notes, or
   explanatory annotations inside the rendered screen area. Put implementation
   hints below the screen or in a separate non-screen section.
-- Mokly's example catalogue under `examples/basic/generated/` is generated from
+- Mokly's example catalogue under `examples/basic/mokly-generated/` is generated from
   the structured definitions under `examples/basic/specs/` using
   `examples/basic/mokly.config.ts`. Canonical entry modules end in `.mockup.ts`
   or `.mockup.tsx`; shared TSX components and page-render helpers live alongside
@@ -211,10 +242,11 @@
   changing example entries, the renderer, configuration, or configured styles,
   run `npm run build`, run `npm run example:build`, run
   `npm run example:check`, and visually smoke-test the changed pages through
-  `npm run dev`. The example uses the default derived output mode: generated
-  HTML and `mokly-manifest.json` under `examples/basic/generated/` are ignored
-  local artifacts validated by `npm run example:check`. Commit only the tracked
-  authored CSS there; never force-add ignored generated output.
+  `npm run dev`. `npm run example:check` validates the compilation and ignores
+  the untracked local tree under `examples/basic/mokly-generated/`. Never commit
+  anything under that generated directory. Commit authored files normally,
+  including specs, configuration and CSS under `examples/basic/`,
+  `examples/basic/design-library/` and `examples/basic/src/components/workspace-note/`.
 - Do not hand-edit Mokly-owned generated HTML or `mokly-manifest.json` as source
   of truth. Update the entry, imported helper, renderer, or shared component
   first, then regenerate the example catalogue.
@@ -609,6 +641,22 @@ docs, mockups, plans, migrations, or schema—without explicit user approval.
 
   Stop unless each deletion or feature-wide reduction is authorized, and record
   every approved removal plus related cleanup in the commit or PR description.
+
+- When a change removes or renames a feature, test, fixture, scenario,
+  command, or file, search `docs/`, `plans/`, and every `README.md` for its
+  name. Update each stale reference in live content in the same change.
+  Record each plan edit in the commit or PR description.
+- `docs/` and every `README.md` are live content. In an active plan,
+  completed milestones and checked TODOs are history; all other content is
+  live. In a completed plan, open review findings and unchecked post-merge
+  follow-ups are live; all other content is history. Do not change the
+  words of history.
+- `tests/markdown_links.test.ts` checks the local links in `docs/`, `plans/`,
+  and every `README.md`. If a history link fails this check, replace it with
+  a GitHub permalink at a commit where the target still matches the text.
+  Start with the commit that wrote the link. For a squash-merged PR, look for
+  that commit in `refs/pull/<number>/head`. For a line in a Markdown file,
+  put `?plain=1` before `#L<number>`.
 
 ### Rules
 

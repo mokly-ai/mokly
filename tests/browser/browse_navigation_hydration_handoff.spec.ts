@@ -85,7 +85,7 @@ test("an unowned exact-resource document stays frame-owned during replacement", 
     releaseRequest = resolve;
   });
   await page.route(
-    "**/static/fixture/nested/home/index.mobile.dark.html",
+    "**/static/mokly-generated/fixture/nested/home/index.mobile.dark.html",
     async (route) => {
       matchingRequests++;
       if (matchingRequests === 1) {
@@ -105,7 +105,7 @@ test("an unowned exact-resource document stays frame-owned during replacement", 
         .locator(".mbk-frame-mobile iframe")
         .evaluate((element: HTMLIFrameElement) =>
           element.contentDocument?.URL.endsWith(
-            "/static/fixture/nested/home/index.mobile.dark.html",
+            "/static/mokly-generated/fixture/nested/home/index.mobile.dark.html",
           ),
         ),
     )

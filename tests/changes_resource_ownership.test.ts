@@ -5,14 +5,10 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { compareReview } from "../dist/review/compare.js";
-import {
-  NodeGitCommandRunner,
-  CommittedRepository,
-} from "../dist/review/git.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 
 test("a non-CSS resource owned only at an actual invocation changes its component", async (t) => {
@@ -20,7 +16,7 @@ test("a non-CSS resource owned only at an actual invocation changes its componen
     t,
     componentEntrySource({
       actionRender:
-        '(props) => <button>{props.label === "Finish" ? <img src="../image.svg" /> : props.label}</button>',
+        '(props) => <button>{props.label === "Finish" ? <img src="../../image.svg" /> : props.label}</button>',
     }),
     { extraConfig: 'renderer: "renderer.tsx",' },
     async ({ root, mockupsDir }) => {
@@ -36,15 +32,15 @@ export default (input) => {
     },
   );
   await fs.writeFile(path.join(fixture.mockupsDir, "image.svg"), "updated");
-  const git = new CommittedRepository(new NodeGitCommandRunner(fixture.root));
+  const git = committedReviewRepository(fixture.config);
   const { result } = await compareReview(
     await compileCatalogue(fixture.config),
     fixture.config,
     git,
     "main",
   );
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   assert.deepEqual(
     result.changes.map((change) => (change.after ?? change.before)!.path),
     ["action"],

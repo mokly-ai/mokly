@@ -7,14 +7,14 @@ import {
   CANCELLATION_LINE,
 } from "./helpers/publish_pre_installation_cancellation.js";
 
-for (const mode of ["committed", "derived"] as const) {
+for (const storage of ["blobs", "rebuild"] as const) {
   test(
-    `${mode} publish cancels when esbuild exits before the signal listener runs`,
+    `${storage} publish cancels when esbuild exits before the signal listener runs`,
     { skip: process.platform === "win32" },
     async (context) => {
       const scenario = await cancellationScenario(
         context,
-        mode,
+        storage,
         "compile",
         "plain",
       );
@@ -35,7 +35,7 @@ test(
   async (context) => {
     const scenario = await cancellationScenario(
       context,
-      "committed",
+      "blobs",
       "compile",
       "plain",
       true,

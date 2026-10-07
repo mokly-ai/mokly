@@ -26,7 +26,7 @@ const configMessage =
   "review.sharedImpact has been removed; ignoring it. Delete the field.";
 
 for (const mode of ["plain", "rich"] as const)
-  for (const outcome of ["resource", "transform", "success"] as const)
+  for (const outcome of ["resource", "success"] as const)
     test(`${mode} Build and Check retain link warnings on ${outcome}`, async (t) => {
       const fixture = await linkWarningFailureFixture(outcome);
       t.after(() => fixture.remove());

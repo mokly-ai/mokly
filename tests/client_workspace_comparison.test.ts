@@ -4,7 +4,7 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
@@ -163,10 +163,10 @@ function componentComparison(
   sourcePaths: string[],
   reasonPath?: string,
   excludedCss?: string,
-): ReviewResultV5 {
+): ReviewResultV6 {
   const address = { path: "home", title: "Home" };
   return {
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: [
@@ -211,9 +211,9 @@ function componentComparison(
   };
 }
 
-function comparison(): ReviewResultV5 {
+function comparison(): ReviewResultV6 {
   return {
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: [

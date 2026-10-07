@@ -22,13 +22,13 @@ independent of the visual [comparison result](./mokly-changes.md);
 
 One package-internal catalogue-change module owns this typed snapshot and its
 pure selection rules. The Git-backed loader supplies validated current and
-baseline v8 manifests plus one resolved branch-point commit. Server, watcher,
+baseline v9 manifests plus one resolved branch-point commit. Server, watcher,
 preview capture, and publication consume the same
 snapshot for a catalogue generation:
 
 ```ts
 interface CatalogueChangeSnapshot {
-  schemaVersion: 2;
+  schemaVersion: 3;
   baseRef: string;
   baseCommit: string;
   changedEntries: readonly string[];
@@ -48,17 +48,18 @@ interface RemovedEntrySnapshot {
 }
 ```
 
-No-watch Serve validates the successfully written compilation's manifest and
-resolves its optional Changes exactly once before handing that catalogue
-snapshot to HTTP. HTTP consumes the supplied snapshot without rereading the
-manifest or retrying Git. Child startup uses the same validation and optional
-history loader when no snapshot was supplied. A failed optional calculation
-omits the entire Changes result, including removed entries; there is no separate
-startup route-list fallback. Invalid current manifests or stale source inventories
-still prevent listening. This startup guarantee does not pin a later, explicitly
-requested on-demand screen comparison to the startup Git state.
+No-watch Serve validates an in-memory live index before listening. Its
+background generation compiles the full catalogue without writing the output
+tree unless `--build` was requested; the parent prepares any Git baseline and
+publishes the optional Changes snapshot when classification finishes. HTTP uses
+the accepted manifest and snapshot without selecting a baseline or building
+historical output. Watched children likewise receive prepared baseline
+selection from their parent rather than running a history loader. A failed
+optional calculation omits the entire Changes result, including removed
+entries; invalid current manifests or stale source inventories still prevent
+listening. On-demand comparisons use the accepted generation and pinned base.
 
-The entry types are validated manifest-v8 DTOs, including their common metadata
+The entry types are validated manifest-v9 DTOs, including their common metadata
 and tags. A removed record carries no route: its URL and artifact names derive
 from its path. `folderTitles` holds the baseline titles of its folders from the
 top level down, resolved from the baseline manifest's folder records and index
@@ -88,15 +89,15 @@ continues to propagate to use cases through their screen steps. Current display
 metadata comes from the matching current catalogue; removed display metadata
 comes from `removedEntries`. No removed-use-case support is introduced here.
 
-Visual comparisons use [review result v5](./mokly-changes-serving.md#comparison-engine)
+Visual comparisons use [review result v6](./mokly-changes-serving.md#comparison-engine)
 for every catalogue. Pages and documents add no comparison records. Neither
 catalogue change detection nor page or document removal requires snapshot
 generation. The publisher must not discover removed pages or documents by reading
 `ReviewResult.screens`; that array remains the source of screen comparisons.
 The shared catalogue snapshot drives its removed-entry pages, shell metadata,
 and filter/search rows before HTML capture. It requires no additional public
-endpoint. CSS page evidence is carried by catalogue v4 `resourceEvidence`;
-[comparison v5 evidence](./mokly-css-attribution-membership.md) changes in place.
+endpoint. CSS page evidence is carried by catalogue v5 `resourceEvidence`;
+[comparison v6 evidence](./mokly-css-attribution-membership.md) changes in place.
 
 ## Removal Selection And Precedence
 

@@ -3,7 +3,8 @@ import { test } from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { ManifestScreen, ManifestV8 } from "../src/registry/types.js";
+import { currentManifest } from "../../../tests/helpers/current_manifest.js";
+import type { ManifestScreen, ManifestV9 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import type { ShellInitialState } from "../src/shell/store_state.js";
 import { StandaloneShellDocument } from "../src/standalone/document.js";
@@ -19,13 +20,13 @@ const screen = {
   title: "Welcome",
   useCasePaths: [],
 } satisfies ManifestScreen;
-const manifest: ManifestV8 = {
+const manifest: ManifestV9 = currentManifest({
   entries: [screen],
   generatedBy: "mokly",
-  schemaVersion: 8 as const,
+  schemaVersion: 9,
   folders: [],
   sourceFiles: [screen.sourcePath],
-};
+});
 
 function render(colorScheme: "light" | "dark", home = false): string {
   const initialState: ShellInitialState = {

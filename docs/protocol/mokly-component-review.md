@@ -2,23 +2,23 @@
 
 ## Delivery Status
 
-CSS per-rule attribution and the revised v5 evidence are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
+CSS per-rule attribution and the revised v6 evidence are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
 of the [source-path removal plan](../../plans/remove-source-path-evidence.md). Comparison details are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
 
 The producer, source validator, artifact publisher, exporter, and browser
-decoder implement this path-keyed component-aware schema v5 for
+decoder implement this path-keyed component-aware schema v6 for
 [change attribution](./mokly-component-changes.md). `ReviewResult`,
 `ScreenReview`, `ViewReview`, and `ReviewState` refer to the base
 [Changes contract](./mokly-changes.md) and
 [named result interfaces](../../packages/viewer/src/review/types.ts).
 Manifest/usage types come from the
-[component manifest](./mokly-component-manifest.md). Version 5 addresses
+[component manifest](./mokly-component-manifest.md). Version 6 addresses
 screens, components, variants, and views by entry path and view axes, carries
 `previousPath` for paired moves, and stores no artifact path.
 
 ## Normative Result
 
-Every catalogue emits the [comparison v5 records](./mokly-component-comparison-records.md).
+Every catalogue emits the [comparison v6 records](./mokly-component-comparison-records.md).
 
 ## Reasons And Secondary Evidence
 
@@ -63,7 +63,7 @@ markers, and one-sided range validation.
 Views omit empty `reasons` and `excludedResources` lists and sort both by path.
 Entry reasons merge by path and rule key under the
 [CSS evidence schema](./mokly-css-attribution-membership.md). It adds per-rule
-changed component paths and page evidence in review result v5, without a new
+changed component paths and page evidence in review result v6, without a new
 version. A component-only rule can be absent from a consumer's entry reasons while still
 appearing in its view evidence. CSS at an actual invocation cannot change a
 component whose own pages keep no match for that rule. Non-CSS resource
@@ -94,7 +94,7 @@ each evidence destination from its own side; stored evidence paths never change.
 Repeated physical placements do not duplicate logical evidence or screen counts;
 the inspector can resolve that logical instance to its current ranges.
 
-The v5 result has no `sharedImpact`; its entries omit `dependencies` and
+The v6 result has no `sharedImpact`; its entries omit `dependencies` and
 `sharedImpact` (both removed). The inherited `kind: "dependency"` reason names a referenced
 resource, not a manually declared repository path. Existing `ignoredImpact`
 and view `ignoredIds` retain manual

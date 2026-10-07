@@ -82,8 +82,8 @@ document design `design/browse/pages/document` depicts: 14.5px body text on
 a 720px measure, 26px and 17px headings, semibold underlined links, bordered
 inline code, and full-width tables; below 600px the body is 14px and the
 title 22px. Elements that the design does not show follow the same scale.
-The light document is `static/<path>/index.html`; when the catalogue
-enables dark, `static/<path>/index.dark.html` applies the dark palette. A
+The light document is `static/mokly-generated/<path>/index.html`; when the catalogue
+enables dark, `static/mokly-generated/<path>/index.dark.html` applies the dark palette. A
 document without a dark document keeps its light one under Dark. When the
 catalogue has a dark axis, the shell names that fallback with the existing
 `Light only` note: in a quiet band above a current document's pane, as the
@@ -92,10 +92,9 @@ catalogue has a dark axis, the shell names that fallback with the existing
 `design/browse/appearance/states/light-only-document` design shows. The
 shell opens the document for the current appearance exactly as it selects a
 screen's scheme, and documents have no viewport axis. Documents pass the same
-ownership header, final HTML validation, and transactional write as pages.
+plain generated notice, final HTML validation and whole-tree write as pages.
 Final documents also pass the independent parse5 element, attribute and URL
-allowlist in [Document Rendering Safety](./mokly-document-safety.md), after any
-compatibility transformer. It rejects active markup, event/style attributes and
+allowlist in [Document Rendering Safety](./mokly-document-safety.md), after logical-link rewriting. It rejects active markup, event/style attributes and
 unsupported URL schemes. The template remains script-free; a blanket script-blocking
 CSP meta is omitted because it also blocks Mokly's frame instrumentation.
 
@@ -117,10 +116,10 @@ links retain repository spelling when catalogue placement differs:
   [navigation contract](./mokly-navigation.md).
 - A relative destination that names a file with an extension in `png`, `jpg`,
   `jpeg`, `gif`, `svg`, `webp`, `avif`, or `pdf` is a resource. Mokly copies it
-  to `static/<folder path>/<relative path>`, where the folder path is the
+  to `static/mokly-generated/<folder path>/<relative path>`, where the folder path is the
   document's logical-link base folder and the relative path is the destination as written after
   normalisation; `../shared/a.png` from a folder README at `account/billing` writes
-  `static/account/shared/a.png`. The file must exist inside the same root's
+  `static/mokly-generated/account/shared/a.png`. The file must exist inside the same root's
   directory; a destination that escapes it fails with
   `<location>: resource <destination> is outside the root`. Resources join the
   public-file inventory and its collision rules. Both lexical and physical paths
@@ -135,10 +134,10 @@ links retain repository spelling when catalogue placement differs:
   enter the graph before imported CSS validation, so a nested source root can
   share an explicitly referenced asset with CSS. Unrelated public files keep
   the CSS pass's existing protection. Exact
-  output ownership derives from the document source, path and `resources` in a
-  validated previous manifest for this configuration, or a document still
-  resolved or inventoried by the current config. Thus a config rename retains
-  its documents' resource ownership. No unowned file may be replaced. The same transaction installs copies and removes owned orphans.
+  resource routes derive from the document source, path and `resources`. Copies
+  join the accepted generated inventory with exact byte hashes. Whole-tree
+  replacement installs the copies and removes obsolete generated files; authored
+  files outside `mokly-generated/` remain untouched.
 - Classify existing targets under `mockupsDir`, including physical aliases,
   before collecting inputs. A target proven to be Mokly-owned output or internal
   metadata fails with `<location>: link target <destination> targets Mokly-owned output or metadata`.

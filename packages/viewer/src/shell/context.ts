@@ -3,8 +3,7 @@ import type { RenderCapability } from "../components/render_types.js";
 import type { StaticDelivery } from "../navigation/delivery.js";
 import type { ViewerTheme } from "../viewer/types.js";
 
-import type { ShellEvidence } from "./metadata.js";
-import type { LiveChangesStatus } from "./metadata.js";
+import type { ShellEvidence, LiveChangesStatus } from "./metadata.js";
 
 /** Server-side context shared by every shell page. */
 export interface ShellContext {

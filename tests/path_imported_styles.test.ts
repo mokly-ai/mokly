@@ -6,7 +6,7 @@ import { pathFixture } from "./helpers/path_fixture.js";
 function screen(fields = ""): string {
   return `import {defineScreen} from '@mokly/mokly';
 import './theme.css';
-export default defineScreen({title:'Home',description:'Home',dependencies:[],relatedDocs:[],mobile:'Home',desktop:'Home',${fields}});`;
+export default defineScreen({title:'Home',description:'Home',relatedDocs:[],mobile:'Home',desktop:'Home',${fields}});`;
 }
 
 for (const directory of ["_drafts", "-drafts"])
@@ -20,8 +20,8 @@ for (const directory of ["_drafts", "-drafts"])
     context.after(fixture.remove);
     const compiled = await fixture.compile();
     assert.equal(compiled.manifest.entries[0]?.path, `${directory}/home`);
-    const stylesheet = `mokly-generated/styles/specs/${directory}/home.mockup.tsx.css`;
-    const asset = `mokly-generated/assets/specs/${directory}/_assets/-image.svg`;
+    const stylesheet = `styles/specs/${directory}/home.mockup.tsx.css`;
+    const asset = `assets/specs/${directory}/_assets/-image.svg`;
     assert.ok(compiled.outputs.has(stylesheet));
     assert.ok(compiled.outputs.has(asset));
     assert.ok(

@@ -7,8 +7,8 @@ Continuation of [CSS Change Attribution](./mokly-css-attribution.md).
 Implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md):
 rule and page evidence, classification and strict readers. Comparison details
 for screens and component saved views are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence); the
-whole-document page display is implemented in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence). Comparison result v5, catalogue read model v4 and
-manifest v8 are unreleased and change in place; no version is added.
+whole-document page display is implemented in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence). Comparison result v6, catalogue read model v5 and
+manifest v9 are unreleased and change in place; no version is added.
 
 ## Membership Rule
 
@@ -20,6 +20,16 @@ render of an affected consumer without giving that consumer its own row.
 A formatting-only edit has no changed rules and stays excluded. All independent
 Changes signals retain their existing meaning.
 
+Read and compare every reachable resource path on each side. Keep the actual
+public-pipeline CSS rule evidence. When Git evidence is absent, the byte-only
+material-reason and changed-view fallback remains for a stylesheet linked on
+both actual sides. Use the intersection of those actual resource sets;
+projection-only CSS cannot qualify. One-sided inserted-link membership alone
+cannot grant that fallback. An added declaration of unchanged existing CSS
+therefore changes only its root-owned link material. Inserted consumer links
+stay omitted from page material. Renderer-authored links, root-owned links and
+non-CSS byte comparison retain their ordinary rules.
+
 Variant view states and exclusions remain unchanged by consumer-only matches;
 no synthetic variant entry is created for actual-invocation evidence. CSS
 component reasons require kept own-page matches under the nested-component
@@ -28,7 +38,7 @@ test. Non-CSS resources and document `styles` records keep their existing actual
 ## Evidence Schema
 
 Use these records on both retained view reasons and direct entry reasons in
-comparison result v5. Keep the wire reason kind `dependency`.
+comparison result v6. Keep the wire reason kind `dependency`.
 
 ```ts
 interface CssRuleAttribution {
@@ -80,9 +90,9 @@ private imported source. `ruleKey` is the cross-stylesheet key defined in the
 `rules` is nonempty and contains each retained identity once for this path and
 view. Excluded rules are omitted. Repeated occurrences union their evidence;
 unresolved takes precedence over matched for the same identity on this view.
-Every [review result v5](./mokly-changes-serving.md#comparison-engine) view record
-carries these fields. Results without them remain valid and mean the analysis
-did not run.
+These fields are optional on each [review result v6](./mokly-changes-serving.md#comparison-engine)
+view. Empty reason and exclusion lists are omitted. Their absence records no
+retained or excluded resource evidence; it does not select an older schema.
 
 A parse failure has no diffed rule identity: emit one unkeyed unresolved record,
 with empty selector and component arrays, and no keyed records for that path
@@ -144,10 +154,10 @@ It describes documents, not CSS membership or component ownership records.
 Retain actual final bytes in snapshots and keep private document coordinates
 out of public evidence.
 
-Catalogue read model v4 gains optional `resourceEvidence: ResourceEvidence` on
+Catalogue read model v5 gains optional `resourceEvidence: ResourceEvidence` on
 `CatalogueView` and on the single-document `CataloguePage`. Screen and component
-variant views use the same records as comparison v5. Whole-document pages gain
-no v5 comparison records or comparison controls. Their catalogue evidence comes
+variant views use the same records as comparison v6. Whole-document pages gain
+no v6 comparison records or comparison controls. Their catalogue evidence comes
 from the same classifier and pinned baseline. Component parents use their
 saved views and the existing component result, not invented parent views.
 These fields are allowed only with ready Changes; omit empty evidence. Pending,
@@ -168,7 +178,7 @@ can validate id syntax; the complete producer also verifies unfiltered and kept 
   paired Review-ignore. Embedded documents use their own normalized trees.
 - No path is both retained and excluded on one view. Reasons and exclusions
   sort uniquely by path. Omit empty optional lists; required empty arrays stay.
-- Every analysed v5 reason has nonempty `rules`. A `ruleKey` has 64 lowercase
+- Every analysed v6 reason has nonempty `rules`. A `ruleKey` has 64 lowercase
   hex digits. Keyed records sort by key; an unkeyed record sorts last. A whole-file parse
   failure has no keyed siblings on that view. Entry aggregates can retain keyed
   evidence from other views beside an unkeyed failure.

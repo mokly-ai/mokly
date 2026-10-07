@@ -48,8 +48,8 @@ root and the file, then the file name up to its first dot. That path is the
 screen's identity everywhere. Links name it, flows name it, its address in the
 catalogue is `/view/account/billing/invoice/`, and its views are written as
 `account/billing/invoice/index.mobile.html` and `index.desktop.html` under
-`mockupsDir`, with `.dark` before `.html` for dark views. Serve exposes these
-files below `/static/`, and export writes them below `static/`.
+`mockupsDir/mokly-generated/`, with `.dark` before `.html` for dark views. Serve exposes these
+files below `/static/mokly-generated/`, and export writes them below `static/mokly-generated/`.
 
 Set `slug` when the last segment should differ from the file name, and set
 `path` when a file cannot sit where its path should be; a declared path is

@@ -106,7 +106,6 @@ export async function prepareRemovedPreviewEntrypoint(
     configPath,
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
-  generatedOutput: "committed",
   roots: [{ dir: "../../entries" }],
   mockupsDir: "../../mockups",
   repoRoot: "../..",
@@ -186,7 +185,7 @@ export const mockups = [
     current
       ? ""
       : `defineScreen({ ...metadata, path: "fixture/deleted-archive/deleted-section/removed-screen", title: "Removed screen", mobile: <main>${prefix} mobile screen</main>, desktop: <main>${prefix} desktop screen</main>, useCasePaths: [] }),
-  definePage({ ...metadata, path: "fixture/deleted-archive/deleted-section/removed-page", title: "Removed page", render: () => '<!doctype html><html><head><link rel="stylesheet" href="../../../../assets/page.css"></head><body><main>${prefix} page</main><img src="../../../../assets/past.png"></body></html>' }),`
+  definePage({ ...metadata, path: "fixture/deleted-archive/deleted-section/removed-page", title: "Removed page", render: () => '<!doctype html><html><head><link rel="stylesheet" href="../../../../../assets/page.css"></head><body><main>${prefix} page</main><img src="../../../../../assets/past.png"></body></html>' }),`
   }
 ];`;
 }

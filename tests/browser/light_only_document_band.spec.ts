@@ -10,10 +10,10 @@ import {
 } from "./branch_hosts.js";
 
 const config = (schemes: string) =>
-  `{mockupsDir:"mockups",roots:[{dir:"specs"}],generatedOutput:"committed",colorSchemes:${schemes}}`;
+  `{mockupsDir:"mockups",roots:[{dir:"specs"}],colorSchemes:${schemes}}`;
 const screen = (title: string) =>
   `import {defineScreen} from '@mokly/mokly';
-export default defineScreen({title:'${title}',description:'${title}',dependencies:[],relatedDocs:[],mobile:<main><h1>${title}</h1></main>,desktop:<main><h1>${title}</h1></main>});`;
+export default defineScreen({title:'${title}',description:'${title}',relatedDocs:[],mobile:<main><h1>${title}</h1></main>,desktop:<main><h1>${title}</h1></main>});`;
 const TERMS = `---
 description: When an invoice is due.
 ---
@@ -102,7 +102,7 @@ for (const kind of ["serve", "export"] as const)
         const pane = page.locator("[data-mokly-fragment-frame]");
         await expect(pane).toHaveAttribute(
           "src",
-          /\/static\/payment-terms\/index\.html$/u,
+          /\/static\/mokly-generated\/payment-terms\/index\.html$/u,
         );
         const bandBox = await band.boundingBox();
         const paneBox = await pane.boundingBox();

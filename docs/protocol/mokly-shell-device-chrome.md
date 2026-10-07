@@ -9,8 +9,7 @@ color-scheme tokens and containment rules those frames use; the shell design
 contract owns the surrounding layout, tokens, and responsive behavior, and the
 [viewer appearance contract](./mokly-viewer-appearance.md) owns the interface
 appearance around the frames. The document pane's Markdown document follows
-the approved [document contract](./mokly-documents.md) and arrives with the
-[path identity plan](../../plans/path-identity.md).
+the implemented [document contract](./mokly-documents.md).
 
 ## Device Chrome
 
@@ -72,9 +71,9 @@ of those two.
 
 - **Containment** — dark paints the phone screen surface, including its
   status-band ink, its home pill, and the fragment it holds, and the browser
-  viewport surface. The phone body and notch, the browser bar with its traffic
-  lights and address pill, and every shell surface outside a device screen stay
-  light.
+  viewport surface. Phone hardware keeps its fixed colors. The browser bar,
+  address pill and shell surfaces follow interface appearance; preview scheme
+  alone does not change them. Traffic-light artwork keeps its fixed colors.
 - **Screen edge** — a dark screen inside the near-black phone body would lose
   its edge, so the phone screen carries a 1px inset `box-shadow` hairline mixed
   from the two dark tokens, painted on an overlay above the fragment so the
@@ -85,9 +84,8 @@ of those two.
   top bar at every width, setting the interface and the previews together; see
   [mokly-viewer-appearance.md](./mokly-viewer-appearance.md). An embedded root
   instead carries a Dark preview toggle beside the viewport dropdown, and only
-  when the catalogue has dark fragments. Authored design pairs navigate through
-  their canonical scheme links. Component designs toggle their local preview;
-  unavailable choices are disabled with an explanation.
+  when the catalogue has dark fragments. Design artboards depict the same top-bar Appearance control. Their previews
+  follow the scheme of the rendered artboard.
 - **Light-only screens** — a screen with no dark render keeps its light frames
   under a dark selection and states the fallback in its frame label, which
   gains an `mbk-frame-scheme-note` span so the caption reads
