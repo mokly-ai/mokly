@@ -4,6 +4,9 @@
 
 Implemented. CI selects baseline or strict mode by event and pull request.
 The Dependency Audit workflow maintains strict findings on `main`.
+The workflow verification tests below are being introduced under
+[Meta-Test Reduction](../../plans/meta-test-reduction.md); they replace the
+literal workflow tests.
 
 ## Workflow Boundary
 
@@ -173,6 +176,28 @@ The [Testbox workflow contract](./remote-verification-testbox.md#workflow)
 defines the exact revisions and step order. `Required CI` does not depend on
 this workflow. The hosted CI graph and its release profile keep their current
 required jobs.
+
+## Workflow Verification
+
+Tests verify workflow files by their properties and by running their scripts.
+`tests/ci_workflow_policies.test.ts` requires every `uses:` revision across the
+workflows and composite actions to be a 40-character commit, forbids untrusted
+pull request fields in `ci.yml` `run:` steps and `${{` in Dependency Audit
+`run:` steps, requires full-history checkouts in CI and preview jobs, keeps the
+functional jobs on the checked-out lockfile, and checks that the Node version
+files, the Testbox toolchain steps and the repository job agree.
+`tests/ci_workflow_scripts.test.ts` executes the Node profile selector, the
+Testbox lockfile stamp and the Testbox environment step with controlled inputs
+and asserts their outputs.
+[`tests/ci_required_guard.test.ts`](../../tests/ci_required_guard.test.ts),
+[`tests/ci_workflow_remote_state.test.ts`](../../tests/ci_workflow_remote_state.test.ts),
+[`tests/ci_pull_request_title.test.ts`](../../tests/ci_pull_request_title.test.ts),
+[`tests/npm_pin.test.ts`](../../tests/npm_pin.test.ts),
+[`tests/release_evidence_contract.test.ts`](../../tests/release_evidence_contract.test.ts)
+and
+[`tests/workflow_runner_sizes.test.ts`](../../tests/workflow_runner_sizes.test.ts)
+keep their property checks. No test asserts literal job names, step order,
+matrix values or run strings; review owns those.
 
 ## Related Docs
 

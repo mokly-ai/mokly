@@ -10,7 +10,8 @@ internal binary and is not published to npm or crates.io.
   audit errors. Support strict mode for release and dependency update checks.
 - Enforce the Rust file-length limit.
 - Enforce changed repository-wide TypeScript/JavaScript (300 lines) and
-  protocol Markdown (250 lines or an exact reviewed cap) limits against the
+  protocol Markdown (250 lines or an exact reviewed cap in
+  `xtask/protocol-document-caps.json`) limits against the
   fetched `origin/main` baseline.
 - Ratchet JavaScript/TypeScript length, protocol caps, and internal exports
   against the branch point, and published-package exports against release tags.

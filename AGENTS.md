@@ -7,6 +7,14 @@
 - Search for and run relevant tests after making changes, ensure all tests pass (100% pass rate required)
 - Tests must not assert elapsed wall-clock time. Use operation counts, captured inputs, event order or fake-clock time.
   Follow [CI Test Timing](./docs/protocol/ci-test-timing.md).
+- Do not test documentation wording with regular expressions or sentence
+  matches. Test documentation against code structurally: compare parsed
+  values, names, options, tables, links, and counts with the code or data
+  that owns them.
+- Verify workflow YAML by executing its scripts with controlled inputs and by
+  checking policy properties, such as pinned action revisions and no
+  untrusted interpolation in `run:` steps. Do not assert literal job names,
+  step order, matrix values, or run strings.
 - Run `cargo xtask check` before saying work is complete; if it cannot be run, explain the blocker and the checks already run
 - After tests and `cargo xtask check` pass, run `git add -A`, commit the
   completed work using Conventional Commits, and push the branch; newly created
@@ -360,7 +368,7 @@
 
 ### Rust File Size Limits
 
-The repository gate also limits changed TypeScript/JavaScript anywhere in the repository to 300 lines and protocol Markdown to 250 lines, except pages with exact reviewed caps in `tests/protocol_doc_sizes.test.ts`; fetch `origin/main` before `cargo xtask source-file-length-lint`. It excludes only Git-ignored untracked files.
+The repository gate also limits changed TypeScript/JavaScript anywhere in the repository to 300 lines and protocol Markdown to 250 lines, except pages with exact reviewed caps in `xtask/protocol-document-caps.json`; fetch `origin/main` before `cargo xtask source-file-length-lint`. It excludes only Git-ignored untracked files.
 
 The file length linter enforces a **300-line** hard cap for Rust files under `crates/` and `xtask/` when they are changed relative to `origin/main` or present in the working tree. Run `cargo xtask rust-file-length-lint --all` to audit every Rust file under those directories. Files exceeding 300 lines must be refactored into multiple modules; there is no override mechanism.
 

@@ -123,8 +123,8 @@ removal shares one teardown, and a dependent cleanup failure retains the
 workspace for diagnosis. Tests that create a runtime after obtaining a shared
 fixture register that cleanup through the fixture's `beforeRemove` lifecycle;
 they must not add a later test-runner teardown hook that can race workspace
-removal. Source-level verification enforces this ownership rule for shared
-fixture helpers. Failed browser and hydration jobs retain only the uploaded
+removal. The ESLint rule `mokly/no-late-fixture-teardown` enforces this
+ownership rule for the shared fixture helpers under `tests/`. Failed browser and hydration jobs retain only the uploaded
 diagnostic artifacts selected by the workflow. Jobs must not delete, overwrite
 or reuse another job's writable output.
 
@@ -134,8 +134,8 @@ then runs owned cleanups in reverse registration order, even if setup failed.
 It attempts every cleanup before reporting a cleanup failure. A run that selects
 none of the file's tests starts no setup and leaves no owned output. Module-scope
 code must not start fixture setup eagerly. `tests/helpers/file_fixture.ts`
-provides this boundary; source-level verification enforces lazy setup for shared
-design fixtures.
+provides this boundary; the ESLint rule `mokly/no-eager-fixture-setup` rejects
+module-scope `designLibraryFixture` calls.
 
 ## Unit Shard Balance
 
@@ -173,21 +173,18 @@ spec therefore stays whole and no spec uses parallel mode except the unsharded
 hydration route-inventory spec that [Test Concurrency](#test-concurrency)
 defines.
 
-[`tests/browser_shard_balance.test.ts`](../../tests/browser_shard_balance.test.ts)
-first lists the all-project Playwright inventory, then the complete `chromium`
-inventory and each `chromium` shard in the CI browser job's matrix. It fails
-when any shard holds more than 125% of an even share of the browser tests, and
-it runs the aggregate's `validateShardReports` over reports whose
-`playwrightFiles` carry the all-project inventory while `fullFiles` and
-`fullTests` carry the `chromium` inventory. A spec split across shards therefore
-fails before CI does.
-
-The test performs each listing one at a time. Playwright writes compiled test
-modules to a shared on-disk cache without an atomic rename, so concurrent
-listings on an empty cache can load a module that another listing is still
-writing. The bound applies to test counts, because that is what Playwright
-balances; shard durations remain a measurement from the shard reports. When the
-bound fails, split a large non-hydration spec into smaller spec files.
+The aggregate also bounds balance. `validateShardReports` in
+`scripts/verification/report-validation.mjs` fails a browser shard group when
+any shard's `assignedTests` count exceeds 125% of an even share of the
+`fullTests` inventory, rounded up. The failure names the shard, its count, the
+inventory size and the limit, and asks for a large non-hydration spec to be
+split into smaller spec files. The bound uses test counts because that is what
+Playwright balances; shard durations remain a measurement from the shard
+reports. It runs wherever shard reports are validated: `Required CI` and the
+remote Testbox gate. The local sequential gate runs unsharded and does not
+apply it. No test lists the Playwright inventory to check balance.
+[Meta-Test Reduction](../../plans/meta-test-reduction.md) moves this bound
+from a listing-based unit test into the aggregate.
 
 ## Acceptance Measurement
 

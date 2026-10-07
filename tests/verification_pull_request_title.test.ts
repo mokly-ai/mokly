@@ -141,28 +141,12 @@ test("the title CLI rejects 73 code points and names the 72-character limit", as
 });
 
 test("CI and release contracts document the enforced title boundary", async () => {
-  const [ci, release, releaseManagement] = await Promise.all([
-    fs.readFile(
-      path.join(repositoryRoot, "docs/protocol/ci-verification.md"),
-      "utf8",
-    ),
-    fs.readFile(
-      path.join(repositoryRoot, "docs/protocol/npm-release.md"),
-      "utf8",
-    ),
-    fs.readFile(
-      path.join(repositoryRoot, "docs/protocol/npm-release-management.md"),
-      "utf8",
-    ),
-  ]);
+  const ci = await fs.readFile(
+    path.join(repositoryRoot, "docs/protocol/ci-verification.md"),
+    "utf8",
+  );
   assert.ok(ci.includes("scripts/verification/pull-request-title.mjs"));
   assert.ok(ci.includes(PULL_REQUEST_TITLE_ERROR));
-  assert.match(ci, /at most 72 Unicode code points/u);
   for (const type of PULL_REQUEST_TITLE_TYPES)
     assert.ok(ci.includes(`\`${type}\``), type);
-  assert.match(ci, /\[a-z0-9\._\/-\]\+/u);
-  assert.match(release, /npm-release-management\.md/u);
-  assert.match(releaseManagement, /Pull Request Title Contract/u);
-  assert.match(releaseManagement, /chore\(main\): release 0\.13\.0/u);
-  assert.match(releaseManagement, /BREAKING CHANGE:/u);
 });

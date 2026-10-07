@@ -5,7 +5,8 @@
 The file-length, protocol-cap, unused-internal-export, and
 public-package-export ratchets are implemented. Every ratchet in this document
 runs in the repository suite and the complete gate. The baseline dependency
-audit uses the same comparison-commit resolver.
+audit uses the same comparison-commit resolver. The JSON cap table and its
+legacy fallback follow [Meta-Test Reduction](../../plans/meta-test-reduction.md).
 
 This contract owns the maintainability ratchets run by the repository suite of
 `cargo xtask check`. The file-length, protocol-cap, and unused-internal-export
@@ -49,15 +50,26 @@ line count, allowed count, and predecessor when applicable.
 
 ## Protocol Document Caps
 
-`tests/protocol_doc_sizes.test.ts` owns exact caps for protocol documents that
-remain over 250 lines. A capped value equals that file's current physical line
-count; shrinking the file requires lowering the cap. A document at or below 250
-has no cap. A new document must stay at or below 250 and cannot add a cap.
-The changed-file source-length audit and this ratchet share one length policy:
-TypeScript/JavaScript have a 300-line limit; a changed protocol page passes at
-250 lines or at its exact reviewed cap, never above it.
-Both that test and the ratchet scan Markdown recursively beneath
-`docs/protocol/`, excluding the `docs/protocol/fixtures/` tree.
+`xtask/protocol-document-caps.json` owns exact caps for protocol documents that
+remain over 250 lines. It is one JSON object. Each key is a document path
+relative to `docs/protocol/`, keys are sorted, and each value is a safe integer
+above 250. A repeated key, an unsorted key, a non-integer, or a value at or
+below 250 is an invalid table and fails the audit. A capped value equals that
+file's current physical line count; shrinking the file requires lowering the
+cap. A document at or below 250 has no cap. A new document must stay at or
+below 250 and cannot add a cap. The changed-file source-length audit and this
+ratchet share one length policy: TypeScript/JavaScript have a 300-line limit;
+a changed protocol page passes at 250 lines or at its exact reviewed cap, never
+above it. The ratchet scans Markdown recursively beneath `docs/protocol/`,
+excluding the `docs/protocol/fixtures/` tree, and audits every document on
+every run.
+
+The ratchet reads the baseline table at the comparison commit. When that commit
+has no `xtask/protocol-document-caps.json`, it reads the legacy `oversizedCaps`
+table in `tests/protocol_doc_sizes.test.ts` at that commit. When neither
+exists, it bootstraps caps from the baseline line counts. The legacy reader is
+removed once `origin/main` and every open branch's merge base contain the JSON
+file.
 
 The repository ratchet compares the candidate cap policy with the comparison
 commit:

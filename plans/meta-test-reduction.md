@@ -194,7 +194,7 @@ test is covered by `tests/verification_example_servers.test.ts`.
 The documentation edits and the prose-regex tests cannot be separated. Those
 tests pin the sentences that this milestone rewrites, so the removal lands here.
 
-- [ ] `AGENTS.md`: add two rules under `## General`. First: do not test
+- [x] `AGENTS.md`: add two rules under `## General`. First: do not test
       documentation wording with regular expressions or sentence matches; test
       documentation against code structurally by comparing parsed values,
       names, options, tables, links and counts with the code or data that owns
@@ -204,32 +204,32 @@ tests pin the sentences that this milestone rewrites, so the removal lands here.
       assert literal job names, step order, matrix values or run strings.
       Update the cap reference in "Rust File Size Limits" to
       `xtask/protocol-document-caps.json`.
-- [ ] `docs/protocol/ci-test-repository-inputs.md`: replace the
+- [x] `docs/protocol/ci-test-repository-inputs.md`: replace the
       `tests/deployment.test.ts` and `tests/ci_workflow.test.ts` items with
       `tests/ci_workflow_policies.test.ts`; state that review owns workflow
       literals.
-- [ ] `docs/protocol/ci-workflow.md`: add a "Workflow Verification" paragraph
+- [x] `docs/protocol/ci-workflow.md`: add a "Workflow Verification" paragraph
       that names the policy and script test files and the kept property tests.
-- [ ] `docs/protocol/ci-suite-evidence.md`: rewrite "Browser Shard Balance"
+- [x] `docs/protocol/ci-suite-evidence.md`: rewrite "Browser Shard Balance"
       for the aggregate bound (Decision 2) and name the two fixture ESLint
       rules in the fixture paragraphs.
-- [ ] `docs/protocol/ci-verification.md` and
+- [x] `docs/protocol/ci-verification.md` and
       `docs/protocol/ci-verification-repository.md`: point the cap reference at
       the JSON file and list the ESLint-enforced rules in the repository suite
       paragraph.
-- [ ] `docs/protocol/verification-ratchets.md`: "Protocol Document Caps" owns
+- [x] `docs/protocol/verification-ratchets.md`: "Protocol Document Caps" owns
       `xtask/protocol-document-caps.json`, its format, the legacy fallback and
       the fallback removal condition.
-- [ ] `docs/protocol/mokly-artifact-paths.md`: name
+- [x] `docs/protocol/mokly-artifact-paths.md`: name
       `mokly/no-artifact-path-literals` and its scope: `src/**`,
       `packages/viewer/src/**`, `scripts/**` and `examples/**` modules, except
       `packages/viewer/src/navigation/routes.ts` and test directories.
-- [ ] `docs/protocol/mokly-guides.md`: state that root guide tests compare
+- [x] `docs/protocol/mokly-guides.md`: state that root guide tests compare
       guide content with code and data structurally and never match sentences.
-- [ ] `docs/protocol/remote-verification-testbox.md`: name
+- [x] `docs/protocol/remote-verification-testbox.md`: name
       `tests/ci_workflow_scripts.test.ts` for the stamp and environment steps.
-- [ ] `xtask/README.md`: name the caps file.
-- [ ] Active plans: annotate unticked items and prose that name a removed test
+- [x] `xtask/README.md`: name the caps file.
+- [x] Active plans: annotate unticked items and prose that name a removed test
       in `plans/attribution-test-consolidation.md` (lines 502 and 573),
       `plans/baseline-relative-dependency-audit.md` (289, 379, 425),
       `plans/generated-output-simplification.md` (303, 305, 432),
@@ -237,12 +237,18 @@ tests pin the sentences that this milestone rewrites, so the removal lands here.
       `plans/deterministic-test-timing.md` (362) and
       `plans/hydration-route-shapes.md` (165, 174). Leave ticked history lines
       unchanged. Record each plan edit in the commit message.
-- [ ] Apply the Inventory "Documentation prose tests" deletions and trims.
+- [x] Apply the Inventory "Documentation prose tests" deletions and trims.
       Remove the unused `guides_ci_context.ts` exports.
-- [ ] Run `npm run format:check`, `npm run lint`, and
+- [x] Run `npm run format:check`, `npm run lint`, and
       `node --import tsx --test tests/guides_*.test.ts tests/protocol_*.test.ts tests/markdown_links.test.ts tests/component_protocol_docs.test.ts tests/verification_pull_request_title.test.ts`.
       Save output under `.context/meta-test-reduction/milestone-1.md`.
-- [ ] Commit with Conventional Commits and push.
+- [x] Commit with Conventional Commits and push.
+
+Evidence: `.context/meta-test-reduction/milestone-1.md`. The new test file
+names appear as code spans in the protocol docs until the files exist; the
+`ci-workflow.md`, `remote-verification-testbox.md`, `ci-suite-evidence.md`,
+`verification-ratchets.md` and `mokly-artifact-paths.md` status sentences
+point at this plan until the matching milestone lands.
 
 ## Milestone 2: Reduce workflow YAML tests
 
@@ -252,6 +258,13 @@ tests pin the sentences that this milestone rewrites, so the removal lands here.
 - [ ] Delete the six workflow literal test files.
 - [ ] After user approval of Decision 7, reduce `tests/release.test.ts` to its
       property assertions.
+- [ ] Convert the `tests/ci_workflow_policies.test.ts` and
+      `tests/ci_workflow_scripts.test.ts` code spans in
+      `docs/protocol/ci-test-repository-inputs.md`,
+      `docs/protocol/ci-workflow.md` and
+      `docs/protocol/remote-verification-testbox.md` into links. Replace the
+      "being introduced" and "follows" status sentences in those two contract
+      docs with implemented wording.
 - [ ] Run the new tests and the kept workflow tests:
       `node --import tsx --test tests/ci_*.test.ts tests/npm_pin.test.ts tests/release_evidence_contract.test.ts tests/workflow_runner_sizes.test.ts tests/publish_action.test.ts`.
       Save output under `.context/meta-test-reduction/milestone-2.md`.
@@ -294,6 +307,10 @@ tests pin the sentences that this milestone rewrites, so the removal lands here.
       `tests/verification_evidence.test.ts` is already over 300 lines.
 - [ ] Delete `tests/browser_shard_balance.test.ts`.
 - [ ] Delete test 4 from `tests/eslint_postcss_calls.test.ts`.
+- [ ] Replace the plan-pointing status sentences in
+      `docs/protocol/ci-suite-evidence.md`,
+      `docs/protocol/verification-ratchets.md` and
+      `docs/protocol/mokly-artifact-paths.md` with implemented wording.
 - [ ] Smoke: run `npm run lint` and confirm zero findings from the three new
       rules on the current tree. Run
       `node scripts/verification/repository-ratchets.mjs` and

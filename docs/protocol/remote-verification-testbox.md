@@ -11,6 +11,7 @@ Workflow validation and both box suite smoke checks pass.
 Main's dependency fixes are merged. The complete explicit remote check passes.
 Automatic remote selection and `cargo xtask executor` are implemented.
 The complete automatic smoke check passes.
+Workflow verification follows [Meta-Test Reduction](../../plans/meta-test-reduction.md).
 
 ## Workflow
 
@@ -53,6 +54,10 @@ the [cleanup contract](./remote-verification.md#cleanup-and-interrupts).
 Key login saves the key in the local CLI credential file.
 It replaces any saved login for the same organization.
 The [key contract](./remote-verification.md#key-and-cli-handling) names that file.
+
+`tests/ci_workflow_scripts.test.ts` executes the lockfile stamp step and the
+environment step with controlled inputs and asserts the written files. Step
+order and action pins are review-owned literals.
 
 Pin each action to these immutable revisions. Keep the version comments.
 

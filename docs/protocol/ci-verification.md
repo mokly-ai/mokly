@@ -73,7 +73,7 @@ shrink-only baselines, and recursive `docs/protocol/**` scan excluding
 The repository prerequisite also runs the workspace-root source/protocol
 length audit. It covers changed repository TypeScript/JavaScript and protocol
 Markdown plus non-ignored untracked files. Protocol pages over 250 lines use
-only the exact reviewed caps in `tests/protocol_doc_sizes.test.ts`; `cargo xtask
+only the exact reviewed caps in `xtask/protocol-document-caps.json`; `cargo xtask
 source-file-length-lint --all` audits every scoped file. This remains in
 addition to the repository ratchets.
 The full scope and failure semantics are in
