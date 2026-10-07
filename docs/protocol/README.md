@@ -50,15 +50,15 @@ unsupported versions before content or path interpretation.
 - [Public API reports and unused members](./verification-api-members.md) —
   approved signature reports, release-note gate and member ratchet.
 
+- [Developer test commands](./developer-test-commands.md) and [selected results](./developer-test-results.md) — preparation, selection, output and partial verification.
 - [CI verification](./ci-verification.md) — implemented suite, shard, evidence, cache and aggregation contract.
   - [CI dependency cache and security](./ci-verification-security.md).
   - [Repository gate and length audits](./ci-verification-repository.md).
-  - [Development hydration coverage](./ci-verification-hydration.md) — one
-    route per entry shape and the generated resource audit.
+  - [Development hydration coverage](./ci-verification-hydration.md) — one route per entry shape and the generated resource audit.
 - [Remote verification](./remote-verification.md) — implemented explicit and automatic execution.
   - [Testbox execution](./remote-verification-testbox.md) — workflow, commands, sync probe, suite wrapper and source-tree fingerprint.
 - [CI workflow graph](./ci-workflow.md)
-- [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard balance and acceptance measurement.
+- [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, test concurrency, unit shard balance and scenario grouping, browser shard balance and acceptance measurement.
 - [CI test assertions](./ci-test-assertions.md) — unit assertion guard, checked catalogue selections and test lint rules.
 - [CI test timing](./ci-test-timing.md) — deterministic assertions, duration reporting and lint guard.
 - [Repository verification ratchets](./verification-ratchets.md)

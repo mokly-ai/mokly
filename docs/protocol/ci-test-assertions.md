@@ -18,9 +18,11 @@ Playwright assertion counting is outside this contract.
 modules own the resolve hook, counting assertion modules, and test frames.
 Each module stays under 300 lines.
 
-The unit runner loads `tsx` first, then the guard, under both its developer and
-strict policies. The three native-platform `node --test` steps load the same
-imports. A direct run uses:
+`executeUnitTests` in `scripts/verification/unit-execution.mjs` loads `tsx`
+first, then the guard. The unit runner uses it under both its developer and
+strict policies, and so do the targeted
+[developer test commands](./developer-test-commands.md). The three
+native-platform `node --test` steps load the same imports. A direct run uses:
 
 ```bash
 node --import tsx --import ./scripts/verification/assertion-guard.mjs --test <file>

@@ -67,7 +67,9 @@ occupy.
   stays under 300 lines.
 - `scripts/verification/unit-runner.mjs` passes
   `--import tsx --import ./scripts/verification/assertion-guard.mjs` under both
-  policies. The three native-platform `node --test` steps in
+  policies. Since main's #155, `executeUnitTests` in
+  `scripts/verification/unit-execution.mjs` holds these flags for both policies
+  and the targeted developer runs. The three native-platform `node --test` steps in
   `.github/workflows/ci.yml` pass the same flags. A direct run uses
   `node --import tsx --import ./scripts/verification/assertion-guard.mjs --test <file>`.
   A run without the guard is partial verification.

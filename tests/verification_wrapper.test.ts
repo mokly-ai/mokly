@@ -1,14 +1,15 @@
 import assert from "node:assert/strict";
-import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
-import { promisify } from "node:util";
 
 import { repositoryRoot } from "./helpers/fixture.js";
-
-const execute = promisify(execFile);
+import {
+  createHarness,
+  runWrapper,
+  writeHarnessFile,
+} from "./helpers/verification_wrapper.js";
 
 test("verification wrappers retain real reporter evidence and fail closed", async () => {
   const root = await createHarness();
@@ -19,7 +20,7 @@ test("verification wrappers retain real reporter evidence and fail closed", asyn
   const sharedPlaywrightState = await fileState(sharedPlaywrightMarker);
   try {
     const browserReport = path.join(root, "browser-report.json");
-    await runWrapper(root, "run-browser.mjs", browserReport);
+    await runWrapper(root, "run-browser.mjs", { report: browserReport });
     await assertPlaywrightOutputIsConfined(
       root,
       sharedPlaywrightMarker,
@@ -53,11 +54,14 @@ fs.writeFileSync = function (file, ...args) {
 `,
     );
     await assert.rejects(
-      runWrapper(root, "run-browser.mjs", browserReport, {
-        NODE_OPTIONS: appendNodeOption(
-          process.env.NODE_OPTIONS,
-          `--import=${pathToFileURL(preload).href}`,
-        ),
+      runWrapper(root, "run-browser.mjs", {
+        report: browserReport,
+        environment: {
+          NODE_OPTIONS: appendNodeOption(
+            process.env.NODE_OPTIONS,
+            `--import=${pathToFileURL(preload).href}`,
+          ),
+        },
       }),
     );
     await assertPlaywrightOutputIsConfined(
@@ -72,7 +76,9 @@ fs.writeFileSync = function (file, ...args) {
     assert.equal(failed.outcome.status, "failed");
 
     const unitReport = path.join(root, "unit-report.json");
-    await assert.rejects(runWrapper(root, "run-unit.mjs", unitReport));
+    await assert.rejects(
+      runWrapper(root, "run-unit.mjs", { report: unitReport }),
+    );
     const unit = await readJson(unitReport);
     assert.equal(unit.outcome.status, "failed");
     assert.ok(
@@ -86,83 +92,86 @@ fs.writeFileSync = function (file, ...args) {
   }
 });
 
-async function createHarness(): Promise<string> {
-  const root = await fs.mkdtemp(
-    path.join(repositoryRoot, ".context/verification-wrapper-"),
+test("complete developer runs retain skips and reports while the strict policy rejects skips", async (context) => {
+  const root = await createHarness();
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  await writeHarnessFile(
+    root,
+    "tests/failing.test.ts",
+    'import test from "node:test";\ntest("passing", () => {});\ntest.skip("intentional Windows skip", () => {});\ntest.todo("pending");\n',
   );
-  await fs.cp(
-    path.join(repositoryRoot, "scripts/verification"),
-    path.join(root, "scripts/verification"),
-    { recursive: true },
+  const report = path.join(root, "unit-report.json");
+  const { stdout } = await runWrapper(root, "run-unit-dev.mjs", { report });
+  const developer = await readJson(report);
+  assert.equal(developer.skipped, 2);
+  assert.equal(developer.reporterComplete, true);
+  assert.equal(developer.outcome.status, "passed");
+  assert.match(stdout, /unit tests skipped or todo: 2/u);
+  assert.doesNotMatch(stdout, /partial verification/u);
+  await assert.rejects(
+    runWrapper(root, "run-unit.mjs", { report }),
+    /report contains skipped tests/u,
   );
-  await fs.symlink(
-    path.join(repositoryRoot, "node_modules"),
-    path.join(root, "node_modules"),
-    process.platform === "win32" ? "junction" : "dir",
-  );
-  const files = new Map([
-    ["dist/cli/bin.js", ""],
-    ["packages/viewer/dist/browser/inspector.js", ""],
-    ["examples/basic/mokly-generated/mokly-manifest.json", "{}\n"],
-    [
-      "playwright.config.mjs",
-      `export default {
-  fullyParallel: false,
-  outputDir: ${JSON.stringify(path.join(root, "playwright-output"))},
-  projects: [{ name: "chromium" }],
-  retries: 0,
-  testDir: "tests/browser",
-  workers: 1,
-};
-`,
-    ],
-    [
-      "tests/browser/passing.spec.ts",
-      `import { test } from "@playwright/test";
-
-test("real reporter identity", () => {});
-`,
-    ],
-    [
-      "tests/failing.test.ts",
-      `import test from "node:test";
-
-test("retained unit diagnostic", () => {
-  throw new Error("retained unit diagnostic sentinel");
+  const strict = await readJson(report);
+  assert.equal(strict.skipped, 2);
+  assert.equal(strict.outcome.status, "failed");
 });
-`,
-    ],
-  ]);
-  for (const [name, contents] of files) {
-    const target = path.join(root, name);
-    await fs.mkdir(path.dirname(target), { recursive: true });
-    await fs.writeFile(target, contents);
-  }
-  await fs.mkdir(path.join(root, "packages/viewer/tests"), { recursive: true });
-  return root;
-}
 
-async function runWrapper(
-  root: string,
-  name: string,
-  report: string,
-  environment: Readonly<Record<string, string>> = {},
-): Promise<void> {
-  const inherited = { ...process.env };
-  delete inherited.NODE_TEST_CONTEXT;
-  await execute(
-    process.execPath,
-    [path.join(root, "scripts/verification", name)],
-    {
-      cwd: root,
-      env: {
-        ...inherited,
-        ...environment,
-        MOKLY_VERIFICATION_REPORT: report,
-        MOKLY_VERIFICATION_RUNTIME: `node-${process.versions.node}`,
-      },
-    },
+test("the strict wrapper retains Node shard arguments and report assignments", async (context) => {
+  const root = await createHarness();
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  await writeHarnessFile(
+    root,
+    "tests/passing.test.ts",
+    'import test from "node:test";\ntest("passing", () => {});\n',
   );
+  const report = path.join(root, "unit-report.json");
+  await runWrapper(root, "run-unit.mjs", {
+    report,
+    args: ["--shard", "2/2"],
+  });
+  const strict = await readJson(report);
+  assert.deepEqual(strict.shard, { index: 2, total: 2 });
+  assert.deepEqual(strict.fullFiles, [
+    "tests/failing.test.ts",
+    "tests/passing.test.ts",
+  ]);
+  assert.deepEqual(strict.assignedFiles, ["tests/passing.test.ts"]);
+  assert.deepEqual(
+    strict.observedFiles.map((entry: { file: string }) => entry.file),
+    strict.assignedFiles,
+  );
+  assert.equal(strict.outcome.status, "passed");
+});
+
+for (const policy of ["run-unit.mjs", "run-unit-dev.mjs"]) {
+  for (const failure of ["discovery", "preparation"]) {
+    test(
+      "complete " +
+        policy +
+        " removes stale evidence before " +
+        failure +
+        " fails",
+      async (context) => {
+        const root = await createHarness();
+        context.after(() => fs.rm(root, { recursive: true, force: true }));
+        const report = path.join(root, "unit-report.json");
+        await fs.writeFile(report, "stale complete report\n");
+        await fs.writeFile(report + ".events", "stale events\n");
+        if (failure === "discovery")
+          await fs.rm(path.join(root, "tests/failing.test.ts"));
+        else await fs.rm(path.join(root, "dist"), { recursive: true });
+        await assert.rejects(
+          runWrapper(root, policy, { report }),
+          failure === "discovery"
+            ? /unit test discovery was empty/u
+            : /prepared verification output is missing/u,
+        );
+        for (const target of [report, report + ".events"])
+          await assert.rejects(fs.stat(target), { code: "ENOENT" });
+      },
+    );
+  }
 }
 
 async function readJson(file: string) {
