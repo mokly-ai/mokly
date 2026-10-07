@@ -128,7 +128,9 @@ Node floor, and regenerate the lockfile with npm. Do not blindly run
 or an incompatible toolchain replacement.
 
 Update from an installed tree: run `npm ci`, then `npm update <package>`.
-Lockfile-only mode can record bundled entries of optional platform packages
+Use the npm version that `packageManager` pins; the
+[CI workflow graph](./ci-workflow.md#job-execution) explains why lockfile
+changes need it. Lockfile-only mode can record bundled entries of optional platform packages
 that this machine does not install. Keep the lockfile diff to the intended
 entries.
 
