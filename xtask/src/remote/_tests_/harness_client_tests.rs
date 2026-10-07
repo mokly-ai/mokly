@@ -17,6 +17,8 @@ pub(super) fn client(
 ) -> Unimock {
     let warmups = Arc::new(AtomicUsize::new(0));
     let probes = Arc::new(AtomicUsize::new(0));
+    let stop_attempts = Arc::new(AtomicUsize::new(0));
+    let completed_attempts = stop_attempts.clone();
     let warm_events = Arc::clone(&events);
     let warm_signal = Arc::clone(&interrupted);
     let run_events = Arc::clone(&events);
@@ -34,20 +36,31 @@ pub(super) fn client(
                 .lock()
                 .unwrap()
                 .push(format!("warm:tbx_{index}"));
-            if case == Case::InterruptWarmup {
+            if matches!(case, Case::InterruptWarmup | Case::InterruptCleanupWarmup) {
                 warm_signal.store(true, Ordering::SeqCst);
             }
             if index == 0 && case == Case::NoId {
                 return Ok(output("none".into(), 0));
             }
-            let text = if index == 0 && case == Case::MultipleIds {
+            let mut text = if index == 0 && case == Case::MultipleIds {
                 format!("tbx_{index}\ntbx_extra\n")
             } else {
                 format!("tbx_{index}\n")
             };
+            if matches!(
+                case,
+                Case::WarmupRunId | Case::WarmupRunIdFailure | Case::ProbeRunId | Case::StatusRunId
+            ) {
+                text.push_str("https://github.com/org/repo/actions/runs/456\n");
+            }
             Ok(output(
                 text,
-                if index == 0 && matches!(case, Case::Warmup | Case::CleanupWarmup) {
+                if index == 0
+                    && matches!(
+                        case,
+                        Case::Warmup | Case::CleanupWarmup | Case::WarmupRunIdFailure
+                    )
+                {
                     1
                 } else {
                     0
@@ -61,6 +74,12 @@ pub(super) fn client(
                 probes.fetch_add(1, Ordering::SeqCst);
                 run_events.lock().unwrap().push(format!("probe:{id}"));
                 assert!(command.contains("--print-head"));
+                if case == Case::ProbeRunIdFailure {
+                    return Ok(output(
+                        "https://github.com/org/repo/actions/runs/789".into(),
+                        1,
+                    ));
+                }
                 if id == "tbx_0" && case == Case::Probe {
                     return Ok(output(String::new(), 1));
                 }
@@ -74,7 +93,11 @@ pub(super) fn client(
                 } else {
                     "a".repeat(64)
                 };
-                return Ok(output(format!("ready\nsha256:{fingerprint}\n{head}\n"), 0));
+                let mut result = output(format!("ready\nsha256:{fingerprint}\n{head}\n"), 0);
+                if matches!(case, Case::ProbeRunId | Case::StatusRunId) {
+                    result.stderr = "https://github.com/org/repo/actions/runs/789".into();
+                }
+                return Ok(result);
             }
             assert_eq!(probes.load(Ordering::SeqCst), 11);
             assert!(
@@ -86,12 +109,14 @@ pub(super) fn client(
             if case == Case::PanicSuites && id == "tbx_0" {
                 panic!("suite dependency failed");
             }
-            if case == Case::InterruptSuites {
+            if matches!(case, Case::InterruptSuites | Case::InterruptCleanupSuites) {
                 run_signal.store(true, Ordering::SeqCst);
             }
             Ok(output(
                 String::new(),
-                if case == Case::Suite && command.contains("--suite repository") {
+                if matches!(case, Case::Suite | Case::LogUnavailable)
+                    && command.contains("--suite repository")
+                {
                     1
                 } else {
                     0
@@ -118,17 +143,49 @@ pub(super) fn client(
         .each_call(matching!(_))
         .answers_arc(Arc::new(move |_, id| {
             status_events.lock().unwrap().push(format!("status:{id}"));
-            Ok(if case == Case::MissingRun {
-                "no URL".into()
-            } else {
-                "https://github.com/org/repo/actions/runs/123".into()
-            })
+            if matches!(case, Case::WarmupRunId | Case::WarmupRunIdFailure) {
+                return Err(Error::Command {
+                    operation: Operation::Blacksmith,
+                    code: Some(1),
+                });
+            }
+            Ok(
+                if id == "tbx_0"
+                    && ((case == Case::CompletedOnRetry
+                        && completed_attempts.load(Ordering::SeqCst) > 0)
+                        || (case == Case::CompletedOnFinal
+                            && completed_attempts.load(Ordering::SeqCst) == 3))
+                {
+                    format!("ID STATUS\n{id} completed\n")
+                } else if matches!(
+                    case,
+                    Case::MissingRun | Case::ProbeRunId | Case::ProbeRunIdFailure
+                ) {
+                    "no URL".into()
+                } else {
+                    "https://github.com/org/repo/actions/runs/123".into()
+                },
+            )
         }));
     let stop = BlacksmithStopMock
         .each_call(matching!(_))
         .answers_arc(Arc::new(move |_, id| {
             stop_events.lock().unwrap().push(format!("stop:{id}"));
-            if case == Case::CleanupWarmup && id == "tbx_0" {
+            let attempt = if id == "tbx_0" {
+                stop_attempts.fetch_add(1, Ordering::SeqCst)
+            } else {
+                0
+            };
+            if id == "tbx_0"
+                && (matches!(
+                    case,
+                    Case::CleanupWarmup
+                        | Case::CompletedOnFinal
+                        | Case::CleanupSuites
+                        | Case::InterruptCleanupWarmup
+                        | Case::InterruptCleanupSuites
+                ) || (matches!(case, Case::RetryStop | Case::CompletedOnRetry) && attempt == 0))
+            {
                 return Err(Error::Command {
                     operation: Operation::Blacksmith,
                     code: Some(1),
@@ -147,11 +204,21 @@ pub(super) fn client(
         status,
         stop,
     );
-    if case.preparation_fails() && !matches!(case, Case::Probe | Case::Head | Case::Fingerprint) {
+    if case.preparation_fails()
+        && !matches!(
+            case,
+            Case::Probe | Case::Head | Case::Fingerprint | Case::ProbeRunIdFailure
+        )
+    {
         Unimock::new(common)
     } else if matches!(
         case,
-        Case::Probe | Case::Head | Case::Fingerprint | Case::InterruptSuites
+        Case::Probe
+            | Case::Head
+            | Case::Fingerprint
+            | Case::ProbeRunIdFailure
+            | Case::InterruptSuites
+            | Case::InterruptCleanupSuites
     ) {
         Unimock::new((common, run))
     } else {
