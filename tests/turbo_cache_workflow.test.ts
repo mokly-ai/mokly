@@ -124,3 +124,35 @@ test("cache bindings are local in development and committed client settings rema
   assert.equal(turbo.remoteCache.apiUrl, undefined);
   assert.equal(turbo.remoteCache.teamSlug, undefined);
 });
+
+test("the Worker contract lists all modules and copies its exact Wrangler config", async () => {
+  const workerRoot = path.join(repositoryRoot, "scripts/turbo-cache");
+  const config = await fs.readFile(
+    path.join(workerRoot, "wrangler.jsonc"),
+    "utf8",
+  );
+  const contract = await fs.readFile(
+    path.join(repositoryRoot, "docs/protocol/ci-remote-cache-worker.md"),
+    "utf8",
+  );
+  const moduleList = contract.slice(
+    contract.indexOf("Own the modules under"),
+    contract.indexOf("```json", contract.indexOf("Own the modules under")),
+  );
+  const plan = await fs.readFile(
+    path.join(repositoryRoot, "plans/turborepo-cloudflare-remote-cache.md"),
+    "utf8",
+  );
+  const planModules = plan.slice(
+    plan.indexOf("Repository layout:"),
+    plan.indexOf("## CI Wiring"),
+  );
+  for (const module of (await fs.readdir(workerRoot)).filter((file) =>
+    file.endsWith(".ts"),
+  )) {
+    assert.ok(moduleList.includes(`\`${module}\``), module);
+    assert.ok(planModules.includes(module), module);
+  }
+  const documented = /```jsonc\n([\s\S]*?)\n```/u.exec(contract)?.[1];
+  assert.equal(documented?.trim(), config.trim());
+});

@@ -14,7 +14,7 @@ The [task contract](./ci-remote-cache.md) owns builds and client credentials.
 Implement the [published OpenAPI](https://turborepo.dev/api/remote-cache-spec)
 with the compatibility additions required by the client at tag `v2.11.7`.
 OpenAPI lists unversioned `/artifacts` paths and origin-only servers. The real
-client adds `/v8`; serve that prefix and set `apiUrl` to the origin without it.
+client adds `/v8`; serve that prefix and set `apiUrl` to the origin without it or a trailing slash.
 Use HTTPS, no redirects, and `remoteCache.preflight: false`.
 No browser CORS or OPTIONS preflight support is required for this CLI service.
 
@@ -185,9 +185,10 @@ operations per month, and free egress.
 ## Configuration And Deployment
 
 Own the modules under `scripts/turbo-cache/`: `worker.ts`, `artifacts.ts`,
-`auth.ts`, `store.ts`, `tsconfig.json`, `README.md`, and this Wrangler shape:
+`auth.ts`, `store.ts`, `r2.ts`, `stream.ts`, `metadata.ts`, `errors.ts`,
+`tsconfig.json`, `README.md`, and this exact Wrangler config:
 
-```json
+```jsonc
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "mokly-turbo-cache",
@@ -196,10 +197,14 @@ Own the modules under `scripts/turbo-cache/`: `worker.ts`, `artifacts.ts`,
   "workers_dev": true,
   "preview_urls": false,
   "r2_buckets": [
-    { "binding": "ARTIFACTS", "bucket_name": "mokly-turbo-cache" }
+    {
+      "binding": "ARTIFACTS",
+      "bucket_name": "mokly-turbo-cache",
+      "remote": false,
+    },
   ],
   "vars": { "TURBO_CACHE_TEAM": "mokly" },
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
 }
 ```
 

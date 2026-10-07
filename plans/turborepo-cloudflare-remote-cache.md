@@ -222,7 +222,8 @@ ten million Class B operations with free egress. The Worker contract also sets
 explicit JSON, hash, metadata, and upload limits.
 
 Repository layout: `scripts/turbo-cache/worker.ts`, `artifacts.ts`, `auth.ts`,
-`store.ts`, `wrangler.jsonc`, `tsconfig.json`, and `README.md`, with tests
+`store.ts`, `r2.ts`, `stream.ts`, `metadata.ts`, `errors.ts`, `wrangler.jsonc`,
+`tsconfig.json`, and `README.md`, with tests
 under `tests/turbo_cache_*.test.ts` that use an in-memory store. `scripts` is
 already a ratchet source root, so the length and export ratchets cover the
 Worker. The deployment workflow `.github/workflows/turbo-cache.yml` runs
@@ -571,7 +572,7 @@ in CI uses it yet, so the product stays functional.
   - Finding 3 (low, missing test): no automated test runs the Workers runtime, so a broken FixedLengthStream path can deploy; recommend an unstable_startWorker integration test with local R2 in the deploy gate. Waiting for the user.
   - [x] Fix finding 2: disable version preview URLs explicitly, assert the config, and document the old-version URL check after token rotation.
   - [x] Fix finding 4: log unexpected error names/messages through the injected logger while keeping client responses generic; capture the regression first.
-  - [ ] Fix finding 5: list every Worker module and copy the exact Wrangler configuration into the contract, with a drift regression.
+  - [x] Fix finding 5: list every Worker module and copy the exact Wrangler configuration into the contract, with a drift regression.
   - [ ] Merge main's browser helper change after the fixes; audit preservation, run the complete gate, commit, and push the fixes plus merge. The supervising agent owns the re-review.
 
 Evidence: `.context/turborepo-cloudflare-remote-cache/m3-progress.md` and
