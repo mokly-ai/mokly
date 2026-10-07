@@ -1,3 +1,5 @@
+import { validateBrowserShardBalance } from "./shard-balance.mjs";
+
 export function validateCompletedReport(report, options = {}) {
   if (report?.schemaVersion !== 1) throw new Error("invalid report schema");
   if (!["unit", "browser", "hydration"].includes(report.suite))
@@ -122,6 +124,11 @@ export function validateShardReports(reports, expected) {
       ordered.map((report) => report.observedTests.map((entry) => entry.id)),
       first.fullTests.map((entry) => entry.id),
       "observed browser tests",
+    );
+    validateBrowserShardBalance(
+      ordered,
+      first.fullTests.length,
+      expected.total,
     );
   }
 }

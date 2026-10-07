@@ -5,8 +5,9 @@
 The file-length, protocol-cap, unused-internal-export, and
 public-package-export ratchets are implemented. Every ratchet in this document
 runs in the repository suite and the complete gate. The baseline dependency
-audit uses the same comparison-commit resolver. The JSON cap table and its
-legacy fallback follow [Meta-Test Reduction](../../plans/meta-test-reduction.md).
+audit uses the same comparison-commit resolver. The protocol caps live in the
+JSON table `xtask/protocol-document-caps.json`, with a legacy reader for older
+comparison commits.
 
 This contract owns the maintainability ratchets run by the repository suite of
 `cargo xtask check`. The file-length, protocol-cap, and unused-internal-export
@@ -51,25 +52,33 @@ line count, allowed count, and predecessor when applicable.
 ## Protocol Document Caps
 
 `xtask/protocol-document-caps.json` owns exact caps for protocol documents that
-remain over 250 lines. It is one JSON object. Each key is a document path
-relative to `docs/protocol/`, keys are sorted, and each value is a safe integer
-above 250. A repeated key, an unsorted key, a non-integer, or a value at or
-below 250 is an invalid table and fails the audit. A capped value equals that
-file's current physical line count; shrinking the file requires lowering the
-cap. A document at or below 250 has no cap. A new document must stay at or
-below 250 and cannot add a cap. The changed-file source-length audit and this
-ratchet share one length policy: TypeScript/JavaScript have a 300-line limit;
-a changed protocol page passes at 250 lines or at its exact reviewed cap, never
-above it. The ratchet scans Markdown recursively beneath `docs/protocol/`,
-excluding the `docs/protocol/fixtures/` tree, and audits every document on
-every run.
+remain over 250 lines. It holds one JSON object. Each key is the path of a
+Markdown document relative to `docs/protocol/`, written with `/` separators and
+without an empty, `.` or `..` segment. Keys are sorted ascending by UTF-16 code
+unit, and each value is a safe integer above 250. Invalid JSON, a document that
+is not one object, an invalid, repeated or unsorted key, or a cap that is not a
+safe integer above 250 makes the table invalid: the error names the file and
+the audit fails. The ratchet also fails when the table is missing. A capped
+value equals that file's current physical line count; shrinking the file
+requires lowering the cap. A document at or below 250 has no cap. A new
+document must stay at or below 250 and cannot add a cap. The changed-file
+source-length audit and this ratchet share one length policy:
+TypeScript/JavaScript have a 300-line limit; a changed protocol page passes at
+250 lines or at its exact reviewed cap, never above it. The source-length audit
+reads the same working-tree table and applies 250 lines to every page when the
+file is absent. The ratchet scans Markdown recursively beneath
+`docs/protocol/`, excluding the `docs/protocol/fixtures/` tree, and audits
+every document on every run.
 
 The ratchet reads the baseline table at the comparison commit. When that commit
 has no `xtask/protocol-document-caps.json`, it reads the legacy `oversizedCaps`
-table in `tests/protocol_doc_sizes.test.ts` at that commit. When neither
-exists, it bootstraps caps from the baseline line counts. The legacy reader is
-removed once `origin/main` and every open branch's merge base contain the JSON
-file.
+table in `tests/protocol_doc_sizes.test.ts` at that commit; a legacy file
+without that table fails the audit. When neither file exists, as on commits
+that predate the original cap test, each existing document over 250 lines takes
+its actual line count at that commit as its baseline cap, and renamed
+`mokly-variants.md` inherits `mokly-screen-variants.md`. This bootstrap cannot
+grant a cap to a new document. The legacy reader is removed once `origin/main`
+and every open branch's merge base contain the JSON file.
 
 The repository ratchet compares the candidate cap policy with the comparison
 commit:
@@ -80,12 +89,7 @@ commit:
   uncapped;
 - a new document has the 250-line limit.
 
-During the one-time introduction of the cap test, when the comparison commit
-has no cap table, each existing document's baseline cap is its actual line
-count at that commit; renamed `mokly-variants.md` inherits
-`mokly-screen-variants.md`. This bootstrap cannot grant a cap to a new document.
-Later runs read the explicit table from the comparison commit. A missing
-predecessor or ambiguous rename is treated as new.
+A missing predecessor or ambiguous rename is treated as new.
 
 ## Public Package Exports
 
@@ -218,11 +222,12 @@ All four auditors are repository-suite operations and therefore run in both
 run after the live dependency audit and report all findings in their own audit
 before returning failure. Focused unit tests cover boundary counts, new and
 renamed files, an already-oversized shrink/growth pair, cap bootstrap and stale
-caps, nested protocol documents and the fixtures exclusion, public re-exports,
-newly unused symbols, CommonJS use, attempted baseline growth, stale baseline
-removal, release-tag selection, public name and subpath removals, explicit
-exports, recursive star re-exports, unresolved star targets, release-note
-retention, and a moving `origin/main` whose merge base stays fixed.
+caps, cap-table validation, the legacy-table fallback, nested protocol
+documents and the fixtures exclusion, public re-exports, newly unused symbols,
+CommonJS use, attempted baseline growth, stale baseline removal, release-tag
+selection, public name and subpath removals, explicit exports, recursive star
+re-exports, unresolved star targets, release-note retention, and a moving
+`origin/main` whose merge base stays fixed.
 
 The approved [API and member checks](./verification-api-members.md) add public
 signature reports with a release-note gate, an unused-member ratchet and a test

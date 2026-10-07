@@ -225,9 +225,11 @@ cargo clippy --workspace --all-targets -- -D warnings
   [`module-commonjs.mjs`](../scripts/verification/ratchets/module-commonjs.mjs)
   and
   [`module-imports.mjs`](../scripts/verification/ratchets/module-imports.mjs)
-  supply CommonJS export and import-use discovery, and
+  supply CommonJS export and import-use discovery,
   [`unused-internal-exports.txt`](./unused-internal-exports.txt) is the sorted
-  shrinking exception baseline.
+  shrinking exception baseline, and
+  [`protocol-document-caps.json`](./protocol-document-caps.json) holds the
+  reviewed protocol document caps.
 
 ### Related Docs
 

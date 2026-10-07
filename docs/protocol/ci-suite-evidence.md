@@ -124,7 +124,12 @@ workspace for diagnosis. Tests that create a runtime after obtaining a shared
 fixture register that cleanup through the fixture's `beforeRemove` lifecycle;
 they must not add a later test-runner teardown hook that can race workspace
 removal. The ESLint rule `mokly/no-late-fixture-teardown` enforces this
-ownership rule for the shared fixture helpers under `tests/`. Failed browser and hydration jobs retain only the uploaded
+ownership rule in every JavaScript and TypeScript module under `tests/`. Within
+the module scope and within each function, it reports a member call named
+`after`, such as `t.after(...)`, that starts at or after the first
+`changedFixture`, `componentReviewFixture` or `designLibraryFixture` call in
+the same scope. A call inside a nested function belongs only to that
+function's scope. Failed browser and hydration jobs retain only the uploaded
 diagnostic artifacts selected by the workflow. Jobs must not delete, overwrite
 or reuse another job's writable output.
 
@@ -135,7 +140,8 @@ It attempts every cleanup before reporting a cleanup failure. A run that selects
 none of the file's tests starts no setup and leaves no owned output. Module-scope
 code must not start fixture setup eagerly. `tests/helpers/file_fixture.ts`
 provides this boundary; the ESLint rule `mokly/no-eager-fixture-setup` rejects
-module-scope `designLibraryFixture` calls.
+a `designLibraryFixture` call that is not inside a function, in any JavaScript
+or TypeScript module under `tests/`.
 
 ## Unit Shard Balance
 
@@ -173,18 +179,25 @@ spec therefore stays whole and no spec uses parallel mode except the unsharded
 hydration route-inventory spec that [Test Concurrency](#test-concurrency)
 defines.
 
-The aggregate also bounds balance. `validateShardReports` in
-`scripts/verification/report-validation.mjs` fails a browser shard group when
-any shard's `assignedTests` count exceeds 125% of an even share of the
-`fullTests` inventory, rounded up. The failure names the shard, its count, the
-inventory size and the limit, and asks for a large non-hydration spec to be
-split into smaller spec files. The bound uses test counts because that is what
-Playwright balances; shard durations remain a measurement from the shard
-reports. It runs wherever shard reports are validated: `Required CI` and the
-remote Testbox gate. The local sequential gate runs unsharded and does not
-apply it. No test lists the Playwright inventory to check balance.
-[Meta-Test Reduction](../../plans/meta-test-reduction.md) moves this bound
-from a listing-based unit test into the aggregate.
+The aggregate also bounds balance. After the browser test assignments prove
+disjoint and complete, `validateShardReports` in
+`scripts/verification/report-validation.mjs` applies the bound in
+`scripts/verification/shard-balance.mjs`. The limit is the `fullTests`
+inventory divided by the shard count, times `BROWSER_SHARD_SHARE_LIMIT` (1.25),
+rounded up. The group fails at the first shard whose `assignedTests` count
+exceeds that limit, with this message:
+
+```text
+browser shard <index>/<total> holds <count> of <inventory> tests, above the limit of <limit>; split a large spec into smaller spec files
+```
+
+The bound uses test counts because that is what Playwright balances; shard
+durations remain a measurement from the shard reports. It runs wherever shard
+reports are validated: `Required CI` and the remote Testbox gate. The local
+sequential gate runs unsharded and does not apply it. The bound does not apply
+to unit shards. No test lists the Playwright inventory to check balance;
+[`tests/verification_shard_balance.test.ts`](../../tests/verification_shard_balance.test.ts)
+checks the bound with synthetic shard reports.
 
 ## Acceptance Measurement
 

@@ -278,51 +278,57 @@ Evidence: `.context/meta-test-reduction/milestone-2.md`, with deviations.
 
 ## Milestone 3: Move whole-tree lints and the cap table
 
-- [ ] Add `xtask/protocol-document-caps.json` with the current
+- [x] Add `xtask/protocol-document-caps.json` with the current
       `oversizedCaps` entries.
-- [ ] `scripts/verification/ratchets/length-policy.mjs`: add a JSON cap
+- [x] `scripts/verification/ratchets/length-policy.mjs`: add a JSON cap
       parser with the same validation (safe integer above 250, no repeats,
       sorted keys). Keep the TypeScript parser as the legacy baseline reader.
-- [ ] `scripts/verification/ratchets/protocol-caps.mjs` and
+- [x] `scripts/verification/ratchets/protocol-caps.mjs` and
       `scripts/verification/source-file-length.mjs`: read the JSON file at the
       working tree; at the comparison commit read the JSON file, else the
       legacy test file, else bootstrap from line counts.
-- [ ] Update the fixtures in `tests/repository_ratchets_git.test.ts` and
+- [x] Update the fixtures in `tests/repository_ratchets_git.test.ts` and
       `tests/source_file_length.test.ts` to write the JSON file. Add the JSON
       parser tests and one legacy-fallback case in a new
       `tests/protocol_caps_table.test.ts`; `tests/repository_ratchets.test.ts`
       is already over 300 lines and must not grow.
-- [ ] Delete `tests/protocol_doc_sizes.test.ts`.
-- [ ] Add `scripts/eslint/no-artifact-path-literals.mjs`. Report string
+- [x] Delete `tests/protocol_doc_sizes.test.ts`.
+- [x] Add `scripts/eslint/no-artifact-path-literals.mjs`. Report string
       literals and whole template literals that contain `snapshots/` or match
       the `pages/<route>.json` pattern. Register it in `eslint.config.js` with the scope from
       Milestone 1. Delete `tests/artifact_path_helpers.test.ts`. Add
       `tests/artifact_path_lint.test.ts` using `tests/helpers/lint_config.ts`.
-- [ ] Add `scripts/eslint/no-late-fixture-teardown.mjs` and
+- [x] Add `scripts/eslint/no-late-fixture-teardown.mjs` and
       `scripts/eslint/no-eager-fixture-setup.mjs`. Port the `inspectScope` and
       `moduleFixtureCalls` logic from `tests/fixture_lifecycle.test.ts` to
       ESTree. Scope both rules to `tests/**`. Delete tests 3 to 5 from
       `tests/fixture_lifecycle.test.ts`. Add
       `tests/fixture_lifecycle_lint.test.ts` with the sample code from the
       deleted test 5 as rule cases.
-- [ ] `scripts/verification/report-validation.mjs`: export
+- [x] `scripts/verification/report-validation.mjs`: export
       `BROWSER_SHARD_SHARE_LIMIT = 1.25` and enforce the bound for the browser
       suite inside `validateShardReports`. The message names the shard, its
       count, the total, the limit, and asks to split a large spec into smaller
       spec files. Add `tests/verification_shard_balance.test.ts`;
       `tests/verification_evidence.test.ts` is already over 300 lines.
-- [ ] Delete `tests/browser_shard_balance.test.ts`.
-- [ ] Delete test 4 from `tests/eslint_postcss_calls.test.ts`.
-- [ ] Replace the plan-pointing status sentences in
+- [x] Delete `tests/browser_shard_balance.test.ts`.
+- [x] Delete test 4 from `tests/eslint_postcss_calls.test.ts`.
+- [x] Replace the plan-pointing status sentences in
       `docs/protocol/ci-suite-evidence.md`,
       `docs/protocol/verification-ratchets.md` and
       `docs/protocol/mokly-artifact-paths.md` with implemented wording.
-- [ ] Smoke: run `npm run lint` and confirm zero findings from the three new
+- [x] Smoke: run `npm run lint` and confirm zero findings from the three new
       rules on the current tree. Run
       `node scripts/verification/repository-ratchets.mjs` and
       `cargo xtask source-file-length-lint --all`. Run the new unit tests.
       Save output under `.context/meta-test-reduction/milestone-3.md`.
-- [ ] Run `cargo xtask check --suite repository`. Commit and push.
+- [x] Run `cargo xtask check --suite repository`. Commit and push.
+
+Evidence: `.context/meta-test-reduction/milestone-3.md`.
+
+Deviation: the shard bound and `BROWSER_SHARD_SHARE_LIMIT` live in the new
+`scripts/verification/shard-balance.mjs`, because `report-validation.mjs` would
+pass 300 lines; `validateShardReports` calls it.
 
 ## Milestone 4: Final gate, commit, push and review
 
