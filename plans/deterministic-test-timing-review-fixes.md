@@ -291,7 +291,7 @@ Integrate main, run the complete gate, and deliver the branch.
 
 Evidence: `.context/deterministic-test-timing-review-fixes/milestone-7.md`.
 
-- [ ] Search the current docs and READMEs for statements that these changes
+- [x] Search the current docs and READMEs for statements that these changes
       make stale, and update them.
 - [ ] Fetch `origin/main`. If it moved, merge it with the Mainline Feature
       Preservation steps in `AGENTS.md`. Save the merge justifications in the

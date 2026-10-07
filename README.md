@@ -346,7 +346,8 @@ MOKLY_PLAYWRIGHT_WORKERS=3 npm run test:browser
 ```
 
 Required tests follow [CI test timing](./docs/protocol/ci-test-timing.md).
-Use [`waitUntil`](./tests/helpers/wait_until.ts) for polling.
+Use [`waitUntil`](./tests/helpers/wait_until.ts) for Node state polling.
+Use Playwright waits for browser page state.
 Use the [shared evidence helpers](./docs/protocol/ci-test-timing-helpers.md)
 for operation counts and duration text.
 Unit discovery and the timing lint guard share the

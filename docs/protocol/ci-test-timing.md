@@ -23,15 +23,15 @@ used by an assertion, apply these acceptance relations:
 
 - The count at the smaller size must be greater than zero. This includes
   per-path counts and totals. A missed interception must fail the test.
-- Counts for work that happens once per run must be equal at both sizes.
+- Counts for work with a fixed count per run must be equal at both sizes.
   This includes fixed-root projection, sorts, glob compilation, index
   construction, and working-directory resolution.
 - Each counted total at the larger size must be at most 4.5 times its total
   at the smaller size. Linear work grows by about 4 times. Quadratic work
   grows by about 16 times.
 
-Apply equality checks even when total growth passes. Repeated fixed-root
-resolution can remain linear while violating the once-per-run contract.
+Apply equality checks even when total growth passes. Root-resolution counts
+can grow linearly with input size while violating the fixed-count contract.
 Keep the operation's result assertions beside its count assertions.
 
 The [stylesheet collection contract](./mokly-imported-styles.md#roots-collection-and-deduplication)
@@ -41,7 +41,7 @@ number of inputs or edges. This also holds when the working directory is a
 symlink or equals `repoRoot`. Each root traversal reads a metafile input at
 most once.
 
-Use the combined `{ operation: "realpath", path }` selection for a once-only
+Use the combined `{ operation: "realpath", path }` selection for a fixed-count
 check of a fixed root. This includes a working directory, `repoRoot`, and the
 mockups directory. Code can resolve these roots through `fs.realpathSync`
 or `fs.realpathSync.native`.

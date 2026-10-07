@@ -61,19 +61,20 @@ The path maps use string keys. Convert other first arguments with `String`.
 Sort has a total only.
 
 The helper provides a two-size assertion with the acceptance relations in
-[Operation Counts](./ci-test-timing.md#operation-counts). Equal once-only counts pass. Growing
-once-only counts fail. A total above 4.5 times fails. Any asserted count
+[Operation Counts](./ci-test-timing.md#operation-counts). Equal fixed counts pass. Growing
+fixed counts fail. A total above 4.5 times fails. Any asserted count
 that is zero at the smaller size fails.
 
 Use `assertOperationScaling(smaller, larger, onceOnly, scaledTotals)`.
 Pass the two counter results as `smaller` and `larger`.
-List once-only counts as `{ operation, path? }` objects.
+List fixed per-run counts as `{ operation, path? }` objects in `onceOnly`.
+These counts can be greater than one.
 List scaled totals by operation name. Omit `path` for a total.
 Failure text names the operation, the selected path, and both counts.
 
 The combined `{ operation: "realpath", path }` selection adds the
 `fs.realpathSync` and `fs.realpathSync.native` calls for one path. Use it for
-every fixed-root once-only check, including PostCSS dependency collection.
+every fixed-root count check, including PostCSS dependency collection.
 The separate totals and path maps remain available.
 
 Counted code must call `fs` and `path` functions through their default
