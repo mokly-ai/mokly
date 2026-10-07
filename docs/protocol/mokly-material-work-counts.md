@@ -65,8 +65,9 @@ Historical reports retain their original values and explain the method change.
 
 Tests pin the core collector shape, probe every detail method/constructor with
 collection off/on, retain exact-count/work-bound assertions with details on, and
-reject timed-record contamination. Real Serve proves environment isolation,
-companion counts/membership and scenario restoration.
+reject timed-record contamination. Benchmarks run separately; real Serve
+environment isolation, companion counts/membership and interruption restoration
+are no longer checked by the unit suite's browser-driven tool tests.
 
 ## Required Proof
 

@@ -1,5 +1,9 @@
 # M9 Separate Material Detail Checkpoint
 
+Coverage update (2026-10-07): the user removed the real-browser cancellation and
+companion tool tests described below; benchmarks run separately. This report
+retains the checkpoint's historical verification and mutation results.
+
 This checkpoint implements the supervisor-approved split of M9 diagnostics.
 The [full-worker ablation](./fingerprinted-materials-worker-ablation.md) recovered
 15.09 s on average (2.49–2.97 ms/view spread) by reverting diagnostics, with

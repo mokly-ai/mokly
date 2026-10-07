@@ -44,8 +44,13 @@ acceptance plan needs a fresh same-session reference. Harness code lives here,
 outside that digest.
 
 ```bash
-node --import tsx --test tests/large_material*.test.ts tests/large_companion_outcomes.test.ts
+node --import tsx --test tests/large_material_details.test.ts tests/large_companion_outcomes.test.ts
 ```
+
+These tests check diagnostic isolation and companion outcome records without
+starting Chromium. Benchmarks run separately; the unit suite no longer runs the
+real-browser companion pass or the Ctrl+C restoration checks. The tool behavior
+and commands above remain available.
 
 The [timing protocol](../../docs/protocol/mokly-timings.md) defines the opt-in;
 [material work](../../docs/protocol/mokly-material-work-counts.md) defines counts.

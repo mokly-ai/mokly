@@ -116,8 +116,9 @@ cancellation, aborts the active preparation `execFile` through its AbortSignal
 and stops the active Serve. Skip remaining rows/states, close Chrome and rebuild
 setup in `finally` before nonzero exit. Restoration itself is not aborted.
 The final report carries `cancelled: true` and retains started samples only;
-never invent records for skipped samples. Child-process tests interrupt both
-preparation and sampling and compare every setup source/output byte.
+never invent records for skipped samples. Benchmarks run separately; the unit
+suite no longer launches browser-backed child processes to check interruption
+during preparation or sampling and compare every setup source/output byte.
 
 Record every requested sample unless cancelled, continue after bounded failures,
 and write the full report before returning nonzero. The exact `ok`, `error`,
