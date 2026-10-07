@@ -116,7 +116,7 @@ already-planned post-review bookkeeping.
 
 4. **Severity: Low — public README includes downstream app migration guidance.**
 
-   Context: [README.md](../README.md#L118) puts consumer-specific styled `Button` instructions in the package README.
+   Context: [README.md](https://github.com/mokly-ai/mokly/blob/c72e349/README.md?plain=1#L118) puts consumer-specific styled `Button` instructions in the package README.
 
    Impact of doing nothing: app-independent Mokabook docs remain coupled to one consumer app/framework, which can confuse package users and make future README maintenance noisier.
 
@@ -126,7 +126,7 @@ already-planned post-review bookkeeping.
 
 5. **Severity: Low — delivery plan status is stale for a committed/pushed review diff.**
 
-   Context: [plans/mocklink-child-controls.md](../plans/mocklink-child-controls.md#L49) says full validation passed, but [plans/mocklink-child-controls.md](../plans/mocklink-child-controls.md#L55) leaves commit, push, review, and final plan recording unchecked; `plans/README.md` still lists the plan as active.
+   Context: [plans/mocklink-child-controls.md](https://github.com/mokly-ai/mokly/blob/c72e349/plans/mocklink-child-controls.md?plain=1#L49) says full validation passed, but [plans/mocklink-child-controls.md](https://github.com/mokly-ai/mokly/blob/c72e349/plans/mocklink-child-controls.md?plain=1#L55) leaves commit, push, review, and final plan recording unchecked; `plans/README.md` still lists the plan as active.
 
    Impact of doing nothing: reviewers cannot tell whether post-push review happened or whether the feature is complete.
 
@@ -202,7 +202,7 @@ original report.
 
 1. **Severity: High — branch would remove a current `origin/main` feature.**
 
-   **Context:** `HEAD` is behind local `origin/main` by one commit: `1dcfb67 fix(search): match authored page IDs (#39)`. The committed diff removes ID search by dropping `data-entry-id` from nav rows in [src/server/shell/nav.tsx](../src/server/shell/nav.tsx#L62) and matching only text/route in [src/client/search_query.ts](../src/client/search_query.ts#L23). It also updates docs to remove ID search while the UI still exposes copyable IDs in [src/server/shell/head.tsx](../src/server/shell/head.tsx#L113).
+   **Context:** `HEAD` is behind local `origin/main` by one commit: `1dcfb67 fix(search): match authored page IDs (#39)`. The committed diff removes ID search by dropping `data-entry-id` from nav rows in [src/server/shell/nav.tsx](https://github.com/mokly-ai/mokly/blob/5556c88/src/server/shell/nav.tsx#L62) and matching only text/route in [src/client/search_query.ts](https://github.com/mokly-ai/mokly/blob/5556c88/src/client/search_query.ts#L23). It also updates docs to remove ID search while the UI still exposes copyable IDs in [src/server/shell/head.tsx](https://github.com/mokly-ai/mokly/blob/5556c88/src/server/shell/head.tsx#L113).
 
    **Impact of doing nothing:** merging this branch as-is regresses mainline Browse search and deletes tests/docs added by `origin/main`. Users who copy an ID chip or know a `MockLink` target ID may no longer find the screen unless title/route happen to match.
 
@@ -232,7 +232,7 @@ original report.
 
 4. **Severity: Low — delivery plan still records review as pending.**
 
-   **Context:** [plans/mocklink-child-controls.md](../plans/mocklink-child-controls.md#L165) leaves post-push `cargo xtask review` and final plan/index recording unchecked, and `plans/README.md` still lists the plan as active.
+   **Context:** [plans/mocklink-child-controls.md](https://github.com/mokly-ai/mokly/blob/5556c88/plans/mocklink-child-controls.md?plain=1#L165) leaves post-push `cargo xtask review` and final plan/index recording unchecked, and `plans/README.md` still lists the plan as active.
 
    **Impact of doing nothing:** reviewers cannot tell from committed docs whether the required post-push Review step completed for the final fix commit.
 
