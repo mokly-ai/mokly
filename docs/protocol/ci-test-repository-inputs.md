@@ -18,10 +18,13 @@ The remaining automated checks for repository inputs are deliberately narrow:
 
 - [`tests/preview.test.ts`](../../tests/preview.test.ts) owns the isolated
   fixture baseline, deterministic edit and exact changed-result assertions.
-- `tests/ci_workflow_policies.test.ts` requires the browser example server
-  command to include `--base HEAD`, checked through the exported command
-  builder rather than source text. It also requires the package, unit,
-  browser and hydration jobs to use the checked-out lockfile and never
+- [`tests/ci_workflow_policies.test.ts`](../../tests/ci_workflow_policies.test.ts)
+  requires the browser example server command to include `--base HEAD`,
+  checked through the exported `exampleServerCommand` builder in
+  [`tests/browser/example_servers.ts`](../../tests/browser/example_servers.ts)
+  rather than source text. The Playwright configuration must start every
+  worker's server with that builder. The test also requires the package,
+  unit, browser and hydration jobs to use the checked-out lockfile and never
   resolve `origin/main` or a branch-point lockfile.
 
 These checks are properties of the workflow, not copies of its text. Review

@@ -252,23 +252,25 @@ point at this plan until the matching milestone lands.
 
 ## Milestone 2: Reduce workflow YAML tests
 
-- [ ] Add `tests/ci_workflow_policies.test.ts` with the seven checks from the
+- [x] Add `tests/ci_workflow_policies.test.ts` with the seven checks from the
       Inventory. Keep the file under 300 lines.
-- [ ] Add `tests/ci_workflow_scripts.test.ts` with the three script runs.
-- [ ] Delete the six workflow literal test files.
+- [x] Add `tests/ci_workflow_scripts.test.ts` with the three script runs.
+- [x] Delete the six workflow literal test files.
 - [ ] After user approval of Decision 7, reduce `tests/release.test.ts` to its
       property assertions.
-- [ ] Convert the `tests/ci_workflow_policies.test.ts` and
+- [x] Convert the `tests/ci_workflow_policies.test.ts` and
       `tests/ci_workflow_scripts.test.ts` code spans in
       `docs/protocol/ci-test-repository-inputs.md`,
       `docs/protocol/ci-workflow.md` and
       `docs/protocol/remote-verification-testbox.md` into links. Replace the
       "being introduced" and "follows" status sentences in those two contract
       docs with implemented wording.
-- [ ] Run the new tests and the kept workflow tests:
+- [x] Run the new tests and the kept workflow tests:
       `node --import tsx --test tests/ci_*.test.ts tests/npm_pin.test.ts tests/release_evidence_contract.test.ts tests/workflow_runner_sizes.test.ts tests/publish_action.test.ts`.
       Save output under `.context/meta-test-reduction/milestone-2.md`.
-- [ ] Run `cargo xtask check --suite repository`. Commit and push.
+- [x] Run `cargo xtask check --suite repository`. Commit and push.
+
+Evidence: `.context/meta-test-reduction/milestone-2.md`, with deviations.
 
 ## Milestone 3: Move whole-tree lints and the cap table
 
