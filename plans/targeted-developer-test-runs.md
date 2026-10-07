@@ -1,6 +1,11 @@
 # Targeted Developer Test Runs
 
-Status: Active
+Status: Completed. [PR #155](https://github.com/mokly-ai/mokly/pull/155) merged on 2026-10-07.
+The user chose option A for Review 4 finding 1, and branch
+`calummoore/fix-npm-test-command-follow-on-v1` fixes it.
+Review 4 finding 2 (early `process.exit(0)` passes a selected run; recommend C)
+and finding 3 (no test covers the plain signal message; recommend A) stay open
+for the user.
 
 Before this change, developer commands forced repeated complete suites and
 delayed repository checks. This plan adds file and name selection, introduces
