@@ -1,10 +1,9 @@
 # Shared Example Compilation Snapshot
 
-Status: Active. Milestones 1 to 8 are complete on draft PR
-[#138](https://github.com/mokly-ai/mokly/pull/138); Milestone 9 adapts the
-snapshot to main's generated output change. The plan closes when the PR
-merges. Review findings 2 and 3 stay open for the user to decide; Milestone
-7 lists them.
+Status: Active. Milestones 1 to 9 are complete on draft PR
+[#138](https://github.com/mokly-ai/mokly/pull/138). The plan closes when the
+PR merges. Review findings 2, 3, 7, 10, and 11 stay open for the user to
+decide; Milestones 7 and 9 list them.
 
 ## Status And Outcome
 
@@ -18,13 +17,14 @@ and their documentation. It needs no product code, UI, or mockup work. The
 product CLI, `prepare:verification`, the package suite, and the browser suites
 stay unchanged.
 
-Main's #139 restructured the attribution tests. Five test files now use the
+Main's #139 restructured the attribution tests. Four test files now use the
 shared design library fixture: `tests/design_library_attribution.test.ts`,
 `tests/component_design_attribution.test.ts`,
-`tests/design_library_source_edits.test.ts`,
-`tests/design_library_committed_baseline.test.ts`, and
-`tests/fixture_lifecycle.test.ts`. This plan only changes the fixture they
-share: its before state comes from the snapshot. See Milestones 4 and 9.
+`tests/design_library_source_edits.test.ts`, and
+`tests/design_library_committed_baseline.test.ts`.
+`tests/fixture_lifecycle.test.ts` only checks where test files place fixture
+calls. This plan only changes the fixture: its before state comes from the
+snapshot. See Milestones 4 and 9.
 
 Contract owners:
 
@@ -57,15 +57,15 @@ Baseline measurements: `.context/shared-example-compilation-snapshot/baseline.md
 
 ## Where The Compiles Come From
 
-| Helper or test                                                 | Consumers                                                                                  | What it compiles                                              | Plan                                                  |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ----------------------------------------------------- |
-| `tests/helpers/design_catalogue.ts`                            | 31 test files; also `design_stacks.ts`, `design_rows.ts`, `design_component_navigation.ts` | The example, once per test process                            | Load the snapshot; compile only as fallback           |
-| `tests/helpers/design_library_fixture.ts`                      | Four attribution and source-edit test files, and `fixture_lifecycle.test.ts`               | A copied example as the before state, then every edited state | Before state from the snapshot                        |
-| `tests/helpers/example_baseline.ts`                            | `preview.test.ts`, `example_baseline.test.ts`, browser fixtures                            | Copies with changed config profiles and historical rebuilds   | Unchanged; the preparation is the behavior under test |
-| `tests/helpers/move_catalogue.ts`                              | Seven move tests                                                                           | A small synthetic catalogue, not the example                  | Unchanged                                             |
-| `tests/build.test.ts`                                          | One test                                                                                   | The example, once                                             | Unchanged; it is explicit compile coverage            |
-| `tests/helpers/design_palette.ts`                              | Appearance tests                                                                           | Nothing; it reads `examples/basic/design.css`                 | Unchanged                                             |
-| `route_scoped_catalogue_real`, `server_route_scoped_bootstrap` | Two tests                                                                                  | Nothing; they read the generated manifest                     | Unchanged                                             |
+| Helper or test                                                 | Consumers                                                                                             | What it compiles                                              | Plan                                                  |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ----------------------------------------------------- |
+| `tests/helpers/design_catalogue.ts`                            | 34 test files; also `design_stacks.ts`, `design_rows.ts`, `design_component_navigation.ts`            | The example, once per test process                            | Load the snapshot; compile only as fallback           |
+| `tests/helpers/design_library_fixture.ts`                      | Four attribution and source-edit test files                                                           | A copied example as the before state, then every edited state | Before state from the snapshot                        |
+| `tests/helpers/example_baseline.ts`                            | `preview.test.ts`, `example_baseline.test.ts`, `example_namespace_artifact.test.ts`, browser fixtures | Copies with changed config profiles and historical rebuilds   | Unchanged; the preparation is the behavior under test |
+| `tests/helpers/move_catalogue.ts`                              | Seven move tests                                                                                      | A small synthetic catalogue, not the example                  | Unchanged                                             |
+| `tests/build.test.ts`                                          | One test                                                                                              | The example, once                                             | Unchanged; it is explicit compile coverage            |
+| `tests/helpers/design_palette.ts`                              | Appearance tests                                                                                      | Nothing; it reads `examples/basic/design.css`                 | Unchanged                                             |
+| `route_scoped_catalogue_real`, `server_route_scoped_bootstrap` | Two tests                                                                                             | Nothing; they read the generated manifest                     | Unchanged                                             |
 
 The two native CI jobs run named test files directly. None of those files
 imports `designCatalogue`, so they never need the snapshot.
@@ -433,7 +433,7 @@ Evidence: `.context/shared-example-compilation-snapshot/milestone-6.md`
 `.context/shared-example-compilation-snapshot/merges.md` and the PR #138
 description.
 
-## Milestone 9: Adapt to main's generated output change — in progress
+## Milestone 9: Adapt to main's generated output change — completed
 
 Main's #156 moved the generated example output to
 `examples/basic/mokly-generated/`, moved the authored CSS out of
@@ -460,7 +460,7 @@ snapshot so that the key and the test copy cover the same inputs.
       snapshot contract: `test:unit` writes the snapshot, and only complete
       unit runs require it.
 - [x] Run `cargo xtask check`, commit, and push.
-- [ ] Only after the push, review the change with
+- [x] Only after the push, review the change with
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`, then apply the review-fix rule: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest.
@@ -468,11 +468,16 @@ snapshot so that the key and the test copy cover the same inputs.
         unit run requires the snapshot.
   - [x] Fix finding 9 (Low, docs): the plan's live sections match #139, #155,
         and #156.
-  - [ ] Re-run the review once on the fix.
+  - [x] Re-run the review once on the fix. The re-review confirmed findings 8
+        and 9 and reported findings 12 and 13, both `Auto-fix: yes`: the plan
+        now gives 34 design catalogue test files and four fixture users, names
+        `example_namespace_artifact.test.ts`, lists every open finding in its
+        status paragraph, and gives the rerun outcome of finding 7. The fix
+        round then stopped.
   - Open finding 7 (Medium, test, unrelated flaky test): "real SIGINT reports
     the process outcome and removes temporary events" in
     `tests/verification_unit_interrupt.test.ts` failed once in CI shard 2/4
-    with `'' !== 'ready'`; main's run 37636857126 failed the same way;
+    of run 37647326903 with `'' !== 'ready'`; it passed on the rerun (attempt 2) and in 20 of 20 local runs; main's run 37636857126 failed the same way;
     suspected source: the `fs.watch` creation event arrives before the marker
     content is written; fix it in a separate branch from main.
   - Open finding 10 (Low, process): the post-merge check that each attribution
@@ -483,7 +488,9 @@ snapshot so that the key and the test copy cover the same inputs.
     placeholder.
 
 Evidence: `.context/shared-example-compilation-snapshot/merges.md` (merge 9)
-and `.context/shared-example-compilation-snapshot/milestone-9.md`.
+and `.context/shared-example-compilation-snapshot/milestone-9.md`. Review
+reports: `.context/shared-example-compilation-snapshot/review.md`. Flaky test:
+`.context/shared-example-compilation-snapshot/flaky/report.md`.
 
 ## Post-merge follow-up (non-blocking)
 
