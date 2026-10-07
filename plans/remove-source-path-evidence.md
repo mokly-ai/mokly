@@ -1,12 +1,9 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestones 1 to 31 are implemented, verified and pushed; the
-branch contains main `dc56e3d4`. Milestone 32's post-push review reported five
-findings. Findings 1 and 3 are fixed and verified by the re-review. The second
-and last fix round has implemented, verified and committed its grouping and
-current-entry projection fixes locally. Main advanced to `f8ab241f` during
-the final fetch and remains unmerged. No third review is planned. Findings 2,
-4 and 5 wait for the user.
+Status: Active. Milestones 1 to 32 are implemented, verified and pushed through
+`300e407d`. Milestone 32's review and both fix rounds are complete; its open
+findings wait for the user. Milestone 33 merges main `f8ab241f` (#160, #156 and
+#144), as the user asked on 2026-10-07.
 
 ## Status And Outcome
 
@@ -2489,15 +2486,61 @@ Evidence: `.context/remove-source-path-evidence/milestone-31.md`.
   - [ ] Earlier schema example item (Low, also on main): variant description is required in the example but optional in the comparison type. Recommend correcting the example and extending its compiler-backed check.
   - [ ] Earlier exported-view item: temporary navigation omits "Changed component" lines until destination data loads. Recommend a separate decision on public affected-consumer evidence.
   - [ ] Earlier mockup item: mockups show a "Catalogue home" crumb that the viewer omits. Recommend a product decision on the shared navigation contract before changing either side.
-  - [ ] Main advanced to `f8ab241f` with #160, #156 and #144 during the final fetch. It remains unmerged as instructed; schedule integration as a separate task.
+  - [x] Main advanced to `f8ab241f` with #160, #156 and #144 during the final fetch. Milestone 33 integrates it, as the user asked on 2026-10-07.
 
 Evidence: `.context/remove-source-path-evidence/milestone-32.md`.
 Fix-round evidence: `.context/remove-source-path-evidence/milestone-32-fixes.md`.
 Final fix-round evidence: `.context/remove-source-path-evidence/milestone-32-final-fix.md`.
 
-On 2026-10-07 the user approved the current-entry projection correction as part
-of re-review finding 1. Raw aggregates retain their existing precedence. A
+On 2026-10-07 the reviewer approved the current-entry projection correction as
+part of re-review finding 1, because the catalogue delivery contract settles it. Raw aggregates retain their existing precedence. A
 current entry's aggregate `removed` comparison projects as `changed`; its
 per-view states stay unchanged. The projection defect also exists on main.
 Keep all controls, complete the full checks, and make one local commit. Do not
 push or run a third review.
+
+On 2026-10-07 the user asked to merge the latest `main` after Milestone 32 and
+to delegate the merge to Codex Sol 6.1 at maximum effort. `main` moved to
+`f8ab241f` with #160 (the complete gate on Blacksmith Testboxes), #156
+(simplified generated output and delivery) and #144 (CSS Modules ignore source
+maps). #156 is a breaking change: generated files live in
+`<mockupsDir>/mokly-generated/`, only Build, `build --watch` and `serve --build`
+write them, the `generatedOutput`, `publicExclude` and `compatibility` options
+and the output ownership headers are removed, and the unreleased formats are
+manifest v9, catalogue read model v5 and review result v6. As the user decided
+on 2026-10-05 for the same situation, the merged branch keeps main's unreleased
+format numbers and adds no version: they carry main's records and this branch's
+records together.
+
+## Milestone 33: Integrate `main` #160, #156 and #144
+
+Merge `main` at `f8ab241f` (or the latest `main` at merge time).
+
+- [ ] Audit main's additions from the source tip, merge `origin/main` with
+      exactly two parents, resolve conflicts path by path and review every
+      remerge-diff path.
+- [ ] Combine the formats: main's unreleased manifest v9, catalogue read model
+      v5 and review result v6 carry this branch's records (component
+      stylesheet declarations, inserted-stylesheet provenance, root output
+      ranges, per-rule CSS evidence and page resource evidence). Record each
+      renamed field or message and every conflict of meaning here.
+- [ ] Port this branch's behavior to #156: generated output, in-memory Serve
+      and export, the asset closure and the removed compatibility transformer
+      and ownership headers. Remove this branch's code, tests and docs that
+      exist only for the removed transformer or headers, and record each
+      removal here as an intended migration.
+- [ ] Compare every line that main added since `dc56e3d4` with the merged tree.
+      Classify each absent line as an intended migration, a move or a loss,
+      and restore every loss before the push.
+- [ ] Run `cargo xtask check` at 100%. Inspect the diff and the deletions
+      against `origin/main`, record the result, and push the branch.
+- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
+      complete diff against `origin/main` and report findings. Keep the review
+      read-only. Then apply the review-fix rule in `AGENTS.md`: fix
+      `Auto-fix: yes` findings, run checks, commit, push and re-review once.
+      Fix new `Auto-fix: yes` findings once more, then stop and report the
+      rest. Ask the user for findings tagged `Auto-fix: no`. Add each open
+      finding as one line under this TODO. Keep reports and evidence under
+      `.context/`.
+
+Evidence: `.context/remove-source-path-evidence/milestone-33.md`.
