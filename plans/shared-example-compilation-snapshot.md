@@ -508,14 +508,15 @@ milestone merges main and confirms that the snapshot needs no change.
       options that #167 fixes.
 - [x] Record that main's #165 resolves open finding 7: the test now writes its
       ready marker through a temporary file and a rename.
-- [ ] Run `cargo xtask check`, commit, and push.
+- [x] Run `cargo xtask check`, commit, and push.
 - [ ] Only after the push, review the change with
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`, then apply the review-fix rule: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest.
 
-Evidence: `.context/shared-example-compilation-snapshot/merge-13-audit.txt`
-and `.context/shared-example-compilation-snapshot/merges.md` (merge 13).
+Evidence: `.context/shared-example-compilation-snapshot/merge-13-audit.txt`,
+`.context/shared-example-compilation-snapshot/merges.md` (merge 13), and
+`.context/shared-example-compilation-snapshot/milestone-10.md`.
 
 ## Post-merge follow-up (non-blocking)
 
