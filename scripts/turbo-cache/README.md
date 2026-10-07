@@ -144,8 +144,11 @@ npx --no-install wrangler r2 object delete mokly-turbo-cache/<namespace>/<hash> 
 
 Delete only the identified object. Clear the affected client's local cache
 before verification. Rotate an access token by replacing its Worker secret and
-all corresponding private/GitHub consumers; old tokens must get 401. Rotate the
-signature key with a new team namespace and populate it from authorized CI.
+all corresponding private/GitHub consumers; old tokens must get 401.
+Check a known old version's preview URL after rotation. It must not reach the
+Worker. Keep `preview_urls: false`; disabled version URLs prevent old versions
+from serving their earlier secrets. This production check requires the admin.
+Rotate the signature key with a new team namespace and populate it from authorized CI.
 Update the Worker team, every client's team setting, and the PR lifecycle prefix
 together, as the access runbook specifies.
 Existing objects cannot be re-signed; let the old namespace expire.

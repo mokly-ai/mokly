@@ -193,6 +193,7 @@ Own the modules under `scripts/turbo-cache/`: `worker.ts`, `artifacts.ts`,
   "main": "worker.ts",
   "compatibility_date": "2026-07-21",
   "workers_dev": true,
+  "preview_urls": false,
   "r2_buckets": [
     { "binding": "ARTIFACTS", "bucket_name": "mokly-turbo-cache" }
   ],

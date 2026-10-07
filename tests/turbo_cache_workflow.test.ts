@@ -104,11 +104,13 @@ test("cache bindings are local in development and committed client settings rema
     name: string;
     main: string;
     compatibility_date: string;
+    preview_urls: boolean;
     r2_buckets: { binding: string; bucket_name: string; remote: boolean }[];
   };
   assert.equal(config.name, "mokly-turbo-cache");
   assert.equal(config.main, "worker.ts");
   assert.equal(config.compatibility_date, "2026-07-21");
+  assert.equal(config.preview_urls, false);
   assert.deepEqual(config.r2_buckets, [
     { binding: "ARTIFACTS", bucket_name: "mokly-turbo-cache", remote: false },
   ]);

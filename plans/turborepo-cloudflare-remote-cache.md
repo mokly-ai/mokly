@@ -567,10 +567,17 @@ in CI uses it yet, so the product stays functional.
       `docs/implementation-review-prompt.md` after the push. The supervising
       agent runs the review. Apply the `AGENTS.md` review-fix rule after it
       reports; keep the review itself read-only.
+  - Finding 1 (high, security): the deploy workflow uses an account-wide Workers/R2 write token as a repository secret, which any branch workflow can read; recommend a main-only GitHub environment, reduced permissions, and a rule/test that no Workers/R2 write credential is a repository secret or reaches a pull_request workflow. Waiting for the user.
+  - Finding 3 (low, missing test): no automated test runs the Workers runtime, so a broken FixedLengthStream path can deploy; recommend an unstable_startWorker integration test with local R2 in the deploy gate. Waiting for the user.
+  - [x] Fix finding 2: disable version preview URLs explicitly, assert the config, and document the old-version URL check after token rotation.
+  - [ ] Fix finding 4: log unexpected error names/messages through the injected logger while keeping client responses generic; capture the regression first.
+  - [ ] Fix finding 5: list every Worker module and copy the exact Wrangler configuration into the contract, with a drift regression.
+  - [ ] Merge main's browser helper change after the fixes; audit preservation, run the complete gate, commit, and push the fixes plus merge. The supervising agent owns the re-review.
 
 Evidence: `.context/turborepo-cloudflare-remote-cache/m3-progress.md` and
 `.context/turborepo-cloudflare-remote-cache/m3-validation.md`.
 Main integration decisions: `.context/turborepo-cloudflare-remote-cache/m3-main-decisions.md`.
+Review-fix evidence: `.context/turborepo-cloudflare-remote-cache/m3-review-fix-validation.md`.
 
 ### Milestone 4: Cloudflare Provisioning And CI Wiring
 
@@ -607,6 +614,13 @@ before the merge.
       through a private password-manager share. Confirm `local:rw,remote:r`
       suppresses uploads and that a read-only token without a key cannot
       accept a signed download.
+- [ ] Confirm token rotation makes old tokens return 401 and a known old
+      version's preview URL cannot reach the Worker; keep preview_urls false.
+- [ ] Verify large uploads and batches against Workers Free's 1,000 internal
+      subrequests per request (R2) and 10 ms CPU budget. Cover trusted and PR
+      fallback batches; a 1,024-hash query can exceed that subrequest budget.
+- [ ] Confirm the configured apiUrl has no trailing slash. Verify requests use
+      /v8 paths, since a trailing slash can produce //v8 paths and silent misses.
 - [ ] Confirm production R2 conditional behavior: absent-key PUT succeeds,
       repeated and concurrent PUTs keep one complete body and its original
       metadata, and a failed condition returns null. Compare with local

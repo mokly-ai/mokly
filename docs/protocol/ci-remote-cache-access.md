@@ -121,8 +121,11 @@ threshold. No bucket lock rule is part of this cache.
 Delete only the named poisoned object after identifying its namespace/hash.
 The next authorized writer can fill that absent key. Client local caches can
 retain an earlier artifact; clear only the affected client/fixture cache before
-verification. Rotate a compromised access token and its consumers. Rotate the
-signature key with a new team namespace; old objects cannot be re-signed.
+verification. Rotate a compromised access token and its consumers.
+After rotation, confirm a known old version's preview URL cannot reach the
+Worker. Explicit `preview_urls: false` disables version URLs, which otherwise
+can serve old secrets outside Workers Logs. Run this check during provisioning.
+Rotate the signature key with a new team namespace; old objects cannot be re-signed.
 Update `TURBO_CACHE_TEAM` and every client's team setting together. Add the
 7-day lifecycle rule for the new `<team>-pr-` prefix; let the old rules expire
 old namespaces.
