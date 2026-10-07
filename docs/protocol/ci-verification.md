@@ -7,14 +7,19 @@ ratchet are implemented. [Hosted measurements](https://github.com/mokly-ai/mokly
 record timing and coverage. `cargo xtask check` is the complete gate.
 A validated hosted aggregate is reusable evidence for its exact tree.
 Public argument forwarding, cancellation and title validation are implemented.
-Remote execution and automatic selection are implemented.
+Remote execution and automatic selection are implemented. Dependency audit
+modes and scheduled update pull requests are implemented under the
+[audit contracts](./dependency-audit-update-pr.md).
 
 ## Verification Boundary
 
 `cargo xtask check` is the complete repository and release gate.
 The local executor runs every gate sequentially in one checkout.
-It starts with the live workspace dependency audit. The complete gate can
-instead run on Testboxes under the implemented
+It starts with the live baseline workspace audit. It fails on new issues and
+reports inherited ones as notices. `--dependency-audit strict` selects strict
+mode for the complete gate or repository suite;
+[baseline auditing](./dependency-audit-baseline.md) owns the CLI and CI mode
+rules. The complete gate can instead run on Testboxes under the implemented
 [remote verification contract](./remote-verification.md).
 Only active reviewed path exceptions cover findings.
 [Dependency security](./dependency-security.md) defines their UTC expiry and
@@ -27,6 +32,7 @@ The CLI is:
 
 ```bash
 cargo xtask check
+cargo xtask check --dependency-audit strict
 cargo xtask check --suite repository
 cargo xtask check --suite package
 cargo xtask check --suite unit --shard 1/4
@@ -46,7 +52,7 @@ hydration suite fail before any subprocess starts.
 
 | Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                                                            |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Repository       | Live dependency audit first; Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                                                                                                          |
+| Repository       | Live audit first: baseline for ordinary PRs, pushes, and local checks; strict for release and dependency update PRs. Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                  |
 | Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; every clean consumer smoke using that pair. Real `prepack` builds remain part of packing. |
 | Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. A shard runs its whole-file partition.                                                                                                                                                               |
 | Browser          | One ordinary package/example preparation followed by every non-hydration Playwright spec, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                  |

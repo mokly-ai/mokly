@@ -6,8 +6,8 @@ internal binary and is not published to npm or crates.io.
 ## Responsibilities
 
 - Run the current source-level TypeScript, package, example, and Rust suite.
-- Fail verification on uncovered Low-or-higher advisories, invalid exceptions,
-  or audit errors.
+- Run the baseline dependency audit by default and fail on new issues or
+  audit errors. Support strict mode for release and dependency update checks.
 - Enforce the Rust file-length limit.
 - Enforce changed repository-wide TypeScript/JavaScript (300 lines) and
   protocol Markdown (250 lines or an exact reviewed cap) limits against the
@@ -42,10 +42,14 @@ defines them. Individual concurrency tests and their existing timeouts remain
 unchanged.
 For targeted unit and browser runs during development, use the
 [developer test commands](../docs/protocol/developer-test-commands.md).
-The local complete check starts with `npm run dependencies:check`, covering all
-workspace dependency categories. It requires registry access; an audit or network
-failure stops subsequent checks. Reviewed workspace exceptions have exact
-dev-only paths, inclusive UTC end dates, and a maximum 31-day window under the
+The [baseline audit contract](../docs/protocol/dependency-audit-baseline.md)
+defines the complete check's default, `npm run dependencies:check -- --baseline`,
+covering every dependency category from the lockfile. Issues already present at
+the merge base print as inherited notices. New issues or operational audit
+errors stop subsequent checks. `--dependency-audit strict` instead calls
+`npm run dependencies:check`, which fails on all uncovered findings and invalid
+exception records. Both modes require registry access. Reviewed exceptions
+have exact dev-only paths, inclusive UTC end dates, and a maximum 31-day window under the
 [dependency security contract](../docs/protocol/dependency-security.md).
 Packed-consumer smokes separately audit the consumer's resolved production
 dependencies without workspace overrides or audit exceptions.
@@ -93,11 +97,13 @@ Tests using `changedFixture` register servers and workers with
 
 ```bash
 cargo xtask check
+cargo xtask check --dependency-audit strict
 cargo xtask check --executor local
 cargo xtask executor
 cargo xtask executor --executor local
 cargo xtask check --executor remote
 cargo xtask check --suite repository
+cargo xtask check --suite repository --dependency-audit strict
 cargo xtask check --suite package
 cargo xtask check --suite unit --shard 1/4
 cargo xtask check --suite browser --shard 1/4
@@ -110,6 +116,15 @@ cargo xtask source-file-length-lint --all
 `--shard INDEX/TOTAL` is valid only for the unit and browser suites. Omitting it
 runs the full selected suite. Package, unit, browser, and hydration suites
 prepare their required output before invoking prepared npm scripts.
+
+`--dependency-audit <baseline|strict>` defaults to `baseline`. It is valid for
+the complete gate or repository suite. An explicit mode flag with another suite
+returns a typed error before subprocesses start. Ordinary pull requests and all
+pushes use baseline mode; same-repository dependency update and Release Please
+pull requests use strict mode. Release publishing uses strict mode for its
+direct audit and complete fallback. The scheduled `main` audit also
+uses strict mode under the linked update pull request contract. A remote
+complete gate passes the same mode to the repository command on its Testbox.
 
 `--executor auto|local|remote` overrides `MOKLY_CHECK_EXECUTOR`.
 An absent flag and variable select `auto`. Explicit `local` skips remote checks.
@@ -178,8 +193,11 @@ cargo clippy --workspace --all-targets -- -D warnings
   child process groups on interrupts.
 - [`src/command.rs`](./src/command.rs) defines the injected command-runner
   boundary.
-- [`src/check.rs`](./src/check.rs) defines the complete source, packed-consumer,
-  browser, hydration, and Rust verification sequence.
+- [`src/check/request.rs`](./src/check/request.rs) validates suite, shard, and
+  dependency audit selections before subprocesses start.
+- [`src/check/commands.rs`](./src/check/commands.rs) defines the shared suite
+  commands. [`src/check/runner.rs`](./src/check/runner.rs) runs them through
+  injected process and file auditors.
 - [`../scripts/verification/unit-selection.mjs`](../scripts/verification/unit-selection.mjs)
   validates developer test arguments before preparation checks;
   [`unit-execution.mjs`](../scripts/verification/unit-execution.mjs) shares
@@ -195,6 +213,10 @@ cargo clippy --workspace --all-targets -- -D warnings
   dispatches the repository ratchets, and
   [`../scripts/verification/ratchets/git.mjs`](../scripts/verification/ratchets/git.mjs)
   owns their merge-base workspace and reachable release-tag views.
+- [`../scripts/verification/dependency-audit.mjs`](../scripts/verification/dependency-audit.mjs)
+  runs strict and baseline audits. The scheduled workflow uses
+  [`dependency-audit-pr.mjs`](../scripts/verification/dependency-audit-pr.mjs)
+  to maintain the update pull request and preserve human commits.
 - [`../scripts/verification/ratchets/typescript-length.mjs`](../scripts/verification/ratchets/typescript-length.mjs),
   [`protocol-caps.mjs`](../scripts/verification/ratchets/protocol-caps.mjs),
   [`internal-exports.mjs`](../scripts/verification/ratchets/internal-exports.mjs),
@@ -220,3 +242,5 @@ cargo clippy --workspace --all-targets -- -D warnings
 - [Remote verification](../docs/protocol/remote-verification.md)
 - [Testbox execution](../docs/protocol/remote-verification-testbox.md)
 - [Dependency security](../docs/protocol/dependency-security.md)
+- [Baseline dependency audit](../docs/protocol/dependency-audit-baseline.md)
+- [Dependency update pull request](../docs/protocol/dependency-audit-update-pr.md)

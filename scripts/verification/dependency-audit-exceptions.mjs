@@ -1,3 +1,4 @@
+import { auditIssue } from "./dependency-audit-issues.mjs";
 import {
   isInstallLocation,
   isPackageName,
@@ -76,7 +77,7 @@ function schemaErrors(record) {
 
 /** Validate every reviewed record and its inclusive UTC review window. */
 export function validateAuditExceptions(input, now) {
-  const errors = [];
+  const issues = [];
   const records = [];
   const seen = new Set();
   const today =
@@ -84,19 +85,27 @@ export function validateAuditExceptions(input, now) {
       ? calendarDay(now.toISOString().slice(0, 10))
       : undefined;
   if (today === undefined)
-    errors.push("Invalid audit clock. Fix the UTC clock and retry.");
-  if (!Array.isArray(input)) {
-    errors.push(
-      "Invalid exceptions file: expected a JSON array. Fix scripts/verification/dependency-audit-exceptions.json.",
+    issues.push(
+      auditIssue("input", "Invalid audit clock. Fix the UTC clock and retry."),
     );
-    return { errors, records };
+  if (!Array.isArray(input)) {
+    issues.push(
+      auditIssue(
+        "input",
+        "Invalid exceptions file: expected a JSON array. Fix scripts/verification/dependency-audit-exceptions.json.",
+      ),
+    );
+    return { issues, records };
   }
   input.forEach((exception, index) => {
     const label = `exception #${index + 1}${isRecord(exception) && typeof exception.advisory === "string" ? ` (${exception.advisory})` : ""}`;
     const invalid = schemaErrors(exception);
     if (invalid.length) {
-      errors.push(
-        `Invalid ${label}: ${invalid.join("; ")}. Fix or remove this record after review.`,
+      issues.push(
+        auditIssue(
+          "exception",
+          `Invalid ${label}: ${invalid.join("; ")}. Fix or remove this record after review.`,
+        ),
       );
       return;
     }
@@ -110,28 +119,40 @@ export function validateAuditExceptions(input, now) {
       exception,
       label,
       daysLeft,
-      errors: [],
+      issues: [],
       matched: false,
       used: false,
     };
     if (today === undefined)
-      record.errors.push(
-        `Invalid ${label}: UTC clock is invalid. Fix the clock and retry.`,
+      record.issues.push(
+        auditIssue(
+          "input",
+          `Invalid ${label}: UTC clock is invalid. Fix the clock and retry.`,
+        ),
       );
     if (seen.has(key))
-      record.errors.push(
-        `Invalid ${label}: duplicate advisory, package, and path. Remove the duplicate record.`,
+      record.issues.push(
+        auditIssue(
+          "exception",
+          `Invalid ${label}: duplicate advisory, package, and path. Remove the duplicate record.`,
+        ),
       );
     seen.add(key);
     if (daysLeft < 0)
-      record.errors.push(
-        `Expired ${label}: expired on ${exception.until} UTC. Remove the record or obtain a new risk review and end date.`,
+      record.issues.push(
+        auditIssue(
+          "exception",
+          `Expired ${label}: expired on ${exception.until} UTC. Remove the record or obtain a new risk review and end date.`,
+        ),
       );
     else if (daysLeft > 31)
-      record.errors.push(
-        `Invalid ${label}: end date ${exception.until} is more than 31 days ahead. Obtain a new review and set an end date within 31 days.`,
+      record.issues.push(
+        auditIssue(
+          "exception",
+          `Invalid ${label}: end date ${exception.until} is more than 31 days ahead. Obtain a new review and set an end date within 31 days.`,
+        ),
       );
     records.push(record);
   });
-  return { errors, records };
+  return { issues, records };
 }

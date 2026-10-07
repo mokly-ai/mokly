@@ -1,5 +1,6 @@
 //! Pure remote command, identifier and output contract regressions.
 
+use crate::check::request::DependencyAudit;
 use crate::executor::{Executor, resolve_executor};
 use crate::remote::parse::{
     box_is_completed, probe_identity, require_warmup_id, run_id_from_status, warmup_ids,
@@ -46,7 +47,8 @@ fn completed_status_requires_one_matching_table_row() {
 
 #[test]
 fn command_inventory_has_eleven_unique_commands_and_nine_reports() {
-    let commands = commands();
+    let baseline = commands(DependencyAudit::Baseline);
+    let commands = commands(DependencyAudit::Strict);
     assert_eq!(commands.len(), 11);
     assert_eq!(commands.iter().filter(|command| command.report).count(), 9);
     assert_eq!(
@@ -72,6 +74,21 @@ fn command_inventory_has_eleven_unique_commands_and_nine_reports() {
         commands[2]
             .shell_command("sha256:abc")
             .ends_with("--suite unit --shard 1/4")
+    );
+    assert!(
+        commands[0]
+            .shell_command("sha256:abc")
+            .ends_with("--suite repository --dependency-audit strict")
+    );
+    assert!(commands[1..].iter().all(|command| {
+        !command
+            .shell_command("sha256:abc")
+            .contains("--dependency-audit")
+    }));
+    assert!(
+        baseline[0]
+            .shell_command("sha256:abc")
+            .ends_with("--suite repository --dependency-audit baseline")
     );
 }
 

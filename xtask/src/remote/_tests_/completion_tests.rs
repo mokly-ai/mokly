@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
+use crate::check::request::DependencyAudit;
 use crate::remote::cleanup::{BoxCleanup, CleanupGuard};
 use crate::remote::contracts::*;
 use crate::remote::runner::DefaultRemoteRunner;
@@ -94,7 +95,15 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
         cleanup.track(id);
     }
     assert_eq!(
-        runner.execute(&boxes, "sha256:test", "run", &cleanup).len(),
+        runner
+            .execute(
+                &boxes,
+                "sha256:test",
+                "run",
+                &cleanup,
+                DependencyAudit::Baseline,
+            )
+            .len(),
         3
     );
     assert!(cleanup.pending().is_empty());
