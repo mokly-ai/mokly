@@ -101,9 +101,11 @@ Developer runner arguments (`npm test -- ...` and `npm run test:unit -- ...`):
   verification status, and complete gate command:
   `selected files: <files>; tests run: <n>; partial verification; complete gate: cargo xtask check`.
   Sum per-file `passed + failed + cancelled` for `<n>`. After the skipped and todo
-  line, warn for each selected file with per-file `tests = 0`:
+  line, warn for each explicitly named file with reported `tests = 0`:
   `warning: no test ran in <file>`. Append `; check --test-name-pattern` when a
-  pattern is present. Print warnings in selected-file order. Do not change the
+  pattern is present. A pattern-only run prints only
+  `warning: no test matched --test-name-pattern`, and only when no file reports
+  any test. Print named-file warnings in selected-file order. Do not change the
   evidence schema, complete output, or zero-test exit status.
   Zero matching tests in a selected file is not a failure; the reporter must
   still observe that file.
@@ -124,11 +126,23 @@ Developer runner arguments (`npm test -- ...` and `npm run test:unit -- ...`):
   name the problem before usage; invalid patterns also retain the quoted value
   and SyntaxError reason. Empty discovery and internal faults retain stacks.
   The strict entrypoint stays unchanged. Validate selected outcomes in order:
-  evidence, reporter completion, failed tests, cancellation, process, then file
-  set. Expected test failures report a count and at most 20 ordered `✖ <name>`
-  lines, then `… and <k> more`. Cancellation reports its count; process failures
+  evidence, reporter completion, failed/cancelled groups, process, then file
+  set. Drop `subtestsFailed` wrappers. Classify `testTimeoutFailure` and
+  `cancelledByParent` under cancelled; every other type is failed. Print both
+  non-empty groups in that order, using the name count or the per-file count
+  when no names exist. Each shows at most 20 ordered `✖ <name>` lines, then
+  `… and <k> more`. Process failures
   name the code or signal. File-set errors name missing and unexpected files.
   Exact messages follow the developer command protocol.
+- Record top-level file results and failure types only in internal event data.
+  Selected runs accept a file-only pass as observed with zero tests. Strict and
+  complete runs keep summary-only evidence, with written failure entries exactly
+  `{ name, diagnostic }`. On a failed process with missing or incomplete
+  reporter output, show the process failure first with
+  `; the test reporter did not finish`, without unobserved totals or warnings.
+  Keep evidence faults internal on a zero exit. Print pattern values literally
+  in double quotes, with no JSON escaping. Full rules are in
+  [selected results](../docs/protocol/developer-test-results.md).
 
 Every selected run, filtered Playwright run (including project selection), and
 single `cargo xtask check --suite` run is partial verification. A complete public
@@ -366,7 +380,7 @@ the orchestrating agent.
       protocol caps and coherent merged guidance.
 - [x] Run verification tests on Node 24 and Node 22.14, then the repository
       suite. Commit the merge and semantic follow-up and push for hosted CI.
-- [ ] Define the selected-output contract before its implementation.
+- [x] Define the selected-output contract before its implementation.
 - [ ] Fix finding 1: warn only for named files, or once for an empty pattern run.
 - [ ] Fix finding 4: recognize file-only passes for selected runs; keep strict
       summary-only file evidence.

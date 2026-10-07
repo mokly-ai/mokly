@@ -97,7 +97,8 @@ Each occurrence requires a non-empty value. A missing or empty value reports
 `--test-name-pattern needs a non-empty value`, followed by usage. Each value
 must follow Node CLI regex syntax, including `/pattern/flags` values. An invalid
 regex reports `invalid --test-name-pattern value "<value>": <SyntaxError message>`,
-followed by usage. Validation happens
+followed by usage. Show the pattern exactly as typed inside double quotes;
+do not apply JSON escaping. Validation happens
 before inventory discovery, prepared-output checks, or test execution. Forward
 every pattern unchanged and in argument order to Node; Node applies repeated
 patterns as alternatives.
@@ -132,36 +133,10 @@ current developer policy. Print their combined count. Zero matching tests in a
 selected file is not a failure; the reporter must still observe that file and
 complete normally.
 
-After the skipped and todo count, print one stdout warning for each selected
-file whose per-file `test:summary` has `tests = 0`, in selected-file order:
-
-```text
-warning: no test ran in <file>
-```
-
-Append `; check --test-name-pattern` when the run has a name pattern. Then print:
-
-```text
-selected files: <files>; tests run: <n>; partial verification; complete gate: cargo xtask check
-```
-
-`<n>` sums per-file `passed + failed + cancelled`. Skipped and todo tests do not
-contribute. Use per-file counts because Node can report a file with zero matching
-tests as one passed test in its run-level output. Zero tests still passes.
-These totals never enter a written report or change complete-run output.
-
-Validate selected outcomes in this order: evidence error, incomplete reporter,
-failed tests, cancelled tests, process exit or signal, then the file set.
-Failed tests are an expected failure: `<n> selected unit test failed:` for one,
-or `<n> selected unit tests failed:` otherwise, followed by ordered reporter
-failure names as `✖ <name>` lines. Show at most 20 names; append `… and <k> more`
-for the rest. Cancellation reports `<n> selected unit test(s) cancelled`, using
-the same singular/plural rule. A process failure reports
-`selected unit test process exited with code <code>` or
-`selected unit test process exited with signal <signal>` as an expected failure.
-Every condition still fails the run. Evidence errors, incomplete reporters, and
-file-set mismatches remain internal errors with a stack. A file-set message names
-missing and unexpected files. Strict and complete runs keep their prior behavior.
+The [selected-run result contract](./developer-test-results.md) defines exact
+counts, warnings, classified failure reports, and interrupted-process messages.
+Selected runs recognize top-level file passes without summaries as zero-test
+files. Complete and strict runs still require per-file summaries.
 
 Selected runs never create, remove, or change any file under
 `.context/verification-reports`. They ignore `MOKLY_VERIFICATION_REPORT`, even

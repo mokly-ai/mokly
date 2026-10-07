@@ -50,7 +50,7 @@ unsupported versions before content or path interpretation.
 - [Public API reports and unused members](./verification-api-members.md) —
   approved signature reports, release-note gate and member ratchet.
 
-- [Developer test commands](./developer-test-commands.md) — public preparation, selected runs and partial verification.
+- [Developer test commands](./developer-test-commands.md) and [selected results](./developer-test-results.md) — preparation, selection, output and partial verification.
 - [CI verification](./ci-verification.md) — implemented suite, shard, evidence, cache and aggregation contract.
   - [CI dependency cache and security](./ci-verification-security.md).
   - [Repository gate and length audits](./ci-verification-repository.md).
