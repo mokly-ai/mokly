@@ -35,13 +35,18 @@ for (const transport of ["same-origin", "postMessage"] as const) {
         await page.evaluate(async (json) => {
           const usage = JSON.parse(json) as ComponentViewRecord;
           const { sameOriginAdapter } = (await import(
-            `${location.origin}/__mokly/client/same_origin_adapter.js`
+            `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
           )) as typeof LocalAdapter;
+          const frame = document.querySelector<HTMLIFrameElement>("#frame")!;
+          frame.dataset["moklyGeneratedPrefix"] = "mokly-generated";
           (window as unknown as FrameTestWindow).mounted =
             await sameOriginAdapter().mount(
               document.querySelector<HTMLIFrameElement>("#frame")!,
               {
-                url: new URL("/static/home/index.mobile.html", location.origin),
+                url: new URL(
+                  "/static/mokly-generated/home/index.mobile.html",
+                  location.origin,
+                ),
                 usage: { status: "ready", ...usage },
               },
             );
@@ -50,7 +55,9 @@ for (const transport of ["same-origin", "postMessage"] as const) {
       const child = page
         .frames()
         .find((frame) =>
-          frame.url().includes("/static/home/index.mobile.html"),
+          frame
+            .url()
+            .includes("/static/mokly-generated/home/index.mobile.html"),
         )!;
       const expected = await child.evaluate((layout) => {
         const outer = document.querySelector<HTMLElement>("#outer")!;
@@ -100,7 +107,7 @@ for (const transport of ["same-origin", "postMessage"] as const) {
         const local = await page.evaluate(
           async ({ usageJson, key }) => {
             const { localInspection } = (await import(
-              `${location.origin}/__mokly/client/same_origin_adapter.js`
+              `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
             )) as typeof LocalAdapter;
             return localInspection(
               document.querySelector<HTMLIFrameElement>("#frame")!,

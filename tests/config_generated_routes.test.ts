@@ -56,7 +56,7 @@ test("the generated folder name remains valid below an ordinary first segment", 
   );
 });
 
-test("v8 views and pages stay outside the reserved generated tree", async (context) => {
+test("v9 map keys are relative to the unified generated tree", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   await fs.writeFile(
@@ -72,8 +72,9 @@ test("v8 views and pages stay outside the reserved generated tree", async (conte
   assert.ok(routes.includes(viewRoute("home", "mobile", "light")));
   assert.ok(routes.includes(entryRoute("notice")));
   assert.ok(routes.every((route) => !route.startsWith("mokly-generated/")));
-  assert.throws(
-    () => validateGeneratedOutputPaths(["mokly-generated/notice.html"], config),
-    /generated route is unsafe: mokly-generated\/notice\.html/u,
+  assert.equal(
+    config.generatedDir,
+    path.join(config.mockupsDir, "mokly-generated"),
   );
+  assert.doesNotThrow(() => validateGeneratedOutputPaths(routes, config));
 });

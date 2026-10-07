@@ -24,8 +24,13 @@ test.beforeAll(async () => {
     }),
   );
   const config = await loadConfig(fixture.root);
-  await writeCompilation(await compileCatalogue(config), config);
-  server = await startCatalogueServer(config, { base: "main", port: 0 });
+  const compilation = await compileCatalogue(config);
+  await writeCompilation(compilation, config);
+  server = await startCatalogueServer(config, {
+    base: "main",
+    port: 0,
+    generatedOutputs: compilation.outputs,
+  });
 });
 test.afterAll(async () => {
   await server?.close();
@@ -41,7 +46,7 @@ test("component geometry clips nested overflow and preserves multiple roots and 
   ).toBeEnabled();
   const facts = await page.evaluate(async () => {
     const { authenticateRanges, rangeBounds } = (await import(
-      `${location.origin}/__mokly/client/component_geometry.js`
+      `${location.origin}/mokly-viewer/client/component_geometry.js`
     )) as typeof Geometry;
     const data = JSON.parse(
       document.querySelector("[data-workspace-data]")!.textContent!,

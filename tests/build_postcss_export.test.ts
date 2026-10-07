@@ -38,7 +38,7 @@ test("PostCSS watch metadata does not make a stable accepted generation fail exp
     noChanges: true,
   });
   const exported = await fs.readFile(
-    path.join(result.outDir, "static", entryStyle),
+    path.join(result.outDir, "static/mokly-generated", entryStyle),
     "utf8",
   );
   assert.match(exported, /color: red/);

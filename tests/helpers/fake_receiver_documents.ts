@@ -26,7 +26,7 @@ const MANIFEST_FIELDS = [
 /** Independently validate an upload manifest received in the plan archive. */
 export function readFakeUploadManifest(value: unknown): UploadManifest {
   if (!record(value) || !Object.hasOwn(value, "schemaVersion")) throw invalid();
-  if (value["schemaVersion"] !== 1) throw unsupported();
+  if (value["schemaVersion"] !== 2) throw unsupported();
   if (!exactKeys(value, MANIFEST_FIELDS)) throw invalid();
   const repository = value["repository"];
   if (
@@ -63,7 +63,7 @@ export function readFakeUploadManifest(value: unknown): UploadManifest {
     typeof value["baseSha"] !== "string" ||
     !GIT_SHA.test(value["baseSha"]) ||
     typeof value["comparisonPath"] !== "string" ||
-    !/^__mokly\/diffs\/__generations\/[a-f0-9]{64}\/review\.json$/u.test(
+    !/^mokly-viewer\/diffs\/generations\/[a-f0-9]{64}\/review\.json$/u.test(
       value["comparisonPath"],
     )
   )
@@ -71,10 +71,10 @@ export function readFakeUploadManifest(value: unknown): UploadManifest {
   return value as unknown as UploadManifest;
 }
 
-/** Independently validate the schema 2 ownership marker received at Plan. */
+/** Independently validate the schema 3 ownership marker received at Plan. */
 export function readFakeOwnership(value: unknown): ExportOwnership {
   if (!record(value) || !Object.hasOwn(value, "schemaVersion")) throw invalid();
-  if (value["schemaVersion"] !== 2) throw unsupported();
+  if (value["schemaVersion"] !== 3) throw unsupported();
   if (!Array.isArray(value["files"])) throw invalid();
   const files: ExportOwnershipEntry[] = [];
   const paths = [MARKER.toLowerCase()];
@@ -99,7 +99,7 @@ export function readFakeOwnership(value: unknown): ExportOwnership {
       parts.pop();
     }
   }
-  return { schemaVersion: 2, files };
+  return { schemaVersion: 3, files };
 }
 
 function ownershipEntryRejection(

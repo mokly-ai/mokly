@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
+import { setTimeout } from "node:timers/promises";
 
 import { MoklyError } from "../dist/errors.js";
 import { GitRepositoryEvidence } from "../dist/review/git_evidence.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { configuredServedReview } from "../dist/server/configured_review.js";
 import { NodeCatalogueServerFactory } from "../dist/server/factory.js";
 import { startCatalogueServer } from "../dist/server/http.js";
@@ -13,6 +13,7 @@ import { serve } from "../dist/server/serve.js";
 
 import { observeBackgroundClassification } from "./helpers/background_classification.js";
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
 import { documentText } from "./helpers/html.js";
@@ -58,7 +59,6 @@ test("no-watch startup retains removed metadata from its single Changes calculat
 
 test("unavailable startup Changes leaves a complete current catalogue without retrying Git", async (context) => {
   const fixture = await changedFixture(context, validEntrySource() + page);
-  const classified = observeBackgroundClassification(context, fixture.config);
   await fs.writeFile(fixture.entryPath, validEntrySource());
   let calls = 0;
   context.mock.method(
@@ -75,8 +75,12 @@ test("unavailable startup Changes leaves a complete current catalogue without re
     watch: false,
   });
   fixture.beforeRemove(() => running.close());
-  await classified;
-  const home = await (await fetch(running.url)).text();
+  let home = "";
+  for (let attempt = 0; attempt < 100; attempt++) {
+    home = await (await fetch(running.url)).text();
+    if (home.includes('data-changes-status="unavailable"')) break;
+    await setTimeout(50);
+  }
   assert.match(home, /data-entry-id="home"/);
   assert.match(home, /data-changes-status="unavailable"/);
   assert.doesNotMatch(home, /data-removed-page/);
@@ -84,10 +88,10 @@ test("unavailable startup Changes leaves a complete current catalogue without re
   assert.equal(calls, 1);
 });
 
-test("server startup rejects invalid current metadata before querying history", async (context) => {
+test("HTTP startup rejects supplied invalid metadata before querying history", async (context) => {
   const fixture = await changedFixture(context);
   await fs.writeFile(
-    path.join(fixture.mockupsDir, "mokly-manifest.json"),
+    path.join(fixture.mockupsDir, "mokly-generated/mokly-manifest.json"),
     "{}",
   );
   let calls = 0;
@@ -102,6 +106,12 @@ test("server startup rejects invalid current metadata before querying history", 
 
   await assert.rejects(
     startCatalogueServer(fixture.config, {
+      manifest: JSON.parse(
+        await fs.readFile(
+          path.join(fixture.generatedDir, "mokly-manifest.json"),
+          "utf8",
+        ),
+      ),
       base: "main",
       port: 0,
       review: configuredServedReview(
@@ -126,11 +136,9 @@ test("no-watch HTTP startup reuses the catalogue validated before factory handof
       this: NodeCatalogueServerFactory,
       ...args: Parameters<typeof start>
     ) {
-      const manifestPath = path.join(fixture.mockupsDir, "mokly-manifest.json");
-      const bytes = await fs.readFile(manifestPath, "utf8");
       await fs.writeFile(
-        manifestPath,
-        bytes.replace('"title": "Home"', '"title": "Later catalogue"'),
+        fixture.entryPath,
+        validEntrySource({ firstTitle: "Later catalogue" }),
       );
       return start.apply(this, args);
     },

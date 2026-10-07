@@ -6,7 +6,7 @@ import { classifyComponents } from "../../dist/review/component_classification.j
 import type { ComponentClassificationInput } from "../../dist/review/component_classification_input.js";
 import { classifyComponentsWithSources } from "../../dist/review/component_classification_sources.js";
 import type { Manifest } from "../../packages/viewer/dist/registry/types.js";
-import type { ReviewResultV5 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV6 } from "../../packages/viewer/dist/review/component_types.js";
 
 type FixtureFile = string | Uint8Array;
 
@@ -23,7 +23,12 @@ export function compilationFiles(
   compilation: Compilation,
   resources: Readonly<Record<string, FixtureFile>> = {},
 ): ReadonlyMap<string, FixtureFile> {
-  return new Map([...compilation.outputs, ...Object.entries(resources)]);
+  return new Map<string, FixtureFile>([
+    ...[...compilation.outputs].map(
+      ([route, bytes]) => [`mokly-generated/${route}`, bytes] as const,
+    ),
+    ...Object.entries(resources),
+  ]);
 }
 
 /** Inspect the exact sources recorded by one real classifier run. */
@@ -42,7 +47,7 @@ export function classifyFixtureWithSources(fixture: FastPathFixture) {
 
 export async function assertFastPathEquivalent(
   fixture: FastPathFixture,
-): Promise<ReviewResultV5> {
+): Promise<ReviewResultV6> {
   const input = {
     before: fixture.before,
     after: fixture.after,

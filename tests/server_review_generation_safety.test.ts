@@ -34,11 +34,11 @@ test("an in-flight explicit refresh queues one fresh generation", async (context
   const server = await startFixtureServer(fixture.root, review);
   fixture.beforeRemove(() => server.close());
 
-  const initial = fetch(`${server.url}/__mokly/diffs/review.json`);
+  const initial = fetch(`${server.url}/mokly-viewer/diffs/review.json`);
   await firstStarted.promise;
   const refreshed = [
-    fetch(`${server.url}/__mokly/diffs/review.json?refresh=1`),
-    fetch(`${server.url}/__mokly/diffs/review.json?refresh=1`),
+    fetch(`${server.url}/mokly-viewer/diffs/review.json?refresh=1`),
+    fetch(`${server.url}/mokly-viewer/diffs/review.json?refresh=1`),
   ];
   releaseFirst.resolve();
 
@@ -72,10 +72,10 @@ test("an in-flight invalidation queues one fresh generation", async (context) =>
   const server = await startFixtureServer(fixture.root, review);
   fixture.beforeRemove(() => server.close());
 
-  const initial = fetch(`${server.url}/__mokly/diffs/review.json`);
+  const initial = fetch(`${server.url}/mokly-viewer/diffs/review.json`);
   await firstStarted.promise;
   server.publishUpdate();
-  const updated = fetch(`${server.url}/__mokly/diffs/review.json`);
+  const updated = fetch(`${server.url}/mokly-viewer/diffs/review.json`);
   releaseFirst.resolve();
 
   assert.match(await (await updated).text(), /Generation 2/);
@@ -103,7 +103,7 @@ test("refresh refuses to archive an unowned output replacement", async (context)
   });
 
   assert.match(
-    await (await fetch(`${server.url}/__mokly/diffs/review.json`)).text(),
+    await (await fetch(`${server.url}/mokly-viewer/diffs/review.json`)).text(),
     /Generation 1/,
   );
   await fs.promises.rm(outDir, { recursive: true });
@@ -112,7 +112,7 @@ test("refresh refuses to archive an unowned output replacement", async (context)
   await fs.promises.writeFile(userFile, "user-authored\n");
 
   const failed = await fetch(
-    `${server.url}/__mokly/diffs/review.json?refresh=1`,
+    `${server.url}/mokly-viewer/diffs/review.json?refresh=1`,
   );
   assert.equal(failed.status, 500);
   assert.match(await failed.text(), /comparison could not be loaded/);
@@ -152,10 +152,12 @@ test("failed refresh preserves an unowned concurrent replacement", async (contex
   });
 
   assert.match(
-    await (await fetch(`${server.url}/__mokly/diffs/review.json`)).text(),
+    await (await fetch(`${server.url}/mokly-viewer/diffs/review.json`)).text(),
     /Generation 1/,
   );
-  const refresh = fetch(`${server.url}/__mokly/diffs/review.json?refresh=1`);
+  const refresh = fetch(
+    `${server.url}/mokly-viewer/diffs/review.json?refresh=1`,
+  );
   await refreshStarted.promise;
   await fs.promises.mkdir(outDir);
   const userFile = path.join(outDir, "keep.txt");
@@ -201,13 +203,16 @@ test("shutdown waits for an in-flight refresh to restore output", async (context
   });
 
   assert.match(
-    await (await fetch(`${server.url}/__mokly/diffs/review.json`)).text(),
+    await (await fetch(`${server.url}/mokly-viewer/diffs/review.json`)).text(),
     /Generation 1/,
   );
   const controller = new AbortController();
-  const refresh = fetch(`${server.url}/__mokly/diffs/review.json?refresh=1`, {
-    signal: controller.signal,
-  });
+  const refresh = fetch(
+    `${server.url}/mokly-viewer/diffs/review.json?refresh=1`,
+    {
+      signal: controller.signal,
+    },
+  );
   await refreshStarted.promise;
   controller.abort();
   await assert.rejects(refresh, { name: "AbortError" });

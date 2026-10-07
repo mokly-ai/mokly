@@ -1,5 +1,5 @@
 /** Optional changed-route detection powering the Browse changed/all filter. */
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../build/compile.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -8,7 +8,6 @@ import {
   removedManifestEntries,
   type CatalogueChangeSnapshot,
 } from "../registry/changes.js";
-import { readManifest } from "../registry/manifest.js";
 import {
   acceptedGenerationFromCompilation,
   type AcceptedGeneration,
@@ -16,10 +15,8 @@ import {
 import type { ChangeEvidence } from "../review/change_evidence.js";
 import type { ReadOnlyReviewRepository } from "../review/repository.js";
 
-import {
-  readCatalogueChanges,
-  type ComponentChangeSnapshot,
-} from "./component_changes.js";
+import type { ComponentChangeSnapshot } from "./component_change_types.js";
+import { readCatalogueChanges } from "./component_changes.js";
 
 /** Impact and ownership evidence resolved together from one baseline. */
 export interface ResolvedCatalogueChanges extends CatalogueChangeSnapshot {
@@ -46,15 +43,12 @@ export async function computeCatalogueChanges(
   config: ResolvedConfig,
   base: string,
   git: ReadOnlyReviewRepository,
-  manifest?: ManifestV8,
+  manifest?: ManifestV9,
   acceptedEvidence?: ChangeEvidence,
   accepted?: AcceptedGeneration,
 ): Promise<ResolvedCatalogueChanges> {
-  const compilation =
-    config.generatedOutput === "derived" && !manifest
-      ? await compileCatalogue(config)
-      : undefined;
-  manifest ??= compilation?.manifest ?? readManifest(config);
+  const compilation = manifest ? undefined : await compileCatalogue(config);
+  manifest ??= compilation!.manifest;
   const commit = await git.evidence.mergeBase(base, "HEAD");
   const componentChanges = await readCatalogueChanges(
     config,
@@ -72,7 +66,7 @@ export async function computeCatalogueChanges(
   const moves = componentChanges.pairing?.moves ?? [];
   const removedEntries = removedManifestEntries(manifest, baseline, moves);
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     movedEntries: moves.map(({ path, previousPath }) => ({
       path,
       previousPath,

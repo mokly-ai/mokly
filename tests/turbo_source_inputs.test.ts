@@ -6,7 +6,7 @@ import test from "node:test";
 import { promisify } from "node:util";
 
 import { repositoryRoot } from "./helpers/fixture.js";
-import { createTurboFixture } from "./helpers/turbo_fixture.js";
+import { createTurboFixture, runTurbo } from "./helpers/turbo_fixture.js";
 
 const execute = promisify(execFile);
 
@@ -85,61 +85,35 @@ test("viewer asset copying excludes ignored leftovers", async (context) => {
     });
 });
 
-test("example cleanup clears only output patterns and does not follow linked directories", async (context) => {
-  const root = await createTurboFixture(context);
-  const generated = path.join(root, "examples/basic/generated");
-  const css = await fs.readFile(path.join(generated, "styles.css"));
-  const outputs = [
-    "nested/unowned.html",
-    "mokly-manifest.json",
-    "example/workspace.svg",
-    "mokly-generated/styles/stale.css",
-  ];
-  for (const relative of outputs) {
-    await fs.mkdir(path.dirname(path.join(generated, relative)), {
-      recursive: true,
-    });
-    await fs.writeFile(path.join(generated, relative), "generated output\n");
-  }
+test("example builds replace disposable output and reject linked output roots", async (context) => {
+  const root = await createTurboFixture(context, true);
+  await runTurbo(root, ["run", "build:package"]);
+  const generated = path.join(root, "examples/basic/mokly-generated");
+  const css = path.join(root, "examples/basic/styles.css");
+  const authored = await fs.readFile(css);
+  await fs.mkdir(generated, { recursive: true });
+  const stale = path.join(generated, "unowned-cache-proof.html");
+  await fs.writeFile(stale, "stale output");
+  const build = () =>
+    execute(
+      process.execPath,
+      [
+        path.join(repositoryRoot, "dist/cli/bin.js"),
+        "build",
+        "--config",
+        "examples/basic/mokly.config.ts",
+      ],
+      { cwd: root, maxBuffer: 8_000_000 },
+    );
+  await build();
+  await assert.rejects(fs.access(stale), { code: "ENOENT" });
+  assert.deepEqual(await fs.readFile(css), authored);
   const external = path.join(root, ".context/external");
   await fs.mkdir(external, { recursive: true });
-  await fs.writeFile(path.join(external, "keep.html"), "authored HTML\n");
-  await fs.symlink(external, path.join(generated, "linked"), "junction");
-  const clean = () =>
-    execute(process.execPath, [
-      path.join(root, "scripts/clean.mjs"),
-      "--example",
-    ]);
-  await clean();
-  for (const relative of outputs)
-    await assert.rejects(fs.access(path.join(generated, relative)), {
-      code: "ENOENT",
-    });
-  assert.deepEqual(await fs.readFile(path.join(generated, "styles.css")), css);
-  assert.equal(
-    await fs.readFile(path.join(external, "keep.html"), "utf8"),
-    "authored HTML\n",
-  );
-  await fs.rename(generated, path.join(root, ".context/held-generated"));
+  const keep = path.join(external, "keep.html");
+  await fs.writeFile(keep, "authored HTML");
+  await fs.rm(generated, { recursive: true });
   await fs.symlink(external, generated, "junction");
-  await clean();
-  assert.equal(
-    await fs.readFile(path.join(external, "keep.html"), "utf8"),
-    "authored HTML\n",
-  );
-  await fs.mkdir(path.join(external, "generated"));
-  await fs.writeFile(
-    path.join(external, "generated/keep.html"),
-    "authored HTML\n",
-  );
-  await fs.rename(
-    path.join(root, "examples/basic"),
-    path.join(root, ".context/held-basic"),
-  );
-  await fs.symlink(external, path.join(root, "examples/basic"), "junction");
-  await clean();
-  assert.equal(
-    await fs.readFile(path.join(external, "generated/keep.html"), "utf8"),
-    "authored HTML\n",
-  );
+  await assert.rejects(build());
+  assert.equal(await fs.readFile(keep, "utf8"), "authored HTML");
 });

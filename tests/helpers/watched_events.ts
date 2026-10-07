@@ -12,7 +12,7 @@ interface WatchedResourceOptions<Value> {
   readonly fetcher?: typeof fetch;
 }
 
-/** One complete event from a watched catalogue's `/__mokly/events` stream. */
+/** One complete event from a watched catalogue's `/mokly-viewer/events` stream. */
 export interface WatchedStreamEvent {
   readonly kind: string | undefined;
   readonly version: number;
@@ -128,9 +128,12 @@ export async function waitForWatchedResource<Value>(
     lastContentVersion = initialContent;
     while (!controller.signal.aborted) {
       try {
-        const response = await fetcher(`${options.origin}/__mokly/events`, {
-          signal: controller.signal,
-        });
+        const response = await fetcher(
+          `${options.origin}/mokly-viewer/events`,
+          {
+            signal: controller.signal,
+          },
+        );
         for await (const { kind, version } of watchedEvents(response)) {
           if (!edited && kind === "ready") {
             edited = true;
@@ -197,7 +200,7 @@ export async function waitForBrowserReload(
   let edited = false;
   try {
     while (!controller.signal.aborted) {
-      const response = await fetch(`${url}/__mokly/events`, {
+      const response = await fetch(`${url}/mokly-viewer/events`, {
         signal: controller.signal,
       });
       for await (const { kind, version } of watchedEvents(response)) {

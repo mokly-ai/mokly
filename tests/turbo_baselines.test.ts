@@ -43,7 +43,7 @@ test("linked-worktree baselines build each commit's package and viewer without T
   );
   assert.equal(
     packageMetadata.scripts["example:build"],
-    `node scripts/clean.mjs --example && ${directBaselineCommands[4].join(" ")}`,
+    directBaselineCommands[4].join(" "),
   );
   const root = await createTurboFixture(context);
   const packageSource = path.join(root, "src/index.ts");

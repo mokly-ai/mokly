@@ -1,3 +1,4 @@
+export type { StaticDeliveryParseResult } from "./navigation/delivery.js";
 export { parseStaticDelivery } from "./navigation/delivery.js";
 export type { StaticDelivery } from "./navigation/delivery.js";
 export {
@@ -127,7 +128,7 @@ export type {
 } from "./navigation/routes.js";
 export type {
   ReviewEntryAddress,
-  ScreenReviewV5,
+  ScreenReviewV6,
   ReviewVariantAddress,
   ComponentVariantReview,
   ComponentReview,
@@ -136,7 +137,7 @@ export type {
   ComponentUsageContext,
   AffectedUsageEvidence,
   AffectedConsumer,
-  ReviewResultV5,
+  ReviewResultV6,
 } from "./review/component_types.js";
 export { affectedConsumerOrderKey } from "./review/order.js";
 export type {
@@ -176,7 +177,7 @@ export type {
   ManifestDocument,
   ManifestFolder,
   ManifestEntry,
-  ManifestV8,
+  ManifestV9,
   Manifest,
   HistoricalManifestEntry,
   HistoricalManifestScreen,
@@ -185,6 +186,14 @@ export type {
   HistoricalManifest,
 } from "./registry/types.js";
 export { reviewMaterialKey } from "./data/material_key.js";
+export {
+  GENERATED_DIRECTORY,
+  VIEWER_DIRECTORY,
+  generatedResourcePath,
+  generatedResourceRoute,
+  currentDocumentPath,
+  currentDocumentRoute,
+} from "./catalogue/delivery_paths.js";
 export {
   ComponentRenderError,
   renderStatus,
@@ -200,3 +209,5 @@ export {
   isPortableUrlPath,
   encodeUrlPath,
 } from "./data/paths.js";
+
+export { MoklyVersionError } from "./catalogue/version_error.js";

@@ -23,8 +23,17 @@ test("committed example fixtures remove the complete multiline baseline recipe",
   );
   context.after(() => fs.rm(root, { recursive: true, force: true }));
   const config = await createCommittedExampleBaseline(root, "ordinary-preview");
-  assert.equal(config.generatedOutput, "committed");
-  assert.equal(config.review.baselineBuild, undefined);
+  assert.deepEqual(config.review.baselineBuild, [
+    ["npm", "ci"],
+    [
+      "npx",
+      "--no-install",
+      "mokly",
+      "build",
+      "--config",
+      "examples/basic/mokly.config.ts",
+    ],
+  ]);
 });
 
 test("the example fixture rebuilds an untracked baseline from its own source and lockfile", async (t) => {
@@ -39,17 +48,16 @@ test("the example fixture rebuilds an untracked baseline from its own source and
     await fs.readFile(path.join(repositoryRoot, "turbo.json"), "utf8"),
   );
   await fs.access(path.join(root, "scripts/clean.mjs"));
-  assert.equal(config.generatedOutput, "derived");
   const tracked = (
-    await execute("git", ["ls-files", "examples/basic/generated"], {
+    await execute("git", ["ls-files", "examples/basic"], {
       cwd: root,
     })
   ).stdout
     .trim()
-    .split("\n");
-  assert.ok(tracked.length > 0);
-  assert.ok(tracked.every((file) => file.endsWith(".css")));
-  const manifestPath = path.join(config.mockupsDir, "mokly-manifest.json");
+    .split("\n")
+    .filter((file) => file.endsWith(".css"));
+  assert.equal(tracked.length, 34);
+  const manifestPath = path.join(config.generatedDir, "mokly-manifest.json");
   await assert.rejects(fs.access(manifestPath), { code: "ENOENT" });
   const prepared = await prepareReviewRepository(config, "HEAD");
   assert.ok(prepared.reader instanceof RebuiltBaselineReader);
@@ -57,7 +65,7 @@ test("the example fixture rebuilds an untracked baseline from its own source and
     JSON.parse(
       await prepared.reader.readFile(
         prepared.commit,
-        "examples/basic/generated/mokly-manifest.json",
+        "examples/basic/mokly-generated/mokly-manifest.json",
       ),
     ),
   );

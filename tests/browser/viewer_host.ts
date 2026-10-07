@@ -47,7 +47,7 @@ export async function hostExportedViewer(
   });
   const artifact = await serveStaticFiles(output);
   const catalogue: unknown = JSON.parse(
-    await fs.readFile(path.join(output, "__mokly/catalogue.json"), "utf8"),
+    await fs.readFile(path.join(output, "mokly-viewer/catalogue.json"), "utf8"),
   );
   const data = JSON.stringify({
     catalogue,

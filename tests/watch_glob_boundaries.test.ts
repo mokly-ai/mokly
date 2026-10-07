@@ -163,7 +163,7 @@ test("watch pruning derives denied-leaf directory status from supplied stats", a
   assert.equal(isPackageOwnedIgnoredWatchPath(deniedLeaf, config), false);
   assert.equal(isPackageOwnedIgnoredWatchPath(unowned, config), false);
   assert.ok(calls.readFileSync > 0);
-  assert.ok(calls.openSync > 0);
+  assert.equal(calls.openSync, 0);
 });
 
 test("unlink of an ordinary matched entry rebuilds and add beneath dist stays ignored", async (context) => {

@@ -1,5 +1,6 @@
 /** Source and usage projection for saved and temporary stage views. */
 
+import { currentDocumentPath } from "../catalogue/delivery_paths.js";
 import type {
   ShellCatalogueUsage,
   ShellCatalogueView,
@@ -27,7 +28,7 @@ export function frameSource(
 ): string | undefined {
   if (!view) return;
   return framePath(
-    `static/${viewRoute(entry.path, view.viewport, view.colorScheme)}`,
+    currentDocumentPath(viewRoute(entry.path, view.viewport, view.colorScheme)),
     stepIndex === undefined || stepIndex === 0 ? fragment : undefined,
   );
 }
@@ -61,7 +62,7 @@ export function generatedFrameSource(
 ): string {
   const source = view.path.startsWith("/")
     ? view.path
-    : `/static/${encodeUrlPath(view.path)}`;
+    : framePath(currentDocumentPath(view.path));
   return fragment && (stepIndex === undefined || stepIndex === 0)
     ? `${source}#${encodeURIComponent(fragment)}`
     : source;

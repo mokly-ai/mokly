@@ -152,7 +152,7 @@ async function buildScenario(
   const stylesheet = compiled.outputs.get(entryStyle) as string;
   const assets = new Map(
     [...compiled.outputs]
-      .filter(([route]) => route.startsWith("mokly-generated/assets/"))
+      .filter(([route]) => route.startsWith("assets/"))
       .map(
         ([route, bytes]) => [route, Buffer.from(bytes as Uint8Array)] as const,
       ),
@@ -207,8 +207,5 @@ for (const scenario of scenarios)
           assert.ok(output.includes(marker), `${marker}: ${output}`);
     }
     for (const asset of scenario.assets ?? [])
-      assert.ok(
-        module.assets.has(`mokly-generated/assets/entries/${asset}`),
-        asset,
-      );
+      assert.ok(module.assets.has(`assets/entries/${asset}`), asset);
   });

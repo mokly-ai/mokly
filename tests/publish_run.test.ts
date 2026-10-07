@@ -33,7 +33,7 @@ test("publish exchanges the pinned export and returns counts", async () => {
     viewerUrl: "https://mokly.ai/catalogues/one",
   });
   assert.deepEqual(fixture.metadata(), {
-    schemaVersion: 1,
+    schemaVersion: 2,
     moklyVersion: "1.2.3",
     repository: { host: "github.com", owner: "team", name: "catalogue" },
     branch: "feature",

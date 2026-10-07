@@ -11,12 +11,12 @@ test("cache restore repairs owned bytes without cleaning extra files or authored
   const files = [
     "dist/index.js",
     "packages/viewer/dist/index.js",
-    "examples/basic/generated/mokly-manifest.json",
+    "examples/basic/mokly-generated/mokly-manifest.json",
   ];
   const expected = await Promise.all(
     files.map((file) => fs.readFile(path.join(root, file))),
   );
-  const css = path.join(root, "examples/basic/generated/styles.css");
+  const css = path.join(root, "examples/basic/styles.css");
   const authored = await fs.readFile(css);
   await fs.rm(path.join(root, files[0]!));
   await fs.writeFile(path.join(root, files[1]!), "corrupted output\n");
@@ -47,13 +47,15 @@ test("forced task execution clears stale package outputs before caching", async 
 
 test("example execution excludes ignored unowned HTML from cache artifacts", async (context) => {
   const root = await createTurboFixture(context, true);
-  const generated = path.join(root, "examples/basic/generated");
-  const css = await fs.readFile(path.join(generated, "styles.css"));
+  const generated = path.join(root, "examples/basic/mokly-generated");
+  const cssPath = path.join(root, "examples/basic/styles.css");
+  const css = await fs.readFile(cssPath);
+  await fs.mkdir(generated, { recursive: true });
   const extra = path.join(generated, "unowned-cache-proof.html");
   await fs.writeFile(extra, "<!doctype html><title>unowned</title>\n");
   await runTurbo(root, ["run", "example:build", "--force"]);
   await assert.rejects(fs.access(extra), { code: "ENOENT" });
-  assert.deepEqual(await fs.readFile(path.join(generated, "styles.css")), css);
+  assert.deepEqual(await fs.readFile(cssPath), css);
   const restored = await runTurbo(root, ["run", "example:build"]);
   assert.match(restored, /3 cached, 3 total/);
   await assert.rejects(fs.access(extra), { code: "ENOENT" });

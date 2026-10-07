@@ -608,6 +608,10 @@ before the merge.
 - [x] Run one deploy with that token from the admin's machine before merge to
       prove the permission is enough. Done on 2026-10-07; see
       `.context/turborepo-cloudflare-remote-cache/provisioning-2026-10-07.md`.
+- [x] Preserve main's dependency updates, generated-output migration, renderer
+      typecheck and Testbox executor. Resolve conflicts path by path. Update
+      Turbo outputs, imported-asset inputs, baseline fixtures and cleanup tests
+      for the disposable mokly-generated tree; keep baselines outside Turbo.
 - [ ] Add `environment: turbo-cache-deploy` to the deploy job in
       `turbo-cache.yml` and assert it in `tests/turbo_cache_workflow.test.ts`.
       The token is not a repository secret, so the job cannot deploy without it.
@@ -690,6 +694,9 @@ before the merge.
 - [ ] Review the complete local diff against `origin/main` with
       `docs/implementation-review-prompt.md` after the push. Report findings
       without changing the implementation.
+
+Evidence: `.context/turborepo-cloudflare-remote-cache/m4-validation.md`.
+Main integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-main-decisions.md`.
 
 ## Post-merge follow-up (non-blocking)
 

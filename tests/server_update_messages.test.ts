@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { baselineCatalogue } from "../dist/baseline/catalogue.js";
 import {
   childUpdateMessage,
   parseChildUpdateMessage,
@@ -133,6 +134,10 @@ test("baseline handoffs preserve pinned commits and explicit revocation", () => 
       "pending",
       "evidence",
       commit,
+      commit === null ? undefined : "blobs",
+      commit === null
+        ? undefined
+        : baselineCatalogue(commit, "mockups", "generated-v9"),
     );
     assert.equal(message.baselineCommit, commit);
     assert.deepEqual(parseChildUpdateMessage(message), message);
@@ -161,7 +166,7 @@ test("catalogue completion accepts manifest v8 and rejects the preceding v7 enve
     generation: "a".repeat(32),
     version: 1,
     manifest: {
-      schemaVersion: 8,
+      schemaVersion: 9,
       generatedBy: "mokly",
       entries: [],
       folders: [],

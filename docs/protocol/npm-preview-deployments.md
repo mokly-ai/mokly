@@ -37,14 +37,14 @@ the deployment result, URL, commit, and workflow run. Fork pull requests never
 receive Cloudflare credentials or write-capable execution.
 
 `npm run preview:build` first prepares Mokly through Turbo, then directly builds
-its derived basic consumer.
+its basic consumer output.
 The repository-only preview builder starts the real Browse server on an
 ephemeral loopback port and snapshots the home, not-found, and current entry
 shells at `view/<path>/index.html`, plus removed-entry shells only when Changes
 is included. It copies the
 shell stylesheet, browser and shared navigation modules, fonts, and every
 validated public consumer asset into `.context/mokly-preview`. HTML copies pass
-through the same manifest/header-aware logical-link adapter as served Browse;
+through the same validated logical-link adapter as served Browse;
 unowned reserved metadata is removed and invalid trusted output fails the
 build. Preview shell links use the canonical `/view/<path>/` URLs, which
 Cloudflare Pages serves from `view/<path>/index.html` without rewrites; static
@@ -61,8 +61,9 @@ one merge-base commit for impact and screen and component variant comparisons
 and rejects any input mutation during capture. It packages comparison JSON and
 isolated resources under an immutable generation path; visitors fetch them only
 after selecting a diff. Refresh loads that same published result. Unavailable
-requested baselines or invalid comparisons abort the build without replacing
-previous output.
+history or invalid comparisons abort the build without replacing previous output.
+A recognized earlier baseline instead publishes current content with Changes
+unavailable under [baseline compatibility](./mokly-baseline-compatibility.md).
 
 Both options omit the live-update entrypoint, watch-only modules, event routes,
 and stale comparison directories. Full history remains available in both jobs.
@@ -74,9 +75,8 @@ absent change evidence never invents a status. Pages retain Changes membership
 but never offer visual comparisons. The
 [Changes contract](./mokly-changes.md) owns the shared interaction and snapshot
 rules. Artifact replacement uses the shared exclusive reservation, ownership
-inventory, and rollback transaction. The adapter requires current schema-2
-export ownership; an earlier `.mokly-preview-artifact` cannot authorize replacing
-any file or adopting pre-derived `view/` paths. See [export safety](./mokly-export-safety.md).
+inventory and rollback transaction. Every adapter adopts only an empty
+directory or an artifact with a valid current ownership marker.
 
 Closing a same-repository pull request marks its sticky comment inactive and
 attempts to delete all Cloudflare deployments carrying that PR branch alias.

@@ -80,9 +80,9 @@ declare function postMessageAdapter(options: {
 }): FrameAdapter;
 ```
 
-Each mount owns one immediate viewer-created frame and its current URL/usage.
-The host supplies the selected catalogue view URL; the adapter confines it to
-current `/static/` HTML paths, the configured origin and a valid logical hash.
+Current frames derive routes from `url` under `/static/mokly-generated/`; no prefix or route override exists.
+
+Mount validation follows [generated delivery](./mokly-generated-delivery.md#frames-and-reverse-mapping).
 Caller-approved query parameters are retained; no selectors or comparison paths
 are accepted. Mount navigates with iframe history replacement semantics; the
 React shell retains its initial portable `src` after an adapter takes ownership.
@@ -284,11 +284,11 @@ Ready/requests time out after five seconds, disposing the session without retrie
 Disposal/unload clears all work; a fresh mount loads a new document and nonce.
 At most 16 requests are pending.
 
-## Wire Protocol v1
+## Wire Protocol v2
 
 Every message is a JSON string of at most 262,144 UTF-8 bytes; reject nonstrings
 or oversized strings before JSON parsing. The exact envelope is
-`{ channel: "mokly-inspector", version: 1, nonce, type, ...fields }`.
+`{ channel: "mokly-inspector", version: 2, nonce, type, ...fields }`.
 All objects must be plain JSON objects with exactly the fields for their
 discriminant; reject unknown keys recursively, unsupported versions/types,
 duplicates in key/range arrays, invalid numbers and broken references. Do not

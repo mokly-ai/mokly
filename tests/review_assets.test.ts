@@ -8,13 +8,12 @@ import { promisify } from "node:util";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
-import { copySnapshotDependencies } from "../dist/review/assets.js";
-import {
-  NodeGitCommandRunner,
-  CommittedRepository,
-} from "../dist/review/git.js";
+import { gitBlobHash } from "../dist/registry/blob_hash.js";
+import { serializeManifest } from "../dist/registry/manifest.js";
 import { runReview } from "../dist/review/run.js";
+import { copySnapshotDependencies } from "../dist/review/snapshot_resources.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import {
   createFixture,
   removeFixture,
@@ -69,7 +68,6 @@ test("Review copies local stylesheet dependencies for both snapshots", async (co
     fixture.configPath,
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
-  generatedOutput: "committed",
   roots: [{ dir: "entries" }],
   mockupsDir: "mockups",
   repoRoot: ".",
@@ -95,7 +93,7 @@ export default defineConfig({
     config,
     "HEAD",
     config.review.outDir,
-    new CommittedRepository(new NodeGitCommandRunner(fixture.root)),
+    committedReviewRepository(config),
   );
 
   for (const side of ["before", "after"]) {
@@ -126,7 +124,6 @@ test("Review rejects base dependencies beneath authored source roots", async (co
     fixture.configPath,
     `import { defineConfig } from "@mokly/mokly";
 export default defineConfig({
-  generatedOutput: "committed",
   roots: [{ dir: "mockups/src/entries" }],
   mockupsDir: "mockups",
   repoRoot: ".",
@@ -136,12 +133,12 @@ export default defineConfig({
   );
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
-  const baseFragment = path.join(fixture.mockupsDir, "home/index.mobile.html");
+  const baseFragment = path.join(config.generatedDir, "home/index.mobile.html");
   await fs.promises.writeFile(
     baseFragment,
     (await fs.promises.readFile(baseFragment, "utf8")).replace(
       "</body>",
-      '<script src="../src/entries/fixture.mockup.tsx"></script></body>',
+      '<script src="../../src/entries/fixture.mockup.tsx"></script></body>',
     ),
   );
   await git(fixture.root, ["init", "-q"]);
@@ -161,7 +158,7 @@ export default defineConfig({
         config,
         "HEAD",
         config.review.outDir,
-        new CommittedRepository(new NodeGitCommandRunner(fixture.root)),
+        committedReviewRepository(config),
       ),
     /not a public static file/,
   );
@@ -172,7 +169,7 @@ test("Review rejects non-regular base dependency blobs", async (context) => {
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
-  const baseFragment = path.join(fixture.mockupsDir, "home/index.mobile.html");
+  const baseFragment = path.join(config.generatedDir, "home/index.mobile.html");
   await fs.promises.symlink(
     "../notes.md",
     path.join(fixture.mockupsDir, "linked.css"),
@@ -181,9 +178,19 @@ test("Review rejects non-regular base dependency blobs", async (context) => {
     baseFragment,
     (await fs.promises.readFile(baseFragment, "utf8")).replace(
       "</head>",
-      '<link rel="stylesheet" href="../linked.css" /></head>',
+      '<link rel="stylesheet" href="../../linked.css" /></head>',
     ),
   );
+  const manifestPath = path.join(config.generatedDir, "mokly-manifest.json");
+  const baseline = JSON.parse(await fs.promises.readFile(manifestPath, "utf8"));
+  baseline.assetClosure = ["linked.css"];
+  baseline.generatedFiles.find(
+    (file: { path: string }) => file.path === "home/index.mobile.html",
+  ).blobHash = gitBlobHash(
+    await fs.promises.readFile(baseFragment),
+    baseline.blobHashAlgorithm,
+  );
+  await fs.promises.writeFile(manifestPath, serializeManifest(baseline));
   await git(fixture.root, ["init", "-q"]);
   await git(fixture.root, ["config", "user.name", "Mokly Test"]);
   await git(fixture.root, ["config", "user.email", "mokly@example.invalid"]);
@@ -201,7 +208,7 @@ test("Review rejects non-regular base dependency blobs", async (context) => {
         config,
         "HEAD",
         config.review.outDir,
-        new CommittedRepository(new NodeGitCommandRunner(fixture.root)),
+        committedReviewRepository(config),
       ),
     /not a regular Git file/,
   );
@@ -212,9 +219,9 @@ test("Review rejects a base pane stored as a Git symlink", async (context) => {
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
-  const fragment = path.join(fixture.mockupsDir, "home/index.mobile.html");
+  const fragment = path.join(config.generatedDir, "home/index.mobile.html");
   await fs.promises.rm(fragment);
-  await fs.promises.symlink("../../notes.md", fragment);
+  await fs.promises.symlink("../../../notes.md", fragment);
   await git(fixture.root, ["init", "-q"]);
   await git(fixture.root, ["config", "user.name", "Mokly Test"]);
   await git(fixture.root, ["config", "user.email", "mokly@example.invalid"]);
@@ -233,7 +240,7 @@ test("Review rejects a base pane stored as a Git symlink", async (context) => {
         config,
         "HEAD",
         config.review.outDir,
-        new CommittedRepository(new NodeGitCommandRunner(fixture.root)),
+        committedReviewRepository(config),
       ),
     /not a regular Git file/,
   );

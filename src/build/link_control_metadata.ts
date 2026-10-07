@@ -1,9 +1,8 @@
-/** Parsed ownership rules shared by child adaptation and compatibility output. */
+/** Parsed ownership rules for explicit child-link adaptation. */
 
 import { parse } from "parse5";
 
 import {
-  attribute,
   CHILD_MARKER,
   CONTROL_MARKER,
   controlError,
@@ -69,56 +68,8 @@ export function parseControlMetadata(
   return { document, duplicateOffsets, markers, owners };
 }
 
-/** Compatibility output must not reintroduce unresolved authoring markers. */
+/** Reject unconsumed child-link authoring markers. */
 export function assertNoChildLinkMarkers(html: string, route: string): void {
   if (parseControlMetadata(html, route)?.markers.length)
     throw controlError(route, "has unconsumed markers");
-}
-
-/** Preserve generated metadata and its logical owner across migration edits. */
-export function validateControlMetadata(
-  original: string,
-  transformed: string,
-  route: string,
-): void {
-  const expected = metadataRecords(original, route);
-  const actual = metadataRecords(transformed, route);
-  if (
-    expected.length !== actual.length ||
-    expected.some((record, index) => record !== actual[index])
-  ) {
-    throw controlError(route, "changed reserved adaptation metadata records");
-  }
-}
-
-function metadataRecords(html: string, route: string): string[] {
-  const parsed = parseControlMetadata(html, route);
-  if (parsed?.markers.length)
-    throw controlError(route, "has unconsumed markers");
-  return (parsed?.owners ?? [])
-    .map(({ node, inTemplate }) =>
-      JSON.stringify({
-        inTemplate,
-        namespace: node.namespaceURI,
-        tag: node.tagName,
-        attributes: node.attrs
-          .filter(
-            (attr) =>
-              attr.name.startsWith(CONTROL_MARKER) ||
-              ["id", "href", "data-nav-href", "data-mokly-link"].includes(
-                attr.name,
-              ),
-          )
-          .map(({ name, value }) => ({ name, value }))
-          .sort((left, right) => left.name.localeCompare(right.name)),
-        ...(attribute(node, `${CONTROL_MARKER}-styles`) === undefined
-          ? {}
-          : {
-              stylesheet: node.childNodes
-                .map((child) => ("value" in child ? child.value : ""))
-                .join(""),
-            }),
-      }),
-    )
-    .sort();
 }

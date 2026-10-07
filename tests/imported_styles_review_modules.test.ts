@@ -43,9 +43,7 @@ for (const module of [false, true]) {
     for (const name of assets) {
       assert.deepEqual(
         Buffer.from(
-          compiled.outputs.get(
-            `mokly-generated/assets/entries/${name}`,
-          ) as Uint8Array,
+          compiled.outputs.get(`assets/entries/${name}`) as Uint8Array,
         ),
         Buffer.from([0, 255, 17]),
         name,

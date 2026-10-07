@@ -111,7 +111,7 @@ export async function createTurboFixture(
   const files = stdout
     .split("\0")
     .filter((file) =>
-      /^(?:src\/|packages\/viewer\/|examples\/basic\/|docs\/protocol\/|scripts\/(?:copy-assets|clean)\.mjs$|(?:package(?:-lock)?\.json|turbo\.json|tsconfig(?:\.build)?\.json|README\.md|AGENTS\.md|\.gitignore)$)/.test(
+      /^(?:src\/|packages\/viewer\/|examples\/(?:basic|imported-assets)\/|docs\/protocol\/|scripts\/(?:copy-assets|clean)\.mjs$|(?:package(?:-lock)?\.json|turbo\.json|tsconfig(?:\.build)?\.json|README\.md|AGENTS\.md|\.gitignore)$)/.test(
         file,
       ),
     );

@@ -91,14 +91,14 @@ test("reserved configuration rejects only deliberate generated-directory targets
     ],
     [
       { roots: [{ dir: "entries" }], publicExclude: ["mokly-generated/**"] },
-      "publicExclude must not start with mokly-generated/: mokly-generated/**; narrow the exclusion to consumer-owned paths",
+      "publicExclude was removed; remove it; only referenced authored assets are public",
     ],
     [
       {
         roots: [{ dir: "entries" }],
         publicExclude: ["{public,mokly-generated}/**"],
       },
-      "publicExclude must not start with mokly-generated/: {public,mokly-generated}/**; narrow the exclusion to consumer-owned paths",
+      "publicExclude was removed; remove it; only referenced authored assets are public",
     ],
   ] as const;
   for (const [value, message] of invalid)
@@ -114,12 +114,13 @@ test("reserved configuration rejects only deliberate generated-directory targets
     ["**/drafts/**"],
     ["**/mokly-generated/**"],
   ])
-    assert.deepEqual(
-      resolveConfig(
-        { ...common, roots: [{ dir: "entries" }], publicExclude },
-        fixture.configPath,
-      ).publicExclude.slice(-1),
-      publicExclude,
+    assert.throws(
+      () =>
+        resolveConfig(
+          { ...common, roots: [{ dir: "entries" }], publicExclude },
+          fixture.configPath,
+        ),
+      /publicExclude was removed/,
     );
 });
 
@@ -172,10 +173,7 @@ test("generated asset routes accept every documented extension", async (t) => {
     "woff2",
   ])
     assert.doesNotThrow(() =>
-      validateGeneratedOutputPaths(
-        [`mokly-generated/assets/img/example.${extension}`],
-        config,
-      ),
+      validateGeneratedOutputPaths([`assets/img/example.${extension}`], config),
     );
 });
 
@@ -262,7 +260,7 @@ test("configured paths cannot alias the reserved directory", async (t) => {
   }
 });
 
-test("Build reports reserved symlinks before inventorying another reserved source", async (t) => {
+test("compilation rejects selected generated input without inspecting stale tree contents", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const reserved = path.join(fixture.mockupsDir, "mokly-generated", "styles");
@@ -275,6 +273,6 @@ test("Build reports reserved symlinks before inventorying another reserved sourc
   );
   await assert.rejects(
     compileCatalogue(await loadConfig(fixture.root)),
-    /mokly-generated\/ contains a symlink or non-regular entry: mockups\/mokly-generated\/styles\/a-symlink.css; delete it before building or checking/,
+    /authoring input is inside mokly-generated|CSS.*generated output/,
   );
 });

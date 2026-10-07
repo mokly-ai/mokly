@@ -146,12 +146,12 @@ the defining module.
 
 Build renders a variant exactly as it renders any entry of its kind: one
 document per effective viewport and color scheme through the consumer
-renderer, with the same ownership header, link rewriting, fragment validation,
-resource validation, compatibility transformation, collision and orphan
+renderer, with the same plain generated marker, link rewriting, fragment validation,
+resource validation, collision and generated-inventory
 checks, and transactional writes. A component parent has no views; its page
 shows its first variant entry.
 
-The manifest is schema v8. `variantOf` is present exactly on variant entries
+The manifest is schema v9. `variantOf` is present exactly on variant entries
 of either kind and holds the parent's path under the
 [manifest contract](./mokly-component-manifest.md). Validation requires the
 named parent to be a current entry of the same kind without `variantOf` and
@@ -183,7 +183,7 @@ rows, parent-kind icons, sibling navigation, comparison-mode retention,
 aggregate Changes behavior, removed-variant order and breadcrumbs, Dark
 availability, and public Viewer parity. The public model carries `variantOf`
 exactly on variants and places current variants in their parent's tree node;
-catalogue v4 readers validate those relationships.
+catalogue v5 readers validate those relationships.
 
 ## Verification
 

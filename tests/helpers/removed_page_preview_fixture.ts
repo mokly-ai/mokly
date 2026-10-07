@@ -14,10 +14,11 @@ import type {
   GitFileKind,
 } from "../../dist/review/git.js";
 
+import { currentManifest } from "./current_manifest.js";
 import { createFixture, removeFixture } from "./fixture.js";
 
 export const PAGE_COMMIT = "b".repeat(40);
-export const PAGE_ROUTE = "guide/index.html";
+export const PAGE_ROUTE = "mokly-generated/guide/index.html";
 
 interface BaselineFile {
   bytes?: Uint8Array;
@@ -39,13 +40,6 @@ export async function removedPagePreviewFixture(t: TestContext) {
     tags: ["guide"],
     title: "Guide",
   };
-  const baseline = {
-    entries: [page],
-    generatedBy: "mokly",
-    schemaVersion: 8 as const,
-    folders: [],
-    sourceFiles: ["entries/guide.mockup.tsx"],
-  } as HistoricalManifest;
   const files = new Map<string, BaselineFile>();
   const add = (route: string, content: string | Uint8Array): void => {
     files.set(`mockups/${route}`, {
@@ -55,7 +49,7 @@ export async function removedPagePreviewFixture(t: TestContext) {
   };
   add(
     PAGE_ROUTE,
-    '<!doctype html><link rel="stylesheet" href="../assets/main.css"><img src="../assets/direct.png"><iframe src="../assets/embed.html"></iframe><main>Baseline guide</main>',
+    '<!doctype html><link rel="stylesheet" href="../../assets/main.css"><img src="../../assets/direct.png"><iframe src="../../assets/embed.html"></iframe><main>Baseline guide</main>',
   );
   add(
     "assets/main.css",
@@ -68,6 +62,20 @@ export async function removedPagePreviewFixture(t: TestContext) {
   add("assets/background.png", Uint8Array.from([8, 9]));
   add("assets/nested.png", Uint8Array.from([10, 11]));
   add("assets/embedded.png", Uint8Array.from([12, 13]));
+  const metadata = currentManifest({
+    entries: [page],
+    generatedBy: "mokly",
+    schemaVersion: 9,
+    sourceFiles: ["entries/guide.mockup.tsx"],
+  });
+  const baseline: HistoricalManifest = {
+    ...metadata,
+    generatedBy: "mokly",
+    assetClosure: [...files.keys()]
+      .map((file) => file.slice("mockups/".length))
+      .filter((file) => !file.startsWith("mokly-generated/"))
+      .sort(),
+  };
   for (const [repoPath] of files) {
     const route = repoPath.slice("mockups/".length);
     const current = path.join(fixture.mockupsDir, route);
@@ -83,7 +91,7 @@ export async function removedPagePreviewFixture(t: TestContext) {
     baseRef: "main",
     changedEntries: [page.path],
     removedEntries: [{ entry: page, folderTitles: [] }],
-    schemaVersion: 2 as const,
+    schemaVersion: 3 as const,
   };
   return { ...fixture, batches, baseline, config, files, page, reader, source };
 }

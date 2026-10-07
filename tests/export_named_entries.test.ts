@@ -37,7 +37,9 @@ for (const mode of ["committed", "derived"] as const)
     });
     try {
       for (let attempt = 0; ; attempt++) {
-        const response = await fetch(`${server.url}/__mokly/catalogue.json`);
+        const response = await fetch(
+          `${server.url}/mokly-viewer/catalogue.json`,
+        );
         assert.equal(response.status, 200);
         const model = readCatalogue(await response.json());
         if (model.changesStatus === "ready") break;
@@ -48,8 +50,11 @@ for (const mode of ["committed", "derived"] as const)
       for (const name of BUILD_NAMES) {
         assert.equal((await fetch(`${server.url}/view/${name}/`)).status, 200);
         assert.equal(
-          (await fetch(`${server.url}/static/${name}/index.mobile.html`))
-            .status,
+          (
+            await fetch(
+              `${server.url}/static/mokly-generated/${name}/index.mobile.html`,
+            )
+          ).status,
           200,
         );
       }
@@ -63,7 +68,10 @@ for (const mode of ["committed", "derived"] as const)
     await assertCurrentFiles(outDir);
     const model = readCatalogue(
       JSON.parse(
-        await fs.readFile(path.join(outDir, "__mokly/catalogue.json"), "utf8"),
+        await fs.readFile(
+          path.join(outDir, "mokly-viewer/catalogue.json"),
+          "utf8",
+        ),
       ),
     );
     assert.ok(model.comparisonUrl);
@@ -75,7 +83,7 @@ for (const mode of ["committed", "derived"] as const)
             await fs.stat(
               path.join(
                 snapshots,
-                `snapshots/${side}/${name}/index.mobile.html`,
+                `snapshots/${side}/mokly-generated/${name}/index.mobile.html`,
               ),
             )
           ).isFile(),
@@ -101,7 +109,10 @@ for (const mode of ["committed", "derived"] as const)
       assert.ok(
         (
           await fs.stat(
-            path.join(snapshots, `snapshots/before/guides/${name}/index.html`),
+            path.join(
+              snapshots,
+              `snapshots/before/mokly-generated/guides/${name}/index.html`,
+            ),
           )
         ).isFile(),
       );
@@ -110,7 +121,7 @@ for (const mode of ["committed", "derived"] as const)
           await fs.stat(
             path.join(
               snapshots,
-              `snapshots/before/retired/${name}/index.mobile.html`,
+              `snapshots/before/mokly-generated/retired/${name}/index.mobile.html`,
             ),
           )
         ).isFile(),
@@ -137,7 +148,7 @@ async function assertCurrentFiles(outDir: string): Promise<void> {
   const files = await directoryFiles(outDir);
   for (const name of BUILD_NAMES) {
     assert.ok(files.has(`view/${name}/index.html`));
-    assert.ok(files.has(`static/${name}/index.mobile.html`));
+    assert.ok(files.has(`static/mokly-generated/${name}/index.mobile.html`));
     assert.ok(
       files.has(`static/mokly-generated/assets/assets/${name}/icon.svg`),
     );

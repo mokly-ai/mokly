@@ -45,7 +45,7 @@ test("Turbo configuration preserves guidance, integrity, and generated ownership
   )
     .split("\n")
     .filter((line) =>
-      line.replace(/^\//, "").startsWith("examples/basic/generated/"),
+      line.replace(/^\//, "").startsWith("examples/basic/mokly-generated/"),
     )
     .map((line) => line.replace(/^\//, "").replace(/\/$/, "/**"));
   assert.deepEqual(config.tasks["//#example:build"]!.outputs, ignored);
@@ -79,9 +79,10 @@ test("declared example inputs invalidate only the example task", async (context)
     "examples/basic/specs/catalogue.tsx",
     "examples/basic/mokly.config.ts",
     "examples/basic/renderer.tsx",
-    "examples/basic/generated/styles.css",
+    "examples/basic/styles.css",
     "examples/basic/postcss.config.mjs",
     "examples/basic/.browserslistrc",
+    "examples/imported-assets/workspace-note-signal.png",
     "docs/protocol/mokly-design-components.md",
   ])
     await withInputEdit(root, input, async () => {
@@ -154,10 +155,10 @@ test("unrelated files and ignored leftovers do not affect task hashes", async (c
     "src/.mokly-write-leftover/stale.ts",
     "src/.context/stale.ts",
     "src/dist/stale.js",
-    "examples/basic/generated/ignored/index.mobile.html",
-    "examples/basic/generated/mokly-manifest.json",
-    "examples/basic/generated/example/workspace.svg",
-    "examples/basic/generated/mokly-generated/stale.css",
+    "examples/basic/mokly-generated/ignored/index.mobile.html",
+    "examples/basic/mokly-generated/mokly-manifest.json",
+    "examples/basic/mokly-generated/example/workspace.svg",
+    "examples/basic/mokly-generated/styles/stale.css",
   ]) {
     const file = path.join(root, relative);
     const original = await fs.readFile(file).catch(() => undefined);

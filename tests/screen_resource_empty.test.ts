@@ -5,10 +5,10 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { capturePublicFiles } from "../dist/export/public_files.js";
 import { assembleExport } from "../dist/export/site.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
 for (const producer of ["live", "export"])
@@ -26,7 +26,7 @@ for (const producer of ["live", "export"])
           entryPath,
           (await fs.readFile(entryPath, "utf8")).replace(
             '<main id="home-mobile">',
-            '<main id="home-mobile"><link rel="stylesheet" href="../shared.css" />',
+            '<main id="home-mobile"><link rel="stylesheet" href="../../shared.css" />',
           ),
         );
       },
@@ -53,7 +53,13 @@ for (const producer of ["live", "export"])
       await compileCatalogue(fixture.config),
       changes.componentChanges!.baseline,
       comparison,
-      await capturePublicFiles(fixture.config),
+      await compileCatalogue(fixture.config).then((compilation) =>
+        capturePublicFiles(
+          fixture.config,
+          compilation.outputs,
+          compilation.manifest.assetClosure,
+        ),
+      ),
       [],
     );
     for (const screen of comparison.result.screens) {

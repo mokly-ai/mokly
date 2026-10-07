@@ -1,4 +1,4 @@
-# Root Discovery And Ownership
+# Root Discovery And Source Membership
 
 This complements [roots configuration](./mokly-configuration.md#roots).
 It defines the filesystem boundary shared by Build, Check, Serve and export.
@@ -28,7 +28,7 @@ its root, or resolves outside `repoRoot` through a symlink. A file below
 `mockupsDir` is protected authored source under the
 [source-protection contract](./mokly-source-protection.md), cannot be served
 or exported as a public file, and remains protected through aliases.
-Generated output is collision-checked against it.
+Authored input cannot be inside the generated tree, including through aliases.
 
 Discovery runs when the configuration is resolved, so every resolved config
 carries its sorted file set beside `roots`, and again at the start of each
@@ -36,16 +36,11 @@ compilation so watched Serve observes created, renamed, or deleted files as
 defined by the [watch contract](./mokly-watch.md). The set is retained beside
 `sourceFiles` across build, check, watched Serve, publication, and the
 component runtime; later stages consume it and never repeat the walk within
-one compilation. Generated HTML first needs the
-[current ownership header](./mokly-rendering-generated.md#ownership). Its
-repository-relative owner must be a resolved file, an inventoried source, or lie
-below a configured root and match one of its `files` globs with dotfile
-matching enabled. The match rule keeps output owned after a matched file is
-renamed, moved, or deleted, which the [move contract](./mokly-moves.md)
-depends on. An ownership header that satisfies none of the three branches is
-unclaimed: committed `check` reports it, while Build, Serve, and Export leave
-the file untouched. Registry attribution remains narrower and accepts only a
-resolved entry module or inventoried source.
+one compilation. Registry attribution accepts only a resolved entry module or
+an inventoried source. The generated tree contains output only and is replaced
+as a whole. Accepted generations retain the immutable
+[route set](./mokly-generation-routes.md); source-path headers do not grant
+replacement authority or affect discovery.
 
 A matched barrel that re-exports another matched module's definition object
 fails with the entry-module `duplicate-export` diagnostic. Narrow the globs, rename
@@ -53,15 +48,10 @@ the barrel so no glob matches it, or stop re-exporting definitions.
 
 ## Moving Defining Helpers
 
-An exporting module and its defining helper may move together. A previous valid
-v8 manifest supplies one additional ownership proof: the candidate is an exact
-artifact path derived from a recorded entry, its current encoded ownership header
-names that entry's `sourcePath`, and the manifest's `sourceFiles` includes the
-current configuration file. The prior manifest must be a regular file in this
-`mockupsDir`. This proof is checked again when the manifest changes. Missing,
-malformed, earlier, or foreign manifests grant no ownership. It never grants
-blanket ownership to every file naming a former source. Source denials and output
-confinement still apply before replacement or orphan cleanup.
+An exporting module and its defining helper may move together. The accepted
+generation derives their new output paths. Whole-tree replacement removes the
+previous paths. [Move pairing](./mokly-moves.md) uses each side's valid manifest
+and confined sources; it does not require an ownership header or local output.
 
 ## New Source Candidates
 
@@ -70,3 +60,34 @@ accepts them, including excluded files and invalid modules. File creation and
 removal still rebuild the source inventory after root-local traversal denials;
 folder exclusions only prevent entry collection. This protection grants no entry
 registration and adds no file to a historical manifest's source inventory.
+
+## Glob Validation
+
+Root `files` and directory-carried folder `exclude` use relative POSIX globs.
+Validate both the original string and every brace-expanded alternative. Reject
+non-strings, whitespace-only strings, leading `!` or `#`, absolute/drive/UNC
+paths, backslashes, colons, control characters, and empty, `.` or `..` segments.
+Return a frozen copy without adding public-file defaults. Root diagnostics name
+`roots[<index>].files`; folder diagnostics name the owning folder record.
+Folder exclusions cannot select a literal first `mokly-generated` segment.
+The root reserved-output checks independently reject physical aliases and
+static prefixes inside the generated tree.
+
+When a file matches two roots after exclusions, fail `config-invalid` with
+`file <path> is matched by roots[<n>] and roots[<m>]`. The path is repository-relative
+and the root indices are zero-based. Physical aliases participate in this check.
+
+## Root Fields
+
+`roots` is a non-empty list of root objects. `dir` names an existing
+directory inside `repoRoot`, config-relative, outside `.mokly-cache/`, Review
+output, and package-owned private roots, and not equal to `mockupsDir`.
+`files` is a non-empty list of safe relative POSIX globs matched against paths
+relative to `dir` with the same minimatch syntax and path rules as
+`review.sharedImpact`; it defaults to `**/*.mockup.{ts,tsx}` and `**/*.md`.
+`path` is a path under the [segment grammar](./mokly-paths.md#segment-grammar)
+and prefixes every path derived from the root. `transparent` lists directory
+names, each a valid segment, that derivation removes. Omitting `roots` means
+`[{ dir: "specs" }]`. A missing directory, an empty or duplicate glob, two
+roots with the same `dir`, or an invalid `path` or `transparent` value fails
+with `config-invalid` naming `roots[<index>].<field>`.

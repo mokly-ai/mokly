@@ -2,8 +2,8 @@
 export const HELP = `Mokly — app-independent React mockup catalogues
 
 Usage:
-  mokly [serve] [--config <path>] [--port <port>] [--base <ref>] [--no-watch] [--open]
-  mokly build [--config <path>] [--strict]
+  mokly [serve] [--config <path>] [--port <port>] [--base <ref>] [--no-watch] [--build] [--open]
+  mokly build [--config <path>] [--watch] [--strict]
   mokly check [--config <path>] [--strict]
   mokly export --out <path> [--config <path>] [--base <ref>] [--strict]
   mokly publish [--endpoint <url>] [--token <token>] [--out <path>]
@@ -14,7 +14,7 @@ Usage:
 Commands:
   serve    Build and serve the catalogue with on-demand diffs
   build    Transactionally generate static HTML documents and the manifest
-  check    Validate source and generated output for the configured mode
+  check    Validate source and compare output when tracked in Git
   export   Build a complete static catalogue to deploy with your own host
   publish  Export and upload a catalogue to your chosen service
 
@@ -31,8 +31,9 @@ Options:
   --no-changes     Publish current catalogue without a comparison baseline
   --strict         Fail build, check, export or publish on build warnings
   --upload-concurrency <n>  Parallel file uploads from 1 to 32 (default 8)
-  --watch          Watch consumer inputs (serve default)
+  --watch          Watch consumer inputs (serve default; build opt-in)
   --no-watch       Serve one deterministic snapshot
+  --build          Write generated output after complete Serve compilations
   --open           Open the served URL in the default browser
   -h, --help       Show help
   -v, --version    Show installed version
@@ -41,9 +42,7 @@ Value options also accept --name=value. Use --token=-TOKEN for a leading dash.
 Boolean flags take no value.
 
 Configuration:
-  generatedOutput       "derived" (default) checks generated files are untracked;
-                        "committed" checks files match source
-  review.baselineBuild  Derived-only argv arrays run without a shell using
+  review.baselineBuild  Historical build argv arrays run without a shell using
                         trusted historical code. Defaults: npm ci, then
                         npx --no-install mokly build --config <config-path>
 `;

@@ -35,17 +35,13 @@ test("binary assets preserve bytes, URL suffixes and shared routes", async (t) =
   const compiled = await compileFixture(fixture);
   assert.deepEqual(
     Buffer.from(
-      compiled.outputs.get(
-        "mokly-generated/assets/entries/photo.webp",
-      ) as Uint8Array,
+      compiled.outputs.get("assets/entries/photo.webp") as Uint8Array,
     ),
     Buffer.from([0xff, 0, 0x80]),
   );
   assert.deepEqual(
     Buffer.from(
-      compiled.outputs.get(
-        "mokly-generated/assets/entries/type.woff2",
-      ) as Uint8Array,
+      compiled.outputs.get("assets/entries/type.woff2") as Uint8Array,
     ),
     Buffer.from([0x90, 0x10]),
   );
@@ -133,7 +129,11 @@ test("assets in scoped npm packages retain literal @ in CSS paths", async (t) =>
   const route =
     "mokly-generated/assets/node_modules/@fontsource/inter/files/a.woff2";
   assert.deepEqual(
-    Buffer.from(compiled.outputs.get(route) as Uint8Array),
+    Buffer.from(
+      compiled.outputs.get(
+        route.slice("mokly-generated/".length),
+      ) as Uint8Array,
+    ),
     Buffer.from([0, 0x91]),
   );
   assert.match(
@@ -226,15 +226,10 @@ test("unresolvable local @import fails with exact guidance", async (t) => {
   );
 });
 
-test("generated CSS routes matching public exclusion are rejected", async (t) => {
+test("removed publicExclude cannot hide imported styles", async (t) => {
   const fixture = await styleFixture(".a{color:red}", {
     extraConfig: 'publicExclude: ["**/*.css"],',
   });
   t.after(() => removeFixture(fixture));
-  const config = await loadConfig(fixture.root);
-  assert.ok(config.publicExclude.includes("**/*.css"));
-  await assert.rejects(
-    () => compileFixture(fixture),
-    /generated route matches public exclusion \*\*\/\*\.css: mokly-generated\/styles\/entries\/fixture.mockup.tsx.css; narrow the exclusion/,
-  );
+  await assert.rejects(loadConfig(fixture.root), /publicExclude was removed/);
 });

@@ -1,6 +1,12 @@
+import type { BaselineCatalogue } from "../baseline/catalogue.js";
 import { MoklyError } from "../errors.js";
 
-import type { BaselineReader, GitFile, GitFileKind } from "./git.js";
+import type {
+  BaselineReader,
+  GitCommandRunner,
+  GitFile,
+  GitFileKind,
+} from "./git.js";
 import { readGitFiles } from "./git_batch.js";
 import { GitCommands } from "./git_commands.js";
 import { assertGitPath } from "./git_path.js";
@@ -10,6 +16,12 @@ export class CommittedBaselineReader
   extends GitCommands
   implements BaselineReader
 {
+  constructor(
+    runner: GitCommandRunner,
+    readonly catalogue?: BaselineCatalogue,
+  ) {
+    super(runner);
+  }
   async readFile(commit: string, repoRelativePath: string): Promise<string> {
     assertGitPath(repoRelativePath);
     return this.run(

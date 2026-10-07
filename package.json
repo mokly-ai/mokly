@@ -47,7 +47,7 @@
     "dev:large": "node scripts/large/cli.mjs serve",
     "fixture:large": "npm run build && tsx scripts/large/cli.mjs generate",
     "benchmark:large": "node scripts/large/cli.mjs benchmark",
-    "example:build": "node scripts/clean.mjs --example && node dist/cli/bin.js build --config examples/basic/mokly.config.ts",
+    "example:build": "node dist/cli/bin.js build --config examples/basic/mokly.config.ts",
     "example:check": "node dist/cli/bin.js check --config examples/basic/mokly.config.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

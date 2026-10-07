@@ -15,13 +15,12 @@ import { directBaselineCommands } from "./helpers/turbo_baseline.js";
 
 const input = { roots: [{ dir: "entries" }], mockupsDir: "mockups" };
 
-test("the example rebuilds derived baselines with its own package tooling", async () => {
+test("the example configures historical build tooling", async () => {
   const configPath = path.join(
     repositoryRoot,
     "examples/basic/mokly.config.ts",
   );
   const config = await loadConfig(repositoryRoot, configPath);
-  assert.equal(config.generatedOutput, "derived");
   const recipe = directBaselineCommands;
   assert.deepEqual(config.review.baselineBuild, recipe);
   assert.deepEqual(
@@ -36,37 +35,16 @@ test("the example rebuilds derived baselines with its own package tooling", asyn
     ).review.baselineBuild,
     recipe,
   );
-  assert.throws(
-    () =>
-      resolveConfig(
-        {
-          roots: [{ dir: "specs" }],
-          mockupsDir: "generated",
-          repoRoot: "../..",
-          generatedOutput: "committed",
-          review: { baselineBuild: recipe },
-        },
-        configPath,
-      ),
-    { code: "config-invalid" },
-  );
 });
 
-test("generated output defaults to derived and derives exact default argv", async (t) => {
+test("baseline build defaults to exact argv without an output mode", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
-  const derived = resolveConfig(input, fixture.configPath);
-  assert.equal(derived.generatedOutput, "derived");
-  assert.deepEqual(derived.review.baselineBuild, [
+  const resolved = resolveConfig(input, fixture.configPath);
+  assert.deepEqual(resolved.review.baselineBuild, [
     ["npm", "ci"],
     ["npx", "--no-install", "mokly", "build", "--config", "mokly.config.ts"],
   ]);
-  const committed = resolveConfig(
-    { ...input, generatedOutput: "committed" },
-    fixture.configPath,
-  );
-  assert.equal(committed.generatedOutput, "committed");
-  assert.equal(committed.review.baselineBuild, undefined);
   const configPath = path.join(fixture.root, "config", "catalogue.ts");
   const nested = resolveConfig(
     {
@@ -92,7 +70,6 @@ test("generated output defaults to derived and derives exact default argv", asyn
       resolveConfig(
         {
           ...input,
-          generatedOutput: "derived",
           review: { baselineBuild: commands },
         },
         fixture.configPath,
@@ -102,14 +79,30 @@ test("generated output defaults to derived and derives exact default argv", asyn
   }
 });
 
-test("generated output rejects unknown modes and malformed or committed commands", async (t) => {
+test("removed output mode is rejected with actionable guidance", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
-  for (const generatedOutput of ["rebuilt", "", null, false, 1])
-    assert.throws(
-      () => resolveConfig({ ...input, generatedOutput }, fixture.configPath),
-      { code: "config-invalid" },
-    );
+  assert.throws(
+    () =>
+      resolveConfig(
+        { ...input, generatedOutput: "committed" },
+        fixture.configPath,
+      ),
+    /generatedOutput was removed; use Git tracking for check and run mokly build to write output/,
+  );
+  assert.throws(
+    () =>
+      resolveConfig(
+        { ...input, publicExclude: ["internal/**"] },
+        fixture.configPath,
+      ),
+    /publicExclude was removed; remove it; only referenced authored assets are public/,
+  );
+});
+
+test("baseline build rejects malformed commands", async (t) => {
+  const fixture = await createFixture();
+  t.after(() => removeFixture(fixture));
   for (const baselineBuild of [
     null,
     "npm ci",
@@ -123,40 +116,20 @@ test("generated output rejects unknown modes and malformed or committed commands
     assert.throws(
       () =>
         resolveConfig(
-          { ...input, generatedOutput: "derived", review: { baselineBuild } },
+          { ...input, review: { baselineBuild } },
           fixture.configPath,
         ),
       { code: "config-invalid" },
     );
-  assert.throws(
-    () =>
-      resolveConfig(
-        {
-          ...input,
-          generatedOutput: "committed",
-          review: { baselineBuild: [] },
-        },
-        fixture.configPath,
-      ),
-    { code: "config-invalid" },
-  );
 });
 
-test("only derived output may be absent and its projected root stays confined", async (t) => {
+test("output may be absent and its projected root stays confined", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const missing = { ...input, mockupsDir: "new/nested/output" };
   assert.equal(
     resolveConfig(missing, fixture.configPath).mockupsDir,
     path.join(fixture.root, missing.mockupsDir),
-  );
-  assert.throws(
-    () =>
-      resolveConfig(
-        { ...missing, generatedOutput: "committed" },
-        fixture.configPath,
-      ),
-    { code: "config-invalid" },
   );
   await fs.symlink(
     path.dirname(fixture.root),
@@ -165,7 +138,7 @@ test("only derived output may be absent and its projected root stays confined", 
   assert.throws(
     () =>
       resolveConfig(
-        { ...input, mockupsDir: "outside/missing", generatedOutput: "derived" },
+        { ...input, mockupsDir: "outside/missing" },
         fixture.configPath,
       ),
     { code: "config-invalid" },
@@ -194,17 +167,13 @@ test("cache paths and physical aliases cannot be configured as catalogue roots",
       );
 });
 
-test("derived missing roots still report dangling links and file ancestors as config errors", async (t) => {
+test("missing roots report dangling links and file ancestors as config errors", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   await fs.symlink("absent", path.join(fixture.root, "dangling"));
   for (const mockupsDir of ["dangling/output", "notes.md/output"])
     assert.throws(
-      () =>
-        resolveConfig(
-          { ...input, mockupsDir, generatedOutput: "derived" },
-          fixture.configPath,
-        ),
+      () => resolveConfig({ ...input, mockupsDir }, fixture.configPath),
       { code: "config-invalid" },
     );
 });

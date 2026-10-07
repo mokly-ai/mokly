@@ -17,7 +17,9 @@
     "COLUMNS",
     "BROWSERSLIST_IGNORE_OLD_DATA"
   ],
-  "futureFlags": { "longerSignatureKey": true },
+  "futureFlags": {
+    "longerSignatureKey": true
+  },
   "remoteCache": {
     "enabled": true,
     "signature": true,
@@ -66,6 +68,8 @@
       "dependsOn": ["//#build:package"],
       "inputs": [
         "examples/basic/**",
+        "examples/imported-assets/**",
+        "!examples/basic/mokly-generated/**",
         "docs/protocol/mokly-component-controls-design.md",
         "docs/protocol/mokly-component-controls.md",
         "docs/protocol/mokly-component-design.md",
@@ -76,10 +80,6 @@
         "docs/protocol/mokly-design-components.md",
         "docs/protocol/mokly-shell-design.md",
         "docs/protocol/mokly-viewer-appearance.md",
-        "!examples/basic/generated/**/*.html",
-        "!examples/basic/generated/mokly-manifest.json",
-        "!examples/basic/generated/example/workspace.svg",
-        "!examples/basic/generated/mokly-generated/**",
         "!**/.context/**",
         "!**/.mokly-cache/**",
         "!**/.mokly-review-*/**",
@@ -95,12 +95,7 @@
         "!**/.superpowers/**",
         "!**/*.tgz"
       ],
-      "outputs": [
-        "examples/basic/generated/**/*.html",
-        "examples/basic/generated/mokly-manifest.json",
-        "examples/basic/generated/example/workspace.svg",
-        "examples/basic/generated/mokly-generated/**"
-      ],
+      "outputs": ["examples/basic/mokly-generated/**"],
       "env": [
         "NODE_ENV",
         "BROWSERSLIST",

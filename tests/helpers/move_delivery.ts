@@ -87,7 +87,7 @@ export async function assertMoveDelivery(
   });
   try {
     const served = readCatalogue(
-      await (await fetch(`${server.url}/__mokly/catalogue.json`)).json(),
+      await (await fetch(`${server.url}/mokly-viewer/catalogue.json`)).json(),
     );
     assert.deepEqual(identities(served), expected);
     for (const route of [
@@ -102,7 +102,10 @@ export async function assertMoveDelivery(
   await exportCatalogue(config, { outDir, base: "main" });
   const exported = readCatalogue(
     JSON.parse(
-      await fs.readFile(path.join(outDir, "__mokly/catalogue.json"), "utf8"),
+      await fs.readFile(
+        path.join(outDir, "mokly-viewer/catalogue.json"),
+        "utf8",
+      ),
     ),
   );
   assert.deepEqual(identities(exported), expected);

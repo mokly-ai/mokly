@@ -39,7 +39,7 @@ test("published scheme swaps survive a redirected source replacement", async ({
   page,
 }) => {
   await page.route(
-    /\/static\/example\/screens\/welcome\/index\.desktop\.dark\.html$/,
+    /\/static\/mokly-generated\/example\/screens\/welcome\/index\.desktop\.dark\.html$/,
     async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 100));
       await route.continue();
@@ -115,7 +115,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     await expectFrameLoaded(
       page.locator(`.mbk-frame-${viewport} iframe`),
       new RegExp(
-        `/static/design/browse/pages/view/index\\.${viewport}(?:\\.html)?$`,
+        `/static/mokly-generated/design/browse/pages/view/index\\.${viewport}(?:\\.html)?$`,
       ),
     );
     await frame

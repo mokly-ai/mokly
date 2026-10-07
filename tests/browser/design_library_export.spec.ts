@@ -1,18 +1,16 @@
-import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { promisify } from "node:util";
 
 import { expect, test } from "@playwright/test";
 
 import { exportCatalogue } from "../../dist/export/run.js";
-import { createCommittedExampleBaseline } from "../helpers/example_baseline.js";
-import { repositoryRoot } from "../helpers/fixture.js";
+import { validateWarmExample } from "../helpers/example_preparation.js";
+import type { PreparedExample } from "../helpers/example_preparation.js";
 import {
   FULL_CATALOGUE_SETUP_TIMEOUT_MS,
   timeExportPreparation,
-  timeFixturePhase,
 } from "../helpers/fixture_timing.js";
+import { acquireSharedExample } from "../helpers/shared_example.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
 import { assertServedShellMarker } from "./export_shell.js";
@@ -20,43 +18,46 @@ import { chooseVariant, chooseViewport } from "./workspace_actions.js";
 
 let site: Awaited<ReturnType<typeof serveStaticFiles>>;
 let root: string;
+let prepared: PreparedExample;
 test.beforeAll(async () => {
   test.setTimeout(FULL_CATALOGUE_SETUP_TIMEOUT_MS);
-  await fs.mkdir(path.join(repositoryRoot, ".context"), { recursive: true });
-  root = await fs.mkdtemp(path.join(repositoryRoot, ".context/design-export-"));
-  const config = await timeFixturePhase(
-    "design-library-export",
-    "baseline-fixture",
-    false,
-    () => createCommittedExampleBaseline(root, "design-library"),
-  );
-  const git = (...args: string[]) =>
-    promisify(execFile)("git", args, { cwd: root });
-  const baselineManifest = JSON.parse(
-    (await git("show", "HEAD:examples/basic/generated/mokly-manifest.json"))
-      .stdout,
-  );
-  expect(baselineManifest.schemaVersion).toBe(8);
-  const file = path.join(
-    root,
-    "examples/basic/specs/design/library/controls/tag-chip.view.tsx",
-  );
-  const source = await fs.readFile(file, "utf8");
-  expect(source).toContain("{label}");
-  await fs.writeFile(file, source.replace("{label}", "{label} revised"));
-  const output = path.join(root, "site");
-  await timeExportPreparation("design-library-export", () =>
-    exportCatalogue(config, { base: "HEAD", outDir: output }),
-  );
-  site = await serveStaticFiles(output);
-  await assertServedShellMarker(
-    site.url,
-    "/view/design/library/chrome/top-bar/search/",
-  );
+  prepared = await acquireSharedExample("design-library-export");
+  root = prepared.root;
+  const config = prepared.config;
+  try {
+    await validateWarmExample(config, prepared.commit);
+    const file = path.join(
+      root,
+      "examples/basic/specs/design/library/controls/tag-chip.view.tsx",
+    );
+    const source = await fs.readFile(file, "utf8");
+    expect(source).toContain("{label}");
+    await fs.writeFile(file, source.replace("{label}", "{label} revised"));
+    const output = path.join(root, "site");
+    await timeExportPreparation(
+      "design-library-export",
+      () =>
+        exportCatalogue(config, {
+          base: "HEAD",
+          outDir: output,
+          signal: prepared.signal,
+        }),
+      { operationUnderTest: false, expectWarmBaseline: true },
+    );
+    site = await serveStaticFiles(output);
+    await assertServedShellMarker(
+      site.url,
+      "/view/design/library/chrome/top-bar/search/",
+    );
+  } catch (error) {
+    await site?.close();
+    await prepared.close();
+    throw error;
+  }
 });
 test.afterAll(async () => {
   await site?.close();
-  if (root) await fs.rm(root, { recursive: true, force: true });
+  await prepared?.close();
 });
 
 for (const viewport of ["desktop", "mobile"] as const)

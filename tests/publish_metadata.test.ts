@@ -12,7 +12,7 @@ import type { GitCommandRunner } from "../dist/review/git.js";
 
 const head = "a".repeat(40);
 const manifest = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   moklyVersion: "1.2.3-beta.1+build.5",
   repository: { host: "github.com", owner: "sample", name: "catalogue" },
   branch: "feature/screens",
@@ -167,7 +167,7 @@ test("publish identity readers preserve Git cancellation", async () => {
 
 test("manifest validates exact fields, paired comparison metadata, versions, sizes and paths", () => {
   assert.deepEqual(validateUploadManifest(manifest), manifest);
-  const comparisonPath = `__mokly/diffs/__generations/${"b".repeat(64)}/review.json`;
+  const comparisonPath = `mokly-viewer/diffs/generations/${"b".repeat(64)}/review.json`;
   validateUploadManifest({
     ...manifest,
     baseRef: "origin/main",
@@ -175,7 +175,7 @@ test("manifest validates exact fields, paired comparison metadata, versions, siz
     comparisonPath,
   });
   for (const invalid of [
-    { ...manifest, schemaVersion: 2 },
+    { ...manifest, schemaVersion: 1 },
     { ...manifest, extra: true },
     { ...manifest, moklyVersion: "1.2" },
     { ...manifest, headSha: "a".repeat(41) },

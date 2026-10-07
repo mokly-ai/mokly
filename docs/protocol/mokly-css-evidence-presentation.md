@@ -16,7 +16,7 @@ with per-view viewport, color scheme, optional reasons, and optional excluded
 resources. Paths remain repository-relative. The workspace projects the
 selected screen's views as optional `resourceEvidence`; it does not invent
 component reasons, component results, or comparison states. Static exports
-project the same slice from review result v5. A new classification generation
+project the same slice from review result v6. A new classification generation
 replaces the slice and clears stale evidence while Changes is pending or
 unavailable.
 

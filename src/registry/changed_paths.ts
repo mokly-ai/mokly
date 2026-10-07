@@ -3,18 +3,17 @@ import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
 import {
+  type HistoricalManifest,
+  type HistoricalManifestEntry,
+  type ManifestEntry,
+  type ManifestV9,
   analyzeHierarchy,
   entryRoute,
   documentRoute,
   generatedViews,
+  generatedResourcePath,
   isManifestComponentVariant,
   type CatalogueHierarchy,
-} from "@mokly/viewer/data";
-import type {
-  HistoricalManifest,
-  HistoricalManifestEntry,
-  ManifestEntry,
-  ManifestV8,
 } from "@mokly/viewer/data";
 
 import { toPosixPath } from "../config/paths.js";
@@ -26,7 +25,7 @@ import { moveIdentity, type EntryMove } from "../review/moves/types.js";
 
 /** Match each entry, including every variant, against changed material and metadata. */
 export function changedManifestPaths(
-  manifest: ManifestV8,
+  manifest: ManifestV9,
   baseManifest: HistoricalManifest,
   config: ResolvedConfig,
   changedPaths: readonly string[],
@@ -186,6 +185,6 @@ function changedPathCandidates(
           ? generatedViews(baseEntry).map((view) => view.path)
           : [];
   return [...new Set([...current, ...baseline])].map(
-    (candidate) => `${prefix}${candidate}`,
+    (candidate) => `${prefix}${generatedResourcePath(candidate)}`,
   );
 }

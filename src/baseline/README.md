@@ -50,8 +50,8 @@ enter timing records. See the [timing contract](../../docs/protocol/mokly-timing
 Preparation lives in `review/prepare.ts`; read-only factories live separately
 in `review/repository.ts`:
 `prepareReviewRepository(config, base, { signal, onProgress })` creates the Node
-builder or committed reader and returns a pinned repository. Serve's
-`BackgroundGeneration` uses a retained `BackgroundBaseline` in the parent after output adoption and before
+builder or Git-blob reader per commit and returns a pinned repository. Serve's
+`BackgroundGeneration` uses a retained `BackgroundBaseline` in the parent after compilation and before
 `BackgroundCompilation.classify(base, commit)`. The classification worker reads
 the cache and its accepted compiled head output; it cannot start a rebuild.
 `BackgroundBaseline` passes an observer at that parent call that publishes the
@@ -63,13 +63,17 @@ Content invalidation cancels the classification wait without cancelling the
 commit's build. Ref changes reuse preparation when the merge base is unchanged;
 a changed commit or build settings and shutdown cancel and drain it.
 
-`cache_layout.ts` owns `.mokly-cache/baselines/<commit>`. After it validates
-the cache ancestors, the builder publishes `.mokly-cache/.gitignore` through
-`config/cache_ignore.ts` when it is missing. The builder then extracts
-to `source`, runs commands, inspects manifest compatibility and validates the
-output tree,
-moves the generated directory to `output`, deletes the extraction, and writes
-`complete.json`. Completion of the marker write commits the result immediately.
+`cache_layout.ts` owns `.mokly-cache/baselines/<commit>`. The parent chooses
+blob reads only for commits with a complete matching manifest inventory;
+other commits rebuild. After validating cache ancestors, the builder publishes
+`.mokly-cache/.gitignore` through `config/cache_ignore.ts` when it is missing.
+It then extracts to `source`, runs commands,
+discovers the historical catalogue root, validates its manifest and output tree,
+moves only `mokly-generated/` and copies the manifest's authored asset closure to
+their repository-relative paths under `output/`. Only v9 content is adopted;
+readers append repository-relative paths beneath `output/`, using the pinned
+historical root. It deletes the remaining extraction and writes
+`complete.json` through an atomic rename, which commits the result.
 Cancellation before that point removes partial output; cancellation afterward
 returns the completed result and skips remaining retention work. Cleanup and
 lock release cannot reject or erase a completed build. No cleanup failure may
@@ -79,16 +83,23 @@ maintenance failures and continues with other eligible entries. The maintenance
 reporter receives each entry and original error without adding failure events
 to a successful build. Its `report(failure)` method must not
 throw; the stderr implementation tolerates a closed diagnostic stream.
-`inputs.json` records the repository-relative output path;
-the marker records the commands. A complete entry for different settings fails
-explicitly and remains intact. Remove that commit's cache entry before changing
-its catalogue/build settings. Partial entries are rebuilt under the entry lock.
-`manifest.ts` fully validates v8 during adoption. It retains a lower integer
-version or earlier-name sentinel as completed incompatible output so the
-historical gate can report the expected unavailable outcome without rerunning
-trusted baseline commands. The gate accepts only path-keyed manifest v8 under
-the [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md). `compatibility.ts` owns that typed outcome and its
-single user-facing line. Newer or malformed output is not adopted.
+Rebuild discovery prefers the requested root, then searches the bounded
+extraction for exactly one valid manifest; details and reader path mapping
+are in [baseline addressing](../../docs/protocol/mokly-baseline-addressing.md).
+`inputs.json` records the requested current repository-relative catalogue
+path; version-2 completion markers record v9, `generated-v9`, the discovered root
+and the commands. Only a complete valid v9 cache with matching inputs and
+recipe is reusable. A valid v9 marker with different settings fails intact
+before validating its output. Every invalid, missing, truncated or earlier-format entry
+is partial and is removed under its lock before rebuilding. Cleanup also removes
+unlocked entries with missing or invalid markers/inputs rather than ranking
+them for retention. Cleanup never reads or hashes output; reuse validates it.
+The marker is written to `complete-<uuid>.tmp` and atomically renamed to
+`complete.json` after adoption and source removal. The rename commits the result.
+Committed selection probes only the generated subtree. A stale root-level
+manifest cannot decide availability. After rebuilding, root-level output below
+v9 still returns the typed unavailable outcome without caching it.
+`compatibility.ts` retains the exact product line and command behavior.
 
 Lock publication uses a fully written temporary file and an exclusive hard link.
 The filesystem captures the temporary file's identity before publication and
@@ -102,8 +113,9 @@ simultaneous stale observers cannot unlink a replacement lock. Waiters poll ever
 commits by default, always keeping the active entry and skipping locked entries.
 Retired entries are moved beneath the active locked entry before removal.
 All builder calls acquire the lock before reuse. They sweep discarded output
-and dead-owner temporary lock files, including on cache hits. Tombstones and
-legacy temporaries without owner identity remain until entry retirement.
+and regular `complete-<uuid>.tmp` files, plus dead-owner temporary lock files,
+including on cache hits. Tombstones and unrecognized temporaries without owner
+identity remain until entry retirement.
 
 `archive.ts` uses the tar parser without its filesystem extractor, validates all
 paths and symlink chains before writing, and rejects hard links, device files,
@@ -138,11 +150,10 @@ historical code before it starts; there is no child-only fallback.
 
 `RebuiltBaselineReader(fs, repoRoot, outputDir, commit, mockupsPath, signal?)`
 reads only a completed output tree. Its `BaselineReader` API retains
-repository-relative paths and the pinned commit; it strips the output prefix
-internally. It rejects symlinks at every ancestor and non-regular files. Bulk
+repository-relative paths and the pinned commit; it appends the path beneath its cache output. It rejects symlinks at every ancestor and non-regular files. Bulk
 reads use the Git reader's 4,096-object / 48 MiB batch limits, with at most 32
 filesystem reads in flight. The review asset reader additionally applies the
-accepted v8 baseline's source inventory and reserved-name policy. Earlier output
+accepted v9 baseline's source inventory and reserved-name policy. Earlier output
 follows the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
 
@@ -165,3 +176,13 @@ requiring a Windows host.
 The Windows fixture detaches its descendant from Node's automatic
 kill-child-on-parent-exit relationship. It must still belong to Mokly's enclosing
 job; otherwise the fixture would exit automatically before testing cancellation.
+
+The approved [cache and moved-root rules](../../docs/protocol/mokly-comparison-inventory.md#cache-acquisition-and-discovery)
+cover retention racing lock acquisition and one v9 catalogue beside stale older
+files. No earlier-format content reader or cached incompatibility is added.
+
+The approved [path/output integration](../../docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
+Markdown documents and moves inside one generated tree. It introduces manifest
+v9, catalogue v5 and review v6, with explicit versions for the other boundaries.
+Accepted workers use immutable in-memory route sets; only writing commands
+acquire the output lock. The integration plan records verification and scope.

@@ -1,5 +1,6 @@
+import type { MoklyError } from "../errors.js";
+
 import type { CompletionMarker } from "./cache_layout.js";
-import type { BaselineError } from "./errors.js";
 
 /** File metadata without following symbolic links. */
 export interface BaselineStat {
@@ -72,13 +73,13 @@ export type BaselineProgress =
   | {
       readonly type: "fail";
       readonly commit: string;
-      readonly error: BaselineError;
+      readonly error: MoklyError;
     };
 
 export interface BaselineBuildRequest {
   readonly repoRoot: string;
   readonly commit: string;
-  /** Repository-relative location of historical generated output. */
+  /** Requested/current repository-relative catalogue root (`.` at repo root). */
   readonly mockupsPath: string;
   readonly commands: readonly (readonly string[])[];
   readonly signal?: AbortSignal;

@@ -3,13 +3,14 @@ dist
 node_modules
 .turbo/
 target
-examples/basic/generated
+examples/basic/mokly-generated
 package-lock.json
 test-results
 playwright-report
 
 # Canonical protocol bytes are verified by catalogue conformance tests.
 docs/protocol/fixtures/catalogue-v4.json
+docs/protocol/fixtures/catalogue-v5.json
 
 # release-please owns the changelog format
 CHANGELOG.md

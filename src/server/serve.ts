@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import type { BaselineBuilder } from "../baseline/types.js";
 import { prepareLiveRuntime } from "../build/live_runtime.js";
 import {
@@ -7,10 +9,8 @@ import {
 import { FileSystemConfigLoader, type ConfigLoader } from "../config/load.js";
 import type { ResolvedConfig } from "../config/types.js";
 
-import {
-  RepositoryCatalogueChangeClassifier,
-  type CatalogueChangeClassifier,
-} from "./component_changes.js";
+import type { CatalogueChangeClassifier } from "./component_change_types.js";
+import { RepositoryCatalogueChangeClassifier } from "./component_changes.js";
 import { configuredServedReview } from "./configured_review.js";
 import { BackgroundGeneration } from "./demand/generation.js";
 import {
@@ -36,6 +36,7 @@ import {
 /** Public Serve options after CLI validation. */
 export interface ServeOptions {
   base?: string;
+  build?: boolean;
   port: number;
   watch: boolean;
 }
@@ -51,7 +52,7 @@ export interface RunningServe {
 
 /** Injectable runtime collaborators for Serve orchestration. */
 export interface ServeDependencies {
-  /** Derived-mode rebuilds; Serve constructs the Node builder when absent. */
+  /** Historical rebuilds; Serve constructs the Node builder when absent. */
   baselineBuilder?: BaselineBuilder;
   changeClassifier?: CatalogueChangeClassifier;
   configLoader: ConfigLoader;
@@ -115,11 +116,16 @@ export async function serve(
         });
       },
       {
-        baselinePrepared: (commit) => {
-          repository.accept(commit);
+        baselinePrepared: (prepared) => {
+          repository.accept(
+            prepared?.commit ?? null,
+            undefined,
+            prepared?.selection,
+            prepared?.descriptor,
+          );
           server.publishUpdate({
             kind: "evidence",
-            ...(commit === null ? { changesStatus: "pending" } : {}),
+            ...(prepared === null ? { changesStatus: "pending" } : {}),
           });
         },
         baselineStatus: (changesStatus) =>
@@ -138,6 +144,13 @@ export async function serve(
         },
         diagnostic: (error) => reporter.runtimeDiagnostic(error),
         incompatibleBaseline: (commit) => reporter.incompatibleBaseline(commit),
+        writeOutput: options.build ?? false,
+        outputWritten: (compilation, duration) =>
+          reporter.outputWritten?.(
+            compilation.outputs.size,
+            path.relative(config.repoRoot, config.mockupsDir),
+            duration,
+          ),
         ...(dependencies.baselineBuilder
           ? { builder: dependencies.baselineBuilder }
           : {}),

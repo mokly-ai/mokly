@@ -14,9 +14,6 @@ import {
   ReviewIgnore,
   ReviewIgnoreScope,
   reviewMaterialKey,
-  type CompatibilityConfig,
-  type CompatibilityTransformer,
-  type CompatibilityTransformInput,
   type EntryInput,
   type PageInput,
   type PageDefinition,
@@ -229,8 +226,6 @@ type PublicTypes =
   | FolderInput
   | FolderDefinition
   | RootConfig
-  | CompatibilityConfig
-  | CompatibilityTransformInput
   | EntryInput
   | PageInput
   | PageDefinition
@@ -253,11 +248,7 @@ type PublicTypes =
 
 const renderer: Renderer = (input) =>
   `<html><body>${input.entry.title}</body></html>`;
-const compatibilityTransformer: CompatibilityTransformer = (input) =>
-  input.content;
-const exhaustive:
-  PublicTypes | Renderer | CompatibilityTransformer | undefined =
-  compatibilityTransformer ?? renderer;
+const exhaustive: PublicTypes | Renderer | undefined = renderer;
 void exhaustive;
 
 // @ts-expect-error Pages cannot declare screen variants.
@@ -270,3 +261,10 @@ const asynchronousPage: PageInput = {
   render: async () => "<html/>",
 };
 void [unsupportedPage, obsoleteConfig, asynchronousPage];
+
+const removedCompatibility: MoklyConfig = {
+  ...config,
+  // @ts-expect-error The document transformer option is removed.
+  compatibility: undefined,
+};
+void removedCompatibility;

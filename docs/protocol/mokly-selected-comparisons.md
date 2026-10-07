@@ -6,12 +6,12 @@ the catalogue, or snapshots other entries; exhaustive commands remain unchanged.
 
 ## Delivery Status
 
-Implemented with entries selected by path and review result v5. Removed pages
+Implemented with entries selected by path and review result v6. Removed pages
 and Markdown documents use the shared selected-preview boundary.
 
 ## Requests and evidence
 
-The live browser requests `/__mokly/diffs/review.json?path=<path>`, where the
+The live browser requests `/mokly-viewer/diffs/review.json?path=<path>`, where the
 path names the selected screen or component variant entry, adding `refresh=1`
 for an explicit retry or refresh, or `page=<path>` for a removed page's or
 document's [preview](./mokly-removed-previews.md). Both values use the
@@ -43,6 +43,8 @@ failures use the existing comparison failure state and explicit retry.
 
 The live server uses the accepted complete manifest and background Changes
 snapshot. Background classification retains the pinned branch-point commit,
+the [baseline catalogue descriptor](./mokly-baseline-addressing.md#comparison-namespaces)
+for route/resource addressing across historical catalogue roots,
 changed paths, and SHA-256 digests of current generated views and resources it
 reads. Those digests are private IPC data, not published comparison fields.
 Every current selected document requires a digest. Capturing a known input with
@@ -50,7 +52,7 @@ different bytes fails instead of combining old evidence with new output. Missing
 or pending evidence produces the existing retryable comparison failure state;
 it never falls back to an exhaustive foreground build.
 
-Project the complete [review result v5](./mokly-changes-serving.md#comparison-engine)
+Project the complete [review result v6](./mokly-changes-serving.md#comparison-engine)
 onto the selected entry: a screen, or a component variant entry addressed by
 its path. Keep its entry sides, `previousPath`, view states, ignored regions
 and direct change reasons. Recompute the selected screen ignored-impact
@@ -58,13 +60,13 @@ aggregate. Catalogue-wide
 affected-consumer evidence remains in the shell inspector; the selected
 response omits those cross-entry records. Screen-only catalogues apply the same
 policy as complete comparisons to the requested screen only. The response
-passes the v5 result validator. Missing entries fail without inventing
+passes the v6 result validator. Missing entries fail without inventing
 comparison records.
 
 ## Capture and lifetime
 
 Capture every available view of the selection and only its transitive resource
-closure. Copy accepted v8 before/after documents byte-for-byte to paths from
+closure. Copy accepted v9 before/after documents byte-for-byte to paths from
 `snapshotViewPath` in the
 [artifact path contract](./mokly-artifact-paths.md); the before side of a paired
 moved entry is the paired baseline entry's views, named by `previousPath`.
@@ -75,7 +77,7 @@ validated and captured on demand. Panes present those documents without script
 permission under the [comparison pane contract](./mokly-comparison-panes.md).
 
 The stable request redirects to
-`/__mokly/diffs/__generations/selected-<uuid>/review.json`. JSON and snapshot
+`/mokly-viewer/diffs/generations/selected-<uuid>/review.json`. JSON and snapshot
 files belong to that immutable generation, are served with `no-store` and
 `nosniff`, and resolve only from its captured file map. These in-memory generations
 create no comparison output directories. HEAD returns the same headers without
