@@ -87,16 +87,36 @@ Its release removes only the lock file, never a directory, so creating a cache
 entry does not race a writer removing its cache ancestors. The cache is package owned: never served, never watched, never a comparison resource, excluded from
 changed-path evidence and shared-impact globs before those globs are evaluated,
 and never a valid `mockupsDir`, root, resolved entry module or document,
-`review.outDir`, or export destination. Consumers add `.mokly-cache/` to their
-ignore file; only `check` runs the index guard, failing if Git tracks anything under it.
+`review.outDir`, or export destination. Only `check` runs the index guard,
+failing if Git tracks anything under it. Its remedy is `git rm --cached`,
+without a cache ignore rule.
+
+The cache ignores itself. Before a writer acquires the generated-output lock,
+and after a rebuild validates the cache ancestors, Mokly creates
+`.mokly-cache/.gitignore` when no entry has that name. Its bytes are
+`# Created by Mokly automatically.\n*\n`: `*` matches every cache path,
+the ignore file included, so Git never shows or adds the cache, not even a
+lock that a stopped command left. Mokly writes a temporary sibling and renames
+it into place, so an interrupted write never leaves a partial file; failing to
+publish it fails that lock acquisition or rebuild. An existing entry is never
+replaced, so a consumer may edit it. A writer skips the file when
+`.mokly-cache` is a symbolic link, because Git does not read ignore files
+through a link. Consumers may still list `.mokly-cache/` in root ignore files
+that other tools read. Retention and debris cleanup preserve the ignore file.
+Only Build, watched Build and the `serve --build` parent take the output lock.
+Plain Serve, export, publication and Check do not create a cache themselves;
+requested baseline rebuilds can create it through the builder above.
 
 ```text
-.mokly-cache/baselines/<commit>/
-  lock            # holder pid and start time, created exclusively
-  source/         # extraction, removed after adoption
-  output/         # v9: repo-relative mokly-generated plus authored closure
-  complete.json   # completion marker
-  inputs.json     # JSON string containing requested/current repo-relative mockupsDir ("." at repo root)
+.mokly-cache/
+  .gitignore        # "*": Git ignores every cache path, this file included
+  locks/            # the generated-output writer lock
+  baselines/<commit>/
+    lock            # holder pid and start time, created exclusively
+    source/         # extraction, removed after adoption
+    output/         # v9: repo-relative generated tree plus authored closure
+    complete.json   # completion marker
+    inputs.json     # requested/current repo-relative mockupsDir ("." at repo root)
 ```
 
 New `complete.json` markers are `{ schemaVersion: 2, commit, finishedAt,

@@ -173,6 +173,7 @@ flag. Navigation targets and `preparing → pending` timing remain measurable.
 
 - Test tracking outcomes (including no Git), mixed-state path guidance,
   tracked missing/stale/extra output, and untracked local-output independence.
+  Cache paths need only `git rm --cached`, because the cache ignores itself.
 - Test v9 absent/complete/missing/mismatched/extra inventory at **each** base
   commit, tracking transitions and moved v9 roots; test v2–v8 incompatibility
   at the selected generated location and after a rebuild, plus once-per-base

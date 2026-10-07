@@ -65,7 +65,9 @@ a changed commit or build settings and shutdown cancel and drain it.
 
 `cache_layout.ts` owns `.mokly-cache/baselines/<commit>`. The parent chooses
 blob reads only for commits with a complete matching manifest inventory;
-other commits rebuild. The builder extracts to `source`, runs commands,
+other commits rebuild. After validating cache ancestors, the builder publishes
+`.mokly-cache/.gitignore` through `config/cache_ignore.ts` when it is missing.
+It then extracts to `source`, runs commands,
 discovers the historical catalogue root, validates its manifest and output tree,
 moves only `mokly-generated/` and copies the manifest's authored asset closure to
 their repository-relative paths under `output/`. Only v9 content is adopted;

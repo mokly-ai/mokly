@@ -35,7 +35,7 @@ successful output. Watching continues so you can repair the source.
 
 ## What it writes
 
-Only under `<mockupsDir>/mokly-generated/`: one directory per entry named by
+Generated output goes only under `<mockupsDir>/mokly-generated/`: one directory per entry named by
 its path, with a document per effective viewport and color scheme for screens
 and component variants, each page, Markdown documents and copied resources,
 `mokly-manifest.json`, compiled CSS in `styles/` and copied CSS assets in `assets/`.
@@ -52,8 +52,7 @@ catalogue; only referenced assets are served and exported.
 
 Only `check` reads the Git index to decide whether to compare generated files;
 `build` never reads head tracking or refuses to write a new route. Either
-commit the **entire** `mokly-generated/` tree, or ignore that directory and
-`.mokly-cache/`. After building a new entry in a tracked catalogue, `check`
+commit the **entire** `mokly-generated/` tree, or ignore that directory. After building a new entry in a tracked catalogue, `check`
 lists its route under `untracked:` until it is staged. Only `check` reports
 partial tracking, with instructions for both choices.
 
@@ -62,3 +61,8 @@ rebuilds. Every successful complete compilation replaces `mokly-generated/`;
 errors preserve the last-good tree and watching continues. Plain `serve` and
 `export` never write generated output. Use `serve --build` to opt into writing
 while you browse.
+
+Mokly keeps private state in `.mokly-cache/` at the repository
+root and writes a `.gitignore` file inside it, so Git never shows or adds that
+folder. Also list `.mokly-cache/` in your root `.gitignore` when other tools,
+such as formatters or linters, read only that file.

@@ -69,7 +69,7 @@ test("current-only export keeps lock directories left by an earlier Build", asyn
   const locks = path.join(cache, "locks");
   const before = await fs.stat(locks);
   await exportCatalogue(fixture.config, { outDir: "site", noChanges: true });
-  assert.deepEqual(await fs.readdir(cache), ["locks"]);
+  assert.deepEqual((await fs.readdir(cache)).sort(), [".gitignore", "locks"]);
   assert.deepEqual(await fs.readdir(locks), []);
   assert.equal((await fs.stat(locks)).ino, before.ino);
 });

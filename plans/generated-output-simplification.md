@@ -2045,6 +2045,20 @@ Remerge review: `.context/generated-output-simplification/m23-147-remerge-review
 
 Implements 40 B, 9 B, 41 B, 50 B, 18 A, 16 B and 51 A.
 
+- [ ] Merge the captured latest main (`dc56e3d4`) under the user's direct
+      2026-10-07 instruction. Preserve #145's cache ignore publication, #151's
+      npm pin, #152's deterministic timing rules and #134's scroll waits.
+      Keep writer-only locking and the cold preview operation across the file
+      split. Resolve each conflict, audit paths and titles, smoke the built
+      CLI, run the full gate, commit with two parents, review every remerge
+      path, and push. Tick this item after the push; start no other TODO here.
+
+Merge evidence: `.context/generated-output-simplification/m24-main-preservation.md`.
+
+Merge justifications: `.context/generated-output-simplification/m24-main-justifications.md`.
+
+Validation: `.context/generated-output-simplification/m24-main-validation.md`.
+
 - [ ] Write failing lifecycle tests first. Extract one watch-setup owner from
       `server/serve_watched.ts`, `watch_inventory.ts`, `watch_paths.ts`,
       `watcher.ts` and `resource_watcher.ts`; use it from `cli/build_watch.ts`.
@@ -2071,7 +2085,9 @@ Implements 40 B, 9 B, 41 B, 50 B, 18 A, 16 B and 51 A.
       `build/compile.ts`, its graph/render lifecycle and `output_store.ts`.
       Test initial compilation and a held lock with explicit synchronization;
       no late candidate may write. Keep the transaction drain and #132's
-      persistent lock directories and foreign-lock protections.
+      persistent lock directories and foreign-lock protections. Preserve cache
+      ignore publication before the writer acquires its lock; nonwriting
+      consumers do not create a cache except through requested baseline rebuilds.
 - [ ] Share the generated summary for `cli/run.ts`, `cli/build_watch.ts`,
       `server/serve.ts`, `server/watched_background.ts` and reporter calls.
       Keep #124’s `reportCatalogueReady` warning boundary separate from the generated
@@ -2123,7 +2139,8 @@ Implements 39 B, 54 A, 55 A, 59 A, 60 A, 48 A, 58 A and 62 A.
       exhausted attempts, other failures and cancellation with deterministic
       interleaving against `cleanup.ts`. Keep metadata-only retention and
       fail-intact settings mismatch. Do not restore #132's removed cache-ancestor
-      retries or delete the persistent writer-lock directories.
+      retries or delete the persistent writer-lock directories. Preserve the
+      cache ignore file through partial-entry and retention cleanup.
 - [ ] Update `baseline/discovery.ts` for 60 A using v9 candidates: one valid
       current-format catalogue wins over stale pre-v9 envelopes, including at
       the requested root. Preserve malformed/newer rejection and ambiguity for
@@ -2132,7 +2149,8 @@ Implements 39 B, 54 A, 55 A, 59 A, 60 A, 48 A, 58 A and 62 A.
 - [ ] Extend `tests/baseline_debris.test.ts` with a table of every recognized
       temporary name from `cache_layout.ts`, `debris.ts`, `rebuild.ts` and
       `filesystem.ts`, including `complete-<uuid>.tmp`. Retain live owners,
-      tombstones, unrecognized files and maintenance-error behavior (64 A).
+      tombstones, unrecognized files, the cache ignore file and maintenance-error
+      behavior (64 A).
 - [ ] Add 48 A's real Git SHA-256 inventory selection and opaque blob-byte
       tests. Extend `baseline_compatibility.test.ts` and
       `baseline_rebuilt_version.test.ts` with real watched/no-watch Serve:
@@ -2186,6 +2204,14 @@ Implements 10 B and 25 B in the viewer. No backend work.
 
 Implements 57 B, 65 A, 63 B and 42 B. Finding 63 B excludes the now-used
 `PendingGeneratedFiles.routes()` under the user's post-merge decision A.
+
+Timing work follows [CI Test Timing](../docs/protocol/ci-test-timing.md):
+deterministic assertions use operation counts, captured watcher targets, event
+order or fake clocks. Report durations as text through the shared duration
+helper; retain structured fixture phase evidence and the existing setup budgets.
+Polling for expected state allows at least 10,000 ms. Keep the real-config
+timing selectors, directory guard, source-order guard and import rules active.
+The npm pin is 11.21.0; preserve its workflow and lockfile-shape checks.
 
 - [ ] Record a comparable full browser run and actual fixture timings before
       changing setup. Replace `acquireSharedExample` in

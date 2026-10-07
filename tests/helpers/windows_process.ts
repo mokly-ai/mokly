@@ -106,7 +106,11 @@ export function windowsProcessFixture(t: TestContext) {
     child,
     close,
     async waitForEvent(name: string) {
-      for (let attempt = 0; attempt < 200 && !events.includes(name); attempt++)
+      for (
+        let attempt = 0;
+        attempt < 1_500 && !events.includes(name);
+        attempt++
+      )
         await setTimeout(10);
       assert.ok(events.includes(name), `Missing ${name}: ${events.join(", ")}`);
     },

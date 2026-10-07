@@ -138,7 +138,7 @@ screen/component templates live under `tests/fixtures/large`. A small instance
 of the same generator runs in automated tests. A full-sized instance must be
 smoke-tested using the opt-in browser benchmark's under-five-second usable-startup
 assertion. It runs with other heavy checks idle; CI's small correctness fixtures
-have no machine-specific wall-clock assertion.
+have [no machine-specific wall-clock assertion](./ci-test-timing.md).
 
 The fixture uses real React Native Web and Firna rendering, nested folders,
 component variant entries, repeated and nested component usage, caller-owned

@@ -36,6 +36,7 @@ test("partly tracked Check gives one directory ignore rule for tracked reserved 
         error.message,
         /git rm -r --cached -- mockups\/mokly-generated\//,
       );
+      assert.doesNotMatch(error.message, /\/\.mokly-cache\//u);
       return true;
     },
   );

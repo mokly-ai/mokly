@@ -19,7 +19,7 @@ previous output in place.
 ## Ignore the output, or commit it
 
 Choose with Git, not a config option. To keep generated output local, add
-`/specs/generated/mokly-generated/` and `/.mokly-cache/` to `.gitignore`; Check
+`/specs/generated/mokly-generated/` to `.gitignore`; Check
 validates sources but ignores local generated files. To commit output, track
 every file under `mokly-generated/` and commit them after Build. Check then
 compares the entire tree, reporting missing, stale or extra files. Partial
@@ -36,6 +36,11 @@ A build fails, naming the file and the fix, when two files derive the same
 path, when a file name contains a character that cannot be part of a path,
 when a module exports no definition, or when a link names a path that does
 not exist.
+
+Mokly keeps private state in `.mokly-cache/` at the repository
+root and writes a `.gitignore` file inside it, so Git never shows or adds that
+folder. Also list `.mokly-cache/` in your root `.gitignore` when other tools,
+such as formatters or linters, read only that file.
 
 ## Validate without writing
 

@@ -14,7 +14,7 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 test(
   "watched controls adopt only successful graphs and never publish edits or delay Browse",
-  { timeout: 25_000 },
+  { timeout: 60_000 },
   async (t) => {
     const source = controlsEntrySource();
     const fixture = await createFixture(source, {
@@ -26,7 +26,8 @@ test(
     const server = await serve(config, { port: 0, watch: true });
     fixture.beforeRemove(() => server.close());
     const capabilities = async () => {
-      for (let attempt = 0; attempt < 200; attempt += 1) {
+      const deadline = Date.now() + 15_000;
+      while (Date.now() < deadline) {
         const html = await (await fetch(`${server.url}/view/action/`)).text();
         const capability = settledRenderCapability(html);
         if (capability) return capability;
@@ -71,13 +72,23 @@ test(
     await delay(250);
     assert.deepEqual(await capabilities(), first);
     assert.equal((await render(first, "Last good")).status, 200);
-    const hanging = render(first, "Hang");
+    let hangSettled = false;
+    const hanging = render(first, "Hang").then(
+      (response) => {
+        hangSettled = true;
+        return response;
+      },
+      (error: unknown) => {
+        hangSettled = true;
+        throw error;
+      },
+    );
     await delay(100);
-    const started = Date.now();
     assert.equal((await fetch(server.url)).status, 200);
-    assert.ok(
-      Date.now() - started < 1000,
-      "synchronous consumer rendering must not occupy the HTTP thread",
+    assert.equal(
+      hangSettled,
+      false,
+      "Browse must answer while the Hang render is still pending",
     );
     assert.equal((await hanging).status, 422);
     assert.equal((await render(first, "Recovered")).status, 200);
@@ -89,7 +100,7 @@ test(
       ),
     );
     let latest = first;
-    const deadline = Date.now() + 5000;
+    const deadline = Date.now() + 15_000;
     while (latest.generation === first.generation && Date.now() < deadline) {
       await delay(50);
       latest = await capabilities();

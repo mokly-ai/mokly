@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import path from "node:path";
 
+import { ensureCacheIgnore } from "../config/cache_ignore.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { errorMessage } from "../errors.js";
 
@@ -82,6 +83,7 @@ export class CachedBaselineBuilder implements BaselineBuilder {
         layout.entry,
         request.signal,
       );
+      await ensureCacheIgnore(this.fs, layout.cache);
       const lock = await acquireBaselineLock(
         this.fs,
         this.runner,

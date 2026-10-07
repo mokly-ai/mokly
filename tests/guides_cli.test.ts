@@ -149,6 +149,17 @@ test("exit status and every public error category are documented", () => {
   assert.ok(source.includes("[mokly/"));
 });
 
+test("build guides explain the cache that Git ignores", () => {
+  for (const id of ["cli/build", "start/build"]) {
+    const guide = GUIDES.find((page) => page.id === id)?.source ?? "";
+    assert.match(
+      guide.replace(/\s+/gu, " "),
+      /Mokly keeps private state in `\.mokly-cache\/` at the repository root and writes a `\.gitignore` file inside it, so Git never shows or adds that folder\./u,
+      id,
+    );
+  }
+});
+
 test("publish and export guides carry the reviewed contract copy", () => {
   const publish = (sources.get("cli/publish") ?? "").replace(/\s+/gu, " ");
   assert.match(publish, /tried up to five times/u);

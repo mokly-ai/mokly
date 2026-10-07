@@ -70,7 +70,7 @@ export class GitTrackedGeneratedOutput implements TrackedGeneratedOutput {
             .map((name) => `  - ${name}`)
             .join(
               "\n",
-            )}\nRemove these paths from the index with git rm --cached and add /${MOKLY_CACHE}/ to .gitignore.`,
+            )}\nRemove these paths from the index with git rm --cached.`,
         );
       const pathForRoute = (prefix: string, route: string) =>
         prefix ? `${prefix}/${route}` : route;

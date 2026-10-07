@@ -32,7 +32,7 @@ for (const completeHeaders of [false, true]) {
     );
     await headersReceived;
     const disconnected = once(client, "close", {
-      signal: AbortSignal.timeout(2_000),
+      signal: AbortSignal.timeout(15_000),
     });
     const closing = closeCatalogueHttp(server, new Set(), []);
     t.after(() => closing);

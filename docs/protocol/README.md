@@ -11,8 +11,6 @@ by rejecting the case-insensitive pattern `\bmilestones?\s+\d`.
 
 ## Supported Formats
 
-The following table describes the implemented formats.
-
 | Catalogue                     | Generated manifest | Comparison result |
 | ----------------------------- | ------------------ | ----------------- |
 | Without registered components | 9                  | 6                 |
@@ -61,6 +59,8 @@ unsupported versions before content or path interpretation.
 - [CI workflow graph](./ci-workflow.md)
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard
   balance, and acceptance measurement.
+- [CI test timing](./ci-test-timing.md) — deterministic assertions,
+  duration reporting, and lint guard.
 - [Repository verification ratchets](./verification-ratchets.md)
 - [Catalogue upload v2](./mokly-upload.md) — public CLI, repository identity,
   upload manifest, output entry point and composite action boundary.

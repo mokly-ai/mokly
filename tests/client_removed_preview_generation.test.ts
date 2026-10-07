@@ -17,18 +17,18 @@ test("a generation that resolved elsewhere is not reused", async () => {
   } as const;
   const same = respond(null, loaded.url);
   assert.equal(
-    await renewPreview(loaded, same.win, AbortSignal.timeout(5_000)),
+    await renewPreview(loaded, same.win, AbortSignal.timeout(15_000)),
     true,
   );
   assert.deepEqual(same.calls, [{ url: loaded.url, method: "HEAD" }]);
   const moved = respond(null, "https://catalogue.test/elsewhere.json");
   assert.equal(
-    await renewPreview(loaded, moved.win, AbortSignal.timeout(5_000)),
+    await renewPreview(loaded, moved.win, AbortSignal.timeout(15_000)),
     false,
   );
   const failed = respond(null, loaded.url, false);
   assert.equal(
-    await renewPreview(loaded, failed.win, AbortSignal.timeout(5_000)),
+    await renewPreview(loaded, failed.win, AbortSignal.timeout(15_000)),
     false,
   );
 });

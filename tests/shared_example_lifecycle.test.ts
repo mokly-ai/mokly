@@ -111,7 +111,7 @@ test("cancelling example preparation drains its real process before deleting res
   const rejected = assert.rejects(pending, /stop preparation/u);
   try {
     let pid: number | undefined;
-    const end = Date.now() + 5000;
+    const end = Date.now() + 10_000;
     while (!pid && Date.now() < end) {
       pid = await fs
         .readFile(path.join(owner.root, "started"), "utf8")
