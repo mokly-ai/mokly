@@ -293,13 +293,13 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-7.md`.
 
 - [x] Search the current docs and READMEs for statements that these changes
       make stale, and update them.
-- [ ] Fetch `origin/main`. If it moved, merge it with the Mainline Feature
+- [x] Fetch `origin/main`. If it moved, merge it with the Mainline Feature
       Preservation steps in `AGENTS.md`. Save the merge justifications in the
       evidence file for the PR description.
-- [ ] Run `cargo xtask check`.
-- [ ] Inspect the diff and the deletions against `origin/main`. Record each
+- [x] Run `cargo xtask check`.
+- [x] Inspect the diff and the deletions against `origin/main`. Record each
       approved removal in the commit body.
-- [ ] Run `git add -A`, commit the completed work using Conventional
+- [x] Run `git add -A`, commit the completed work using Conventional
       Commits, and push the branch.
 - [ ] After the push, use `docs/implementation-review-prompt.md` to review
       the complete local diff against `origin/main` and report the findings.
