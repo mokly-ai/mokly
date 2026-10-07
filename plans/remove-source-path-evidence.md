@@ -1,11 +1,8 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestones 1 to 30 are implemented, verified and pushed.
-Milestone 30A is implemented and verified through main `6bf62517` in three
-local merges, with the approved isolated Serve fixture. Only its reviewer-owned
-push remains. Newer main changes await separate integration under the user's
-fetch-only instruction. Milestones 31 and 32 remain. The branch must not be
-pushed by this task.
+Status: Active. Milestones 1 to 30A are implemented, verified and pushed;
+Milestone 30A integrated main through `6bf62517`. Milestone 30B integrates main
+`dc56e3d4` (#145, #151, #152 and #134) before Milestones 31 and 32.
 
 ## Status And Outcome
 
@@ -2264,7 +2261,8 @@ On 2026-10-06 the user approved option A: the first test in `tests/build_warning
       third merge, including the parallel route hydration tests.
 - [x] Complete the focused warning and Serve checks after the user's fixture
       decision, then run the complete suite and gate with the approved fixture.
-- [ ] Push the branch after the reviewer checks the local merge.
+- [x] Push the branch after the reviewer checks the local merge. The reviewer
+      checked the merges and the fixture change and pushed `b9d49f13`.
 
 ### Integration decisions
 
@@ -2346,6 +2344,25 @@ from merging. No absolute checkout path decides the order.
   removed shared-impact globs. Main's five retained package scenarios stay.
 
 Evidence: `.context/remove-source-path-evidence/milestone-30a.md`; `.context/remove-source-path-evidence/third-merge-evidence.md`; `.context/remove-source-path-evidence/fixture-approved-evidence.md`.
+
+## Milestone 30B: Integrate `main` #145, #151, #152 and #134
+
+`main` moved to `dc56e3d4` after Milestone 30A. #145 makes `.mokly-cache`
+ignore itself, #151 pins npm 11.21.0, #152 replaces wall-clock test limits with
+deterministic checks, and #134 makes a browser test wait for panel scrolls to
+rest. A trial merge gives two conflicts. Merge it before Milestone 31, so that
+the remaining work uses main's deterministic tests.
+
+- [ ] Audit main's additions from the source tip, merge `origin/main` with
+      exactly two parents, resolve conflicts path by path and review every
+      remerge-diff path.
+- [ ] Compare every line that main added since `6bf62517` with the merged tree.
+      Classify each absent line as an intended migration, a move or a loss,
+      and restore every loss before the push.
+- [ ] Port this branch's tests that use wall-clock limits to #152's
+      deterministic checks where #152 replaced the same kind of limit.
+- [ ] Run `cargo xtask check` at 100%. Inspect the diff and the deletions
+      against `origin/main`, record the result, and push the branch.
 
 ## Milestone 31: Keep the branch name in exported navigation
 
