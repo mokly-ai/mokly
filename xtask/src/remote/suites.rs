@@ -7,6 +7,7 @@ use crate::check::request::DependencyAudit;
 use crate::remote::cleanup::BoxCleanup;
 use crate::remote::error::Error;
 use crate::remote::plan::{RunCommand, commands};
+use crate::remote::reporting::warning;
 
 use crate::remote::runner::DefaultRemoteRunner;
 
@@ -22,8 +23,6 @@ pub(super) struct Completion {
     pub(super) elapsed: u128,
     /// Whether the report download succeeded.
     pub(super) report_downloaded: bool,
-    /// Whether the first cleanup attempt failed.
-    pub(super) cleanup_failed: bool,
 }
 
 impl DefaultRemoteRunner {
@@ -50,7 +49,6 @@ impl DefaultRemoteRunner {
                                 passed: false,
                                 elapsed: 0,
                                 report_downloaded: false,
-                                cleanup_failed: false,
                             };
                         }
                         let start = dependencies.clock.millis();
@@ -66,9 +64,9 @@ impl DefaultRemoteRunner {
                         let passed = match outcome {
                             Ok(output) => output.success(),
                             Err(error) => {
-                                dependencies.reporter.executor(&format!(
-                                    "warning: {} failed: {error}",
-                                    command.name
+                                dependencies.reporter.executor(&warning(
+                                    &format!("{} failed", command.name),
+                                    &error,
                                 ));
                                 false
                             }
@@ -87,24 +85,29 @@ impl DefaultRemoteRunner {
                                     command.name,
                                     log.display()
                                 )),
-                                Err(error) => dependencies.reporter.progress(&format!(
-                                    "{} failed; log unavailable: {error}; log: {}",
-                                    command.name,
-                                    log.display()
-                                )),
+                                Err(error) => {
+                                    dependencies.reporter.executor(&warning(
+                                        &format!("log for {} unavailable", command.name),
+                                        &error,
+                                    ));
+                                    dependencies.reporter.progress(&format!(
+                                        "{} failed; log: {}",
+                                        command.name,
+                                        log.display()
+                                    ));
+                                }
                             }
                         }
                         let report_downloaded = command.report
                             && !dependencies.interrupt.requested()
                             && self.download_one(id, &command.name, run);
-                        let cleanup_failed = cleanup.stop_boxes(std::slice::from_ref(id)) != 0;
+                        cleanup.stop_boxes(std::slice::from_ref(id));
                         Completion {
                             command,
                             box_id: id.clone(),
                             passed,
                             elapsed,
                             report_downloaded,
-                            cleanup_failed,
                         }
                     })
                 })
@@ -115,7 +118,7 @@ impl DefaultRemoteRunner {
                     Ok(outcome) => outcomes.push(outcome),
                     Err(_) => dependencies
                         .reporter
-                        .executor(&format!("warning: suite worker failed: {}", Error::Worker)),
+                        .executor(&warning("suite worker failed", &Error::Worker)),
                 }
             }
             outcomes
@@ -134,7 +137,7 @@ impl DefaultRemoteRunner {
         if let Err(error) = dependencies.blacksmith.download(id, &source, &target) {
             dependencies
                 .reporter
-                .executor(&format!("warning: report {name} failed: {error}"));
+                .executor(&warning(&format!("report {name} failed"), &error));
             false
         } else {
             dependencies

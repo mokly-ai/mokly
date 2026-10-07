@@ -12,17 +12,27 @@ import {
 import { writeHarnessFile } from "./helpers/verification_wrapper.js";
 
 test(
-  "real SIGINT reports the process outcome and removes temporary events",
+  "real SIGINT with absent reporter output reports the process outcome and removes temporary events",
   {
     skip: process.platform === "win32",
     timeout: 30_000,
   },
   async (context) => {
     const harness = await createSelectedHarness(context);
+    const reporter = path.join(
+      harness.root,
+      "scripts/verification/node-reporter.mjs",
+    );
+    const source = await fs.readFile(reporter, "utf8");
+    assert.ok(source.includes("fs.writeFileSync("));
+    await fs.writeFile(
+      reporter,
+      source.replace("fs.writeFileSync(", "if (false) fs.writeFileSync("),
+    );
     await writeHarnessFile(
       harness.root,
       "tests/passing.test.ts",
-      'import fs from "node:fs"; import test from "node:test"; setInterval(() => {}, 1000); test("never settles", async () => { fs.writeFileSync("signal.marker", "ready"); await new Promise(() => {}); });',
+      'import fs from "node:fs"; import test from "node:test"; setInterval(() => {}, 1000); test("never settles", async () => { fs.writeFileSync("signal.marker.tmp", "ready"); fs.renameSync("signal.marker.tmp", "signal.marker"); await new Promise(() => {}); });',
     );
     let markerReady: () => void;
     const ready = new Promise<void>((resolve) => {
