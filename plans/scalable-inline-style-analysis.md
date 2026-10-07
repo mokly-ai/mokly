@@ -1980,7 +1980,7 @@ Evidence: `.context/scalable-inline-style-analysis/m11-merge/`.
       Record the CPU and boot ID around browser and hydration verification.
 - [ ] Discovered: PR #158 CI fails 6 unit tests on Node 22.14.0; pending the user's decision (fix or remove; slow custom tests). Logs: `.context/scalable-inline-style-analysis/m11-ci/`.
       Replay test (material_fingerprint_catalogues): Node 22.14 prefixes child test output lines with "# ", so it reads 0 records.
-      Speed-test tool tests (large_scenario_cancellation x4, large_material_companion x1): they launch Chromium, which the CI unit job does not install; the companion test also expects a startup of at least 5 seconds, which #152 forbids.
+      Speed-test tool tests (large_scenario_cancellation x4, large_material_companion x1): they launch Chromium, which the CI unit job does not install; under parallel load, the companion test's browser waits use Playwright's 5-second default (review finding 2).
 - [x] Commit with Conventional Commits and push after the supervisor's check.
       Pushed after the supervisor's check (2026-10-07).
 - [x] After the push, use
