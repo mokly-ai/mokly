@@ -732,6 +732,7 @@ before the merge.
       `docs/implementation-review-prompt.md` after the push. Report findings
       without changing the implementation.
   - Re-review of `5211ab11` (finding 2) and `ed1ee254` (finding 4): no new findings. Findings 1 and 3 wait for the user.
+  - Unrelated flaky test (not fixed here): `tests/browser/component_design_navigation.spec.ts` "the served catalogue reaches component designs and follows their variant links" failed once in PR #170 run 37685140800 (the frame `readyState` stayed `interactive` past the 5 s `expectFrameLoaded` wait) and passed on the rerun; suspected source: frame load timing on a busy runner.
   - Finding 1 (high, security): the committed `remoteCache.apiUrl`/`teamSlug` plus Turbo's file-based login (turbo login or the Vercel CLI login under the user config directory) make every Turbo run without the env pair send a `POST /v8/artifacts/events?slug=mokly` with the developer's token to the Worker; recommend removing apiUrl/teamSlug from turbo.json, injecting TURBO_API and the team only when the pair is present, plus a capture-server regression test with synthetic login files. Waiting for the user.
   - Finding 3 (low, repository rule): the protocol index format paragraph that merge `6dece14` shortened still lacks most of main's statements; needs the user's approval of the shortened text or a restored paragraph with a reviewed cap. Waiting for the user.
   - [x] Fix finding 2: preserve launcher signal handling and Windows TTY
