@@ -1,9 +1,9 @@
 # Remote Verification Review Follow-Up
 
-Status: Active. No pull request exists yet. Milestones 1 through 4 and the
-cleanup review changes are completed and pushed. The Testbox workflow passed
-in validation mode. Milestone 5 is next. The full gate remains deferred at
-the user's request.
+Status: Active. No pull request exists yet. Milestones 1 through 5 and the
+cleanup review changes are completed. The Testbox workflow passed in
+validation mode. Milestone 6 verification is next. Claude owns the final
+review. The user approved the local and default remote gates for this work.
 
 Fix the eleven open findings from the post-push review of
 [Blacksmith remote verification](./blacksmith-remote-verification.md)
@@ -186,12 +186,13 @@ Evidence: `.context/remote-verification-review-follow-up/milestone-4.md`.
 
 ## Milestone 5: Adapter tests
 
-Covers finding 4.
+Completed. Covers finding 4.
+Evidence: `.context/remote-verification-review-follow-up/milestone-5.md`.
 
-- [ ] Add the adapter tests in the finding 4 rules under the owning
+- [x] Add the adapter tests in the finding 4 rules under the owning
       `_tests_` directories. Keep each file at 300 lines or less.
-- [ ] Confirm that each new test fails when its adapter behavior is removed.
-- [ ] Run the Rust checks again. Commit.
+- [x] Confirm that each new test fails when its adapter behavior is removed.
+- [x] Run the Rust checks again. Commit.
 
 ## Milestone 6: Verification, close-out and review
 

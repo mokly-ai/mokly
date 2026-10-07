@@ -114,8 +114,12 @@ impl Interrupt for SystemInterrupt {
     fn arm(&self) -> Result<()> {
         let state = Arc::clone(&self.state);
         match ctrlc::set_handler(move || {
-            let previous = state.fetch_or(REQUESTED, Ordering::SeqCst);
-            if signal_action(previous & RELEASED != 0) == SignalAction::Exit {
+            let previous = match state.fetch_update(Ordering::SeqCst, Ordering::SeqCst, |bits| {
+                Some(signal_request(bits).0)
+            }) {
+                Ok(previous) | Err(previous) => previous,
+            };
+            if signal_request(previous).1 == SignalAction::Exit {
                 std::process::exit(130);
             }
         }) {
@@ -171,6 +175,19 @@ fn signal_action(released: bool) -> SignalAction {
     }
 }
 
+/// Preserve release and record the request in one atomic state transition.
+fn signal_request(state: u8) -> (u8, SignalAction) {
+    (state | REQUESTED, signal_action(state & RELEASED != 0))
+}
+
 #[cfg(test)]
 #[path = "_tests_/runtime_signal_tests.rs"]
 mod runtime_signal_tests;
+
+#[cfg(all(test, unix))]
+#[path = "_tests_/programs_adapter_tests.rs"]
+mod programs_adapter_tests;
+
+#[cfg(test)]
+#[path = "_tests_/interrupt_adapter_tests.rs"]
+mod interrupt_adapter_tests;

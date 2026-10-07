@@ -182,6 +182,12 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 
+The `*_adapter_tests.rs` files under `src/remote/_tests_/` test the operating
+system boundaries with real shell children and temporary directories. They
+cover streamed logs, private stdin, child environments, process-group cleanup,
+fresh log files, PATH permissions and interrupt state order. They use readiness
+signals and expected-state waits. They do not assert elapsed time.
+
 ### Key Code
 
 - [`src/cli.rs`](./src/cli.rs) parses and dispatches commands.

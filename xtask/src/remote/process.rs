@@ -249,3 +249,15 @@ fn system<T>(result: std::io::Result<T>, operation: Operation) -> Result<T> {
 #[cfg(test)]
 #[path = "_tests_/process_command_tests.rs"]
 mod process_command_tests;
+
+#[cfg(all(test, unix))]
+#[path = "_tests_/process_adapter_support.rs"]
+mod process_adapter_support;
+
+#[cfg(all(test, unix))]
+#[path = "_tests_/process_io_adapter_tests.rs"]
+mod process_io_adapter_tests;
+
+#[cfg(all(test, unix))]
+#[path = "_tests_/process_interrupt_adapter_tests.rs"]
+mod process_interrupt_adapter_tests;
