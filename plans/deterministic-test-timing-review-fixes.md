@@ -3,10 +3,10 @@
 Status: Active. No PR is open yet. On 2026-10-06 the user chose the
 recommended option for findings 1 to 5 of the
 [Deterministic Test Timing](./deterministic-test-timing.md) review. Finding 6
-needs no change: the squash title of PR #152 is within the limit. All eight
-milestones are complete. After the merge with main in Milestone 8, review
-finding 1 no longer applies. Findings 2 and 3 under Milestone 7, and finding 4
-under Milestone 8, await the user's decision.
+needs no change: the squash title of PR #152 is within the limit. Milestones 1
+to 8 are complete. After the merge with main in Milestone 8, review finding 1
+no longer applies. Milestone 9 fixes findings 2 to 4 with the options that the
+user chose.
 
 Fix the five open findings from the PR #152 review. Keep browser retries
 working, give Playwright assertions the contract's 10-second minimum, replace
@@ -342,6 +342,47 @@ Evidence: `.context/deterministic-test-timing-review-fixes/merge-7d3b232.md`.
   - Finding 1 no longer applies: PR #156 removed the `isOwned` call chain, and every fixed root now resolves a constant number of times.
   - Findings 2 and 3 still apply. Finding 3 also covers `performance.timeOrigin + performance.now() - started`, which main's `tests/helpers/browser_timing.ts` uses for fixture timing.
   - 4 (Low, test): `tests/server_fixture.ts` is an unused copy of `tests/helpers/server_http.ts` from PR #156. It keeps a 12 s deadline loop and a 2 s request timeout. Recommended: delete it.
+
+## Milestone 9: Fix review findings 2 to 4
+
+On 2026-10-07 the user chose option A for finding 2, option B for finding 3
+and option A for finding 4. Option A for finding 4 approves the deletion of
+`tests/server_fixture.ts` from `origin/main`.
+
+- Finding 2: wait for the replaced document in
+  `tests/browser/same_origin_reconnect.spec.ts` with `page.waitForFunction`
+  and a 15 s allowance, outside `page.evaluate`.
+- Finding 3: the guard also rejects `<object>.Date.now()`,
+  `new <object>.Date().getTime()` and a clock call that is a direct operand
+  of a `+` expression on the left of a subtraction, such as
+  `performance.timeOrigin + performance.now() - started`. The guard exempts
+  the fixture-timing helper `tests/helpers/browser_timing.ts` as well as
+  `tests/helpers/durations.ts`.
+- Finding 4: delete the unused `tests/server_fixture.ts`.
+
+Evidence: `.context/deterministic-test-timing-review-fixes/milestone-9.md`.
+
+- [ ] Update the ESLint Guard section of `docs/protocol/ci-test-timing.md`,
+      the duration-helper text in `docs/protocol/ci-test-timing-helpers.md`,
+      `docs/protocol/ci-verification-repository.md` and `README.md` for the
+      finding 3 forms and exemption.
+- [ ] Replace the in-page `setInterval` wait in
+      `tests/browser/same_origin_reconnect.spec.ts` (finding 2). Run the spec
+      three times.
+- [ ] Add the finding 3 forms and the exemption to
+      `tests/test_timing_lint.test.ts` and watch the new cases fail. Then
+      extend the selectors and the exemption in `eslint.config.js`.
+- [ ] Delete `tests/server_fixture.ts` (finding 4). Search `docs/`, `plans/`
+      and every `README.md` for its name.
+- [ ] Merge the latest `origin/main` with the Mainline Feature Preservation
+      steps in `AGENTS.md`.
+- [ ] Run `cargo xtask check --suite repository`, then the complete gate, with
+      the CI toolchain (Rust 1.95.0) and the local executor.
+- [ ] Commit and push the branch, and open the pull request.
+- [ ] After the push, use `docs/implementation-review-prompt.md` to review
+      the complete local diff against `origin/main` and report the findings.
+      Then apply the review-fix rule: fix the `Auto-fix: yes` findings,
+      re-review once, and report the rest.
 
 ## Post-merge follow-up (non-blocking)
 
