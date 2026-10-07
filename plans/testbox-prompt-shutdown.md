@@ -158,31 +158,35 @@ Evidence: `.context/testbox-prompt-shutdown/spike.md`.
 
 ## Milestone 2: Close the connection during cleanup
 
-xtask closes each box's shared SSH connection before any other cleanup
-action.
+Completed. Xtask closes each box's shared SSH connection once before status,
+stop and cancellation. The current stop-before-cancel order remains.
 
-- [ ] Add a close method to the `Blacksmith` trait, for example
+Evidence: `.context/testbox-prompt-shutdown/milestone-2.md`.
+
+- [x] Add a close method to the `Blacksmith` trait, for example
       `disconnect(id)`. Implement it in `SystemBlacksmith` with the method
       from Milestone 1. Run `ssh` through the `Process` boundary, so the
       secret variable list and redaction still apply. Add a typed operation
       for SSH diagnostics.
-- [ ] Call the close method once per box in `CleanupGuard`, before status,
+- [x] Call the close method once per box in `CleanupGuard`, before status,
       stop and cancellation, inside the existing unwind protection. Store the
       close state with the box, so retries and final cleanup do not repeat
       it.
-- [ ] Add unit tests with unimock. Use event order and captured inputs, not
+- [x] Add unit tests with unimock. Use event order and captured inputs, not
       elapsed time. Cover: close before status, stop and cancellation; one
       close per box across suite, final and panic cleanup; one information
       line for an absent connection and no output for a closed connection;
       one warning for a failed close, then normal cleanup; and
       the interrupt and preparation-failure paths.
-- [ ] Add adapter tests in the existing adapter test style. Cover the exact
+- [x] Add adapter tests in the existing adapter test style. Cover the exact
       `ssh` arguments, the removed secret variables and no process for a
       missing socket.
-- [ ] Update the existing cleanup tests for the new call.
-- [ ] Update the cleanup text in the xtask README.
-- [ ] Run the xtask tests, `cargo fmt --all -- --check`, Clippy and the
-      length lints. Commit.
+- [x] Update the existing cleanup tests for the new call.
+- [x] Make the SSH adapter fixture accept a child that finishes before a poll
+      wait. Keep all assertions and record repeat results under `.context/`.
+- [x] Update the cleanup text in the xtask README.
+- [x] Run the xtask tests, `cargo fmt --all -- --check`, Clippy and the
+      length lints, local repository gate and Markdown checks. Commit and push.
 
 ## Milestone 3: Cancel order and error text
 

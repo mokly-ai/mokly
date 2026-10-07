@@ -10,14 +10,22 @@ use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
 use crate::remote::runner::DefaultRemoteRunner;
 
+#[path = "disconnect_cleanup_tests.rs"]
+mod disconnect_cleanup_tests;
+
 #[test]
 fn cleanup_continues_after_status_stop_and_optional_github_failures() {
     for case in 0..5 {
         let events = Arc::new(Mutex::new(Vec::new()));
         let status_events = events.clone();
+        let close_events = events.clone();
         let stop_events = events.clone();
         let cancel_events = events.clone();
         let shared = Arc::new(Unimock::new((
+            BlacksmithDisconnectMock.each_call(matching!(_)).answers_arc(Arc::new(move |_, id| {
+                close_events.lock().unwrap().push(format!("close:{id}"));
+                Ok(Disconnection::Closed)
+            })),
             ProgramsFindMock
                 .next_call(matching!("gh"))
                 .answers_arc(Arc::new(move |_, _| {
@@ -102,6 +110,21 @@ fn cleanup_continues_after_status_stop_and_optional_github_failures() {
         );
         let events = events.lock().unwrap();
         for id in ["tbx_a", "tbx_b"] {
+            assert_eq!(
+                events
+                    .iter()
+                    .filter(|event| **event == format!("close:{id}"))
+                    .count(),
+                1
+            );
+            assert!(
+                events
+                    .iter()
+                    .position(|event| *event == format!("close:{id}"))
+                    < events
+                        .iter()
+                        .position(|event| *event == format!("status:{id}"))
+            );
             assert_eq!(
                 events
                     .iter()

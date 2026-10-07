@@ -22,6 +22,7 @@ enum Case {
 fn fixture(case: Case) -> (Dependencies, Arc<Mutex<Vec<String>>>) {
     let events = Arc::new(Mutex::new(Vec::new()));
     let statuses = events.clone();
+    let closes = events.clone();
     let stops = events.clone();
     let waits = events.clone();
     let cancels = events.clone();
@@ -29,6 +30,12 @@ fn fixture(case: Case) -> (Dependencies, Arc<Mutex<Vec<String>>>) {
     let (sender, receiver) = mpsc::channel();
     let receiver = Mutex::new(receiver);
     let shared = Arc::new(Unimock::new((
+        BlacksmithDisconnectMock
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, id| {
+                closes.lock().unwrap().push(format!("close:{id}"));
+                Ok(Disconnection::Closed)
+            })),
         ProgramsFindMock
             .each_call(matching!("gh"))
             .answers(&|_, _| Ok(true)),
@@ -136,6 +143,7 @@ fn a_retrying_box_does_not_block_another_box_and_keeps_its_order() {
     let events = events.lock().unwrap();
     let position = |event| events.iter().position(|entry| entry == event).unwrap();
     assert!(position("stop:tbx_b:1") < position("stop:tbx_a:2"));
+    assert!(position("close:tbx_b") < position("status:tbx_b"));
     assert!(position("status:tbx_b") < position("stop:tbx_b:1"));
     assert!(position("stop:tbx_b:1") < position("cancel:456"));
     let own: Vec<_> = events
@@ -146,6 +154,7 @@ fn a_retrying_box_does_not_block_another_box_and_keeps_its_order() {
     assert_eq!(
         own,
         [
+            "close:tbx_a",
             "status:tbx_a",
             "stop:tbx_a:1",
             "wait:start",

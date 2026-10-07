@@ -285,3 +285,6 @@ mod cancellation_tests;
 
 #[path = "warning_paths_tests.rs"]
 mod warning_paths_tests;
+
+#[path = "disconnect_runner_tests.rs"]
+mod disconnect_runner_tests;

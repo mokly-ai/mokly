@@ -4,9 +4,10 @@ Continuation of [Remote Verification](./remote-verification.md).
 
 ## Delivery Status
 
-Stop retries, completion proof, interrupts and the panic guard are implemented.
-Closing the shared SSH connection, cancelling before stop and retaining command
-error text are approved targets under the
+The shared SSH close, stop retries, completion proof, interrupts and panic
+guard are implemented. The current per-box order is close, status, stop, then
+cancellation. Cancelling before stop and retaining command error text remain
+approved targets under the
 [prompt shutdown plan](../../plans/testbox-prompt-shutdown.md).
 
 ## Cleanup And Interrupts

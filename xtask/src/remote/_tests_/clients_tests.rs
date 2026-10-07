@@ -19,6 +19,7 @@ fn login_uses_stdin_and_never_places_the_key_in_arguments_or_debug_output() {
     SystemBlacksmith {
         process,
         workspace: PathBuf::from("/workspace"),
+        home: None,
     }
     .login("test-key")
     .unwrap();
@@ -84,6 +85,7 @@ fn warmup_probe_download_status_and_stop_use_the_contract_arguments() {
     let client = SystemBlacksmith {
         process,
         workspace: PathBuf::from("/workspace"),
+        home: None,
     };
     client.warmup("feature").unwrap();
     client.run("tbx_a", "probe", None).unwrap();
@@ -144,7 +146,7 @@ fn github_state_uses_exact_arguments_and_a_typed_status() {
         assert_eq!(
             SystemGithub {
                 process,
-                workspace: PathBuf::from("/workspace")
+                workspace: PathBuf::from("/workspace"),
             }
             .state(123)
             .unwrap(),

@@ -16,6 +16,8 @@ pub(crate) enum Operation {
     Git,
     /// Authenticate or manage a Testbox.
     Blacksmith,
+    /// Close the CLI's existing shared SSH connection.
+    Ssh,
     /// Read or cancel a GitHub workflow run.
     Github,
     /// Compute the source fingerprint.
@@ -35,6 +37,9 @@ mod error_tests;
 /// Failures that prevent a complete remote pass.
 #[derive(Debug, Error)]
 pub(crate) enum Error {
+    /// HOME did not supply the CLI's control directory location.
+    #[error("[xtask/remote] HOME is unset or empty; cannot close shared SSH connection")]
+    MissingHome,
     /// A child did not expose its configured output pipe.
     #[error("[xtask/remote] child output pipe is unavailable")]
     Pipe,

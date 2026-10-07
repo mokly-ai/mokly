@@ -1,4 +1,4 @@
-//! Best-effort status, stop and GitHub cancellation for every warmed box.
+//! Best-effort SSH close, status, stop and cancellation for every warmed box.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::panic::{AssertUnwindSafe, catch_unwind};
@@ -7,7 +7,7 @@ use std::sync::{Mutex, MutexGuard};
 use std::thread;
 use std::time::Duration;
 
-use crate::remote::contracts::{Dependencies, GithubRunState};
+use crate::remote::contracts::{Dependencies, Disconnection, GithubRunState};
 use crate::remote::error::Error;
 use crate::remote::parse::{box_is_completed, run_id_from_status};
 use crate::remote::reporting::warning;
@@ -29,6 +29,8 @@ pub(super) trait BoxCleanup: Send + Sync {
 /// State that survives every cleanup call without resetting the retry limit.
 #[derive(Clone, Copy, Default)]
 struct BoxState {
+    /// Claim the close before its boundary call, including calls that panic.
+    disconnect_attempted: bool,
     run: Option<u64>,
     attempts: usize,
     warned: bool,
@@ -79,6 +81,29 @@ impl<'a> CleanupGuard<'a> {
         self.report(&warning(context, error));
     }
 
+    /// Close each tracked box's shared SSH connection once before other calls.
+    fn disconnect(&self, id: &str) {
+        {
+            let mut remaining = self.remaining();
+            let Some(state) = remaining.get_mut(id) else {
+                return;
+            };
+            if state.disconnect_attempted {
+                return;
+            }
+            state.disconnect_attempted = true;
+        }
+        match self.during_unwind(|| self.dependencies.blacksmith.disconnect(id)) {
+            Some(Ok(Disconnection::Absent)) => {
+                self.report(&format!("information: no shared SSH connection for {id}"))
+            }
+            Some(Err(error)) => {
+                self.warn(&format!("could not close SSH connection for {id}"), &error)
+            }
+            Some(Ok(Disconnection::Closed)) | None => {}
+        }
+    }
+
     /// Read completion proof and prefer the current status run ID.
     fn status(&self, id: &str, recorded: Option<u64>) -> (bool, Option<u64>) {
         match self.during_unwind(|| self.dependencies.blacksmith.status(id)) {
@@ -103,6 +128,7 @@ impl<'a> CleanupGuard<'a> {
 
     /// Retry one box within its shared three-attempt limit.
     fn stop_one(&self, id: &str, github: bool) {
+        self.disconnect(id);
         let Some(mut state) = self.remaining().get(id).copied() else {
             return;
         };

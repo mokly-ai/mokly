@@ -144,6 +144,7 @@ fn remote_dependencies(workspace: PathBuf) -> Dependencies {
     let blacksmith: Arc<dyn Blacksmith + Send + Sync> = Arc::new(SystemBlacksmith {
         process: Arc::clone(&process),
         workspace: workspace.clone(),
+        home: environment.get("HOME").map(PathBuf::from),
     });
     let github: Arc<dyn Github + Send + Sync> = Arc::new(SystemGithub {
         process,

@@ -148,13 +148,22 @@ It does not change the required source fingerprint or `HEAD`.
 The [remote contract](../docs/protocol/remote-verification.md) defines the
 availability order, probe barrier and report aggregate.
 The [cleanup contract](../docs/protocol/remote-verification-cleanup.md) defines
-cleanup rules. Closing the shared SSH connection, cancelling before stop and
-retaining command error text are approved targets under the
+cleanup rules. Closing the shared SSH connection is implemented. Cancelling
+before stop and retaining command error text remain approved targets under the
 [prompt shutdown plan](../plans/testbox-prompt-shutdown.md).
 Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
 Each command worker downloads its report and cleans up its box when it ends.
 It does not wait for other commands. Final cleanup covers only remaining boxes.
 Different boxes clean up in parallel. Each box keeps its own attempt order.
+Cleanup closes each box's shared SSH connection once before status, stop and
+cancellation. It records the attempt before the call, so retries and the panic
+guard do not repeat it. The composition root reads `HOME` through the environment
+boundary and supplies it to the Blacksmith adapter. The close reads no key.
+An unset or empty `HOME` warns once. A missing control directory or socket
+starts no process and prints `information: no shared SSH connection for <box-id>`
+once. A failed close warns once and does not change the cleanup failure count.
+A socket that disappears during a failed close counts as closed and prints
+nothing. Cleanup still stops before it cancels the GitHub run.
 The status table can prove a box already completed. That box needs no stop or
 GitHub cancellation. Cleanup keeps run IDs from warmup and probe output as a
 fallback when status fails or names no run. A failed stop gets retries after
