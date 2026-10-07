@@ -196,7 +196,7 @@ test("cancelled selected tests report the count before the process exit", async 
   );
   await assert.rejects(
     runSelected(harness, ["tests/passing.test.ts"]),
-    expectedReport("1 selected unit test cancelled\n"),
+    expectedReport("1 selected unit test cancelled:\n✖ cancelled\n"),
   );
 });
 

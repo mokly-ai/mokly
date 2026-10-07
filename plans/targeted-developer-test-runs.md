@@ -384,7 +384,7 @@ the orchestrating agent.
 - [x] Fix finding 1: warn only for named files, or once for an empty pattern run.
 - [x] Fix finding 4: recognize file-only passes for selected runs; keep strict
       summary-only file evidence.
-- [ ] Fix finding 2: classify reporter failures, omit wrappers, and print both
+- [x] Fix finding 2: classify reporter failures, omit wrappers, and print both
       failed and cancelled groups without changing written report entries.
 - [ ] Fix finding 3: prefer process errors over missing or incomplete reporter
       output on process failure. Test a real signal and temporary cleanup.

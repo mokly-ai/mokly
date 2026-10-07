@@ -27,6 +27,7 @@ export default async function* verificationReporter(source) {
         failures.push({
           name: event.data.name,
           diagnostic: failureDiagnostic(event.data.details?.error),
+          failureType: event.data.details?.error?.failureType,
         });
       const line = outputLine(event);
       if (line) yield line;

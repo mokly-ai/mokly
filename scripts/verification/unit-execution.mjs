@@ -38,13 +38,31 @@ export async function executeUnitTests(repositoryRoot, options) {
       observedFiles: raw.summaries.map((summary) =>
         fileEvidence(repositoryRoot, summary),
       ),
-      failures: raw.failures,
+      failures: raw.failures.map(({ name, diagnostic }) => ({
+        name,
+        diagnostic,
+      })),
       skipped: sum(raw.summaries, "skipped") + sum(raw.summaries, "todo"),
       cancelled: sum(raw.summaries, "cancelled"),
       failed: sum(raw.summaries, "failed"),
       reporterComplete: true,
     };
     if (options.selected) {
+      evidence.failedNames = raw.failures
+        .filter(
+          ({ failureType }) =>
+            ![
+              "subtestsFailed",
+              "testTimeoutFailure",
+              "cancelledByParent",
+            ].includes(failureType),
+        )
+        .map(({ name }) => name);
+      evidence.cancelledNames = raw.failures
+        .filter(({ failureType }) =>
+          ["testTimeoutFailure", "cancelledByParent"].includes(failureType),
+        )
+        .map(({ name }) => name);
       const summaries = new Set(evidence.observedFiles.map(({ file }) => file));
       for (const fileResult of raw.fileResults ?? []) {
         const file = fileEvidence(repositoryRoot, { ...fileResult, tests: 0 });
