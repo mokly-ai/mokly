@@ -212,11 +212,12 @@ that pull request. An app installation token acts as its app. If the
 organization requires fine-grained token approval, an organization owner
 approves it.
 
-Maintainer `calummoore` created the repository secret on 2026-10-06. Its expiry
-date is not yet recorded. Do not infer one from the creation date. The owner
-rotates the token before the end date shown in the token settings and keeps
-the repository scope and permissions above. The maintainer will obtain and
-record that end date.
+Maintainer `calummoore` created the repository secret on 2026-10-06. The token
+has no expiration date, so no scheduled rotation applies. Replace it when it
+may be exposed, when its owner loses write access, or when the owner revokes
+it. Keep the repository scope and permissions above in every replacement.
+A revoked token that stays in the secret fails checkout. Only an empty or
+deleted secret selects the `github.token` fallback.
 
 Without the secret, the fallback token can create the pull request and push
 its branch, but CI needs a maintainer push or close-and-reopen action. Every

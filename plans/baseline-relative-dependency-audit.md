@@ -7,8 +7,9 @@ landed on `main` in [PR #146](https://github.com/mokly-ai/mokly/pull/146): the
 Miniflare `sharp` override is 0.35.5 and `shell-quote` is 1.12.0. The live
 strict audit now passes with the reviewed `braces` exception. Maintainer
 `calummoore` created the `DEPENDENCY_AUDIT_TOKEN` repository secret on
-2026-10-06; its expiry date is not yet recorded. This plan changes the audit
-policy and puts future strict failures on a bot-maintained update pull request.
+2026-10-06; the token has no expiration date (user decision, 2026-10-07).
+This plan changes the audit policy and puts future strict failures on a
+bot-maintained update pull request.
 
 ## Status And Outcome
 
@@ -231,14 +232,16 @@ These decisions are fixed for every milestone below.
     Metadata read is implicit. No account or Workflows permission is
     granted. A personal token is bounded by its owner's write access; the
     owner is the pull request author and cannot approve it. An installation
-    token acts as its app. A fine-grained token expires and must be rotated
-    before its end date. If the
+    token acts as its app. A fine-grained token can have an expiration date;
+    this token has none, by user decision on 2026-10-07. If the
     organization requires approval for fine-grained tokens, an owner
     approves the request. Without the secret the update pull request exists
     but needs a maintainer push or close-and-reopen before CI runs. The new
     protocol page records owner `calummoore`, the exact scope, creation date
-    2026-10-06, and the rotation rule. The expiry date is unknown; the owner
-    rotates the token before the end date shown in the token settings.
+    2026-10-06, the absence of an expiration date, and the replacement rule:
+    replace the token when it may be exposed, when its owner loses write
+    access, or when it is revoked. A revoked token in the secret fails
+    checkout; only an empty secret selects the `github.token` fallback.
 
 ## Milestone 1: Define the baseline audit contract
 
@@ -476,8 +479,8 @@ fixed findings 4, 6, and 7; the re-review found no new finding. Reports:
 ## Post-merge follow-up (non-blocking)
 
 The advisory fixes already landed in PR #146. Maintainer `calummoore` already
-created the repository secret on 2026-10-06. Its owner must rotate it before
-the end date in the token settings; the expiry date remains an open owner detail.
+created the repository secret on 2026-10-06. The token has no expiration date,
+so no rotation date applies.
 
 - Dispatch the Dependency Audit workflow once. Confirm it finds `main` clean
   with the reviewed `braces` exception and opens no pull request.
