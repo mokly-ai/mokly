@@ -237,21 +237,23 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-4.md`.
       changed browser fixture once. Run `npm run lint` and
       `npm run typecheck`.
 
-## Milestone 5: Browser assertion timeouts (findings 1 and 2)
+## Milestone 5: Browser assertion timeouts (findings 1 and 2) — completed
 
 Raise the Playwright assertion timeout and restore the evidence retry.
 
 Evidence: `.context/deterministic-test-timing-review-fixes/milestone-5.md`.
 
-- [ ] Add a failing assertion to `tests/verification_concurrency.test.ts`,
+- [x] Add a failing assertion to `tests/verification_concurrency.test.ts`,
       then set `expect: { timeout: 15_000 }` in `playwright.config.ts`.
-- [ ] Set the per-attempt panel wait in `openEvidence` to 1 s. Keep
+- [x] Set the per-attempt panel wait in `openEvidence` to 1 s. Keep
       `toPass({ timeout: 15_000 })`.
-- [ ] Confirm that no other retry loop has an inner wait as long as its
+- [x] Confirm that no other retry loop has an inner wait as long as its
       deadline, and that no browser test catches a failed assertion.
-- [ ] Prove the retry with a temporary change that swallows the first Details
-      click. The evidence specs must still pass. Revert the change.
-- [ ] Run `css_evidence.spec.ts`, `css_screen_evidence.spec.ts`,
+- [x] Run `npm run prepare:verification` once before the browser checks.
+- [x] Prove the retry with a temporary change that swallows the first Details
+      click. The evidence spec must still pass. Confirm that the same spec
+      fails with a 15 s per-attempt wait. Revert both temporary changes.
+- [x] Run `css_evidence.spec.ts`, `css_screen_evidence.spec.ts`,
       `shared_impact_details.spec.ts` and
       `tests/verification_concurrency.test.ts`. Run `npm run lint` and
       `npm run typecheck`.

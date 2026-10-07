@@ -123,6 +123,12 @@ test("Playwright and both runners use the shared defaults", async () => {
   assert.match(browserRunner, /env: \{ \.\.\.environment,/u);
 });
 
+test("Playwright assertions allow at least ten seconds", () => {
+  const timeout = browserConfig.expect?.timeout;
+  assert.equal(typeof timeout, "number");
+  assert.ok(timeout !== undefined && timeout >= 10_000);
+});
+
 test("hydration route tests run in parallel with one bundle per worker", async () => {
   const spec = await fs.readFile(
     path.join(

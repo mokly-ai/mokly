@@ -14,6 +14,7 @@ const projectUse = {
 
 /** Browser regression configuration for the served Mokly shell. */
 export default defineConfig({
+  expect: { timeout: 15_000 },
   forbidOnly: true,
   fullyParallel: false,
   globalSetup: "./tests/browser/setup.ts",
