@@ -128,7 +128,9 @@ Node floor, and regenerate the lockfile with npm. Do not blindly run
 or an incompatible toolchain replacement.
 
 Update from an installed tree: run `npm ci`, then `npm update <package>`.
-Lockfile-only mode can record bundled entries of optional platform packages
+Use the npm version that `packageManager` pins; the
+[CI workflow graph](./ci-workflow.md#job-execution) explains why lockfile
+changes need it. Lockfile-only mode can record bundled entries of optional platform packages
 that this machine does not install. Keep the lockfile diff to the intended
 entries.
 
@@ -170,10 +172,13 @@ The current maintenance choices are:
   Remove each override when a deliberately upgraded Wrangler/Miniflare version
   resolves a patched version without it and passes the complete gate. These
   overrides do not apply to unrelated dependency parents.
-- `react-native-reanimated` 4.3.4 stays on its 4.3 line through a tilde range:
-  4.4 and later need `react-native-worklets` 0.9 or later, 4.7 needs React
-  Native 0.86, and the development `@firna/ui` 0.14 peer range ends below 0.86.
-  Lift the hold with a `@firna/ui` release that accepts both newer lines.
+- `react-native-reanimated` 4.3.4 stays on its 4.3 line through a tilde range.
+  Releases 4.4 through 4.6 each need a newer `react-native-worklets` line (0.9
+  through 0.12), which the root `^0.8.3` range excludes. Move to one of them
+  only in a reviewed change that also moves `react-native-worklets` to the
+  matching line. Release 4.7 needs React Native 0.86 or later, but every
+  `@firna/ui` release, including 0.15.0 and 4.0.0, accepts only React Native
+  below 0.86. Move to 4.7 only after `@firna/ui` accepts React Native 0.86.
 - `@playwright/test` 1.61.1 stays locked. Playwright 1.62 and later exit with
   status 1 when a reporter event write fails, but the wrapper test in
   `tests/verification_wrapper.test.ts` expects the 1.61 status 0. Update that
