@@ -1,12 +1,13 @@
 //! Exact Blacksmith commands and private stdin behavior.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use unimock::{MockFn, Unimock, matching};
 
 use crate::remote::clients::{SystemBlacksmith, SystemGithub};
-use crate::remote::contracts::{Blacksmith, Github, Output};
+use crate::remote::contracts::{Blacksmith, Github, GithubRunState, Output};
+use crate::remote::error::{Error, Operation};
 use crate::remote::process::ProcessExecuteMock;
 
 #[test]
@@ -106,4 +107,87 @@ fn github_cleanup_cannot_be_cancelled_by_the_same_interrupt() {
     }
     .cancel(123)
     .unwrap();
+}
+
+#[test]
+fn github_state_uses_exact_arguments_and_a_typed_status() {
+    for (text, state) in [
+        ("completed\n", GithubRunState::Completed),
+        (" \tcompleted\r\n", GithubRunState::Completed),
+        ("in_progress\n", GithubRunState::Other),
+        ("new_status", GithubRunState::Other),
+        ("completed-extra", GithubRunState::Other),
+        ("null", GithubRunState::Other),
+    ] {
+        let text = text.to_owned();
+        let process = Arc::new(Unimock::new(
+            ProcessExecuteMock
+                .next_call(matching!(_))
+                .answers_arc(Arc::new(move |_, request| {
+                    assert_eq!(request.program, "gh");
+                    assert_eq!(
+                        request.args,
+                        ["run", "view", "123", "--json", "status", "--jq", ".status"]
+                    );
+                    assert!(!request.cancellable);
+                    assert!(!request.blacksmith);
+                    assert!(request.input.is_none());
+                    assert!(request.log.is_none());
+                    assert_eq!(request.cwd.as_path(), Path::new("/workspace"));
+                    Ok(Output {
+                        stdout: text.clone(),
+                        code: Some(0),
+                        ..Output::default()
+                    })
+                })),
+        ));
+        assert_eq!(
+            SystemGithub {
+                process,
+                workspace: PathBuf::from("/workspace")
+            }
+            .state(123)
+            .unwrap(),
+            state
+        );
+    }
+}
+
+#[test]
+fn github_state_read_preserves_command_failures_and_rejects_empty_output() {
+    for (code, text) in [(1, "completed\n"), (0, ""), (0, " \t\n")] {
+        let text = text.to_owned();
+        let process = Arc::new(Unimock::new(
+            ProcessExecuteMock
+                .next_call(matching!(_))
+                .answers_arc(Arc::new(move |_, _| {
+                    Ok(Output {
+                        stdout: text.clone(),
+                        code: Some(code),
+                        ..Output::default()
+                    })
+                })),
+        ));
+        let error = SystemGithub {
+            process,
+            workspace: PathBuf::from("/workspace"),
+        }
+        .state(123)
+        .unwrap_err();
+        if code != 0 {
+            assert!(matches!(
+                error,
+                Error::Command {
+                    operation: Operation::Github,
+                    code: Some(1)
+                }
+            ));
+        } else {
+            assert!(matches!(error, Error::EmptyGithubState));
+            assert_eq!(
+                error.to_string(),
+                "[xtask/remote] GitHub run state is empty"
+            );
+        }
+    }
 }

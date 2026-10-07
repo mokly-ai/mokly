@@ -43,7 +43,7 @@ separate [suite evidence contract](./ci-suite-evidence.md).
 ## Testbox Key And Secret Boundary
 
 The [remote verification contract](./remote-verification.md) is an approved
-target under the active [plan](../../plans/blacksmith-remote-verification.md).
+target under the [plan](../../plans/blacksmith-remote-verification.md).
 The workflow secret boundary and executor key handling are implemented.
 Explicit and automatic modes use the same key handling.
 
@@ -52,6 +52,11 @@ It sends the key to `blacksmith auth login --api-token -` on standard input.
 Login saves the key in `~/.blacksmith/credentials`.
 It replaces any saved login for the same organization.
 The key must never appear in arguments, logs, remote commands or reports.
+One shared list defines secret environment variables for xtask children.
+The list currently contains only `BLACKSMITH_ORG_TOKEN`.
+Every local runner and remote process request removes each listed variable
+from its child environment. This includes helper processes such as `kill`.
+Key login uses standard input, never a child environment variable.
 Explicit remote mode can use the current CLI login when the variable is unset
 or empty. Automatic mode selects local execution in that case.
 The cloud snapshot supplies tools but must not contain

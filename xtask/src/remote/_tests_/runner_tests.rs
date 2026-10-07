@@ -14,6 +14,12 @@ mod harness_tests;
 #[path = "harness_client_tests.rs"]
 mod harness_client_tests;
 
+#[path = "harness_clock_tests.rs"]
+mod harness_clock_tests;
+
+#[path = "harness_github_tests.rs"]
+mod harness_github_tests;
+
 #[test]
 fn complete_remote_gate_downloads_nine_reports_after_eleven_suites() {
     let fixture = harness(Case::Success);
@@ -173,7 +179,7 @@ fn interruption_is_nonzero_even_when_children_return_zero() {
             dependencies: fixture.dependencies
         }
         .run(DependencyAudit::Baseline),
-        Err(Failure::Failed(Error::Interrupted))
+        Err(Failure::Failed(Error::Interrupted { cleanup: 0 }))
     ));
 }
 
@@ -267,3 +273,15 @@ fn each_report_download_precedes_its_box_stop() {
 
 #[path = "panic_cleanup_tests.rs"]
 mod panic_cleanup_tests;
+
+#[path = "cleanup_count_tests.rs"]
+mod cleanup_count_tests;
+
+#[path = "run_id_recovery_tests.rs"]
+mod run_id_recovery_tests;
+
+#[path = "cancellation_tests.rs"]
+mod cancellation_tests;
+
+#[path = "warning_paths_tests.rs"]
+mod warning_paths_tests;

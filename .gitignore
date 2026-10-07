@@ -1,4 +1,5 @@
 .context/
+.claude/worktrees/
 .mokly-cache/
 .mokly-review-*/
 .mokly-write-*/
