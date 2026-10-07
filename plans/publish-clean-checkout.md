@@ -1,8 +1,10 @@
 # Require A Clean Checkout For Publish
 
-Status: Active. The user approved this change and plan. The branch starts at
-`origin/main`. [PR #168](https://github.com/mokly-ai/mokly/pull/168) is open.
-PR #135 is not part of this change. Completion requires the pull request to merge.
+Status: Completed. [PR #168](https://github.com/mokly-ai/mokly/pull/168) merged on
+2026-10-07. Review finding #1 was resolved by
+[PR #165](https://github.com/mokly-ai/mokly/pull/165). Review finding #2 remains
+open. The user must choose whether to fix or remove the watched page/PDF test
+in a separate branch.
 
 ## Contract And Decisions
 
