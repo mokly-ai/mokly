@@ -374,9 +374,9 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-9.md`.
       extend the selectors and the exemption in `eslint.config.js`.
 - [x] Delete `tests/server_fixture.ts` (finding 4). Search `docs/`, `plans/`
       and every `README.md` for its name.
-- [ ] Merge the latest `origin/main` with the Mainline Feature Preservation
+- [x] Merge the latest `origin/main` with the Mainline Feature Preservation
       steps in `AGENTS.md`.
-- [ ] Run `cargo xtask check --suite repository`, then the complete gate, with
+- [x] Run `cargo xtask check --suite repository`, then the complete gate, with
       the CI toolchain (Rust 1.95.0) and the local executor.
 - [ ] Commit and push the branch, and open the pull request.
 - [ ] After the push, use `docs/implementation-review-prompt.md` to review
