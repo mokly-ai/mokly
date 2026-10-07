@@ -15,7 +15,7 @@ No evidence shape, ordering, state coupling or delivery schema changes.
 
 ## Evidence Shape And Emission
 
-`ViewReview` gains one optional field, allowed in result schema v5 and emitted only
+`ViewReview` gains one optional field, allowed in result schema v6 and emitted only
 when component usage enables inline analysis:
 
 ```ts

@@ -305,7 +305,7 @@ See the [build pipeline](../../docs/architecture/build-pipeline.md),
 [component guide](../components/README.md).
 
 The implemented [public closure contract](../../docs/protocol/mokly-public-closure.md)
-uses one policy instance per compile for configured stylesheets, renderer seeds
+uses one policy instance per compile for configured stylesheets, explicit closure seeds
 and transitive links. The [post-render edit target](../../docs/protocol/mokly-comparison-inventory.md#post-render-offset-mapping)
 owns later offset-mapping changes; current component ownership comes from the
 rendered document and validated ranges.

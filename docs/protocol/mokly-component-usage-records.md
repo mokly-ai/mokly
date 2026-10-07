@@ -101,7 +101,7 @@ changes remain material under the
 ## Retired Ownership Records
 
 The renderer returns a document string, never ownership assertions. Current
-v8 usage records reject `styles` and `resources` as unknown keys; retirement
+v9 usage records reject `styles` and `resources` as unknown keys; retirement
 does not bump the manifest version. Inline ownership is inferred under the
 [inline style contract](./mokly-inline-styles.md); linked-file ownership uses
 `ownedDependencies`.
@@ -109,7 +109,7 @@ does not bump the manifest version. Inline ownership is inferred under the
 At the Git boundary and when loading a rebuilt baseline cache, every admitted
 historical usage record may contain either retired key only as an array.
 Readers discard those arrays before comparison without interpreting their
-contents and reject non-arrays. All other v8 validation remains identical to
+contents and reject non-arrays. All other v9 validation remains identical to
 current validation, including prop schemas, declared slots, keys, references,
 ordering and source locations.
 

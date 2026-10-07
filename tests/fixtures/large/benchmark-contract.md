@@ -49,8 +49,8 @@ as described in the README.
 Every setup, sample and matrix report also carries `renderingDependencies`,
 an object keyed by `react`, `react-dom`, `react-native-web`, `@firna/ui`,
 `lightningcss`, `parse5`, `css-select`, `css-what`, with their resolved installed
-version strings, not ranges. Rendering packages resolve from the fixture root
-(its own install in derived mode, the checkout's ancestor install otherwise);
+version strings, not ranges. Setup always installs the fixture's own toolchain.
+Rendering packages resolve from that fixture-root install;
 classification packages resolve from the current Mokly checkout. Preserve the
 setup map as `preparedRenderingDependencies` on reused matrix reports. Compare
 maps by exact name/version membership, not property order, during acceptance.
@@ -96,7 +96,7 @@ classification worker. Chrome is launched before the measured command.
 
 Reset both mutatable files independently before each scenario; never carry a
 previous edit into the next one. Build current outputs after preparation,
-including in committed mode, before starting its cold server. Derived cache
+including with `--tracked-output`, before starting its cold server. Rebuilt-baseline cache
 reset/hit rules remain in the README. Zero shared-sheet count makes the linked
 row a no-op with zero CSS-analysis union; zero share keeps the unused rule but
 no reachable dependency. The ordinary stylesheet edit proves rule exclusion,
@@ -137,12 +137,13 @@ one session on one machine, in alternating order. The M9A values are indicative
 only; neither they nor the stored M2 reference set the later limits.
 
 Use default dimensions (30/40/12, four sheets, share 0.5), all four scenarios
-and both states in **committed mode**. At the reference step run two complete
+and both states with **`--tracked-output`**. Output is untracked by default;
+`--tracked-output` is opt-in. At the reference step run two complete
 default-fixture matrices after regeneration. Retain every sample, including
 cumulative failures from its separate baseline matrix; old historical tables
 are not substituted for this reference. At acceptance regenerate both current
-fixtures and run two complete matrices per fixture, plus one derived-mode
-cold cumulative `component-style` sample. Use the same template digest,
+fixtures and run two complete matrices per fixture, plus one cold cumulative
+`component-style` sample with the default untracked output. Use the same template digest,
 dimensions, Node runtime and machine, with other heavy work idle. Record
 `nproc`, `free -m` and `uptime` before/after each run.
 
@@ -158,7 +159,7 @@ ratios may round only after the pass decision. Pass iff **all** hold:
 - On each fixture/state, its `component-style` mean divided by its
   `no-changes` mean is `<= 1.25`.
 - For every scenario/state, `D(s,t) / B(s,t) <= 1.05`.
-- Every sample contributing to `B`, `D` or `C`, and the derived spot sample,
+- Every sample contributing to `B`, `D` or `C`, and the untracked-output spot sample,
   is `ok`, has exact expected membership and a present `heapPeakMiB < 1024`.
   The separate cumulative baseline matrix is diagnostic, not an input to `B`.
 

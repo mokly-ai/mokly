@@ -19,7 +19,7 @@ but never executes baseline source through the current Mokly package. The
 sole shape exception is retirement of array-valued `styles` and `resources`
 under [usage records](./mokly-component-usage-records.md#retired-ownership-records):
 Git and rebuilt-cache readers discard those keys and reject malformed values
-without relaxing any other v8 validation.
+without relaxing any other v9 validation.
 
 The boundary does not translate earlier schemas. Every accepted entry and
 artifact already has the path-derived layout in the

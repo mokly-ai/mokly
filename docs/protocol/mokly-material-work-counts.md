@@ -73,7 +73,8 @@ companion counts/membership and scenario restoration.
 Fingerprint/text differentials compare state, material flags, reasons, resource
 and ownership evidence, inline evidence, errors and validation; only fingerprint
 bytes may differ. Cover every inline/CSS/Changes catalogue and the small scale
-renderers in both modes. Check all four fast/style switches for guarded cases.
+renderers with and without Git evidence for generated view paths. Check all four
+fast/style switches for guarded cases.
 
 Require exact text material bytes for base-only, head-only and two-sided source
 or seam guards, authored lookalikes, movement, copied slots, inserted tokens and
@@ -154,7 +155,7 @@ opening prefix/ending crosses a seam, or both stay whole at exactly `|S| - 12`
 apart in different pieces. The two window checks and index check cover these cases.
 Eligible-only copies across instances and interleaved CSS-in-JS sheets keep their
 fingerprints. Test compiled instance, renamed-key, slot, paired-region, tag-rewrite
-and joined-copy cases in both modes/all switches; guarded materials stay verbatim.
+and joined-copy cases with all fast/style switches; guarded materials stay verbatim.
 Compare seeded recipes against brute-force material occurrence/seam scans. After
 indexing, spy on string search/slice and regexp operations over 1 MiB pieces;
 out-of-window reads must fail, including mutations that rescan queried pieces.

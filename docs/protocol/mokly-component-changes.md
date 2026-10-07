@@ -9,7 +9,7 @@ The [fast-path contract](./mokly-component-review-fast-path.md) owns decision or
 
 The classifier, Browse/watch cache, artifacts and static exporter share this
 policy; the [explorer plan](../../plans/component-explorer.md) records delivery.
-Path-keyed v5 results retain main move pairing. Unregistered catalogues retain ordinary behavior. Complete paired comparisons
+Path-keyed v6 results retain main move pairing. Unregistered catalogues retain ordinary behavior. Complete paired comparisons
 infer head-style ownership from documents/ranges; references follow owners,
 results carry validated inline evidence, and the shell presents it.
 

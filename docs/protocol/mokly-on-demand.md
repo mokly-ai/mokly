@@ -4,7 +4,7 @@
 
 On-demand rendering and background classification are implemented. Under the
 [scalable analysis plan](../../plans/scalable-inline-style-analysis.md),
-committed-mode workers release compiled output after transfer to the parent.
+the worker keeps one accepted output map for in-memory head comparison.
 On-demand startup and evidence completion are implemented. The
 route-evidence loading and failed Usage states are implemented by the
 [route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).

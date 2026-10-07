@@ -187,7 +187,7 @@ both `useStylePath` and `useFastPath`. This section owns M8's test obligations:
   Also cover an unchanged reference whose style-text source span touches a
   paired ignore but whose canonical rule retains the reference: require full
   fallback and unchanged resource evidence.
-- Require full fallback and route-disabled equality, per view in both modes,
+- Require full fallback and route-disabled equality for each generated view,
   for component-marker string edits (`r-10`/`r-20`), review-ignore start/end
   lookalikes, material signals, an escaped `\3c !--mokly-component:` spelling
   present only in composed text, inline-fingerprint lookalikes, and a lookalike

@@ -13,7 +13,7 @@ visual rules remain in [CSS Evidence In The Shell](./mokly-css-evidence-shell.md
 
 Live classification retains screen-only `screenEvidence` keyed by entry path,
 with per-view viewport, color scheme, optional reasons, and optional excluded
-resources. Component-aware classification retains its full v5 result, including
+resources. Component-aware classification retains its full v6 result, including
 `inlineStyles`, instead of projecting it into the screen-only slice. Paths remain repository-relative. The workspace projects the
 selected screen's views as optional `resourceEvidence`; it does not invent
 component reasons, component results, or comparison states. Static exports

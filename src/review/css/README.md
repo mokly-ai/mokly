@@ -95,7 +95,8 @@ to production parameters or a disabled-session collector.
 After building, run `node --import tsx --test tests/review_css_*.test.ts`.
 Differentials replay the delivered parser corpus, real cumulative React
 Native Web rendering, Emotion-style elements and 1,000 seeded mutations.
-Real committed/derived catalogues compare against whole-list classification.
+Real catalogues compare against whole-list classification with and without Git
+evidence for generated view paths.
 Captured M4 orchestration under `tests/helpers/inline_m4_*.ts` pins flat pairing,
 materials and reference behavior; grouped displacement and the duplicate-copy
 correction have explicit expected results. Seeded flat mutations and real RNW

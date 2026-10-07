@@ -216,5 +216,5 @@ source-protection rule denies them.
 The approved [public-file policy](./mokly-public-closure.md) centralizes these
 checks once per compile. File extensions and build-folder names alone do not
 protect a referenced authored file. Actual source and protected-location rules
-still win. Renderer seeds use the same validation, and Serve rechecks each
+still win. Explicit closure seeds use the same validation, and Serve rechecks each
 listed file without following symbolic links at read time.

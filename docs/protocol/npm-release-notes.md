@@ -184,8 +184,8 @@ Custom renderers return only the complete HTML string. Remove object-shaped
 from `@mokly/viewer/data` as well as the root viewer and Mokly exports.
 Remove `styles` and `resources` from current usage records: Mokly
 infers inline-rule ownership and uses declared `ownedDependencies` for files.
-Historical v8 readers discard array-valued retired keys without weakening
-other validation; the current manifest is v8.
+Historical v9 readers discard array-valued retired keys without weakening
+other validation; the current manifest is v9.
 
 Both `@mokly/viewer/data` validators remove positional booleans and obsolete
 component-root arguments. Use

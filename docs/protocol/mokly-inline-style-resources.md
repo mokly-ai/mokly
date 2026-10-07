@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Implemented for committed and derived comparison, including unchanged
+Implemented for Git-blob and rebuilt baselines, including unchanged
 reference-bearing rules and resources absent from saved variants.
 The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md)
 implements the following behavior. Decision 13 performance acceptance is

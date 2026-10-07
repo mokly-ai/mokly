@@ -112,6 +112,7 @@ fixed before this plan can prove its result.
 1. **The background worker keeps compilation outputs only in derived mode.**
    [On-demand work](../docs/protocol/mokly-on-demand.md) owns the transfer and
    release rule; committed-mode classification continues reading files.
+   Superseded in Milestone 12 (2026-10-07): main #156 removed the generated-output modes. Head comparison runs in memory, so the worker keeps one accepted output map. The memory effect on large catalogues is not measured.
 2. **Parse caches are byte-bounded LRUs.**
    [Cache lifetime and accounting](../docs/protocol/mokly-css-parse-reuse.md#cache-lifetime-and-accounting)
    owns both independent bounds, estimates, flat copies, recency and oversize
@@ -247,8 +248,8 @@ Use the [page-analysis contract](../docs/protocol/mokly-page-analysis.md).
 It owns lifetime, original coordinates, marker pairing, reference provenance,
 copy visibility and original-tree matching. The unchanged decision first
 tries its single-analysis identical-text check; all successful quick checks
-avoid inline analysis. Committed mode keeps head-only resource traversal;
-derived mode traverses both readers independently and compares membership/bytes.
+avoid inline analysis. Resource proof rejects changed Git paths and independently
+compares both closures' membership and bytes for Git-blob and rebuilt baselines.
 The plan does not introduce another marker dialect or normalized page tree.
 
 ### Fingerprints
@@ -2030,14 +2031,19 @@ Evidence: `.context/scalable-inline-style-analysis/m12-merge/`.
 - [x] Discovered: merge main #165, #164 and #167 with two parents. Review the
       remerge diff and preserve the two approved deletions.
       Evidence: `.context/scalable-inline-style-analysis/m12-merge/fourth/`.
+- [x] Discovered: classify the viewer failure with isolated branch/main reruns,
+      then merge main #168 with two parents and review the remerge/deletion audit.
+      Evidence: `.context/scalable-inline-style-analysis/m12-merge/fifth/` and `fourth/viewer-repeat-summary.md` in the same evidence root.
 - [ ] After checks pass, `git add -A`, commit with Conventional Commits and
       push the branch.
       User instruction (2026-10-07): commit locally and stop for the supervisor's check before the push.
+      Superseded by the supervisor's rerun instruction (2026-10-07): push after the required verification and smoke checks pass.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`. Keep the review read-only, then apply main's
       [review-fix rule](../AGENTS.md#general): fix `Auto-fix: yes` findings,
       re-review once and report fixed and open findings separately.
+      Unrelated flaky test: `viewer.spec.ts`, "uncontrolled selection, slots and handle lifecycle", failed with "Execution context was destroyed, most likely because of a navigation"; isolated reruns passed 9/10 on both branch and clean main in the same boot; suspect navigation racing `page.evaluate` at line 31. Evidence: `.context/scalable-inline-style-analysis/m12-merge/fourth/viewer-repeat-summary.md`.
 
 ## Post-merge follow-up (non-blocking)
 

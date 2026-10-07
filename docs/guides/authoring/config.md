@@ -201,7 +201,7 @@ Stylesheet hrefs are relative to each generated document inside `mokly-generated
 | `ReviewConfig`                            | The `review` object                               |
 | `WatchConfig`, `WatchRule`, `WatchAction` | The `watch` object and its rules                  |
 | `ModuleResolutionConfig`, `ModuleLoader`  | The `moduleResolution` object and its loaders     |
-| `Renderer`, `RenderInput`                 | Your renderer, its context and its result         |
+| `Renderer`, `RenderInput`                 | Your renderer and its context                     |
 
 A referenced authored file can be public regardless of its extension or a
 folder name such as `dist`. Keep it outside actual source, package, cache and
