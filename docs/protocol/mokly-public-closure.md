@@ -14,9 +14,9 @@ One generation-scoped policy owns the decision for each catalogue-relative
 authored path. Resolve its logical and physical location, source membership,
 protected-location membership and regular-file status once per compilation.
 Cache both accepted and rejected decisions by normalized path. Configured
-stylesheets, renderer resource declarations and the transitive link walk reuse
-this same instance. Create a new instance after every source/config/resource
-change; do not retain filesystem decisions across accepted generations.
+stylesheets and the transitive document-link walk reuse this same instance.
+Create a new instance after every source/config/resource change; do not retain
+filesystem decisions across accepted generations.
 
 The policy rejects unsafe or escaping paths, hidden path segments, symbolic
 links at any path component, nonregular files, the manifest, cache, Review and
@@ -49,26 +49,26 @@ source-root equality or Review-root overlap rules.
 
 Build, requested-document compilation, resource Watch, Serve and both
 publication paths use one closure builder. Its inputs are the accepted
-generated documents, pending compiled CSS/assets, renderer-declared resources,
+generated documents, pending compiled CSS/assets, configured stylesheet seeds,
 the public-file policy and an explicit full/on-demand traversal mode.
 Return the sorted unique authored closure and traversal evidence for watching:
 per-file references, logical locations and invalid recovery targets.
 
 Use the existing shared HTML/CSS reference parser. Include ordinary `<a href>`,
 `data-nav-href`, resource hints such as preload, `<iframe>`, `srcset`, CSS imports
-and URLs, and explicit renderer resource seeds. Ignore external/data URLs under
-the current URL rules. Decode and confine relative local paths, retain fragment
+and URLs. Ignore external/data URLs under the current URL rules. Decode and
+confine relative local paths, retain fragment
 validation, and walk authored HTML and CSS transitively. Read each file and
 visit each edge set once per pass; handle cycles without recursive duplication.
 Binary resources retain their exact bytes and have no parsed child links.
 
-Every renderer resource seed passes the same policy and existence checks as a
-document link before it enters the closure. A declaration cannot bypass source
-protection, authorize a symlink or make an unlisted file public. A failure names
-the declaring/referring generated route. Link/seed traversal retains
-`build-invalid`; declared component-resource validation retains its existing
-component-validation error and `component resource is not a public file`
-detail. Both use the same policy. Link diagnostics are:
+Renderers return only complete HTML strings; this branch has no renderer
+`resources` declarations. Renderer output reaches the closure through its
+document links. Each target passes the shared policy and existence checks before
+it enters the closure. A link cannot bypass source protection, authorize a
+symlink or make an unlisted file public. A symlinked or protected target fails
+with the link diagnostic and names the referring generated route. Link/seed
+traversal retains `build-invalid`. Link diagnostics are:
 
 ```text
 document links and resources are invalid:
@@ -107,9 +107,9 @@ binary bytes, manifest/cache privacy, ownership, collision checks and rollback.
 
 Write failing regressions before implementation. Use one fixture with a linked
 authored page, PDF, `data-nav-href`, preload, iframe, `srcset`, CSS dependencies
-and renderer resources. Assert exact equality between compiler and Watch
-closures. Fetch the linked page and PDF through watched Serve before and after
-resource changes. Verify protected declarations fail with the referring route.
+and resources linked only by the renderer. Assert exact equality between
+compiler and Watch closures. Fetch the linked page and PDF through watched Serve before and after
+resource changes. Verify protected links fail with the referring route.
 Replace an accepted file and an ancestor with symlinks and require GET/HEAD 404.
 
 Exercise allowed authored script/map/build-folder names and denied actual

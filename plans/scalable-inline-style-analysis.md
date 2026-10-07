@@ -2019,9 +2019,10 @@ Evidence: `.context/scalable-inline-style-analysis/m12-merge/`.
       generated-output layout. Preserve useful analysis and harness coverage.
 - [ ] Align the affected contracts and READMEs. Validate the merged code with
       targeted tests, real-server smoke checks and `cargo xtask check`.
-- [ ] Discovered: main's `renderer_closure` error-text assertion conflicts with
+- [x] Discovered: main's `renderer_closure` error-text assertion conflicts with
       the string-only renderer's shared closure diagnostic. The proposed regex
       change is pending approval under the prior main-test expectation rule.
+      User decision (2026-10-07): option A. Change only the expected text, and update the public-closure contract.
 - [ ] Discovered: two untouched `shared_example` cases fail on Node 24.21.0
       with `ERR_FS_CP_EEXIST` on both this branch and clean main in the same boot.
       Keep the tests unchanged; the complete gate remains blocked.

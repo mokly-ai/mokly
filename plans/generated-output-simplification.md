@@ -38,8 +38,9 @@ catalogue directory and generated documents reference them in place with
 relative hrefs. The approved Milestone 9 merge contract also places imported
 CSS bundles and copied CSS assets in this tree, under `styles/` and `assets/`.
 The public surface is the referenced asset closure: stylesheet
-rules, renderer resource records, and every local URL reachable from generated
-documents and their CSS. For the example:
+rules and every local URL reachable from generated documents and their CSS.
+Renderers return HTML strings and contribute resources through document links.
+For the example:
 
 ```
 examples/basic/mokly-generated/         all generated files, replaced on every build

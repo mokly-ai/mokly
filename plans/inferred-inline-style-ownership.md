@@ -22,16 +22,17 @@ rule-level stylesheet analysis this plan reuses was delivered by
 [CSS change attribution](./css-change-attribution.md) and lives under
 `src/review/css/`. Nothing in this repository returns ownership records: the
 example renderer in `examples/basic/renderer.tsx` returns a string, and the
-only producers are test renderers.
+test renderers also use the string-only contract.
 
 ## Problem
 
 Component-generated CSS can live in a `<style>` element in `<head>`, outside
 every component range. Mokly cannot tell from markup alone which component a
 head rule belongs to, so an edit to one component's styles marks every screen
-that renders that CSS as changed. The current answer is a renderer-returned
-record: `{ startOffset, endOffset, componentIds }` for style text and
-`{ path, componentIds }` for public files. That answer has three defects.
+that renders that CSS as changed. Before this plan, the answer was a
+renderer-returned record: `{ startOffset, endOffset, componentIds }` for style text and
+`{ path, componentIds }` for public files. Those records are now removed. The
+three defects below explain why this plan replaced them.
 
 1. The renderer is the wrong party to ask. React Native Web, Emotion,
    styled-components and similar libraries do not report which registered

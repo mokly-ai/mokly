@@ -161,8 +161,9 @@ incompatible-earlier outcome. Invalid caches are partial and rebuild.
 
 The public asset surface is a **referenced closure**, not a directory scan.
 Seed it with every configured local stylesheet-rule path that applies to a
-rendered view and every local renderer resource record. Traverse every local
-URL reachable from generated HTML (including nested HTML), generated CSS and
+rendered view. Renderers return HTML strings, so their resources enter through
+document links. Traverse every local URL reachable from generated HTML
+(including nested HTML), generated CSS and
 referenced authored HTML/CSS: navigation links, stylesheet and script links,
 `src`, `srcset` candidates, CSS `@import` and `url()` references, including
 references from nested imports. Generated-to-generated links stay generated;

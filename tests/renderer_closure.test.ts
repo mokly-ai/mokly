@@ -52,6 +52,6 @@ export default input => '<html><head><link rel="stylesheet" href="' + '../'.repe
   assert.equal((await fetch(server.url + "/static/widget.css")).status, 404);
   await assert.rejects(
     compileCatalogue(config),
-    /component resource.*widget.css.*symlink/,
+    /protected target .*widget.css.*symlink/,
   );
 });
