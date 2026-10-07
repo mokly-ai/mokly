@@ -29,6 +29,7 @@ import { ChokidarWatcherFactory } from "../dist/server/watcher.js";
 import { nodeBaselineBuilder } from "./helpers/baseline_builders.js";
 import { derivedFixture } from "./helpers/derived_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 test("debounced and queued watch work retains every candidate path", async () => {
   const clock = new FakeClock();
@@ -177,11 +178,12 @@ test("the watched RunningServe rebuild hook uses the serialized queue", async (t
   fixture.beforeRemove(() => running.close());
   assert.ok(running.rebuild);
   running.rebuild();
-  for (let attempt = 0; attempt < 400; attempt++) {
-    if (reporter.events.includes("watch-finished:rebuild")) return;
-    await new Promise((resolve) => setTimeout(resolve, 25));
-  }
-  assert.fail(`Manual rebuild did not settle: ${reporter.events.join(", ")}`);
+  await waitUntil(() => reporter.events.includes("watch-finished:rebuild"), {
+    timeoutMs: 15_000,
+    intervalMs: 25,
+    message: () =>
+      `Manual rebuild did not settle: ${reporter.events.join(", ")}`,
+  });
 });
 
 class FakeClock implements DebounceClock {

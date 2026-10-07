@@ -10,6 +10,7 @@ import {
   registerWarningPage,
   writeWarningPage,
 } from "./helpers/link_control_warning_fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 import {
   catalogue,
   version,
@@ -68,10 +69,9 @@ async function requestWarningPage(url: string): Promise<void> {
 }
 
 async function waitFor(condition: () => boolean): Promise<void> {
-  const deadline = Date.now() + 15_000;
-  while (Date.now() < deadline) {
-    if (condition()) return;
-    await new Promise((resolve) => setTimeout(resolve, 25));
-  }
-  throw new Error("warning report did not settle");
+  await waitUntil(condition, {
+    timeoutMs: 15_000,
+    intervalMs: 25,
+    message: "warning report did not settle",
+  });
 }

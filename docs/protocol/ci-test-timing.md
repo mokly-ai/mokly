@@ -126,13 +126,17 @@ Fixture phase reporting continues to follow
 
 ### Polling
 
-Hand-written waits must poll for an expected state only with `waitUntil`
+Hand-written Node waits must poll for an expected state only with `waitUntil`
 from `tests/helpers/wait_until.ts`. Do not write a counted loop of N pauses
 of M ms or a clock-deadline loop. Exported waits, including those in
 `tests/helpers/server_http.ts` and `tests/helpers/watched_catalogue.ts`,
 must use `waitUntil` and keep their public signatures. Each replacement wait
 allows at least the larger of 15 seconds and its current allowance.
 Keep its current poll interval.
+
+In a Playwright spec, poll page state with `expect.poll` or
+`page.waitForFunction`. Allow at least 10 seconds for that wait.
+Code that runs inside the page cannot import `waitUntil`.
 
 A loop whose attempts do more than check a state is not a polling wait.
 For example, a loop can retry an operation that has side effects.

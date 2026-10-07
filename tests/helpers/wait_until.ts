@@ -4,8 +4,11 @@ export interface WaitUntilOptions {
   readonly timeoutMs?: number;
   /** Pause in milliseconds between probes; defaults to 10. */
   readonly intervalMs?: number;
-  /** Timeout error text; defaults to a message that names timeoutMs. */
-  readonly message?: string;
+  /**
+   * Timeout text or a function called once, only when the wait times out.
+   * Defaults to text that names timeoutMs.
+   */
+  readonly message?: string | (() => string);
 }
 
 /** Poll immediately and after each pause; return a narrowed result and preserve probe failures. */
@@ -25,8 +28,11 @@ export async function waitUntil<T>(
     if (Date.now() < deadline) {
       await new Promise<void>((resolve) => setTimeout(resolve, intervalMs));
     } else {
+      const message = options.message;
       throw new Error(
-        options.message ?? `waitUntil timed out after ${timeoutMs} ms`,
+        typeof message === "function"
+          ? message()
+          : (message ?? `waitUntil timed out after ${timeoutMs} ms`),
       );
     }
   }

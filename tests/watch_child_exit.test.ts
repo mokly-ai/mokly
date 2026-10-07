@@ -36,6 +36,7 @@ import {
   removeFixture,
   repositoryRoot,
 } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 test(
   "watched child exits when its parent IPC channel disconnects",
@@ -114,9 +115,11 @@ test("watched Serve restarts through the action queue after an unexpected child 
   fixture.beforeRemove(() => running.close());
 
   supervisor.exitUnexpectedly();
-  const deadline = performance.now() + 15_000;
-  while (supervisor.restarts === 0 && performance.now() < deadline)
-    await new Promise((resolve) => setTimeout(resolve, 10));
+  await waitUntil(() => supervisor.restarts !== 0, {
+    timeoutMs: 15_000,
+    intervalMs: 10,
+    message: "Serve did not restart after the unexpected child exit",
+  });
   assert.equal(supervisor.restarts, 1);
 });
 

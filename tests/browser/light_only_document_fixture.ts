@@ -1,7 +1,6 @@
 import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { setTimeout as delay } from "node:timers/promises";
 import { promisify } from "node:util";
 
 import { readCatalogue } from "@mokly/viewer";
@@ -11,6 +10,7 @@ import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
 import { serve } from "../../dist/server/serve.js";
 import { createFixture, removeFixture } from "../helpers/fixture.js";
+import { waitUntil } from "../helpers/wait_until.js";
 
 const execute = promisify(execFile);
 
@@ -34,14 +34,19 @@ Every invoice was due 14 days after it was issued.
 `;
 
 async function waitForChanges(url: string): Promise<void> {
-  for (let attempt = 0; attempt < 600; attempt++) {
-    const model = readCatalogue(
-      await (await fetch(`${url}/__mokly/catalogue.json`)).json(),
-    );
-    if (model.changesStatus === "ready") return;
-    await delay(50);
-  }
-  throw new Error("The fixture did not publish its removed document");
+  await waitUntil(
+    async () => {
+      const model = readCatalogue(
+        await (await fetch(`${url}/__mokly/catalogue.json`)).json(),
+      );
+      return model.changesStatus === "ready";
+    },
+    {
+      timeoutMs: 30_000,
+      intervalMs: 50,
+      message: "The fixture did not publish its removed document",
+    },
+  );
 }
 
 /**

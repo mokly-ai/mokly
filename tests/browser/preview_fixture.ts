@@ -1,11 +1,11 @@
 import path from "node:path";
-import { setTimeout as pause } from "node:timers/promises";
 import { stripVTControlCharacters } from "node:util";
 
 import { buildPreview } from "../../scripts/preview/catalogue.mjs";
 import { createCommittedExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { timeFixturePhase } from "../helpers/fixture_timing.js";
+import { waitUntil } from "../helpers/wait_until.js";
 
 import {
   PreviewOutputRetentionError,
@@ -19,7 +19,7 @@ import {
   type PreviewServerProcess,
 } from "./preview_process.js";
 
-const STARTUP_ATTEMPTS = 150;
+const STARTUP_TIMEOUT_MS = 30_000;
 const WRANGLER_EPHEMERAL_PORT = 0;
 const WRANGLER_READY_ENDPOINT =
   /\[wrangler:info\]\s+Ready on (http:\/\/127\.0\.0\.1:\d+)\r?\n/;
@@ -32,9 +32,7 @@ interface PreviewServerOptions {
     artifact: string,
     port: number,
   ) => Promise<PreviewServerProcess>;
-  readonly pause?: (milliseconds: number) => Promise<unknown>;
   readonly request?: (url: string) => Promise<{ readonly ok: boolean }>;
-  readonly startupAttempts?: number;
 }
 
 /** Run the real clean preview preparation and serve its owned output. */
@@ -138,27 +136,31 @@ async function waitUntilReady(
   options: PreviewServerOptions,
 ): Promise<string> {
   const request = options.request ?? fetch;
-  const wait = options.pause ?? pause;
-  const attempts = options.startupAttempts ?? STARTUP_ATTEMPTS;
   let url: string | undefined;
-  for (let attempt = 0; attempt < attempts; attempt += 1) {
-    if (child.exited)
-      throw new Error(`preview exited before startup: ${child.output}`);
-    // Port zero stays owned by workerd from selection through listen. Wrangler
-    // reports the resulting loopback endpoint only after that bind succeeds;
-    // Playwright may force terminal colours into the captured log stream.
-    url ??= stripVTControlCharacters(child.output).match(
-      WRANGLER_READY_ENDPOINT,
-    )?.[1];
-    try {
-      if (url) {
-        const response = await request(url);
-        if (response.ok) return url;
+  return waitUntil(
+    async () => {
+      if (child.exited)
+        throw new Error(`preview exited before startup: ${child.output}`);
+      // Port zero stays owned by workerd from selection through listen. Wrangler
+      // reports the resulting loopback endpoint only after that bind succeeds;
+      // Playwright may force terminal colours into the captured log stream.
+      url ??= stripVTControlCharacters(child.output).match(
+        WRANGLER_READY_ENDPOINT,
+      )?.[1];
+      try {
+        if (url) {
+          const response = await request(url);
+          if (response.ok) return url;
+        }
+      } catch {
+        // Wrangler can report the endpoint just before it accepts requests.
       }
-    } catch {
-      // Wrangler can report the endpoint just before it accepts requests.
-    }
-    await wait(200);
-  }
-  throw new Error(`preview did not start: ${child.output}`);
+      return undefined;
+    },
+    {
+      timeoutMs: STARTUP_TIMEOUT_MS,
+      intervalMs: 200,
+      message: () => `preview did not start: ${child.output}`,
+    },
+  );
 }

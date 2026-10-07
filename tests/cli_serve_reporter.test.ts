@@ -5,6 +5,7 @@ import test from "node:test";
 
 import { derivedFixture } from "./helpers/derived_fixture.js";
 import { repositoryRoot } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 const cli = path.join(repositoryRoot, "dist/cli/bin.js");
 
@@ -68,9 +69,9 @@ async function waitFor(
   predicate: () => boolean,
   stderr: () => string,
 ): Promise<void> {
-  for (let attempt = 0; attempt < 600; attempt++) {
-    if (predicate()) return;
-    await new Promise((resolve) => setTimeout(resolve, 25));
-  }
-  assert.fail(`Serve lifecycle timed out\n${stderr()}`);
+  await waitUntil(predicate, {
+    timeoutMs: 15_000,
+    intervalMs: 25,
+    message: () => `Serve lifecycle timed out\n${stderr()}`,
+  });
 }

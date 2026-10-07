@@ -46,7 +46,8 @@ Planning evidence:
   is not `undefined`, `null` or `false`. It rethrows probe errors.
 - Options: `timeoutMs` (default 15,000; a value below 10,000 rejects with
   `RangeError` before the first probe), `intervalMs` (default 10), and
-  `message` for the timeout error.
+  `message` for the timeout error. The message can be a string or a function.
+  The helper calls the function once, only when the wait times out.
 - The helper reads `Date.now()` and pauses with the global `setTimeout`
   wrapped in a promise. Its own tests can then use `t.mock.timers` and do
   not wait in real time.
@@ -191,28 +192,48 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-3.md`.
 - [x] Run every symlink test once. Run the new tests five times. Check changed
       file sizes and format.
 
-## Milestone 4: Polling waits (finding 3)
+## Milestone 4: Polling waits (finding 3) — completed
 
 Replace the hand-written polling loops with `waitUntil`, and drive the
 `demand_safety` timeout with mock timers.
 
 Evidence: `.context/deterministic-test-timing-review-fixes/milestone-4.md`.
 
-- [ ] Inventory every hand-written polling loop under the test roots, with
+- [x] Inventory every hand-written polling loop under the test roots, with
       its allowance, interval and expected state. Start from the planning
       inventory. It is a regex scan and misses some loops.
-- [ ] Include the loops missed by that scan in
+- [x] Include the loops missed by that scan in
       `tests/watched_child_startup.test.ts`,
       `tests/export_named_entries.test.ts`,
       `tests/preview_fixture_cleanup.test.ts`,
       `tests/helpers/blocking_git.ts`, `tests/helpers/watched_events.ts`
       and `tests/browser/historical_selection_history_fixture.ts`.
-- [ ] Replace each loop with `waitUntil` as decided. Record each kept loop and
+- [x] Replace each loop with `waitUntil` as decided. Record each kept loop and
       its reason in the evidence file.
-- [ ] Drive the `demand_safety` job timer with `t.mock.timers` as decided.
+- [x] Update the preview fixture tests to use mock timers instead of an
+      injected pause. Test the exported HTTP wait's allowance and probe errors.
+      Keep the watched catalogue's timeout diagnostics under mock timers.
+- [x] Replace browser-page state waits with Playwright waits. Record the
+      browser-only viewer harness wait in the evidence file.
+- [x] Resolve the scope of the unused animation-frame state wait in
+      `packages/viewer/tests/frame_registry_harness.tsx`. Keep it unchanged.
+      `mountedRegistrySessions` has no callers and runs inside the browser
+      page, where it cannot import `waitUntil`. Deleting code on `origin/main`
+      needs the user's approval. The empty diff rule covers product code;
+      files under `packages/viewer/tests/` are test code.
+- [x] Add and test the explicit message function API for `waitUntil`. Update
+      its JSDoc and helper protocol. Replace all eight message getters with
+      functions that read the current state.
+- [x] Document page-state polling with Playwright and its 10-second minimum.
+- [x] Run the review-request checks: `wait_until` five times, each changed
+      message-function caller once, the protocol and Markdown link tests,
+      lint, type checks, format, file sizes and the product diff check.
+- [x] Drive the `demand_safety` job timer with `t.mock.timers` as decided.
       Prove the guard: change the timeout that the test passes and confirm
       that the test fails.
-- [ ] Run each changed Node test file three times and the specs of each
+- [x] Run the affected hydration specs with the hydration project. The
+      Chromium project excludes their filenames.
+- [x] Run each changed Node test file three times and the specs of each
       changed browser fixture once. Run `npm run lint` and
       `npm run typecheck`.
 
@@ -280,3 +301,5 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-7.md`.
 
 - Decide whether a lint rule should reject counted polling loops under the
   test roots.
+- Decide whether to delete the unused `mountedRegistrySessions` helper in
+  `packages/viewer/tests/frame_registry_harness.tsx`.

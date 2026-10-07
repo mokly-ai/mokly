@@ -4,9 +4,10 @@ import { EventEmitter } from "node:events";
 import { syncBuiltinESMExports } from "node:module";
 import { PassThrough } from "node:stream";
 import type { TestContext } from "node:test";
-import { setTimeout } from "node:timers/promises";
 
 import koffi from "koffi";
+
+import { waitUntil } from "./wait_until.js";
 
 /** Simulate descendants retaining output after the immediate Windows process exits. */
 export function windowsProcessFixture(t: TestContext) {
@@ -106,12 +107,11 @@ export function windowsProcessFixture(t: TestContext) {
     child,
     close,
     async waitForEvent(name: string) {
-      for (
-        let attempt = 0;
-        attempt < 1_500 && !events.includes(name);
-        attempt++
-      )
-        await setTimeout(10);
+      await waitUntil(() => events.includes(name), {
+        timeoutMs: 15_000,
+        intervalMs: 10,
+        message: () => `Missing ${name}: ${events.join(", ")}`,
+      });
       assert.ok(events.includes(name), `Missing ${name}: ${events.join(", ")}`);
     },
     failConfiguration() {

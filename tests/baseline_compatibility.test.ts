@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { setTimeout } from "node:timers/promises";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
@@ -14,6 +13,7 @@ import { serve } from "../dist/server/serve.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 const EARLIER_BASELINE_LINE =
   "Changes are unavailable because the comparison base was built with an earlier version of Mokly. Changes will return once the base includes this version.";
@@ -245,10 +245,9 @@ async function installBaseline(
 }
 
 async function waitFor<T>(read: () => Promise<T | undefined>): Promise<T> {
-  for (let attempt = 0; attempt < 200; attempt++) {
-    const value = await read();
-    if (value !== undefined) return value;
-    await setTimeout(25);
-  }
-  throw new Error("Serve did not settle");
+  return waitUntil(read, {
+    timeoutMs: 15_000,
+    intervalMs: 25,
+    message: "Serve did not settle",
+  });
 }

@@ -8,6 +8,7 @@ import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
 import { repositoryRoot } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 const execute = promisify(execFile);
 
@@ -223,12 +224,11 @@ async function writePlaywrightScopeHarness(
 }
 
 async function waitFor(predicate: () => boolean | Promise<boolean>) {
-  const deadline = Date.now() + 15_000;
-  while (Date.now() < deadline) {
-    if (await predicate()) return;
-    await delay(25);
-  }
-  assert.fail("timed out waiting for verification process state");
+  await waitUntil(predicate, {
+    timeoutMs: 15_000,
+    intervalMs: 25,
+    message: "timed out waiting for verification process state",
+  });
 }
 
 function processExists(pid: number | undefined): boolean {

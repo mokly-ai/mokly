@@ -3,7 +3,6 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { setTimeout as delay } from "node:timers/promises";
 
 import { readCatalogue } from "@mokly/viewer";
 
@@ -16,6 +15,7 @@ import {
   namedEntryFixture,
 } from "./helpers/export_named_entries.js";
 import { repositoryRoot } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 for (const mode of ["committed", "derived"] as const)
   test(`${mode}: legal build-directory entry names survive every delivery boundary`, async (t) => {
@@ -36,15 +36,21 @@ for (const mode of ["committed", "derived"] as const)
       watch: false,
     });
     try {
-      for (let attempt = 0; ; attempt++) {
-        const response = await fetch(`${server.url}/__mokly/catalogue.json`);
-        assert.equal(response.status, 200);
-        const model = readCatalogue(await response.json());
-        if (model.changesStatus === "ready") break;
-        assert.notEqual(model.changesStatus, "unavailable");
-        assert.ok(attempt < 200, "Changes did not become ready");
-        await delay(50);
-      }
+      await waitUntil(
+        async () => {
+          const response = await fetch(`${server.url}/__mokly/catalogue.json`);
+          assert.equal(response.status, 200);
+          const model = readCatalogue(await response.json());
+          if (model.changesStatus === "ready") return true;
+          assert.notEqual(model.changesStatus, "unavailable");
+          return false;
+        },
+        {
+          timeoutMs: 15_000,
+          intervalMs: 50,
+          message: "Changes did not become ready",
+        },
+      );
       for (const name of BUILD_NAMES) {
         assert.equal((await fetch(`${server.url}/view/${name}/`)).status, 200);
         assert.equal(

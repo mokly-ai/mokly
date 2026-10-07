@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { setTimeout } from "node:timers/promises";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import type { ComponentChangeSnapshot } from "../dist/server/component_changes.js";
@@ -8,6 +7,7 @@ import { BackgroundCompilation } from "../dist/server/demand/background.js";
 import { serve } from "../dist/server/serve.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 for (const watch of [false, true]) {
   for (const outcome of ["ready", "unavailable", "failed"] as const) {
@@ -46,11 +46,17 @@ for (const watch of [false, true]) {
           );
           const status = outcome === "ready" ? "ready" : "unavailable";
           let completed = "";
-          for (let attempt = 0; attempt < 300; attempt++) {
-            completed = await (await fetch(running.url)).text();
-            if (completed.includes(`data-changes-status="${status}"`)) break;
-            await setTimeout(10);
-          }
+          await waitUntil(
+            async () => {
+              completed = await (await fetch(running.url)).text();
+              return completed.includes(`data-changes-status="${status}"`);
+            },
+            {
+              timeoutMs: 15_000,
+              intervalMs: 10,
+              message: `Serve did not publish ${status} Changes`,
+            },
+          );
           assert.match(
             completed,
             new RegExp(`data-changes-status="${status}"`),

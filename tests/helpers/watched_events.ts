@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { setTimeout as delay } from "node:timers/promises";
 
+import { waitUntil } from "./wait_until.js";
+
 interface WatchedResourceOptions<Value> {
   readonly origin: string;
   readonly previous: number;
@@ -105,26 +107,31 @@ export async function waitForWatchedResource<Value>(
   let lastResourceStatus = "not requested";
   let lastResourceValue = "not read";
   try {
-    let initialContent: number | undefined;
-    while (initialContent === undefined && !controller.signal.aborted) {
-      try {
-        const response = await fetcher(options.origin, {
-          signal: controller.signal,
-        });
-        assert.equal(response.status, 200);
-        initialContent = contentVersion(await response.text());
-      } catch (error) {
-        if (controller.signal.aborted) break;
-        if (!restartError(error)) throw error;
+    const initialContent = await waitUntil(
+      async () => {
+        if (controller.signal.aborted)
+          throw new Error("watched shell was unavailable before the edit");
         try {
-          await delay(30, undefined, { signal: controller.signal });
-        } catch {
-          break;
+          const response = await fetcher(options.origin, {
+            signal: controller.signal,
+          });
+          assert.equal(response.status, 200);
+          return contentVersion(await response.text());
+        } catch (error) {
+          if (controller.signal.aborted)
+            throw new Error("watched shell was unavailable before the edit", {
+              cause: error,
+            });
+          if (!restartError(error)) throw error;
+          return undefined;
         }
-      }
-    }
-    if (initialContent === undefined)
-      throw new Error("watched shell was unavailable before the edit");
+      },
+      {
+        timeoutMs: Math.max(15_000, options.timeoutMs ?? 25_000),
+        intervalMs: 30,
+        message: "watched shell was unavailable before the edit",
+      },
+    );
     lastContentVersion = initialContent;
     while (!controller.signal.aborted) {
       try {

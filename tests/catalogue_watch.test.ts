@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { setTimeout } from "node:timers/promises";
 
 import { loadConfig } from "../dist/config/load.js";
 import { serve } from "../dist/server/serve.js";
@@ -12,6 +11,7 @@ import type { CatalogueReadModel } from "../packages/viewer/dist/catalogue/types
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createExportFixture } from "./helpers/export_fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 import { version } from "./helpers/watched_catalogue.js";
 import { waitForWatchedResource } from "./helpers/watched_events.js";
 
@@ -257,22 +257,27 @@ async function waitForCatalogue(
   origin: string,
   accepted: (model: CatalogueReadModel) => boolean,
 ): Promise<CatalogueReadModel> {
-  const deadline = performance.now() + 20_000;
-  while (performance.now() < deadline) {
-    try {
-      const response = await fetch(`${origin}/__mokly/catalogue.json`);
-      assert.equal(response.status, 200);
-      const model = readCatalogue(await response.json());
-      if (accepted(model)) return model;
-    } catch (error) {
-      const code = (error as { cause?: NodeJS.ErrnoException }).cause?.code;
-      if (
-        !code ||
-        !["ECONNREFUSED", "ECONNRESET", "UND_ERR_SOCKET"].includes(code)
-      )
-        throw error;
-    }
-    await setTimeout(30);
-  }
-  throw new Error("Watched catalogue did not reach the expected revision");
+  return waitUntil(
+    async () => {
+      try {
+        const response = await fetch(`${origin}/__mokly/catalogue.json`);
+        assert.equal(response.status, 200);
+        const model = readCatalogue(await response.json());
+        if (accepted(model)) return model;
+      } catch (error) {
+        const code = (error as { cause?: NodeJS.ErrnoException }).cause?.code;
+        if (
+          !code ||
+          !["ECONNREFUSED", "ECONNRESET", "UND_ERR_SOCKET"].includes(code)
+        )
+          throw error;
+      }
+      return undefined;
+    },
+    {
+      timeoutMs: 20_000,
+      intervalMs: 30,
+      message: "Watched catalogue did not reach the expected revision",
+    },
+  );
 }

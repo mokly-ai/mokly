@@ -57,17 +57,19 @@ test("an unconstrained update still requires a strictly higher version", async (
 });
 
 test("a newer but wrong Changes state fails within the original deadline", async (context) => {
-  const times = [0, 0, 20_001];
-  context.mock.method(performance, "now", () => times.shift() ?? 20_001);
+  context.mock.timers.enable({ apis: ["Date", "setTimeout"] });
   context.mock.method(
     globalThis,
     "fetch",
     async () => new Response(shell(2, 2)),
   );
-  await assert.rejects(
+  const rejected = assert.rejects(
     waitForChangedCount(url, 1, 0),
     /did not publish 0 changed screens.*last version 2, Changes 2/,
   );
+  await new Promise(setImmediate);
+  context.mock.timers.tick(20_000);
+  await rejected;
 });
 
 test("transient child transport errors retry without relaxing the expected state", async (context) => {

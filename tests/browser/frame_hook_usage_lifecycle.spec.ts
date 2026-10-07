@@ -38,22 +38,27 @@ for (const reject of [false, true]) {
           page.evaluate(() => window.frameHookHarness.snapshot("superseded")),
         )
         .toMatchObject({ pendingUpdates: 1, updateStatuses: ["pending"] });
-      const obsolete = await page.evaluate(async (reuseSnapshot) => {
+      const readiness = page.evaluate(() => {
         const readiness = window.frameHookHarness.ready("superseded");
         window.frameHookHarness.renderUsage(
           "superseded",
           "unavailable",
           "second",
         );
-        if (reuseSnapshot) {
-          while (
-            window.frameHookHarness.snapshot("superseded").usageRevision < 2
-          )
-            await new Promise(requestAnimationFrame);
-          window.frameHookHarness.renderUsage("superseded", "pending", "first");
-        }
         return readiness;
-      }, reuse);
+      });
+      if (reuse) {
+        await page.waitForFunction(
+          () =>
+            window.frameHookHarness.snapshot("superseded").usageRevision >= 2,
+          undefined,
+          { timeout: 15_000, polling: "raf" },
+        );
+        await page.evaluate(() =>
+          window.frameHookHarness.renderUsage("superseded", "pending", "first"),
+        );
+      }
+      const obsolete = await readiness;
       expect(obsolete).toBe("disposed");
 
       await page.evaluate((fail) => {

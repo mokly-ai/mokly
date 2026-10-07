@@ -30,6 +30,7 @@ import type {
 } from "../dist/server/watcher.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 test("notification gate preserves startup events", () => {
   const gate = new NotificationGate<string>(() => undefined);
@@ -136,8 +137,11 @@ test("Serve orchestration accepts fake filesystem, server, and watcher boundarie
   );
   assert.equal(serverFactory.starts, 1);
   assert.equal(running.port, 43210);
-  for (let attempt = 0; outputStore.writes === 0 && attempt < 200; attempt++)
-    await new Promise((resolve) => setTimeout(resolve, 10));
+  await waitUntil(() => outputStore.writes !== 0, {
+    timeoutMs: 15_000,
+    intervalMs: 10,
+    message: "the initial output write did not start",
+  });
   assert.equal(outputStore.writes, 1);
   await running.close();
   assert.equal(serverFactory.closed, true);

@@ -20,6 +20,7 @@ import {
   repositoryRoot,
 } from "./helpers/fixture.js";
 import { memoryTerminal } from "./helpers/terminal.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 const cli = path.join(repositoryRoot, "dist/cli/bin.js");
 
@@ -176,10 +177,11 @@ test(
       stderr += chunk.toString();
     });
     child.stdin.on("error", () => undefined);
-    for (let attempt = 0; attempt < 300; attempt++) {
-      if (stdout.includes("MOKLY_TEST_READY_REPORT_BLOCKED")) break;
-      await new Promise((resolve) => setTimeout(resolve, 25));
-    }
+    await waitUntil(() => stdout.includes("MOKLY_TEST_READY_REPORT_BLOCKED"), {
+      timeoutMs: 15_000,
+      intervalMs: 25,
+      message: "Serve did not reach its blocked readiness report",
+    });
     assert.match(stdout, /Mokly listening at/);
     assert.match(stdout, /MOKLY_TEST_READY_REPORT_BLOCKED/);
     const exited = new Promise<number | null>((resolve) =>

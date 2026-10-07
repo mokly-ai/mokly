@@ -16,6 +16,7 @@ import {
   removeFixture,
   repositoryRoot,
 } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 test(
   "watched child uses retained manifest and reports readiness before requesting its full runtime",
@@ -90,19 +91,27 @@ test(
   },
 );
 
-/** Wait within the test deadline; a loaded machine can delay child startup. */
+/** Wait for the retained child's next message without hiding an early exit. */
 async function waitForMessage(
   child: ChildProcess,
   messages: readonly unknown[],
   index: number,
 ): Promise<unknown> {
-  while (messages.length <= index) {
-    if (child.exitCode !== null || child.signalCode !== null)
-      throw new Error(
-        `child exited before sending message ${String(index + 1)}`,
-      );
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
+  await waitUntil(
+    () => {
+      if (messages.length > index) return true;
+      if (child.exitCode !== null || child.signalCode !== null)
+        throw new Error(
+          `child exited before sending message ${String(index + 1)}`,
+        );
+      return false;
+    },
+    {
+      timeoutMs: 15_000,
+      intervalMs: 10,
+      message: `child did not send message ${String(index + 1)}`,
+    },
+  );
   return messages[index];
 }
 
@@ -110,13 +119,19 @@ async function waitForRuntime(
   child: ChildProcess,
   url: string,
 ): Promise<string> {
-  for (;;) {
-    if (child.exitCode !== null || child.signalCode !== null)
-      throw new Error("child exited before publishing its retained runtime");
-    const html = await (await fetch(`${url}/view/action/`)).text();
-    if (html.includes('data-mokly-update-version="2"')) return html;
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
+  return waitUntil(
+    async () => {
+      if (child.exitCode !== null || child.signalCode !== null)
+        throw new Error("child exited before publishing its retained runtime");
+      const html = await (await fetch(`${url}/view/action/`)).text();
+      return html.includes('data-mokly-update-version="2"') ? html : undefined;
+    },
+    {
+      timeoutMs: 15_000,
+      intervalMs: 10,
+      message: "child did not publish its retained runtime",
+    },
+  );
 }
 
 async function stopChild(child: ChildProcess): Promise<void> {

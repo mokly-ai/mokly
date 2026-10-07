@@ -18,7 +18,10 @@ The options are:
 - `timeoutMs`: defaults to 15,000 ms. A value below 10,000 ms rejects with
   `RangeError` before the first probe.
 - `intervalMs`: defaults to 10 ms between probes.
-- `message`: supplies the timeout error message.
+- `message`: supplies the timeout error text as a string or `() => string`.
+  The helper calls the function once, only when the wait times out.
+  Use the function form to read the latest state for the error message.
+  The helper does not call it when the probe succeeds.
 
 The helper probes once before the first pause. It probes again after each
 pause. A result at or after the deadline still succeeds. If that probe has no

@@ -11,6 +11,7 @@ import {
   killProcessIfPresent,
   readProcessField,
 } from "./helpers/process_state.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 for (const exitLauncher of [false, true]) {
   test(
@@ -55,24 +56,31 @@ for (const exitLauncher of [false, true]) {
       );
       for (const file of ["launcher.pid", "descendant.pid"]) {
         let value = "";
-        for (let attempt = 0; attempt < 1_500 && !value; attempt++) {
-          try {
-            value = await fs.readFile(path.join(root, file), "utf8");
-          } catch (error) {
-            if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-          }
-          if (!value) await setTimeout(10);
-        }
+        await waitUntil(
+          async () => {
+            try {
+              value = await fs.readFile(path.join(root, file), "utf8");
+            } catch (error) {
+              if ((error as NodeJS.ErrnoException).code !== "ENOENT")
+                throw error;
+            }
+            return Boolean(value);
+          },
+          {
+            timeoutMs: 15_000,
+            intervalMs: 10,
+            message: `Missing ${file}`,
+          },
+        );
         assert.ok(value, `Missing ${file}`);
         pids.push(Number(value));
       }
       if (exitLauncher) {
-        for (
-          let attempt = 0;
-          attempt < 1_500 && runner.isAlive(pids[0]!);
-          attempt++
-        )
-          await setTimeout(10);
+        await waitUntil(() => !runner.isAlive(pids[0]!), {
+          timeoutMs: 15_000,
+          intervalMs: 10,
+          message: "the launcher has not exited before cancellation",
+        });
         assert.equal(
           runner.isAlive(pids[0]!),
           false,

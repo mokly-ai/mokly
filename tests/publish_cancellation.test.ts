@@ -6,6 +6,7 @@ import test from "node:test";
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { startFakeReceiver } from "./helpers/fake_receiver.js";
 import { repositoryRoot } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 const cli = path.join(repositoryRoot, "dist/cli/bin.js");
 const token = "cancel-receiver-token";
@@ -82,10 +83,16 @@ async function waitForBlob(
   void closed.then(() => {
     exited = true;
   });
-  for (let attempt = 0; attempt < 2_000; attempt++) {
-    if (requests.some(({ kind }) => kind === "blob")) return;
-    if (exited) assert.fail("publish exited before its first Blob request");
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-  assert.fail("publish did not start a Blob request");
+  await waitUntil(
+    () => {
+      if (requests.some(({ kind }) => kind === "blob")) return true;
+      if (exited) assert.fail("publish exited before its first Blob request");
+      return false;
+    },
+    {
+      timeoutMs: 20_000,
+      intervalMs: 10,
+      message: "publish did not start a Blob request",
+    },
+  );
 }

@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 
+import { waitUntil } from "./wait_until.js";
+
 /** Read the current watched shell without starting a comparison build. */
 export async function catalogue(url: string): Promise<string> {
   const response = await fetch(url);
@@ -90,36 +92,40 @@ async function waitForPublished(
   expectation: string,
   timeoutMs = 20_000,
 ): Promise<string> {
-  const deadline = performance.now() + timeoutMs;
   let published: string | undefined;
   let latest: string | undefined;
-  while (performance.now() < deadline) {
-    try {
-      const html = await catalogue(url);
-      latest = html;
-      if (version(html) > previous) {
-        published = html;
-        if (settled(html)) return html;
+  return waitUntil(
+    async () => {
+      try {
+        const html = await catalogue(url);
+        latest = html;
+        if (version(html) > previous) {
+          published = html;
+          if (settled(html)) return html;
+        }
+      } catch (error) {
+        const code = (error as { cause?: NodeJS.ErrnoException }).cause?.code;
+        if (
+          !code ||
+          !["ECONNREFUSED", "ECONNRESET", "UND_ERR_SOCKET"].includes(code)
+        )
+          throw error;
       }
-    } catch (error) {
-      const code = (error as { cause?: NodeJS.ErrnoException }).cause?.code;
-      if (
-        !code ||
-        !["ECONNREFUSED", "ECONNRESET", "UND_ERR_SOCKET"].includes(code)
-      )
-        throw error;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
-  throw new Error(
-    `referenced resource edit did not publish ${expectation}; ${
-      published === undefined
-        ? "no watched update was published"
-        : `the last published update had ${changedCount(published) ?? "no"} changed screens`
-    }; waiting after version ${previous}; ${
-      latest === undefined
-        ? "no catalogue response"
-        : `last version ${version(latest)}, Changes ${changedCount(latest) ?? "unavailable"}`
-    }`,
+      return undefined;
+    },
+    {
+      timeoutMs: Math.max(15_000, timeoutMs),
+      intervalMs: 50,
+      message: () =>
+        `referenced resource edit did not publish ${expectation}; ${
+          published === undefined
+            ? "no watched update was published"
+            : `the last published update had ${changedCount(published) ?? "no"} changed screens`
+        }; waiting after version ${previous}; ${
+          latest === undefined
+            ? "no catalogue response"
+            : `last version ${version(latest)}, Changes ${changedCount(latest) ?? "unavailable"}`
+        }`,
+    },
   );
 }

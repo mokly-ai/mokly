@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import test from "node:test";
-import { setTimeout } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
 import { MessageChannel, Worker } from "node:worker_threads";
 
@@ -15,6 +14,7 @@ import {
   removeFixture,
   repositoryRoot,
 } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 test("the Git bridge preserves concurrent text, binary input and command errors", async (t) => {
   const fixture = await createFixture();
@@ -112,8 +112,11 @@ for (const action of ["block", "crash"] as const) {
       await received;
       if (action === "block") await host.close();
       else {
-        for (let attempt = 0; attempt < 300 && processExists(pid); attempt++)
-          await setTimeout(10);
+        await waitUntil(() => !processExists(pid), {
+          timeoutMs: 15_000,
+          intervalMs: 10,
+          message: "the crashed worker's Git process did not exit",
+        });
       }
       assert.equal(processExists(pid), false);
     },

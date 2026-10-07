@@ -1,12 +1,11 @@
 /** A real Git process blocked on a FIFO, independent of its worker's IPC pipes. */
-import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { setTimeout } from "node:timers/promises";
 
 import type { TestFixture } from "./fixture.js";
 import { killProcessIfPresent, readProcessField } from "./process_state.js";
+import { waitUntil } from "./wait_until.js";
 
 export async function blockingGit(
   fixture: TestFixture,
@@ -51,21 +50,27 @@ exec ${quote(executable)} "$@"
   return {
     restore,
     async started(count = 1): Promise<number> {
-      for (let attempt = 0; attempt < 1_500; attempt++) {
-        const pids = (await fs.readFile(marker, "utf8").catch(() => ""))
-          .trim()
-          .split("\n")
-          .map(Number)
-          .filter((pid) => pid > 0);
-        for (const pid of pids) observed.add(pid);
-        const pid = pids[count - 1] ?? 0;
-        if (pid > 0 && processExists(pid)) {
-          const name = readProcessField(pid, "comm");
-          if (name && path.basename(name) === "git") return pid;
-        }
-        await setTimeout(10);
-      }
-      assert.fail("Background classification did not start its Git subprocess");
+      return waitUntil(
+        async () => {
+          const pids = (await fs.readFile(marker, "utf8").catch(() => ""))
+            .trim()
+            .split("\n")
+            .map(Number)
+            .filter((pid) => pid > 0);
+          for (const pid of pids) observed.add(pid);
+          const pid = pids[count - 1] ?? 0;
+          if (pid > 0 && processExists(pid)) {
+            const name = readProcessField(pid, "comm");
+            if (name && path.basename(name) === "git") return pid;
+          }
+          return undefined;
+        },
+        {
+          timeoutMs: 15_000,
+          intervalMs: 10,
+          message: "Background classification did not start its Git subprocess",
+        },
+      );
     },
   };
 }

@@ -4,7 +4,6 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { setTimeout } from "node:timers/promises";
 
 import { cacheLayout } from "../dist/baseline/cache_layout.js";
 import { SystemBaselineClock } from "../dist/baseline/clock.js";
@@ -15,6 +14,8 @@ import { NodeBaselineProcessRunner } from "../dist/baseline/process.js";
 import { RebuiltBaselineReader } from "../dist/baseline/reader.js";
 import { CachedBaselineBuilder } from "../dist/baseline/rebuild.js";
 import type { BaselineProcessRunner } from "../dist/baseline/types.js";
+
+import { waitUntil } from "./helpers/wait_until.js";
 
 /** Exercise the actual host boundaries only here; unit tests use an injected host. */
 test("real Git baseline lifecycle: reuse, interruption, failure and confinement", async (t) => {
@@ -148,23 +149,39 @@ test("real Git baseline lifecycle: reuse, interruption, failure and confinement"
   const interruptedLayout = cacheLayout(root, interrupted.commit);
   const pidPath = path.join(interruptedLayout.source, "command.pid");
   let pid: number | undefined;
-  for (let attempt = 0; attempt < 250 && pid === undefined; attempt++) {
-    try {
-      pid = Number(await fs.readFile(pidPath, "utf8"));
-    } catch {
-      await setTimeout(20);
-    }
-  }
+  await waitUntil(
+    async () => {
+      try {
+        pid = Number(await fs.readFile(pidPath, "utf8"));
+      } catch {
+        return false;
+      }
+      return pid !== undefined;
+    },
+    {
+      timeoutMs: 15_000,
+      intervalMs: 20,
+      message: "the baseline command did not report its pid",
+    },
+  );
   assert.ok(pid);
   const descendantPath = path.join(interruptedLayout.source, "descendant.pid");
   let descendant: number | undefined;
-  for (let attempt = 0; attempt < 250 && descendant === undefined; attempt++) {
-    try {
-      descendant = Number(await fs.readFile(descendantPath, "utf8"));
-    } catch {
-      await setTimeout(20);
-    }
-  }
+  await waitUntil(
+    async () => {
+      try {
+        descendant = Number(await fs.readFile(descendantPath, "utf8"));
+      } catch {
+        return false;
+      }
+      return descendant !== undefined;
+    },
+    {
+      timeoutMs: 15_000,
+      intervalMs: 20,
+      message: "the baseline descendant did not report its pid",
+    },
+  );
   assert.ok(descendant);
   controller.abort();
   await rejected;

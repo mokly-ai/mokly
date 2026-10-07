@@ -23,6 +23,7 @@ import type {
 } from "../dist/server/watcher.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 test("watched startup attaches the watcher before the initial output write", async (context) => {
   const fixture = await createFixture();
@@ -225,11 +226,11 @@ class FakeSupervisor implements ProcessSupervisor {
 }
 
 async function waitForEvent(events: readonly string[], expected: string) {
-  for (let attempt = 0; attempt < 600; attempt += 1) {
-    if (events.includes(expected)) return;
-    await new Promise((resolve) => setTimeout(resolve, 5));
-  }
-  throw new Error(`missing event: ${expected}`);
+  await waitUntil(() => events.includes(expected), {
+    timeoutMs: 15_000,
+    intervalMs: 5,
+    message: `missing event: ${expected}`,
+  });
 }
 
 class UnusedServerFactory implements CatalogueServerFactory {

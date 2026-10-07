@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
-import { setTimeout } from "node:timers/promises";
 
 import { BaselineError } from "../dist/baseline/errors.js";
 import type { BaselineBuilder } from "../dist/baseline/types.js";
@@ -27,6 +26,7 @@ import {
 } from "./helpers/baseline_builders.js";
 import { derivedFixture } from "./helpers/derived_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 /** Record every status the parent publishes, including the opening one. */
 class RecordingServerFactory implements CatalogueServerFactory {
@@ -281,10 +281,9 @@ test(
 );
 
 async function waitFor<T>(read: () => Promise<T | undefined> | T | undefined) {
-  for (let attempt = 0; attempt < 400; attempt++) {
-    const value = await read();
-    if (value !== undefined) return value;
-    await setTimeout(50);
-  }
-  throw new Error("Derived Serve did not reach the expected state");
+  return waitUntil(read, {
+    timeoutMs: 20_000,
+    intervalMs: 50,
+    message: "Derived Serve did not reach the expected state",
+  });
 }

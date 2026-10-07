@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { type TestContext } from "node:test";
 
 import { servePreviewFixture } from "./browser/preview_fixture.js";
 import type { PreviewServerProcess } from "./browser/preview_process.js";
 
-test("preview lets Wrangler own the ephemeral port and uses its reported endpoint", async () => {
+test("preview lets Wrangler own the ephemeral port and uses its reported endpoint", async (t) => {
+  t.mock.timers.enable({ apis: ["Date", "setTimeout"] });
   const expectedUrl = "http://127.0.0.1:43217";
   let launchPort: number | undefined;
   let output = "[wrangler:info] Ready on http://127.0.0.1:43";
-  let pauses = 0;
   const requests: string[] = [];
   const process: PreviewServerProcess = {
     get exited() {
@@ -20,24 +20,25 @@ test("preview lets Wrangler own the ephemeral port and uses its reported endpoin
     close: async () => {},
   };
 
-  const preview = await servePreviewFixture("/fixture/site", {
+  const starting = servePreviewFixture("/fixture/site", {
     launch: async (_artifact, port) => {
       launchPort = port;
       return process;
-    },
-    pause: async () => {
-      pauses += 1;
-      output += "217\n";
     },
     request: async (url) => {
       requests.push(url);
       return new Response();
     },
-    startupAttempts: 2,
   });
+  await new Promise(setImmediate);
+  output += "217\n";
+  t.mock.timers.tick(199);
+  await new Promise(setImmediate);
+  assert.deepEqual(requests, []);
+  t.mock.timers.tick(1);
+  const preview = await starting;
 
   assert.equal(launchPort, 0);
-  assert.equal(pauses, 1);
   assert.equal(preview.url, expectedUrl);
   assert.deepEqual(requests, [expectedUrl]);
 });
@@ -60,19 +61,18 @@ test("preview accepts Wrangler readiness when Playwright forces ANSI colors", as
 
   const preview = await servePreviewFixture("/fixture/site", {
     launch: async () => process,
-    pause: async () => {},
     request: async (url) => {
       requestedUrl = url;
       return new Response();
     },
-    startupAttempts: 1,
   });
 
   assert.equal(requestedUrl, expectedUrl);
   assert.equal(preview.url, expectedUrl);
 });
 
-test("preview server HTTP startup failure closes its process scope", async () => {
+test("preview server HTTP startup failure closes its process scope", async (t) => {
+  t.mock.timers.enable({ apis: ["Date", "setTimeout"] });
   let closes = 0;
   let requests = 0;
   const process: PreviewServerProcess = {
@@ -87,19 +87,19 @@ test("preview server HTTP startup failure closes its process scope", async () =>
     },
   };
 
-  await assert.rejects(
+  const rejected = assert.rejects(
     servePreviewFixture("/fixture/site", {
       launch: async () => process,
-      pause: async () => {},
       request: async () => {
         requests += 1;
         return new Response(undefined, { status: 503 });
       },
-      startupAttempts: 1,
     }),
     /preview did not start: \[wrangler:info\] Ready on http:\/\/127\.0\.0\.1:43217/,
   );
-  assert.equal(requests, 1);
+  await expireStartup(t);
+  await rejected;
+  assert.equal(requests, 151);
   assert.equal(closes, 1);
 });
 
@@ -110,7 +110,8 @@ for (const [caseName, output] of [
     "[wrangler:info] Ready on http://0.0.0.0:43217\n",
   ],
 ] as const) {
-  test(`preview ${caseName} closes without probing an untrusted endpoint`, async () => {
+  test(`preview ${caseName} closes without probing an untrusted endpoint`, async (t) => {
+    t.mock.timers.enable({ apis: ["Date", "setTimeout"] });
     let closes = 0;
     let requests = 0;
     const process: PreviewServerProcess = {
@@ -125,21 +126,29 @@ for (const [caseName, output] of [
       },
     };
 
-    await assert.rejects(
+    const rejected = assert.rejects(
       servePreviewFixture("/fixture/site", {
         launch: async () => process,
-        pause: async () => {},
         request: async () => {
           requests += 1;
           return new Response();
         },
-        startupAttempts: 1,
       }),
       (error) =>
         error instanceof Error &&
         error.message === `preview did not start: ${output}`,
     );
+    await expireStartup(t);
+    await rejected;
     assert.equal(requests, 0);
     assert.equal(closes, 1);
   });
+}
+
+async function expireStartup(t: TestContext): Promise<void> {
+  await new Promise(setImmediate);
+  for (let probe = 0; probe < 150; probe++) {
+    t.mock.timers.tick(200);
+    await new Promise(setImmediate);
+  }
 }

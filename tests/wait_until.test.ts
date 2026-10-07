@@ -169,6 +169,72 @@ test("uses the default 15,000 ms deadline", async (context) => {
   assert.equal(probe.mock.callCount(), 2);
 });
 
+test("calls the message function once at timeout and uses its latest text", async (context) => {
+  context.mock.timers.enable({ apis: ["Date", "setTimeout"], now: 0 });
+  let probes = 0;
+  const calledAt: number[] = [];
+  const message = context.mock.fn(() => {
+    calledAt.push(Date.now());
+    return `catalogue did not become ready after ${probes} probes`;
+  });
+  const waiting = waitUntil(
+    () => {
+      probes++;
+      return false;
+    },
+    {
+      timeoutMs: 10_000,
+      intervalMs: 5_000,
+      message,
+    },
+  );
+  const state = settlement(waiting);
+  await settle();
+  assert.equal(message.mock.callCount(), 0);
+  context.mock.timers.tick(5_000);
+  await settle();
+  assert.equal(probes, 2);
+  assert.equal(message.mock.callCount(), 0);
+  context.mock.timers.tick(4_999);
+  await settle();
+  assert.equal(state.status, "pending");
+  assert.equal(message.mock.callCount(), 0);
+  context.mock.timers.tick(1);
+  await assert.rejects(waiting, {
+    name: "Error",
+    message: "catalogue did not become ready after 3 probes",
+  });
+  assert.equal(message.mock.callCount(), 1);
+  assert.deepEqual(calledAt, [10_000]);
+  context.mock.timers.tick(10_000);
+  await settle();
+  assert.equal(message.mock.callCount(), 1);
+});
+
+for (const delayed of [false, true]) {
+  test(`does not call the message function for ${delayed ? "deadline" : "immediate"} probe success`, async (context) => {
+    context.mock.timers.enable({ apis: ["Date", "setTimeout"] });
+    let ready = !delayed;
+    const message = context.mock.fn(() => "unused timeout message");
+    const waiting = waitUntil(() => ready, {
+      timeoutMs: 10_000,
+      intervalMs: 10_000,
+      message,
+    });
+    settlement(waiting);
+    await settle();
+    assert.equal(message.mock.callCount(), 0);
+    if (delayed) {
+      ready = true;
+      context.mock.timers.tick(10_000);
+    }
+    assert.equal(await waiting, true);
+    context.mock.timers.tick(10_000);
+    await settle();
+    assert.equal(message.mock.callCount(), 0);
+  });
+}
+
 for (const timeoutMs of [-1, 0, 9_999]) {
   test(`rejects timeoutMs ${timeoutMs} with RangeError before the first probe`, async (context) => {
     context.mock.timers.enable({ apis: ["Date", "setTimeout"] });

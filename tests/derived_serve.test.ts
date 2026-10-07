@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { setTimeout } from "node:timers/promises";
 
 import { CachedBaselineBuilder } from "../dist/baseline/rebuild.js";
 import { serve } from "../dist/server/serve.js";
@@ -14,6 +13,7 @@ import { processExists } from "./helpers/blocking_git.js";
 import { derivedFixture } from "./helpers/derived_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
 import { removedDeliverySource } from "./helpers/removed_delivery_fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 for (const watch of [false, true]) {
   test(
@@ -225,10 +225,9 @@ test(
 );
 
 async function waitFor<T>(read: () => Promise<T | undefined>): Promise<T> {
-  for (let attempt = 0; attempt < 200; attempt++) {
-    const value = await read();
-    if (value !== undefined) return value;
-    await setTimeout(50);
-  }
-  throw new Error("Derived Serve did not settle");
+  return waitUntil(read, {
+    timeoutMs: 15_000,
+    intervalMs: 50,
+    message: "Derived Serve did not settle",
+  });
 }
