@@ -11,6 +11,7 @@ import { FileSystemConfigLoader } from "../dist/config/load.js";
 import { serve } from "../dist/server/serve.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
+import { startFakeReceiver } from "./helpers/fake_receiver.js";
 import { repositoryRoot, validEntrySource } from "./helpers/fixture.js";
 import { linkWarningFailureFixture } from "./helpers/link_control_warning_fixture.js";
 import { memoryTerminal } from "./helpers/terminal.js";
@@ -26,11 +27,21 @@ const configMessage =
   "review.sharedImpact has been removed; ignoring it. Delete the field.";
 
 for (const mode of ["plain", "rich"] as const)
-  for (const outcome of ["resource", "success"] as const)
-    test(`${mode} Build and Check retain link warnings on ${outcome}`, async (t) => {
+  for (const outcome of [
+    "resource",
+    "success",
+    "placement",
+    "placement-success",
+  ] as const)
+    test(`${mode} ${outcome.startsWith("placement") ? "commands retain placement warnings" : "Build and Check retain link warnings"} on ${outcome}`, async (t) => {
       const fixture = await linkWarningFailureFixture(outcome);
       t.after(() => fixture.remove());
-      for (const command of ["build", "check"])
+      const success = outcome.endsWith("success");
+      const placement = outcome.startsWith("placement");
+      const receiver = placement ? await startFakeReceiver(t) : undefined;
+      for (const command of placement
+        ? ["build", "check", "export", "publish"]
+        : ["build", "check"])
         await t.test(command, async () => {
           const terminal = memoryTerminal({ isTTY: false, columns: 240 });
           const reporter =
@@ -39,7 +50,25 @@ for (const mode of ["plain", "rich"] as const)
               : new RichReporter(terminal.environment);
           try {
             const code = await run(
-              [command, "--config", fixture.configPath],
+              [
+                command,
+                "--config",
+                fixture.configPath,
+                ...(command === "export" || command === "publish"
+                  ? ["--out", "site"]
+                  : []),
+                ...(command === "publish"
+                  ? [
+                      "--no-changes",
+                      "--endpoint",
+                      receiver!.endpoint,
+                      "--token",
+                      "fixture-token",
+                      "--repository",
+                      "github.com/example/catalogue",
+                    ]
+                  : []),
+              ],
               fixture.root,
               terminal.environment,
               reporter,
@@ -47,11 +76,7 @@ for (const mode of ["plain", "rich"] as const)
               reporter.renderError(error, (value) => value);
               return 1;
             });
-            assert.equal(
-              code,
-              outcome === "success" ? 0 : 1,
-              terminal.stderr(),
-            );
+            assert.equal(code, success ? 0 : 1, terminal.stderr());
             const prefix = mode === "plain" ? "[mokly/warning]" : "  !";
             const expected = fixture.diagnostics
               .map(
@@ -61,10 +86,12 @@ for (const mode of ["plain", "rich"] as const)
               .join("");
             assert.equal(terminal.stderr().slice(0, expected.length), expected);
             const rest = terminal.stderr().slice(expected.length);
-            if (outcome === "success") assert.equal(rest, "");
+            if (success) assert.equal(rest, "");
             else {
               assert.match(rest, fixture.failure);
               assert.ok(!rest.includes(prefix), rest);
+              if (command === "publish")
+                assert.equal(receiver!.requests.length, 0);
             }
           } finally {
             reporter.close();

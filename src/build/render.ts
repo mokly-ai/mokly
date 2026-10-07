@@ -150,10 +150,10 @@ export function renderFragments(
                 position: placement.position,
                 configuredHrefs: placement.configuredHrefs,
                 mockupsDir: config.mockupsDir,
+                ...(onWarning ? { onWarning } : {}),
               });
               rendered = output.html;
               stylesheetLinks?.set(route, output.stylesheetLinks);
-              if (onWarning) output.diagnostics?.forEach(onWarning);
               componentViews.set(route, {
                 ...output.view,
                 styles: rebaseStyleOwnership(

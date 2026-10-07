@@ -45,6 +45,7 @@ export type ComponentGraphRenderer = (
     position: number;
     configuredHrefs: readonly string[];
     mockupsDir: string;
+    onWarning?: (warning: BuildDiagnostic) => void;
   },
 ) => ComponentRenderOutput;
 
@@ -139,7 +140,10 @@ export const renderWithComponents: ComponentGraphRenderer = (
     [...declarations]
       .filter(([physical]) => !rendererLinks.has(physical))
       .map(([, declaration]) => declaration.file),
-    (warning) => warnings.push(warning),
+    (warning) => {
+      warnings.push(warning);
+      placement.onWarning?.(warning);
+    },
     placement.diagnosticRoute,
   );
   const view: ComponentViewRecord = {

@@ -325,6 +325,8 @@ and direct document-link resolver return diagnostics beside their output;
 it. During exhaustive compilation, each adapter also forwards its diagnostics
 through the compilation callback before logical-link rewriting and later
 resource validation. Later failures therefore retain all warnings already found.
+Component stylesheet placement forwards warnings when it creates them, before
+document-style range validation. Its completion does not replay those records.
 Successful results stay sorted, and the sink reports each warning once.
 Diagnostics never enter generated files, the manifest, HTTP bytes, or
 timing records. Authored C0/C1 controls become visible `\uXXXX` escapes before

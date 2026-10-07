@@ -8,6 +8,8 @@ import {
   type BuildDiagnostic,
 } from "../dist/build/build_warnings.js";
 import { compileCatalogue } from "../dist/build/compile.js";
+import { compileRuntime } from "../dist/build/compile_runtime.js";
+import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import { loadConfig } from "../dist/config/load.js";
 import { PlainServeReporter } from "../dist/server/reporter.js";
 import { serve } from "../dist/server/serve.js";
@@ -19,7 +21,12 @@ import {
 import { removeFixture } from "./helpers/fixture.js";
 import { linkWarningFailureFixture } from "./helpers/link_control_warning_fixture.js";
 
-for (const outcome of ["resource", "success"] as const) {
+for (const outcome of [
+  "resource",
+  "success",
+  "placement",
+  "placement-success",
+] as const) {
   test(`compilation forwards each link warning before ${outcome}`, async (t) => {
     const fixture = await linkWarningFailureFixture(outcome);
     t.after(() => fixture.remove());
@@ -30,12 +37,33 @@ for (const outcome of ["resource", "success"] as const) {
       undefined,
       (warning) => streamed.push(warning),
     );
-    if (outcome === "success")
+    if (outcome.endsWith("success"))
       assert.deepEqual((await pending).diagnostics, fixture.diagnostics);
     else await assert.rejects(pending, fixture.failure);
     assert.equal(streamed.length, fixture.diagnostics.length);
     assert.deepEqual(normalizeBuildDiagnostics(streamed), fixture.diagnostics);
   });
+
+  if (outcome.startsWith("placement"))
+    test(`Serve compilation forwards placement warnings on ${outcome}`, async (t) => {
+      const fixture = await linkWarningFailureFixture(outcome);
+      t.after(() => fixture.remove());
+      const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
+      const warnings: BuildDiagnostic[] = [];
+      const rendering = compileRuntime(
+        runtime,
+        async () => {},
+        (warning) => warnings.push(warning),
+      );
+      if (outcome.endsWith("success"))
+        assert.deepEqual((await rendering).diagnostics, fixture.diagnostics);
+      else await assert.rejects(rendering, fixture.failure);
+      assert.equal(warnings.length, fixture.diagnostics.length);
+      assert.deepEqual(
+        normalizeBuildDiagnostics(warnings),
+        fixture.diagnostics,
+      );
+    });
 
   test(
     `background build reports link warnings once before ${outcome}`,
@@ -76,7 +104,7 @@ for (const outcome of ["resource", "success"] as const) {
       assert.ok(
         events.slice(0, -1).every((line) => line.startsWith("[mokly/warning]")),
       );
-      if (outcome === "success") assert.equal(events.at(-1), "ready");
+      if (outcome.endsWith("success")) assert.equal(events.at(-1), "ready");
       else assert.match(events.at(-1)!, fixture.failure);
     },
   );

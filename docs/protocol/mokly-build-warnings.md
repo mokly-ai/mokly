@@ -113,7 +113,9 @@ as well as render diagnostics. During exhaustive compilation, forward each
 adapter's diagnostics through the compilation callback as soon as the adapter
 returns, before logical-link rewriting and later resource validation. A
 later validation or link-edit failure retains those warnings without inventing
-a result. Keep the successful result sorted and deduplicate at the sink.
+a result. Component stylesheet placement forwards each warning when it is
+produced, before document-style range validation. Completion does not replay
+these callback records. Keep the successful result sorted and deduplicate at the sink.
 They are never written into generated files, never included in
 `check` comparisons, never served over HTTP, and never uploaded.
 
