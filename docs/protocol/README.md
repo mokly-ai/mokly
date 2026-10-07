@@ -50,8 +50,8 @@ unsupported versions before content or path interpretation.
 - [Public API reports and unused members](./verification-api-members.md) —
   approved signature reports, release-note gate and member ratchet.
 
-- [CI verification](./ci-verification.md) — implemented suite, shard, evidence,
-  cache and aggregation contract.
+- [Developer test commands](./developer-test-commands.md) and [selected results](./developer-test-results.md) — preparation, selection, output and partial verification.
+- [CI verification](./ci-verification.md) — implemented suite, shard, evidence, cache and aggregation contract.
   - [CI dependency cache and security](./ci-verification-security.md).
   - [Repository gate and length audits](./ci-verification-repository.md).
   - [Development hydration coverage](./ci-verification-hydration.md) — one
@@ -59,7 +59,7 @@ unsupported versions before content or path interpretation.
 - [Remote verification](./remote-verification.md) — implemented explicit and automatic execution.
   - [Testbox execution](./remote-verification-testbox.md) — workflow, commands, sync probe, suite wrapper, source-tree fingerprint, report download and aggregation.
 - [CI workflow graph](./ci-workflow.md)
-- [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard balance and acceptance measurement.
+- [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, test concurrency, unit shard balance and scenario grouping, browser shard balance and acceptance measurement.
 - [CI test timing](./ci-test-timing.md) — deterministic assertions, duration reporting and lint guard.
 - [Repository verification ratchets](./verification-ratchets.md)
 - [Catalogue upload v2](./mokly-upload.md) — public CLI, repository identity,
@@ -239,7 +239,7 @@ unsupported versions before content or path interpretation.
   - [GitHub publishing protections](./npm-github-protections.md)
 - [Dependency security](./dependency-security.md) — advisory gates, targeted
   updates, temporary patched-release overrides, reviewed path exceptions, and
-  strict packed-consumer audit coverage.
+  strict packed-consumer audit coverage; see [baseline audit modes](./dependency-audit-baseline.md) and [dependency update pull requests](./dependency-audit-update-pr.md).
 
 - [Catalogue serialization](./mokly-catalogue-serialization.md) — canonical bytes,
   snapshot identity and strict current-format readers.

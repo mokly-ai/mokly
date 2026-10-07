@@ -16,7 +16,7 @@ const message =
 const sourceUsage =
   "usage: source-tree.mjs [--expect sha256:<digest>] [--print-head]";
 const testboxUsage =
-  "usage: testbox-suite.mjs --expect <fingerprint> --suite <suite> [--shard INDEX/TOTAL]";
+  "usage: testbox-suite.mjs --expect <fingerprint> --suite <suite> [--shard INDEX/TOTAL] [--dependency-audit baseline|strict]";
 
 test("the shared fingerprint validator accepts the exact value and has no usage text", () => {
   assert.equal(typeof sourceTree.validateFingerprint, "function");

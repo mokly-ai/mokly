@@ -6,7 +6,8 @@ use std::sync::Arc;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::application::{Application, Xtask};
-use crate::check::{CheckRequest, CheckRunnerRunMock, VerificationSuite};
+use crate::check::request::{CheckRequest, DependencyAudit, VerificationSuite};
+use crate::check::runner::CheckRunnerRunMock;
 use crate::cli::Command;
 use crate::error::Error;
 use crate::executor::{Decision, Executor, LocalReason, resolve_executor};
@@ -30,7 +31,7 @@ fn application(
             CheckRunnerRunMock
                 .next_call(matching!(_))
                 .answers_arc(Arc::new(move |_, request| {
-                    assert_eq!(request, CheckRequest::new(suite, None).unwrap());
+                    assert_eq!(request, CheckRequest::new(suite, None, None).unwrap());
                     Ok(())
                 })),
         )
@@ -38,8 +39,8 @@ fn application(
     let remote_runner = Arc::new(if remote {
         Unimock::new(
             RemoteRunnerRunMock
-                .next_call(matching!())
-                .answers(&|_| Ok(())),
+                .next_call(matching!(DependencyAudit::Baseline))
+                .answers(&|_, _| Ok(())),
         )
     } else {
         Unimock::new(())
@@ -98,6 +99,7 @@ fn auto_and_selected_suites_keep_local_behavior() {
             .run(Command::Check {
                 suite,
                 shard: None,
+                dependency_audit: None,
                 executor: None,
             })
             .unwrap();
@@ -116,6 +118,7 @@ fn flags_override_environment_and_inherited_remote_runs_the_runner() {
             .run(Command::Check {
                 suite: None,
                 shard: None,
+                dependency_audit: None,
                 executor: flag,
             })
             .unwrap();
@@ -156,6 +159,7 @@ fn remote_with_suite_and_invalid_environment_fail_before_any_work() {
         let result = app.run(Command::Check {
             suite: Some(VerificationSuite::Package),
             shard: None,
+            dependency_audit: None,
             executor: flag,
         });
         assert!(
@@ -192,6 +196,7 @@ fn signal_registration_failure_cannot_start_remote_work() {
         app.run(Command::Check {
             suite: None,
             shard: None,
+            dependency_audit: None,
             executor: None
         })
         .is_err()
@@ -204,7 +209,45 @@ fn default_auto_runs_remote_when_selection_is_available() {
         .run(Command::Check {
             suite: None,
             shard: None,
+            dependency_audit: None,
             executor: None,
         })
         .unwrap();
+}
+
+#[test]
+fn strict_audit_mode_reaches_the_remote_runner() {
+    let app = Application {
+        selector: Arc::new(Unimock::new(
+            SelectorSelectMock
+                .next_call(matching!(Executor::Auto))
+                .answers(&|_, _| Ok(Decision::Remote)),
+        )),
+        check_runner: Arc::new(Unimock::new(())),
+        remote_runner: Arc::new(Unimock::new(
+            RemoteRunnerRunMock
+                .next_call(matching!(DependencyAudit::Strict))
+                .answers(&|_, _| Ok(())),
+        )),
+        rust_file_length_auditor: Arc::new(Unimock::new(())),
+        environment: Arc::new(Unimock::new(
+            EnvironmentGetMock
+                .next_call(matching!("MOKLY_CHECK_EXECUTOR"))
+                .returns(None),
+        )),
+        reporter: Arc::new(Unimock::new(
+            ReporterExecutorMock.next_call(matching!(_)).returns(()),
+        )),
+        interrupt: Arc::new(Unimock::new(
+            InterruptArmMock.next_call(matching!()).answers(&|_| Ok(())),
+        )),
+        workspace: PathBuf::from("/workspace"),
+    };
+    app.run(Command::Check {
+        suite: None,
+        shard: None,
+        dependency_audit: Some(DependencyAudit::Strict),
+        executor: None,
+    })
+    .unwrap();
 }

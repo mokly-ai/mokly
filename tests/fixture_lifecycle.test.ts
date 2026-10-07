@@ -11,7 +11,11 @@ import {
   repositoryRoot,
 } from "./helpers/fixture.js";
 
-const fixtureHelpers = new Set(["changedFixture", "componentReviewFixture"]);
+const fixtureHelpers = new Set([
+  "changedFixture",
+  "componentReviewFixture",
+  "designLibraryFixture",
+]);
 
 test("fixture teardown drains dependents before removing their workspace", async (t) => {
   const fixture = await createFixture();
@@ -69,6 +73,71 @@ test("fixture helper consumers do not register later teardown hooks", async () =
   );
 });
 
+test("shared design fixtures never start setup at module scope", async () => {
+  const testsRoot = path.join(repositoryRoot, "tests");
+  const violations: string[] = [];
+  for (const entry of await fs.readdir(testsRoot, {
+    recursive: true,
+    withFileTypes: true,
+  })) {
+    if (!entry.isFile() || !/\.tsx?$/.test(entry.name)) continue;
+    const filename = path.join(entry.parentPath, entry.name);
+    const source = ts.createSourceFile(
+      filename,
+      await fs.readFile(filename, "utf8"),
+      ts.ScriptTarget.Latest,
+      true,
+    );
+    violations.push(...moduleFixtureCalls(source));
+  }
+  assert.deepEqual(
+    violations,
+    [],
+    "start shared setup through fileFixture on first use",
+  );
+});
+
+test("module-scope fixture check rejects eager calls and accepts lazy callbacks", () => {
+  const source = ts.createSourceFile(
+    "fixture-sample.ts",
+    `
+const direct = designLibraryFixture({ after });
+if (enabled) designLibraryFixture({ after });
+const lazy = fileFixture((owner) => designLibraryFixture(owner));
+async function testBody(t) { await designLibraryFixture(t); }
+const nested = () => designLibraryFixture(owner);
+class Fixture { async setup(t) { return designLibraryFixture(t); } }
+class Other { constructor(t) { designLibraryFixture(t); } get value() { return designLibraryFixture(owner); } }
+`,
+    ts.ScriptTarget.Latest,
+    true,
+  );
+  assert.deepEqual(moduleFixtureCalls(source), [
+    "fixture-sample.ts:2",
+    "fixture-sample.ts:3",
+  ]);
+});
+
+function moduleFixtureCalls(source: ts.SourceFile): string[] {
+  const violations: string[] = [];
+  function inspect(node: ts.Node): void {
+    if (isFunctionScope(node)) return;
+    if (
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === "designLibraryFixture"
+    ) {
+      const location = source.getLineAndCharacterOfPosition(
+        node.getStart(source),
+      );
+      violations.push(`${source.fileName}:${location.line + 1}`);
+    }
+    ts.forEachChild(node, inspect);
+  }
+  inspect(source);
+  return violations;
+}
+
 function inspectScope(
   source: ts.SourceFile,
   scope: ts.Node,
@@ -114,6 +183,9 @@ function isFunctionScope(node: ts.Node): node is ts.FunctionLikeDeclaration {
     ts.isArrowFunction(node) ||
     ts.isFunctionDeclaration(node) ||
     ts.isFunctionExpression(node) ||
-    ts.isMethodDeclaration(node)
+    ts.isMethodDeclaration(node) ||
+    ts.isConstructorDeclaration(node) ||
+    ts.isGetAccessorDeclaration(node) ||
+    ts.isSetAccessorDeclaration(node)
   );
 }

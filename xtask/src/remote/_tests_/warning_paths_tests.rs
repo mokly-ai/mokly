@@ -1,5 +1,6 @@
 //! Error warning paths keep one output prefix and the defining module.
 
+use crate::check::request::DependencyAudit;
 use crate::remote::runner::{DefaultRemoteRunner, RemoteRunner};
 
 use super::harness_tests::{Case, harness};
@@ -11,7 +12,7 @@ fn a_failed_log_read_uses_an_error_warning_without_a_repeated_prefix() {
         DefaultRemoteRunner {
             dependencies: fixture.dependencies
         }
-        .run()
+        .run(DependencyAudit::Baseline)
         .is_err()
     );
     let events = fixture.events.lock().unwrap();

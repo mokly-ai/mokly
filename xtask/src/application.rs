@@ -3,7 +3,8 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use crate::check::{CheckRequest, CheckRunner};
+use crate::check::request::CheckRequest;
+use crate::check::runner::CheckRunner;
 use crate::cli::Command;
 use crate::error::{Error, Result};
 use crate::executor::{Decision, Executor, LocalReason, resolve_executor};
@@ -46,9 +47,10 @@ impl Xtask for Application {
             Command::Check {
                 suite,
                 shard,
+                dependency_audit,
                 executor,
             } => {
-                let request = CheckRequest::new(suite, shard)?;
+                let request = CheckRequest::new(suite, shard, dependency_audit)?;
                 if executor == Some(Executor::Remote) && suite.is_some() {
                     return Err(Error::Remote {
                         source: error::Error::SelectedSuite,
@@ -78,7 +80,7 @@ impl Xtask for Application {
                     Decision::Remote => {
                         remote(self.interrupt.arm())?;
                         self.reporter.executor(&Decision::Remote.to_string());
-                        match self.remote_runner.run() {
+                        match self.remote_runner.run(request.dependency_audit()) {
                             Ok(()) => Ok(()),
                             Err(Failure::Unavailable(source)) if mode == Executor::Auto => {
                                 self.interrupt.release();

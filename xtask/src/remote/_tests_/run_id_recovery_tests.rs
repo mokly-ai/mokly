@@ -1,5 +1,6 @@
 //! Captured phase output recovers cancellation when status has no run ID.
 
+use crate::check::request::DependencyAudit;
 use crate::remote::runner::{DefaultRemoteRunner, Failure, RemoteRunner};
 
 use super::harness_tests::{Case, harness};
@@ -9,7 +10,7 @@ fn check_recovery(case: Case, expected_id: u64, preparation_failure: bool) {
     let result = DefaultRemoteRunner {
         dependencies: fixture.dependencies,
     }
-    .run();
+    .run(DependencyAudit::Baseline);
     if preparation_failure {
         assert!(matches!(result, Err(Failure::Unavailable(_))));
     } else {

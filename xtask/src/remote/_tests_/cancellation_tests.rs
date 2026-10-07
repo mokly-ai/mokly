@@ -1,5 +1,6 @@
 //! Cancellation diagnostics depend on typed run state rather than error text.
 
+use crate::check::request::DependencyAudit;
 use crate::remote::runner::{DefaultRemoteRunner, RemoteRunner};
 
 use super::harness_tests::{Case, harness};
@@ -10,7 +11,7 @@ fn failed_cancellation_of_a_completed_run_prints_information() {
     DefaultRemoteRunner {
         dependencies: fixture.dependencies,
     }
-    .run()
+    .run(DependencyAudit::Baseline)
     .unwrap();
     let events = fixture.events.lock().unwrap();
     assert!(
@@ -34,7 +35,7 @@ fn failed_cancellation_reads_the_run_state_before_warning() {
     DefaultRemoteRunner {
         dependencies: fixture.dependencies,
     }
-    .run()
+    .run(DependencyAudit::Baseline)
     .unwrap();
     let events = fixture.events.lock().unwrap();
     assert_eq!(
@@ -59,7 +60,7 @@ fn a_failed_run_state_read_keeps_the_cancellation_warning() {
     DefaultRemoteRunner {
         dependencies: fixture.dependencies,
     }
-    .run()
+    .run(DependencyAudit::Baseline)
     .unwrap();
     let events = fixture.events.lock().unwrap();
     assert_eq!(

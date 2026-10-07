@@ -3,6 +3,7 @@
 use std::path::{Path, PathBuf};
 use std::thread;
 
+use crate::check::request::DependencyAudit;
 use crate::remote::cleanup::BoxCleanup;
 use crate::remote::error::Error;
 use crate::remote::plan::{RunCommand, commands};
@@ -32,10 +33,11 @@ impl DefaultRemoteRunner {
         fingerprint: &str,
         run: &str,
         cleanup: &dyn BoxCleanup,
+        dependency_audit: DependencyAudit,
     ) -> Vec<Completion> {
         let dependencies = &self.dependencies;
         thread::scope(|scope| {
-            let workers: Vec<_> = commands()
+            let workers: Vec<_> = commands(dependency_audit)
                 .into_iter()
                 .zip(boxes)
                 .map(|(command, id)| {

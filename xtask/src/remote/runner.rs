@@ -2,6 +2,7 @@
 
 use thiserror::Error;
 
+use crate::check::request::DependencyAudit;
 use crate::remote::cleanup::{BoxCleanup, CleanupGuard};
 use crate::remote::contracts::Dependencies;
 use crate::remote::error::{self, Result};
@@ -25,7 +26,8 @@ pub(crate) type RunResult = std::result::Result<(), Failure>;
 #[cfg_attr(test, unimock::unimock(api = [RemoteRunnerRunMock]))]
 pub(crate) trait RemoteRunner: Send + Sync {
     /// Execute the complete remote gate and always clean up warmed boxes.
-    fn run(&self) -> RunResult;
+    /// The repository suite on its box uses the requested audit mode.
+    fn run(&self, dependency_audit: DependencyAudit) -> RunResult;
 }
 
 /// Runner composed entirely from trait-backed collaborators.
@@ -35,7 +37,7 @@ pub(crate) struct DefaultRemoteRunner {
 }
 
 impl RemoteRunner for DefaultRemoteRunner {
-    fn run(&self) -> RunResult {
+    fn run(&self, dependency_audit: DependencyAudit) -> RunResult {
         let cleanup = CleanupGuard::new(&self.dependencies);
         let mut boxes = Vec::new();
         let preparation = self.prepare(&mut boxes, &cleanup);
@@ -59,7 +61,14 @@ impl RemoteRunner for DefaultRemoteRunner {
                 return Err(Failure::Unavailable(source));
             }
         };
-        match self.finish(&boxes, &fingerprint, &run, &head, &cleanup) {
+        match self.finish(
+            &boxes,
+            &fingerprint,
+            &run,
+            &head,
+            &cleanup,
+            dependency_audit,
+        ) {
             Ok(()) => Ok(()),
             Err(source) => Err(Failure::Failed(source)),
         }
@@ -105,9 +114,10 @@ impl DefaultRemoteRunner {
         run: &str,
         head: &str,
         cleanup: &dyn BoxCleanup,
+        dependency_audit: DependencyAudit,
     ) -> Result<()> {
         let dependencies = &self.dependencies;
-        let completed = self.execute(boxes, fingerprint, run, cleanup);
+        let completed = self.execute(boxes, fingerprint, run, cleanup, dependency_audit);
         let reports = dependencies
             .workspace
             .join(".context/verification-reports/remote")

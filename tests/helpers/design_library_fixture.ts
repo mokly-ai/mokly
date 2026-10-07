@@ -17,7 +17,12 @@ import type { ReadOnlyReviewRepository } from "../../dist/review/repository.js";
 import { copyExampleSources } from "./example_sources.js";
 import { repositoryRoot } from "./fixture.js";
 
-/** Copy the actual consumer so source-edit tests never mutate the working catalogue. */
+/**
+ * Copy the actual consumer so edits never mutate the working catalogue.
+ * Share across a file with `fileFixture((owner) => designLibraryFixture(owner))`.
+ * That helper registers teardown immediately and starts setup on first use.
+ * Pass `t` to `designLibraryFixture(t)` for a single test's lifetime instead.
+ */
 export async function designLibraryFixture(t: {
   after(fn: () => Promise<void>): void;
 }) {
@@ -90,8 +95,8 @@ export async function designLibraryFixture(t: {
     ]);
     const read = async (_commit: string, file: string) => {
       const contents = files.get(file);
-      assert.notEqual(contents, undefined, file);
-      return Buffer.from(contents!);
+      assert.ok(contents !== undefined, file);
+      return Buffer.from(contents);
     };
     return {
       descriptor,
@@ -141,6 +146,7 @@ export async function designLibraryFixture(t: {
   };
 }
 
+/** Read compiled documents and captured stylesheet bytes without disk reads. */
 export function snapshotReader(
   compilation: Compilation,
   resources: ReadonlyMap<string, GeneratedFile>,
@@ -152,8 +158,8 @@ export function snapshotReader(
           ? file.slice("mokly-generated/".length)
           : "",
       ) ?? resources.get(file);
-    assert.notEqual(value, undefined, file);
-    return generatedBytes(value!);
+    assert.ok(value !== undefined, file);
+    return generatedBytes(value);
   };
   return {
     read,

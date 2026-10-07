@@ -339,6 +339,30 @@ npm run dev
 renderer, and stylesheets. Changes to Mokly's own `src/` files require
 restarting the command so the CLI is rebuilt.
 
+Run tests that cover the change while you develop:
+
+```bash
+npm test -- tests/ci_workflow.test.ts
+npm run test:unit -- tests/ci_workflow.test.ts --test-name-pattern="CI shards complete verification"
+npm run test:browser -- tests/browser/pages.spec.ts -g "retain metadata"
+```
+
+Put every test argument after `--`. npm consumes flags before that separator.
+The developer runner rejects consumed name-pattern and shard flags.
+
+`npm test`, `npm run test:unit`, and `npm run test:browser` always prepare
+package and example output, so they test the current `src/`. The raw commands
+`node --import tsx --test <file>` and `npx playwright test <spec>` use the last
+build; run `npm run prepare:verification` after a `src/` change before using
+them. Browser tests reject `.only`; select by path and `-g`. These selected runs
+are partial verification. See [developer test commands](./docs/protocol/developer-test-commands.md)
+for the argument and report rules.
+Selected unit runs print the number of tests that ran. They print a warning
+for each named file that reports zero tests; skipped and todo tests count
+as reported tests. A pattern-only run warns once if no file reports a test.
+Argument errors and selected-run failures print a short
+report without a stack trace. Internal faults keep the full error report.
+
 Run the complete repository gate before submitting a change:
 
 ```bash
@@ -420,13 +444,27 @@ Pull request titles use Conventional Commits and at most 72 Unicode code points.
 The separate title check runs when a PR opens, changes, or receives a push; see
 the [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).
 
-`npm run dependencies:check` audits every workspace dependency category against
-the live registry. It fails on Low-or-higher advisories unless an active reviewed
-exception covers the exact dev-only path. Exceptions expire on an inclusive UTC
-date and cannot extend more than 31 days from the current date. The packed ESM
-consumer's production audit stays strict and has no exceptions. See
-[dependency security](./docs/protocol/dependency-security.md) for the data file,
-review rules, and the temporary Braces exception.
+`npm run dependencies:check` runs the strict live audit of every workspace
+dependency category from the lockfile. It fails on uncovered Low-or-higher
+advisories and invalid exception records. Use
+`npm run dependencies:check -- --baseline` to report issues already present at
+the comparison commit as notices and fail on new issues. The
+[baseline audit contract](./docs/protocol/dependency-audit-baseline.md) defines
+byte comparison and inheritance. Baseline mode is the default for
+`cargo xtask check`, ordinary pull requests, and pushes. Select strict local
+verification with `cargo xtask check --dependency-audit strict`.
+Either mode can write a JSON summary with `--report <file>`.
+
+Release Please and dependency update pull requests, release publishing, and
+the daily `main` audit stay strict. The scheduled workflow creates or refreshes
+the [dependency update pull request](./docs/protocol/dependency-audit-update-pr.md)
+for findings and exception issues. It preserves human commits and closes the
+update pull request when `main` passes. It needs no installed dependencies for
+the audit or script load; only the failure path installs and updates packages.
+Reviewed exceptions keep their exact dev-only path, inclusive UTC end date,
+and maximum 31-day window. The packed ESM consumer's production audit stays
+strict with no exceptions. See [dependency security](./docs/protocol/dependency-security.md)
+for the review rules and temporary Braces exception.
 
 ### Key code
 

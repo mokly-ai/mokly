@@ -70,23 +70,26 @@ Each box runs `node scripts/verification/testbox-suite.mjs` with
 repository root. Derive the command name from the suite and optional shard.
 Use that name for its report and log.
 
-| Command name     | Wrapper arguments             |
-| ---------------- | ----------------------------- |
-| `repository`     | `--suite repository`          |
-| `package`        | `--suite package`             |
-| `unit-1-of-4`    | `--suite unit --shard 1/4`    |
-| `unit-2-of-4`    | `--suite unit --shard 2/4`    |
-| `unit-3-of-4`    | `--suite unit --shard 3/4`    |
-| `unit-4-of-4`    | `--suite unit --shard 4/4`    |
-| `browser-1-of-4` | `--suite browser --shard 1/4` |
-| `browser-2-of-4` | `--suite browser --shard 2/4` |
-| `browser-3-of-4` | `--suite browser --shard 3/4` |
-| `browser-4-of-4` | `--suite browser --shard 4/4` |
-| `hydration`      | `--suite hydration`           |
+| Command name     | Wrapper arguments                              |
+| ---------------- | ---------------------------------------------- |
+| `repository`     | `--suite repository --dependency-audit <mode>` |
+| `package`        | `--suite package`                              |
+| `unit-1-of-4`    | `--suite unit --shard 1/4`                     |
+| `unit-2-of-4`    | `--suite unit --shard 2/4`                     |
+| `unit-3-of-4`    | `--suite unit --shard 3/4`                     |
+| `unit-4-of-4`    | `--suite unit --shard 4/4`                     |
+| `browser-1-of-4` | `--suite browser --shard 1/4`                  |
+| `browser-2-of-4` | `--suite browser --shard 2/4`                  |
+| `browser-3-of-4` | `--suite browser --shard 3/4`                  |
+| `browser-4-of-4` | `--suite browser --shard 4/4`                  |
+| `hydration`      | `--suite hydration`                            |
 
 The wrapper accepts only the suite and shard forms from
 [CI verification](./ci-verification.md#verification-boundary).
-Invalid arguments fail before any suite starts.
+`<mode>` is the complete gate's `--dependency-audit` value, `baseline` by
+default or `strict`. The wrapper accepts that option only with the repository
+suite and passes it to `cargo xtask check`. The command name stays
+`repository`. Invalid arguments fail before any suite starts.
 Both scripts use `validateFingerprint` from `source-tree.mjs`.
 Its error contains no usage text. Each script adds its own usage line.
 
