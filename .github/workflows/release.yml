@@ -124,7 +124,7 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run complete verification
         if: steps.evidence.outputs.mode != 'evidence'
-        run: cargo xtask check
+        run: cargo xtask check --dependency-audit strict
       - name: Prepare exact publish artifacts
         id: package
         run: node scripts/release/pack.mjs .context/release-artifact

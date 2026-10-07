@@ -10,11 +10,11 @@ configuration would otherwise omit a category. The Node entry point is
 --json --audit-level=low --package-lock-only --include=prod --include=dev
 --include=optional --include=peer --prefix .` against the live registry.
 Strict mode fails on every uncovered Low-or-higher advisory or exception issue. Registry,
-transport, report, and input errors always fail. The approved
-[baseline audit contract](./dependency-audit-baseline.md) defines the active
-implementation target, CLI, JSON summary, and comparison rules.
+transport, report, and input errors always fail. The
+[baseline audit contract](./dependency-audit-baseline.md) defines the
+implemented modes, CLI, JSON summary, and comparison rules.
 
-`npm run dependencies:check` stays strict. Under the approved contract,
+`npm run dependencies:check` stays strict. Under this contract,
 `cargo xtask check` runs the baseline audit first by default. Ordinary pull
 requests and every push also use baseline mode in the shared repository
 prerequisite. It prints inherited findings and exception issues as notices;

@@ -6,7 +6,7 @@ The npm release workflow has two verification modes. A release push and a manual
 dispatch default to `evidence`. In that mode, publishing reuses complete CI
 evidence for the exact Git tree at the immutable release tags. A manual dispatch
 may instead select `complete`, which skips all GitHub evidence requests and runs
-`cargo xtask check` in the release checkout.
+`cargo xtask check --dependency-audit strict` in the release checkout.
 
 Both modes run the live workspace dependency audit after `npm ci`. Evidence mode
 does not treat an earlier audit as current security evidence. Complete mode then
@@ -71,7 +71,8 @@ Evidence selection produces one of three outcomes:
 
 - `applicable`: a candidate passes the job, artifact, identity, aggregate, and
   live unit and Playwright inventory checks. The publish job skips Rust,
-  Chromium, and `cargo xtask check` and continues with exact-artifact checks.
+  Chromium, and `cargo xtask check --dependency-audit strict` and continues with
+  exact-artifact checks.
 - `absent`: no candidate exists, a listing or download has a transport failure,
   the required job is unavailable, artifacts are missing or expired, the
   evidence commit cannot be resolved, or its tree differs from the tag. The

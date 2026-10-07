@@ -4,7 +4,7 @@ use std::io;
 
 use thiserror::Error;
 
-use crate::check::VerificationSuite;
+use crate::check::request::VerificationSuite;
 
 /// Result returned by xtask operations.
 pub(crate) type Result<T> = std::result::Result<T, Error>;
@@ -12,6 +12,14 @@ pub(crate) type Result<T> = std::result::Result<T, Error>;
 /// Failures surfaced by xtask commands.
 #[derive(Debug, Error)]
 pub(crate) enum Error {
+    /// An explicit dependency audit mode was requested for another suite.
+    #[error(
+        "[xtask/check] --dependency-audit is not supported with suite {suite}; select the complete gate or --suite repository"
+    )]
+    UnsupportedDependencyAudit {
+        /// Selected unsupported suite.
+        suite: VerificationSuite,
+    },
     /// A shard did not use the required one-based `INDEX/TOTAL` form.
     #[error(
         "[xtask/check] invalid shard `{shard}`; expected one-based INDEX/TOTAL within JavaScript safe integers"

@@ -359,9 +359,9 @@ advisories and invalid exception records. Use
 `npm run dependencies:check -- --baseline` to report issues already present at
 the comparison commit as notices and fail on new issues. The
 [baseline audit contract](./docs/protocol/dependency-audit-baseline.md) defines
-byte comparison and inheritance. The remaining approved implementation target
-makes baseline mode the default for `cargo xtask check`, ordinary pull requests,
-and pushes.
+byte comparison and inheritance. Baseline mode is the default for
+`cargo xtask check`, ordinary pull requests, and pushes. Select strict local
+verification with `cargo xtask check --dependency-audit strict`.
 Either mode can write a JSON summary with `--report <file>`.
 
 Release Please and dependency update pull requests, release publishing, and

@@ -2,9 +2,10 @@
 
 ## Delivery Status
 
-The strict and baseline scripts, structured issues, byte comparison, and JSON
-reports are implemented. Xtask defaults and CI mode selection remain targets
-of the active [audit plan](../../plans/baseline-relative-dependency-audit.md).
+The strict and baseline scripts, structured issues, byte comparison, JSON
+reports, xtask defaults, and CI mode selection are implemented. The scheduled
+audit and update script remain in the active
+[audit plan](../../plans/baseline-relative-dependency-audit.md).
 The [dependency security contract](./dependency-security.md) owns reviewed
 exceptions and dependency update policy.
 

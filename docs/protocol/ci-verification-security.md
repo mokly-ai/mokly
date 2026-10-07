@@ -11,7 +11,7 @@ miss is an ordinary cold install and never permits a skipped command.
 
 The live lockfile-only workspace audit runs first in the repository prerequisite
 and does not depend on cache state. Complete local and release commands keep
-audit-first ordering. Under the approved [baseline audit contract](./dependency-audit-baseline.md),
+audit-first ordering. Under the [baseline audit contract](./dependency-audit-baseline.md),
 ordinary pull requests, every push, and default local checks fail only on new
 findings or exception issues; inherited issues print as notices. Report and
 input failures always fail. Release Please and dependency update pull requests,

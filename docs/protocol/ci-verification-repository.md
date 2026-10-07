@@ -14,7 +14,7 @@ gate. An explicit mode flag with any other suite returns a typed error before
 subprocesses start. Release Please and dependency update pull requests select
 strict mode; the scheduled `main` audit and release publish step also stay
 strict. The [baseline contract](./dependency-audit-baseline.md) defines the
-active implementation target and comparison rules. Reviewed path and expiry
+implemented mode selection and comparison rules. Reviewed path and expiry
 rules follow [Dependency Security](./dependency-security.md#reviewed-workspace-exceptions).
 
 The Rust file-length auditor is implemented inside `xtask` rather than as a

@@ -5,7 +5,7 @@
 `.github/workflows/ci.yml` runs on pull requests and pushes to `main`. It has
 read-only repository contents permission and cancels superseded workflow runs.
 The repository job is every verification job's shared prerequisite and runs the
-audit-first repository suite. The approved [baseline audit contract](./dependency-audit-baseline.md)
+audit-first repository suite. The [baseline audit contract](./dependency-audit-baseline.md)
 sets `DEPENDENCY_AUDIT` to `baseline` for ordinary pull requests and every push.
 It sets `strict` for same-repository dependency update and Release Please pull
 requests. The suite receives `--dependency-audit "$DEPENDENCY_AUDIT"`.

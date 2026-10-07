@@ -12,10 +12,10 @@ policy and puts future strict failures on a bot-maintained update pull request.
 
 ## Status And Outcome
 
-Today the live `npm audit` is the shared prerequisite of every CI job and the
-first command of `cargo xtask check`. A new advisory therefore stops every
-pull request and every local check, even when the branch did not change a
-dependency. After this plan:
+Before this plan, the strict live audit was the shared prerequisite of every
+CI job and the first command of `cargo xtask check`. A new advisory stopped
+every pull request and every local check, even when the branch did not change
+a dependency. This plan provides:
 
 - Ordinary pull requests, pushes to `main`, and local `cargo xtask check`
   fail the audit only for issues that are **not already present at the
@@ -351,6 +351,9 @@ Evidence: `.context/baseline-relative-dependency-audit/milestone-2-checks.md`.
 
 ## Milestone 3: xtask mode flag and CI selection
 
+Completed. The mode flag, CI selection, and strict release fallback pass the
+required Milestone 3 checks.
+
 Implement decisions 8 and 9 so local checks, ordinary pull requests, and
 pushes default to baseline mode while update and release pull requests stay
 strict.
@@ -358,18 +361,26 @@ strict.
 Merge justification for `30ce35f`:
 `.context/baseline-relative-dependency-audit/merge-2-justification.md`.
 
-- [ ] Add `--dependency-audit <baseline|strict>` to `cargo xtask check` with a
+- [x] Add `--dependency-audit <baseline|strict>` to `cargo xtask check` with a
       typed error for non-repository suites; pass `-- --baseline` only in
       baseline mode; update `check_tests.rs` and `cli_tests.rs`.
-- [ ] Update the `.github/workflows/ci.yml` repository job: compute
+- [x] Update the `.github/workflows/ci.yml` repository job: compute
       `DEPENDENCY_AUDIT` from the same-repository head ref prefix, the label,
       and the existing release detection; pass it to the suite command.
       Update `tests/ci_workflow.test.ts` to assert the expression and flag.
-- [ ] Change the complete fallback in `.github/workflows/release.yml` to
+- [x] Change the complete fallback in `.github/workflows/release.yml` to
       `cargo xtask check --dependency-audit strict`. Assert the command in
       `tests/release.test.ts`; split that file as needed to meet 300 lines.
-- [ ] Run Actionlint on `ci.yml` and `release.yml`, `cargo xtask check --suite repository`, and
+- [x] Update `xtask/README.md`, the root README, and protocol status text for
+      implemented local and CI mode selection. Keep scheduled-audit wording
+      cleanup in Milestone 4.
+- [x] Run Actionlint on `ci.yml` and `release.yml`, `cargo xtask check --suite repository`, and
       the focused workflow tests; record results in `.context/`.
+- [x] Run Rust 1.95.0 formatting, workspace Clippy and tests, the strict
+      repository suite, the typed-error unit-suite smoke, the focused guide
+      tests, and source-length audits. Record results in `.context/`.
+
+Evidence: `.context/baseline-relative-dependency-audit/milestone-3-checks.md`.
 
 ## Milestone 4: Scheduled strict audit and update pull request
 
@@ -421,8 +432,9 @@ The implementer stops after the commit and push. Claude runs the final review.
 - [ ] Run a clean `npm ci`, then `cargo xtask check` and require a 100% pass
       rate; store the summary in `.context/`.
 - [ ] Inspect `git diff --name-status origin/main` and
-      `git diff --diff-filter=D --name-status origin/main`; no deletions are
-      expected.
+      `git diff --diff-filter=D --name-status origin/main`; no feature removals
+      are expected. The authorized Milestone 3 split replaces
+      `xtask/src/check.rs` with modules under `xtask/src/check/`.
 - [ ] Run `git add -A`, commit the completed work with a Conventional Commit,
       and push the current branch with every new file tracked.
 - [ ] Claude: after the push, review the complete diff against `origin/main`

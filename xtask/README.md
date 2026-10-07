@@ -37,8 +37,8 @@ positive integer to override these values. The
 [test concurrency contract](../docs/protocol/ci-suite-evidence.md#test-concurrency)
 defines them. Individual concurrency tests and their existing timeouts remain
 unchanged.
-The approved [baseline audit contract](../docs/protocol/dependency-audit-baseline.md)
-sets the complete check's default to `npm run dependencies:check -- --baseline`,
+The [baseline audit contract](../docs/protocol/dependency-audit-baseline.md)
+defines the complete check's default, `npm run dependencies:check -- --baseline`,
 covering every dependency category from the lockfile. Issues already present at
 the merge base print as inherited notices. New issues or operational audit
 errors stop subsequent checks. `--dependency-audit strict` instead calls
@@ -110,9 +110,9 @@ prepare their required output before invoking prepared npm scripts.
 the complete gate or repository suite. An explicit mode flag with another suite
 returns a typed error before subprocesses start. Ordinary pull requests and all
 pushes use baseline mode; same-repository dependency update and Release Please
-pull requests use strict mode. Scheduled `main` and release publish audits stay
-strict. These mode rules are the active implementation target in the linked
-baseline audit contract.
+pull requests use strict mode. Release publishing uses strict mode for its
+direct audit and complete fallback. The approved scheduled `main` audit also
+uses strict mode under the linked update pull request contract.
 
 ## Development
 
@@ -127,8 +127,11 @@ cargo test --package xtask
 - [`src/cli.rs`](./src/cli.rs) parses and dispatches commands.
 - [`src/command.rs`](./src/command.rs) defines the injected command-runner
   boundary.
-- [`src/check.rs`](./src/check.rs) defines the complete source, packed-consumer,
-  browser, hydration, and Rust verification sequence.
+- [`src/check/request.rs`](./src/check/request.rs) validates suite, shard, and
+  dependency audit selections before subprocesses start.
+- [`src/check/commands.rs`](./src/check/commands.rs) defines the shared suite
+  commands. [`src/check/runner.rs`](./src/check/runner.rs) runs them through
+  injected process and file auditors.
 - [`../scripts/package/browser_graph_analysis.mjs`](../scripts/package/browser_graph_analysis.mjs)
   validates the delivered browser module graph;
   [`../scripts/package/consumer_cases`](../scripts/package/consumer_cases) and

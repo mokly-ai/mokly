@@ -5,8 +5,8 @@
 The suite CLI, evidence, workflow graph, fixture reuse, ratchets, argument
 forwarding, cancellation, and title validation are implemented.
 [Hosted measurements](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md)
-record timing and coverage. The approved [baseline audit contract](./dependency-audit-baseline.md)
-defines the active target for dependency mode selection.
+record timing and coverage. Dependency mode selection is implemented under the
+[baseline audit contract](./dependency-audit-baseline.md).
 
 ## Verification Boundary
 
@@ -26,6 +26,7 @@ The CLI is:
 
 ```bash
 cargo xtask check
+cargo xtask check --dependency-audit strict
 cargo xtask check --suite repository
 cargo xtask check --suite package
 cargo xtask check --suite unit --shard 1/4

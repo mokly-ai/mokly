@@ -6,7 +6,8 @@ use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
 
-use crate::check::{CheckRequest, CheckRunner, DefaultCheckRunner, Shard, VerificationSuite};
+use crate::check::request::{CheckRequest, DependencyAudit, Shard, VerificationSuite};
+use crate::check::runner::{CheckRunner, DefaultCheckRunner};
 use crate::command::{CommandRunner, SystemCommandRunner};
 use crate::error::{Error, Result};
 use crate::rust_file_length::{RustFileLengthAuditor, SystemRustFileLengthAuditor};
@@ -28,6 +29,9 @@ enum Command {
         /// Run one one-based whole-file shard of a unit or browser suite.
         #[arg(long, value_name = "INDEX/TOTAL")]
         shard: Option<Shard>,
+        /// Select the workspace audit policy for complete or repository checks.
+        #[arg(long, value_enum)]
+        dependency_audit: Option<DependencyAudit>,
     },
     /// Enforce the 300-line Rust source limit.
     RustFileLengthLint {
@@ -58,9 +62,13 @@ struct Application {
 impl Xtask for Application {
     fn run(&self, command: Command) -> Result<()> {
         match command {
-            Command::Check { suite, shard } => {
-                self.check_runner.run(CheckRequest::new(suite, shard)?)
-            }
+            Command::Check {
+                suite,
+                shard,
+                dependency_audit,
+            } => self
+                .check_runner
+                .run(CheckRequest::new(suite, shard, dependency_audit)?),
             Command::RustFileLengthLint { all: _ } => {
                 self.rust_file_length_auditor.run(&self.workspace)
             }
