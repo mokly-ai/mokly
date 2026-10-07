@@ -69,9 +69,10 @@ key. Otherwise it compiles `examples/basic/mokly.config.ts` in memory and
 computes the key again; when an input changed during the compile, it fails
 without writing. It writes a temporary file beside the snapshot and renames it
 into place, so a reader never sees a partial file. `npm run prepare:unit` runs
-`npm run prepare:verification` and then the producer. `npm test` and the xtask
-unit suite use it; the package, browser and hydration suites keep
-`npm run prepare:verification` because they never read the snapshot.
+`npm run prepare:verification` and then the producer. `npm run test:unit`,
+which `npm test` forwards to, and the xtask unit suite use it; the package,
+browser and hydration suites keep `npm run prepare:verification` because they
+never read the snapshot.
 
 ## Test Helper
 
@@ -90,8 +91,11 @@ adds phase `compile:missing`, `compile:stale` or `compile:invalid`.
 
 ## Unit Runners
 
-Both unit runners require the snapshot file, the package outputs and the
-example manifest to exist, and name `npm run prepare:unit` when one is missing.
+A complete run of either unit runner requires the snapshot file, the package
+outputs and the example manifest to exist, and names `npm run prepare:unit`
+when one is missing. A selected developer run, which names files or test name
+patterns, requires only the package outputs and the example manifest; its
+tests fall back to a compile when the snapshot is missing.
 They only check existence and never import the compiler; the helper owns
 freshness and the compile fallback. Per-file report durations and the fixture
 timing lines show when a fallback happened.

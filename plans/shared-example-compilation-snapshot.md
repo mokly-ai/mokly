@@ -443,6 +443,13 @@ snapshot so that the key and the test copy cover the same inputs.
       layout, and the new root-dependent config field `generatedDir`.
 - [x] Update the snapshot contract for the new inputs, manifest v9, and the
       fixture, and keep `docs/protocol/README.md` at 250 lines.
+- [x] Merge main's later #139, #155, #157, and #159: move the unit suite's
+      `prepare:unit` into `xtask/src/check/commands.rs`, make `test:unit`
+      prepare with `prepare:unit`, give the shared wrapper harness a snapshot
+      placeholder, and stub `prepare:unit` in the probe packages.
+- [x] Align `docs/protocol/developer-test-commands.md`, the README, and the
+      snapshot contract: `test:unit` writes the snapshot, and only complete
+      unit runs require it.
 - [x] Run `cargo xtask check`, commit, and push.
 - [ ] Only after the push, review the change with
       [the implementation review prompt](../docs/implementation-review-prompt.md)

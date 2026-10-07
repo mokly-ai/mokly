@@ -432,7 +432,8 @@ Pull request titles use Conventional Commits and at most 72 Unicode code points.
 The separate title check runs when a PR opens, changes, or receives a push; see
 the [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).
 
-`npm test` runs `npm run prepare:unit` and then every Node unit test file.
+`npm test` and `npm run test:unit` run `npm run prepare:unit` and then the
+Node unit tests.
 `prepare:unit` builds the package and the example. When the saved snapshot is
 not fresh, it then compiles the example once more in memory and saves the
 result to `.context/verification/example-compilation.json`; when the snapshot
