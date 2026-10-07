@@ -59,8 +59,7 @@ unsupported versions before content or path interpretation.
 - [Remote verification](./remote-verification.md) — implemented explicit and automatic execution.
   - [Testbox execution](./remote-verification-testbox.md) — workflow, commands, sync probe, suite wrapper and source-tree fingerprint.
 - [CI workflow graph](./ci-workflow.md)
-- [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard balance and acceptance measurement.
-  - [CI example compilation snapshot](./ci-example-snapshot.md) — the compiled example that unit test files share, its freshness key and the compile fallback.
+- [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard balance and acceptance measurement; the [example compilation snapshot](./ci-example-snapshot.md) defines the compiled example that unit test files share.
 - [CI test timing](./ci-test-timing.md) — deterministic assertions, duration reporting and lint guard.
 - [Repository verification ratchets](./verification-ratchets.md)
 - [Catalogue upload v2](./mokly-upload.md) — public CLI, repository identity,

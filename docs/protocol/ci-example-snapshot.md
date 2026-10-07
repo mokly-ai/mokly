@@ -17,7 +17,7 @@ with exactly these fields:
 | `schemaVersion`         | `1`.                                                                                                                  |
 | `key`                   | The freshness key, as 64 lowercase hexadecimal characters.                                                            |
 | `diagnostics`           | The compilation's normalized build diagnostics as `{ code, route, message }` records.                                 |
-| `manifest`              | The compilation's schema-v8 manifest object.                                                                          |
+| `manifest`              | The compilation's manifest v9 object.                                                                                 |
 | `outputs`               | `[route, file]` pairs in compilation order. Text stays a string; binary output is `{ "kind": "bytes", "base64": … }`. |
 | `deliveredStyleSources` | The compilation's repository-relative delivered style inputs.                                                         |
 | `documentMarkdown`      | `[sourcePath, markdown]` pairs; omitted when the compilation has none.                                                |
@@ -29,7 +29,7 @@ field.
 
 Decoding requires the manifest object to serialize exactly to the snapshot's
 `mokly-manifest.json` output. The compile writes that output only after its
-strict schema-v8 validation, so decoding does not repeat the validation, which
+strict manifest v9 validation, so decoding does not repeat the validation, which
 costs seconds per test process. Diagnostics pass the build-warning validator.
 Decoding rejects another schema version, a malformed key, unknown fields,
 duplicate routes or document paths, and invalid binary transfer values. A
@@ -48,8 +48,11 @@ symbolic link, or `missing` when the path is absent or is not a regular file.
 The inputs are:
 
 - every file that `git ls-files --cached --others --exclude-standard` lists
-  under `examples/basic`, `docs/protocol` and `README.md`, so a tracked file
-  deleted from the working tree hashes as `missing`;
+  under `examples/basic`, `examples/imported-assets`, `docs/protocol` and
+  `README.md`, so a tracked file deleted from the working tree hashes as
+  `missing`. The example's stylesheets import assets from
+  `examples/imported-assets`, and `copyExampleSources` copies the same four
+  paths;
 - every regular file under `dist/` and `packages/viewer/dist/`, or the
   directory itself as `missing`;
 - `package-lock.json` and `tsconfig.json`.
@@ -78,8 +81,8 @@ the snapshot is missing, stale or invalid, it compiles the example in memory,
 so a test file run by hand always works. Tests never write the shared snapshot
 file; the round-trip test writes only a temporary copy. The round-trip and
 copied-example tests require both compilations to have the same field set.
-`designCatalogue` and the default-mode before state of `designLibraryFixture`
-use this helper. Fixtures that compile edited copies, other config profiles or
+`designCatalogue` and the before state of `designLibraryFixture` use this
+helper. Fixtures that compile edited copies, other config profiles or
 historical commits keep compiling, because that preparation is part of what
 they verify. Each load emits `[mokly:fixture-timing]` lines with fixture
 `example-compilation`: phase `snapshot` measures the lookup, and a fallback

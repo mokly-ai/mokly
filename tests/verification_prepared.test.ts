@@ -11,7 +11,7 @@ const PACKAGE_OUTPUTS = [
   "dist/cli/bin.js",
   "packages/viewer/dist/browser/inspector.js",
 ];
-const EXAMPLE_MANIFEST = "examples/basic/generated/mokly-manifest.json";
+const EXAMPLE_MANIFEST = "examples/basic/mokly-generated/mokly-manifest.json";
 
 async function preparedRoot(
   t: test.TestContext,

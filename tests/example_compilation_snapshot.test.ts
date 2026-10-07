@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 
 import type { Compilation } from "../dist/build/compile.js";
 import { MANIFEST_NAME, serializeManifest } from "../dist/registry/manifest.js";
@@ -26,9 +26,9 @@ function compilation(documentMarkdown = true): Compilation {
     entries: [],
     folders: [],
     generatedBy: "mokly",
-    schemaVersion: 8,
+    schemaVersion: 9,
     sourceFiles: [],
-  } as unknown as ManifestV8;
+  } as unknown as ManifestV9;
   return {
     diagnostics: [
       {
@@ -43,7 +43,7 @@ function compilation(documentMarkdown = true): Compilation {
       ["styles.css", "body { color: red; }\n"],
       ["mokly-generated/logo.png", Uint8Array.from([0, 1, 2, 128, 255])],
     ]),
-    deliveredStyleSources: ["examples/basic/generated/styles.css"],
+    deliveredStyleSources: ["examples/basic/styles.css"],
     ...(documentMarkdown
       ? { documentMarkdown: new Map([["docs/guide.md", "# Guide\n"]]) }
       : {}),

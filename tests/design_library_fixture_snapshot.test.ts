@@ -15,6 +15,7 @@ import { repositoryRoot } from "./helpers/fixture.js";
 const ROOT_DEPENDENT_FIELDS = [
   "configPath",
   "entryModules",
+  "generatedDir",
   "mockupsDir",
   "postcss",
   "protectedFiles",

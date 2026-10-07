@@ -14,12 +14,13 @@ import {
 const execute = promisify(execFile);
 
 const trackedFiles: Readonly<Record<string, string>> = {
-  ".gitignore": "dist/\nexamples/basic/generated/**/*.html\n",
+  ".gitignore": "dist/\nexamples/basic/mokly-generated/\n",
   "README.md": "# Fixture\n",
   "docs/protocol/contract.md": "# Contract\n",
-  "examples/basic/generated/styles.css": "body { color: black; }\n",
   "examples/basic/mokly.config.ts": "export default {};\n",
   "examples/basic/specs/home.mockup.tsx": "export const mockups = [];\n",
+  "examples/basic/styles.css": "body { color: black; }\n",
+  "examples/imported-assets/signal.png": "png\n",
   "package-lock.json": "{}\n",
   "tsconfig.json": "{}\n",
   "unrelated.txt": "outside the inventory\n",
@@ -27,7 +28,7 @@ const trackedFiles: Readonly<Record<string, string>> = {
 
 const ignoredFiles: Readonly<Record<string, string>> = {
   "dist/cli/bin.js": "export {};\n",
-  "examples/basic/generated/home/index.html": "<p>Home</p>\n",
+  "examples/basic/mokly-generated/home/index.html": "<p>Home</p>\n",
   "packages/viewer/dist/data.js": "export {};\n",
 };
 
@@ -68,7 +69,11 @@ const inputChanges: ReadonlyArray<
   ],
   [
     "an edited authored stylesheet",
-    (root) => write(root, "examples/basic/generated/styles.css", "body {}\n"),
+    (root) => write(root, "examples/basic/styles.css", "body {}\n"),
+  ],
+  [
+    "an edited imported asset",
+    (root) => write(root, "examples/imported-assets/signal.png", "changed\n"),
   ],
   [
     "an added untracked example file",
@@ -123,8 +128,16 @@ for (const [name, change] of inputChanges)
 test("ignored output and files outside the inventory keep the key", async (t) => {
   const root = await repository(t);
   const before = await exampleSnapshotKey(root);
-  await write(root, "examples/basic/generated/home/index.html", "<p>New</p>\n");
-  await write(root, "examples/basic/generated/about/index.html", "<p>A</p>\n");
+  await write(
+    root,
+    "examples/basic/mokly-generated/home/index.html",
+    "<p>New</p>\n",
+  );
+  await write(
+    root,
+    "examples/basic/mokly-generated/about/index.html",
+    "<p>A</p>\n",
+  );
   await write(root, "unrelated.txt", "changed outside the inventory\n");
   await write(root, "docs/guide.md", "# Not a protocol document\n");
   assert.equal(await exampleSnapshotKey(root), before);
@@ -152,13 +165,10 @@ test("the source inventory lists tracked and untracked inputs in code-unit order
   assert.deepEqual(await exampleSourceFiles(root), [
     "README.md",
     "docs/protocol/contract.md",
-    "examples/basic/generated/styles.css",
     "examples/basic/mokly.config.ts",
     "examples/basic/specs/Zeta.mockup.tsx",
     "examples/basic/specs/home.mockup.tsx",
+    "examples/basic/styles.css",
+    "examples/imported-assets/signal.png",
   ]);
-  assert.deepEqual(
-    await exampleSourceFiles(root, ["examples/basic/generated"]),
-    ["examples/basic/generated/styles.css"],
-  );
 });

@@ -12,7 +12,10 @@ export const EXAMPLE_SNAPSHOT_PATH =
 /** Snapshot format version; every key includes it. */
 export const EXAMPLE_SNAPSHOT_SCHEMA_VERSION = 1;
 
-/** Authored inputs of the example compile, listed through Git. */
+/**
+ * Authored inputs of the example compile. The key lists them through Git, and
+ * the test helper `copyExampleSources` copies them.
+ */
 export const EXAMPLE_SOURCE_PATHS = Object.freeze([
   "examples/basic",
   "examples/imported-assets",
@@ -25,13 +28,10 @@ const SETTINGS_FILES = ["package-lock.json", "tsconfig.json"];
 const execute = promisify(execFile);
 
 /**
- * List tracked and non-ignored untracked files in code-unit order. Tracked
- * files deleted from the working tree stay listed.
+ * List tracked and non-ignored untracked files under the authored inputs in
+ * code-unit order. Tracked files deleted from the working tree stay listed.
  */
-export async function exampleSourceFiles(
-  repositoryRoot,
-  pathspecs = EXAMPLE_SOURCE_PATHS,
-) {
+export async function exampleSourceFiles(repositoryRoot) {
   const { stdout } = await execute(
     "git",
     [
@@ -41,7 +41,7 @@ export async function exampleSourceFiles(
       "--exclude-standard",
       "-z",
       "--",
-      ...pathspecs,
+      ...EXAMPLE_SOURCE_PATHS,
     ],
     { cwd: repositoryRoot, maxBuffer: 64 * 1024 * 1024 },
   );

@@ -1,8 +1,9 @@
 # Shared Example Compilation Snapshot
 
-Status: Active. All eight milestones are complete on draft PR
-[#138](https://github.com/mokly-ai/mokly/pull/138); the plan closes when that
-PR merges. Review findings 2 and 3 stay open for the user to decide; Milestone
+Status: Active. Milestones 1 to 8 are complete on draft PR
+[#138](https://github.com/mokly-ai/mokly/pull/138); Milestone 9 adapts the
+snapshot to main's generated output change. The plan closes when the PR
+merges. Review findings 2 and 3 stay open for the user to decide; Milestone
 7 lists them.
 
 ## Status And Outcome
@@ -423,6 +424,34 @@ Evidence: `.context/shared-example-compilation-snapshot/milestone-6.md`
 `.context/shared-example-compilation-snapshot/merges.md` and the PR #138
 description.
 
+## Milestone 9: Adapt to main's generated output change — in progress
+
+Main's #156 moved the generated example output to
+`examples/basic/mokly-generated/`, moved the authored CSS out of
+`examples/basic/generated/`, removed the design library fixture's committed
+mode, moved to manifest v9, and made the example read
+`examples/imported-assets/`. This milestone merges main and adapts the
+snapshot so that the key and the test copy cover the same inputs.
+
+- [x] Merge `origin/main` one commit at a time with the preservation checks,
+      and record the justifications in the PR description.
+- [x] Add `examples/imported-assets` to the shared source list, so the key and
+      `copyExampleSources` cover the same inputs, and add a key test for an
+      edited imported asset.
+- [x] Take the fixture's before state from the snapshot for every call.
+- [x] Update the tests for manifest v9, the new manifest path, the new example
+      layout, and the new root-dependent config field `generatedDir`.
+- [x] Update the snapshot contract for the new inputs, manifest v9, and the
+      fixture, and keep `docs/protocol/README.md` at 250 lines.
+- [ ] Run `cargo xtask check`, commit, and push.
+- [ ] Only after the push, review the change with
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against `origin/main`, then apply the review-fix rule: fix the
+      `Auto-fix: yes` findings, re-review once, and report the rest.
+
+Evidence: `.context/shared-example-compilation-snapshot/merges.md` (merge 9)
+and `.context/shared-example-compilation-snapshot/milestone-9.md`.
+
 ## Post-merge follow-up (non-blocking)
 
 - Compare the first green `main` run after the merge with run 37354719684 and
@@ -442,10 +471,9 @@ description.
    Open review finding 2 reopens this question: the strict runner could set
    an environment flag that makes the helper fail instead of compiling, which
    needs no input hashing in the runner.
-2. Should the committed-mode fixture call also use the snapshot? This plan
-   recommends no. Only one call uses that mode, and `generatedOutput` changes
-   compile inputs, so the saving is one compile and the risk is a hidden
-   divergence.
+2. Should the committed-mode fixture call also use the snapshot? Resolved by
+   main's #156: the committed mode no longer exists, so every fixture call now
+   takes its before state from the snapshot.
 3. Should `tests/build.test.ts` keep its real compile of the example? This plan
    recommends yes, as the one unit test that proves the compile path on the
    real example.
