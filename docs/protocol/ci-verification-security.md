@@ -30,8 +30,8 @@ exact-artifact checks.
 ## Task Cache Security And Remote Target
 
 The local task cache stores viewer, package, and example outputs. The remote
-Worker is deployed without access tokens and rejects every request until an
-admin sets them; it uses the repository R2 bucket. It does not cache `npm ci`, audits, tests, or reports.
+Worker is deployed with policy B credentials, but CI does not use it yet; it
+uses the repository R2 bucket. It does not cache `npm ci`, audits, tests, or reports.
 Every job keeps its lockfile-keyed download cache and fresh install. Missing,
 unavailable, or rejected artifacts require task execution, not skipped checks.
 

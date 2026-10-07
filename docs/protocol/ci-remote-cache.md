@@ -6,8 +6,8 @@ This is the approved target of the
 [remote-cache plan](../../plans/turborepo-cloudflare-remote-cache.md).
 The local task graph, strict environment, cache exclusions, and workflow
 telemetry/release-force settings are implemented. Worker code and local signed
-verification are implemented. The Worker is deployed without access tokens and
-rejects every request. Credentials and the hosted prepare job remain planned. The R2 bucket and expiry rule exist.
+verification are implemented. The Worker is deployed with policy B credentials;
+CI does not use it yet. The hosted prepare job and CI credentials remain planned. The R2 bucket and expiry rules exist.
 Tests, reports, and `npm run example:check` stay uncached;
 the check revalidates referenced paths and Git state outside the build hash.
 

@@ -4,7 +4,7 @@ Status: Active. Created on 2026-10-06. No pull request yet. Milestone 1 was
 accepted at `7b70b7e`. Milestone 2 local implementation and checks are complete; hosted native
 verification remains a pre-merge requirement. The supervising agent owns formal
 reviews in another worktree. Milestone 3 implementation, local smokes, and the full gate are complete;
-Its supervising-agent review and final fix gate are complete; R2 and the open user decisions remain recorded. CI policy remains open, with B recommended. The Worker is deployed at `https://mokly-turbo-cache.calum-785.workers.dev` without access tokens; it answers 401 to every request.
+Its supervising-agent review and final fix gate are complete; R2 and the open user decisions remain recorded. The user selected CI policy B on 2026-10-07. The Worker is deployed at `https://mokly-turbo-cache.calum-785.workers.dev` with policy B credentials; CI does not use it yet.
 
 ## Summary
 
@@ -39,7 +39,7 @@ suite boundaries, shard evidence, and fail-closed aggregate stay unchanged.
 | Task runner    | Turborepo 2.11.7 as a root `turbo` devDependency. npm workspaces and `package-lock.json` stay as they are.                                                      |
 | Cached tasks   | `@mokly/viewer#build`, root `build:package`, and root `example:build`. Test suites are not cached by this plan.                                                 |
 | Remote cache   | A Worker owned by this repository under `scripts/turbo-cache/`, storing artifacts in one R2 bucket. No Vercel account.                                          |
-| Write policy   | Keys are write-once. CI policy A/B/C awaits the user, with B (scoped PR writes) recommended. Three principals support all options; forks remain local only.     |
+| Write policy   | Keys are write-once. The user selected CI policy B (scoped PR writes) on 2026-10-07. Three principals support all options; forks remain local only.             |
 | Integrity      | `remoteCache.signature` is on with a key of at least 32 bytes. CI and read-only developers need the same key. Invalid downloads are rejected before extraction. |
 | Release        | `release.yml` forces task execution with `TURBO_FORCE=true`, local cache only, and no remote credentials. Force can refresh local entries.                      |
 | Native CI jobs | The macOS and Windows jobs keep building from source with no remote token.                                                                                      |
@@ -611,13 +611,16 @@ before the merge.
 - [ ] Add `environment: turbo-cache-deploy` to the deploy job in
       `turbo-cache.yml` and assert it in `tests/turbo_cache_workflow.test.ts`.
       The token is not a repository secret, so the job cannot deploy without it.
-- [ ] Admin: choose CI policy A, B (recommended), or C. Restrict the trusted
-      writer GitHub environment to main for A/B; apply the same choice to PR
-      previews. Record B's shared-PR-token residual risk or C's accepted risk.
-- [ ] Admin: add the documented 7-day mokly-pr- lifecycle rule; confirm that
-      its expiry takes precedence over the existing all-prefix 30-day rule.
-- [ ] Admin: generate the three Worker tokens and the signature key with
-      `openssl rand -hex 32`.
+- [x] Admin: choose CI policy A, B (recommended), or C. The user chose B on
+      2026-10-07. The trusted writer lives in the GitHub environment
+      `turbo-cache-trusted`, which allows only `main`. The access contract
+      records B's shared-PR-token residual risk.
+- [x] Admin: add the documented 7-day `mokly-pr-` lifecycle rule
+      `expire-pr-artifacts`. Done on 2026-10-07. Confirming the earlier expiry
+      needs 7 days, so it is a post-merge follow-up.
+- [x] Admin: generate the three Worker tokens and the signature key with
+      `openssl rand -hex 32`. Done on 2026-10-07 on the admin's Mac; values
+      never left it in any output.
 - [ ] Verify the rotation runbook changes the Worker team, all client team
       settings, and the 7-day PR lifecycle prefix together, preserving old
       namespace expiry.
@@ -626,25 +629,35 @@ before the merge.
       `https://mokly-turbo-cache.calum-785.workers.dev`. With no secrets it answers 401 to every
       request; the version preview URL returns 404. See
       `.context/turborepo-cloudflare-remote-cache/provisioning-2026-10-07.md`.
-- [ ] Admin: set the Worker secrets for the chosen principals with
-      `wrangler secret put`.
-- [ ] Admin: add repository secrets with the selected principal token names and
-      `TURBO_CACHE_SIGNATURE_KEY`.
+- [x] Admin: set the Worker secrets for the chosen principals. Done on
+      2026-10-07 with `wrangler secret bulk`.
+- [x] Admin: add GitHub secrets with the selected principal token names and
+      `TURBO_CACHE_SIGNATURE_KEY`. Done on 2026-10-07:
+      `TURBO_CACHE_TRUSTED_WRITE_TOKEN` in the environment `turbo-cache-trusted`;
+      `TURBO_CACHE_PR_WRITE_TOKEN` and `TURBO_CACHE_SIGNATURE_KEY` as repository
+      secrets. The read-only token and key are in the admin's Keychain item
+      `mokly-turbo-cache-developer`.
 - [ ] Admin: give approved developers the read-only token and signature key
       through a private password-manager share. Confirm `local:rw,remote:r`
       suppresses uploads and that a read-only token without a key cannot
       accept a signed download.
-- [ ] Confirm token rotation makes old tokens return 401 and a known old
+- [x] Confirm token rotation makes old tokens return 401 and a known old
       version's preview URL cannot reach the Worker; keep preview_urls false.
-- [ ] Verify large uploads and batches against Workers Free's 1,000 internal
+      Done on 2026-10-07 for the PR token.
+- [x] Verify large uploads and batches against Workers Free's 1,000 internal
       subrequests per request (R2) and 10 ms CPU budget. Cover trusted and PR
       fallback batches; a 1,024-hash query can exceed that subrequest budget.
+      Done on 2026-10-07: a 40 MiB upload and a 3-hash batch passed; a
+      1,024-hash PR batch returned 500, and Turbo falls back to HEAD.
+- [ ] Decide whether to cap batch queries below the subrequest budget, so a
+      large batch gets 413 instead of 500. Turbo falls back to HEAD either way.
 - [ ] Confirm the configured apiUrl has no trailing slash. Verify requests use
       /v8 paths, since a trailing slash can produce //v8 paths and silent misses.
-- [ ] Confirm production R2 conditional behavior: absent-key PUT succeeds,
+- [x] Confirm production R2 conditional behavior: absent-key PUT succeeds,
       repeated and concurrent PUTs keep one complete body and its original
       metadata, and a failed condition returns null. Compare with local
       simulation; resolve any difference before enabling remote writes.
+      Done on 2026-10-07; matches local simulation.
 - [ ] Commit `remoteCache.apiUrl` and `remoteCache.teamSlug` in `turbo.json`.
 - [ ] Add the `prepare` job to `ci.yml`. Add it to the `needs` of `package`,
       `unit`, `browser`, `hydration`, and `Required CI`. Add the token
@@ -684,6 +697,8 @@ before the merge.
   this change merges. Release Please creates that pull request from main, so
   this measurement cannot be a pre-merge milestone requirement.
 
+- Confirm that PR-area objects expire after 7 days, the earlier of the two
+  lifecycle rules.
 - Watch the first five `main` runs for remote cache errors in the `turbo` logs
   and in Worker observability.
 - Rotate the read-only token and record the rotation date when the first

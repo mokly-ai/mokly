@@ -5,8 +5,8 @@
 This is the approved access contract for the
 [remote-cache plan](../../plans/turborepo-cloudflare-remote-cache.md).
 The three-principal authorization, namespace fallback, and local verification
-are implemented. CI policy selection and
-remote provisioning remain planned. Current workflows remain local only.
+are implemented. The user selected policy B on 2026-10-07; its Worker secrets,
+GitHub secrets, and PR expiry rule are provisioned. Current workflows remain local only.
 The [Worker contract](./ci-remote-cache-worker.md) owns routes and wire formats.
 
 ## Principals And Namespaces
@@ -63,9 +63,9 @@ use the matching flat and wrapped fields in the Worker contract. Turbo treats
 configuration/storage errors as cache errors and continues builds. Forbidden
 access can disable remote reads and writes for the rest of that Turbo run.
 
-## Pending CI Policy
+## CI Policy
 
-The user chooses A, B, or C during remote provisioning. B is recommended.
+The user selected B on 2026-10-07. The table keeps A and C for reference.
 The Worker implements all three principals; CI credential wiring is planned.
 All authorized remote clients also receive the shared signature key.
 

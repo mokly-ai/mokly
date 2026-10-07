@@ -7,8 +7,7 @@ This is the approved service contract for the
 The R2 bucket in WEUR and its expiry rule are provisioned. Worker code,
 tests, deployment workflow, and local signed-client verification are implemented.
 The Worker is deployed at `https://mokly-turbo-cache.calum-785.workers.dev`
-without access tokens, so it answers 401 to every request. Secrets and client
-wiring remain planned.
+with the three policy B access tokens. Client wiring remains planned.
 The [task contract](./ci-remote-cache.md) owns builds and client credentials.
 
 ## Compatibility And Routing
@@ -233,8 +232,11 @@ Never deploy from a fork or supply Cloudflare credentials to build-cache clients
 The [Worker README](../../scripts/turbo-cache/README.md) owns local setup,
 authorized provisioning, deployment, and curl commands. The
 [access contract](./ci-remote-cache-access.md#expiry-and-recovery-runbook)
-owns PR-prefix expiry and poisoned-object recovery. Provisioning commands are
-planned; existing bucket/rules must not be recreated without inspection.
+owns PR-prefix expiry and poisoned-object recovery. Do not recreate the
+existing bucket or rules without inspection. Change Worker secrets with
+`wrangler secret bulk` and one JSON object on standard input, never as
+arguments. After a rotation, wait until the old token returns 401; allow up to
+5 minutes.
 
 ## Verified Client Sources
 

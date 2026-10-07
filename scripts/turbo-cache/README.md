@@ -8,9 +8,9 @@ adapter and fetch entry contain the platform-specific boundary.
 
 The core, R2 adapter, configuration, tests, and local curl/signed-client
 verification are implemented. The first deploy ran on 2026-10-07 from the
-admin's login at commit `11b207d`: `https://mokly-turbo-cache.calum-785.workers.dev`. It has no access
-tokens yet, so it answers 401 to every request. Hosted cache wiring
-and CI policy selection remain Milestone 4 work.
+admin's login at commit `11b207d`: `https://mokly-turbo-cache.calum-785.workers.dev`. The policy B
+access tokens were set on 2026-10-07. Hosted cache wiring remains Milestone 4
+work.
 
 ## Development
 
@@ -125,9 +125,8 @@ npx --no-install wrangler r2 bucket create mokly-turbo-cache
 npx --no-install wrangler r2 bucket lifecycle add mokly-turbo-cache expire-artifacts --expire-days 30
 npx --no-install wrangler r2 bucket lifecycle list mokly-turbo-cache
 npx --no-install wrangler r2 bucket lifecycle add mokly-turbo-cache expire-pr-artifacts mokly-pr- --expire-days 7
-npx --no-install wrangler secret put TURBO_CACHE_TRUSTED_WRITE_TOKEN --config scripts/turbo-cache/wrangler.jsonc
-npx --no-install wrangler secret put TURBO_CACHE_PR_WRITE_TOKEN --config scripts/turbo-cache/wrangler.jsonc
-npx --no-install wrangler secret put TURBO_CACHE_READ_TOKEN --config scripts/turbo-cache/wrangler.jsonc
+# Pipe one JSON object with the three token names on standard input.
+npx --no-install wrangler secret bulk --config scripts/turbo-cache/wrangler.jsonc
 npx --no-install wrangler deploy --config scripts/turbo-cache/wrangler.jsonc
 ```
 
