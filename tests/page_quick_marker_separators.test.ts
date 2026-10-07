@@ -10,7 +10,7 @@ import {
 } from "./helpers/style_switches.js";
 
 const key = "a".repeat(64);
-const reference = 'background:url("../asset.svg")';
+const reference = 'background:url("../../asset.svg")';
 const ignore = (text: string) =>
   `<!--mokly-review-ignore:start:other-->${text}<!--mokly-review-ignore:end:other-->`;
 const spellings = ["<! --", "<!/**/--", "< !--", "</**/!--"];
@@ -76,7 +76,7 @@ for (const mode of ["committed", "derived"] as const)
                   kind: "error",
                   name: "Error",
                   message:
-                    "[mokly/review-ignore] home/index.mobile.html: material signal for clock has no region",
+                    "[mokly/review-ignore] mokly-generated/home/index.mobile.html: material signal for clock has no region",
                 });
               for (const switches of styleSwitches)
                 await context.test(JSON.stringify(switches), async () => {
@@ -115,7 +115,7 @@ for (const mode of ["committed", "derived"] as const)
                     kind: "error",
                     name: "Error",
                     message:
-                      "[mokly/review-ignore] home/index.mobile.html: region clock has no end marker",
+                      "[mokly/review-ignore] mokly-generated/home/index.mobile.html: region clock has no end marker",
                   },
                 );
               });

@@ -16,19 +16,19 @@ for (const mode of ["committed", "derived"] as const)
     for (const [name, markup] of [
       [
         "CSS comment ignore",
-        '<style>.entry{background:url("../asset.svg")}/*<!--mokly-review-ignore:start:clock-->same<!--mokly-review-ignore:end:clock-->*/</style>',
+        '<style>.entry{background:url("../../asset.svg")}/*<!--mokly-review-ignore:start:clock-->same<!--mokly-review-ignore:end:clock-->*/</style>',
       ],
       [
         "style tag attributes",
-        '<style data-ignore="<!--mokly-review-ignore:start:clock-->">.entry{background:url("../asset.svg")}</style data-ignore="<!--mokly-review-ignore:end:clock-->">',
+        '<style data-ignore="<!--mokly-review-ignore:start:clock-->">.entry{background:url("../../asset.svg")}</style data-ignore="<!--mokly-review-ignore:end:clock-->">',
       ],
       [
         "removed component marker",
-        '<style>.entry{background:url("../asset.svg")}/*<!--mokly-component:start:r-77-->*/</style>',
+        '<style>.entry{background:url("../../asset.svg")}/*<!--mokly-component:start:r-77-->*/</style>',
       ],
       [
         "removed component marker with a non-identical outside ignore",
-        '<style>.entry{background:url("../asset.svg")}/*<!--mokly-component:start:r-77-->*/</style>',
+        '<style>.entry{background:url("../../asset.svg")}/*<!--mokly-component:start:r-77-->*/</style>',
       ],
     ])
       await context.test(name!, async () => {

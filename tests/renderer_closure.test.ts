@@ -22,7 +22,7 @@ test("renderer-only resources share full and requested closure validation", asyn
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
     `import { renderToStaticMarkup } from "react-dom/server";
-export default input => ({html: '<html><body>' + renderToStaticMarkup(input.node) + '</body></html>', resources: [{ path: "widget.css", componentIds: ["action"] }] });`,
+export default input => '<html><head><link rel="stylesheet" href="' + '../'.repeat(input.entry.path.split('/').length + 1) + 'widget.css"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
   );
   const config = await loadConfig(fixture.root);
   const compiled = await compileCatalogue(config);

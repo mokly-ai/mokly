@@ -7,7 +7,7 @@ import {
   styleSwitches,
 } from "./helpers/style_switches.js";
 
-const sheet = '<style>.missing{background:url("../x.css")}</style>';
+const sheet = '<style>.missing{background:url("../../x.css")}</style>';
 const ignored = (value: string) =>
   `<!--mokly-review-ignore:start:clock-->${value}<!--mokly-review-ignore:end:clock-->`;
 
@@ -58,7 +58,7 @@ test("derived proofs preserve a required reader's missing-file diagnostic", asyn
   for (const changed of [false, true])
     await context.test(`style text changed=${changed}`, async (context) => {
       const markup = (color: string) =>
-        `<style>.entry{background:url("../new.svg")}.entry{color:${color}}</style>`;
+        `<style>.entry{background:url("../../new.svg")}.entry{color:${color}}</style>`;
       const input = withHeadStyles(
         base,
         markup("red"),

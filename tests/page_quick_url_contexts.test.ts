@@ -41,7 +41,7 @@ for (const mode of ["committed", "derived"] as const)
         await context.test(
           `${JSON.stringify(prefix)}, identical=${identical}`,
           async (context) => {
-            const css = `.entry:foo(${prefix}(#x "<!--mok\\\nly-review-material:clock:${"a".repeat(64)}-->")){background:url("../asset.svg")}`;
+            const css = `.entry:foo(${prefix}(#x "<!--mok\\\nly-review-material:clock:${"a".repeat(64)}-->")){background:url("../../asset.svg")}`;
             const ignored = (text: string) =>
               identical
                 ? ""
@@ -69,7 +69,7 @@ for (const mode of ["committed", "derived"] as const)
                 kind: "error",
                 name: "Error",
                 message:
-                  "[mokly/review-ignore] home/index.mobile.html: material signal for clock has no region",
+                  "[mokly/review-ignore] mokly-generated/home/index.mobile.html: material signal for clock has no region",
               });
             for (const switches of styleSwitches)
               await context.test(JSON.stringify(switches), async () => {

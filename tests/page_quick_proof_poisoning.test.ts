@@ -13,8 +13,8 @@ import {
 } from "./helpers/style_route.js";
 import { styleSwitches } from "./helpers/style_switches.js";
 
-const needed = '.entry{background:url("../asset.svg")}';
-const missing = '.missing{background:url("../m.svg")}';
+const needed = '.entry{background:url("../../asset.svg")}';
+const missing = '.missing{background:url("../../m.svg")}';
 const ignored = (value: string) =>
   `<!--mokly-review-ignore:start:other-->${value}<!--mokly-review-ignore:end:other-->`;
 
@@ -35,8 +35,8 @@ test("a failed required-only proof batch cannot poison needed files", async (con
     ],
     [
       "link",
-      `<style>${missing}</style><link rel="stylesheet" href="../sheet.css">`,
-      `<style>${missing}</style><link rel="stylesheet" href="../sheet.css">`,
+      `<style>${missing}</style><link rel="stylesheet" href="../../sheet.css">`,
+      `<style>${missing}</style><link rel="stylesheet" href="../../sheet.css">`,
       "unchanged",
     ],
     [

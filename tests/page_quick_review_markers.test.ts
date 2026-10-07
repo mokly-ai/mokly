@@ -14,7 +14,7 @@ import {
 const start = "<!--mokly-review-ignore:start:clock-->";
 const end = "<!--mokly-review-ignore:end:clock-->";
 const signal = `<!--mokly-review-material:clock:${"a".repeat(64)}-->`;
-const reference = '<style>.entry{background:url("../asset.svg")}</style>';
+const reference = '<style>.entry{background:url("../../asset.svg")}</style>';
 const oneSided = `<style>.entry{color:red}/*${start}*/</style><p>x</p>${end}`;
 const plain = "<style>.entry{color:red}/**/</style><p>x</p>";
 

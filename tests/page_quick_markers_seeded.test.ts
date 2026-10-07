@@ -23,7 +23,7 @@ test("seeded decoded markers and ordinary escapes equal the complete-path oracle
     const kind = index % 3;
     const marker = Math.floor(index / 3) % 3;
     const encoded = encoder.encode(markers[marker]!, index, kind !== 2);
-    const reference = 'background:url("../asset.svg")';
+    const reference = 'background:url("../../asset.svg")';
     const css =
       kind === 0
         ? `.entry:is([title="${encoded}"],main){${reference}}`

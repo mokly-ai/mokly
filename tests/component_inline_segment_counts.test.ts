@@ -30,7 +30,9 @@ test("a real small catalogue emits exactly one inline count record with parsing,
         `<style>.target{color:${color}}.common{display:block}.common{display:block}</style><style>${failure}{</style></head>`,
       ),
     );
-    return { read: async (route: string) => Buffer.from(files.get(route)!) };
+    return {
+      read: async (route: string) => Buffer.from(textOutput(files, route)!),
+    };
   };
   const events: TimingEvent[] = [];
   const result = await runWithTimings(

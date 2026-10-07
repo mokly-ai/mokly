@@ -9,7 +9,7 @@ import {
 
 const ignored = (value: string) =>
   `<!--mokly-review-ignore:start:other-->${value}<!--mokly-review-ignore:end:other-->`;
-const marker = String.raw`.entry:is([title="\3c !--mokly-review-material:clock:${"a".repeat(64)}-->"],main){background:url("../asset.svg")}`;
+const marker = String.raw`.entry:is([title="\3c !--mokly-review-material:clock:${"a".repeat(64)}-->"],main){background:url("../../asset.svg")}`;
 
 for (const mode of ["committed", "derived"] as const)
   test(`decoded selector markers preserve full validation in ${mode}`, async (context) => {
@@ -32,7 +32,7 @@ for (const mode of ["committed", "derived"] as const)
           await context.test(JSON.stringify(switches), async () => {
             await assert.rejects(compareStyleSwitches(fixture, switches), {
               message:
-                "[mokly/review-ignore] home/index.mobile.html: material signal for clock has no region",
+                "[mokly/review-ignore] mokly-generated/home/index.mobile.html: material signal for clock has no region",
             });
           });
       });
@@ -49,7 +49,7 @@ for (const mode of ["committed", "derived"] as const)
       '.entry{content:"less < more"}',
     ])
       await context.test(css, async () => {
-        const markup = `<style>${css}.entry{background:url("../asset.svg")}</style>`;
+        const markup = `<style>${css}.entry{background:url("../../asset.svg")}</style>`;
         for (const identical of [true, false]) {
           const input = withHeadStyles(
             base,

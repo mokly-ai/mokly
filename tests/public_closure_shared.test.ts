@@ -36,7 +36,7 @@ test("Build and Watch share every authored link and renderer resource edge", asy
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
     `import { renderToStaticMarkup } from "react-dom/server";
-export default input => ({html: '<html><body>' + renderToStaticMarkup(input.node) + '</body></html>', resources: [{ path: "widget.css", componentIds: ["action"] }] });`,
+export default input => '<html><head><link rel="stylesheet" href="' + '../'.repeat(input.entry.path.split('/').length + 1) + 'widget.css"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
   );
   t.after(() => removeFixture(fixture));
   for (const [name, content] of Object.entries({

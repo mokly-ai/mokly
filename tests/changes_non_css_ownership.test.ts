@@ -20,7 +20,7 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 function actualOnlyPublicAssetSource(): string {
   return componentEntrySource({
     actionRender:
-      '(props) => <button>{props.label}{props.label === "Finish" ? <img src="../asset.svg" /> : null}</button>',
+      '(props) => <button>{props.label}{props.label === "Finish" ? <img src="../../asset.svg" /> : null}</button>',
   }).replace(
     'path: "action",',
     'path: "action", dependencies: ["mockups/asset.svg"], ownedDependencies: ["mockups/asset.svg"],',
@@ -51,8 +51,8 @@ test("committed non-CSS actual-invocation evidence belongs to its declared owner
     ),
   ]);
   assert.deepEqual(live.changedEntries, ["action"]);
-  assert.equal(artifact.result.schemaVersion, 5);
-  if (artifact.result.schemaVersion !== 5) return;
+  assert.equal(artifact.result.schemaVersion, 6);
+  if (artifact.result.schemaVersion !== 6) return;
   assert.deepEqual(artifact.result.changes, [
     {
       kind: "component",
@@ -139,8 +139,8 @@ test("non-public implementation dependencies keep declarative ownership", async 
   );
   assert.deepEqual(live.changedEntries, ["action"]);
   const result = live.componentChanges?.result;
-  assert.equal(result?.schemaVersion, 5);
-  if (result?.schemaVersion !== 5) return;
+  assert.equal(result?.schemaVersion, 6);
+  if (result?.schemaVersion !== 6) return;
   assert.deepEqual(result.changes[0]?.reasons, [
     { kind: "dependency", path: "shared/action.ts" },
   ]);

@@ -15,7 +15,7 @@ for (const mode of ["committed", "derived"] as const)
       ["moKly", "fast"],
     ] as const)
       await context.test(word, async () => {
-        const markup = String.raw`<style>.entry:is([title="\3C !--${word}-component:start:r-1-->"],main){background:url("../asset.svg")}</style>`;
+        const markup = String.raw`<style>.entry:is([title="\3C !--${word}-component:start:r-1-->"],main){background:url("../../asset.svg")}</style>`;
         const input = withHeadStyles(base, markup, markup, mode);
         const fixture = {
           ...input,

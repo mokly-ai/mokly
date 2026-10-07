@@ -51,7 +51,7 @@ export function separatorMarkerCases(seed: number) {
     const raw = `${prefix}${control ? "ordinary" : "mokly"}-${ending}`;
     const marker =
       Math.floor(index / 6) % 2 ? raw : encoder.encode(raw, index, true);
-    const reference = 'background:url("../asset.svg")';
+    const reference = 'background:url("../../asset.svg")';
     const kind = index % 6;
     let css: string;
     if (kind === 0) {
@@ -77,7 +77,7 @@ export function separatorMarkerCases(seed: number) {
       css = `.entry:is([title="${encoder.encode(raw, index, true)}"],main){${reference}}`;
     } else {
       contexts.add("utility control");
-      css = String.raw`.md\:flex{display:flex}.w-1\/2{width:50%}.hover\:bg-red:hover{color:red}.entry{content:"\201C < ordinary";background:url("../asset.svg")}`;
+      css = String.raw`.md\:flex{display:flex}.w-1\/2{width:50%}.hover\:bg-red:hover{color:red}.entry{content:"\201C < ordinary";background:url("../../asset.svg")}`;
     }
     if (!control && index % 4 !== 0) for (const part of parts) seen.add(part);
     cases.push({ index, kind, css, control });
