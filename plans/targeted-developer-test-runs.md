@@ -312,7 +312,8 @@ and merged documentation-only main updates without another complete gate.
 ## Milestone 4: Review Decisions
 
 This milestone applies the selected output and error improvements, shares the
-Windows-safe npm test launcher, and integrates main. Post-push review is pending.
+Windows-safe npm test launcher, and integrates main. Completed. Review 3 fixed
+finding 5; the re-review found no new findings.
 Evidence: `.context/targeted-developer-test-runs/milestone-4.md`.
 Review 3: .context/targeted-developer-test-runs/review-3.md.
 
@@ -342,7 +343,7 @@ failing tests after a gate failure.
 - [x] Pass the repository suite, then run the complete gate once on the merged
       tree. Use targeted reruns after a failure and report repeated unrelated failures.
 - [x] Run the deletion checks, commit remaining changes, and push the branch.
-- [ ] After the push, review the complete diff against `origin/main` with
+- [x] After the push, review the complete diff against `origin/main` with
       `docs/implementation-review-prompt.md`, report findings, then apply the
       review-fix rule in `AGENTS.md`. The orchestrating agent runs this review.
   - Review 3 finding 1, Medium: pattern-only runs warn for nearly every file; recommend A.
