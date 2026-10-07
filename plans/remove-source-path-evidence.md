@@ -1,8 +1,8 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestones 1 to 30B are implemented, verified and pushed;
-the branch contains main `dc56e3d4`. Milestone 31 is implemented and verified
-in one local commit. Milestone 32 remains.
+Status: Active. Milestones 1 to 31 are implemented, verified and pushed; the
+branch contains main `dc56e3d4`. Milestone 32's final gate and push are done;
+its post-push review is in progress.
 
 ## Status And Outcome
 
@@ -2425,9 +2425,10 @@ Evidence: `.context/remove-source-path-evidence/milestone-31.md`.
 
 ## Milestone 32: Verify, deliver and review
 
-- [ ] Run `cargo xtask check` at 100%, inspect the diff and deletions against
-      `origin/main`, and record the evidence.
-- [ ] Run `git add -A`, commit with a Conventional Commit, and push the branch.
+- [x] Run `cargo xtask check` at 100%, inspect the diff and deletions against
+      `origin/main`, and record the evidence. The gate passed at 100% on the
+      final code tree in Milestone 31; Milestone 32 changes only this plan.
+- [x] Run `git add -A`, commit with a Conventional Commit, and push the branch.
 - [ ] After the push, use `docs/implementation-review-prompt.md` to review the
       complete diff against `origin/main` and report findings. Keep the review
       read-only. Then apply the General review-fix rule in `AGENTS.md`: fix
