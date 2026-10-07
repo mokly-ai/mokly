@@ -61,7 +61,7 @@ exits `1` under the `build-invalid` category. Its error is
 
 ## Errors
 
-A failure prints one line on standard error that begins with its category, so
+A failure prints a message on standard error that begins with its category, so
 you can tell a configuration problem from an upload problem without reading a
 stack trace:
 
@@ -69,29 +69,31 @@ stack trace:
 [mokly/config-missing] no mokly.config file was found
 ```
 
-| Category                        | Raised when                                            |
-| ------------------------------- | ------------------------------------------------------ |
-| `cli-invalid`                   | An argument is unknown, misplaced or missing its value |
-| `config-missing`                | No configuration file was found                        |
-| `config-invalid`                | The configuration is not valid                         |
-| `build-invalid`                 | The catalogue could not be built or validated          |
-| `manifest-invalid`              | A manifest could not be read or does not match         |
-| `review-invalid`                | A comparison could not be produced from the inputs     |
-| `export-invalid`                | An export destination or artifact was refused          |
-| `server-failed`                 | The local server could not start or continue           |
-| `git-failed`                    | A Git command failed                                   |
-| `baseline-history-unavailable`  | The branch point is not in the checkout                |
-| `baseline-incompatible-earlier` | The comparison base was built by an earlier Mokly      |
-| `baseline-extraction-failed`    | The historical checkout could not be extracted         |
-| `baseline-command-failed`       | A baseline build command failed                        |
-| `baseline-output-invalid`       | A baseline build produced no valid catalogue           |
-| `baseline-interrupted`          | Baseline preparation was interrupted                   |
-| `baseline-lock-timeout`         | The baseline cache stayed locked                       |
-| `upload-unauthorized`           | The service refused the token or the repository        |
-| `upload-invalid-bundle`         | The upload was rejected as malformed                   |
-| `upload-too-large`              | An upload limit was exceeded                           |
-| `upload-unsupported-version`    | The service does not support this upload version       |
-| `upload-failed`                 | The upload failed for any other reason                 |
+| Category                        | Raised when                                                    |
+| ------------------------------- | -------------------------------------------------------------- |
+| `cli-invalid`                   | An argument is unknown, misplaced or missing its value         |
+| `config-missing`                | No configuration file was found                                |
+| `config-invalid`                | The configuration is not valid                                 |
+| `build-invalid`                 | The catalogue could not be built or validated                  |
+| `build-stale`                   | Committed generated files do not match the publish build       |
+| `manifest-invalid`              | A manifest could not be read or does not match                 |
+| `review-invalid`                | A comparison could not be produced from the inputs             |
+| `export-invalid`                | An export destination or artifact was refused                  |
+| `server-failed`                 | The local server could not start or continue                   |
+| `git-failed`                    | A Git command failed                                           |
+| `git-uncommitted`               | Publish found uncommitted files or missing output ignore rules |
+| `baseline-history-unavailable`  | The branch point is not in the checkout                        |
+| `baseline-incompatible-earlier` | The comparison base was built by an earlier Mokly              |
+| `baseline-extraction-failed`    | The historical checkout could not be extracted                 |
+| `baseline-command-failed`       | A baseline build command failed                                |
+| `baseline-output-invalid`       | A baseline build produced no valid catalogue                   |
+| `baseline-interrupted`          | Baseline preparation was interrupted                           |
+| `baseline-lock-timeout`         | The baseline cache stayed locked                               |
+| `upload-unauthorized`           | The service refused the token or the repository                |
+| `upload-invalid-bundle`         | The upload was rejected as malformed                           |
+| `upload-too-large`              | An upload limit was exceeded                                   |
+| `upload-unsupported-version`    | The service does not support this upload version               |
+| `upload-failed`                 | The upload failed for any other reason                         |
 
 `baseline-incompatible-earlier` is a typed internal availability outcome, not
 a command failure. Serve stays available, and export or publish exits `0`
@@ -102,3 +104,10 @@ Cancelling publish keeps `upload-failed` but prints
 `Publication was cancelled. Run mokly publish again when you are ready.` An
 exhausted request prints
 `The catalogue upload did not complete. Check the endpoint and connection, then retry.`
+
+`git-uncommitted` says `The checkout has uncommitted changes.` Its hint says
+`Commit, stash or ignore these files, then publish again.` `build-stale` says
+`The committed generated files are out of date.` Its hint says
+`Run mokly build, commit the result and publish again.` Both show at most 20
+paths, then the number of other paths, in plain and rich output. Changes found
+after export say that they appeared during the export.

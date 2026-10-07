@@ -4,6 +4,10 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { compileCatalogue } from "../dist/build/compile.js";
+import { writeCompilation } from "../dist/build/transaction.js";
+import { loadConfig } from "../dist/config/load.js";
+
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { startFakeReceiver } from "./helpers/fake_receiver.js";
 import { validEntrySource } from "./helpers/fixture.js";
@@ -28,6 +32,11 @@ test("delta receiver uploads generated CSS and exact binary asset bytes", async 
     '.auth { background-image: url("./font.woff2"); color: red; }',
   );
   await fs.writeFile(path.join(fixture.entriesDir, "font.woff2"), assetBytes);
+
+  const config = await loadConfig(fixture.root);
+  await writeCompilation(await compileCatalogue(config), config);
+  await fixture.git("add", "entries", "mockups/mokly-generated");
+  await fixture.git("commit", "-qm", "test: publish compiled styles and asset");
 
   await runPublishedCli(fixture.root, receiver.endpoint, token);
   const ownership = receiver.plans[0]!.ownership.files;
@@ -75,7 +84,9 @@ test("publish uploads changed content and identity-stamped shells after an entry
     fixture.entryPath,
     validEntrySource({ body: "<strong>Changed published home</strong>" }),
   );
-  await fixture.git("add", "entries/fixture.mockup.tsx");
+  const config = await loadConfig(fixture.root);
+  await writeCompilation(await compileCatalogue(config), config);
+  await fixture.git("add", "entries", "mockups/mokly-generated");
   await fixture.git("commit", "-qm", "test: change one published screen");
   const { stdout, stderr } = await runPublishedCli(
     fixture.root,

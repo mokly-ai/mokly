@@ -82,6 +82,8 @@ test("publish uploads current-only output for an earlier baseline", async (t) =>
   const fixture = await createExportFixture();
   t.after(() => fixture.close());
   await installBaseline(fixture, { version: 7 });
+  await fixture.git("add", "mockups/mokly-generated");
+  await fixture.git("commit", "-qm", "test: publish current generated output");
   const messages: string[] = [];
   const requests: Array<{ method: string | undefined; url: string }> = [];
   await publishCatalogue(
@@ -90,7 +92,7 @@ test("publish uploads current-only output for an earlier baseline", async (t) =>
       endpoint: "https://uploads.example.test/plan",
       token: "fixture-token",
       repository: "github.com/example/catalogue",
-      base: "HEAD",
+      base: "HEAD^",
       out: "published",
     },
     "0.0.0-test",

@@ -116,12 +116,14 @@ the definition, not necessarily the module that called its helper.
 ## Commands And Accepted Generations
 
 No output-mode branches or Git-ignore committability checks participate in
-the imported CSS implementation. Only `check` reads the current index, using
+the imported CSS implementation. `check` reads the current index, using
 the complete expected tree including pages, manifest, CSS, and binary assets.
 Keep the exact tracked/mixed/untracked and stale-output errors in
 [generated output](./mokly-generated-output.md#tracked-state-and-commands).
 Untracked checks never inspect an old output tree, even for CSS ownership.
 Build can write ignored output; neither `.gitignore` nor head tracking gates it.
+CLI publish separately requires a clean checkout and compares committed output
+or requires ignored derived output under the [upload contract](./mokly-upload.md).
 
 Preserve the repository-scoped generated-output lock and its exact holder,
 realpath-alias, bounded wait, cancellation, dead-holder reclamation and cleanup

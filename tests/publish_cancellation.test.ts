@@ -29,7 +29,7 @@ test("SIGINT during Blob upload has dedicated plain and rich output", async (con
         "--repository",
         "github.com/sample/catalogue",
         "--out",
-        `site-${mode}`,
+        "site",
         "--no-changes",
       ],
       {
