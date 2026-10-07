@@ -1,9 +1,9 @@
 # Remote Verification Review Follow-Up
 
-Status: Active. No pull request exists yet. Milestones 1 and 2 are completed.
-The cleanup review changes and Milestone 3 are completed. Milestone 4 code
-and local checks are ready. Push and workflow validation are next.
-The user approved those changes and a push after the listed checks.
+Status: Active. No pull request exists yet. Milestones 1 through 4 and the
+cleanup review changes are completed and pushed. The Testbox workflow passed
+in validation mode. Milestone 5 is next. The full gate remains deferred at
+the user's request.
 
 Fix the eleven open findings from the post-push review of
 [Blacksmith remote verification](./blacksmith-remote-verification.md)
@@ -170,7 +170,7 @@ Evidence: `.context/remote-verification-review-follow-up/milestone-3.md`.
 
 ## Milestone 4: Scripts and workflow
 
-Covers findings 6, 7 and 10.
+Completed. Covers findings 6, 7 and 10.
 Evidence: `.context/remote-verification-review-follow-up/milestone-4.md`.
 
 - [x] Finding 6: write the failing workflow test, then add the branch filter.
@@ -181,7 +181,7 @@ Evidence: `.context/remote-verification-review-follow-up/milestone-4.md`.
       the shared validator.
 - [x] Run ESLint, prepared TypeScript, Prettier and the focused Node tests.
       Commit.
-- [ ] Push the committed milestones. Confirm that the changed Testbox
+- [x] Push the committed milestones. Confirm that the changed Testbox
       workflow passes in validation mode on this branch.
 
 ## Milestone 5: Adapter tests
