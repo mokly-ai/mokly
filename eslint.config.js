@@ -6,7 +6,28 @@ import importPlugin from "eslint-plugin-import-x";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
+import noDirectoryLiterals from "./scripts/eslint/no-directory-literals.mjs";
+
 const gitignorePath = path.join(import.meta.dirname, ".gitignore");
+const sourceFiles = ["src/**/*.ts", "src/**/*.tsx"];
+const postcssCallsModule = "src/build/styles/postcss_calls.ts";
+const postcssCallsMessage = `Parse and process CSS only through ${postcssCallsModule}. Its calls always pass map: false, so PostCSS never loads a source map.`;
+const postcssModuleSource = String.raw`/^postcss(?:$|\x2F)/`;
+const postcssLoadRestrictions = [
+  {
+    selector: `ImportExpression[source.value=${postcssModuleSource}]`,
+    message: postcssCallsMessage,
+  },
+  {
+    selector: `CallExpression[arguments.0.value=${postcssModuleSource}]`,
+    message: postcssCallsMessage,
+  },
+];
+const sourcePathRestriction = {
+  selector: "CallExpression[callee.property.name='localeCompare']",
+  message:
+    "Sort source paths with compareCodeUnits to avoid locale-dependent inventories and diagnostics.",
+};
 
 /** Test timing restrictions from docs/protocol/ci-test-timing.md. */
 const testTimingRestrictions = [
@@ -59,8 +80,9 @@ export default tseslint.config(
   {
     ignores: [
       "**/.context/**",
+      "**/.wrangler/**",
       "**/dist/**",
-      "examples/basic/generated/**",
+      "examples/basic/mokly-generated/**",
       "node_modules/**",
       "target/**",
     ],
@@ -72,12 +94,16 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    plugins: { import: importPlugin },
+    plugins: {
+      import: importPlugin,
+      mokly: { rules: { "no-directory-literals": noDirectoryLiterals } },
+    },
     settings: {
       "import-x/internal-regex": "^@mokly/(?:mokly|viewer)(?:/|$)",
     },
     rules: {
       "import/first": "error",
+      "import/no-duplicates": "error",
       "import/order": [
         "error",
         {
@@ -126,6 +152,55 @@ export default tseslint.config(
     rules: restrictedSyntax(catalogueSelectionRestrictions),
   },
   {
+    files: sourceFiles,
+    rules: {
+      "no-restricted-syntax": ["error", ...postcssLoadRestrictions],
+    },
+  },
+  {
+    files: sourceFiles,
+    ignores: [postcssCallsModule],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "postcss",
+              importNames: [
+                "default",
+                "fromJSON",
+                "Input",
+                "parse",
+                "Processor",
+              ],
+              allowTypeImports: true,
+              message: postcssCallsMessage,
+            },
+          ],
+          patterns: [
+            {
+              regex: "^postcss/",
+              allowTypeImports: true,
+              message: postcssCallsMessage,
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: [
+      "src/**/*.{ts,tsx}",
+      "packages/viewer/src/**/*.{ts,tsx}",
+      "scripts/preview/**/*.mjs",
+    ],
+    ignores: ["packages/viewer/src/catalogue/delivery_paths.ts"],
+    rules: {
+      "mokly/no-directory-literals": "error",
+    },
+  },
+  {
     files: [
       "src/config/**/*.ts",
       "src/build/discovery.ts",
@@ -136,11 +211,8 @@ export default tseslint.config(
     rules: {
       "no-restricted-syntax": [
         "error",
-        {
-          selector: "CallExpression[callee.property.name='localeCompare']",
-          message:
-            "Sort source paths with compareCodeUnits to avoid locale-dependent inventories and diagnostics.",
-        },
+        sourcePathRestriction,
+        ...postcssLoadRestrictions,
       ],
     },
   },

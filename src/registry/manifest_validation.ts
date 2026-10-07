@@ -4,34 +4,48 @@ import {
   viewRoute,
   firstPathCaseCollision,
 } from "@mokly/viewer/data";
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 
 import { incompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { validateManifestComponentUsage } from "../components/manifest_validation.js";
 import { MoklyError } from "../errors.js";
 
+import type { ManifestMetadata } from "./manifest.js";
 import { validateManifestEntry } from "./manifest_entries.js";
 import { validateManifestFolders } from "./manifest_folders.js";
+import { validateManifestInventory } from "./manifest_inventory.js";
 import { validateManifestRelationships } from "./manifest_relationships.js";
 import { record, stringArray, validateRepoPath } from "./manifest_values.js";
 
-/** Validate current or historical JSON against the one supported v8 schema. */
+/** Validate current or historical JSON against the one supported v9 schema. */
 export function validateManifest(
   value: unknown,
   historical = false,
   componentUsage = true,
-): ManifestV8 {
+): ManifestV9 {
+  const metadata = validateMetadata(value, historical, componentUsage, true);
+  validateManifestInventory(value as Record<string, unknown>, metadata);
+  return value as ManifestV9;
+}
+
+function validateMetadata(
+  value: unknown,
+  historical: boolean,
+  componentUsage: boolean,
+  inventory: boolean,
+): ManifestMetadata {
   if (
     historical &&
     record(value) &&
     Number.isInteger(value.schemaVersion) &&
-    (value.schemaVersion as number) < 8
+    (value.schemaVersion as number) < 9
   )
     throw incompatibleEarlierBaseline();
-  if (!record(value) || !Array.isArray(value.entries))
+  if (!record(value)) failure("manifest must contain an entries array");
+  if (value.schemaVersion !== 9 || value.generatedBy !== "mokly")
+    failure("expected Mokly manifest schema version 9; run mokly build");
+  if (!Array.isArray(value.entries))
     failure("manifest must contain an entries array");
-  if (value.schemaVersion !== 8 || value.generatedBy !== "mokly")
-    failure("expected Mokly manifest schema version 8; run mokly build");
   if (
     Object.keys(value).some(
       (key) =>
@@ -41,6 +55,9 @@ export function validateManifest(
           "generatedBy",
           "schemaVersion",
           "sourceFiles",
+          ...(inventory
+            ? ["assetClosure", "blobHashAlgorithm", "generatedFiles"]
+            : []),
         ].includes(key),
     )
   )
@@ -98,12 +115,12 @@ export function validateManifest(
     );
   validateManifestRelationships(entries, byPath);
   if (componentUsage) validateManifestComponentUsage(value as never);
-  return value as unknown as ManifestV8;
+  return value as unknown as ManifestMetadata;
 }
 
-/** Validate the same v8 metadata used by the live catalogue boundary. */
-export function validateManifestMetadata(value: unknown): ManifestV8 {
-  return validateManifest(value, false, false);
+/** Validate the same v9 metadata used by the live catalogue boundary. */
+export function validateManifestMetadata(value: unknown): ManifestMetadata {
+  return validateMetadata(value, false, false, false);
 }
 
 function addOutputPath(paths: Set<string>, candidate: string): void {

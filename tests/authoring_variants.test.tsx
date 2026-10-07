@@ -7,7 +7,6 @@ import {
   defineScreen,
 } from "../dist/authoring/definitions.js";
 import type { ScreenInput } from "../dist/authoring/types.js";
-import { DEFAULT_PUBLIC_EXCLUDE } from "../dist/config/public_exclusions.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
 import { collectModuleExports } from "../dist/registry/export_collection.js";
 import { prepareRegistry } from "../dist/registry/prepare.js";
@@ -16,10 +15,7 @@ import { repositoryRoot } from "./helpers/fixture.js";
 
 const sourceRelativePath = "tests/authoring_variants.test.tsx";
 const config: ResolvedConfig = {
-  generatedOutput: "committed",
-  publicExclude: DEFAULT_PUBLIC_EXCLUDE,
   colorSchemes: ["light"],
-  compatibility: {},
   configPath: path.join(repositoryRoot, "mokly.config.ts"),
   roots: [
     {
@@ -29,6 +25,7 @@ const config: ResolvedConfig = {
     },
   ],
   mockupsDir: path.join(repositoryRoot, "mockups"),
+  generatedDir: path.join(repositoryRoot, "mockups/mokly-generated"),
   moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
   repoRoot: repositoryRoot,
   review: { base: "main", outDir: ".review", sharedImpact: [] },

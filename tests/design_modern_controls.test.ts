@@ -10,17 +10,17 @@ import {
 } from "../packages/viewer/dist/data.js";
 import type {
   ManifestScreen,
-  ManifestV8,
+  ManifestV9,
 } from "../packages/viewer/dist/registry/types.js";
 
 import { entriesWhere } from "./helpers/catalogue_selection.js";
 import { componentParent } from "./helpers/component_views.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
-const generated = path.join(repositoryRoot, "examples/basic/generated");
+const generated = path.join(repositoryRoot, "examples/basic/mokly-generated");
 const manifest = JSON.parse(
   await fs.readFile(path.join(generated, "mokly-manifest.json"), "utf8"),
-) as ManifestV8;
+) as ManifestV9;
 
 test("the shared footer exposes only the icon panel and its current variants", () => {
   const footer = componentParent(

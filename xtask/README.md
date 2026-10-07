@@ -15,6 +15,9 @@ internal binary and is not published to npm or crates.io.
 - Ratchet JavaScript/TypeScript length, protocol caps, and internal exports
   against the branch point, and published-package exports against release tags.
 - Keep the complete local gate aligned with the approved independent CI suites.
+- Run explicit and automatic remote checks on 11 Testboxes with complete shard
+  evidence.
+- Stop warmed boxes on failure, success, SIGINT and SIGTERM.
 
 ## What This Crate Does
 
@@ -52,8 +55,10 @@ dependencies without workspace overrides or audit exceptions.
 
 The [CI verification contract](../docs/protocol/ci-verification.md) defines the
 suite boundaries, shard evidence, and fail-closed CI aggregate. Selected suites
-are partial verification; the unqualified command remains the complete gate. The
-[repository ratchet contract](../docs/protocol/verification-ratchets.md) owns
+are partial verification. The unqualified command runs the complete gate.
+`--executor remote` runs that gate on Testboxes. `auto` selects remote mode when
+an org key and every availability check pass. It otherwise selects local mode.
+The [repository ratchet contract](../docs/protocol/verification-ratchets.md) owns
 the exact scopes and exceptions. Length, protocol-cap, and
 unused-internal-export analysis compare against
 `git merge-base HEAD origin/main`; module analysis covers `.ts`, `.tsx`, `.mts`,
@@ -91,6 +96,10 @@ Tests using `changedFixture` register servers and workers with
 
 ```bash
 cargo xtask check
+cargo xtask check --executor local
+cargo xtask executor
+cargo xtask executor --executor local
+cargo xtask check --executor remote
 cargo xtask check --suite repository
 cargo xtask check --suite package
 cargo xtask check --suite unit --shard 1/4
@@ -105,17 +114,71 @@ cargo xtask source-file-length-lint --all
 runs the full selected suite. Package, unit, browser, and hydration suites
 prepare their required output before invoking prepared npm scripts.
 
+`--executor auto|local|remote` overrides `MOKLY_CHECK_EXECUTOR`.
+An absent flag and variable select `auto`. Explicit `local` skips remote checks.
+Explicit `remote` rejects `--suite` and GitHub Actions.
+Push local `HEAD` before a remote check. Install `blacksmith`, `rsync` and `ssh`.
+PATH lookup skips entries when file access fails.
+Set `BLACKSMITH_ORG_TOKEN` to use org-key login through stdin.
+Remote mode can use the current CLI login when the key is absent.
+Login saves the key in `~/.blacksmith/credentials`.
+It replaces any saved login for the same organization.
+The CLI never receives the key in arguments or remote commands.
+Warmup uses the Testbox workflow from `main`.
+Set `MOKLY_TESTBOX_REF=<pushed branch>` only to test a changed Testbox workflow
+before it merges.
+It does not change the required source fingerprint or `HEAD`.
+
+The [remote contract](../docs/protocol/remote-verification.md) defines the
+availability order, probe barrier, report aggregate and cleanup.
+Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
+Each command worker downloads its report and cleans up its box when it ends.
+It does not wait for other commands. Final cleanup covers only remaining boxes.
+The status table can prove a box already completed. That box needs no stop or
+GitHub cancellation. The aggregate runs after all commands and cleanup end.
+Each check creates new report and log directories under `.context/`.
+Their shared run name is UTC `YYYYMMDDTHHMMSSZ` followed by `-<process-id>`.
+Decision, information and warning lines start with `[xtask/executor]`.
+Suite progress and summaries start with `[xtask/remote]`.
+Failed commands show their last 60 log lines and the log path.
+Failed aggregate and fingerprint reads show captured stdout and stderr after
+their warning. The summary names the aggregate outcome as `passed` or `failed`.
+Automatic mode checks the key before looking for programs.
+No key prints one information line and selects local mode.
+`cargo xtask executor` prints exactly `<executor>: <reason>` on stdout.
+It checks availability without warming boxes or running suites.
+The CLI version and diagnostics stay on stderr. Both decisions exit 0.
+Invalid or rejected modes exit nonzero.
+Automatic preparation failures stop their boxes before the full local fallback.
+Typed results prevent fallback after suites start or an interrupt arrives.
+Failed preparation cleanup also prevents fallback.
+Before fallback after an armed signal handler, xtask releases the handler.
+SIGINT, SIGTERM or SIGHUP after release ends xtask at once with exit status 130.
+Xtask reads the interrupt flag again after release. An earlier signal prevents
+fallback. Terminal output is best effort. Closed stdout or stderr cannot stop
+cleanup. A guard tracks boxes that are not yet stopped or proven completed.
+It uses the normal cleanup rules when a panic unwinds the runner.
+It never panics itself and does no cleanup on a normal return.
+
 ## Development
 
 Run the crate tests directly when changing command orchestration:
 
 ```bash
 cargo test --package xtask
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets -- -D warnings
 ```
 
 ### Key Code
 
 - [`src/cli.rs`](./src/cli.rs) parses and dispatches commands.
+- [`src/application.rs`](./src/application.rs) selects the effective executor.
+- [`src/remote/runner.rs`](./src/remote/runner.rs) owns remote phase order.
+- [`src/remote/contracts.rs`](./src/remote/contracts.rs) defines injected
+  environment, Git, CLI, clock, script, log, signal and output boundaries.
+- [`src/remote/process.rs`](./src/remote/process.rs) streams output and kills
+  child process groups on interrupts.
 - [`src/command.rs`](./src/command.rs) defines the injected command-runner
   boundary.
 - [`src/check.rs`](./src/check.rs) defines the complete source, packed-consumer,
@@ -153,4 +216,6 @@ cargo test --package xtask
 - [Repository README](../README.md)
 - [CI and npm release contract](../docs/protocol/npm-release.md)
 - [CI verification](../docs/protocol/ci-verification.md)
+- [Remote verification](../docs/protocol/remote-verification.md)
+- [Testbox execution](../docs/protocol/remote-verification-testbox.md)
 - [Dependency security](../docs/protocol/dependency-security.md)

@@ -5,33 +5,35 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { compileCatalogue } from "../dist/build/compile.js";
 import { exportCatalogue } from "../dist/export/run.js";
 
 import {
   createExportFixture,
   directoryFiles,
 } from "./helpers/export_fixture.js";
-import { repositoryRoot } from "./helpers/fixture.js";
+import { repositoryRoot, validEntrySource } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
+const preview = (root: string, output: string) =>
+  execute(
+    process.execPath,
+    [
+      "--input-type=module",
+      "--eval",
+      'import { loadConfig } from "./dist/config/load.js"; import { buildPreview } from "./scripts/preview/catalogue.mjs"; await buildPreview(await loadConfig(process.argv[1]), process.argv[2]);',
+      root,
+      output,
+    ],
+    { cwd: repositoryRoot, timeout: 60_000 },
+  );
 
-for (const source of ["public documents"]) {
-  test(`preview rejects colliding ${source} aliases before replacing an existing site`, async (context) => {
+for (const source of ["referenced documents", "unreferenced documents"]) {
+  test(`preview protects its routes from ${source} aliases`, async (context) => {
     const fixture = await createExportFixture();
     context.after(() => fixture.close());
     const output = path.join(fixture.root, ".context/published");
-    const build = () =>
-      execute(
-        process.execPath,
-        [
-          "--input-type=module",
-          "--eval",
-          'import { loadConfig } from "./dist/config/load.js"; import { buildPreview } from "./scripts/preview/catalogue.mjs"; await buildPreview(await loadConfig(process.argv[1]), process.argv[2]);',
-          fixture.root,
-          output,
-        ],
-        { cwd: repositoryRoot, timeout: 60_000 },
-      );
+    const build = () => preview(fixture.root, output);
     await build();
     const previous = await directoryFiles(output);
     await fs.promises.mkdir(path.join(fixture.mockupsDir, "guide"));
@@ -44,7 +46,27 @@ for (const source of ["public documents"]) {
       "<h1>Details</h1>",
     );
     await exportCatalogue(fixture.config, { outDir: "site" });
-    await assert.rejects(build(), /Export file\/directory collision/);
+    const before = await directoryFiles(fixture.mockupsDir);
+    if (source === "referenced documents") {
+      await fs.promises.writeFile(
+        fixture.entryPath,
+        validEntrySource({
+          body: '<a href="../../guide.html">Guide</a><a href="../../guide/details.html">Details</a>',
+        }),
+      );
+      await assert.rejects(build(), /Export file\/directory collision/);
+    } else {
+      await build();
+      assert.equal(
+        fs.existsSync(path.join(output, "static/guide.html")),
+        false,
+      );
+      assert.equal(
+        fs.existsSync(path.join(output, "static/guide/details.html")),
+        false,
+      );
+    }
+    assert.deepEqual(await directoryFiles(fixture.mockupsDir), before);
     assert.deepEqual(await directoryFiles(output), previous);
     assert.deepEqual(
       await fs.promises.readdir(
@@ -54,6 +76,45 @@ for (const source of ["public documents"]) {
     );
   });
 }
+
+test("preview captures compiled output without restoring local generated files", async (context) => {
+  const fixture = await createExportFixture();
+  context.after(() => fixture.close());
+  const compilation = await compileCatalogue(fixture.config);
+  for (const route of compilation.outputs.keys())
+    await fs.promises.rm(path.join(fixture.config.generatedDir, route));
+  const before = await directoryFiles(fixture.mockupsDir);
+  const output = path.join(fixture.root, ".context/published");
+  await preview(fixture.root, output);
+  assert.deepEqual(await directoryFiles(fixture.mockupsDir), before);
+  assert.match(
+    await fs.promises.readFile(
+      path.join(output, "static/mokly-generated/home/index.mobile.html"),
+      "utf8",
+    ),
+    /id="home-mobile"/,
+  );
+});
+
+test("preview serves compiled bytes instead of stale local generated output", async (context) => {
+  const fixture = await createExportFixture();
+  context.after(() => fixture.close());
+  const route = "home/index.mobile.html";
+  await fs.promises.writeFile(
+    path.join(fixture.config.generatedDir, route),
+    "<!doctype html><html><body>Stale local output</body></html>",
+  );
+  const before = await directoryFiles(fixture.mockupsDir);
+  const output = path.join(fixture.root, ".context/published");
+  await preview(fixture.root, output);
+  assert.deepEqual(await directoryFiles(fixture.mockupsDir), before);
+  const published = await fs.promises.readFile(
+    path.join(output, "static/mokly-generated", route),
+    "utf8",
+  );
+  assert.match(published, /id="home-mobile"/);
+  assert.doesNotMatch(published, /Stale local output/);
+});
 
 test("adapter aliases cannot claim the final export ownership marker", async (context) => {
   const fixture = await createExportFixture();

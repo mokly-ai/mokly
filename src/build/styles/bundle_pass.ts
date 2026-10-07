@@ -158,7 +158,7 @@ export async function bundleStylePass(
       minify: false,
       nodePaths: packageNodePaths(config),
       outbase: config.repoRoot,
-      outdir: path.join(config.mockupsDir, "mokly-generated/styles"),
+      outdir: path.join(config.generatedDir, "styles"),
       platform: "node",
       plugins: [plugin, resolution.plugin],
       preserveSymlinks: true,
@@ -170,7 +170,7 @@ export async function bundleStylePass(
     });
     metafile = built.metafile!;
     for (const file of built.outputFiles ?? []) {
-      const route = toPosixPath(path.relative(config.mockupsDir, file.path));
+      const route = toPosixPath(path.relative(config.generatedDir, file.path));
       outputs.set(
         route,
         route.endsWith(".css")
@@ -215,7 +215,7 @@ export async function bundleStylePass(
 
   const inputs = new Map<string, readonly string[]>();
   for (const root of roots) {
-    const output = mapper.key(path.join(config.mockupsDir, root.route));
+    const output = mapper.key(path.join(config.generatedDir, root.route));
     const cssInputs = metafile.outputs[output]?.inputs ?? {};
     const rootMetafile: Metafile = {
       inputs: Object.fromEntries(

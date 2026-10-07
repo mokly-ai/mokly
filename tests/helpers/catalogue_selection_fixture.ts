@@ -6,7 +6,7 @@ import type {
 import type {
   ManifestPage,
   ManifestScreen,
-  ManifestV8,
+  ManifestV9,
 } from "../../packages/viewer/dist/registry/types.js";
 
 const metadata = {
@@ -65,7 +65,7 @@ export const componentVariant: ManifestComponentVariant = {
   componentViews: [],
 };
 /** Small current manifest with mixed kinds, variants, and folder boundaries. */
-export const manifest: ManifestV8 = {
+export const manifest: ManifestV9 = {
   entries: [
     screenVariant,
     folderEntry,
@@ -75,8 +75,11 @@ export const manifest: ManifestV8 = {
     componentVariant,
     parent,
   ],
+  assetClosure: [],
+  blobHashAlgorithm: "sha256",
+  generatedFiles: [],
   generatedBy: "mokly",
-  schemaVersion: 8,
+  schemaVersion: 9,
   folders: [],
   sourceFiles: [],
 };

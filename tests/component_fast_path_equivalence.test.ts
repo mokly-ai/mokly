@@ -5,7 +5,7 @@ import test, { type TestContext } from "node:test";
 
 import { compileCatalogue, type Compilation } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
-import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
 import { componentChangeCases } from "./helpers/component_change_cases.js";
@@ -108,33 +108,34 @@ for (const owned of [false, true])
 
 test("derived byte-only image changes take the complete path", async (t) => {
   const source = componentEntrySource({
-    actionRender:
-      '(props) => <button>{props.label}<img src="../image.svg" /></button>',
+    actionRender: "(props) => <button>{props.label}</button>",
   });
-  const fixture = await createFixture(source);
+  const fixture = await createFixture(source, {
+    extraConfig: 'stylesheets: [{ match: "**", stylesheets: ["shared.css"] }],',
+  });
   t.after(() => removeFixture(fixture));
-  const images = ["image.svg", "action/image.svg", "pane/image.svg"];
-  for (const route of images) {
-    await fs.mkdir(path.dirname(path.join(fixture.mockupsDir, route)), {
-      recursive: true,
-    });
-    await fs.writeFile(path.join(fixture.mockupsDir, route), "base-image");
-  }
+  await fs.writeFile(path.join(fixture.mockupsDir, "image.svg"), "base-image");
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "shared.css"),
+    'button { background: url("image.svg"); }',
+  );
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
-  const baseImages = Object.fromEntries(
-    images.map((image) => [image, "base-image"]),
-  );
-  const headImages = Object.fromEntries(
-    images.map((image) => [image, "head-image"]),
-  );
+  const baseImages = {
+    "image.svg": "base-image",
+    "shared.css": 'button { background: url("image.svg"); }',
+  };
+  const headImages = {
+    "image.svg": "head-image",
+    "shared.css": 'button { background: url("image.svg"); }',
+  };
   const result = await assertFastPathEquivalent({
     before: compilation.manifest,
     after: compilation.manifest,
     beforeFiles: compilationFiles(compilation, baseImages),
     afterFiles: compilationFiles(compilation, headImages),
     changedPaths: [],
-    config: { ...config, generatedOutput: "derived" },
+    config,
   });
   assert.ok(
     result.changes.some((entry) =>
@@ -231,7 +232,7 @@ async function assetFiles(directory: string) {
   return files;
 }
 
-function allViews(result: ReviewResultV5) {
+function allViews(result: ReviewResultV6) {
   return [
     ...result.screens.flatMap((screen) => screen.views),
     ...result.components.flatMap((component) =>

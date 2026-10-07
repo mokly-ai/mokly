@@ -2,13 +2,17 @@
 
 `adaptBrowseDocument(content, route, catalogue)` authenticates current published
 HTML copies for Serve and export. It never writes generated source files or
-comparison snapshots. `trusted_document.ts` derives ownership and the expected
-portable href from the current manifest; unowned resources receive no inspector.
+comparison snapshots. `trusted_document.ts` derives trusted routes and
+expected portable hrefs from the accepted manifest and in-memory compilation;
+authored resources receive no inspector. Callers pass a generated-relative
+`route` only for accepted generated HTML. They pass `undefined` for authored
+closure HTML, including a file whose trailing path equals a generated route.
 
-The adapter checks the ownership header, complete component marker forest,
+The adapter checks route membership, complete component marker forest,
 native logical links, duplicate reserved attributes and portable destinations
-before adding package metadata. It preserves live hrefs and targets, deriving
-only the trusted target metadata that parent navigation consumes. Unowned HTML
+before adding package metadata. It strips only the current plain generated notice after range validation,
+without using that line for authentication. It preserves live hrefs and targets, deriving
+only the trusted target metadata that parent navigation consumes. Authored HTML
 has existing reserved navigation attributes stripped from the published copy.
 
 `inspector_metadata.ts` supplies one inert template and the deferred inspector
@@ -32,5 +36,6 @@ See [navigation](../../docs/protocol/mokly-navigation.md),
 [inspector implementation](../../packages/viewer/src/inspector/README.md), and
 [export assembly](../export/README.md).
 
-Markdown documents authenticate by source header in each supported scheme. Their
+Markdown documents authenticate through the accepted in-memory route and
+content set in each supported scheme. Their
 logical links use the same portable targets and parent navigation as pages.

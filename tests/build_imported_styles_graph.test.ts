@@ -6,15 +6,10 @@ import test from "node:test";
 
 import { checkCompilation } from "../dist/build/check.js";
 import { compileCatalogue } from "../dist/build/compile.js";
-import { loadConsumerGraph } from "../dist/build/load_graph.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
-import {
-  runWithTimings,
-  type TimingEvent,
-} from "../dist/diagnostics/timings.js";
 
-import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { removeFixture } from "./helpers/fixture.js";
 import {
   compileFixture,
   entryStyle,
@@ -30,7 +25,10 @@ test("two entries share a stylesheet without deduplicating across roots", async 
   );
   const compiled = await compileFixture(fixture);
   const other = "mokly-generated/styles/entries/other.mockup.ts.css";
-  assert.equal(compiled.outputs.get(entryStyle), compiled.outputs.get(other));
+  assert.equal(
+    compiled.outputs.get(entryStyle),
+    compiled.outputs.get(other.slice("mokly-generated/".length)),
+  );
   assert.equal(
     compiled.manifest.sourceFiles.filter(
       (file) => file === "entries/fixture.css",
@@ -53,7 +51,7 @@ test("different entries emit independent stylesheets in one compilation", async 
   const compiled = await compileFixture(fixture);
   const first = compiled.outputs.get(entryStyle) as string;
   const second = compiled.outputs.get(
-    "mokly-generated/styles/entries/second.mockup.ts.css",
+    "styles/entries/second.mockup.ts.css",
   ) as string;
   assert.match(first, /\.first/);
   assert.doesNotMatch(first, /\.second/);
@@ -75,7 +73,7 @@ test("a shared asset is emitted once even when two root stylesheets use it", asy
   const compiled = await compileFixture(fixture);
   assert.deepEqual(
     [...compiled.outputs.keys()].filter((route) => route.endsWith("image.png")),
-    ["mokly-generated/assets/entries/image.png"],
+    ["assets/entries/image.png"],
   );
 });
 
@@ -109,43 +107,6 @@ test("JavaScript re-exports and dynamic imports join first-reachability DFS", as
   assert.ok(output.indexOf(".second") < output.indexOf(".third"), output);
 });
 
-test("transformer-only CSS and its nested assets are private, not delivered", async (t) => {
-  const fixture = await createFixture(undefined, {
-    extraConfig: 'compatibility: { transformer: "transform.ts" },',
-  });
-  t.after(() => removeFixture(fixture));
-  await fs.writeFile(
-    path.join(fixture.root, "transform.ts"),
-    'import "./a.css"; export default ({content}) => content;',
-  );
-  await fs.writeFile(path.join(fixture.root, "a.css"), '@import "./b.css";');
-  await fs.writeFile(
-    path.join(fixture.root, "b.css"),
-    '.a { background: url("./image.png") }',
-  );
-  await fs.writeFile(path.join(fixture.root, "image.png"), Buffer.from([0xff]));
-  const config = await loadConfig(fixture.root);
-  const graph = await loadConsumerGraph(config, false);
-  const timings: TimingEvent[] = [];
-  const compiled = await runWithTimings(
-    true,
-    "test",
-    () => compileCatalogue(config),
-    {
-      write: (event) => timings.push(event),
-    },
-  );
-  assert.deepEqual(compiled.manifest.sourceFiles, graph.sourceFiles);
-  for (const source of ["a.css", "b.css", "image.png"])
-    assert.ok(compiled.manifest.sourceFiles.includes(source), source);
-  assert.ok(
-    ![...compiled.outputs.keys()].some((route) =>
-      route.startsWith("mokly-generated/"),
-    ),
-  );
-  assert.ok(!timings.some((event) => event.stage === "styles.bundle"));
-});
-
 test("stylesheet output and inventory repeat byte-identically", async (t) => {
   const fixture = await styleFixture(".a { color: red }");
   t.after(() => removeFixture(fixture));
@@ -154,7 +115,7 @@ test("stylesheet output and inventory repeat byte-identically", async (t) => {
   assert.equal(first.outputs.get(entryStyle), second.outputs.get(entryStyle));
   assert.deepEqual(first.manifest.sourceFiles, second.manifest.sourceFiles);
   const child =
-    'import { loadConfig } from "./dist/config/load.js"; import { compileCatalogue } from "./dist/build/compile.js"; const result = await compileCatalogue(await loadConfig(process.argv[1])); process.stdout.write(result.outputs.get("mokly-generated/styles/entries/fixture.mockup.tsx.css"));';
+    'import { loadConfig } from "./dist/config/load.js"; import { compileCatalogue } from "./dist/build/compile.js"; const result = await compileCatalogue(await loadConfig(process.argv[1])); process.stdout.write(result.outputs.get("styles/entries/fixture.mockup.tsx.css"));';
   const run = () =>
     execFileSync(
       process.execPath,

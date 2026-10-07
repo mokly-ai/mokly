@@ -3,7 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 
 import type { CatalogueReadModel } from "@mokly/viewer";
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 import {
   readScopedShellBootstrap,
   resolveCatalogueUsageScope,
@@ -18,10 +18,10 @@ import { homePage, notFoundPage, viewPage } from "../dist/server/pages.js";
 import { entryAt } from "./helpers/catalogue_selection.js";
 
 const LIMIT = 1_048_576;
-type RoutedManifestEntry = ManifestV8["entries"][number];
+type RoutedManifestEntry = ManifestV9["entries"][number];
 const manifest = JSON.parse(
-  fs.readFileSync("examples/basic/generated/mokly-manifest.json", "utf8"),
-) as ManifestV8;
+  fs.readFileSync("examples/basic/mokly-generated/mokly-manifest.json", "utf8"),
+) as ManifestV9;
 const sourceRemoved = entryAt(manifest, "example/screens/welcome", "screen");
 const removed = {
   ...structuredClone(sourceRemoved),

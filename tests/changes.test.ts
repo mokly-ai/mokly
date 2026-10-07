@@ -78,7 +78,7 @@ test("a material variant edit marks only the variant route", async (t) => {
 
   assert.deepEqual(
     changedManifestPaths(manifest, manifest, config, [
-      `mockups/${viewRoute(variant.path, "mobile", "light")}`,
+      `mockups/mokly-generated/${viewRoute(variant.path, "mobile", "light")}`,
     ]),
     [variant.path],
   );
@@ -121,7 +121,7 @@ for (const changed of ["parent", "variant"] as const)
 
     assert.deepEqual(
       changedManifestPaths(manifest, manifest, config, [
-        `mockups/${viewRoute(screen.path, "mobile", "light")}`,
+        `mockups/mokly-generated/${viewRoute(screen.path, "mobile", "light")}`,
       ]),
       changed === "variant" ? [screen.path, "variant-flow"] : [screen.path],
     );
@@ -150,7 +150,9 @@ test("Changes keeps screen comparisons lazy and has no separate Review route", a
     assert.equal(fs.existsSync(config.review.outDir), false);
     assert.equal((await fetch(`${running.url}/review`)).status, 404);
     assert.equal(fs.existsSync(config.review.outDir), false);
-    const response = await fetch(`${running.url}/__mokly/diffs/review.json`);
+    const response = await fetch(
+      `${running.url}/mokly-viewer/diffs/review.json`,
+    );
     assert.equal(response.status, 200);
     const comparison = (await response.json()) as ReviewResult;
     assert.equal(
@@ -166,7 +168,7 @@ test("Changes keeps screen comparisons lazy and has no separate Review route", a
     const screen = comparison.screens[0]!;
     const snapshot = await fetch(
       new URL(
-        `snapshots/before/${viewRoute(screen.path, view.viewport, view.colorScheme)}`,
+        `snapshots/before/mokly-generated/${viewRoute(screen.path, view.viewport, view.colorScheme)}`,
         response.url,
       ),
     );

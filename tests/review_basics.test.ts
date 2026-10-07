@@ -11,6 +11,7 @@ import {
 } from "../dist/review/ignore.js";
 
 import { entryAt } from "./helpers/catalogue_selection.js";
+import { currentManifest } from "./helpers/current_manifest.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
@@ -64,26 +65,29 @@ test("Review classifies added, removed, and unchanged routes independently", asy
     title: "Old screen",
     useCasePaths: [],
   };
-  const baseManifest = {
+  const baseManifest = currentManifest({
     ...compilation.manifest,
     entries: [{ ...detail, useCasePaths: [] }, old],
-  };
+  });
   const gitFiles = new Map<string, string>([
-    ["mockups/mokly-manifest.json", `${JSON.stringify(baseManifest)}\n`],
     [
-      "mockups/details/index.mobile.html",
+      "mockups/mokly-generated/mokly-manifest.json",
+      `${JSON.stringify(baseManifest)}\n`,
+    ],
+    [
+      "mockups/mokly-generated/details/index.mobile.html",
       textOutput(compilation.outputs, "details/index.mobile.html") ?? "",
     ],
     [
-      "mockups/details/index.desktop.html",
+      "mockups/mokly-generated/details/index.desktop.html",
       textOutput(compilation.outputs, "details/index.desktop.html") ?? "",
     ],
     [
-      "mockups/old-screen/index.mobile.html",
+      "mockups/mokly-generated/old-screen/index.mobile.html",
       "<html><body>Old mobile</body></html>",
     ],
     [
-      "mockups/old-screen/index.desktop.html",
+      "mockups/mokly-generated/old-screen/index.desktop.html",
       "<html><body>Old desktop</body></html>",
     ],
   ]);

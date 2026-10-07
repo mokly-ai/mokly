@@ -47,7 +47,11 @@ not remove it from this list. Links can open the actual before/current screen
 comparison even when the screen has no row in Changes.
 
 Affected describes dependency/usage evidence, not proof of a visual regression.
-In derived mode, a resource-byte difference without a changed Git path is a
+For any baseline source, pair generated views by route and authored assets by
+their side's catalogue-relative path, using the
+[baseline descriptor](./mokly-baseline-addressing.md#comparison-namespaces).
+Git changed-path evidence remains repository-relative; it does not translate
+historical roots. A resource-byte difference without a changed Git path is a
 material change. It does not invent a Git dependency reason or changed path.
 No pixel counts or layout-safety claims are inferred. A changed component can
 alter surrounding layout without changing any screen-owned markup.
@@ -69,8 +73,8 @@ screen.
 
 Lightweight Browse classification reads the current compiled manifest and usage
 metadata together with the baseline manifest and required fragment material.
-Committed mode reads the baseline side from Git branch-point blobs; derived mode
-reads it from the validated rebuilt cache. It does not generate snapshots or copy
+Per-commit selection reads complete Git blobs or the validated rebuilt cache.
+It does not generate snapshots or copy
 comparison assets. Opening All/Changes, navigating, changing viewport/theme in
 Current, and watch notifications retain the no-eager-comparison-generation
 contract. Cache classification by catalogue generation and resolved baseline;
@@ -79,8 +83,8 @@ that affect its inputs. No-watch Serve and publication instead reuse their
 validated startup snapshot, including ownership evidence and unavailable-history
 state, for the lifetime of that capture.
 
-The comparison artifact is the schema v5 result with component/variant records
-and explicit affected-consumer evidence; readers accept only v5, and every
+The comparison artifact is the schema v6 result with component/variant records
+and explicit affected-consumer evidence; readers accept only v6, and every
 record addresses its entry by path. Screen entries retain their actual view
 results, with affected-only evidence separate from direct Changes membership.
 All comparisons keep accepted before/after bytes and isolated assets.
@@ -180,7 +184,7 @@ Component-generated style material can live in the document head rather than
 inside a component boundary. Extend the renderer result with optional typed
 style/resource ownership records while continuing to accept a plain HTML string.
 Records identify exact style ranges or public resource paths and component
-owners. Validate them against the rendered document and final compatibility
+owners. Validate them against the rendered document and final rendered
 output. Only proven component-owned material is excluded from the consuming
 screen projection; mixed or unclaimed head material remains material.
 
@@ -191,7 +195,7 @@ consumer document to make a component-only example pass.
 
 ## Baselines
 
-Baseline and current documents come from validated manifest-v8 output and
+Baseline and current documents come from validated manifest-v9 output and
 retain their original bytes. Style offsets and component ranges share each
 document's UTF-16 coordinate space. Earlier output never reaches attribution;
 it follows the [baseline compatibility contract](./mokly-baseline-compatibility.md).

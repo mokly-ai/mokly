@@ -28,14 +28,17 @@ test("an unowned same-origin document gains no navigation privilege during hando
   await page.goto(fixture.host.url);
   await page.evaluate(async () => {
     const { sameOriginAdapter } = (await import(
-      `${location.origin}/__mokly/client/same_origin_adapter.js`
+      `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
     )) as typeof LocalAdapter;
     const state = window as unknown as IdentityTestWindow;
     state.frameEvents = [];
     state.mounted = await sameOriginAdapter().mount(
       document.querySelector<HTMLIFrameElement>("#frame")!,
       {
-        url: new URL("/static/home/index.mobile.html", location.origin),
+        url: new URL(
+          "/static/mokly-generated/home/index.mobile.html",
+          location.origin,
+        ),
         usage: { status: "unavailable" },
       },
     );
@@ -53,23 +56,29 @@ test("an unowned same-origin document gains no navigation privilege during hando
   const requestReleased = new Promise<void>((resolve) => {
     releaseRequest = resolve;
   });
-  await page.route("**/static/home/index.mobile.html", async (route) => {
-    reportRequest();
-    await requestReleased;
-    await route.continue();
-  });
+  await page.route(
+    "**/static/mokly-generated/home/index.mobile.html",
+    async (route) => {
+      reportRequest();
+      await requestReleased;
+      await route.continue();
+    },
+  );
 
   try {
     await page.evaluate(async () => {
       const { sameOriginAdapter } = (await import(
-        `${location.origin}/__mokly/client/same_origin_adapter.js`
+        `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
       )) as typeof LocalAdapter;
       const state = window as unknown as IdentityTestWindow;
       const onEvent = state.frameEvents.push.bind(state.frameEvents);
       state.replacement = sameOriginAdapter().mount(
         document.querySelector<HTMLIFrameElement>("#frame")!,
         {
-          url: new URL("/static/home/index.mobile.html", location.origin),
+          url: new URL(
+            "/static/mokly-generated/home/index.mobile.html",
+            location.origin,
+          ),
           usage: { status: "unavailable" },
           onEvent,
         },
@@ -119,14 +128,17 @@ test("an unowned exact-resource document gains no navigation privilege during ha
   await page.goto(fixture.host.url);
   await page.evaluate(async () => {
     const { sameOriginAdapter } = (await import(
-      `${location.origin}/__mokly/client/same_origin_adapter.js`
+      `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
     )) as typeof LocalAdapter;
     const state = window as unknown as IdentityTestWindow;
     state.frameEvents = [];
     state.mounted = await sameOriginAdapter().mount(
       document.querySelector<HTMLIFrameElement>("#frame")!,
       {
-        url: new URL("/static/home/index.mobile.html", location.origin),
+        url: new URL(
+          "/static/mokly-generated/home/index.mobile.html",
+          location.origin,
+        ),
         usage: { status: "unavailable" },
       },
     );
@@ -142,7 +154,7 @@ test("an unowned exact-resource document gains no navigation privilege during ha
     releaseRequest = resolve;
   });
   await page.route(
-    "**/static/home/index.mobile.html?handoff=exact",
+    "**/static/mokly-generated/home/index.mobile.html?handoff=exact",
     async (route) => {
       matchingRequests++;
       if (matchingRequests === 1) {
@@ -163,7 +175,7 @@ test("an unowned exact-resource document gains no navigation privilege during ha
         .locator("#frame")
         .evaluate((element: HTMLIFrameElement) =>
           element.contentDocument?.URL.endsWith(
-            "/static/home/index.mobile.html?handoff=exact",
+            "/static/mokly-generated/home/index.mobile.html?handoff=exact",
           ),
         ),
     )
@@ -172,7 +184,7 @@ test("an unowned exact-resource document gains no navigation privilege during ha
   try {
     await page.evaluate(async () => {
       const { sameOriginAdapter } = (await import(
-        `${location.origin}/__mokly/client/same_origin_adapter.js`
+        `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
       )) as typeof LocalAdapter;
       const state = window as unknown as IdentityTestWindow;
       const onEvent = state.frameEvents.push.bind(state.frameEvents);
@@ -180,7 +192,7 @@ test("an unowned exact-resource document gains no navigation privilege during ha
         document.querySelector<HTMLIFrameElement>("#frame")!,
         {
           url: new URL(
-            "/static/home/index.mobile.html?handoff=exact",
+            "/static/mokly-generated/home/index.mobile.html?handoff=exact",
             location.origin,
           ),
           usage: { status: "unavailable" },

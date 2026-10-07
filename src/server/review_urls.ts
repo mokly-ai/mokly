@@ -1,14 +1,18 @@
 import path from "node:path";
 
-import { encodeUrlPath, snapshotSidePath } from "@mokly/viewer/data";
+import {
+  VIEWER_DIRECTORY,
+  encodeUrlPath,
+  snapshotSidePath,
+} from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 
 import { safeDecodePath } from "./respond.js";
 import type { ReviewGeneration } from "./review_generations.js";
 
-export const DIFF_ROUTE = "/__mokly/diffs/";
-export const GENERATION_ROUTE = `${DIFF_ROUTE}__generations/`;
+export const DIFF_ROUTE = `/${VIEWER_DIRECTORY}/diffs/`;
+export const GENERATION_ROUTE = `${DIFF_ROUTE}generations/`;
 const SNAPSHOT_ROOT = `${path.posix.dirname(snapshotSidePath("before"))}/`;
 
 export function generationPath(

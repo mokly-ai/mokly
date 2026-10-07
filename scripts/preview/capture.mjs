@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { VIEWER_DIRECTORY } from "@mokly/viewer/data";
+
 import {
   loadBrowserClientModules,
   loadBrowserNavigationModules,
@@ -9,10 +11,8 @@ import {
 
 import { normalizeProviderHtmlAttributes } from "./html_paths.mjs";
 
-const liveHostScript =
-  '<script src="/__mokly/client/react-host.js" type="module"></script>';
-const staticHydrationScript =
-  '<script src="/__mokly/client/react-shell.js" type="module"></script>';
+const liveHostScript = `<script src="/${VIEWER_DIRECTORY}/client/react-host.js" type="module"></script>`;
+const staticHydrationScript = `<script src="/${VIEWER_DIRECTORY}/client/react-shell.js" type="module"></script>`;
 
 /** Capture the shell assets needed by the static preview. */
 export async function captureAssets(serverUrl, stage) {
@@ -30,7 +30,7 @@ export async function captureAssets(serverUrl, stage) {
 
 function shellAssets() {
   return [
-    "/__mokly/shell.css",
+    `/${VIEWER_DIRECTORY}/shell.css`,
     ...[...loadBrowserClientModules().keys()]
       .filter(
         (name) =>
@@ -42,12 +42,12 @@ function shellAssets() {
           name !== "react_update_controller.js" &&
           name !== "react-host.js",
       )
-      .map((name) => `/__mokly/client/${name}`),
+      .map((name) => `/${VIEWER_DIRECTORY}/client/${name}`),
     ...[...loadBrowserNavigationModules().keys()].map(
-      (name) => `/__mokly/navigation/${name}`,
+      (name) => `/${VIEWER_DIRECTORY}/navigation/${name}`,
     ),
     ...[...loadShellFontAssets().keys()].map(
-      (name) => `/__mokly/fonts/${name}`,
+      (name) => `/${VIEWER_DIRECTORY}/fonts/${name}`,
     ),
   ];
 }

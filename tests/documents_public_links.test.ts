@@ -20,7 +20,7 @@ for (const route of ["mokly-manifest.json", "other/index.html", "a.png"])
     t.after(fixture.remove);
     const config = await fixture.config();
     await writeCompilation(await fixture.compile(), config);
-    const destination = `../generated/${route}`;
+    const destination = `../generated/mokly-generated/${route}`;
     await fixture.write(
       "specs/guide.md",
       `# Guide\n\n[Output](${destination})`,
@@ -31,7 +31,7 @@ for (const route of ["mokly-manifest.json", "other/index.html", "a.png"])
     });
   });
 
-test("public stylesheet and ordinary-file links remain public through repeated Build and export", async (t) => {
+test("public stylesheet and ordinary-file links stay source-safe through repeated Build and export", async (t) => {
   const fixture = await pathFixture(
     {
       "specs/guide.md":
@@ -72,10 +72,7 @@ test("public stylesheet and ordinary-file links remain public through repeated B
     changesStatus: "unavailable",
   });
   try {
-    assert.equal(
-      await (await fetch(`${server.url}/static/notes.txt`)).text(),
-      "Public notes",
-    );
+    assert.equal((await fetch(`${server.url}/static/notes.txt`)).status, 404);
     assert.equal(
       await (await fetch(`${server.url}/static/theme.css`)).text(),
       "h1{color:green}",
@@ -84,9 +81,9 @@ test("public stylesheet and ordinary-file links remain public through repeated B
     await server.close();
   }
   await exportCatalogue(config, { outDir: "site", noChanges: true });
-  assert.equal(
-    await fs.readFile(path.join(fixture.root, "site/static/notes.txt"), "utf8"),
-    "Public notes",
+  await assert.rejects(
+    fs.access(path.join(fixture.root, "site/static/notes.txt")),
+    { code: "ENOENT" },
   );
   assert.equal(
     await fs.readFile(path.join(fixture.root, "site/static/theme.css"), "utf8"),

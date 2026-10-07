@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test";
 
-import { exportCatalogue } from "../../dist/export/run.js";
-import { createExportFixture } from "../helpers/export_fixture.js";
-import { serveStaticFiles } from "../helpers/static_server.js";
-
+import {
+  captureBrowserErrors,
+  expectCleanHydration,
+  installDevelopmentBundle,
+} from "./react_shell_hydration_helpers.js";
 import {
   appearance,
   control,
@@ -11,33 +12,16 @@ import {
   mobileFrame,
   screen,
   select,
+  startSuite,
+  stopSuite,
   store,
-} from "./appearance_assertions.js";
-import {
-  buildDevelopmentBundle,
-  captureBrowserErrors,
-  expectCleanHydration,
-  installDevelopmentBundle,
-} from "./react_shell_hydration_helpers.js";
+  suiteState,
+} from "./standalone_appearance_fixture.js";
 import { expectFrameSource } from "./workspace_actions.js";
 
-let lightOnlyFixture: Awaited<ReturnType<typeof createExportFixture>>;
+test.beforeAll(startSuite);
 
-let lightOnlySite: Awaited<ReturnType<typeof serveStaticFiles>>;
-
-let developmentBundle: string;
-
-test.beforeAll(async () => {
-  developmentBundle = await buildDevelopmentBundle();
-  lightOnlyFixture = await createExportFixture();
-  await exportCatalogue(lightOnlyFixture.config, { outDir: "site" });
-  lightOnlySite = await serveStaticFiles(lightOnlyFixture.output);
-});
-
-test.afterAll(async () => {
-  await lightOnlySite.close();
-  await lightOnlyFixture.close();
-});
+test.afterAll(stopSuite);
 
 for (const catalogue of ["mixed", "light-only"] as const) {
   for (const viewport of [
@@ -50,7 +34,9 @@ for (const catalogue of ["mixed", "light-only"] as const) {
       await page.setViewportSize(viewport);
       await page.emulateMedia({ colorScheme: "dark" });
       const target =
-        catalogue === "mixed" ? screen : `${lightOnlySite.url}/view/home/`;
+        catalogue === "mixed"
+          ? screen
+          : `${suiteState.lightOnlySite.url}/view/home/`;
       const entry = catalogue === "mixed" ? "example/screens/welcome" : "home";
       for (const choice of ["auto", "light", "dark", "pin"] as const) {
         await page.goto(target);
@@ -134,8 +120,8 @@ test("a light-only catalogue hydrates a saved Dark appearance cleanly", async ({
 }) => {
   const errors = captureBrowserErrors(page);
   await store(page, "dark");
-  await installDevelopmentBundle(page, developmentBundle);
-  await page.goto(`${lightOnlySite.url}/view/home/`);
+  await installDevelopmentBundle(page, suiteState.developmentBundle);
+  await page.goto(`${suiteState.lightOnlySite.url}/view/home/`);
 
   await expectCleanHydration(page, errors);
   await expect
@@ -150,10 +136,10 @@ test("a light-only catalogue hydrates a saved Dark appearance cleanly", async ({
 test("a missing appearance startup asset leaves its control hidden", async ({
   page,
 }) => {
-  await page.route("**/__mokly/client/appearance-startup.js", (route) =>
+  await page.route("**/mokly-viewer/client/appearance-startup.js", (route) =>
     route.abort(),
   );
-  await installDevelopmentBundle(page, developmentBundle);
+  await installDevelopmentBundle(page, suiteState.developmentBundle);
   await page.goto(screen);
 
   await expect(page.locator("html")).toHaveAttribute("data-mokly-hydrated", "");

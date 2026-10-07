@@ -15,9 +15,8 @@ import {
 import { textOutput } from "./helpers/generated_text.js";
 
 const stylesheetRoute =
-  "mokly-generated/styles/examples/basic/specs/example/screens/welcome.mockup.ts.css";
-const imageRoute =
-  "mokly-generated/assets/examples/basic/src/components/workspace-note/signal.png";
+  "styles/examples/basic/specs/example/screens/welcome.mockup.ts.css";
+const imageRoute = "assets/examples/imported-assets/workspace-note-signal.png";
 
 test("example Welcome delivers scoped CSS, Tailwind utilities, prefixes and a binary image", async () => {
   const { manifest, outputs } = await designCatalogue;

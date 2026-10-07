@@ -49,7 +49,7 @@ export async function smokeEsmConsumer(context) {
   await runBin(root, ["check"]);
   await inspectMarkdownDocuments(root, "mockups");
   const fragment = await fs.promises.readFile(
-    path.join(root, "mockups/packed-home/index.desktop.html"),
+    path.join(root, "mockups/mokly-generated/packed-home/index.desktop.html"),
     "utf8",
   );
   assert.match(fragment, /data-fixture="esm-desktop"/);
@@ -58,13 +58,13 @@ export async function smokeEsmConsumer(context) {
     /href="\.\.\/packed-detail\/index\.desktop\.html#packed-section"[^>]+data-mokly-link="packed-detail#packed-section"/,
   );
   const coLocated = await fs.promises.readFile(
-    path.join(root, "mockups/packed-card/index.desktop.html"),
+    path.join(root, "mockups/mokly-generated/packed-card/index.desktop.html"),
     "utf8",
   );
   assert.match(coLocated, /data-packed-card=""/);
   const packedManifest = JSON.parse(
     await fs.promises.readFile(
-      path.join(root, "mockups/mokly-manifest.json"),
+      path.join(root, "mockups/mokly-generated/mokly-manifest.json"),
       "utf8",
     ),
   );
@@ -108,7 +108,7 @@ export async function smokeEsmConsumer(context) {
     assert.equal(shell.status, 200);
     assert.match(await shell.text(), /Billing &amp; invoices/);
     const document = await fetch(
-      `${url}/static/account/invoice/index.mobile.html`,
+      `${url}/static/mokly-generated/account/invoice/index.mobile.html`,
     );
     assert.equal(document.status, 200);
     assert.match(await document.text(), /data-packed-derived="mobile"/);
@@ -126,7 +126,7 @@ export async function smokeEsmConsumer(context) {
   await runBin(root, ["build"]);
   let review;
   await smokeServer(root, ["--base", "HEAD"], async (url) => {
-    const response = await fetch(`${url}/__mokly/diffs/review.json`);
+    const response = await fetch(`${url}/mokly-viewer/diffs/review.json`);
     assert.equal(response.status, 200);
     review = await response.json();
   });

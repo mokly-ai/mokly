@@ -9,7 +9,7 @@ import {
 import type {
   ChangedEntry,
   ComponentReview,
-  ScreenReviewV5,
+  ScreenReviewV6,
 } from "../review/component_types.js";
 import type { ViewResourceEvidence } from "../review/types.js";
 import { publicWorkspace } from "../viewer/public_workspace.js";
@@ -77,7 +77,7 @@ export interface WorkspaceData {
   affected: readonly UsageLink[];
   status?: EntryStatus;
   change?: ChangedEntry;
-  comparison?: ComponentReview | ScreenReviewV5;
+  comparison?: ComponentReview | ScreenReviewV6;
   resourceEvidence?: readonly ViewResourceEvidence[];
   base: string;
   comparisons: boolean;
@@ -202,7 +202,7 @@ export function workspaceData(
     ...(context.previewGeneration
       ? { previewGeneration: context.previewGeneration }
       : {}),
-    ...(catalogue.manifest.schemaVersion === "live-index-1"
+    ...(catalogue.manifest.schemaVersion === "live-index-2"
       ? {
           usageComplete: false,
         }

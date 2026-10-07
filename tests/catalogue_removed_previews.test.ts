@@ -12,7 +12,7 @@ import { entriesAt } from "./helpers/catalogue_selection.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 const generation = "c".repeat(64);
-const comparisonUrl = `__mokly/diffs/__generations/${generation}/review.json`;
+const comparisonUrl = `mokly-viewer/diffs/generations/${generation}/review.json`;
 
 test("projection and reader retain typed removed page and screen previews", async (t) => {
   const model = await previewModel(t);
@@ -55,10 +55,10 @@ test("reader rejects malformed or incoherent removed preview descriptors", async
       value.removedEntries[0].preview.path = "../private.json";
     },
     (value) => {
-      value.removedEntries[0].preview.path = `__mokly/diffs/__generations/${generation}/pages/archive/other.html.json`;
+      value.removedEntries[0].preview.path = `mokly-viewer/diffs/generations/${generation}/pages/archive/other.html.json`;
     },
     (value) => {
-      value.removedEntries[0].preview.path = `__mokly/diffs/__generations/${"d".repeat(64)}/pages/archive/guide.html.json`;
+      value.removedEntries[0].preview.path = `mokly-viewer/diffs/generations/${"d".repeat(64)}/pages/archive/guide.html.json`;
     },
     (value) => {
       value.removedEntries[0].preview = { kind: "screen" };

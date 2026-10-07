@@ -8,12 +8,12 @@ import type {
   ManifestComponentVariant,
 } from "../../packages/viewer/dist/components/manifest_types.js";
 import { isManifestComponentVariant } from "../../packages/viewer/dist/data.js";
-import type { ManifestV8 } from "../../packages/viewer/dist/registry/types.js";
+import type { ManifestV9 } from "../../packages/viewer/dist/registry/types.js";
 
 import { CatalogueSelectionError, entryAt } from "./catalogue_selection.js";
 
 /** Every actual screen and saved-variant view, in its own entry scope. */
-export function componentViews(manifest: ManifestV8): ComponentViewRecord[] {
+export function componentViews(manifest: ManifestV9): ComponentViewRecord[] {
   return manifest.entries.flatMap((entry) =>
     entry.kind === "screen"
       ? [...(entry.componentViews ?? [])]
@@ -25,7 +25,7 @@ export function componentViews(manifest: ManifestV8): ComponentViewRecord[] {
 
 /** Find a component parent and reject a variant without making an assertion. */
 export function componentParent(
-  manifest: ManifestV8,
+  manifest: ManifestV9,
   id: string,
 ): ManifestComponent {
   const entry = entryAt(manifest, id, "component");
@@ -42,7 +42,7 @@ export function componentParent(
 }
 
 export function componentVariants(
-  manifest: ManifestV8,
+  manifest: ManifestV9,
   parentId: string,
 ): ManifestComponentVariant[] {
   return manifest.entries.filter(

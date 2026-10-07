@@ -7,16 +7,16 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { viewRoute } from "../../packages/viewer/dist/data.js";
 import type {
   ManifestScreen,
-  ManifestV8,
+  ManifestV9,
 } from "../../packages/viewer/dist/registry/types.js";
 import { entriesUnder } from "../helpers/catalogue_selection.js";
 import { paletteColor } from "../helpers/design_palette.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
-const directory = path.join(repositoryRoot, "examples/basic/generated");
+const directory = path.join(repositoryRoot, "examples/basic/mokly-generated");
 const manifest = JSON.parse(
   fs.readFileSync(path.join(directory, "mokly-manifest.json"), "utf8"),
-) as ManifestV8;
+) as ManifestV9;
 const changedDesigns = new Set([
   "design/browse/variants/variant-changes",
   "design/browse/index-entries/member-changes",

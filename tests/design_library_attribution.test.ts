@@ -14,7 +14,7 @@ test("each exclusive library stylesheet changes its component and only affects r
     await t.test(slug, async () => {
       await fixture.reset();
       await fixture.edit(
-        `examples/basic/generated/design-library/${group}/${slug}.css`,
+        `examples/basic/design-library/${group}/${slug}.css`,
         (source) => source + "\nbody { outline-width: 3px; }\n",
       );
       const result = await fixture.compare();
@@ -212,7 +212,7 @@ test("screen query and field values remain direct changes in their owning design
 });
 
 test("the committed catalogue uses one baseline view batch and agrees across Serve and comparison", async (t) => {
-  const fixture = await designLibraryFixture(t, "committed");
+  const fixture = await designLibraryFixture(t);
   const file = "examples/basic/specs/design/library/controls/tag-chip.view.tsx";
   await fixture.edit(file, (source) =>
     source.replace("{label}", "{label} revised"),
@@ -235,30 +235,25 @@ test("the committed catalogue uses one baseline view batch and agrees across Ser
   );
   assert.ok(viewBatches[0]!.length > 200);
   const resourceReads = fixture.batches
-    .filter((files) => files !== viewBatches[0])
+    .filter((files) => !viewBatches.includes(files))
     .flat();
   assert.equal(
     new Set(resourceReads).size,
     resourceReads.length,
     "shared resources are read once, never once per consumer",
   );
-  const availableResources = new Set(
-    [
-      ...fixture.resources.keys(),
-      ...[...fixture.before.outputs]
-        .filter(
-          ([route, content]) =>
-            route.startsWith("mokly-generated/") || typeof content !== "string",
-        )
-        .map(([route]) => route),
-    ].map((route) => `examples/basic/generated/${route}`),
-  );
+  const availableResources = new Set([
+    ...[...fixture.resources.keys()].map((route) => `examples/basic/${route}`),
+    ...fixture.before.manifest.generatedFiles
+      .filter(({ path }) => !path.endsWith(".html"))
+      .map(({ path }) => `examples/basic/mokly-generated/${path}`),
+  ]);
   assert.ok(resourceReads.length <= availableResources.size);
   for (const file of resourceReads)
     assert.ok(availableResources.has(file), file);
   const { result } = await compareReview(after, fixture.config, git, "main");
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion === 5) {
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion === 6) {
     assert.deepEqual(result.changes, expected.changes);
     assert.deepEqual(result.affectedConsumers, expected.affectedConsumers);
   }

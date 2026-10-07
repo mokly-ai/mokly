@@ -170,7 +170,7 @@ shared resize grip on the catalogue navigation in Current and comparison views; 
 keep the drawer fixed. The recorded tokens and responsive rules live in
 [`docs/protocol/mokly-shell-design.md`](../../docs/protocol/mokly-shell-design.md).
 
-The shared `generated/design.css` is authored source for the design screens.
+The shared `design.css` is authored source for the design screens.
 Its Dark interface uses the same warm Folio neutrals as Mokly Cloud and the
 packaged viewer; the [palette contract](../../docs/protocol/mokly-viewer-palette.md)
 records the source mapping and contrast checks. Preview content owns its colors
@@ -205,8 +205,8 @@ changes. Disabled highlighting explains its specific reason, and outline labels
 use separate rounded chips with a gap above the highlighted region.
 
 Open `/view/design/components/overview/` in Browse, or open
-[`generated/design/components/overview/index.desktop.html`](./generated/design/components/overview/index.desktop.html)
-and [`generated/design/components/overview/index.mobile.html`](./generated/design/components/overview/index.mobile.html)
+[`mokly-generated/design/components/overview/index.desktop.html`](./mokly-generated/design/components/overview/index.desktop.html)
+and [`mokly-generated/design/components/overview/index.mobile.html`](./mokly-generated/design/components/overview/index.mobile.html)
 directly from disk after `npm run build && npm run example:build`.
 The catalogue hierarchy links all owning design pages;
 there is no navigation footer inside an artboard. Product links connect
@@ -229,7 +229,7 @@ keeps its fixed drawer. The component designs reuse the existing shell, frames, 
 and a shared icon inspector, with synthetic usage fixtures under
 `specs/design/components/parts`. The real examples use the public `defineComponent` API.
 
-Exclusive component styles live under `generated/design-library/`. Each component
+Exclusive component styles live under `design-library/`. Each component
 owns only its view module and stylesheet. A per-render collector emits exclusive
 sheets only when the component actually renders, including transient prop edits.
 Registration/variant/control metadata stays outside implementation dependencies.
@@ -296,7 +296,7 @@ From the repository root:
 npm run dev
 ```
 
-This builds the local CLI, generates the catalogue, and watches entries, the
+This builds the local CLI, compiles the catalogue in memory, and watches entries, the
 renderer, and configured stylesheets. Open the printed URL; the browser reloads
 after watched edits. Forward Serve options with `npm run dev -- --port 0`.
 Imported consumer helpers, including this example's `theme.ts`, are tracked
@@ -313,23 +313,25 @@ npm run example:check
 npm run preview:build
 ```
 
-This example uses the default `generatedOutput: "derived"`. Generated HTML,
-the schema-v8 manifest, and `generated/mokly-generated/` stylesheets and binary
-assets are ignored local artifacts, absent in a fresh clone.
-`example:build` writes them transactionally; `example:check` validates the current
-compilation and rejects tracked generated output without requiring files on disk.
-Committed-mode stale and deterministic-output tests use isolated consumer fixtures.
+This example uses `mockupsDir: "."`; its schema-v9 manifest and HTML under
+`mokly-generated/` are ignored local artifacts, absent in a fresh clone.
+`example:build` replaces the entire disposable `mokly-generated/` tree as one
+transaction; unexpected files inside it are removed without touching authored CSS.
+`example:check` validates the current compilation and ignores the untracked local
+tree, which can be absent or stale. Do not commit anything under `mokly-generated/`;
+commit authored files, including specs, configuration and CSS, normally.
+Tracked output checks and historical manifest compatibility use isolated fixtures.
 Both `npm test` and `npm run test:browser` build the example before tests read its
 generated files. Under the
 [test assertion contract](../../docs/protocol/ci-test-assertions.md), tests use
 checked catalogue selections. A moved or renamed spec makes a test fail.
-It cannot leave the test empty. Baseline fixtures copy authored inputs and use
-the normal cached rebuild through the historical commit's own package source
-and lockfile.
-The hand-authored stylesheets (`styles.css`, `design.css`, `design-stage.css`,
-`design-documents.css`, `design-review.css`, `design-review-scroll.css`, and the component design stylesheets) also live under `generated/` because it doubles as the
-public static root and remain tracked. Imported styles live under
-`src/components/workspace-note/` and are never public files. The config's
+It cannot leave the test empty. Baseline fixtures copy authored inputs and use the normal cached
+rebuild through the historical commit's own package source and lockfile. The
+hand-authored stylesheets (`styles.css`, `design.css`, `design-stage.css`,
+`design-documents.css`, `design-review.css`, `design-review-scroll.css`, and the component design stylesheets) stay under the catalogue root and remain tracked. Imported styles live under
+`src/components/workspace-note/` and are never public files. Its imported
+image lives at `examples/imported-assets/workspace-note-signal.png`, outside
+this catalogue root, preserving imported-asset privacy. The config's
 `review.baselineBuild` runs
 `npm ci`, `npm run build`, then `npm run example:build` in the historical commit's
 extraction. The package build step ensures comparisons use that commit's own
@@ -338,7 +340,7 @@ Mokly code. The resulting baseline is cached under `.mokly-cache/`.
 package engine into `.context/mokly-preview` for Cloudflare Pages; it is the same
 current catalogue used by the main preview workflow. It preserves search, tags,
 navigation, Light/Dark choices, client assets, and light/dark fragment files.
-Public HTML copies pass through the same ownership-aware link adapter as served
+Generated HTML copies pass through the same manifest-bound link adapter as served
 Browse; direct preview URLs apply one validated `fragment` query progressively
 in the parent shell. PR previews explicitly include Changes and immutable screen and component variant
 comparisons with `--include-changes --base origin/main`. Publishing then prepares
@@ -351,7 +353,7 @@ or comparison CLI command.
 
 The Browse shell › Appearance folder records the delivered Auto/Light/Dark
 interface appearance for standalone Browse. `design/browse/appearance/overview` is its
-canonical screen; Appearance states owns three more, and Panels and comparisons
+canonical screen; Appearance states owns four more, and Panels and comparisons
 and Status and recovery own five each. Every one of them is an ordinary
 dual-scheme entry, so `mokly build` writes a Light and a
 Dark file per viewport and Browse's Appearance control switches the mockup you

@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { validateExportReferences } from "../dist/export/references.js";
 
-const source = "__mokly/client/app.js";
+const source = "mokly-viewer/client/app.js";
 
 test("export ignores import-like prose, comments, templates and regular expressions", () => {
   assert.doesNotThrow(() =>
@@ -49,7 +49,10 @@ for (const [description, content, destination] of [
       code: "export-invalid",
       detail: `Export resource is unavailable: ${source} -> ${destination}`,
     });
-    files.set(`__mokly/client/${destination.slice(2)}`, "export const a=1;");
+    files.set(
+      `mokly-viewer/client/${destination.slice(2)}`,
+      "export const a=1;",
+    );
     validateExportReferences(files);
   });
 }

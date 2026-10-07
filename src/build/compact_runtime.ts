@@ -4,13 +4,13 @@ import { isManifestComponentVariant } from "@mokly/viewer/data";
 import type { ComponentRuntime } from "./component_runtime.js";
 
 export function compactRuntime(runtime: ComponentRuntime): ComponentRuntime {
-  if (runtime.manifest.schemaVersion === "live-index-1") return runtime;
+  if (runtime.manifest.schemaVersion === "live-index-2") return runtime;
   return {
     ...runtime,
     outputs: [],
     manifest: {
       ...runtime.manifest,
-      schemaVersion: "live-index-1",
+      schemaVersion: "live-index-2",
       entries: runtime.manifest.entries.map((entry) => {
         if (entry.kind === "screen") {
           const { componentViews: _usage, ...metadata } = entry;

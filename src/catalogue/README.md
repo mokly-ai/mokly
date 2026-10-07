@@ -1,7 +1,7 @@
 # Public catalogue data
 
-This module projects validated manifest v8 and accepted Changes evidence into
-public read model v4 at `__mokly/catalogue.json`. Serve, export and repository
+This module projects validated manifest v9 and accepted Changes evidence into
+public read model v5 at `mokly-viewer/catalogue.json`. Serve, export and repository
 preview share its explicit allowlist. Entries are keyed by path, and one tree
 carries resolved folder titles, order, hidden flags, indexes and variants.
 The shell labels its non-component section Specs. Documents share
@@ -21,9 +21,17 @@ updates replace the validated scoped public snapshot and optional matching
 private workspace together.
 
 `projection_input.ts` is the typed input boundary. It accepts validated manifest
-v8 or live-index metadata, the shared folder tree, and accepted comparison/usage
+v9 or live-index metadata, the shared folder tree, and accepted comparison/usage
 evidence; projection performs no filesystem reads, Git commands, or rendering.
 `projection.ts`, `views.ts`, and `changes.ts` select public fields explicitly.
+The v9 and CLI live-index producers emit `sourcePath` and
+`declaredDependencies`; runtime and worker transfers retain those fields.
+Documents also retain their `resources`. Public `details.dependencies` is the
+sorted unique union of those paths. The viewer's
+`displayEntry` conversion is a shell read representation; no product caller
+feeds its records back into the CLI projector. Public projection derives labels
+from source/declared paths and Markdown resource paths; it never reads a stored
+`dependencies` field.
 Changes membership comes from entry and component attribution, independently
 of per-view comparison eligibility. Removed variants require their baseline
 `parentTitle`, including when another kind reuses the parent's path. Both readers
@@ -37,14 +45,18 @@ Snapshot ids derive through the viewer-owned shared helper from the catalogue
 identity, exact entry kind and path, and either the accepted baseline commit or,
 only when no commit exists, an immutable comparison generation. Conflicting
 baseline identities fail projection; revisions and live deployment hashes are
-never substituted. Generation-backed catalogues normalize safely. Readers
-reject any current and removed records that share a path.
+never substituted. Readers never infer missing snapshot ids.
+A non-null `comparisonUrl` requires each removed record's `snapshotId` and
+absence reports `removed entry needs snapshotId when comparisonUrl is non-null`.
+Serve's local comparison request is not a public pointer; completed captures
+publish an immutable alias. Readers reject any current and removed records
+that share a path.
 `CatalogueProjectionInput.removedPreviews` is caller-supplied generation data;
 projection never derives it from Git or the filesystem. The map is keyed by
 removed entry path; `previewMetadataPath(path)` names page metadata, while
 screen descriptors reuse the same generation's comparison. Readers reject descriptors
 on current entries, mismatched entry kinds, or missing comparison URLs while
-accepting v4 catalogues that omit the optional preview field.
+accepting v5 catalogues that omit the optional preview field.
 Serve supplies only removed-screen descriptors after a complete comparison is
 pinned; selected-only generations never change the public model, and live page
 descriptors remain absent. Changes-enabled consumer export and repository
@@ -76,7 +88,7 @@ depends only on the repository-relative config path. Export stamps the complete
 artifact identity; Serve hashes its canonical snapshot with the identity field
 zeroed and advances content/evidence revisions on accepted updates.
 
-The [public fixture](../../docs/protocol/fixtures/catalogue-v4.json) ships in the
+The [public fixture](../../docs/protocol/fixtures/catalogue-v5.json) ships in the
 npm package. Consumers need the documented JSON artifact, not a CLI deep import.
 The viewer package consumes this projection without importing the CLI.
 

@@ -2,7 +2,10 @@ import type fs from "node:fs";
 
 import { exportError } from "./error.js";
 import type { ExportOperations } from "./operations.js";
-import { assertExportOwnership } from "./ownership.js";
+import {
+  assertExportOwnership,
+  assertRealExportDirectory,
+} from "./ownership.js";
 
 /** Identity of the directory inspected before any export generation. */
 export interface ExportDirectoryIdentity {
@@ -22,7 +25,7 @@ export async function captureDestination(
 ): Promise<ExportDestination> {
   const stat = await operations.lstat(output);
   const initial: ExportDestination = stat
-    ? directoryIdentity(stat)
+    ? directoryIdentity(output, stat)
     : { kind: "absent" };
   await assertExportOwnership(output);
   await assertDestination(output, initial, operations);
@@ -51,9 +54,11 @@ export async function assertDestination(
   );
 }
 
-function directoryIdentity(stat: fs.BigIntStats): ExportDirectoryIdentity {
-  if (!stat.isDirectory() || stat.isSymbolicLink())
-    throw exportError("Export ownership requires a real directory.");
+function directoryIdentity(
+  output: string,
+  stat: fs.BigIntStats,
+): ExportDirectoryIdentity {
+  assertRealExportDirectory(output, stat);
   return {
     kind: "directory",
     dev: stat.dev,

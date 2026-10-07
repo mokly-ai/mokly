@@ -1,47 +1,54 @@
 import path from "node:path";
 
-import type { HistoricalManifest } from "@mokly/viewer/data";
+import {
+  GENERATED_DIRECTORY,
+  type HistoricalManifest,
+} from "@mokly/viewer/data";
 
-import { incompatibleEarlierBaseline } from "../baseline/compatibility.js";
+import { joinCataloguePath } from "../baseline/catalogue.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
+import { MoklyError } from "../errors.js";
 import {
-  EARLIER_MANIFEST_NAMES,
   MANIFEST_NAME,
   parseHistoricalManifest,
 } from "../registry/manifest.js";
 
 import type { BaselineReader } from "./git.js";
 
+/** Read only the current generated-location manifest through the version gate. */
 export async function readBaseManifest(
   git: BaselineReader,
   commit: string,
   config: ResolvedConfig,
 ): Promise<HistoricalManifest> {
-  return timeAsync("review.base-manifest", () =>
-    readMeasured(git, commit, config),
-  );
+  return timeAsync("review.base-manifest", async () => {
+    const root =
+      git.catalogue?.catalogueRoot ??
+      (toPosixPath(path.relative(config.repoRoot, config.mockupsDir)) || ".");
+    const candidate = joinCataloguePath(
+      root,
+      `${GENERATED_DIRECTORY}/${MANIFEST_NAME}`,
+    );
+    const kind = await git.fileKind(commit, candidate);
+    if (kind === "missing")
+      throw new MoklyError(
+        "manifest-invalid",
+        "Historical manifest is missing",
+      );
+    if (kind !== "regular")
+      throw new MoklyError(
+        "manifest-invalid",
+        `Historical manifest is not a regular file: ${candidate}`,
+      );
+    return parseHistoricalManifest(
+      JSON.parse(await git.readFile(commit, candidate)),
+    );
+  });
 }
 
-async function readMeasured(
-  git: BaselineReader,
-  commit: string,
-  config: ResolvedConfig,
-): Promise<HistoricalManifest> {
-  const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
-  const canonicalPath = joinGit(prefix, MANIFEST_NAME);
-  if (!(await git.fileExists(commit, canonicalPath))) {
-    for (const name of EARLIER_MANIFEST_NAMES)
-      if (await git.fileExists(commit, joinGit(prefix, name)))
-        throw incompatibleEarlierBaseline();
-  }
-  return parseHistoricalManifest(
-    JSON.parse(await git.readFile(commit, canonicalPath)),
-  );
-}
-
-/** Apply the baseline's own source policy without executing historical consumer code. */
+/** Apply the baseline's source policy without executing historical consumer code. */
 export function baselineResourceConfig(
   config: ResolvedConfig,
   manifest: HistoricalManifest,
@@ -54,8 +61,4 @@ export function baselineResourceConfig(
     protectedFiles: [],
     sourceFiles: manifest.sourceFiles,
   };
-}
-
-function joinGit(prefix: string, route: string): string {
-  return prefix === "" ? route : `${prefix}/${route}`;
 }

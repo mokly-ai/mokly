@@ -109,8 +109,11 @@ test("scheme-specific stylesheets append after shared stylesheets", async (conte
   const light = textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
   const dark =
     textOutput(compilation.outputs, "home/index.mobile.dark.html") ?? "";
-  assert.deepEqual(stylesheetHrefs(light), ["../shared.css"]);
-  assert.deepEqual(stylesheetHrefs(dark), ["../shared.css", "../dark.css"]);
+  assert.deepEqual(stylesheetHrefs(light), ["../../shared.css"]);
+  assert.deepEqual(stylesheetHrefs(dark), [
+    "../../shared.css",
+    "../../dark.css",
+  ]);
 
   await fs.promises.rm(path.join(fixture.mockupsDir, "dark.css"));
   await assert.rejects(
@@ -119,19 +122,26 @@ test("scheme-specific stylesheets append after shared stylesheets", async (conte
   );
 });
 
-test("writer refuses to overwrite an unowned route", async (context) => {
+test("writer replaces its own tree and preserves identical authored-relative paths", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
-  const target = path.join(fixture.mockupsDir, "home/index.mobile.html");
+  const target = path.join(fixture.generatedDir, "home/index.mobile.html");
   await fs.promises.mkdir(path.dirname(target), { recursive: true });
   await fs.promises.writeFile(target, "user-authored\n");
-  await assert.rejects(
-    () => writeCompilation(compilation, config),
-    /refusing to overwrite unowned/,
+  const authored = path.join(fixture.mockupsDir, "home/index.mobile.html");
+  await fs.promises.mkdir(path.dirname(authored), { recursive: true });
+  await fs.promises.writeFile(authored, "authored outside output\n");
+  await writeCompilation(compilation, config);
+  assert.equal(
+    await fs.promises.readFile(target, "utf8"),
+    textOutput(compilation.outputs, "home/index.mobile.html"),
   );
-  assert.equal(await fs.promises.readFile(target, "utf8"), "user-authored\n");
+  assert.equal(
+    await fs.promises.readFile(authored, "utf8"),
+    "authored outside output\n",
+  );
 });
 
 test("generic legacy TypeScript sources coexist through explicit config", async (context) => {

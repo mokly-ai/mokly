@@ -31,6 +31,7 @@ for (const { label, name } of publicCases) {
     const source = path.join(fixture.mockupsDir, name);
     await fs.mkdir(path.dirname(source), { recursive: true });
     await fs.writeFile(source, "Public bytes\n");
+    await reference(fixture.entryPath, name);
     const exported = `static/${name}`;
     const escaped = JSON.stringify(exported).replace(
       /[\u007f-\u009f]/gu,
@@ -78,6 +79,7 @@ test("export accepts a public path containing U+200D", async (context) => {
   context.after(() => fixture.close());
   const name = "joiner-a\u200db.txt";
   await fs.writeFile(path.join(fixture.mockupsDir, name), "Joined\n");
+  await reference(fixture.entryPath, name);
   await exportCatalogue(fixture.config, {
     outDir: "site",
     noChanges: true,
@@ -90,4 +92,16 @@ test("export accepts a public path containing U+200D", async (context) => {
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+}
+
+async function reference(entryPath: string, route: string): Promise<void> {
+  const href = `../../${route.split("/").map(encodeURIComponent).join("/")}`;
+  const source = await fs.readFile(entryPath, "utf8");
+  await fs.writeFile(
+    entryPath,
+    source.replaceAll(
+      '<a href="mock:details">Details</a>',
+      `<a href=${JSON.stringify(href)}>Asset</a>`,
+    ),
+  );
 }

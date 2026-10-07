@@ -20,6 +20,6 @@ export function exportedDelivery(
   )?.value;
   assert.ok(raw, `missing delivery metadata in ${name}`);
   const delivery = parseStaticDelivery(JSON.parse(raw));
-  assert.ok(delivery, `invalid delivery metadata in ${name}`);
-  return delivery;
+  assert.ok(delivery.kind === "valid", `invalid delivery metadata in ${name}`);
+  return delivery.value;
 }

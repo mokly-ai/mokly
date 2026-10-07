@@ -27,8 +27,7 @@ Check out the pull request's head commit, not the merge commit CI creates for
 you, so that the revision in the upload is the branch you are reviewing.
 
 If you would rather not carry history at all, publish the current catalogue
-alone with `--no-changes`. There is then no baseline to fetch, and a derived
-catalogue skips its historical rebuild too.
+alone with `--no-changes`. There is then no baseline to fetch or rebuild.
 
 ## Keep the credentials safe
 

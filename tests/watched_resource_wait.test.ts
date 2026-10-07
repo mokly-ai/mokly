@@ -32,7 +32,7 @@ for (const code of [
     let edits = 0;
     let shells = 0;
     const fetcher = (async (input: RequestInfo | URL): Promise<Response> => {
-      if (String(input).endsWith("/__mokly/events"))
+      if (String(input).endsWith("/mokly-viewer/events"))
         return events(++connections === 1 ? 1 : 3, connections === 1);
       if (String(input) === origin)
         return new Response(
@@ -66,7 +66,7 @@ test("resource wait reads old bytes at an evidence-only update, then accepts the
   let shells = 0;
   let reads = 0;
   const fetcher = (async (input: RequestInfo | URL): Promise<Response> => {
-    if (String(input).endsWith("/__mokly/events"))
+    if (String(input).endsWith("/mokly-viewer/events"))
       return events(++connections === 1 ? 1 : 3, connections === 1);
     if (String(input) === origin)
       return new Response(
@@ -95,7 +95,7 @@ test("resource wait rethrows unrelated fetch failures", async () => {
   });
   let shells = 0;
   const fetcher = (async (input: RequestInfo | URL): Promise<Response> => {
-    if (String(input).endsWith("/__mokly/events")) return events(1, true);
+    if (String(input).endsWith("/mokly-viewer/events")) return events(1, true);
     if (String(input) === origin)
       return new Response(
         `<main data-mokly-content-version="${++shells === 1 ? 1 : 2}">`,
@@ -121,7 +121,7 @@ test("resource wait accepts a later matching content update", async () => {
   let connections = 0;
   let resources = 0;
   const fetcher = (async (input: RequestInfo | URL): Promise<Response> => {
-    if (String(input).endsWith("/__mokly/events"))
+    if (String(input).endsWith("/mokly-viewer/events"))
       return events(++connections === 1 ? 1 : 3, connections === 1);
     if (String(input) === origin)
       return new Response(
@@ -148,7 +148,7 @@ test("resource wait accepts a later matching content update", async () => {
 test("resource wait timeout reports the last versions, status and value", async () => {
   let shells = 0;
   const fetcher = (async (input: RequestInfo | URL): Promise<Response> => {
-    if (String(input).endsWith("/__mokly/events")) return events(1, true);
+    if (String(input).endsWith("/mokly-viewer/events")) return events(1, true);
     if (String(input) === origin)
       return new Response(
         `<main data-mokly-content-version="${++shells === 1 ? 1 : 2}">`,
@@ -174,7 +174,7 @@ test("resource wait retries an unreachable shell before the edit until it answer
   let shells = 0;
   let edits = 0;
   const fetcher = (async (input: RequestInfo | URL): Promise<Response> => {
-    if (String(input).endsWith("/__mokly/events")) return events(1, true);
+    if (String(input).endsWith("/mokly-viewer/events")) return events(1, true);
     if (String(input) === origin) {
       if (++shells === 1) throw refused();
       return new Response(

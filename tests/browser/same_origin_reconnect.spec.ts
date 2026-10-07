@@ -23,7 +23,7 @@ for (const kind of ["current", "temporary"] as const) {
     await page.goto(fixture.host.url);
     const path =
       kind === "current"
-        ? "/static/home/index.mobile.html"
+        ? "/static/mokly-generated/home/index.mobile.html"
         : fixture.temporaryPath;
     let requests = 0;
     let release = () => {};
@@ -51,7 +51,7 @@ for (const kind of ["current", "temporary"] as const) {
       const result = await page.evaluate(
         async ({ kind, path }) => {
           const { sameOriginAdapter, temporaryPreviewAdapter } = (await import(
-            `${location.origin}/__mokly/client/same_origin_adapter.js`
+            `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
           )) as typeof LocalAdapter;
           const adapter =
             kind === "current"
@@ -105,7 +105,7 @@ for (const kind of ["current", "temporary"] as const) {
       async ({ kind, path, usageJson }) => {
         const usage = JSON.parse(usageJson) as ComponentViewRecord;
         const { sameOriginAdapter, temporaryPreviewAdapter } = (await import(
-          `${location.origin}/__mokly/client/same_origin_adapter.js`
+          `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
         )) as typeof LocalAdapter;
         const adapter =
           kind === "current" ? sameOriginAdapter() : temporaryPreviewAdapter();
@@ -147,7 +147,7 @@ for (const kind of ["current", "temporary"] as const) {
         kind,
         path:
           kind === "current"
-            ? "/static/home/index.mobile.html"
+            ? "/static/mokly-generated/home/index.mobile.html"
             : fixture.temporaryPath,
         usageJson: JSON.stringify(fixture.usage),
       },

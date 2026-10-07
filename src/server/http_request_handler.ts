@@ -1,5 +1,7 @@
 import type { RequestListener } from "node:http";
 
+import { VIEWER_DIRECTORY } from "@mokly/viewer/data";
+
 import type { ResolvedConfig } from "../config/types.js";
 
 import { handleControls, localHost } from "./controls/http.js";
@@ -14,6 +16,7 @@ import type { ChangesStatus } from "./update_messages.js";
 type CatalogueRequestArguments = Parameters<typeof handleCatalogueRequest>;
 
 interface CatalogueRequestHandlerInput {
+  assetClosure(): ReadonlySet<string>;
   acceptedGenerated(): CatalogueRequestArguments[17];
   activity: ForegroundActivity;
   activeCatalogue(): CatalogueRequestArguments[3];
@@ -46,7 +49,10 @@ export function catalogueRequestHandler(
         "This request is not allowed.",
         request.method ?? "GET",
       );
-    if (controls && request.url?.startsWith("/__mokly/components/")) {
+    if (
+      controls &&
+      request.url?.startsWith(`/${VIEWER_DIRECTORY}/components/`)
+    ) {
       const busy = input.activity.channel();
       busy(true);
       void handleControls(
@@ -83,6 +89,7 @@ export function catalogueRequestHandler(
       input.acceptedGenerated(),
       input.options.liveChanges === false &&
         input.options.changesStatus === "unavailable",
+      input.assetClosure(),
     ).catch(() => {
       if (!response.destroyed && !response.headersSent)
         send(

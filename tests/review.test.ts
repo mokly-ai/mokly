@@ -3,26 +3,18 @@ import fs from "node:fs";
 import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
-import type { Compilation } from "../dist/build/compile.js";
-import {
-  generatedBytes,
-  generatedText,
-  type GeneratedFile,
-} from "../dist/build/generated_file.js";
 import { loadConfig } from "../dist/config/load.js";
 import { renderReviewArtifact } from "../dist/review/artifact.js";
 import { compareReview } from "../dist/review/compare.js";
-import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
-import { generatedViews } from "../packages/viewer/dist/data.js";
-import type {
-  ManifestScreen,
-  ManifestV8,
-} from "../packages/viewer/dist/registry/types.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
-import { entryAt } from "./helpers/catalogue_selection.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
-import { textOutput } from "./helpers/generated_text.js";
+import {
+  fakeGit,
+  filesForCompilation,
+  withHomeIgnoredRegions,
+  withoutDarkFragments,
+} from "./review_fixture.js";
 
 test("dark views compare and classify against a pre-dark base", async (context) => {
   const fixture = await createFixture(undefined, {
@@ -60,7 +52,7 @@ test("dark views compare and classify against a pre-dark base", async (context) 
   const reviewJson = JSON.parse(
     renderReviewArtifact(artifact).get("review.json") as string,
   ) as ReviewResult;
-  assert.equal(reviewJson.schemaVersion, 5);
+  assert.equal(reviewJson.schemaVersion, 6);
   const jsonHome = reviewJson.screens.find((screen) => screen.path === "home");
   assert.ok(jsonHome);
   assert.deepEqual(
@@ -192,104 +184,3 @@ test("ignoredImpact sorts by viewport then scheme then id", async (context) => {
     { colorScheme: "dark", count: 1, id: "z-nav", viewport: "desktop" },
   ]);
 });
-
-function fakeGit(
-  files: ReadonlyMap<string, GeneratedFile>,
-): ReadOnlyReviewRepository {
-  return {
-    evidence: {
-      changedPaths: async () => [],
-      mergeBase: async () => "a".repeat(40),
-    },
-    reader: {
-      fileExists: async (_commit, repoPath) => files.has(repoPath),
-      fileKind: async (_commit, repoPath) =>
-        files.has(repoPath) ? "regular" : "missing",
-      readFile: async (_commit, repoPath) => {
-        const content = files.get(repoPath);
-        if (content === undefined)
-          throw new Error(`missing fake Git path ${repoPath}`);
-        return generatedText(content, repoPath)!;
-      },
-      readFileBytes: async (_commit, repoPath) => {
-        const content = files.get(repoPath);
-        if (content === undefined)
-          throw new Error(`missing fake Git path ${repoPath}`);
-        return generatedBytes(content);
-      },
-    },
-  };
-}
-
-function filesForCompilation(
-  manifest: ManifestV8,
-  compilation: Compilation,
-): Map<string, GeneratedFile> {
-  const files = new Map<string, GeneratedFile>([
-    ["mockups/mokly-manifest.json", `${JSON.stringify(manifest)}\n`],
-  ]);
-  for (const [route, content] of compilation.outputs) {
-    if (route === "mokly-manifest.json") continue;
-    files.set(`mockups/${route}`, content);
-  }
-  return files;
-}
-
-function withoutDarkFragments(manifest: ManifestV8): ManifestV8 {
-  return {
-    ...manifest,
-    entries: manifest.entries.map((entry) => {
-      if (entry.kind !== "screen") return entry;
-      return {
-        ...entry,
-        colorSchemes: ["light"],
-        ...(entry.componentViews
-          ? {
-              componentViews: entry.componentViews.filter(
-                (view) => view.colorScheme === "light",
-              ),
-            }
-          : {}),
-      };
-    }),
-  };
-}
-
-function withHomeIgnoredRegions(
-  compilation: Compilation,
-  label: string,
-  ids: readonly string[] = ["nav"],
-): Compilation {
-  const home = entryAt(compilation.manifest, "home", "screen");
-  const outputs = new Map(compilation.outputs);
-  for (const fragment of screenFragments(home)) {
-    const content = outputs.get(fragment);
-    if (content === undefined) throw new Error(`missing output ${fragment}`);
-    outputs.set(
-      fragment,
-      insertIgnoredRegions(textOutput(outputs, fragment)!, label, ids),
-    );
-  }
-  return { ...compilation, outputs };
-}
-
-function screenFragments(screen: ManifestScreen): string[] {
-  return generatedViews(screen).map((view) => view.path);
-}
-
-function insertIgnoredRegions(
-  content: string,
-  label: string,
-  ids: readonly string[],
-): string {
-  const regions = ids
-    .map(
-      (id) =>
-        `<!--mokly-review-ignore:start:${id}-->` +
-        `<span>${label}-${id}</span>` +
-        `<!--mokly-review-ignore:end:${id}-->`,
-    )
-    .join("");
-  if (!content.includes("</main>")) throw new Error("missing main close tag");
-  return content.replace("</main>", `${regions}</main>`);
-}

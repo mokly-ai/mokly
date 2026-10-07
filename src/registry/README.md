@@ -9,7 +9,7 @@ derives identity from the exporting module and retains the defining module as
 `sourcePath`. `path_derivation.ts` and `path_collisions.ts` are pure: prefixes,
 transparent directories, leaves, index collapse, declared paths, grammar and
 case-folded collisions need no filesystem access. The first segment
-`mokly-generated` is reserved case-insensitively for generated styles and assets;
+`mokly-generated` is reserved case-insensitively for the generated output tree;
 entry diagnostics retain the exporting source location.
 
 `folder_records.ts` validates both folder carriers. `folder_validation.ts` checks
@@ -29,7 +29,7 @@ the same identities. `changes.ts` suppresses paired removals in every producer.
 It captures each removed variant's baseline `parentTitle` before path reuse
 can discard the former parent. Non-variants carry no parent title.
 
-`manifest.ts` emits schema v8 with paths, authored move hints, folder records and
+`manifest.ts` emits schema v9 with paths, authored move hints, folder records and
 source inventory. `manifest_validation.ts` is the shared strict current/baseline
 reader. It validates document resources, derives artifact names, and rejects unknown
 fields. An earlier comparison base produces the established unavailable outcome.
@@ -43,4 +43,4 @@ node --import tsx --test tests/manifest*.test.ts tests/variant_validation.test.t
 See [paths](../../docs/protocol/mokly-paths.md),
 [folders](../../docs/protocol/mokly-folders.md),
 [variants](../../docs/protocol/mokly-variants.md), and
-[manifest v8](../../docs/protocol/mokly-component-manifest.md).
+[manifest v9](../../docs/protocol/mokly-component-manifest.md).
