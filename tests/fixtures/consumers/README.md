@@ -11,11 +11,13 @@ scenarios work differently. The sections below describe them.
 
 The scenarios run Mokly only from the archives. Checks that read a protocol
 document or a protocol fixture read the copy in the installed package, so they
-test the files that users get. Checks that need a viewer function, such as the
-route helpers that the Export and Publish checks use, load it from the test
-project's installed `@mokly/viewer` through
+test the files that users get. Checks that run in the smoke process and need a
+viewer function, such as the route helpers of the Export and Publish checks,
+load it from the test project's installed `@mokly/viewer` through
 [`scripts/package/installed_viewer.mjs`](../../../scripts/package/installed_viewer.mjs).
-They never import this repository's viewer build.
+Scripts that a check runs inside the test project, such as the viewer API check
+in [`scripts/package/viewer.mjs`](../../../scripts/package/viewer.mjs), import
+`@mokly/viewer` there. No check imports this repository's viewer build.
 
 ```bash
 npm run package:smoke
