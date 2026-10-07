@@ -63,7 +63,7 @@ route. Never use `.gitignore` as evidence of tracked state.
 
 ## Tracked State And Commands
 
-Only `check`, after a successful, complete compilation, enumerates index paths with
+`check`, after a successful, complete compilation, enumerates index paths with
 `git ls-files --cached --full-name -z` under the literal repository-relative
 `mokly-generated/` prefix (checking lexical and resolved aliases); exclude neither
 ignored nor staged-for-removal paths by consulting `.gitignore`. Let `E` be
@@ -96,8 +96,11 @@ Run mokly build and commit every file under <mockupsDir>/mokly-generated/, or ru
 state. Render the whole generated root repository-relative without `./`:
 `mockupsDir: "."` gives `mokly-generated/`, not `./mokly-generated/`.
 `check` computes the state once, after compilation, and compares disk only in
-tracked state. `build`, `build --watch`, `serve`, `serve --build`, export and
-publication do **not** compute tracking or run the cache index guard; no
+tracked state. CLI `publish` separately checks the whole checkout and compares
+compiled bytes with committed generated files, or requires ignored derived
+output, under the [upload contract](./mokly-upload.md). It never writes output.
+`build`, `build --watch`, `serve`, `serve --build`, export and repository preview
+capture do **not** compute tracking or run the cache index guard; no
 watched generation refreshes it and no Serve child receives it. A comparison
 still needs Git and a valid base independently of head tracking. For example,
 adding an entry to a repository that commits `mokly-generated/` must allow `build`

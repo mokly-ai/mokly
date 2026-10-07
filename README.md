@@ -200,6 +200,9 @@ The CLI uses stable plain output in CI and a richer interactive display in a
 terminal. During watched Serve, press `h` to see shortcuts for opening,
 rebuilding, clearing, and quitting. Build warnings print on standard error
 without changing the exit status; `--strict` turns them into a failed command.
+Publish requires a clean Git checkout. It ignores Git-ignored files, its own
+output directory, and Mokly caches and temporary files. Committed generated
+files must match the build; derived generated output must be ignored by Git.
 
 Detailed command references:
 

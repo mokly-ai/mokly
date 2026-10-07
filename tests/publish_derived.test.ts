@@ -19,6 +19,9 @@ test("publish bundles rebuilt derived comparisons and can replace them with curr
     fixture.entryPath,
     validEntrySource({ body: "Published derived screen" }),
   );
+  await fixture.git("add", "entries/fixture.mockup.tsx");
+  await fixture.git("commit", "-qm", "test: publish changed derived screen");
+  const head = (await fixture.git("rev-parse", "HEAD")).stdout.trim();
   const receiver = await startFakeReceiver(context, { token: "fixture-token" });
   const dependencies = {
     git: new NodeGitCommandRunner(fixture.root),
@@ -43,7 +46,7 @@ test("publish bundles rebuilt derived comparisons and can replace them with curr
     await fs.readFile(manifestPath, "utf8"),
   ) as UploadManifest;
   assert.equal(manifest.baseSha, fixture.commit);
-  assert.equal(manifest.headSha, fixture.commit);
+  assert.equal(manifest.headSha, head);
   assert.ok(manifest.comparisonPath);
   const reviewPath = path.join(output, manifest.comparisonPath);
   const review = JSON.parse(await fs.readFile(reviewPath, "utf8"));
