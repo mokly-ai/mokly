@@ -1,8 +1,8 @@
 # Protocol
 
-These documents define Mokly's pre-release contracts and current delivery
-state. Delivery Status sections state the implemented behavior. The
-[path identity plan](../../plans/path-identity.md) records the
+These documents define Mokly's implemented pre-release contract unless a
+Delivery Status names an approved active-plan target. The
+[path identity plan](../../plans/path-identity.md) defines the approved
 path-based formats: every entry is identified by a path derived from its file,
 Markdown files are documents, and moves are paired with their baseline.
 
