@@ -147,8 +147,10 @@ export async function acquireSharedExample(
           await validateWarmExample(original, descriptor.commit);
         },
       );
-      await timeFixturePhase(fixture, "copy", false, () =>
-        fs.cp(descriptor.repository, owned.root, {
+      await timeFixturePhase(fixture, "copy", false, async () => {
+        // Node 24 fs.cp with errorOnExist rejects an existing destination folder.
+        await fs.rmdir(owned.root);
+        await fs.cp(descriptor.repository, owned.root, {
           recursive: true,
           force: false,
           errorOnExist: true,
@@ -156,8 +158,8 @@ export async function acquireSharedExample(
             signal.throwIfAborted();
             return true;
           },
-        }),
-      );
+        });
+      });
       const config = await loadConfig(owned.root, descriptor.configPath);
       await timeFixturePhase(fixture, "cache-validation", false, async () => {
         assert.equal(
