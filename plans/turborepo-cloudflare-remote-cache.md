@@ -719,11 +719,11 @@ before the merge.
       reads and writes for the rest of the run while builds pass. Confirm
       `remote:r` prevents reader uploads. Document access-token rotation and
       new-namespace signature-key rotation.
-- [ ] Push and read the pull request run: `prepare` uploads or restores the three tasks and
+- [x] Push and read the pull request run: `prepare` uploads or restores the three tasks and
       ten ordinary downstream jobs report cache hits. Record
       per-job durations before and after, and the R2 object count, in
       `.context/turborepo-cloudflare-remote-cache/measurements.md`.
-      Run `37672567423` confirms the task path; the R2 object count is still missing.
+      Run `37672567423` confirms the task path; R2 holds 3 objects (2.31 MB).
 - [x] Update the Delivery Status sections and the Contract Owners documents to
       implemented.
 - [x] Run `cargo xtask check`.
