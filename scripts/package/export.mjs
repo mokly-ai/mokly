@@ -11,7 +11,7 @@ export async function inspectConsumerExport(
   relative,
   base,
   expected = [],
-  schemaVersion = 5,
+  schemaVersion = 6,
 ) {
   const output = path.join(root, relative);
   const read = (name) => fs.promises.readFile(path.join(output, name), "utf8");
@@ -22,13 +22,13 @@ export async function inspectConsumerExport(
   for (const name of [
     "index.html",
     "404.html",
-    "__mokly/catalogue.json",
-    "__mokly/client/appearance-startup.js",
-    "__mokly/client/inspector.js",
-    "__mokly/client/navigation-resize.js",
-    "__mokly/client/react-shell.js",
-    "__mokly/navigation/delivery.js",
-    "__mokly/fonts/InterVariable.woff2",
+    "mokly-viewer/catalogue.json",
+    "mokly-viewer/client/appearance-startup.js",
+    "mokly-viewer/client/inspector.js",
+    "mokly-viewer/client/navigation-resize.js",
+    "mokly-viewer/client/react-shell.js",
+    "mokly-viewer/navigation/delivery.js",
+    "mokly-viewer/fonts/InterVariable.woff2",
     ...expected,
   ])
     assert.ok(files.includes(name), `export missing ${name}`);
@@ -43,7 +43,7 @@ export async function inspectConsumerExport(
     assert.equal(/\.(?:tsx?|map)$/.test(name), false);
     assert.ok((await fs.promises.stat(path.join(output, name))).isFile());
   }
-  assert.equal(files.includes("__mokly/client/react-shell.js"), true);
+  assert.equal(files.includes("mokly-viewer/client/react-shell.js"), true);
   for (const name of [
     "host_capabilities.js",
     "host_capability_descriptor.js",
@@ -53,14 +53,14 @@ export async function inspectConsumerExport(
     "react_transports.js",
     "react_update_controller.js",
   ])
-    assert.equal(files.includes(`__mokly/client/${name}`), false);
+    assert.equal(files.includes(`mokly-viewer/client/${name}`), false);
   const home = await read("index.html");
   assert.match(home, /data-mokly-static=""/);
   assert.match(home, /client\/react-shell\.js/);
   assert.doesNotMatch(home, /client\/browser\.js/);
   assert.doesNotMatch(home, /data-mokly-host-capabilit|react-host\.js/);
   const comparison = files.find((name) =>
-    /^__mokly\/diffs\/__generations\/[a-f0-9]{64}\/review\.json$/.test(name),
+    /^mokly-viewer\/diffs\/generations\/[a-f0-9]{64}\/review\.json$/.test(name),
   );
   assert.ok(comparison);
   await inspectPublicCatalogue(output, comparison);

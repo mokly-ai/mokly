@@ -26,7 +26,7 @@ const fixture = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v4.json",
+        "../../../docs/protocol/fixtures/catalogue-v5.json",
         import.meta.url,
       ),
       "utf8",
@@ -78,6 +78,7 @@ test("a full-document render applies the theme prop over its host context", () =
     theme: "light" as const,
   };
   const host = {
+    schemaVersion: 1 as const,
     catalogue,
     context,
     view: viewerView(catalogue, defaultSelection),

@@ -16,7 +16,6 @@ for (const consumer of [
   "config",
   "entry",
   "renderer",
-  "transformer",
   "page",
   "template",
 ] as const) {
@@ -65,10 +64,7 @@ for (const consumer of [
         module,
         `import { source } from ${imported}; export default source;`,
       );
-      const setting =
-        consumer === "renderer"
-          ? 'renderer: "renderer.ts"'
-          : 'compatibility: { transformer: "transformer.ts" }';
+      const setting = 'renderer: "renderer.ts"';
       await fs.promises.writeFile(
         fixture.configPath,
         `export default { roots: [{ dir: "entries" }], mockupsDir: "mockups", repoRoot: ".", ${setting} };`,

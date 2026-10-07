@@ -15,7 +15,7 @@ import { createReactUpdateCapability } from "../dist/client/react_capability_upd
 
 const catalogue = readCatalogue(
   JSON.parse(
-    fs.readFileSync("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
+    fs.readFileSync("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
   ),
 );
 
@@ -58,7 +58,7 @@ function descriptor(
   evidenceRevision: number,
 ): ViewerCapabilityDescriptor {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     source: {
       base: "origin/main",
       catalogueId: catalogue.identity.id,
@@ -157,6 +157,7 @@ function shellBootstrap(
   model: unknown,
 ) {
   return {
+    schemaVersion: 2 as const,
     catalogue: model,
     context: {
       base: descriptor.source.base,

@@ -9,7 +9,7 @@ inspector receives retained and excluded stylesheet evidence for component and
 screen-only catalogues, including before a comparison is loaded. Screen-only
 delivery reuses the screen-only classification without component
 classification or a second resource analysis. The result version follows the
-[Changes contract](./mokly-changes-serving.md#comparison-engine), whose v5 is approved.
+[Changes contract](./mokly-changes-serving.md#comparison-engine), whose v6 is implemented.
 
 ## Purpose
 
@@ -30,7 +30,7 @@ separate future contract.
 Imported CSS is delivered as generated public stylesheets under
 `mokly-generated/styles/`; those emitted routes, not the private `.css` or
 `.module.css` sources, enter rule analysis. Compare accepted stylesheet and
-binary asset bytes against the pinned baseline even in derived mode, then
+binary asset bytes against the pinned baseline independent of head tracking, then
 merge changed generated routes with Git-authored changes. A source can reach
 multiple root bundles; analyze each linked route. Details and precedence are
 in [imported stylesheet delivery](./mokly-imported-styles.md).
@@ -38,8 +38,14 @@ in [imported stylesheet delivery](./mokly-imported-styles.md).
 The analysis runs only for a CSS resource that is already in `changedPaths`
 and already reachable from a view's document through the existing resource
 graph: linked stylesheets, transitive `@import` chains, and stylesheets
-referenced by embedded documents. It examines the resource's branch-point
-bytes and working-tree bytes, and the view's branch-point and working-tree
+referenced by embedded documents. For differing catalogue roots/layouts,
+[baseline addressing](./mokly-baseline-addressing.md#comparison-namespaces)
+pairs CSS by each side's catalogue-relative path, then reads its bytes from
+each side's real location. A changed-path trigger remains repository-relative
+and may name either side's path; it never translates roots. A resource-byte
+difference without such a path is still material comparison evidence, not an
+invented Git reason or grounds for rule-based exclusion. The analysis examines
+the resource's branch-point and working-tree bytes, and both sides' view
 documents after the same paired ignore normalization the comparison engine
 uses. It never widens the set of examined files; unreferenced public files and
 broad `review.sharedImpact` globs continue to add nothing on their own.
@@ -69,21 +75,20 @@ selectors. Their original `.css` and `.module.css` files and plugin
 dependencies remain private `sourceFiles`: they trigger rebuilds but are not
 additional public CSS analyzed as if linked. One imported source can
 contribute to multiple root bundles; analyze each reachable generated route.
-A baseline built before generated CSS links produces a one-time Changes jump
-for the linked views.
+Adding generated CSS links against a compatible v9 baseline without those
+links can change the linked views. Earlier-format baselines provide no comparison.
 
-Git does not report ignored generated routes in derived mode. Compare the
+Git does not report ignored generated routes. Compare the
 baseline builder's captured generated CSS and asset bytes with the accepted
 generation's bytes before rule analysis; add changed routes to the same
 `changedPaths` evidence set used by classification and comparisons. Retain Git's authored
 paths except reserved generated routes, which use byte comparisons. A missing
-baseline route versus a present head route is a change. In committed mode the
-same check covers outputs not yet recorded by Git; never infer a changed route
+baseline route versus a present head route is a change. This also covers outputs not yet recorded by Git; never infer a changed route
 only from a source edit when emitted bytes are identical. Construct this merged
 evidence once per classification or export and pass its typed value to Review
 and Changes; neither may accept the Git-only authored path list in its place.
 Export and Changes-enabled publication use the same evidence for
-comparison panes and catalogue membership as live Serve in both output modes.
+comparison panes and catalogue membership as live Serve with either baseline reader.
 
 Retain each delivered root's CSS-pass input paths and asset paths separately
 from the broader manifest inventory. A changed private CSS input loses its
@@ -92,11 +97,11 @@ changed. A comment-only edit removed by esbuild therefore keeps conservative
 file-level evidence. An asset input loses that evidence only when its matching
 generated asset route changed. Document bytes (including CSS Modules class
 maps), changed rules and generated asset dependencies then provide the visual
-paths. Transformer-only CSS and PostCSS candidates not delivered to a view
+paths. Private CSS inputs and PostCSS candidates not delivered to a view
 retain file-level evidence. A changed generated asset keeps every view whose
 resource closure references it, without decoding it. Each accepted build
 supplies a typed generation with route index, optional generated bytes and
-delivered-source paths; committed classification reuses it rather than
+delivered-source paths; classification reuses it rather than
 reloading the graph or rerunning PostCSS, so a newer edit cannot add a route
 to an older accepted generation's evidence. A direct caller without an accepted
 build may load inventory once without evaluating consumer JavaScript.

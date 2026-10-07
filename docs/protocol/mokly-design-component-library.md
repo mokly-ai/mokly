@@ -12,7 +12,7 @@ is tracked by the [path identity plan](../../plans/path-identity.md).
 
 ## Components And Saved Examples
 
-Each row defines parent `design-ui-{slug}` and its variant entries under the
+Each row defines parent `design/library/{group}/{slug}` and its variant entries under the
 [variant contract](./mokly-variants.md). Each variant's slug is the table's
 kebab-case name, so its path is the parent's path plus that name, and every
 file name follows the [artifact contract](./mokly-artifact-paths.md); the first
@@ -51,8 +51,8 @@ assembled into complete explicit props at declaration time, apart from the
 render-context fallback a dual-scheme sample uses above. They may reuse the
 same typed fixture values used by screen adapters. They never import/render the
 complete owning artboard. All selected-screen footers use the icon panel and the
-viewport control uses the grouped icons. The legacy disclosure variant and
-segmented viewport presentations are removed. Comparison-mode segments remain.
+viewport control uses the grouped icons. No disclosure variant or segmented
+viewport presentation is supported. Comparison-mode segments remain.
 
 ## Data, Slots And Controls
 
@@ -140,7 +140,7 @@ Controls below use text, boolean, number and primitive enum selections only.
    the current screen and query. The shared workspace supplies desktop resizing
    and mobile-sheet placement and sizing; the inspector owns the sheet surface,
    and the open mobile dock spans the workspace width. The icon strip stays
-   fixed while content scrolls. There are no legacy presentation, behavior or
+   fixed while content scrolls. There are no alternate presentation, behavior or
    destination props.
 10. **Metadata row:** label plus a `children` slot for text, code, links or tags.
     Control: label. Keep the correct existing `div`/`dl` semantics through an

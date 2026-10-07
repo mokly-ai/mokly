@@ -56,8 +56,9 @@ async function open(
   );
   const file = `${route}/index.${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
   await page.goto(
-    pathToFileURL(path.join(repositoryRoot, "examples/basic/generated", file))
-      .href,
+    pathToFileURL(
+      path.join(repositoryRoot, "examples/basic/mokly-generated", file),
+    ).href,
   );
   await expect(page.locator(".mbk-cmp-toolbar"), file).toHaveCount(1);
 }

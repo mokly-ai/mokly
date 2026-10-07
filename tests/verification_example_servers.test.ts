@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import type { FullConfig } from "@playwright/test";
+
 import browserConfig from "../playwright.config.js";
 
 import {
   exampleServerPorts,
   ownExampleServerPort,
 } from "./browser/example_servers.js";
+import setup from "./browser/setup.js";
 
 test("each Playwright worker gets one example server on consecutive ports", () => {
   assert.deepEqual(
@@ -80,4 +83,15 @@ test("the Playwright config starts one example server per worker", () => {
     );
     assert.equal(server.reuseExistingServer, false);
   }
+});
+
+test("global setup rejects workers without a prepared example server", async () => {
+  const ports = exampleServerPorts();
+  const workers = ports.length + 1;
+  await assert.rejects(
+    setup({ projects: [], workers } as unknown as FullConfig),
+    {
+      message: `Playwright runs ${workers} workers but starts ${ports.length} example server(s); set MOKLY_PLAYWRIGHT_WORKERS=${workers} instead of passing --workers`,
+    },
+  );
 });

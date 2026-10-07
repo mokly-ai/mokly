@@ -1,11 +1,7 @@
 import path from "node:path";
 
-import {
-  cacheLayout,
-  MAX_MARKER_BYTES,
-  parseCompletionMarker,
-  type CacheLayout,
-} from "./cache_layout.js";
+import { cacheLayout, type CacheLayout } from "./cache_layout.js";
+import { readCacheMetadata } from "./cache_metadata.js";
 import { tryBaselineLock } from "./lock.js";
 import type { BaselineMaintenanceFailure } from "./maintenance.js";
 import type {
@@ -32,24 +28,25 @@ export async function cleanupBaselines(
   } catch (error) {
     return [{ entry: active.root, error }];
   }
-  const entries: { layout: CacheLayout; finishedAt: number }[] = [];
+  const entries: {
+    layout: CacheLayout;
+    finishedAt: number;
+    partial: boolean;
+  }[] = [];
   for (const commit of candidates) {
     if (request.signal?.aborted) return failures;
     if (!/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(commit)) continue;
     const layout = cacheLayout(request.repoRoot, commit);
     try {
       if ((await fs.stat(layout.entry))?.kind !== "directory") continue;
-      if ((await fs.stat(layout.marker))?.kind !== "regular") continue;
-      const marker = parseCompletionMarker(
-        JSON.parse(
-          Buffer.from(await fs.read(layout.marker, MAX_MARKER_BYTES)).toString(
-            "utf8",
-          ),
-        ),
-        commit,
-      );
-      if (marker)
-        entries.push({ layout, finishedAt: Date.parse(marker.finishedAt) });
+      const metadata = await readCacheMetadata(fs, layout, commit);
+      entries.push({
+        layout,
+        finishedAt: metadata
+          ? Date.parse(metadata.marker.finishedAt)
+          : Number.NEGATIVE_INFINITY,
+        partial: metadata === undefined,
+      });
     } catch (error) {
       failures.push({ entry: layout.entry, error });
     }
@@ -60,10 +57,10 @@ export async function cleanupBaselines(
       b.layout.entry.localeCompare(a.layout.entry),
   );
   let kept = 1;
-  for (const { layout } of entries) {
+  for (const { layout, partial } of entries) {
     if (request.signal?.aborted) break;
     if (layout.entry === active.entry) continue;
-    if (kept++ < retained) continue;
+    if (!partial && kept++ < retained) continue;
     try {
       const lock = await tryBaselineLock(fs, runner, clock, layout);
       if (!lock) continue;
@@ -73,6 +70,11 @@ export async function cleanupBaselines(
       );
       try {
         if (request.signal?.aborted) break;
+        if (
+          partial &&
+          (await readCacheMetadata(fs, layout, path.basename(layout.entry)))
+        )
+          continue;
         await fs.rename(layout.entry, trash);
         await fs.remove(trash);
       } catch (error) {

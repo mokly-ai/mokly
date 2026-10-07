@@ -6,26 +6,24 @@ import importPlugin from "eslint-plugin-import-x";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
+import noDirectoryLiterals from "./scripts/eslint/no-directory-literals.mjs";
+
 const gitignorePath = path.join(import.meta.dirname, ".gitignore");
-const postcssBoundary = "src/build/styles/postcss_boundary.ts";
-const postcssBoundaryMessage = `Parse and process CSS through ${postcssBoundary}, which disables PostCSS source maps.`;
-// esquery regular expressions cannot contain "/", so \u002F matches it. A
-// later no-restricted-syntax entry replaces earlier ones for the same file, so
-// every entry that covers product sources outside the boundary must include
-// postcssLoads. tests/eslint_postcss_boundary.test.ts checks every tracked
-// product source.
-const postcssSpecifier = "/^postcss(?:$|\\u002F)/";
-const postcssLoads = [
+const sourceFiles = ["src/**/*.ts", "src/**/*.tsx"];
+const postcssCallsModule = "src/build/styles/postcss_calls.ts";
+const postcssCallsMessage = `Parse and process CSS only through ${postcssCallsModule}. Its calls always pass map: false, so PostCSS never loads a source map.`;
+const postcssModuleSource = String.raw`/^postcss(?:$|\x2F)/`;
+const postcssLoadRestrictions = [
   {
-    selector: `ImportExpression[source.value=${postcssSpecifier}]`,
-    message: postcssBoundaryMessage,
+    selector: `ImportExpression[source.value=${postcssModuleSource}]`,
+    message: postcssCallsMessage,
   },
   {
-    selector: `CallExpression[arguments.0.value=${postcssSpecifier}]`,
-    message: postcssBoundaryMessage,
+    selector: `CallExpression[arguments.0.value=${postcssModuleSource}]`,
+    message: postcssCallsMessage,
   },
 ];
-const localePathSorting = {
+const sourcePathRestriction = {
   selector: "CallExpression[callee.property.name='localeCompare']",
   message:
     "Sort source paths with compareCodeUnits to avoid locale-dependent inventories and diagnostics.",
@@ -36,8 +34,9 @@ export default tseslint.config(
   {
     ignores: [
       "**/.context/**",
+      "**/.wrangler/**",
       "**/dist/**",
-      "examples/basic/generated/**",
+      "examples/basic/mokly-generated/**",
       "node_modules/**",
       "target/**",
     ],
@@ -49,12 +48,16 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    plugins: { import: importPlugin },
+    plugins: {
+      import: importPlugin,
+      mokly: { rules: { "no-directory-literals": noDirectoryLiterals } },
+    },
     settings: {
       "import-x/internal-regex": "^@mokly/(?:mokly|viewer)(?:/|$)",
     },
     rules: {
       "import/first": "error",
+      "import/no-duplicates": "error",
       "import/order": [
         "error",
         {
@@ -83,30 +86,73 @@ export default tseslint.config(
     },
   },
   {
-    files: ["src/**", "packages/*/src/**"],
-    ignores: [postcssBoundary],
+    files: ["tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}"],
+    ignores: ["tests/helpers/durations.ts"],
     rules: {
-      "@typescript-eslint/no-restricted-imports": [
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "BinaryExpression[operator='-'][right.type!='Literal']:matches([left.type='CallExpression'][left.callee.property.name='now'][left.callee.object.name=/^(performance|Date)$/], [left.callee.property.name='bigint'][left.callee.object.property.name='hrtime'])",
+          message:
+            "Use operation counts, captured watcher targets, event order, or fake clocks in tests. Report duration text with tests/helpers/durations.ts. See docs/protocol/ci-test-timing.md.",
+        },
+        {
+          selector:
+            "BinaryExpression[operator='+'][left.callee.property.name='now'][left.callee.object.name=/^(performance|Date)$/][right.type='Literal'][right.value<10000]",
+          message:
+            "Use polling deadlines of at least 10,000 ms. See docs/protocol/ci-test-timing.md.",
+        },
+      ],
+    },
+  },
+  {
+    files: sourceFiles,
+    rules: {
+      "no-restricted-syntax": ["error", ...postcssLoadRestrictions],
+    },
+  },
+  {
+    files: sourceFiles,
+    ignores: [postcssCallsModule],
+    rules: {
+      "no-restricted-imports": [
         "error",
         {
           paths: [
             {
               name: "postcss",
-              importNames: ["default", "parse", "plugin", "Processor", "Input"],
+              importNames: [
+                "default",
+                "fromJSON",
+                "Input",
+                "parse",
+                "Processor",
+              ],
               allowTypeImports: true,
-              message: postcssBoundaryMessage,
+              message: postcssCallsMessage,
             },
           ],
           patterns: [
             {
-              group: ["postcss/**"],
+              regex: "^postcss/",
               allowTypeImports: true,
-              message: postcssBoundaryMessage,
+              message: postcssCallsMessage,
             },
           ],
         },
       ],
-      "no-restricted-syntax": ["error", ...postcssLoads],
+    },
+  },
+  {
+    files: [
+      "src/**/*.{ts,tsx}",
+      "packages/viewer/src/**/*.{ts,tsx}",
+      "scripts/preview/**/*.mjs",
+    ],
+    ignores: ["packages/viewer/src/catalogue/delivery_paths.ts"],
+    rules: {
+      "mokly/no-directory-literals": "error",
     },
   },
   {
@@ -117,15 +163,12 @@ export default tseslint.config(
       "src/build/source_inventory.ts",
       "src/build/package_owned_paths.ts",
     ],
-    ignores: [postcssBoundary],
     rules: {
-      "no-restricted-syntax": ["error", localePathSorting, ...postcssLoads],
-    },
-  },
-  {
-    files: [postcssBoundary],
-    rules: {
-      "no-restricted-syntax": ["error", localePathSorting],
+      "no-restricted-syntax": [
+        "error",
+        sourcePathRestriction,
+        ...postcssLoadRestrictions,
+      ],
     },
   },
 );

@@ -1,22 +1,19 @@
 import path from "node:path";
 
-import type { HistoricalManifest, ReviewArtifact } from "@mokly/viewer/data";
+import type { ReviewArtifact } from "@mokly/viewer/data";
 
-import { isIncompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { compileCatalogue } from "../build/compile.js";
-import { withOutputLock } from "../build/output_lock.js";
-import { writeLockedCompilation } from "../build/transaction.js";
 import { projectRealPath, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { errorMessage, isCancellation, isMoklyError } from "../errors.js";
 import { removedManifestEntries } from "../registry/changes.js";
-import { parseHistoricalManifest } from "../registry/manifest.js";
+import {
+  parseHistoricalManifest,
+  parseManifest,
+} from "../registry/manifest.js";
 import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
 import { GitReviewAssetReader } from "../review/assets.js";
-import {
-  baselineResourceConfig,
-  readBaseManifest,
-} from "../review/base_manifest.js";
+import { baselineResourceConfig } from "../review/base_manifest.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { compareReview } from "../review/compare.js";
 import { importedChangedPaths } from "../review/imported_changes.js";
@@ -25,9 +22,9 @@ import {
   packageRemovedPagePreviews,
   RepositoryRemovedPagePreview,
 } from "../review/page_preview.js";
-import { prepareReviewRepository } from "../review/prepare.js";
 import { changedContentPaths } from "../server/changed_content.js";
 
+import { prepareExportBaseline } from "./baseline.js";
 import { withExportCleanup } from "./cleanup.js";
 import {
   assertExportActive,
@@ -87,29 +84,9 @@ async function generateExport(
   try {
     const base = options.base ?? config.review.base;
     const { baseline, incompatible, prepared } =
-      await withPreInstallationCancellation(options.signal, async () => {
-        const prepared = options.noChanges
-          ? undefined
-          : await prepareReviewRepository(config, base, {
-              ...(options.signal ? { signal: options.signal } : {}),
-              ...(options.diagnostic ? { diagnostic: options.diagnostic } : {}),
-            });
-        let incompatible = false;
-        let baseline: HistoricalManifest | undefined;
-        if (prepared)
-          try {
-            baseline = await readBaseManifest(
-              prepared.reader,
-              prepared.commit,
-              config,
-            );
-          } catch (error) {
-            if (!isIncompatibleEarlierBaseline(error)) throw error;
-            incompatible = true;
-            options.incompatibleBaseline?.(prepared.commit);
-          }
-        return { baseline, incompatible, prepared };
-      });
+      await withPreInstallationCancellation(options.signal, () =>
+        prepareExportBaseline(config, options, base),
+      );
     const compilation = await withPreInstallationCancellation(
       options.signal,
       () => compile(config, undefined, options.signal),
@@ -118,15 +95,10 @@ async function generateExport(
     options.onBuildDiagnostics?.(compilation.diagnostics);
     config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
     assertExportActive(options.signal);
-    const publicFiles = await withOutputLock(
-      config.repoRoot,
-      options.signal ? { signal: options.signal } : {},
-      async (lock) => {
-        await writeLockedCompilation(lock, compilation, config);
-        return withPreInstallationCancellation(options.signal, () =>
-          capturePublicFiles(config, compilation.outputs),
-        );
-      },
+    const publicFiles = await capturePublicFiles(
+      config,
+      compilation.outputs,
+      parseManifest(compilation.manifest).assetClosure,
     );
     const result = await withPreInstallationCancellation(
       options.signal,
@@ -154,6 +126,7 @@ async function generateExport(
             prepared.reader,
             prepared.commit,
             prefix,
+            baseline,
           );
           const changeEvidence = await importedChangedPaths(
             config,
@@ -200,7 +173,7 @@ async function generateExport(
           const pagePreviews = await captureRemovedPagePreviews(
             new RepositoryRemovedPagePreview(config, prepared.reader),
             {
-              schemaVersion: 2,
+              schemaVersion: 3,
               movedEntries:
                 comparison.pairing?.moves.map(({ path, previousPath }) => ({
                   path,

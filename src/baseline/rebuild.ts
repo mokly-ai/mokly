@@ -1,5 +1,7 @@
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 
+import { ensureCacheIgnore } from "../config/cache_ignore.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { errorMessage } from "../errors.js";
 
@@ -13,13 +15,18 @@ import {
 } from "./cache_layout.js";
 import { cleanupBaselines } from "./cleanup.js";
 import { baselineEnvironment, runBaselineCommands } from "./commands.js";
-import { ensureBaselineDirectory, validateOutputTree } from "./confinement.js";
+import { isIncompatibleEarlierBaseline } from "./compatibility.js";
+import { ensureBaselineDirectory } from "./confinement.js";
 import { removeBaselineDebris } from "./debris.js";
+import {
+  discoverHistoricalCatalogue,
+  validateBuiltInventory,
+} from "./discovery.js";
 import { assertBaselineActive, BaselineError } from "./errors.js";
 import { extractBaseline } from "./extract.js";
+import { harvestHistoricalCatalogue } from "./harvest.js";
 import { acquireBaselineLock } from "./lock.js";
 import type { BaselineMaintenanceReporter } from "./maintenance.js";
-import { baselineManifestVersion } from "./manifest.js";
 import type {
   BaselineBuilder,
   BaselineBuildRequest,
@@ -76,6 +83,7 @@ export class CachedBaselineBuilder implements BaselineBuilder {
         layout.entry,
         request.signal,
       );
+      await ensureCacheIgnore(this.fs, layout.cache);
       const lock = await acquireBaselineLock(
         this.fs,
         this.runner,
@@ -137,34 +145,51 @@ export class CachedBaselineBuilder implements BaselineBuilder {
         const result = await timeAsync(
           "baseline.adopt",
           async (): Promise<RebuiltBaseline> => {
-            const output = path.join(layout.source, request.mockupsPath);
-            const manifestVersion = await baselineManifestVersion(
+            const selected = await discoverHistoricalCatalogue(
               this.fs,
-              request.repoRoot,
-              output,
+              layout.source,
+              request,
+            );
+            await validateBuiltInventory(
+              this.fs,
+              layout.source,
+              selected,
               request.signal,
             );
-            await validateOutputTree(this.fs, output, request.signal);
             assertBaselineActive(request.signal);
-            await this.fs.rename(output, layout.output);
+            await harvestHistoricalCatalogue(
+              this.fs,
+              layout.source,
+              layout.output,
+              selected,
+              request.signal,
+            );
             await this.fs.remove(layout.source);
             assertBaselineActive(request.signal);
             const marker: CompletionMarker = {
-              schemaVersion: 1,
+              schemaVersion: 2,
               commit: request.commit,
               finishedAt: new Date(this.clock.now()).toISOString(),
               commands: request.commands.map((argv) => [...argv]),
-              manifestVersion,
+              manifestVersion: selected.version,
+              historicalCatalogueRoot: selected.descriptor.catalogueRoot,
+              layout: selected.descriptor.layout,
             };
             await this.fs.write(
               path.join(layout.entry, "inputs.json"),
               Buffer.from(JSON.stringify(request.mockupsPath)),
             );
             assertBaselineActive(request.signal);
+            const temporary = path.join(
+              layout.entry,
+              `complete-${randomUUID()}.tmp`,
+            );
             await this.fs.write(
-              layout.marker,
+              temporary,
               Buffer.from(`${JSON.stringify(marker)}\n`),
             );
+            assertBaselineActive(request.signal);
+            await this.fs.rename(temporary, layout.marker);
             adopted = true;
             return {
               commit: request.commit,
@@ -217,7 +242,7 @@ export class CachedBaselineBuilder implements BaselineBuilder {
             error,
             { cancelled: true },
           )
-        : error instanceof BaselineError
+        : error instanceof BaselineError || isIncompatibleEarlierBaseline(error)
           ? error
           : new BaselineError(
               "baseline-output-invalid",

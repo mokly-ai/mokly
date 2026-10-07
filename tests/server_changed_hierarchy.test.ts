@@ -5,7 +5,7 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 import { changedManifestPaths } from "../dist/registry/changed_paths.js";
-import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV9 } from "../packages/viewer/dist/registry/types.js";
 
 import {
   createFixture,
@@ -49,6 +49,6 @@ test("changing a folder label changes presentation without changing entry metada
 
 async function compileManifest(
   config: Awaited<ReturnType<typeof loadConfig>>,
-): Promise<ManifestV8> {
+): Promise<ManifestV9> {
   return (await compileCatalogue(config)).manifest;
 }

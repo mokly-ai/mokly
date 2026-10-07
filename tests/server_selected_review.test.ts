@@ -65,23 +65,30 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
   if (unrelated?.kind !== "component" || !("variantOf" in unrelated))
     throw new Error("Missing component variant");
   await fs.rm(
-    path.join(fixture.mockupsDir, viewRoute(unrelated.path, "mobile", "light")),
+    path.join(
+      fixture.generatedDir,
+      viewRoute(unrelated.path, "mobile", "light"),
+    ),
   );
 
   const response = await fetch(
-    `${server.url}/__mokly/diffs/review.json?path=home`,
+    `${server.url}/mokly-viewer/diffs/review.json?path=home`,
   );
   assert.equal(response.status, 200, await response.clone().text());
   const result = parseReviewResult(await response.json());
-  assert.equal(result.schemaVersion, 5);
+  assert.equal(result.schemaVersion, 6);
   assert.deepEqual(
     result.screens.map((screen) => screen.path),
     ["home"],
   );
-  if (result.schemaVersion === 5) assert.deepEqual(result.components, []);
+  if (result.schemaVersion === 6) assert.deepEqual(result.components, []);
   assert.equal(reads.length, 4);
   assert.equal(await fs.readFile(renderLog, "utf8"), "");
-  assert.ok(reads.every((route) => route.startsWith("mockups/home/index.")));
+  assert.ok(
+    reads.every((route) =>
+      route.startsWith("mockups/mokly-generated/home/index."),
+    ),
+  );
   const desktop = result.screens[0]!.views.find(
     (view) => view.viewport === "desktop" && view.colorScheme === "light",
   )!;
@@ -89,7 +96,7 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
     await (
       await fetch(
         new URL(
-          `snapshots/before/${viewRoute("home", desktop.viewport, desktop.colorScheme)}`,
+          `snapshots/before/mokly-generated/${viewRoute("home", desktop.viewport, desktop.colorScheme)}`,
           response.url,
         ),
       )
@@ -100,7 +107,7 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
     await (
       await fetch(
         new URL(
-          `snapshots/after/${viewRoute("home", desktop.viewport, desktop.colorScheme)}`,
+          `snapshots/after/mokly-generated/${viewRoute("home", desktop.viewport, desktop.colorScheme)}`,
           response.url,
         ),
       )
@@ -108,23 +115,24 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
     /Updated content/,
   );
   const cached = await fetch(
-    `${server.url}/__mokly/diffs/review.json?path=home`,
+    `${server.url}/mokly-viewer/diffs/review.json?path=home`,
   );
   assert.equal(cached.url, response.url);
   assert.equal(reads.length, 4);
   const pane = new URL(
-    `snapshots/after/${viewRoute("home", desktop.viewport, desktop.colorScheme)}`,
+    `snapshots/after/mokly-generated/${viewRoute("home", desktop.viewport, desktop.colorScheme)}`,
     response.url,
   );
   assert.equal((await fetch(pane, { method: "HEAD" })).status, 200);
   for (const relative of [
     "summary.md",
     "snapshots/after/mokly-manifest.json",
+    "snapshots/after/mokly-generated/mokly-manifest.json",
     "snapshots%2fafter%2fprivate.html",
   ])
     assert.equal((await fetch(new URL(relative, response.url))).status, 404);
   const edited = path.join(
-    fixture.mockupsDir,
+    fixture.generatedDir,
     viewRoute("home", desktop.viewport, desktop.colorScheme),
   );
   const checked = await fs.readFile(edited, "utf8");
@@ -132,22 +140,27 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
     edited,
     checked.replace("Updated content", "Unchecked content"),
   );
-  const failed = await fetch(
-    `${server.url}/__mokly/diffs/review.json?path=home&refresh=1`,
+  const unchanged = await fetch(
+    `${server.url}/mokly-viewer/diffs/review.json?path=home&refresh=1`,
   );
-  assert.equal(failed.status, 500);
-  assert.match(await failed.text(), /changed since the catalogue was checked/);
+  assert.equal(unchanged.status, 200);
+  assert.deepEqual(
+    parseReviewResult(await unchanged.json()).screens.map(
+      (screen) => screen.path,
+    ),
+    ["home"],
+  );
   assert.match(await (await fetch(pane)).text(), /Updated content/);
   server.publishUpdate({ changesStatus: "pending" });
   const pending = await fetch(
-    `${server.url}/__mokly/diffs/review.json?path=home`,
+    `${server.url}/mokly-viewer/diffs/review.json?path=home`,
   );
   assert.equal(pending.status, 500);
   assert.match(await pending.text(), /not ready/);
   await fs.writeFile(edited, checked);
   server.publishUpdate({ componentChanges: changes });
   const refreshed = await fetch(
-    `${server.url}/__mokly/diffs/review.json?path=home`,
+    `${server.url}/mokly-viewer/diffs/review.json?path=home`,
   );
   assert.equal(refreshed.status, 200);
   assert.notEqual(refreshed.url, response.url);
@@ -174,12 +187,12 @@ test("component comparison snapshots contain only the selected saved variant", a
   });
   fixture.beforeRemove(() => server.close());
   const response = await fetch(
-    `${server.url}/__mokly/diffs/review.json?path=action/disabled`,
+    `${server.url}/mokly-viewer/diffs/review.json?path=action/disabled`,
   );
   assert.equal(response.status, 200, await response.clone().text());
   const result = parseReviewResult(await response.json());
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   assert.deepEqual(result.screens, []);
   assert.equal(result.components.length, 1);
   assert.deepEqual(
@@ -190,7 +203,7 @@ test("component comparison snapshots contain only the selected saved variant", a
   const before = await (
     await fetch(
       new URL(
-        `snapshots/before/${viewRoute("action/disabled", view.viewport, view.colorScheme)}`,
+        `snapshots/before/mokly-generated/${viewRoute("action/disabled", view.viewport, view.colorScheme)}`,
         response.url,
       ),
     )
@@ -198,7 +211,7 @@ test("component comparison snapshots contain only the selected saved variant", a
   const after = await (
     await fetch(
       new URL(
-        `snapshots/after/${viewRoute("action/disabled", view.viewport, view.colorScheme)}`,
+        `snapshots/after/mokly-generated/${viewRoute("action/disabled", view.viewport, view.colorScheme)}`,
         response.url,
       ),
     )
@@ -214,7 +227,8 @@ test("component comparison snapshots contain only the selected saved variant", a
     "unknown=value",
   ])
     assert.equal(
-      (await fetch(`${server.url}/__mokly/diffs/review.json?${query}`)).status,
+      (await fetch(`${server.url}/mokly-viewer/diffs/review.json?${query}`))
+        .status,
       404,
     );
 });

@@ -32,9 +32,8 @@ with a `postcss` factory) or an insertion-ordered
 record mapping package names to plain option objects. Resolve object-form
 package names with the same Node ESM conditions from the PostCSS module's
 directory, instantiate with those options, and preserve declared order.
-`map` is accepted but ignored: Mokly emits no source maps and ignores
-[input source maps](#input-source-maps). Reject any other keys,
-missing/invalid plugins, escaping paths and failed package resolution.
+`map` is accepted but ignored; Mokly emits no source maps. Reject any other
+keys, missing/invalid plugins, escaping paths and failed package resolution.
 Let PostCSS normalize array elements instead of requiring `postcssPlugin`;
 map normalization failures to the indexed `config-invalid` diagnostic.
 The parent treats `error`, `messageerror`, and every unexpected worker exit
@@ -47,7 +46,8 @@ serialized action queue waiting for a response.
 Run the consumer's plugins in order once for each distinct effective
 stylesheet input with `from` set to its physical source path, `map: false`,
 **after** renderer-exclusion pruning and **before** CSS Modules naming and
-esbuild CSS bundling. A plugin can inline nested local `@import`s directly
+esbuild CSS bundling. With `map: false`, a `sourceMappingURL` comment never
+loads a map or reads a file. A plugin can inline nested local `@import`s directly
 from disk, bypassing Mokly's pruning. For each processed input, walk the kept
 local prelude-import tree using the stylesheet resolver, without executing
 plugins. If an excluded renderer file is reachable at depth two or more through
@@ -66,7 +66,7 @@ their versions.
 
 Inventory is the sorted, unique, repo-relative union of config/graph inputs,
 entry roots, CSS-pass inputs including nested imports and `url()` assets,
-transformer-only CSS closure, and PostCSS `dependency` messages and expanded
+and PostCSS `dependency` messages and expanded
 `dir-dependency` matches. Retain both logical and in-repository realpath
 aliases. Inventory-only `loadConsumerGraph(config, false)` **must run the same
 CSS collection/pass and dependency reporting** without evaluating renderer
@@ -105,10 +105,8 @@ or their ancestors. An explicit `dependency.file` is an exact required input:
 an existing file under `dist`, `target`, `coverage`, `test-results`,
 `playwright-report`, or `.context` remains inventoried and watched. Broad
 directory scans still prune those trees. A symlink alias to generated output keeps
-the same explicit-dependency error and committed/derived directory precedence
-as its physical target; diagnostics name the reported logical path. In
-committed mode scan generated trees for matching files before reporting them;
-in derived mode skip those trees entirely.
+the same explicit-dependency error as its physical target; diagnostics name the
+reported logical path. Directory walks skip the generated tree in every command.
 Each reported glob is compiled once per report, classification is cached
 within the graph load, and expanded files already checked as explicit
 dependencies are not checked again. Resolve fixed logical/physical roots once
@@ -121,15 +119,14 @@ Diagnostics and inventory ordering compare
 path UTF-16 code units without locale-sensitive collation.
 
 **Validation precedence:** Explicit `dependency` naming Mokly-owned output
-fails in both modes. For directory matches, committed mode fails when the
-glob reaches an existing generated fragment, manifest or file below
-`mokly-generated/`; derived mode skips those files. Resolve in-repository
+fails. Directory walks skip `mokly-generated/` and its physical aliases before
+reading any generated content. Resolve in-repository
 symlink aliases before classifying generated output or otherwise-public files
 under `mockupsDir`, so an alias cannot hide either class. Diagnostic `{file}`
-keeps the reported logical path. Neither mode inventories Mokly output. Next,
+keeps the reported logical path. No command inventories Mokly output as source. Next,
 any plugin-reported file inside `mockupsDir` that is not
 **already a graph-inventoried source** fails (including public CSS or HTML);
-this applies to explicit files and expanded directories in both modes.
+this applies to explicit files and expanded directories for every command.
 Entries below `mockupsDir` already in the graph are allowed. Finally validate
 the remaining in-repo regular files. An excluded generated or denied path
 cannot be restored by a plugin glob or explicit watch rule. Directory reports
@@ -158,18 +155,3 @@ prefer `tailwindcss({ base: import.meta.dirname, optimize: false })`, or
 or CSS Module requiring Tailwind context (not emitted CSS) should use
 `@reference` rather than `@import`; if the renderer already delivers Tailwind,
 the entry's direct Tailwind import is pruned and `@apply` needs `@reference`.
-
-## Input Source Maps
-
-Mokly ignores input source maps. Every Mokly PostCSS parse and process call,
-for consumer plugins and CSS Modules alike, passes `map: false`, and esbuild
-bundles CSS without source maps. Mokly code inserts PostCSS nodes as objects,
-never as CSS text, because PostCSS parses inserted text without `map: false`.
-Mokly never decodes an inline map or reads a file named by a
-`sourceMappingURL` comment. A missing, stale, malformed or oversized map
-therefore cannot change output, fail Build or move a diagnostic location, and
-map handling never makes a result depend on the process working directory. A
-map file is not an inventory input. PostCSS drops a map comment from the text
-it returns after consumer plugins, and esbuild omits any that remain, so
-delivered CSS has no map comment. A consumer plugin that parses CSS itself owns
-its own source-map options.

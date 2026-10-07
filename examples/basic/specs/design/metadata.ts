@@ -4,8 +4,8 @@ import { componentStyleDependencies } from "./components/parts/styles.js";
 /** Shared authored evidence for the shell design screens. */
 export const designMetadata = {
   dependencies: [
-    "examples/basic/generated/design-stage.css",
-    "examples/basic/generated/design.css",
+    "examples/basic/design-stage.css",
+    "examples/basic/design.css",
   ],
   relatedDocs: [
     "docs/protocol/mokly-shell-design.md",
@@ -16,7 +16,7 @@ export const changesDesignMetadata = {
   ...designMetadata,
   dependencies: [
     ...designMetadata.dependencies,
-    "examples/basic/generated/design-review.css",
+    "examples/basic/design-review.css",
   ],
 };
 export const appearanceDesignMetadata = {
@@ -30,7 +30,7 @@ export const componentDesignMetadata = {
 export const controlsDesignMetadata = {
   dependencies: [
     ...componentStyleDependencies,
-    "examples/basic/generated/design-component-controls.css",
+    "examples/basic/design-component-controls.css",
   ],
   relatedDocs: [
     "docs/protocol/mokly-component-controls-design.md",

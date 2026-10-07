@@ -42,7 +42,7 @@ for (const width of [390, 1440]) {
     await page.reload();
     await expect(page.locator("#mb-main h2")).toHaveText("Home");
     expect(
-      requests.filter((url) => /\/__mokly\/(diffs|events)/.test(url)),
+      requests.filter((url) => /\/mokly-viewer\/(diffs|events)/.test(url)),
     ).toEqual([]);
     expect(failures).toEqual([]);
   });

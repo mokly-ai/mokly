@@ -10,7 +10,7 @@ export interface StyleRule {
   body: string;
 }
 
-const GENERATED = path.join(repositoryRoot, "examples/basic/generated");
+const CATALOGUE = path.join(repositoryRoot, "examples/basic");
 
 /**
  * The design catalogue's own chrome. `styles.css` and `example-components.css`
@@ -26,7 +26,7 @@ function isDesignStylesheet(relative: string): boolean {
 
 /** Every rule in every design stylesheet, including the shared library. */
 export async function designStyleRules(): Promise<StyleRule[]> {
-  const entries = await fs.readdir(GENERATED, {
+  const entries = await fs.readdir(CATALOGUE, {
     recursive: true,
     withFileTypes: true,
   });
@@ -34,7 +34,7 @@ export async function designStyleRules(): Promise<StyleRule[]> {
   for (const entry of entries) {
     if (!entry.isFile() || !entry.name.endsWith(".css")) continue;
     const absolute = path.join(entry.parentPath, entry.name);
-    const relative = path.relative(GENERATED, absolute).replaceAll("\\", "/");
+    const relative = path.relative(CATALOGUE, absolute).replaceAll("\\", "/");
     if (!isDesignStylesheet(relative)) continue;
     const source = await fs.readFile(absolute, "utf8");
     for (const [, selector, body] of source.matchAll(/([^{}]+)\{([^}]*)\}/g))

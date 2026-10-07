@@ -1,12 +1,9 @@
 import path from "node:path";
 
-import { isPortableUrlPath } from "@mokly/viewer/data";
+import { GENERATED_DIRECTORY, isPortableUrlPath } from "@mokly/viewer/data";
 
 import { toPosixPath } from "../../config/paths.js";
 import { MoklyError } from "../../errors.js";
-
-/** The only directory beneath mockupsDir owned in its entirety by Mokly. */
-export const GENERATED_DIRECTORY = "mokly-generated";
 
 /** The MIME type for every supported opaque CSS asset extension. */
 export const ASSET_MIME_TYPES: ReadonlyMap<string, string> = new Map([
@@ -56,7 +53,7 @@ function isPortableGeneratedPath(value: string): boolean {
 /** Map a repository-relative root module to its deterministic stylesheet route. */
 export function stylesheetRoute(root: string, repoRoot: string): string {
   const relative = toPosixPath(path.relative(repoRoot, root));
-  const route = `${GENERATED_DIRECTORY}/styles/${relative}.css`;
+  const route = `styles/${relative}.css`;
   if (!isPortableGeneratedPath(relative))
     throw new MoklyError(
       "build-invalid",
@@ -73,13 +70,13 @@ export function assetRoute(file: string, repoRoot: string): string {
       "build-invalid",
       `CSS asset route is not portable: ${relative}; rename every path segment to be URL-safe (letters, digits, dot, underscore, tilde or hyphen; @scope only after node_modules; no spaces or device names)`,
     );
-  return `${GENERATED_DIRECTORY}/assets/${relative}`;
+  return `assets/${relative}`;
 }
 
 /** Accept only documented CSS or asset output shapes in the reserved tree. */
 export function isValidGeneratedRoute(route: string): boolean {
-  const stylePrefix = `${GENERATED_DIRECTORY}/styles/`;
-  const assetPrefix = `${GENERATED_DIRECTORY}/assets/`;
+  const stylePrefix = "styles/";
+  const assetPrefix = "assets/";
   if (route.startsWith(stylePrefix)) {
     const relative = route.slice(stylePrefix.length);
     return relative.endsWith(".css") && isPortableGeneratedPath(relative);
@@ -92,15 +89,4 @@ export function isValidGeneratedRoute(route: string): boolean {
     );
   }
   return false;
-}
-
-/** Admit only portable stylesheet/asset routes from an accepted generation. */
-export function isPublicGeneratedRoute(
-  route: string,
-  accepted?: ReadonlySet<string>,
-): boolean {
-  return (
-    isValidGeneratedRoute(route) &&
-    (accepted === undefined || accepted.has(route))
-  );
 }

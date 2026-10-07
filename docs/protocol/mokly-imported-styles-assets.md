@@ -8,18 +8,12 @@ CSS `url()` values beginning `data:`, `http:`, `https:` (schemes matched
 case-insensitively), `//` or `#` remain unchanged. A root-absolute `/...`
 URL is invalid.
 
-In committed output mode, every generated fragment, page, manifest, stylesheet
-and asset must be committable. When `repoRoot` is the top level of an available
-Git work tree, Build checks Git ignore rules before writing and Check checks
-them before comparing bytes; watched Serve uses the same Build path. Tracked
-files and effective negations are not ignored. A rule excluding `mockupsDir`
-or one of its ancestors fails first. Otherwise the diagnostic lists ignored
-routes and their winning rules, with negation lines for the matching
-`.gitignore` file. A root `.gitignore` overrides global excludes and
-`.git/info/exclude`, but a nested `.gitignore` must be corrected in that same
-nested file. If Git is unavailable or `repoRoot` is not its work-tree top
-level, this optional committability check is skipped; derived output does not
-run it.
+Only Check reads index tracking for the complete generated tree. A tracked
+Check compares every expected file and byte; a partly tracked tree fails with
+both tracking remedies. An untracked Check validates compilation without
+reading old generated output. Build writes the tree regardless of ignore rules.
+See [the command contract](./mokly-generated-output.md#tracked-state-and-commands).
+
 Quoted local string URLs inside `image-set()` are not validated by esbuild's
 `url-token` hook; reject them, including in authored public CSS, with guidance
 to write `image-set(url("./a.png") 1x)` instead. Resource reference extraction
@@ -66,8 +60,9 @@ decodes both forms. The complete stylesheet route obeys the usual rule.
 scheme-specific paths, then configured renderer stylesheet if present, then
 entry stylesheet if present; generated links exist even without a configured
 rule. Resolve/encode local paths relative to each fragment route, e.g. from
-`home/index.mobile.html` to `mokly-generated/styles/src/home.mockup.tsx.css`
-is `../mokly-generated/styles/src/home.mockup.tsx.css`. Same order for dark,
+`mokly-generated/home/index.mobile.html` to
+`mokly-generated/styles/src/home.mockup.tsx.css` is
+`../styles/src/home.mockup.tsx.css`. Same order for dark,
 component variants and saved viewports. The consumer renderer decides whether
 to emit links; Mokly does not inject link tags. Pages receive no render input
 or automatic link; they still cause an entry stylesheet to be generated and
@@ -87,12 +82,12 @@ opaque asset bytes, seeded with all style outputs before rendering. On-demand
 documents add HTML lazily to that same set; never decode asset bytes. Validate
 generated CSS `url()` references recursively as CSS resources, and binary
 assets by existence only. Pending generated routes satisfy stylesheet and
-component resource checks; compatibility `availableRoutes` includes them.
+component resource checks before any output is written.
 The internal manifest is not a public pending resource, even though it is a
 generated text output; links and component resources naming it retain the
 existing internal-metadata rejection before the manifest exists on disk.
-Ownership/orphan checks use the complete pending public set plus the internal
-manifest output, not just HTML routes.
+The complete output inventory includes the pending public set plus the private
+manifest. Only a writer or tracked Check validates the existing output tree.
 Never read a reserved route from disk during compilation: absent pending
 reserved bytes mean a missing target even if an old file exists. On-demand
 Serve responds to `/static/` generated CSS and assets from the accepted
@@ -100,7 +95,7 @@ generation's bytes, not on-disk files.
 Full compilation continues to walk and validate transitive references in linked
 authored public HTML; on-demand validation reads only the requested view and
 resources it must validate for that request.
-One accepted on-demand generation computes its pending orphan set once from
+One accepted on-demand generation computes its pending route set once from
 the complete route index and parses each generated CSS file at most once.
 Subsequent view requests reuse both indexes while HTML and edited component
 props remain request-specific. A new accepted generation owns fresh indexes;
@@ -120,26 +115,25 @@ inputs and deterministic plugins yield byte-identical output; plugin
 determinism is the consumer's responsibility.
 
 `Compilation.outputs` carries text or raw bytes; compare, stage, roll back,
-read and export by bytes. Build replaces only owned outputs transactionally
-and removes stale files under the reserved directory. Committed Check compares
-every compiled byte and reports extra files in that directory as orphans;
-derived Check accepts missing/mismatched local output but rejects any
-Git-tracked reserved-directory file with `git rm --cached` and one
-`/<mockupsDir-relative-from-repoRoot>/mokly-generated/` `.gitignore` rule.
-Serve `/static/<encoded-route>` and transient previews prefer this generation's
-compiled stylesheet/asset bytes over old disk files (correct content types,
-GET/HEAD, confined paths). Retained Serve runtimes carry per-root stylesheet
-routes and the CSS/asset outputs as raw bytes through the worker and watched
-child IPC boundaries. Recompiling an accepted JavaScript graph reuses those
-outputs without rescanning CSS; runtime transfer may not lose the route map
-or decode assets as UTF-8. An imported CSS, nested import, asset, config or
-plugin-dependency edit rebuilds; new matching files in watched dependency
-directories also rebuild. Ordinary linked authored public CSS changes still
-reload. Committed export/publication capture checked disk bytes; derived
-export/publication and Changes capture validated compilation bytes, including
-binary assets, and keep imported sources private. Generated linked stylesheets
-are public resources analyzed by [CSS change attribution](./mokly-css-attribution.md);
-their original private CSS inputs are dependency evidence, not independently
-analyzed public sheets. The first derived baseline using the older toolchain
-lacks these links, so affected views show a one-time Changes jump; later
-baselines settle on the new output.
+read and export by bytes. Build replaces the complete generated tree under
+one repository-scoped output lock. Watched Build and opted-in Serve use that
+same writer boundary. Failed compilation retains the previous output tree.
+Serve `/static/mokly-generated/<encoded-route>` and transient previews use
+this generation's compiled stylesheet/asset bytes without a disk fallback
+(correct content types, GET/HEAD and confined paths). Retained Serve runtimes
+carry per-root stylesheet routes and the CSS/asset outputs as raw bytes through
+the worker and watched child IPC boundaries. Recompiling an accepted JavaScript
+graph reuses those outputs without rescanning CSS; runtime transfer may not
+lose the route map or decode assets as UTF-8. An imported CSS, nested import,
+asset, config or plugin-dependency edit rebuilds; new matching files in watched
+dependency directories also rebuild. Ordinary linked authored public CSS
+changes still reload.
+
+Export, publication and Changes capture validated in-memory generated bytes,
+including binary assets, and keep imported sources private. Generated linked
+stylesheets are public resources analyzed by
+[CSS change attribution](./mokly-css-attribution.md); their original private
+CSS inputs are dependency evidence, not independently analyzed public sheets.
+Both comparison sides use v9. Earlier output at the selected generated location
+or after the base's own rebuild returns [Changes unavailable](./mokly-baseline-compatibility.md), with no old
+resource reader or one-time cross-layout stylesheet comparison.

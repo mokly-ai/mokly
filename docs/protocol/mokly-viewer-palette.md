@@ -5,7 +5,7 @@
 These are the approved swatches for the
 [appearance contract](./mokly-viewer-appearance.md), which carries the delivery
 status for every appearance surface. They are implemented in the design mockups
-under `examples/basic/generated/` (`design.css` for the interface palette,
+under `examples/basic/mokly-generated/` (`design.css` for the interface palette,
 `design-stage.css` for preview tokens) and adopted by the package's own
 `SHELL_CSS` and scoped embedded stylesheet. The same roles now paint standalone
 Auto/Light/Dark documents and independently themed embedded roots.

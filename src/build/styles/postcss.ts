@@ -8,7 +8,7 @@ import type { NormalizedPostcssPlugin } from "../../config/postcss_loader.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { MoklyError, errorMessage } from "../../errors.js";
 
-import { processStylesheet } from "./postcss_boundary.js";
+import { processCss } from "./postcss_calls.js";
 import type { ProcessedStyleText, StyleTextProcessor } from "./preprocess.js";
 
 /** One raw plugin-reported dependency, pending inventory validation. */
@@ -39,11 +39,7 @@ export class PostcssStyleProcessor implements StyleTextProcessor {
   /** Run one physical stylesheet with source maps disabled. */
   async process(source: string, text: string): Promise<ProcessedStyleText> {
     const relative = toPosixPath(path.relative(this.config.repoRoot, source));
-    const pending = processStylesheet(
-      this.plugins,
-      text,
-      fs.realpathSync(source),
-    );
+    const pending = processCss(this.plugins, text, fs.realpathSync(source));
     let result;
     try {
       result = await pending;

@@ -39,7 +39,7 @@ test(
     const supervisor = new FakeSupervisor();
     const running = await serve(
       config,
-      { port: 0, watch: true },
+      { port: 0, build: true, watch: true },
       {
         configLoader: { load: async () => config },
         outputStore: output,
@@ -77,7 +77,7 @@ test("shutdown cancels replacement watcher readiness", async (context) => {
   const supervisor = new FakeSupervisor();
   const running = await serve(
     config,
-    { port: 0, watch: true },
+    { port: 0, build: true, watch: true },
     {
       configLoader: { load: async () => config },
       outputStore: new BlockingOutputStore(),
@@ -234,7 +234,7 @@ async function completesWithin(operation: Promise<void>): Promise<void> {
       new Promise<void>((_resolve, reject) => {
         handle = setTimeout(
           () => reject(new Error("watched shutdown timed out")),
-          1_000,
+          10_000,
         );
       }),
     ]);

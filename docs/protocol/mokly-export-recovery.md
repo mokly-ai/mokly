@@ -139,10 +139,9 @@ loaded. The window covers these operations:
    recheck.
 
 `mokly publish` installs its listener earlier, so the same window additionally
-covers publish configuration loading and repository identity. Two operations
-remain outside it because their failures carry separate recovery guarantees:
-opening the export transaction keeps its reservation error, and writing the
-generated build output keeps the build transaction's rollback error.
+covers publish configuration loading and repository identity. Opening the export transaction
+remains outside it because its failures carry separate reservation recovery
+guarantees. Export never writes the catalogue generated tree.
 
 If the signal is set after the event-loop check, the failure is a cancellation.
 Marking a `MoklyError` as cancellation keeps the original error object, class,

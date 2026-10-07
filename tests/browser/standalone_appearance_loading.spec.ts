@@ -96,7 +96,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
           })),
         )
         .toEqual({
-          path: `/static/design/browse/appearance/states/light-only/index.${viewport}.dark.html`,
+          path: `/static/mokly-generated/design/browse/appearance/states/light-only/index.${viewport}.dark.html`,
           readyState: "interactive",
         });
 

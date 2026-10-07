@@ -54,7 +54,7 @@ test("linked workspace-package CSS and image retain logical and physical source 
   assert.deepEqual(
     Buffer.from(
       compiled.outputs.get(
-        "mokly-generated/assets/node_modules/local-ui/image.png",
+        "assets/node_modules/local-ui/image.png",
       ) as Uint8Array,
     ),
     Buffer.from([0, 255, 22]),
@@ -79,10 +79,8 @@ test("linked workspace-package CSS and image retain logical and physical source 
   );
 });
 
-test("transformer-only workspace-package CSS inventories a linked image", async (context) => {
-  const fixture = await createFixture(undefined, {
-    extraConfig: 'compatibility: { transformer: "transform.ts" },',
-  });
+test("entry-imported workspace-package CSS inventories a linked image", async (context) => {
+  const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const packageRoot = path.join(fixture.root, "packages/ui");
   await fs.mkdir(packageRoot, { recursive: true });
@@ -96,9 +94,9 @@ test("transformer-only workspace-package CSS inventories a linked image", async 
     '.badge{background:url("./image.png")}',
   );
   await fs.writeFile(path.join(packageRoot, "image.png"), Buffer.from([22]));
-  await fs.writeFile(
-    path.join(fixture.root, "transform.ts"),
-    'import "./node_modules/local-ui/styles.css"; export default ({ content }) => content;',
+  await fs.appendFile(
+    fixture.entryPath,
+    '\nimport "../node_modules/local-ui/styles.css";',
   );
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
   assert.ok(compiled.manifest.sourceFiles.includes("packages/ui/image.png"));

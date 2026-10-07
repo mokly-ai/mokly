@@ -10,12 +10,12 @@ Same-origin local frames keep their parent-owned inspection path.
 ## Publication Boundary
 
 The Browse document adapter injects the dependency-free inspector IIFE from
-`__mokly/client/inspector.js` into **current published HTML copies only**, after
+`mokly-viewer/client/inspector.js` into **current published HTML copies only**, after
 ownership and marker validation. It supplies an inert allowlisted map of
 instance keys to range ids/parents and validated logical-link identities from
 that document's accepted metadata, so `r-n` comments can be resolved without
 reading a manifest. Bound this map to the
-[wire protocol limits](./mokly-frame-adapter.md#wire-protocol-v1) and 262,144
+[wire protocol limits](./mokly-frame-adapter.md#wire-protocol-v2) and 262,144
 UTF-8 bytes; oversized maps disable cross-origin inspection explicitly. No
 private evidence or source text is embedded. Unowned files get no inspector or
 map. Repository preview validates portable consumer resources before adaptation;

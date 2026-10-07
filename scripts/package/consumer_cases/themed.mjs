@@ -27,11 +27,17 @@ export async function smokeThemedConsumer(context) {
   await runBin(root, ["build"]);
   await runBin(root, ["check"]);
   const appFragment = await fs.promises.readFile(
-    path.join(root, "docs/mockups/themed-dashboard/index.desktop.html"),
+    path.join(
+      root,
+      "docs/mockups/mokly-generated/themed-dashboard/index.desktop.html",
+    ),
     "utf8",
   );
   const campaignFragment = await fs.promises.readFile(
-    path.join(root, "docs/mockups/themed-campaign/index.desktop.html"),
+    path.join(
+      root,
+      "docs/mockups/mokly-generated/themed-campaign/index.desktop.html",
+    ),
     "utf8",
   );
   assert.match(appFragment, /data-themed-renderer="desktop"/);
@@ -41,19 +47,21 @@ export async function smokeThemedConsumer(context) {
     /<a[^>]*class="fixture-button"[^>]*data-mokly-link="themed-campaign"/,
   );
   assert.doesNotMatch(appFragment, /data-mokly-link-child-/);
-  assert.match(appFragment, /href="\.\.\/app\.css"/);
-  assert.match(campaignFragment, /href="\.\.\/marketing\.css"/);
+  assert.match(appFragment, /href="\.\.\/\.\.\/app\.css"/);
+  assert.match(campaignFragment, /href="\.\.\/\.\.\/marketing\.css"/);
   assert.equal(
-    fs.existsSync(path.join(root, "docs/mockups/themed-notice/index.html")),
+    fs.existsSync(
+      path.join(root, "docs/mockups/mokly-generated/themed-notice/index.html"),
+    ),
     true,
   );
   const pageManifest = JSON.parse(
     await fs.promises.readFile(
-      path.join(root, "docs/mockups/mokly-manifest.json"),
+      path.join(root, "docs/mockups/mokly-generated/mokly-manifest.json"),
       "utf8",
     ),
   );
-  assert.equal(pageManifest.schemaVersion, 8);
+  assert.equal(pageManifest.schemaVersion, 9);
   assert.ok(
     pageManifest.entries.some(
       (entry) => entry.path === "themed-notice" && entry.kind === "page",
@@ -74,7 +82,7 @@ export async function smokeThemedConsumer(context) {
   await runBin(root, ["build"]);
   let review;
   await smokeServer(root, ["--base", "HEAD"], async (url) => {
-    const response = await fetch(`${url}/__mokly/diffs/review.json`);
+    const response = await fetch(`${url}/mokly-viewer/diffs/review.json`);
     assert.equal(response.status, 200);
     review = await response.json();
   });
@@ -83,7 +91,7 @@ export async function smokeThemedConsumer(context) {
   await runBin(root, ["export", "--out", "published"]);
   await inspectConsumerExport(root, "published", "HEAD", [
     "view/themed-notice/index.html",
-    "static/themed-dashboard/index.desktop.html",
+    "static/mokly-generated/themed-dashboard/index.desktop.html",
   ]);
   await smokeRegisteredComponents(context, root, true);
 }

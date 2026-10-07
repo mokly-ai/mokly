@@ -17,7 +17,7 @@ test("export owns a deterministic public catalogue and stamps its artifact ident
   t.after(() => fixture.close());
   const result = await exportCatalogue(fixture.config, { outDir: "site" });
   const files = await directoryFiles(fixture.output);
-  const bytes = files.get("__mokly/catalogue.json");
+  const bytes = files.get("mokly-viewer/catalogue.json");
   assert.ok(bytes, "public read model is an owned artifact");
   const model = JSON.parse(bytes.toString());
   assert.equal(model.deploymentId, result.deploymentId);
@@ -25,7 +25,7 @@ test("export owns a deterministic public catalogue and stamps its artifact ident
   assert.equal(`/${model.comparisonUrl}`, result.comparisonUrl);
   assert.deepEqual(model.revision, { content: 0, evidence: 0 });
   const ownership = JSON.parse(files.get(".mokly-export-artifact")!.toString());
-  assert.equal(ownership.schemaVersion, 2);
+  assert.equal(ownership.schemaVersion, 3);
   assert.deepEqual(Object.keys(ownership).sort(), ["files", "schemaVersion"]);
   assert.deepEqual(
     ownership.files.map(({ path: name }: { path: string }) => name),
@@ -48,7 +48,8 @@ test("export owns a deterministic public catalogue and stamps its artifact ident
   }
   assert.ok(
     ownership.files.some(
-      ({ path: name }: { path: string }) => name === "__mokly/catalogue.json",
+      ({ path: name }: { path: string }) =>
+        name === "mokly-viewer/catalogue.json",
     ),
   );
   assert.ok(
@@ -63,14 +64,14 @@ test("export owns a deterministic public catalogue and stamps its artifact ident
   assert.equal(elsewhere.deploymentId, result.deploymentId);
   assert.deepEqual(
     await fs.readFile(
-      path.join(fixture.root, "elsewhere/__mokly/catalogue.json"),
+      path.join(fixture.root, "elsewhere/mokly-viewer/catalogue.json"),
     ),
     bytes,
   );
   await exportCatalogue(fixture.config, { outDir: "site", noChanges: true });
   const current = JSON.parse(
     await fs.readFile(
-      path.join(fixture.output, "__mokly/catalogue.json"),
+      path.join(fixture.output, "mokly-viewer/catalogue.json"),
       "utf8",
     ),
   );

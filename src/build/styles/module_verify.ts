@@ -18,7 +18,7 @@ import {
   validModuleIdentifier,
   moduleValuesMatch,
 } from "./module_verify_value.js";
-import { parseStylesheet } from "./postcss_boundary.js";
+import { parseCss } from "./postcss_calls.js";
 
 /** Reject any CSS Modules output difference beyond documented local-name edits. */
 export function verifyModuleScoping(
@@ -27,14 +27,14 @@ export function verifyModuleScoping(
   relative: string,
   prefix: string,
 ): void {
-  const original = parseStylesheet(input, relative);
+  const original = parseCss(input, relative);
   original.walkDecls((declaration) => {
     if (["composes", "compose-with"].includes(declaration.prop.toLowerCase()))
       declaration.remove();
   });
   let transformed: Root;
   try {
-    transformed = parseStylesheet(output, relative);
+    transformed = parseCss(output, relative);
   } catch (error) {
     const line = error instanceof CssSyntaxError ? error.line : undefined;
     const matching =

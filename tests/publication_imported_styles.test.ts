@@ -11,20 +11,12 @@ import { buildPreview } from "../scripts/preview/catalogue.mjs";
 import { removeFixture } from "./helpers/fixture.js";
 import { styleFixture, entryStyle } from "./helpers/imported_styles_fixture.js";
 
-for (const mode of ["committed", "derived"] as const) {
-  test(`${mode} publication captures generated CSS and scoped binary assets without private inputs`, async (context) => {
+for (const diskState of ["current", "stale"] as const) {
+  test(`${diskState} publication captures generated CSS and scoped binary assets without private inputs`, async (context) => {
     const fixture = await styleFixture(
       '.entry { background: url("./node_modules/@fontsource/demo/files/font.woff2"); }',
     );
     context.after(() => removeFixture(fixture));
-    if (mode === "derived")
-      await fs.writeFile(
-        fixture.configPath,
-        (await fs.readFile(fixture.configPath, "utf8")).replace(
-          '"committed"',
-          '"derived"',
-        ),
-      );
     const font = path.join(
       fixture.entriesDir,
       "node_modules/@fontsource/demo/files/font.woff2",
@@ -34,12 +26,12 @@ for (const mode of ["committed", "derived"] as const) {
     const config = await loadConfig(fixture.root);
     const compiled = await compileCatalogue(config);
     await writeCompilation(compiled, config);
-    const stylesheet = path.join(fixture.mockupsDir, entryStyle);
+    const stylesheet = path.join(fixture.generatedDir, entryStyle);
     const asset = path.join(
       fixture.mockupsDir,
       "mokly-generated/assets/entries/node_modules/@fontsource/demo/files/font.woff2",
     );
-    if (mode === "derived") {
+    if (diskState === "stale") {
       await fs.writeFile(stylesheet, "stale CSS");
       await fs.writeFile(asset, "stale binary");
       await fs.writeFile(
@@ -50,7 +42,10 @@ for (const mode of ["committed", "derived"] as const) {
     const output = path.join(fixture.root, ".context/published");
     await buildPreview(config, output);
     assert.equal(
-      await fs.readFile(path.join(output, "static", entryStyle), "utf8"),
+      await fs.readFile(
+        path.join(output, "static/mokly-generated", entryStyle),
+        "utf8",
+      ),
       compiled.outputs.get(entryStyle),
     );
     assert.deepEqual(

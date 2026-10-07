@@ -8,7 +8,7 @@ import { build, transform, type Metafile, type Plugin } from "esbuild";
 import type { AcceptedPlugin, Processor } from "postcss";
 
 import { graphSourceFiles } from "../build/source_inventory.js";
-import { normalizePostcssPlugin } from "../build/styles/postcss_boundary.js";
+import { normalizePlugin } from "../build/styles/postcss_calls.js";
 import { MoklyError, errorMessage } from "../errors.js";
 
 import type { ResolvedConfig } from "./types.js";
@@ -235,7 +235,7 @@ async function normalizePlugins(
   if (Array.isArray(plugins))
     return plugins.flatMap((plugin: unknown, index: number) => {
       try {
-        return normalizePostcssPlugin(plugin as AcceptedPlugin);
+        return normalizePlugin(plugin as AcceptedPlugin);
       } catch (error) {
         throw new MoklyError(
           "config-invalid",
@@ -263,7 +263,7 @@ async function normalizePlugins(
       if (typeof imported.default !== "function")
         throw new Error("package must default-export a plugin factory");
       const plugin: unknown = imported.default(options);
-      instances.push(...normalizePostcssPlugin(plugin as AcceptedPlugin));
+      instances.push(...normalizePlugin(plugin as AcceptedPlugin));
     } catch (error) {
       throw new MoklyError(
         "config-invalid",

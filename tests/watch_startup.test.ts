@@ -5,7 +5,7 @@ import type { Compilation } from "../dist/build/compile.js";
 import type { GeneratedOutputStore } from "../dist/build/output_store.js";
 import { FileSystemConfigLoader, loadConfig } from "../dist/config/load.js";
 import type { ResolvedConfig } from "../dist/config/types.js";
-import type { CatalogueChangeClassifier } from "../dist/server/component_changes.js";
+import type { CatalogueChangeClassifier } from "../dist/server/component_change_types.js";
 import type { CatalogueServerFactory } from "../dist/server/factory.js";
 import type {
   RunningServer,
@@ -32,7 +32,7 @@ test("watched startup attaches the watcher before the initial output write", asy
   const watcher = new FakeWatcher(events);
   const running = await serve(
     config,
-    { base: "origin/main", port: 0, watch: true },
+    { base: "origin/main", build: true, port: 0, watch: true },
     dependencies(events, watcher),
   );
   fixture.beforeRemove(() => running.close());
@@ -89,9 +89,9 @@ test("watched startup does not await repository classification", async (context)
   assert.ok(
     events.indexOf("supervisor:start") < events.indexOf("classification:start"),
   );
-  assert.equal(events.includes("supervisor:update"), false);
+  assert.equal(events.includes("supervisor:ready"), false);
   finish();
-  await waitForEvent(events, "supervisor:update");
+  await waitForEvent(events, "supervisor:ready");
 });
 
 test("watched shutdown cancels background repository classification", async (context) => {
@@ -121,7 +121,7 @@ test("watched shutdown cancels background repository classification", async (con
   await running.close();
 
   assert.equal(classificationSignal?.aborted, true);
-  assert.equal(events.includes("supervisor:update"), false);
+  assert.equal(events.includes("supervisor:ready"), false);
 });
 
 function dependencies(
@@ -208,8 +208,12 @@ class FakeSupervisor implements ProcessSupervisor {
     this.events.push("supervisor:close");
   }
 
-  notifyUpdate(): void {
-    this.events.push("supervisor:update");
+  notifyUpdate(
+    _changedRoutes: readonly string[] | undefined,
+    _componentChanges?: unknown,
+    changesStatus?: string,
+  ): void {
+    this.events.push(`supervisor:${changesStatus ?? "content"}`);
   }
 
   onUnexpectedExit(_callback: (error: Error) => void): void {}

@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 
 import type { WatchReport } from "../../server/reporter.js";
 
@@ -11,7 +11,7 @@ import {
 } from "./terminal.js";
 
 /** Render nonzero user-facing kinds from one accepted manifest. */
-export function catalogueCounts(manifest: ManifestV8): string[] {
+export function catalogueCounts(manifest: ManifestV9): string[] {
   return (
     [
       ["screen", "screen"],

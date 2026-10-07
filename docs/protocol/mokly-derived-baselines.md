@@ -1,242 +1,191 @@
-# Derived Baselines
+# Per-Commit Baseline Selection
 
 ## Delivery Status
 
-The completed [derived baselines plan](../../plans/derived-baselines.md) shipped
-separate readers, caching, command preparation, `preparing`, watched lifecycle,
-timings, and the scale fixture. The manifest version the baseline gate accepts
-follows [baseline compatibility](./mokly-baseline-compatibility.md), whose v8
-target the [path identity plan](../../plans/path-identity.md) delivers.
+Only v9 baselines are readable. Per-commit selection, rebuilds and `preparing`
+apply the [v9 version gate](./mokly-generated-manifest.md) before creating a reader.
+Only `check` inspects head Git index tracking. Implementation and verification
+are tracked by [Generated Output Simplification](../../plans/generated-output-simplification.md).
 
-## Purpose
+## Purpose And Configuration
 
-Committed mode reads its baseline from Git but makes source edits churn
-generated files. Derived mode keeps source as the authored artifact and caches
-output rebuilt from the merge-base commit with that commit's dependencies and
-Mokly version.
+The head side always uses the current validated **in-memory compilation**;
+neither tracked nor untracked head output has to match local generated files
+to compare. For each pinned merge-base commit, probe only its canonical
+generated-location manifest. Earlier output there gives the typed unavailable
+outcome. Otherwise use complete v9 Git blobs, or rebuild the commit using its own
+lockfile, dependencies, config, entries, renderer, and Mokly version. A change
+in tracking policy across history does not change this rule. Neither HTTP
+request paths nor disposable Serve children may run the baseline build.
 
-Derived mode changes only where baseline bytes come from. It never uses current
-code to render the base or rebuilds during an HTTP request.
+`review.baselineBuild` is an optional, ordered list of argv arrays executed
+without a shell in the extracted baseline root, valid in **every** repository.
+Every argv is nonempty, starts with a nonblank executable, and contains only
+strings without NUL. The default is `["npm", "ci"]` followed by
+`["npx", "--no-install", "mokly", "build", "--config", <repository-relative config path>]`.
+Consumers that must compile their own tool first specify the entire recipe;
+Mokly appends no implicit commands. An explicit empty list is valid only if
+the historical extraction already contains usable output. This repository's
+example specifies `npm ci`, `npm run build`, then `npm run example:build`.
+The historical catalogue may have a different `mockupsDir`; a rebuild finds
+the historical output, and does not use the current config to reinterpret it.
 
-## Configuration
+**Trust:** a rebuild executes historical code. Set `review.base` to a trusted
+mainline whose scripts are already trusted in CI; an untrusted branch may
+execute arbitrary scripts during preparation. Tracking generated output at
+the head does not remove this risk if a historical commit lacks complete
+output. Prefer a trusted base rather than relying on the current Git state.
 
-```ts
-interface MoklyConfig {
-  generatedOutput?: "committed" | "derived"; // "derived"
-  review?: {
-    baselineBuild?: readonly (readonly string[])[];
-  };
-}
+## Command Behavior
+
+Only `check` reads head tracked state from the **index**, never `.gitignore`,
+once after its complete compilation; without Git, `check` treats it as
+untracked. The precise mixed-state error and prefix rules are in
+[generated output](./mokly-generated-output.md#tracked-state-and-commands).
+
+| Command                | Behavior                                                                 |
+| ---------------------- | ------------------------------------------------------------------------ |
+| `build`                | Transactionally replace `mokly-generated/` without inspecting head index |
+| `check`                | Validate; compare disk only if all expected output is indexed            |
+| `serve`                | In-memory head; select base reader per commit, not head index            |
+| `export` / publication | In-memory head; select base reader per commit, not head index            |
+
+`check` reports `build-invalid` for sorted missing expected paths, stale
+expected bytes, and extra files under `mokly-generated/`, including an absent
+directory, with both remedies: `mokly build` and commit the complete directory,
+or `git rm -r --cached -- <mockupsDir>/mokly-generated/` and ignore it. Unexpected
+empty directories count as extra paths. Untracked `check` only
+validates compilation and never reads local `mokly-generated/` contents to judge
+freshness. Indexed `.mokly-cache/` files remain invalid regardless of head
+state. Only `check` rejects partly tracked output; `build` writes regardless
+of tracking. Adding a new entry to a committed catalogue therefore builds
+successfully, then `check` lists its unstaged route under `untracked:` until
+it is staged. The exact terminal summaries are in
+[terminal output](./mokly-terminal-output.md).
+
+Only `build`, `build --watch`, and `serve --build` may write the generated
+tree. Watched writes occur only after each successful, complete compilation;
+failed generations retain the previous tree. Plain Serve, export, publication,
+HTTP demand generation, and baseline selection never write head output. See
+[generated output](./mokly-generated-output.md#tracked-state-and-commands)
+for debounce, one-shot and child/parent behavior.
+
+### Selecting The Base Reader
+
+Resolve and pin the merge base once. List only the requested generated
+subtree and inspect its canonical `mokly-manifest.json`. Ignore committed
+root-level and noncanonical filenames. A complete v9 inventory selects Git
+blobs; missing or incomplete output selects the base's own recipe. Keep the
+version gate on a selected current-location manifest and normal I/O errors.
+
+After the rebuild, a canonical root-level manifest below v9 returns
+`baseline-incompatible-earlier`. A current generated manifest takes precedence.
+Do not cache earlier output or its outcome. Invalid, missing or older cached
+entries are partial and are deleted under the cache lock before rebuilding.
+Valid v9 metadata with different catalogue/build settings fails intact before
+output validation. Retention inspects only marker and input metadata, as the
+[storage contract](./mokly-baseline-storage.md#cache-layout) requires.
+No head-index state participates in these decisions.
+
+Both readable implementations accept a commit and repository-relative path.
+The Git reader reads blobs. The rebuilt v9 reader appends that path beneath
+its cache `output/`, using the pinned historical root. There is no flat alternative
+reader. Keep regular-file/symlink checks, 4,096-object and 48 MiB batch bounds,
+and at most 32 disk reads in flight. Authored resources come from the v9
+closure; generated CSS and opaque assets come from its verified inventory.
+
+Both sides are v9. Pair documents by kind/path and view axes; address generated
+resources relative to each generated root and authored resources relative to
+each catalogue root. Preserve moved-root handling, independent byte/membership
+checks, CSS attribution and component fast paths. Remove only old-schema
+conversion and cross-layout URL normalization, not ordinary URL parsing or
+source/dependency evidence. See the
+[descriptor contract](./mokly-baseline-addressing.md#comparison-namespaces).
+
+### Earlier-Baseline Availability
+
+Preserve typed outcome for every pre-v9 base. Serve keeps All usable
+with Changes unavailable and no changed/removed entries, comparisons or previous
+versions. Export and Changes-enabled publication succeed with current content,
+`changesStatus: "unavailable"`, `comparisonUrl: null`, and no historical files.
+Publication without Changes stays disabled and performs no baseline work.
+
+Print exactly once per rejected pinned base:
+
+```text
+Changes are unavailable because the comparison base was built with an earlier version of Mokly. Changes will return once the base includes this version.
 ```
 
-`generatedOutput` selects the mode for every command. `derived` is the default;
-`committed` remains an explicit compatibility mode. Unknown strings are config
-errors.
+Retain the outcome for unchanged content generations; do not repeat the line or
+rebuild. A new base can restore Changes through normal preparation. A v9 source
+failure or invalid/newer baseline does not receive this graceful exception.
 
-`review.baselineBuild` is an ordered list of argv arrays executed in the
-extracted base commit's root, in order, without a shell. Each array is
-non-empty; the first element is the executable. It is valid only in derived
-mode; setting it in committed mode is a config error. The default is an npm
-clean install followed by the Mokly build for the same repository-relative
-config path as the current run. Consumers whose base commit must first compile
-their own tooling, such as this repository's example, list those commands
-explicitly. Mokly never appends implicit commands after an explicit list.
-The exact defaults are `["npm", "ci"]`, then `["npx", "--no-install",
-"mokly", "build", "--config", <repository-relative config path>]`.
-Arguments must be strings without NUL; the executable must not be blank.
-An explicit empty command list is allowed when the archived tree already has
-valid output. Derived `mockupsDir` must be below `repoRoot`; it may be absent
-in a fresh checkout. Existing ancestors and symlinks remain confined.
-The repository example uses the default derived mode with `npm ci`,
-`npm run build`, and `npm run example:build` as its explicit recipe.
-Generated HTML and the manifest are ignored; authored public CSS remains tracked.
-For [imported CSS](./mokly-imported-styles.md), also ignore the
-entire `<mockupsDir>/mokly-generated/` directory (for example
-`/docs/mockups/generated/mokly-generated/` in `.gitignore`). Generated
-stylesheets and binary assets are derived output, not authored public CSS.
-Committed mode never accepts inert commands.
+## Preparation And Serve
 
-## Trust Statement
+The [baseline storage contract](./mokly-baseline-storage.md) owns extraction,
+process cancellation, command environment, cache locking, adoption, retention,
+and crash cleanup. A missing or incomplete base builds **before** Serve's
+classification or export capture, not during an HTTP request. The CLI, export,
+publication and watched Serve parent create `PreparedReviewRepository` for a
+pinned commit, handing only read-only evidence and reader capabilities to
+classification. The Serve child never selects a new baseline or writes output.
+No-Git Serve may still browse without Changes; comparison requires a Git base.
 
-Rebuilding executes code from the merge-base commit: its lockfile, package
-scripts, config module, entries, and renderer. Derived mode is appropriate
-only when the configured base ref is a trusted mainline the consumer already
-runs in CI. A consumer that compares against untrusted branches must stay in
-committed mode. The documentation for the option states this plainly.
+The parent sends `baselineCommit`, `baselineSelection` (`blobs` or `rebuild`)
+and a matching `baselineDescriptor` in its versioned update before classification.
+Omitting the commit retains the reader; `null` revokes it while a new
+base prepares; stale update versions cannot restore an old commit. The child
+opens the already-selected read-only Git or cache reader; `--no-watch` uses
+the same handoff without IPC. Until handoff, unselected
+`/mokly-viewer/diffs/review.json` fails `review-invalid` with
+`The comparison is not prepared`. The parent retains one preparation for each
+resolved commit and build settings. A ref move to a new merge base cancels
+the old preparation, revokes the reader and prepares the new base; an unchanged
+merge base only reclassifies. Content invalidation cancels classification, not
+the shared build. Shutdown drains rebuild processes; superseded results are
+discarded. A failed build can retry on a later generation.
 
-## Command Behavior By Mode
+Serve opens with `pending`; a cache hit proceeds directly to classification.
+While actually rebuilding, show `preparing` in the Changes sidebar and then
+`pending` during classification, followed by `ready` or `unavailable`.
+Classification remains independent of the current output write policy. An earlier base becomes unavailable under the typed policy above; any other
+rebuild failure logs its typed error but does not expose commands or paths in
+the sidebar. Navigation, reconnect and retained-state rules treat `preparing`
+like `pending`. Lock waiters reusing another builder's result receive only
+`complete`, not a spurious `preparing` event.
 
-| Command     | Committed                            | Derived                                                  |
-| ----------- | ------------------------------------ | -------------------------------------------------------- |
-| `build`     | Transactional write to `mockupsDir`  | Same; output is a local artifact, not a commit candidate |
-| `check`     | Expected bytes equal committed bytes | Validate compilation; fail if output is Git-tracked      |
-| `serve`     | Baseline read from Git blobs         | Baseline from the cache, `preparing` while rebuilding    |
-| `export`    | Baseline read from Git blobs         | Rebuild synchronously before capture, then export        |
-| Publication | As export                            | As export                                                |
+## Export, Diagnostics, And Acceptance
 
-Build validation, ownership headers, manifest schema, source protection, and
-route collision rules are identical in both modes. Derived mode does not weaken
-any validation; it only changes the baseline source and the `check` comparison.
+Export with comparison prepares and pins the baseline before capture; a
+rebuild failure fails export, except for the explicit earlier-version outcome
+above; neither outcome is a successful zero-Changes comparison. The input
+recheck confirms the completion marker still names the pinned commit and
+has not changed. Publication with Changes behaves the same; default
+publication without Changes needs no baseline. Both capture current generated
+bytes from memory and authored closure files from confined disk reads.
 
-### Derived check
+`--debug-timings` retains `baseline.resolve`, `baseline.extract`,
+`baseline.command[<index>]`, and `baseline.adopt`; the parent baseline span
+reports `cacheHit` on successful completion. Warm hits omit command and
+adoption spans. The large fixture benchmarks cold and warm rebuilds by
+choosing a commit without complete tracked output; it no longer has a mode
+flag. Navigation targets and `preparing → pending` timing remain measurable.
 
-`check` compiles and validates exactly as in committed mode, then lists the
-files Git tracks under `mockupsDir`, intersects them with the compiled routes
-plus the manifest and indexed ownership headers for retired generated HTML,
-and fails with a typed `build-invalid` error naming each
-tracked path when the intersection is non-empty. The message suggests ignore
-rules for the listed paths. Consumer-authored public files below `mockupsDir`,
-including hand-written HTML without an ownership header, stay tracked and are
-never reported. Derived `check` does not require the on-disk generated files to
-exist or to match; the working tree copy is a local artifact.
-With imported CSS, **any** Git-tracked file below the reserved
-directory fails derived Check (including stale assets no longer compiled),
-and the error includes `git rm --cached` plus one directory-level ignore
-rule. Committed Check instead compares generated text/binary bytes and
-reports unexpected reserved-directory files as orphans.
-Retired output is recognized only by an exact ownership header on the first
-line naming a source below one of this catalogue's roots. Header-like text
-inside authored documents does not establish ownership. Git grep scans the
-index without requiring working-tree files; only its no-match exit status is
-accepted as empty evidence. Other Git failures remain `build-invalid`.
-Tracking is read from the Git index with NUL-delimited names, including both
-logical and physical output-root paths. Cache paths fail independently of the
-compiled route set. Diagnostics include `git rm --cached` and ignore rules.
+- Test tracking outcomes (including no Git), mixed-state path guidance,
+  tracked missing/stale/extra output, and untracked local-output independence.
+  Cache paths need only `git rm --cached`, because the cache ignores itself.
+- Test v9 absent/complete/missing/mismatched/extra inventory at **each** base
+  commit, tracking transitions and moved v9 roots; test v2–v8 incompatibility
+  at the selected generated location and after a rebuild, plus once-per-base
+  reporting and v9 recovery. Prove stale committed root-level v7 and invalid
+  caches rebuild rather than deciding unavailability.
+- Test cache hits, interruption, bounded command errors, path/symlink
+  confinement, child handoff, and in-memory head comparisons.
+- Test Serve's `preparing → pending → ready | unavailable` lifecycle, export
+  pinning and explicit failure, and no writes outside the three opted-in
+  commands.
 
-### Head side
-
-In both modes the head side of a comparison is the current compilation's
-validated output. Committed mode additionally requires that output to equal
-the working tree, as today. Derived mode never reads head bytes from the
-working tree.
-For imported CSS, derived comparison and export capture imported
-stylesheet and binary font/image bytes from the validated compilation;
-committed capture uses checked disk bytes. Authored public resources still
-use confined current reads. Derived membership
-compares every current generated document, plus reachable resource bytes, even
-when Git has no corresponding output-path evidence. Accepted generated bytes
-are retained privately across classification and selected comparisons; they
-are not exposed in shell metadata.
-Component resource-byte differences without a changed Git path use a `material`
-reason; `changedPaths` and `dependency` reasons retain actual Git evidence.
-The same reachable-resource byte comparison gates the
-[unchanged view decision](./mokly-component-changes.md#unchanged-view-decision):
-a view with identical normalized documents still takes the complete comparison
-when independently discovered historical and current resource closures differ,
-or when any resource present on both sides has different bytes, even without
-Git evidence. For views with instances, styles, or entry-owned slots, the same independent
-closure and byte proof also applies to ownership-projected documents; actual and
-projected memberships are compared separately.
-
-## Preparation And Storage
-
-The [baseline storage and execution contract](./mokly-baseline-storage.md)
-defines extraction limits, command environments, Windows npm/npx execution,
-cache locking, adoption, retention and safe crash cleanup.
-
-## Baseline Reads
-
-`RebuiltBaselineReader` implements the same reader interface as the Git blob
-reader over `output/`. The interface accepts commit and repository-relative
-paths, strips the configured `mockupsDir` prefix, and confines the result to
-`output/`. Files must be regular and confined; symlinks, directories, and
-escapes are rejected like non-regular Git blobs. Bulk reads batch
-filesystem access (at most 32 reads in flight) and use the same 4,096-object
-and 48 MiB per-batch budgets as committed reads, including metadata overhead.
-Source protection applies the accepted baseline's own manifest inventory,
-entry sources, and reserved basenames. After a rebuild succeeds, the
-[baseline compatibility gate](./mokly-baseline-compatibility.md) accepts only
-valid v8 output; earlier output is not translated.
-
-## Serve And Watch
-
-Serve in derived mode starts HTTP and adopts complete generated output exactly
-as in committed mode. The parent owns preparation and its abort controller;
-the disposable classification worker receives the prepared commit and compiled
-head output. `PreparedReviewRepository` is constructed only at the CLI,
-export/publication and Serve-parent composition boundary; it carries the pinned
-commit, evidence, reader and completion marker. HTTP-reachable comparisons and
-classification accept `ReadOnlyReviewRepository` (evidence and reader only),
-with no implicit preparation fallback or import path to the builder.
-
-After preparation, the parent sends `baselineCommit` in the existing versioned
-`update` IPC message, before classification. The child opens the cached reader
-through `baselineReaderForCommit` and injects it into its unselected comparison
-provider. Omission retains the reader; `null` revokes it while a replacement is
-prepared. Ref moves revoke and replace the reader; stale update versions cannot
-restore an old commit. Before the first handoff and while revoked, unselected
-`/__mokly/diffs/review.json` fails with `review-invalid` and the message
-"The comparison is not prepared", without starting commands. Committed mode
-may construct its read-only Git reader locally. Single-process `--no-watch`
-Serve uses the same reader handoff without IPC. The builder never runs inside
-a worker that can be terminated without draining its processes. The evidence state while a rebuild actually
-runs is `preparing`: the count slot shows the spinner and selecting Changes
-shows the preparing sidebar with product copy, distinct from the `pending`
-classification state that follows. All remains available. Serve opens in
-`pending`, because whether the commit is already cached is only known once the
-builder has consulted the cache; a cache hit therefore never leaves `pending`.
-A rebuild failure publishes `unavailable` with the existing sidebar; its typed
-reason is logged. Successfully rebuilt but incompatible output follows the
-separate product-copy and recovery rules in the compatibility contract.
-
-Watched Serve observes ref changes as today. When the merge base moves, the
-supervisor cancels a running rebuild, publishes `preparing` for the new commit,
-and starts a new rebuild. Ref changes that leave the merge base unchanged do
-not rebuild; they reclassify as today. `--no-watch` resolves the baseline once.
-Content updates during `preparing` keep the state; the rebuild is independent
-of the current generation. Late results for a superseded commit are ignored.
-The parent retains one preparation per resolved commit and build settings;
-content invalidation cancels classification and its wait, not the shared build.
-Changed build settings, missing history and shutdown revoke the reader and
-drain preparation. A failed build may be retried by a later generation.
-
-The evidence state machine is `preparing → pending → ready | unavailable`, with
-`preparing` omitted on a cache hit or in committed mode. Returning to `pending`
-when the rebuild settles is part of that sequence, so classification always runs
-under `pending`. Live evidence updates, retained navigation state, and reconnect
-rules apply to `preparing` exactly as they apply to `pending`. The owning
-mockups are recorded in the [shell design](./mokly-shell-design.md).
-Lock waiters that reuse another builder's result receive only `complete`,
-without a `start` event or a spurious preparing state.
-
-## Export And Publication
-
-Export resolves and pins the merge base, then runs the rebuild to completion
-before capturing head input. A rebuild failure fails with the typed reason; a
-successful rebuild whose output is incompatible completes without Changes as
-defined by the [compatibility contract](./mokly-baseline-compatibility.md).
-Its input recheck verifies the completion
-marker still names the pinned commit and has not changed; missing or invalid
-markers fail without installing the export. Derived capture and its recheck use
-compiled generated bytes and confined authored public resources. Publication with Changes follows the same
-rules; default publication without Changes needs no baseline in either mode.
-
-## Diagnostics
-
-`--debug-timings` adds `baseline.resolve`, `baseline.extract`,
-`baseline.command[<index>]`, and `baseline.adopt` phases, with a `cacheHit`
-boolean on successful ends of the parent `baseline` builder phase. Resolution
-precedes that phase; the builder span includes cache validation, lock waiting,
-rebuilding and cleanup. Warm hits omit extraction, command and adoption spans.
-The large fixture has a `--derived` variant
-whose benchmark records both a cold-cache and a warm-cache Serve start; the
-benchmark asserts the existing five-second navigation target for both and
-records the separate time to a complete `preparing → pending` transition.
-The benchmark uses builder timings even before Serve publishes `preparing`.
-
-## Acceptance
-
-- Config parsing rejects unknown `generatedOutput` values and `baselineBuild`
-  in committed mode.
-- Derived `check` fails on tracked generated routes, the manifest, and cache
-  contents, listing exact paths, and passes for tracked authored public files.
-- Cache hit runs no command; concurrent builders of one commit share a lock;
-  a dead lock holder is reclaimed; interrupted entries leave no marker.
-- Command failure reports index, argv, exit status, and bounded output.
-- Extraction rejects escaping paths and outward symlinks.
-- Reader rejects symlinks and escapes identically to the Git reader.
-- Serve publishes `preparing`, then `pending`, then a terminal state; a merge
-  base move cancels and restarts; a failure is `unavailable` with no leak of
-  command or path detail into the sidebar.
-- Export fails explicitly on rebuild failure and pins one commit throughout.
-- Committed mode behavior is byte-identical to before this contract.
+The approved [side-inventory contract](./mokly-comparison-inventory.md) makes
+absent counterparts distinct from corrupt listed files, restores targeted
+screen-only base reads, and excludes both generated roots from Git evidence.
+Plain successful baseline notices use stdout; earlier output is never cached.

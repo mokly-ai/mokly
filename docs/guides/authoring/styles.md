@@ -106,11 +106,12 @@ TypeScript declarations for consumer stylesheets.
 ```
 
 Mokly copies local font/image URLs to generated assets, mirrors their paths
-under `mokly-generated/assets/`, and preserves query/hash suffixes. Keep
-committed generated assets visible to Git: broad rules such as `dist/` and
-`node_modules/` also match mirrored asset paths. Build and Check name an
-effective ignore rule and a negation to add to the matching `.gitignore`.
-In derived mode, keep `mokly-generated/` ignored instead. Keep
+under `mokly-generated/assets/`, and preserves query/hash suffixes. Build writes
+the complete generated tree regardless of Git ignore rules. Check reads the Git
+index: either track the whole tree or leave it untracked and ignored. Broad
+ignore rules such as `dist/` and `node_modules/` can also match mirrored asset
+paths; account for them when staging the whole tree. For a partly tracked tree,
+Check lists tracked and untracked paths and gives both remedies. Keep
 asset filenames and directories URL-safe: no spaces, trailing dots or Windows
 device names. An npm scope following `node_modules` may begin with `@`;
 Mokly encodes that character in view links and serves the original package
@@ -225,6 +226,5 @@ and Vite plugins are outside this workflow. JavaScript asset imports with a
 "empty"` deliberately opts out of both plain CSS and CSS Modules;
 `".module.css": "empty"` opts out only of CSS Modules.
 If you import CSS that another tool compiled, Mokly ignores its source map
-comments and inline maps. It does not read or check them, delivered CSS has no
-map comment, and Build error lines refer to the CSS, not to the files that a
-map names.
+comments and inline maps. It does not read or check them, and Build error lines
+refer to the CSS, not to the files that a map names.

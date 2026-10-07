@@ -43,9 +43,14 @@ export function comparisonSection(
   return page.locator(`[data-diff-stage] [data-diff-viewport="${viewport}"]`);
 }
 
+/** The selector, inside a comparison section, of one version's frame. */
+export function paneFrameSelector(side: Side): string {
+  return `.mb-pane--${side} iframe`;
+}
+
 /** The frame showing one version inside a comparison section. */
 export function paneFrame(section: Locator, side: Side): Locator {
-  return section.locator(`.mb-pane--${side} iframe`);
+  return section.locator(paneFrameSelector(side));
 }
 
 /** The user-scrollable shared viewports inside a comparison section. */

@@ -1,11 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { expectDestination } from "./navigation_destination.js";
 import {
   startNavigationFixture,
   type NavigationFixture,
 } from "./navigation_fixture.js";
-import { expectFrameSource } from "./workspace_actions.js";
-import { chooseScheme, chooseViewport } from "./workspace_actions.js";
+import {
+  expectFrameSource,
+  chooseScheme,
+  chooseViewport,
+} from "./workspace_actions.js";
 
 let navigation: NavigationFixture;
 
@@ -14,7 +18,7 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  await navigation.close();
+  await navigation?.close();
 });
 
 async function actAndWaitForFrameLoad(
@@ -231,7 +235,7 @@ test("logical activation stays host-owned during a frame source handoff", async 
     releaseRequest = resolve;
   });
   await page.route(
-    "**/static/fixture/nested/home/index.mobile.dark.html",
+    "**/static/mokly-generated/fixture/nested/home/index.mobile.dark.html",
     async (route) => {
       reportRequest();
       await requestReleased;
@@ -288,11 +292,4 @@ async function navigateFrom(
     await link.click();
   }
   await expectDestination(page);
-}
-
-async function expectDestination(page: Page): Promise<void> {
-  await expect(page).toHaveURL(
-    /\/view\/fixture\/nested\/details\/\?fragment=section$/,
-  );
-  await expect(page.locator("#mb-main h2")).toHaveText("Details");
 }

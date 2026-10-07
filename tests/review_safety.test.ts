@@ -8,10 +8,11 @@ import { loadConfig } from "../dist/config/load.js";
 import { renderReviewArtifact } from "../dist/review/artifact.js";
 import { compareReview } from "../dist/review/compare.js";
 import { normalizeReviewPair } from "../dist/review/ignore.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { runReview } from "../dist/review/run.js";
 import type { ReviewArtifact } from "../packages/viewer/dist/review/types.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
+import { currentManifest } from "./helpers/current_manifest.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
@@ -21,7 +22,7 @@ test("Comparison snapshot output cannot overlap generated or authored roots", as
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
 
-  for (const out of ["mockups/review", "entries/review"]) {
+  for (const out of ["mockups/mokly-generated/review", "entries/review"]) {
     await assert.rejects(
       () =>
         runReview(
@@ -40,13 +41,14 @@ test("Review artifact paths are collision-free for distinct valid routes", async
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
-  const baseManifest = JSON.stringify({
-    entries: [],
-    generatedBy: "mokly",
-    schemaVersion: 8 as const,
-    folders: [],
-    sourceFiles: [],
-  });
+  const baseManifest = JSON.stringify(
+    currentManifest({
+      entries: [],
+      generatedBy: "mokly",
+      schemaVersion: 9,
+      sourceFiles: [],
+    }),
+  );
   const artifact = await compareReview(
     compilation,
     config,
@@ -105,15 +107,21 @@ test("different material keys remain part of Review classification", () => {
 test("Comparison artifacts retain snapshots without standalone UI", () => {
   const artifact: ReviewArtifact = {
     files: new Map([
-      ["snapshots/before/home/index.mobile.html", "<html></html>"],
-      ["snapshots/after/home/index.mobile.html", "<html></html>"],
+      [
+        "snapshots/before/mokly-generated/home/index.mobile.html",
+        "<html></html>",
+      ],
+      [
+        "snapshots/after/mokly-generated/home/index.mobile.html",
+        "<html></html>",
+      ],
     ]),
     result: {
       baseCommit: "a".repeat(40),
       baseRef: "HEAD",
       changedPaths: [],
       ignoredImpact: [],
-      schemaVersion: 5 as const,
+      schemaVersion: 6 as const,
       screens: [
         {
           after: { path: "home", title: "Home" },
@@ -143,7 +151,7 @@ test("Comparison artifacts retain snapshots without standalone UI", () => {
   assert.equal(files.has("index.html"), false);
   assert.equal(files.has("review-navigation.js"), false);
   assert.equal(
-    files.get("snapshots/before/home/index.mobile.html"),
+    files.get("snapshots/before/mokly-generated/home/index.mobile.html"),
     "<html></html>",
   );
 });
@@ -153,13 +161,14 @@ test("Review retains marker-bearing pane bytes as portable output", async (conte
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
-  const baseManifest = JSON.stringify({
-    entries: [],
-    generatedBy: "mokly",
-    schemaVersion: 8 as const,
-    folders: [],
-    sourceFiles: [],
-  });
+  const baseManifest = JSON.stringify(
+    currentManifest({
+      entries: [],
+      generatedBy: "mokly",
+      schemaVersion: 9,
+      sourceFiles: [],
+    }),
+  );
   const artifact = await compareReview(
     compilation,
     config,
@@ -184,7 +193,7 @@ test("Review retains marker-bearing pane bytes as portable output", async (conte
     (view) => view.viewport === "mobile" && view.colorScheme === "light",
   );
   assert.ok(view);
-  const afterPath = "snapshots/after/home/index.mobile.html";
+  const afterPath = "snapshots/after/mokly-generated/home/index.mobile.html";
   const pane = String(artifact.files.get(afterPath));
 
   assert.equal(pane, textOutput(compilation.outputs, "home/index.mobile.html"));

@@ -45,7 +45,7 @@ interface Replacement extends HtmlSourceLocation {
   value: string;
 }
 
-/** One rewritten document plus its compatibility invariant records. */
+/** One rewritten document plus its logical-reference records. */
 export interface RewrittenLogicalLinks {
   content: string;
   records: readonly LogicalReferenceRecord[];

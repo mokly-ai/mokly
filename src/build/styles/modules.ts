@@ -9,7 +9,7 @@ import { rejectUnsafeModuleEscapes } from "./module_escape_guard.js";
 import { modulePlugins } from "./module_plugins.js";
 import { prepareModuleScopes } from "./module_scope.js";
 import { verifyModuleScoping } from "./module_verify.js";
-import { parseStylesheet, processStylesheet } from "./postcss_boundary.js";
+import { parseCss, processRootSync } from "./postcss_calls.js";
 
 /** Rename-only CSS output shared by JavaScript imports and CSS bundling. */
 export interface ScopedStyle {
@@ -27,13 +27,13 @@ export function scopeModule(css: string, relative: string): ScopedStyle {
   const prefix = `mokly_${hash}_`;
   let root: Root | undefined;
   try {
-    root = parseStylesheet(css, relative);
+    root = parseCss(css, relative);
     rejectAuthoredICSS(root, relative);
     rejectUnsafeModuleEscapes(root, relative);
     const restoreScopes = prepareModuleScopes(root, relative);
     rejectEmptyModuleWrappers(root, relative);
     const plugins = modulePlugins();
-    const result = processStylesheet(
+    const result = processRootSync(
       [
         plugins.localByDefault({ mode: "local" }),
         plugins.extractImports(),
@@ -43,7 +43,7 @@ export function scopeModule(css: string, relative: string): ScopedStyle {
       ],
       root,
       relative,
-    ).sync();
+    );
     const { icssImports, icssExports } = plugins.extractICSS(result.root);
     restoreScopes();
     const specifier = Object.keys(icssImports).sort()[0];

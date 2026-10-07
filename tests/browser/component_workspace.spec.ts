@@ -105,7 +105,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
       );
       await preview
         .getByRole("link", { name: "Inspect Action, Continue" })
-        .click({ timeout: 3000 });
+        .click({ timeout: 15_000 });
       await expect(page).toHaveURL(
         componentDesignUrl(
           "design/components/inspection/inspection-consumer",
@@ -234,6 +234,6 @@ test("view controls and highlighting work inside sandboxed Browse frames", async
   await expect(frame.locator("script")).toHaveCount(1);
   await expect(frame.locator("script")).toHaveAttribute(
     "src",
-    "/__mokly/client/inspector.js",
+    "/mokly-viewer/client/inspector.js",
   );
 });

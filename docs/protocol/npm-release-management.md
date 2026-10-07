@@ -28,20 +28,12 @@ Please HTML markers defined in the
 [guides contract](./mokly-guides.md#versions-and-releases). Release PRs update
 those literals with the root package version; root tests reject drift.
 
-The viewer manifest is seeded at **0.0.0**, not 0.1.0, to record that it has no
-prior release. Its per-package `initial-version` is explicitly **0.1.0** because
-release-please 17.6.0 otherwise treats the missing prior release as 1.0.0 rather
-than applying a conventional bump to the 0.0.0 marker. The working viewer
-package is already 0.1.0 so clean local workspace installs can resolve the CLI's
-exact dependency before that release. Subsequent release PRs own both package
-versions; the initial-version setting is ignored after a release exists, and no
-runtime or packaging gate may remain hardcoded to 0.1.0. `bump-minor-pre-major`
-keeps breaking pre-1.0 changes on the minor stream. The requested 0.8.0 → 0.9.0
-CLI pairing was overtaken by main's already published `v0.9.0` (`87daaa4`,
-release PR #73). The current manifest retains that released **0.9.0** state, so
-this feature proposes **CLI 0.10.0** with **viewer 0.1.0**, tagged `v0.10.0` and
-`viewer-v0.1.0`. Never reuse 0.9.0 or move its tag; release-managed package
-versions advance in the release PR.
+The release manifest records each package's latest released version. The viewer
+uses `initial-version: 0.1.0` only before its first release; the setting has no
+effect once a release exists. Runtime and packaging gates derive versions from
+package metadata and never hardcode that initial value. `bump-minor-pre-major`
+keeps breaking pre-1.0 changes on the minor stream. Published tags are immutable;
+versions advance only through the release PR.
 
 The `node-workspace` plugin uses `updateAllPackages: true` to propose both
 packages whenever either releases, including a patch of an otherwise unchanged
@@ -60,8 +52,9 @@ The release workflow then:
    incomplete pair fails closed; ordinary pushes do nothing.
 2. Checks out the CLI tag with history on GitHub-hosted `ubuntu-24.04`.
 3. Resolves the latest available Node 24 patch for the single publish job and
-   installs npm 11.7.0 without a package cache. Rust 1.95.0 and Chromium are
-   installed only when complete verification is selected.
+   installs npm 11.21.0, the `packageManager` version, without a package cache.
+   Rust 1.95.0 and Chromium are installed only when complete verification is
+   selected.
 4. Verifies both local and remote tags identify `HEAD`, the source tree is clean
    including untracked files, and each tag matches its package version.
 5. Runs `npm ci`, performs the live workspace dependency audit, then selects
@@ -135,6 +128,6 @@ As rechecked on 15 September 2026, npm trusted publishing requires Node 22.14 or
 newer and npm 11.5.1 or newer. Use npm 11.15 or newer for `npm trust`
 management, including allowed-action permissions added in 11.15. The package
 must already exist before a trust relationship can be configured. The workflow's
-npm 11.7.0 satisfies publishing; use npm 11.15 or newer only for the separate
-interactive trust-management command. Trusted publishing creates provenance
-automatically on supported GitHub-hosted runners.
+npm 11.21.0 satisfies publishing and also meets the `npm trust` minimum; trust
+management remains a separate interactive command. Trusted publishing creates
+provenance automatically on supported GitHub-hosted runners.

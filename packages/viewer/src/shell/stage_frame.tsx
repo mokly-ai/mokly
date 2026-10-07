@@ -2,6 +2,10 @@
 
 import { useContext, useMemo } from "react";
 
+import {
+  VIEWER_DIRECTORY,
+  currentDocumentPath,
+} from "../catalogue/delivery_paths.js";
 import type {
   ShellCatalogueRoutedEntry,
   ShellCatalogueView,
@@ -82,7 +86,8 @@ export function StageFrame({
     ? generatedFrameSource(preview, fragment, stepIndex)
     : frameSource(entry, selected, fragment, stepIndex);
   const temporary =
-    preview?.path.startsWith("/__mokly/components/renders/") ?? false;
+    preview?.path.startsWith(`/${VIEWER_DIRECTORY}/components/renders/`) ??
+    false;
   const previewAdapter = useMemo(temporaryPreviewAdapter, []);
   const identity = useMemo<ShellFrameIdentity>(
     () => ({
@@ -198,7 +203,7 @@ export function DocumentStageFrame({
       ? selection.colorScheme
       : "light";
   const source = framePath(
-    `static/${documentRoute(entry.path, scheme)}`,
+    currentDocumentPath(documentRoute(entry.path, scheme)),
     fragment,
   );
   const identity = useMemo<ShellFrameIdentity>(
@@ -234,7 +239,7 @@ export function DocumentStageFrame({
             data-fragment-light={
               entry.kind === "document"
                 ? framePath(
-                    `static/${documentRoute(entry.path, "light")}`,
+                    currentDocumentPath(documentRoute(entry.path, "light")),
                     fragment,
                   )
                 : undefined
@@ -242,7 +247,7 @@ export function DocumentStageFrame({
             data-fragment-dark={
               entry.kind === "document" && entry.colorSchemes.includes("dark")
                 ? framePath(
-                    `static/${documentRoute(entry.path, "dark")}`,
+                    currentDocumentPath(documentRoute(entry.path, "dark")),
                     fragment,
                   )
                 : undefined
