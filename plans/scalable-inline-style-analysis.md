@@ -1971,9 +1971,9 @@ User decision (2026-10-07): merge the latest `origin/main` and resolve its confl
 
 Evidence: `.context/scalable-inline-style-analysis/m11-merge/`.
 
-- [ ] Merge `origin/main` once with two parents. Review every remerge path and
+- [x] Merge `origin/main` once with two parents. Review every remerge path and
       audit deletions. Preserve main's package files and agent rules exactly.
-- [ ] Integrate #152's deterministic test rules and #148's parallel workers.
+- [x] Integrate #152's deterministic test rules and #148's parallel workers.
       Check #145's self-ignoring cache behavior and the protocol index.
 - [ ] Run the complete pinned-Chromium gate and real-server smoke tests.
       Record the CPU and boot ID around browser and hydration verification.

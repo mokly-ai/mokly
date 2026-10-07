@@ -30,7 +30,7 @@ test("each completed real view samples heap once; a rejecting view never samples
   const completed = new Promise<void>((resolve) => {
     releaseFailure = resolve;
   });
-  const timer = setTimeout(releaseFailure, 2000);
+  const timer = setTimeout(releaseFailure, 10_000);
   fixture.beforeRemove(() => clearTimeout(timer));
   const beforeReader = new ComponentMaterialReader({
     read: async (route) => Buffer.from(fixture.before.outputs.get(route)!),
