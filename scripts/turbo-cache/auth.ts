@@ -69,11 +69,17 @@ export async function authenticate(
         duplicate;
   }
   const team = bindings.TURBO_CACHE_TEAM ?? "";
-  if (duplicate || !/^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/u.test(team))
+  const failures: string[] = [];
+  if (duplicate) failures.push("duplicate configured secrets");
+  if (team === "") failures.push("missing TURBO_CACHE_TEAM");
+  else if (!/^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/u.test(team))
+    failures.push("invalid TURBO_CACHE_TEAM");
+  if (failures.length > 0)
     throw new CacheError(
       500,
       "configuration_error",
       "Cache configuration is invalid.",
+      `Cache configuration failed: ${failures.join("; ")}.`,
     );
   if (!principal)
     throw new CacheError(401, "unauthorized", "Cache authentication required.");

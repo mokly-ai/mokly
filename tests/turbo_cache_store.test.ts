@@ -3,6 +3,8 @@ import test from "node:test";
 
 import type { R2Bucket } from "@cloudflare/workers-types";
 
+import { createCacheHandler } from "../scripts/turbo-cache/artifacts.js";
+import { CacheError, errorResponse } from "../scripts/turbo-cache/errors.js";
 import { R2ArtifactStore } from "../scripts/turbo-cache/r2.js";
 import worker from "../scripts/turbo-cache/worker.js";
 
@@ -142,6 +144,72 @@ test("R2 conditional null retains first bytes and every metadata field", async (
     "first",
   );
   assert.deepEqual(fixture.objects.get("mokly/abc")!.customMetadata, metadata);
+});
+
+test("stored metadata 500s reach the injected logger and retain their wire response", async () => {
+  for (const corrupt of [
+    { size: -1, customMetadata: metadata },
+    {
+      size: 5,
+      customMetadata: { ...metadata, principal: "private-principal-marker" },
+    },
+    {
+      size: 5,
+      customMetadata: { ...metadata, duration: "private-duration-marker" },
+    },
+  ]) {
+    const fixture = bucketFixture();
+    fixture.objects.set("mokly/abc", {
+      bytes: new TextEncoder().encode("first"),
+      ...corrupt,
+    });
+    const messages: string[] = [];
+    const handle = createCacheHandler(
+      new R2ArtifactStore(fixture.bucket, fixture.makeStream),
+      cacheBindings,
+      (message) => {
+        messages.push(message);
+      },
+    );
+    for (const method of ["GET", "HEAD"]) {
+      const response = await handle(cacheRequest(undefined, { method }));
+      assert.equal(response.status, 500);
+      if (method === "HEAD") assert.equal(response.body, null);
+      else {
+        const detail = {
+          code: "internal_error",
+          message: "Invalid stored artifact metadata.",
+        };
+        assert.deepEqual(await response.json(), { ...detail, error: detail });
+      }
+    }
+    assert.deepEqual(
+      messages,
+      Array(2).fill("Error: Invalid stored artifact metadata."),
+    );
+    assert.ok(messages.every((message) => !message.includes("private-")));
+  }
+});
+
+test("typed errors above 500 log once while client errors do not log", async () => {
+  const messages: string[] = [];
+  const logger = (message: string) => {
+    messages.push(message);
+  };
+  const server = errorResponse(
+    new CacheError(503, "internal_error", "Cache unavailable."),
+    false,
+    logger,
+  );
+  const client = errorResponse(
+    new CacheError(404, "not_found", "Artifact not found."),
+    true,
+    logger,
+  );
+  assert.equal(server.status, 503);
+  assert.equal(client.status, 404);
+  assert.equal(client.body, null);
+  assert.deepEqual(messages, ["Error: Cache unavailable."]);
 });
 
 test("R2 early conditional refusal drains the stream and exceptions propagate", async () => {

@@ -1,10 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { createCacheHandler } from "../scripts/turbo-cache/artifacts.js";
 import { authenticate, authorize } from "../scripts/turbo-cache/auth.js";
 import { CacheError } from "../scripts/turbo-cache/errors.js";
 
-import { cacheBindings, cacheRequest } from "./helpers/turbo_cache.js";
+import {
+  MemoryArtifactStore,
+  cacheBindings,
+  cacheRequest,
+} from "./helpers/turbo_cache.js";
 
 test("cache principals accept only their namespace and PR fallback order", async () => {
   for (const principal of ["trusted", "pr", "reader"] as const) {
@@ -119,6 +124,57 @@ test("invalid configuration fails closed, including duplicate disabled secrets",
       ),
       { status: 500, code: "configuration_error" },
     );
+});
+
+test("configuration 500s log the failed check without exposing configuration values", async () => {
+  const missing = { ...cacheBindings };
+  delete missing.TURBO_CACHE_TEAM;
+  const invalid = {
+    ...cacheBindings,
+    TURBO_CACHE_TEAM: "../private-team-marker",
+  };
+  const duplicate = {
+    ...cacheBindings,
+    TURBO_CACHE_PR_WRITE_TOKEN: cacheBindings.TURBO_CACHE_TRUSTED_WRITE_TOKEN!,
+  };
+  for (const [bindings, reason] of [
+    [missing, "missing TURBO_CACHE_TEAM"],
+    [{ ...cacheBindings, TURBO_CACHE_TEAM: "" }, "missing TURBO_CACHE_TEAM"],
+    [invalid, "invalid TURBO_CACHE_TEAM"],
+    [duplicate, "duplicate configured secrets"],
+    [
+      { ...duplicate, TURBO_CACHE_TEAM: invalid.TURBO_CACHE_TEAM },
+      "duplicate configured secrets; invalid TURBO_CACHE_TEAM",
+    ],
+  ] as const) {
+    const messages: string[] = [];
+    const handle = createCacheHandler(
+      new MemoryArtifactStore(),
+      bindings,
+      (message) => {
+        messages.push(message);
+      },
+    );
+    for (const method of ["GET", "HEAD"]) {
+      const response = await handle(cacheRequest(undefined, { method }));
+      assert.equal(response.status, 500);
+      if (method === "HEAD") assert.equal(response.body, null);
+      else {
+        const detail = {
+          code: "configuration_error",
+          message: "Cache configuration is invalid.",
+        };
+        assert.deepEqual(await response.json(), { ...detail, error: detail });
+      }
+    }
+    assert.deepEqual(
+      messages,
+      Array(2).fill(`Error: Cache configuration failed: ${reason}.`),
+    );
+    for (const value of Object.values(bindings).filter(Boolean))
+      assert.ok(messages.every((message) => !message.includes(value!)));
+    assert.ok(messages.every((message) => !/\d/u.test(message)));
+  }
 });
 
 test("empty and short secrets disable principals without exposing values", async () => {

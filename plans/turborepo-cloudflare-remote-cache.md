@@ -568,6 +568,10 @@ in CI uses it yet, so the product stays functional.
       `docs/implementation-review-prompt.md` after the push. The supervising
       agent runs the review. Apply the `AGENTS.md` review-fix rule after it
       reports; keep the review itself read-only.
+  - R2 (low, test): the finding-5 drift test in `tests/turbo_cache_workflow.test.ts` also reads the plan's "Repository layout" text, so a future Worker module would force edits to a completed plan; it runs in milliseconds and protects the contract's module list and config block. Recommended: keep the contract check and drop the plan check. Waiting for the user.
+  - [x] Fix re-review finding R1: log every 500-or-higher response, including safe configuration-check diagnostics and invalid stored metadata; preserve client responses and capture failing regressions first.
+  - [ ] Run the final re-review gate, close the review with the R1 commit SHA, commit the plan, and push. Stop after this last fix round.
+
   - Finding 1 (high, security): the deploy workflow uses an account-wide Workers/R2 write token as a repository secret, which any branch workflow can read; recommend a main-only GitHub environment, reduced permissions, and a rule/test that no Workers/R2 write credential is a repository secret or reaches a pull_request workflow. Waiting for the user.
   - Finding 3 (low, missing test): no automated test runs the Workers runtime, so a broken FixedLengthStream path can deploy; recommend an unstable_startWorker integration test with local R2 in the deploy gate. Waiting for the user.
   - [x] Fix finding 2: disable version preview URLs explicitly, assert the config, and document the old-version URL check after token rotation.
@@ -580,6 +584,7 @@ Evidence: `.context/turborepo-cloudflare-remote-cache/m3-progress.md` and
 Main integration decisions: `.context/turborepo-cloudflare-remote-cache/m3-main-decisions.md`.
 Review-fix evidence: `.context/turborepo-cloudflare-remote-cache/m3-review-fix-validation.md`.
 Review-fix merge decisions: `.context/turborepo-cloudflare-remote-cache/m3-review-main-decisions.md`.
+Final re-review evidence: `.context/turborepo-cloudflare-remote-cache/m3-rereview-validation.md`.
 
 ### Milestone 4: Cloudflare Provisioning And CI Wiring
 

@@ -76,9 +76,10 @@ adapter pipes into a Workers `FixedLengthStream`, because R2 requires a known
 stream length. No artifact is collected in memory. Conditional losers are
 validated too; their discarded bytes cannot replace the winner.
 
-Unexpected 500 errors log only their name and message through the injected
-logger. Client responses stay generic. Never log request headers, tokens, or
-bodies.
+Every response with status 500 or higher logs through the injected logger.
+Configuration diagnostics name duplicate secrets, a missing team, or an invalid
+team, with no secret values or lengths. Other errors log their name and message.
+Client responses stay unchanged. Never log request headers, tokens, or bodies.
 
 ## Local Real-Client Smoke
 

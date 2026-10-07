@@ -14,6 +14,7 @@ export class CacheError extends Error {
     readonly status: number,
     readonly code: ErrorCode,
     message: string,
+    readonly diagnostic: string = message,
   ) {
     super(message);
   }
@@ -24,16 +25,18 @@ export function errorResponse(
   head: boolean,
   log: (message: string) => void = console.warn,
 ): Response {
-  if (!(error instanceof CacheError))
-    log(
-      error instanceof Error
-        ? `${error.name}: ${error.message}`
-        : "UnknownError: Unexpected cache error.",
-    );
   const failure =
     error instanceof CacheError
       ? error
       : new CacheError(500, "internal_error", "Cache storage failed.");
+  if (failure.status >= 500)
+    log(
+      error instanceof CacheError
+        ? `${error.name}: ${error.diagnostic}`
+        : error instanceof Error
+          ? `${error.name}: ${error.message}`
+          : "UnknownError: Unexpected cache error.",
+    );
   const detail = { code: failure.code, message: failure.message };
   return new Response(
     head ? null : JSON.stringify({ ...detail, error: detail }),
