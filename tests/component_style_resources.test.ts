@@ -15,16 +15,16 @@ for (const mode of ["committed", "derived"] as const)
   test(`style route proves complete reference-free deltas and transitive resources in ${mode}`, async (context) => {
     const fixture = await styleRouteFixture(context);
     const withResources = (before: string, after: string) => ({
-      ...withHeadStyles(fixture, before, after, mode),
+      ...withHeadStyles(fixture, before, after),
       beforeFiles: new Map([
-        ...withHeadStyles(fixture, before, after, mode).beforeFiles,
+        ...withHeadStyles(fixture, before, after).beforeFiles,
         ["asset.svg", "asset"],
         ["other.svg", "other"],
         ["sheet.css", '@import "nested.css";'],
         ["nested.css", '.asset{background:url("asset.svg")}'],
       ]),
       afterFiles: new Map([
-        ...withHeadStyles(fixture, before, after, mode).afterFiles,
+        ...withHeadStyles(fixture, before, after).afterFiles,
         ["asset.svg", "asset"],
         ["other.svg", "other"],
         ["sheet.css", '@import "nested.css";'],

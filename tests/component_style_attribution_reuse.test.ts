@@ -15,12 +15,12 @@ const exec = promisify(execFile);
 const escaped = (id: number) =>
   String.raw`<style id="edited">.entry:is([title="\3c !--mokly-component:start:r-${id}-->"],main){color:red}</style>`;
 
-for (const mode of ["committed", "derived"] as const)
-  test(`fall-through reuses safe diff attribution and rematches unchanged references in ${mode}`, async (context) => {
+for (const evidenceKind of ["git", "bytes"] as const)
+  test(`fall-through reuses safe diff attribution and rematches unchanged references with ${evidenceKind} evidence`, async (context) => {
     const fixture = await styleRouteFixture(context);
     const root = await fs.mkdtemp(path.resolve(".context/style-attribution-"));
     context.after(() => fs.rm(root, { recursive: true, force: true }));
-    for (const references of [false, true]) {
+    for (const references of evidenceKind === "git" ? [false, true] : [true]) {
       const reference = references
         ? '<style>style#edited:contains("r-10"){background:url("../../asset.svg")}</style>'
         : "";
@@ -28,7 +28,6 @@ for (const mode of ["committed", "derived"] as const)
         fixture,
         escaped(10) + reference,
         escaped(20) + reference,
-        mode,
       );
       const input = {
         ...base,
@@ -37,13 +36,19 @@ for (const mode of ["committed", "derived"] as const)
           ...base.afterFiles,
           ["asset.svg", references ? "after" : "before"],
         ]),
-        changedPaths: references ? ["mockups/asset.svg"] : [],
+        changedPaths:
+          references && evidenceKind === "git" ? ["mockups/asset.svg"] : [],
       };
       const result = await assertStyleRoute(input, "complete");
-      if (references)
-        assert.deepEqual(result.comparison.view.reasons, [
-          { kind: "dependency", path: "mockups/asset.svg" },
-        ]);
+      if (references) {
+        assert.equal(result.comparison.view.state, "changed");
+        assert.deepEqual(
+          result.comparison.view.reasons,
+          evidenceKind === "git"
+            ? [{ kind: "dependency", path: "mockups/asset.svg" }]
+            : undefined,
+        );
+      }
       assert.deepEqual(result.counts("review.inline-style-analysis"), {
         elements: references ? 4 : 2,
         segments: references ? 4 : 2,

@@ -119,25 +119,23 @@ test("seeded single-window edits of real RNW sheets equal the disabled-route and
           original.slice(edit.end);
     const changed =
       original.slice(0, edit.start) + edit.text + original.slice(edit.end);
-    for (const mode of ["committed", "derived"] as const) {
-      const input = {
-        ...fixture,
-        after: fixture.before,
-        config: fixture.config,
-        beforeFiles: new Map([...fixture.beforeFiles, [view.path, base]]),
-        afterFiles: new Map([...fixture.beforeFiles, [view.path, changed]]),
-      };
-      try {
-        const route = edit.route;
-        await assertStyleRoute(input, route, id, true, view.path);
-        if (route === "style") routed++;
-      } catch (cause) {
-        throw new Error(
-          `seed=${seed} case=${index} mode=${mode} view=${view.path} window=[${edit.start},${edit.end})`,
-          { cause },
-        );
-      }
+    const input = {
+      ...fixture,
+      after: fixture.before,
+      config: fixture.config,
+      beforeFiles: new Map([...fixture.beforeFiles, [view.path, base]]),
+      afterFiles: new Map([...fixture.beforeFiles, [view.path, changed]]),
+    };
+    try {
+      const route = edit.route;
+      await assertStyleRoute(input, route, id, true, view.path);
+      if (route === "style") routed++;
+    } catch (cause) {
+      throw new Error(
+        `seed=${seed} case=${index} view=${view.path} window=[${edit.start},${edit.end})`,
+        { cause },
+      );
     }
   }
-  assert.ok(routed >= 300, `seed=${seed} routed=${routed}`);
+  assert.ok(routed >= 150, `seed=${seed} routed=${routed}`);
 });

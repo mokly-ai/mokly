@@ -7,8 +7,8 @@ import {
   withHeadStyles,
 } from "./helpers/style_route.js";
 
-for (const mode of ["committed", "derived"] as const)
-  test(`a dropped raw style reference cannot prove canonical resource safety in ${mode}`, async (context) => {
+for (const evidenceKind of ["git", "bytes"] as const)
+  test(`a dropped raw style reference cannot prove canonical resource safety with ${evidenceKind} evidence`, async (context) => {
     const fixture = await styleRouteFixture(context);
     for (const [name, style] of [
       [
@@ -23,12 +23,7 @@ for (const mode of ["committed", "derived"] as const)
       ],
     ] as const)
       await context.test(name, async () => {
-        const input = withHeadStyles(
-          fixture,
-          style("red"),
-          style("blue"),
-          mode,
-        );
+        const input = withHeadStyles(fixture, style("red"), style("blue"));
         const { comparison } = await assertStyleRoute(
           {
             ...input,
@@ -37,12 +32,18 @@ for (const mode of ["committed", "derived"] as const)
               ["asset.svg", "before"],
             ]),
             afterFiles: new Map([...input.afterFiles, ["asset.svg", "after"]]),
-            changedPaths: ["mockups/asset.svg"],
+            changedPaths: evidenceKind === "git" ? ["mockups/asset.svg"] : [],
           },
           "complete",
         );
-        assert.deepEqual(comparison.view.reasons, [
-          { kind: "dependency", path: "mockups/asset.svg" },
-        ]);
+        const reason =
+          evidenceKind === "git"
+            ? { kind: "dependency", path: "mockups/asset.svg" }
+            : { kind: "material" };
+        assert.deepEqual(comparison.reasons, [reason]);
+        assert.deepEqual(
+          comparison.view.reasons,
+          evidenceKind === "git" ? [reason] : undefined,
+        );
       });
   });

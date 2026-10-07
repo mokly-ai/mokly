@@ -47,7 +47,7 @@ test("a failed required-only proof batch cannot poison needed files", async (con
     ],
   ])
     await context.test(name!, async (context) => {
-      const input = withHeadStyles(base, left!, right!, "derived");
+      const input = withHeadStyles(base, left!, right!);
       const beforeFiles = new Map([
         ...input.beforeFiles,
         ["asset.svg", "same"],

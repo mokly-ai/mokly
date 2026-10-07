@@ -29,7 +29,7 @@ test("derived proofs fall through for a missing transitive base resource", async
     ],
   ])
     await context.test(name!, async (context) => {
-      const input = withHeadStyles(base, left!, right!, "derived");
+      const input = withHeadStyles(base, left!, right!);
       const fixture = {
         ...input,
         beforeFiles: new Map([
@@ -63,7 +63,6 @@ test("derived proofs preserve a required reader's missing-file diagnostic", asyn
         base,
         markup("red"),
         markup(changed ? "blue" : "red"),
-        "derived",
       );
       const fixture = {
         ...input,

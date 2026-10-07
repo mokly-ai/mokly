@@ -34,49 +34,46 @@ test("seeded decoded markers and ordinary escapes equal the complete-path oracle
       index % 2
         ? `<!--mokly-review-ignore:start:other-->${value}<!--mokly-review-ignore:end:other-->`
         : "";
-    for (const mode of ["committed", "derived"] as const) {
-      try {
-        const input = withHeadStyles(
-          base,
-          `<style>${css}</style>${ignored("before")}`,
-          `<style>${css}</style>${ignored("after")}`,
-          mode,
-        );
-        const fixture = {
-          ...input,
-          beforeFiles: new Map([...input.beforeFiles, ["asset.svg", "same"]]),
-          afterFiles: new Map([...input.afterFiles, ["asset.svg", "same"]]),
-        };
-        const oracle = await captureStyleSwitches(fixture, styleSwitches[0]);
-        for (const useStylePath of [false, true]) {
-          const result = await captureStyleSwitches(fixture, {
-            useFastPath: true,
-            useStylePath,
-          });
-          compared++;
-          if (result.kind === "result") {
-            assert.equal(oracle.kind, "result");
-            if (oracle.kind === "result")
-              assert.deepEqual(result.result, oracle.result);
-            assert.equal(
-              result.comparisonPath,
-              marker === 2 ? "fast" : "complete",
-            );
-            if (result.comparisonPath === "fast") quick++;
-          } else assert.deepEqual(result, oracle);
-        }
-      } catch (cause) {
-        throw new Error(
-          `seed=${seed} case=${index} context=${kind} marker=${marker} mode=${mode}`,
-          { cause },
-        );
+    try {
+      const input = withHeadStyles(
+        base,
+        `<style>${css}</style>${ignored("before")}`,
+        `<style>${css}</style>${ignored("after")}`,
+      );
+      const fixture = {
+        ...input,
+        beforeFiles: new Map([...input.beforeFiles, ["asset.svg", "same"]]),
+        afterFiles: new Map([...input.afterFiles, ["asset.svg", "same"]]),
+      };
+      const oracle = await captureStyleSwitches(fixture, styleSwitches[0]);
+      for (const useStylePath of [false, true]) {
+        const result = await captureStyleSwitches(fixture, {
+          useFastPath: true,
+          useStylePath,
+        });
+        compared++;
+        if (result.kind === "result") {
+          assert.equal(oracle.kind, "result");
+          if (oracle.kind === "result")
+            assert.deepEqual(result.result, oracle.result);
+          assert.equal(
+            result.comparisonPath,
+            marker === 2 ? "fast" : "complete",
+          );
+          if (result.comparisonPath === "fast") quick++;
+        } else assert.deepEqual(result, oracle);
       }
+    } catch (cause) {
+      throw new Error(
+        `seed=${seed} case=${index} context=${kind} marker=${marker}`,
+        { cause },
+      );
     }
   }
-  assert.equal(compared, 576);
+  assert.equal(compared, 288);
   assert.equal(
     quick,
-    192,
+    96,
     `seed=${seed}: ordinary escaped inputs must keep the quick check`,
   );
   assert.deepEqual([...encoder.lengths].sort(), [2, 3, 4, 5, 6]);

@@ -13,7 +13,6 @@ import { pageSource, pathFixture } from "./path_fixture.js";
 /** Compile a stable link whose old page path can become a Markdown document. */
 export async function moveLinkShortcutFixture(
   t: TestContext,
-  _mode: "committed" | "derived",
   styleEdit: boolean,
   move = true,
   styleLink = false,

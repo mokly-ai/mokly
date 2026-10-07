@@ -25,31 +25,30 @@ const cases = [
 
 test("lazy fingerprint inventories preserve eager per-view validation errors", async (context) => {
   const fixture = await styleRouteFixture(context);
-  for (const mode of ["committed", "derived"] as const)
-    for (const [marker, detail] of cases)
-      await context.test(`${mode}: ${detail}`, async (test) => {
-        const html = `<style>.entry{color:red}</style>${marker}`;
-        const input = withHeadStyles(fixture, html, html, mode);
-        const oracle = await fingerprintComparison(input, false);
-        assert.equal(oracle.kind, "error");
-        if (oracle.kind !== "error") return;
-        assert.ok(oracle.message.endsWith(detail));
-        for (const name of [
-          "materialIds",
-          "materialSignals",
-          "componentMarkers",
-        ] as const)
-          test.mock.getter(PageAnalysis.prototype, name, () =>
-            assert.fail(`validation requested fingerprint inventory ${name}`),
+  for (const [marker, detail] of cases)
+    await context.test(detail, async (test) => {
+      const html = `<style>.entry{color:red}</style>${marker}`;
+      const input = withHeadStyles(fixture, html, html);
+      const oracle = await fingerprintComparison(input, false);
+      assert.equal(oracle.kind, "error");
+      if (oracle.kind !== "error") return;
+      assert.ok(oracle.message.endsWith(detail));
+      for (const name of [
+        "materialIds",
+        "materialSignals",
+        "componentMarkers",
+      ] as const)
+        test.mock.getter(PageAnalysis.prototype, name, () =>
+          assert.fail(`validation requested fingerprint inventory ${name}`),
+        );
+      for (const useFastPath of [true, false])
+        for (const useStylePath of [true, false])
+          assert.deepEqual(
+            await fingerprintComparison(input, true, "home", undefined, {
+              useFastPath,
+              useStylePath,
+            }),
+            oracle,
           );
-        for (const useFastPath of [true, false])
-          for (const useStylePath of [true, false])
-            assert.deepEqual(
-              await fingerprintComparison(input, true, "home", undefined, {
-                useFastPath,
-                useStylePath,
-              }),
-              oracle,
-            );
-      });
+    });
 });

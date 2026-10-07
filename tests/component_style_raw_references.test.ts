@@ -19,7 +19,6 @@ test("derived style proof never reads a head-only selector URL from the base", a
         fixture,
         `<style>.entry::foo(url(../${before}.svg)){color:red}</style>`,
         `<style>.entry::foo(url(../${after}.svg)){color:blue}</style>`,
-        "derived",
       );
       const { comparison } = await assertStyleRoute(
         {

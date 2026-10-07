@@ -62,7 +62,6 @@ for (const mode of ["committed", "derived"] as const)
         fixture,
         style,
         style.replace("red", "blue"),
-        mode,
       );
       assert.deepEqual(
         fingerprintMaterials(input).projected,
@@ -85,7 +84,6 @@ for (const mode of ["committed", "derived"] as const)
           fixture,
           style,
           style.replace("red", "blue"),
-          mode,
         );
         const text = fingerprintMaterials(input, false);
         assert.ok(text.projected.before.includes("<mokly-caller-slot"));

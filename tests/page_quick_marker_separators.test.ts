@@ -38,66 +38,19 @@ test("canonical declaration serialization joins the split material marker", () =
   );
 });
 
-for (const mode of ["committed", "derived"] as const)
-  test(`separator-split markers preserve full validation and results in ${mode}`, async (context) => {
-    const base = await styleRouteFixture(context);
-    for (const prefix of spellings)
-      for (const [name, css] of contexts)
-        for (const identical of [true, false])
-          await context.test(
-            `${prefix}, ${name}, identical=${identical}`,
-            async (context) => {
-              const text = css(
-                `${prefix}mokly-review-material:clock:${key}-->`,
-              );
-              const input = withHeadStyles(
-                base,
-                `<style>${text}</style>${identical ? "" : ignore("before")}`,
-                `<style>${text}</style>${identical ? "" : ignore("after")}`,
-                mode,
-              );
-              const fixture = {
-                ...input,
-                beforeFiles: new Map([
-                  ...input.beforeFiles,
-                  ["asset.svg", "same"],
-                ]),
-                afterFiles: new Map([
-                  ...input.afterFiles,
-                  ["asset.svg", "same"],
-                ]),
-              };
-              const oracle = await captureStyleSwitches(
-                fixture,
-                styleSwitches[0],
-              );
-              if (name === "declaration")
-                assert.deepEqual(oracle, {
-                  kind: "error",
-                  name: "Error",
-                  message:
-                    "[mokly/review-ignore] mokly-generated/home/index.mobile.html: material signal for clock has no region",
-                });
-              for (const switches of styleSwitches)
-                await context.test(JSON.stringify(switches), async () => {
-                  const result = await captureStyleSwitches(fixture, switches);
-                  assert.deepEqual(result, oracle);
-                  if (result.kind === "result")
-                    assert.equal(result.comparisonPath, "complete");
-                });
-            },
-          );
-    for (const prefix of spellings)
+test("separator-split markers preserve full validation and results", async (context) => {
+  const base = await styleRouteFixture(context);
+  for (const prefix of spellings)
+    for (const [name, css] of contexts)
       for (const identical of [true, false])
         await context.test(
-          `ignore start ${prefix}, identical=${identical}`,
+          `${prefix}, ${name}, identical=${identical}`,
           async (context) => {
-            const css = `.entry{--x:(${prefix}mokly-review-ignore:start:clock-->);${reference}}`;
+            const text = css(`${prefix}mokly-review-material:clock:${key}-->`);
             const input = withHeadStyles(
               base,
-              `<style>${css}</style>${identical ? "" : ignore("before")}`,
-              `<style>${css}</style>${identical ? "" : ignore("after")}`,
-              mode,
+              `<style>${text}</style>${identical ? "" : ignore("before")}`,
+              `<style>${text}</style>${identical ? "" : ignore("after")}`,
             );
             const fixture = {
               ...input,
@@ -107,18 +60,51 @@ for (const mode of ["committed", "derived"] as const)
               ]),
               afterFiles: new Map([...input.afterFiles, ["asset.svg", "same"]]),
             };
+            const oracle = await captureStyleSwitches(
+              fixture,
+              styleSwitches[0],
+            );
+            if (name === "declaration")
+              assert.deepEqual(oracle, {
+                kind: "error",
+                name: "Error",
+                message:
+                  "[mokly/review-ignore] mokly-generated/home/index.mobile.html: material signal for clock has no region",
+              });
             for (const switches of styleSwitches)
               await context.test(JSON.stringify(switches), async () => {
-                assert.deepEqual(
-                  await captureStyleSwitches(fixture, switches),
-                  {
-                    kind: "error",
-                    name: "Error",
-                    message:
-                      "[mokly/review-ignore] mokly-generated/home/index.mobile.html: region clock has no end marker",
-                  },
-                );
+                const result = await captureStyleSwitches(fixture, switches);
+                assert.deepEqual(result, oracle);
+                if (result.kind === "result")
+                  assert.equal(result.comparisonPath, "complete");
               });
           },
         );
-  });
+  for (const prefix of spellings)
+    for (const identical of [true, false])
+      await context.test(
+        `ignore start ${prefix}, identical=${identical}`,
+        async (context) => {
+          const css = `.entry{--x:(${prefix}mokly-review-ignore:start:clock-->);${reference}}`;
+          const input = withHeadStyles(
+            base,
+            `<style>${css}</style>${identical ? "" : ignore("before")}`,
+            `<style>${css}</style>${identical ? "" : ignore("after")}`,
+          );
+          const fixture = {
+            ...input,
+            beforeFiles: new Map([...input.beforeFiles, ["asset.svg", "same"]]),
+            afterFiles: new Map([...input.afterFiles, ["asset.svg", "same"]]),
+          };
+          for (const switches of styleSwitches)
+            await context.test(JSON.stringify(switches), async () => {
+              assert.deepEqual(await captureStyleSwitches(fixture, switches), {
+                kind: "error",
+                name: "Error",
+                message:
+                  "[mokly/review-ignore] mokly-generated/home/index.mobile.html: region clock has no end marker",
+              });
+            });
+        },
+      );
+});

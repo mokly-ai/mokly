@@ -68,10 +68,7 @@ export async function inlineChangesFixture(
   const repository = () => committedReviewRepository(fixture.config);
   return {
     ...fixture,
-    complete: async (
-      useFastPath = true,
-      _mode: "committed" | "derived" = "committed",
-    ) => {
+    complete: async (useFastPath = true) => {
       const config = fixture.config;
       return compareReview(
         await compileCatalogue(config),

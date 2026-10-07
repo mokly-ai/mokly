@@ -2051,6 +2051,42 @@ Evidence: `.context/scalable-inline-style-analysis/m12-merge/`.
       Finding 3 (Low, docs): closure contracts describe configured-stylesheet seeds that production never supplies; pending the user's decision.
       Finding 6 (Low, test): the replay keeps two exclusions for tests that main removed; pending the user's decision.
 
+## Milestone 13: Duplicate Mode Pass Removal
+
+Resolve M12 review finding 1. Main #156 removed the generated-output modes, so
+43 test files ran the same inputs twice. Changes removes generated roots from
+Git evidence, so tracked and ignored output give the same changed paths. A
+second pass can only differ when an authored resource changes.
+
+User request (2026-10-07): fix M12 finding 1. Option A (Git evidence, as main's
+own tests do) is recommended; option B (one pass) is acceptable. This milestone
+applies A where a second pass can differ and B elsewhere.
+
+Evidence: `.context/scalable-inline-style-analysis/m13-duplicate-passes/`.
+
+- [x] Correct the renderer coverage claim in
+      [material work counts](../docs/protocol/mokly-material-work-counts.md#required-proof).
+- [x] Run the 39 tests without an authored resource change once. Remove the
+      unused mode parameters from the `withHeadStyles`, `moveLinkShortcutFixture`
+      and `inlineChangesFixture` helpers and the mode words from the titles.
+- [x] Give the 4 tests that change an authored resource main's `git` and
+      `bytes` evidence passes. The `bytes` pass expects a `material` reason and
+      no dependency reason. Prove that a mutation which ignores resource bytes
+      fails every `bytes` pass.
+- [x] Halve the seeded pass counters and lower the catalogue replay pins by the
+      7 removed duplicate catalogues.
+- [x] Run the changed tests, the catalogue replay and `cargo xtask check`.
+      The remote gate passed every suite except the catalogue replay on Node
+      22.14.0, which reads 0 records: the pre-existing M11 CI failure above.
+- [x] After checks pass, `git add -A`, commit with Conventional Commits and
+      push the branch. Pushed as a stacked PR onto `calummoore/irvine-v6`.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      on this milestone's diff from `calummoore/irvine-v6`; the M12 review
+      covers the rest against `origin/main`. Keep the review read-only, then
+      apply main's [review-fix rule](../AGENTS.md#general): fix `Auto-fix: yes`
+      findings, re-review once and report fixed and open findings separately.
+
 ## Post-merge follow-up (non-blocking)
 
 - Smoke the published package against a React Native Web catalogue whose

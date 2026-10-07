@@ -91,9 +91,9 @@ test("existing inline, CSS and Changes catalogues equal M8 text materials in bot
       excludedPairs: total("excludedPairs"),
     },
     {
-      catalogues: 427,
-      pairs: 854,
-      fingerprintedViews: 8100,
+      catalogues: 420,
+      pairs: 840,
+      fingerprintedViews: 7840,
       excludedCatalogues: 0,
       excludedPairs: 0,
     },

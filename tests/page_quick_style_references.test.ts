@@ -10,8 +10,8 @@ import {
 const outsideIgnore = (value: string) =>
   `<!--mokly-review-ignore:start:outside-->${value}<!--mokly-review-ignore:end:outside-->`;
 
-for (const mode of ["committed", "derived"] as const)
-  test(`identical quick check retains canonical style dependencies in ${mode}`, async (context) => {
+for (const evidenceKind of ["git", "bytes"] as const)
+  test(`identical quick check retains canonical style dependencies with ${evidenceKind} evidence`, async (context) => {
     const fixture = await styleRouteFixture(context);
     for (const [name, markup] of [
       [
@@ -38,20 +38,25 @@ for (const mode of ["committed", "derived"] as const)
             (name!.includes("non-identical") ? outsideIgnore("old") : ""),
           markup! +
             (name!.includes("non-identical") ? outsideIgnore("new") : ""),
-          mode,
         );
         const { comparison } = await assertStyleRoute(
           {
             ...input,
             beforeFiles: new Map([...input.beforeFiles, ["asset.svg", "old"]]),
             afterFiles: new Map([...input.afterFiles, ["asset.svg", "new"]]),
-            changedPaths: ["mockups/asset.svg"],
+            changedPaths: evidenceKind === "git" ? ["mockups/asset.svg"] : [],
           },
           "complete",
         );
         assert.equal(comparison.view.state, "changed");
-        assert.deepEqual(comparison.view.reasons, [
-          { kind: "dependency", path: "mockups/asset.svg" },
-        ]);
+        const reason =
+          evidenceKind === "git"
+            ? { kind: "dependency", path: "mockups/asset.svg" }
+            : { kind: "material" };
+        assert.deepEqual(comparison.reasons, [reason]);
+        assert.deepEqual(
+          comparison.view.reasons,
+          evidenceKind === "git" ? [reason] : undefined,
+        );
       });
   });

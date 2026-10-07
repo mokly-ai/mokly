@@ -18,113 +18,117 @@ import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 import { pageContext } from "./helpers/page_comparison.js";
 
-for (const mode of ["committed", "derived"] as const)
-  for (const changed of [false, true])
-    test(`identical quick check uses ${mode} reader closures and reuses fall-through discovery, changed=${changed}`, async (context) => {
-      const fixture = await componentReviewFixture(context, (source) => source);
-      const view = generatedViews(
-        fixture.after.manifest.entries.find(({ path: id }) => id === "home")!,
-      )[0]!;
-      const html =
-        textOutput(fixture.after.outputs, view.path)! +
-        '<link rel="stylesheet" href="../../root.css">';
-      const reads = { before: [] as string[], after: [] as string[] };
-      const materialReader = (side: keyof typeof reads) =>
-        new ComponentMaterialReader({
-          read: async (route) => {
-            reads[side].push(route);
-            if (route === view.path) return Buffer.from(html);
-            if (route === "root.css") return Buffer.from('@import "leaf.css";');
-            assert.equal(route, "leaf.css");
-            return Buffer.from(
-              changed && side === "after"
-                ? ".none{color:blue}"
-                : ".none{color:red}",
-            );
-          },
-        });
-      const beforeReader = materialReader("before");
-      const afterReader = materialReader("after");
-      const changedPaths = changed ? ["mockups/leaf.css"] : [];
-      const baseContext = pageContext({
-        ...fixture,
-        before: fixture.before.manifest,
-        after: fixture.after.manifest,
-        beforeFiles: compilationFiles(fixture.before),
-        afterFiles: compilationFiles(fixture.after),
-        config: fixture.config,
-        changedPaths,
+for (const [changed, evidenceKind] of [
+  [false, "none"],
+  [true, "git"],
+  [true, "bytes"],
+] as const)
+  test(`identical quick check compares reader closures and reuses fall-through discovery, changed=${changed}, evidence=${evidenceKind}`, async (context) => {
+    const fixture = await componentReviewFixture(context, (source) => source);
+    const view = generatedViews(
+      fixture.after.manifest.entries.find(({ path: id }) => id === "home")!,
+    )[0]!;
+    const html =
+      textOutput(fixture.after.outputs, view.path)! +
+      '<link rel="stylesheet" href="../../root.css">';
+    const reads = { before: [] as string[], after: [] as string[] };
+    const materialReader = (side: keyof typeof reads) =>
+      new ComponentMaterialReader({
+        read: async (route) => {
+          reads[side].push(route);
+          if (route === view.path) return Buffer.from(html);
+          if (route === "root.css") return Buffer.from('@import "leaf.css";');
+          assert.equal(route, "leaf.css");
+          return Buffer.from(
+            changed && side === "after"
+              ? ".none{color:blue}"
+              : ".none{color:red}",
+          );
+        },
       });
-      const comparisonContext = {
-        ...baseContext,
+    const beforeReader = materialReader("before");
+    const afterReader = materialReader("after");
+    const changedPaths = evidenceKind === "git" ? ["mockups/leaf.css"] : [];
+    const baseContext = pageContext({
+      ...fixture,
+      before: fixture.before.manifest,
+      after: fixture.after.manifest,
+      beforeFiles: compilationFiles(fixture.before),
+      afterFiles: compilationFiles(fixture.after),
+      config: fixture.config,
+      changedPaths,
+    });
+    const comparisonContext = {
+      ...baseContext,
+      beforeReader,
+      afterReader,
+      resources: new ResourceComparison(
         beforeReader,
         afterReader,
-        resources: new ResourceComparison(
-          beforeReader,
-          afterReader,
-          new Set(changedPaths),
-          "mockups",
-          undefined,
-          undefined,
-          true,
-        ),
-      };
-      const events: TimingEvent[] = [];
-      const result = await runWithTimings(
+        new Set(changedPaths),
+        "mockups",
+        undefined,
+        undefined,
         true,
-        "test",
-        () =>
-          runWithDocumentWork(() =>
-            compareComponentView(comparisonContext, view, view),
-          ),
-        { write: (event) => events.push(event) },
-      );
-      assert.equal(result.comparisonPath, changed ? "complete" : "fast");
-      assert.equal(
-        result.view.state,
-        "unchanged",
-        "unmatched CSS remains excluded",
-      );
-      const counts = events.find(
+      ),
+    };
+    const events: TimingEvent[] = [];
+    const result = await runWithTimings(
+      true,
+      "test",
+      () =>
+        runWithDocumentWork(() =>
+          compareComponentView(comparisonContext, view, view),
+        ),
+      { write: (event) => events.push(event) },
+    );
+    assert.equal(result.comparisonPath, changed ? "complete" : "fast");
+    assert.equal(
+      result.view.state,
+      evidenceKind === "bytes" ? "changed" : "unchanged",
+      "unmatched CSS needs Git evidence for rule attribution",
+    );
+    assert.deepEqual(
+      result.reasons,
+      evidenceKind === "bytes" ? [{ kind: "material" }] : [],
+    );
+    const counts = events.find(
+      ({ stage, event }) =>
+        stage === "review.document-work" && event === "counts",
+    )!.counts!;
+    assert.equal(counts["htmlParses.pageAnalysis"], changed ? 2 : 1);
+    assert.equal(
+      counts.htmlParses,
+      changed ? 20 : 1,
+      "only original analyses and counted link normalization parse",
+    );
+    assert.equal(counts["htmlParses.linkNormalization"] ?? 0, changed ? 18 : 0);
+    assert.deepEqual(
+      reads.after.sort(),
+      [view.path, "root.css", "leaf.css"].sort(),
+    );
+    assert.deepEqual(
+      reads.before.sort(),
+      [view.path, "root.css", "leaf.css"].sort(),
+    );
+    assert.equal(
+      events.filter(
         ({ stage, event }) =>
-          stage === "review.document-work" && event === "counts",
-      )!.counts!;
-      assert.equal(counts["htmlParses.pageAnalysis"], changed ? 2 : 1);
-      assert.equal(
-        counts.htmlParses,
-        changed ? 20 : 1,
-        "only original analyses and counted link normalization parse",
-      );
-      assert.equal(
-        counts["htmlParses.linkNormalization"] ?? 0,
-        changed ? 18 : 0,
-      );
-      assert.deepEqual(
-        reads.after.sort(),
-        [view.path, "root.css", "leaf.css"].sort(),
-      );
-      assert.deepEqual(
-        reads.before.sort(),
-        [view.path, "root.css", "leaf.css"].sort(),
-      );
-      assert.equal(
-        events.filter(
+          stage === "review.resource-graph" && event === "start",
+      ).length,
+      changed ? 4 : 2,
+    );
+    if (!changed) {
+      assert.ok(
+        !events.some(
           ({ stage, event }) =>
-            stage === "review.resource-graph" && event === "start",
-        ).length,
-        changed ? 4 : 2,
+            stage === "review.inline-style-analysis" && event === "start",
+        ),
       );
-      if (!changed) {
-        assert.ok(
-          !events.some(
-            ({ stage, event }) =>
-              stage === "review.inline-style-analysis" && event === "start",
-          ),
-        );
-      }
-    });
+    }
+  });
 
-test("derived quick check traverses differing memberships independently, without a Git hint", async (context) => {
+test("quick check traverses differing memberships independently with bytes evidence", async (context) => {
   const fixture = await componentReviewFixture(context, (source) => source);
   const view = generatedViews(
     fixture.after.manifest.entries.find(({ path: id }) => id === "home")!,

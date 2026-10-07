@@ -40,7 +40,6 @@ export function withHeadStyles(
   fixture: FastPathFixture,
   before: string,
   after: string,
-  _mode: "committed" | "derived",
 ): FastPathFixture {
   const insert = (files: FastPathFixture["beforeFiles"], markup: string) =>
     new Map(

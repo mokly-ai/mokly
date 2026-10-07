@@ -72,9 +72,11 @@ companion counts/membership and scenario restoration.
 
 Fingerprint/text differentials compare state, material flags, reasons, resource
 and ownership evidence, inline evidence, errors and validation; only fingerprint
-bytes may differ. Cover every inline/CSS/Changes catalogue and the small scale
-renderers with and without Git evidence for generated view paths. Check all four
-fast/style switches for guarded cases.
+bytes may differ. Cover every inline/CSS/Changes catalogue with and without Git
+evidence for generated view paths. Cover the small scale renderers once, with the
+renderer source as their only changed Git path: Changes removes generated roots
+from Git evidence under [per-side readers](./mokly-comparison-inventory.md#per-side-readers).
+Check all four fast/style switches for guarded cases.
 
 Require exact text material bytes for base-only, head-only and two-sided source
 or seam guards, authored lookalikes, movement, copied slots, inserted tokens and

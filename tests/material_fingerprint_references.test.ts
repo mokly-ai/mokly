@@ -12,7 +12,7 @@ for (const mode of ["committed", "derived"] as const)
     const base = await styleRouteFixture(context);
     const style =
       '<style>.entry{background:url("../../entry.svg")}.action{background:url("../../owned.svg")}.missing{background:url("../../unused.svg")}</style>';
-    const input = withHeadStyles(base, style, style, mode);
+    const input = withHeadStyles(base, style, style);
     const fixture = {
       ...input,
       beforeFiles: new Map([

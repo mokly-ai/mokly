@@ -16,52 +16,50 @@ test("ordinary RNW fixtures retain complete-path fingerprints and exact text-ora
   const coverage = [];
   for (const cumulative of [false, true]) {
     const fixture = await styleRouteLargeFixture(context, cumulative);
-    for (const mode of ["committed", "derived"] as const)
-      for (const scenario of ["no-changes", "component-style"]) {
-        const identical = scenario === "no-changes";
-        const classify = (useMaterialFingerprints: boolean) =>
-          classifyComponentsWithSources({
-            before: fixture.before,
-            after: identical ? fixture.before : fixture.after,
-            beforeReader: memoryReader(fixture.beforeFiles),
-            afterReader: memoryReader(
-              identical ? fixture.beforeFiles : fixture.afterFiles,
-            ),
-            config: fixture.config,
-            changedPaths: identical ? [] : fixture.changedPaths,
-            baseCommit: "a".repeat(40),
-            baseRef: "main",
-            useFastPath: false,
-            useStylePath: false,
-            useMaterialFingerprints,
-          });
-        const events: TimingEvent[] = [];
-        const actual = await runWithTimings(
-          true,
-          "test",
-          () => runWithComparisonWork(() => classify(true), true),
-          { write: (event) => events.push(event) },
-        );
-        assert.deepEqual(actual, await classify(false));
-        const counts = events.find(
-          ({ stage, event }) =>
-            stage === "review.material-work" && event === "counts",
-        )!.counts!;
-        const paths = events.find(
-          ({ stage, event }) =>
-            stage === "review.compare-screens" && event === "counts",
-        )!.counts!;
-        assert.equal(paths.views, 64);
-        assert.equal(paths.completePath, 64);
-        assert.equal(counts.fingerprintedViews, 64);
-        coverage.push({
-          cumulative,
-          mode,
-          scenario,
-          fingerprintedViews: counts.fingerprintedViews,
-          hashes: counts.inlineFingerprintHashes,
+    for (const scenario of ["no-changes", "component-style"]) {
+      const identical = scenario === "no-changes";
+      const classify = (useMaterialFingerprints: boolean) =>
+        classifyComponentsWithSources({
+          before: fixture.before,
+          after: identical ? fixture.before : fixture.after,
+          beforeReader: memoryReader(fixture.beforeFiles),
+          afterReader: memoryReader(
+            identical ? fixture.beforeFiles : fixture.afterFiles,
+          ),
+          config: fixture.config,
+          changedPaths: identical ? [] : fixture.changedPaths,
+          baseCommit: "a".repeat(40),
+          baseRef: "main",
+          useFastPath: false,
+          useStylePath: false,
+          useMaterialFingerprints,
         });
-      }
+      const events: TimingEvent[] = [];
+      const actual = await runWithTimings(
+        true,
+        "test",
+        () => runWithComparisonWork(() => classify(true), true),
+        { write: (event) => events.push(event) },
+      );
+      assert.deepEqual(actual, await classify(false));
+      const counts = events.find(
+        ({ stage, event }) =>
+          stage === "review.material-work" && event === "counts",
+      )!.counts!;
+      const paths = events.find(
+        ({ stage, event }) =>
+          stage === "review.compare-screens" && event === "counts",
+      )!.counts!;
+      assert.equal(paths.views, 64);
+      assert.equal(paths.completePath, 64);
+      assert.equal(counts.fingerprintedViews, 64);
+      coverage.push({
+        cumulative,
+        scenario,
+        fingerprintedViews: counts.fingerprintedViews,
+        hashes: counts.inlineFingerprintHashes,
+      });
+    }
   }
   context.diagnostic(JSON.stringify(coverage));
   if (process.env.MOKLY_FINGERPRINT_COVERAGE)
