@@ -23,7 +23,7 @@ export interface TestboxWorkflowJob {
 
 export interface TestboxWorkflow {
   on: {
-    push: { paths: readonly string[] };
+    push: { branches: readonly string[]; paths: readonly string[] };
     workflow_dispatch: {
       inputs: Readonly<
         Record<string, { required: boolean; default: string; type?: string }>

@@ -137,7 +137,7 @@ replace the per-route rule. Do not change tests in this milestone.
 
 - [x] Create `docs/protocol/ci-verification-hydration.md`, at most 250 lines,
       with the title `# Development Hydration Coverage`. Start its body with
-      "Continuation of [CI Verification](./ci-verification.md).", as the other
+      `Continuation of [CI Verification](./ci-verification.md).`, as the other
       continuation pages do. It must define:
   - [x] what development hydration checks, and why route data selects shell
         rendering paths;

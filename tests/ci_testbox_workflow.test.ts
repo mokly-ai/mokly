@@ -37,7 +37,10 @@ test("Testbox dispatch and push triggers select only the preparation workflow", 
     "push",
     "workflow_dispatch",
   ]);
-  assert.deepEqual(workflow.on.push, { paths: [workflowPath] });
+  assert.deepEqual(workflow.on.push, {
+    branches: ["**"],
+    paths: [workflowPath],
+  });
   const inputs = workflow.on.workflow_dispatch.inputs;
   assert.deepEqual(Object.keys(inputs), ["testbox_id"]);
   assert.equal(inputs.testbox_id?.required, false);
