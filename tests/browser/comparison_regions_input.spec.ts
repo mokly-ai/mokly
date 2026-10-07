@@ -12,6 +12,7 @@ import {
 } from "./comparison_alignment_helpers.js";
 import {
   expectRegionsAt,
+  expectRegionsAtRest,
   expectRegionsTogether,
   regionOffsets,
   scrollRegion,
@@ -39,8 +40,9 @@ function yRange(frame: Locator, selector: string): Promise<number> {
 }
 
 /**
- * Press a key, then wait until both versions of a region agree on the
- * expected offset, or on any new offset when none is given.
+ * Press a key from the offset at which a region rests, then wait until both
+ * versions of the region rest at the expected offset, or at any new offset
+ * when none is given.
  */
 async function pressTogether(
   page: Page,
@@ -49,18 +51,15 @@ async function pressTogether(
   selector: string,
   expected?: (from: number) => number,
 ): Promise<number> {
-  const from = (await regionOffsets(section, selector)).after.y;
+  const from = await expectRegionsAtRest(section, selector, () => true);
   await page.keyboard.press(key);
-  let reached = from;
-  await expect
-    .poll(async () => {
-      const offsets = await regionOffsets(section, selector);
-      reached = offsets.after.y;
-      if (offsets.before.y !== reached) return false;
-      return expected ? reached === expected(from) : reached !== from;
-    }, key)
-    .toBe(true);
-  return reached;
+  return expectRegionsAtRest(
+    section,
+    selector,
+    (offset) => (expected ? offset === expected(from) : offset !== from),
+    "y",
+    key,
+  );
 }
 
 test("scroll keys after a click inside a panel scroll that panel in every version", async ({

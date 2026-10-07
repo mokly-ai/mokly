@@ -40,10 +40,8 @@ and publish fail before writes or uploads. Serve refuses strict mode.
 
 ## Supported Formats
 
-| Catalogue                     | Generated manifest | Comparison result |
-| ----------------------------- | ------------------ | ----------------- |
-| Without registered components | 8                  | 5                 |
-| With registered components    | 8                  | 5                 |
+The [catalogue format table](./mokly-catalogue.md#supported-formats) lists the
+manifest and comparison versions for both catalogue kinds.
 
 Current output uses manifest v8, review result v5, and public read model v4,
 keyed by kind and path. The private catalogue-change snapshot is v2 and removed
@@ -70,6 +68,8 @@ Current and baseline manifest readers require canonical, valid v8 output. Lower 
 - [CI workflow graph](./ci-workflow.md)
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard
   balance, and acceptance measurement.
+- [CI test timing](./ci-test-timing.md) — deterministic assertions,
+  duration reporting, and lint guard.
 - [Repository verification ratchets](./verification-ratchets.md)
 - [Catalogue upload v1](./mokly-upload.md) — public CLI, repository identity,
   upload manifest, output entry point and composite action boundary.

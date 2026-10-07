@@ -127,7 +127,9 @@ check until it prunes empty generated directories. Build, Serve's background
 generation, export and any other process that writes the same repository
 therefore never interleave backups or installs, and the later writer leaves
 exactly its own complete compilation. Every spelling of the repository root
-resolves to the same lock.
+resolves to the same lock. Before it acquires the lock, a writer creates
+`.mokly-cache/` and its [ignore file](./mokly-baseline-storage.md#cache-layout)
+when they are missing.
 
 The lock file records the holder's process id and a random token. A waiter
 retries every 50 ms. It reclaims a lock only when the recorded process no

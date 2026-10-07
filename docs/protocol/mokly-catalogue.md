@@ -6,6 +6,13 @@ Optional per-view/page `resourceEvidence` and root usage ranges are implemented 
 Read model v4 changes in place. `ResourceEvidence` follows the
 [CSS evidence schema](./mokly-css-attribution-membership.md).
 
+## Supported Formats
+
+| Catalogue                     | Generated manifest | Comparison result |
+| ----------------------------- | ------------------ | ----------------- |
+| Without registered components | 8                  | 5                 |
+| With registered components    | 8                  | 5                 |
+
 ## Location And Types
 
 Export writes `__mokly/catalogue.json` at the artifact root. Serve exposes

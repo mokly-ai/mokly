@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { performance } from "node:perf_hooks";
 import test from "node:test";
 
 import { loadConfig } from "../dist/config/load.js";
@@ -24,6 +23,7 @@ import {
   createSourceWatcher,
 } from "../dist/server/watcher.js";
 
+import { reportDuration } from "./helpers/durations.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { version } from "./helpers/watched_catalogue.js";
 import { waitForBrowserReload } from "./helpers/watched_events.js";
@@ -52,36 +52,63 @@ test("Tailwind-shaped inventory uses one directory watch target and indexed requ
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const root = path.join(fixture.root, "sources");
-  const sources = Array.from(
-    { length: 3_000 },
-    (_, index) => `sources/source-${index}.tsx`,
-  );
-  const config = {
-    ...(await loadConfig(fixture.root)),
-    sourceFiles: sources,
-    postcssWatchDirectories: [{ directory: root, glob: "*.tsx" }],
-  };
-  const targets = watchTargets(config);
-  assert.ok(targets.includes(root));
-  assert.ok(targets.length < 20, `unexpected ${targets.length} watch roots`);
-  const started = performance.now();
-  for (const source of sources)
-    assert.equal(
-      isPackageOwnedIgnoredWatchPath(path.join(fixture.root, source), config),
-      false,
-    );
-  const elapsed = performance.now() - started;
-  assert.ok(
-    elapsed < 1_500,
-    `3,000 indexed lookups took ${elapsed.toFixed(1)} ms`,
-  );
-  assert.equal(
-    classifyWatchPath(
-      { path: path.join(root, "new.tsx"), kind: "add" },
-      config,
-    ),
-    "rebuild",
-  );
+  const loaded = await loadConfig(fixture.root);
+  for (const count of [750, 3_000]) {
+    await context.test(`${count} sources`, (sizeContext) => {
+      const sources = Array.from(
+        { length: count },
+        (_, index) => `sources/source-${index}.tsx`,
+      );
+      let elementReads = 0;
+      let counting = false;
+      const config = {
+        ...loaded,
+        sourceFiles: new Proxy(sources, {
+          get(target, property, receiver) {
+            if (
+              counting &&
+              typeof property === "string" &&
+              /^(?:0|[1-9]\d*)$/.test(property)
+            )
+              elementReads += 1;
+            return Reflect.get(target, property, receiver);
+          },
+        }),
+        postcssWatchDirectories: [{ directory: root, glob: "*.tsx" }],
+      };
+      const targets = watchTargets(config);
+      assert.ok(targets.includes(root));
+      assert.ok(
+        targets.length < 20,
+        `unexpected ${targets.length} watch roots`,
+      );
+      counting = true;
+      for (const source of sources)
+        assert.equal(
+          isPackageOwnedIgnoredWatchPath(
+            path.join(fixture.root, source),
+            config,
+          ),
+          false,
+        );
+      counting = false;
+      assert.equal(
+        classifyWatchPath(
+          { path: path.join(root, "new.tsx"), kind: "add" },
+          config,
+        ),
+        "rebuild",
+      );
+      sizeContext.diagnostic(
+        `${count} sources: ${elementReads} lookup element reads`,
+      );
+      assert.ok(elementReads > 0, "source element reads were not counted");
+      assert.ok(
+        elementReads <= count,
+        `${count} sources used ${elementReads} lookup element reads; limit ${count}`,
+      );
+    });
+  }
 });
 
 test(
@@ -123,18 +150,30 @@ test(
       )
         observe();
     });
+    const recordedTargets: string[][] = [];
+    const watcherFactory = new ChokidarWatcherFactory();
     const watcher = createSourceWatcher(
-      new ChokidarWatcherFactory(),
+      {
+        create(targets, ignore, options) {
+          recordedTargets.push([...targets]);
+          return watcherFactory.create(targets, ignore, options);
+        },
+      },
       config,
       gate,
     );
     context.after(() => watcher.close());
-    const started = performance.now();
-    await watcher.ready();
-    const readiness = performance.now() - started;
+    await reportDuration(
+      "watcher readiness",
+      (text) => context.diagnostic(text),
+      () => watcher.ready(),
+    );
+    assert.ok(recordedTargets.flat().includes(root));
     assert.ok(
-      readiness < 8_000,
-      `watcher readiness took ${readiness.toFixed(1)} ms`,
+      !recordedTargets
+        .flat()
+        .some((target) => target.startsWith(`${root}${path.sep}`)),
+      "covered source files must not be watched individually",
     );
     await fs.writeFile(path.join(root, "new.tsx"), "export default null");
     await within(observed, "watch event");
@@ -187,6 +226,7 @@ export default { plugins: [{ postcssPlugin: "shape", Once(_root, { result }) {
       completed = resolve;
     });
     let sourceWatcherCreates = 0;
+    const sourceWatcherTargets: string[][] = [];
     const watcherFactory = new ChokidarWatcherFactory();
     class CountingReporter extends PlainServeReporter {
       override watchFinished(report: WatchReport): void {
@@ -194,26 +234,35 @@ export default { plugins: [{ postcssPlugin: "shape", Once(_root, { result }) {
         if (report.action === "rebuild") completed();
       }
     }
-    const started = performance.now();
-    const running = await serve(
-      config,
-      { port: 0, watch: true },
-      {
-        reporter: new CountingReporter(() => {}),
-        watcherFactory: {
-          create(targets, ignore, options) {
-            if (targets.includes(directory)) sourceWatcherCreates += 1;
-            return watcherFactory.create(targets, ignore, options);
+    const running = await reportDuration(
+      "watched Serve readiness",
+      (text) => context.diagnostic(text),
+      () =>
+        serve(
+          config,
+          { port: 0, watch: true },
+          {
+            reporter: new CountingReporter(() => {}),
+            watcherFactory: {
+              create(targets, ignore, options) {
+                if (targets.includes(directory)) {
+                  sourceWatcherCreates += 1;
+                  sourceWatcherTargets.push([...targets]);
+                }
+                return watcherFactory.create(targets, ignore, options);
+              },
+            },
           },
-        },
-      },
+        ),
     );
     fixture.beforeRemove(() => running.close());
-    const readyMs = performance.now() - started;
     const initialWatcherCreates = sourceWatcherCreates;
+    assert.ok(sourceWatcherTargets.flat().includes(directory));
     assert.ok(
-      readyMs < 12_000,
-      `watched Serve readiness took ${readyMs.toFixed(1)} ms`,
+      !sourceWatcherTargets
+        .flat()
+        .some((target) => target.startsWith(`${directory}${path.sep}`)),
+      "covered source files must not be watched individually",
     );
     const before = version(
       await fetch(running.url).then((response) => response.text()),

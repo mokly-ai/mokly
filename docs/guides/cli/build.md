@@ -57,11 +57,16 @@ reserved directory after a successful transaction.
 With the default `generatedOutput: "derived"`, keep the generated routes, the
 manifest, `mokly-generated/` and `.mokly-cache/` out of Git; build still
 writes them locally in the same transaction. With `generatedOutput:
-"committed"`, commit what build writes. When the repository is a Git work-tree
-root, Build and Check reject generated files hidden by `.gitignore`; the error
-names the matching rule and a negation to add in that rule's `.gitignore` file.
-Do not ignore the mockups directory itself: remove that rule or choose derived
-output.
+"committed"`, commit what build writes to `mockupsDir`. When the repository is
+a Git work-tree root, Build and Check reject generated files hidden by
+`.gitignore`; the error names the matching rule and a negation to add in that
+rule's `.gitignore` file. Do not ignore the mockups directory itself: remove
+that rule or choose derived output.
+
+In both modes, Mokly keeps private state in `.mokly-cache/` at the repository
+root and writes a `.gitignore` file inside it, so Git never shows or adds that
+folder. Also list `.mokly-cache/` in your root `.gitignore` when other tools,
+such as formatters or linters, read only that file.
 
 Warnings name a generated page, an entry, a component, a folder or the
 configuration file. Strict mode counts all warnings, including ignored inputs.

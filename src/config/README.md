@@ -53,3 +53,7 @@ Historical resource reads retain their validated snapshot inventory.
 `postcss.ts` and `postcss_loader.ts` load the optional consumer PostCSS module;
 `reserved_paths.ts` keeps root directories, file-glob prefixes and authored styles
 outside `mokly-generated/`, including aliases. Broad roots skip that output tree.
+
+`cache_paths.ts` names the private `.mokly-cache/` directory and recognizes
+its paths and aliases. `cache_ignore.ts` publishes `.mokly-cache/.gitignore`,
+which matches every cache path, so Git ignores the cache in both output modes.

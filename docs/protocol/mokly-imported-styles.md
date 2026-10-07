@@ -72,8 +72,10 @@ use parser recovery, and never parse or inventory package CSS under
 `node_modules` solely for the transformer. Metafile input and output keys
 are relative to esbuild's real working directory even when the configured
 repository root is a symlink; map all keys back to the logical root before
-ordering roots or recording sources. When no renderer or entry reaches CSS, skip the
-stylesheet pass entirely. A module that exports only a folder record still has a CSS delivery root even
+ordering roots or recording sources. Resolve esbuild's working directory once
+per metafile. Read each metafile input at most once per root traversal. When
+no renderer or entry reaches CSS, skip the stylesheet pass entirely. A module
+that exports only a folder record still has a CSS delivery root even
 though it registers no view. Every entry module must export a definition. Two entries sharing CSS each emit it in their own bundle.
 After the JavaScript graph build and before CSS bundling or graph inventory,
 validate each delivery root's direct CSS imports against `repoRoot`. Read the

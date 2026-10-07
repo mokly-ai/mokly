@@ -68,7 +68,9 @@ Content invalidation cancels the classification wait without cancelling the
 commit's build. Ref changes reuse preparation when the merge base is unchanged;
 a changed commit or build settings and shutdown cancel and drain it.
 
-`cache_layout.ts` owns `.mokly-cache/baselines/<commit>`. The builder extracts
+`cache_layout.ts` owns `.mokly-cache/baselines/<commit>`. After it validates
+the cache ancestors, the builder publishes `.mokly-cache/.gitignore` through
+`config/cache_ignore.ts` when it is missing. The builder then extracts
 to `source`, runs commands, inspects manifest compatibility and validates the
 output tree,
 moves the generated directory to `output`, deletes the extraction, and writes

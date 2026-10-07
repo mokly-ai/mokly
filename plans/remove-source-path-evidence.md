@@ -1,8 +1,9 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestones 1 to 30A are implemented, verified and pushed;
-Milestone 30A integrated main through `6bf62517`. Milestone 30B integrates main
-`dc56e3d4` (#145, #151, #152 and #134) before Milestones 31 and 32.
+Status: Active. Milestones 1 to 30A are implemented, verified and pushed.
+Milestone 30B integrates main `dc56e3d4` (#145, #151, #152 and #134) and passes
+all required checks. Its merge stays local for the reviewer. Milestones 31 and
+32 remain pending.
 
 ## Status And Outcome
 
@@ -2353,16 +2354,27 @@ deterministic checks, and #134 makes a browser test wait for panel scrolls to
 rest. A trial merge gives two conflicts. Merge it before Milestone 31, so that
 the remaining work uses main's deterministic tests.
 
-- [ ] Audit main's additions from the source tip, merge `origin/main` with
+- [x] Audit main's additions from the source tip, merge `origin/main` with
       exactly two parents, resolve conflicts path by path and review every
       remerge-diff path.
-- [ ] Compare every line that main added since `6bf62517` with the merged tree.
+- [x] Compare every line that main added since `6bf62517` with the merged tree.
       Classify each absent line as an intended migration, a move or a loss,
       and restore every loss before the push.
-- [ ] Port this branch's tests that use wall-clock limits to #152's
+- [x] Port this branch's tests that use wall-clock limits to #152's
       deterministic checks where #152 replaced the same kind of limit.
-- [ ] Run `cargo xtask check` at 100%. Inspect the diff and the deletions
-      against `origin/main`, record the result, and push the branch.
+- [x] Keep the merged protocol index within 250 lines. Move its format table
+      to the catalogue contract and keep the same version assertions there.
+- [x] Run `cargo xtask check` at 100%. Inspect the diff and the deletions
+      against `origin/main` and record the result.
+- [ ] Push the branch after the reviewer checks the local merge. The user
+      requires local commits only for this task.
+
+The merge keeps the existing preview-test split and main's changes to those
+tests. The protocol index links to the unchanged format table in the catalogue
+contract. Other short waits remain unchanged for a separate user decision.
+The evidence file lists those waits and the recommended follow-up.
+
+Evidence: `.context/remove-source-path-evidence/milestone-30b.md`.
 
 ## Milestone 31: Keep the branch name in exported navigation
 

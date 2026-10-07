@@ -56,7 +56,7 @@ export async function openEvidence(page: Page): Promise<Locator> {
   const evidence = page.locator("[data-workspace-evidence]");
   await expect(async () => {
     if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
-    await expect(evidence).toBeVisible({ timeout: 1000 });
+    await expect(evidence).toBeVisible({ timeout: 15_000 });
   }).toPass({ timeout: 15_000 });
   await expect(evidence).toContainText("Comparison details");
   return evidence;
