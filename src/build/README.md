@@ -107,11 +107,13 @@ CSS Modules mutation checklist:
   HTML and temporary prop edits remain fresh. A new generation has new indexes.
   Build replaces the entire generated tree, including old CSS/assets. Tracked
   Check reports missing, stale and extra files; untracked Check validates the
-  compilation without disk inspection. Only Check reads the index. Build,
+  compilation without disk inspection. Check reads the index. CLI Publish reads
+  committed generated paths and compares their bytes with compilation. Build,
   build --watch and serve --build hold the repository writer lock through the
   whole-tree transaction. Plain Serve, export and publication read memory.
   Existing generated trees cannot contain symlinks or special files at a writer
-  or tracked-check boundary. No command checks Git-ignore committability.
+  or tracked-check boundary. CLI Publish requires ignored derived generated
+  output and a clean checkout under the upload contract.
   Imported CSS requires a portable module path even when an entry overrides
   its identity with `path`; the diagnostic names that module under the
   [imported-styles error contract](../../docs/protocol/mokly-imported-styles-errors.md).

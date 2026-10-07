@@ -16,7 +16,12 @@ begin.
 
 `run.ts` composes injected Git, export, HTTP and time boundaries. It pins the
 actual checkout HEAD, adds an owned manifest through the exporter, captures its
-finalized bytes before installation and rechecks HEAD. `snapshot.ts` validates
+finalized bytes before installation and rechecks HEAD. It checks whole-repository
+status before export and before Plan. Git-ignored files, the current output,
+and Mokly-owned cache and temporary paths do not count. Committed generated
+files always count. Publish compares compiled bytes with their Git blob identities before
+capture and reports `build-stale` without writing generated files. Derived
+output must be ignored by Git. `snapshot.ts` validates
 that finalized map and indexes its blobs; `exchange.ts` owns Plan → Blobs →
 Complete and the single re-plan. HTTP failure leaves the complete local export
 intact. Capture failure happens before installation and retains the previous
@@ -43,7 +48,11 @@ files and Blob attempts. `http.ts` shares bounded response reads, media-type
 handling, a 120-second timeout and redirect refusal; `errors.ts` owns every
 fixed publish error factory, including typed cancellation and transport-failure
 presentations with the shared `upload-failed` category. Git identity reads
-preserve cancellation rather than converting it to `git-failed`.
+preserve cancellation rather than converting it to `git-failed`. The committed
+generation comparison uses the same pre-installation cancellation boundary,
+preserving its original typed Git failure for diagnostic stacks.
+The comparison reads tree metadata and hashes the raw compiled blob envelope.
+It supports SHA-1 and SHA-256 repositories and adds no historical blob-size limit.
 Remote bodies and exceptions never become user diagnostics. `cli/secrets.ts`
 also redacts tokens from parser/config/build errors and diagnostic stacks.
 Shared CLI value parsing accepts `--name=value`, preserving leading dashes and
