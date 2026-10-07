@@ -20,6 +20,22 @@ pub(crate) enum DependencyAudit {
     Strict,
 }
 
+impl DependencyAudit {
+    /// Stable CLI name for the audit mode.
+    pub(crate) const fn as_str(self) -> &'static str {
+        match self {
+            Self::Baseline => "baseline",
+            Self::Strict => "strict",
+        }
+    }
+}
+
+impl fmt::Display for DependencyAudit {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(self.as_str())
+    }
+}
+
 /// Independently executable verification ownership areas.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ValueEnum)]
 pub(crate) enum VerificationSuite {
@@ -145,6 +161,11 @@ impl CheckRequest {
             shard,
             dependency_audit: dependency_audit.unwrap_or_default(),
         })
+    }
+
+    /// Resolved audit mode for local and remote repository verification.
+    pub(crate) const fn dependency_audit(&self) -> DependencyAudit {
+        self.dependency_audit
     }
 }
 

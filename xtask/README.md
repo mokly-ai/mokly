@@ -121,7 +121,8 @@ returns a typed error before subprocesses start. Ordinary pull requests and all
 pushes use baseline mode; same-repository dependency update and Release Please
 pull requests use strict mode. Release publishing uses strict mode for its
 direct audit and complete fallback. The scheduled `main` audit also
-uses strict mode under the linked update pull request contract.
+uses strict mode under the linked update pull request contract. A remote
+complete gate passes the same mode to the repository command on its Testbox.
 
 `--executor auto|local|remote` overrides `MOKLY_CHECK_EXECUTOR`.
 An absent flag and variable select `auto`. Explicit `local` skips remote checks.

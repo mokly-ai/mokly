@@ -38,8 +38,8 @@ fn fallback_requires_auto_and_an_unavailable_preparation() {
         ));
         let runner = Arc::new(Unimock::new(
             RemoteRunnerRunMock
-                .next_call(matching!())
-                .answers_arc(Arc::new(move |_| {
+                .next_call(matching!(_))
+                .answers_arc(Arc::new(move |_, _| {
                     Err(match scenario {
                         1 => Failure::Failed(Error::Command {
                             operation: Operation::Blacksmith,
@@ -134,8 +134,8 @@ fn fallback_releases_before_local_run_and_checks_the_flag_after_release() {
             )),
             remote_runner: Arc::new(Unimock::new(
                 RemoteRunnerRunMock
-                    .next_call(matching!())
-                    .answers(&|_| Err(Failure::Unavailable(Error::WarmupIds { count: 0 }))),
+                    .next_call(matching!(_))
+                    .answers(&|_, _| Err(Failure::Unavailable(Error::WarmupIds { count: 0 }))),
             )),
             check_runner: Arc::new(if interrupted_after_release {
                 Unimock::new(())

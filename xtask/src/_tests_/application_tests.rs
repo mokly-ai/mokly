@@ -6,7 +6,7 @@ use std::sync::Arc;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::application::{Application, Xtask};
-use crate::check::request::{CheckRequest, VerificationSuite};
+use crate::check::request::{CheckRequest, DependencyAudit, VerificationSuite};
 use crate::check::runner::CheckRunnerRunMock;
 use crate::cli::Command;
 use crate::error::Error;
@@ -39,8 +39,8 @@ fn application(
     let remote_runner = Arc::new(if remote {
         Unimock::new(
             RemoteRunnerRunMock
-                .next_call(matching!())
-                .answers(&|_| Ok(())),
+                .next_call(matching!(DependencyAudit::Baseline))
+                .answers(&|_, _| Ok(())),
         )
     } else {
         Unimock::new(())
@@ -213,4 +213,41 @@ fn default_auto_runs_remote_when_selection_is_available() {
             executor: None,
         })
         .unwrap();
+}
+
+#[test]
+fn strict_audit_mode_reaches_the_remote_runner() {
+    let app = Application {
+        selector: Arc::new(Unimock::new(
+            SelectorSelectMock
+                .next_call(matching!(Executor::Auto))
+                .answers(&|_, _| Ok(Decision::Remote)),
+        )),
+        check_runner: Arc::new(Unimock::new(())),
+        remote_runner: Arc::new(Unimock::new(
+            RemoteRunnerRunMock
+                .next_call(matching!(DependencyAudit::Strict))
+                .answers(&|_, _| Ok(())),
+        )),
+        rust_file_length_auditor: Arc::new(Unimock::new(())),
+        environment: Arc::new(Unimock::new(
+            EnvironmentGetMock
+                .next_call(matching!("MOKLY_CHECK_EXECUTOR"))
+                .returns(None),
+        )),
+        reporter: Arc::new(Unimock::new(
+            ReporterExecutorMock.next_call(matching!(_)).returns(()),
+        )),
+        interrupt: Arc::new(Unimock::new(
+            InterruptArmMock.next_call(matching!()).answers(&|_| Ok(())),
+        )),
+        workspace: PathBuf::from("/workspace"),
+    };
+    app.run(Command::Check {
+        suite: None,
+        shard: None,
+        dependency_audit: Some(DependencyAudit::Strict),
+        executor: None,
+    })
+    .unwrap();
 }

@@ -79,7 +79,7 @@ impl Xtask for Application {
                     Decision::Remote => {
                         remote(self.interrupt.arm())?;
                         self.reporter.executor(&Decision::Remote.to_string());
-                        match self.remote_runner.run() {
+                        match self.remote_runner.run(request.dependency_audit()) {
                             Ok(()) => Ok(()),
                             Err(Failure::Unavailable(source)) if mode == Executor::Auto => {
                                 self.interrupt.release();

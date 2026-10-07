@@ -191,6 +191,8 @@ repository and keep evidence under `.context/`.
 
 `cargo xtask check [--dependency-audit <baseline|strict>]` defaults to
 `baseline`. The flag is valid for the complete gate and `--suite repository`.
+A complete gate on Testboxes passes the same mode to its remote repository
+command under the [Testbox execution contract](./remote-verification-testbox.md#remote-commands).
 An explicit flag with another suite returns a typed error before any subprocess
 starts. The repository suite calls `npm run dependencies:check -- --baseline`
 or `npm run dependencies:check` for the selected mode.
