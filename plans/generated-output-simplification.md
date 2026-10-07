@@ -2045,19 +2045,34 @@ Remerge review: `.context/generated-output-simplification/m23-147-remerge-review
 
 Implements 40 B, 9 B, 41 B, 50 B, 18 A, 16 B and 51 A.
 
-- [ ] Merge the captured latest main (`dc56e3d4`) under the user's direct
+- [x] Merge the captured latest main (`dc56e3d4`) under the user's direct
       2026-10-07 instruction. Preserve #145's cache ignore publication, #151's
       npm pin, #152's deterministic timing rules and #134's scroll waits.
       Keep writer-only locking and the cold preview operation across the file
       split. Resolve each conflict, audit paths and titles, smoke the built
       CLI, run the full gate, commit with two parents, review every remerge
       path, and push. Tick this item after the push; start no other TODO here.
+- [ ] Merge the next captured main (`fcc50591`) as a separate two-parent
+      merge under the user's explicit 2026-10-07 approval for #160 and Blacksmith
+      Testboxes. Preserve all incoming code, tests and contracts; keep the
+      protocol index at 250 lines. Install the CLI under `.context/`, check the
+      executor, commit and push before the complete automatic remote gate.
+      Verify every command, nine reports, the aggregate and box cleanup. Use
+      local fallback only before remote suites start. Retry an infrastructure
+      failure at most once. After a passing gate, tick this item, validate the
+      plan, commit and push. Start no other TODO here.
 
 Merge evidence: `.context/generated-output-simplification/m24-main-preservation.md`.
 
 Merge justifications: `.context/generated-output-simplification/m24-main-justifications.md`.
 
 Validation: `.context/generated-output-simplification/m24-main-validation.md`.
+
+Second merge evidence: `.context/generated-output-simplification/m24-main-160-preservation.md`.
+
+Second merge justifications: `.context/generated-output-simplification/m24-main-160-justifications.md`.
+
+Second merge validation: `.context/generated-output-simplification/m24-main-160-validation.md`.
 
 - [ ] Write failing lifecycle tests first. Extract one watch-setup owner from
       `server/serve_watched.ts`, `watch_inventory.ts`, `watch_paths.ts`,

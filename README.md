@@ -361,6 +361,34 @@ Browser global setup prepares one real example baseline and cache. Ordinary
 export fixtures use isolated, validated copies; dedicated tests retain cold
 baseline and preview builds. See [fixture preparation](./docs/protocol/ci-fixture-preparation.md).
 
+The [remote verification contract](./docs/protocol/remote-verification.md)
+defines the Testbox gate. Push your branch before an explicit remote check:
+
+```bash
+cargo xtask check --executor remote
+```
+
+Warmup uses the Testbox workflow from `main`.
+Set `MOKLY_TESTBOX_REF=<pushed branch>` only to test a changed Testbox workflow
+before it merges. This variable does not change the source commit under test.
+
+Install `blacksmith`, `rsync` and `ssh`. Set `BLACKSMITH_ORG_TOKEN` for org-key
+login, or use the current CLI login. The remote gate runs 11 commands in parallel.
+Login saves the key in `~/.blacksmith/credentials`.
+It replaces any saved login for the same organization.
+Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
+Each ended command downloads its report and cleans up its box at once.
+The gate requires nine reports. It skips stop and cancellation for a status
+table row that proves the box is completed. Logs stay under `.context/`.
+`--executor local` skips remote checks. The default `auto` selects remote mode
+when an org key and all availability checks pass. It otherwise runs locally.
+Run `cargo xtask executor` to print `<executor>: <reason>` without warming boxes.
+Automatic fallback runs the full local gate only before a remote suite starts.
+An interrupt never starts local fallback.
+`MOKLY_CHECK_EXECUTOR` sets the default mode. The CLI flag overrides it.
+A selected `--suite` stays local.
+Explicit `remote` with `--suite` fails before work starts.
+
 Local test runs scale with the machine. Unit tests run half the available CPUs'
 worth of test files at once, never fewer than two, and the hydration suite uses
 half the CPUs as Playwright workers. Other browser runs use one worker. Set
@@ -432,6 +460,12 @@ review rules, and the temporary Braces exception.
 - [`scripts/preview/baseline.mjs`](./scripts/preview/baseline.mjs) and
   [`html_paths.mjs`](./scripts/preview/html_paths.mjs) — preview publication's
   baseline-availability and provider-path adapters.
+- [`scripts/verification/source-tree.mjs`](./scripts/verification/source-tree.mjs)
+  computes the source fingerprint, including uncommitted changes.
+- [`scripts/verification/testbox-suite.mjs`](./scripts/verification/testbox-suite.mjs)
+  checks that fingerprint and prepares one suite through injected commands.
+- [`xtask/src/remote`](./xtask/src/remote) runs the complete Testbox gate and
+  owns report downloads, logs and interrupt cleanup.
 - [`examples/basic`](./examples/basic/README.md) — reference consumer and design
   catalogue.
 
