@@ -219,7 +219,10 @@ test("cancelled selected tests report the count before the process exit", async 
   );
 });
 
-for (const [exitCode, signal, message] of [[17, null, "code 17"]] as const) {
+for (const [exitCode, signal, message] of [
+  [17, null, "code 17"],
+  [null, "SIGTERM", "signal SIGTERM"],
+] as const) {
   test("selected process failure names " + message, async (context) => {
     const harness = await createSelectedHarness(context);
     const processFile = path.join(
