@@ -1,9 +1,10 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { createPreviewComparisonFixture } from "../helpers/preview_comparison_fixture.js";
 
 import { expectPresentedPane, PANE_SOURCE } from "./comparison_actions.js";
 import { servePreviewFixture, type PreviewFixture } from "./preview_fixture.js";
+import { test } from "./preview_test.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
 
 let fixture: Awaited<ReturnType<typeof createPreviewComparisonFixture>>;

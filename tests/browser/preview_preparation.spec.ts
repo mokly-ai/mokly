@@ -2,13 +2,14 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { expect, test as base } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 import { FULL_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.js";
 
 import { startPreviewFixture } from "./preview_fixture.js";
 import type { OwnedPreviewFixture } from "./preview_fixture_owner.js";
+import { test as base } from "./preview_test.js";
 
 interface PreparedPreview {
   readonly before: string;

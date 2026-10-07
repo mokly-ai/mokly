@@ -1,8 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 import { createPreviewComparisonFixture } from "../helpers/preview_comparison_fixture.js";
 
 import { servePreviewFixture, type PreviewFixture } from "./preview_fixture.js";
+import { test } from "./preview_test.js";
 
 let fixture: Awaited<ReturnType<typeof createPreviewComparisonFixture>>;
 let preview: PreviewFixture;

@@ -17,6 +17,7 @@ import {
   startPreviewServerProcess,
   type PreviewServerProcess,
 } from "./preview_process.js";
+import { trackPreviewServer } from "./preview_server_logs.js";
 
 const STARTUP_ATTEMPTS = 150;
 const WRANGLER_EPHEMERAL_PORT = 0;
@@ -76,7 +77,14 @@ export async function servePreviewFixture(
   );
   try {
     const url = await waitUntilReady(child, options);
-    return { close: () => child.close(), url };
+    const untrack = trackPreviewServer(child, url);
+    return {
+      close: () => {
+        untrack();
+        return child.close();
+      },
+      url,
+    };
   } catch (error) {
     try {
       await child.close();

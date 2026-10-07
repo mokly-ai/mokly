@@ -62,6 +62,20 @@ consumer repository's publication fingerprint. Unit tests that fork compiled CLI
 entrypoints set an empty `execArgv`, preventing the parent test runner's loader
 and concurrency flags from changing child startup behavior.
 
+### Preview Server Logs
+
+Each Wrangler preview process keeps its last 64 KiB of output. Specs that
+serve a preview use `test` from `tests/browser/preview_test.ts`, directly or
+through `ordinary_preview_fixture.ts`. When such a test fails or times out,
+every preview server that ran during the test gets a `preview-server-<n>.log`
+file in the test output directory, beside the trace. The file names the
+server, its state (`running`, `exited` or `closed`) and the test. A
+`[mokly:preview-server-log]` block on standard error names each server, its
+state and its file. After a timeout, the block also prints the last 40 lines
+of each log, so the failure output shows whether the server answered. A
+server closed before the test started is not reported. A test that passes,
+skips, is interrupted or fails as expected writes and prints nothing.
+
 ## Test Concurrency
 
 [`scripts/verification/concurrency.mjs`](../../scripts/verification/concurrency.mjs)

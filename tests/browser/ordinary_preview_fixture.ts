@@ -1,7 +1,5 @@
 import path from "node:path";
 
-import { test as base } from "@playwright/test";
-
 import { buildPreview } from "../../scripts/preview/catalogue.mjs";
 import { createCommittedExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
@@ -16,6 +14,7 @@ import {
   startOwnedPreviewFixture,
   type OwnedPreviewFixture,
 } from "./preview_fixture_owner.js";
+import { test as base } from "./preview_test.js";
 
 interface OrdinaryPreviewWorkerFixtures {
   readonly ordinaryPreview: OwnedPreviewFixture;

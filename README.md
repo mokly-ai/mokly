@@ -357,6 +357,10 @@ build; run `npm run prepare:verification` after a `src/` change before using
 them. Browser tests reject `.only`; select by path and `-g`. These selected runs
 are partial verification. See [developer test commands](./docs/protocol/developer-test-commands.md)
 for the argument and report rules.
+When a browser test that serves a Wrangler preview fails, its `test-results/`
+directory keeps each preview server's recent log beside the trace. A timeout
+also prints the last 40 lines of each log; see
+[preview server logs](./docs/protocol/ci-suite-evidence.md#preview-server-logs).
 Selected unit runs print the number of tests that ran. They print a warning
 for each named file that reports zero tests; skipped and todo tests count
 as reported tests. A pattern-only run warns once if no file reports a test.
