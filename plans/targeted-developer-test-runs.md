@@ -381,7 +381,7 @@ the orchestrating agent.
 - [x] Run verification tests on Node 24 and Node 22.14, then the repository
       suite. Commit the merge and semantic follow-up and push for hosted CI.
 - [x] Define the selected-output contract before its implementation.
-- [ ] Fix finding 1: warn only for named files, or once for an empty pattern run.
+- [x] Fix finding 1: warn only for named files, or once for an empty pattern run.
 - [ ] Fix finding 4: recognize file-only passes for selected runs; keep strict
       summary-only file evidence.
 - [ ] Fix finding 2: classify reporter failures, omit wrappers, and print both

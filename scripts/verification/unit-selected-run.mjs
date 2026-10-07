@@ -31,7 +31,7 @@ export async function runSelectedUnitVerification(repositoryRoot, selection) {
     const observed = new Map(
       result.observedFiles.map(({ file, tests }) => [file, tests]),
     );
-    for (const file of files)
+    for (const { file } of selection.files)
       if (observed.get(file) === 0)
         console.log(
           "warning: no test ran in " +
@@ -40,6 +40,11 @@ export async function runSelectedUnitVerification(repositoryRoot, selection) {
               ? "; check --test-name-pattern"
               : ""),
         );
+    if (
+      selection.files.length === 0 &&
+      [...observed.values()].every((tests) => tests === 0)
+    )
+      console.log("warning: no test matched --test-name-pattern");
     console.log(
       "selected files: " +
         files.length +

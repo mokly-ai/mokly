@@ -358,8 +358,9 @@ them. Browser tests reject `.only`; select by path and `-g`. These selected runs
 are partial verification. See [developer test commands](./docs/protocol/developer-test-commands.md)
 for the argument and report rules.
 Selected unit runs print the number of tests that ran. They print a warning
-for each selected file that reports zero tests; skipped and todo tests count
-as reported tests. Argument errors and selected-run failures print a short
+for each named file that reports zero tests; skipped and todo tests count
+as reported tests. A pattern-only run warns once if no file reports a test.
+Argument errors and selected-run failures print a short
 report without a stack trace. Internal faults keep the full error report.
 
 Run the complete repository gate before submitting a change:

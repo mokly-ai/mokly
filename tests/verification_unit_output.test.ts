@@ -49,3 +49,21 @@ test("tests run sums per-file executed tests without skips or todos", async (con
   );
   assert.doesNotMatch(stdout, /warning: no test ran/u);
 });
+
+test("pattern-only runs warn once only when all files report zero tests", async (context) => {
+  const harness = await createSelectedHarness(context);
+  const matched = await runSelected(harness, [
+    "--test-name-pattern=selected passing",
+  ]);
+  assert.match(matched.stdout, /tests run: 1;/u);
+  assert.doesNotMatch(matched.stdout, /warning:/u);
+  const empty = await runSelected(harness, [
+    "--test-name-pattern=never matches",
+  ]);
+  assert.match(
+    empty.stdout,
+    /warning: no test matched --test-name-pattern\nselected files: 2; tests run: 0;/u,
+  );
+  assert.doesNotMatch(empty.stdout, /warning: no test ran in/u);
+  assert.equal(empty.stdout.match(/warning:/gu)?.length, 1);
+});
