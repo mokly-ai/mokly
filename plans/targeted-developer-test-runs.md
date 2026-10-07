@@ -365,8 +365,9 @@ failing tests after a gate failure.
 
 ## Milestone 5: Main Merge And Review 3 Fixes
 
-Integrate current main before fixing selected-run warnings, file evidence,
-failure groups, interruption reports, and literal pattern messages.
+This milestone integrates main and fixes selected-run warnings, file evidence,
+failure groups, interruption reports, and literal pattern messages. The
+implementation is ready for post-push review.
 Evidence: `.context/targeted-developer-test-runs/milestone-5.md`.
 Merge audit: `.context/targeted-developer-test-runs/merge-main.md`.
 
@@ -394,9 +395,9 @@ the orchestrating agent.
       and the repository suite. Push the tested code before the auto gate.
 - [x] Correct the signal fixture environment type found by the package gate,
       rerun the failed package suite, and push before the complete gate retry.
-- [ ] Run the complete auto gate once. Record executor and duration. Use the
+- [x] Run the complete auto gate once. Record executor and duration. Use the
       targeted failure rules and report repeated unrelated failures.
-- [ ] Tick completed tasks, commit, run deletion checks, and push the branch.
+- [x] Tick completed tasks, commit, run deletion checks, and push the branch.
 - [ ] After the push, review the complete diff against `origin/main` using
       `docs/implementation-review-prompt.md`, report findings, then apply the
       review-fix rule in `AGENTS.md`. The orchestrating agent runs this review.
