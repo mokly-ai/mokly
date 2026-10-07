@@ -111,7 +111,7 @@ the complete gate or repository suite. An explicit mode flag with another suite
 returns a typed error before subprocesses start. Ordinary pull requests and all
 pushes use baseline mode; same-repository dependency update and Release Please
 pull requests use strict mode. Release publishing uses strict mode for its
-direct audit and complete fallback. The approved scheduled `main` audit also
+direct audit and complete fallback. The scheduled `main` audit also
 uses strict mode under the linked update pull request contract.
 
 ## Development
@@ -143,6 +143,10 @@ cargo test --package xtask
   dispatches the repository ratchets, and
   [`../scripts/verification/ratchets/git.mjs`](../scripts/verification/ratchets/git.mjs)
   owns their merge-base workspace and reachable release-tag views.
+- [`../scripts/verification/dependency-audit.mjs`](../scripts/verification/dependency-audit.mjs)
+  runs strict and baseline audits. The scheduled workflow uses
+  [`dependency-audit-pr.mjs`](../scripts/verification/dependency-audit-pr.mjs)
+  to maintain the update pull request and preserve human commits.
 - [`../scripts/verification/ratchets/typescript-length.mjs`](../scripts/verification/ratchets/typescript-length.mjs),
   [`protocol-caps.mjs`](../scripts/verification/ratchets/protocol-caps.mjs),
   [`internal-exports.mjs`](../scripts/verification/ratchets/internal-exports.mjs),

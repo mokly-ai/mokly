@@ -177,7 +177,10 @@ These decisions are fixed for every milestone below.
     takes `--outcome success|failure`, `--log <file>`, and `--report <json>`,
     reads `GITHUB_TOKEN`, `GITHUB_REPOSITORY`, `GITHUB_SERVER_URL`, and
     `GITHUB_RUN_ID`, and uses an injected `fetch` and command runner. The
-    branch is `dependency-audit/main`; the label is `dependency-audit`,
+    optional `GITHUB_API_URL` defaults to `https://api.github.com` and selects
+    the REST server. Requests use Bearer authentication, the GitHub JSON
+    Accept header, API version `2022-11-28`, and a User-Agent.
+    The branch is `dependency-audit/main`; the label is `dependency-audit`,
     created when missing; the title is
     `fix(deps): resolve dependency audit findings`; commits use the
     `github-actions[bot]` identity. Create, refresh, and close identify open
@@ -191,14 +194,15 @@ These decisions are fixed for every milestone below.
     On failure with no open pull request, it creates the branch from `main`,
     runs `npm ci --ignore-scripts`, then runs
     `npm update <package> --ignore-scripts` for each distinct uncovered
-    package. All npm child environments omit `GITHUB_TOKEN`. It fails if any
+    package. All Git and npm child environments omit `GITHUB_TOKEN` and
+    `GH_TOKEN`. It fails if any
     `package.json` changed and commits a
     lockfile change as `fix(deps): update audited dependencies` or an empty
     commit `chore(deps): track dependency audit findings`, pushes, and opens
     the pull request. The body holds the UTC date, run URL, fenced log
     truncated by retaining its final part, a link to the protocol page, and
     the required actions. The complete body stays within GitHub's limit of
-    65,536 characters, including the date, links, fences, truncation notice,
+    65,536 UTF-16 code units, including the date, links, fences, truncation notice,
     and actions. The actions always include: "If CI did not start on this
     pull request, push a commit to the branch or close and reopen the pull
     request." On failure with an open pull request, it recreates the
@@ -384,15 +388,19 @@ Evidence: `.context/baseline-relative-dependency-audit/milestone-3-checks.md`.
 
 ## Milestone 4: Scheduled strict audit and update pull request
 
+Completed. The scheduled workflow, update script, focused checks, and local
+failure-to-success smoke test pass. The implementation loads without installed
+dependencies and preserves human branch commits.
+
 Implement decisions 10 through 12 so `main`'s advisories have one visible,
 fixable owner without blocking ordinary work.
 
-- [ ] Add `scripts/verification/dependency-audit-pr.mjs` and its declaration
+- [x] Add `scripts/verification/dependency-audit-pr.mjs` and its declaration
       file with an injected `fetch` and command runner: label and open pull
       request discovery, branch creation, compatible update, manifest-change
       guard, commit, push, force-push, body replacement, comment, close,
       branch deletion, and body truncation.
-- [ ] Add `tests/verification_dependency_audit_pr.test.ts`: first failure
+- [x] Add `tests/verification_dependency_audit_pr.test.ts`: first failure
       creates branch, lockfile commit, label, and pull request; no lockfile
       change makes an empty commit; a changed `package.json` fails; an open
       pull request with bot-only commits is recreated and force-pushed; one
@@ -408,21 +416,28 @@ fixable owner without blocking ordinary work.
       GitHub mutations. Both npm commands ignore scripts and omit the token.
       An existing branch without an open pull request is recreated only with
       bot-only commits, including none; human commits fail with an action.
-- [ ] Add `.github/workflows/dependency-audit.yml` per decisions 10 and 12
+- [x] Add `.github/workflows/dependency-audit.yml` per decisions 10 and 12
       with pinned action revisions, and `tests/dependency_audit_workflow.test.ts`
       asserting triggers, permissions, runner, timeout, concurrency, pinned
       actions, full-history checkout with the token expression, strict
       command and JSON report, `.context/` creation before `tee`, pipefail via
       `shell: bash` or `set -o pipefail`, `continue-on-error`, the script step
       with the same token expression, and no `npm ci` before the audit.
-- [ ] Run Actionlint on the new workflow and confirm
+- [x] Run Actionlint on the new workflow and confirm
       `tests/workflow_runner_sizes.test.ts` accepts it.
-- [ ] Rewrite transitional contract wording to describe implemented behavior
+- [x] Run the focused lint, formatting, declaration, source-length, workflow,
+      audit, npm-pin, and protocol checks. Run all workflows through pinned,
+      checksum-verified Actionlint. Smoke-test failure and later success with
+      a local GitHub API server and a temporary bare Git remote outside the
+      repository. Prove the script loads without installed dependencies.
+- [x] Rewrite transitional contract wording to describe implemented behavior
       in the root README, `xtask/README.md`, CI pages, dependency security,
       both new audit pages, the protocol index, and the ratchet cross-reference.
       Update each affected Delivery Status section. Remove "approved contract",
       "active implementation target", "pending implementation", and similar
       transition text after the implementations above pass their checks.
+
+Evidence: `.context/baseline-relative-dependency-audit/milestone-4-checks.md`.
 
 ## Milestone 5: Verify and deliver
 

@@ -1,5 +1,10 @@
 # Dependency Security
 
+## Delivery Status
+
+Implemented. Baseline and strict audits share the reviewed exception rules.
+The scheduled workflow maintains the dependency update pull request.
+
 ## Verification Boundary
 
 `npm run dependencies:check` audits the workspace lockfile against the
@@ -21,6 +26,9 @@ prerequisite. It prints inherited findings and exception issues as notices;
 new issues fail. Release Please and dependency update pull requests use strict
 mode. The daily scheduled workflow audits `main` strictly and creates or
 refreshes the [dependency update pull request](./dependency-audit-update-pr.md).
+It closes that pull request when the strict audit of `main` passes and preserves
+branches with human commits. Audit command, registry, report, and input failures
+do not change pull requests.
 Dependency fixes, pinned-parent overrides, and reviewed exceptions land there.
 
 The release workflow retains its strict live audit immediately after install,

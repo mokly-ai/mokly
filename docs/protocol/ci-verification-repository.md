@@ -1,6 +1,15 @@
 # Repository Gate And Length Audits
 
-Continuation of [CI Verification](./ci-verification.md). The repository suite
+Continuation of [CI Verification](./ci-verification.md).
+
+## Delivery Status
+
+Implemented. The repository suite selects baseline or strict mode.
+The separate scheduled workflow handles strict findings on `main`.
+
+## Repository Boundary
+
+The repository suite
 starts with the live lockfile-only workspace audit, then Prettier, ESLint,
 changed source/protocol file-length audit, Rust formatting, workspace Clippy
 with warnings denied, Rust tests and the Rust file-length audit. The

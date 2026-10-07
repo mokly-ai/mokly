@@ -4,8 +4,8 @@
 
 The strict and baseline scripts, structured issues, byte comparison, JSON
 reports, xtask defaults, and CI mode selection are implemented. The scheduled
-audit and update script remain in the active
-[audit plan](../../plans/baseline-relative-dependency-audit.md).
+strict audit and update script maintain the
+[dependency update pull request](./dependency-audit-update-pr.md).
 The [dependency security contract](./dependency-security.md) owns reviewed
 exceptions and dependency update policy.
 

@@ -5,8 +5,8 @@
 The suite CLI, evidence, workflow graph, fixture reuse, ratchets, argument
 forwarding, cancellation, and title validation are implemented.
 [Hosted measurements](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md)
-record timing and coverage. Dependency mode selection is implemented under the
-[baseline audit contract](./dependency-audit-baseline.md).
+record timing and coverage. Dependency modes and scheduled update pull requests
+are implemented under the [audit contracts](./dependency-audit-update-pr.md).
 
 ## Verification Boundary
 

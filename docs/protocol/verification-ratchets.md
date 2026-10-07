@@ -4,7 +4,8 @@
 
 The file-length, protocol-cap, unused-internal-export, and
 public-package-export ratchets are implemented. Every ratchet in this document
-runs in the repository suite and the complete gate.
+runs in the repository suite and the complete gate. The baseline dependency
+audit uses the same comparison-commit resolver.
 
 This contract owns the maintainability ratchets run by the repository suite of
 `cargo xtask check`. The file-length, protocol-cap, and unused-internal-export
@@ -21,7 +22,7 @@ While a merge is uncommitted, use `MERGE_HEAD` only if it equals `origin/main`.
 If it is an ancestor of `origin/main`, main moved during the merge and the
 gate fails until the merge is refreshed. For any other merge, including a
 local `main` ahead of `origin/main`, retain the normal merge-base rule. The
-source-file-length audit uses the same Git comparison boundary. The approved
+source-file-length audit uses the same Git comparison boundary. The
 [baseline dependency audit](./dependency-audit-baseline.md) also shares this
 comparison-commit rule through `GitWorkspace.requireBase()`.
 

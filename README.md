@@ -365,8 +365,11 @@ verification with `cargo xtask check --dependency-audit strict`.
 Either mode can write a JSON summary with `--report <file>`.
 
 Release Please and dependency update pull requests, release publishing, and
-the daily `main` audit stay strict. Scheduled failures belong to the
-[dependency update pull request](./docs/protocol/dependency-audit-update-pr.md).
+the daily `main` audit stay strict. The scheduled workflow creates or refreshes
+the [dependency update pull request](./docs/protocol/dependency-audit-update-pr.md)
+for findings and exception issues. It preserves human commits and closes the
+update pull request when `main` passes. It needs no installed dependencies for
+the audit or script load; only the failure path installs and updates packages.
 Reviewed exceptions keep their exact dev-only path, inclusive UTC end date,
 and maximum 31-day window. The packed ESM consumer's production audit stays
 strict with no exceptions. See [dependency security](./docs/protocol/dependency-security.md)

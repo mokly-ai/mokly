@@ -2,9 +2,9 @@
 
 ## Delivery Status
 
-This is the approved contract for the active
-[baseline-relative audit plan](../../plans/baseline-relative-dependency-audit.md).
-The scheduled workflow and update script are pending implementation.
+The scheduled strict workflow and update script are implemented. They create,
+refresh, and close update pull requests under this contract. Unit tests use
+injected boundaries. Local smoke tests use a temporary Git remote and API server.
 The `sharp` and `shell-quote` fixes already landed on `main` in
 [PR #146](https://github.com/mokly-ai/mokly/pull/146). The strict audit passes
 with the reviewed `braces` exception. This workflow owns future audit failures.
@@ -60,6 +60,17 @@ under the [baseline audit contract](./dependency-audit-baseline.md#output-and-js
 The four workflow environment variables above are required. Unit tests inject
 file reads, the clock, `fetch`, and the command runner. They never call the
 registry or GitHub.
+Require a non-empty token, an `owner/repository` name without `.` or `..`
+path segments, a numeric run ID, and an HTTP server URL without embedded
+credentials, a query, or a fragment. Reject unknown or repeated CLI options.
+
+`GITHUB_API_URL` is optional and defaults to `https://api.github.com`.
+Actions supplies it for its REST server, including GitHub Enterprise.
+REST calls send Bearer authentication, `Accept: application/vnd.github+json`,
+`X-GitHub-Api-Version: 2022-11-28`, and a User-Agent. Errors name the method,
+path, status, and GitHub message. Never print the token or request headers.
+Discover open requests with `GET /repos/{owner}/{repo}/pulls?state=open&head={owner}:dependency-audit/main`.
+Follow pagination and verify each request's repository and head.
 
 Before any Git or GitHub mutation, read and validate the summary and log.
 The summary must have `mode: strict`, boolean `ok`, and a structured `issues`
@@ -82,7 +93,8 @@ successful maintenance.
 ## Pull Request Identity And Body
 
 The branch is `dependency-audit/main`. The label is `dependency-audit`;
-create it when missing. The title is
+create it after a 404 lookup and accept a 422 "already exists" race.
+Add it through the issues labels endpoint. The title is
 `fix(deps): resolve dependency audit findings`. Create, refresh, and close
 select only open pull requests whose head is `dependency-audit/main` in this
 repository. The label is a marker and a strict-CI signal; it does not identify
@@ -102,10 +114,11 @@ Replace the pull request body with the latest audit evidence:
 - This required action in every body: "If CI did not start on this pull
   request, push a commit to the branch or close and reopen the pull request."
 
-GitHub's pull request body limit is 65,536 characters. The complete body must
+GitHub's pull request body limit is 65,536 UTF-16 code units. The complete body must
 stay within that limit, including the date, links, fences, truncation notice,
 and actions. Reserve room for those fields before selecting the log tail.
-Use a fence that keeps arbitrary log text inside the log block. Do not extend exception
+Do not split a surrogate pair when selecting the tail. Use a backtick fence
+longer than every backtick run in the retained log. Do not extend exception
 dates automatically. The update pull request stays on strict CI until the
 branch resolves every issue under the unchanged exception rules.
 
@@ -125,10 +138,13 @@ On a valid failing audit with no open update pull request:
    an empty commit as `chore(deps): track dependency audit findings`.
 8. Push and open the labelled pull request with its latest body.
 
+Read the remote tip with `git ls-remote`, fetch it, and inspect its
+`origin/main..<tip>` commits with `git rev-list` and `git log`.
 The bot-only test checks both author and committer against the exact name
 and email above. Read actual branch history; do not infer ownership from a
 branch name, label, or pull request author. When recreating an existing
-branch, force-push with a lease for the inspected remote tip. A concurrent
+branch, force-push with a lease for the inspected remote tip. For a new branch,
+use `--force-with-lease=refs/heads/dependency-audit/main:` to require absence. A concurrent
 change must fail the push instead of overwriting a human commit.
 
 If the branch exists without an open pull request and contains a non-bot
@@ -136,7 +152,7 @@ commit, fail before recreating it. Name `dependency-audit/main` and tell a
 maintainer to delete the branch or reopen its pull request. This includes a
 closed unmerged pull request and a merged pull request whose branch remains.
 
-Run all npm child processes without `GITHUB_TOKEN` in their environment.
+Run all Git and npm child processes without `GITHUB_TOKEN` or `GH_TOKEN`.
 Both install and update commands use `--ignore-scripts` because a lockfile
 update needs no dependency lifecycle code. The script retains the token for
 its GitHub API calls. Checkout supplies the same token for Git pushes.
@@ -162,7 +178,8 @@ clean run. Leave other pull requests open, including ones with the
 `dependency-audit` label. Delete
 `dependency-audit/main` only when every commit beyond current `main` passes
 the bot-only test, including when there are none. Preserve a branch with
-human commits. If no update pull request or branch exists, success creates
+human commits. Delete with a leased Git push for the inspected tip, never
+through the REST API. If no update pull request or branch exists, success creates
 nothing. Report or operational failures never close pull requests.
 
 ## Token Ownership And Rotation

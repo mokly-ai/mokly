@@ -1,5 +1,10 @@
 # CI Workflow Graph
 
+## Delivery Status
+
+Implemented. CI selects baseline or strict mode by event and pull request.
+The Dependency Audit workflow maintains strict findings on `main`.
+
 ## Workflow Boundary
 
 `.github/workflows/ci.yml` runs on pull requests and pushes to `main`. It has
@@ -11,7 +16,7 @@ It sets `strict` for same-repository dependency update and Release Please pull
 requests. The suite receives `--dependency-audit "$DEPENDENCY_AUDIT"`.
 Fork branch names and labels cannot select strict mode.
 
-The approved `.github/workflows/dependency-audit.yml` runs a daily off-hour
+`.github/workflows/dependency-audit.yml` runs a daily off-hour
 strict audit on `main` and supports manual dispatch. Its write permissions,
 JSON report, token, branch, and create, refresh, and close behavior follow the
 [dependency update pull request contract](./dependency-audit-update-pr.md).

@@ -2,6 +2,11 @@
 
 Continuation of [CI Verification](./ci-verification.md).
 
+## Delivery Status
+
+Implemented. Baseline and strict modes share the live lockfile audit.
+Scheduled strict failures use the dependency update pull request workflow.
+
 ## Dependency Cache And Security
 
 CI caches npm's download cache only. `actions/setup-node` keys it from the
@@ -20,8 +25,9 @@ The release complete fallback uses `cargo xtask check --dependency-audit strict`
 Only active reviewed workspace exceptions cover strict findings, under the
 unchanged exact-path, UTC expiry, and 31-day rules in
 [Dependency Security](./dependency-security.md#reviewed-workspace-exceptions).
-The [update pull request contract](./dependency-audit-update-pr.md) owns strict
-scheduled failures, token use, and update lifecycle isolation.
+The [update pull request workflow](./dependency-audit-update-pr.md) handles
+scheduled findings and exception issues. Operational failures still fail the
+run. Updates disable lifecycle scripts and omit API tokens from child processes.
 Every selected package-runtime job also preserves the
 separate production audit of the freshly resolved ESM consumer, which is outside
 the workspace lockfile, overrides, and audit exceptions; it stays strict.
