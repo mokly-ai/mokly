@@ -49,7 +49,7 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   - [Development hydration coverage](./ci-verification-hydration.md) — one
     route per entry shape and the generated resource audit.
 - [Remote verification](./remote-verification.md) — implemented explicit and automatic execution.
-  - [Testbox execution](./remote-verification-testbox.md) — workflow, commands, sync probe, suite wrapper and source-tree fingerprint.
+  - [Testbox execution](./remote-verification-testbox.md) — workflow, commands, sync probe, suite wrapper, source-tree fingerprint, report download and aggregation.
 - [CI workflow graph](./ci-workflow.md)
 - [CI task cache](./ci-remote-cache.md) — implemented local/remote task graph and restore rules; hosted checks and
   developer credential sharing remain open.

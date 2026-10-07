@@ -11,6 +11,7 @@ use crate::executor::{Decision, Executor, LocalReason, resolve_executor};
 use crate::remote::availability::Selector;
 use crate::remote::contracts::{Environment, Interrupt, Reporter};
 use crate::remote::error;
+use crate::remote::reporting::warning;
 use crate::remote::runner::{Failure, RemoteRunner};
 use crate::rust_file_length::RustFileLengthAuditor;
 
@@ -84,15 +85,14 @@ impl Xtask for Application {
                             Err(Failure::Unavailable(source)) if mode == Executor::Auto => {
                                 self.interrupt.release();
                                 if self.interrupt.requested()
-                                    || matches!(source, error::Error::Interrupted)
+                                    || matches!(source, error::Error::Interrupted { .. })
                                 {
                                     return Err(Error::Remote {
-                                        source: error::Error::Interrupted,
+                                        source: error::Error::Interrupted { cleanup: 0 },
                                     });
                                 }
-                                self.reporter.executor(&format!(
-                                    "warning: remote preparation unavailable: {source}"
-                                ));
+                                self.reporter
+                                    .executor(&warning("remote preparation unavailable", &source));
                                 self.local(request, LocalReason::Preparation)
                             }
                             Err(Failure::Unavailable(source) | Failure::Failed(source)) => {

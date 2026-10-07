@@ -9,8 +9,8 @@ pub(super) enum Check {
     GithubActions,
     /// Require an org key before any automatic program lookup.
     Key,
-    /// Find one executable without running it.
-    Program(&'static str),
+    /// Find all required executables without running them.
+    Programs,
     /// Print the CLI version after finding every required executable.
     Version,
     /// Log in only when an org key is supplied.
@@ -33,9 +33,7 @@ pub(super) fn ordered_checks(mode: Executor) -> Vec<Check> {
         checks.push(Check::Key);
     }
     checks.extend([
-        Check::Program("blacksmith"),
-        Check::Program("rsync"),
-        Check::Program("ssh"),
+        Check::Programs,
         Check::Version,
         Check::Login,
         Check::Access,
@@ -51,7 +49,7 @@ impl Check {
         match self {
             Self::GithubActions => LocalReason::GithubActions,
             Self::Key => LocalReason::NoKey,
-            Self::Program(_) => LocalReason::Program,
+            Self::Programs => LocalReason::Program,
             Self::Version => LocalReason::Version,
             Self::Login => LocalReason::Login,
             Self::Access => LocalReason::Access,

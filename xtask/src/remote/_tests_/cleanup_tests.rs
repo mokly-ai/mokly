@@ -77,7 +77,11 @@ fn cleanup_continues_after_status_stop_and_optional_github_failures() {
             dependencies: Dependencies {
                 environment: unused.clone(),
                 programs: shared.clone(),
-                clock: unused.clone(),
+                clock: Arc::new(if case == 3 {
+                    Unimock::new(ClockWaitMock.each_call(matching!(_)).returns(()))
+                } else {
+                    Unimock::new(())
+                }),
                 git: unused.clone(),
                 blacksmith: shared.clone(),
                 github,
@@ -90,6 +94,8 @@ fn cleanup_continues_after_status_stop_and_optional_github_failures() {
             },
         };
         let cleanup = CleanupGuard::new(&runner.dependencies);
+        cleanup.track("tbx_a");
+        cleanup.track("tbx_b");
         assert_eq!(
             cleanup.stop_boxes(&["tbx_b".into(), "tbx_a".into(), "tbx_b".into()]),
             usize::from(case == 3)
@@ -101,7 +107,11 @@ fn cleanup_continues_after_status_stop_and_optional_github_failures() {
                     .iter()
                     .filter(|event| **event == format!("stop:{id}"))
                     .count(),
-                usize::from(case != 4 || id != "tbx_a")
+                if case == 3 && id == "tbx_a" {
+                    3
+                } else {
+                    usize::from(case != 4 || id != "tbx_a")
+                }
             );
             if case == 4 && id == "tbx_a" {
                 continue;
