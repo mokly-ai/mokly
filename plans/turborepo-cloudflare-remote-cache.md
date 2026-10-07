@@ -738,6 +738,7 @@ Developer-test integration decisions: `.context/turborepo-cloudflare-remote-cach
 Review-guidance integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-agent-main-decisions.md`.
 Plan-history integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-history-main-decisions.md`.
 Remote-verification integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-remote-main-decisions.md`.
+Fixture-cleanup flake fix (Git 2.55 background maintenance) and gate runs: `.context/turborepo-cloudflare-remote-cache/m4-flake-turbo-inventory.md`.
 
 ## Post-merge follow-up (non-blocking)
 
