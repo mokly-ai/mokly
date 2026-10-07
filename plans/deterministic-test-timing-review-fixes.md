@@ -3,7 +3,9 @@
 Status: Active. No PR is open yet. On 2026-10-06 the user chose the
 recommended option for findings 1 to 5 of the
 [Deterministic Test Timing](./deterministic-test-timing.md) review. Finding 6
-needs no change: the squash title of PR #152 is within the limit.
+needs no change: the squash title of PR #152 is within the limit. All seven
+milestones are complete. Three review findings under Milestone 7 await the
+user's decision.
 
 Fix the five open findings from the PR #152 review. Keep browser retries
 working, give Playwright assertions the contract's 10-second minimum, replace
@@ -285,7 +287,7 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-6.md`.
       file, the protocol tests, `tests/markdown_links.test.ts`, `npm run lint`
       and `npm run typecheck`.
 
-## Milestone 7: Deliver and review
+## Milestone 7: Deliver and review — completed
 
 Integrate main, run the complete gate, and deliver the branch.
 
@@ -301,10 +303,16 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-7.md`.
       approved removal in the commit body.
 - [x] Run `git add -A`, commit the completed work using Conventional
       Commits, and push the branch.
-- [ ] After the push, use `docs/implementation-review-prompt.md` to review
+- [x] After the push, use `docs/implementation-review-prompt.md` to review
       the complete local diff against `origin/main` and report the findings.
       Then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+      The review at `9f101e1` found three findings. None is tagged
+      `Auto-fix: yes`, so no fix round ran. Report:
+      `.context/deterministic-test-timing-review-fixes/review-1.md`.
+  - 1 (Medium, docs or spec): PostCSS collection still projects each `config.roots[].dir` once per candidate under `mockupsDir`. Recommended: cache configured root projections per collection, and build the fixed-root test list from the config.
+  - 2 (Low, test): `tests/browser/same_origin_reconnect.spec.ts` polls page state with an in-page `setInterval` loop. Recommended: wait with `page.waitForFunction` and a 15 s allowance.
+  - 3 (Low, docs or spec): the lint guard misses `<object>.Date.now()` and `new <object>.Date().getTime()`. Recommended: extend the selectors, with rule tests.
 
 ## Post-merge follow-up (non-blocking)
 
