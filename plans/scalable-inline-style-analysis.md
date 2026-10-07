@@ -2023,11 +2023,16 @@ Evidence: `.context/scalable-inline-style-analysis/m12-merge/`.
       the string-only renderer's shared closure diagnostic. The proposed regex
       change is pending approval under the prior main-test expectation rule.
       User decision (2026-10-07): option A. Change only the expected text, and update the public-closure contract.
-- [ ] Discovered: two untouched `shared_example` cases fail on Node 24.21.0
+- [x] Discovered: two untouched `shared_example` cases fail on Node 24.21.0
       with `ERR_FS_CP_EEXIST` on both this branch and clean main in the same boot.
       Keep the tests unchanged; the complete gate remains blocked.
+      Resolved by main #167, merged in `7b9cecf0`.
+- [x] Discovered: merge main #165, #164 and #167 with two parents. Review the
+      remerge diff and preserve the two approved deletions.
+      Evidence: `.context/scalable-inline-style-analysis/m12-merge/fourth/`.
 - [ ] After checks pass, `git add -A`, commit with Conventional Commits and
       push the branch.
+      User instruction (2026-10-07): commit locally and stop for the supervisor's check before the push.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`. Keep the review read-only, then apply main's
