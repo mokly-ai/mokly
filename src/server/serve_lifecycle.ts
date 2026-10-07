@@ -1,21 +1,17 @@
 /** Shutdown and child-restart helpers for watched Serve orchestration. */
 import { fileURLToPath } from "node:url";
 
-import type { Compilation } from "../build/compile.js";
-import type { GeneratedOutputStore } from "../build/output_store.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timingArguments } from "../diagnostics/timings.js";
 
-import type {
-  PreparedResourceWatch,
-  ResourceWatcher,
-} from "./resource_watcher.js";
+import type { ResourceWatcher } from "./resource_watcher.js";
 import type { ServeOptions } from "./serve.js";
 import type {
   ProcessSupervisor,
   ProcessSupervisorFactory,
 } from "./supervisor.js";
 import type { WatchActionQueue } from "./watch_events.js";
+import type { WatchedBackground } from "./watched_background.js";
 import type { ConsumerWatcher } from "./watcher.js";
 
 /** Keep CLI child configuration, including diagnostic opt-in, stable across restarts. */
@@ -46,32 +42,6 @@ export async function watcherReadyBeforeShutdown(
     watcher.ready().then(() => true),
     shutdownStarted.then(() => false),
   ]);
-}
-
-/** Write candidate output only after its resource watches are ready. */
-export async function prepareWatchedOutput(
-  config: ResolvedConfig,
-  compilation: Compilation,
-  resources: ResourceWatcher,
-  outputStore: GeneratedOutputStore,
-  shutdownStarted: Promise<void>,
-  isClosed: () => boolean,
-): Promise<PreparedResourceWatch | undefined> {
-  const prepared = await resources.prepare(
-    config,
-    compilation,
-    shutdownStarted,
-  );
-  if (!prepared) return undefined;
-  try {
-    if (!isClosed()) await outputStore.write(compilation, config);
-    if (!isClosed()) return prepared;
-  } catch (error) {
-    await prepared.close();
-    throw error;
-  }
-  await prepared.close();
-  return undefined;
 }
 
 /** Close queued work, active watchers, and child while preserving first failure. */
@@ -110,5 +80,24 @@ export async function restartWithRecovery(
       throw restartError;
     }
     throw restartError;
+  }
+}
+
+/** Reattach current evidence and resume background work after child recovery. */
+export async function restartWatchedGeneration(
+  supervisor: ProcessSupervisor,
+  background: WatchedBackground,
+  closed: () => boolean,
+): Promise<void> {
+  try {
+    await restartWithRecovery(supervisor);
+    supervisor.notifyUpdate(
+      undefined,
+      undefined,
+      background.changesStatus,
+      "evidence",
+    );
+  } finally {
+    if (!closed()) background.schedule(background.compilation);
   }
 }

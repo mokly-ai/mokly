@@ -9,7 +9,6 @@ import type {
   GeneratedComponentView,
   ManifestEntry,
   HistoricalManifestEntry,
-  generatedViews,
 } from "@mokly/viewer/data";
 import { canonicalJson, isManifestComponentVariant } from "@mokly/viewer/data";
 
@@ -25,6 +24,7 @@ import type { ComponentVariantPair } from "./component_variant_pairs.js";
 import type { ComparedComponentView } from "./component_view.js";
 import { previousPathFields } from "./moves/types.js";
 import { aggregateState } from "./screen_views.js";
+import type { reviewViews } from "./views.js";
 
 type ComponentParent = ManifestComponent;
 type ReviewComponentVariant = ManifestComponentVariant;
@@ -52,7 +52,7 @@ interface VariantClassification {
   reviews: readonly ComponentVariantReview[];
 }
 
-/** Classify variant entries while retaining Review v5's grouped component result. */
+/** Classify variant entries while retaining Review v6's grouped component result. */
 export function classifyComponentVariants(
   input: VariantClassificationInput,
 ): VariantClassification {
@@ -149,7 +149,7 @@ export function classifyComponentVariants(
   return { parentReasons, reviews };
 }
 
-/** Index current or historical-v8 flattened variants by case-folded path. */
+/** Index current or historical-v9 flattened variants by case-folded path. */
 export function componentVariantEntries(
   entries: readonly (ManifestEntry | HistoricalManifestEntry)[],
 ): ReadonlyMap<string, ReviewComponentVariant> {
@@ -163,8 +163,8 @@ export function componentVariantEntries(
 }
 
 function slotScopedInputsChanged(
-  before: ReturnType<typeof generatedViews>[number] | undefined,
-  after: ReturnType<typeof generatedViews>[number] | undefined,
+  before: ReturnType<typeof reviewViews>[number] | undefined,
+  after: ReturnType<typeof reviewViews>[number] | undefined,
 ): boolean {
   const scoped = (view: typeof before) =>
     view?.usage?.instances

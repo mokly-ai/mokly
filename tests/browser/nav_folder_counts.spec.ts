@@ -25,7 +25,7 @@ function shopCatalogue() {
       "specs/shop/archive/_folder.json": '{"title":"Archive"}',
       "specs/shop/archive/orders.mockup.tsx": screen("Orders", "Orders"),
     },
-    '{mockupsDir:"mockups",roots:[{dir:"specs"}],generatedOutput:"committed",colorSchemes:["light"]}',
+    '{mockupsDir:"mockups",roots:[{dir:"specs"}],colorSchemes:["light"]}',
     async (fixture) => {
       await fixture.write(
         "specs/shop/cart.mockup.tsx",

@@ -6,6 +6,8 @@ import importPlugin from "eslint-plugin-import-x";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
+import noDirectoryLiterals from "./scripts/eslint/no-directory-literals.mjs";
+
 const gitignorePath = path.join(import.meta.dirname, ".gitignore");
 
 export default tseslint.config(
@@ -13,8 +15,9 @@ export default tseslint.config(
   {
     ignores: [
       "**/.context/**",
+      "**/.wrangler/**",
       "**/dist/**",
-      "examples/basic/generated/**",
+      "examples/basic/mokly-generated/**",
       "node_modules/**",
       "target/**",
     ],
@@ -26,12 +29,16 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    plugins: { import: importPlugin },
+    plugins: {
+      import: importPlugin,
+      mokly: { rules: { "no-directory-literals": noDirectoryLiterals } },
+    },
     settings: {
       "import-x/internal-regex": "^@mokly/(?:mokly|viewer)(?:/|$)",
     },
     rules: {
       "import/first": "error",
+      "import/no-duplicates": "error",
       "import/order": [
         "error",
         {
@@ -78,6 +85,17 @@ export default tseslint.config(
             "Use polling deadlines of at least 10,000 ms. See docs/protocol/ci-test-timing.md.",
         },
       ],
+    },
+  },
+  {
+    files: [
+      "src/**/*.{ts,tsx}",
+      "packages/viewer/src/**/*.{ts,tsx}",
+      "scripts/preview/**/*.mjs",
+    ],
+    ignores: ["packages/viewer/src/catalogue/delivery_paths.ts"],
+    rules: {
+      "mokly/no-directory-literals": "error",
     },
   },
   {

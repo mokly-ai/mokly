@@ -14,7 +14,7 @@ const screens = JSON.parse(
 ) as {
   path: string;
 }[];
-const generated = path.join(repositoryRoot, "examples/basic/generated");
+const generated = path.join(repositoryRoot, "examples/basic/mokly-generated");
 const fileUrl = (file: string) =>
   pathToFileURL(path.join(generated, file)).href;
 const withoutInspector = new Set([

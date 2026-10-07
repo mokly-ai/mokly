@@ -33,7 +33,7 @@ test("every served document loads the hydrated live host", async (context) => {
     const document = await (await fetch(`${server.url}${route}`)).text();
     assert.match(
       document,
-      /<script src="\/__mokly\/client\/react-host\.js" type="module"><\/script>/,
+      /<script src="\/mokly-viewer\/client\/react-host\.js" type="module"><\/script>/,
       route,
     );
   }
@@ -73,7 +73,7 @@ test("every served document loads the hydrated live host", async (context) => {
   assert.equal("renderCapability" in capability.workspace, false);
   assert.doesNotMatch(
     reactDocument,
-    /<script src="\/__mokly\/client\/(?:browse|browser)\.js"/,
+    /<script src="\/mokly-viewer\/client\/(?:browse|browser)\.js"/,
   );
   for (const retired of [
     "browse.js",
@@ -83,35 +83,35 @@ test("every served document loads the hydrated live host", async (context) => {
     "live_updates.js",
   ])
     assert.equal(
-      (await fetch(`${server.url}/__mokly/client/${retired}`)).status,
+      (await fetch(`${server.url}/mokly-viewer/client/${retired}`)).status,
       404,
       retired,
     );
   assert.equal(
-    (await fetch(`${server.url}/__mokly/client/react-shell.js`)).status,
+    (await fetch(`${server.url}/mokly-viewer/client/react-shell.js`)).status,
     200,
   );
   const appearance = await fetch(
-    `${server.url}/__mokly/client/appearance-startup.js`,
+    `${server.url}/mokly-viewer/client/appearance-startup.js`,
   );
   assert.equal(appearance.status, 200);
   assert.match(await appearance.text(), /mokly:theme/);
   assert.equal(
-    (await fetch(`${server.url}/__mokly/client/react-host.js`)).status,
+    (await fetch(`${server.url}/mokly-viewer/client/react-host.js`)).status,
     200,
   );
   const liveHost = await (
-    await fetch(`${server.url}/__mokly/client/react-host.js`)
+    await fetch(`${server.url}/mokly-viewer/client/react-host.js`)
   ).text();
   assert.match(liveHost, /\.\/react-shell\.js/);
   assert.doesNotMatch(liveHost, /hydrateRoot/);
   const publicCatalogue = await (
-    await fetch(`${server.url}/__mokly/catalogue.json`)
+    await fetch(`${server.url}/mokly-viewer/catalogue.json`)
   ).json();
   assert.doesNotThrow(() => readCatalogue(publicCatalogue));
   assert.doesNotMatch(JSON.stringify(publicCatalogue), /"status":"omitted"/);
   assert.equal(
-    (await fetch(`${server.url}/__mokly/client/unknown.js`)).status,
+    (await fetch(`${server.url}/mokly-viewer/client/unknown.js`)).status,
     404,
   );
 });

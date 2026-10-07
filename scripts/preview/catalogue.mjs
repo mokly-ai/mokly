@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { isDeepStrictEqual } from "node:util";
 
 import { viewHref } from "@mokly/viewer/data";
 
@@ -24,11 +23,13 @@ import { resolveExportOutput } from "../../dist/export/paths.js";
 import { ExportTransaction } from "../../dist/export/transaction.js";
 import { publicationOptions } from "../../dist/publication/options.js";
 import { copyPublicFiles } from "../../dist/publication/resources.js";
-import { prepareReviewRepository } from "../../dist/review/prepare.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 
 import { stagePreviewArtifact } from "./artifact.mjs";
-import { publicationSnapshot } from "./baseline.mjs";
+import {
+  publicationSnapshot,
+  preparePublicationBaseline,
+} from "./baseline.mjs";
 import { captureAssets, capturePage, writeText } from "./capture.mjs";
 import {
   captureComparison,
@@ -38,7 +39,7 @@ import {
 } from "./comparisons.mjs";
 import { capturePublicationInputs } from "./inputs.mjs";
 
-/** Capture already-built output; the supported npm command builds before this boundary. */
+/** Capture a validated in-memory compilation; the npm wrapper also prepares the example. */
 export async function buildPreview(config, output, options = {}) {
   const capability = publicationOptions(options);
   assertSafeOutput(output, config.repoRoot);
@@ -61,28 +62,32 @@ export async function buildPreview(config, output, options = {}) {
         const base = capability.includeChanges
           ? (capability.base ?? config.review.base)
           : "";
-        const prepared = capability.includeChanges
-          ? await prepareReviewRepository(config, base)
-          : undefined;
+        const preparation = await preparePublicationBaseline(
+          config,
+          base,
+          capability.includeChanges,
+        );
+        const prepared = preparation.prepared;
         const git = prepared;
-        const inputs = await capturePublicationInputs(config, excludedRoots);
-        const compiled =
-          config.generatedOutput === "derived"
-            ? await compileCatalogue(config)
-            : undefined;
-        if (compiled && !isDeepStrictEqual(compiled.manifest, inputs.manifest))
-          throw new Error(
-            "consumer inputs changed during publication; retry with stable inputs",
-          );
-        const { incompatible, snapshot, changeEvidence } =
-          await publicationSnapshot(
-            config,
-            git,
-            base,
-            compiled?.manifest ?? inputs.manifest,
-            compiled,
-            excludedRoots,
-          );
+        const compiled = await compileCatalogue(config);
+        const inputs = await capturePublicationInputs(
+          config,
+          excludedRoots,
+          compiled,
+        );
+        const {
+          incompatible: snapshotIncompatible,
+          snapshot,
+          changeEvidence,
+        } = await publicationSnapshot(
+          config,
+          git,
+          base,
+          compiled?.manifest ?? inputs.manifest,
+          compiled,
+          excludedRoots,
+        );
+        const incompatible = preparation.incompatible || snapshotIncompatible;
         const { catalogue, changes } = snapshot;
         const manifest = catalogue.manifest;
         const review =
@@ -100,6 +105,7 @@ export async function buildPreview(config, output, options = {}) {
           ...(incompatible ? { changesStatus: "unavailable" } : {}),
           liveChanges: false,
           snapshot,
+          generatedOutputs: compiled.outputs,
           port: 0,
           ...(compiled ? { componentRuntime: componentRuntime(compiled) } : {}),
           ...(review ? { review } : {}),
@@ -151,7 +157,7 @@ export async function buildPreview(config, output, options = {}) {
           catalogue,
           stage,
           excludedRoots,
-          compiled?.outputs,
+          compiled.outputs,
         );
         const readModel = projectCatalogue({
           configPath: path
@@ -195,7 +201,13 @@ export async function buildPreview(config, output, options = {}) {
         );
         if (
           inputs.fingerprint !==
-          (await capturePublicationInputs(config, excludedRoots)).fingerprint
+          (
+            await capturePublicationInputs(
+              config,
+              excludedRoots,
+              await compileCatalogue(config),
+            )
+          ).fingerprint
         )
           throw new Error(
             "consumer inputs changed during publication; retry with stable inputs",

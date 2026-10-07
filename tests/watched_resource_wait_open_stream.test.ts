@@ -33,7 +33,7 @@ test(
       input: RequestInfo | URL,
       init?: RequestInit,
     ): Promise<Response> => {
-      if (String(input).endsWith("/__mokly/events"))
+      if (String(input).endsWith("/mokly-viewer/events"))
         return openEvents(
           init,
           "event: ready\ndata: 1\n\nevent: update\ndata: 2\n\n",
@@ -71,7 +71,7 @@ test(
       input: RequestInfo | URL,
       init?: RequestInit,
     ): Promise<Response> => {
-      if (String(input).endsWith("/__mokly/events")) {
+      if (String(input).endsWith("/mokly-viewer/events")) {
         connections += 1;
         return openEvents(
           init,

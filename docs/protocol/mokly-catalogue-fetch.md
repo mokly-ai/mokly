@@ -4,7 +4,7 @@
 
 Implemented. This contract is split from the
 [public catalogue read model](./mokly-catalogue.md) and keeps the serving and
-fetch rules for `__mokly/catalogue.json` and the files it points at. The read
+fetch rules for `mokly-viewer/catalogue.json` and the files it points at. The read
 model's shape, projection, and versions stay in that contract.
 
 ## Serve And Fetch Rules
@@ -32,9 +32,9 @@ Alias bookkeeping never renews a generation's idle retention window; only an
 actual retained-generation read renews it. Unused generations expire even when
 complete captures continue.
 
-Public paths are `__mokly/catalogue.json`, `static/**`,
-`__mokly/client/**`, `__mokly/shell.css`, `__mokly/fonts/**`, and immutable
-comparison generations under `__mokly/diffs/__generations/**`. These retain
+Public paths are `mokly-viewer/catalogue.json`, `static/**`,
+`mokly-viewer/client/**`, `mokly-viewer/shell.css`, `mokly-viewer/fonts/**`, and immutable
+comparison generations under `mokly-viewer/diffs/generations/**`. These retain
 normal path confinement; this list grants no source, controls or watcher access.
 For removed entries and comparisons, the viewer fetches validated HTML beneath
 the advertised generation's permitted `snapshots/before/` and `after/` trees

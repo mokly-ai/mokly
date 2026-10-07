@@ -1,7 +1,9 @@
 /** Static-deployment continuity checks for read-model navigation. */
 
+import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
 import { readCatalogue } from "../catalogue/reader.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
+import { MoklyVersionError } from "../catalogue/version_error.js";
 import {
   parseStaticDelivery,
   type StaticDelivery,
@@ -18,8 +20,11 @@ export function readShellDelivery(doc: Document): StaticDelivery | undefined {
   if (mode === "" && raw !== null) {
     try {
       const value = parseStaticDelivery(JSON.parse(raw));
-      if (value) return value;
-    } catch {
+      if (value.kind === "valid") return value.value;
+      if (value.kind === "unsupported-version")
+        throw new MoklyVersionError("delivery", value.version, 4);
+    } catch (error) {
+      if (error instanceof MoklyVersionError) throw error;
       // The shared failure below keeps malformed and missing metadata alike.
     }
   }
@@ -36,7 +41,7 @@ export async function currentDeploymentMatches(
 ): Promise<boolean> {
   try {
     const response = await win.fetch(
-      new URL("/__mokly/catalogue.json", win.location.href),
+      new URL(`/${VIEWER_DIRECTORY}/catalogue.json`, win.location.href),
       {
         cache: "no-store",
         credentials: "omit",

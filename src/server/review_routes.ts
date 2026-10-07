@@ -1,4 +1,5 @@
 /** Lazy comparison snapshots used by the catalogue diff controls. */
+
 import type { ServerResponse } from "node:http";
 
 import type {
@@ -71,7 +72,7 @@ export class ReviewRoutes {
     return this.closePromise;
   }
 
-  /** Respond to one `/__mokly/diffs/` or `/__mokly/diffs/<path>` request. */
+  /** Respond to one `/mokly-viewer/diffs/` or `/mokly-viewer/diffs/<path>` request. */
   async handle(
     url: URL,
     response: ServerResponse,

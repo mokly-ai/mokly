@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ESLint } from "eslint";
+import { lintProbe, requireLintRule } from "./helpers/lint_config.js";
 
-const eslint = new ESLint();
 const extensions = ["js", "mjs", "cjs", "ts", "tsx", "mts", "cts"];
 const testPaths = extensions.flatMap((extension) => [
   `tests/example.test.${extension}`,
   `tests/browser/example.spec.${extension}`,
+  `tests/helpers/nested/example.${extension}`,
 ]);
 const elapsedExpressions = [
   "performance.now() - started",
@@ -30,6 +30,7 @@ const allowedExpressions = [
 
 for (const filePath of testPaths) {
   test(`timing lint rejects elapsed subtraction and short deadlines in ${filePath}`, async () => {
+    await requireLintRule(filePath, "no-restricted-syntax");
     for (const expression of rejectedExpressions) {
       for (const input of [expression, `page.evaluate(() => ${expression})`]) {
         const messages = await restrictedSyntaxMessages(input, filePath);
@@ -84,9 +85,7 @@ for (const filePath of [
 }
 
 async function restrictedSyntaxMessages(expression: string, filePath: string) {
-  const [result] = await eslint.lintText(`void (${expression});\n`, {
-    filePath,
-  });
+  const result = await lintProbe(`void (${expression});\n`, filePath);
   assert.ok(result, filePath);
   assert.equal(result.fatalErrorCount, 0, `${filePath}: ${expression}`);
   assert.equal(result.warningCount, 0, `${filePath}: ${expression}`);

@@ -1,6 +1,8 @@
 /** Generated views are rendered in memory; ordinary public files retain the static policy. */
+
 import type { ServerResponse } from "node:http";
 
+import { VIEWER_DIRECTORY, GENERATED_DIRECTORY } from "@mokly/viewer/data";
 import type { Catalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../../browse/document_adapter.js";
@@ -18,16 +20,21 @@ export async function handleDemandRequest(
   catalogue: Catalogue,
   documents: DocumentService,
 ): Promise<boolean> {
-  const metadata = url.pathname.startsWith("/__mokly/views/");
+  const metadata = url.pathname.startsWith(`/${VIEWER_DIRECTORY}/views/`);
   if (!metadata && !url.pathname.startsWith("/static/")) return false;
-  const route = safeDecodePath(
-    url.pathname.slice(metadata ? "/__mokly/views/".length : 8),
+  const raw = safeDecodePath(
+    url.pathname.slice(metadata ? `/${VIEWER_DIRECTORY}/views/`.length : 8),
   );
+  const route = metadata
+    ? raw
+    : raw?.startsWith(`${GENERATED_DIRECTORY}/`)
+      ? raw.slice(GENERATED_DIRECTORY.length + 1)
+      : undefined;
   if (
     !route ||
     (!documents.routes.has(route) && (metadata || !documents.styles.has(route)))
   )
-    if (!metadata && route && isGeneratedRoute(route)) {
+    if (!metadata && raw && isGeneratedRoute(raw)) {
       send(response, 404, "text/plain", "Not found", method);
       return true;
     } else return false;

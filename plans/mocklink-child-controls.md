@@ -212,7 +212,7 @@ original report.
 
 2. **Severity: Medium — compatibility transforms can invalidate adapted-control safety after validation.**
 
-   **Context:** child controls are validated before the compatibility transformer in [src/compatibility/transform.ts](../src/compatibility/transform.ts#L35), but after transform only metadata/logical records are checked at [src/compatibility/transform.ts](../src/compatibility/transform.ts#L83). Those checks do not reject new interactive ancestors, nested controls, or inline handlers on the adapted anchor. I verified with the built validators that wrapping the generated anchor in `<button>`, adding `onclick`, or inserting a nested `<button>` passes current metadata/logical validation.
+   **Context:** child controls are validated before the compatibility transformer in [src/compatibility/transform.ts](https://github.com/mokly-ai/mokly/blob/f11e516d144b4616986423ccf3e8ed86095eed21/src/compatibility/transform.ts#L35), but after transform only metadata/logical records are checked at [src/compatibility/transform.ts](https://github.com/mokly-ai/mokly/blob/f11e516d144b4616986423ccf3e8ed86095eed21/src/compatibility/transform.ts#L83). Those checks do not reject new interactive ancestors, nested controls, or inline handlers on the adapted anchor. I verified with the built validators that wrapping the generated anchor in `<button>`, adding `onclick`, or inserting a nested `<button>` passes current metadata/logical validation.
 
    **Impact of doing nothing:** a compatibility bridge can ship output that violates the documented “no inline handlers / no nested controls / no interactive ancestor” contract, especially in standalone files and Review snapshots.
 
@@ -222,7 +222,7 @@ original report.
 
 3. **Severity: Medium — control metadata ownership is not bound strongly enough.**
 
-   **Context:** [src/build/link_control_metadata.ts](../src/build/link_control_metadata.ts#L104) records only control metadata plus `id`, `href`, `data-nav-href`, and `data-mokabook-link`. It ignores preserved owner attributes such as `class`, `style`, labels, and DOM position. The existing test at [tests/compatibility_link_controls.test.ts](../tests/compatibility_link_controls.test.ts#L51) catches moving metadata only because the ordinary link has a distinguishing `id`; the same move to a no-id same-destination link passes.
+   **Context:** [src/build/link_control_metadata.ts](https://github.com/mokly-ai/mokly/blob/f11e516d144b4616986423ccf3e8ed86095eed21/src/build/link_control_metadata.ts#L104) records only control metadata plus `id`, `href`, `data-nav-href`, and `data-mokabook-link`. It ignores preserved owner attributes such as `class`, `style`, labels, and DOM position. The existing test at [tests/compatibility_link_controls.test.ts](https://github.com/mokly-ai/mokly/blob/f11e516d144b4616986423ccf3e8ed86095eed21/tests/compatibility_link_controls.test.ts#L51) catches moving metadata only because the ordinary link has a distinguishing `id`; the same move to a no-id same-destination link passes.
 
    **Impact of doing nothing:** compatibility transforms can move `data-mokabook-link-control` from the styled adapted control to a plain same-destination link without detection, breaking the documented “moving metadata to a different logical owner fails” guarantee.
 

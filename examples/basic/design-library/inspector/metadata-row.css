@@ -1,0 +1,22 @@
+/* Exclusive shared-component styles. Global and layout rules stay shared. */
+
+.mbk-meta-row {
+  align-items: baseline;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 82px 1fr;
+}
+
+.mbk-meta-k {
+  color: var(--chrome-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.mbk-meta-v {
+  color: var(--chrome-ink-2);
+  font-size: 12.5px;
+  min-width: 0;
+}

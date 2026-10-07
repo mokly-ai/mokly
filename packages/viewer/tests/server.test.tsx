@@ -1,23 +1,11 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import { test } from "node:test";
 
 import { catalogueComponentVariants } from "../src/catalogue/entry_selection.js";
-import { readCatalogue } from "../src/catalogue/reader.js";
 import { renderViewer } from "../src/viewer/server.js";
 import { catalogueUrl, readObjectSource } from "../src/viewer/source.js";
 
-const fixture = readCatalogue(
-  JSON.parse(
-    fs.readFileSync(
-      new URL(
-        "../../../docs/protocol/fixtures/catalogue-v4.json",
-        import.meta.url,
-      ),
-      "utf8",
-    ),
-  ),
-);
+import { fixture, htmlIds, htmlReferences } from "./server_fixture.js";
 
 test("SSR renders the public fixture, default state and every host slot", () => {
   const html = renderViewer({
@@ -198,17 +186,3 @@ test("server and React viewer IDs share one validation contract", async () => {
     renderViewer({ ...props, viewerId: "v".repeat(64) }),
   );
 });
-
-function htmlIds(html: string): Set<string> {
-  return new Set(
-    [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]!),
-  );
-}
-
-function htmlReferences(html: string): string[] {
-  return [
-    ...html.matchAll(
-      /\s(?:aria-controls|aria-describedby|aria-labelledby|for)="([^"]+)"|\shref="#([^"]+)"/g,
-    ),
-  ].flatMap((match) => (match[1] ?? match[2]!).split(" "));
-}

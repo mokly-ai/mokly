@@ -35,6 +35,7 @@ test(
     const running = await serve(fixture.config, {
       base: "main",
       port: 0,
+      build: true,
       watch: true,
     });
     try {

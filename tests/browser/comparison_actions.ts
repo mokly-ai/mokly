@@ -22,7 +22,7 @@ export async function loadComparison(
         candidate.method() === "GET" &&
         candidate.resourceType() === "fetch" &&
         url.origin === origin &&
-        url.pathname === "/__mokly/diffs/review.json" &&
+        url.pathname === "/mokly-viewer/diffs/review.json" &&
         (url.searchParams.get("refresh") === "1") === refresh;
       if (matches) initiatingRequest = candidate;
       return matches;
@@ -68,6 +68,6 @@ export async function expectPresentedPane(
   await expect(frame).toHaveAttribute(
     PANE_SOURCE,
     source ??
-      /\/__mokly\/diffs\/__generations\/[^/]+\/snapshots\/(?:before|after)\//,
+      /\/mokly-viewer\/diffs\/generations\/[^/]+\/snapshots\/(?:before|after)\//,
   );
 }

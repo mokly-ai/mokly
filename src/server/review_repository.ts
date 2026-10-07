@@ -1,9 +1,13 @@
 /** HTTP-owned reader state. Only the parent can prepare the supplied commit. */
+import {
+  parseBaselineCatalogue,
+  type BaselineCatalogue,
+} from "../baseline/catalogue.js";
 import type { ResolvedConfig } from "../config/types.js";
 import {
-  committedReviewRepository,
   comparisonNotPrepared,
   readOnlyRepositoryForCommit,
+  type BaselineSelection,
   type ReadOnlyReviewRepository,
 } from "../review/repository.js";
 
@@ -20,7 +24,6 @@ export class ServedReviewRepository implements ReviewRepositorySource {
     version = 0,
   ) {
     this.version = version;
-    this.repository = this.unprepared();
   }
 
   current(): ReadOnlyReviewRepository {
@@ -29,18 +32,28 @@ export class ServedReviewRepository implements ReviewRepositorySource {
   }
 
   /** Ignore superseded handoffs; null revokes a previously accepted reader. */
-  accept(commit: string | null | undefined, version = this.version + 1): void {
+  accept(
+    commit: string | null | undefined,
+    version = this.version + 1,
+    selection?: BaselineSelection,
+    descriptor?: BaselineCatalogue,
+  ): void {
     if (version <= this.version) return;
     this.version = version;
     if (commit === undefined) return;
-    this.repository = commit
-      ? readOnlyRepositoryForCommit(this.config, commit)
-      : this.unprepared();
-  }
-
-  private unprepared(): ReadOnlyReviewRepository | undefined {
-    return this.config.generatedOutput === "derived"
-      ? undefined
-      : committedReviewRepository(this.config);
+    if (commit && (!selection || !parseBaselineCatalogue(descriptor, commit)))
+      throw comparisonNotPrepared();
+    this.repository =
+      commit && selection
+        ? readOnlyRepositoryForCommit(
+            this.config,
+            commit,
+            selection,
+            undefined,
+            undefined,
+            undefined,
+            descriptor,
+          )
+        : undefined;
   }
 }

@@ -22,10 +22,7 @@ for (const edited of [false, true])
         "import {defineComponent} from '@mokly/mokly'; import {label} from './implementation.js'; export const action=defineComponent({title:'Action',description:'An action',dependencies:['specs/old/implementation.ts'],ownedDependencies:['specs/old/implementation.ts'],relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> <button>{label}</button>,variants:[{slug:'default',title:'Default',props:{}}]});",
       "specs/old/implementation.ts": "export const label='Continue';\n",
     };
-    const fixture = await pathFixture(
-      sources,
-      '{mockupsDir:"mockups",generatedOutput:"committed"}',
-    );
+    const fixture = await pathFixture(sources, '{mockupsDir:"mockups",}');
     t.after(() => fixture.remove());
     await fs.mkdir(path.join(fixture.root, "mockups"));
     const before = await fixture.compile();

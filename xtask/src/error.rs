@@ -5,6 +5,7 @@ use std::io;
 use thiserror::Error;
 
 use crate::check::request::VerificationSuite;
+use crate::remote::error;
 
 /// Result returned by xtask operations.
 pub(crate) type Result<T> = std::result::Result<T, Error>;
@@ -19,6 +20,12 @@ pub(crate) enum Error {
     UnsupportedDependencyAudit {
         /// Selected unsupported suite.
         suite: VerificationSuite,
+    },
+    /// Remote verification failed at a typed runtime boundary.
+    #[error("[xtask/check] {source}")]
+    Remote {
+        /// Original remote verification error.
+        source: error::Error,
     },
     /// A shard did not use the required one-based `INDEX/TOTAL` form.
     #[error(

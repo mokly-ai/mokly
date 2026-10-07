@@ -11,14 +11,13 @@ appearance before the first paint, and the documented precedence over the
 `scheme` pin, the stored override and the server-supplied initial theme. The
 standalone scheme switches and the workspace Dark preview button are gone from
 standalone documents; an embedded root keeps its own preview control. Markdown
-documents follow the approved [document contract](./mokly-documents.md) below
-and arrive with the [path identity plan](../../plans/path-identity.md).
+documents follow the implemented [document contract](./mokly-documents.md).
 
 One package-owned semantic palette carries the recorded swatches and their
 three Light corrections, in [mokly-viewer-palette.md](./mokly-viewer-palette.md).
 The appearance mockups are delivered: every appearance entry renders in both
 schemes, the depicted top bar component owns the one Appearance control, and
-the legacy head-band scheme depictions are gone.
+separate head-band scheme depictions are gone.
 
 The [dark-mode plan](../../plans/viewer-dark-mode.md) tracks the work.
 
@@ -180,7 +179,7 @@ the current effective appearance forward rather than a separate preview state.
 The asset is listed by the generated browser-output manifest, validated with
 the complete build directory, and copied into export inventories. Exported
 shell documents use the root-absolute URL
-`/__mokly/client/appearance-startup.js`: a root deployment works directly, while
+`/mokly-viewer/client/appearance-startup.js`: a root deployment works directly, while
 a deployment beneath a URL prefix needs a prefix-stripping hosting mount that
 also resolves the export's root-absolute asset routes. Export does not rewrite a
 deployment prefix; a `--base-path` option is separate work. The classic asset
@@ -288,7 +287,7 @@ difference result.
 ## Mockup Contract
 
 The owning catalogue is `examples/basic/specs/design`, generated under
-`examples/basic/generated/design`; use its registered shared components and
+`examples/basic/mokly-generated/design`; use its registered shared components and
 existing screen compositions. Appearance screens and their affected shared
 component samples publish Light and Dark fragments for both viewports through
 Mokly's existing authoring: the entries inherit the configured `colorSchemes`,

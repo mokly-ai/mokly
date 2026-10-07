@@ -211,3 +211,7 @@ newly unused symbols, CommonJS use, attempted baseline growth, stale baseline
 removal, release-tag selection, public name and subpath removals, explicit
 exports, recursive star re-exports, unresolved star targets, release-note
 retention, and a moving `origin/main` whose merge base stays fixed.
+
+The approved [API and member checks](./verification-api-members.md) add public
+signature reports with a release-note gate, an unused-member ratchet and a test
+for literal ESLint paths. Existing export-name and size checks remain independent.

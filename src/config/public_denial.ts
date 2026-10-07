@@ -1,0 +1,107 @@
+import path from "node:path";
+
+import {
+  generatedResourceRoute,
+  isSafeRepositoryPath,
+} from "@mokly/viewer/data";
+
+import { sourceDenialMessage } from "../build/source_denial.js";
+import { MANIFEST_NAME } from "../registry/manifest.js";
+
+import { entryModuleRoots } from "./entry_membership.js";
+import { isInside, projectRealPath } from "./paths.js";
+import {
+  privateStaticPathReason,
+  publicFileFailureReason,
+} from "./public_files.js";
+import type { ResolvedConfig } from "./types.js";
+
+const PRIVATE_DIRECTORIES = new Set(["node_modules"]);
+
+function exportPublicNameDenial(
+  name: string,
+  config: ResolvedConfig,
+  resolveAliases: boolean,
+): string | undefined {
+  if (!isSafeRepositoryPath(name))
+    return "is not a safe repository-relative path";
+  const candidate = path.resolve(config.mockupsDir, name);
+  const denial = resolveAliases
+    ? publicFileFailureReason(candidate, config)
+    : privateStaticPathReason(candidate, config, false);
+  if (denial) return denial;
+  if (name === MANIFEST_NAME) return "targets internal catalogue metadata";
+  for (const part of name.split("/")) {
+    if (part.startsWith(".")) return "contains a hidden path segment";
+    if (PRIVATE_DIRECTORIES.has(part))
+      return `is inside a private build or dependency directory (${part})`;
+  }
+}
+
+/** Retain the public-policy cause when a required snapshot resource is rejected. */
+export function publicResourceDenial(
+  config: ResolvedConfig,
+  resolveAliases = true,
+  generatedRoutes: ReadonlySet<string> = new Set(),
+): (name: string) => string | undefined {
+  const mockups = projectRealPath(config.mockupsDir);
+  const packages = config.moduleResolution.packageRoots.map(projectRealPath);
+  const roots = [
+    ...entryModuleRoots(config).map((root) => ({
+      path: root,
+      reason: sourceDenialMessage({ kind: "entries" }),
+    })),
+    {
+      path: config.review.outDir,
+      reason: "is inside the Review output directory",
+    },
+    ...packages
+      .filter((root) => root !== mockups && isInside(mockups, root))
+      .map((root) => ({
+        path: root,
+        reason: "is inside a consumer package root",
+      })),
+  ].flatMap((root) => [root, { ...root, path: projectRealPath(root.path) }]);
+  const files = [
+    ...packages.map((root) => ({
+      path: path.join(root, "package.json"),
+      reason: "is consumer package metadata",
+    })),
+    {
+      path: config.configPath,
+      reason: "is the catalogue configuration module",
+    },
+    { path: config.renderer, reason: "is the configured renderer module" },
+
+    ...(config.sourceFiles ?? []).map((name) => ({
+      path: path.resolve(config.repoRoot, name),
+      reason: sourceDenialMessage({ kind: "listed" }),
+    })),
+  ].flatMap(({ path: file, reason }) =>
+    file
+      ? [
+          { path: file, reason },
+          { path: projectRealPath(file), reason },
+        ]
+      : [],
+  );
+  return (name) => {
+    const generated = generatedResourceRoute(name);
+    if (generated !== undefined)
+      return generatedRoutes.has(generated) && generated !== MANIFEST_NAME
+        ? undefined
+        : "is not an accepted generated resource";
+    const denial = exportPublicNameDenial(name, config, resolveAliases);
+    if (denial) return denial;
+    const candidates = [
+      path.resolve(config.mockupsDir, name),
+      path.resolve(mockups, name),
+    ];
+    for (const candidate of candidates) {
+      const protectedPath =
+        files.find((file) => file.path === candidate) ??
+        roots.find((root) => isInside(root.path, candidate));
+      if (protectedPath) return protectedPath.reason;
+    }
+  };
+}

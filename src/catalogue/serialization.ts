@@ -1,9 +1,13 @@
 import { createHash } from "node:crypto";
 
 import type { CatalogueReadModel } from "@mokly/viewer";
-import { canonicalJson, repositoryPath } from "@mokly/viewer/data";
+import {
+  VIEWER_DIRECTORY,
+  canonicalJson,
+  repositoryPath,
+} from "@mokly/viewer/data";
 
-export const CATALOGUE_PATH = "__mokly/catalogue.json";
+export const CATALOGUE_PATH = `${VIEWER_DIRECTORY}/catalogue.json`;
 export const ZERO_DEPLOYMENT_ID = "0".repeat(64);
 
 /** Stable catalogue identity does not depend on checkout or output location. */

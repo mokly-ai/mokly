@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import { GENERATED_DIRECTORY, isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { publicFileNameDenial } from "../config/public_names.js";
 
@@ -39,7 +39,7 @@ export function documentResourceOutput(
   const route = path.posix.normalize(path.posix.join(folder, relative));
   if (
     !isSafeRepositoryPath(route) ||
-    route.split("/")[0]!.toLowerCase() === "mokly-generated"
+    route.split("/")[0]!.toLowerCase() === GENERATED_DIRECTORY
   )
     return;
   const denial = publicFileNameDenial(route);

@@ -80,7 +80,7 @@ export async function startDocumentChangesFixture(): Promise<DocumentChangesFixt
       base: "origin/main",
       snapshot: await loadCatalogueSnapshot(config, async () => ({
         movedEntries: [],
-        schemaVersion: 2,
+        schemaVersion: 3,
         baseRef: "origin/main",
         baseCommit: "a".repeat(40),
         changedEntries: ["account/profile/security", "guide/old-terms"],

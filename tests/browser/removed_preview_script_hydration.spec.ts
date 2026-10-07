@@ -16,7 +16,7 @@ import {
 } from "./react_shell_hydration_helpers.js";
 
 const CONFIG =
-  '{mockupsDir:"mockups",roots:[{dir:"specs"}],generatedOutput:"committed",colorSchemes:["light"]}';
+  '{mockupsDir:"mockups",roots:[{dir:"specs"}],colorSchemes:["light"]}';
 const HOME = `import {defineScreen} from '@mokly/mokly';
 export default defineScreen({title:'Home',description:'Home',dependencies:[],relatedDocs:[],mobile:<main><h1>Home</h1></main>,desktop:<main><h1>Home</h1></main>});`;
 

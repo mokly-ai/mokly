@@ -1,3 +1,4 @@
+import { generatedResourcePath } from "../catalogue/delivery_paths.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
 
 import { isEntryPath, isSafeRepositoryPath } from "./logical.js";
@@ -52,7 +53,10 @@ export function snapshotViewPath(
   viewport: Viewport,
   colorScheme: ColorScheme,
 ): string {
-  return snapshotResourcePath(side, viewRoute(path, viewport, colorScheme));
+  return snapshotResourcePath(
+    side,
+    generatedResourcePath(viewRoute(path, viewport, colorScheme)),
+  );
 }
 
 /** Derive one retained complete document beneath its comparison side. */
@@ -61,7 +65,10 @@ export function snapshotDocumentPath(
   path: string,
   colorScheme: ColorScheme,
 ): string {
-  return snapshotResourcePath(side, documentRoute(path, colorScheme));
+  return snapshotResourcePath(
+    side,
+    generatedResourcePath(documentRoute(path, colorScheme)),
+  );
 }
 
 /** Derive a comparison side's directory prefix. */

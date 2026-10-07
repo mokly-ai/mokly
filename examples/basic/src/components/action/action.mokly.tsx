@@ -2,7 +2,7 @@ import { defineComponent, MockLink } from "@mokly/mokly";
 
 import { Action } from "./action.js";
 
-const dependency = "examples/basic/generated/example-components.css";
+const dependency = "examples/basic/example-components.css";
 const implementation = "examples/basic/src/components/action/action.tsx";
 
 export const action = defineComponent({

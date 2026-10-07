@@ -25,7 +25,7 @@ export function libraryMetadata(
     `${directory}/${style}.view.tsx`,
     ...views.map((view) => `${directory}/${view}`),
   ];
-  const stylesheet = `examples/basic/generated/${libraryStyleFiles[style]}`;
+  const stylesheet = `examples/basic/${libraryStyleFiles[style]}`;
   return {
     slug: style,
 

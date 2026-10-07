@@ -18,11 +18,11 @@ for (const refresh of [false, true]) {
     page,
   }) => {
     const action = refresh ? "Refresh comparison" : "Overlay";
-    const root = "/__mokly/diffs/review.json";
+    const root = "/mokly-viewer/diffs/review.json";
     const intended = `${root}${refresh ? "?refresh=1" : ""}`;
     const stale = refresh
       ? root
-      : "/__mokly/diffs/__generations/stale/review.json";
+      : "/mokly-viewer/diffs/generations/stale/review.json";
     const arrivedStale = gate();
     const arrivedIntended = gate();
     const releaseStale = gate();
@@ -39,11 +39,11 @@ for (const refresh of [false, true]) {
         arrivedIntended.release();
         await releaseIntended.promise;
         response.writeHead(302, {
-          location: "/__mokly/diffs/__generations/current/review.json",
+          location: "/mokly-viewer/diffs/generations/current/review.json",
         });
         response.end();
       } else if (
-        request.url === "/__mokly/diffs/__generations/current/review.json"
+        request.url === "/mokly-viewer/diffs/generations/current/review.json"
       ) {
         response.writeHead(refresh ? 503 : 200, {
           "content-type": "application/json",

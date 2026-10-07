@@ -3,7 +3,7 @@ import test from "node:test";
 import { setTimeout } from "node:timers/promises";
 
 import { compileCatalogue } from "../dist/build/compile.js";
-import type { ComponentChangeSnapshot } from "../dist/server/component_changes.js";
+import type { ComponentChangeSnapshot } from "../dist/server/component_change_types.js";
 import { BackgroundCompilation } from "../dist/server/demand/background.js";
 import { serve } from "../dist/server/serve.js";
 

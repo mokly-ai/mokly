@@ -9,6 +9,9 @@ use unimock::{MockFn, Unimock, matching};
 use crate::check::request::{CheckRequest, DependencyAudit, VerificationSuite};
 use crate::check::runner::{CheckRunnerRunMock, CheckRunnerSourceFileLengthMock};
 use crate::error::Error;
+use crate::executor::{Decision, Executor, LocalReason};
+use crate::remote::availability::SelectorSelectMock;
+use crate::remote::contracts::{EnvironmentGetMock, ReporterExecutorMock};
 use crate::rust_file_length::RustFileLengthAuditorRunMock;
 
 use super::{Application, Cli, Command, Xtask};
@@ -22,6 +25,7 @@ fn parses_every_suite_and_a_valid_shard() {
             suite: parsed,
             shard,
             dependency_audit,
+            ..
         } = cli.command
         else {
             panic!("check command expected");
@@ -37,6 +41,15 @@ fn parses_every_suite_and_a_valid_shard() {
         panic!("check command expected");
     };
     assert_eq!(shard.expect("shard exists").to_string(), "3/4");
+}
+
+#[test]
+fn executor_command_accepts_the_same_mode_flag() {
+    for mode in ["auto", "local", "remote"] {
+        let parsed = Cli::try_parse_from(["xtask", "executor", "--executor", mode]).unwrap();
+        assert!(matches!(parsed.command, Command::Executor { .. }));
+    }
+    assert!(Cli::try_parse_from(["xtask", "executor", "--executor", "invalid"]).is_err());
 }
 
 #[test]
@@ -83,6 +96,19 @@ fn application_dispatches_source_length_and_complete_check() {
             .returns(Ok(())),
     )));
     let app = Application {
+        selector: Arc::new(Unimock::new(
+            SelectorSelectMock
+                .next_call(matching!(Executor::Auto))
+                .answers(&|_, _| Ok(Decision::Local(LocalReason::NoKey))),
+        )),
+        remote_runner: Arc::new(Unimock::new(())),
+        interrupt: Arc::new(Unimock::new(())),
+        environment: Arc::new(Unimock::new(
+            EnvironmentGetMock.each_call(matching!(_)).returns(None),
+        )),
+        reporter: Arc::new(Unimock::new(
+            ReporterExecutorMock.each_call(matching!(_)).returns(()),
+        )),
         check_runner: checks,
         rust_file_length_auditor: Arc::new(Unimock::new(
             RustFileLengthAuditorRunMock
@@ -97,6 +123,7 @@ fn application_dispatches_source_length_and_complete_check() {
         suite: None,
         shard: None,
         dependency_audit: None,
+        executor: None,
     })
     .unwrap();
     app.run(Command::RustFileLengthLint { all: false }).unwrap();
@@ -136,21 +163,21 @@ fn application_dispatches_both_dependency_audit_modes() {
     for suite in [None, Some(VerificationSuite::Repository)] {
         for mode in [DependencyAudit::Baseline, DependencyAudit::Strict] {
             let expected = CheckRequest::new(suite, None, Some(mode)).unwrap();
-            let app = Application {
-                check_runner: Arc::new(Unimock::new(
+            let app = local_application(
+                Arc::new(Unimock::new(
                     CheckRunnerRunMock
                         .next_call(&|matching| {
                             matching.func(move |request, _| request == &expected);
                         })
                         .returns(Ok(())),
                 )),
-                rust_file_length_auditor: Arc::new(Unimock::new(())),
-                workspace: PathBuf::from("/workspace"),
-            };
+                suite.is_none(),
+            );
             app.run(Command::Check {
                 suite,
                 shard: None,
                 dependency_audit: Some(mode),
+                executor: None,
             })
             .expect("valid mode is forwarded");
         }
@@ -159,9 +186,15 @@ fn application_dispatches_both_dependency_audit_modes() {
 
 #[test]
 fn application_rejects_explicit_audit_modes_before_running_checks() {
+    let unused = || Arc::new(Unimock::new(()));
     let app = Application {
-        check_runner: Arc::new(Unimock::new(())),
-        rust_file_length_auditor: Arc::new(Unimock::new(())),
+        selector: unused(),
+        check_runner: unused(),
+        remote_runner: unused(),
+        rust_file_length_auditor: unused(),
+        environment: unused(),
+        reporter: unused(),
+        interrupt: unused(),
         workspace: PathBuf::from("/workspace"),
     };
     for suite in [
@@ -185,5 +218,31 @@ fn application_rejects_explicit_audit_modes_before_running_checks() {
                 Err(Error::UnsupportedDependencyAudit { suite: rejected }) if rejected == suite
             ));
         }
+    }
+}
+
+/// Build an application whose automatic executor always selects the local gate.
+fn local_application(check_runner: Arc<Unimock>, complete: bool) -> Application {
+    Application {
+        selector: Arc::new(if complete {
+            Unimock::new(
+                SelectorSelectMock
+                    .next_call(matching!(Executor::Auto))
+                    .answers(&|_, _| Ok(Decision::Local(LocalReason::NoKey))),
+            )
+        } else {
+            Unimock::new(())
+        }),
+        remote_runner: Arc::new(Unimock::new(())),
+        interrupt: Arc::new(Unimock::new(())),
+        environment: Arc::new(Unimock::new(
+            EnvironmentGetMock.each_call(matching!(_)).returns(None),
+        )),
+        reporter: Arc::new(Unimock::new(
+            ReporterExecutorMock.each_call(matching!(_)).returns(()),
+        )),
+        check_runner,
+        rust_file_length_auditor: Arc::new(Unimock::new(())),
+        workspace: PathBuf::from("/workspace"),
     }
 }

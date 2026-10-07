@@ -8,6 +8,7 @@ import {
 import { catalogueRouteEntry } from "@mokly/viewer/server";
 import type { Catalogue, ShellContext } from "@mokly/viewer/server";
 
+import type { GeneratedFile } from "../build/generated_file.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import type { DocumentService } from "./demand/service.js";
@@ -24,6 +25,7 @@ export async function renderView(
   context: ShellContext,
   method: string,
   documents?: DocumentService,
+  generatedOutputs?: ReadonlyMap<string, GeneratedFile>,
 ): Promise<void> {
   const identity = parseViewHref(`/view/${encodedRoute}`);
   const snapshots = url.searchParams.getAll("snapshot");
@@ -85,7 +87,13 @@ export async function renderView(
     ? url.searchParams.has("fragment")
       ? null
       : undefined
-    : await requestedFragment(url, manifestEntry, catalogue, config, documents);
+    : await requestedFragment(
+        url,
+        manifestEntry,
+        catalogue,
+        documents,
+        generatedOutputs,
+      );
   if (fragment === null) {
     return send(response, 400, "text/plain", "Invalid fragment query", method);
   }

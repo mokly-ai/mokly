@@ -18,12 +18,14 @@ import {
 
 let fixture: TestFixture;
 let compilation: Compilation;
+let generatedDir: string;
 
 test.beforeAll(async () => {
   fixture = await createFixture(componentEntrySource(), {
     extraConfig: 'colorSchemes: ["light", "dark"],',
   });
   const config = await loadConfig(fixture.root);
+  generatedDir = config.generatedDir;
   compilation = await compileCatalogue(config);
   await writeCompilation(compilation, config);
 });
@@ -43,7 +45,7 @@ test("saved component variants render through standalone portable links in every
       );
       const suffix = `${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
       const url = (route: string) =>
-        pathToFileURL(path.join(fixture.mockupsDir, route)).href;
+        pathToFileURL(path.join(generatedDir, route)).href;
       await page.goto(url(`home/index.${suffix}`));
       await expect(
         page.getByRole("button", { name: "Slot action", exact: true }),
@@ -64,5 +66,5 @@ test("saved component variants render through standalone portable links in every
         path: testInfo.outputPath(`action-${viewport}-${scheme}.png`),
       });
     }
-  expect(compilation.manifest.schemaVersion).toBe(8);
+  expect(compilation.manifest.schemaVersion).toBe(9);
 });

@@ -120,22 +120,32 @@ source files or directories in `dependencies`. An entry file ends in
 `.mockup.ts` or `.mockup.tsx` and exports its definitions from any export,
 default or named. Mokly derives everything else from the file's place: this
 screen is `account/account-home`, it lives at `/view/account/account-home/`,
-and its views are written under `mockupsDir` as
+and its views are written under `mockupsDir/mokly-generated/` as
 `account/account-home/index.mobile.html` and `index.desktop.html`, one file
-per viewport and color scheme. Serve exposes them below `/static/`; export
-writes them below `static/`. The `account`
+per viewport and color scheme. Serve exposes them below `/static/mokly-generated/`; export
+writes them below `static/mokly-generated/`. The `account`
 directory is a folder in the catalogue; a `_folder.json` file or a
 `defineFolder` export gives it a title and an order.
 
-Mokly derives generated output by default. Keep its HTML, manifest, and cache
-out of Git:
+Keep generated output local by ignoring its dedicated directory and cache:
 
 ```gitignore
 .mokly-cache/
-specs/generated/**/*.html
-specs/generated/mokly-manifest.json
-specs/generated/mokly-generated/
+/specs/generated/mokly-generated/
 ```
+
+For this configuration, `build` writes only under `specs/generated/mokly-generated/`; referenced authored
+assets stay under `specs/generated/` and are served and exported in place. To
+commit generated output instead, commit every generated file. `check`
+compares compiled output only when the generated tree is indexed; a partial
+index fails with both remedies. A committed baseline's v9 inventory must
+match its Git blobs; otherwise the baseline is rebuilt.
+Build and Serve do not inspect head tracking: a new route builds successfully,
+and `check` then lists it under `untracked:` until staged. Only `check` rejects
+an indexed `.mokly-cache/` path.
+Current output uses manifest v9. The manifest records the referenced asset closure and Git blob-hash
+inventory. Earlier baseline formats make Changes unavailable under
+[baseline compatibility](./docs/protocol/mokly-baseline-compatibility.md).
 
 Add `specs/account/README.md` to give Account its own Overview row:
 
@@ -151,7 +161,6 @@ Folder rows expand without changing the content area. The Overview row opens
 the document at `/view/account/`. Specs contains screens, pages, documents and
 flows; Components contains registered components.
 
-Current output uses manifest v8, and comparison-base output must do the same.
 For an existing catalogue, follow the
 [path identity migration note](./docs/protocol/npm-release-notes.md#breaking-path-identity-release-note).
 
@@ -180,8 +189,10 @@ follow the command, for example `mokly build --config tools/mokly.config.ts`.
 | `mokly`                     | Serve the catalogue, render on demand, and watch for changes |
 | `mokly serve --open`        | Serve and open the local URL in a browser                    |
 | `mokly build`               | Validate and transactionally write generated output          |
-| `mokly check`               | Validate the catalogue without writing output                |
-| `mokly export --out <path>` | Build a complete static catalogue for hosting                |
+| `mokly build --watch`       | Write after each successful compilation while watching       |
+| `mokly serve --build`       | Browse and write complete output after successful compiles   |
+| `mokly check`               | Validate; compare disk when Git tracks generated output      |
+| `mokly export --out <path>` | Compile and export without writing catalogue output          |
 | `mokly publish`             | Export and upload to a compatible catalogue service          |
 | `mokly --help`              | Show every command and option                                |
 
@@ -298,6 +309,14 @@ The guides are user-facing and ship with the npm package. The protocol documents
 are the detailed implementation contracts used to keep the CLI, viewer,
 generated output, and tests aligned.
 
+The [path/output contract](./docs/protocol/mokly-path-output-integration.md) defines
+one [unified layout](./docs/protocol/mokly-unified-output.md) for generated pages,
+imported styles and assets. The portable
+[viewer namespace](./docs/protocol/mokly-viewer-namespace.md) is `mokly-viewer/`.
+Older receivers reject the new upload format. Mokly Cloud needs the documented
+receiver and viewer update before publication. Progress remains in the
+[implementation plans](./plans/).
+
 ## Develop Mokly
 
 For repository development, use the tested Node.js version in
@@ -333,6 +352,42 @@ suite, dependency checks, and Rust checks. See the
 functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
+
+ESLint requires shared directory constants, locale-independent source ordering,
+and unique imports. Tests probe every covered source folder through the real
+flat config. See the [lint contract](./docs/protocol/mokly-directory-lint.md).
+
+Browser global setup prepares one real example baseline and cache. Ordinary
+export fixtures use isolated, validated copies; dedicated tests retain cold
+baseline and preview builds. See [fixture preparation](./docs/protocol/ci-fixture-preparation.md).
+
+The [remote verification contract](./docs/protocol/remote-verification.md)
+defines the Testbox gate. Push your branch before an explicit remote check:
+
+```bash
+cargo xtask check --executor remote
+```
+
+Warmup uses the Testbox workflow from `main`.
+Set `MOKLY_TESTBOX_REF=<pushed branch>` only to test a changed Testbox workflow
+before it merges. This variable does not change the source commit under test.
+
+Install `blacksmith`, `rsync` and `ssh`. Set `BLACKSMITH_ORG_TOKEN` for org-key
+login, or use the current CLI login. The remote gate runs 11 commands in parallel.
+Login saves the key in `~/.blacksmith/credentials`.
+It replaces any saved login for the same organization.
+Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
+Each ended command downloads its report and cleans up its box at once.
+The gate requires nine reports. It skips stop and cancellation for a status
+table row that proves the box is completed. Logs stay under `.context/`.
+`--executor local` skips remote checks. The default `auto` selects remote mode
+when an org key and all availability checks pass. It otherwise runs locally.
+Run `cargo xtask executor` to print `<executor>: <reason>` without warming boxes.
+Automatic fallback runs the full local gate only before a remote suite starts.
+An interrupt never starts local fallback.
+`MOKLY_CHECK_EXECUTOR` sets the default mode. The CLI flag overrides it.
+A selected `--suite` stays local.
+Explicit `remote` with `--suite` fails before work starts.
 
 Local test runs scale with the machine. Unit tests run half the available CPUs'
 worth of test files at once, never fewer than two, and the hydration suite uses
@@ -385,10 +440,10 @@ for the review rules and temporary Braces exception.
 - [`src/build/mock_link_routes.ts`](./src/build/mock_link_routes.ts) —
   identity-derived logical-link targets and portable artifact URLs.
 - [`src/components/manifest_entry_validation.ts`](./src/components/manifest_entry_validation.ts)
-  — manifest-v8 component-entry validation.
+  — manifest-v9 component-entry validation.
 - [`src/registry/changed_paths.ts`](./src/registry/changed_paths.ts) and
   [`manifest_validation.ts`](./src/registry/manifest_validation.ts) —
-  identity-keyed change membership and the strict baseline-v8 boundary.
+  identity-keyed change membership and the strict baseline-v9 boundary.
 - [`src/baseline/compatibility.ts`](./src/baseline/compatibility.ts) and
   [`src/server/classification_result.ts`](./src/server/classification_result.ts)
   — the typed earlier-baseline outcome from admission through Serve.
@@ -419,6 +474,12 @@ for the review rules and temporary Braces exception.
 - [`scripts/preview/baseline.mjs`](./scripts/preview/baseline.mjs) and
   [`html_paths.mjs`](./scripts/preview/html_paths.mjs) — preview publication's
   baseline-availability and provider-path adapters.
+- [`scripts/verification/source-tree.mjs`](./scripts/verification/source-tree.mjs)
+  computes the source fingerprint, including uncommitted changes.
+- [`scripts/verification/testbox-suite.mjs`](./scripts/verification/testbox-suite.mjs)
+  checks that fingerprint and prepares one suite through injected commands.
+- [`xtask/src/remote`](./xtask/src/remote) runs the complete Testbox gate and
+  owns report downloads, logs and interrupt cleanup.
 - [`examples/basic`](./examples/basic/README.md) — reference consumer and design
   catalogue.
 

@@ -1,11 +1,10 @@
 /** Prepare a last-good routing generation without invoking a consumer renderer. */
 import { randomBytes } from "node:crypto";
 
-import { entryRoute, documentRoute, generatedViews } from "@mokly/viewer/data";
-
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { createCatalogueIndex } from "../registry/catalogue_index.js";
+import { generatedDocumentRoutes } from "../registry/generated_documents.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
 import { prepareRegistry } from "../registry/prepare.js";
 
@@ -40,15 +39,7 @@ export async function prepareLiveRuntime(
     const outputSnapshot = await captureOutputSnapshot(
       [
         MANIFEST_NAME,
-        ...manifest.entries.flatMap((entry) =>
-          entry.kind === "document"
-            ? entry.colorSchemes.map((scheme) =>
-                documentRoute(entry.path, scheme),
-              )
-            : entry.kind === "page"
-              ? [entryRoute(entry.path)]
-              : generatedViews(entry).map((view) => view.path),
-        ),
+        ...generatedDocumentRoutes(manifest.entries),
         ...graph.styleOutputs.keys(),
       ],
       config,

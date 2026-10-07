@@ -58,12 +58,11 @@ test("Browse recovery parsing rejects malformed session state", () => {
     undefined,
   );
   assert.deepEqual(parseBrowseRecoveryState(browseState()), browseState());
-  const legacyState: Record<string, unknown> = { ...browseState() };
-  delete legacyState["filterBaselineDisclosures"];
-  assert.deepEqual(parseBrowseRecoveryState(legacyState), {
-    ...browseState(),
-    filterBaselineDisclosures: null,
-  });
+  for (const field of ["filterBaselineDisclosures", "changesStatus"]) {
+    const incomplete: Record<string, unknown> = { ...browseState() };
+    delete incomplete[field];
+    assert.equal(parseBrowseRecoveryState(incomplete), undefined);
+  }
   assert.equal(
     parseBrowseRecoveryState({ ...browseState(), viewport: "tablet" }),
     undefined,

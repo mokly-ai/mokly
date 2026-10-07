@@ -23,7 +23,7 @@ export async function designPalette(): Promise<
   Record<Appearance, Map<string, string>>
 > {
   const source = await fs.readFile(
-    path.join(repositoryRoot, "examples/basic/generated/design.css"),
+    path.join(repositoryRoot, "examples/basic/design.css"),
     "utf8",
   );
   const light = LIGHT_BLOCK.exec(source);

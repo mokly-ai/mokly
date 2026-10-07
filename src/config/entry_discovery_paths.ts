@@ -3,7 +3,8 @@ import path from "node:path";
 
 import { Minimatch } from "minimatch";
 
-import { GENERATED_DIRECTORY } from "../build/styles/routes.js";
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import { MoklyError } from "../errors.js";
 
 import { projectRealPath, toPosixPath } from "./paths.js";
@@ -91,17 +92,7 @@ export function discoveryPaths(
 }
 
 function generatedRootProjection(mockupsDir: string): string {
-  const root = path.join(mockupsDir, GENERATED_DIRECTORY);
-  try {
-    return projectRealPath(root);
-  } catch (error) {
-    if (
-      (error as NodeJS.ErrnoException).code === "ENOENT" &&
-      fs.lstatSync(root, { throwIfNoEntry: false })?.isSymbolicLink()
-    )
-      return root;
-    throw error;
-  }
+  return path.join(projectRealPath(mockupsDir), GENERATED_DIRECTORY);
 }
 
 /** Only missing or replaced directories are benign races during discovery. */

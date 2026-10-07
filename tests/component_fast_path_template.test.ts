@@ -11,7 +11,7 @@ import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
-const image = '<img loading="lazy" src="../image.svg" />';
+const image = '<img loading="lazy" src="../../image.svg" />';
 const templateCases = [
   {
     name: "receiver template",
@@ -55,8 +55,8 @@ const selectCases = [
 ] as const;
 
 for (const templateCase of templateCases)
-  for (const generatedOutput of ["committed", "derived"] as const)
-    test(`${templateCase.name} caller slots use complete ${generatedOutput} comparison`, async (t) => {
+  for (const evidenceKind of ["git", "bytes"] as const)
+    test(`${templateCase.name} caller slots use complete ${evidenceKind} comparison`, async (t) => {
       const fixture = await createFixture(componentEntrySource(templateCase));
       t.after(() => removeFixture(fixture));
       await fs.writeFile(path.join(fixture.mockupsDir, "image.svg"), "image");
@@ -79,9 +79,8 @@ for (const templateCase of templateCases)
           after: compilation.manifest,
           beforeReader: files("base image"),
           afterReader: files("head image"),
-          config: { ...config, generatedOutput },
-          changedPaths:
-            generatedOutput === "committed" ? ["mockups/image.svg"] : [],
+          config,
+          changedPaths: evidenceKind === "git" ? ["mockups/image.svg"] : [],
           baseCommit: "a".repeat(40),
           baseRef: "main",
           useFastPath,
@@ -97,7 +96,7 @@ for (const templateCase of templateCases)
       assert.ok(screenChange);
       assert.ok(
         screenChange.reasons.some((reason) =>
-          generatedOutput === "committed"
+          evidenceKind === "git"
             ? reason.kind === "dependency" &&
               reason.path === "mockups/image.svg"
             : reason.kind === "material",
@@ -106,8 +105,8 @@ for (const templateCase of templateCases)
     });
 
 for (const selectCase of selectCases)
-  for (const generatedOutput of ["committed", "derived"] as const)
-    test(`${selectCase.name} resources agree in ${generatedOutput} mode`, async (t) => {
+  for (const evidenceKind of ["git", "bytes"] as const)
+    test(`${selectCase.name} resources agree in ${evidenceKind} mode`, async (t) => {
       const fixture = await createFixture(componentEntrySource(selectCase));
       t.after(() => removeFixture(fixture));
       await fs.writeFile(path.join(fixture.mockupsDir, "image.svg"), "image");
@@ -130,9 +129,8 @@ for (const selectCase of selectCases)
           after: compilation.manifest,
           beforeReader: reader("base image"),
           afterReader: reader("head image"),
-          config: { ...config, generatedOutput },
-          changedPaths:
-            generatedOutput === "committed" ? ["mockups/image.svg"] : [],
+          config,
+          changedPaths: evidenceKind === "git" ? ["mockups/image.svg"] : [],
           baseCommit: "a".repeat(40),
           baseRef: "main",
           useFastPath,
@@ -148,7 +146,7 @@ for (const selectCase of selectCases)
       assert.ok(screenChange);
       assert.ok(
         screenChange.reasons.some((reason) =>
-          generatedOutput === "committed"
+          evidenceKind === "git"
             ? reason.kind === "dependency" &&
               reason.path === "mockups/image.svg"
             : reason.kind === "material",

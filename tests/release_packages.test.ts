@@ -109,7 +109,7 @@ test("the CLI archive requires every guide and rejects repository-only paths", a
     );
   }
   for (const excluded of [
-    "examples/basic/generated/index.html",
+    "examples/basic/index.html",
     "plans/package-documentation.md",
     "site/package.json",
     "tests/package.test.ts",

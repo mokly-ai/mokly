@@ -171,7 +171,7 @@ test("view swaps, disposal, and absent inspector timeouts discard old work", asy
       const usage = JSON.parse(usageJson) as ComponentViewRecord;
       const state = window as unknown as FrameTestWindow;
       const { postMessageAdapter } = (await import(
-        `${location.origin}/__mokly/client/post_message_adapter.js`
+        `${location.origin}/mokly-viewer/client/post_message_adapter.js`
       )) as typeof PostAdapter;
       const old = state.mounted;
       const pending = old
@@ -180,7 +180,10 @@ test("view swaps, disposal, and absent inspector timeouts discard old work", asy
       state.mounted = await postMessageAdapter({ frameOrigin: origin }).mount(
         document.querySelector<HTMLIFrameElement>("#frame")!,
         {
-          url: new URL("/static/home/index.desktop.html", origin),
+          url: new URL(
+            "/static/mokly-generated/home/index.desktop.html",
+            origin,
+          ),
           usage: { status: "ready", ...usage },
         },
       );
@@ -202,11 +205,11 @@ test("view swaps, disposal, and absent inspector timeouts discard old work", asy
   ).toHaveCount(0);
   const timeout = await page.evaluate(async (origin) => {
     const { postMessageAdapter } = (await import(
-      `${location.origin}/__mokly/client/post_message_adapter.js`
+      `${location.origin}/mokly-viewer/client/post_message_adapter.js`
     )) as typeof PostAdapter;
     return postMessageAdapter({ frameOrigin: origin })
       .mount(document.querySelector<HTMLIFrameElement>("#frame")!, {
-        url: new URL("/static/silent.html", origin),
+        url: new URL("/static/mokly-generated/silent/index.html", origin),
         usage: { status: "unavailable" },
       })
       .then(

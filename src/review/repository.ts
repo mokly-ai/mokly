@@ -2,6 +2,10 @@
 import path from "node:path";
 
 import { cacheLayout } from "../baseline/cache_layout.js";
+import {
+  baselineCatalogue,
+  type BaselineCatalogue,
+} from "../baseline/catalogue.js";
 import { NodeBaselineFileSystem } from "../baseline/filesystem.js";
 import { RebuiltBaselineReader } from "../baseline/reader.js";
 import type { BaselineFileSystem } from "../baseline/types.js";
@@ -12,7 +16,6 @@ import { MoklyError } from "../errors.js";
 
 import { CommittedBaselineReader } from "./committed.js";
 import {
-  CommittedRepository,
   type RepositoryEvidence,
   type BaselineReader,
   type GitCommandRunner,
@@ -23,18 +26,13 @@ import { GitRepositoryEvidence } from "./git_evidence.js";
 export interface ReadOnlyReviewRepository {
   readonly evidence: RepositoryEvidence;
   readonly reader: BaselineReader;
+  readonly descriptor?: BaselineCatalogue;
   /** Committed authoring bytes; distinct from rebuilt public baseline output. */
   readonly sourceReader?: BaselineReader;
 }
 
-/** Committed mode needs no preparation; derived mode must receive a pinned commit. */
-export function committedReviewRepository(
-  config: ResolvedConfig,
-  runner: GitCommandRunner = new ConfiguredGitCommandRunner(config),
-): ReadOnlyReviewRepository {
-  if (config.generatedOutput === "derived") throw comparisonNotPrepared();
-  return new CommittedRepository(runner);
-}
+/** Only the parent preparation boundary chooses which historical reader to open. */
+export type BaselineSelection = "blobs" | "rebuild";
 
 export function comparisonNotPrepared(): MoklyError {
   return new MoklyError("review-invalid", "The comparison is not prepared");
@@ -44,19 +42,30 @@ export function comparisonNotPrepared(): MoklyError {
 export function readOnlyRepositoryForCommit(
   config: ResolvedConfig,
   commit: string,
+  selection: BaselineSelection,
   runner: GitCommandRunner = new ConfiguredGitCommandRunner(config),
   signal?: AbortSignal,
   filesystem: BaselineFileSystem = new NodeBaselineFileSystem(),
+  descriptor?: BaselineCatalogue,
 ): ReadOnlyReviewRepository {
   const evidence = new GitRepositoryEvidence(runner);
   return {
+    ...(descriptor ? { descriptor } : {}),
     sourceReader: new CommittedBaselineReader(runner),
     evidence: {
       mergeBase: async () => commit,
       changedPaths: (baseCommit, excluded) =>
         evidence.changedPaths(baseCommit, excluded),
     },
-    reader: baselineReaderForCommit(config, commit, runner, signal, filesystem),
+    reader: baselineReaderForCommit(
+      config,
+      commit,
+      selection,
+      runner,
+      signal,
+      filesystem,
+      descriptor,
+    ),
   };
 }
 
@@ -64,11 +73,17 @@ export function readOnlyRepositoryForCommit(
 export function baselineReaderForCommit(
   config: ResolvedConfig,
   commit: string,
+  selection: BaselineSelection,
   runner: GitCommandRunner = new ConfiguredGitCommandRunner(config),
   signal?: AbortSignal,
   filesystem: BaselineFileSystem = new NodeBaselineFileSystem(),
+  descriptor: BaselineCatalogue = baselineCatalogue(
+    commit,
+    toPosixPath(path.relative(config.repoRoot, config.mockupsDir)) || ".",
+    "generated-v9",
+  ),
 ): BaselineReader {
-  return config.generatedOutput === "derived"
+  return selection === "rebuild"
     ? new RebuiltBaselineReader(
         filesystem,
         config.repoRoot,
@@ -76,6 +91,7 @@ export function baselineReaderForCommit(
         commit,
         toPosixPath(path.relative(config.repoRoot, config.mockupsDir)),
         signal,
+        descriptor,
       )
-    : new CommittedBaselineReader(runner);
+    : new CommittedBaselineReader(runner, descriptor);
 }

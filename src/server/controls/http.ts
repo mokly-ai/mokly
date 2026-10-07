@@ -1,7 +1,12 @@
 /** Private same-origin admission and immutable sandboxed memory responses. */
+
 import type { IncomingMessage, ServerResponse } from "node:http";
 
-import { ComponentRenderError, renderStatus } from "@mokly/viewer/data";
+import {
+  VIEWER_DIRECTORY,
+  ComponentRenderError,
+  renderStatus,
+} from "@mokly/viewer/data";
 
 import { PlainServeReporter } from "../reporter.js";
 import { safeDecodePath } from "../respond.js";
@@ -39,14 +44,14 @@ export async function handleControls(
         "This request is not allowed.",
       );
     const url = new URL(request.url!, `http://${host}`);
-    if (url.pathname.startsWith("/__mokly/components/renders/")) {
+    if (url.pathname.startsWith(`/${VIEWER_DIRECTORY}/components/renders/`)) {
       if (request.method !== "GET" && request.method !== "HEAD")
         throw new ComponentRenderError(
           "method",
           "Use GET to open this preview.",
         );
       const [id, ...pieces] = url.pathname
-        .slice("/__mokly/components/renders/".length)
+        .slice(`/${VIEWER_DIRECTORY}/components/renders/`.length)
         .split("/");
       const route = safeDecodePath(pieces.join("/"));
       const bundle = service.store.get(id ?? "");
@@ -63,7 +68,7 @@ export async function handleControls(
       response.end(request.method === "HEAD" ? undefined : file.bytes);
       return;
     }
-    if (url.pathname !== "/__mokly/components/render")
+    if (url.pathname !== `/${VIEWER_DIRECTORY}/components/render`)
       throw new ComponentRenderError("unknown-entry", "Not found.");
     if (request.method !== "POST")
       throw new ComponentRenderError("method", "Use POST to update props.");
