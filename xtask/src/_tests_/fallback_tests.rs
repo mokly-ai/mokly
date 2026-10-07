@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::application::{Application, Xtask};
-use crate::check::CheckRunnerRunMock;
+use crate::check::runner::CheckRunnerRunMock;
 use crate::cli::Command;
 use crate::error;
 use crate::executor::{Decision, Executor};
@@ -38,14 +38,14 @@ fn fallback_requires_auto_and_an_unavailable_preparation() {
         ));
         let runner = Arc::new(Unimock::new(
             RemoteRunnerRunMock
-                .next_call(matching!())
-                .answers_arc(Arc::new(move |_| {
+                .next_call(matching!(_))
+                .answers_arc(Arc::new(move |_, _| {
                     Err(match scenario {
                         1 => Failure::Failed(Error::Command {
                             operation: Operation::Blacksmith,
                             code: Some(1),
                         }),
-                        2 => Failure::Unavailable(Error::Interrupted),
+                        2 => Failure::Unavailable(Error::Interrupted { cleanup: 0 }),
                         _ => Failure::Unavailable(Error::WarmupIds { count: 0 }),
                     })
                 })),
@@ -80,6 +80,7 @@ fn fallback_requires_auto_and_an_unavailable_preparation() {
         let result = app.run(Command::Check {
             suite: None,
             shard: None,
+            dependency_audit: None,
             executor: Some(mode),
         });
         assert_eq!(result.is_ok(), local, "{mode:?} scenario={scenario}");
@@ -133,8 +134,8 @@ fn fallback_releases_before_local_run_and_checks_the_flag_after_release() {
             )),
             remote_runner: Arc::new(Unimock::new(
                 RemoteRunnerRunMock
-                    .next_call(matching!())
-                    .answers(&|_| Err(Failure::Unavailable(Error::WarmupIds { count: 0 }))),
+                    .next_call(matching!(_))
+                    .answers(&|_, _| Err(Failure::Unavailable(Error::WarmupIds { count: 0 }))),
             )),
             check_runner: Arc::new(if interrupted_after_release {
                 Unimock::new(())
@@ -183,13 +184,14 @@ fn fallback_releases_before_local_run_and_checks_the_flag_after_release() {
         let result = app.run(Command::Check {
             suite: None,
             shard: None,
+            dependency_audit: None,
             executor: None,
         });
         if interrupted_after_release {
             assert!(matches!(
                 result,
                 Err(error::Error::Remote {
-                    source: Error::Interrupted
+                    source: Error::Interrupted { cleanup: 0 }
                 })
             ));
         } else {

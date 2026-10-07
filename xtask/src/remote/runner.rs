@@ -2,9 +2,11 @@
 
 use thiserror::Error;
 
+use crate::check::request::DependencyAudit;
 use crate::remote::cleanup::{BoxCleanup, CleanupGuard};
 use crate::remote::contracts::Dependencies;
 use crate::remote::error::{self, Result};
+use crate::remote::reporting::warning;
 
 /// The stage boundary that controls automatic local fallback.
 #[derive(Debug, Error)]
@@ -24,7 +26,8 @@ pub(crate) type RunResult = std::result::Result<(), Failure>;
 #[cfg_attr(test, unimock::unimock(api = [RemoteRunnerRunMock]))]
 pub(crate) trait RemoteRunner: Send + Sync {
     /// Execute the complete remote gate and always clean up warmed boxes.
-    fn run(&self) -> RunResult;
+    /// The repository suite on its box uses the requested audit mode.
+    fn run(&self, dependency_audit: DependencyAudit) -> RunResult;
 }
 
 /// Runner composed entirely from trait-backed collaborators.
@@ -34,18 +37,20 @@ pub(crate) struct DefaultRemoteRunner {
 }
 
 impl RemoteRunner for DefaultRemoteRunner {
-    fn run(&self) -> RunResult {
+    fn run(&self, dependency_audit: DependencyAudit) -> RunResult {
         let cleanup = CleanupGuard::new(&self.dependencies);
         let mut boxes = Vec::new();
         let preparation = self.prepare(&mut boxes, &cleanup);
         let (head, fingerprint, run) = match preparation {
             Ok(identity) => identity,
             Err(source) => {
-                let failures = cleanup.stop_boxes(&cleanup.pending());
+                let failures = cleanup.finish();
                 if self.dependencies.interrupt.requested()
-                    || matches!(source, error::Error::Interrupted)
+                    || matches!(source, error::Error::Interrupted { .. })
                 {
-                    return Err(Failure::Failed(error::Error::Interrupted));
+                    return Err(Failure::Failed(error::Error::Interrupted {
+                        cleanup: failures,
+                    }));
                 }
                 if failures != 0 {
                     return Err(Failure::Failed(error::Error::PreparationCleanup {
@@ -56,7 +61,14 @@ impl RemoteRunner for DefaultRemoteRunner {
                 return Err(Failure::Unavailable(source));
             }
         };
-        match self.finish(&boxes, &fingerprint, &run, &head, &cleanup) {
+        match self.finish(
+            &boxes,
+            &fingerprint,
+            &run,
+            &head,
+            &cleanup,
+            dependency_audit,
+        ) {
             Ok(()) => Ok(()),
             Err(source) => Err(Failure::Failed(source)),
         }
@@ -87,7 +99,7 @@ impl DefaultRemoteRunner {
             "information: run={run} ref={reference} HEAD={head}"
         ));
         self.warmup(&reference, boxes, cleanup)?;
-        self.probe(boxes, &fingerprint, &head)?;
+        self.probe(boxes, &fingerprint, &head, cleanup)?;
         dependencies
             .reporter
             .executor("information: all 11 probes passed");
@@ -102,9 +114,10 @@ impl DefaultRemoteRunner {
         run: &str,
         head: &str,
         cleanup: &dyn BoxCleanup,
+        dependency_audit: DependencyAudit,
     ) -> Result<()> {
         let dependencies = &self.dependencies;
-        let completed = self.execute(boxes, fingerprint, run, cleanup);
+        let completed = self.execute(boxes, fingerprint, run, cleanup, dependency_audit);
         let reports = dependencies
             .workspace
             .join(".context/verification-reports/remote")
@@ -113,13 +126,9 @@ impl DefaultRemoteRunner {
             .iter()
             .filter(|completion| completion.report_downloaded)
             .count();
-        let cleanup = completed
-            .iter()
-            .filter(|completion| completion.cleanup_failed)
-            .count()
-            + cleanup.stop_boxes(&cleanup.pending());
+        let cleanup = cleanup.finish();
         if dependencies.interrupt.requested() {
-            return Err(error::Error::Interrupted);
+            return Err(error::Error::Interrupted { cleanup });
         }
         let aggregate_failed = match dependencies.aggregate.validate(&reports, head) {
             Ok(()) => false,
@@ -183,7 +192,7 @@ impl DefaultRemoteRunner {
     pub(super) fn report_failure(&self, context: &str, error: &error::Error) {
         self.dependencies
             .reporter
-            .executor(&format!("warning: {context} failed: {error}"));
+            .executor(&warning(&format!("{context} failed"), error));
         if let error::Error::Captured { output, .. } = error {
             for (name, stream) in [("stdout", &output.stdout), ("stderr", &output.stderr)] {
                 for line in stream.lines() {

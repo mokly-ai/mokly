@@ -2,6 +2,7 @@
 
 use std::collections::BTreeSet;
 
+use crate::check::request::DependencyAudit;
 use crate::remote::error::Error;
 use crate::remote::runner::{DefaultRemoteRunner, Failure, RemoteRunner};
 
@@ -13,13 +14,19 @@ mod harness_tests;
 #[path = "harness_client_tests.rs"]
 mod harness_client_tests;
 
+#[path = "harness_clock_tests.rs"]
+mod harness_clock_tests;
+
+#[path = "harness_github_tests.rs"]
+mod harness_github_tests;
+
 #[test]
 fn complete_remote_gate_downloads_nine_reports_after_eleven_suites() {
     let fixture = harness(Case::Success);
     DefaultRemoteRunner {
         dependencies: fixture.dependencies,
     }
-    .run()
+    .run(DependencyAudit::Baseline)
     .unwrap();
     let events = fixture.events.lock().unwrap();
     assert_eq!(
@@ -78,7 +85,7 @@ fn every_failed_run_cleans_all_recoverable_boxes() {
             DefaultRemoteRunner {
                 dependencies: fixture.dependencies
             }
-            .run()
+            .run(DependencyAudit::Baseline)
             .is_err(),
             "{case:?}"
         );
@@ -150,7 +157,7 @@ fn failed_cancel_and_missing_run_urls_only_warn() {
         DefaultRemoteRunner {
             dependencies: fixture.dependencies,
         }
-        .run()
+        .run(DependencyAudit::Baseline)
         .unwrap();
         let events = fixture.events.lock().unwrap();
         assert!(
@@ -171,8 +178,8 @@ fn interruption_is_nonzero_even_when_children_return_zero() {
         DefaultRemoteRunner {
             dependencies: fixture.dependencies
         }
-        .run(),
-        Err(Failure::Failed(Error::Interrupted))
+        .run(DependencyAudit::Baseline),
+        Err(Failure::Failed(Error::Interrupted { cleanup: 0 }))
     ));
 }
 
@@ -190,7 +197,7 @@ fn preparation_failures_are_unavailable_and_later_failures_are_terminal() {
         let result = DefaultRemoteRunner {
             dependencies: fixture.dependencies,
         }
-        .run();
+        .run(DependencyAudit::Baseline);
         assert_eq!(
             matches!(result, Err(Failure::Unavailable(_))),
             unavailable,
@@ -206,7 +213,7 @@ fn preparation_cleanup_failure_cannot_allow_local_fallback() {
         DefaultRemoteRunner {
             dependencies: fixture.dependencies
         }
-        .run(),
+        .run(DependencyAudit::Baseline),
         Err(Failure::Failed(Error::PreparationCleanup { .. }))
     ));
     assert!(
@@ -226,7 +233,7 @@ fn aggregate_summary_names_the_failed_outcome() {
         DefaultRemoteRunner {
             dependencies: fixture.dependencies
         }
-        .run()
+        .run(DependencyAudit::Baseline)
         .is_err()
     );
     assert!(fixture.events.lock().unwrap().iter().any(|event| event.contains("summary: commands=") && event.contains("aggregate=failed")));
@@ -238,7 +245,7 @@ fn each_report_download_precedes_its_box_stop() {
     DefaultRemoteRunner {
         dependencies: fixture.dependencies,
     }
-    .run()
+    .run(DependencyAudit::Baseline)
     .unwrap();
     let events = fixture.events.lock().unwrap();
     for id in events
@@ -266,3 +273,15 @@ fn each_report_download_precedes_its_box_stop() {
 
 #[path = "panic_cleanup_tests.rs"]
 mod panic_cleanup_tests;
+
+#[path = "cleanup_count_tests.rs"]
+mod cleanup_count_tests;
+
+#[path = "run_id_recovery_tests.rs"]
+mod run_id_recovery_tests;
+
+#[path = "cancellation_tests.rs"]
+mod cancellation_tests;
+
+#[path = "warning_paths_tests.rs"]
+mod warning_paths_tests;

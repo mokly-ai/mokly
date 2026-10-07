@@ -46,12 +46,24 @@ export const entries = [
     "test: record archived namespace fixture",
   ]);
   await fs.rm(entry);
+  await writeCompilation(await compileCatalogue(config), config);
+  await git.run(["add", "-A"]);
+  await git.run(["add", "-f", "examples/basic/mokly-generated"]);
+  await git.run([
+    "-c",
+    "core.hooksPath=/dev/null",
+    "-c",
+    "commit.gpgsign=false",
+    "commit",
+    "-qm",
+    "test: commit removed namespace entries",
+  ]);
   const receiver = await startFakeReceiver(t);
   await publishCatalogue(
     config,
     {
       out: path.join(root, "site"),
-      base: "HEAD",
+      base: "HEAD^",
       endpoint: receiver.endpoint,
       token: "fixture-token",
       repository: "github.com/sample/catalogue",

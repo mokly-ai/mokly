@@ -80,28 +80,40 @@ exhausted retry or transport failure renders headline
 `Check the endpoint and connection, then retry.` A rich detail and hint must
 never repeat the same sentence.
 
-| Code                           | Headline                                       | Hint                                                   |
-| ------------------------------ | ---------------------------------------------- | ------------------------------------------------------ |
-| `baseline-history-unavailable` | Comparison history is unavailable.             | Fetch the configured base and retry.                   |
-| `baseline-extraction-failed`   | The comparison baseline could not be prepared. | Check the Git object and temporary storage.            |
-| `baseline-command-failed`      | The comparison baseline build failed.          | Run the configured baseline command locally.           |
-| `baseline-output-invalid`      | The comparison baseline output is invalid.     | Build the baseline and fix its generated output.       |
-| `baseline-interrupted`         | Comparison preparation was interrupted.        | Retry when the repository is idle.                     |
-| `baseline-lock-timeout`        | The comparison baseline is busy.               | Stop the other Mokly process or retry later.           |
-| `build-invalid`                | The catalogue could not be built.              | Fix the reported catalogue source and retry.           |
-| `cli-invalid`                  | The command could not be understood.           | Run `mokly --help` to see commands.                    |
-| `config-invalid`               | The Mokly configuration is invalid.            | Fix the reported configuration value and retry.        |
-| `config-missing`               | No Mokly configuration was found.              | Run inside a consumer repository or pass `--config`.   |
-| `export-invalid`               | The catalogue could not be exported.           | Fix the reported destination or input and retry.       |
-| `git-failed`                   | Git information could not be read.             | Check the repository and configured base.              |
-| `manifest-invalid`             | The generated catalogue is invalid.            | Rebuild the catalogue and fix the reported entry.      |
-| `review-invalid`               | The comparison could not be created.           | Fix the reported comparison input and retry.           |
-| `server-failed`                | The catalogue server could not start.          | Check the reported port or process and retry.          |
-| `upload-failed`                | The catalogue could not be published.          | Check the endpoint and connection, then retry.         |
-| `upload-invalid-bundle`        | The catalogue upload is invalid.               | Rebuild the export and retry.                          |
-| `upload-too-large`             | The catalogue is too large to publish.         | Reduce the export size or raise the receiver limit.    |
-| `upload-unauthorized`          | The catalogue upload was not authorized.       | Check the token and repository access.                 |
-| `upload-unsupported-version`   | The receiver does not support this catalogue.  | Upgrade the receiver or use a supported Mokly version. |
+| Code                           | Headline                                       | Hint                                                     |
+| ------------------------------ | ---------------------------------------------- | -------------------------------------------------------- |
+| `baseline-history-unavailable` | Comparison history is unavailable.             | Fetch the configured base and retry.                     |
+| `baseline-extraction-failed`   | The comparison baseline could not be prepared. | Check the Git object and temporary storage.              |
+| `baseline-command-failed`      | The comparison baseline build failed.          | Run the configured baseline command locally.             |
+| `baseline-output-invalid`      | The comparison baseline output is invalid.     | Build the baseline and fix its generated output.         |
+| `baseline-interrupted`         | Comparison preparation was interrupted.        | Retry when the repository is idle.                       |
+| `baseline-lock-timeout`        | The comparison baseline is busy.               | Stop the other Mokly process or retry later.             |
+| `build-invalid`                | The catalogue could not be built.              | Fix the reported catalogue source and retry.             |
+| `build-stale`                  | The committed generated files are out of date. | Run `mokly build`, commit the result and publish again.  |
+| `cli-invalid`                  | The command could not be understood.           | Run `mokly --help` to see commands.                      |
+| `config-invalid`               | The Mokly configuration is invalid.            | Fix the reported configuration value and retry.          |
+| `config-missing`               | No Mokly configuration was found.              | Run inside a consumer repository or pass `--config`.     |
+| `export-invalid`               | The catalogue could not be exported.           | Fix the reported destination or input and retry.         |
+| `git-failed`                   | Git information could not be read.             | Check the repository and configured base.                |
+| `git-uncommitted`              | The checkout has uncommitted changes.          | Commit, stash or ignore these files, then publish again. |
+| `manifest-invalid`             | The generated catalogue is invalid.            | Rebuild the catalogue and fix the reported entry.        |
+| `review-invalid`               | The comparison could not be created.           | Fix the reported comparison input and retry.             |
+| `server-failed`                | The catalogue server could not start.          | Check the reported port or process and retry.            |
+| `upload-failed`                | The catalogue could not be published.          | Check the endpoint and connection, then retry.           |
+| `upload-invalid-bundle`        | The catalogue upload is invalid.               | Rebuild the export and retry.                            |
+| `upload-too-large`             | The catalogue is too large to publish.         | Reduce the export size or raise the receiver limit.      |
+| `upload-unauthorized`          | The catalogue upload was not authorized.       | Check the token and repository access.                   |
+| `upload-unsupported-version`   | The receiver does not support this catalogue.  | Upgrade the receiver or use a supported Mokly version.   |
+
+`git-uncommitted` and `build-stale` show the headline, detail and hint in both
+plain and rich output. Plain output keeps the `[mokly/<code>]` prefix and puts
+the detail and hint on following lines. Rich output prints each sentence once.
+Details list at most 20 unique repository-relative paths, sorted by path, then
+the number of other paths. Escape control characters in path names. Changes
+found after export say `Changes appeared during the export.` Missing derived
+output ignore rules name `/<generated-root>/` to add to the repository's
+`.gitignore`. Use the physical generated root when the config uses an alias.
+Escape Git pattern characters in that rule so it matches the literal root.
 
 For `unknown command: <candidate>`, the headline is
 `Unknown command "<candidate>".` and the hint names the closest public command

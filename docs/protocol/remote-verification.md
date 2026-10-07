@@ -2,14 +2,15 @@
 
 ## Delivery Status
 
-The active [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
+The [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
 defines this approved target. Explicit remote execution, the scripts and the
 Testbox workflow are implemented. Automatic remote selection and
 `cargo xtask executor` are implemented. The complete automatic smoke check passes.
 The approved idle timeout is 30 minutes. Per-box cleanup and diagnostics are
 implemented. The complete explicit remote smoke check passes.
 The [Testbox execution contract](./remote-verification-testbox.md) defines the
-workflow, commands, probe, suite wrapper and source-tree fingerprint.
+workflow, commands, probe, suite wrapper, source-tree fingerprint, report
+download and aggregation.
 
 ## Executor Selection
 
@@ -45,7 +46,8 @@ git for-each-ref --contains HEAD --format=%(refname) refs/remotes/origin/
 
 Detect `blacksmith`, `rsync` and `ssh` by searching `PATH` for an executable
 file. Do not run those programs to detect them. Run `blacksmith --version`
-only after finding the CLI. Name each missing program in the diagnostic.
+only after finding the CLI. Look up all three programs in that order.
+Name every missing program in one diagnostic, with its install hint.
 For a missing CLI, print:
 
 ```bash
@@ -130,6 +132,8 @@ Run all local and CLI operations from the workspace root.
 
 A successful check requires all 11 commands to exit 0. It also requires all
 nine downloads, a valid aggregate and an unchanged local source tree.
+Every box must be stopped or proven completed after all cleanup attempts.
+A stop that succeeds on a retry does not fail the check.
 Preparation, discovery, missing reports and invalid reports cannot produce
 success. Never substitute local suite results after remote execution starts.
 
@@ -141,39 +145,8 @@ blacksmith testbox warmup blacksmith-testbox.yml --ref main --idle-timeout 30
 
 ## Report Download And Aggregation
 
-The suite wrapper writes each report on its box to
-`.context/verification-reports/remote/<command>.json`.
-Only unit shards 1 through 4, browser shards 1 through 4 and hydration produce
-the nine required reports. Repository and package outcomes use command exits.
-
-Allocate a new local report directory for each run:
-`.context/verification-reports/remote/<run>/`.
-The `<run>` value is UTC time in `YYYYMMDDTHHMMSSZ` format, a hyphen and the
-xtask process ID in decimal. For example, `20261006T134131Z-1234`.
-Compute it once at run start. Report and log directories use the same value.
-Download each report there under its command name. Do not use reports from
-another run. A missing or failed download fails remote verification.
-Download each report as its command ends, before stopping that box.
-
-Use the CLI download command for each required report:
-
-```bash
-blacksmith testbox download --id <box-id> .context/verification-reports/remote/<command>.json .context/verification-reports/remote/<run>/<command>.json
-```
-
-Run the existing aggregate after box cleanup:
-
-```bash
-node scripts/verification/aggregate.mjs --reports .context/verification-reports/remote/<run> --commit <local-head> --runtimes node-22.14.0
-```
-
-The [existing evidence rules](./ci-verification.md#inventory-and-report-evidence)
-still apply. Keep the report schema unchanged. The aggregate must accept
-exactly nine reports for the expected commit and runtime profile.
-It must prove complete shard coverage and the browser/hydration partition.
-The box `HEAD` must equal local `HEAD`, so the commit checks stay valid.
-The fingerprint covers uncommitted source changes without changing report
-identity. The final local fingerprint check rejects changes made during the run.
+Use the [Testbox report contract](./remote-verification-testbox.md#report-download-and-aggregation)
+for the nine downloads, fresh run directories and local aggregate.
 
 ## Cleanup And Interrupts
 
@@ -181,25 +154,54 @@ Stop every warmed box on success, failure, Ctrl-C and SIGTERM.
 Track boxes as warmup requests complete. Cleanup must also cover boxes created
 during an interrupted or failed warmup. Stop launching suite commands after
 an interrupt. Attempt cleanup for all boxes even if one cleanup call fails.
-Report cleanup failures. An interrupted check cannot pass or start local fallback.
+Clean up boxes in parallel. Each box keeps its own attempt order.
+A panic in one cleanup worker must not stop cleanup of the other boxes.
+Count each box once after its last cleanup attempt. Count only boxes that are
+neither stopped nor proven completed. A nonzero count fails the check and
+prevents local fallback. An interrupted check cannot pass or start fallback.
+Its final error is `verification interrupted; cleanup=<count> boxes remain`.
 Track successful stops and already-completed boxes. Final cleanup processes
-only the remaining boxes. A failed stop stays eligible for final cleanup.
+only the remaining boxes. One owner holds box IDs, recorded run IDs and stop
+attempt counts across workers and final cleanup.
 One cleanup guard tracks every warmed box that is not yet stopped or proven
 completed. When a panic unwinds the runner, the guard stops those remaining
 boxes with the normal cleanup rules. The guard never panics itself.
 The guard does no cleanup on a normal return.
 
-Before stopping each box, run `blacksmith testbox status --id <box-id>`.
+Before each stop attempt, run `blacksmith testbox status --id <box-id>`.
 Split table lines on ASCII whitespace. Find the header whose first column is
 `ID`. Read the column named `STATUS`. Require exactly one row whose first
 column is the box ID. If that row's status is exactly `completed`, skip both
 stop and cancellation. Count no cleanup failure for that box.
 Missing, ambiguous or incomplete table data does not prove completion.
 A failed status read still requires a stop attempt.
-Read its GitHub run ID from the first `/actions/runs/<digits>` match.
-If there is no match, print a warning and skip cancellation for that box.
-Then run `blacksmith testbox stop --id <box-id>`.
-Use `gh run cancel <github-run-id>` when an ID and `gh` are available.
+Use the first numeric `/actions/runs/<digits>` match in status output for the
+GitHub run ID. If status fails or names no run, use the recorded ID for that
+box. Record IDs from captured warmup and probe stdout and stderr, including
+nonzero exits. A probe ID replaces an earlier warmup ID. A captured output
+with no run ID preserves the earlier ID. If neither source names a run,
+print `warning: no GitHub run ID for <box-id>; cancellation skipped`.
+Run `blacksmith testbox stop --id <box-id>`. Retry a failed stop after 5 seconds,
+then after 10 more seconds. Use the injected clock for both waits.
+Allow at most three stop attempts per box across all cleanup calls.
+Read status again in final cleanup for any box whose attempts are exhausted.
+A completed status clears that box's failure without another stop.
+After the stop attempts, use `gh run cancel <github-run-id>` once when an ID
+and `gh` are available. A completed box status skips cancellation.
+If cancellation fails, read `gh run view <id> --json status --jq .status`.
+Trim the output. Map `completed` to the typed completed state. Map every other
+nonempty value to the other state. Empty output is a typed read error.
+For `completed`, print
+`information: GitHub run=<id> already ended; cancellation not needed`.
+Any other state, empty output or failed state read prints the cancellation
+warning. Never decide from error text. Cancellation failure alone does not
+fail the check or prove that a box completed.
+After final cleanup, print this warning once for each remaining box:
+
+```text
+[xtask/executor] warning: box=<box-id> cleanup failed; run blacksmith testbox stop --id <box-id>; the 30-minute idle timeout ends it
+```
+
 The 30-minute idle timeout and 30-minute workflow
 timeout limit cost if the local process is killed before cleanup.
 Do not reuse boxes between checks.
@@ -219,6 +221,10 @@ On aggregate or fingerprint read failure, print a warning first.
 Then print that command's captured stdout and stderr with the executor prefix.
 Describe command termination as `exit <code>` or `a signal`.
 Use `[xtask/check]` for the outer error wrapper.
+One function formats every warning line that embeds an error.
+An embedded error keeps the `[xtask/<module>]` prefix of its defining module.
+Errors defined in `xtask/src/remote/error.rs` use `[xtask/remote]`.
+Reporter lines keep `[xtask/executor]`. No output line repeats a prefix.
 Apply the key secrecy rule to diagnostics and captured output.
 
 ## Out Of Scope
