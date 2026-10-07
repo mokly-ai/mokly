@@ -147,7 +147,11 @@ export function projectCatalogue(
         views: projectViews(input, retainedComponents, entry, removed),
         comparison: comparisonSelection(
           input,
-          removed ? "removed" : review?.state,
+          removed
+            ? "removed"
+            : review?.state === "removed"
+              ? "changed"
+              : review?.state,
           true,
         ),
       };

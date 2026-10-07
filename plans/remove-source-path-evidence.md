@@ -2,8 +2,11 @@
 
 Status: Active. Milestones 1 to 31 are implemented, verified and pushed; the
 branch contains main `dc56e3d4`. Milestone 32's post-push review reported five
-findings. Findings 1 and 3 are fixed and verified locally. The reviewer owns
-the next push and review. Findings 2, 4 and 5 wait for the user.
+findings. Findings 1 and 3 are fixed and verified by the re-review. The second
+and last fix round has implemented, verified and committed its grouping and
+current-entry projection fixes locally. Main advanced to `f8ab241f` during
+the final fetch and remains unmerged. No third review is planned. Findings 2,
+4 and 5 wait for the user.
 
 ## Status And Outcome
 
@@ -2446,13 +2449,33 @@ Evidence: `.context/remove-source-path-evidence/milestone-31.md`.
 - [x] Run `git add -A` and make a local Conventional Commit that names both
       fixed findings. Do not push in this fix round; the reviewer checks and
       pushes the commit before the next review.
-- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
+- [x] Capture re-review finding 1 before the fix: moved components with removed
+      and added Dark views, moved screens with removed Dark views, the same
+      edits without moves, and moves without scheme changes. Cover both
+      comparison paths, Serve and export, with and without declared CSS.
+- [x] Apply re-review option A: group each compared view with the matching
+      side of its variant pair. Keep the complete view union and each side's
+      original document route. Clarify the README and protocol if needed.
+- [x] Resolve the downstream catalogue projection blocker found by the
+      required controls: a current variant with removed Dark views receives
+      a `removed` comparison state. Apply the approved projection fix and audit
+      every other current-entry projection. Keep raw aggregate precedence and
+      per-view states unchanged. Keep the reader and every failing control.
+- [x] Run build, typecheck, lint, focused tests, the exact complete unit
+      command and the complete `cargo xtask check` at 100%. Fetch main without
+      merging. Inspect the diff and the four approved deletions. Record evidence.
+- [x] Run `git add -A` and make one local Conventional Commit that names
+      re-review finding 1 (M32). Do not push. This is the last fix round;
+      stop after its report and do not run a third review.
+- [x] After the push, use `docs/implementation-review-prompt.md` to review the
       complete diff against `origin/main` and report findings. Keep the review
       read-only. Then apply the General review-fix rule in `AGENTS.md`: fix
       `Auto-fix: yes` findings, run checks, commit, push and re-review once.
       Fix new `Auto-fix: yes` findings once more, then stop and report the rest.
       Ask the user for findings tagged `Auto-fix: no`. Add each open finding
       as one line under this TODO. Keep reports and evidence under `.context/`.
+      Both reviews are complete. The final fix stays local as instructed;
+      no third review follows it.
   - [ ] M32 finding 2 (Medium): foreign-namespace links can suppress required CSS. Recommend B: use one namespace-aware rule, after the user decides the provenance boundary.
   - [ ] M32 finding 4 (Low): control characters in config filenames can make ignored-field warnings fail. Recommend B: retain the path as data and encode controls for display.
   - [ ] M32 finding 5 (Low): the watch contract restores the retired `entries` input. Recommend B: correct the text and extend the existing docs guard with the exact obsolete claim.
@@ -2466,6 +2489,15 @@ Evidence: `.context/remove-source-path-evidence/milestone-31.md`.
   - [ ] Earlier schema example item (Low, also on main): variant description is required in the example but optional in the comparison type. Recommend correcting the example and extending its compiler-backed check.
   - [ ] Earlier exported-view item: temporary navigation omits "Changed component" lines until destination data loads. Recommend a separate decision on public affected-consumer evidence.
   - [ ] Earlier mockup item: mockups show a "Catalogue home" crumb that the viewer omits. Recommend a product decision on the shared navigation contract before changing either side.
+  - [ ] Main advanced to `f8ab241f` with #160, #156 and #144 during the final fetch. It remains unmerged as instructed; schedule integration as a separate task.
 
 Evidence: `.context/remove-source-path-evidence/milestone-32.md`.
 Fix-round evidence: `.context/remove-source-path-evidence/milestone-32-fixes.md`.
+Final fix-round evidence: `.context/remove-source-path-evidence/milestone-32-final-fix.md`.
+
+On 2026-10-07 the user approved the current-entry projection correction as part
+of re-review finding 1. Raw aggregates retain their existing precedence. A
+current entry's aggregate `removed` comparison projects as `changed`; its
+per-view states stay unchanged. The projection defect also exists on main.
+Keep all controls, complete the full checks, and make one local commit. Do not
+push or run a third review.

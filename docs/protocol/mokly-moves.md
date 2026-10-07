@@ -187,8 +187,11 @@ bounded diagnostic presentation under [terminal output](./mokly-terminal-output.
 They are not fields of `review.json` or public catalogue JSON. Plain builds publish no inferred or authored `previousPath`.
 
 Complete and selected capture retain each side's actual spelling and source
-documents. A moved component variant groups beneath its current parent; a
-removed variant stays with its baseline parent. A removed parent can therefore
+documents. Group each compared view with the same side of its variant pair:
+current views use the current variant path; baseline-only views use the
+baseline variant path. Retain the union of viewports and schemes when a move
+adds or removes views. A moved component variant groups beneath its current
+parent; a removed variant stays with its baseline parent. A removed parent can therefore
 have an empty historical variant group after all its variants pair elsewhere.
 The complete and scoped catalogue readers accept that removed parent with zero
 variants and retain its removal row; they must not restore the moved variants

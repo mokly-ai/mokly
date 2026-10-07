@@ -55,13 +55,15 @@ export function classifyComponentVariants(
   for (const { before: base, after: head } of input.pairs) {
     const selected = (head ?? base)!;
     const id = selected.path;
-    const key = id.toLowerCase();
-    const comparisons = input.compared.filter(
-      (_result, index) =>
-        (
-          input.pairedViews[index]!.after ?? input.pairedViews[index]!.before
-        )?.variantPath?.toLowerCase() === key,
-    );
+    const comparisons = input.compared.filter((_result, index) => {
+      const pair = input.pairedViews[index]!;
+      const variant = pair.after ? head : base;
+      return (
+        variant !== undefined &&
+        (pair.after ?? pair.before)?.variantPath?.toLowerCase() ===
+          variant.path.toLowerCase()
+      );
+    });
     const views = comparisons.map((result) => result.view);
     const beforeEntry = base;
     const afterEntry = head;

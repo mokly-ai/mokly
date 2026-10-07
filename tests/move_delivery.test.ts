@@ -16,7 +16,27 @@ import { removedPagePreviewSource } from "../dist/server/review_sources.js";
 import { serve } from "../dist/server/serve.js";
 
 import { movedCatalogueFixture } from "./helpers/move_catalogue.js";
-import { stylesheetMoveFixture } from "./helpers/move_review_fixture.js";
+import { assertSchemeMoveDelivery } from "./helpers/move_delivery.js";
+import {
+  schemeMoveCases,
+  stylesheetMoveFixture,
+} from "./helpers/move_review_fixture.js";
+
+for (const scenario of schemeMoveCases)
+  test(
+    `${scenario.kind} delivers ${scenario.change} Dark views: moved=${scenario.moved}, CSS=${Boolean(scenario.stylesheet)}`,
+    { timeout: 30_000 },
+    async (t) => {
+      const fixture = await stylesheetMoveFixture(
+        t,
+        scenario.kind,
+        scenario.destination,
+        scenario.stylesheet,
+        scenario,
+      );
+      await assertSchemeMoveDelivery(t, fixture, scenario);
+    },
+  );
 
 for (const kind of ["screen", "component"] as const)
   for (const destination of ["new/home", "new/deep/home"])

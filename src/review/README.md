@@ -102,6 +102,9 @@ Snapshots keep original before/after paths and bytes; logical reference
 normalization affects equality only. Resource traversal and CSS matching keep
 real URLs. Moved variants group under their current component parent, while
 affected-consumer evidence retains historical context and usage paths.
+Each variant retains the union of both sides' viewports and schemes. Group a
+baseline-only view by the baseline variant path and a current view by the
+current variant path, including when a move adds or removes Dark views.
 
 Lower integer manifest versions and former-name sentinels give the existing
 typed unavailable outcome. Former files are never read. Invalid v8 data stays

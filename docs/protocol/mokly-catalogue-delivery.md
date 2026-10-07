@@ -18,6 +18,9 @@ spread a manifest, entry, or internal evidence object into public JSON.
   viewer. Documents copy the catalogue's `colorSchemes` and have no views.
   A current entry's comparison state is never `removed`; that state is valid
   only inside `removedEntries`.
+  A current entry whose aggregate comparison state is `removed` because some
+  of its views were removed projects as `changed`; its per-view states stay
+  unchanged.
 - Pages and documents have no viewport or usage. Use cases keep ordered
   standalone-screen steps by path; reused frames add no screen uses or
   duplicate instance records.
