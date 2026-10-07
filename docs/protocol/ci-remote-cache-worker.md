@@ -217,10 +217,14 @@ The dedicated `turbo-cache.yml` uses manual dispatch and `main` pushes touching
 `scripts/turbo-cache/**`. It uses immutable action revisions, npm 11.21.0,
 `npm ci`, the repository's pinned Wrangler, and a 30-minute timeout.
 Validate `vars.CLOUDFLARE_ACCOUNT_ID` and
-`secrets.CLOUDFLARE_WORKERS_API_TOKEN`; give that account API token only the
-Workers `Editor` role scoped to the `mokly-turbo-cache` Worker. A deploy needs
-no R2 permission. Per-Worker scope requires an existing Worker, so an admin's
-own login creates the Worker with the first deploy. Run Worker typecheck/tests
+`secrets.CLOUDFLARE_WORKERS_API_TOKEN`. That account API token has only the
+Workers `Editor` role scoped to the `mokly-turbo-cache` Worker, plus Workers
+`Metadata Read-Only` for all Workers, because Wrangler reads the account's
+`workers.dev` subdomain after each deploy. A deploy needs no R2 permission.
+Per-Worker scope requires an existing Worker, so an admin's own login creates
+the Worker with the first deploy. The token is stored only in the GitHub
+environment `turbo-cache-deploy`, which allows only `main`; the deploy job must
+declare that environment. Run Worker typecheck/tests
 before `npx --no-install wrangler deploy --config scripts/turbo-cache/wrangler.jsonc`.
 Never deploy from a fork or supply Cloudflare credentials to build-cache clients.
 

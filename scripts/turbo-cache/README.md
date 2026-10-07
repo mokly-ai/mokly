@@ -134,8 +134,11 @@ npx --no-install wrangler deploy --config scripts/turbo-cache/wrangler.jsonc
 Generate four independent values: three tokens and the Turbo signature key.
 The Worker never receives the signature key. The workflow uses
 `vars.CLOUDFLARE_ACCOUNT_ID` and `secrets.CLOUDFLARE_WORKERS_API_TOKEN`. That
-account API token has only the Workers `Editor` role, scoped to the
-`mokly-turbo-cache` Worker; deploys need no R2 permission.
+account API token has the Workers `Editor` role scoped to the
+`mokly-turbo-cache` Worker, plus Workers `Metadata Read-Only` for all Workers
+so that Wrangler can read the account's `workers.dev` subdomain. Deploys need
+no R2 permission. The token lives only in the GitHub environment
+`turbo-cache-deploy`, which allows only `main`.
 It deploys only from main in this repository, after Worker typecheck/tests and
 the dependency audit. A new dispatch workflow is unavailable before it enters
 the default branch; the authorized first deployment can use the checked pinned

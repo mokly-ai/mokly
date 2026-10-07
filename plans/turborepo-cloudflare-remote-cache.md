@@ -229,8 +229,9 @@ already a ratchet source root, so the length and export ratchets cover the
 Worker. The deployment workflow `.github/workflows/turbo-cache.yml` runs
 `wrangler deploy` on `workflow_dispatch` and on `main` pushes that touch
 `scripts/turbo-cache/**`. It uses `vars.CLOUDFLARE_ACCOUNT_ID` and a new
-`secrets.CLOUDFLARE_WORKERS_API_TOKEN`: an account API token with only the
-Workers `Editor` role, scoped to the `mokly-turbo-cache` Worker.
+`secrets.CLOUDFLARE_WORKERS_API_TOKEN` from the main-only GitHub environment
+`turbo-cache-deploy`: an account API token with the Workers `Editor` role
+scoped to the `mokly-turbo-cache` Worker plus Workers `Metadata Read-Only`.
 
 ## CI Wiring
 
@@ -573,7 +574,7 @@ in CI uses it yet, so the product stays functional.
   - [x] Fix re-review finding R1: log every 500-or-higher response, including safe configuration-check diagnostics and invalid stored metadata; preserve client responses and capture failing regressions first.
   - [x] Run the final re-review gate, close the review with the R1 commit SHA, commit the plan, and push. Stop after this last fix round.
 
-  - Finding 1 (high, security): the deploy workflow uses an account-wide Workers/R2 write token as a repository secret, which any branch workflow can read; recommend a main-only GitHub environment, reduced permissions, and a rule/test that no Workers/R2 write credential is a repository secret or reaches a pull_request workflow. Waiting for the user.
+  - Finding 1 (high, security): the deploy workflow uses an account-wide Workers/R2 write token as a repository secret, which any branch workflow can read; recommend a main-only GitHub environment, reduced permissions, and a rule/test that no Workers/R2 write credential is a repository secret or reaches a pull_request workflow. Partly resolved on 2026-10-07: the token lives in the main-only environment `turbo-cache-deploy` with Worker-scoped permissions. The rule, the workflow test, and a check of the preview token's permissions wait for the user.
   - Finding 3 (low, missing test): no automated test runs the Workers runtime, so a broken FixedLengthStream path can deploy; recommend an unstable_startWorker integration test with local R2 in the deploy gate. Waiting for the user.
   - [x] Fix finding 2: disable version preview URLs explicitly, assert the config, and document the old-version URL check after token rotation.
   - [x] Fix finding 4: log unexpected error names/messages through the injected logger while keeping client responses generic; capture the regression first.
@@ -599,12 +600,17 @@ before the merge.
       `.context/turborepo-cloudflare-remote-cache/provisioning-2026-10-06.md`.
 - [x] Admin: add the 30-day expiry lifecycle rule `expire-artifacts`. Done on
       2026-10-06.
-- [ ] Admin: create the account API token `github-actions-mokly-turbo-cache-deploy`
-      with only the Workers `Editor` role, scoped to the `mokly-turbo-cache`
-      Worker. Store it as `CLOUDFLARE_WORKERS_API_TOKEN`. Where GitHub stores
-      it follows the decision on Milestone 3 review finding 1.
-- [ ] Run one deploy with that token from the admin's machine before merge to
-      prove the permission is enough.
+- [x] Admin: create the account API token `github-actions-mokly-turbo-cache-deploy`
+      with the Workers `Editor` role scoped to the `mokly-turbo-cache` Worker
+      and Workers `Metadata Read-Only` for all Workers. Done on 2026-10-07;
+      stored as `CLOUDFLARE_WORKERS_API_TOKEN` in the GitHub environment
+      `turbo-cache-deploy`, which allows only `main`.
+- [x] Run one deploy with that token from the admin's machine before merge to
+      prove the permission is enough. Done on 2026-10-07; see
+      `.context/turborepo-cloudflare-remote-cache/provisioning-2026-10-07.md`.
+- [ ] Add `environment: turbo-cache-deploy` to the deploy job in
+      `turbo-cache.yml` and assert it in `tests/turbo_cache_workflow.test.ts`.
+      The token is not a repository secret, so the job cannot deploy without it.
 - [ ] Admin: choose CI policy A, B (recommended), or C. Restrict the trusted
       writer GitHub environment to main for A/B; apply the same choice to PR
       previews. Record B's shared-PR-token residual risk or C's accepted risk.
