@@ -5,7 +5,8 @@ use std::sync::Arc;
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::remote::clients::{SystemBlacksmith, SystemGithub};
+use crate::remote::clients::blacksmith::SystemBlacksmith;
+use crate::remote::clients::github::SystemGithub;
 use crate::remote::contracts::{Blacksmith, Github, GithubRunState, Output};
 use crate::remote::error::{Error, Operation};
 use crate::remote::process::ProcessExecuteMock;
@@ -181,7 +182,8 @@ fn github_state_read_preserves_command_failures_and_rejects_empty_output() {
                 error,
                 Error::Command {
                     operation: Operation::Github,
-                    code: Some(1)
+                    code: Some(1),
+                    ..
                 }
             ));
         } else {

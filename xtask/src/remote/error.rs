@@ -82,12 +82,14 @@ pub(crate) enum Error {
     #[error("[xtask/remote] GitHub run state is empty")]
     EmptyGithubState,
     /// A command returned a failed or signal exit.
-    #[error("[xtask/remote] {operation:?} command failed with {}", termination(*code))]
+    #[error("[xtask/remote] {operation:?} command failed with {}{}", termination(*code), command_detail(detail))]
     Command {
         /// Command responsibility.
         operation: Operation,
         /// Numeric exit code, absent for a signal.
         code: Option<i32>,
+        /// One bounded diagnostic line for cleanup commands only.
+        detail: Option<String>,
     },
     /// Preserve both script streams alongside the original typed failure.
     #[error("[xtask/remote] {}", remote_message(source))]
@@ -184,5 +186,13 @@ fn termination(code: Option<i32>) -> String {
     match code {
         Some(code) => format!("exit {code}"),
         None => "a signal".to_owned(),
+    }
+}
+
+/// Append a diagnostic only when the cleanup command supplied a line.
+fn command_detail(detail: &Option<String>) -> String {
+    match detail {
+        Some(detail) => format!(": {detail}"),
+        None => String::new(),
     }
 }

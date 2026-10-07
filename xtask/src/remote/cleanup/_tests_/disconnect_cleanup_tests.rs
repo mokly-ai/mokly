@@ -6,7 +6,8 @@ use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::remote::cleanup::{BoxCleanup, CleanupGuard};
+use crate::remote::cleanup::contracts::BoxCleanup;
+use crate::remote::cleanup::guard::CleanupGuard;
 use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
 
@@ -54,6 +55,7 @@ fn fixture(close: Close, failed_stop: bool) -> (Dependencies, Arc<Mutex<Vec<Stri
                     Err(Error::Command {
                         operation: Operation::Blacksmith,
                         code: Some(1),
+                        detail: None,
                     })
                 } else {
                     Ok(())
@@ -108,7 +110,7 @@ fn closed_connection_is_first_and_has_no_close_output() {
         .filter(|event| !event.starts_with("message:"))
         .map(String::as_str)
         .collect();
-    assert_eq!(operations, ["close", "status", "stop", "cancel"]);
+    assert_eq!(operations, ["close", "status", "cancel", "stop"]);
     assert!(!events.iter().any(|event| event.contains("SSH connection")));
 }
 
@@ -163,7 +165,7 @@ fn failed_close_warns_once_and_does_not_change_cleanup_failure_counts() {
         assert!(position("close") < position(warning));
         assert!(position(warning) < position("status"));
         assert!(position("status") < position("stop"));
-        assert!(position("stop") < position("cancel"));
+        assert!(position("cancel") < position("stop"));
     }
 }
 
@@ -245,5 +247,5 @@ fn a_panicking_close_during_unwinding_does_not_prevent_status_stop_or_cancel() {
         .filter(|event| !event.starts_with("message:"))
         .map(String::as_str)
         .collect();
-    assert_eq!(operations, ["close", "status", "stop", "cancel"]);
+    assert_eq!(operations, ["close", "status", "cancel", "stop"]);
 }

@@ -10,6 +10,7 @@ fn command_failures_name_exit_codes_and_signals() {
         let source = Error::Command {
             operation: Operation::Blacksmith,
             code,
+            detail: None,
         };
         assert!(source.to_string().ends_with(wording));
         let wrapped = error::Error::Remote { source }.to_string();
@@ -44,6 +45,7 @@ fn wrapped_remote_errors_do_not_repeat_their_module_prefix() {
         source: Box::new(Error::Command {
             operation: Operation::Blacksmith,
             code: Some(1),
+            detail: None,
         }),
         failures: 1,
     };

@@ -8,7 +8,8 @@ use std::time::Duration;
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::remote::cleanup::{BoxCleanup, CleanupGuard};
+use crate::remote::cleanup::contracts::BoxCleanup;
+use crate::remote::cleanup::guard::CleanupGuard;
 use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
 
@@ -50,6 +51,7 @@ fn fixture(case: Case) -> (Dependencies, Arc<Mutex<Vec<String>>>) {
                     return Err(Error::Command {
                         operation: Operation::Blacksmith,
                         code: Some(1),
+                        detail: None,
                     });
                 }
                 Ok(format!(
@@ -76,6 +78,7 @@ fn fixture(case: Case) -> (Dependencies, Arc<Mutex<Vec<String>>>) {
                     Err(Error::Command {
                         operation: Operation::Blacksmith,
                         code: Some(1),
+                        detail: None,
                     })
                 } else {
                     Ok(())
@@ -145,7 +148,7 @@ fn a_retrying_box_does_not_block_another_box_and_keeps_its_order() {
     assert!(position("stop:tbx_b:1") < position("stop:tbx_a:2"));
     assert!(position("close:tbx_b") < position("status:tbx_b"));
     assert!(position("status:tbx_b") < position("stop:tbx_b:1"));
-    assert!(position("stop:tbx_b:1") < position("cancel:456"));
+    assert!(position("cancel:456") < position("stop:tbx_b:1"));
     let own: Vec<_> = events
         .iter()
         .filter(|event| !event.contains("tbx_b") && *event != "cancel:456")
@@ -156,12 +159,12 @@ fn a_retrying_box_does_not_block_another_box_and_keeps_its_order() {
         [
             "close:tbx_a",
             "status:tbx_a",
+            "cancel:123",
             "stop:tbx_a:1",
             "wait:start",
             "wait:end",
             "status:tbx_a",
-            "stop:tbx_a:2",
-            "cancel:123"
+            "stop:tbx_a:2"
         ]
     );
 }

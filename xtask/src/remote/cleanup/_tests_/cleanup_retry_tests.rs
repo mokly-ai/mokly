@@ -7,7 +7,8 @@ use std::time::Duration;
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::remote::cleanup::{BoxCleanup, CleanupGuard};
+use crate::remote::cleanup::contracts::BoxCleanup;
+use crate::remote::cleanup::guard::CleanupGuard;
 use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
 
@@ -50,6 +51,7 @@ fn fixture(failed_stops: usize, completes: bool) -> (Dependencies, Arc<Mutex<Vec
                     Err(Error::Command {
                         operation: Operation::Blacksmith,
                         code: Some(1),
+                        detail: None,
                     })
                 } else {
                     Ok(())
@@ -74,18 +76,14 @@ fn fixture(failed_stops: usize, completes: bool) -> (Dependencies, Arc<Mutex<Vec
             clock: shared.clone(),
             git: unused.clone(),
             blacksmith: shared.clone(),
-            github: Arc::new(if completes {
-                Unimock::new(())
-            } else {
-                Unimock::new(
-                    GithubCancelMock
-                        .each_call(matching!(123))
-                        .answers_arc(Arc::new(move |_, _| {
-                            cancel_events.lock().unwrap().push("cancel".into());
-                            Ok(())
-                        })),
-                )
-            }),
+            github: Arc::new(Unimock::new(
+                GithubCancelMock
+                    .each_call(matching!(123))
+                    .answers_arc(Arc::new(move |_, _| {
+                        cancel_events.lock().unwrap().push("cancel".into());
+                        Ok(())
+                    })),
+            )),
             fingerprint: unused.clone(),
             aggregate: unused.clone(),
             logs: unused.clone(),
@@ -106,8 +104,8 @@ fn failed_stops_use_three_attempts_with_five_and_ten_second_waits() {
     assert_eq!(
         *events.lock().unwrap(),
         [
-            "close", "status", "stop", "wait:5", "status", "stop", "wait:10", "status", "stop",
-            "cancel"
+            "close", "status", "cancel", "stop", "wait:5", "status", "stop", "wait:10", "status",
+            "stop"
         ]
     );
 }
@@ -122,13 +120,13 @@ fn a_second_attempt_success_has_no_ten_second_wait() {
     assert_eq!(
         *events.lock().unwrap(),
         [
-            "close", "status", "stop", "wait:5", "status", "stop", "cancel"
+            "close", "status", "cancel", "stop", "wait:5", "status", "stop"
         ]
     );
 }
 
 #[test]
-fn completed_status_before_a_retry_skips_stop_and_cancellation() {
+fn completed_status_before_a_retry_skips_stop_and_additional_cancellation() {
     let (dependencies, events) = fixture(1, true);
     let cleanup = CleanupGuard::new(&dependencies);
     cleanup.track("tbx_a");
@@ -136,7 +134,7 @@ fn completed_status_before_a_retry_skips_stop_and_cancellation() {
     assert!(cleanup.pending().is_empty());
     assert_eq!(
         *events.lock().unwrap(),
-        ["close", "status", "stop", "wait:5", "status"]
+        ["close", "status", "cancel", "stop", "wait:5", "status"]
     );
 }
 

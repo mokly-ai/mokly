@@ -5,7 +5,8 @@ use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::remote::cleanup::{BoxCleanup, CleanupGuard};
+use crate::remote::cleanup::contracts::BoxCleanup;
+use crate::remote::cleanup::guard::CleanupGuard;
 use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
 use crate::remote::runner::DefaultRemoteRunner;
@@ -46,6 +47,7 @@ fn cleanup_continues_after_status_stop_and_optional_github_failures() {
                         Err(Error::Command {
                             operation: Operation::Blacksmith,
                             code: Some(1),
+                            detail: None,
                         })
                     } else if case == 4 && id == "tbx_a" {
                         Ok("ID STATUS REPO\ntbx_other completed mokly\ntbx_a completed mokly\n/actions/runs/123".into())
@@ -61,12 +63,12 @@ fn cleanup_continues_after_status_stop_and_optional_github_failures() {
                         Err(Error::Command {
                             operation: Operation::Blacksmith,
                             code: Some(1),
+                            detail: None,
                         })
                     } else {
                         Ok(())
                     }
                 })),
-            ReporterExecutorMock.each_call(matching!(_)).returns(()),
         )));
         let github = Arc::new(if case < 2 {
             Unimock::new(())
@@ -97,7 +99,11 @@ fn cleanup_continues_after_status_stop_and_optional_github_failures() {
                 aggregate: unused.clone(),
                 logs: unused.clone(),
                 interrupt: unused,
-                reporter: shared,
+                reporter: Arc::new(if case == 0 {
+                    Unimock::new(())
+                } else {
+                    Unimock::new(ReporterExecutorMock.each_call(matching!(_)).returns(()))
+                }),
                 workspace: PathBuf::from("/workspace"),
             },
         };

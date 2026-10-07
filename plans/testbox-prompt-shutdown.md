@@ -190,18 +190,24 @@ Evidence: `.context/testbox-prompt-shutdown/milestone-2.md`.
 
 ## Milestone 3: Cancel order and error text
 
-The GitHub run ends right after the close, and cleanup warnings show why a
-command failed.
+Completed. Cleanup closes each connection and attempts one cancellation
+before stop. Cleanup warnings keep one bounded command detail.
 
-- [ ] Apply the cleanup order from the Milestone 1 contract.
-- [ ] Keep the error line of a failed status, stop, cancel, run state or close
+Evidence: `.context/testbox-prompt-shutdown/milestone-3.md`; repeat results: `.context/testbox-prompt-shutdown/milestone-3-repeats.md`.
+
+- [x] Apply the cleanup order from the Milestone 1 contract.
+- [x] Keep the error line of a failed status, stop, cancel, run state or close
       command in the typed error. Show it in the warning, at most 200
       characters, after redaction.
-- [ ] Add unit tests for the call order, the warning text, a long line, an
+- [x] Add unit tests for the call order, the warning text, a long line, an
       empty error stream and redaction of the key.
-- [ ] Update the xtask README.
-- [ ] Run the xtask tests, `cargo fmt --all -- --check`, Clippy and the
-      length lints. Commit.
+- [x] Split cleanup and client modules by responsibility before they exceed
+      300 lines. Keep module roots thin and update imports and live links.
+- [x] Repeat each test that uses real processes or threads ten times. Save
+      the results under `.context/testbox-prompt-shutdown/`.
+- [x] Update the xtask README.
+- [x] Run the xtask tests, `cargo fmt --all -- --check`, Clippy and the
+      length lints, local repository gate and Markdown checks. Commit and push.
 
 ## Milestone 4: Verification, close-out and review
 

@@ -11,8 +11,9 @@ implemented. The complete explicit remote smoke check passes.
 The [Testbox execution contract](./remote-verification-testbox.md) defines the
 workflow, commands, probe, suite wrapper, source-tree fingerprint, report
 download and aggregation.
-The [cleanup contract](./remote-verification-cleanup.md) defines implemented
-cleanup rules and the approved prompt shutdown target.
+The [cleanup contract](./remote-verification-cleanup.md) is fully implemented.
+It closes the shared SSH connection, cancels a known run once before stop and
+keeps one bounded diagnostic line for cleanup command failures.
 
 ## Executor Selection
 

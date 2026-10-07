@@ -145,6 +145,7 @@ pub(super) fn client(
                 return Err(Error::Command {
                     operation: Operation::Blacksmith,
                     code: Some(1),
+                    detail: None,
                 });
             }
             Ok(())
@@ -157,6 +158,7 @@ pub(super) fn client(
                 return Err(Error::Command {
                     operation: Operation::Blacksmith,
                     code: Some(1),
+                    detail: None,
                 });
             }
             Ok(
@@ -199,6 +201,7 @@ pub(super) fn client(
                 return Err(Error::Command {
                     operation: Operation::Blacksmith,
                     code: Some(1),
+                    detail: None,
                 });
             }
             Ok(())

@@ -148,9 +148,11 @@ It does not change the required source fingerprint or `HEAD`.
 The [remote contract](../docs/protocol/remote-verification.md) defines the
 availability order, probe barrier and report aggregate.
 The [cleanup contract](../docs/protocol/remote-verification-cleanup.md) defines
-cleanup rules. Closing the shared SSH connection is implemented. Cancelling
-before stop and retaining command error text remain approved targets under the
-[prompt shutdown plan](../plans/testbox-prompt-shutdown.md).
+cleanup rules. The full cleanup contract is implemented: close the shared SSH
+connection, cancel a known run once, then check status and stop. Cleanup
+command errors retain one bounded diagnostic line. The
+[prompt shutdown plan](../plans/testbox-prompt-shutdown.md) keeps complete remote
+verification and cost measurement pending.
 Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
 Each command worker downloads its report and cleans up its box when it ends.
 It does not wait for other commands. Final cleanup covers only remaining boxes.
@@ -163,9 +165,12 @@ An unset or empty `HOME` warns once. A missing control directory or socket
 starts no process and prints `information: no shared SSH connection for <box-id>`
 once. A failed close warns once and does not change the cleanup failure count.
 A socket that disappears during a failed close counts as closed and prints
-nothing. Cleanup still stops before it cancels the GitHub run.
+nothing. A recorded run ID is cancelled immediately after close when `gh` is
+available. An ID first found in status is cancelled before stop. Record the
+cancel attempt before its call. Retries, final cleanup and panic cleanup do
+not repeat it, even after a failed cancel or a different later ID.
 The status table can prove a box already completed. That box needs no stop or
-GitHub cancellation. Cleanup keeps run IDs from warmup and probe output as a
+unattempted GitHub cancellation. Cleanup keeps run IDs from warmup and probe output as a
 fallback when status fails or names no run. A failed stop gets retries after
 5 seconds and 10 more seconds, with at most three attempts per box.
 Final cleanup counts each box once if it is neither stopped nor proven completed.
@@ -175,12 +180,18 @@ its manual stop command and the 30-minute idle timeout.
 After a failed GitHub cancellation, xtask reads the run state with
 `gh run view <id> --json status --jq .status`. A completed run
 gets an information line. Other states and failed reads keep the warning.
+Failed state reads also print their own warning. Before each cancellation
+attempt, print `information: cleanup box=<box-id> GitHub run=<id>` once.
 The aggregate runs after all commands and cleanup end.
 Each check creates new report and log directories under `.context/`.
 Their shared run name is UTC `YYYYMMDDTHHMMSSZ` followed by `-<process-id>`.
 Decision, information and warning lines start with `[xtask/executor]`.
 One function formats warnings that embed errors. Each error keeps its module
 prefix. Remote errors use `[xtask/remote]`. No line repeats a prefix.
+Status, stop, cancel, run-state and SSH close failures keep the last nonempty
+stderr line, or stdout when stderr has no line. Trim the line and keep at most
+200 characters. Append it after the exit or signal wording. Other command
+errors keep their existing text.
 Suite progress and summaries start with `[xtask/remote]`.
 Failed commands show their last 60 log lines and the log path.
 Failed aggregate and fingerprint reads show captured stdout and stderr after
@@ -225,8 +236,12 @@ signals and expected-state waits. They do not assert elapsed time.
 - [`src/remote/runner.rs`](./src/remote/runner.rs) owns remote phase order.
 - [`src/remote/contracts.rs`](./src/remote/contracts.rs) defines injected
   environment, Git, CLI, clock, script, log, signal and output boundaries.
-- [`src/remote/cleanup.rs`](./src/remote/cleanup.rs) owns box state, captured run
-  IDs, stop retries and final cleanup counts.
+- [`src/remote/cleanup/guard.rs`](./src/remote/cleanup/guard.rs) owns box state
+  and final counts. [`steps.rs`](./src/remote/cleanup/steps.rs) owns close,
+  status and stop retries. [`cancellation.rs`](./src/remote/cleanup/cancellation.rs)
+  owns the single cancel attempt and run-state diagnostics.
+- [`src/remote/clients/outcome.rs`](./src/remote/clients/outcome.rs) owns command
+  errors and bounded cleanup details for the Blacksmith, GitHub and SSH adapters.
 - [`src/remote/reporting.rs`](./src/remote/reporting.rs) formats error warnings
   with one copy of each module prefix.
 - [`src/remote/process.rs`](./src/remote/process.rs) streams output and kills

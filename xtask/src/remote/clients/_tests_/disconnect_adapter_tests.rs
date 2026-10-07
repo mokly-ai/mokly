@@ -8,7 +8,7 @@ use std::sync::Arc;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::remote::adapter_support::TestDirectory;
-use crate::remote::clients::SystemBlacksmith;
+use crate::remote::clients::blacksmith::SystemBlacksmith;
 use crate::remote::contracts::{Blacksmith, Disconnection, Output};
 use crate::remote::error::{Error, Operation};
 use crate::remote::process::ProcessExecuteMock;
@@ -119,7 +119,7 @@ fn disconnect_preserves_ssh_exit_and_signal_errors_when_the_socket_remains() {
             home: Some(home.path().to_owned()),
         };
         assert!(
-            matches!(client.disconnect(BOX_ID), Err(Error::Command { operation: Operation::Ssh, code: actual }) if actual == code)
+            matches!(client.disconnect(BOX_ID), Err(Error::Command { operation: Operation::Ssh, code: actual, .. }) if actual == code)
         );
     }
 }

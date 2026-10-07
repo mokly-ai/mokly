@@ -12,7 +12,7 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::child_environment::SECRET_VARIABLES;
 use crate::remote::adapter_support::TestDirectory;
-use crate::remote::clients::SystemBlacksmith;
+use crate::remote::clients::blacksmith::SystemBlacksmith;
 use crate::remote::contracts::{Blacksmith, ClockSleepMock, Disconnection, InterruptRequestedMock};
 use crate::remote::process::SystemProcess;
 
@@ -31,7 +31,7 @@ fn ssh_close_removes_secret_variables_and_runs_after_an_interrupt() {
         let mut child = Command::new(env::current_exe().unwrap());
         child.args([
             "--exact",
-            "remote::clients::disconnect_process_adapter_tests::ssh_close_removes_secret_variables_and_runs_after_an_interrupt",
+            "remote::clients::disconnect::disconnect_process_adapter_tests::ssh_close_removes_secret_variables_and_runs_after_an_interrupt",
         ]);
         child.env(MARKER, "1").env("PATH", binaries.path());
         for name in SECRET_VARIABLES {

@@ -4,11 +4,12 @@ Continuation of [Remote Verification](./remote-verification.md).
 
 ## Delivery Status
 
-The shared SSH close, stop retries, completion proof, interrupts and panic
-guard are implemented. The current per-box order is close, status, stop, then
-cancellation. Cancelling before stop and retaining command error text remain
-approved targets under the
-[prompt shutdown plan](../../plans/testbox-prompt-shutdown.md).
+Implemented. Cleanup closes the shared SSH connection, cancels a known run
+once, then checks status and stops the box. Cleanup command errors retain one
+bounded diagnostic line. Stop retries, completion proof, interrupts and the
+panic guard use the same rules. The
+[prompt shutdown plan](../../plans/testbox-prompt-shutdown.md) keeps complete
+remote verification and cost measurement pending.
 
 ## Cleanup And Interrupts
 
@@ -147,6 +148,12 @@ A stop that succeeds on a retry does not fail the check.
 
 Use `gh run cancel <github-run-id>` at most once per box, at the point defined
 in the per-box order. A completed box status skips an unattempted cancellation.
+Print this line once, immediately before the cancellation attempt:
+
+```text
+information: cleanup box=<box-id> GitHub run=<id>
+```
+
 If cancellation fails, read `gh run view <id> --json status --jq .status`.
 Trim the output. Map `completed` to the typed completed state. Map every other
 nonempty value to the other state. Empty output is a typed read error.
@@ -167,8 +174,10 @@ For failed status, stop, cancel, run-state and close commands, store the
 diagnostic line in the typed command error. Do not format it at the call site.
 Select the last nonempty standard-error line. If standard error has no
 nonempty line, select the last nonempty standard-output line instead.
-Trim the selected line. Apply the existing key redaction before truncation.
+Trim the selected line. Use output after process input redaction.
 Keep at most 200 characters. Use character boundaries, not byte boundaries.
+These five requests have no input and remove the shared secret environment
+variables. Never pass a key to them. Errors from other commands stay unchanged.
 
 Append the line to the existing typed error text with `: `.
 If neither stream supplies a line, append nothing and add no separator.
