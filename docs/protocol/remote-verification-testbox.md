@@ -4,7 +4,7 @@ Continuation of [Remote Verification](./remote-verification.md).
 
 ## Delivery Status
 
-The active [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
+The [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
 approves this target. Explicit remote execution, the fingerprint, suite wrapper
 and workflow are implemented. The wrapper selects `--executor local`.
 Workflow validation and both box suite smoke checks pass.
@@ -17,9 +17,9 @@ Workflow verification executes the Testbox scripts instead of matching their tex
 
 `.github/workflows/blacksmith-testbox.yml` prepares one Testbox per dispatch.
 Use `workflow_dispatch` with an optional `testbox_id` input that defaults to
-an empty string. Use `push` with a path filter for this workflow file only.
-A push run registers the workflow before merge. The push trigger has no
-branch filter.
+an empty string. Use `push` with `branches: ["**"]` and a path filter for this
+workflow file only. A branch push must match both filters. Tag pushes do not
+start the workflow. A push run registers the workflow before merge.
 
 Set `permissions: contents: read`. Use no workflow secrets.
 Run one job on `blacksmith-2vcpu-ubuntu-2404`.
@@ -97,6 +97,8 @@ The wrapper accepts only the suite and shard forms from
 default or `strict`. The wrapper accepts that option only with the repository
 suite and passes it to `cargo xtask check`. The command name stays
 `repository`. Invalid arguments fail before any suite starts.
+Both scripts use `validateFingerprint` from `source-tree.mjs`.
+Its error contains no usage text. Each script adds its own usage line.
 
 ## Readiness And Sync Probe
 
@@ -164,6 +166,10 @@ every box. Run it from the repository root.
 3. Inspect each path without following symbolic links.
    Skip paths that do not exist. Other read errors fail the command.
    Reject directories and other unsupported file types.
+   Name the repository-relative path in that error. Tell the caller to ignore
+   or remove a nested repository or worktree. Ignore `.claude/worktrees/` in
+   the repository's `.gitignore`. Other non-ignored nested repositories still
+   fail the fingerprint; do not silently omit them.
 4. For a regular file, read its working-tree bytes. Use mode `100755` if any
    executable permission bit is set. Otherwise use `100644`.
    For a symbolic link, use mode `120000`. Hash its link-target bytes.
@@ -184,6 +190,42 @@ A mismatch returns nonzero. Both scripts include the expected and actual
 fingerprints in the mismatch error. `--print-head` adds the full lowercase local
 `HEAD` SHA on a separate line after the fingerprint. Read failures return
 nonzero. The probe checks that SHA independently from the digest.
+
+## Report Download And Aggregation
+
+The suite wrapper writes each report on its box to
+`.context/verification-reports/remote/<command>.json`.
+Only unit shards 1 through 4, browser shards 1 through 4 and hydration produce
+the nine required reports. Repository and package outcomes use command exits.
+
+Allocate a new local report directory for each run:
+`.context/verification-reports/remote/<run>/`.
+The `<run>` value is UTC time in `YYYYMMDDTHHMMSSZ` format, a hyphen and the
+xtask process ID in decimal. For example, `20261006T134131Z-1234`.
+Compute it once at run start. Report and log directories use the same value.
+Download each report there under its command name. Do not use reports from
+another run. A missing or failed download fails remote verification.
+Download each report as its command ends, before stopping that box.
+
+Use the CLI download command for each required report:
+
+```bash
+blacksmith testbox download --id <box-id> .context/verification-reports/remote/<command>.json .context/verification-reports/remote/<run>/<command>.json
+```
+
+Run the existing aggregate after box cleanup:
+
+```bash
+node scripts/verification/aggregate.mjs --reports .context/verification-reports/remote/<run> --commit <local-head> --runtimes node-22.14.0
+```
+
+The [existing evidence rules](./ci-verification.md#inventory-and-report-evidence)
+still apply. Keep the report schema unchanged. The aggregate must accept
+exactly nine reports for the expected commit and runtime profile.
+It must prove complete shard coverage and the browser/hydration partition.
+The box `HEAD` must equal local `HEAD`, so the commit checks stay valid.
+The fingerprint covers uncommitted source changes without changing report
+identity. The final local fingerprint check rejects changes made during the run.
 
 ## Related Docs
 

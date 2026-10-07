@@ -3,8 +3,9 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use crate::remote::contracts::{Blacksmith, Github, Output};
+use crate::remote::contracts::{Blacksmith, Github, GithubRunState, Output};
 use crate::remote::error::{Error, Operation, Result};
+use crate::remote::parse::github_run_state;
 use crate::remote::process::{Process, Request};
 
 /// Blacksmith client backed by an injected process host.
@@ -153,6 +154,28 @@ impl Github for SystemGithub {
             blacksmith: false,
         })?;
         success(&output, Operation::Github)
+    }
+    fn state(&self, id: u64) -> Result<GithubRunState> {
+        let output = self.process.execute(&Request {
+            program: "gh".into(),
+            args: vec![
+                "run".into(),
+                "view".into(),
+                id.to_string(),
+                "--json".into(),
+                "status".into(),
+                "--jq".into(),
+                ".status".into(),
+            ],
+            cwd: self.workspace.clone(),
+            operation: Operation::Github,
+            input: None,
+            log: None,
+            cancellable: false,
+            blacksmith: false,
+        })?;
+        success(&output, Operation::Github)?;
+        github_run_state(&output.stdout)
     }
 }
 

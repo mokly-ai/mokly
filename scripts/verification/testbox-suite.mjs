@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 
 import { parseShardArgument } from "./evidence.mjs";
 import { runCaptured, runInherited } from "./process.mjs";
-import { parseSourceTreeArguments, readSourceTree } from "./source-tree.mjs";
+import { readSourceTree, validateFingerprint } from "./source-tree.mjs";
 
 const SUITES = new Set([
   "repository",
@@ -36,10 +36,12 @@ export function parseTestboxArguments(args) {
       throw new Error(USAGE);
     values.set(flag, value);
   }
-  const { expected } = parseSourceTreeArguments([
-    "--expect",
-    values.get("--expect"),
-  ]);
+  let expected;
+  try {
+    expected = validateFingerprint(values.get("--expect"));
+  } catch (error) {
+    throw new Error(`${error.message}; ${USAGE}`, { cause: error });
+  }
   const suite = values.get("--suite");
   if (!SUITES.has(suite)) throw new Error(`invalid suite; ${USAGE}`);
   const shard = parseShardArgument(
