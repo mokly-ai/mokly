@@ -204,7 +204,7 @@ fixed before this plan can prove its result.
 - The five-second navigation target, which `origin/main` also missed cold in a
   paired run, and the background build that renders every page before
   classification (about 90 seconds on the cumulative fixture).
-- Moving prefetched document buffers or derived-mode outputs out of memory.
+- Moving prefetched document buffers or the worker's accepted output map out of memory.
 
 ## Design Summary
 
@@ -2039,12 +2039,17 @@ Evidence: `.context/scalable-inline-style-analysis/m12-merge/`.
       push the branch.
       User instruction (2026-10-07): commit locally and stop for the supervisor's check before the push.
       Superseded by the supervisor's rerun instruction (2026-10-07): push after the required verification and smoke checks pass.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`. Keep the review read-only, then apply main's
       [review-fix rule](../AGENTS.md#general): fix `Auto-fix: yes` findings,
       re-review once and report fixed and open findings separately.
       Unrelated flaky test: `viewer.spec.ts`, "uncontrolled selection, slots and handle lifecycle", failed with "Execution context was destroyed, most likely because of a navigation"; isolated reruns passed 9/10 on both branch and clean main in the same boot; suspect navigation racing `page.evaluate` at line 31. Evidence: `.context/scalable-inline-style-analysis/m12-merge/fourth/viewer-repeat-summary.md`.
+      Review complete; report: `.context/scalable-inline-style-analysis/m12-review/report.md`.
+      Finding 1 (Medium, test): 43 branch test files repeat identical committed/derived passes after #156 removed the modes; titles and mokly-material-work-counts.md claim coverage that no longer exists; pending the user's decision.
+      Finding 2 (Low, docs): main's open 58 A TODO and the comparison-inventory target name the deleted style_ownership.ts and recorded style ranges; pending the user's decision.
+      Finding 3 (Low, docs): closure contracts describe configured-stylesheet seeds that production never supplies; pending the user's decision.
+      Finding 6 (Low, test): the replay keeps two exclusions for tests that main removed; pending the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 

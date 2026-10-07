@@ -62,8 +62,8 @@ validation, and walk authored HTML and CSS transitively. Read each file and
 visit each edge set once per pass; handle cycles without recursive duplication.
 Binary resources retain their exact bytes and have no parsed child links.
 
-Renderers return only complete HTML strings; this branch has no renderer
-`resources` declarations. Renderer output reaches the closure through its
+Renderers return only complete HTML strings and declare no `resources`.
+Renderer output reaches the closure through its
 document links. Each target passes the shared policy and existence checks before
 it enters the closure. A link cannot bypass source protection, authorize a
 symlink or make an unlisted file public. A symlinked or protected target fails

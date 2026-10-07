@@ -37,13 +37,14 @@ owns identity, scenarios and the procedure for later acceptance.
 CI follows [deterministic test timing](./ci-test-timing.md).
 
 `fixture:large` explicitly prepares and records an isolated baseline under
-`.context`; setup time includes exhaustive Build and Git and is reported separately.
+`.context`; setup time includes the toolchain install and Git. It also includes
+exhaustive Build when `--tracked-output` is set. Setup time is reported separately.
 `dev:large` and `benchmark:large` reuse that fixture without compiling the package.
 Rebuild Mokly explicitly after package-source edits. A fixture whose generated
-output is tracked reuses complete Git blobs. To benchmark rebuilding, configure
-the fixture with `mokly-generated/` ignored and commit only source, authored
-resources and tooling. Its setup archives a packaged Mokly version and a
-consumer lockfile and installs the head dependencies. Serve rebuilds the archived
+output is tracked reuses complete Git blobs. The default fixture ignores
+`mokly-generated/` and commits only source, authored resources and tooling.
+Setup always archives a packaged Mokly version and a consumer lockfile and
+installs the fixture's toolchain. For the default fixture, Serve rebuilds the archived
 commit through its `baselineBuild` recipe; no cached or committed HTML stands in
 for that build.
 The benchmark launches Chrome before timing a fresh Serve subprocess and measures
