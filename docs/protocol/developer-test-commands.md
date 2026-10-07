@@ -197,9 +197,10 @@ pass rate for the tests that run. Run `cargo xtask check --suite repository`
 early to catch formatting, lint, file length, export, and Rust failures before
 long test runs. Leave complete unit and browser suite runs to the complete gate.
 
-Run the complete `cargo xtask check` once before saying work is complete. It
-stops at the first failed suite. After a failure, fix it and rerun the narrowest
-command that covers it. Use the
+Run the complete `cargo xtask check` once before saying work is complete.
+A local run stops at the first failed suite. A
+[remote run](./remote-verification.md) reports every failed suite.
+After a failure, fix it and rerun the narrowest command that covers it. Use the
 targeted commands for failing unit test files or browser specs. Use the failed
 `--suite` for repository or package findings. Then run the complete gate once
 more. If the gate cannot run, explain the blocker and list the checks already

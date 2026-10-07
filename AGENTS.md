@@ -12,7 +12,8 @@
 - Run `cargo xtask check --suite repository` early. Leave complete unit and
   browser suite runs to the complete gate.
 - Run the complete `cargo xtask check` once before saying work is complete.
-  It stops at the first failed suite. After a failure, fix it. Rerun only the
+  A local run stops at the first failed suite. A remote run reports every
+  failed suite. After a failure, fix it. Rerun only the
   failing tests or the failed repository or package suite. Then rerun the
   complete gate. If it cannot run, explain the blocker and the checks already run.
 - After tests and `cargo xtask check` pass, run `git add -A`, commit the

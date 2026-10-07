@@ -42,7 +42,7 @@ defines them. Individual concurrency tests and their existing timeouts remain
 unchanged.
 For targeted unit and browser runs during development, use the
 [developer test commands](../docs/protocol/developer-test-commands.md).
-The complete check starts with `npm run dependencies:check`, covering all
+The local complete check starts with `npm run dependencies:check`, covering all
 workspace dependency categories. It requires registry access; an audit or network
 failure stops subsequent checks. Reviewed workspace exceptions have exact
 dev-only paths, inclusive UTC end dates, and a maximum 31-day window under the

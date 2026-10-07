@@ -148,7 +148,8 @@ Agent rules in `AGENTS.md`:
 - Run `cargo xtask check --suite repository` early to catch format, lint,
   length, export, and Rust findings before any long test run.
 - Run the complete `cargo xtask check` once before saying work is complete.
-  It stops at the first failed suite.
+  A local run stops at the first failed suite. A remote run reports every
+  failed suite, as [remote verification](../docs/protocol/remote-verification.md) defines.
   After a failure, fix it and rerun the narrowest command that covers it: the
   targeted commands for failing unit files or browser specs, or the failed
   `--suite` for repository or package findings. Then run the complete gate once
@@ -346,8 +347,40 @@ failing tests after a gate failure.
 - [x] After the push, review the complete diff against `origin/main` with
       `docs/implementation-review-prompt.md`, report findings, then apply the
       review-fix rule in `AGENTS.md`. The orchestrating agent runs this review.
-  - Review 3 finding 1, Medium: pattern-only runs warn for nearly every file; recommend A.
-  - Review 3 finding 2, Low: the failure report mixes two counts; recommend A.
-  - Review 3 finding 3, Low: Ctrl+C shows a temp-file ENOENT stack; recommend A.
-  - Review 3 finding 4, Low: an empty test file fails as an internal fault; recommend A.
-  - Review 3 finding 6, Low: invalid-pattern errors escape backslashes; recommend A.
+  - User decisions on Review 3 findings 1, 2, 3, 4, and 6 are in Milestone 5.
+
+## Milestone 5: Main Merge And Review 3 Fixes
+
+Integrate current main before fixing selected-run warnings, file evidence,
+failure groups, interruption reports, and literal pattern messages.
+Evidence: `.context/targeted-developer-test-runs/milestone-5.md`.
+Merge audit: `.context/targeted-developer-test-runs/merge-main.md`.
+
+Decision: The user selected option A for Review 3 findings 1, 2, 3, 4, and 6.
+Keep complete and strict report schemas unchanged. Leave post-push review to
+the orchestrating agent.
+
+- [x] Merge fetched main first. Preserve all changes, resolve each path,
+      confirm two parents, and inspect every remerge path.
+- [x] Apply generated-path and local/remote gate-rule follow-ups. Check the
+      protocol caps and coherent merged guidance.
+- [x] Run verification tests on Node 24 and Node 22.14, then the repository
+      suite. Commit the merge and semantic follow-up and push for hosted CI.
+- [ ] Define the selected-output contract before its implementation.
+- [ ] Fix finding 1: warn only for named files, or once for an empty pattern run.
+- [ ] Fix finding 4: recognize file-only passes for selected runs; keep strict
+      summary-only file evidence.
+- [ ] Fix finding 2: classify reporter failures, omit wrappers, and print both
+      failed and cancelled groups without changing written report entries.
+- [ ] Fix finding 3: prefer process errors over missing or incomplete reporter
+      output on process failure. Test a real signal and temporary cleanup.
+- [ ] Fix finding 6: show the pattern exactly as typed inside double quotes.
+- [ ] Commit each finding separately and name its review number in the body.
+- [ ] Pass lint, formatting, declarations, affected tests on both Node versions,
+      and the repository suite. Push the tested code before the auto gate.
+- [ ] Run the complete auto gate once. Record executor and duration. Use the
+      targeted failure rules and report repeated unrelated failures.
+- [ ] Tick completed tasks, commit, run deletion checks, and push the branch.
+- [ ] After the push, review the complete diff against `origin/main` using
+      `docs/implementation-review-prompt.md`, report findings, then apply the
+      review-fix rule in `AGENTS.md`. The orchestrating agent runs this review.
