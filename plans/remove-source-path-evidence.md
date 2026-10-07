@@ -1,12 +1,8 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestones 1 to 32 are implemented, verified and pushed through
-`506baeb5`. Milestone 32's review and both fix rounds are complete; its open
-findings wait for the user. Milestone 33 integrates latest main, including
-#160, #156 and #144, as the user asked on 2026-10-07. Its local work is complete,
-including the later separate merge through #168.
-The reviewer resolved the CSS alias and former-manifest sentinel conflicts
-under the user's main integration instruction. Push and post-push review remain open.
+Status: Active. Milestones 1 to 33 are implemented, verified and pushed through
+`d1414026`; the branch contains main `acac1c73`. Milestone 32's open findings
+wait for the user. Milestone 33's post-push review is in progress.
 
 ## Status And Outcome
 
@@ -2670,7 +2666,9 @@ movement without another merge. The branch stays local.
 - [x] Run `git add -A` and make the checked local merge commit. Confirm both
       captured parents. Review every remerge path with `GIT_NO_LAZY_FETCH=1`.
       Amend any restoration, keep both parents and review again.
-- [ ] Push the branch after the reviewer checks the local commits.
+- [x] Push the branch after the reviewer checks the local commits. The
+      reviewer checked both merges, the loss audit, the gate reports and the
+      smoke screenshots, and pushed `d1414026`.
 - [ ] After the push, use `docs/implementation-review-prompt.md` to review the
       complete diff against `origin/main` and report findings. Keep the review
       read-only. Then apply the review-fix rule in `AGENTS.md`: fix
