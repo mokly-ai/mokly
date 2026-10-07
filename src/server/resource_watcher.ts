@@ -2,7 +2,6 @@
 
 import path from "node:path";
 
-import type { Compilation } from "../build/compile.js";
 import { isInside } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
@@ -12,6 +11,7 @@ import { NotificationGate, type WatchEvent } from "./watch_events.js";
 import {
   discoverWatchResources,
   type ResourceWatchSnapshot,
+  type WatchCompilation,
 } from "./watch_resources.js";
 import type { ConsumerWatcher, ConsumerWatcherFactory } from "./watcher.js";
 
@@ -36,11 +36,14 @@ export class ResourceWatcher {
   get paths(): ReadonlySet<string> {
     return this.#snapshot?.paths ?? new Set();
   }
+  get closure(): ReadonlySet<string> {
+    return this.#snapshot?.closure ?? new Set();
+  }
 
   /** Observe new inputs before adoption and retain removed inputs until it succeeds. */
   async prepare(
     config: ResolvedConfig,
-    compilation: Pick<Compilation, "outputs">,
+    compilation: WatchCompilation,
     shutdownStarted: Promise<void>,
     allowInvalid = false,
     incremental = false,
@@ -61,7 +64,8 @@ export class ResourceWatcher {
     if (sameWatch(snapshot, this.#snapshot)) {
       return {
         adopt: () => {
-          if (!this.#closed) this.#snapshot = snapshot;
+          if (!this.#closed)
+            this.#snapshot = acceptedSnapshot(this.#snapshot, snapshot);
         },
         close: async () => undefined,
       };
@@ -114,7 +118,7 @@ export class ResourceWatcher {
           adopt: () => {
             if (this.#closed || adopted || disposed) return;
             previous = this.#watcher;
-            this.#snapshot = snapshot;
+            this.#snapshot = acceptedSnapshot(this.#snapshot, snapshot);
             this.#watcher = watcher;
             adopted = true;
             gate.open((event) => {
@@ -152,6 +156,7 @@ function mergeResourceSnapshots(
     invalid: new Set([...previous.invalid, ...next.invalid]),
     references: new Map([...previous.references, ...next.references]),
     locations: new Map([...previous.locations, ...next.locations]),
+    closure: new Set([...previous.closure, ...next.closure]),
   };
 }
 
@@ -174,4 +179,13 @@ function samePaths(
     left.size === right.size &&
     [...left].every((candidate) => right.has(candidate))
   );
+}
+
+function acceptedSnapshot(
+  previous: ResourceWatchSnapshot | undefined,
+  next: ResourceWatchSnapshot,
+): ResourceWatchSnapshot {
+  return next.invalid.size
+    ? { ...next, closure: previous?.closure ?? new Set() }
+    : next;
 }

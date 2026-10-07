@@ -49,8 +49,10 @@ test("resource identity retains origin, path and query while excluding hash", ()
 
 for (const suffix of ["/index.html", "/", ""]) {
   test(`page frame authentication accepts the directory form ${suffix || "without slash"}`, () => {
-    const pathname = `/static/docs/guide${suffix}`;
-    const expected = new URL("https://app.test/static/docs/guide/index.html");
+    const pathname = `/static/mokly-generated/docs/guide${suffix}`;
+    const expected = new URL(
+      "https://app.test/static/mokly-generated/docs/guide/index.html",
+    );
     const fixture = fakeFrame();
     fixture.attributes.set("src", pathname);
     Object.assign(fixture.frame, {
@@ -69,7 +71,10 @@ for (const suffix of ["/index.html", "/", ""]) {
     );
     assert.equal(localFrameReady(fixture.frame, "docs/guide/index.html"), true);
     assert.equal(
-      sameFrameResource("https://app.test/static/docs/guide/index", expected),
+      sameFrameResource(
+        "https://app.test/static/mokly-generated/docs/guide/index",
+        expected,
+      ),
       false,
     );
     assert.equal(

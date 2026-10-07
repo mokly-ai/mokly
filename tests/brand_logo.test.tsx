@@ -28,7 +28,7 @@ const LOGO_MARK =
 const DARK_SHELL = /:root\[data-mokly-theme="dark"\] \{([^}]*)\}/;
 
 const designCss = (file: string) =>
-  readFile(path.join(repositoryRoot, "examples/basic/generated", file), "utf8");
+  readFile(path.join(repositoryRoot, "examples/basic", file), "utf8");
 
 function token(css: string, name: string): string | undefined {
   return css.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1]?.trim();

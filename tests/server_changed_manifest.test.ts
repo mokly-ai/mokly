@@ -28,7 +28,7 @@ test("changed routes select fragment edits rather than source or dependency edit
   );
   assert.deepEqual(
     changedManifestPaths(compilation.manifest, compilation.manifest, config, [
-      "mockups/home/index.mobile.html",
+      "mockups/mokly-generated/home/index.mobile.html",
     ]),
     ["home", "tour"],
   );
@@ -53,7 +53,7 @@ test("manifest entry changes are attributed to their route", async (context) => 
   assert.deepEqual(
     changedManifestPaths(manifest, baseManifest, config, [
       "entries/fixture.mockup.tsx",
-      "mockups/mokly-manifest.json",
+      "mockups/mokly-generated/mokly-manifest.json",
     ]),
     ["home", "tour"],
   );

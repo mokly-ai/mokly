@@ -1,0 +1,62 @@
+name: Blacksmith Testbox
+
+on:
+  push:
+    branches: ["**"]
+    paths: [.github/workflows/blacksmith-testbox.yml]
+  workflow_dispatch:
+    inputs:
+      testbox_id:
+        description: Testbox session ID supplied by blacksmith testbox warmup.
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  PLAYWRIGHT_CHANNEL: chromium
+
+jobs:
+  testbox:
+    name: Testbox
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Begin Testbox
+        uses: useblacksmith/begin-testbox@233448af4bfdc6fca509a7f0974411ac6d8a8043 # v2
+        with:
+          testbox_id: ${{ inputs.testbox_id }}
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22.14.0
+          package-manager-cache: false
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Set up npm
+        run: npm install --global npm@11.21.0
+      - name: Set up Rust
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy
+          rustup default 1.95.0
+      - name: Install dependencies
+        run: npm ci
+      - name: Stamp installed lockfile
+        run: |
+          mkdir -p "$HOME/.mokly-testbox"
+          sha256sum package-lock.json | cut -d ' ' -f1 > "$HOME/.mokly-testbox/package-lock.sha256"
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Expose job environment to Testbox sessions
+        run: |
+          sudo sed -i '/^PATH=/d;/^PLAYWRIGHT_CHANNEL=/d' /etc/environment
+          printf 'PATH=%s\nPLAYWRIGHT_CHANNEL=%s\n' "$PATH" "$PLAYWRIGHT_CHANNEL" | sudo tee -a /etc/environment >/dev/null
+      - name: Run Testbox
+        uses: useblacksmith/run-testbox@5ca05834db1d3813554d1dd109e5f2087a8d7cbc # v2

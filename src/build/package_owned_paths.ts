@@ -9,7 +9,6 @@ import { isDeniedSourceSegment } from "../config/private_directories.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MANIFEST_NAME } from "../registry/manifest.js";
 
-import { isOwned } from "./ownership.js";
 import { isGeneratedRoute } from "./styles/routes.js";
 
 /** Reasons a consumer path cannot be discovered through a broad walk. */
@@ -54,12 +53,6 @@ export function packageOwnedPath(
     roots?.repo,
   );
   if (!isInside(config.repoRoot, absolute)) return "outside";
-  if (
-    absolute.endsWith(".html") &&
-    isInside(config.mockupsDir, absolute) &&
-    isOwned(absolute, config, roots?.mockups)
-  )
-    return "generated";
   let isDirectory: boolean;
   try {
     isDirectory =
@@ -79,11 +72,6 @@ export function packageOwnedPath(
     if (isInside(mockupsDir, pathName)) {
       const route = toPosixPath(path.relative(mockupsDir, pathName));
       if (route === MANIFEST_NAME || isGeneratedRoute(route))
-        return "generated";
-      if (
-        !isDirectory &&
-        isOwned(pathName, { ...config, mockupsDir }, roots?.mockups)
-      )
         return "generated";
     }
     if (isInside(reviewDir, pathName)) return "review";

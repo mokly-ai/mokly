@@ -185,45 +185,26 @@ test("a live signal preserves a genuine failure after one event-loop turn", asyn
   assert.equal(isCancellation(original), false);
 });
 
-test("generated-output write failures remain unmarked after cancellation", async (context) => {
+test("export never enters a consumer generated-output write transaction", async (context) => {
   const fixture = await createExportFixture();
   context.after(() => fixture.close());
-  await exportCatalogue(fixture.config, { outDir: "site", noChanges: true });
-  const previous = await directoryFiles(fixture.output);
-  const controller = new AbortController();
-  const descriptor = Object.getOwnPropertyDescriptor(fs.promises, "writeFile");
-  assert.ok(descriptor);
+  const before = await directoryFiles(fixture.config.generatedDir);
   const original = fs.promises.writeFile;
-  Object.defineProperty(fs.promises, "writeFile", {
-    ...descriptor,
-    value: async (...args: unknown[]) => {
-      const candidate = String(args[0]);
-      if (
-        candidate.includes(`${path.sep}.mokly-write-`) &&
-        candidate.includes(`${path.sep}stage${path.sep}`)
-      ) {
-        controller.abort();
-        throw new Error("Injected generated-output write failure");
+  let generatedWrites = 0;
+  context.mock.method(
+    fs.promises,
+    "writeFile",
+    async (...args: Parameters<typeof original>) => {
+      if (String(args[0]).includes(`${path.sep}.mokly-write-`)) {
+        generatedWrites++;
+        throw new Error("Unexpected generated-output write");
       }
-      return Reflect.apply(original, fs.promises, args);
+      return original.apply(fs.promises, args);
     },
-  });
-  try {
-    const failure = await rejection(
-      exportCatalogue(fixture.config, {
-        outDir: "site",
-        noChanges: true,
-        signal: controller.signal,
-      }),
-    );
-    assert.ok(failure instanceof MoklyError);
-    assert.equal(failure.code, "build-invalid");
-    assert.match(failure.message, /Injected generated-output write failure/u);
-    assert.equal(isCancellation(failure), false);
-  } finally {
-    Object.defineProperty(fs.promises, "writeFile", descriptor);
-  }
-  assert.deepEqual(await directoryFiles(fixture.output), previous);
+  );
+  await exportCatalogue(fixture.config, { outDir: "site", noChanges: true });
+  assert.equal(generatedWrites, 0);
+  assert.deepEqual(await directoryFiles(fixture.config.generatedDir), before);
 });
 
 test("reservation setup failures remain unmarked after cancellation", async (context) => {

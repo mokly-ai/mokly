@@ -46,7 +46,7 @@ test("watch ownership follows the inventory and does not suppress unowned descen
   for (const name of [
     EXPORT_MARKER,
     "index.html",
-    "static/home/index.mobile.html",
+    "static/mokly-generated/home/index.mobile.html",
   ])
     assert.equal(
       classifyWatchPath(
@@ -88,7 +88,11 @@ test("watch parses an unchanged marker once and reparses after replacement", asy
       return parseExportOwnership(content);
     },
   });
-  const owned = [EXPORT_MARKER, "index.html", "static/home/index.mobile.html"];
+  const owned = [
+    EXPORT_MARKER,
+    "index.html",
+    "static/mokly-generated/home/index.mobile.html",
+  ];
   for (let iteration = 0; iteration < 5; iteration++)
     for (const name of owned)
       assert.equal(
@@ -110,7 +114,7 @@ test("watch accepts ownership markers between 8 and 64 MiB", () => {
   const output = path.join(root, "site");
   const marker = path.join(output, EXPORT_MARKER);
   const content = JSON.stringify({
-    schemaVersion: 2,
+    schemaVersion: 3,
     files: [{ path: "index.html", sha256: "a".repeat(64), size: 1 }],
   });
   const matcher = new ExportIgnoredMatcher({

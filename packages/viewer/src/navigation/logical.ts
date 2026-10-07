@@ -1,3 +1,4 @@
+import { GENERATED_DIRECTORY } from "../catalogue/delivery_paths.js";
 const PATH_SEGMENT = /^[A-Za-z0-9_-]+$/;
 const WINDOWS_DEVICE_NAME = /^(?:aux|con|nul|prn|com[1-9]|lpt[1-9])$/i;
 const LOGICAL_FRAGMENT = /^[\p{L}\p{N}\p{M}_:.-]+$/u;
@@ -26,7 +27,7 @@ export function isPathSegment(value: unknown): value is string {
 export function isEntryPath(value: unknown): value is string {
   return (
     typeof value === "string" &&
-    value.split("/")[0]?.toLowerCase() !== "mokly-generated" &&
+    value.split("/")[0]?.toLowerCase() !== GENERATED_DIRECTORY &&
     value.split("/").every(isPathSegment)
   );
 }

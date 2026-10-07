@@ -2,11 +2,11 @@
 
 ## Delivery Status
 
-Implemented for manifest v8, including strict admission of baseline usage
+Implemented for manifest v9, including strict admission of baseline usage
 records. `componentId` names a component parent by its path.
 
 This contract owns the per-view component instance, slot, range, style, and
-resource records stored by [manifest v8](./mokly-component-manifest.md).
+resource records stored by [manifest v9](./mokly-component-manifest.md).
 Stable instance-key behavior is defined separately by
 [Component Instance Identity](./mokly-instances.md).
 
@@ -126,7 +126,7 @@ CSS-selector inference.
 
 ## Validation
 
-Every current screen and component variant has one `ComponentViewRecord` for
+When components are registered, every current screen and component variant has one `ComponentViewRecord` for
 each effective view, ordered mobile/light, mobile/dark, desktop/light,
 desktop/dark. A view with no instances still has an explicit empty record;
 missing usage is never normalized to empty.

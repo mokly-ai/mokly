@@ -2,7 +2,11 @@ import path from "node:path";
 
 import { parse } from "es-module-lexer/minimal";
 
-import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import {
+  VIEWER_DIRECTORY,
+  isSafeRepositoryPath,
+  snapshotSidePath,
+} from "@mokly/viewer/data";
 import type { ReviewArtifactContent } from "@mokly/viewer/data";
 
 import { extractCssReferences } from "../css_references.js";
@@ -11,14 +15,18 @@ import {
   htmlResource,
   type ResourceReference,
 } from "../html_link_validation.js";
-import { extractHtmlReferences } from "../html_references.js";
+import {
+  extractHtmlReferences,
+  resolveLocalReferencePath,
+} from "../html_references.js";
 import { classifyResourceUrl } from "../resource_url.js";
 
 import { exportError } from "./error.js";
 import { ExportPathIndex } from "./path_index.js";
 
-const COMPARISON_SNAPSHOT =
-  /^__mokly\/diffs\/__generations\/[a-f0-9]{64}\/snapshots\//;
+const COMPARISON_SNAPSHOT = new RegExp(
+  `^${VIEWER_DIRECTORY}/diffs/generations/[a-f0-9]{64}/(?:${snapshotSidePath("before")}|${snapshotSidePath("after")})`,
+);
 
 /** Prove every local document/resource/module request has an exported target. */
 export function validateExportReferences(
@@ -70,7 +78,7 @@ export function validateExportReferences(
           checkFragment: false,
         })),
       );
-    else if (extension === ".js" && name.startsWith("__mokly/"))
+    else if (extension === ".js" && name.startsWith(`${VIEWER_DIRECTORY}/`))
       references.push(...moduleReferences(name, content));
     for (const reference of references) {
       const target = referenceTarget(name, reference.value);
@@ -124,21 +132,10 @@ function referenceTarget(source: string, value: string): string | undefined {
     classification.reason !== "root-absolute"
   )
     throw exportError(`Unsupported export URL: ${source} -> ${reference}`);
-  const encoded = reference.split(/[?#]/, 1)[0] ?? "";
-  let decoded: string;
-  try {
-    decoded = decodeURIComponent(encoded);
-  } catch (error) {
-    throw exportError(`Invalid export URL: ${reference}`, error);
-  }
-  if (decoded === "/") return "index.html";
-  const resolved = path.posix.normalize(
-    decoded.startsWith("/")
-      ? decoded.slice(1)
-      : path.posix.join(path.posix.dirname(source), decoded),
-  );
-  const target = resolved.replace(/\/$/, "");
-  if (!isSafeRepositoryPath(target))
+  const resolved = resolveLocalReferencePath(source, reference, true);
+  if (resolved.kind === "invalid-encoding")
+    throw exportError(`Invalid export URL: ${reference}`);
+  if (resolved.kind !== "resolved")
     throw exportError(`Export URL escapes the site: ${reference}`);
-  return target;
+  return resolved.path;
 }

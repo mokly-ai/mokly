@@ -40,7 +40,7 @@ export async function crossOriginFixture(
   const fixture = await createFixture(
     componentEntrySource(
       options ?? {
-        body: '<action.Component label="Visible" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><action.Component moklyInstance="multiple" label="Multiple" disabled /><div style={{height:800}} /><div style={{height:100,overflow:"auto"}}><div style={{height:200}}/><action.Component moklyInstance="scroll" label="Scroll" /></div><MockLink to="action">Open Action</MockLink><a href="../unowned.html" id="unowned-link">Open unowned document</a><a href="./index.mobile.html?handoff=exact" id="exact-resource-link">Open exact next document</a>',
+        body: '<action.Component label="Visible" /><action.Component moklyInstance="hidden" label="Hidden" hidden /><action.Component moklyInstance="multiple" label="Multiple" disabled /><div style={{height:800}} /><div style={{height:100,overflow:"auto"}}><div style={{height:200}}/><action.Component moklyInstance="scroll" label="Scroll" /></div><MockLink to="action">Open Action</MockLink><a href="../../unowned.html" id="unowned-link">Open unowned document</a><a href="./index.mobile.html?handoff=exact" id="exact-resource-link">Open exact next document</a>',
         actionRender:
           "(props) => props.hidden ? null : props.disabled ? <><span>First root</span> Text root <strong>Last root</strong></> : <button style={{width:160,height:40}}>{props.label}</button>",
       },
@@ -66,19 +66,23 @@ export async function crossOriginFixture(
       "index.html",
       '<!doctype html><body><iframe id="frame" style="width:390px;height:300px;border:0"></iframe></body>',
     ],
-    ["static/silent.html", "<!doctype html><p>No inspector</p>"],
+    [
+      "static/mokly-generated/silent.html",
+      "<!doctype html><p>No inspector</p>",
+    ],
   ]);
   for (const [name, bytes] of compilation.outputs)
     if (name.endsWith(".html"))
       files.set(
-        `static/${name}`,
+        `static/mokly-generated/${name}`,
         adaptBrowseDocument(generatedText(bytes, name)!, name, catalogue),
       );
   files.set("static/unowned.html", unownedDocument);
+  files.set("static/silent.html", "<!doctype html><p>No inspector</p>");
   for (const [name, bytes] of loadBrowserClientModules())
-    files.set(`__mokly/client/${name}`, bytes);
+    files.set(`mokly-viewer/client/${name}`, bytes);
   for (const [name, bytes] of loadBrowserNavigationModules())
-    files.set(`__mokly/navigation/${name}`, bytes);
+    files.set(`mokly-viewer/navigation/${name}`, bytes);
   for (const [name, bytes] of files) {
     await fs.mkdir(path.dirname(path.join(root, name)), { recursive: true });
     await fs.writeFile(path.join(root, name), bytes);
@@ -91,10 +95,13 @@ export async function crossOriginFixture(
   if (home?.kind !== "screen") throw new Error("No fixture screen");
   const mobileView = viewRoute(home.path, "mobile", "light");
   const renderId = `${"a".repeat(48)}.${"b".repeat(64)}`;
-  const temporaryPath = `/__mokly/components/renders/${renderId}/${mobileView}`;
+  const temporaryPath = `/mokly-viewer/components/renders/${renderId}/mokly-generated/${mobileView}`;
   const temporaryFile = path.join(root, temporaryPath.slice(1));
   await fs.mkdir(path.dirname(temporaryFile), { recursive: true });
-  await fs.copyFile(path.join(root, "static", mobileView), temporaryFile);
+  await fs.copyFile(
+    path.join(root, "static", "mokly-generated", mobileView),
+    temporaryFile,
+  );
   const usage = home.componentViews![0]!;
   return {
     host,
@@ -119,7 +126,7 @@ export async function crossOriginFixture(
 export async function mountCrossFrame(
   page: Page,
   fixture: Awaited<ReturnType<typeof crossOriginFixture>>,
-  path = "/static/home/index.mobile.html",
+  path = "/static/mokly-generated/home/index.mobile.html",
 ) {
   await page.goto(fixture.host.url);
   await page.evaluate(
@@ -127,7 +134,7 @@ export async function mountCrossFrame(
       const usage = JSON.parse(usageJson) as ComponentViewRecord;
       const state = window as unknown as FrameTestWindow;
       const { postMessageAdapter } = (await import(
-        `${location.origin}/__mokly/client/post_message_adapter.js`
+        `${location.origin}/mokly-viewer/client/post_message_adapter.js`
       )) as typeof PostAdapter;
       state.wire = [];
       state.frameEvents = [];
@@ -140,7 +147,10 @@ export async function mountCrossFrame(
       });
       state.mounted = await postMessageAdapter({ frameOrigin: origin }).mount(
         document.querySelector<HTMLIFrameElement>("#frame")!,
-        { url: new URL(path, origin), usage: { status: "ready", ...usage } },
+        {
+          url: new URL(path, origin),
+          usage: { status: "ready", ...usage },
+        },
       );
       state.unsubscribe = state.mounted.subscribe((event) =>
         state.frameEvents.push(event),

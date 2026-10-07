@@ -35,8 +35,9 @@ existence check and realpath is absent; lexical metadata denials still apply.
 It still projects each candidate to reject escaping or dangling links.
 `locatePath` uses fresh roots for each call and returns no location when a
 lookup fails.
-`public_names.ts` owns the lexical public-file rules shared by export and copied
-Markdown resources. It has no filesystem reads or configuration state.
+`public_names.ts` owns pure lexical rules for copied Markdown resources.
+`public_denial.ts` owns authored-closure privacy shared with export, using
+configuration and projected filesystem paths.
 
 ```sh
 node --import tsx --test tests/config*.test.ts tests/entry_discovery*.test.ts
@@ -52,9 +53,10 @@ so newly created or invalid source files cannot become public during a rebuild.
 Historical resource reads retain their validated snapshot inventory.
 
 `postcss.ts` and `postcss_loader.ts` load the optional consumer PostCSS module;
+the loader normalizes plugins through `../build/styles/postcss_calls.ts`;
 `reserved_paths.ts` keeps root directories, file-glob prefixes and authored styles
 outside `mokly-generated/`, including aliases. Broad roots skip that output tree.
 
 `cache_paths.ts` names the private `.mokly-cache/` directory and recognizes
 its paths and aliases. `cache_ignore.ts` publishes `.mokly-cache/.gitignore`,
-which matches every cache path, so Git ignores the cache in both output modes.
+which matches every cache path, so Git ignores the cache.

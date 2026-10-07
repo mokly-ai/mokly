@@ -42,8 +42,8 @@ test("static export keeps component Changes, affected screens, saved variants an
   const result = parseReviewResult(
     JSON.parse(files.get(exported.comparisonUrl.slice(1))!.toString()),
   );
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   assert.deepEqual(
     result.changes.map((item) => (item.after ?? item.before)!.path),
     ["action"],
@@ -66,11 +66,12 @@ test("static export keeps component Changes, affected screens, saved variants an
     ),
     false,
   );
-  for (const view of action.views) assert.ok(files.has(`static/${view.path}`));
-  assert.ok(files.has("__mokly/client/component_geometry.js"));
-  assert.ok(!files.has("__mokly/client/browser.js"));
+  for (const view of action.views)
+    assert.ok(files.has(`static/mokly-generated/${view.path}`));
+  assert.ok(files.has("mokly-viewer/client/component_geometry.js"));
+  assert.ok(!files.has("mokly-viewer/client/browser.js"));
   assert.equal(
-    (await fs.readdir(path.join(fixture.output, "__mokly"))).includes(
+    (await fs.readdir(path.join(fixture.output, "mokly-viewer"))).includes(
       "components",
     ),
     false,
@@ -101,7 +102,7 @@ test("static export retains removed saved variants and baseline component consum
   const result = parseReviewResult(
     JSON.parse(files.get(exported.comparisonUrl.slice(1))!.toString()),
   );
-  if (result.schemaVersion !== 5) assert.fail("Expected component result");
+  if (result.schemaVersion !== 6) assert.fail("Expected component result");
   const removed = result.components
     .find((item) => item.path === "action")!
     .variants.find((item) => item.path === "action/disabled")!;
@@ -109,7 +110,7 @@ test("static export retains removed saved variants and baseline component consum
   for (const view of removed.views)
     assert.ok(
       files.has(
-        `${path.posix.dirname(exported.comparisonUrl.slice(1))}/snapshots/before/${viewRoute(removed.path, view.viewport, view.colorScheme)}`,
+        `${path.posix.dirname(exported.comparisonUrl.slice(1))}/snapshots/before/mokly-generated/${viewRoute(removed.path, view.viewport, view.colorScheme)}`,
       ),
     );
 });

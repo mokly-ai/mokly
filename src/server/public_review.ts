@@ -3,7 +3,9 @@ import type { ServerResponse } from "node:http";
 import path from "node:path";
 
 import {
+  VIEWER_DIRECTORY,
   generatedViews,
+  generatedResourcePath,
   parseReviewResult,
   snapshotSidePath,
   snapshotViewPath,
@@ -69,7 +71,7 @@ export class PublicReviewAliases {
         if (
           !bytes ||
           createHash("sha256").update(bytes).digest("hex") !==
-            source.headDigests[view.path]
+            source.headDigests[generatedResourcePath(view.path)]
         )
           return;
       }
@@ -89,16 +91,15 @@ export class PublicReviewAliases {
     const identity = comparisonContentId(files);
     this.aliases.set(identity, generation.version);
     return {
-      path: `__mokly/diffs/__generations/${identity}/review.json`,
+      path: `${VIEWER_DIRECTORY}/diffs/generations/${identity}/review.json`,
       result,
     };
   }
 
   handle(url: URL, response: ServerResponse, method: string): boolean {
-    const match =
-      /^\/__mokly\/diffs\/__generations\/([a-f0-9]{64})\/(.*)$/.exec(
-        url.pathname,
-      );
+    const match = new RegExp(
+      `^\\/${VIEWER_DIRECTORY}\\/diffs\\/generations\\/([a-f0-9]{64})\\/(.*)$`,
+    ).exec(url.pathname);
     if (!match) return false;
     response.setHeader("cache-control", "no-store");
     const version = this.aliases.get(match[1]!);

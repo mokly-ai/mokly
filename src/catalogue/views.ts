@@ -42,7 +42,7 @@ export function projectViews(
         ? undefined
         : recordedUsage;
     const live =
-      !removed && input.catalogue.manifest.schemaVersion === "live-index-1";
+      !removed && input.catalogue.manifest.schemaVersion === "live-index-2";
     const provenEmpty =
       !live &&
       !removed &&

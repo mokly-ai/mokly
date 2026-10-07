@@ -34,7 +34,9 @@ test(
     const document = path.join(fixture.entriesDir, "guide.md");
     const model = async () =>
       readCatalogue(
-        await (await fetch(`${running.url}/__mokly/catalogue.json`)).json(),
+        await (
+          await fetch(`${running.url}/mokly-viewer/catalogue.json`)
+        ).json(),
       );
 
     await fs.writeFile(document, "# Added guide\n\nStart here.");
@@ -45,7 +47,9 @@ test(
     );
     assert.ok(
       (
-        await (await fetch(`${running.url}/static/guide/index.html`)).text()
+        await (
+          await fetch(`${running.url}/static/mokly-generated/guide/index.html`)
+        ).text()
       ).includes("Start here."),
     );
 
@@ -57,7 +61,9 @@ test(
     assert.equal((await model()).documents[0]?.title, "Revised guide");
     assert.ok(
       (
-        await (await fetch(`${running.url}/static/guide/index.html`)).text()
+        await (
+          await fetch(`${running.url}/static/mokly-generated/guide/index.html`)
+        ).text()
       ).includes("Follow the new instructions."),
     );
 
@@ -66,7 +72,8 @@ test(
     assert.deepEqual((await model()).documents, []);
     assert.equal((await fetch(`${running.url}/view/guide/`)).status, 404);
     assert.equal(
-      (await fetch(`${running.url}/static/guide/index.html`)).status,
+      (await fetch(`${running.url}/static/mokly-generated/guide/index.html`))
+        .status,
       404,
     );
   },
@@ -102,7 +109,7 @@ test(
     let html = await waitForClassifiedCount(running.url, 0);
     const resource = path.join(fixture.entriesDir, "diagram.svg");
     const copied = async () =>
-      (await fetch(`${running.url}/static/diagram.svg`)).text();
+      (await fetch(`${running.url}/static/mokly-generated/diagram.svg`)).text();
 
     await fs.writeFile(resource, svg("blue"));
     html = await waitForChangedCount(running.url, version(html), 1);

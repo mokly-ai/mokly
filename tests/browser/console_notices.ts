@@ -1,6 +1,6 @@
 /**
  * The one console rule that browser checks share. The viewer renders its stage
- * views (`/static/`), temporary renders (`/__mokly/components/renders/`), and
+ * views (`/static/`), temporary renders (`/mokly-viewer/components/renders/`), and
  * previous versions (`about:srcdoc`) in frames sandboxed without
  * `allow-scripts`, so Chrome reports every script that tries to run there.
  * That includes a previous version's own scripts and Playwright's trace
@@ -24,7 +24,7 @@ function viewerSandboxedDocument(url: string): boolean {
   return (
     (parsed.protocol === "http:" || parsed.protocol === "https:") &&
     (/(?:^|\/)static\//u.test(parsed.pathname) ||
-      parsed.pathname.startsWith("/__mokly/components/renders/"))
+      parsed.pathname.startsWith("/mokly-viewer/components/renders/"))
   );
 }
 

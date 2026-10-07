@@ -29,7 +29,9 @@ for (const watch of [false, true]) {
       try {
         await waitForReady(running.url);
         const model = readCatalogue(
-          await (await fetch(`${running.url}/__mokly/catalogue.json`)).json(),
+          await (
+            await fetch(`${running.url}/mokly-viewer/catalogue.json`)
+          ).json(),
         );
         for (const removed of model.removedEntries)
           assert.deepEqual(removed.folderTitles, [
@@ -40,7 +42,7 @@ for (const watch of [false, true]) {
         assert.notEqual(fixture.baseCommit, fixture.branchEditCommit);
         assert.equal((await fetch(`${running.url}/view/current/`)).status, 200);
         const pageResponse = await fetch(
-          `${running.url}/__mokly/diffs/review.json?page=fixture/deleted-archive/deleted-section/removed-page`,
+          `${running.url}/mokly-viewer/diffs/review.json?page=fixture/deleted-archive/deleted-section/removed-page`,
         );
         assert.equal(
           pageResponse.status,
@@ -53,7 +55,7 @@ for (const watch of [false, true]) {
           await (
             await fetch(
               new URL(
-                `snapshots/before/${entryRoute(preview.path)}`,
+                `snapshots/before/mokly-generated/${entryRoute(preview.path)}`,
                 pageResponse.url,
               ),
             )
@@ -64,7 +66,7 @@ for (const watch of [false, true]) {
           await (
             await fetch(
               new URL(
-                `snapshots/before/${entryRoute(preview.path)}`,
+                `snapshots/before/mokly-generated/${entryRoute(preview.path)}`,
                 pageResponse.url,
               ),
             )
@@ -80,7 +82,7 @@ for (const watch of [false, true]) {
           "main { color: rebeccapurple; }",
         );
         const screenResponse = await fetch(
-          `${running.url}/__mokly/diffs/review.json?path=fixture/deleted-archive/deleted-section/removed-screen`,
+          `${running.url}/mokly-viewer/diffs/review.json?path=fixture/deleted-archive/deleted-section/removed-screen`,
         );
         assert.equal(
           screenResponse.status,
@@ -99,7 +101,7 @@ for (const watch of [false, true]) {
                   (candidate) => candidate.viewport === "desktop",
                 );
                 return view
-                  ? `snapshots/before/${viewRoute("fixture/deleted-archive/deleted-section/removed-screen", view.viewport, view.colorScheme)}`
+                  ? `snapshots/before/mokly-generated/${viewRoute("fixture/deleted-archive/deleted-section/removed-screen", view.viewport, view.colorScheme)}`
                   : "missing";
               })(),
               screenResponse.url,
@@ -119,7 +121,7 @@ async function waitForReady(url: string): Promise<void> {
   await waitUntil(
     async () => {
       const model = readCatalogue(
-        await (await fetch(`${url}/__mokly/catalogue.json`)).json(),
+        await (await fetch(`${url}/mokly-viewer/catalogue.json`)).json(),
       );
       return model.changesStatus === "ready";
     },

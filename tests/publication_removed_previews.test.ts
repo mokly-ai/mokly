@@ -26,7 +26,7 @@ const result: ReviewResult = {
   baseRef: "main",
   changedPaths: [],
   ignoredImpact: [],
-  schemaVersion: 5 as const,
+  schemaVersion: 6 as const,
   screens: [],
   sharedImpact: [],
   components: [],

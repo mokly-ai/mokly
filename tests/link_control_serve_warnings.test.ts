@@ -60,7 +60,9 @@ function warnings(output: readonly string[]): string[] {
 }
 
 async function requestWarningPage(url: string): Promise<void> {
-  const response = await fetch(`${url}/static/warning-page/index.html`);
+  const response = await fetch(
+    `${url}/static/mokly-generated/warning-page/index.html`,
+  );
   assert.equal(response.status, 200);
   assert.match(
     await response.text(),

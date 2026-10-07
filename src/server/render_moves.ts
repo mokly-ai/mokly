@@ -1,6 +1,6 @@
 import type { AcceptedMoveTargets } from "../build/move_targets.js";
 
-import type { ComponentChangeSnapshot } from "./component_changes.js";
+import type { ComponentChangeSnapshot } from "./component_change_types.js";
 import type { ChangesStatus } from "./update_messages.js";
 
 /** Keep diagnostic suggestions tied to accepted evidence and an unchanged renderer. */

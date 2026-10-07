@@ -1,10 +1,9 @@
 import path from "node:path";
 
-import { generatedViews } from "@mokly/viewer/data";
-
 import { toPosixPath } from "../../config/paths.js";
 import { cachedReviewAssets } from "../cached_assets.js";
 import type { ComponentClassificationInput } from "../component_classification_input.js";
+import { reviewViews } from "../views.js";
 
 import { readMovePairing } from "./read.js";
 import { readMoveResources } from "./resources.js";
@@ -21,12 +20,12 @@ export async function prepareMoveClassification(
   await Promise.all([
     beforeReader.readMany!(
       input.before.entries.flatMap((entry) =>
-        generatedViews(entry).map((view) => view.path),
+        reviewViews(entry).map((view) => view.path),
       ),
     ),
     afterReader.readMany!(
       input.after.entries.flatMap((entry) =>
-        generatedViews(entry).map((view) => view.path),
+        reviewViews(entry).map((view) => view.path),
       ),
     ),
   ]);

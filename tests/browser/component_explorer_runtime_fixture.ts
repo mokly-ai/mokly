@@ -47,6 +47,7 @@ export async function startComponentExplorer(
   const server = await startCatalogueServer(fixture.config, {
     base: "main",
     port: 0,
+    generatedOutputs: fixture.after.outputs,
     componentChanges: changes,
     changedEntries: result.components.flatMap((component) =>
       component.variants

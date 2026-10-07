@@ -1,4 +1,4 @@
-import postcss, {
+import {
   CssSyntaxError,
   type AtRule,
   type ChildNode,
@@ -18,6 +18,7 @@ import {
   validModuleIdentifier,
   moduleValuesMatch,
 } from "./module_verify_value.js";
+import { parseCss } from "./postcss_calls.js";
 
 /** Reject any CSS Modules output difference beyond documented local-name edits. */
 export function verifyModuleScoping(
@@ -26,14 +27,14 @@ export function verifyModuleScoping(
   relative: string,
   prefix: string,
 ): void {
-  const original = postcss.parse(input, { from: relative, map: false });
+  const original = parseCss(input, relative);
   original.walkDecls((declaration) => {
     if (["composes", "compose-with"].includes(declaration.prop.toLowerCase()))
       declaration.remove();
   });
   let transformed: Root;
   try {
-    transformed = postcss.parse(output, { from: relative, map: false });
+    transformed = parseCss(output, relative);
   } catch (error) {
     const line = error instanceof CssSyntaxError ? error.line : undefined;
     const matching =

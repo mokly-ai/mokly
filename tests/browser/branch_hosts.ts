@@ -77,7 +77,7 @@ async function waitForChanges(url: string): Promise<void> {
   await waitUntil(
     async () => {
       const model = readCatalogue(
-        await (await fetch(`${url}/__mokly/catalogue.json`)).json(),
+        await (await fetch(`${url}/mokly-viewer/catalogue.json`)).json(),
       );
       return model.changesStatus === "ready";
     },

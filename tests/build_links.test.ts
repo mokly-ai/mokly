@@ -142,12 +142,12 @@ test("link validation fails closed for non-portable targets", async (context) =>
   await assert.rejects(() => compileCatalogue(config), /root-absolute link/);
 });
 
-test("link validation rejects generated targets pending orphan removal", async (context) => {
-  const fixture = await createFixture(orphanLinkSource(true));
+test("link validation rejects references to removed generated routes", async (context) => {
+  const fixture = await createFixture(removedLinkSource(true));
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
-  await fs.promises.writeFile(fixture.entryPath, orphanLinkSource(false));
+  await fs.promises.writeFile(fixture.entryPath, removedLinkSource(false));
 
   await assert.rejects(() => compileCatalogue(config), /missing target/);
 });
@@ -193,7 +193,7 @@ test("framework-emitted stylesheet URLs encode path segments", async (context) =
   const mobile =
     textOutput(compilation.outputs, "home/index.mobile.html") ?? "";
 
-  assert.match(mobile, /href="\.\.\/theme%20%231\.css"/);
+  assert.match(mobile, /href="\.\.\/\.\.\/theme%20%231\.css"/);
 });
 
 test("stylesheet rules match catalogue routes for every viewport", async (context) => {
@@ -222,7 +222,7 @@ test("stylesheet rules match catalogue routes for every viewport", async (contex
       textOutput(compilation.outputs, `home/index.${viewport}.html`) ?? "";
     const details =
       textOutput(compilation.outputs, `details/index.${viewport}.html`) ?? "";
-    assert.match(home, /href="\.\.\/home\.css"/);
+    assert.match(home, /href="\.\.\/\.\.\/home\.css"/);
     assert.doesNotMatch(details, /home\.css/);
   }
 });
@@ -253,7 +253,7 @@ export const mockups = [
 `;
 }
 
-function orphanLinkSource(includeTarget: boolean): string {
+function removedLinkSource(includeTarget: boolean): string {
   const target = includeTarget
     ? `defineScreen({ ...metadata, description: "Details", desktop: <main>Details</main>, path: "details", mobile: <main>Details</main>, title: "Details" })`
     : "";

@@ -20,15 +20,15 @@ export function useCatalogue(source: CatalogueSource, baseUrl?: string | URL) {
   }
   const initial = useMemo(() => {
     try {
-      return { loaded: readObjectSource(source, baseUrl), error: false };
-    } catch {
-      return { loaded: undefined, error: true };
+      return { loaded: readObjectSource(source, baseUrl), error: undefined };
+    } catch (cause) {
+      return { loaded: undefined, error: { cause } };
     }
   }, [identity, base, retry]);
   const [result, setResult] = useState<{
     key: typeof initial;
     loaded?: LoadedCatalogue;
-    error?: boolean;
+    error?: { cause: unknown };
   }>();
   useEffect(() => {
     if (initial.loaded || initial.error) return;
@@ -42,9 +42,9 @@ export function useCatalogue(source: CatalogueSource, baseUrl?: string | URL) {
         (loaded) => {
           if (!controller.signal.aborted) setResult({ key: initial, loaded });
         },
-        () => {
+        (cause: unknown) => {
           if (!controller.signal.aborted)
-            setResult({ key: initial, error: true });
+            setResult({ key: initial, error: { cause } });
         },
       );
     return () => controller.abort();
@@ -53,7 +53,8 @@ export function useCatalogue(source: CatalogueSource, baseUrl?: string | URL) {
     key: initial,
     loaded:
       initial.loaded ?? (result?.key === initial ? result.loaded : undefined),
-    error: initial.error || (result?.key === initial && result.error),
+    error:
+      initial.error ?? (result?.key === initial ? result.error : undefined),
     retry: () => setRetry((value) => value + 1),
   };
 }

@@ -188,10 +188,13 @@ test("a preview that cannot be loaded offers another attempt", async ({
   page,
 }) => {
   let fail = true;
-  await page.route("**/__mokly/diffs/review.json?page=*", async (route) => {
-    if (!fail) return route.continue();
-    await route.fulfill({ status: 503, body: "{}" });
-  });
+  await page.route(
+    "**/mokly-viewer/diffs/review.json?page=*",
+    async (route) => {
+      if (!fail) return route.continue();
+      await route.fulfill({ status: 503, body: "{}" });
+    },
+  );
   await page.goto(`${host.url}/view/removed-page/`);
   await expect(page.locator(`${stage} h2`)).toHaveText(
     "Previous version unavailable",
@@ -218,11 +221,14 @@ test("navigation fences a late response and keeps history usable", async ({
     release = resolve;
   });
   let handled = false;
-  await page.route("**/__mokly/diffs/review.json?page=*", async (route) => {
-    await held;
-    await route.continue().catch(() => undefined);
-    handled = true;
-  });
+  await page.route(
+    "**/mokly-viewer/diffs/review.json?page=*",
+    async (route) => {
+      await held;
+      await route.continue().catch(() => undefined);
+      handled = true;
+    },
+  );
   const settled = settlement(page, "review.json?page=");
   await page.goto(`${host.url}/view/current/`);
   await page.locator('[data-filter="changed"]').click();
@@ -258,7 +264,9 @@ test("browsing current entries requests no historical bytes", async ({
   await expect(
     page.frameLocator('iframe[data-workspace-frame="mobile"]').locator("main"),
   ).toHaveText("Current mobile");
-  expect(requests.filter((url) => url.includes("/__mokly/diffs/"))).toEqual([]);
+  expect(
+    requests.filter((url) => url.includes("/mokly-viewer/diffs/")),
+  ).toEqual([]);
 });
 
 test.describe("without its browser client", () => {

@@ -77,7 +77,7 @@ test("static hydration adopts choices made after load while its catalogue is pen
   const released = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await page.route("**/__mokly/catalogue.json", async (route) => {
+  await page.route("**/mokly-viewer/catalogue.json", async (route) => {
     markRequested();
     await released;
     await route.continue();
@@ -133,7 +133,7 @@ test("development React hydrates removed and moved finalized routes", async ({
   await expectCleanHydration(page, errors, "renamed/index.html");
   const catalogue = readCatalogue(
     await (
-      await page.request.get(`${historical.url}/__mokly/catalogue.json`)
+      await page.request.get(`${historical.url}/mokly-viewer/catalogue.json`)
     ).json(),
   );
   const moved = catalogue.pages.find((entry) => entry.path === "renamed")!;

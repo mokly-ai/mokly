@@ -68,7 +68,7 @@ export async function startHistoricalSelectionHistory(
     const catalogue = await waitUntil(
       async () => {
         const catalogue = readCatalogue(
-          await (await fetch(`${host.url}/__mokly/catalogue.json`)).json(),
+          await (await fetch(`${host.url}/mokly-viewer/catalogue.json`)).json(),
         );
         return catalogue.changesStatus === "ready" ? catalogue : undefined;
       },

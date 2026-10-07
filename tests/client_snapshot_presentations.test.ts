@@ -8,9 +8,9 @@ import {
 } from "../packages/viewer/dist/previews/presentation.js";
 
 const GENERATION =
-  "https://catalogue.test/__mokly/diffs/__generations/comparison/";
-const BEFORE = `${GENERATION}snapshots/before/home/index.html`;
-const AFTER = `${GENERATION}snapshots/after/home/index.html`;
+  "https://catalogue.test/mokly-viewer/diffs/generations/comparison/";
+const BEFORE = `${GENERATION}snapshots/before/mokly-generated/home/index.html`;
+const AFTER = `${GENERATION}snapshots/after/mokly-generated/home/index.html`;
 
 function documentFixture(): Document {
   let baseHref = "";
@@ -90,7 +90,7 @@ test("comparison confinement rejects every unadvertised subtree", async () => {
     `${GENERATION}snapshots/after/`,
     `${GENERATION}snapshots/beforeX/home/index.html`,
     `${GENERATION}snapshots/archive/home/index.html`,
-    `${GENERATION.replace("comparison", "other")}snapshots/after/home/index.html`,
+    `${GENERATION.replace("comparison", "other")}snapshots/after/mokly-generated/home/index.html`,
     AFTER.replace("catalogue.test", "other.test"),
     AFTER.replace("https://", "https://reader@"),
     `${AFTER}?revision=2`,

@@ -115,10 +115,6 @@ export function collectPostcssDependencies(
   for (const candidate of explicit)
     if (isGenerated(candidate.file, config, ownership))
       throw generatedError(candidate, config);
-  if (config.generatedOutput === "committed")
-    for (const candidate of expanded)
-      if (isGenerated(candidate.file, config, ownership))
-        throw generatedError(candidate, config);
   const sourceFiles = new Set<string>();
   const explicitPaths = new Set(explicit.map(({ file }) => file));
   const candidates = [

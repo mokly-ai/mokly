@@ -50,7 +50,7 @@ Planning measurements: `.context/hydration-route-shapes/planning.md`.
 
 Milestone 1 writes this rule into the new protocol doc, which then owns it.
 
-For each entry `e` of `examples/basic/generated/mokly-manifest.json`, the shape
+For each entry `e` of `examples/basic/mokly-generated/mokly-manifest.json`, the shape
 key is the JSON text of an object with these properties, in this order:
 
 1. `kind`: `e.kind`.
@@ -83,7 +83,8 @@ list. Use the [appendix method](#appendix-coverage-comparison-method).
 
 Milestone 1 writes this audit into the new protocol doc.
 
-- **Scope:** every `.html` and `.css` file under `examples/basic/generated/`.
+- **Scope:** every `.html` and `.css` file under `examples/basic/mokly-generated/`
+  and in the v9 authored `assetClosure`, relative to `examples/basic/`.
 - **HTML references:**
   - `link[href]` when `rel` contains `stylesheet`, `icon`, `preload` or
     `modulepreload`;
@@ -104,7 +105,7 @@ Milestone 1 writes this audit into the new protocol doc.
 - **Failures:**
   - a root-absolute value, because Serve and export deliver generated files
     under `/static/` and a file opened from disk has no site root;
-  - a relative value that resolves outside `examples/basic/generated/`; and
+  - a relative value that resolves outside the catalogue root `examples/basic/`; and
   - a relative value that does not name an existing regular file after the
     audit removes its query and fragment and percent-decodes it.
 - **Report:** each failure names the file, the attribute or rule, the value
@@ -136,7 +137,7 @@ replace the per-route rule. Do not change tests in this milestone.
 
 - [x] Create `docs/protocol/ci-verification-hydration.md`, at most 250 lines,
       with the title `# Development Hydration Coverage`. Start its body with
-      "Continuation of [CI Verification](./ci-verification.md).", as the other
+      `Continuation of [CI Verification](./ci-verification.md).`, as the other
       continuation pages do. It must define:
   - [x] what development hydration checks, and why route data selects shell
         rendering paths;
@@ -227,7 +228,7 @@ that this protection never stops.
         ignored; and
   - [x] the audit checks `url()` in `<style>` elements and `style` attributes.
 - [x] Add `tests/example_resource_references.test.ts`. It scans
-      `examples/basic/generated/` and expects no failures. It also requires that
+      `examples/basic/mokly-generated/` and the authored closure, and expects no failures. It also requires that
       the scan read more than zero HTML files and stylesheet links.
 - [x] Prove that the check finds a real break. Delete one generated stylesheet
       that a mockup links, run the test, and confirm that the failure names the
@@ -374,7 +375,7 @@ Write the measurement script outside the repository, for example under
       `Profiler.takePreciseCoverage`.
    4. Wait for `load` and two more animation frames, then take the coverage
       again.
-4. Keep only the script whose URL ends with `/__mokly/client/react-shell.js`.
+4. Keep only the script whose URL ends with `/mokly-viewer/client/react-shell.js`.
    Use the `// <path>` comment that esbuild writes before each module to map
    offsets to modules. Keep the modules under `packages/viewer/src/`.
 5. Count a function when its first range has a count above zero. Sort all

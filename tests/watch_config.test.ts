@@ -37,7 +37,7 @@ test("watched graphs add imported helpers and retain last-good inputs after fail
   const supervisor = new FakeSupervisor();
   const running = await serve(
     initial,
-    { port: 0, watch: true },
+    { port: 0, build: true, watch: true },
     {
       configLoader: new FakeConfigLoader(initial),
       outputStore: output,
@@ -113,7 +113,7 @@ test("watched Serve reloads config with a ready replacement watcher", async (con
   const supervisorFactory = new FakeSupervisorFactory(supervisor);
   const running = await serve(
     initial,
-    { port: 0, watch: true },
+    { port: 0, build: true, watch: true },
     {
       configLoader: loader,
       outputStore: output,
@@ -162,7 +162,7 @@ test("failed config adoption retains the last-good watcher and child", async (co
   const supervisor = new FakeSupervisor();
   const running = await serve(
     initial,
-    { port: 0, watch: true },
+    { port: 0, build: true, watch: true },
     {
       configLoader: new FakeConfigLoader(next),
       outputStore: output,

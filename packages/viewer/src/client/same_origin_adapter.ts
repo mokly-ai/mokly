@@ -1,3 +1,8 @@
+import {
+  VIEWER_DIRECTORY,
+  currentDocumentPath,
+  currentDocumentRoute,
+} from "../catalogue/delivery_paths.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
 import type { ComponentViewRecord } from "../components/manifest_types.js";
 import { inspection } from "../inspector/inspection.js";
@@ -55,10 +60,12 @@ export function localFrameReady(
   frame: HTMLIFrameElement,
   path: string,
 ): boolean {
+  const pathname = localFramePath(frame);
   return (
     localFrameAccess(frame).document()?.readyState === "complete" &&
-    normalizedHtmlPath(decodeURIComponent(localFramePath(frame)!)) ===
-      normalizedHtmlPath(`/static/${path}`)
+    pathname !== undefined &&
+    normalizedHtmlPath(decodeURIComponent(pathname)) ===
+      normalizedHtmlPath(`/${currentDocumentPath(path)}`)
   );
 }
 
@@ -79,9 +86,7 @@ function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
       if (!win) throw new FrameError("unavailable");
       const url = resolveUrl(frame, view, win.location.origin);
       const pathname = decodeURIComponent(url.pathname);
-      const inspectionPath = pathname.startsWith("/static/")
-        ? pathname.slice("/static/".length)
-        : pathname;
+      const inspectionPath = currentDocumentRoute(pathname) ?? pathname;
       let usage = frameUsage(view.usage);
       view.signal?.throwIfAborted();
       const mounting = mountLocalDocument(
@@ -113,7 +118,7 @@ function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
               selecting = mode !== "off";
               if (mode === "off" || !record) return;
               stop = installLocalHighlight(
-                frame.closest<HTMLElement>(".mokly-viewer") ??
+                frame.closest<HTMLElement>(`.${VIEWER_DIRECTORY}`) ??
                   frame.ownerDocument.body,
                 [
                   {

@@ -7,11 +7,6 @@ import test from "node:test";
 import { checkCompilation } from "../dist/build/check.js";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { validateGeneratedOutputPaths } from "../dist/build/output_paths.js";
-import {
-  generatedOwnershipDenial,
-  pendingGeneratedOrphanRoutes,
-  unclaimedGeneratedRoutes,
-} from "../dist/build/ownership.js";
 import { assetRoute, stylesheetRoute } from "../dist/build/styles/routes.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
@@ -19,10 +14,11 @@ import { isPublicStaticFile } from "../dist/config/public_files.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { withGeneratedOutputs } from "./helpers/generated_compilation.js";
 
 const directory = "mokly-generated";
-const stylesheet = `${directory}/styles/src/fixture.mockup.tsx.css`;
-const asset = `${directory}/assets/node_modules/@fontsource/inter/files/regular.woff2`;
+const stylesheet = `styles/src/fixture.mockup.tsx.css`;
+const asset = `assets/node_modules/@fontsource/inter/files/regular.woff2`;
 
 test("generated routes accept only portable stylesheets and supported assets", async (t) => {
   const fixture = await createFixture();
@@ -69,16 +65,16 @@ test("generated routes accept only portable stylesheets and supported assets", a
     validateGeneratedOutputPaths([stylesheet, asset], config),
   );
   for (const route of [
-    `${directory}/bad.html`,
-    `${directory}/styles/a.txt`,
-    `${directory}/assets/x.exe`,
-    `${directory}/assets/@fontsource/x.woff2`,
-    `${directory}/assets/node_modules/@scope/aux.woff2`,
-    `${directory}/styles/a space.tsx.css`,
+    `styles/bad.html`,
+    `styles/a.txt`,
+    `assets/x.exe`,
+    `assets/@fontsource/x.woff2`,
+    `assets/node_modules/@scope/aux.woff2`,
+    `styles/a space.tsx.css`,
   ]) {
     assert.throws(
       () => validateGeneratedOutputPaths([route], config),
-      /generated route is unsafe:|route is not portable:/,
+      /generated route is unsafe:|route is not portable:|reserved first segment/,
       route,
     );
   }
@@ -98,32 +94,25 @@ test("all reserved files are owned, removed as orphans, and empty directories ar
     path.join(fixture.mockupsDir, "other", "public.css"),
     "public",
   );
-  const extra = `${directory}/styles/stale/nested.css`;
-  await fs.mkdir(path.dirname(path.join(fixture.mockupsDir, extra)), {
+  const extra = `styles/stale/nested.css`;
+  await fs.mkdir(path.dirname(path.join(config.generatedDir, extra)), {
     recursive: true,
   });
-  await fs.writeFile(path.join(fixture.mockupsDir, extra), "stale");
+  await fs.writeFile(path.join(config.generatedDir, extra), "stale");
+  const extended = withGeneratedOutputs(baseline, outputs);
+  await writeCompilation(extended, config);
   assert.equal(
-    generatedOwnershipDenial(path.join(fixture.mockupsDir, extra), config),
-    undefined,
-  );
-  assert.deepEqual(pendingGeneratedOrphanRoutes(config, outputs.keys()), [
-    extra,
-  ]);
-  assert.deepEqual(unclaimedGeneratedRoutes(config), []);
-  await writeCompilation({ ...baseline, outputs }, config);
-  assert.equal(
-    await fs.readFile(path.join(fixture.mockupsDir, asset), "hex"),
+    await fs.readFile(path.join(config.generatedDir, asset), "hex"),
     "ff0080",
   );
   assert.equal(
-    isPublicStaticFile(path.join(fixture.mockupsDir, asset), config),
-    true,
+    isPublicStaticFile(path.join(config.generatedDir, asset), config),
+    false,
   );
   const server = await startCatalogueServer(config, { base: "main", port: 0 });
   fixture.beforeRemove(() => server.close());
   const response = await fetch(
-    `${server.url}/static/${asset.replace("@fontsource", "%40fontsource")}`,
+    `${server.url}/static/mokly-generated/${asset.replace("@fontsource", "%40fontsource")}`,
   );
   assert.equal(response.status, 404);
   assert.deepEqual(
@@ -133,21 +122,21 @@ test("all reserved files are owned, removed as orphans, and empty directories ar
     undefined,
   );
   await fs
-    .writeFile(path.join(fixture.mockupsDir, extra), "orphan")
+    .writeFile(path.join(config.generatedDir, extra), "orphan")
     .catch(async () => {
-      await fs.mkdir(path.dirname(path.join(fixture.mockupsDir, extra)), {
+      await fs.mkdir(path.dirname(path.join(config.generatedDir, extra)), {
         recursive: true,
       });
-      await fs.writeFile(path.join(fixture.mockupsDir, extra), "orphan");
+      await fs.writeFile(path.join(config.generatedDir, extra), "orphan");
     });
   assert.throws(
-    () => checkCompilation({ ...baseline, outputs }, config),
-    /orphan generated files:[\s\S]*mokly-generated\/styles\/stale\/nested.css/,
+    () => checkCompilation(extended, config),
+    /extra generated files:[\s\S]*mokly-generated\/styles\/stale\/nested.css/,
   );
   await writeCompilation(baseline, config);
   assert.equal(
     await fs
-      .stat(path.join(fixture.mockupsDir, directory))
+      .stat(path.join(config.generatedDir, "styles"))
       .catch(() => undefined),
     undefined,
   );
@@ -238,46 +227,27 @@ test("Build and committed Check reject every non-regular reserved entry without 
   assert.equal(await fs.readFile(outside, "utf8"), "consumer");
 });
 
-test("generated routes collide with consumer exclusions including defaults", async (t) => {
+test("removed public exclusions cannot change generated path admission", async (t) => {
+  const fixture = await createFixture(undefined, {
+    extraConfig: 'publicExclude: ["**/*.css"],',
+  });
+  t.after(() => removeFixture(fixture));
+  await assert.rejects(loadConfig(fixture.root), /publicExclude was removed/);
+});
+
+test("HTML cannot occupy either reserved output bucket, regardless of case", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
-  for (const [glob, route] of [
-    ["**/*.css", stylesheet],
-    ["**/README.*", `${directory}/styles/README.tsx.css`],
-  ] as const) {
-    const config = await loadConfig(fixture.root);
-    const excluded =
-      glob === "**/README.*" ? config : { ...config, publicExclude: [glob] };
-    const message = `generated route matches public exclusion ${glob}: ${route}; narrow the exclusion so Mokly-generated files stay public`;
+  const config = await loadConfig(fixture.root);
+  for (const segment of ["styles", "assets", "Styles", "ASSETS"]) {
     assert.throws(
-      () => validateGeneratedOutputPaths([route], excluded),
-      (error: Error & { code?: string }) =>
-        error.code === "build-invalid" &&
-        error.message === `[mokly/build-invalid] ${message}`,
+      () => validateGeneratedOutputPaths([`${segment}/../page.html`], config),
+      /generated route is unsafe/,
     );
-    const baseline = await compileCatalogue(config);
-    const outputs = new Map(baseline.outputs);
-    outputs.set(route, "/* synthetic output */");
-    await assert.rejects(
-      writeCompilation({ ...baseline, outputs }, excluded),
-      (error: Error & { code?: string }) =>
-        error.code === "build-invalid" &&
-        error.message === `[mokly/build-invalid] ${message}`,
-    );
-    if (glob === "**/*.css")
-      assert.throws(
-        () =>
-          validateGeneratedOutputPaths(
-            [route, `${directory}/styles/aaa.tsx.css`],
-            excluded,
-          ),
-        /generated route matches public exclusion \*\*\/\*\.css: mokly-generated\/styles\/aaa.tsx.css/,
-      );
-    if (glob === "**/*.css")
-      assert.throws(
-        () =>
-          validateGeneratedOutputPaths([`${directory}/invalid.css`], excluded),
-        /generated route is unsafe: mokly-generated\/invalid.css; use mokly-generated\/styles/,
-      );
+    const route = `${segment}/page/index.html`;
+    assert.throws(() => validateGeneratedOutputPaths([route], config), {
+      code: "build-invalid",
+      message: `[mokly/build-invalid] generated HTML route uses reserved first segment ${segment}: ${route}; styles and assets are reserved for generated stylesheets and assets`,
+    });
   }
 });

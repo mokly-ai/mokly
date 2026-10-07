@@ -12,10 +12,14 @@ import { pageSource, pathFixture } from "./helpers/path_fixture.js";
 test("new root matches stay private before a candidate can be accepted, including excluded files", async (t) => {
   const fixture = await pathFixture(
     {
-      "generated/specs/account/main.mockup.ts": pageSource(),
+      "generated/specs/account/main.mockup.ts": pageSource(
+        "",
+        '<html><body>Page<img src="../../../assets/image.svg"></body></html>',
+      ),
+      "generated/assets/image.svg": "<svg/>",
       "generated/specs/account/_folder.json": '{"exclude":["drafts/**"]}',
     },
-    '{mockupsDir:"generated",roots:[{dir:"generated/specs"}],generatedOutput:"committed"}',
+    '{mockupsDir:"generated",roots:[{dir:"generated/specs"}],}',
   );
   t.after(fixture.remove);
   const config = await fixture.config();
@@ -57,6 +61,10 @@ test("new root matches stay private before a candidate can be accepted, includin
   await fixture.write("generated/specs/account/image.svg", "<svg/>");
   assert.equal(
     (await fetch(`${server.url}/static/specs/account/image.svg`)).status,
+    404,
+  );
+  assert.equal(
+    (await fetch(`${server.url}/static/assets/image.svg`)).status,
     200,
   );
 });

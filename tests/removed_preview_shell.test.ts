@@ -6,10 +6,11 @@ import test from "node:test";
 import { exportCatalogue } from "../dist/export/run.js";
 import { viewPage } from "../dist/server/pages.js";
 import { readPreviewDescriptor } from "../packages/viewer/dist/previews/descriptor.js";
-import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV9 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { RemovedEntrySnapshot } from "../packages/viewer/dist/shell/metadata.js";
 
+import { currentManifest } from "./helpers/current_manifest.js";
 import { documentText } from "./helpers/html.js";
 import { publicShellContext } from "./helpers/public_shell.js";
 import { createRemovedDeliveryFixture } from "./helpers/removed_delivery_fixture.js";
@@ -77,13 +78,13 @@ function removedShell(
   entry: RemovedEntry,
   related: readonly RemovedEntry[] = [],
 ): string {
-  const manifest: ManifestV8 = {
-    schemaVersion: 8 as const,
+  const manifest: ManifestV9 = currentManifest({
+    schemaVersion: 9,
     folders: [],
     generatedBy: "mokly",
     sourceFiles: [],
     entries: [],
-  };
+  });
   const removed: RemovedEntrySnapshot[] = [
     { folderTitles: [], entry: { ...entry } },
     ...related.map((candidate) => ({

@@ -1,5 +1,7 @@
 import { transform } from "lightningcss";
 
+import { VIEWER_DIRECTORY } from "@mokly/viewer/data";
+
 function scopeShellSelectors(styles) {
   return transform({
     code: Buffer.from(styles),
@@ -32,7 +34,7 @@ export function embeddedStyles(shell, extensions) {
   const font = shell
     .match(/@font-face\s*\{[^}]*\}/)[0]
     .replaceAll('"Inter"', '"Mokly Inter"')
-    .replace("/__mokly/fonts/", "./assets/fonts/");
+    .replace(`/${VIEWER_DIRECTORY}/fonts/`, "./assets/fonts/");
   // Dropping the public declarations lets a host value on an ancestor inherit
   // in. Each use then falls back to the matching default, which the palette
   // restates per appearance, so an un-overridden dark root is not pinned Light.
@@ -51,5 +53,5 @@ export function embeddedStyles(shell, extensions) {
       .replaceAll(new RegExp(`  ${name}: [^;]+;\\n`, "g"), "")
       .replaceAll(`var(${name})`, `var(${name}, var(${fallback}))`);
   }
-  return `${font}\n@scope (.mokly-viewer) to ([data-mokly-slot]) {\n${scoped}\n}\n${extensions}`;
+  return `${font}\n@scope (.${VIEWER_DIRECTORY}) to ([data-mokly-slot]) {\n${scoped}\n}\n${extensions}`;
 }

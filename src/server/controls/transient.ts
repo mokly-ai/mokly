@@ -1,5 +1,5 @@
 /** Render temporary props through the same single-view compiler as saved previews. */
-import { encodeProps } from "@mokly/viewer/data";
+import { encodeProps, generatedResourcePath } from "@mokly/viewer/data";
 import type { ComponentRenderRequest } from "@mokly/viewer/data";
 
 import type { ComponentRuntime } from "../../build/component_runtime.js";
@@ -55,7 +55,7 @@ export function renderTransient(
   )![0];
   const document = compiler.render(route, props, moveTargets);
   return {
-    route,
+    route: generatedResourcePath(route),
     props: encodeProps(props),
     view: document.view!,
     files: captureRenderBundle(

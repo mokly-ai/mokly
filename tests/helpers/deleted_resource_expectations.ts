@@ -73,7 +73,7 @@ function expectedRejection(
     case "unsafe-view":
       return {
         code: "review-invalid",
-        message: `${prefix} could not retain Review asset ${viewRoute}: asset URL escapes mockupsDir: ../../${route}`,
+        message: `${prefix} could not retain Review asset mokly-generated/${viewRoute}: asset URL escapes mockupsDir: ../../../${route}`,
       };
   }
 }

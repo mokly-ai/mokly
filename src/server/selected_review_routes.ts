@@ -1,6 +1,9 @@
 /** Bounded immutable snapshots for a selected comparison or removed page. */
+
 import { randomUUID } from "node:crypto";
 import type { ServerResponse } from "node:http";
+
+import { VIEWER_DIRECTORY } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 
@@ -15,7 +18,7 @@ import {
   type SelectedReviewRoutesOptions,
 } from "./selected_review_capture.js";
 
-const PREFIX = "/__mokly/diffs/__generations/selected-";
+const PREFIX = `/${VIEWER_DIRECTORY}/diffs/generations/selected-`;
 const DEFAULT_LIMITS: SelectedReviewLimits = {
   artifactBytes: 64 * 1024 * 1024,
   capacityBytes: 128 * 1024 * 1024,
@@ -74,7 +77,7 @@ export class SelectedReviewRoutes {
     method: string,
   ): Promise<boolean> {
     const stable =
-      url.pathname === "/__mokly/diffs/review.json" &&
+      url.pathname === `/${VIEWER_DIRECTORY}/diffs/review.json` &&
       [...url.searchParams.keys()].some((name) => name !== "refresh");
     if (!stable && !url.pathname.startsWith(PREFIX)) return false;
     try {

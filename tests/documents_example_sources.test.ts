@@ -25,9 +25,7 @@ test("example fixtures copy authored Markdown and assets without generated resou
     ).isFile(),
   );
   assert.ok(
-    (
-      await fs.stat(path.join(root, "examples/basic/generated/styles.css"))
-    ).isFile(),
+    (await fs.stat(path.join(root, "examples/basic/styles.css"))).isFile(),
   );
   for (const file of [
     "example/workspace.svg",

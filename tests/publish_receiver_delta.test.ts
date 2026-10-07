@@ -117,12 +117,12 @@ test("publish uploads changed content and identity-stamped shells after an entry
   );
   assert.equal(stderr, "");
   const snapshots = requested.filter((name) =>
-    name.includes("/snapshots/after/home/index."),
+    name.includes("/snapshots/after/mokly-generated/home/index."),
   );
   assert.equal(snapshots.length, 2);
   const identityStamped = [
     "404.html",
-    "__mokly/catalogue.json",
+    "mokly-viewer/catalogue.json",
     "index.html",
     "view/details/index.html",
     "view/home/index.html",
@@ -134,7 +134,7 @@ test("publish uploads changed content and identity-stamped shells after an entry
       (name) =>
         name === "index.html" ||
         name === "404.html" ||
-        name === "__mokly/catalogue.json" ||
+        name === "mokly-viewer/catalogue.json" ||
         name.startsWith("view/"),
     )
     .sort();
@@ -143,8 +143,8 @@ test("publish uploads changed content and identity-stamped shells after an entry
     requested,
     [
       ...identityStamped,
-      "static/home/index.desktop.html",
-      "static/home/index.mobile.html",
+      "static/mokly-generated/home/index.desktop.html",
+      "static/mokly-generated/home/index.mobile.html",
       ...snapshots,
     ].sort(),
   );

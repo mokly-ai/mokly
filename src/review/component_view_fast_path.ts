@@ -69,12 +69,10 @@ export async function compareUnchangedComponentView(
     after.path,
     actual.resourceHead ?? actual.head,
   );
-  const beforeResources = context.compareResourceBytes
-    ? await context.beforeReader.resources(
-        before.path,
-        actual.resourceBase ?? actual.base,
-      )
-    : afterResources;
+  const beforeResources = await context.beforeReader.resources(
+    before.path,
+    actual.resourceBase ?? actual.base,
+  );
   const projectedAfterResources =
     projected && excluded
       ? await context.afterReader.resources(
@@ -84,7 +82,7 @@ export async function compareUnchangedComponentView(
         )
       : new Set<string>();
   const projectedBeforeResources =
-    projected && excluded && context.compareResourceBytes
+    projected && excluded
       ? await context.beforeReader.resources(
           before.path,
           projected.resourceBefore ?? projected.before,
@@ -102,7 +100,6 @@ export async function compareUnchangedComponentView(
   if ([...resources].some((route) => context.changed.has(repoPath(route))))
     return fallback();
   if (
-    context.compareResourceBytes &&
     (
       await changedResourceBytes(
         beforeResources,
@@ -115,7 +112,6 @@ export async function compareUnchangedComponentView(
   )
     return fallback();
   if (
-    context.compareResourceBytes &&
     (
       await changedResourceBytes(
         projectedBeforeResources,

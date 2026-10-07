@@ -9,7 +9,7 @@ const design = (entryPath: string, viewport: string): string =>
   pathToFileURL(
     path.join(
       repositoryRoot,
-      "examples/basic/generated",
+      "examples/basic/mokly-generated",
       entryPath,
       `index.${viewport}.html`,
     ),

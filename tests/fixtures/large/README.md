@@ -13,21 +13,21 @@ npm run fixture:large -- --areas 2 --screens 10 --rows 6
 npm run benchmark:large -- --areas 2 --screens 10 --rows 6
 npm run fixture:large -- --stylesheets 8 --stylesheet-share 0.75
 npm run benchmark:large -- --stylesheets 8 --stylesheet-share 0.75
-npm run fixture:large -- --derived
-npm run dev:large -- --derived --debug-timings
-npm run benchmark:large -- --derived
+npm run fixture:large -- --tracked-output
+npm run dev:large -- --tracked-output --debug-timings
+npm run benchmark:large -- --tracked-output
 ```
 
 `fixture:large` creates a `.context/mokly-large-*` directory, builds its output
 and commits a `main` baseline **inside that isolated fixture**, not in Mokly's
 repository. It reports setup time separately and saves a size-keyed record for reuse.
-The record key includes the stylesheet count, share, and output mode. After committing, setup
+The record key includes the stylesheet count, share, and tracked-output choice. After committing, setup
 appends one unrelated `.scale-unrelated-rule` rule to `assets/shared-1.css`.
-That is the only worktree edit; the generated documents stay current. The
+That is the only worktree edit; when built, generated documents stay current. The
 selector occurs in no screen, so rule attribution examines and excludes the
 edited sheet from each linked view. It adds no screens or flows to Changes.
-Committed `dev:large` and `benchmark:large` reuse those baseline bytes.
-Neither mode repeats package compilation. Run `npm run build` explicitly after changing Mokly's
+Tracked-output `dev:large` and `benchmark:large` reuse those baseline bytes.
+Neither choice repeats package compilation. Run `npm run build` explicitly after changing Mokly's
 source. Missing setup fails with the matching preparation command; `--config`
 can select an existing fixture. `dev:large` serves until Ctrl-C.
 
@@ -42,9 +42,9 @@ times. Either usable startup at five seconds or above fails the command.
 Chrome is launched before timing; “cold” means application-cold, not a flushed
 OS page cache. Generated fixtures remain for inspection.
 
-### Derived baselines
+### Untracked baselines
 
-`--derived` uses a separate record for the same dimensions and leaves generated
+The default uses a separate record for the same dimensions and leaves generated
 HTML and the manifest untracked. Setup packs the already-built Mokly package
 into `tooling/mokly.tgz`, pins Firna and its peers from this repository's
 lockfile, creates the consumer's own lockfile and installs it. Source, public

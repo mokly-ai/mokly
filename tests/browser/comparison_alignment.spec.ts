@@ -45,7 +45,9 @@ async function expectPresentedFrames(section: Locator): Promise<void> {
     await expect(frame).toHaveAttribute("srcdoc", /al-page/);
     await expect(frame).toHaveAttribute(
       "data-mokly-preview-source",
-      new RegExp(`/snapshots/${side}/tall/index\\.desktop\\.html$`),
+      new RegExp(
+        `/snapshots/${side}/mokly-generated/tall/index\\.desktop\\.html$`,
+      ),
     );
     await expect(frame).not.toHaveAttribute("src", /.*/);
     await expect(section.locator(`.mb-pane--${side} .mb-pane-doc`)).toHaveCSS(

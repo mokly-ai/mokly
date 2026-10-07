@@ -18,6 +18,10 @@ memo between the graph and stylesheet passes. The generated name is
 of SHA-256 over the UTF-8 repository-relative POSIX stylesheet path. It never
 depends on source bytes, bundle order, process cwd or platform separators.
 Distinct local identities colliding at a generated name fail Build.
+Every CSS Modules parse and process call, including verification, passes
+`map: false`, so a `sourceMappingURL` comment never loads a map or reads a
+file. Diagnostic positions refer to the CSS that the scoper receives, after
+renderer pruning and any consumer PostCSS, never to a source-map origin.
 
 CSS whitespace in selectors and `@scope` preludes means only space, tab, line
 feed, carriage return and form feed. A hex escape consumes its next single
@@ -172,8 +176,7 @@ prefix, polyfill or normalize other declarations, selectors, comments,
 conditions or modern CSS syntax. These reach esbuild as authored; plain and
 module bundles differ only in the scoped names. The authored quoted-local
 `image-set()` guard still runs before scoping. Lightning CSS remains a
-read-only parser for Changes and transformer-only inventory, never a module
-delivery transformer. Browserslist targets are the consumer's PostCSS concern,
+read-only parser for Changes, never a CSS Modules delivery transform. Browserslist targets are the consumer's PostCSS concern,
 not a Mokly CSS Modules input.
 
 Before the plugins run, reject authored `:import(...)`, `:export` and

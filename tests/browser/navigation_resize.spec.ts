@@ -18,7 +18,7 @@ test("Changes keeps resized navigation across diff modes and screen navigation",
   await page.setViewportSize({ height: 900, width: 1_280 });
   const comparisonRequests: string[] = [];
   page.on("request", (request) => {
-    if (request.url().includes("/__mokly/diffs/"))
+    if (request.url().includes("/mokly-viewer/diffs/"))
       comparisonRequests.push(request.url());
   });
   await page.goto(`${fixture.url}/view/home/`);

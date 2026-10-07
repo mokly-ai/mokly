@@ -3,9 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { Metafile } from "esbuild";
-import { Minimatch } from "minimatch";
 
-import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import { GENERATED_DIRECTORY, isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import {
   isAuthoredEntryPath,
@@ -23,10 +22,9 @@ import {
   type MetafilePathMapper,
 } from "./metafile_paths.js";
 import type { SourceDenial } from "./source_denial.js";
-import { GENERATED_DIRECTORY } from "./styles/routes.js";
 
 /** Names reserved for authoring, including stale helpers no longer imported. */
-function isReservedSource(candidate: string): boolean {
+export function isReservedSource(candidate: string): boolean {
   return (
     path.basename(candidate).toLowerCase() === "_folder.json" ||
     /\.source\.(?:html?|[cm]?[jt]sx?)$/i.test(candidate)
@@ -42,19 +40,6 @@ const logicalSourceIndexes = new WeakMap<
   readonly string[],
   ReadonlySet<string>
 >();
-const exclusionMatchers = new WeakMap<
-  readonly string[],
-  readonly Minimatch[]
->();
-
-/** Classification options for internal metadata and per-load root projections. */
-export interface SourceClassificationOptions {
-  /** Bypass public globs while retaining every authoring-source protection. */
-  readonly ignorePublicExclusions?: boolean;
-  /** Reuse a physical mockups root within one dependency collection. */
-  readonly physicalMockupsRoot?: string;
-}
-
 /**
  * Return the denial cause, or undefined for a public candidate.
  * Historical readers use no filesystem aliases;
@@ -65,8 +50,8 @@ export function isAuthoringSource(
   candidate: string,
   config: ResolvedConfig,
   aliases: "all" | "exclusions" | "none" = "all",
-  options: SourceClassificationOptions = {},
 ): SourceDenial | undefined {
+  if (isInside(config.generatedDir, candidate)) return { kind: "generated" };
   if (
     isAuthoredEntryPath(candidate, config) ||
     (aliases !== "none" && matchesRootFile(candidate, config))
@@ -74,15 +59,6 @@ export function isAuthoringSource(
     return { kind: "entries" };
   if (isReservedSource(candidate)) return { kind: "reserved" };
   if (isListedSource(candidate, config)) return { kind: "listed" };
-  const logicalExclusion = options.ignorePublicExclusions
-    ? undefined
-    : matchingPublicExclusion(
-        candidate,
-        config.mockupsDir,
-        config.publicExclude,
-      );
-  if (logicalExclusion !== undefined)
-    return { kind: "exclusion", glob: logicalExclusion };
   if (aliases === "none") return;
   let real: string;
   try {
@@ -91,15 +67,13 @@ export function isAuthoringSource(
     if (aliases === "exclusions") return;
     throw error;
   }
-  const physicalExclusion = options.ignorePublicExclusions
-    ? undefined
-    : matchingPublicExclusion(
-        real,
-        options.physicalMockupsRoot ?? projectRealPath(config.mockupsDir),
-        config.publicExclude,
-      );
-  if (physicalExclusion !== undefined)
-    return { kind: "exclusion", glob: physicalExclusion };
+  if (
+    isInside(
+      path.join(projectRealPath(config.mockupsDir), GENERATED_DIRECTORY),
+      real,
+    )
+  )
+    return { kind: "generated" };
   if (aliases === "exclusions") return;
   if (
     isAuthoredEntryPath(real, config, true) ||
@@ -147,24 +121,6 @@ function isListedSource(candidate: string, config: ResolvedConfig): boolean {
   return files.has(toPosixPath(path.relative(config.repoRoot, candidate)));
 }
 
-/** Identify the first exclusion matching a mockups-relative path, including defaults. */
-export function matchingPublicExclusion(
-  candidate: string,
-  root: string,
-  globs: readonly string[],
-): string | undefined {
-  if (!isInside(root, candidate)) return;
-  const relative = toPosixPath(path.relative(root, candidate));
-  let matchers = exclusionMatchers.get(globs);
-  if (!matchers) {
-    matchers = globs.map(
-      (glob) => new Minimatch(glob, { nocase: true, dot: true }),
-    );
-    exclusionMatchers.set(globs, matchers);
-  }
-  return matchers.find((matcher) => matcher.match(relative))?.pattern;
-}
-
 /** Record actual graph inputs before tree shaking, including both path aliases. */
 export function graphSourceFiles(
   metafile: Metafile,
@@ -199,11 +155,10 @@ export function normalizeSourceFiles(
   const inventory = new Set<string>();
   const locate = createPathLocator(repoRoot);
   const reservedRoot = path.join(mockupsDir, GENERATED_DIRECTORY);
-  const realReservedRoot = fs
-    .lstatSync(reservedRoot, { throwIfNoEntry: false })
-    ?.isSymbolicLink()
-    ? reservedRoot
-    : projectRealPath(reservedRoot);
+  const realReservedRoot = path.join(
+    projectRealPath(mockupsDir),
+    GENERATED_DIRECTORY,
+  );
   for (const file of files) {
     const absolute = path.resolve(repoRoot, file);
     const location = locate(absolute);
@@ -220,7 +175,7 @@ export function normalizeSourceFiles(
       if (logicalReserved || isInside(realReservedRoot, location.physicalPath))
         throw new MoklyError(
           "build-invalid",
-          `authoring input is inside mokly-generated/: ${logicalReserved ? location.relativePath : location.physicalRelativePath}; move authored sources outside Mokly's output directory`,
+          `authoring input is inside ${GENERATED_DIRECTORY}/: ${logicalReserved ? location.relativePath : location.physicalRelativePath}; move authored sources outside Mokly's output directory`,
         );
       if (!isSafeRepositoryPath(relative))
         throw new MoklyError(

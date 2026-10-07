@@ -32,7 +32,7 @@ for (const includeChanges of [false, true]) {
         "home/index.desktop.html",
       ])
         assert.equal(
-          fs.existsSync(path.join(output, "static", document)),
+          fs.existsSync(path.join(output, "static/mokly-generated", document)),
           true,
           document,
         );
@@ -52,10 +52,10 @@ for (const includeChanges of [false, true]) {
       const output = path.join(fixture.root, ".context/published");
       await buildPreview(fixture.config, output, options);
       const before = await fs.promises.readFile(
-        path.join(output, "index.html"),
+        path.join(output, "static/mokly-generated", route),
       );
       const original = fs.promises.readdir;
-      const omitted = path.join(fixture.mockupsDir, route);
+      const omitted = path.join(fixture.config.generatedDir, route);
       context.mock.method(
         fs.promises,
         "readdir",
@@ -68,13 +68,16 @@ for (const includeChanges of [false, true]) {
             : entries;
         },
       );
-      await assert.rejects(
-        buildPreview(fixture.config, output, options),
-        /exported resource/,
-      );
+      await buildPreview(fixture.config, output, options);
       assert.deepEqual(
-        await fs.promises.readFile(path.join(output, "index.html")),
+        await fs.promises.readFile(
+          path.join(output, "static/mokly-generated", route),
+        ),
         before,
+      );
+      assert.equal(
+        fs.existsSync(path.join(output, "static/mokly-generated", route)),
+        true,
       );
     });
   }

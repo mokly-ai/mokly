@@ -1,4 +1,4 @@
-/** Assembled package-owned stylesheet served at /__mokly/shell.css and
+/** Assembled package-owned stylesheet served at /mokly-viewer/shell.css and
  * inlined into static Review artifact pages. */
 
 import { SHELL_CHROME_CSS } from "./css_chrome.js";

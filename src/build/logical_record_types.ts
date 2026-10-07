@@ -6,11 +6,11 @@ export interface LogicalAttributeRecord {
   value: string;
 }
 
-/** Native-link classification retained across compatibility transforms. */
+/** Native-link classification for validated logical references. */
 export type LogicalOwnerClass =
   "html-a" | "html-area" | "metadata-only" | "svg-a";
 
-/** Namespace classification retained across compatibility transforms. */
+/** Namespace classification for validated logical references. */
 export type LogicalNamespace = "html" | "other" | "svg";
 
 /** Complete identity retained for one rewritten logical reference. */

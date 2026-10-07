@@ -22,7 +22,7 @@ test("moved entry roots keep imported CSS identity when definitions stay in a he
         "import './styles.css'; export {screen as default} from '../shared.js';",
       "specs/old/styles.css": ".note{color:blue}",
     },
-    '{mockupsDir:"mockups",generatedOutput:"committed",review:{sharedImpact:["mockups/mokly-generated/**"]}}',
+    '{mockupsDir:"mockups",review:{sharedImpact:["mockups/mokly-generated/**"]}}',
   );
   t.after(() => fixture.remove());
   await fs.mkdir(path.join(fixture.root, "mockups"));
@@ -61,7 +61,7 @@ test("mapping a moved entry's shared stylesheet does not change a surviving cons
       "specs/old/collection.mockup.ts":
         "import '../styles.css'; export {home,detail} from '../shared.js';",
     },
-    '{mockupsDir:"mockups",generatedOutput:"committed"}',
+    '{mockupsDir:"mockups",}',
   );
   t.after(() => fixture.remove());
   await fs.mkdir(path.join(fixture.root, "mockups"));
@@ -101,7 +101,7 @@ test("a source directory move with an explicit stable path keeps imported CSS un
         "import './styles.css'; import {defineScreen} from '@mokly/mokly'; export default defineScreen({path:'stable',title:'Screen',description:'Description',dependencies:[],relatedDocs:[],mobile:<p>Mobile</p>,desktop:<p>Desktop</p>});",
       "specs/old/styles.css": "p { color: blue; }",
     },
-    '{mockupsDir:"mockups",generatedOutput:"committed"}',
+    '{mockupsDir:"mockups",}',
   );
   t.after(() => fixture.remove());
   await fs.mkdir(path.join(fixture.root, "mockups"));

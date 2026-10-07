@@ -24,5 +24,4 @@ export async function compileFixture(fixture: TestFixture) {
 }
 
 /** Root stylesheet route for the fixture's default entry. */
-export const entryStyle =
-  "mokly-generated/styles/entries/fixture.mockup.tsx.css";
+export const entryStyle = "styles/entries/fixture.mockup.tsx.css";

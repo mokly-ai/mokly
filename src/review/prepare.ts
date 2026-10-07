@@ -4,6 +4,11 @@ import { isDeepStrictEqual } from "node:util";
 import { completedBaseline } from "../baseline/cache.js";
 import { cacheLayout } from "../baseline/cache_layout.js";
 import type { CompletionMarker } from "../baseline/cache_layout.js";
+import {
+  baselineCatalogue,
+  joinCataloguePath,
+  type BaselineCatalogue,
+} from "../baseline/catalogue.js";
 import { SystemBaselineClock } from "../baseline/clock.js";
 import { assertBaselineActive, BaselineError } from "../baseline/errors.js";
 import { NodeBaselineFileSystem } from "../baseline/filesystem.js";
@@ -20,13 +25,25 @@ import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
+import {
+  MANIFEST_NAME,
+  parseHistoricalManifest,
+} from "../registry/manifest.js";
 
+import { CommittedBaselineReader } from "./committed.js";
 import type { GitCommandRunner } from "./git.js";
 import { GitRepositoryEvidence } from "./git_evidence.js";
 import {
   readOnlyRepositoryForCommit,
+  type BaselineSelection,
   type ReadOnlyReviewRepository,
 } from "./repository.js";
+import {
+  incompleteGeneratedInventory,
+  inventoryDiagnostic,
+  readCommitTree,
+  treeEntryKind,
+} from "./tree_inventory.js";
 
 export interface BaselinePreparationOptions {
   readonly signal?: AbortSignal;
@@ -45,6 +62,8 @@ export interface PreparedReviewRepository extends ReadOnlyReviewRepository {
   readonly [preparedRepository]: true;
   readonly marker: CompletionMarker | undefined;
   readonly commit: string;
+  readonly selection: BaselineSelection;
+  readonly descriptor: BaselineCatalogue;
   /** Validate retained cache identity again before installing an export. */
   assertUnchanged(): Promise<void>;
 }
@@ -69,10 +88,7 @@ export async function prepareReviewRepository(
       return options.commit ?? (await evidence.mergeBase(base, "HEAD"));
     });
   } catch (error) {
-    if (
-      config.generatedOutput !== "derived" ||
-      (error instanceof MoklyError && error.code === "config-invalid")
-    )
+    if (error instanceof MoklyError && error.code === "config-invalid")
       throw error;
     assertBaselineActive(options.signal);
     throw new BaselineError(
@@ -88,16 +104,49 @@ export async function prepareReviewRepository(
   );
   const filesystem =
     options.filesystem ?? new NodeBaselineFileSystem(maintenance);
+  const prefix =
+    toPosixPath(path.relative(config.repoRoot, config.mockupsDir)) || ".";
+  const blobReader = new CommittedBaselineReader(runner);
+  let selection: BaselineSelection = "rebuild";
+  let descriptor = baselineCatalogue(commit, prefix, "generated-v9");
+  const tree = await readCommitTree(runner, commit, descriptor.generatedRoot);
+  const candidate = joinCataloguePath(descriptor.generatedRoot, MANIFEST_NAME);
+  const kind = treeEntryKind(tree.get(candidate));
+  if (kind !== "missing") {
+    if (kind !== "regular")
+      throw new MoklyError(
+        "manifest-invalid",
+        `historical manifest is not a regular file: ${candidate}`,
+      );
+    try {
+      const manifest = parseHistoricalManifest(
+        JSON.parse(await blobReader.readFile(commit, candidate)),
+      );
+      const issue = incompleteGeneratedInventory(tree, descriptor, manifest);
+      if (issue) {
+        const line = inventoryDiagnostic(commit, issue);
+        if (options.diagnostic) options.diagnostic(line);
+        else process.stderr.write(`${line}\n`);
+      } else selection = "blobs";
+    } catch (error) {
+      if (error instanceof MoklyError) throw error;
+      throw new MoklyError(
+        "manifest-invalid",
+        `invalid historical manifest: ${candidate}`,
+        { cause: error },
+      );
+    }
+  }
   const request = {
     repoRoot: config.repoRoot,
     commit,
-    mockupsPath: toPosixPath(path.relative(config.repoRoot, config.mockupsDir)),
+    mockupsPath: prefix,
     commands: config.review.baselineBuild ?? [],
     ...(options.signal ? { signal: options.signal } : {}),
     ...(options.onProgress ? { onProgress: options.onProgress } : {}),
   };
   const rebuilt =
-    config.generatedOutput === "derived"
+    selection === "rebuild"
       ? await (
           options.builder ??
           new CachedBaselineBuilder(
@@ -109,16 +158,25 @@ export async function prepareReviewRepository(
           )
         ).build(request)
       : undefined;
+  if (rebuilt)
+    descriptor = baselineCatalogue(
+      commit,
+      rebuilt.marker.historicalCatalogueRoot,
+    );
   return {
     commit,
+    selection,
+    descriptor,
     [preparedRepository]: true,
     marker: rebuilt?.marker,
     ...readOnlyRepositoryForCommit(
       config,
       commit,
+      selection,
       runner,
       options.signal,
       filesystem,
+      descriptor,
     ),
     async assertUnchanged() {
       if (!rebuilt) return;

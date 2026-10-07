@@ -33,7 +33,7 @@ test("background baselines reconcile removed rows and invalidate changed histori
   page.on("request", (request) => {
     const url = new URL(request.url());
     if (
-      url.pathname === "/__mokly/diffs/review.json" &&
+      url.pathname === "/mokly-viewer/diffs/review.json" &&
       url.searchParams.has("page")
     )
       previewRequests++;

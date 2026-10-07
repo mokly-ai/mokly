@@ -9,7 +9,7 @@ function shell(status?: string, usageComplete = true): string {
   const state = status ? `data-changes-status="${status}"` : "";
   const descriptor = {
     renderCapability: capability,
-    schemaVersion: 1,
+    schemaVersion: 2,
     source: {
       base: "main",
       catalogueId: "c".repeat(64),

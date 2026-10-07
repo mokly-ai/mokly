@@ -91,7 +91,7 @@ test(
       assert.equal((await fetch(`${running.url}/view/home/`)).status, 200);
       const builds = builder.builds.length;
       const preview = await fetch(
-        `${running.url}/__mokly/diffs/review.json?page=removed`,
+        `${running.url}/mokly-viewer/diffs/review.json?page=removed`,
       );
       assert.equal(preview.status, 500);
       assert.equal(builder.builds.length, builds);
@@ -185,7 +185,7 @@ test(
       assert.equal((await fetch(`${running.url}/view/home/`)).status, 200);
       const builds = builder.builds.length;
       const preview = await fetch(
-        `${running.url}/__mokly/diffs/review.json?page=removed`,
+        `${running.url}/mokly-viewer/diffs/review.json?page=removed`,
       );
       assert.equal(preview.status, 500);
       assert.equal(builder.builds.length, builds);
@@ -259,7 +259,9 @@ test(
       );
       await waitFor(async () => {
         const document = await (
-          await fetch(`${running.url}/static/home/index.mobile.html`)
+          await fetch(
+            `${running.url}/static/mokly-generated/home/index.mobile.html`,
+          )
         ).text();
         return document.includes("Freshly edited preview")
           ? document

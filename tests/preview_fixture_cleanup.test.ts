@@ -220,7 +220,7 @@ async function writeFreshArtifact(artifact: string): Promise<void> {
   await fs.mkdir(artifact, { recursive: true });
   await fs.writeFile(
     path.join(artifact, PREVIEW_ARTIFACT_MARKER),
-    "schemaVersion=1\n",
+    JSON.stringify({ schemaVersion: 3, files: [] }),
   );
 }
 
