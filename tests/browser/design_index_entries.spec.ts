@@ -86,7 +86,7 @@ for (const viewport of ["desktop", "mobile"] as const)
       pathToFileURL(
         path.join(
           repositoryRoot,
-          "examples/basic/generated/design/browse/index-entries/member-changes",
+          "examples/basic/mokly-generated/design/browse/index-entries/member-changes",
           `index.${viewport}.html`,
         ),
       ).href,

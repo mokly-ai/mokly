@@ -77,7 +77,7 @@ test("live SSR carries a private descriptor while export carries no host loader"
   const exported = renderHydratedShellPage(view, {
     base: source.base,
     delivery: {
-      schemaVersion: 3,
+      schemaVersion: 5,
       deploymentId,
       canonicalPath: "/",
       comparisonUrl: null,
@@ -142,7 +142,7 @@ test("static shell, workspace and deployment derive from the complete model", ()
   const deploymentId = "d".repeat(64);
   const publicModel = { ...catalogue, deploymentId };
   const delivery = {
-    schemaVersion: 3 as const,
+    schemaVersion: 5 as const,
     deploymentId,
     canonicalPath: "/view/components/action/",
     comparisonUrl: null,

@@ -1,5 +1,6 @@
 /** Resolve and fetch one removed entry's previous version. */
 
+import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
 import { historicalSnapshotId } from "../catalogue/snapshot_identity.js";
 import type { CatalogueReadModel } from "../catalogue/types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
@@ -9,7 +10,7 @@ import type { RemovedPreviewData } from "../shell/previews.js";
 
 import { pageContent, screenContent } from "./content.js";
 
-const STABLE_ENDPOINT = "/__mokly/diffs/review.json";
+const STABLE_ENDPOINT = `/${VIEWER_DIRECTORY}/diffs/review.json`;
 const REVIEW_FILE = "review.json";
 
 /** One historical screen view rendered in its own device frame. */
@@ -140,7 +141,9 @@ function unavailable(): never {
 
 function generationFromUrl(value: string | URL): string | undefined {
   const path = new URL(value).pathname;
-  return /^\/__mokly\/diffs\/__generations\/([a-f0-9]{64})\//.exec(path)?.[1];
+  return new RegExp(
+    `^\\/${VIEWER_DIRECTORY}\\/diffs\\/generations\\/([a-f0-9]{64})\\/`,
+  ).exec(path)?.[1];
 }
 
 function snapshotMatches(

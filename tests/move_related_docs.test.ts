@@ -26,7 +26,7 @@ for (const components of [false, true])
         "specs/old.md": "# Guide\n\nRead this guide.",
         "specs/links.mockup.tsx": source,
       },
-      '{mockupsDir:"mockups",roots:[{dir:"specs"}],generatedOutput:"committed"}',
+      '{mockupsDir:"mockups",roots:[{dir:"specs"}],}',
     );
     t.after(fixture.remove);
     await fs.mkdir(path.join(fixture.root, "mockups"));

@@ -1,4 +1,4 @@
-import { generatedSource } from "../build/ownership.js";
+import { stripGeneratedFirstLine } from "../build/generated_marker.js";
 
 const ID = "[a-z0-9]+(?:-[a-z0-9]+)*";
 const KEY = "[a-f0-9]{64}";
@@ -119,8 +119,7 @@ export function reviewFingerprintMaterial(
 }
 
 function parseDocument(content: string, route: string): ParsedDocument {
-  if (generatedSource(content))
-    content = content.slice(content.indexOf("\n") + 1);
+  content = stripGeneratedFirstLine(content);
   const materials = parseMaterials(content, route);
   const matches = [...content.matchAll(MARKER_SCAN)];
   if (content.replace(MARKER_SCAN, "").includes("<!--mokly-review-ignore:")) {

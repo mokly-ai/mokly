@@ -5,6 +5,8 @@ import test from "node:test";
 
 import ts from "typescript";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 
 function normalized(value: string): string {
@@ -25,6 +27,20 @@ function literalText(source: string, file: string): string {
   const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
   const literals: string[] = [];
   const visit = (node: ts.Node): void => {
+    if (ts.isTemplateExpression(node)) {
+      literals.push(
+        node.head.text +
+          node.templateSpans
+            .map(
+              (span) =>
+                (ts.isIdentifier(span.expression) &&
+                span.expression.text === "GENERATED_DIRECTORY"
+                  ? GENERATED_DIRECTORY
+                  : "{}") + span.literal.text,
+            )
+            .join(""),
+      );
+    }
     if (
       ts.isStringLiteral(node) ||
       ts.isNoSubstitutionTemplateLiteral(node) ||

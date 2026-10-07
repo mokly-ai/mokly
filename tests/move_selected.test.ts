@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import test from "node:test";
 
-import { generatedBytes } from "../dist/build/generated_file.js";
+import {
+  generatedBytes,
+  transferGeneratedFile,
+} from "../dist/build/generated_file.js";
 import { compareReview } from "../dist/review/compare.js";
 import { RepositorySelectedReview } from "../dist/review/selected.js";
 import { selectedComparisonViews } from "../packages/viewer/src/shell/comparison_selection.js";
@@ -34,9 +37,12 @@ async function capture(
       baseCommit: artifact.result.baseCommit,
       baseRef: "main",
       changedPaths: [],
+      headOutputs: [...fixture.after.outputs].map(
+        ([route, value]) => [route, transferGeneratedFile(value)] as const,
+      ),
       headDigests: Object.fromEntries(
         [...fixture.after.outputs].map(([route, bytes]) => [
-          route,
+          `mokly-generated/${route}`,
           createHash("sha256").update(generatedBytes(bytes)).digest("hex"),
         ]),
       ),
@@ -47,7 +53,7 @@ async function capture(
   const views = selectedComparisonViews(
     {
       result: selected.result,
-      url: "https://catalogue.test/__mokly/diffs/__generations/selected-one/review.json",
+      url: "https://catalogue.test/mokly-viewer/diffs/generations/selected-one/review.json",
     },
     {
       mode: "side",
@@ -71,18 +77,21 @@ test("selected moved-screen capture and viewer addresses use the original before
       const before = `old/screen/detail/index.${viewport}${suffix}.html`;
       const after = `new/screen/detail/index.${viewport}${suffix}.html`;
       assert.deepEqual(
-        Buffer.from(selected.files.get(`snapshots/before/${before}`) ?? []),
+        Buffer.from(
+          selected.files.get(`snapshots/before/mokly-generated/${before}`) ??
+            [],
+        ),
         Buffer.from(generatedBytes(fixture.before.outputs.get(before)!)),
       );
-      assert.ok(selected.files.has(`snapshots/after/${after}`));
+      assert.ok(selected.files.has(`snapshots/after/mokly-generated/${after}`));
     }
   assert.equal(
     views?.[0]?.documents.before,
-    "https://catalogue.test/__mokly/diffs/__generations/selected-one/snapshots/before/old/screen/detail/index.mobile.dark.html",
+    "https://catalogue.test/mokly-viewer/diffs/generations/selected-one/snapshots/before/mokly-generated/old/screen/detail/index.mobile.dark.html",
   );
   assert.equal(
     views?.[0]?.documents.after,
-    "https://catalogue.test/__mokly/diffs/__generations/selected-one/snapshots/after/new/screen/detail/index.mobile.dark.html",
+    "https://catalogue.test/mokly-viewer/diffs/generations/selected-one/snapshots/after/mokly-generated/new/screen/detail/index.mobile.dark.html",
   );
   assert.ok(
     ![...selected.files.keys()].some((route) => route.includes("guide")),
@@ -99,9 +108,13 @@ test("case-only selected capture retains exact before spelling without previousP
   );
   const { selected, views } = await capture(fixture, "welcome");
   assert.equal(selected.result.screens[0]!.previousPath, undefined);
-  assert.ok(selected.files.has("snapshots/before/Welcome/index.mobile.html"));
+  assert.ok(
+    selected.files.has(
+      "snapshots/before/mokly-generated/Welcome/index.mobile.html",
+    ),
+  );
   assert.match(
     views?.[0]?.documents.before ?? "",
-    /\/before\/Welcome\/index.mobile.dark.html$/,
+    /\/before\/mokly-generated\/Welcome\/index.mobile.dark.html$/,
   );
 });

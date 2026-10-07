@@ -7,12 +7,12 @@ import { promisify } from "node:util";
 
 import { loadConfig } from "../dist/config/load.js";
 import { readManifest } from "../dist/registry/manifest.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 import { expectedStylesheetChanges } from "../scripts/large/browse.mjs";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const exec = promisify(execFile);
@@ -48,13 +48,23 @@ test(
       path.join(repository, "scripts/large"),
       { recursive: true },
     );
+    await fs.writeFile(
+      path.join(repository, "scripts/large/toolchain.mjs"),
+      `import fs from "node:fs/promises"; import path from "node:path";
+export async function prepareDerivedToolchain(_repository, root) {
+  await fs.symlink(${JSON.stringify(path.join(repositoryRoot, "node_modules"))}, path.join(root, "node_modules"));
+}\n`,
+    );
     for (const directory of ["dist", "tests"])
       await fs.symlink(
         path.join(repositoryRoot, directory),
         path.join(repository, directory),
         "junction",
       );
-    const record = path.join(repository, ".context/large-1-3-1-2-0.34.json");
+    const record = path.join(
+      repository,
+      ".context/large-1-3-1-2-0.34-tracked.json",
+    );
     const { stdout } = await exec(
       process.execPath,
       [
@@ -72,6 +82,7 @@ test(
         "2",
         "--stylesheet-share",
         "0.34",
+        "--tracked-output",
       ],
       { cwd: repository, timeout: 120000 },
     );
@@ -110,7 +121,7 @@ test(
     for (const entry of manifest.entries) {
       for (const view of generatedViews(entry)) {
         const html = await fs.readFile(
-          path.join(config.mockupsDir, view.path),
+          path.join(config.generatedDir, view.path),
           "utf8",
         );
         const linked =

@@ -3,6 +3,7 @@ import path from "node:path";
 
 import type { RemovedEntryPreview } from "@mokly/viewer";
 import {
+  VIEWER_DIRECTORY,
   previewMetadataPath,
   parseRemovedPagePreview,
   type RemovedPagePreviewArtifact,
@@ -54,7 +55,7 @@ export async function capturePublicationPagePreviews(
         baseRef: changes.baseRef,
         changedEntries: changes.changedEntries,
         removedEntries: changes.removedEntries,
-        schemaVersion: 2,
+        schemaVersion: 3,
         movedEntries: changes.movedEntries,
       },
       new AbortController().signal,
@@ -144,7 +145,7 @@ export async function publishPublicationComparison(
           await fs.promises.readFile(path.join(provider.outDir, name)),
         );
     const packaged = packageRemovedPagePreviews(files, pagePreviews);
-    const directory = `__mokly/diffs/__generations/${comparisonContentId(packaged)}`;
+    const directory = `${VIEWER_DIRECTORY}/diffs/generations/${comparisonContentId(packaged)}`;
     const removedPreviews = staticRemovedPreviews(
       removed,
       { result: comparison.result },
@@ -177,17 +178,19 @@ export function publicationComparisonMetadata(comparisonUrl: string): {
   redirect: string;
 } {
   if (
-    !/^\/__mokly\/diffs\/__generations\/[a-f0-9]{64}\/review\.json$/.test(
-      comparisonUrl,
-    )
+    !new RegExp(
+      `^\\/${VIEWER_DIRECTORY}\\/diffs\\/generations\\/[a-f0-9]{64}\\/review\\.json$`,
+    ).test(comparisonUrl)
   )
     throw publicationError(
       "Preview comparison did not resolve an immutable generation.",
     );
   return {
-    redirect: `/__mokly/diffs/review.json ${comparisonUrl} 302`,
-    headers:
-      "/__mokly/diffs/*\n  Cache-Control: no-store\n  X-Content-Type-Options: nosniff\n",
+    redirect: `/${VIEWER_DIRECTORY}/diffs/review.json ${comparisonUrl} 302`,
+    headers: `/${VIEWER_DIRECTORY}/diffs/*
+  Cache-Control: no-store
+  X-Content-Type-Options: nosniff
+`,
   };
 }
 

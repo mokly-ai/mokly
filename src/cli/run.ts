@@ -11,6 +11,7 @@ import { serve, type RunningServe } from "../server/serve.js";
 
 import { parseArguments, type CliArguments } from "./arguments.js";
 import { openServedBrowser } from "./browser.js";
+import { watchBuild } from "./build_watch.js";
 import { runExport } from "./export.js";
 import { HELP } from "./help.js";
 import {
@@ -117,6 +118,17 @@ async function execute(
   }
   const outputStore = new FileSystemGeneratedOutputStore();
   if (arguments_.command === "build") {
+    if (arguments_.watch) {
+      await watchBuild(
+        config,
+        cwd,
+        reporter,
+        undefined,
+        undefined,
+        arguments_.strict ?? false,
+      );
+      return 0;
+    }
     const compilation = await reportPhase(
       reporter,
       "Rendering catalogue",
@@ -153,7 +165,7 @@ async function execute(
       compilation.diagnostics,
       arguments_.strict ?? false,
     );
-    await reportPhase(
+    const tracking = await reportPhase(
       reporter,
       "Checking generated output",
       "Generated output checked",
@@ -162,12 +174,12 @@ async function execute(
           outputStore.check(compilation, config),
         ),
     );
-    const derived = config.generatedOutput === "derived";
+    const untracked = tracking === "untracked";
     reporter.summary(
-      derived
+      untracked
         ? `Mokly output is valid and untracked (${compilation.outputs.size} files).\n`
         : `Mokly output is current (${compilation.outputs.size} files).\n`,
-      derived
+      untracked
         ? `Mokly output is valid and untracked · ${compilation.outputs.size} files`
         : `Mokly output is current · ${compilation.outputs.size} files`,
       environment.now() - startedAt,
@@ -194,6 +206,7 @@ async function execute(
       {
         ...(arguments_.base !== undefined ? { base: arguments_.base } : {}),
         port,
+        build: arguments_.build ?? false,
         watch: arguments_.watch ?? true,
       },
       { reporter },
@@ -209,7 +222,6 @@ async function execute(
     base,
     configPath:
       path.relative(cwd, config.configPath) || path.basename(config.configPath),
-    generatedOutput: config.generatedOutput,
     url: running.url,
     version: packageVersion(),
     watch: arguments_.watch ?? true,

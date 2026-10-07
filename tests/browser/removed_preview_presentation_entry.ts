@@ -28,7 +28,7 @@ declare global {
 }
 
 const generation =
-  "https://artifact.test/__mokly/diffs/__generations/presentation/";
+  "https://artifact.test/mokly-viewer/diffs/generations/presentation/";
 const snapshotAddress = `${generation}snapshots/before/archive/page.html`;
 
 function byteBody(size: number): ReadableStream<Uint8Array> {

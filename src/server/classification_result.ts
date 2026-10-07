@@ -1,4 +1,4 @@
-import type { ComponentChangeSnapshot } from "./component_changes.js";
+import type { ComponentChangeSnapshot } from "./component_change_types.js";
 
 /** Expected unavailable outcome for a baseline built by an earlier Mokly. */
 export interface EarlierBaselineClassification {

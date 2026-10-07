@@ -67,7 +67,7 @@ and transparent directories apply:
 ```
 
 The file is strict JSON with the fields above and no `path`. `exclude` globs
-use the safe relative glob grammar of `publicExclude` and match repository
+use the [safe relative glob grammar](./mokly-root-discovery.md#glob-validation) and match repository
 files relative to the directory; a matched file is neither an entry nor a
 document. A file matched by a root's `files` globs stays a protected, watched
 source input even when excluded and never imported. Exclusions match whole file

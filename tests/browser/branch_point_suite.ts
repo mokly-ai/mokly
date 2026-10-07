@@ -41,7 +41,8 @@ async function prepareServedComparisons(
     for (const entry of entries) {
       const review = page.waitForResponse(
         (response) =>
-          new URL(response.url()).pathname === "/__mokly/diffs/review.json",
+          new URL(response.url()).pathname ===
+          "/mokly-viewer/diffs/review.json",
       );
       await page.goto(`${host.url}/view/${entry}/?comparison=side`);
       expect((await review).status()).toBeLessThan(400);

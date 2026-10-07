@@ -66,14 +66,14 @@ test("unrelated dangling and cyclic links do not prevent publication", async (co
   await buildPreview(config, path.join(fixture.root, ".context/published"));
 });
 
-test("publication rejects an escaping manifest before reading its bytes", async (context) => {
+test("publication ignores an escaping local generated manifest without reading its bytes", async (context) => {
   const fixture = await createFixture();
   const outside = await createFixture();
   context.after(() => removeFixture(fixture));
   context.after(() => removeFixture(outside));
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
-  const manifest = path.join(fixture.mockupsDir, "mokly-manifest.json");
+  const manifest = path.join(config.generatedDir, "mokly-manifest.json");
   const target = path.join(outside.root, "metadata.json");
   await fs.promises.copyFile(manifest, target);
   await fs.promises.unlink(manifest);
@@ -88,10 +88,7 @@ test("publication rejects an escaping manifest before reading its bytes", async 
       return original.apply(fs.promises, args);
     },
   );
-  await assert.rejects(
-    buildPreview(config, path.join(fixture.root, ".context/published")),
-    /inside|confined|publication input/,
-  );
+  await buildPreview(config, path.join(fixture.root, ".context/published"));
   assert.equal(reads, 0);
 });
 

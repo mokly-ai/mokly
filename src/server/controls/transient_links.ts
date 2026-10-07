@@ -3,7 +3,12 @@ import path from "node:path";
 
 import { parse } from "parse5";
 
-import { encodeUrlPath, isSafeRepositoryPath } from "@mokly/viewer/data";
+import {
+  GENERATED_DIRECTORY,
+  currentDocumentPath,
+  encodeUrlPath,
+  isSafeRepositoryPath,
+} from "@mokly/viewer/data";
 
 interface Node {
   tagName?: string;
@@ -14,7 +19,11 @@ interface Node {
     attrs?: Record<string, { startOffset: number; endOffset: number }>;
   };
 }
-export function rebaseTransientNavigation(html: string, route: string): string {
+export function rebaseTransientNavigation(
+  html: string,
+  route: string,
+  generatedRoutes: ReadonlySet<string>,
+): string {
   const replacements: {
     startOffset: number;
     endOffset: number;
@@ -34,7 +43,14 @@ export function rebaseTransientNavigation(html: string, route: string): string {
         );
         if (!isSafeRepositoryPath(target))
           throw new Error("Preview navigation escapes its catalogue");
-        const value = `/static/${encodeUrlPath(target)}${href.slice(pathname!.length)}`;
+        const generatedRoute = target.startsWith(`${GENERATED_DIRECTORY}/`)
+          ? target.slice(`${GENERATED_DIRECTORY}/`.length)
+          : undefined;
+        const staticPath =
+          generatedRoute && generatedRoutes.has(generatedRoute)
+            ? currentDocumentPath(generatedRoute)
+            : `static/${target}`;
+        const value = `/${encodeUrlPath(staticPath)}${href.slice(pathname!.length)}`;
         replacements.push({
           ...location,
           value: `href="${value.replaceAll("&", "&amp;").replaceAll('"', "&quot;")}"`,

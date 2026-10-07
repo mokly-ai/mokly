@@ -27,13 +27,9 @@ for (const referenced of [true, false]) {
     assert.ok(manifest.sourceFiles.includes("generated/specs/image.svg"));
     assert.deepEqual(
       outputs.get("image.svg"),
-      outputs.get("mokly-generated/assets/generated/specs/image.svg"),
+      outputs.get("assets/generated/specs/image.svg"),
     );
-    assert.ok(
-      outputs.has(
-        "mokly-generated/styles/generated/specs/screen.mockup.tsx.css",
-      ),
-    );
+    assert.ok(outputs.has("styles/generated/specs/screen.mockup.tsx.css"));
     assert.ok(
       (outputs.get("guide/index.html") as string).includes(
         'src="../image.svg"',

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { validateDocumentHtml } from "../dist/documents/safety.js";
+
 import { pathFixture } from "./helpers/path_fixture.js";
 
 const rejected = [
@@ -48,34 +50,42 @@ const rejected = [
 
 for (const [markup, reason] of rejected)
   test(`the final document allowlist rejects ${markup}`, async (t) => {
-    const fixture = await pathFixture(
-      {
-        "specs/guide.md": "# Guide",
-        "transform.ts": `export default ({content}) => content.replace('</main>', ${JSON.stringify(markup)} + '</main>');`,
-      },
-      '{mockupsDir:"generated",roots:[{dir:"specs"}],compatibility:{transformer:"transform.ts"}}',
-    );
+    const fixture = await pathFixture({ "specs/guide.md": "# Guide" });
     t.after(fixture.remove);
-    await assert.rejects(fixture.compile(), {
-      code: "build-invalid",
-      detail: `specs/guide.md: unsafe rendered document: ${reason}`,
-    });
+    const html = (await fixture.compile()).outputs.get(
+      "guide/index.html",
+    ) as string;
+    assert.throws(
+      () =>
+        validateDocumentHtml(
+          html.replace("</main>", markup + "</main>"),
+          "specs/guide.md",
+        ),
+      {
+        code: "build-invalid",
+        detail: `specs/guide.md: unsafe rendered document: ${reason}`,
+      },
+    );
   });
 
 test("the final allowlist also rejects event attributes merged onto the document root", async (t) => {
-  const fixture = await pathFixture(
-    {
-      "specs/guide.md": "# Guide",
-      "transform.ts": `export default ({content}) => content.replace('</main>', '<html onclick="alert(1)"></main>');`,
-    },
-    '{mockupsDir:"generated",roots:[{dir:"specs"}],compatibility:{transformer:"transform.ts"}}',
-  );
+  const fixture = await pathFixture({ "specs/guide.md": "# Guide" });
   t.after(fixture.remove);
-  await assert.rejects(fixture.compile(), {
-    code: "build-invalid",
-    detail:
-      "specs/guide.md: unsafe rendered document: attribute onclick on <html> is not allowed",
-  });
+  const html = (await fixture.compile()).outputs.get(
+    "guide/index.html",
+  ) as string;
+  assert.throws(
+    () =>
+      validateDocumentHtml(
+        html.replace("</main>", '<html onclick="alert(1)"></main>'),
+        "specs/guide.md",
+      ),
+    {
+      code: "build-invalid",
+      detail:
+        "specs/guide.md: unsafe rendered document: attribute onclick on <html> is not allowed",
+    },
+  );
 });
 
 test("the allowlist accepts the complete CommonMark and GFM output in both schemes", async (t) => {

@@ -10,21 +10,23 @@ import type {
 import { SelectedReviewRoutes } from "../dist/server/selected_review_routes.js";
 import type { ReviewArtifact } from "../packages/viewer/dist/review/types.js";
 
+import { currentManifest } from "./helpers/current_manifest.js";
+
 const source: SelectedReviewSource = {
-  before: {
+  before: currentManifest({
     entries: [],
     generatedBy: "mokly",
-    schemaVersion: 8 as const,
+    schemaVersion: 9 as const,
     folders: [],
     sourceFiles: [],
-  },
-  after: {
+  }),
+  after: currentManifest({
     entries: [],
     generatedBy: "mokly",
-    schemaVersion: 8 as const,
+    schemaVersion: 9 as const,
     folders: [],
     sourceFiles: [],
-  },
+  }),
   baseCommit: "a".repeat(40),
   baseRef: "HEAD",
   changedPaths: [],
@@ -37,7 +39,7 @@ const source: SelectedReviewSource = {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     screens: [],
     sharedImpact: [],
   },
@@ -59,7 +61,7 @@ function artifact(route: string): ReviewArtifact {
       baseRef: source.baseRef,
       changedPaths: [],
       ignoredImpact: [],
-      schemaVersion: 5 as const,
+      schemaVersion: 6 as const,
       screens: [],
       sharedImpact: [],
       components: [],
@@ -98,7 +100,7 @@ async function start(
     routes,
     request: (id: string, refresh = false) =>
       fetch(
-        `http://127.0.0.1:${address.port}/__mokly/diffs/review.json?path=${encodeURIComponent(id)}${refresh ? "&refresh=1" : ""}`,
+        `http://127.0.0.1:${address.port}/mokly-viewer/diffs/review.json?path=${encodeURIComponent(id)}${refresh ? "&refresh=1" : ""}`,
       ),
   };
 }

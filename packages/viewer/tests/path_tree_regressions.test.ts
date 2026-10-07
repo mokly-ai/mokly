@@ -31,7 +31,7 @@ const fixture = () =>
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v4.json",
+        "../../../docs/protocol/fixtures/catalogue-v5.json",
         import.meta.url,
       ),
       "utf8",
@@ -147,6 +147,7 @@ test("current and removed records cannot overlap after case folding", () => {
         changes: { status: "ready", kind: "removed", included: true },
       },
       folderTitles: [],
+      snapshotId: "d".repeat(64),
     },
   ];
   delete model.removedEntries[0].entry.previousPath;

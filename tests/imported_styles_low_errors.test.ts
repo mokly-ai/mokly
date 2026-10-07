@@ -9,6 +9,7 @@ import {
   isValidGeneratedRoute,
   stylesheetRoute,
 } from "../dist/build/styles/routes.js";
+import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
@@ -37,8 +38,10 @@ test("dangling PostCSS and reserved output symlinks keep their catalogued diagno
     "missing-directory",
     path.join(output.mockupsDir, "mokly-generated"),
   );
+  const outputConfig = await loadConfig(output.root);
+  const compilation = await compileCatalogue(outputConfig);
   await assert.rejects(
-    async () => compileCatalogue(await loadConfig(output.root)),
+    () => writeCompilation(compilation, outputConfig),
     (error: Error) => {
       assert.equal(
         error.message,
@@ -90,10 +93,7 @@ test("stylesheet roots inside scoped packages use portable output routes", async
     path.join(fixture.root, "node_modules/@acme/renderer/index.tsx"),
     fixture.root,
   );
-  assert.equal(
-    route,
-    "mokly-generated/styles/node_modules/@acme/renderer/index.tsx.css",
-  );
+  assert.equal(route, "styles/node_modules/@acme/renderer/index.tsx.css");
   assert.equal(isValidGeneratedRoute(route), true);
 });
 

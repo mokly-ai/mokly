@@ -71,30 +71,30 @@ test("delivered browser graph resolves every import", () => {
 test("delivered browser graph rejects a missing import target", () => {
   const modules = new Map([
     [
-      "/__mokly/client/react-shell.js",
+      "/mokly-viewer/client/react-shell.js",
       Buffer.from('const hydrateRoot = true;\nimport "./missing.js";\n'),
     ],
   ]);
   assert.throws(
     () => inspectDeliveredBrowserGraph(modules),
-    /Missing delivered module: \/__mokly\/client\/react-shell\.js -> \.\/missing\.js/,
+    /Missing delivered module: \/mokly-viewer\/client\/react-shell\.js -> \.\/missing\.js/,
   );
 });
 
 test("delivered browser graph confines React to the hydration bundle", () => {
   const modules = new Map([
     [
-      "/__mokly/client/react-shell.js",
+      "/mokly-viewer/client/react-shell.js",
       Buffer.from("const hydrateRoot = true;\n"),
     ],
     [
-      "/__mokly/client/frame_adapter.js",
+      "/mokly-viewer/client/frame_adapter.js",
       Buffer.from("const hydrateRoot = true;\n"),
     ],
   ]);
   assert.throws(
     () => inspectDeliveredBrowserGraph(modules),
-    /Unexpected React runtime in \/__mokly\/client\/frame_adapter\.js/,
+    /Unexpected React runtime in \/mokly-viewer\/client\/frame_adapter\.js/,
   );
 });
 

@@ -23,7 +23,7 @@ export type MovedChangesHost = BranchHost;
 function movedCatalogue() {
   return branchCatalogue(
     BASELINE,
-    '{mockupsDir:"mockups",roots:[{dir:"specs"}],generatedOutput:"committed",colorSchemes:["light"]}',
+    '{mockupsDir:"mockups",roots:[{dir:"specs"}],colorSchemes:["light"]}',
     async (fixture) => {
       const specs = path.join(fixture.root, "specs");
       await fs.mkdir(path.join(specs, "account"));

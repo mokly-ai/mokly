@@ -67,7 +67,7 @@ export async function startHistoricalSelectionHistory(
     closeHost = () => host.close();
     for (let attempt = 0; attempt < 600; attempt++) {
       const catalogue = readCatalogue(
-        await (await fetch(`${host.url}/__mokly/catalogue.json`)).json(),
+        await (await fetch(`${host.url}/mokly-viewer/catalogue.json`)).json(),
       );
       if (catalogue.changesStatus === "ready")
         return {

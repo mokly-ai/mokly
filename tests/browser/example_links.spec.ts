@@ -21,7 +21,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
     }) => {
       if (viewport === "mobile" && scheme === "dark")
         await page.route(
-          "**/static/example/screens/welcome/index.mobile.dark.html",
+          "**/static/mokly-generated/example/screens/welcome/index.mobile.dark.html",
           async (route) => {
             await setTimeout(500);
             await route.continue();
@@ -35,7 +35,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       await expectFrameLoaded(
         frameElement,
         new RegExp(
-          `/static/example/screens/welcome/index\\.${suffix.replaceAll(".", "\\.")}$`,
+          `/static/mokly-generated/example/screens/welcome/index\\.${suffix.replaceAll(".", "\\.")}$`,
         ),
       );
       const frame = frameElement.contentFrame();
@@ -68,7 +68,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
         pathToFileURL(
           path.join(
             repositoryRoot,
-            `examples/basic/generated/example/screens/welcome/index.${suffix}`,
+            `examples/basic/mokly-generated/example/screens/welcome/index.${suffix}`,
           ),
         ).href,
       );

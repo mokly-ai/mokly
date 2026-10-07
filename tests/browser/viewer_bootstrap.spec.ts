@@ -11,10 +11,13 @@ test("reload recovery starts without fetching another catalogue snapshot", async
   let catalogueRequests = 0;
   let connected = false;
   page.on("response", (response) => {
-    if (new URL(response.url()).pathname === "/__mokly/events" && response.ok())
+    if (
+      new URL(response.url()).pathname === "/mokly-viewer/events" &&
+      response.ok()
+    )
       connected = true;
   });
-  await page.route("**/__mokly/catalogue.json", (route) => {
+  await page.route("**/mokly-viewer/catalogue.json", (route) => {
     catalogueRequests++;
     return route.abort();
   });
@@ -58,7 +61,7 @@ test("early native disclosures survive delayed hydration and recovery", async ({
   const requested = new Promise<void>((resolve) => {
     markRequested = resolve;
   });
-  await page.route("**/__mokly/client/react-host.js", async (route) => {
+  await page.route("**/mokly-viewer/client/react-host.js", async (route) => {
     markRequested();
     await blocked;
     await route.continue();
@@ -71,6 +74,7 @@ test("early native disclosures survive delayed hydration and recovery", async ({
         url: location.href,
         version: 1,
         browse: {
+          changesStatus: "ready",
           changedOnly: false,
           disclosures: { "folder:specs:fixture/archive": false },
           colorScheme: "light",

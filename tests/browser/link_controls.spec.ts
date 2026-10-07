@@ -113,9 +113,9 @@ test("generated controls remain native links in standalone and Review snapshots"
   page,
 }) => {
   for (const root of [
-    controls.fixture.mockupsDir,
-    path.join(controls.reviewDir, "snapshots/after"),
-    path.join(controls.reviewDir, "snapshots/before"),
+    path.join(controls.fixture.mockupsDir, "mokly-generated"),
+    path.join(controls.reviewDir, "snapshots/after/mokly-generated"),
+    path.join(controls.reviewDir, "snapshots/before/mokly-generated"),
   ]) {
     await page.goto(
       pathToFileURL(path.join(root, "home/index.mobile.html")).href,

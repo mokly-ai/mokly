@@ -55,7 +55,12 @@ test("the live reader accepts only exact entry scope", () => {
     ({ path: id }) => id === "product/browse/home",
   )!;
   const view = target(screen);
-  const complete = { catalogue: model, context, view };
+  const complete = {
+    schemaVersion: 2 as const,
+    catalogue: model,
+    context,
+    view,
+  };
   const scoped = JSON.parse(scopedBytes(view));
   assert.deepEqual(
     readLiveShellBootstrap(scoped),
@@ -77,10 +82,11 @@ test("the live reader accepts only exact entry scope", () => {
 
 test("the live state reader leaves static external references unchanged", () => {
   const external = {
+    schemaVersion: 2 as const,
     catalogue: {
       identity: model.identity.id,
       kind: "external",
-      path: "/__mokly/catalogue.json",
+      path: "/mokly-viewer/catalogue.json",
       revision: model.revision,
     },
     context,
@@ -170,6 +176,7 @@ test("scoped reader rejects unknown targets and complete live bootstraps", () =>
   assert.throws(
     () =>
       readScopedShellBootstrap({
+        schemaVersion: 2 as const,
         catalogue: model,
         context,
         view: target(screen),
@@ -178,17 +185,17 @@ test("scoped reader rejects unknown targets and complete live bootstraps", () =>
   );
 });
 
-test("the canonical public v4 fixture bytes remain unchanged", () => {
+test("the canonical public v5 fixture bytes remain unchanged", () => {
   const bytes = fs.readFileSync(
     new URL(
-      "../../../docs/protocol/fixtures/catalogue-v4.json",
+      "../../../docs/protocol/fixtures/catalogue-v5.json",
       import.meta.url,
     ),
   );
-  assert.equal(bytes.byteLength, 12_418);
+  assert.equal(bytes.byteLength, 12421);
   assert.equal(
     createHash("sha256").update(bytes).digest("hex"),
-    "0105ff635e68cc0ed00ed84d5aafdddb638cd834c7fb416cf9738c1b06f8eafc",
+    "b73f7134f4c686e28e900f2bdb332876f461fe8f90b73b61b218e9e836db2d33",
   );
   assert.doesNotThrow(() => readCatalogue(JSON.parse(bytes.toString("utf8"))));
 });
@@ -203,6 +210,7 @@ function target(entry: Pick<CatalogueRecord, "path" | "kind">) {
 
 function scopedBytes(view: ShellBootstrapView): string {
   return serializeShellBootstrap({
+    schemaVersion: 2,
     catalogue: projectScopedCatalogue(model, view),
     context,
     view,

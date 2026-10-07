@@ -9,7 +9,7 @@ import { MoklyError } from "../errors.js";
 import { isBaselineCachePath } from "./cache_paths.js";
 import { requireDirectory } from "./path_validation.js";
 import { projectRealPath, resolveInside } from "./paths.js";
-import { validatePublicExclude } from "./public_exclusions.js";
+import { validateRelativeGlobs } from "./relative_globs.js";
 import { validateRootReservedPath } from "./reserved_paths.js";
 import { requireString } from "./rules.js";
 import type { ResolvedRoot } from "./types.js";
@@ -45,7 +45,7 @@ export function resolveRoots(
     if (seen.has(realDir))
       throw invalid(`${at}.dir`, `duplicates ${path.relative(repoRoot, dir)}`);
     seen.add(realDir);
-    const files = validatePublicExclude(
+    const files = validateRelativeGlobs(
       root.files === undefined ? DEFAULT_FILES : root.files,
       `${at}.files`,
     );

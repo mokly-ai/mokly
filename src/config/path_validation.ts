@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import { MoklyError, type MoklyErrorCode } from "../errors.js";
 
 import { MOKLY_CACHE } from "./cache_paths.js";
@@ -89,14 +91,19 @@ export function validateReviewOut(
 ): void {
   const { mockupsDir, repoRoot } = boundary;
   const protectedRoots = [
-    mockupsDir,
+    path.join(mockupsDir, GENERATED_DIRECTORY),
     ...entryRootsOf(boundary),
     path.join(repoRoot, MOKLY_CACHE),
   ];
   const realRepoRoot = fs.realpathSync(repoRoot);
   const realReviewOut = configuredRealPath(reviewOut, label, code);
-  const realProtectedRoots = protectedRoots.map((root) =>
-    configuredRealPath(root, label, code),
+  const realProtectedRoots = protectedRoots.map((root, index) =>
+    index === 0
+      ? path.join(
+          configuredRealPath(mockupsDir, label, code),
+          GENERATED_DIRECTORY,
+        )
+      : configuredRealPath(root, label, code),
   );
   if (
     reviewOut === repoRoot ||

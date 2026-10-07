@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import { generatedBytes, type GeneratedFile } from "../build/generated_file.js";
 import { loadConsumerGraph } from "../build/load_graph.js";
 import { isValidGeneratedRoute } from "../build/styles/routes.js";
@@ -9,8 +11,6 @@ import { isDocumentResource } from "../documents/resource_paths.js";
 
 import type { GitReviewAssetReader, ReviewAssetReader } from "./assets.js";
 import { asChangeEvidence, type ChangeEvidence } from "./change_evidence.js";
-
-const generatedRoot = "mokly-generated";
 
 /** Merge Git changes with generated-byte evidence without over-attributing sources. */
 export async function importedChangedPaths(
@@ -23,7 +23,7 @@ export async function importedChangedPaths(
   acceptedRoutes?: readonly string[],
 ): Promise<ChangeEvidence> {
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
-  const reserved = `${prefix ? `${prefix}/` : ""}${generatedRoot}/`;
+  const reserved = `${prefix ? `${prefix}/` : ""}${GENERATED_DIRECTORY}/`;
   const authoredInputs = authored.filter(
     (route) => !route.startsWith(reserved),
   );
@@ -87,16 +87,22 @@ async function changedGeneratedStyles(
   outputs?: ReadonlyMap<string, GeneratedFile>,
 ): Promise<readonly string[]> {
   if (!routes.length) return [];
-  const baseFiles = await baseline.readManyIfExists(routes);
+  const baseFiles = await baseline.readManyIfExists(
+    routes.map((route) => `${GENERATED_DIRECTORY}/${route}`),
+  );
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const changed: string[] = [];
   for (const route of routes) {
     const current = outputs?.get(route);
     const bytes =
-      current === undefined ? await head.read(route) : generatedBytes(current);
-    const before = baseFiles.get(route);
+      current === undefined
+        ? await head.read(`${GENERATED_DIRECTORY}/${route}`)
+        : generatedBytes(current);
+    const before = baseFiles.get(`${GENERATED_DIRECTORY}/${route}`);
     if (before === undefined || !Buffer.from(before).equals(bytes))
-      changed.push(prefix ? `${prefix}/${route}` : route);
+      changed.push(
+        `${prefix ? `${prefix}/` : ""}${GENERATED_DIRECTORY}/${route}`,
+      );
   }
   return changed;
 }
@@ -109,7 +115,7 @@ export function withoutDeliveredSourceImpact(
   config: ResolvedConfig,
 ): readonly string[] {
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
-  const base = `${prefix ? `${prefix}/` : ""}${generatedRoot}/`;
+  const base = `${prefix ? `${prefix}/` : ""}${GENERATED_DIRECTORY}/`;
   const styleChanged = generated.some((route) =>
     route.startsWith(`${base}styles/`),
   );

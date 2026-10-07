@@ -30,8 +30,9 @@ protection is based on the resolved file set and complete graph inventory.
 Path projection retries a vanished ordinary ancestor at most five times.
 Dangling symlinks still fail. An internal manifest that disappears between an
 existence check and realpath is absent; lexical metadata denials still apply.
-`public_names.ts` owns the lexical public-file rules shared by export and copied
-Markdown resources. It has no filesystem reads or configuration state.
+`public_names.ts` owns pure lexical rules for copied Markdown resources.
+`public_denial.ts` owns authored-closure privacy shared with export, using
+configuration and projected filesystem paths.
 
 ```sh
 node --import tsx --test tests/config*.test.ts tests/entry_discovery*.test.ts
@@ -52,4 +53,4 @@ outside `mokly-generated/`, including aliases. Broad roots skip that output tree
 
 `cache_paths.ts` names the private `.mokly-cache/` directory and recognizes
 its paths and aliases. `cache_ignore.ts` publishes `.mokly-cache/.gitignore`,
-which matches every cache path, so Git ignores the cache in both output modes.
+which matches every cache path, so Git ignores the cache.

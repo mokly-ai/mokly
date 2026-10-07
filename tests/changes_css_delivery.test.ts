@@ -5,7 +5,7 @@ import test from "node:test";
 
 import { exportCatalogue } from "../dist/export/run.js";
 import { readManifest } from "../dist/registry/manifest.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
+import { prepareReviewRepository } from "../dist/review/prepare.js";
 import { ComponentChangeCache } from "../dist/server/component_change_cache.js";
 import { RepositoryComponentChanges } from "../dist/server/component_changes.js";
 import { configuredServedReview } from "../dist/server/configured_review.js";
@@ -13,14 +13,27 @@ import { startCatalogueServer } from "../dist/server/http.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
 for (const components of [false, true])
   test(`v${components ? 3 : 2} CSS evidence survives selected HTTP, watched cache, and static export`, async (t) => {
     const fixture = await cssAttributionFixture(t, components);
     const manifest = readManifest(fixture.config);
+    const prepared = await prepareReviewRepository(fixture.config, "main");
     const cache = new ComponentChangeCache(
-      new RepositoryComponentChanges(fixture.config, manifest, "main"),
+      new RepositoryComponentChanges(
+        fixture.config,
+        manifest,
+        "main",
+        undefined,
+        undefined,
+        {
+          commit: prepared.commit,
+          selection: prepared.selection,
+          descriptor: prepared.descriptor,
+        },
+      ),
     );
     await fixture.append(".guide { padding: 2px; }");
     const snapshot = await cache.read(1);
@@ -43,7 +56,7 @@ for (const components of [false, true])
     });
     t.after(() => server.close());
     const response = await fetch(
-      `${server.url}/__mokly/diffs/review.json?path=home`,
+      `${server.url}/mokly-viewer/diffs/review.json?path=home`,
     );
     assert.equal(response.status, 200, await response.clone().text());
     const selected = parseReviewResult(await response.json());
@@ -54,7 +67,7 @@ for (const components of [false, true])
         (
           await fetch(
             new URL(
-              `snapshots/after/${viewRoute("home", view.viewport, view.colorScheme)}`,
+              `snapshots/after/mokly-generated/${viewRoute("home", view.viewport, view.colorScheme)}`,
               response.url,
             ),
           )
@@ -87,7 +100,7 @@ for (const components of [false, true])
     assert.ok(updated);
     assert.ok(updated?.changedEntries?.includes("home"));
     const complete = await fixture.compare();
-    if (complete.result.schemaVersion === 5)
+    if (complete.result.schemaVersion === 6)
       assert.deepEqual(updated.result, complete.result);
   });
 
@@ -107,7 +120,7 @@ for (const components of [false, true])
       assert.equal(Boolean(view.excludedResources), view.viewport === "mobile");
     }
     assert.deepEqual(home.sharedImpact, ["mockups/shared.css"]);
-    if (result.schemaVersion === 5)
+    if (result.schemaVersion === 6)
       assert.deepEqual(
         result.changes.find((entry) => entry.after?.path === "home")?.reasons,
         home.views.find((view) => view.viewport === "desktop")?.reasons,
@@ -124,5 +137,5 @@ for (const components of [false, true])
         entry.views.every((view) => !view.reasons && !view.excludedResources),
       ),
     );
-    if (result.schemaVersion === 5) assert.deepEqual(result.changes, []);
+    if (result.schemaVersion === 6) assert.deepEqual(result.changes, []);
   });

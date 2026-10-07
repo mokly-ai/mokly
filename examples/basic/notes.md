@@ -21,8 +21,8 @@ in each entry's description and rationale, never inside the rendered screens:
   on a branch.
 - Supported controls are `MockLink` anchors: brand/home, catalogue leaves,
   content and flow references, Welcome inspector, comparison modes, and
-  Welcome tag states. Links navigate to design ids, independently of
-  the example ids shown in the secondary metadata. The two actual example
+  Welcome tag states. Links navigate to design paths, independently of
+  the example paths shown in the secondary metadata. The two actual example
   buttons use `MockLink asChild` with their original Firna styles.
 - Viewport, copy, refresh, resize, and collapse-all remain depictions without
   keyboard stops. Unsupported subject/scheme/comparison combinations have no
@@ -38,8 +38,8 @@ in each entry's description and rationale, never inside the rendered screens:
   adds normal light Details and four tag states; that contract owns their
   destinations. The original inspector and forms-open routes stay available.
 - The two established scheme examples and four tag-state artboards remain
-  variants of the canonical Welcome design. Each has its own id-derived screen
-  route and stays grouped below Welcome in navigation.
+  variants of the canonical Welcome design. Each has its own file-derived screen
+  path and stays grouped below Welcome in navigation.
 - The two retained scheme variants now render both Light and Dark artboards
   through the shared Appearance selector. Welcome's device screen follows the
   catalogue scheme; Details keeps its light frames under Dark and names the
@@ -56,7 +56,7 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
 - A variant's inspector shows the metadata it inherits from its parent, because
   a variant inherits the parent's address, schemes, dependencies, tags, and
   related docs. It supplies its own title, description, render, and any
-  reciprocal flow membership; omitted `useCaseIds` defaults to an empty list.
+  reciprocal flow membership; omitted `useCasePaths` defaults to an empty list.
   The removed variant has its own recorded details, like every removed screen.
 - The changed-views artboard records a direct or All-filter arrival at `Welcome`
   while its shown light view is unmodified: the change is confined to the dark
@@ -95,9 +95,8 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
   beside them keep their full-strength surface while only the shell below the
   bar dims. The served shell stacks its bar above the scrim the same way, so
   the artboard and the shipped drawer agree.
-- The `Light | Dark` control sits in the top bar on the wide artboards and in
-  the screen head band, under the viewport control, on the narrow ones: a 390px
-  top bar has no room for a third control.
+- One Appearance selector sits in the top bar on both wide and narrow
+  artboards. The screen head carries no separate scheme control.
 - The comparison band contains Current, Side by side, Overlay, and Difference.
   Viewport and scheme selections remain in the normal screen header and top bar.
   Every screen starts in Current, and diff snapshots load only after a click.
@@ -133,7 +132,7 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
   reserved space.
 - Those two artboards draw every row at a fixed height. Each drawn region
   states its visible height, content height and offset once in
-  `generated/design-review-scroll.css`, and both the content's offset and its
+  `design-review-scroll.css`, and both the content's offset and its
   scrollbar thumb follow those numbers, so they always agree and never depend
   on text wrapping.
 - Component Overlay and Difference draw one bordered component frame holding
@@ -152,13 +151,11 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
 The shipped shell was visually smoke-tested against these mockups. The
 following presentation differences are intentional:
 
-- The details inspector's collapsed bar shows one fixed hint
-  ("Description, rationale, source, related docs, and use cases") rather than
-  the state-specific hint copy some mockups draw.
-- Navigation groups render in deterministic alphabetical order, so the
-  `Design` group precedes `Example` when this example is served.
-- The Browse changed/all filter appears only when the serve base ref resolves
-  in Git; the mockups always show it with a sample count.
+- The runtime and artboards use the shared icon footer for the inspector.
+- The example's top-level order places Example before Design. Other siblings
+  follow the folder ordering contract.
+- Live Browse always shows All/Changes. It reports unavailable Changes when
+  Git evidence cannot be prepared; artboards depict explicit fixture states.
 - The mockups draw a small-phone artboard variant so a full 390×844 phone fits
   the depicted narrow shells; the served shell always uses the full-size
   phone frame and scales it below the responsive breakpoint.
@@ -167,8 +164,8 @@ following presentation differences are intentional:
   and the panel is hidden until it is opened. The artboards instead use native
   link semantics to open authored tag states; selected chips and picker
   visibility are part of the destination screen.
-- There is no separate Review section or standalone comparison command. Stable
-  design routes retain their old identifiers to preserve catalogue links.
+- There is no separate Review section or standalone comparison command. Design
+  links use the current file-derived catalogue paths.
 - Comparison artboards draw shorter browser frames than the served shell so two
   versions fit side by side, and every comparison mode keeps that one frame
   size. Component comparison artboards likewise draw a shorter bordered frame

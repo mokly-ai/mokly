@@ -32,10 +32,10 @@ for (const cross of [false, true]) {
       await page.evaluate(
         async ({ cross, status, origin }) => {
           const local = (await import(
-            `${location.origin}/__mokly/client/same_origin_adapter.js`
+            `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
           )) as typeof LocalAdapter;
           const remote = (await import(
-            `${location.origin}/__mokly/client/post_message_adapter.js`
+            `${location.origin}/mokly-viewer/client/post_message_adapter.js`
           )) as typeof PostAdapter;
           const adapter = cross
             ? remote.postMessageAdapter({ frameOrigin: origin })
@@ -46,7 +46,7 @@ for (const cross of [false, true]) {
             document.querySelector<HTMLIFrameElement>("#frame")!,
             {
               url: new URL(
-                "/static/home/index.mobile.html",
+                "/static/mokly-generated/home/index.mobile.html",
                 cross ? origin : location.origin,
               ),
               usage: { status },

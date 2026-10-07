@@ -10,7 +10,7 @@ by generated output:
 
 - the config file and its transitive authoring imports reload configuration, generated
   output, watch targets, and the child;
-- resolved entry modules, page/renderer/transformer imports, and every other
+- resolved entry modules, page/renderer imports, and every other
   inventoried source rebuild generated output, including imported bytes handled
   by asset loaders;
 - a created, renamed, moved, or deleted regular file below a configured root
@@ -34,7 +34,7 @@ by generated output:
   and browser reload event advance together. Deleting generated output cannot
   trigger a rebuild; generated routes and their symlink aliases never schedule
   a feedback loop;
-- header-proven generated output plus `.git`, `.context`, `node_modules`,
+- the entire `mokly-generated/` tree plus `.git`, `.context`, `node_modules`,
   `dist`, `target`, coverage, browser-test output, comparison output, and Mokly
   transaction trees are pruned from broad watches and classify as ignored;
 - additional inputs use the explicit action declared in config.
@@ -48,7 +48,7 @@ denied, so a regular file named `target` remains ordinary. The denied names are
 `.git`, `node_modules`, `.mokly-cache`, `dist`, `coverage`, `target`,
 `test-results`, `playwright-report`, `.context`, and segments beginning with
 `.mokly-review-` or `.mokly-write-`. Baseline-cache, `review.outDir`,
-header-proven generated-output, and export-output rules still apply. Thus an
+`mokly-generated/` generated-output, and export-output rules still apply. Thus an
 explicit `dist/specs` root remains reachable, while `src/dist` and
 `src/node_modules` are pruned beneath a `src` root, and a root at the repository
 root still prunes top-level `.git` and `node_modules`. The discovery walk and
@@ -61,7 +61,7 @@ watcher stats, else from the event kind: `addDir` and `unlinkDir` are directorie
 `add`, `change`, and `unlink` are files. Only a `raw` rename fallback or a direct
 call without stats or event evidence needs a directory lookup: each denied-leaf
 check uses one `statSync`, treating any failure as a file. Supplied stats avoid that
-lookup. Traversal still consults export markers and generated ownership headers.
+lookup. Traversal still consults export markers; `mokly-generated/` is ignored by path.
 Thus existing and removed denied directories stay ignored ahead of user rules,
 while deleting a matched regular file named `target` rebuilds just like deleting
 any other matched file. Watch notifications retain path, kind, and optional
@@ -89,23 +89,22 @@ classifies like any other unrelated file. Package source under `node_modules` or
 an npx cache is never treated as consumer source. Development of Mokly itself
 uses repository tooling rather than a hidden consumer-specific self-reload path.
 
-Header-proven generated output is trusted only when its recorded owner is a
-resolved file, an inventoried source, or a repository-relative path below a
-configured root matching one of its `files` globs with dotfile matching
-enabled. A root at the repository root trusts every matching path and nothing
-else. A deleted, renamed, or moved file remains trusted while its old path
-still matches, so its stale output is pruned as an orphan while the
-[move contract](./mokly-moves.md) pairs the new path with its baseline. Other
-Mokly-headered HTML is unclaimed and remains untouched.
+All files under `mokly-generated/` are generated output and ignored by watch,
+including removed and newly added paths. `build --watch` reuses these
+classification and debounce rules. A reload, rebuild or config action compiles
+a complete candidate and writes only after validation succeeds; evidence-only
+events do not write. Failed candidates retain the previous tree. `serve --build`
+writes accepted full compilations in the parent after resource watches are ready;
+plain Serve never writes output.
 
 Resource discovery follows the same portable HTML/CSS URL rules as Changes,
 including transitive imports and nested documents, with shared edges read once
 per discovery pass and cycles visited once. External URLs and resource hints
 are excluded. Live documents include ignored-region resources in this watch
 graph so their rendered chrome refreshes even when Changes remains empty.
-Only confined public files and their validated local alias targets are watched;
+Only confined regular files in the referenced closure are public watch inputs;
 resource watchers do not follow symlinks. Their lexical paths remain observable
-so an invalid or replaced alias can be repaired. Generated files and
+so an invalid or replaced symlink can be repaired as a regular file. Generated files and
 package-owned ignored paths remain excluded, preventing output feedback loops.
 
 The repository's `npm run dev` command builds the local CLI once, then runs
@@ -116,11 +115,9 @@ watch targets beyond the example's inputs and referenced resources.
 Use `npm run -s dev` for Mokly's rich terminal output without npm's outer script
 banner; nested build scripts are already quiet.
 
-An unowned public HTML file beneath `mockupsDir` is an authored static input,
-not generated merely because of its extension. Reachable HTML resources reload
-automatically; an unrelated file can use an explicit reload, restart, rebuild,
-or ignore rule. Configured inputs and discovered resources take precedence over
-additional rules.
+Referenced authored HTML beneath `mockupsDir` is a closure asset and reloads
+automatically. Unrelated files remain private but can use explicit watch rules.
+Configured inputs and discovered resources take precedence over additional rules.
 
 Export markers prove ownership of their listed files, not every descendant of
 the output directory. Ignore inventory-listed files and the marker itself, but
@@ -177,10 +174,21 @@ On a config-file change, the parent first loads and validates the candidate,
 starts a replacement watcher, waits for readiness and validates a new index and
 rendering graph. It then adopts the config, closes the old watcher and restarts
 the child. Load, watcher-readiness or index-validation failure retains the previous
-config, watcher, output and child. Full rendering and transactional output writing
-follow in the background. Their failure preserves old disk output and withholds
+config, watcher, output and child. Full rendering follows in the background,
+with transactional output writing only when `--build` is set. Their failure preserves old disk output and withholds
 complete usage/Changes; valid current previews remain available. An explicit CLI
 `--base` remains pinned; without one, the restarted child uses the newly loaded
 config's comparison base.
 
 Resource adoption and recovery continue in [Watch Runtime And Recovery](./mokly-watch-runtime.md).
+
+Stored Browse recovery requires both `filterBaselineDisclosures` and a valid
+`changesStatus`. Missing fields discard the stored snapshot without defaults.
+The [disclosure persistence contract](./mokly-disclosure-persistence.md#recovery-and-versioning)
+owns these checks. The watched host stores no Browse record when a captured
+general shell snapshot has no live status.
+
+The approved [shared watch setup](./mokly-watch-writers.md) will extend Serve
+and `build --watch` with one setup module, initial-edit retention and
+compile/lock cancellation. The current Build watcher shares classification
+helpers but does not yet share Serve's full inventory and resource lifecycle.

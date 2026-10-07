@@ -10,10 +10,10 @@ import {
   timeAsync,
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { runReview } from "../dist/review/run.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { directoryFiles } from "./helpers/export_fixture.js";
 import { repositoryRoot, validEntrySource } from "./helpers/fixture.js";
@@ -172,12 +172,22 @@ for (const [components, watch] of [
         }
       }
       const events = timingEvents(stderr);
+      const backgroundEvents = events.filter(
+        (event) => event.role === "background",
+      );
+      assert.ok(
+        events.some(
+          (event) =>
+            event.role === "serve" && event.stage === "review.base-commit",
+        ),
+      );
       assertReviewTimings(
-        events,
+        backgroundEvents,
         "background",
         "changes.classify",
         [...reviewStages, "review.css-analysis"].filter(
-          (stage) => stage !== "review.write-artifact",
+          (stage) =>
+            stage !== "review.write-artifact" && stage !== "review.base-commit",
         ),
       );
       if (components) assertComparisonCounts(events, "background");

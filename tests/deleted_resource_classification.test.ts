@@ -4,16 +4,14 @@ import path from "node:path";
 import test from "node:test";
 
 import { readManifest } from "../dist/registry/manifest.js";
-import {
-  FileSystemReviewAssetReader,
-  GitReviewAssetReader,
-} from "../dist/review/assets.js";
+import { GitReviewAssetReader } from "../dist/review/assets.js";
 import { asChangeEvidence } from "../dist/review/change_evidence.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
 import {
   CommittedRepository,
   NodeGitCommandRunner,
 } from "../dist/review/git.js";
+import { CompiledReviewAssetReader } from "../dist/review/head_assets.js";
 import { classifyChangedContent } from "../dist/server/changed_content.js";
 import { generatedViews } from "../packages/viewer/dist/data.js";
 
@@ -35,18 +33,18 @@ interface DeletionCase {
   current: CurrentState;
   expected: "changed" | Readonly<Record<ClassifierName, RejectionKind>>;
   kind: ResourceKind;
-  mode: "committed" | "derived";
+  storage: "blobs" | "rebuild";
   unsafe?: boolean;
 }
 
 const deletionCases: readonly DeletionCase[] = [
-  ...(["committed", "derived"] as const).flatMap((mode) =>
+  ...(["blobs", "rebuild"] as const).flatMap((storage) =>
     (["stylesheet", "image", "embedded HTML"] as const).map((kind) => ({
       baseline: "regular" as const,
       current: "deleted" as const,
       expected: "changed" as const,
       kind,
-      mode,
+      storage,
     })),
   ),
   {
@@ -54,21 +52,21 @@ const deletionCases: readonly DeletionCase[] = [
     current: "absent",
     expected: rejected("baseline-missing", "current-missing"),
     kind: "image",
-    mode: "committed",
+    storage: "blobs",
   },
   {
     baseline: "absent",
     current: "absent",
     expected: rejected("baseline-missing", "current-missing"),
     kind: "embedded HTML",
-    mode: "derived",
+    storage: "rebuild",
   },
   {
     baseline: "absent",
     current: "absent",
     expected: rejected("baseline-missing", "unsafe-view"),
     kind: "stylesheet",
-    mode: "committed",
+    storage: "blobs",
     unsafe: true,
   },
   {
@@ -76,7 +74,7 @@ const deletionCases: readonly DeletionCase[] = [
     current: "absent",
     expected: rejected("baseline-missing", "current-missing"),
     kind: "image",
-    mode: "derived",
+    storage: "rebuild",
     unsafe: true,
   },
   {
@@ -84,29 +82,29 @@ const deletionCases: readonly DeletionCase[] = [
     current: "dangling",
     expected: rejected("dangling", "dangling"),
     kind: "image",
-    mode: "committed",
+    storage: "blobs",
   },
   {
     baseline: "regular",
     current: "escaping",
     expected: rejected("escaping", "escaping"),
     kind: "image",
-    mode: "derived",
+    storage: "rebuild",
   },
   {
     baseline: "regular",
     current: "source-root",
     expected: rejected("source-root", "source-root"),
     kind: "image",
-    mode: "committed",
+    storage: "blobs",
   },
 ];
 
 for (const scenario of deletionCases) {
-  const label = `${scenario.mode} ${scenario.kind}, ${scenario.baseline} at branch point, ${scenario.current} now`;
+  const label = `${scenario.storage} ${scenario.kind}, ${scenario.baseline} at branch point, ${scenario.current} now`;
   test(`deleted-resource classifiers agree: ${label}`, async (t) => {
     const route = resourceRoute(scenario.kind);
-    const reference = `../${route}`;
+    const reference = `../../${route}`;
     const fixture = await changedFixture(
       t,
       validEntrySource({ body: resourceMarkup(scenario.kind, reference) }),
@@ -124,7 +122,7 @@ for (const scenario of deletionCases) {
       await fs.symlink("missing.svg", resource);
     if (scenario.current === "escaping")
       await fs.symlink("../notes.md", resource);
-    let config = { ...fixture.config, generatedOutput: scenario.mode } as const;
+    let config = fixture.config;
     if (scenario.current === "source-root") {
       const entriesDir = path.join(fixture.mockupsDir, "src/entries");
       await fs.mkdir(entriesDir, { recursive: true });
@@ -141,17 +139,13 @@ for (const scenario of deletionCases) {
     const manifest = readManifest(fixture.config);
     const home = manifest.entries.find((entry) => entry.path === "home")!;
     const viewPaths = generatedViews(home).map((view) => view.path);
+    const outputs = new Map(fixture.compilation.outputs);
     if (scenario.unsafe)
-      for (const viewPath of viewPaths) {
-        const target = path.join(fixture.mockupsDir, viewPath);
-        await fs.writeFile(
-          target,
-          (await fs.readFile(target, "utf8")).replace(
-            `../${route}`,
-            `../../${route}`,
-          ),
+      for (const viewPath of viewPaths)
+        outputs.set(
+          viewPath,
+          String(outputs.get(viewPath)).replace(reference, `../../../${route}`),
         );
-      }
     const repository = new CommittedRepository(
       new NodeGitCommandRunner(fixture.root),
     );
@@ -185,7 +179,7 @@ for (const scenario of deletionCases) {
         run: async () => {
           const result = await classifyComponents({
             after: manifest,
-            afterReader: new FileSystemReviewAssetReader(config),
+            afterReader: new CompiledReviewAssetReader(config, outputs),
             baseCommit: commit,
             baseRef: "main",
             before: manifest,
@@ -194,6 +188,7 @@ for (const scenario of deletionCases) {
               baselineReader,
               commit,
               "mockups",
+              manifest,
             ),
             changedPaths: asChangeEvidence(changedPaths),
             config,
@@ -213,7 +208,7 @@ for (const scenario of deletionCases) {
             baselineReader,
             commit,
             asChangeEvidence(changedPaths),
-            new FileSystemReviewAssetReader(config),
+            new CompiledReviewAssetReader(config, outputs),
           );
           return result.changedPaths.some((changed) =>
             changed.endsWith("home/index.mobile.html"),

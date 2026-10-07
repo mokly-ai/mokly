@@ -1,20 +1,21 @@
 import type { ResolvedConfig } from "../config/types.js";
 import { NodeGitCommandRunner } from "../review/git.js";
-import type { GitCommandRunner } from "../review/git.js";
 
 import { checkCompilation } from "./check.js";
-import { assertCommittableOutput } from "./committable_output.js";
 import type { Compilation } from "./compile.js";
 import {
   GitTrackedGeneratedOutput,
+  type GeneratedOutputTracking,
   type TrackedGeneratedOutput,
 } from "./tracked_output.js";
 import { writeCompilation } from "./transaction.js";
 
 /** Filesystem boundary for generated catalogue snapshots. */
 export interface GeneratedOutputStore {
-  check(compilation: Compilation, config: ResolvedConfig): void | Promise<void>;
-  /** Write under the repository writer lock; `signal` stops only the wait. */
+  check(
+    compilation: Compilation,
+    config: ResolvedConfig,
+  ): GeneratedOutputTracking | void | Promise<GeneratedOutputTracking | void>;
   write(
     compilation: Compilation,
     config: ResolvedConfig,
@@ -24,25 +25,18 @@ export interface GeneratedOutputStore {
 
 /** Transactional operating-system generated-output store. */
 export class FileSystemGeneratedOutputStore implements GeneratedOutputStore {
-  constructor(
-    private readonly tracked?: TrackedGeneratedOutput,
-    private readonly committedGit?: GitCommandRunner,
-  ) {}
+  constructor(private readonly tracked?: TrackedGeneratedOutput) {}
 
-  check(
+  async check(
     compilation: Compilation,
     config: ResolvedConfig,
-  ): void | Promise<void> {
-    if (config.generatedOutput === "derived")
-      return (
-        this.tracked ??
-        new GitTrackedGeneratedOutput(new NodeGitCommandRunner(config.repoRoot))
-      ).check(compilation, config);
-    return assertCommittableOutput(
-      compilation.outputs.keys(),
-      config,
-      this.committedGit,
-    ).then(() => checkCompilation(compilation, config));
+  ): Promise<GeneratedOutputTracking> {
+    const state = await (
+      this.tracked ??
+      new GitTrackedGeneratedOutput(new NodeGitCommandRunner(config.repoRoot))
+    ).state(compilation, config);
+    if (state === "tracked") checkCompilation(compilation, config);
+    return state;
   }
 
   write(
@@ -50,6 +44,6 @@ export class FileSystemGeneratedOutputStore implements GeneratedOutputStore {
     config: ResolvedConfig,
     signal?: AbortSignal,
   ): Promise<void> {
-    return writeCompilation(compilation, config, this.committedGit, signal);
+    return writeCompilation(compilation, config, signal);
   }
 }

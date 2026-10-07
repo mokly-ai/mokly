@@ -28,7 +28,7 @@ export interface ViewerCapabilityRequest {
 /** Private server-to-CLI bootstrap kept outside public catalogue JSON. */
 export interface ViewerCapabilityDescriptor {
   renderCapability?: RenderCapability;
-  schemaVersion: 1;
+  schemaVersion: 2;
   source: ViewerCapabilitySource;
   workspace?: WorkspaceData;
 }
@@ -69,7 +69,7 @@ export function viewerCapabilityDescriptor(
     : undefined;
   if (privateWorkspace) readViewerWorkspace(privateWorkspace, source);
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     source,
     ...(context.renderCapability
       ? { renderCapability: context.renderCapability }
@@ -82,7 +82,7 @@ export function viewerCapabilityDescriptor(
 export function readViewerCapabilityDescriptor(
   value: unknown,
 ): ViewerCapabilityDescriptor {
-  if (!record(value) || value["schemaVersion"] !== 1)
+  if (!record(value) || value["schemaVersion"] !== 2)
     throw new Error("Invalid live viewer capability descriptor.");
   const source = readSource(value["source"]);
   const renderCapability = readRenderCapability(
@@ -91,7 +91,7 @@ export function readViewerCapabilityDescriptor(
   );
   const workspace = readWorkspace(value["workspace"], source);
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     source,
     ...(renderCapability ? { renderCapability } : {}),
     ...(workspace ? { workspace } : {}),

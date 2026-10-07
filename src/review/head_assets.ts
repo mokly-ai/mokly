@@ -1,13 +1,15 @@
 import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
-import { isSafeRepositoryPath } from "@mokly/viewer/data";
+import {
+  generatedResourceRoute,
+  isSafeRepositoryPath,
+} from "@mokly/viewer/data";
 import type { Manifest } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../build/compile.js";
 import { generatedBytes, type GeneratedFile } from "../build/generated_file.js";
 import { isInside, projectRealPath } from "../config/paths.js";
-import { privateStaticPathReason } from "../config/public_files.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
 
@@ -26,22 +28,20 @@ export class CompiledReviewAssetReader extends FileSystemReviewAssetReader {
   }
 
   override async readLocated(route: string): Promise<LocatedReviewAsset> {
-    const content = this.outputs?.get(route);
+    const generatedRoute = generatedResourceRoute(route);
+    const content =
+      generatedRoute === undefined
+        ? undefined
+        : this.outputs?.get(generatedRoute);
     if (content === undefined) return super.readLocated(route);
     const logicalPath = path.resolve(this.headConfig.mockupsDir, route);
     if (
       !isSafeRepositoryPath(route) ||
-      !isInside(this.headConfig.mockupsDir, logicalPath)
+      !isInside(this.headConfig.generatedDir, logicalPath)
     )
       throw new MoklyError(
         "review-invalid",
         `Generated comparison resource is not public: ${route} (unsafe path)`,
-      );
-    const denial = privateStaticPathReason(logicalPath, this.headConfig);
-    if (denial)
-      throw new MoklyError(
-        "review-invalid",
-        `Generated comparison resource is not public: ${route} (${denial})`,
       );
     return {
       content: generatedBytes(content),
@@ -59,12 +59,11 @@ export class CompiledReviewAssetReader extends FileSystemReviewAssetReader {
 }
 
 /** Direct non-HTTP callers may compile once; workers supply their accepted output. */
-export async function derivedHeadOutputs(
+export async function compiledHeadOutputs(
   config: ResolvedConfig,
   manifest: Manifest,
   outputs?: ReadonlyMap<string, GeneratedFile>,
-): Promise<ReadonlyMap<string, GeneratedFile> | undefined> {
-  if (config.generatedOutput !== "derived") return;
+): Promise<ReadonlyMap<string, GeneratedFile>> {
   if (outputs) return outputs;
   const compilation = await compileCatalogue(config);
   if (!isDeepStrictEqual(compilation.manifest, manifest))

@@ -79,13 +79,13 @@ export function readExportShellMetadata(
   } catch (error) {
     throw invalidShell(name, error);
   }
-  const delivery = parseStaticDelivery(value);
-  if (!delivery || !isDeepStrictEqual(delivery, expected))
+  const parsed = parseStaticDelivery(value);
+  if (parsed.kind !== "valid" || !isDeepStrictEqual(parsed.value, expected))
     throw invalidShell(name);
   return {
     before: html.slice(0, location.startOffset),
     after: html.slice(location.endOffset),
-    delivery,
+    delivery: parsed.value,
   };
 }
 

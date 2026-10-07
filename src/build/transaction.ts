@@ -1,176 +1,49 @@
-import fs from "node:fs";
-import path from "node:path";
-
-import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync } from "../diagnostics/timings.js";
-import { MoklyError, errorMessage } from "../errors.js";
-import type { GitCommandRunner } from "../review/git.js";
 
-import { assertCommittableOutput } from "./committable_output.js";
 import type { Compilation } from "./compile.js";
-import { walkFiles } from "./discovery.js";
-import { generatedBytes } from "./generated_file.js";
-import { OutputDirectories } from "./output_directories.js";
 import {
   assertOutputLockHeld,
   withOutputLock,
   type OutputLock,
 } from "./output_lock.js";
-import { validateGeneratedOutputPaths } from "./output_paths.js";
 import {
-  generatedOwnershipDenial,
-  pendingGeneratedOrphanRoutes,
-} from "./ownership.js";
-import {
-  assertSafeGeneratedTree,
-  pruneEmptyGeneratedDirectories,
-} from "./reserved_tree.js";
+  validateGeneratedInventory,
+  validateGeneratedRoot,
+  validateGeneratedOutputPaths,
+} from "./output_paths.js";
+import { assertSafeGeneratedTree } from "./reserved_tree.js";
+import { replaceGeneratedTree } from "./transaction_tree.js";
 
-/**
- * Atomically replace owned generated files with rollback on any failure, while
- * holding the repository writer lock. `signal` stops only the wait for the lock.
- */
+/** Replace the complete generated tree; cancellation stops only lock waiting. */
 export async function writeCompilation(
   compilation: Compilation,
   config: ResolvedConfig,
-  runner?: GitCommandRunner,
   signal?: AbortSignal,
 ): Promise<void> {
   return withOutputLock(config.repoRoot, signal ? { signal } : {}, (lock) =>
-    writeLockedCompilation(lock, compilation, config, runner),
+    writeLockedCompilation(lock, compilation, config),
   );
 }
 
-/** Write under a lock the caller holds so it can also read the tree it wrote. */
-export async function writeLockedCompilation(
+/** Validate, install and roll back one complete tree while the writer lock is held. */
+async function writeLockedCompilation(
   lock: OutputLock,
   compilation: Compilation,
   config: ResolvedConfig,
-  runner?: GitCommandRunner,
 ): Promise<void> {
   assertOutputLockHeld(lock, config.repoRoot);
-  return timeAsync("output.write", () =>
-    writeMeasured(compilation, config, runner),
-  );
-}
-
-async function writeMeasured(
-  compilation: Compilation,
-  config: ResolvedConfig,
-  runner?: GitCommandRunner,
-): Promise<void> {
-  const destinationConfig = config;
-  config = { ...config, sourceFiles: compilation.manifest.sourceFiles };
-  assertSafeGeneratedTree(config);
-  timeSync("output.validate-targets", () =>
-    rejectUnsafeTargets(compilation, config),
-  );
-  await assertCommittableOutput(compilation.outputs.keys(), config, runner);
-  await fs.promises.mkdir(path.dirname(config.mockupsDir), { recursive: true });
-  const temporaryRoot = await fs.promises.mkdtemp(
-    path.join(path.dirname(config.mockupsDir), ".mokly-write-"),
-  );
-  const stageRoot = path.join(temporaryRoot, "stage");
-  const backupRoot = path.join(temporaryRoot, "backup");
-  const expected = [...compilation.outputs.keys()].sort();
-  const orphan = timeSync("output.find-orphans", () =>
-    pendingGeneratedOrphanRoutes(config, expected),
-  );
-  const expectedPaths = new Set(expected.map((route) => route.toLowerCase()));
-  const orphanPaths = new Set(orphan);
-  const affected = walkFiles(config.mockupsDir)
-    .map((file) => toPosixPath(path.relative(config.mockupsDir, file)))
-    .filter(
-      (route) =>
-        expectedPaths.has(route.toLowerCase()) || orphanPaths.has(route),
-    )
-    .sort();
-  const backedUp: string[] = [];
-  const installed: string[] = [];
-  const directories = new OutputDirectories(config.mockupsDir);
-  try {
-    await timeAsync("output.stage", async () => {
-      for (const route of expected) {
-        const staged = path.join(stageRoot, route);
-        await fs.promises.mkdir(path.dirname(staged), { recursive: true });
-        const content = compilation.outputs.get(route);
-        if (content === undefined)
-          throw new Error(`missing generated file: ${route}`);
-        await fs.promises.writeFile(staged, generatedBytes(content));
-      }
+  return timeAsync("output.write", async () => {
+    timeSync("output.validate-targets", () => {
+      validateGeneratedRoot(config);
+      assertSafeGeneratedTree(config);
+      validateGeneratedOutputPaths(compilation.outputs.keys(), {
+        ...config,
+        sourceFiles: compilation.manifest.sourceFiles,
+      });
+      validateGeneratedInventory(compilation);
     });
-    await timeAsync("output.backup", async () => {
-      for (const route of affected) {
-        const target = path.join(config.mockupsDir, route);
-        if (!fs.existsSync(target)) continue;
-        const backup = path.join(backupRoot, route);
-        await fs.promises.mkdir(path.dirname(backup), { recursive: true });
-        await fs.promises.rename(target, backup);
-        backedUp.push(route);
-      }
-    });
-    await directories.prune(backedUp, expected);
-    await timeAsync("output.install", async () => {
-      for (const route of expected) {
-        const target = path.join(config.mockupsDir, route);
-        await directories.ensure(path.dirname(target));
-        await fs.promises.rename(path.join(stageRoot, route), target);
-        installed.push(route);
-      }
-    });
-  } catch (error) {
-    await timeAsync("output.rollback", () =>
-      rollback(config, backupRoot, installed, backedUp, directories),
-    );
-    throw new MoklyError(
-      "build-invalid",
-      `could not commit generated output: ${errorMessage(error)}`,
-      {
-        cause: error,
-      },
-    );
-  } finally {
-    await timeAsync("output.cleanup", () =>
-      fs.promises.rm(temporaryRoot, { force: true, recursive: true }),
-    );
-  }
-  await pruneEmptyGeneratedDirectories(config);
-  destinationConfig.sourceFiles = compilation.manifest.sourceFiles;
-}
-
-function rejectUnsafeTargets(
-  compilation: Compilation,
-  config: ResolvedConfig,
-): void {
-  validateGeneratedOutputPaths(compilation.outputs.keys(), config);
-  for (const route of compilation.outputs.keys()) {
-    const target = path.join(config.mockupsDir, route);
-    if (!fs.existsSync(target)) continue;
-    const denial = generatedOwnershipDenial(target, config);
-    if (denial) {
-      throw new MoklyError(
-        "build-invalid",
-        `refusing to overwrite unowned file: ${route} (${denial})`,
-      );
-    }
-  }
-}
-
-async function rollback(
-  config: ResolvedConfig,
-  backupRoot: string,
-  installed: readonly string[],
-  backedUp: readonly string[],
-  directories: OutputDirectories,
-): Promise<void> {
-  for (const route of [...installed].reverse()) {
-    await fs.promises.rm(path.join(config.mockupsDir, route), { force: true });
-  }
-  await directories.restore();
-  for (const route of [...backedUp].reverse()) {
-    const target = path.join(config.mockupsDir, route);
-    await fs.promises.mkdir(path.dirname(target), { recursive: true });
-    await fs.promises.rename(path.join(backupRoot, route), target);
-  }
+    await replaceGeneratedTree(compilation, config.generatedDir);
+    config.sourceFiles = compilation.manifest.sourceFiles;
+  });
 }
