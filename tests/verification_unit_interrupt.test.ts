@@ -33,7 +33,7 @@ test(
       if (name === "signal.marker") markerReady();
     });
     context.after(() => watcher.close());
-    const env = {
+    const env: NodeJS.ProcessEnv = {
       ...process.env,
       TMPDIR: harness.temporary,
       TMP: harness.temporary,

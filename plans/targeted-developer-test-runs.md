@@ -392,6 +392,8 @@ the orchestrating agent.
 - [x] Commit each finding separately and name its review number in the body.
 - [x] Pass lint, formatting, declarations, affected tests on both Node versions,
       and the repository suite. Push the tested code before the auto gate.
+- [x] Correct the signal fixture environment type found by the package gate,
+      rerun the failed package suite, and push before the complete gate retry.
 - [ ] Run the complete auto gate once. Record executor and duration. Use the
       targeted failure rules and report repeated unrelated failures.
 - [ ] Tick completed tasks, commit, run deletion checks, and push the branch.
