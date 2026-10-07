@@ -332,16 +332,20 @@ pass 300 lines; `validateShardReports` calls it.
 
 ## Milestone 4: Final gate, commit, push and review
 
-- [ ] `origin/main` moved after the branch point. Follow the Mainline Feature
+- [x] `origin/main` moved after the branch point. Follow the Mainline Feature
       Preservation rule: fetch `origin/main`, capture the source tip, audit
       main's additions with `git diff --name-status <base>..origin/main`,
       merge main (never bulk-take a side), confirm the merge commit has
       exactly two parents, review `git show --remerge-diff` for every listed
       path, and record the justifications under
       `.context/meta-test-reduction/merge-main.md`.
-- [ ] Run `cargo xtask check`. Save output under
+- [x] Run `cargo xtask check`. Save output under
       `.context/meta-test-reduction/final-check.md`.
-- [ ] Inspect `git diff --name-status origin/main` and
+      The gate passed under Node 22.14.0, the minimum tested version that
+      ordinary CI runs (`final-check-node22.txt`). Under Node 24.21.0 the
+      unit suite fails two tests this branch does not touch; see the review
+      TODO below.
+- [x] Inspect `git diff --name-status origin/main` and
       `git diff --diff-filter=D --name-status origin/main`. Confirm every
       deletion is in the Inventory. Record the deletions in the commit and PR
       description.
@@ -351,6 +355,17 @@ pass 300 lines; `validateShardReports` calls it.
       findings. Apply the review-fix rule: fix the `Auto-fix: yes` findings,
       run the checks, commit, push, re-run the review once, and report the
       rest. Add each open finding as one line below.
+  - Unrelated failure (not fixed here): `tests/shared_example.test.ts`
+    tests "one real baseline preparation supplies independent warm
+    repositories and caches" and "a copied cache is revalidated against
+    its actual generated inventory" fail on Node 24.21.0 with
+    `ERR_FS_CP_EEXIST ... /repository already exists` from the `fs.cp` in
+    `tests/helpers/shared_example.ts`; they pass on Node 22.14.0 and fail
+    again on every rerun under 24.21.0. Suspected source: Node 24.13.1
+    (nodejs/node#60946) made `fs.cp` with `errorOnExist` reject an existing
+    destination directory, and `tests/helpers/owned_example.ts` creates the
+    root before the copy. Ordinary CI runs only Node 22.14.0; the Node 24
+    release profile will hit it. Fix in a separate branch.
 
 ## Post-merge follow-up (non-blocking)
 
