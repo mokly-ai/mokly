@@ -187,6 +187,10 @@ cargo clippy --workspace --all-targets -- -D warnings
 - [`src/remote/runner.rs`](./src/remote/runner.rs) owns remote phase order.
 - [`src/remote/contracts.rs`](./src/remote/contracts.rs) defines injected
   environment, Git, CLI, clock, script, log, signal and output boundaries.
+- [`src/remote/cleanup.rs`](./src/remote/cleanup.rs) owns box state, captured run
+  IDs, stop retries and final cleanup counts.
+- [`src/remote/reporting.rs`](./src/remote/reporting.rs) formats error warnings
+  with one copy of each module prefix.
 - [`src/remote/process.rs`](./src/remote/process.rs) streams output and kills
   child process groups on interrupts.
 - [`src/command.rs`](./src/command.rs) defines the injected command-runner

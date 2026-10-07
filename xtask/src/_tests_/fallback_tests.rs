@@ -45,7 +45,7 @@ fn fallback_requires_auto_and_an_unavailable_preparation() {
                             operation: Operation::Blacksmith,
                             code: Some(1),
                         }),
-                        2 => Failure::Unavailable(Error::Interrupted),
+                        2 => Failure::Unavailable(Error::Interrupted { cleanup: 0 }),
                         _ => Failure::Unavailable(Error::WarmupIds { count: 0 }),
                     })
                 })),
@@ -189,7 +189,7 @@ fn fallback_releases_before_local_run_and_checks_the_flag_after_release() {
             assert!(matches!(
                 result,
                 Err(error::Error::Remote {
-                    source: Error::Interrupted
+                    source: Error::Interrupted { cleanup: 0 }
                 })
             ));
         } else {

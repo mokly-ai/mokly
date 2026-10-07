@@ -2,6 +2,9 @@
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use std::time::Duration;
+
+use serde::Deserialize;
 
 use crate::executor::Decision;
 use crate::remote::error::Result;
@@ -45,7 +48,7 @@ pub(crate) trait Programs: Send + Sync {
 }
 
 /// Time used by run identifiers, durations and process polling.
-#[cfg_attr(test, unimock::unimock(api = [ClockStampMock, ClockMillisMock, ClockSleepMock]))]
+#[cfg_attr(test, unimock::unimock(api = [ClockStampMock, ClockMillisMock, ClockSleepMock, ClockWaitMock]))]
 pub(crate) trait Clock: Send + Sync {
     /// UTC timestamp in YYYYMMDDTHHMMSSZ format.
     fn stamp(&self) -> String;
@@ -53,6 +56,8 @@ pub(crate) trait Clock: Send + Sync {
     fn millis(&self) -> u128;
     /// Wait between nonblocking process status checks.
     fn sleep(&self);
+    /// Wait before retrying a failed cleanup operation.
+    fn wait(&self, duration: Duration);
 }
 
 /// Local commit and origin reachability.
@@ -86,10 +91,23 @@ pub(crate) trait Blacksmith: Send + Sync {
 }
 
 /// Optional GitHub workflow cancellation.
-#[cfg_attr(test, unimock::unimock(api = [GithubCancelMock]))]
+#[cfg_attr(test, unimock::unimock(api = [GithubCancelMock, GithubStateMock]))]
 pub(crate) trait Github: Send + Sync {
     /// Cancel a box's GitHub run.
     fn cancel(&self, id: u64) -> Result<()>;
+    /// Read the typed workflow run state after a failed cancellation.
+    fn state(&self, id: u64) -> Result<GithubRunState>;
+}
+
+/// Run states that distinguish an ended workflow from all other responses.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum GithubRunState {
+    /// The workflow run has ended.
+    Completed,
+    /// Any other status keeps the cancellation warning.
+    #[serde(other)]
+    Other,
 }
 
 /// Working-tree identity script.

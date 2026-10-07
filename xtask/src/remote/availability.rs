@@ -5,6 +5,7 @@ use crate::remote::contracts::Dependencies;
 
 use crate::remote::error::{Error, Result};
 use crate::remote::policy::{Check, ordered_checks};
+use crate::remote::reporting::warning;
 /// Availability selection without box warmup or suite execution.
 #[cfg_attr(test, unimock::unimock(api = [SelectorSelectMock]))]
 pub(crate) trait Selector: Send + Sync {
@@ -28,12 +29,10 @@ impl Selector for DefaultSelector {
             match self.check(check, mode, &mut key) {
                 Ok(Some(reason)) => return Ok(Decision::Local(reason)),
                 Ok(None) => {}
-                Err(Error::Interrupted) => return Err(Error::Interrupted),
+                Err(error @ Error::Interrupted { .. }) => return Err(error),
                 Err(error) if mode == Executor::Remote => return Err(error),
                 Err(error) => {
-                    self.dependencies
-                        .reporter
-                        .executor(&format!("warning: {error}"));
+                    self.dependencies.reporter.executor(&warning("", &error));
                     return Ok(Decision::Local(check.local_reason()));
                 }
             }
@@ -102,7 +101,7 @@ impl DefaultSelector {
             }
             Check::Interrupt => {
                 if dependencies.interrupt.requested() {
-                    return Err(Error::Interrupted);
+                    return Err(Error::Interrupted { cleanup: 0 });
                 }
             }
         }

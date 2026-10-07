@@ -65,7 +65,7 @@ pub(crate) struct SystemProcess {
 impl Process for SystemProcess {
     fn execute(&self, request: &Request) -> Result<Output> {
         if request.cancellable && self.interrupt.requested() {
-            return Err(Error::Interrupted);
+            return Err(Error::Interrupted { cleanup: 0 });
         }
         let sink = match &request.log {
             Some(path) => Some(self.logs.open(path)?),

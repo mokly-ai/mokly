@@ -1,7 +1,8 @@
 # Remote Verification Review Follow-Up
 
-Status: Active. No pull request exists yet. Milestone 1 is completed.
-Milestone 2 is next.
+Status: Active. No pull request exists yet. Milestones 1 and 2 are completed.
+Milestone 3 is next. The user limited this turn to Milestones 1 and 2.
+The milestone commits stay local.
 
 Fix the eleven open findings from the post-push review of
 [Blacksmith remote verification](./blacksmith-remote-verification.md)
@@ -117,21 +118,24 @@ Evidence: `.context/remote-verification-review-follow-up/milestone-1.md`.
 
 ## Milestone 2: Cleanup and reporting
 
-Make cleanup robust and its output accurate. Covers findings 5, 12, 13 and 14.
+Completed. Make cleanup robust and its output accurate. Covers findings 5, 12,
+13 and 14.
+Evidence: `.context/remote-verification-review-follow-up/milestone-2.md`.
 
-- [ ] Write failing unimock tests first for each rule, then implement:
-  - [ ] Finding 14: run IDs from warmup and probe output, the status-first
+- [x] Write failing unimock tests first for each rule, then implement:
+  - [x] Finding 14: run IDs from warmup and probe output, the status-first
         rule, three stop attempts with 5 and 10 second clock waits, and the
         manual cleanup warning.
-  - [ ] Finding 5: one count per box after its last attempt, a passing check
+  - [x] Finding 5: one count per box after its last attempt, a passing check
         after a stop that succeeds on retry, and the interrupt count.
-  - [ ] Finding 12: a typed GitHub run state read after a failed
+  - [x] Finding 12: a typed GitHub run state read after a failed
         cancellation.
-  - [ ] Finding 13: one warning-line formatter and `[xtask/remote]` prefixes
+  - [x] Finding 13: one warning-line formatter and `[xtask/remote]` prefixes
         for the variants in `xtask/src/remote/error.rs`.
-- [ ] Run Rust formatting, Clippy with `-D warnings`, the xtask tests and the
+    - [x] Route failed log reads through the same warning formatter.
+- [x] Run Rust formatting, Clippy with `-D warnings`, the xtask tests and the
       Rust length lint.
-- [ ] Commit.
+- [x] Commit.
 
 ## Milestone 3: Availability and subprocess environment
 

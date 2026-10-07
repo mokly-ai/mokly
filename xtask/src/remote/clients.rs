@@ -3,7 +3,9 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use crate::remote::contracts::{Blacksmith, Github, Output};
+use serde::Deserialize;
+
+use crate::remote::contracts::{Blacksmith, Github, GithubRunState, Output};
 use crate::remote::error::{Error, Operation, Result};
 use crate::remote::process::{Process, Request};
 
@@ -154,6 +156,35 @@ impl Github for SystemGithub {
         })?;
         success(&output, Operation::Github)
     }
+    fn state(&self, id: u64) -> Result<GithubRunState> {
+        let output = self.process.execute(&Request {
+            program: "gh".into(),
+            args: vec![
+                "run".into(),
+                "view".into(),
+                id.to_string(),
+                "--json".into(),
+                "status".into(),
+            ],
+            cwd: self.workspace.clone(),
+            operation: Operation::Github,
+            input: None,
+            log: None,
+            cancellable: false,
+            blacksmith: false,
+        })?;
+        success(&output, Operation::Github)?;
+        match serde_json::from_str::<RunStatus>(&output.stdout) {
+            Ok(run) => Ok(run.status),
+            Err(source) => Err(Error::GithubState { source }),
+        }
+    }
+}
+
+/// The single requested field from GitHub's JSON response.
+#[derive(Deserialize)]
+struct RunStatus {
+    status: GithubRunState,
 }
 
 /// Convert process termination into a typed boundary failure.

@@ -175,7 +175,7 @@ fn each_remote_condition_fails_before_the_next_condition() {
         match (stage, result) {
             (0, Err(Error::GithubActions))
             | (7, Err(Error::UnpublishedHead))
-            | (8, Err(Error::Interrupted))
+            | (8, Err(Error::Interrupted { cleanup: 0 }))
             | (9, Ok(Decision::Remote)) => {}
             (1..=3, Err(Error::MissingProgram { program, hint })) => {
                 assert_eq!(program, all[stage - 1]);
@@ -208,7 +208,7 @@ fn automatic_selection_uses_every_table_row_and_never_hides_interrupts() {
         let (selector, _) = fixture(stage, true, Executor::Auto);
         let result = selector.select(Executor::Auto);
         if stage == 8 {
-            assert!(matches!(result, Err(Error::Interrupted)));
+            assert!(matches!(result, Err(Error::Interrupted { cleanup: 0 })));
         } else if stage == 9 {
             assert_eq!(result.unwrap(), Decision::Remote);
         } else {

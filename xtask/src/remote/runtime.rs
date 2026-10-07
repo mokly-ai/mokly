@@ -98,6 +98,9 @@ impl Clock for SystemClock {
     fn sleep(&self) {
         thread::sleep(Duration::from_millis(25));
     }
+    fn wait(&self, duration: Duration) {
+        thread::sleep(duration);
+    }
 }
 
 /// Shared interrupt flag owned by the signal adapter.

@@ -11,6 +11,7 @@ mod phases;
 mod plan;
 mod policy;
 pub(crate) mod process;
+pub(crate) mod reporting;
 pub(crate) mod runner;
 pub(crate) mod runtime;
 pub(crate) mod scripts;
