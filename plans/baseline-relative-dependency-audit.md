@@ -492,14 +492,15 @@ branch was open. Merge it and keep a strict complete gate strict on Testboxes.
       forwarding and rejections.
 - [x] Document the mode in the Testbox command table, the baseline contract,
       and the xtask README. Keep the protocol index within 250 lines.
-- [ ] Confirm the complete gate passes on the merged tree. The local Node
-      24.21 run fails only main's `tests/shared_example.test.ts` (2 tests),
-      which also fail on unmodified `origin/main` and pass on Node 22.14;
-      confirm with PR CI.
+- [x] Confirm the complete gate passes on the merged tree. PR CI passed
+      every job, including `Required CI`, on Node 22.14. The local Node 24.21
+      run fails only main's `tests/shared_example.test.ts` (2 tests), which
+      also fail on unmodified `origin/main` and pass on Node 22.14.
 - [x] Commit and push.
-- [ ] Claude: review the integration diff with
+- [x] Claude: review the integration diff with
       `docs/implementation-review-prompt.md` after the push and apply the
-      review-fix rule.
+      review-fix rule. The review found no new finding
+      (`.context/baseline-relative-dependency-audit/review-round-3.md`).
 
 Merge justification: `.context/baseline-relative-dependency-audit/merge-3-justification.md`.
 Evidence: `.context/baseline-relative-dependency-audit/merge-3-xtask-check.log`.
