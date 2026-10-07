@@ -1988,6 +1988,7 @@ Evidence: `.context/scalable-inline-style-analysis/m11-merge/`.
       Replay test (material_fingerprint_catalogues): Node 22.14 prefixes child test output lines with "# ", so it reads 0 records.
       Speed-test tool tests (large_scenario_cancellation x4, large_material_companion x1): they launch Chromium, which the CI unit job does not install; under parallel load, the companion test's browser waits use Playwright's 5-second default (review finding 2).
       User decision (2026-10-07): option C. Remove the five speed-test tool tests; benchmarks run separately. This also resolves M11 review finding 2. The replay test decision is still pending.
+      User decision (2026-10-07): option A for the replay test. Accept the `# ` output prefix of Node 22.14. M11 review finding 1 (the nested runner's fixed concurrency) stays open.
 - [x] Commit with Conventional Commits and push after the supervisor's check.
       Pushed after the supervisor's check (2026-10-07).
 - [x] After the push, use

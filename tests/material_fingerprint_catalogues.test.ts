@@ -5,6 +5,8 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { parseFingerprintCatalogueRecords } from "./helpers/fingerprint_catalogue_records.js";
+
 const execute = promisify(execFile);
 
 test("existing inline, CSS and Changes catalogues equal M8 text materials in both modes", async (context) => {
@@ -44,22 +46,7 @@ test("existing inline, CSS and Changes catalogues equal M8 text materials in bot
       `Catalogue differential subprocess failed; logs: ${directory}`,
     );
   });
-  const records = stdout
-    .split("\n")
-    .filter((line) => line.startsWith("Fingerprint catalogue proof "))
-    .map(
-      (line) =>
-        JSON.parse(line.slice("Fingerprint catalogue proof ".length)) as {
-          file?: string;
-          catalogues: number;
-          pairs: number;
-          fingerprintHashes: number;
-          fingerprintedViews: number;
-          failures: number;
-          excludedCatalogues: number;
-          excludedPairs: number;
-        },
-    );
+  const records = parseFingerprintCatalogueRecords(stdout);
   if (process.env.MOKLY_FINGERPRINT_EVIDENCE) {
     await fs.writeFile(
       process.env.MOKLY_FINGERPRINT_EVIDENCE,
