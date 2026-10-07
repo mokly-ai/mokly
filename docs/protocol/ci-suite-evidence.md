@@ -193,8 +193,10 @@ browser shard <index>/<total> holds <count> of <inventory> tests, above the limi
 
 The bound uses test counts because that is what Playwright balances; shard
 durations remain a measurement from the shard reports. It runs wherever shard
-reports are validated: `Required CI` and the remote Testbox gate. The local
-sequential gate runs unsharded and does not apply it. The bound does not apply
+reports are validated: `Required CI`, the remote Testbox gate, and release
+evidence validation, where a shard above the limit makes the evidence invalid
+and stops the publish. The local sequential gate runs unsharded and does not
+apply it. The bound does not apply
 to unit shards. No test lists the Playwright inventory to check balance;
 [`tests/verification_shard_balance.test.ts`](../../tests/verification_shard_balance.test.ts)
 checks the bound with synthetic shard reports.

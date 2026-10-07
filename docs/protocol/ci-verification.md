@@ -196,8 +196,9 @@ discovery exactly once. Each runtime requires one unsharded hydration report;
 every browser-like report must carry the same all-project inventory, and the
 browser and hydration file inventories must be disjoint and exhaust it. A
 missing file or test, duplicate assignment or observed test, unexpected file or
-test, skipped or cancelled test, non-zero exit, signal exit, or absent/invalid
-report fails verification. Per-file and per-test durations are retained so
+test, skipped or cancelled test, browser shard above the
+[share limit](./ci-suite-evidence.md#browser-shard-balance), non-zero exit,
+signal exit, or absent/invalid report fails verification. Per-file and per-test durations are retained so
 imbalance can be measured without changing whole-file partitioning.
 
 Report artifacts have stable, unique suite, runtime and shard names and use

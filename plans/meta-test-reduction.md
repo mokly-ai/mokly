@@ -157,8 +157,10 @@ New `tests/ci_workflow_policies.test.ts`:
    command, and `ci.yml` never mentions `origin/main`.
 5. `.nvmrc`, the `package.json` engines range, the lockfile engines range and
    the README agree with `TESTED_NODE_VERSIONS` and `SUPPORTED_NODE_RANGE`.
-6. The Testbox workflow's "Set up Node.js" version, "Set up npm" and "Set up
-   Rust" run strings equal the CI repository job's.
+6. The Testbox workflow's "Set up Node.js" version equals the CI native
+   job's, and its "Set up npm" and "Set up Rust" run strings equal the CI
+   repository job's. The repository job runs a floating Node 24, so it cannot
+   anchor the Node version.
 7. The Playwright example server command includes `--base HEAD`, checked
    through an exported command builder in `tests/browser/example_servers.ts`,
    not by matching source text. Export one if none exists.
@@ -349,7 +351,7 @@ pass 300 lines; `validateShardReports` calls it.
       `git diff --diff-filter=D --name-status origin/main`. Confirm every
       deletion is in the Inventory. Record the deletions in the commit and PR
       description.
-- [ ] Run `git add -A`, commit with Conventional Commits, and push.
+- [x] Run `git add -A`, commit with Conventional Commits, and push.
 - [ ] Review: after the push, use `docs/implementation-review-prompt.md` to
       review the complete local diff against `origin/main`. Report the
       findings. Apply the review-fix rule: fix the `Auto-fix: yes` findings,
@@ -365,7 +367,36 @@ pass 300 lines; `validateShardReports` calls it.
     (nodejs/node#60946) made `fs.cp` with `errorOnExist` reject an existing
     destination directory, and `tests/helpers/owned_example.ts` creates the
     root before the copy. Ordinary CI runs only Node 22.14.0; the Node 24
-    release profile will hit it. Fix in a separate branch.
+    release profile will hit it. Fixed on `main` by PR #167 (merged after the first gate run).
+  - Review 1 (`.context/meta-test-reduction/review-1.md`), fixed: finding 1
+    narrow fix (README examples now run `tests/ci_workflow_policies.test.ts`),
+    finding 4 (shard bound named in release evidence validation and the
+    verification failure list), finding 5 (plan item 6 and the ticked push
+    TODO).
+  - Review 1, open, finding 1B (docs or spec, medium): add a check that every
+    `tests/...` path in README and `docs/` command blocks exists.
+    Recommendation: adopt it as an extension of `tests/markdown_links.test.ts`.
+  - Review 1, open, finding 2 (test, medium): three deleted property checks
+    have no test: Testbox workflow read-only permissions, no secrets and
+    `persist-credentials: false`; the Dependency Audit job runs no `npm ci`
+    before the audit; the CI native job runs `TESTED_NODE_VERSIONS[0]`.
+    Recommendation: add them to `tests/ci_workflow_policies.test.ts`.
+  - Review 1, open, finding 3 (docs or spec, medium): `mokly-guides.md`,
+    `ci-workflow.md` and `AGENTS.md` claim stricter tests than kept (some
+    value regexes and the job names in the policy test). Recommendation:
+    reword the sentences; do not change the tests.
+  - Review 1, open, finding 6 (test, medium): `mokly/no-artifact-path-literals`
+    covers nine fewer files than the deleted scanner (`packages/viewer/scripts/`,
+    root `eslint.config.js`, `playwright.config.ts`). Recommendation: scope the
+    rule like the old scanner.
+  - Review 1, open, finding 7 (process, small): the fixture-lifecycle finding in
+    `plans/attribution-test-consolidation.md` (wrong `beforeRemove` message and
+    a `fileFixture` false positive) has no owner; the ESLint rule keeps the
+    false positive by design. Recommendation: add it to this plan's post-merge
+    follow-up and reword that note.
+  - Review 1, open, finding 8 (repository rule, small): commit `4ce6d6c` has a
+    61-character title. Recommendation: no history rewrite; the squash merge
+    keeps only the PR title.
 
 ## Post-merge follow-up (non-blocking)
 
