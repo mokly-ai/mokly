@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { FileSystemGeneratedOutputStore } from "../dist/build/output_store.js";
 import { loadConfig } from "../dist/config/load.js";
 import { serve } from "../dist/server/serve.js";
 
@@ -105,21 +106,33 @@ for (const build of [false, true]) {
         path.join(fixture.mockupsDir, "b.svg"),
         '<svg width="42"/>',
       );
-      const running = await serve(await loadConfig(fixture.root), {
-        watch: true,
-        build,
-        port: 0,
-      });
+      const outputStore = new FileSystemGeneratedOutputStore();
+      const completed = new Set<string>();
+      const write = outputStore.write.bind(outputStore);
+      t.mock.method(
+        outputStore,
+        "write",
+        async (...args: Parameters<typeof write>) => {
+          await write(...args);
+          completed.add(JSON.stringify(args[0].manifest.assetClosure));
+        },
+      );
+      const running = await serve(
+        await loadConfig(fixture.root),
+        { watch: true, build, port: 0 },
+        { outputStore },
+      );
       fixture.beforeRemove(() => running.close());
       await waitForInitialChanges(running.url);
       const manifest = path.join(fixture.generatedDir, "mokly-manifest.json");
       const checkClosure = async (expected: string[]) => {
-        if (build)
+        if (build) {
+          await waitFor(async () => completed.has(JSON.stringify(expected)));
           assert.deepEqual(
             JSON.parse(await fs.readFile(manifest, "utf8")).assetClosure,
             expected,
           );
-        else
+        } else
           await assert.rejects(fs.stat(fixture.generatedDir), {
             code: "ENOENT",
           });
