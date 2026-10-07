@@ -3,7 +3,7 @@
 ## Delivery Status
 
 This is the approved target in
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
+[Generated Output Review Fixes](../../plans/generated-output-review-fixes.md).
 The [v9 baseline contract](./mokly-baseline-addressing.md) owns historical roots.
 
 ## Per-Side Readers
@@ -45,6 +45,11 @@ with the existing typed preparation failure; other filesystem failures propagate
 immediately. Do not interpret a missing parent as lock contention or remove a
 different process's lock. Preserve existing lock wait deadlines and ownership.
 
+Keep [cache ignore publication and metadata-only retention](./mokly-baseline-storage.md#cache-layout).
+Entry retries, partial cleanup and debris removal must retain the cache ignore
+file and persistent writer-lock directories. Do not restore ancestor-directory
+retries or replace fail-intact settings mismatches with rebuilds.
+
 After rebuilding, prefer a valid v9 catalogue at the requested root. During a
 bounded moved-root search, count valid v9 candidates separately from recognized
 earlier envelopes. Exactly one v9 candidate wins even when stale pre-v9 files
@@ -72,6 +77,9 @@ package link-control stylesheet in `<head>` cannot claim a component's existing
 body style or change its ownership. Build and requested Serve compilation use
 the same mapping for all component views.
 
+Preserve the [build warning contract](./mokly-build-warnings.md): patch reporting
+retains diagnostics, sanitization, ordering and link-control placement tiers.
+
 Public catalogue dependency labels always derive from the sorted unique union
 of `sourcePath`, `declaredDependencies`, and each Markdown document's `resources`.
 The projector never reads an entry's stored `dependencies`; display projection is a reader-side shell representation,
@@ -90,6 +98,11 @@ Use deterministic filesystem interleaving for the cache-directory removal race,
 then test success, exhausted retries, other failures and cancellation. Test a
 unique moved v9 catalogue plus stale root v7, multiple v9 candidates, and an
 actual pre-v9 rebuild with no v9 result.
+
+Cover every recognized debris name, including `complete-<uuid>.tmp`. Keep live
+owners, tombstones, unrecognized files and the cache ignore file. Preserve
+maintenance-error reporting and completed output. Use the deterministic evidence
+methods in [CI Test Timing](./ci-test-timing.md), never elapsed-time assertions.
 
 Add SHA-256 repository and binary Git-blob baselines. Retain Serve's exact
 earlier-version line, once per base and reset on a changed base. Test a component

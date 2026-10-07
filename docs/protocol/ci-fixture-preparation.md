@@ -3,7 +3,7 @@
 ## Delivery Status
 
 The committed-output export fixtures below are the approved target in
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
+[Generated Output Review Fixes](../../plans/generated-output-review-fixes.md).
 The [CI verification](./ci-verification.md) and
 [CI suite evidence](./ci-suite-evidence.md) contracts own suite boundaries,
 process lifetime, cleanup and evidence.
@@ -49,6 +49,12 @@ deadlines, retries, sharding and the full gate unchanged. Preserve the
 shared baseline setup does not remove baseline, lock, cancellation, source
 mutation or clean-install unit/integration coverage.
 
+Follow [CI Test Timing](./ci-test-timing.md): expected-state polling allows at
+least 10,000 ms; assertions use operation counts, captured inputs, event order
+or fake clocks. Duration text and structured fixture phases remain evidence.
+The [remote gate](./remote-verification.md) preserves these suite boundaries,
+fixture ownership and budgets; remote execution does not relax them.
+
 ## Timing And Cleanup
 
 Retain useful `[mokly:fixture-timing]` records for preparation that actually
@@ -59,7 +65,8 @@ are true. A phase that does not run has no invented zero duration.
 Record full browser-suite wall time and fixture phase timings on this machine
 before and after changing setup. Name runtime, npm, browser and cache conditions.
 Do not compare only assertion time or claim controlled improvement when inputs
-or test inventory differ. The plan keeps measurements and `.context/` logs.
+or test inventory differ. Save measurements and logs under `.context/`; the
+active plan names their location without embedding the evidence.
 
 All fixtures register owned resources before work starts. Drain processes and
 close servers/browsers on success, failure and cancellation. Use the existing

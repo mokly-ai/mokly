@@ -6,7 +6,7 @@ with exact plain output and rich error presentation.
 ## Delivery Status
 
 The paragraph labelled **Approved target** records pending notice-stream changes
-from [Generated Output Simplification](../../plans/generated-output-simplification.md).
+from [Generated Output Review Fixes](../../plans/generated-output-review-fixes.md).
 The remaining plain and rich output rules describe current behaviour.
 
 ## Plain Compatibility

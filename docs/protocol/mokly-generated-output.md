@@ -11,6 +11,7 @@ and [viewer namespace](./mokly-viewer-namespace.md) define the implemented contr
 The approved [public closure](./mokly-public-closure.md),
 [watch writers](./mokly-watch-writers.md), [comparison inventories](./mokly-comparison-inventory.md)
 and [boundary results](./mokly-boundary-results.md) define the pending review fixes.
+Their pending work belongs to [Generated Output Review Fixes](../../plans/generated-output-review-fixes.md).
 The [lint contract](./mokly-directory-lint.md) defines implemented folder coverage
 and duplicate-import checks.
 

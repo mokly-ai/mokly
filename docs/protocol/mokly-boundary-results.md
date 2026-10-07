@@ -4,7 +4,7 @@
 
 Static-delivery parsing and export refusals are implemented. Git-state and
 frame-identity changes are approved targets in
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
+[Generated Output Review Fixes](../../plans/generated-output-review-fixes.md).
 Format gates detect unsupported data; they do not convert it.
 
 ## Git State For Check
@@ -40,6 +40,10 @@ suggestions. The recommended `git rm -r --cached -- <path>/` and `.gitignore`
 entry must name Git's actual indexed path. Do not suggest an alias that Git
 will not match. Display paths for current filesystem checks can remain relative
 to the configured catalogue; distinguish them from the suggested index path.
+
+Keep the independent tracked-cache refusal. Its remedy is only
+`git rm --cached`; do not suggest a root cache ignore rule, because the
+[cache ignores itself](./mokly-baseline-storage.md#cache-layout).
 
 Tests use non-English stderr without matching it, missing Git, corrupt and
 inaccessible repository metadata, bare repositories, ordinary non-repository

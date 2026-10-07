@@ -3,7 +3,7 @@
 ## Delivery Status
 
 This is the approved target in
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
+[Generated Output Review Fixes](../../plans/generated-output-review-fixes.md).
 It extends [Watch](./mokly-watch.md) and the
 [output transaction](./mokly-generated-output.md#tracked-state-and-commands).
 
@@ -34,6 +34,11 @@ a complete valid candidate. `serve --build` also refreshes and writes the
 manifest after an authored stylesheet reload changes the resource closure.
 Plain Serve updates its checked in-memory closure without writing output.
 Evidence-only events never write. Only the parent writes in Serve.
+
+Preserve [cache ignore publication](./mokly-baseline-storage.md#cache-layout)
+before each output-lock acquisition. Keep the persistent lock directories and
+the cache ignore file. Nonwriting commands create no cache themselves; a
+requested baseline rebuild retains its separate cache-publication boundary.
 
 ## Cancellation
 
@@ -76,6 +81,10 @@ a different base clears the notice state so a later incompatible base can
 report once again. Rich mode keeps its existing reporter surfaces.
 
 ## Acceptance
+
+Follow [CI Test Timing](./ci-test-timing.md). Prove lifecycle ordering with
+explicit synchronization, not elapsed-time bounds. Expected-state polling
+allows at least 10,000 ms; report measured durations only as evidence.
 
 Run the same watch fixtures through Serve and `build --watch`. Cover imported
 helpers, Tailwind-style PostCSS content scans, new scan files/directories,

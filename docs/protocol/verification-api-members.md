@@ -3,8 +3,11 @@
 ## Delivery Status
 
 This is the approved target in
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
+[Generated Output Review Fixes](../../plans/generated-output-review-fixes.md).
 These checks extend the [repository ratchets](./verification-ratchets.md).
+Use the shared [gate definitions](./ci-verification.md#gate-ownership) so both
+local and [remote execution](./remote-verification.md) run the same checks.
+Test assertions follow [CI Test Timing](./ci-test-timing.md).
 
 ## Public API Reports
 
@@ -58,8 +61,8 @@ test, worker, interface and package-entry uses when resolving references.
 Verify a called and an uncalled member in the same class.
 
 Measure the script on the complete repository. If it takes more than about
-60 seconds, restrict candidate declarations to non-exported classes and record
-that measured choice in the plan. Keep reference resolution across all relevant
+60 seconds, restrict candidate declarations to non-exported classes. Record
+the scope decision in the plan and measurements under `.context/`. Keep reference resolution across all relevant
 workspace files. Interface fields written but not read are outside this check;
 the specifically approved fields are removed manually. Keep dynamic-use exceptions explicit and reviewed.
 
