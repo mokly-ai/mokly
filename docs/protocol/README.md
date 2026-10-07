@@ -60,8 +60,7 @@ unsupported versions before content or path interpretation.
   - [Testbox execution](./remote-verification-testbox.md) — workflow, commands, sync probe, suite wrapper, source-tree fingerprint, report download and aggregation.
 - [CI workflow graph](./ci-workflow.md)
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, test concurrency, unit shard balance and scenario grouping, browser shard balance and acceptance measurement.
-- [CI test timing](./ci-test-timing.md) — deterministic assertions, duration reporting and lint guard.
-  - [CI test timing helpers](./ci-test-timing-helpers.md) — polling, operation counts and duration text.
+- [CI test timing](./ci-test-timing.md) — deterministic assertions, duration reporting and lint guard; [helpers](./ci-test-timing-helpers.md) for polling, operation counts and duration text.
 - [Repository verification ratchets](./verification-ratchets.md)
 - [Catalogue upload v2](./mokly-upload.md) — public CLI, repository identity,
   upload manifest, output entry point and composite action boundary.
