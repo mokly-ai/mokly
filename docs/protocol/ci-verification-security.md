@@ -36,9 +36,9 @@ runtimes. Intentionally isolated clean-cache consumer tests keep private empty
 npm caches. Release publishing retains its uncached, OIDC-scoped boundary and
 exact-artifact checks.
 
-Fixture ownership, failure cleanup, browser shard balance, and acceptance
-measurement follow the separate
-[suite evidence contract](./ci-suite-evidence.md).
+Fixture ownership, test concurrency, failure cleanup, unit shard balance and
+scenario grouping, browser shard balance, and acceptance measurement follow the
+separate [suite evidence contract](./ci-suite-evidence.md).
 
 ## Testbox Key And Secret Boundary
 
