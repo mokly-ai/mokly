@@ -745,6 +745,10 @@ before the merge.
       the wrong-root AGENTS diff check, the slow-test cuts and .context creation.
       Resolve Milestone 3 re-review finding R2 by dropping only the plan drift
       check while retaining the Worker contract checks.
+- [x] Correction to the line above: the batch resolved Milestone 2 findings 2
+      (wrong-root `AGENTS.md` check), 5 (slow tests), and 8 (`.context`
+      creation). Findings 3 (`dev` errors during uncached builds) and 9
+      (exact Turbo pin) stay open. The supervisor's brief used wrong numbers.
 - [x] Withdraw the new-test options for Milestone 2 finding 4 and Milestone 3
       finding 3 under decision B; the existing package and Worker checks remain.
 - [x] Validate changed/new test files and one complete default cargo xtask check;
