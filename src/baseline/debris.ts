@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import type { CacheLayout } from "./cache_layout.js";
+import { isCompletionTemporary, type CacheLayout } from "./cache_layout.js";
 import type { BaselineMaintenanceFailure } from "./maintenance.js";
 import type { BaselineFileSystem, BaselineProcessRunner } from "./types.js";
 
@@ -23,7 +23,8 @@ export async function removeBaselineDebris(
       /^\.lock-([1-9][0-9]*)-[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.exec(
         name,
       )?.[1];
-    if (!discard && !pid) continue;
+    const completion = isCompletionTemporary(name);
+    if (!discard && !pid && !completion) continue;
     const entry = path.join(layout.entry, name);
     try {
       if (

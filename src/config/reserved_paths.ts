@@ -2,7 +2,8 @@ import path from "node:path";
 
 import { braceExpand } from "minimatch";
 
-import { GENERATED_DIRECTORY } from "../build/styles/routes.js";
+import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
+
 import { MoklyError } from "../errors.js";
 
 import { isInside, projectRealPath } from "./paths.js";
@@ -16,7 +17,10 @@ export function isReservedConfiguredPath(
   const root = path.join(mockupsDir, GENERATED_DIRECTORY);
   if (isInside(root, candidate)) return true;
   try {
-    return isInside(projectRealPath(root), projectRealPath(candidate));
+    return isInside(
+      path.join(projectRealPath(mockupsDir), GENERATED_DIRECTORY),
+      projectRealPath(candidate),
+    );
   } catch {
     return false;
   }
@@ -43,7 +47,7 @@ export function validateStylesheetAliases(
         )
           throw new MoklyError(
             "config-invalid",
-            `stylesheets[${index}].${field} must not reference mokly-generated/: ${stylesheet}; link imported CSS through the renderer instead`,
+            `stylesheets[${index}].${field} must not reference ${GENERATED_DIRECTORY}/: ${stylesheet}; link imported CSS through the renderer instead`,
           );
       }
     }
@@ -62,7 +66,7 @@ export function validateRootReservedPath(
     if (isReservedConfiguredPath(directory, mockupsDir))
       throw new MoklyError(
         "config-invalid",
-        `roots[${index}].dir must not select mokly-generated/: ${configured}; choose a directory of authored entry modules`,
+        `roots[${index}].dir must not select ${GENERATED_DIRECTORY}/: ${configured}; choose a directory of authored entry modules`,
       );
     return;
   }
@@ -77,7 +81,7 @@ export function validateRootReservedPath(
       )
         throw new MoklyError(
           "config-invalid",
-          `roots[${index}].files must not select mokly-generated/: ${glob}; narrow the file glob to authored files`,
+          `roots[${index}].files must not select ${GENERATED_DIRECTORY}/: ${glob}; narrow the file glob to authored files`,
         );
     }
   }

@@ -11,11 +11,11 @@ import {
 import type { RemovedPreviewData } from "../packages/viewer/dist/shell/previews.js";
 
 const GENERATION = "b".repeat(64);
-const COMPARISON = `/__mokly/diffs/__generations/${GENERATION}/review.json`;
+const COMPARISON = `/mokly-viewer/diffs/generations/${GENERATION}/review.json`;
 const BASE = "https://catalogue.test/view/archive/removed/";
 
 const delivery: StaticDelivery = {
-  schemaVersion: 3,
+  schemaVersion: 5,
   deploymentId: "c".repeat(64),
   canonicalPath: "/view/archive/removed/",
   comparisonUrl: COMPARISON,
@@ -33,16 +33,16 @@ const removedScreen: RemovedPreviewData = {
   title: "Removed screen",
 };
 
-const pagePath = `__mokly/diffs/__generations/${GENERATION}/previews/removed-page/index.json`;
+const pagePath = `mokly-viewer/diffs/generations/${GENERATION}/previews/removed-page/index.json`;
 
 test("development stages request the stable selected endpoint", () => {
   assert.equal(
     previewEndpoint(removedPage, undefined, BASE, false)?.endpoint.href,
-    "https://catalogue.test/__mokly/diffs/review.json?page=removed-page",
+    "https://catalogue.test/mokly-viewer/diffs/review.json?page=removed-page",
   );
   assert.equal(
     previewEndpoint(removedScreen, undefined, BASE, true)?.endpoint.href,
-    "https://catalogue.test/__mokly/diffs/review.json?path=removed-screen&refresh=1",
+    "https://catalogue.test/mokly-viewer/diffs/review.json?path=removed-screen&refresh=1",
   );
 });
 
@@ -148,8 +148,8 @@ test("the documented embedded fetch set advertises comparison snapshots", () => 
   assert.deepEqual(advertisedPreviewPaths(model), {
     files: [COMPARISON.slice(1), pagePath],
     prefixes: [
-      `__mokly/diffs/__generations/${GENERATION}/snapshots/before/`,
-      `__mokly/diffs/__generations/${GENERATION}/snapshots/after/`,
+      `mokly-viewer/diffs/generations/${GENERATION}/snapshots/before/`,
+      `mokly-viewer/diffs/generations/${GENERATION}/snapshots/after/`,
     ],
   });
   assert.deepEqual(

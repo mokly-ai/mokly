@@ -1,4 +1,4 @@
-import postcss, { type AtRule, type Root, type Rule } from "postcss";
+import { Rule, type AtRule, type Root } from "postcss";
 
 import { MoklyError } from "../../errors.js";
 
@@ -89,7 +89,7 @@ export function prepareModuleScopes(root: Root, relative: string): () => void {
       }
       groups = [prelude.start, prelude.limit].flatMap((group) => {
         if (!group) return [];
-        const rule = postcss.rule({
+        const rule = new Rule({
           selector: params.slice(group.start, group.end),
         });
         if (atRule.source) rule.source = atRule.source;

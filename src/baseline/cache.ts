@@ -2,55 +2,37 @@ import path from "node:path";
 import { isDeepStrictEqual } from "node:util";
 
 import {
-  MAX_MARKER_BYTES,
-  parseCompletionMarker,
+  MANIFEST_NAME,
+  parseHistoricalManifest,
+} from "../registry/manifest.js";
+import { MAX_BATCH_OUTPUT_BYTES } from "../review/git_batch.js";
+
+import {
+  isCompletionTemporary,
   type CacheLayout,
   type CompletionMarker,
 } from "./cache_layout.js";
-import { BaselineError } from "./errors.js";
-import { baselineManifestVersion } from "./manifest.js";
+import { readCacheMetadata } from "./cache_metadata.js";
+import { baselineCatalogue, joinCataloguePath } from "./catalogue.js";
+import { confinedBaselineStat } from "./confinement.js";
+import { validateBuiltInventory } from "./discovery.js";
+import { assertBaselineActive, BaselineError } from "./errors.js";
 import type { BaselineBuildRequest, BaselineFileSystem } from "./types.js";
 
-/** Incomplete entries are reusable only after a fresh rebuild under their lock. */
+/** Validate metadata, compare settings, then validate current output for reuse. */
 export async function completedBaseline(
   fs: BaselineFileSystem,
   layout: CacheLayout,
   request: BaselineBuildRequest,
 ): Promise<CompletionMarker | undefined> {
-  let marker: CompletionMarker | undefined;
-  let mockupsPath: unknown;
-  try {
-    if ((await fs.stat(layout.marker))?.kind !== "regular") return;
-    marker = parseCompletionMarker(
-      JSON.parse(
-        Buffer.from(await fs.read(layout.marker, MAX_MARKER_BYTES)).toString(
-          "utf8",
-        ),
-      ),
-      request.commit,
-    );
-    if (!marker || (await fs.stat(layout.output))?.kind !== "directory") return;
-    if (
-      (await fs.stat(path.join(layout.entry, "inputs.json")))?.kind !==
-      "regular"
-    )
-      return;
-    mockupsPath = JSON.parse(
-      Buffer.from(
-        await fs.read(path.join(layout.entry, "inputs.json"), MAX_MARKER_BYTES),
-      ).toString("utf8"),
-    );
-    const version = await baselineManifestVersion(
-      fs,
-      request.repoRoot,
-      layout.output,
-      request.signal,
-    );
-    if (version !== marker.manifestVersion) return;
-  } catch (error) {
-    if (request.signal?.aborted) throw error;
-    return;
-  }
+  const metadata = await readCacheMetadata(
+    fs,
+    layout,
+    request.commit,
+    request.signal,
+  );
+  if (!metadata) return;
+  const { marker, mockupsPath } = metadata;
   if (
     mockupsPath !== request.mockupsPath ||
     !isDeepStrictEqual(marker.commands, request.commands)
@@ -59,10 +41,53 @@ export async function completedBaseline(
       "baseline-output-invalid",
       `Cached baseline uses different build settings; remove ${layout.entry} before changing catalogues or commands`,
     );
-  return marker;
+  try {
+    if ((await fs.stat(layout.output))?.kind !== "directory") return;
+    const descriptor = baselineCatalogue(
+      request.commit,
+      marker.historicalCatalogueRoot,
+    );
+    const file = joinCataloguePath(descriptor.generatedRoot, MANIFEST_NAME);
+    if (
+      (await confinedBaselineStat(fs, layout.output, file, request.signal))
+        ?.kind !== "regular"
+    )
+      return;
+    const manifest = parseHistoricalManifest(
+      JSON.parse(
+        Buffer.from(
+          await fs.read(path.join(layout.output, file), MAX_BATCH_OUTPUT_BYTES),
+        ).toString("utf8"),
+      ),
+    );
+    await validateBuiltInventory(
+      fs,
+      layout.output,
+      { descriptor, manifest, version: 9 },
+      request.signal,
+    );
+    for (const asset of manifest.assetClosure) {
+      const relative = joinCataloguePath(descriptor.catalogueRoot, asset);
+      if (
+        (
+          await confinedBaselineStat(
+            fs,
+            layout.output,
+            relative,
+            request.signal,
+          )
+        )?.kind !== "regular"
+      )
+        return;
+    }
+    return marker;
+  } catch {
+    assertBaselineActive(request.signal);
+    return;
+  }
 }
 
-/** Remove partial output and installed dependencies without removing the held lock. */
+/** Remove partial content under the entry lock, preserving lock ownership. */
 export async function removePartialBaseline(
   fs: BaselineFileSystem,
   layout: CacheLayout,
@@ -72,6 +97,9 @@ export async function removePartialBaseline(
     layout.source,
     layout.output,
     path.join(layout.entry, "inputs.json"),
+    ...(await fs.list(layout.entry))
+      .filter(isCompletionTemporary)
+      .map((name) => path.join(layout.entry, name)),
   ])
     await fs.remove(file);
 }

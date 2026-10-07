@@ -8,12 +8,12 @@ import type { ResolvedConfig } from "../src/config/types.js";
 import { handleCatalogueRequest } from "../src/server/http_routes.js";
 
 for (const route of [
-  "/__mokly/shell.css",
-  "/__mokly/client/appearance-startup.js",
-  "/__mokly/client/react-shell.js",
-  "/__mokly/navigation/logical.js",
-  "/__mokly/fonts/InterVariable.woff2",
-  "/__mokly/events",
+  "/mokly-viewer/shell.css",
+  "/mokly-viewer/client/appearance-startup.js",
+  "/mokly-viewer/client/react-shell.js",
+  "/mokly-viewer/navigation/logical.js",
+  "/mokly-viewer/fonts/InterVariable.woff2",
+  "/mokly-viewer/events",
 ])
   test(`asset delivery does not decode the public catalogue: ${route}`, async () => {
     let status: number | undefined;

@@ -17,7 +17,7 @@ import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 const resource = "mockups/shared.svg";
-const image = '<img src="../shared.svg" />';
+const image = '<img src="../../shared.svg" />';
 const svg = (fill: string) =>
   `<svg xmlns="http://www.w3.org/2000/svg"><rect fill="${fill}"/></svg>`;
 

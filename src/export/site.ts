@@ -1,11 +1,16 @@
 import path from "node:path";
 
-import type { HistoricalManifest, ReviewArtifact } from "@mokly/viewer/data";
+import type {
+  HistoricalManifest,
+  ReviewArtifact,
+  StaticDelivery,
+} from "@mokly/viewer/data";
 import {
+  VIEWER_DIRECTORY,
   canonicalJson,
   entryRoute,
+  GENERATED_DIRECTORY,
   parseStaticDelivery,
-  type StaticDelivery,
   parseReviewResult,
   snapshotSidePath,
   viewHref,
@@ -35,7 +40,6 @@ import { homePage, notFoundPage, viewPage } from "../server/pages.js";
 
 import { comparisonContentId } from "./content_id.js";
 import { exportError } from "./error.js";
-import { historicalGeneratedPaths } from "./generated_inventory.js";
 import { ExportInventory } from "./inventory.js";
 import { exportResourceDenial } from "./resource_policy.js";
 import { STAGED_DEPLOYMENT_ID } from "./shell_metadata.js";
@@ -89,20 +93,21 @@ export function assembleExport(
       `${canonicalJson(comparison.result, 2)}\n`,
     );
   const generation = comparisonContentId(comparisonFiles);
-  const prefix = `__mokly/diffs/__generations/${generation}`;
+  const prefix = `${VIEWER_DIRECTORY}/diffs/generations/${generation}`;
   const removedPreviews = staticRemovedPreviews(
     removedSnapshots,
     comparison,
     comparisonFiles,
   );
-  const delivery = parseStaticDelivery({
-    schemaVersion: 3,
+  const parsedDelivery = parseStaticDelivery({
+    schemaVersion: 5,
     deploymentId: STAGED_DEPLOYMENT_ID,
     canonicalPath: "/",
     comparisonUrl: comparison ? `/${prefix}/review.json` : null,
   });
-  if (!delivery)
+  if (parsedDelivery.kind !== "valid")
     throw exportError("Invalid static catalogue delivery metadata.");
+  const delivery = parsedDelivery.value;
   const inventory = new ExportInventory();
   const shells = new Map<string, StaticDelivery>();
   const addShell = (name: string, html: string, descriptor: StaticDelivery) => {
@@ -112,16 +117,12 @@ export function assembleExport(
   const beforeDenial = exportResourceDenial(
     baselineResourceConfig(config, baseline),
     false,
-    historicalGeneratedPaths(
-      baseline,
-      comparisonFiles.keys(),
-      snapshotSidePath("before"),
-    ),
+    new Set(baseline.generatedFiles.map((file) => file.path)),
   );
   const afterDenial = exportResourceDenial(
     config,
     false,
-    new Set(compilation.outputs.keys()),
+    new Set(compilation.manifest.generatedFiles.map((file) => file.path)),
   );
   for (const [name, bytes] of comparisonFiles) {
     const resource = snapshotResourceRoute(name);
@@ -249,20 +250,23 @@ export function assembleExport(
     addShell(`view/${route}`, html, descriptor);
   }
   for (const [name, bytes] of publicFiles) {
+    const logicalRoute = name.startsWith(`${GENERATED_DIRECTORY}/`)
+      ? name.slice(GENERATED_DIRECTORY.length + 1)
+      : undefined;
     const adapted = /\.html?$/i.test(name)
-      ? adaptBrowseDocument(bytes.toString("utf8"), name, catalogue)
+      ? adaptBrowseDocument(bytes.toString("utf8"), logicalRoute, catalogue)
       : bytes;
     inventory.add(`static/${name}`, adapted);
   }
-  inventory.add("__mokly/shell.css", SHELL_CSS);
+  inventory.add(`${VIEWER_DIRECTORY}/shell.css`, SHELL_CSS);
   for (const [name, bytes] of loadBrowserClientModules()) {
     if (!LIVE_HOST_BUNDLES.has(name))
-      inventory.add(`__mokly/client/${name}`, bytes);
+      inventory.add(`${VIEWER_DIRECTORY}/client/${name}`, bytes);
   }
   for (const [name, bytes] of loadBrowserNavigationModules())
-    inventory.add(`__mokly/navigation/${name}`, bytes);
+    inventory.add(`${VIEWER_DIRECTORY}/navigation/${name}`, bytes);
   for (const [name, bytes] of loadShellFontAssets())
-    inventory.add(`__mokly/fonts/${name}`, bytes);
+    inventory.add(`${VIEWER_DIRECTORY}/fonts/${name}`, bytes);
   return { inventory, delivery, shells };
 }
 

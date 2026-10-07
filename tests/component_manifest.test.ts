@@ -10,7 +10,7 @@ import type {
   ComponentViewRecord,
 } from "../packages/viewer/dist/components/manifest_types.js";
 import type {
-  ManifestV8,
+  ManifestV9,
   ManifestScreen,
 } from "../packages/viewer/dist/registry/types.js";
 
@@ -23,11 +23,11 @@ type ComponentManifestScreen = ManifestScreen & {
 
 async function example(t: {
   after: (fn: () => Promise<void>) => void;
-}): Promise<ManifestV8> {
+}): Promise<ManifestV9> {
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const result = await compileCatalogue(await loadConfig(fixture.root));
-  assert.equal(result.manifest.schemaVersion, 8);
+  assert.equal(result.manifest.schemaVersion, 9);
   return result.manifest;
 }
 
@@ -36,7 +36,7 @@ test("manifest v8 rejects broken identities, ownership references and props befo
   const edits: readonly [
     string,
     (
-      value: ManifestV8,
+      value: ManifestV9,
       screen: ComponentManifestScreen,
       component: ManifestComponent,
       variant: ManifestComponentVariant,

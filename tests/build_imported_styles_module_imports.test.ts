@@ -66,11 +66,7 @@ test("CSS Module custom-property url() is copied and rewritten", async (context)
   await fs.writeFile(path.join(fixture.entriesDir, "icon.svg"), bytes);
   const compiled = await compileFixture(fixture);
   assert.deepEqual(
-    Buffer.from(
-      compiled.outputs.get(
-        "mokly-generated/assets/entries/icon.svg",
-      ) as Uint8Array,
-    ),
+    Buffer.from(compiled.outputs.get("assets/entries/icon.svg") as Uint8Array),
     bytes,
   );
   assert.match(

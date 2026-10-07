@@ -61,13 +61,19 @@ for (const edited of [false, true])
     }
     if (!edited) assert.deepEqual(result.changes[0]!.reasons, []);
     assert.ok(
-      artifact.files.has("snapshots/before/old/welcome/index.mobile.html"),
+      artifact.files.has(
+        "snapshots/before/mokly-generated/old/welcome/index.mobile.html",
+      ),
     );
     assert.ok(
-      artifact.files.has("snapshots/after/new/welcome/index.mobile.html"),
+      artifact.files.has(
+        "snapshots/after/mokly-generated/new/welcome/index.mobile.html",
+      ),
     );
     assert.ok(
-      !artifact.files.has("snapshots/before/new/welcome/index.mobile.html"),
+      !artifact.files.has(
+        "snapshots/before/mokly-generated/new/welcome/index.mobile.html",
+      ),
     );
   });
 

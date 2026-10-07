@@ -10,19 +10,20 @@ route-evidence loading and failed Usage states are implemented by the
 
 Serve loads one consumer graph and validates its catalogue metadata, routes,
 hierarchy, schemas, source inventory and output confinement before listening.
-Output collision/ownership/confinement checks capture one stable snapshot under
-the repository writer lock. The private runtime transfers its validated routes
-and orphan routes with the accepted generation. Demand and background workers
-reuse that evidence; they never scan a partially written output tree or acquire
-a writer lock while executing consumer code. A new generation captures new evidence.
+Output collision and confinement checks create one immutable in-memory route
+set from validated identities and retained generated resources. Private runtime
+transfer preserves that set. Demand and background workers reject undeclared
+routes; they never scan disk output or acquire its writer lock. A new generation
+creates a new checked set under the [route-set contract](./mokly-generation-routes.md).
 It does not render every document, write output, classify Git changes or transfer
 generated HTML as a prerequisite for Browse. This applies with and without watch.
 
-The live catalogue index is a distinct internal format, not a schema-v8 manifest.
-It describes available views, not completed rendering or usage evidence. A v8
+The live catalogue index is a distinct internal format, not a schema-v9 manifest.
+It describes available views, not completed rendering or usage evidence. A v9
 manifest still requires every view's validated records. Build, Check and Export
-remain exhaustive and produce the same portable artifacts, committed or
-[derived](./mokly-derived-baselines.md) according to `generatedOutput`.
+remain exhaustive and produce the same portable artifacts regardless of
+Git tracking; only explicit Build and `serve --build` write them to disk, and
+neither reads head tracking. Only Check consults the current Git index.
 
 The scale target is command start to searchable navigation and a real selected
 preview visible in under five seconds, cold and warm on the default large fixture.
@@ -32,7 +33,7 @@ reported separately and never repeated during ordinary large-fixture startup.
 
 ## Foreground documents
 
-Generated `/static/` routes render the requested page, document, or
+Generated `/static/mokly-generated/` routes render the requested page, document, or
 screen/component variant, viewport and scheme through the retained consumer
 graph. Rendering runs outside
 the HTTP event loop in a bounded, terminable worker. Concurrent requests for the
@@ -48,14 +49,13 @@ static delivery. Inventory-only startup freshness runs the CSS/PostCSS
 dependency pass without rendering every view.
 Every `/static/mokly-generated/**` request is generation-owned: if the route
 is absent from that accepted generation, return 404 even when a stale file
-exists on disk. Apply this to watched and no-watch committed/derived Serve,
+exists on disk. Apply this to watched and no-watch Serve,
 on-demand dispatch, and transient controls; never delegate a reserved route
 to the ordinary static filesystem fallback. Valid routes return exactly the
 accepted bytes with the route's MIME type, including `%40` npm scopes.
-For committed Serve without a retained runtime, derive the exact accepted
-reserved-route set from the inventory-only graph and snapshot only those disk
-bytes at startup; a syntactically valid stray on disk is still a 404. A runtime
-already carries the accepted CSS and asset bytes for both output modes.
+The retained runtime carries the accepted CSS and asset bytes. Internal
+full-compilation hosts supply accepted generated outputs explicitly; no host
+snapshots generated disk files as a fallback.
 
 The foreground service admits one active document and 32 queued distinct routes,
 with a ten-second deadline, a 256 MiB worker heap limit and a 64 MiB result cache.
@@ -64,7 +64,7 @@ before replacements start. Exhaustive background work uses one worker with a
 1 GiB heap limit and yields between documents and major validation phases.
 
 The single-document compiler reuses exhaustive Build's validation primitives: rendering,
-stylesheet selection, compatibility, logical links, ownership, component ranges,
+stylesheet selection, logical links, component ranges,
 props, style/resource metadata, ignore markers, output confinement, and resource
 validation. Navigation without anchors needs the destination's registered entry,
 not its rendered HTML. Anchors require the actual destination document; logical
@@ -120,7 +120,7 @@ defines request scope, checked-input digests, immutable snapshots and cancellati
 
 ## Background work and replacement
 
-Both Serve modes complete the generated tree and Changes in background work.
+Watched and no-watch Serve complete generated output and Changes in background work.
 Background work is bounded, gives foreground rendering priority and cannot publish
 after its source generation is superseded. Source/config replacement accepts a new
 validated index and rendering graph together; failed candidates retain the previous
@@ -148,10 +148,12 @@ validation cannot render a destination ahead of that order. Stateful style regis
 can include different unused CSS in on-demand previews; the exhaustive background
 artifacts retain Build's bytes and do not create artificial Changes.
 
-Full generated output is finalized only through the existing transactional output
-store. It never substitutes for demand rendering of the current generation.
-Git-only baseline changes are observed off the HTTP request path, as is any
-derived-mode baseline rebuild. Ref observation
+Full generated output stays in memory unless the parent is running
+`serve --build`; only after a complete successful compilation and ready
+resource watches does the parent transactionally replace `mokly-generated/`.
+The child and HTTP requests never write. Complete output never substitutes
+for demand rendering of the current generation. Git-only baseline changes
+and per-commit baseline rebuilds are observed off the HTTP request path. Ref observation
 must support worktrees and packed refs. Publication and offline consumers accept
 only exhaustive, validated artifacts, never the live index.
 

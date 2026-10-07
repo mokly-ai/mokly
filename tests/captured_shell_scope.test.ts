@@ -16,7 +16,7 @@ import {
 
 const catalogue = readCatalogue(
   JSON.parse(
-    fs.readFileSync("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
+    fs.readFileSync("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
   ),
 );
 const view = {
@@ -25,6 +25,7 @@ const view = {
   entryKind: catalogue.screens[0]!.kind,
 };
 const bootstrap = {
+  schemaVersion: 2 as const,
   catalogue: projectScopedCatalogue(catalogue, view),
   context: {
     base: "origin/main",
@@ -46,7 +47,7 @@ test("capture externalizes one exact scoped projection", () => {
   assert.deepEqual(parsed.catalogue, {
     identity: catalogue.identity.id,
     kind: "external",
-    path: "/__mokly/catalogue.json",
+    path: "/mokly-viewer/catalogue.json",
     revision: catalogue.revision,
   });
 });

@@ -1,7 +1,9 @@
 /** Bounded immutable render storage with authenticated, expirable identifiers. */
+
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 import {
+  VIEWER_DIRECTORY,
   ComponentRenderError,
   type ComponentRenderSuccess,
 } from "@mokly/viewer/data";
@@ -52,7 +54,7 @@ export class RenderStore {
       generation,
       props: value.props,
       view: value.view,
-      previewUrl: `/__mokly/components/renders/${id}/${value.route.split("/").map(encodeURIComponent).join("/")}`,
+      previewUrl: `/${VIEWER_DIRECTORY}/components/renders/${id}/${value.route.split("/").map(encodeURIComponent).join("/")}`,
     };
   }
   get(id: string): TransientRender {

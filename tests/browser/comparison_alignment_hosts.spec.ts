@@ -82,7 +82,7 @@ test("a static export aligns stacks, mirrors Side by side and stays read-only", 
   for (const side of ["before", "after"] as const)
     await expectPresentedPane(
       paneFrame(desktop, side),
-      /\/__mokly\/diffs\/__generations\/[a-f0-9]{64}\/snapshots\//,
+      /\/mokly-viewer\/diffs\/generations\/[a-f0-9]{64}\/snapshots\//,
     );
   await wheelOver(page, paneFrame(desktop, "after"), 400);
   await expectStackAt(desktop, 400);
@@ -121,10 +121,16 @@ test("a pane document that cannot be presented fails and recovers with Try again
   page,
 }) => {
   let failing = true;
-  await page.route("**/snapshots/after/tall/index.desktop.html", (route) =>
-    failing
-      ? route.fulfill({ status: 404, contentType: "text/plain", body: "gone" })
-      : route.continue(),
+  await page.route(
+    "**/snapshots/after/mokly-generated/tall/index.desktop.html",
+    (route) =>
+      failing
+        ? route.fulfill({
+            status: 404,
+            contentType: "text/plain",
+            body: "gone",
+          })
+        : route.continue(),
   );
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.goto(`${viewer.url}/viewer.html?adapter=cross&entry=tall`);

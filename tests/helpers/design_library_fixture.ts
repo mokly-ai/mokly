@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { baselineCatalogue } from "../../dist/baseline/catalogue.js";
 import {
   compileCatalogue,
   type Compilation,
 } from "../../dist/build/compile.js";
+import type { GeneratedFile } from "../../dist/build/generated_file.js";
 import { generatedBytes } from "../../dist/build/generated_file.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
@@ -18,13 +20,12 @@ import { repositoryRoot } from "./fixture.js";
 
 /**
  * Copy the actual consumer so source-edit tests never mutate the working
- * catalogue. Without a mode, the unedited copy compiles to the shared example
- * compilation, so the before state reuses it.
+ * catalogue. The unedited copy compiles to the shared example compilation, so
+ * the before state reuses it.
  */
-export async function designLibraryFixture(
-  t: { after(fn: () => Promise<void>): void },
-  mode?: "committed" | "derived",
-) {
+export async function designLibraryFixture(t: {
+  after(fn: () => Promise<void>): void;
+}) {
   await fs.mkdir(path.join(repositoryRoot, ".context"), { recursive: true });
   const root = await fs.mkdtemp(
     path.join(repositoryRoot, ".context/design-library-test-"),
@@ -32,12 +33,8 @@ export async function designLibraryFixture(
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   await copyExampleSources(root);
   const config = await loadConfig(path.join(root, "examples/basic"));
-  if (mode) config.generatedOutput = mode;
-  if (mode === "committed") delete config.review.baselineBuild;
-  const before = mode
-    ? await compileCatalogue(config)
-    : await exampleCompilation();
-  const resources = new Map<string, string>();
+  const before = await exampleCompilation();
+  const resources = new Map<string, GeneratedFile>();
   for (const file of await fs.readdir(config.mockupsDir, { recursive: true })) {
     if (file.endsWith(".css"))
       resources.set(
@@ -45,7 +42,7 @@ export async function designLibraryFixture(
         await fs.readFile(path.join(config.mockupsDir, file), "utf8"),
       );
   }
-  const originals = new Map<string, string>();
+  const originals = new Map<string, GeneratedFile>();
   async function edit(file: string, change: (source: string) => string) {
     const absolute = path.join(root, file);
     const source = await fs.readFile(absolute, "utf8");
@@ -62,9 +59,9 @@ export async function designLibraryFixture(
   async function compare(after = before, changedPaths = [...originals.keys()]) {
     const current = new Map(resources);
     for (const file of changedPaths) {
-      if (file.startsWith("examples/basic/generated/") && file.endsWith(".css"))
+      if (file.startsWith("examples/basic/") && file.endsWith(".css"))
         current.set(
-          file.slice("examples/basic/generated/".length),
+          file.slice("examples/basic/".length),
           await fs.readFile(path.join(root, file), "utf8"),
         );
     }
@@ -81,23 +78,34 @@ export async function designLibraryFixture(
   }
   const batches: string[][] = [];
   function git(changedPaths: readonly string[]): ReadOnlyReviewRepository {
-    const files = new Map(
-      [...resources, ...before.outputs].map(([file, contents]) => [
-        `examples/basic/generated/${file}`,
-        contents,
-      ]),
+    const commit = "a".repeat(40);
+    const descriptor = baselineCatalogue(
+      commit,
+      "examples/basic",
+      "generated-v9",
     );
+    const files = new Map<string, GeneratedFile>([
+      ...[...resources].map(
+        ([file, contents]) => [`examples/basic/${file}`, contents] as const,
+      ),
+      ...[...before.outputs].map(
+        ([file, contents]) =>
+          [`examples/basic/mokly-generated/${file}`, contents] as const,
+      ),
+    ]);
     const read = async (_commit: string, file: string) => {
       const contents = files.get(file);
       assert.notEqual(contents, undefined, file);
       return Buffer.from(contents!);
     };
     return {
+      descriptor,
       evidence: {
-        mergeBase: async () => "a".repeat(40),
+        mergeBase: async () => commit,
         changedPaths: async () => changedPaths,
       },
       reader: {
+        catalogue: descriptor,
         fileExists: async (_commit, file) => files.has(file),
         fileKind: async (_commit, file) =>
           files.has(file) ? "regular" : "missing",
@@ -140,10 +148,15 @@ export async function designLibraryFixture(
 
 export function snapshotReader(
   compilation: Compilation,
-  resources: ReadonlyMap<string, string>,
+  resources: ReadonlyMap<string, GeneratedFile>,
 ) {
   const read = async (file: string) => {
-    const value = compilation.outputs.get(file) ?? resources.get(file);
+    const value =
+      compilation.outputs.get(
+        file.startsWith("mokly-generated/")
+          ? file.slice("mokly-generated/".length)
+          : "",
+      ) ?? resources.get(file);
     assert.notEqual(value, undefined, file);
     return generatedBytes(value!);
   };

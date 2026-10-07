@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import type { ReactNode, RefObject } from "react";
 
+import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
 import { themeAttributes } from "../viewer/theme.js";
 import type {
   ViewerEvents,
@@ -48,7 +49,7 @@ export function EmbeddedViewerShell({
   useNavigationBounds(root);
   return (
     <div
-      className="mbk mokly-viewer"
+      className={`mbk ${VIEWER_DIRECTORY}`}
       data-drawer={store.state.drawerOpen ? "open" : "closed"}
       data-mokly-color-scheme={store.state.selection.colorScheme}
       data-mokly-shell=""

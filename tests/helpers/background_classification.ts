@@ -16,13 +16,28 @@ export function observeBackgroundClassification(
   context.mock.method(
     BackgroundCompilation.prototype,
     "classify",
-    async function (this: BackgroundCompilation, base: string) {
+    async function (
+      this: BackgroundCompilation,
+      base: string,
+      prepared?: { commit: string; selection: "blobs" | "rebuild" },
+    ) {
       try {
         const compilation = await this.compilation;
         return await new RepositoryCatalogueChangeClassifier().read(
           config,
           compilation.manifest,
           base,
+          undefined,
+          prepared
+            ? {
+                ...prepared,
+                generation: {
+                  outputs: compilation.outputs,
+                  routes: [...compilation.outputs.keys()],
+                  deliveredStyleSources: compilation.deliveredStyleSources,
+                },
+              }
+            : undefined,
         );
       } finally {
         complete();

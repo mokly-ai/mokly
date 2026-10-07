@@ -29,37 +29,34 @@ import { startCatalogueServer } from "../dist/server/http.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { screenView } from "./helpers/component_views.js";
-import { createFixture, removeFixture } from "./helpers/fixture.js";
+import {
+  createFixture,
+  removeFixture,
+  validEntrySource,
+} from "./helpers/fixture.js";
+import { withBinaryDocument } from "./helpers/generated_compilation.js";
 
 const route = "home/index.mobile.html";
 const assetRoute = "assets/binary.png";
 const rawBytes = Uint8Array.from([0x00, 0xff, 0x80, 0x61]);
-
-function binaryCompilation(
-  compilation: Awaited<ReturnType<typeof compileCatalogue>>,
-  bytes: Uint8Array,
-) {
-  const outputs = new Map<string, GeneratedFile>(compilation.outputs);
-  const html = generatedText(outputs.get(route), route)!;
-  const header = html.slice(0, html.indexOf("\n") + 1);
-  outputs.set(route, Buffer.concat([Buffer.from(header), bytes]));
-  return { ...compilation, outputs };
-}
 
 test("generated output retains non-UTF-8 bytes through write and Check", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
-  const binary = binaryCompilation(compilation, rawBytes);
+  const binary = withBinaryDocument(compilation, route, rawBytes);
 
   await writeCompilation(binary, config);
   assert.deepEqual(
-    await fs.promises.readFile(path.join(fixture.mockupsDir, route)),
+    await fs.promises.readFile(path.join(fixture.generatedDir, route)),
     generatedBytes(binary.outputs.get(route)!),
   );
   checkCompilation(binary, config);
-  await fs.promises.appendFile(path.join(fixture.mockupsDir, route), "changed");
+  await fs.promises.appendFile(
+    path.join(fixture.generatedDir, route),
+    "changed",
+  );
   assert.throws(
     () => checkCompilation(binary, config),
     /stale generated files/,
@@ -71,23 +68,24 @@ test("failed install restores the original binary after byte-safe staging", asyn
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
-  const original = binaryCompilation(compilation, rawBytes);
+  const original = withBinaryDocument(compilation, route, rawBytes);
   await writeCompilation(original, config);
-  const replacement = binaryCompilation(
+  const replacement = withBinaryDocument(
     compilation,
+    route,
     Uint8Array.from([0xfe, 0x81]),
   );
-  const target = path.join(fixture.mockupsDir, route);
+  const target = path.join(fixture.generatedDir, route);
   const rename = fs.promises.rename.bind(fs.promises);
   let inspectedStage = false;
   context.mock.method(
     fs.promises,
     "rename",
     async (from: string, to: string) => {
-      if (from.includes(`${path.sep}stage${path.sep}`) && to === target) {
+      if (from.endsWith(`${path.sep}stage`) && to === config.generatedDir) {
         inspectedStage = true;
         assert.deepEqual(
-          await fs.promises.readFile(from),
+          await fs.promises.readFile(path.join(from, route)),
           generatedBytes(replacement.outputs.get(route)!),
         );
         throw new Error("injected install failure");
@@ -114,16 +112,23 @@ test("derived export and review capture generated binary bytes without UTF-8 con
   const outputs = new Map<string, GeneratedFile>(compilation.outputs);
   outputs.set(assetRoute, rawBytes);
   const captured = await capturePublicFiles(
-    { ...config, generatedOutput: "derived" },
+    config,
     outputs,
+    compilation.manifest.assetClosure,
   );
-  assert.deepEqual(captured.get(assetRoute), Buffer.from(rawBytes));
+  assert.deepEqual(
+    captured.get(`mokly-generated/${assetRoute}`),
+    Buffer.from(rawBytes),
+  );
   const reader = new CompilationAssetReader(outputs, {
     read: async () => {
       throw new Error("unexpected disk read");
     },
   });
-  assert.deepEqual(await reader.read(assetRoute), Buffer.from(rawBytes));
+  assert.deepEqual(
+    await reader.read(`mokly-generated/${assetRoute}`),
+    Buffer.from(rawBytes),
+  );
 
   const html = generatedText(outputs.get(route), route)!;
   outputs.set(
@@ -136,8 +141,11 @@ test("derived export and review capture generated binary bytes without UTF-8 con
     compilation.manifest,
     config,
   );
-  assert.deepEqual(bundle.get(assetRoute)?.bytes, Buffer.from(rawBytes));
-  assert.equal(bundle.get(assetRoute)?.type, "image/png");
+  assert.deepEqual(
+    bundle.get(`mokly-generated/${assetRoute}`)?.bytes,
+    Buffer.from(rawBytes),
+  );
+  assert.equal(bundle.get(`mokly-generated/${assetRoute}`)?.type, "image/png");
 });
 
 test("runtime and selected-review JSON transfers retain binary bytes", async (context) => {
@@ -230,7 +238,7 @@ test("controls Serve sends synthetic generated asset bytes without decoding", as
   context.after(() => service.close());
   const rendered = service.store.put(
     {
-      route,
+      route: `mokly-generated/${route}`,
       props: {},
       view: screenView(compilation),
       files: captureRenderBundle(route, outputs, compilation.manifest, config),
@@ -250,7 +258,7 @@ test("controls Serve sends synthetic generated asset bytes without decoding", as
   const address = server.address();
   assert.ok(address && typeof address !== "string");
   const response = await fetch(
-    `http://127.0.0.1:${address.port}/__mokly/components/renders/${rendered.renderId}/${assetRoute}`,
+    `http://127.0.0.1:${address.port}/mokly-viewer/components/renders/${rendered.renderId}/mokly-generated/${assetRoute}`,
   );
   assert.equal(response.status, 200);
   assert.deepEqual(
@@ -259,23 +267,27 @@ test("controls Serve sends synthetic generated asset bytes without decoding", as
   );
 });
 
-test("Serve sends raw public binary bytes without decoding", async (context) => {
-  const fixture = await createFixture();
+test("Serve sends referenced authored binary bytes without decoding", async (context) => {
+  const fixture = await createFixture(
+    validEntrySource({
+      body: `<img src="../../${assetRoute}" alt="Binary" />`,
+    }),
+  );
   context.after(() => removeFixture(fixture));
+  const target = path.join(fixture.mockupsDir, assetRoute);
+  await fs.promises.mkdir(path.dirname(target), { recursive: true });
+  await fs.promises.writeFile(target, rawBytes);
   const config = await loadConfig(fixture.root);
-  await writeCompilation(await compileCatalogue(config), config);
   const server = await startCatalogueServer(config, {
     base: "origin/main",
     port: 0,
   });
   fixture.beforeRemove(() => server.close());
-  const target = path.join(fixture.mockupsDir, assetRoute);
-  await fs.promises.mkdir(path.dirname(target), { recursive: true });
-  await fs.promises.writeFile(target, rawBytes);
   const response = await fetch(`${server.url}/static/${assetRoute}`);
   assert.equal(response.status, 200);
   assert.deepEqual(
     Buffer.from(await response.arrayBuffer()),
     Buffer.from(rawBytes),
   );
+  assert.equal(fs.existsSync(config.generatedDir), false);
 });

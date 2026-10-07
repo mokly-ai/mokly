@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { VIEWER_DIRECTORY } from "@mokly/viewer/data";
+
 import { isBaselineCachePath } from "../config/cache_paths.js";
 import { locatePath, type FileLocation } from "../config/file_locations.js";
 import { isInside, projectRealPath } from "../config/paths.js";
@@ -28,6 +30,14 @@ export async function publicationFiles(
     const parts = path.relative(config.repoRoot, file).split(path.sep);
     return (
       isBaselineCachePath(file, config.repoRoot) ||
+      isInside(config.generatedDir, file) ||
+      isInside(
+        path.join(
+          projectRealPath(config.mockupsDir),
+          path.basename(config.generatedDir),
+        ),
+        resolvedOrLogicalPath(file),
+      ) ||
       excluded.some((directory) => isInside(directory, file)) ||
       parts.includes(".git") ||
       (!publicRoot &&
@@ -118,14 +128,26 @@ export async function readPublicationFile(
 function isComparisonPath(file: string, config: ResolvedConfig): boolean {
   if (
     isInside(config.review.outDir, file) ||
-    isInside(projectRealPath(config.review.outDir), file)
+    isInside(projectRealPath(config.review.outDir), resolvedOrLogicalPath(file))
   )
     return true;
   const parts = path.relative(config.mockupsDir, file).split(path.sep);
   return (
     parts.includes(".comparisons") ||
-    (parts.includes("__mokly") && parts.includes("diffs"))
+    (parts.includes(`${VIEWER_DIRECTORY}`) && parts.includes("diffs"))
   );
+}
+
+function resolvedOrLogicalPath(file: string): string {
+  try {
+    return projectRealPath(file);
+  } catch (error) {
+    if (
+      ["ENOENT", "ELOOP"].includes((error as NodeJS.ErrnoException).code ?? "")
+    )
+      return file;
+    throw error;
+  }
 }
 
 /** Inspect artifact ownership only after the path is physically confined. */

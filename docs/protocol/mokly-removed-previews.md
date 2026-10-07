@@ -20,7 +20,8 @@ here and depicted by the design catalogue's
 
 Opening a removed screen, page, or document shows the version from the pinned
 Changes baseline: the same branch-point commit that produced its Changes row,
-in committed or [derived](./mokly-derived-baselines.md) mode. The heading keeps
+whether the commit has complete generated blobs or needs a
+[rebuilt baseline](./mokly-derived-baselines.md). The heading keeps
 its Removed badge, breadcrumbs keep the textual baseline ancestry, and Details
 keeps its historical metadata. A quiet label above the stage reads “Showing
 previous version.” No Current selector, comparison band, refresh control, Props
@@ -94,12 +95,12 @@ cancellation, invalidation, and shutdown follow the
 
 Pages and documents have no comparison records, so a removed page or document
 adds a page selection to the same generation lifecycle. The stable request is
-`/__mokly/diffs/review.json?page=<path>`, naming the removed page's or
+`/mokly-viewer/diffs/review.json?page=<path>`, naming the removed page's or
 document's path, optionally with `refresh=1`. `page` is exclusive with `path`;
 combining them, repeating it, or naming a path that is not a selected removed
 page or document fails with the existing malformed-request or
 missing-selection responses. The response redirects to
-`/__mokly/diffs/__generations/selected-<uuid>/preview.json`, an immutable
+`/mokly-viewer/diffs/generations/selected-<uuid>/preview.json`, an immutable
 generation served with `no-store` and `nosniff`, GET/HEAD parity, and the
 existing file-map confinement:
 
@@ -133,14 +134,14 @@ deadline, 60-second idle retention, 64 MiB artifact and 128 MiB capacity bounds,
 epoch invalidation, and shutdown draining.
 
 Changes-enabled export, publish packaging, and repository preview capture every
-removed page and document preview from the single pinned baseline before
+removed page and document preview from the single pinned historical-root baseline descriptor before
 installation and write it beside the comparison:
 
 ```text
-__mokly/diffs/__generations/<generation>/review.json
-__mokly/diffs/__generations/<generation>/previews/<path>/index.json
-__mokly/diffs/__generations/<generation>/snapshots/before/<path>/index.html
-__mokly/diffs/__generations/<generation>/snapshots/before/<path>/index.dark.html
+mokly-viewer/diffs/generations/<generation>/review.json
+mokly-viewer/diffs/generations/<generation>/previews/<path>/index.json
+mokly-viewer/diffs/generations/<generation>/snapshots/before/mokly-generated/<path>/index.html
+mokly-viewer/diffs/generations/<generation>/snapshots/before/mokly-generated/<path>/index.dark.html
 ```
 
 The dark document exists only for a document with a historical dark scheme.
@@ -157,7 +158,7 @@ development server it captured remains unchanged.
 
 ## Public Descriptor
 
-Catalogue v4 carries the optional preview descriptor on each removed entry:
+Catalogue v5 carries the optional preview descriptor on each removed entry:
 
 ```ts
 interface RemovedEntry {
@@ -187,16 +188,16 @@ Removed entries have no current files and no route field; their URL is
 `/view/<path>/`, and historical HTML is never disguised as current output. The
 descriptor contains no baseline metadata, source paths, or commit identifiers
 beyond those already public in review JSON. Readers validate each published
-`snapshotId` as a unique lowercase 64-hex identity. They tolerate its absence
-and may derive it from an immutable `comparisonUrl` generation; an explicitly
-published baseline-backed identity remains valid before a generation exists or
-while `comparisonUrl` is null.
+`snapshotId` as a unique lowercase 64-hex identity. Every removed record requires
+`snapshotId` when `comparisonUrl` is non-null; readers never derive a missing
+identity. With a null comparison URL, the field may be absent. A published
+baseline-backed identity remains valid before a generation exists.
 
 Preview validation is separate: readers validate `preview.kind`, tolerate
 `preview` being absent, and reject a preview on current entries or when
 `comparisonUrl` is null; the derived preview metadata path stays confined to
-the advertised generation beneath `__mokly/diffs/__generations/**` by
-construction. The shipped [v4 fixture](./fixtures/catalogue-v4.json) exercises
+the advertised generation beneath `mokly-viewer/diffs/generations/**` by
+construction. The shipped [v5 fixture](./fixtures/catalogue-v5.json) exercises
 these descriptors.
 
 The embedded viewer first resolves the selected snapshot and historical entry,
@@ -206,14 +207,14 @@ documents, resolved against the source origin root for object and URL sources.
 Validated
 metadata may then name a historical document only on that source origin beneath
 the advertised generation's `snapshots/before/` directory. It never discovers
-`/__mokly/diffs/review.json`, runs Git, or fetches a removed entry's path as
+`/mokly-viewer/diffs/review.json`, runs Git, or fetches a removed entry's path as
 current output. A catalogue without the field, or with `comparisonUrl: null`,
 shows the unavailable state without a request. Neither frame adapter mounts a
 preview frame. Previews are viewer-owned documents, so no adapter handshake or
 inspection, marker, or navigation message exists for them.
 
 Serve and static artifacts include the preview controller and comparison
-validator once in `__mokly/client/react-shell.js`. Application-owned
+validator once in `mokly-viewer/client/react-shell.js`. Application-owned
 `@mokly/viewer` roots use the same React components and request lifecycle.
 
 ## Frames And Lifecycle
@@ -224,5 +225,4 @@ late-response rules for a historical document follow the separate
 
 ## Acceptance
 
-The required regression and presentation coverage follows the separate
-[removed preview acceptance contract](./mokly-removed-preview-acceptance.md).
+See [removed preview acceptance](./mokly-removed-preview-acceptance.md).

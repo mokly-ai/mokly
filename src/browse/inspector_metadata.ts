@@ -1,4 +1,5 @@
 import type { ComponentViewRecord } from "@mokly/viewer";
+import { VIEWER_DIRECTORY } from "@mokly/viewer/data";
 import type { HtmlSourceLocation } from "@mokly/viewer/data";
 import {
   readMetadata,
@@ -58,5 +59,5 @@ export function inspectorMarkup(
     (character) =>
       `\\u${character.charCodeAt(0).toString(16).padStart(4, "0")}`,
   );
-  return `<template data-mokly-inspector>${escaped}</template><script src="/__mokly/client/inspector.js" defer></script>`;
+  return `<template data-mokly-inspector>${escaped}</template><script src="/${VIEWER_DIRECTORY}/client/inspector.js" defer></script>`;
 }

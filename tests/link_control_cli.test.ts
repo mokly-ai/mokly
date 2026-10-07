@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -22,6 +23,7 @@ const warning =
 test("build and check report warnings and strict fails before writing", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
+  execFileSync("git", ["init", "-q", fixture.root]);
   const sourcePath = await registerWarningPage(fixture);
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
@@ -36,6 +38,7 @@ test("build and check report warnings and strict fails before writing", async (t
   assert.equal(built.stderr, warning);
   const lastGood = await treeDigest(fixture.mockupsDir);
 
+  execFileSync("git", ["-C", fixture.root, "add", "-f", fixture.generatedDir]);
   const checked = await invoke(fixture, ["check"]);
   assert.equal(checked.code, 0);
   assert.equal(

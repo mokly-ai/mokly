@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 
 import type { BuildDiagnostic } from "../dist/build/build_warnings.js";
 import type { Compilation } from "../dist/build/compile.js";
@@ -9,6 +9,8 @@ import {
   PlainServeReporter,
   reportCatalogueReady,
 } from "../dist/server/reporter.js";
+
+import { currentManifest } from "./helpers/current_manifest.js";
 
 test("Serve reports one generation's warnings immediately before catalogue ready", () => {
   const reporter = new WarningReporter();
@@ -20,13 +22,13 @@ test("Serve reports one generation's warnings immediately before catalogue ready
         message: "MockLink child control is inside <button>",
       },
     ],
-    manifest: {
+    manifest: currentManifest({
       entries: [],
       folders: [],
       generatedBy: "mokly",
-      schemaVersion: 8,
+      schemaVersion: 9,
       sourceFiles: [],
-    },
+    }),
     deliveredStyleSources: [],
     outputs: new Map(),
   };
@@ -79,7 +81,7 @@ class WarningReporter extends PlainServeReporter {
       this.events.push(`warning:${diagnostic.route}`);
   }
 
-  override catalogueReady(manifest: ManifestV8): void {
+  override catalogueReady(manifest: ManifestV9): void {
     const screens = manifest.entries.filter(
       (entry) => entry.kind === "screen",
     ).length;

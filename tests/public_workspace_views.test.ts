@@ -3,12 +3,13 @@ import test from "node:test";
 
 import { projectCatalogue } from "../dist/catalogue/projection.js";
 import { removedManifestEntries } from "../dist/registry/changes.js";
-import type { ManifestV8 } from "../packages/viewer/dist/registry/types.js";
-import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
+import type { ManifestV9 } from "../packages/viewer/dist/registry/types.js";
+import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { workspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
 
+import { currentManifest } from "./helpers/current_manifest.js";
 import {
   component,
   componentBaseline,
@@ -76,14 +77,14 @@ test("public workspace derives a screen's ready per-view states", () => {
     title: "Welcome",
     useCasePaths: [],
   };
-  const manifest: ManifestV8 = {
+  const manifest: ManifestV9 = currentManifest({
     entries: [screen],
-    generatedBy: "mokly",
-    schemaVersion: 8 as const,
     folders: [],
+    generatedBy: "mokly",
+    schemaVersion: 9,
     sourceFiles: [screen.sourcePath],
-  };
-  const result: ReviewResultV5 = {
+  });
+  const result: ReviewResultV6 = {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
     baseRef: "main",
@@ -91,7 +92,7 @@ test("public workspace derives a screen's ready per-view states", () => {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     screens: [
       {
         after: { path: screen.path, title: screen.title },

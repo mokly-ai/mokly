@@ -25,17 +25,13 @@ export async function decideReferencedResource(
   route: string,
   beforeReader: OptionalResourceReader,
   afterReader: OptionalResourceReader,
-  changeEvidence: boolean,
-  compareBytes: boolean,
 ): Promise<ResourceDecision> {
   const after = await afterReader.readIfExists(route);
   if (after === undefined) {
-    if (!changeEvidence && !compareBytes) throw missingResource(route);
     const before = await beforeReader.readIfExists(route);
     if (before === undefined) throw missingResource(route);
     return { before, byteChanged: true, kind: "verified-deletion" };
   }
-  if (!compareBytes) return { after, byteChanged: false, kind: "present" };
   const before = await beforeReader.readIfExists(route);
   return {
     after,

@@ -3,6 +3,7 @@ import type { BrowseRecoveryState } from "../../packages/viewer/dist/runtime.js"
 /** Shared current-shape Browse recovery snapshot for unit tests. */
 export function browseState(): BrowseRecoveryState {
   return {
+    changesStatus: "ready",
     changedOnly: true,
     disclosures: { "folder:specs:fixture": false },
     colorScheme: "dark",

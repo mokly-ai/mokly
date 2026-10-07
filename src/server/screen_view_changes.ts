@@ -1,9 +1,9 @@
 import path from "node:path";
 
-import { generatedViews } from "@mokly/viewer/data";
+import { GENERATED_DIRECTORY, generatedViews } from "@mokly/viewer/data";
 import type {
   HistoricalManifest,
-  ManifestV8,
+  ManifestV9,
   ViewReview,
 } from "@mokly/viewer/data";
 
@@ -18,7 +18,7 @@ export interface ScreenViewChanges {
 
 /** Retain the completed material pass's per-view decisions without generating comparisons. */
 export function screenViewChanges(
-  current: ManifestV8,
+  current: ManifestV9,
   baseline: HistoricalManifest,
   config: ResolvedConfig,
   materialPaths: readonly string[],
@@ -70,7 +70,9 @@ export function screenViewChanges(
               ? ("removed" as const)
               : !before
                 ? ("added" as const)
-                : changed.has(prefix ? `${prefix}/${after.path}` : after.path)
+                : changed.has(
+                      `${prefix ? `${prefix}/` : ""}${GENERATED_DIRECTORY}/${after.path}`,
+                    )
                   ? ("changed" as const)
                   : ("unchanged" as const),
           },

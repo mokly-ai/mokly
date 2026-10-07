@@ -118,10 +118,10 @@ test("historical markup becomes one faithful viewer-owned document", async ({
   );
   expect(result.credentials).toBe("omit");
   expect(await inspect(page, result.srcdoc)).toEqual({
-    base: "https://artifact.test/__mokly/diffs/__generations/presentation/snapshots/before/assets/",
+    base: "https://artifact.test/mokly-viewer/diffs/generations/presentation/snapshots/before/assets/",
     baseCount: 1,
     baseUri:
-      "https://artifact.test/__mokly/diffs/__generations/presentation/snapshots/before/assets/",
+      "https://artifact.test/mokly-viewer/diffs/generations/presentation/snapshots/before/assets/",
     bodyText: "Kept body",
     compatMode: "CSS1Compat",
     doctype: { name: "html", publicId: "", systemId: "" },

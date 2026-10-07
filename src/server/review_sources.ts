@@ -11,7 +11,7 @@ import type {
   SelectedReviewSource,
 } from "../review/selection_types.js";
 
-import type { ComponentChangeSnapshot } from "./component_changes.js";
+import type { ComponentChangeSnapshot } from "./component_change_types.js";
 import type { PublicComparison } from "./public_review.js";
 import type { ChangesStatus } from "./update_messages.js";
 
@@ -19,7 +19,7 @@ export function selectedReviewSource(
   manifest: CatalogueMetadata,
   changes: ComponentChangeSnapshot | undefined,
 ): SelectedReviewSource | undefined {
-  if (manifest.schemaVersion !== 8 || !changes?.comparison || !changes.result)
+  if (manifest.schemaVersion !== 9 || !changes?.comparison || !changes.result)
     return;
   return {
     ...changes.comparison,
@@ -41,7 +41,7 @@ export function removedPagePreviewSource(
     changes.pairing?.moves,
   );
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     movedEntries:
       changes.pairing?.moves.map(({ path, previousPath }) => ({
         path,

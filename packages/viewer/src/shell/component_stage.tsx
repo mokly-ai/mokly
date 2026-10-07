@@ -1,10 +1,14 @@
 /** Component canvases keep the real mobile/desktop renderer contexts. */
+import { currentDocumentPath } from "../catalogue/delivery_paths.js";
 import type { ManifestComponentVariant } from "../components/manifest_types.js";
 import type { GeneratedComponentView } from "../components/views.js";
-import { encodeUrlPath } from "../data/paths.js";
 import { viewRoute } from "../navigation/routes.js";
 
-import { generatedFrameSource, generatedView } from "./stage_sources.js";
+import {
+  framePath,
+  generatedFrameSource,
+  generatedView,
+} from "./stage_sources.js";
 
 export function ComponentStage({
   variant,
@@ -37,11 +41,15 @@ export function ComponentStage({
         );
         const light = previewLight
           ? generatedFrameSource(previewLight)
-          : `/static/${encodeUrlPath(viewRoute(variant.path, viewport, "light"))}`;
+          : framePath(
+              currentDocumentPath(viewRoute(variant.path, viewport, "light")),
+            );
         const dark = previewDark
-          ? generatedFrameSource(previewDark)
+          ? generatedFrameSource(previewDark, undefined, undefined)
           : variant.colorSchemes.includes("dark")
-            ? `/static/${encodeUrlPath(viewRoute(variant.path, viewport, "dark"))}`
+            ? framePath(
+                currentDocumentPath(viewRoute(variant.path, viewport, "dark")),
+              )
             : undefined;
         return (
           <section

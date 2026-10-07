@@ -169,13 +169,16 @@ async function problem(
 }
 
 /**
- * Check every local resource reference in the generated HTML and CSS files
- * under `root`, as the development hydration coverage contract defines.
+ * Check local references in HTML and CSS beneath the catalogue root. Explicit
+ * inputs cover the generated tree and authored closure; synthetic sites scan all.
  */
 export async function auditGeneratedResourceReferences(
   root: string,
+  inputFiles?: readonly string[],
 ): Promise<ResourceReferenceAudit> {
-  const files = (await fs.readdir(root, { recursive: true }))
+  const files = [
+    ...new Set(inputFiles ?? (await fs.readdir(root, { recursive: true }))),
+  ]
     .filter((file) => file.endsWith(".html") || file.endsWith(".css"))
     .sort();
   const known = new Map<string, Promise<boolean>>();

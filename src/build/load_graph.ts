@@ -2,7 +2,6 @@ import path from "node:path";
 
 import { build } from "esbuild";
 
-import type { CompatibilityTransformer } from "../compatibility/types.js";
 import type { ComponentGraphRenderer } from "../components/render.js";
 import {
   discoverEntries,
@@ -30,20 +29,17 @@ import {
 } from "./consumer_resolution.js";
 import type { GeneratedFile } from "./generated_file.js";
 import { createMetafilePathMapper } from "./metafile_paths.js";
-import { assertSafeGeneratedTree } from "./reserved_tree.js";
 import { graphSourceFiles, normalizeSourceFiles } from "./source_inventory.js";
 import { bundleStyles } from "./styles/bundle.js";
 import { GraphStyles } from "./styles/collect.js";
 import { collectPostcssDependencies } from "./styles/dependency_inventory.js";
 import { createStyleProcessor } from "./styles/processor_setup.js";
 import { graphStyleRoots } from "./styles/root_graph.js";
-import { inventoryTransformerStyles } from "./styles/transformer_inventory.js";
 
 /** Consumer modules loaded in one React-safe esbuild graph. */
 export interface LoadedGraph {
   /** Fresh filesystem inventory; a bundle replay uses its already accepted config. */
   discovery?: EntryDiscovery;
-  compatibilityTransformer?: CompatibilityTransformer;
   definitions: unknown[];
   documents?: readonly ResolvedDocument[];
   entrySources: readonly string[];
@@ -76,7 +72,6 @@ async function loadGraph(
   evaluate: boolean,
   postcssLoader: PostcssConfigLoader,
 ): Promise<LoadedGraph> {
-  assertSafeGeneratedTree(config);
   const discovery = timeSync("graph.discover", () => discoverEntries(config));
   const entrySources = discovery.entryModules;
   config = { ...config, ...discovery };
@@ -153,17 +148,15 @@ async function loadGraph(
       config.repoRoot,
       config.mockupsDir,
     );
-    const deliveryRoots = roots.filter((root) => root.emit);
-    const transformerStyles = roots.find((root) => !root.emit)?.styles ?? [];
     const graphInputs = new Set(
       [...graphFiles, ...documentSources].map((file) =>
         path.resolve(config.repoRoot, file),
       ),
     );
-    const bundled = deliveryRoots.some((root) => root.styles.length)
+    const bundled = roots.some((root) => root.styles.length)
       ? await bundleStyles(
           config,
-          deliveryRoots,
+          roots,
           graphInputs,
           styles.preprocessor,
           styles.classMaps,
@@ -173,13 +166,6 @@ async function loadGraph(
           routes: new Map<string, string>(),
           sourceFiles: new Set<string>(),
         };
-    const transformerFiles = await inventoryTransformerStyles(
-      config,
-      transformerStyles,
-      graphInputs,
-      styles.preprocessor,
-      bundled.sourceFiles,
-    );
     const dependencies = collectPostcssDependencies(
       config,
       styles.preprocessor.reports,
@@ -190,16 +176,12 @@ async function loadGraph(
         ...graphFiles,
         ...documentSources,
         ...bundled.sourceFiles,
-        ...transformerFiles,
         ...styles.preprocessor.sourceFiles,
         ...dependencies.sourceFiles,
         ...(config.configSourceFiles ?? [config.configPath]),
         ...(config.protectedFiles ?? config.resolvedFiles ?? entrySources),
         ...(config.folderRecords ?? []).map((folder) => folder.sourcePath),
         ...(config.renderer ? [config.renderer] : []),
-        ...(config.compatibility.transformer
-          ? [config.compatibility.transformer]
-          : []),
       ],
       config.repoRoot,
       config.mockupsDir,
@@ -244,22 +226,7 @@ async function loadGraph(
         "renderer module must default-export a function",
       );
     }
-    if (
-      config.compatibility.transformer &&
-      typeof imported.compatibilityTransformer !== "function"
-    ) {
-      throw new MoklyError(
-        "build-invalid",
-        "compatibility transformer module must default-export a function",
-      );
-    }
     const graph: LoadedGraph = {
-      ...(typeof imported.compatibilityTransformer === "function"
-        ? {
-            compatibilityTransformer:
-              imported.compatibilityTransformer as CompatibilityTransformer,
-          }
-        : {}),
       definitions: imported.definitions,
       discovery,
       entrySources,

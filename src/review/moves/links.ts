@@ -6,6 +6,7 @@ import {
   documentRoute,
   entryRoute,
   generatedViews,
+  generatedResourcePath,
   logicalMarker,
   parseLogicalMarker,
   parseLogicalTarget,
@@ -77,11 +78,15 @@ function routeIndex(
 ): ReadonlyMap<string, string> {
   const index = new Map<string, string>();
   for (const entry of entries) {
-    index.set(entryRoute(entry.path), entry.path);
-    for (const view of generatedViews(entry)) index.set(view.path, entry.path);
+    index.set(generatedResourcePath(entryRoute(entry.path)), entry.path);
+    for (const view of generatedViews(entry))
+      index.set(generatedResourcePath(view.path), entry.path);
     if (entry.kind === "document")
       for (const scheme of entry.colorSchemes)
-        index.set(documentRoute(entry.path, scheme), entry.path);
+        index.set(
+          generatedResourcePath(documentRoute(entry.path, scheme)),
+          entry.path,
+        );
   }
   return index;
 }

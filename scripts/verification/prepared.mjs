@@ -5,7 +5,7 @@ import { EXAMPLE_SNAPSHOT_PATH } from "./example-snapshot-key.mjs";
 
 const outputs = {
   package: ["dist/cli/bin.js", "packages/viewer/dist/browser/inspector.js"],
-  example: ["examples/basic/generated/mokly-manifest.json"],
+  example: ["examples/basic/mokly-generated/mokly-manifest.json"],
   snapshot: [EXAMPLE_SNAPSHOT_PATH],
 };
 

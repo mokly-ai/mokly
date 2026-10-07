@@ -66,8 +66,8 @@ may still use that raw form in supported navigation attributes.
 A complete document that contains an activatable logical `href` must not
 contain an HTML `<base href>` element. The base URL would change the browser's
 effective portable destination without changing the link attribute bytes that
-Browse authenticates. The builder enforces this restriction both before and
-after compatibility transformation. A metadata-only `data-nav-href` does not
+Browse authenticates. The builder enforces this restriction on rendered
+documents during logical-link rewriting. A metadata-only `data-nav-href` does not
 activate the restriction, and `<base target>` remains supported under the
 target rules below.
 
@@ -105,8 +105,10 @@ The builder must:
   conflicting logical destinations carried by two navigation attributes on
   one element.
 
-A compatibility transformer must preserve every logical-reference record and
-ownership header under [transformer validation](./mokly-link-transform-validation.md).
+The [final link validation contract](./mokly-link-validation.md) defines
+reference records, final anchor checks and Markdown safety. No consumer
+transformation or source-path ownership header participates. Authored
+`data-mokly-target` is stripped by Browse; markers never grant resource access.
 
 The marker is inert metadata, not a second resource URL. HTML escaping must be
 deterministic, and link/resource validation continues to inspect the portable
@@ -118,8 +120,9 @@ prevents Mokly from taking over product or asset navigation accidentally.
 
 ## Portable And Comparison Output
 
-Generated documents in both output modes keep their relative artifact `href`
-values. They must remain navigable when opened directly or copied without the
+Generated documents under `mokly-generated/` keep relative artifact `href` values
+to other generated documents and authored closure files. They must remain
+navigable when opened directly or copied with the matching closure without the
 Browse shell. Comparison snapshot trees copy the same portable documents and do
 not promote links into Browse routes; the pane guard cancels activation and
 [reveals same-document anchors](./mokly-comparison-scrolling.md#anchors).
@@ -127,12 +130,13 @@ not promote links into Browse routes; the pane guard cancels activation and
 ## Browse Presentation
 
 When an eligible marked native link from a manifest-owned generated document is
-presented beneath `/static/` in served Browse or in the deployed Browse preview,
+presented beneath `/static/mokly-generated/` in served Browse or in the deployed Browse preview,
 Mokly authenticates its marker for trusted parent enhancement while retaining
 the portable `href` and live `target`. The trusted-document set is exactly every
 current manifest screen fragment, including dark fragments, plus every
-generated page and document in that manifest. Its generated header must name
-the same `sourcePath` as that manifest entry. The parent resolves the marker's path through its catalogue read model to the
+generated page and document in that manifest. The accepted in-memory
+generation must contain it. The plain marker does not authenticate its source.
+The parent resolves the marker's path through its catalogue read model to the
 canonical `/view/<path>/` or `/view/<path>/?fragment=<encoded-fragment>`
 destination; it never trusts the portable URL as entry identity. The adapter removes any
 consumer-authored `data-mokly-target`, resolves the eligible link's effective
@@ -147,13 +151,13 @@ The portable file on disk must not be mutated. The development server and
 preview builder share one deterministic Browse-document adapter for marker
 authentication and derived target metadata. Every HTML response or preview
 copy beneath `/static/` passes through it. Only a route in the trusted set above
-whose bytes retain that matching ownership header may promote a marker. The
+whose bytes match the accepted generated document may promote a marker. The
 adapter recomputes the source view's expected portable `href` and requires the
 marked link to match it exactly. On any other HTML route, including
-consumer-authored unowned files, it removes `data-mokly-link` and
+authored closure files, it removes `data-mokly-link` and
 `data-mokly-target` from the adapted copy and never promotes them; removal
 covers every raw occurrence even when HTML parsing hides duplicates. A missing
-or mismatched ownership header, duplicate reserved attribute, malformed or
+or mismatched compiled document, duplicate reserved attribute, malformed or
 manifest-invalid marker, or mismatched portable `href` on a trusted route
 yields HTTP 500 without serving that document and fails the preview build. A
 trusted document that carries an activatable marker and `<base href>` fails
@@ -281,22 +285,8 @@ navigation from URLs, `data-nav-href`, or visible labels.
 
 ### Frame Adapter Boundary
 
-The implemented `sameOriginAdapter` preserves this existing behavior;
-direct `contentDocument` access lives behind the local transport interface.
-The viewer package exposes the same boundary. Logical fragment scope is resolved
-once in the frame URL boundary shared by public markup and adapter mounts:
-standalone views receive the fragment; flows apply it only to step zero,
-including across scheme and viewport changes. Logical target
-parsing, marker/ownership checks, modifier/target classification, canonical
-routes and safe degradation do not change. No adapter gains nested-frame access.
-The optional `postMessageAdapter` requires a separate, nonopaque frame origin
-and the [inspector handshake](./mokly-frame-adapter.md#cross-origin-mount-and-handshake).
-It carries bounded logical paths/fragments and activation/target states, never
-consumer hrefs, labels or arbitrary navigation URLs. The host revalidates the
-destination against its catalogue and owns the navigation action; the inspector
-never reads or changes `window.top` or `parent.location`. Cross-origin hosts
-grant `allow-same-origin allow-scripts` only under that explicit contract;
-default local Browse and all comparison snapshot restrictions remain unchanged.
+The [frame link contract](./mokly-frame-link-navigation.md) defines shared
+fragment scope, local and cross-origin transports, and host revalidation.
 
 ## Active Catalogue Visibility
 
@@ -347,11 +337,11 @@ Coverage must prove:
 
 - helper-level path/fragment separation and grammar, portable output, eligible
   native-link markers, metadata-only `data-nav-href`, rejection of logical
-  `href` on resource/non-link elements, rejection of `<base href>` before and
-  after compatibility transformation, dual navigation attributes, hashes,
+  `href` on resource/non-link elements, rejection of `<base href>` in
+  rendered documents, dual navigation attributes, hashes,
   use-case paths, dark-to-light fallback, conflicts, and reserved-marker errors;
 - served and preview adaptation without mutating generated fragments, including
-  LF/CRLF ownership-gated promotion, unowned reserved-metadata removal, secure
+  LF/CRLF current-notice stripping, unowned reserved-metadata removal, secure
   target parsing, portable live attributes, and request-visible fragment
   transport;
 - served cross-view fragment validation and JavaScript-disabled anchor
@@ -376,7 +366,7 @@ Coverage must prove:
 - [Paths, roots, and identity](./mokly-paths.md)
 - [Folders](./mokly-folders.md)
 - [Shell destination queries](./mokly-shell-destinations.md)
-- [Logical link transformer validation](./mokly-link-transform-validation.md)
+- [Final logical link validation](./mokly-link-validation.md)
 - [Build and Browse runtime](./mokly-runtime.md)
 - [Shell design contract](./mokly-shell-design.md)
 - [Build pipeline](../architecture/build-pipeline.md)

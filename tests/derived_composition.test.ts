@@ -22,12 +22,25 @@ test("composition selects committed reads without building and pins repository e
         calls.push(argv[0]!);
         if (argv[0] === "rev-parse") return fixture.root;
         if (argv[0] === "merge-base") return "a".repeat(40);
+        if (argv[0] === "ls-tree")
+          return `100644 blob ${"a".repeat(40)}\tmockups/mokly-generated/mokly-manifest.json\0`;
+        if (argv[0] === "show")
+          return JSON.stringify({
+            entries: [],
+            folders: [],
+            schemaVersion: 9,
+            assetClosure: [],
+            blobHashAlgorithm: "sha1",
+            generatedFiles: [],
+            generatedBy: "mokly",
+            sourceFiles: [],
+          });
         return "notes.md\n.mokly-cache/private\n";
       },
     },
     builder: {
       async build() {
-        throw new Error("committed mode must not build");
+        throw new Error("complete committed output must not rebuild");
       },
     },
   });
@@ -44,9 +57,7 @@ test("composition selects committed reads without building and pins repository e
 });
 
 test("derived composition forwards cancellation and progress to the injected builder", async (t) => {
-  const fixture = await createFixture(undefined, {
-    extraConfig: 'generatedOutput: "derived",',
-  });
+  const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const requests: BaselineBuildRequest[] = [];
@@ -58,7 +69,11 @@ test("derived composition forwards cancellation and progress to the injected bui
     filesystem: new MemoryBaselineFileSystem(),
     runner: {
       async run(argv) {
-        return argv[0] === "rev-parse" ? fixture.root : "b".repeat(40);
+        return argv[0] === "rev-parse"
+          ? fixture.root
+          : argv[0] === "ls-tree"
+            ? ""
+            : "b".repeat(40);
       },
     },
     builder: {
@@ -80,10 +95,12 @@ test("derived composition forwards cancellation and progress to the injected bui
             "output",
           ),
           marker: {
-            schemaVersion: 1,
+            schemaVersion: 2,
             commit: request.commit,
             commands: request.commands,
-            manifestVersion: 5,
+            manifestVersion: 9,
+            historicalCatalogueRoot: "mockups",
+            layout: "generated-v9",
             finishedAt: new Date(0).toISOString(),
           },
         };
@@ -99,9 +116,7 @@ test("derived composition forwards cancellation and progress to the injected bui
 });
 
 test("unavailable derived history and cancellation keep typed outcomes before building", async (t) => {
-  const fixture = await createFixture(undefined, {
-    extraConfig: 'generatedOutput: "derived",',
-  });
+  const fixture = await createFixture(undefined, {});
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const runner = {

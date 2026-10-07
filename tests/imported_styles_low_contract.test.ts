@@ -13,7 +13,7 @@ import {
   styleFixture,
 } from "./helpers/imported_styles_fixture.js";
 
-test("derived Check gives one directory ignore rule for tracked reserved routes", async (context) => {
+test("partly tracked Check gives one directory ignore rule for tracked reserved routes", async (context) => {
   const fixture = await styleFixture(".entry{color:red}");
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -28,12 +28,15 @@ test("derived Check gives one directory ignore rule for tracked reserved routes"
     },
   });
   await assert.rejects(
-    () => tracked.check(compiled, config),
+    () => tracked.state(compiled, config),
     (error: Error) => {
-      assert.equal(
+      assert.match(error.message, /generated output is partly tracked by Git/);
+      assert.ok(error.message.includes(route));
+      assert.match(
         error.message,
-        `[mokly/build-invalid] derived output must not be tracked by Git:\n  - ${route}\nRemove these paths from the index with git rm --cached and add these rules to .gitignore:\n/mockups/mokly-generated/`,
+        /git rm -r --cached -- mockups\/mokly-generated\//,
       );
+      assert.doesNotMatch(error.message, /\/\.mokly-cache\//u);
       return true;
     },
   );
@@ -105,7 +108,10 @@ test("scoped npm renderer imports a delivered stylesheet", async (context) => {
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
   const route =
     "mokly-generated/styles/node_modules/@acme/renderer/index.tsx.css";
-  assert.match(compiled.outputs.get(route) as string, /\.package/);
+  assert.match(
+    compiled.outputs.get(route.slice("mokly-generated/".length)) as string,
+    /\.package/,
+  );
   assert.ok(
     [...compiled.outputs.values()].some(
       (value) =>

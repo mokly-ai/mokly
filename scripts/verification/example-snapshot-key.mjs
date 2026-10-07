@@ -15,6 +15,7 @@ export const EXAMPLE_SNAPSHOT_SCHEMA_VERSION = 1;
 /** Authored inputs of the example compile, listed through Git. */
 export const EXAMPLE_SOURCE_PATHS = Object.freeze([
   "examples/basic",
+  "examples/imported-assets",
   "docs/protocol",
   "README.md",
 ]);

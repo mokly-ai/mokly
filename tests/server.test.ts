@@ -16,13 +16,19 @@ test("server validates before bind and supports safe no-watch routes on port zer
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
-  await assert.rejects(
-    () => startCatalogueServer(config, { base: "origin/main", port: 0 }),
-    /could not read.*mokly-manifest/,
-  );
-  await writeCompilation(await compileCatalogue(config), config);
+  await assert.rejects(async () => {
+    const invalid = await startCatalogueServer(config, {
+      base: "origin/main",
+      port: 0,
+      manifest: {} as never,
+    });
+    fixture.beforeRemove(() => invalid.close());
+  }, /expected Mokly manifest schema version 9/);
+  const compilation = await compileCatalogue(config);
+  await writeCompilation(compilation, config);
   const server = await startCatalogueServer(config, {
     base: "origin/main",
+    generatedOutputs: compilation.outputs,
     port: 0,
   });
   fixture.beforeRemove(() => server.close());
@@ -33,7 +39,7 @@ test("server validates before bind and supports safe no-watch routes on port zer
   assert.match(homeHtml, /data-mokly-shell/);
   assert.match(homeHtml, /aria-label="Catalogue"/);
   assert.match(homeHtml, /Browse the mockup catalogue/);
-  const shellCss = await fetch(`${server.url}/__mokly/shell.css`);
+  const shellCss = await fetch(`${server.url}/mokly-viewer/shell.css`);
   assert.equal(shellCss.status, 200);
   assert.match(await shellCss.text(), /--mokly-accent/);
   const removedAlias = await fetch(`${server.url}/id/home`, {
@@ -43,14 +49,20 @@ test("server validates before bind and supports safe no-watch routes on port zer
   assert.match(await removedAlias.text(), /Item not found/);
   assert.equal((await fetch(`${server.url}/view/home/`)).status, 200);
   assert.equal(
-    (await fetch(`${server.url}/static/home/index.mobile.html`)).status,
+    (await fetch(`${server.url}/static/mokly-generated/home/index.mobile.html`))
+      .status,
     200,
+  );
+  assert.equal(
+    (await fetch(`${server.url}/static/mokly-generated/mokly-manifest.json`))
+      .status,
+    404,
   );
   assert.equal(
     (await fetch(`${server.url}/static/entries/fixture.mockup.tsx`)).status,
     404,
   );
-  const events = await fetch(`${server.url}/__mokly/events`);
+  const events = await fetch(`${server.url}/mokly-viewer/events`);
   const eventReader = events.body?.getReader();
   assert.ok(eventReader);
   assert.match(await readEvent(eventReader), /event: ready\ndata: 1/);
@@ -99,7 +111,11 @@ test("event-stream HEAD releases a keep-alive connection", async (context) => {
   const agent = new Agent({ keepAlive: true, maxSockets: 1 });
   context.after(() => agent.destroy());
 
-  const head = await nodeRequest(`${server.url}/__mokly/events`, "HEAD", agent);
+  const head = await nodeRequest(
+    `${server.url}/mokly-viewer/events`,
+    "HEAD",
+    agent,
+  );
   assert.equal(head.status, 200);
   assert.equal(head.body, "");
   const home = await nodeRequest(`${server.url}/`, "GET", agent);
@@ -112,7 +128,10 @@ test("malformed manifest identities fail before server readiness", async (contex
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
-  const manifestPath = path.join(fixture.mockupsDir, "mokly-manifest.json");
+  const manifestPath = path.join(
+    fixture.mockupsDir,
+    "mokly-generated/mokly-manifest.json",
+  );
   const manifest = JSON.parse(
     await fs.promises.readFile(manifestPath, "utf8"),
   ) as {
@@ -122,10 +141,14 @@ test("malformed manifest identities fail before server readiness", async (contex
   assert.ok(screen);
   screen.path = "../outside";
   await fs.promises.writeFile(manifestPath, `${JSON.stringify(manifest)}\n`);
-  await assert.rejects(
-    () => startCatalogueServer(config, { base: "origin/main", port: 0 }),
-    /invalid manifest path/,
-  );
+  await assert.rejects(async () => {
+    const invalid = await startCatalogueServer(config, {
+      base: "origin/main",
+      port: 0,
+      manifest: manifest as never,
+    });
+    fixture.beforeRemove(() => invalid.close());
+  }, /invalid manifest path/);
 });
 
 test("manifest relationships retain their required entry kinds", async (context) => {
@@ -133,7 +156,10 @@ test("manifest relationships retain their required entry kinds", async (context)
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   await writeCompilation(await compileCatalogue(config), config);
-  const manifestPath = path.join(fixture.mockupsDir, "mokly-manifest.json");
+  const manifestPath = path.join(
+    fixture.mockupsDir,
+    "mokly-generated/mokly-manifest.json",
+  );
   const manifest = JSON.parse(
     await fs.promises.readFile(manifestPath, "utf8"),
   ) as {
@@ -151,8 +177,12 @@ test("manifest relationships retain their required entry kinds", async (context)
     if (entry.kind === "screen") entry.useCasePaths = [];
   }
   await fs.promises.writeFile(manifestPath, `${JSON.stringify(manifest)}\n`);
-  await assert.rejects(
-    () => startCatalogueServer(config, { base: "origin/main", port: 0 }),
-    /step target is not a screen/,
-  );
+  await assert.rejects(async () => {
+    const invalid = await startCatalogueServer(config, {
+      base: "origin/main",
+      port: 0,
+      manifest: manifest as never,
+    });
+    fixture.beforeRemove(() => invalid.close());
+  }, /step target is not a screen/);
 });

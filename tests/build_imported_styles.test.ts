@@ -21,7 +21,7 @@ test("plain imported CSS emits and links its root stylesheet", async (t) => {
   assert.ok(compiled.manifest.sourceFiles.includes("entries/fixture.css"));
   assert.match(
     compiled.outputs.get("home/index.mobile.html") as string,
-    /href="\.\.\/mokly-generated\/styles\/entries\/fixture\.mockup\.tsx\.css"/,
+    /href="\.\.\/styles\/entries\/fixture\.mockup\.tsx\.css"/,
   );
   assert.deepEqual(
     (await loadConsumerGraph(await loadConfig(fixture.root), false))
@@ -71,9 +71,7 @@ test("renderer closure is excluded from entry CSS even via nested imports", asyn
     '@import "./token.css"; .mid{color:orange}',
   );
   const compiled = await compileFixture(fixture);
-  const renderer = compiled.outputs.get(
-    "mokly-generated/styles/renderer.tsx.css",
-  ) as string;
+  const renderer = compiled.outputs.get("styles/renderer.tsx.css") as string;
   const entry = compiled.outputs.get(entryStyle) as string;
   assert.match(renderer, /\.token/);
   assert.match(renderer, /\.theme/);

@@ -2,6 +2,7 @@ import {
   canonicalJson,
   documentRoute,
   generatedViews,
+  generatedResourcePath,
   isManifestComponentVariant,
   type ManifestEntry,
   type GeneratedComponentView,
@@ -42,11 +43,11 @@ export function moveDocuments(entry: ManifestEntry): readonly MoveDocument[] {
       entry.kind === "document" ? entry.colorSchemes : (["light"] as const)
     ).map((scheme) => ({
       key: scheme,
-      route: documentRoute(entry.path, scheme),
+      route: generatedResourcePath(documentRoute(entry.path, scheme)),
     }));
   return generatedViews(entry).map((view) => ({
     key: `${view.viewport}:${view.colorScheme}`,
-    route: view.path,
+    route: generatedResourcePath(view.path),
     ...(view.usage ? { usage: view.usage } : {}),
   }));
 }

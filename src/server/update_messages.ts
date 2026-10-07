@@ -1,7 +1,17 @@
-import { isEntryPath } from "@mokly/viewer/data";
-import type { ManifestV8 } from "@mokly/viewer/data";
+import {
+  isEntryPath,
+  isSafeRepositoryPath,
+  GENERATED_DIRECTORY,
+} from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 
-import type { ComponentChangeSnapshot } from "./component_changes.js";
+import {
+  parseBaselineCatalogue,
+  type BaselineCatalogue,
+} from "../baseline/catalogue.js";
+import type { BaselineSelection } from "../review/repository.js";
+
+import type { ComponentChangeSnapshot } from "./component_change_types.js";
 import type {
   RuntimeMessage,
   RuntimeStartupMessage,
@@ -9,8 +19,8 @@ import type {
 /** Typed watched-server updates crossing the parent/child IPC boundary. */
 
 /**
- * Live comparison state. `preparing` precedes `pending` only while a derived
- * baseline is actually rebuilt; a cache hit and committed mode skip it.
+ * Live comparison state. `preparing` precedes `pending` only while the pinned
+ * baseline is actually rebuilt; a cache hit and a blob reader skip it.
  */
 export type ChangesStatus = "preparing" | "pending" | "ready" | "unavailable";
 
@@ -19,6 +29,7 @@ export type CatalogueUpdateKind = "content" | "evidence";
 
 /** Mutable running-server state published before clients refresh. */
 export interface CatalogueUpdate {
+  assetClosure?: readonly string[];
   /** Defaults to content, requiring clients to refresh their rendered documents. */
   kind?: CatalogueUpdateKind;
   /** Omit to retain status unless the update replaces change evidence. */
@@ -33,8 +44,11 @@ export interface CatalogueUpdate {
 
 /** Parent-to-child update command with an explicit changed-id snapshot. */
 export interface ChildUpdateMessage {
+  assetClosure?: readonly string[];
   /** Omit to retain the reader; null revokes it while the parent prepares. */
   baselineCommit?: string | null;
+  baselineSelection?: BaselineSelection;
+  baselineDescriptor?: BaselineCatalogue;
   kind?: CatalogueUpdateKind;
   changesStatus?: ChangesStatus;
   changedEntries: readonly string[] | null;
@@ -45,7 +59,7 @@ export interface ChildUpdateMessage {
 
 export interface CatalogueCompleteMessage {
   type: "catalogue-complete";
-  manifest: ManifestV8;
+  manifest: ManifestV9;
   generation: string;
   version: number;
 }
@@ -93,7 +107,7 @@ export function parseCatalogueCompleteMessage(
     (candidate.version ?? 0) <= 0 ||
     !candidate.manifest ||
     typeof candidate.manifest !== "object" ||
-    candidate.manifest.schemaVersion !== 8
+    candidate.manifest.schemaVersion !== 9
   )
     return;
   return candidate as CatalogueCompleteMessage;
@@ -115,9 +129,15 @@ export function childUpdateMessage(
   changesStatus?: ChangesStatus,
   kind?: CatalogueUpdateKind,
   baselineCommit?: string | null,
+  baselineSelection?: BaselineSelection,
+  baselineDescriptor?: BaselineCatalogue,
+  assetClosure?: readonly string[],
 ): ChildUpdateMessage {
   return {
     ...(baselineCommit !== undefined ? { baselineCommit } : {}),
+    ...(baselineSelection ? { baselineSelection } : {}),
+    ...(baselineDescriptor ? { baselineDescriptor } : {}),
+    ...(assetClosure ? { assetClosure: [...assetClosure] } : {}),
     ...(kind ? { kind } : {}),
     ...(changesStatus ? { changesStatus } : {}),
     changedEntries: changedEntries ? [...changedEntries] : null,
@@ -140,6 +160,9 @@ export function parseChildUpdateMessage(
   }
   const candidate = value as {
     baselineCommit?: unknown;
+    baselineSelection?: unknown;
+    baselineDescriptor?: unknown;
+    assetClosure?: unknown;
     kind?: unknown;
     changesStatus?: unknown;
     changedEntries?: unknown;
@@ -151,6 +174,25 @@ export function parseChildUpdateMessage(
       candidate.baselineCommit !== null &&
       (typeof candidate.baselineCommit !== "string" ||
         !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(candidate.baselineCommit))) ||
+    (typeof candidate.baselineCommit === "string" &&
+      candidate.baselineSelection !== "blobs" &&
+      candidate.baselineSelection !== "rebuild") ||
+    (typeof candidate.baselineCommit === "string" &&
+      !parseBaselineCatalogue(
+        candidate.baselineDescriptor,
+        candidate.baselineCommit,
+      )) ||
+    (typeof candidate.baselineCommit !== "string" &&
+      (candidate.baselineSelection !== undefined ||
+        candidate.baselineDescriptor !== undefined)) ||
+    (candidate.assetClosure !== undefined &&
+      (!Array.isArray(candidate.assetClosure) ||
+        !candidate.assetClosure.every(
+          (route: unknown) =>
+            typeof route === "string" &&
+            isSafeRepositoryPath(route) &&
+            !route.startsWith(`${GENERATED_DIRECTORY}/`),
+        ))) ||
     !Number.isSafeInteger(candidate.version) ||
     (candidate.version as number) <= 0 ||
     !isChangedPaths(candidate.changedEntries) ||
@@ -166,6 +208,20 @@ export function parseChildUpdateMessage(
   return {
     ...(candidate.baselineCommit !== undefined
       ? { baselineCommit: candidate.baselineCommit }
+      : {}),
+    ...(candidate.baselineSelection
+      ? { baselineSelection: candidate.baselineSelection as BaselineSelection }
+      : {}),
+    ...(typeof candidate.baselineCommit === "string"
+      ? {
+          baselineDescriptor: parseBaselineCatalogue(
+            candidate.baselineDescriptor,
+            candidate.baselineCommit,
+          )!,
+        }
+      : {}),
+    ...(candidate.assetClosure !== undefined
+      ? { assetClosure: candidate.assetClosure as string[] }
       : {}),
     ...(candidate.kind ? { kind: candidate.kind } : {}),
     ...(candidate.changesStatus

@@ -45,7 +45,12 @@ export function resolveShellBootstrap(
   if (!catalogueReferenceMatches(state.catalogue, catalogue))
     throw new Error("The deployed catalogue does not match the page.");
   validateTarget(catalogue, state.view);
-  return { catalogue, context: state.context, view: state.view };
+  return {
+    schemaVersion: 2,
+    catalogue,
+    context: state.context,
+    view: state.view,
+  };
 }
 
 function isExternalShellBootstrap(
