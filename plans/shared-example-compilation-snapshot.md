@@ -18,10 +18,13 @@ and their documentation. It needs no product code, UI, or mockup work. The
 product CLI, `prepare:verification`, the package suite, and the browser suites
 stay unchanged.
 
-The two attribution tests (`tests/design_library_attribution.test.ts` and
-`tests/component_design_attribution.test.ts`) are restructured in a separate
-workspace. This plan only changes the fixture they share, and only in a way
-that the restructured files inherit automatically. See Milestone 4.
+Main's #139 restructured the attribution tests. Five test files now use the
+shared design library fixture: `tests/design_library_attribution.test.ts`,
+`tests/component_design_attribution.test.ts`,
+`tests/design_library_source_edits.test.ts`,
+`tests/design_library_committed_baseline.test.ts`, and
+`tests/fixture_lifecycle.test.ts`. This plan only changes the fixture they
+share: its before state comes from the snapshot. See Milestones 4 and 9.
 
 Contract owners:
 
@@ -31,9 +34,10 @@ Contract owners:
   250-line protocol limit.
 - [CI verification](../docs/protocol/ci-verification.md) owns the unit gate's
   preparation sequence.
-- [Local verification](../xtask/README.md) and the
-  [developer section of the README](../README.md#develop-mokly) own the
-  developer-facing commands.
+- [Developer test commands](../docs/protocol/developer-test-commands.md) owns
+  the developer-facing test commands. The [xtask README](../xtask/README.md)
+  and the [developer section of the README](../README.md#develop-mokly)
+  describe them.
 
 ## Rationale
 
@@ -44,9 +48,10 @@ compiling the same example again; the two attribution tests spent another
 
 - A compilation survives the round trip through JSON exactly.
 - A compile of a copy made by `copyExampleSources` equals a compile of the
-  checked-out example. Only ten root-dependent fields of the resolved config
+  checked-out example. Only root-dependent fields of the resolved config
   differ: `configPath`, `roots`, `mockupsDir`, `renderer`, `postcss`,
-  `repoRoot`, `review`, `resolvedFiles`, `protectedFiles`, and `entryModules`.
+  `repoRoot`, `review`, `resolvedFiles`, `protectedFiles`, `entryModules`,
+  and, since main's #156, `generatedDir`.
 
 Baseline measurements: `.context/shared-example-compilation-snapshot/baseline.md`.
 
@@ -54,12 +59,12 @@ Baseline measurements: `.context/shared-example-compilation-snapshot/baseline.md
 
 | Helper or test                                                 | Consumers                                                                                  | What it compiles                                              | Plan                                                  |
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ----------------------------------------------------- |
-| `tests/helpers/design_catalogue.ts`                            | 34 test files; also `design_stacks.ts`, `design_rows.ts`, `design_component_navigation.ts` | The example, once per test process                            | Load the snapshot; compile only as fallback           |
-| `tests/helpers/design_library_fixture.ts`                      | Two attribution tests, six fixture calls                                                   | A copied example as the before state, then every edited state | Before state from the snapshot in the default mode    |
+| `tests/helpers/design_catalogue.ts`                            | 31 test files; also `design_stacks.ts`, `design_rows.ts`, `design_component_navigation.ts` | The example, once per test process                            | Load the snapshot; compile only as fallback           |
+| `tests/helpers/design_library_fixture.ts`                      | Four attribution and source-edit test files, and `fixture_lifecycle.test.ts`               | A copied example as the before state, then every edited state | Before state from the snapshot                        |
 | `tests/helpers/example_baseline.ts`                            | `preview.test.ts`, `example_baseline.test.ts`, browser fixtures                            | Copies with changed config profiles and historical rebuilds   | Unchanged; the preparation is the behavior under test |
 | `tests/helpers/move_catalogue.ts`                              | Seven move tests                                                                           | A small synthetic catalogue, not the example                  | Unchanged                                             |
 | `tests/build.test.ts`                                          | One test                                                                                   | The example, once                                             | Unchanged; it is explicit compile coverage            |
-| `tests/helpers/design_palette.ts`                              | Appearance tests                                                                           | Nothing; it reads `generated/design.css`                      | Unchanged                                             |
+| `tests/helpers/design_palette.ts`                              | Appearance tests                                                                           | Nothing; it reads `examples/basic/design.css`                 | Unchanged                                             |
 | `route_scoped_catalogue_real`, `server_route_scoped_bootstrap` | Two tests                                                                                  | Nothing; they read the generated manifest                     | Unchanged                                             |
 
 The two native CI jobs run named test files directly. None of those files
@@ -84,10 +89,10 @@ The key is a SHA-256 digest over sorted pairs of repository-relative path and
 content digest for:
 
 - every tracked or untracked non-ignored file under `examples/basic`,
-  `docs/protocol`, and `README.md`, listed with
-  `git ls-files --cached --others --exclude-standard`, which is the inventory
-  `copyExampleSources` already uses; a tracked file that is missing from the
-  working tree hashes as missing instead of failing;
+  `examples/imported-assets`, `docs/protocol`, and `README.md`, listed with
+  `git ls-files --cached --others --exclude-standard`; `copyExampleSources`
+  copies the same four paths with a name filter, and a tracked file that is
+  missing from the working tree hashes as missing instead of failing;
 - every regular file under `dist/` and `packages/viewer/dist/`;
 - `package-lock.json`, which pins every dependency the example bundles, and
   `tsconfig.json`, which esbuild reads for every example module;
@@ -97,9 +102,9 @@ A symbolic link hashes as its target text. The key reads files synchronously,
 because thousands of small reads through the four-thread pool are several
 times slower.
 
-Generated HTML, the generated manifest, and `generated/mokly-generated/` are
-ignored outputs, so they never enter the key. The key covers about 430 example
-files and about 3,300 built files and costs well under a second.
+The generated output under `examples/basic/mokly-generated/` is Git-ignored,
+so it never enters the key. The key covers about 430 example files and about
+3,300 built files and costs well under a second.
 Producer and consumers share one key function, so a mismatch can only mean
 that an input changed after the snapshot was written.
 
@@ -109,9 +114,10 @@ that an input changed after the snapshot was written.
 compiles once with `compileCatalogue`, and writes the snapshot. When the
 existing snapshot already carries the current key, it exits without compiling.
 A new `prepare:unit` npm script runs `prepare:verification` and then this
-producer. The xtask unit suite and `npm test` use `prepare:unit`. The package,
-browser, and hydration suites keep `prepare:verification`, because they never
-read the snapshot and the extra compile would only slow them down.
+producer. The xtask unit suite and `npm run test:unit`, which `npm test`
+forwards to, use `prepare:unit`. The package, browser, and hydration suites
+keep `prepare:verification`, because they never read the snapshot and the
+extra compile would only slow them down.
 
 ### Consumers and fallback
 
@@ -134,12 +140,15 @@ helpers only read `manifest` and `outputs`.
 ### Preparation and the strict runner
 
 `requirePrepared` gains a `unit` kind that also requires the snapshot file to
-exist, with a message that names `npm run prepare:unit`. Both unit runners use
-it. The runner only checks existence and never imports the compiler, because
-`tests/verification_wrapper.test.ts` runs the copied runner in a harness with
-empty placeholder outputs and no `dist`. Freshness stays with the helper, which
-falls back to a compile. Per-file timings in the unit reports and the fixture
-timing lines show whether the snapshot was used.
+exist, with a message that names `npm run prepare:unit`. Complete runs of both
+unit runners use it; a selected developer run keeps
+`requirePrepared(repositoryRoot)`. The runner only checks existence and never
+imports the compiler, because the harness in
+`tests/helpers/verification_wrapper.ts` runs the copied runner with empty
+placeholder outputs, including a snapshot placeholder, and no `dist`.
+Freshness stays with the helper, which falls back to a compile. Per-file
+timings in the unit reports and the fixture timing lines show whether the
+snapshot was used.
 
 ### Alternatives considered
 
@@ -147,9 +156,9 @@ timing lines show whether the snapshot was used.
   adds one compile to every package, browser, and hydration job.
 - Emitting the snapshot from the product `build` command: rejected, because it
   adds a test-only flag to the public CLI.
-- Reading `examples/basic/generated/` back as the compilation: rejected, because
-  `deliveredStyleSources` and `documentMarkdown` are not on disk and the
-  generated tree mixes authored stylesheets with outputs.
+- Reading `examples/basic/mokly-generated/` back as the compilation: rejected,
+  because `deliveredStyleSources`, `documentMarkdown`, and the build
+  diagnostics are not on disk.
 - Letting the helper write the snapshot on fallback: rejected, because two
   concurrent test files would race to write 27 MB and tests would own shared
   state.
@@ -455,6 +464,23 @@ snapshot so that the key and the test copy cover the same inputs.
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`, then apply the review-fix rule: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest.
+  - [x] Fix finding 8 (Low, docs): `ci-verification.md` says that a complete
+        unit run requires the snapshot.
+  - [x] Fix finding 9 (Low, docs): the plan's live sections match #139, #155,
+        and #156.
+  - [ ] Re-run the review once on the fix.
+  - Open finding 7 (Medium, test, unrelated flaky test): "real SIGINT reports
+    the process outcome and removes temporary events" in
+    `tests/verification_unit_interrupt.test.ts` failed once in CI shard 2/4
+    with `'' !== 'ready'`; main's run 37636857126 failed the same way;
+    suspected source: the `fs.watch` creation event arrives before the marker
+    content is written; fix it in a separate branch from main.
+  - Open finding 10 (Low, process): the post-merge check that each attribution
+    file logs phase `snapshot` can run before the merge; recommended: move it
+    into this milestone.
+  - Open finding 11 (Low, test): no test proves that a selected run works
+    without the snapshot; recommended: add one selected-run test without the
+    placeholder.
 
 Evidence: `.context/shared-example-compilation-snapshot/merges.md` (merge 9)
 and `.context/shared-example-compilation-snapshot/milestone-9.md`.

@@ -99,7 +99,7 @@ reject arguments other than the optional shard, and fail when required output is
 missing; prepared package commands may instead receive the gate's archive pair.
 Xtask prepares output per suite and calls only prepared consumers; output is
 reused only within that suite. `npm test` and the xtask unit suite run
-`npm run prepare:unit`; the unit runners require the example compilation
+`npm run prepare:unit`; a complete unit run requires the example compilation
 [snapshot](./ci-example-snapshot.md) it writes.
 
 Builds under test are not removed. Package dry-run allowlist inspection retains
