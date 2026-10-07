@@ -115,6 +115,7 @@ for (const watch of [false, true]) {
           "mokly-generated/home/index.mobile.html",
         );
         const initial = await waitFor(() => readOutput(file));
+        assert.match(initial, /<main id="home-mobile">/u);
         if (watch) {
           await fs.writeFile(
             fixture.entryPath,
