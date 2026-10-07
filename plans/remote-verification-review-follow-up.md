@@ -1,11 +1,6 @@
 # Remote Verification Review Follow-Up
 
-Status: Active. No pull request exists yet. Milestones 1 through 5 and the
-cleanup review changes are completed and pushed. Milestone 6 verification and
-close-out are completed. The full local gate and the default remote gate pass.
-This gate has no active box. Its GitHub runs have ended. The post-push review
-reported D1, D2 and R4 for automatic fixes. Six findings wait for user decisions.
-Claude owns the open re-review. The user approved both gates for this work.
+Status: Active. No pull request exists yet. Milestones 1 to 6 are complete. The review is complete; six Low findings await the user's decision. The plan closes when its PR merges.
 
 Fix the eleven open findings from the post-push review of
 [Blacksmith remote verification](./blacksmith-remote-verification.md)
@@ -196,9 +191,9 @@ Evidence: `.context/remote-verification-review-follow-up/milestone-5.md`.
 - [x] Confirm that each new test fails when its adapter behavior is removed.
 - [x] Run the Rust checks again. Commit.
 
-## Milestone 6: Verification, close-out and review
+## Milestone 6: Verification, close-out and review — completed
 
-Verification and close-out are completed. The re-review remains open for Claude.
+Verification, close-out and review are completed.
 Evidence: `.context/remote-verification-review-follow-up/milestone-6.md`, `merge-justifications.md` and `review-fixes.md` in the same directory.
 
 - [x] Fetch `origin/main` and merge new commits under the mainline
@@ -212,7 +207,7 @@ Evidence: `.context/remote-verification-review-follow-up/milestone-6.md`, `merge
 - [x] Inspect the diff and the deletions against `origin/main`.
 - [x] After the checks pass, run `git add -A`, commit with Conventional
       Commits and push the branch.
-- [ ] After the push, a reviewer uses
+- [x] After the push, a reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and reports the
       findings. Keep the review read-only. The implementer then applies the
@@ -226,3 +221,4 @@ Evidence: `.context/remote-verification-review-follow-up/milestone-6.md`, `merge
   - Rust #3 (Low, test): The isolated environment tests can pass when the child matches no test.
   - Rust #5 (Low, test): No test checks the real `SystemClock::stamp()` format.
   - Rust #6 (Low, UX wording): The missing-program message puts a comma after the install command.
+  - Fixed in `2f9cd36f`: D1, D2 and R4. Re-review of `2f9cd36f`: no new findings.
