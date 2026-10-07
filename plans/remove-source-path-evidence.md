@@ -1,9 +1,7 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestones 1 to 30A are implemented, verified and pushed.
-Milestone 30B integrates main `dc56e3d4` (#145, #151, #152 and #134) and passes
-all required checks. Its merge stays local for the reviewer. Milestones 31 and
-32 remain pending.
+Status: Active. Milestones 1 to 30B are implemented, verified and pushed;
+the branch contains main `dc56e3d4`. Milestones 31 and 32 remain.
 
 ## Status And Outcome
 
@@ -2366,8 +2364,8 @@ the remaining work uses main's deterministic tests.
       to the catalogue contract and keep the same version assertions there.
 - [x] Run `cargo xtask check` at 100%. Inspect the diff and the deletions
       against `origin/main` and record the result.
-- [ ] Push the branch after the reviewer checks the local merge. The user
-      requires local commits only for this task.
+- [x] Push the branch after the reviewer checks the local merge. The reviewer
+      checked the merge and pushed `1c808080`.
 
 The merge keeps the existing preview-test split and main's changes to those
 tests. The protocol index links to the unchanged format table in the catalogue
