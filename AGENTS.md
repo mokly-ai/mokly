@@ -67,11 +67,10 @@ and when to read it. Read the doc at that point instead of guessing the rule.
   reproduce the flake, name the nondeterminism source, make the test
   deterministic, keep every assertion, and add no retry, sleep, repeat, skip,
   quarantine, or longer time limit. Do not fix a flaky test that the diff does
-  not touch;
-  report it with its name, failure text, rerun outcome, and suspected source.
-  Slow, custom, or low-value tests, gates, lints, and checks stay
-  `Auto-fix: no`; ask the user whether to fix or remove each one, and state
-  what it protects and how long it runs
+  not touch; report it with its name, failure text, rerun outcome, and
+  suspected source. Slow, custom, or low-value tests, gates, lints, and checks
+  stay `Auto-fix: no`; ask the user whether to fix or remove each one, and
+  state what it protects and how long it runs
 - Keep review reports, verification evidence, measurements, and other scratch
   output under the git-ignored `.context/` directory. Do not create review
   records or evidence files in the repository
