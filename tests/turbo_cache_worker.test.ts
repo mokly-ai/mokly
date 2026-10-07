@@ -201,7 +201,10 @@ test("PR reads choose per-hash PR hits and fall back to trusted without write-th
 
 test("every HEAD outcome is bodyless and storage errors stay private", async () => {
   const store = new MemoryArtifactStore();
-  const handle = createCacheHandler(store, cacheBindings);
+  const messages: string[] = [];
+  const handle = createCacheHandler(store, cacheBindings, (message) => {
+    messages.push(message);
+  });
   const cases = [
     [cacheRequest(undefined, { method: "HEAD" }), 404],
     [
@@ -237,6 +240,26 @@ test("every HEAD outcome is bodyless and storage errors stay private", async () 
     (await handle(cacheRequest(undefined, { method: "HEAD" }))).body,
     null,
   );
+  const upload = await handle(
+    cacheRequest(undefined, {
+      method: "PUT",
+      body: "private upload marker",
+      headers: { "X-Private-Header": "private header marker" },
+    }),
+  );
+  assert.equal(upload.status, 500);
+  assert.ok(!(await upload.text()).includes("private storage diagnostic"));
+  assert.deepEqual(messages, [
+    "Error: private storage diagnostic",
+    "Error: private storage diagnostic",
+    "Error: private storage diagnostic",
+  ]);
+  for (const value of [
+    ...Object.values(cacheBindings),
+    "private upload marker",
+    "private header marker",
+  ])
+    assert.ok(messages.every((message) => !message.includes(value!)));
 });
 
 test("forbidden and configuration errors use matching flat and wrapped codes", async () => {

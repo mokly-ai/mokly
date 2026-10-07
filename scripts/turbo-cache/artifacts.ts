@@ -218,7 +218,7 @@ export function createCacheHandler(
         headers: artifactHeaders(artifact),
       });
     } catch (error) {
-      return errorResponse(error, request.method === "HEAD");
+      return errorResponse(error, request.method === "HEAD", warn);
     }
   };
 }

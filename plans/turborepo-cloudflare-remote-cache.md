@@ -570,7 +570,7 @@ in CI uses it yet, so the product stays functional.
   - Finding 1 (high, security): the deploy workflow uses an account-wide Workers/R2 write token as a repository secret, which any branch workflow can read; recommend a main-only GitHub environment, reduced permissions, and a rule/test that no Workers/R2 write credential is a repository secret or reaches a pull_request workflow. Waiting for the user.
   - Finding 3 (low, missing test): no automated test runs the Workers runtime, so a broken FixedLengthStream path can deploy; recommend an unstable_startWorker integration test with local R2 in the deploy gate. Waiting for the user.
   - [x] Fix finding 2: disable version preview URLs explicitly, assert the config, and document the old-version URL check after token rotation.
-  - [ ] Fix finding 4: log unexpected error names/messages through the injected logger while keeping client responses generic; capture the regression first.
+  - [x] Fix finding 4: log unexpected error names/messages through the injected logger while keeping client responses generic; capture the regression first.
   - [ ] Fix finding 5: list every Worker module and copy the exact Wrangler configuration into the contract, with a drift regression.
   - [ ] Merge main's browser helper change after the fixes; audit preservation, run the complete gate, commit, and push the fixes plus merge. The supervising agent owns the re-review.
 

@@ -127,7 +127,8 @@ Use codes `bad_request` (400), `unauthorized` (401), `forbidden` (403),
 `not_found` (404), `method_not_allowed` (405), `too_large` (413),
 `unsupported_media_type` (415), `internal_error` (500), and
 `configuration_error` (500) for invalid Worker configuration.
-Keep tokens, storage errors, and account details private. `remote_caching_*`
+Log only unexpected 500 error names/messages through the injected logger; never log headers, tokens, or bodies. Keep responses generic.
+Keep tokens, storage errors, and account details out of responses. `remote_caching_*`
 codes signal cache-status changes; do not use them for permission failures.
 GET/HEAD 404 is a miss. Other unsuccessful statuses are cache errors.
 

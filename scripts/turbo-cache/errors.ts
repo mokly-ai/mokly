@@ -19,7 +19,17 @@ export class CacheError extends Error {
   }
 }
 
-export function errorResponse(error: unknown, head: boolean): Response {
+export function errorResponse(
+  error: unknown,
+  head: boolean,
+  log: (message: string) => void = console.warn,
+): Response {
+  if (!(error instanceof CacheError))
+    log(
+      error instanceof Error
+        ? `${error.name}: ${error.message}`
+        : "UnknownError: Unexpected cache error.",
+    );
   const failure =
     error instanceof CacheError
       ? error
