@@ -11,7 +11,7 @@ import {
 } from "../dist/diagnostics/timings.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
-import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
 
 import {
   assertComparisonModesEquivalent,
@@ -76,7 +76,7 @@ test("invocation line shifts alone keep every view on the fast path", async (t) 
   const fixture = await componentReviewFixture(t, (source) => "\n\n" + source);
   const reader = (outputs: ReadonlyMap<string, GeneratedFile>) => ({
     read: async (route: string) => {
-      const content = outputs.get(route);
+      const content = outputs.get(route.replace(/^mokly-generated\//, ""));
       assert.notEqual(content, undefined, route);
       return generatedBytes(content!);
     },
@@ -133,7 +133,7 @@ function reviewFixture(
   };
 }
 
-function reasonKinds(result: ReviewResultV5, id: string) {
+function reasonKinds(result: ReviewResultV6, id: string) {
   const change = result.changes.find(
     (entry) => (entry.after ?? entry.before)?.path === id,
   );

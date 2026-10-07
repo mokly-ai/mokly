@@ -61,7 +61,7 @@ real href values for resource traversal and CSS selector matching. Move pairing
 aligns component identities without changing captured bytes or instance offsets.
 
 Compiled JSX invocations record optional `source: { path, line, column }` in
-manifest v8. The path identifies the caller inside the repository, with 1-based
+manifest v9. The path identifies the caller inside the repository, with 1-based
 coordinates. Programmatic or already-compiled calls can omit it. The internal
 `__moklySource` prop is reserved from data schemas and slots and stripped before
 validation, hashing and rendering. Source metadata never affects identity or
@@ -103,7 +103,7 @@ Review diffs rules and infers owners from every matched element in the paired do
 Entry-reaching or unresolved rules stay with the entry; unmatched rules are
 excluded. Referenced files follow inferred rule owners, while entry-owned
 references retain entry evidence. The renderer returns a complete document
-string. Compatible v8 baselines retain their original bytes; historical
+string. Compatible v9 baselines retain their original bytes; historical
 readers discard retired ownership arrays without relaxing instance validation.
 
 Component-aware comparison shares one original page tree per used view side.
@@ -127,7 +127,7 @@ node --import tsx --test tests/component_*.test.ts
   boundary and inference.
 - [`manifest_build.ts`](./manifest_build.ts) and
   [`manifest_entry_validation.ts`](./manifest_entry_validation.ts): flattened
-  parent/variant records and manifest-v8 validation.
+  parent/variant records and manifest-v9 validation.
 - Viewer [`props.ts`](../../packages/viewer/src/components/props.ts),
   [`schema.ts`](../../packages/viewer/src/components/schema.ts), and
   [`codec.ts`](../../packages/viewer/src/components/codec.ts): declarative

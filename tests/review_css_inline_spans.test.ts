@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { generatedHeader } from "../src/build/ownership.js";
+import { GENERATED_MARKER } from "../src/build/generated_marker.js";
 import { flattenInlineRules } from "../src/review/css/inline_rule_runs.js";
 import { findUnownedInlineStyles } from "../src/review/css/inline_styles.js";
 import { normalizeReviewPair } from "../src/review/ignore.js";
@@ -71,7 +71,7 @@ test("baseline-v7 markers and a generated header keep original span coordinates"
     instances: [item],
     ranges: [range(0, { kind: "instance", instanceKey: item.key })],
   });
-  const header = generatedHeader("entries/fixture.mockup.tsx");
+  const header = GENERATED_MARKER;
   const styles = changedStyle();
   const historicalIgnored =
     "<!--mokly-review-ignore:start:legacy--><style>.ignored{color:red}</style><!--mokly-review-ignore:end:legacy-->";

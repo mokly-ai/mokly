@@ -53,8 +53,7 @@ async function runBenchmark(repository, fixture, definitions, cancellation) {
           scenario.name,
           cancellation.signal,
         );
-        if (config.generatedOutput === "derived")
-          await resetFixtureBaseline(config);
+        if (!fixture.trackedOutput) await resetFixtureBaseline(config);
       },
       sample: (scenario, state) => {
         return benchmarkSample(
@@ -79,7 +78,7 @@ async function runBenchmark(repository, fixture, definitions, cancellation) {
       !cancellation.signal.aborted &&
       matrix.runs.every((run) => run.outcome === "ok"),
     ...(cancellation.signal.aborted ? { cancelled: true } : {}),
-    generatedOutput: config.generatedOutput,
+    trackedOutput: fixture.trackedOutput,
     machine: machineDetails(),
     targetHeld:
       !cancellation.signal.aborted &&

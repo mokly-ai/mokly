@@ -27,6 +27,7 @@ for (const kind of ["benchmark", "details"])
             stylesheetShare: 1,
           }),
           false,
+          true,
         );
         const setup = await fixtureSetupTree(fixture.root);
         const child = spawn(
@@ -67,7 +68,7 @@ for (const kind of ["benchmark", "details"])
           }
           await fs.rm(fixture.root, { recursive: true, force: true });
           await fs.rm(
-            path.join(repositoryRoot, ".context/large-1-2-3-1-1.json"),
+            path.join(repositoryRoot, ".context/large-1-2-3-1-1-tracked.json"),
             { force: true },
           );
         });

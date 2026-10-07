@@ -4,10 +4,10 @@ import type { TestContext } from "node:test";
 
 import { compileCatalogue } from "../../dist/build/compile.js";
 import { compareReview } from "../../dist/review/compare.js";
-import { committedReviewRepository } from "../../dist/review/repository.js";
 import { computeCatalogueChanges } from "../../dist/server/changed.js";
 
 import { changedFixture } from "./changed_fixture.js";
+import { committedReviewRepository } from "./committed_repository.js";
 import { componentEntrySource } from "./component_fixture.js";
 
 export function inlineComponentSource(): string {
@@ -25,7 +25,7 @@ export function inlineComponentSource(): string {
 
 export function inlineRenderer(styles: string): string {
   return `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => '<!doctype html><html><head>' + ${JSON.stringify(styles)}.replaceAll('../', '../'.repeat(input.entry.path.split('/').length)) + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
+export default (input) => '<!doctype html><html><head>' + ${JSON.stringify(styles)}.replaceAll('../', '../'.repeat(input.entry.path.split('/').length + 1)) + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
 }
 
 export async function inlineChangesFixture(
@@ -70,9 +70,9 @@ export async function inlineChangesFixture(
     ...fixture,
     complete: async (
       useFastPath = true,
-      mode: "committed" | "derived" = "committed",
+      _mode: "committed" | "derived" = "committed",
     ) => {
-      const config = { ...fixture.config, generatedOutput: mode };
+      const config = fixture.config;
       return compareReview(
         await compileCatalogue(config),
         config,

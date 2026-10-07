@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Implemented in [review v5](./mokly-component-review.md) across live, complete,
+Implemented in [review v6](./mokly-component-review.md) across live, complete,
 selected and published results. [Inline ownership](./mokly-inline-styles.md)
 owns analysis; [validation](./mokly-component-review-validation.md#inline-style-evidence-validation)
 owns strict shapes and [presentation](./mokly-css-evidence-presentation.md) owns copy.
@@ -42,7 +42,7 @@ Reference-bearing rules that are not diffed contribute no evidence. Views
 settled by the unchanged decision, one-sided views and views without unowned
 inline style differences carry no field.
 
-The component-aware live classification snapshot's full schema-v5 result, the
+The component-aware live classification snapshot's full schema-v6 result, the
 complete comparison artifact, static publication and the selected live
 component-aware endpoint carry `inlineStyles` beside `reasons` and
 `excludedResources`, with the same omission and canonical ordering rules.

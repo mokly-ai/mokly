@@ -4,7 +4,7 @@ Continuation of [Catalogue Read Model](./mokly-catalogue.md).
 
 ## Projection And Privacy
 
-Construct an explicit allowlist projection from validated manifest v8, the
+Construct an explicit allowlist projection from validated manifest v9, the
 validated folder records, and the accepted Changes/comparison snapshot. Do not
 spread a manifest, entry, or internal evidence object into public JSON.
 
@@ -64,7 +64,7 @@ Missing baseline usage is unavailable. Projection omits a removed view's usage
 when it names an unpublished component and marks it unavailable. Ready empty
 arrays require proven empty usage, never a failed or incomplete render.
 
-`comparisonUrl` is null or `__mokly/diffs/__generations/<generation>/review.json`,
+`comparisonUrl` is null or `mokly-viewer/diffs/generations/<generation>/review.json`,
 pinned to this content's evidence. Resolve snapshots against that JSON response
-URL. Null forbids fallback requests to `/__mokly/diffs/review.json`.
+URL. Null forbids fallback requests to `/mokly-viewer/diffs/review.json`.
 Comparison files load only on selection.

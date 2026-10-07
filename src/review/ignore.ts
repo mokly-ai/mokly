@@ -1,4 +1,4 @@
-import { generatedSource } from "../build/ownership.js";
+import { stripGeneratedFirstLine } from "../build/generated_marker.js";
 import { timingMaterialWork } from "../diagnostics/material_timings.js";
 import { documentWorkSync } from "../diagnostics/timings.js";
 
@@ -125,7 +125,7 @@ export function parseReviewDocument(
   content: string,
   route: string,
 ): ParsedDocument {
-  const offset = generatedSource(content) ? content.indexOf("\n") + 1 : 0;
+  const offset = content.length - stripGeneratedFirstLine(content).length;
   content = content.slice(offset);
   const materials = parseMaterials(content, route);
   const matches = [...content.matchAll(MARKER_SCAN)];

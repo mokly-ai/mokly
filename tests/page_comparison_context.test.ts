@@ -12,6 +12,7 @@ import {
   auditContextSource,
   comparisonContextAudit,
 } from "./helpers/comparison_context_audit.js";
+import { compilationFiles } from "./helpers/component_fast_path.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
 test("every component-aware comparison context in tests supplies production links", async () => {
@@ -74,8 +75,8 @@ test("comparison helpers require production links except the explicit M6 oracle"
     JSON.stringify({
       before: fixture.before.manifest,
       after: fixture.after.manifest,
-      beforeFiles: [...fixture.before.outputs],
-      afterFiles: [...fixture.after.outputs],
+      beforeFiles: [...compilationFiles(fixture.before)],
+      afterFiles: [...compilationFiles(fixture.after)],
       config: fixture.config,
       changedPaths: [],
     }),

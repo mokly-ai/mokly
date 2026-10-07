@@ -6,6 +6,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
+import { compilationFiles } from "./helpers/component_fast_path.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { inlineChangesFixture } from "./helpers/inline_changes.js";
 import { pageFixtureInput } from "./helpers/page_fixture_inputs.js";
@@ -21,8 +22,8 @@ for (const changed of [false, true])
       JSON.stringify({
         before: fixture.before.manifest,
         after: fixture.after.manifest,
-        beforeFiles: [...fixture.before.outputs],
-        afterFiles: [...fixture.after.outputs],
+        beforeFiles: [...compilationFiles(fixture.before)],
+        afterFiles: [...compilationFiles(fixture.after)],
         changedPaths: fixture.changedPaths,
         config: fixture.config,
       }),

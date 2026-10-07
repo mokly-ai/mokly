@@ -11,7 +11,7 @@ export interface FixtureIdentity extends LargeSize {
   moklyCommit: string;
   moklyDirty: boolean;
   fixtureCommit: string;
-  generatedOutput: "committed" | "derived";
+  trackedOutput: boolean;
   renderingDependencies: Readonly<Record<string, string>>;
 }
 export function templateDigest(directory: string): Promise<string>;
@@ -20,11 +20,11 @@ export function moklyIdentity(
 ): Promise<{ moklyCommit: string; moklyDirty: boolean }>;
 export function preparationCommand(
   size: LargeSize,
-  generatedOutput?: "committed" | "derived",
+  trackedOutput?: boolean,
 ): string;
 export function readFixtureIdentity(
   repository: string,
   root: string,
   size: LargeSize,
-  mode?: "committed" | "derived",
+  trackedOutput?: boolean,
 ): Promise<FixtureIdentity>;

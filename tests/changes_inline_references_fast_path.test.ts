@@ -44,7 +44,7 @@ for (const mode of ["committed", "derived"] as const)
           "image.svg": "after-image",
         }),
         changedPaths: mode === "committed" ? ["mockups/image.svg"] : [],
-        config: { ...fixture.config, generatedOutput: mode },
+        config: fixture.config,
       };
       await assertComparisonPaths(input, "complete");
       const result = await assertComparisonModesEquivalent(input);
@@ -74,7 +74,7 @@ for (const mode of ["committed", "derived"] as const)
         beforeFiles: files,
         afterFiles: files,
         changedPaths: [],
-        config: { ...fixture.config, generatedOutput: mode },
+        config: fixture.config,
       };
       await assertComparisonPaths(input, "fast");
       const result = await assertFastPathEquivalent(input);
@@ -99,7 +99,7 @@ for (const mode of ["committed", "derived"] as const)
       after: fixture.compilation.manifest,
       beforeFiles,
       afterFiles,
-      config: { ...fixture.config, generatedOutput: mode },
+      config: fixture.config,
       changedPaths: mode === "committed" ? ["mockups/image.svg"] : [],
     };
     await assertComparisonPaths(input, "complete", ["home"], 1);
@@ -135,7 +135,7 @@ for (const mode of ["committed", "derived"] as const)
       { write: (event) => events.push(event) },
     );
     assert.deepEqual(Object.fromEntries(parseCounts), {
-      '.actual-only{background:url("../image.svg")}': 1,
+      '.actual-only{background:url("../../image.svg")}': 1,
     });
     assert.deepEqual(result, await assertComparisonModesEquivalent(input));
     assert.deepEqual(
@@ -175,7 +175,7 @@ async function referenceFixture(
   const styles = `<style>${selector}{background:url("../image.svg")}</style>`;
   const renderer = mixed
     ? `import { renderToStaticMarkup } from "react-dom/server";
-export default (input) => '<!doctype html><html><head>' + (input.entry.path === "home" ? ${JSON.stringify(styles)} : ${JSON.stringify(styles.replace("../image.svg", "../other.svg"))}).replaceAll('../', '../'.repeat(input.entry.path.split('/').length)) + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`
+export default (input) => '<!doctype html><html><head>' + (input.entry.path === "home" ? ${JSON.stringify(styles)} : ${JSON.stringify(styles.replace("../image.svg", "../other.svg"))}).replaceAll('../', '../'.repeat(input.entry.path.split('/').length + 1)) + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`
     : inlineRenderer(styles);
   await fs.writeFile(path.join(fixture.root, "renderer.tsx"), renderer);
   await fs.writeFile(path.join(fixture.mockupsDir, "image.svg"), "image");

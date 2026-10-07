@@ -7,7 +7,7 @@ import {
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
 import { parseHistoricalManifest } from "../dist/registry/manifest.js";
-import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
 
 import { assertComparisonPaths } from "./helpers/component_comparison_paths.js";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
@@ -81,7 +81,7 @@ test("Review enabled and forced-complete modes agree for a Git asset-byte change
 async function equivalentReview(
   fixture: Awaited<ReturnType<typeof cssAttributionFixture>>,
   scenarioId = "home",
-): Promise<ReviewResultV5> {
+): Promise<ReviewResultV6> {
   const events: TimingEvent[] = [];
   const fast = await runWithTimings(true, "test", () => fixture.compare(true), {
     write: (event) => events.push(event),
@@ -93,7 +93,7 @@ async function equivalentReview(
   )?.counts;
   assert.ok(Number(counts?.fastPath) > 0);
   assert.deepEqual(fast.result, complete.result);
-  assert.equal(fast.result.schemaVersion, 5);
+  assert.equal(fast.result.schemaVersion, 6);
   const files = (side: "before" | "after") => {
     const prefix = `snapshots/${side}/`;
     return new Map(
@@ -109,7 +109,7 @@ async function equivalentReview(
       before: parseHistoricalManifest(
         JSON.parse(
           fixture
-            .git("show", "main:mockups/mokly-manifest.json")
+            .git("show", "main:mockups/mokly-generated/mokly-manifest.json")
             .toString("utf8"),
         ),
       ),
@@ -125,7 +125,7 @@ async function equivalentReview(
   return fast.result;
 }
 
-function reasonPaths(result: ReviewResultV5) {
+function reasonPaths(result: ReviewResultV6) {
   return [
     ...new Set(
       result.changes.flatMap((entry) =>

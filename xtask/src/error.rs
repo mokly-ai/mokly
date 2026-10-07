@@ -5,6 +5,7 @@ use std::io;
 use thiserror::Error;
 
 use crate::check::VerificationSuite;
+use crate::remote::error;
 
 /// Result returned by xtask operations.
 pub(crate) type Result<T> = std::result::Result<T, Error>;
@@ -12,6 +13,12 @@ pub(crate) type Result<T> = std::result::Result<T, Error>;
 /// Failures surfaced by xtask commands.
 #[derive(Debug, Error)]
 pub(crate) enum Error {
+    /// Remote verification failed at a typed runtime boundary.
+    #[error("[xtask/check] {source}")]
+    Remote {
+        /// Original remote verification error.
+        source: error::Error,
+    },
     /// A shard did not use the required one-based `INDEX/TOTAL` form.
     #[error(
         "[xtask/check] invalid shard `{shard}`; expected one-based INDEX/TOTAL within JavaScript safe integers"

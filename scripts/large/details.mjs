@@ -46,8 +46,7 @@ export async function materialDetails(
           scenario.name,
           cancellation.signal,
         );
-        if (config.generatedOutput === "derived")
-          await resetFixtureBaseline(config);
+        if (!fixture.trackedOutput) await resetFixtureBaseline(config);
         if (cancellation.signal.aborted) break;
         result = await companionSample(
           browser,

@@ -59,7 +59,7 @@ test("component render keeps head styles without manifest ownership records", as
     /renderer must return a string/,
   );
   assert.equal(
-    await fs.readFile(path.join(fixture.mockupsDir, mobileView), "utf8"),
+    await fs.readFile(path.join(config.generatedDir, mobileView), "utf8"),
     html,
   );
 });

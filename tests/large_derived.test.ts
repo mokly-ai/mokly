@@ -17,11 +17,10 @@ test("the derived large fixture archives inputs and ignores generated output and
   const fixture = await generateLargeFixture(
     root,
     { areas: 1, screens: 2, rows: 1 },
-    "derived",
+    false,
   );
   const config = await loadConfig(root);
-  assert.equal(fixture.generatedOutput, "derived");
-  assert.equal(config.generatedOutput, "derived");
+  assert.equal(fixture.trackedOutput, false);
   assert.deepEqual(config.review.baselineBuild, [
     ["npm", "ci"],
     ["npx", "--no-install", "mokly", "build", "--config", "mokly.config.ts"],
@@ -35,8 +34,7 @@ test("the derived large fixture archives inputs and ignores generated output and
       ".mokly-cache/",
       "node_modules/",
       ".mokly-large-fixture.json",
-      "mockups/**/*.html",
-      "mockups/mokly-manifest.json",
+      "mockups/mokly-generated/",
     ],
   );
   const lock = JSON.parse(

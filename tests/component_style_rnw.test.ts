@@ -6,7 +6,7 @@ import {
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
-import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import { reviewViews as generatedViews } from "../dist/review/views.js";
 
 import { memoryReader } from "./helpers/component_fast_path.js";
 import { assertStyleRoute } from "./helpers/style_route.js";
@@ -17,7 +17,7 @@ test("every eligible cumulative RNW component-style view routes with exact catal
   for (const mode of ["committed", "derived"] as const) {
     const input = {
       ...fixture,
-      config: { ...fixture.config, generatedOutput: mode },
+      config: fixture.config,
     };
     let routed = 0;
     for (const entry of fixture.after.entries)

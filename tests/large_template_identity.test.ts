@@ -122,13 +122,16 @@ test(
       stylesheets: 1,
       stylesheetShare: 0.37,
     });
-    const index = path.join(repositoryRoot, ".context/large-1-2-2-1-0.37.json");
+    const index = path.join(
+      repositoryRoot,
+      ".context/large-1-2-2-1-0.37-tracked.json",
+    );
     const previous = await fs.readFile(index).catch(() => undefined);
     testContext.after(async () => {
       if (previous) await fs.writeFile(index, previous);
       else await fs.rm(index, { force: true });
     });
-    const fixture = await prepareFixture(repositoryRoot, size, false);
+    const fixture = await prepareFixture(repositoryRoot, size, false, true);
     testContext.after(() =>
       fs.rm(fixture.root, { recursive: true, force: true }),
     );
@@ -144,12 +147,7 @@ test(
       await templateDigest(path.join(repositoryRoot, "tests/fixtures/large")),
     );
     for (const config of [undefined, fixture.configPath]) {
-      const reused = await preparedFixture(
-        repositoryRoot,
-        size,
-        "committed",
-        config,
-      );
+      const reused = await preparedFixture(repositoryRoot, size, true, config);
       assert.equal(reused.fixtureCommit, identity.fixtureCommit);
       assert.equal(reused.preparedMoklyCommit, identity.moklyCommit);
       assert.deepEqual(
@@ -161,18 +159,18 @@ test(
         JSON.stringify({ ...identity, templateDigest: "0".repeat(64) }),
       );
       await assert.rejects(
-        preparedFixture(repositoryRoot, size, "committed", config),
+        preparedFixture(repositoryRoot, size, true, config),
         /template identity.*npm run fixture:large -- --areas 1 --screens 2 --rows 2 --stylesheets 1 --stylesheet-share 0\.37/,
       );
       await fs.rm(rootRecord);
       await assert.rejects(
-        preparedFixture(repositoryRoot, size, "committed", config),
+        preparedFixture(repositoryRoot, size, true, config),
         /Prepare this fixture first/,
       );
       for (const malformed of [{}, { ...identity, screens: 1 }]) {
         await fs.writeFile(rootRecord, JSON.stringify(malformed));
         await assert.rejects(
-          preparedFixture(repositoryRoot, size, "committed", config),
+          preparedFixture(repositoryRoot, size, true, config),
           /npm run fixture:large -- --areas 1 --screens 2 --rows 2 --stylesheets 1 --stylesheet-share 0\.37/,
         );
       }

@@ -139,7 +139,7 @@ test("resource discovery digest separates content, routes, and exclusion identit
   );
 });
 
-test("fall-through views reuse actual discovery in derived mode", async (t) => {
+test("fall-through views reuse actual discovery during byte comparison", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const screen = fixture.after.manifest.entries.find(
     (entry) => entry.kind === "screen",
@@ -151,7 +151,7 @@ test("fall-through views reuse actual discovery in derived mode", async (t) => {
   assert.notEqual(source, undefined);
   const document = `${source}<img src="../image.svg">`;
 
-  const discoveryCount = async (compareResourceBytes: boolean) => {
+  const discoveryCount = async () => {
     const events: TimingEvent[] = [];
     const reader = () =>
       new ComponentMaterialReader({
@@ -187,7 +187,6 @@ test("fall-through views reuse actual discovery in derived mode", async (t) => {
               new Set(["mockups/image.svg"]),
               "mockups",
             ),
-            compareResourceBytes,
           },
           view,
           view,
@@ -201,6 +200,5 @@ test("fall-through views reuse actual discovery in derived mode", async (t) => {
     ).length;
   };
 
-  assert.equal(await discoveryCount(false), 4);
-  assert.equal(await discoveryCount(true), 4);
+  assert.equal(await discoveryCount(), 4);
 });

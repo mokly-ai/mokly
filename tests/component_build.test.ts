@@ -30,7 +30,7 @@ async function compile(
 
 test("component registration emits deterministic variants and actual per-view ownership", async (t) => {
   const result = await compile(t);
-  assert.equal(result.manifest.schemaVersion, 8);
+  assert.equal(result.manifest.schemaVersion, 9);
   const action = result.manifest.entries.find(
     (entry) => entry.path === "action",
   );
@@ -169,7 +169,7 @@ for (const [name, options, error] of [
     await assert.rejects(compile(t, options), error);
   });
 
-test("v8 retains only explicit dependency declarations", async (t) => {
+test("v9 retains only explicit dependency declarations", async (t) => {
   const result = await compile(t);
   const action = result.manifest.entries.find(
     (entry) => entry.path === "action",

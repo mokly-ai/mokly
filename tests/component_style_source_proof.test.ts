@@ -14,12 +14,12 @@ for (const mode of ["committed", "derived"] as const)
       [
         "CSS comment",
         (color: string) =>
-          `<style>.entry{background:url("../asset.svg")}/*<!--mokly-review-ignore:start:clock-->same<!--mokly-review-ignore:end:clock-->*/.actual-only{color:${color}}</style>`,
+          `<style>.entry{background:url("../../asset.svg")}/*<!--mokly-review-ignore:start:clock-->same<!--mokly-review-ignore:end:clock-->*/.actual-only{color:${color}}</style>`,
       ],
       [
         "style tag attributes",
         (color: string) =>
-          `<style data-ignore="<!--mokly-review-ignore:start:clock-->">.entry{background:url("../asset.svg")}</style data-ignore="<!--mokly-review-ignore:end:clock-->"><style>.actual-only{color:${color}}</style>`,
+          `<style data-ignore="<!--mokly-review-ignore:start:clock-->">.entry{background:url("../../asset.svg")}</style data-ignore="<!--mokly-review-ignore:end:clock-->"><style>.actual-only{color:${color}}</style>`,
       ],
     ] as const)
       await context.test(name, async () => {

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import type { Compilation } from "../../dist/build/compile.js";
 import type { ResolvedConfig } from "../../dist/config/types.js";
 
+import { compilationFiles } from "./component_fast_path.js";
 import { comparePageViews } from "./page_comparison.js";
 
 export async function assertParserRecoveryDifference(
@@ -15,8 +16,8 @@ export async function assertParserRecoveryDifference(
   const input = {
     before: compilation.manifest,
     after: compilation.manifest,
-    beforeFiles: new Map([...compilation.outputs, ...Object.entries(before)]),
-    afterFiles: new Map([...compilation.outputs, ...Object.entries(after)]),
+    beforeFiles: compilationFiles(compilation, before),
+    afterFiles: compilationFiles(compilation, after),
     config,
     changedPaths,
   };

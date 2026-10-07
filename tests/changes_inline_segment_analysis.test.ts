@@ -19,7 +19,7 @@ for (const mode of ["committed", "derived"] as const)
       },
     );
     const { result } = await fixture.complete(false, mode);
-    assert.ok(result.schemaVersion === 5);
+    assert.ok(result.schemaVersion === 6);
     const home = result.screens.find((screen) => screen.path === "home");
     assert.ok(home);
     assert.equal(home.views.length, 2);

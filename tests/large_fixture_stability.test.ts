@@ -4,6 +4,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { generatedResourceRoute } from "@mokly/viewer/data";
+
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
@@ -80,7 +82,7 @@ test("adding a real generated screen preserves other areas' values, classes, mar
   const reader = (outputs: ReadonlyMap<string, string | Uint8Array>) => ({
     read: async (route: string) =>
       Buffer.from(
-        outputs.get(route) ??
+        outputs.get(generatedResourceRoute(route) ?? route) ??
           (await fs.readFile(path.join(config.mockupsDir, route))),
       ),
   });

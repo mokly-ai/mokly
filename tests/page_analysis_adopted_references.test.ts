@@ -18,7 +18,7 @@ for (const mode of ["committed", "derived"] as const)
           source: componentEntrySource({
             body: embedded
               ? "<main>Home</main>"
-              : '<body style={{ backgroundImage: "url(../bg.svg)" }}><main>Home</main></body>',
+              : '<body style={{ backgroundImage: "url(../../bg.svg)" }}><main>Home</main></body>',
           }),
           files: {
             before: {

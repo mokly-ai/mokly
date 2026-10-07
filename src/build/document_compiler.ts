@@ -1,6 +1,7 @@
 /** Shared single-view render/validation with generation-local route and resource indexes. */
 import type { ComponentViewRecord } from "@mokly/viewer";
 import {
+  GENERATED_DIRECTORY,
   entryRoute,
   documentRoute,
   isManifestComponentVariant,
@@ -10,16 +11,14 @@ import {
 import type { ArtifactView } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
-import {
-  transformCompatibilityDocuments,
-  type CompatibilityContext,
-} from "../compatibility/transform.js";
 import { validateComponentRanges } from "../components/ranges.js";
+import { PublicFilePolicy } from "../config/public_policy.js";
 import { extractCssReferences } from "../css_references.js";
 import { MoklyError } from "../errors.js";
 import { extractHtmlReferences } from "../html_references.js";
 import { prepareRegistry } from "../registry/prepare.js";
 import { normalizeSingleDocument } from "../review/ignore.js";
+import type { EntryMove } from "../review/moves/types.js";
 
 import {
   normalizeBuildDiagnostics,
@@ -27,6 +26,7 @@ import {
 } from "./build_warnings.js";
 import type { ComponentRuntime } from "./component_runtime.js";
 import { DocumentCache } from "./document_cache.js";
+import { resolveDocumentLinks } from "./document_links.js";
 import type { GeneratedFile } from "./generated_file.js";
 import { validateHtmlLinks, type HtmlValidationContext } from "./html_links.js";
 import type { LoadedGraph } from "./load_graph.js";
@@ -36,13 +36,11 @@ import {
   moveTargetsForGeneration,
   type AcceptedMoveTargets,
 } from "./move_targets.js";
-import {
-  assertSnapshotRoutes,
-  type OutputSnapshot,
-} from "./output_snapshot.js";
-import { validateGeneratedOwnershipHeaders } from "./ownership.js";
+import { validateGeneratedOutputPaths } from "./output_paths.js";
+import { assertSnapshotRoutes } from "./output_snapshot.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
+import type { ResourceSeed } from "./resource_seeds.js";
 
 export interface CompiledDocument {
   diagnostics: readonly BuildDiagnostic[];
@@ -50,6 +48,8 @@ export interface CompiledDocument {
   html: string;
   view?: ComponentViewRecord;
   watchDocuments?: readonly (readonly [string, string])[];
+  assetClosure?: readonly string[];
+  resourceSeeds?: readonly ResourceSeed[];
 }
 interface PreparedDocument extends CompiledDocument {
   records: readonly LogicalReferenceRecord[];
@@ -61,19 +61,18 @@ interface DocumentTarget extends ArtifactView {
 
 /** Pure/countable boundaries used once per accepted document generation. */
 export interface DocumentValidationSeams {
-  readonly orphanRoutes: (snapshot: OutputSnapshot) => readonly string[];
   readonly parseCss: (text: string) => readonly string[];
 }
 
 const defaultValidationSeams: DocumentValidationSeams = {
-  orphanRoutes: (snapshot) => snapshot.orphanRoutes,
   parseCss: extractCssReferences,
 };
 
 export class DocumentCompiler {
   readonly entries: readonly ResolvedRegistryEntry[];
   readonly routes = new Map<string, DocumentTarget>();
-  private readonly compatibility: CompatibilityContext;
+  private moves: readonly EntryMove[] = [];
+  private readonly byId: ReadonlyMap<string, ResolvedRegistryEntry>;
   private readonly components;
   private readonly prepared = new DocumentCache<PreparedDocument>(
     32 * 1024 * 1024,
@@ -91,13 +90,14 @@ export class DocumentCompiler {
     private readonly graph: LoadedGraph,
     seams: DocumentValidationSeams = defaultValidationSeams,
   ) {
+    validateGeneratedOutputPaths(runtime.outputSnapshot.routes, runtime.config);
     const registry = prepareRegistry(
       graph.definitions,
       runtime.config,
       graph.documents,
     );
     this.entries = registry.entries;
-    this.compatibility = { byPath: registry.byPath, routeIndexes: new Map() };
+    this.byId = registry.byPath;
     this.components = new Map(
       runtime.manifest.entries.flatMap((entry) =>
         entry.kind === "component" && !isManifestComponentVariant(entry)
@@ -135,9 +135,9 @@ export class DocumentCompiler {
     assertSnapshotRoutes(runtime.outputSnapshot, this.pending.routes());
     this.links = {
       pending: this.pending,
-      pendingOrphans: new Set(seams.orphanRoutes(runtime.outputSnapshot)),
       parsed: new Map(),
       onDemand: true,
+      policy: new PublicFilePolicy(runtime.config),
     };
   }
 
@@ -147,10 +147,7 @@ export class DocumentCompiler {
     componentProps?: Readonly<Record<string, unknown>>,
     moveTargets?: AcceptedMoveTargets,
   ): CompiledDocument {
-    this.compatibility.moves = moveTargetsForGeneration(
-      moveTargets,
-      this.runtime.generation,
-    );
+    this.moves = moveTargetsForGeneration(moveTargets, this.runtime.generation);
     const document = componentProps
       ? this.prepare(route, componentProps)
       : this.prepare(route);
@@ -169,18 +166,28 @@ export class DocumentCompiler {
       (target) => read(target).anchors,
     );
     this.activeRead = read;
+    let assetClosure: readonly string[];
     try {
-      validateHtmlLinks(outputs, this.runtime.config, this.links);
+      assetClosure = validateHtmlLinks(
+        outputs,
+        this.runtime.config,
+        this.links,
+      );
     } finally {
       this.activeRead = undefined;
       // Generated views are resolved from the bounded document cache, never from stale prop edits.
       for (const target of this.links.parsed.keys())
-        if (this.routes.has(target)) this.links.parsed.delete(target);
+        if (
+          target.startsWith(`${GENERATED_DIRECTORY}/`) &&
+          this.routes.has(target.slice(GENERATED_DIRECTORY.length + 1))
+        )
+          this.links.parsed.delete(target);
     }
     return {
       diagnostics: document.diagnostics,
       route,
       html: document.html,
+      assetClosure,
       ...(document.view ? { view: document.view } : {}),
       ...(observed.size ? { watchDocuments: [...observed] } : {}),
     };
@@ -220,24 +227,21 @@ export class DocumentCompiler {
         ),
       componentViews,
       target,
-      { routes: this.graph.stylesheetRoutes, pending: this.pending },
+      {
+        routes: this.graph.stylesheetRoutes,
+        pending: this.pending,
+        ...(this.links.policy ? { policy: this.links.policy } : {}),
+      },
     );
-    const compatibility = transformCompatibilityDocuments(
+    const resolvedLinks = resolveDocumentLinks(
       outputs,
       this.entries,
       config,
-      this.graph,
       views,
-      [...this.routes.keys()],
-      this.compatibility,
-      this.pending,
+      this.byId,
+      this.moves,
     );
     const html = outputs.get(route)!;
-    const entry = this.compatibility.byPath.get(target.entryId)!;
-    validateGeneratedOwnershipHeaders(
-      outputs,
-      new Map([[route, entry.sourceRelativePath]]),
-    );
     normalizeSingleDocument(html, route);
     const view = componentViews.get(route);
     if (view) {
@@ -245,10 +249,10 @@ export class DocumentCompiler {
       validateComponentViewRecord(view, this.components, route, {});
     }
     const prepared = {
-      diagnostics: normalizeBuildDiagnostics(compatibility.diagnostics),
+      diagnostics: normalizeBuildDiagnostics(resolvedLinks.diagnostics),
       route,
       html,
-      records: compatibility.records,
+      records: resolvedLinks.records,
       anchors: extractHtmlReferences(html).anchors,
       ...(view ? { view } : {}),
     };

@@ -6,10 +6,10 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 import { compareReview } from "../dist/review/compare.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import {
   assertFastPathEquivalent,
   compilationFiles,
@@ -94,7 +94,7 @@ test("derived non-CSS actual-invocation bytes become owner material", async (t) 
       "asset.svg": "after-image",
     }),
     changedPaths: [],
-    config: { ...config, generatedOutput: "derived" },
+    config: config,
   });
   assert.deepEqual(
     result.changes.map((entry) => ({

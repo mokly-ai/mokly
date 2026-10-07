@@ -27,11 +27,12 @@ test(
         stylesheetShare: 0.37,
       }),
       false,
+      true,
     );
     context.after(async () => {
       await fs.rm(fixture.root, { recursive: true, force: true });
       await fs.rm(
-        path.join(repositoryRoot, ".context/large-1-2-1-1-0.37.json"),
+        path.join(repositoryRoot, ".context/large-1-2-1-1-0.37-tracked.json"),
         { force: true },
       );
     });
@@ -44,6 +45,7 @@ test(
           mode,
           "--config",
           fixture.configPath,
+          "--tracked-output",
           "--scenario",
           "linked-stylesheet",
         ],

@@ -25,7 +25,7 @@ test("design catalogue keeps fingerprints on all complete-path views", async (co
         after: fixture.before.manifest,
         beforeReader: snapshotReader(fixture.before, fixture.resources),
         afterReader: snapshotReader(fixture.before, fixture.resources),
-        config: { ...fixture.config, generatedOutput: mode },
+        config: fixture.config,
         changedPaths: [],
         baseCommit: "a".repeat(40),
         baseRef: "main",

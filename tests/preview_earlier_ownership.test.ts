@@ -12,7 +12,7 @@ import {
 } from "./helpers/export_fixture.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
-for (const route of ["view/screens/home.html", "view/home/index.html"])
+for (const route of ["view/home/index.html", "view/home/index.html"])
   test(`earlier preview marker cannot adopt ${route}`, async (t) => {
     const fixture = await createExportFixture();
     t.after(() => fixture.close());

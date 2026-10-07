@@ -122,7 +122,7 @@ async function captureSample(
     }
     cancellation.clearActive(running);
   }
-  if (fixture.generatedOutput === "derived") {
+  if (!fixture.trackedOutput) {
     try {
       Object.assign(
         measured,

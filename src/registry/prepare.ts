@@ -1,5 +1,4 @@
-import { ComponentValidationError } from "@mokly/viewer/data";
-import { resolveLinkPath } from "@mokly/viewer/data";
+import { ComponentValidationError, resolveLinkPath } from "@mokly/viewer/data";
 
 import { existingDefinitionReference } from "../authoring/identity.js";
 import type { ResolvedRegistryEntry } from "../authoring/types.js";

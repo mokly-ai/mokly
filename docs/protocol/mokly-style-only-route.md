@@ -81,11 +81,10 @@ Every condition must hold, otherwise use the full comparison:
    Stored rule references omit selectors; the raw detector can find `url()`
    inside selector arguments, so reference-free rule deltas alone do not prove
    equal raw seeds. The quick check's resource proof then passes using the
-   head analysis's shared raw reference seeds. In committed mode traverse only the **head reader's
-   closure** and require no changed reachable Git path. In derived mode
+   head analysis's shared raw reference seeds. For Git-blob and rebuilt baselines,
    traverse both readers independently, reject changed reachable paths and
    require equal closure membership and bytes. These are transitive checks,
-   not seed-path checks; a union cannot replace the derived comparisons.
+   not seed-path checks; a union cannot replace the separate comparisons.
    Traverse the base proof closure with optional reads at every depth. Any
    missing seed or transitive file fails the proof and takes fallback, never a
    required-read error from the optimization. Reuse successful reads/closures;
@@ -169,7 +168,7 @@ do not publish a provisional owner set or partial evidence. The full path
 remains the oracle with `useStylePath: false`; a complete-path oracle disables
 both `useStylePath` and `useFastPath`. This section owns M8's test obligations:
 
-- Compare route-enabled and disabled results in committed and derived modes
+- Compare route-enabled and disabled results for Git-blob and rebuilt baselines
   for excluded, owned, entry-retained and unresolved diffed rules, and an
   entry-owned usage input change. Assert the named view's route, not a
   catalogue-wide counter satisfied by a bystander. Prove every eligible view

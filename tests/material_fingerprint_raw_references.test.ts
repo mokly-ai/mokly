@@ -27,7 +27,7 @@ for (const mode of ["committed", "derived"] as const)
       const input = await pageFixtureInput(fixture, mode);
       const text = fingerprintMaterials(input, false);
       assert.equal(text.inlineAnalysis?.status, "skipped");
-      assert.ok(text.references!.actualBefore.includes("../image.svg"));
+      assert.ok(text.references!.actualBefore.includes("../../image.svg"));
       const outcome = await fingerprintComparison(input, false);
       assert.equal(outcome.kind, "result");
       if (outcome.kind === "result") {

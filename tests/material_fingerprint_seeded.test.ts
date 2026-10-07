@@ -9,7 +9,10 @@ import {
   catalogueKinds,
   fingerprintSeededCase,
 } from "./helpers/fingerprint_seeded_cases.js";
-import { inlineChangesFixture } from "./helpers/inline_changes.js";
+import {
+  inlineChangesFixture,
+  inlineRenderer,
+} from "./helpers/inline_changes.js";
 import { pageFixtureInput } from "./helpers/page_fixture_inputs.js";
 import { styleSwitches } from "./helpers/style_switches.js";
 
@@ -29,8 +32,12 @@ test("seeded compiled catalogues preserve text results/errors under every switch
         ...(sample.source ? { source: sample.source } : {}),
         ...(sample.afterSource ? { afterSource: sample.afterSource } : {}),
         renderer: sample.renderer ?? {
-          before: fingerprintRenderer(sample.before),
-          after: fingerprintRenderer(sample.after),
+          before: sample.resourceChange
+            ? inlineRenderer(sample.before)
+            : fingerprintRenderer(sample.before),
+          after: sample.resourceChange
+            ? inlineRenderer(sample.after)
+            : fingerprintRenderer(sample.after),
         },
         files: {
           before: {

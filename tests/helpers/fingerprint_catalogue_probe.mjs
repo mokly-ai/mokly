@@ -4,14 +4,13 @@ import { mock } from "node:test";
 
 import { runWithComparisonWork } from "../../dist/diagnostics/material_timings.js";
 import { runWithTimings } from "../../dist/diagnostics/timings.js";
-import { generatedViews } from "../../packages/viewer/dist/components/views.js";
+import { reviewViews as generatedViews } from "../../dist/review/views.js";
 
 import { fingerprintReplayExclusions } from "./fingerprint_replay_exclusions.mjs";
 import { fingerprintReplayReader } from "./fingerprint_replay_reader.mjs";
 
 const original =
   await import("../../dist/review/component_classification_sources.js");
-const fixtures = await import("./fixture.js");
 const pending = new Map();
 const fixtureNames = new Map();
 const counts = {
@@ -39,6 +38,21 @@ const capture = async (operation) => {
   }
 };
 
+mock.module("../../dist/review/component_classification_sources.js", {
+  namedExports: {
+    ...original,
+    classifyComponentsWithSources(input) {
+      const operation = compare(input);
+      let tasks = pending.get(input.config.repoRoot);
+      if (!tasks) pending.set(input.config.repoRoot, (tasks = new Set()));
+      tasks.add(operation);
+      void operation.finally(() => tasks.delete(operation)).catch(() => {});
+      return operation;
+    },
+  },
+});
+
+const fixtures = await import("./fixture.js");
 mock.module("./fixture.js", {
   namedExports: {
     ...fixtures,
@@ -58,20 +72,6 @@ mock.module("./changed_fixture.js", {
       const fixture = await changedFixtures.changedFixture(context, ...args);
       fixtureNames.set(fixture.root, context.name);
       return fixture;
-    },
-  },
-});
-
-mock.module("../../dist/review/component_classification_sources.js", {
-  namedExports: {
-    ...original,
-    classifyComponentsWithSources(input) {
-      const operation = compare(input);
-      let tasks = pending.get(input.config.repoRoot);
-      if (!tasks) pending.set(input.config.repoRoot, (tasks = new Set()));
-      tasks.add(operation);
-      void operation.finally(() => tasks.delete(operation)).catch(() => {});
-      return operation;
     },
   },
 });
@@ -120,17 +120,16 @@ async function compare(input) {
       ...rest,
       beforeReader,
       afterReader,
-      config: { ...input.config, generatedOutput },
+      config: input.config,
       changedPaths:
-        generatedOutput === "derived" &&
-        input.config.generatedOutput !== "derived"
+        generatedOutput === "derived"
           ? input.changedPaths.filter((route) => !generated.has(route))
           : input.changedPaths,
       useFastPath: false,
       useStylePath: false,
     };
     const normalMode =
-      generatedOutput === input.config.generatedOutput
+      generatedOutput === "committed"
         ? normal
         : await capture(() =>
             runWithTimings(false, "fingerprint-test", () =>

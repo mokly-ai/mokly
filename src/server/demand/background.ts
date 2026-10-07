@@ -8,6 +8,7 @@ import {
 import type { Compilation } from "../../build/compile.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import { timingArguments } from "../../diagnostics/timings.js";
+import type { PreparedReviewRepository } from "../../review/prepare.js";
 import type { CatalogueChangeClassification } from "../classification_result.js";
 
 import { backgroundInputs } from "./background_inputs.js";
@@ -95,7 +96,10 @@ export class BackgroundCompilation {
   }
   classify(
     base: string,
-    commit?: string,
+    prepared?: Pick<
+      PreparedReviewRepository,
+      "commit" | "selection" | "descriptor"
+    >,
   ): Promise<CatalogueChangeClassification> {
     if (this.closed) return Promise.resolve(undefined);
     return new Promise((resolve, reject) => {
@@ -103,7 +107,13 @@ export class BackgroundCompilation {
       this.worker.postMessage({
         type: "classify",
         base,
-        ...(commit ? { commit } : {}),
+        ...(prepared
+          ? {
+              commit: prepared.commit,
+              selection: prepared.selection,
+              descriptor: prepared.descriptor,
+            }
+          : {}),
       });
     });
   }

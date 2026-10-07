@@ -44,14 +44,19 @@ every replacement child; the child reports startup transfer, source-inventory
 validation, catalogue preparation, and listening separately.
 
 Build phases distinguish discovery, bundling, evaluation, registry validation,
-rendering, compatibility transformation, component metadata validation, logical
-links, ignore rules, manifest construction/validation, resource validation,
-HTML links, output-path checks and runtime retention. Watcher attachment,
+rendering, component metadata validation, `html.links` for control adaptation
+and logical-link rewriting, ignore rules, manifest construction/validation,
+resource validation, output-path checks and runtime retention. Watcher attachment,
 resource discovery, transactional output, and Changes have separate spans;
-`output.lock` measures the wait for the generated-output writer lock, including
-short output-validation snapshot reads. `output.paths` measures snapshot checks.
+`output.lock` measures only a writer's wait for the generated-output lock.
+`output.paths` measures validation of the in-memory route set.
 Graph work for watcher inventory and source-freshness validation is deliberately
-visible even when it repeats compilation's graph work.
+visible even when it repeats compilation's graph work. Output spans are
+`output.write` (parent), `output.validate-targets` (routes and inventory),
+`output.stage` (complete sibling tree), `output.install` (old-tree rename and
+new-tree rename), `output.rollback` (only after failed installation), and
+`output.cleanup` (only after success or rollback). There are no per-file
+backup, orphan-discovery, or generated-header validation phases.
 
 Review phases use the same session, role and parent context as their caller:
 
@@ -59,7 +64,7 @@ Review phases use the same session, role and parent context as their caller:
   Pinned readers reuse the resolved commit without another Git span.
 - `review.changed-paths` covers output exclusions, tracked/untracked discovery,
   deduplication and sorting, including later input-freshness checks.
-- `review.base-manifest` covers canonical baseline reading, v8 validation, and
+- `review.base-manifest` covers canonical baseline reading, v9 validation, and
   incompatible-version detection.
 - `review.base-documents` covers each bulk baseline-document read, including
   live component prefetch and bounded live document-comparison batches. It does
@@ -77,14 +82,14 @@ Review phases use the same session, role and parent context as their caller:
   Snapshot-copy traversals are measured even when their reads are cached;
   classification discovery-cache hits emit no additional span. Watcher
   inventory keeps its own stages.
-  Fast-path-eligible views in a component-aware classification where no view
-  differs emit at most **one actual occurrence per paired view in committed
-  mode, two in derived mode**. Non-identical attempts with ownership text edits
-  may add one committed or two derived projected occurrences; identical-text
-  checks use one conservative seed set without projection. The
-  [resource rule](./mokly-component-review-fast-path.md#resource-and-one-sided-rules) defines per-mode reader bounds.
-  One-sided views add one occurrence. Repeated discovery for the same side,
-  route, reference identity and exclusion policy is a defect.
+  Fast-path-eligible views where no view differs emit at most one actual
+  occurrence per paired view on each side, for both Git-blob and rebuilt
+  baselines. Non-identical attempts with ownership text edits may add one
+  projected occurrence per side; identical-text checks share conservative seeds
+  without projection. The
+  [resource rule](./mokly-component-review-fast-path.md#resource-and-one-sided-rules)
+  defines reader bounds. One-sided views add one occurrence. Repeated discovery
+  for the same side, route, reference identity and exclusion policy is a defect.
 - `review.css-analysis` measures the synchronous parse/diff/match/reduce pass
   for one changed, reachable stylesheet and one before/after document pair.
   It includes parser-cache lookups or parsing, and runs for cache hits and empty
@@ -133,12 +138,7 @@ See [Historical baseline phases](./mokly-timing-baselines.md#historical-baseline
 
 See [Representative local fixture](./mokly-timing-baselines.md#representative-local-fixture) for the complete rules.
 
-The repository's large consumer is synthetic and opt-in. Its generator and
-screen/component templates live under `tests/fixtures/large`. A small instance
-of the same generator runs in automated tests. A full-sized instance must be
-smoke-tested using the opt-in browser benchmark's under-five-second usable-startup
-assertion. It runs with other heavy checks idle; CI's small correctness fixtures
-have [no machine-specific wall-clock assertion](./ci-test-timing.md).
+CI follows [CI Test Timing](./ci-test-timing.md).
 
 ## Component Analysis Counts
 

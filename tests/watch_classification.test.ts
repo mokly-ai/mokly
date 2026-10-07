@@ -5,8 +5,10 @@ import type { ResolvedConfig } from "../dist/config/types.js";
 import type {
   CatalogueChangeClassifier,
   ComponentChangeSnapshot,
-} from "../dist/server/component_changes.js";
+} from "../dist/server/component_change_types.js";
 import { WatchClassification } from "../dist/server/watch_classification.js";
+
+import { currentManifest } from "./helpers/current_manifest.js";
 
 test("background classification aborts superseded work and publishes only the latest result", async () => {
   const pending: {
@@ -64,24 +66,24 @@ test("closing background classification aborts work and prevents publication", a
 
 function snapshot(id: string): ComponentChangeSnapshot {
   return {
-    baseline: {
+    baseline: currentManifest({
       entries: [],
       generatedBy: "mokly",
-      schemaVersion: 8 as const,
+      schemaVersion: 9 as const,
       folders: [],
       sourceFiles: [`${id}.html`],
-    },
+    }),
   };
 }
 
 function manifest() {
-  return {
+  return currentManifest({
     entries: [],
     generatedBy: "mokly" as const,
-    schemaVersion: 8 as const,
+    schemaVersion: 9 as const,
     folders: [],
     sourceFiles: [],
-  };
+  });
 }
 
 function config(): ResolvedConfig {

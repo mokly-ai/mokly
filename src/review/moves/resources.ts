@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import type { ManifestEntry } from "@mokly/viewer/data";
+import { generatedResourceRoute, type ManifestEntry } from "@mokly/viewer/data";
 
 import { isValidGeneratedRoute } from "../../build/styles/routes.js";
 import { rewriteCssReferences } from "../../css_references.js";
@@ -186,7 +186,8 @@ async function readSide(
     [...declared.values()].flatMap((routes) => [...routes]),
   );
   const generated = (route: string) =>
-    isValidGeneratedRoute(route) || copied.has(route);
+    isValidGeneratedRoute(generatedResourceRoute(route) ?? "") ||
+    copied.has(route);
   const pending = new Set(copied);
   const documents = [
     ...new Set(

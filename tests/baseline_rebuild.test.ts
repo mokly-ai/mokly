@@ -22,7 +22,7 @@ test("baseline rebuild adopts once and a cache hit executes no commands", async 
     onProgress: (event) => events.push(event),
   });
   assert.equal(first.cacheHit, false);
-  assert.equal(first.marker.manifestVersion, 8);
+  assert.equal(first.marker.manifestVersion, 9);
   assert.deepEqual(first.marker.commands, request.commands);
   assert.equal(
     await fs.stat(path.join(path.dirname(first.outputDir), "source")),
@@ -59,10 +59,10 @@ test("cancellation at the marker commit point completes and skips cleanup", asyn
   const { builder, request, fs, calls } = baselineFixture();
   const layout = cacheLayout(request.repoRoot, request.commit);
   const controller = new AbortController();
-  const write = fs.write.bind(fs);
-  t.mock.method(fs, "write", async (file: string, bytes: Uint8Array) => {
-    await write(file, bytes);
-    if (file === layout.marker) controller.abort();
+  const rename = fs.rename.bind(fs);
+  t.mock.method(fs, "rename", async (from: string, to: string) => {
+    await rename(from, to);
+    if (to === layout.marker) controller.abort();
   });
   const list = fs.list.bind(fs);
   const cleanup = t.mock.method(fs, "list", async (directory: string) => {
@@ -75,6 +75,7 @@ test("cancellation at the marker commit point completes and skips cleanup", asyn
     signal: controller.signal,
     onProgress: (event) => events.push(event),
   });
+  assert.equal(controller.signal.aborted, true);
   assert.equal(result.cacheHit, false);
   assert.deepEqual(
     events.map((event) => event.type),
@@ -245,7 +246,10 @@ for (const outcome of ["missing", "invalid", "symlink"] as const)
     runner.run = async (command) => {
       const result = await run(command);
       if (command.argv[0] !== "git") {
-        const file = path.join(command.cwd, "mockups/mokly-manifest.json");
+        const file = path.join(
+          command.cwd,
+          "mockups/mokly-generated/mokly-manifest.json",
+        );
         await fs.remove(file);
         if (outcome !== "missing")
           fs.put(

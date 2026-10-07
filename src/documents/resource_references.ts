@@ -1,4 +1,8 @@
-import { documentRoute, type ManifestEntry } from "@mokly/viewer/data";
+import {
+  generatedResourcePath,
+  documentRoute,
+  type ManifestEntry,
+} from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 import { extractHtmlReferences } from "../html_references.js";
@@ -24,11 +28,14 @@ export function documentResourceIndex(
             "review-invalid",
             `invalid document resource for ${entry.path}: ${resource}`,
           );
-        return route;
+        return generatedResourcePath(route);
       }),
     );
     for (const scheme of entry.colorSchemes)
-      index.set(documentRoute(entry.path, scheme), resources);
+      index.set(
+        generatedResourcePath(documentRoute(entry.path, scheme)),
+        resources,
+      );
   }
   return index;
 }

@@ -1,0 +1,90 @@
+/* Exclusive shared-component styles. Global and layout rules stay shared. */
+
+.ce-control-row {
+  align-items: start;
+  border-top: 1px solid var(--chrome-border);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 120px minmax(0, 1fr);
+  padding: 9px 0;
+}
+
+.ce-control-row > label {
+  color: var(--chrome-ink-2);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding-top: 8px;
+}
+
+.ce-control-row > label > span {
+  color: var(--chrome-muted);
+  display: block;
+  font-family: var(--sans);
+  font-size: 10px;
+  margin-top: 3px;
+}
+
+.ce-control-row .ce-field-error {
+  color: var(--mbk-danger-ink);
+  font-size: 11px;
+  margin: 6px 0 0;
+}
+
+.ce-design .mbk-shell--mobile .ce-control-row {
+  grid-template-columns: 100px minmax(0, 1fr);
+}
+
+.ce-control-hint {
+  color: var(--chrome-muted);
+  display: block;
+  font-size: 10px;
+  margin-top: 4px;
+}
+
+/* The field frames whatever native control its caller supplies, so a prop panel
+   reads the same in every host that renders this component. */
+.ce-control-row input:not([type="checkbox"]),
+.ce-control-row select {
+  background: var(--chrome-surface);
+  border: 1px solid var(--chrome-control-edge);
+  border-radius: 5px;
+  color: var(--chrome-ink);
+  font: inherit;
+  font-size: 12px;
+  height: 32px;
+  max-width: 100%;
+  padding: 5px 8px;
+  width: 100%;
+}
+
+.ce-control-row input[type="checkbox"] {
+  accent-color: var(--mbk-sage-deep);
+  height: 16px;
+  margin: 0;
+  width: 16px;
+}
+
+.ce-control-row .ce-check-value {
+  align-items: center;
+  display: flex;
+  font: inherit;
+  font-size: 11px;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0;
+}
+
+.ce-control-row input[aria-invalid="true"] {
+  border-color: var(--mbk-danger-ink);
+}
+
+.ce-optional-control .ce-unset-value {
+  color: var(--chrome-muted);
+  font-size: 11px;
+  margin: 3px 0 0;
+}
+
+.ce-optional-control:has(input[type="checkbox"]:checked) .ce-unset-value,
+.ce-optional-control:has(input[type="checkbox"]:not(:checked)) .ce-hint-value {
+  display: none;
+}

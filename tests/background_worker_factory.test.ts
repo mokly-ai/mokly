@@ -10,11 +10,11 @@ import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
 for (const mode of ["committed", "derived"] as const)
   for (const existing of [false, true])
-    test(`${mode} ${existing ? "existing" : "fresh"} BackgroundCompilation sends compact mode-selected workerData`, async (context) => {
+    test(`${mode} ${existing ? "existing" : "fresh"} BackgroundCompilation sends compact workerData for the selected baseline`, async (context) => {
       const fixture = await componentReviewFixture(context, (source) => source);
       const runtime = {
         ...componentRuntime(fixture.after),
-        config: { ...fixture.config, generatedOutput: mode },
+        config: fixture.config,
       };
       const accepted = existing ? fixture.after : undefined;
       let captured: { url: URL; options: WorkerOptions } | undefined;
@@ -37,7 +37,7 @@ for (const mode of ["committed", "derived"] as const)
       assert.deepEqual(input.runtime.outputs, []);
       assert.equal(
         input.existingOutputs,
-        mode === "derived" && existing ? fixture.after.outputs : undefined,
+        existing ? fixture.after.outputs : undefined,
       );
       assert.ok(pause instanceof SharedArrayBuffer);
       assert.equal(typeof debug, "boolean");

@@ -23,7 +23,7 @@ test("every hydration shape has exactly one independently timed test", async () 
       await fs.readFile(
         path.join(
           repositoryRoot,
-          "examples/basic/generated/mokly-manifest.json",
+          "examples/basic/mokly-generated/mokly-manifest.json",
         ),
         "utf8",
       ),

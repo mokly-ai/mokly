@@ -12,11 +12,15 @@ import {
 import { readBaseManifest } from "../dist/review/base_manifest.js";
 import { asChangeEvidence } from "../dist/review/change_evidence.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
+import { CompiledReviewAssetReader } from "../dist/review/head_assets.js";
 import { prepareMoveClassification } from "../dist/review/moves/prepare.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { classifyChangedContent } from "../dist/server/changed_content.js";
 
-import { memoryReader } from "./helpers/component_fast_path.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
+import {
+  compilationFiles,
+  memoryReader,
+} from "./helpers/component_fast_path.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
@@ -38,8 +42,8 @@ test("either input manifest enables page analysis even when current identities r
   const prepared = await prepareMoveClassification({
     before: fixture.before.manifest,
     after: fixture.after.manifest,
-    beforeReader: memoryReader(fixture.before.outputs),
-    afterReader: memoryReader(fixture.after.outputs),
+    beforeReader: memoryReader(compilationFiles(fixture.before)),
+    afterReader: memoryReader(compilationFiles(fixture.after)),
     changedPaths: fixture.changedPaths,
     config: fixture.config,
     baseCommit: "a".repeat(40),
@@ -120,7 +124,7 @@ for (const mode of ["committed", "derived"] as const)
         "defineComponent, definePage, defineScreen",
       ) +
       `
-mockups.push(definePage({ path: "guide", title: "Guide", description: "Page path", dependencies: [], relatedDocs: [], render: () => '<!doctype html><html><head><link rel="stylesheet" href="../sheet.css"></head><body><div><!--mokly-review-ignore:start:context--><i class="ignored"></i><!--mokly-review-ignore:end:context--><b class="subject"></b></div></body></html>' }));`;
+mockups.push(definePage({ path: "guide", title: "Guide", description: "Page path", dependencies: [], relatedDocs: [], render: () => '<!doctype html><html><head><link rel="stylesheet" href="../../sheet.css"></head><body><div><!--mokly-review-ignore:start:context--><i class="ignored"></i><!--mokly-review-ignore:end:context--><b class="subject"></b></div></body></html>' }));`;
     const fixture = await inlineChangesFixture(context, "", "", {
       source,
       colorSchemes: false,
@@ -129,7 +133,7 @@ mockups.push(definePage({ path: "guide", title: "Guide", description: "Page path
         after: { "sheet.css": ".ignored + .subject{color:blue}" },
       },
     });
-    const config = { ...fixture.config, generatedOutput: mode };
+    const config = fixture.config;
     const git = committedReviewRepository(fixture.config);
     const commit = fixture.git("rev-parse", "HEAD").toString().trim();
     const before = await readBaseManifest(git.reader, commit, config);
@@ -147,7 +151,7 @@ mockups.push(definePage({ path: "guide", title: "Guide", description: "Page path
             git.reader,
             commit,
             asChangeEvidence(["mockups/sheet.css"]),
-            undefined,
+            new CompiledReviewAssetReader(config, after.outputs),
             "pages",
           ),
         ),

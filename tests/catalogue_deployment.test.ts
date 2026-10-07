@@ -23,11 +23,11 @@ test("catalogue identity normalizes only its owned top-level field and hashes ot
       adapter: {
         transform(files) {
           const model = JSON.parse(
-            Buffer.from(files.get("__mokly/catalogue.json")!).toString(),
+            Buffer.from(files.get("mokly-viewer/catalogue.json")!).toString(),
           );
           model.deploymentId = "b".repeat(64);
           if (extension) model.extension = { deploymentId: "c".repeat(64) };
-          files.set("__mokly/catalogue.json", canonicalJson(model, 2));
+          files.set("mokly-viewer/catalogue.json", canonicalJson(model, 2));
         },
       },
     });
@@ -36,7 +36,7 @@ test("catalogue identity normalizes only its owned top-level field and hashes ot
   assert.notEqual(extended.deploymentId, first.deploymentId);
   const model = JSON.parse(
     (await directoryFiles(fixture.output))
-      .get("__mokly/catalogue.json")!
+      .get("mokly-viewer/catalogue.json")!
       .toString(),
   );
   assert.equal(model.deploymentId, extended.deploymentId);
@@ -62,18 +62,20 @@ for (const alteration of [
         adapter: {
           transform(files) {
             if (alteration === "missing")
-              files.delete("__mokly/catalogue.json");
+              files.delete("mokly-viewer/catalogue.json");
             else if (alteration === "collision")
-              files.set("__mokly/CATALOGUE.json", "{}");
+              files.set("mokly-viewer/CATALOGUE.json", "{}");
             else if (alteration === "prefix")
-              files.set("__mokly/catalogue.json/child", "{}");
+              files.set("mokly-viewer/catalogue.json/child", "{}");
             else {
               const model = JSON.parse(
-                Buffer.from(files.get("__mokly/catalogue.json")!).toString(),
+                Buffer.from(
+                  files.get("mokly-viewer/catalogue.json")!,
+                ).toString(),
               );
               if (alteration === "malformed") model.deploymentId = "invalid";
               else model.sourceFiles = ["entries/secret.tsx"];
-              files.set("__mokly/catalogue.json", JSON.stringify(model));
+              files.set("mokly-viewer/catalogue.json", JSON.stringify(model));
             }
           },
         },

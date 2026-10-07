@@ -7,8 +7,8 @@ import { mock } from "node:test";
 const input = JSON.parse(await fs.readFile(process.argv[2], "utf8"));
 input.beforeFiles = new Map(input.beforeFiles);
 input.afterFiles = new Map(input.afterFiles);
-const { generatedViews } =
-  await import("../../packages/viewer/dist/components/views.js");
+const { reviewViews: generatedViews } =
+  await import("../../dist/review/views.js");
 const before = generatedViews(
   input.before.entries.find(({ path }) => path === "home"),
 )[0];

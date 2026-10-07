@@ -111,8 +111,7 @@ link cannot also submit a form. Ordinary unmarked buttons and metadata-only
 ## Static Generation
 
 The helper emits paired inert template markers around the child. After the
-consumer renderer returns, and before logical-link rewriting or compatibility
-transformation, Mokly consumes these markers for screen and whole-document
+consumer renderer returns, and before logical-link rewriting, Mokly consumes these markers for screen and whole-document
 documents. It validates the parsed HTML structure and patches only marked
 boundaries and control tags/attributes using their original source offsets.
 It does not reserialize the whole document. Markers are an internal reserved
@@ -125,21 +124,13 @@ The `data-mokly-link-control` attribute namespace, including the stylesheet
 marker, is reserved throughout the document and inert template contents.
 Consumer renderers cannot supply these attributes, even without child links.
 Only the adapter can create them. Duplicate attributes on reserved-metadata
-elements fail even when HTML parsing would collapse them. Compatibility output
-must preserve their
-records: element namespace and tag, control metadata, id, navigation attributes,
-and whether the element is inside a template. The package stylesheet's text
-must also remain intact. Reordering attributes or independent controls is
-allowed; adding, removing, moving metadata to a different logical owner, or
-changing owned records fails the build.
+elements fail even when HTML parsing would collapse them. Final rendering retains the validated control metadata.
 
 An active control becomes one native HTML anchor. Child content, classes,
 inline styles, ids, labels, and other applicable attributes remain intact.
 Button roles and button-only form attributes are removed. The new logical
 `href` goes through the existing target, fragment, viewport, scheme, portable
-URL, and authenticated Browse-marker validation. Compatibility transformers
-receive the adapted links and must preserve their logical records as usual;
-they cannot introduce new unconsumed child markers.
+URL, and authenticated Browse-marker validation.
 
 Only documents with active adapted controls receive package-owned inline CSS.
 Low-specificity rules restore ordinary inherited link text styling and the
@@ -182,7 +173,7 @@ This package change does not migrate or publish downstream repositories.
 Verification covers default-anchor byte compatibility, typed and untyped API
 misuse, source-byte preservation, native/custom controls, disabled and busy
 states, ambiguity and malformed markup, target validation, light/dark and both
-viewports, page callbacks/custom renderers, compatibility transforms, and clean packed
+viewports, page callbacks/custom renderers and clean packed
 ESM/NodeNext consumers. Browser checks exercise real Firna buttons, pointer and
 keyboard navigation in script-free Browse/use-case frames, focus visibility,
 disabled behavior, standalone file links, and Review snapshot links.

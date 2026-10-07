@@ -1,45 +1,53 @@
-import fs from "node:fs";
 import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
 import { exportCatalogue } from "../../dist/export/run.js";
-import { createCommittedExampleBaseline } from "../helpers/example_baseline.js";
-import { repositoryRoot } from "../helpers/fixture.js";
+import { validateWarmExample } from "../helpers/example_preparation.js";
+import type { PreparedExample } from "../helpers/example_preparation.js";
 import {
   FULL_CATALOGUE_SETUP_TIMEOUT_MS,
   timeExportPreparation,
-  timeFixturePhase,
 } from "../helpers/fixture_timing.js";
+import { acquireSharedExample } from "../helpers/shared_example.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
 import { assertServedShellMarker } from "./export_shell.js";
 import { chooseViewport, expectFrameSource } from "./workspace_actions.js";
 
+let prepared: PreparedExample;
 let output: string;
 let root: string;
 let server: Awaited<ReturnType<typeof serveStaticFiles>>;
 test.beforeAll(async () => {
   test.setTimeout(FULL_CATALOGUE_SETUP_TIMEOUT_MS);
-  root = await fs.promises.mkdtemp(
-    path.join(repositoryRoot, ".context/mokly-example-export-"),
-  );
-  const config = await timeFixturePhase(
-    "static-example",
-    "baseline-fixture",
-    false,
-    () => createCommittedExampleBaseline(root, "static-example"),
-  );
-  output = path.join(root, "site");
-  await timeExportPreparation("static-example", () =>
-    exportCatalogue(config, { base: "HEAD", outDir: output }),
-  );
-  server = await serveStaticFiles(output);
-  await assertServedShellMarker(server.url, "/view/example/screens/welcome/");
+  prepared = await acquireSharedExample("static-example");
+  root = prepared.root;
+  const config = prepared.config;
+  try {
+    await validateWarmExample(config, prepared.commit);
+    output = path.join(root, "site");
+    await timeExportPreparation(
+      "static-example",
+      () =>
+        exportCatalogue(config, {
+          base: "HEAD",
+          outDir: output,
+          signal: prepared.signal,
+        }),
+      { operationUnderTest: false, expectWarmBaseline: true },
+    );
+    server = await serveStaticFiles(output);
+    await assertServedShellMarker(server.url, "/view/example/screens/welcome/");
+  } catch (error) {
+    await server?.close();
+    await prepared.close();
+    throw error;
+  }
 });
 test.afterAll(async () => {
   await server?.close();
-  if (root) await fs.promises.rm(root, { recursive: true, force: true });
+  await prepared?.close();
 });
 
 test("the owning example stays usable when HEAD is the unchanged baseline", async ({
@@ -77,9 +85,9 @@ test("the owning example stays usable when HEAD is the unchanged baseline", asyn
     await page.screenshot({ path: info.outputPath(`${width}-Current.png`) });
   }
   expect(failures).toEqual([]);
-  expect(server.requests.some((url) => url.includes("/__mokly/events"))).toBe(
-    false,
-  );
+  expect(
+    server.requests.some((url) => url.includes("/mokly-viewer/events")),
+  ).toBe(false);
 });
 
 test("the exported example discloses a screen's variants without a server", async ({
@@ -138,6 +146,6 @@ test("the exported example opens a Markdown document from each URL form", async 
   await page.getByLabel("Appearance", { exact: true }).selectOption("dark");
   await expectFrameSource(
     frame,
-    `${server.url}/static/example/workspace-guide/index.dark.html`,
+    `${server.url}/static/mokly-generated/example/workspace-guide/index.dark.html`,
   );
 });

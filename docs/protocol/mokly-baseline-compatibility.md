@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Current and historical readers accept manifest v8. Earlier baselines use the
+Current and historical readers accept manifest v9. Earlier baselines use the
 established Changes-unavailable outcome without conversion.
 
 This contract owns the version gate between a current catalogue and the Git
@@ -12,8 +12,8 @@ rebuilding are defined by [Derived Baselines](./mokly-derived-baselines.md).
 ## Compatible Baseline
 
 A comparison base is compatible only when its output contains the canonical
-`mokly-manifest.json` and that manifest is a valid schema-v8 manifest. The
-historical boundary applies the same v8 shape, relationship, path, and source
+`mokly-generated/mokly-manifest.json` and that manifest is a valid schema-v9 manifest. The
+historical boundary applies the same v9 shape, relationship, path, and source
 inventory validation as the current manifest reader. It reads baseline bytes
 but never executes baseline source through the current Mokly package. The
 sole shape exception is retirement of array-valued `styles` and `resources`
@@ -28,11 +28,12 @@ artifact already has the path-derived layout in the
 
 ## Incompatible Earlier Baseline
 
-A canonical manifest with an integer `schemaVersion` below `8` is incompatible
-earlier output. A base that has no canonical manifest but contains
-`mokabook-manifest.json` or `mockbook-manifest.json` is also incompatible;
-those names are sentinels for earlier output, not fallback inputs. Mokly does
-not parse their contents.
+At the selected generated location, a canonical manifest with an integer
+`schemaVersion` below `9` is incompatible earlier output. A committed
+root-level manifest does not decide selection: a missing generated manifest
+selects a rebuild. After that build, canonical root-level output below v9
+produces this same outcome without a flat-layout reader or cache entry.
+Only `mokly-manifest.json` is recognized.
 
 An incompatible base is an expected comparison-availability outcome, not a
 current-build failure:
@@ -60,10 +61,10 @@ restores Changes without restarting Serve.
 ## Invalid Or Missing Data
 
 The graceful branch above is only for recognized earlier output. An integer
-`schemaVersion` above `8` is an unsupported newer baseline and follows the
+`schemaVersion` above `9` is an unsupported newer baseline and follows the
 invalid-baseline path. Invalid JSON, a non-object root, a missing or non-integer
-version, or a schema-v8 file that fails validation follows the same path.
-Absence of every recognized manifest is missing history. None of these cases
+version, or a schema-v9 file that fails validation follows the same path.
+Absence of the canonical generated manifest at the requested root selects a rebuild with that commit's own recipe under the [manifest selection contract](./mokly-generated-manifest.md#selection-cache-and-resource-addressing). None of these cases
 falls back or becomes a successful empty comparison.
 
 Serve reports invalid or missing history as Changes unavailable and logs its
@@ -74,18 +75,18 @@ defined above. Current output validation remains fatal for every command.
 ## Output Ownership Is Independent
 
 Rejecting an earlier comparison base does not weaken generated-output
-ownership. A current build still inventories owned files, reports pending
-orphans in Check, and removes proven old generated files transactionally in
-Build. Static export replacement likewise removes files owned only by the
+ownership. A current build inventories the whole generated tree. Tracked Check reports
+missing, stale and extra files; Build replaces the tree transactionally. Static export replacement likewise removes files owned only by the
 previous artifact. These operations inspect current ownership metadata and the
 installed output; they do not parse or convert an incompatible baseline.
 
 ## Verification
 
-Coverage must prove that a valid v8 base compares normally and that a lower
-version or incompatible sentinel produces the command outcomes and single line
+Coverage must prove that a valid v9 base compares normally and that a lower
+version in the selected generated location or rebuilt root-level output produces the command outcomes and single line
 above. A newer-version base must make Serve report Changes unavailable with its
-normal safe diagnostic and make explicit capture fail. Malformed v8, missing
+normal safe diagnostic and make explicit capture fail. Malformed v9, missing
 history, current-manifest failure, output cleanup, and rollback remain separate
-cases. Derived mode builds the base with that commit's tooling before this gate;
-committed mode applies it directly to Git blobs.
+cases. The [v9 gate](./mokly-generated-manifest.md) defines committed-envelope
+selection from the generated subtree, rejection after the base's own build,
+partial-cache rebuilding, and moved-root v9 inventory verification.

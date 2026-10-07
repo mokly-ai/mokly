@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { PageAnalysisPair } from "../dist/review/page_pair.js";
-import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import { reviewViews as generatedViews } from "../dist/review/views.js";
 
 import { inlineChangesFixture } from "./helpers/inline_changes.js";
 import { comparePageViews } from "./helpers/page_comparison.js";

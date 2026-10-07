@@ -7,8 +7,8 @@ input.beforeFiles = new Map(input.beforeFiles);
 input.afterFiles = new Map(input.afterFiles);
 const scenario = process.argv[3];
 const real = await import("../../dist/review/ignore.js");
-const { generatedViews } =
-  await import("../../packages/viewer/dist/components/views.js");
+const { reviewViews: generatedViews } =
+  await import("../../dist/review/views.js");
 const after = generatedViews(
   input.after.entries.find(({ path }) => path === "home"),
 )[0];

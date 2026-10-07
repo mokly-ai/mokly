@@ -11,8 +11,8 @@ test("a cumulative sheet excludes another component's unused rule from a zero-in
   );
   const live = await fixture.live();
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   assert.deepEqual(result.changes, []);
   assert.deepEqual(live.changedEntries, []);
   const plain = result.screens.find((screen) => screen.path === "plain")!;
@@ -37,8 +37,8 @@ test("formatting, comments, attributes and element splits carry no identity", as
   );
   const live = await fixture.live();
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   assert.deepEqual(result.changes, []);
   assert.deepEqual(live.changedEntries, []);
   assert.ok(
@@ -61,8 +61,8 @@ test("a parse failure stays entry material with no inferred component owner", as
   );
   const live = await fixture.live();
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   assert.ok(live.changedEntries?.includes("home"));
   assert.ok(
     result.changes.some(

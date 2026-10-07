@@ -18,7 +18,7 @@ for (const mode of ["committed", "derived"] as const)
       "doctype",
     ] as const)
       test(`${mode} ${lookalike} respects the adopted token's paired region, ignored=${ignoredActual}`, async (context) => {
-        const actual = '<body style="background:url(../image.svg)">';
+        const actual = '<body style="background:url(../../image.svg)">';
         const hidden = {
           "ignored-tag": `<tr title='${actual}'>`,
           "end-tag": `</div title='${actual}'>`,

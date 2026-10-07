@@ -14,17 +14,32 @@ import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
-for (const generatedOutput of ["committed", "derived"] as const)
-  test(`zero-change ${generatedOutput} classification discovers each required side once`, async (t) => {
+for (const access of ["single", "bulk"] as const)
+  test(`zero-change ${access} classification discovers each required side once`, async (t) => {
     const fixture = await componentReviewFixture(t, (source) => source);
     const events: TimingEvent[] = [];
-    const reader = (outputs: ReadonlyMap<string, GeneratedFile>) => ({
-      read: async (route: string) => {
-        const content = outputs.get(route);
+    const reader = (outputs: ReadonlyMap<string, GeneratedFile>) => {
+      const read = async (route: string) => {
+        const content = outputs.get(route.replace(/^mokly-generated\//, ""));
         assert.notEqual(content, undefined, route);
         return generatedBytes(content!);
-      },
-    });
+      };
+      return {
+        read,
+        ...(access === "bulk"
+          ? {
+              readMany: async (routes: readonly string[]) =>
+                new Map(
+                  await Promise.all(
+                    routes.map(
+                      async (route) => [route, await read(route)] as const,
+                    ),
+                  ),
+                ),
+            }
+          : {}),
+      };
+    };
     await runWithTimings(
       true,
       "test",
@@ -34,7 +49,7 @@ for (const generatedOutput of ["committed", "derived"] as const)
           after: fixture.after.manifest,
           beforeReader: reader(fixture.before.outputs),
           afterReader: reader(fixture.after.outputs),
-          config: { ...fixture.config, generatedOutput },
+          config: fixture.config,
           changedPaths: [],
           baseCommit: "a".repeat(40),
           baseRef: "main",
@@ -74,7 +89,7 @@ for (const generatedOutput of ["committed", "derived"] as const)
         (event) =>
           event.stage === "review.resource-graph" && event.event === "start",
       ).length,
-      views * (generatedOutput === "derived" ? 2 : 1),
+      views * 2,
     );
     assert.equal(
       events.filter(

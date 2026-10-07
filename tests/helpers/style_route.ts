@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import type { TestContext } from "node:test";
 
+import { generatedResourcePath } from "@mokly/viewer/data";
+
 import {
   runWithDocumentWork,
   runWithTimings,
@@ -8,9 +10,12 @@ import {
   type TimingEvent,
 } from "../../dist/diagnostics/timings.js";
 import { compareComponentView } from "../../dist/review/component_view.js";
-import { generatedViews } from "../../packages/viewer/dist/components/views.js";
+import { reviewViews } from "../../dist/review/views.js";
 
-import type { FastPathFixture } from "./component_fast_path.js";
+import {
+  compilationFiles,
+  type FastPathFixture,
+} from "./component_fast_path.js";
 import { componentReviewFixture } from "./component_review_fixture.js";
 import { inlineComponentSource } from "./inline_changes.js";
 import { pageContext } from "./page_comparison.js";
@@ -24,8 +29,8 @@ export async function styleRouteFixture(
   return {
     before: fixture.before.manifest,
     after: fixture.after.manifest,
-    beforeFiles: fixture.before.outputs,
-    afterFiles: fixture.after.outputs,
+    beforeFiles: compilationFiles(fixture.before),
+    afterFiles: compilationFiles(fixture.after),
     config: fixture.config,
     changedPaths: [],
   } satisfies FastPathFixture;
@@ -35,7 +40,7 @@ export function withHeadStyles(
   fixture: FastPathFixture,
   before: string,
   after: string,
-  mode: "committed" | "derived",
+  _mode: "committed" | "derived",
 ): FastPathFixture {
   const insert = (files: FastPathFixture["beforeFiles"], markup: string) =>
     new Map(
@@ -46,7 +51,6 @@ export function withHeadStyles(
     );
   return {
     ...fixture,
-    config: { ...fixture.config, generatedOutput: mode },
     beforeFiles: insert(fixture.beforeFiles, before),
     afterFiles: insert(fixture.afterFiles, after),
   };
@@ -59,10 +63,13 @@ export function selectedStyleViews(
 ) {
   const entry = fixture.after.entries.find((entry) => entry.path === id)!;
   const previous = fixture.before.entries.find((entry) => entry.path === id)!;
-  const after = generatedViews(entry).find(
-    (view) => !viewPath || view.path === viewPath,
+  const after = reviewViews(entry).find(
+    (view) =>
+      !viewPath ||
+      view.path === viewPath ||
+      view.path === generatedResourcePath(viewPath),
   )!;
-  const before = generatedViews(previous).find(
+  const before = reviewViews(previous).find(
     (view) => view.path === after.path,
   )!;
   return {

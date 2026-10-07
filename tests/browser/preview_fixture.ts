@@ -2,8 +2,7 @@ import path from "node:path";
 import { setTimeout as pause } from "node:timers/promises";
 import { stripVTControlCharacters } from "node:util";
 
-import { buildPreview } from "../../scripts/preview/catalogue.mjs";
-import { createCommittedExampleBaseline } from "../helpers/example_baseline.js";
+import { runColdPreviewBuild } from "../helpers/cold_preview_build.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 import { timeFixturePhase } from "../helpers/fixture_timing.js";
 
@@ -50,15 +49,7 @@ export async function startPreviewFixture(
         true,
         async () => {
           const fixtureRoot = path.dirname(path.dirname(output));
-          const config = await createCommittedExampleBaseline(
-            fixtureRoot,
-            "static-example",
-          );
-          await buildPreview(
-            config,
-            output,
-            includeChanges ? { includeChanges: true, base: "HEAD" } : {},
-          );
+          await runColdPreviewBuild(fixtureRoot, output, includeChanges);
         },
       ),
     contextRoot: previewFixtureContextRoot(

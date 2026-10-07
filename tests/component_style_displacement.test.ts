@@ -22,7 +22,7 @@ for (const mode of ["committed", "derived"] as const)
                 material === "custom"
                   ? `--tone:${color};color:${color}`
                   : material === "url"
-                    ? `background:url("../${color}.svg")`
+                    ? `background:url("../../${color}.svg")`
                     : `color:${color}`;
               const single = (color: string, outputColor = color) =>
                 wrap(

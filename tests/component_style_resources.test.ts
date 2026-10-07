@@ -35,43 +35,43 @@ for (const mode of ["committed", "derived"] as const)
     for (const [name, before, after, route] of [
       [
         "adjacent unchanged URL",
-        '.asset{background:url("../asset.svg")}.entry{color:red}',
-        '.asset{background:url("../asset.svg")}.entry{color:blue}',
+        '.asset{background:url("../../asset.svg")}.entry{color:red}',
+        '.asset{background:url("../../asset.svg")}.entry{color:blue}',
         "style",
       ],
       [
         "unchanged owned URL",
-        '.actual-only{background:url("../asset.svg")}.entry{color:red}',
-        '.actual-only{background:url("../asset.svg")}.entry{color:blue}',
+        '.actual-only{background:url("../../asset.svg")}.entry{color:red}',
+        '.actual-only{background:url("../../asset.svg")}.entry{color:blue}',
         "style",
       ],
       [
         "reference crossing window edge",
-        '.entry{background:url("../asset.svg")}',
-        '.entry{background:url("../other.svg")}',
+        '.entry{background:url("../../asset.svg")}',
+        '.entry{background:url("../../other.svg")}',
         "complete",
       ],
       [
         "unchanged reference in changed rule",
-        '.entry{background:url("../asset.svg");color:red}',
-        '.entry{background:url("../asset.svg");color:blue}',
+        '.entry{background:url("../../asset.svg");color:red}',
+        '.entry{background:url("../../asset.svg");color:blue}',
         "complete",
       ],
       [
         "condition prelude reference",
-        '@supports(background:url("../asset.svg")){.entry{color:red}}',
-        '@supports(background:url("../asset.svg")){.entry{color:blue}}',
+        '@supports(background:url("../../asset.svg")){.entry{color:red}}',
+        '@supports(background:url("../../asset.svg")){.entry{color:blue}}',
         "complete",
       ],
       [
         "added reference rule",
         ".entry{color:red}",
-        '.entry{color:red}.asset{background:url("../asset.svg")}',
+        '.entry{color:red}.asset{background:url("../../asset.svg")}',
         "complete",
       ],
       [
         "removed reference rule",
-        '.entry{color:red}.asset{background:url("../asset.svg")}',
+        '.entry{color:red}.asset{background:url("../../asset.svg")}',
         ".entry{color:red}",
         "complete",
       ],
@@ -89,10 +89,10 @@ for (const mode of ["committed", "derived"] as const)
         );
       });
     const markup = (color: string) =>
-      `<link rel="stylesheet" href="../sheet.css">${style(`.entry{color:${color}}`)}`;
+      `<link rel="stylesheet" href="../../sheet.css">${style(`.entry{color:${color}}`)}`;
     const original = withResources(markup("red"), markup("blue"));
     await context.test(
-      "only the mode-required readers traverse stable closures",
+      "both readers traverse stable closures once",
       async () => {
         const comparisonContext = pageContext(original);
         const readBefore =
@@ -127,7 +127,7 @@ for (const mode of ["committed", "derived"] as const)
           after,
         );
         assert.equal(result.comparisonPath, "style");
-        assert.equal(baseCalls, mode === "committed" ? 0 : 1);
+        assert.equal(baseCalls, 1);
         assert.equal(headCalls, 1);
         assert.equal(requiredBaseCalls, 0);
       },

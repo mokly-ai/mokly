@@ -18,7 +18,7 @@ test("v4 asserts analysed reason scope at the producer boundary", async (t) => {
   };
   const documents = new Map(
     [...fixture.after.outputs].map(([route, html]) => [
-      route,
+      `mokly-generated/${route}`,
       Buffer.from(html),
     ]),
   );

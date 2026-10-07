@@ -1992,6 +1992,34 @@ Evidence: `.context/scalable-inline-style-analysis/m11-merge/`.
       Finding 1: the replay test starts a nested runner with --test-concurrency=2, beyond main's shared unit limit; pending the user's decision.
       Finding 2: the companion test drives the real viewer in Chromium under parallel load with 5-second Playwright waits; pending the user's decision.
 
+## Milestone 12: Generated Output Mainline Integration
+
+Merge current main's generated-output layout, remote verification and CSS source
+map handling. Preserve the branch's analysis, fingerprint proofs and diagnostics.
+Keep the recorded CI failures and open review findings pending their decisions.
+
+User decision (2026-10-07): merge the latest `origin/main` and resolve its conflicts.
+
+Evidence: `.context/scalable-inline-style-analysis/m12-merge/`.
+
+- [ ] Audit main's additions and merge once with two parents. Resolve each
+      conflict by responsibility, then review the complete remerge diff and
+      deletion audit.
+- [ ] Discovered: main advanced during integration. Merge the dependency-audit,
+      test-consolidation and targeted-runner additions after reviewing the
+      first merge. Keep two parents and a separate audit for each merge.
+- [ ] Integrate the branch with manifest v9, catalogue v5, review v6 and the
+      generated-output layout. Preserve useful analysis and harness coverage.
+- [ ] Align the affected contracts and READMEs. Validate the merged code with
+      targeted tests, real-server smoke checks and `cargo xtask check`.
+- [ ] After checks pass, `git add -A`, commit with Conventional Commits and
+      push the branch.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against `origin/main`. Keep the review read-only, then apply main's
+      [review-fix rule](../AGENTS.md#general): fix `Auto-fix: yes` findings,
+      re-review once and report fixed and open findings separately.
+
 ## Post-merge follow-up (non-blocking)
 
 - Smoke the published package against a React Native Web catalogue whose

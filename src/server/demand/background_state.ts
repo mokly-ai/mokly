@@ -1,18 +1,17 @@
 /** Retain only the worker's classification inputs after complete parent delivery. */
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 
+import type { BaselineCatalogue } from "../../baseline/catalogue.js";
 import type { Compilation } from "../../build/compile.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import type { GeneratedFile } from "../../build/generated_file.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { errorMessage } from "../../errors.js";
+import type { BaselineSelection } from "../../review/repository.js";
 import type { CatalogueChangeClassification } from "../classification_result.js";
-import type { CatalogueClassificationInputs } from "../component_changes.js";
+import type { CatalogueClassificationInputs } from "../component_change_types.js";
 
-import {
-  classificationOutputs,
-  type backgroundInputs,
-} from "./background_inputs.js";
+import type { backgroundInputs } from "./background_inputs.js";
 
 export type BackgroundWorkerMessage =
   | { type: "compiled"; compilation: Compilation }
@@ -27,7 +26,7 @@ interface BackgroundFunctions {
   post(message: BackgroundWorkerMessage): void;
   classify(
     config: ResolvedConfig,
-    manifest: ManifestV8,
+    manifest: ManifestV9,
     base: string,
     accepted: CatalogueClassificationInputs,
   ): Promise<CatalogueChangeClassification>;
@@ -35,7 +34,7 @@ interface BackgroundFunctions {
 
 export class BackgroundWorkerState {
   private readonly runtime: ComponentRuntime;
-  private manifest: ManifestV8 | undefined;
+  private manifest: ManifestV9 | undefined;
   private outputs: ReadonlyMap<string, GeneratedFile> | undefined;
 
   constructor(
@@ -45,10 +44,7 @@ export class BackgroundWorkerState {
   ) {
     this.runtime = inputs.runtime;
     this.manifest = inputs.existingManifest;
-    this.outputs = classificationOutputs(
-      this.runtime.config,
-      inputs.existingOutputs,
-    );
+    this.outputs = inputs.existingOutputs;
     delete inputs.existingOutputs;
   }
 
@@ -65,18 +61,20 @@ export class BackgroundWorkerState {
       );
       this.manifest = compilation.manifest;
       this.functions.post({ type: "compiled", compilation });
-      this.outputs = classificationOutputs(
-        this.runtime.config,
-        compilation.outputs,
-      );
+      this.outputs = compilation.outputs;
     } catch (error) {
       this.functions.post({ type: "failed", error: errorMessage(error) });
     }
   }
 
-  async classify(message: { base: string; commit?: string }): Promise<void> {
+  async classify(message: {
+    base: string;
+    commit?: string;
+    selection?: BaselineSelection;
+    descriptor?: BaselineCatalogue;
+  }): Promise<void> {
     if (!this.manifest) return;
-    if (this.runtime.config.generatedOutput === "derived" && !message.commit) {
+    if (!message.commit || !message.selection) {
       this.functions.post({ type: "classified" });
       return;
     }
@@ -86,7 +84,9 @@ export class BackgroundWorkerState {
       this.manifest,
       message.base,
       {
-        ...(message.commit ? { commit: message.commit } : {}),
+        commit: message.commit,
+        selection: message.selection,
+        ...(message.descriptor ? { descriptor: message.descriptor } : {}),
         generation: {
           routes: this.runtime.styleOutputs.map(([route]) => route),
           ...(this.outputs ? { outputs: this.outputs } : {}),

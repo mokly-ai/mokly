@@ -7,8 +7,9 @@ import {
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
 import { compareComponentView } from "../dist/review/component_view.js";
-import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import { reviewViews as generatedViews } from "../dist/review/views.js";
 
+import { compilationFiles } from "./helpers/component_fast_path.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { comparePageFixture, pageContext } from "./helpers/page_comparison.js";
 
@@ -18,7 +19,6 @@ for (const mode of ["committed", "derived"] as const)
       const fixture = await componentReviewFixture(context, (source) =>
         changed ? source.replace("Screen content", "Changed screen") : source,
       );
-      fixture.config.generatedOutput = mode;
       const events: TimingEvent[] = [];
       const results = await runWithTimings(
         true,
@@ -29,8 +29,8 @@ for (const mode of ["committed", "derived"] as const)
               ...fixture,
               before: fixture.before.manifest,
               after: fixture.after.manifest,
-              beforeFiles: fixture.before.outputs,
-              afterFiles: fixture.after.outputs,
+              beforeFiles: compilationFiles(fixture.before),
+              afterFiles: compilationFiles(fixture.after),
             }),
           ),
         { write: (event) => events.push(event) },
@@ -74,8 +74,8 @@ test("added and removed views parse their sole original side exactly once", asyn
     ...fixture,
     before: fixture.before.manifest,
     after: fixture.after.manifest,
-    beforeFiles: fixture.before.outputs,
-    afterFiles: fixture.after.outputs,
+    beforeFiles: compilationFiles(fixture.before),
+    afterFiles: compilationFiles(fixture.after),
   };
   for (const side of ["before", "after"] as const) {
     const events: TimingEvent[] = [];

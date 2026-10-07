@@ -90,7 +90,7 @@ test("a failed required-only proof batch cannot poison needed files", async (con
               existing.changed,
               existing.prefix,
               undefined,
-              true,
+              undefined,
               true,
             ),
           },

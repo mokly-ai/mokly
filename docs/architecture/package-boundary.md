@@ -13,7 +13,7 @@ paths, and synthetic tests.
 | esbuild discovery and one-graph loading               | Product component library                     | Renderer/module resolution               |
 | Static fragments and manifest schema                  | Theme/tokens/providers                        | Stylesheet rules                         |
 | Per-root CSS/asset bundling and PostCSS orchestration | Imported CSS/fonts/images and PostCSS plugins | `postcss` module and CSS `empty` opt-out |
-| Generated-file ownership and check                    | Product CSS/fonts/images                      | Document transformer                     |
+| Generated-tree replacement and check                  | Product CSS/fonts/images                      | Consumer renderer                        |
 | Safe paths and catalogue navigation                   | Product route semantics                       | Additional watch inputs                  |
 | Git comparison and Review-ignore rules                | Comparison policy                             | Base, output, impact globs               |
 | Complete static catalogue export                      | Hosting, credentials, deployment              | Export output and Git base               |
@@ -68,7 +68,7 @@ never imports the CLI, Node built-ins, Git or consumer application code. Its `./
 is explicitly Node-only SSR and is excluded from the browser entry graph.
 
 The public boundary consists of [scoped instances](../protocol/mokly-instances.md),
-the [catalogue v4 projection](../protocol/mokly-catalogue.md), the
+the [catalogue v5 projection](../protocol/mokly-catalogue.md), the
 [React/SSR viewer API](../protocol/mokly-viewer.md) and
 [FrameAdapter](../protocol/mokly-frame-adapter.md). Hosts consume packages and
 documented public artifacts, without private manifest access, deep imports or
@@ -100,11 +100,10 @@ the viewer before the CLI that depends on it.
 Consumers register complete HTML with `definePage`; a Markdown file matched by a
 configured root defines a [document](../protocol/mokly-documents.md), which
 Mokly renders while its source remains protected and watched. A page callback
-may reuse an existing render helper; consumer
-policy owns source allowlists and document-stage rules. A configured
-complete-document transformer remains an explicit deterministic boundary whose
-result receives normal validation. Current and comparison-base manifests both
-require v8 under the
+may reuse an existing render helper; consumer policy owns source allowlists and
+document-stage rules. The configured renderer supplies screen and component
+views before link validation; pages keep their own complete-document callbacks.
+Current and comparison-base manifests both require v9 under the
 [baseline compatibility contract](../protocol/mokly-baseline-compatibility.md).
 [Paths and roots](../protocol/mokly-paths.md) determine identity for every kind.
 [Move detection](../protocol/mokly-moves.md) pairs entries across accepted builds.
@@ -113,9 +112,9 @@ require v8 under the
 
 Browse serves only the configured mockups root and rejects protected authoring inputs, traversal, and symlink escapes. Watch targets come from resolved config and the complete source inventory; package-owned dependency/build/test/output trees are
 pruned before broad consumer rules, while explicit source modules and
-stylesheets retain their required action. Output HTML is pruned only when its
-versioned, comment-safe generated header decodes to a source beneath an authored
-root; consumer-authored public HTML may use explicit watch rules. A child closes
+referenced stylesheets retain their required action. Generated output under
+`mokly-generated/` is pruned by path, without parsing its plain marker; referenced
+authored closure files remain watched. A child closes
 on either an orderly message/signal or loss of its parent IPC channel, and
 supervisor shutdown waits for confirmed exit while escalating from IPC to
 SIGTERM and SIGKILL. On-demand comparisons read the base
@@ -135,8 +134,8 @@ drains generation work before removing them.
 
 Browse promotes only explicit path-addressed
 catalogue links from manifest-owned generated fragments and complete pages
-whose ownership header matches the entry's manifest `sourcePath` into outer
-Browse routes. Adapted public unowned HTML loses reserved-looking metadata and
+whose route and bytes match the accepted manifest and compilation into outer
+Browse routes. Other adapted authored HTML loses reserved-looking metadata and
 is never trusted. A generated document with an activatable catalogue link
 rejects `<base href>` so its relative fallback cannot resolve differently from
 the portable bytes Browse authenticates. Browse uses same-origin inspection
@@ -156,7 +155,7 @@ page's canonical `/view/<path>/` URL and immutable comparison URLs. The exporter
 owns file selection, input consistency, exclusive output reservation,
 replacement, and rollback; `scripts/preview` captures one already-built Browse
 snapshot with optional Changes and adds Pages URL/header metadata and
-current schema-2 preview ownership. Both paths share artifact validation, deployment
+current schema-3 export ownership. Both paths share artifact validation, deployment
 identity, and the output transaction, and reuse the same shell renderer and
 comparison engine. Watch ignores inventory-listed export files while traversing
 output directories for new authored files.

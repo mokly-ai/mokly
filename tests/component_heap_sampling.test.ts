@@ -11,9 +11,10 @@ import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js"
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
-import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import { reviewViews as generatedViews } from "../dist/review/views.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 test("each completed real view samples heap once; a rejecting view never samples and the peak is rounded", async (testContext) => {
   const fixture = await componentReviewFixture(testContext, (source) => source);
@@ -33,7 +34,8 @@ test("each completed real view samples heap once; a rejecting view never samples
   const timer = setTimeout(releaseFailure, 10_000);
   fixture.beforeRemove(() => clearTimeout(timer));
   const beforeReader = new ComponentMaterialReader({
-    read: async (route) => Buffer.from(fixture.before.outputs.get(route)!),
+    read: async (route) =>
+      Buffer.from(textOutput(fixture.before.outputs, route)!),
   });
   const afterReader = new ComponentMaterialReader({
     read: async (route) => {
@@ -41,7 +43,7 @@ test("each completed real view samples heap once; a rejecting view never samples
         await completed;
         throw failure;
       }
-      return Buffer.from(fixture.after.outputs.get(route)!);
+      return Buffer.from(textOutput(fixture.after.outputs, route)!);
     },
   });
   const changed = new Set<string>();

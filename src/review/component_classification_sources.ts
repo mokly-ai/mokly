@@ -3,8 +3,8 @@ import type {
   ChangedEntry,
   ComponentReview,
   EntryChangeReason,
-  ReviewResultV5,
-  ScreenReviewV5,
+  ReviewResultV6,
+  ScreenReviewV6,
 } from "@mokly/viewer/data";
 
 import { runWithComparisonWork } from "../diagnostics/material_timings.js";
@@ -48,7 +48,7 @@ import { aggregateState } from "./screen_views.js";
 
 /** Internal classifier output for source validation and its regression fixtures. */
 export interface ComponentClassificationWithSources {
-  result: ReviewResultV5;
+  result: ReviewResultV6;
   implementationImpact: ReadonlySet<string>;
   sources: DependencyReasonSources;
   pairing: MovePairing;
@@ -88,7 +88,7 @@ export async function classifyComponentsWithSources(
     after,
   );
   const sharedImpact = dependencies.sharedPaths(changedPaths);
-  const screens: ScreenReviewV5[] = [];
+  const screens: ScreenReviewV6[] = [];
   const components: ComponentReview[] = [];
   const changes: ChangedEntry[] = [];
   const impacting = new Set<string>();

@@ -13,6 +13,8 @@ owns watchers, background work and the supervised HTTP child. `http.ts` and
 mutable catalogue and evidence lifecycle.
 `component_change_cache.ts` coalesces accepted classification reads across
 the server's content generations.
+`component_change_types.ts` defines the shared snapshot and classifier contracts.
+`component_changes.ts` runs the repository classification against those contracts.
 `render_moves.ts` binds accepted pairs to that renderer generation for saved and
 controlled preview diagnostics. Pending evidence, runtime replacement and
 unavailable Changes clear the map. Background classification shares one pairing
@@ -25,6 +27,9 @@ Markdown similarity never reads a newer filesystem generation.
 `http_shutdown.ts` stops HTTP admission, ends live-update streams, and disconnects
 open clients before draining every owned service. Incomplete request headers or
 unfinished responses cannot keep shutdown waiting for the browser.
+`http_snapshot.ts` selects startup metadata before listening. The request
+handler also applies local-control admission and routes HTTP errors. `serve_lifecycle.ts`
+keeps child restart, recovery and queued background work together.
 `watch_events.ts` owns classification and serialized event handling;
 `watch_paths.ts` owns watch roots and pruning, including entry-glob traversal
 boundaries that retain each stable prefix without exempting its ignored
@@ -48,8 +53,9 @@ Physical event paths
 under a symlinked repository root map back to configured logical paths.
 `addDir` and `unlinkDir` identify directories; `add`, `change`, and `unlink`
 identify files. Supplied stats avoid that stat, but traversal still reads export
-markers and ownership headers. Deleted matched files rebuild even when named
-`target`; existing and removed denied directories outrank user watch rules.
+markers; the watcher ignores `mokly-generated/` by prefix. Deleted matched
+files rebuild even when named `target`; existing and removed denied
+directories outrank user watch rules.
 Resource notifications coalesce by path with the latest descriptor.
 PostCSS directory-dependency roots join the package-owned watch targets after
 graph inventory. Matching file additions and any new non-ignored subdirectory
@@ -69,7 +75,7 @@ lexical fallback if its projection fails. Source notifications
 are isolated at the gate: classifier failures are reported, that notification
 is dropped, and later notifications continue through the same watcher.
 
-GET/HEAD `/__mokly/catalogue.json` returns the public v4
+GET/HEAD `/mokly-viewer/catalogue.json` returns the public v5
 [read model](../catalogue/README.md) as complete JSON with
 `Cache-Control: no-store`; it never contains bootstrap-only omitted usage.
 `public_catalogue.ts` serializes an atomic snapshot when accepted content,
@@ -145,30 +151,37 @@ an in-flight Git resolution from launching a replacement during the drain.
 `demand/generation.ts` passes each generation's cancellation signal to its
 output write, so a superseded generation or a closing Serve stops waiting for
 the [generated-output writer lock](../../docs/protocol/mokly-rendering-generated.md#concurrent-writers)
-that a concurrent Build or export holds.
+that a concurrent Build or Serve writer holds.
 
-Watched Serve sends that commit as `baselineCommit` on the existing versioned
-`update` IPC envelope. Omission retains the reader; null revokes it. The child
+Watched Serve sends the commit and selected reader (`blobs` or `rebuild`) on the
+versioned `update` IPC envelope. Omission retains the reader; null revokes it. The child
 uses `ServedReviewRepository` in `review_repository.ts` to open a confined cached
 reader through `readOnlyRepositoryForCommit` / `baselineReaderForCommit` and
 ignore stale versions. The single-process host uses the same holder directly.
-Committed mode can open a Git-blob reader locally, without preparation.
+The Serve parent selects the pinned baseline reader per commit, using the
+historical manifest's presence and matching v9 inventory
+or the rebuild cache. The child receives that selection; it neither
+builds baselines nor writes output. `serve --build` writes in the parent only
+after complete compilation and resource-watch readiness, including once with
+`--no-watch`; plain Serve never writes output.
+Only `check` consults the head Git index and guards `.mokly-cache/` tracking;
+neither the Serve parent nor child needs tracked state to render or write.
 That reader validates the configured Git top level on its first read, so the
 unselected route reports `config-invalid` for a nested `repoRoot` while All
 remains available. Parent preparation, classification and selected readers use
 the same config-owned validation.
 
-Both readers accept only manifest v8. Recognized earlier output follows the
+Both readers accept only manifest v9. Recognized earlier output follows the
 successful unavailable behavior and single terminal line in the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
 `classification_result.ts` carries that expected typed outcome across the
 background worker without converting it into a generic classifier failure;
-unsupported newer or malformed v8 data keeps the normal safe diagnostic path.
+unsupported newer or malformed v9 data keeps the normal safe diagnostic path.
 
 `configured_review.ts` requires an injected `ReadOnlyReviewRepository` or a
 `ReviewRepositorySource` that supplies the current reader. The full comparison
 route fails with typed `review-invalid` ("The comparison is not prepared")
-until a derived reader is available. `selected_review_routes.ts` owns one
+until a selected v9 reader is available. `selected_review_routes.ts` owns one
 bounded generation service for screen/component comparisons and removed-page
 previews. Pages use `review.json?page=<page-path>`, while screens and component
 variants use `review.json?path=<entry-path>`; each redirects to immutable metadata
@@ -204,10 +217,10 @@ recompilation reuse the original bytes instead of silently dropping them.
 `demand/http.ts` answers on-demand `/static/` stylesheet and image/font
 requests from the accepted generation's CSS or opaque bytes (including HEAD),
 before ordinary public-file serving can see an older reserved file on disk.
-Committed Serve without a runtime derives the exact output route set from the
-inventory-only graph and snapshots only those disk bytes; syntactically valid
-strays in the reserved tree remain 404 even before startup. Derived Serve and
-watched children use retained runtime bytes, never reserved disk fallbacks.
+All Serve hosts use accepted generated bytes from a retained runtime or an
+explicit in-memory compilation. Syntactically valid strays on disk remain 404.
+Watched children receive the same generation; no path reads reserved disk
+output as a fallback.
 `DocumentCompiler` validates the same pending resources before any HTML view
 is delivered; superseded generations never become resource fallbacks.
 The classification worker uses
@@ -224,16 +237,11 @@ background compilation result through the existing structured clone.
 and snapshot Serve. On-demand documents retain diagnostics for parity but never
 print or expose them through HTTP.
 
-The [public-exclusion policy](../../docs/protocol/mokly-source-protection.md#public-exclusions)
-adds config-owned `publicExclude` globs to the shared source classifier.
-Case-insensitive README/tsconfig defaults remain when consumers add globs.
-Serve HTTP, generated-resource validation, Review reads, static export and
-public content-change classification test both candidate and realpath-alias
-paths relative to `mockupsDir`. Excluded requests return 404; excluded edits are
-not public content evidence, and exclusion alone never adds `sourceFiles`.
-Manifest/cache privacy and independently discovered authoring inputs remain protected.
-Screen-level resource classification shares Review's verified-deletion decision,
-so committed and derived runs agree without weakening these path checks.
+The [referenced asset closure](../../docs/protocol/mokly-generated-output.md#closure-urls-and-publication)
+is the only authored public surface: generated routes live
+under `mokly-generated/`, referenced assets remain catalogue-relative, and unreferenced
+requests return 404. Manifest/cache privacy, realpath confinement and authoring
+inputs remain protected now.
 
 When controls are active, every Serve request uses the
 [Host contract](../../docs/protocol/mokly-component-controls.md#request-and-lifecycle-rules):
@@ -281,12 +289,35 @@ Serve startup is not subject to the worker-request timeout.
 See [review boundaries](../review/README.md), [baseline building](../baseline/README.md),
 and the [derived baseline protocol](../../docs/protocol/mokly-derived-baselines.md).
 
+Snapshot validation reuses the compilation associated with an accepted manifest
+when its effective configuration matches. A fresh in-memory compilation already
+provides its source inventory; supplied manifests retain the independent freshness
+check. This avoids a second PostCSS pass merely to recover accepted head bytes.
+
+The implemented [shared closure](../../docs/protocol/mokly-public-closure.md)
+replaces the separate Watch list with checked serving membership. Serve still
+rechecks each listed file without following symlinks. The approved
+[shared watch setup](../../docs/protocol/mokly-watch-writers.md) will also supply
+`build --watch`, including initial edits and interruptible lock waits.
+
+`watch_resources.ts` uses Build's closure builder. Invalid recovery edges can
+keep a confined path observable but cannot grant HTTP access. The resource
+watcher retains the previous checked closure on failure. Static and transient
+reads use `PublicFilePolicy.read`, which rechecks components and the open file
+without following symbolic links.
+
+The approved [path/output integration](../../docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
+Markdown documents and moves inside one generated tree. It introduces manifest
+v9, catalogue v5 and review v6, with explicit versions for the other boundaries.
+Accepted workers use immutable in-memory route sets; only writing commands
+acquire the output lock. The integration plan records verification and scope.
+
 `generated_static.ts` resolves and snapshots the accepted CSS and asset inventory
 at startup. `config/root_membership.ts` owns file exclusions used by watch discovery;
 protection still covers excluded matches.
 
-Accepted runtimes carry the output route/orphan snapshot captured under the
-writer lock during generation preparation. Demand and background workers reuse
+Accepted runtimes carry the immutable output route set checked in memory during
+generation preparation. Demand and background workers reuse
 that private proof instead of taking a filesystem snapshot during a write.
 
 Markdown documents use the page route and demand compiler, with one route per

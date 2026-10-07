@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 
 import { repositoryRoot } from "../helpers/fixture.js";
 
-const directory = path.join(repositoryRoot, "examples/basic/generated");
+const directory = path.join(repositoryRoot, "examples/basic/mokly-generated");
 
 const pickerDesigns = [
   "design/browse/views/screen/tag-picker",

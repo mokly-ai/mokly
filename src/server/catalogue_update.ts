@@ -3,7 +3,7 @@ import { type Catalogue } from "@mokly/viewer/server";
 import { includeMovedEntries } from "../review/moves/entries.js";
 
 import { catalogueWithChanges } from "./baseline_catalogue.js";
-import type { ComponentChangeSnapshot } from "./component_changes.js";
+import type { ComponentChangeSnapshot } from "./component_change_types.js";
 import type { CatalogueUpdate, ChangesStatus } from "./update_messages.js";
 
 export interface CatalogueUpdateState {

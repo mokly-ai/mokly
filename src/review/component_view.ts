@@ -50,7 +50,6 @@ export interface ComponentViewContext {
   changed: ReadonlySet<string>;
   prefix: string;
   resources: ResourceComparison;
-  compareResourceBytes?: boolean;
   useFastPath?: boolean;
   useStylePath?: boolean;
   /** Test-only: retain delivered text materials instead of fingerprints. */
@@ -189,46 +188,42 @@ export async function compareComponentView(
     context.prefix,
     context.componentAware,
   );
-  const byteChanges = context.compareResourceBytes
-    ? await changedResourceBytes(
-        await context.beforeReader.resources(
-          before!.path,
-          resourceBefore,
-          excluded,
-          references?.before,
-        ),
-        await context.afterReader.resources(
-          after!.path,
-          resourceAfter,
-          excluded,
-          references?.after,
-        ),
-        context.beforeReader,
-        context.afterReader,
-        context.resourceIdentity,
-      )
-    : new Set<string>();
+  const byteChanges = await changedResourceBytes(
+    await context.beforeReader.resources(
+      before!.path,
+      resourceBefore,
+      excluded,
+      references?.before,
+    ),
+    await context.afterReader.resources(
+      after!.path,
+      resourceAfter,
+      excluded,
+      references?.after,
+    ),
+    context.beforeReader,
+    context.afterReader,
+    context.resourceIdentity,
+  );
   if ([...byteChanges].some((route) => !context.changed.has(repoPath(route))))
     reasons.push({ kind: "material" });
-  const actualByteChanges = context.compareResourceBytes
-    ? await changedResourceBytes(
-        await context.beforeReader.resources(
-          before!.path,
-          actualBefore,
-          undefined,
-          references?.actualBefore,
-        ),
-        await context.afterReader.resources(
-          after!.path,
-          actualAfter,
-          undefined,
-          references?.actualAfter,
-        ),
-        context.beforeReader,
-        context.afterReader,
-        context.resourceIdentity,
-      )
-    : new Set<string>();
+  const actualByteChanges = await changedResourceBytes(
+    await context.beforeReader.resources(
+      before!.path,
+      actualBefore,
+      undefined,
+      references?.actualBefore,
+    ),
+    await context.afterReader.resources(
+      after!.path,
+      actualAfter,
+      undefined,
+      references?.actualAfter,
+    ),
+    context.beforeReader,
+    context.afterReader,
+    context.resourceIdentity,
+  );
   const actualResourceChange =
     Boolean(actualEvidence.reasons?.length) ||
     [...actualByteChanges].some(

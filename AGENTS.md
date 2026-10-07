@@ -202,7 +202,7 @@
 - Mockup screens must not contain implementation hints, engineering notes, or
   explanatory annotations inside the rendered screen area. Put implementation
   hints below the screen or in a separate non-screen section.
-- Mokly's example catalogue under `examples/basic/generated/` is generated from
+- Mokly's example catalogue under `examples/basic/mokly-generated/` is generated from
   the structured definitions under `examples/basic/specs/` using
   `examples/basic/mokly.config.ts`. Canonical entry modules end in `.mockup.ts`
   or `.mockup.tsx`; shared TSX components and page-render helpers live alongside
@@ -211,10 +211,11 @@
   changing example entries, the renderer, configuration, or configured styles,
   run `npm run build`, run `npm run example:build`, run
   `npm run example:check`, and visually smoke-test the changed pages through
-  `npm run dev`. The example uses the default derived output mode: generated
-  HTML and `mokly-manifest.json` under `examples/basic/generated/` are ignored
-  local artifacts validated by `npm run example:check`. Commit only the tracked
-  authored CSS there; never force-add ignored generated output.
+  `npm run dev`. `npm run example:check` validates the compilation and ignores
+  the untracked local tree under `examples/basic/mokly-generated/`. Never commit
+  anything under that generated directory. Commit authored files normally,
+  including specs, configuration and CSS under `examples/basic/`,
+  `examples/basic/design-library/` and `examples/basic/src/components/workspace-note/`.
 - Do not hand-edit Mokly-owned generated HTML or `mokly-manifest.json` as source
   of truth. Update the entry, imported helper, renderer, or shared component
   first, then regenerate the example catalogue.
@@ -609,6 +610,12 @@ docs, mockups, plans, migrations, or schema—without explicit user approval.
 
   Stop unless each deletion or feature-wide reduction is authorized, and record
   every approved removal plus related cleanup in the commit or PR description.
+
+- When a change removes or renames a feature, test, fixture, scenario, command,
+  or file, search the active plans, `docs/`, and every `README.md` for its name.
+  Update each stale reference in the same change and record each plan edit in
+  the commit or PR description. Leave completed plans unchanged because they
+  record history.
 
 ### Rules
 

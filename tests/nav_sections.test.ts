@@ -8,7 +8,7 @@ import type {
 import type {
   ManifestEntry,
   ManifestScreen,
-  ManifestV8,
+  ManifestV9,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { reconcileDisclosures } from "../packages/viewer/dist/shell/disclosure_storage.js";
@@ -24,6 +24,7 @@ import {
 } from "../packages/viewer/dist/shell/nav_tree.js";
 import type { ShellRecoverySnapshot } from "../packages/viewer/dist/shell/store_state.js";
 
+import { currentManifest } from "./helpers/current_manifest.js";
 import { fixtureShellState } from "./helpers/viewer_catalogue.js";
 
 test("Specs and Components sections preserve only their relevant hierarchy", () => {
@@ -228,8 +229,8 @@ function component(id: string, title: string): ManifestComponent {
   };
 }
 
-function manifest(entries: readonly ManifestEntry[]): ManifestV8 {
-  return {
+function manifest(entries: readonly ManifestEntry[]): ManifestV9 {
+  return currentManifest({
     entries: entries.flatMap((entry) => [
       {
         ...entry,
@@ -240,12 +241,12 @@ function manifest(entries: readonly ManifestEntry[]): ManifestV8 {
         : []),
     ]),
     generatedBy: "mokly",
-    schemaVersion: 8 as const,
+    schemaVersion: 9 as const,
     folders: [],
     sourceFiles: [
       ...new Set(entries.map(({ sourcePath }) => sourcePath)),
     ].sort(),
-  };
+  });
 }
 
 function componentVariant(parent: ManifestComponent): ManifestComponentVariant {

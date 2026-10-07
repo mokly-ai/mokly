@@ -12,8 +12,20 @@ import { repositoryRoot, validEntrySource } from "./helpers/fixture.js";
 const read = (file: string) =>
   fs.readFile(path.join(repositoryRoot, file), "utf8");
 
-test("manifest v8 and review v5 share path identity", async (t) => {
+test("manifest v9 and review v6 share path identity", async (t) => {
   const index = await read("docs/protocol/README.md");
+  assert.match(index, /\]\(\.\/protocol-status\.md\)/);
+  const formats = await read("docs/protocol/protocol-status.md");
+  const outputContract = await read(
+    "docs/protocol/mokly-generated-manifest.md",
+  );
+  assert.match(outputContract, /schemaVersion: 9/);
+  assert.match(outputContract, /assetClosure: readonly string\[\]/);
+  assert.match(
+    outputContract,
+    /generatedFiles: readonly \{ path: string; blobHash: string \}\[\]/,
+  );
+  assert.match(outputContract, /blobHashAlgorithm: "sha1" \| "sha256"/);
   const plain = validEntrySource();
   const components = componentEntrySource();
   for (const [before, after] of [
@@ -29,13 +41,13 @@ test("manifest v8 and review v5 share path identity", async (t) => {
       fixture.git,
       "main",
     );
-    assert.equal(fixture.after.manifest.schemaVersion, 8);
-    assert.equal(result.schemaVersion, 5);
+    assert.equal(fixture.after.manifest.schemaVersion, 9);
+    assert.equal(result.schemaVersion, 6);
     assert.match(
-      index,
+      formats,
       after === components
-        ? /With registered components\s*\|\s*8\s*\|\s*5/
-        : /Without registered components\s*\|\s*8\s*\|\s*5/,
+        ? /With registered components\s*\|\s*9\s*\|\s*6/
+        : /Without registered components\s*\|\s*9\s*\|\s*6/,
     );
   }
 });
@@ -71,5 +83,5 @@ test("delivered component contracts do not retain superseded status or version i
       /Keep `ReviewResult\.schemaVersion` at 2/,
       file,
     );
-  assert.match(await read("README.md"), /Current output uses manifest v8/);
+  assert.match(await read("README.md"), /Current output uses manifest v9/);
 });

@@ -33,8 +33,8 @@ test("excluded inline evidence is omitted from an ignored-only view", async (t) 
     { source, afterSource: source.replaceAll(">Before<", ">After<") },
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   const home = result.screens.find((screen) => screen.path === "home")!;
   assert.ok(
     home.views.every(
@@ -46,7 +46,7 @@ test("excluded inline evidence is omitted from an ignored-only view", async (t) 
 test("excluded inline evidence is omitted beside a resource reason", async (t) => {
   const source = inlineComponentSource().replaceAll(
     '<main className="entry">',
-    '<main className="entry"><img src="../image.svg" />',
+    '<main className="entry"><img src="../../image.svg" />',
   );
   const fixture = await inlineChangesFixture(
     t,
@@ -61,8 +61,8 @@ test("excluded inline evidence is omitted beside a resource reason", async (t) =
     },
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   assert.ok(
     result.screens
       .find((screen) => screen.path === "home")!
@@ -90,8 +90,8 @@ test("excluded inline evidence is omitted beside an input reason", async (t) => 
     },
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   const home = result.changes.find((entry) => entry.after?.path === "home");
   assert.deepEqual(home?.reasons, [{ kind: "inputs" }]);
   assert.ok(
@@ -104,7 +104,7 @@ test("excluded inline evidence is omitted beside an input reason", async (t) => 
 test("excluded evidence is omitted for a derived byte-only material change", async (t) => {
   const source = inlineComponentSource().replaceAll(
     '<main className="entry">',
-    '<main className="entry"><img src="../image.svg" />',
+    '<main className="entry"><img src="../../image.svg" />',
   );
   const fixture = await createFixture(source, {
     extraConfig: 'renderer: "renderer.tsx",',
@@ -128,7 +128,7 @@ test("excluded evidence is omitted for a derived byte-only material change", asy
     beforeFiles: compilationFiles(before, { "image.svg": "before-image" }),
     afterFiles: compilationFiles(after, { "image.svg": "after-image" }),
     changedPaths: [],
-    config: { ...config, generatedOutput: "derived" },
+    config: config,
   });
   const home = result.screens.find((screen) => screen.path === "home")!;
   assert.ok(
@@ -162,8 +162,8 @@ test("views settled by the fast path emit no inline evidence", async (t) => {
       event.stage === "review.compare-screens" && event.event === "counts",
   )?.counts;
   assert.ok(Number(counts?.fastPath) > 0);
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   assert.ok(
     [
       ...result.screens.flatMap((screen) => screen.views),

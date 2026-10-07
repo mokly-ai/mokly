@@ -13,7 +13,7 @@ import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import type { ShellBootstrapView } from "../packages/viewer/dist/standalone/bootstrap.js";
 
 const manifest = JSON.parse(
-  fs.readFileSync("examples/basic/generated/mokly-manifest.json", "utf8"),
+  fs.readFileSync("examples/basic/mokly-generated/mokly-manifest.json", "utf8"),
 );
 const model = projectCatalogue({
   catalogue: createCatalogue(manifest),
@@ -79,6 +79,7 @@ function scopedBytes(
   view: ShellBootstrapView,
 ): string {
   return serializeShellBootstrap({
+    schemaVersion: 2,
     catalogue: projectScopedCatalogue(catalogue, view),
     context,
     view,

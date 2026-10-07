@@ -28,13 +28,7 @@ export function consumerBundle(graph: LoadedGraph): ConsumerBundle {
 }
 export function evaluateBundle(
   bundle: ConsumerBundle,
-): Pick<
-  LoadedGraph,
-  | "definitions"
-  | "renderer"
-  | "renderWithComponents"
-  | "compatibilityTransformer"
-> {
+): Pick<LoadedGraph, "definitions" | "renderer" | "renderWithComponents"> {
   const module = { exports: {} };
   const run = new Script(
     `(function(exports, require, module, __filename, __dirname) {\n${bundle.code}\n})`,
@@ -55,9 +49,6 @@ export function evaluateBundle(
   );
   return module.exports as Pick<
     LoadedGraph,
-    | "definitions"
-    | "renderer"
-    | "renderWithComponents"
-    | "compatibilityTransformer"
+    "definitions" | "renderer" | "renderWithComponents"
   >;
 }

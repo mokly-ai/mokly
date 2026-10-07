@@ -4,7 +4,7 @@ import { html, type DefaultTreeAdapterMap } from "parse5";
 import type { ComponentViewRecord } from "@mokly/viewer";
 import { invalidData } from "@mokly/viewer/data";
 
-import { generatedSource } from "../build/ownership.js";
+import { stripGeneratedFirstLine } from "../build/generated_marker.js";
 import {
   callerSlotRanges,
   type MaterialRecipe,
@@ -55,7 +55,7 @@ export class PageAnalysis {
       this.regions = [...regions.values()];
       if (materials.size) this.originalMaterials = materials;
     }
-    this.headerEnd = generatedSource(source) ? source.indexOf("\n") + 1 : 0;
+    this.headerEnd = source.length - stripGeneratedFirstLine(source).length;
     this.document = parsePageDocument("pageAnalysis", source);
     this.ranges = usage
       ? validateComponentRanges(source, usage.ranges, this.document)

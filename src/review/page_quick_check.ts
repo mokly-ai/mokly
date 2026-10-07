@@ -46,7 +46,7 @@ export async function identicalPageQuickCheck(
   };
 }
 
-/** Conservative shared-seed proof: head closure in committed mode, both in derived mode. */
+/** Conservative shared-seed proof over both snapshots' closures and bytes. */
 export async function unchangedPageResources(
   context: ComponentViewContext,
   pages: PageAnalysisPair,
@@ -65,14 +65,12 @@ export async function unchangedPageResources(
     undefined,
     seeds,
   );
-  const beforeResources = context.compareResourceBytes
-    ? await context.beforeReader.resourcesIfPresent(
-        head.route,
-        head.source,
-        undefined,
-        seeds,
-      )
-    : afterResources;
+  const beforeResources = await context.beforeReader.resourcesIfPresent(
+    head.route,
+    head.source,
+    undefined,
+    seeds,
+  );
   if (!beforeResources) return false;
   const path = (route: string) =>
     context.prefix ? `${context.prefix}/${route}` : route;
@@ -83,7 +81,6 @@ export async function unchangedPageResources(
   )
     return false;
   if (
-    context.compareResourceBytes &&
     (
       await changedResourceBytes(
         beforeResources,

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
+import { currentManifest } from "../../../tests/helpers/current_manifest.js";
 import { readCatalogue } from "../src/catalogue/reader.js";
 import { folderTitleLookup } from "../src/registry/folder_titles.js";
 import { analyzeHierarchy } from "../src/registry/hierarchy.js";
@@ -154,13 +155,13 @@ test("Changes activation searches a removed variant as its row does", () => {
   const current = screen("start/welcome/empty", "Empty", parent.path);
   const removed = screen("start/welcome/old", "Old", parent.path);
   const catalogue = createCatalogue(
-    {
+    currentManifest({
       entries: [parent, current],
       folders: [record("start", { title: "Launchpad" })],
       generatedBy: "mokly",
-      schemaVersion: 8,
+      schemaVersion: 9,
       sourceFiles: [],
-    },
+    }),
     [
       {
         entry: removed,
@@ -197,7 +198,7 @@ test("a route reveal keeps a search that the destination's folder title matches"
     JSON.parse(
       fs.readFileSync(
         new URL(
-          "../../../docs/protocol/fixtures/catalogue-v4.json",
+          "../../../docs/protocol/fixtures/catalogue-v5.json",
           import.meta.url,
         ),
         "utf8",

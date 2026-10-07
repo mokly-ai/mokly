@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { scanCssSegments } from "../dist/review/css/segments.js";
 import { PageAnalysis } from "../dist/review/page_analysis.js";
-import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import { reviewViews as generatedViews } from "../dist/review/views.js";
 
 import { assertStyleRoute } from "./helpers/style_route.js";
 import { styleRouteLargeFixture } from "./helpers/style_route_large.js";
@@ -123,7 +123,7 @@ test("seeded single-window edits of real RNW sheets equal the disabled-route and
       const input = {
         ...fixture,
         after: fixture.before,
-        config: { ...fixture.config, generatedOutput: mode },
+        config: fixture.config,
         beforeFiles: new Map([...fixture.beforeFiles, [view.path, base]]),
         afterFiles: new Map([...fixture.beforeFiles, [view.path, changed]]),
       };

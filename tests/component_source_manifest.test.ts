@@ -9,11 +9,11 @@ import { parseManifest, serializeManifest } from "../dist/registry/manifest.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentViews } from "./helpers/component_views.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
-test("v8 source metadata round-trips deterministically and accepts its absence", async (t) => {
+test("v9 source metadata round-trips deterministically and accepts its absence", async (t) => {
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const { manifest } = await compileCatalogue(await loadConfig(fixture.root));
-  assert.equal(manifest.schemaVersion, 8);
+  assert.equal(manifest.schemaVersion, 9);
   const original = structuredClone(manifest);
   for (const view of componentViews(original))
     for (const instance of view.instances)

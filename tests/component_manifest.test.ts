@@ -13,7 +13,7 @@ import type {
   ComponentViewRecord,
 } from "../packages/viewer/dist/components/manifest_types.js";
 import type {
-  ManifestV8,
+  ManifestV9,
   ManifestScreen,
 } from "../packages/viewer/dist/registry/types.js";
 
@@ -26,20 +26,20 @@ type ComponentManifestScreen = ManifestScreen & {
 
 async function example(t: {
   after: (fn: () => Promise<void>) => void;
-}): Promise<ManifestV8> {
+}): Promise<ManifestV9> {
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const result = await compileCatalogue(await loadConfig(fixture.root));
-  assert.equal(result.manifest.schemaVersion, 8);
+  assert.equal(result.manifest.schemaVersion, 9);
   return result.manifest;
 }
 
-test("manifest v8 rejects broken identities, ownership references and props before readers can suppress changes", async (t) => {
+test("manifest v9 rejects broken identities, ownership references and props before readers can suppress changes", async (t) => {
   const original = await example(t);
   const edits: readonly [
     string,
     (
-      value: ManifestV8,
+      value: ManifestV9,
       screen: ComponentManifestScreen,
       component: ManifestComponent,
       variant: ManifestComponentVariant,
@@ -193,7 +193,7 @@ test("manifest v8 rejects broken identities, ownership references and props befo
   }
 });
 
-test("historical v8 discards retired ownership arrays and rejects malformed values", async (t) => {
+test("historical v9 discards retired ownership arrays and rejects malformed values", async (t) => {
   const original = await example(t);
   const historical = structuredClone(original);
   const screen = historical.entries.find(

@@ -8,10 +8,10 @@ import {
   runWithTimings,
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 
 test("real Serve classification counts the page and component passes once, including linked and embedded HTML parses", async (testContext) => {

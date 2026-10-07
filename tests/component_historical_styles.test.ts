@@ -35,7 +35,7 @@ for (const edit of [
   "material-key",
   "implementation",
 ])
-  test(`historical v8 retired arrays preserve inline attribution: ${edit}`, async (t) => {
+  test(`historical v9 retired arrays preserve inline attribution: ${edit}`, async (t) => {
     const fixture = await createFixture(source, {
       extraConfig: 'renderer: "renderer.tsx", colorSchemes: ["light", "dark"],',
     });
@@ -72,8 +72,8 @@ for (const edit of [
     );
     const git = componentGit(before, changedPaths);
     const artifact = await compareReview(after, config, git, "main");
-    assert.equal(artifact.result.schemaVersion, 5);
-    if (artifact.result.schemaVersion !== 5) return;
+    assert.equal(artifact.result.schemaVersion, 6);
+    if (artifact.result.schemaVersion !== 6) return;
     const expected =
       edit === "owned-css" || edit === "implementation"
         ? ["action"]
@@ -114,11 +114,11 @@ for (const edit of [
       after.manifest.entries.find((entry) => entry.path === "home")!,
     )) {
       assert.equal(
-        artifact.files.get(`snapshots/before/${view.path}`),
+        artifact.files.get(`snapshots/before/mokly-generated/${view.path}`),
         before.outputs.get(view.path),
       );
       assert.equal(
-        artifact.files.get(`snapshots/after/${view.path}`),
+        artifact.files.get(`snapshots/after/mokly-generated/${view.path}`),
         after.outputs.get(view.path),
       );
     }

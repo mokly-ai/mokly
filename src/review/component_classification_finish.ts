@@ -2,7 +2,7 @@ import type {
   ChangedEntry,
   ComponentReview,
   Manifest,
-  ScreenReviewV5,
+  ScreenReviewV6,
 } from "@mokly/viewer/data";
 
 import { relatedDocumentReferences } from "../documents/references.js";
@@ -33,7 +33,7 @@ export function finishComponentClassification(input: {
   after: Manifest;
   pairs: ReturnType<typeof entryPairs>;
   pairing: MovePairing;
-  screens: ScreenReviewV5[];
+  screens: ScreenReviewV6[];
   components: ComponentReview[];
   changes: ChangedEntry[];
   ownedResources: OwnedResourceReason[];
@@ -100,7 +100,7 @@ export function finishComponentClassification(input: {
   );
   return {
     result: {
-      schemaVersion: 5,
+      schemaVersion: 6,
       baseCommit: request.baseCommit,
       baseRef: request.baseRef,
       changedPaths: [...request.changedPaths].sort(),

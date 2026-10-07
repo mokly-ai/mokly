@@ -11,8 +11,8 @@ import { compareComponentView } from "../../dist/review/component_view.js";
 import { CssResourceAnalysis } from "../../dist/review/css/resource_analysis.js";
 import { catalogueLinkNormalizer } from "../../dist/review/moves/links.js";
 import { ResourceComparison } from "../../dist/review/resource_comparison.js";
+import { reviewViews } from "../../dist/review/views.js";
 import { isManifestComponentVariant } from "../../packages/viewer/dist/components/manifest_types.js";
-import { generatedViews } from "../../packages/viewer/dist/components/views.js";
 
 import { memoryReader, type FastPathFixture } from "./component_fast_path.js";
 
@@ -39,7 +39,6 @@ export async function assertComparisonPaths(
     fixture.config.repoRoot,
     fixture.config.mockupsDir,
   );
-  const compareResourceBytes = fixture.config.generatedOutput === "derived";
   const context = {
     componentAware: true,
     links: catalogueLinkNormalizer(
@@ -52,14 +51,13 @@ export async function assertComparisonPaths(
     dependencies,
     changed,
     prefix,
-    compareResourceBytes,
     resources: new ResourceComparison(
       beforeReader,
       afterReader,
       changed,
       prefix,
       new CssResourceAnalysis(),
-      compareResourceBytes,
+      undefined,
       true,
     ),
   };
@@ -70,8 +68,8 @@ export async function assertComparisonPaths(
       (candidate) => candidate.path === entry.path,
     );
     assert.ok(before);
-    const beforeViews = generatedViews(before);
-    for (const view of generatedViews(entry)) {
+    const beforeViews = reviewViews(before);
+    for (const view of reviewViews(entry)) {
       const base = beforeViews.find(
         (candidate) => candidate.path === view.path,
       );

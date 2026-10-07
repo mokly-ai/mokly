@@ -12,6 +12,7 @@ import {
   comparisonMaterials,
   fingerprintMaterials,
 } from "./helpers/fingerprint_comparison.js";
+import { textOutput } from "./helpers/generated_text.js";
 import { moveLinkShortcutFixture } from "./helpers/move_link_shortcuts.js";
 import {
   selectedStyleViews,
@@ -58,8 +59,8 @@ for (const mode of ["committed", "derived"] as const) {
           : `.actual-only{color:${color}}.entry{background:url("${url}")}`;
       const original = withHeadStyles(
         await styleRouteFixture(t),
-        `<style>${css("red", "../asset.svg")}</style>`,
-        `<style>${css("blue", ".././asset.svg")}</style>`,
+        `<style>${css("red", "../../asset.svg")}</style>`,
+        `<style>${css("blue", "../.././asset.svg")}</style>`,
         mode,
       );
       const fixture = {
@@ -94,8 +95,8 @@ for (const mode of ["committed", "derived"] as const) {
   test(`an unchanged URL beside an edited rule retains fingerprints in ${mode}`, async (t) => {
     const original = withHeadStyles(
       await styleRouteFixture(t),
-      '<style>.entry{background:url("../asset.svg")}.entry{color:red}</style>',
-      '<style>.entry{background:url("../asset.svg")}.entry{color:blue}</style>',
+      '<style>.entry{background:url("../../asset.svg")}.entry{color:red}</style>',
+      '<style>.entry{background:url("../../asset.svg")}.entry{color:blue}</style>',
       mode,
     );
     const fixture = {
@@ -122,8 +123,8 @@ for (const mode of ["committed", "derived"] as const) {
         { ...context, useMaterialFingerprints: enabled },
         before,
         after,
-        fixture.before.outputs.get(before.path) as string,
-        fixture.after.outputs.get(after.path) as string,
+        textOutput(fixture.before.outputs, before.path)!,
+        textOutput(fixture.after.outputs, after.path)!,
       );
     const text = prepare(false);
     const fingerprint = prepare(true);

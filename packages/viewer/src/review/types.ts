@@ -1,7 +1,7 @@
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import type { ManifestEntry } from "../registry/types.js";
 
-import type { ReviewResultV5 } from "./component_types.js";
+import type { ReviewResultV6 } from "./component_types.js";
 
 /** Text or binary bytes retained in one static Review artifact. */
 export type ReviewArtifactContent = string | Uint8Array;
@@ -85,4 +85,4 @@ export interface ReviewArtifact {
 }
 
 /** The only accepted comparison payload. */
-export type ReviewResult = ReviewResultV5;
+export type ReviewResult = ReviewResultV6;

@@ -3,10 +3,7 @@ import test from "node:test";
 
 import { componentRuntime } from "../dist/build/component_runtime.js";
 import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
-import {
-  backgroundInputs,
-  classificationOutputs,
-} from "../src/server/demand/background_inputs.js";
+import { backgroundInputs } from "../src/server/demand/background_inputs.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
@@ -15,23 +12,16 @@ for (const mode of ["committed", "derived"] as const)
     const fixture = await componentReviewFixture(context, (source) => source);
     const compilation = fixture.after;
     assert.ok(compilation.outputs.size > 1);
-    assert.equal(
-      classificationOutputs({ generatedOutput: mode }, compilation.outputs),
-      mode === "derived" ? compilation.outputs : undefined,
-    );
     const runtime = {
       ...componentRuntime(compilation),
-      config: { ...fixture.config, generatedOutput: mode },
+      config: fixture.config,
     };
     assert.ok(runtime.outputs.length > 0);
     const inputs = backgroundInputs(runtime, compilation);
     assert.deepEqual(inputs.runtime.outputs, []);
-    assert.equal(inputs.runtime.manifest.schemaVersion, "live-index-1");
+    assert.equal(inputs.runtime.manifest.schemaVersion, "live-index-2");
     assert.equal(inputs.existingManifest, compilation.manifest);
-    assert.equal(
-      inputs.existingOutputs,
-      mode === "derived" ? compilation.outputs : undefined,
-    );
+    assert.equal(inputs.existingOutputs, compilation.outputs);
     assert.ok(
       runtime.outputs.length > 0,
       "parent adoption output is preserved",

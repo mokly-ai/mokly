@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 
 import { attribute, textContent } from "./helpers/html.js";
@@ -14,7 +14,7 @@ test("excluded page styles keep the screen unmodified without a comparison stage
     path: "example/screens/welcome",
     title: "Welcome",
   };
-  const views: ReviewResultV5["screens"][number]["views"] = (
+  const views: ReviewResultV6["screens"][number]["views"] = (
     ["mobile", "desktop"] as const
   ).map((viewport) => ({
     colorScheme: "light",
@@ -23,7 +23,7 @@ test("excluded page styles keep the screen unmodified without a comparison stage
     state: "unchanged",
     viewport,
   }));
-  const result: ReviewResultV5 = {
+  const result: ReviewResultV6 = {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
     baseRef: "origin/main",
@@ -31,7 +31,7 @@ test("excluded page styles keep the screen unmodified without a comparison stage
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 5,
+    schemaVersion: 6,
     screens: [
       {
         ...address,

@@ -91,14 +91,15 @@ cannot reopen a folder the user collapsed.
 ## Recovery And Versioning
 
 Watched-reload recovery stores `disclosures` and
-`filterBaselineDisclosures` as explicit maps or `null`. A missing
-`filterBaselineDisclosures` on an otherwise current snapshot means no filter
-baseline. Reject a snapshot containing `closedFolderKeys`,
+`filterBaselineDisclosures` as explicit maps or `null`, and requires
+`changesStatus` to be `preparing`, `pending`, `ready` or `unavailable`.
+Missing or undefined values for either field invalidate the complete snapshot.
+Reject a snapshot containing `closedFolderKeys`,
 `closedCollectionIds`, or `filterBaselineClosedFolderKeys` in full. A non-null
 baseline without active filtering is invalid. The recovery parser remains
 strict for its other fields as defined by the [watch contract](./mokly-watch.md).
 
-Any change to the persisted value shape or storage key requires a new storage
-version; a disclosure key form that no longer occurs
-in the current navigation is ignored on restore as above and needs none. Ignore
-older versions rather than partially interpreting them.
+Read and write only the current v4 disclosure key. Do not inspect, migrate or
+remove keys from previous versions. Any change to the persisted disclosure key format or
+value shape requires a new storage version. Ignore older versions rather than
+partially interpreting them.

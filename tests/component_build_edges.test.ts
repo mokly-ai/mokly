@@ -51,7 +51,7 @@ test("a repeated slot rejects conflicting logical inputs from an impure child", 
   );
 });
 
-test("saved variants share transactional orphan protection", async (t) => {
+test("saved variants share tree replacement and collision protection", async (t) => {
   const source = componentEntrySource();
   const fixture = await createFixture(source, {
     extraConfig: 'colorSchemes: ["light", "dark"],',
@@ -70,54 +70,15 @@ test("saved variants share transactional orphan protection", async (t) => {
     ),
   );
   const next = await compileCatalogue(config);
-  assert.throws(() => checkCompilation(next, config), /orphan/);
+  assert.throws(
+    () => checkCompilation(next, config),
+    /extra generated files:[\s\S]*action\/disabled\/index\.desktop\.dark\.html/,
+  );
   await writeCompilation(next, config);
-  await assert.rejects(fs.stat(path.join(fixture.mockupsDir, oldRoute)), {
+  await assert.rejects(fs.stat(path.join(config.generatedDir, oldRoute)), {
     code: "ENOENT",
   });
   checkCompilation(next, config);
-});
-
-test("compatibility rejects removed component ownership", async (t) => {
-  const fixture = await createFixture(componentEntrySource(), {
-    extraConfig:
-      'compatibility: { transformer: "transform.ts" }, renderer: "renderer.tsx",',
-  });
-  t.after(() => removeFixture(fixture));
-  await fs.writeFile(
-    path.join(fixture.root, "transform.ts"),
-    'export default ({ content }) => content.replace(/<!--mokly-component:[\\s\\S]*?-->/g, "");',
-  );
-  await fs.writeFile(
-    path.join(fixture.root, "renderer.tsx"),
-    `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => '<html><head><style>.owned{color:red}</style></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
-  );
-  await assert.rejects(
-    compileCatalogue(await loadConfig(fixture.root)),
-    /component boundar/,
-  );
-});
-
-test("compatibility may edit head styles before inferred comparison", async (t) => {
-  const fixture = await createFixture(componentEntrySource(), {
-    extraConfig:
-      'compatibility: { transformer: "transform.ts" }, renderer: "renderer.tsx",',
-  });
-  t.after(() => removeFixture(fixture));
-  await fs.writeFile(
-    path.join(fixture.root, "transform.ts"),
-    'export default ({ content }) => content.replace(".owned{color:red}", ".owned{color:blue}");',
-  );
-  await fs.writeFile(
-    path.join(fixture.root, "renderer.tsx"),
-    `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => '<html><head><style>.owned{color:red}</style></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
-  );
-  const result = await compileCatalogue(await loadConfig(fixture.root));
-  assert.ok(
-    [...result.outputs.values()].some(
-      (html) => typeof html === "string" && html.includes(".owned{color:blue}"),
-    ),
-  );
 });
 
 test("an actually invoked wrapper must be exported", async (t) => {

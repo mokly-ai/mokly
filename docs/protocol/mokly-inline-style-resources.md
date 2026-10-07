@@ -37,7 +37,7 @@ exactly as they do for actual material. Owners for one retained actual-view
 dependency reason are the union of matching inline owner sets and
 `ownedDependencies`, filtered to components present in that view. If projected
 entry material independently reaches the same path, its entry reason remains.
-In derived mode, a byte-only difference without Git evidence gives inferred
+For either baseline source, a byte-only difference without Git evidence gives inferred
 owners a component `material` reason, matching `ownedDependencies`; it does not
 invent a dependency reason or changed path.
 

@@ -8,7 +8,7 @@ import {
 } from "../dist/diagnostics/timings.js";
 import { compareComponentViews } from "../dist/review/component_compare_views.js";
 import { entryViewPairs } from "../dist/review/component_pairing.js";
-import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import { reviewViews as generatedViews } from "../dist/review/views.js";
 
 import { pageContext } from "./helpers/page_comparison.js";
 import { styleRouteFixture, withHeadStyles } from "./helpers/style_route.js";

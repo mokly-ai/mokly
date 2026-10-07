@@ -3,7 +3,7 @@ import path from "node:path";
 
 import ts from "typescript";
 
-const hydrationBundles = new Set(["/__mokly/client/react-shell.js"]);
+const hydrationBundles = new Set(["/mokly-viewer/client/react-shell.js"]);
 
 /** Check every import in an explicit delivered browser module graph. */
 export function inspectDeliveredBrowserGraph(modules) {

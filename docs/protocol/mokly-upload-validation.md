@@ -1,4 +1,4 @@
-# Catalogue Upload Validation v1
+# Catalogue Upload Validation v2
 
 This document supplements the
 [Catalogue Upload Exchange](./mokly-upload-exchange.md) with rejection
@@ -8,11 +8,16 @@ categories, upload limits, and receiver validation.
 
 Statuses map by value alone. A receiver may return
 `{"error":{"code":"upload-invalid-bundle"}}` for other clients, but Mokly
-does not read a rejection body.
+does not read a rejection body. HTTP 426 stops the exchange without retry,
+Blobs, Complete or downgrade. It reports:
+
+```text
+The catalogue service does not support this Mokly version. Update the service and try again.
+```
 
 | Rejection                                                                       | HTTP status            | CLI category                      |
 | ------------------------------------------------------------------------------- | ---------------------- | --------------------------------- |
-| Unsupported envelope or present non-2 ownership `schemaVersion`                 | 426                    | `upload-unsupported-version`      |
+| Unsupported envelope or present non-3 ownership `schemaVersion`                 | 426                    | `upload-unsupported-version`      |
 | Invalid archive, missing marker version, malformed value/path, or byte mismatch | 400 or 422             | `upload-invalid-bundle`           |
 | Any exceeded limit, including declared file size or path byte length            | 413                    | `upload-too-large`                |
 | Missing/invalid token or forbidden repository                                   | 401 or 403             | `upload-unauthorized`             |
@@ -34,7 +39,7 @@ local export in place.
 The marker and verified blobs reconstruct every public artifact, including the
 manifest, shells, static assets and enabled comparisons. Source
 `mokly-manifest.json` stays private. CLI and receiver enforce these binary-unit
-v1 ceilings; receivers may impose lower quotas and return 413.
+v2 ceilings; receivers may impose lower quotas and return 413.
 
 | Limit                                                    | Maximum           |
 | -------------------------------------------------------- | ----------------- |
@@ -60,9 +65,9 @@ paths as filesystem authority.
 
 After bounded extraction and JSON decoding, version validation precedes the
 versioned document's other fields. A missing ownership `schemaVersion` is
-invalid (400/422). Any present ownership version other than the number `2`,
-including string `"2"`, is unsupported (426), regardless of its `files` value.
-For schema 2, apply the ownership document's shape, portability, collision,
+invalid (400/422). Any present ownership version other than the number `3`,
+including string `"3"`, is unsupported (426), regardless of its `files` value.
+For schema 3, apply the ownership document's shape, portability, collision,
 digest and size rules. After required primitive types, check declared limits
 before remaining entry grammar: an integer size over 64 MiB or a string path
 over 1,024 UTF-8 bytes is too large (413). A negative, fractional or nonnumeric
@@ -70,7 +75,7 @@ size and every other path-grammar violation is malformed (400/422).
 
 Require entries for `index.html`, `404.html` and `mokly-upload.json`. Archived
 manifest/review bytes match their entries; review path and base metadata match
-the manifest and [comparison format](./README.md#supported-formats).
+the manifest and [comparison format](./protocol-status.md#supported-formats).
 Current-only uploads contain no comparison files.
 
 Answer `missing` from every verified blob stored for the same project,

@@ -27,7 +27,7 @@ test("ordinary RNW fixtures retain complete-path fingerprints and exact text-ora
             afterReader: memoryReader(
               identical ? fixture.beforeFiles : fixture.afterFiles,
             ),
-            config: { ...fixture.config, generatedOutput: mode },
+            config: fixture.config,
             changedPaths: identical ? [] : fixture.changedPaths,
             baseCommit: "a".repeat(40),
             baseRef: "main",

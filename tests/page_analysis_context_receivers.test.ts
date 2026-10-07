@@ -14,12 +14,12 @@ const cases = [
     name: "table",
     receiver: "<table><tbody>{props.children}</tbody></table>",
     child:
-      '<tr><td style={{ backgroundImage: "url(../image.svg)" }}>Caller</td></tr>',
+      '<tr><td style={{ backgroundImage: "url(../../image.svg)" }}>Caller</td></tr>',
   },
   {
     name: "SVG",
     receiver: "<svg>{props.children}</svg>",
-    child: '<image href="../image.svg" />',
+    child: '<image href="../../image.svg" />',
   },
 ];
 

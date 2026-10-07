@@ -16,8 +16,8 @@ for (const mode of ["committed", "derived"] as const)
   test(`fingerprints retain text-oracle equality after resource URL normalization in ${mode}`, async (t) => {
     const original = withHeadStyles(
       await styleRouteFixture(t),
-      '<style>.entry{background:url("../asset.svg")}</style>',
-      '<style>.entry{background:url(".././asset.svg")}</style>',
+      '<style>.entry{background:url("../../asset.svg")}</style>',
+      '<style>.entry{background:url("../.././asset.svg")}</style>',
       mode,
     );
     const fixture = {

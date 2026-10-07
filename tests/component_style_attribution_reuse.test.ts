@@ -22,7 +22,7 @@ for (const mode of ["committed", "derived"] as const)
     context.after(() => fs.rm(root, { recursive: true, force: true }));
     for (const references of [false, true]) {
       const reference = references
-        ? '<style>style#edited:contains("r-10"){background:url("../asset.svg")}</style>'
+        ? '<style>style#edited:contains("r-10"){background:url("../../asset.svg")}</style>'
         : "";
       const base = withHeadStyles(
         fixture,

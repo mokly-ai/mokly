@@ -46,7 +46,7 @@ for (const mode of ["committed", "derived"] as const)
             const linked = path !== "inline";
             const styles = (css: string) =>
               linked
-                ? '<link rel="stylesheet" href="../sheet.css">'
+                ? '<link rel="stylesheet" href="../../sheet.css">'
                 : `<style>${css}</style>`;
             const renderer = (css: string) =>
               `import { renderToStaticMarkup } from 'react-dom/server'; export default input => input.entry.path === 'home' ? ${JSON.stringify(document(styles(css)))} : '<!doctype html><html><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;

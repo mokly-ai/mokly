@@ -60,10 +60,7 @@ for (const mode of ["committed", "derived"] as const) {
         )
         .replace("Action</button>", "Action</button></>"),
     );
-    await assertStyleRoute(
-      { ...owned, config: { ...owned.config, generatedOutput: mode } },
-      "complete",
-    );
+    await assertStyleRoute({ ...owned, config: owned.config }, "complete");
   });
   test(`missing usage, one-sided views and component-free scope bypass the route in ${mode}`, async (context) => {
     const fixture = withHeadStyles(

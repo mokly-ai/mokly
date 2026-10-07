@@ -96,7 +96,7 @@ device and pane frames. Both are recorded, with their contrast, in the
 [semantic palette](./mokly-viewer-palette.md).
 
 Typography is **Inter** (a variable font packaged with the shell and served at
-`/__mokly/fonts/InterVariable.woff2` under its SIL OFL license) via
+`/mokly-viewer/fonts/InterVariable.woff2` under its SIL OFL license) via
 `--sans: "Inter", ui-sans-serif, system-ui, …` at a 13px shell base, with
 `--mono: "SFMono-Regular", Consolas, …` for ids, addresses, and paths.
 The [brand contract](./mokly-shell-brand.md) owns the system-serif wordmark

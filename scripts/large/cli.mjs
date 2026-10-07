@@ -20,7 +20,7 @@ async function main() {
   };
   let debug = mode === "benchmark";
   let config;
-  let generatedOutput = "committed";
+  let trackedOutput = false;
   const scenarioNames = [];
   while (args.length) {
     const flag = args.shift();
@@ -36,7 +36,7 @@ async function main() {
         );
       scenarioNames.push(value);
     } else if (flag === "--debug-timings") debug = true;
-    else if (flag === "--derived") generatedOutput = "derived";
+    else if (flag === "--tracked-output") trackedOutput = true;
     else if (flag === "--inline-styles") size.inlineStyles = true;
     else if (flag === "--config") {
       const value = args.shift();
@@ -63,12 +63,12 @@ async function main() {
   if (size.screens < 2)
     throw new Error("screens must be at least two per area");
   if (mode === "generate")
-    return prepareFixture(repository, size, debug, generatedOutput);
+    return prepareFixture(repository, size, debug, trackedOutput);
   const scenarios = selectScenarios(scenarioNames);
   const fixture = await preparedFixture(
     repository,
     size,
-    generatedOutput,
+    trackedOutput,
     config,
   );
   if (mode === "benchmark") {

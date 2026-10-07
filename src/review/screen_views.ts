@@ -1,7 +1,6 @@
 /** View enumeration and aggregation helpers for Review screen comparisons. */
 
 import type { ColorScheme, Viewport } from "@mokly/viewer";
-import { generatedViews } from "@mokly/viewer/data";
 import type {
   HistoricalManifestScreen,
   ManifestScreen,
@@ -11,6 +10,7 @@ import type {
 } from "@mokly/viewer/data";
 
 import { lexical } from "./component_metadata.js";
+import { reviewViews } from "./views.js";
 
 type ReviewScreen = ManifestScreen | HistoricalManifestScreen;
 
@@ -30,7 +30,7 @@ export function fragmentForView(
   viewport: Viewport,
   colorScheme: ColorScheme,
 ): string | undefined {
-  return generatedViews(screen).find(
+  return reviewViews(screen).find(
     (view) => view.viewport === viewport && view.colorScheme === colorScheme,
   )?.path;
 }

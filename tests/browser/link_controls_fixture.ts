@@ -6,9 +6,9 @@ import { promisify } from "node:util";
 import { compileCatalogue } from "../../dist/build/compile.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
-import { committedReviewRepository } from "../../dist/review/repository.js";
 import { runReview } from "../../dist/review/run.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
+import { committedReviewRepository } from "../helpers/committed_repository.js";
 import {
   createFixture,
   removeFixture,
@@ -27,7 +27,8 @@ moduleResolution: { aliases: { "react-native": "react-native-web" }, conditions:
       rendererSource,
     );
     const config = await loadConfig(fixture.root);
-    await writeCompilation(await compileCatalogue(config), config);
+    const compilation = await compileCatalogue(config);
+    await writeCompilation(compilation, config);
     const run = promisify(execFile);
     for (const args of [
       ["init", "-q", "--initial-branch=main"],
@@ -41,7 +42,8 @@ moduleResolution: { aliases: { "react-native": "react-native-web" }, conditions:
       fixture.entryPath,
       controlSource("Updated Home"),
     );
-    await writeCompilation(await compileCatalogue(config), config);
+    const updated = await compileCatalogue(config);
+    await writeCompilation(updated, config);
     await runReview(
       config,
       "HEAD",
@@ -51,6 +53,7 @@ moduleResolution: { aliases: { "react-native": "react-native-web" }, conditions:
     const server = await startCatalogueServer(config, {
       base: "HEAD",
       port: 0,
+      generatedOutputs: updated.outputs,
     });
     return {
       fixture,

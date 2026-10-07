@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
 
-import type { ReviewResultV5 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
 
 import {
   inlineChangesFixture,
@@ -27,18 +27,18 @@ async function resultFor(
   t: TestContext,
   styles: string,
   options: Parameters<typeof inlineChangesFixture>[3] = {},
-): Promise<ReviewResultV5> {
+): Promise<ReviewResultV6> {
   const fixture = await inlineChangesFixture(t, styles, styles, {
     files: imageFiles(),
     ...options,
   });
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 5);
-  assert.ok(result.schemaVersion === 5);
+  assert.equal(result.schemaVersion, 6);
+  assert.ok(result.schemaVersion === 6);
   return result;
 }
 
-function change(result: ReviewResultV5, route: string) {
+function change(result: ReviewResultV6, route: string) {
   return result.changes.find(
     (entry) => (entry.after ?? entry.before)?.path === route,
   );
@@ -52,8 +52,8 @@ test("an image reached only by an owned inline rule belongs to its component", a
     fixture.live(),
     fixture.complete(),
   ]);
-  assert.equal(artifact.result.schemaVersion, 5);
-  if (artifact.result.schemaVersion !== 5) return;
+  assert.equal(artifact.result.schemaVersion, 6);
+  if (artifact.result.schemaVersion !== 6) return;
   assert.deepEqual(live.changedEntries, ["action"]);
   assert.deepEqual(
     artifact.result.changes.map((entry) => entry.after?.path),
@@ -88,7 +88,7 @@ test("an unrelated entry edit keeps material without claiming the owned image", 
 test("entry markup independently referencing an owned image keeps both rows", async (t) => {
   const source = inlineComponentSource().replace(
     '<main className="entry">',
-    '<main className="entry"><img src="../image.svg" />',
+    '<main className="entry"><img src="../../image.svg" />',
   );
   const result = await resultFor(t, ownedRule, { source });
   for (const route of ["action", "home"])
@@ -114,8 +114,8 @@ test("one referenced image can belong to two matched components", async (t) => {
     files: imageFiles(),
   });
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   const ownersAndVariants = [
     "action",
     "action/default",
@@ -170,8 +170,8 @@ test("transitive inline resources retain the rule owner's repository path", asyn
     },
   });
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   assert.deepEqual(change(result, "action")?.reasons, [
     { kind: "dependency", path: "mockups/deep.svg" },
   ]);

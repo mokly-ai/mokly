@@ -5,7 +5,7 @@ import { ComponentMaterialReader } from "../../dist/review/component_resources.j
 import { compareComponentView } from "../../dist/review/component_view.js";
 import { catalogueLinkNormalizer } from "../../dist/review/moves/links.js";
 import { ResourceComparison } from "../../dist/review/resource_comparison.js";
-import { generatedViews } from "../../packages/viewer/dist/components/views.js";
+import { reviewViews } from "../../dist/review/views.js";
 
 import { memoryReader, type FastPathFixture } from "./component_fast_path.js";
 import { compareComponentView as delivered } from "./page_m6/component_view.js";
@@ -52,10 +52,10 @@ export function pageContext(
       changed,
       prefix,
       undefined,
-      fixture.config.generatedOutput === "derived",
+      undefined,
       componentAware,
     ),
-    compareResourceBytes: fixture.config.generatedOutput === "derived",
+    compareResourceBytes: true,
   };
 }
 
@@ -87,8 +87,8 @@ export async function comparePageViews(
     const previous = fixture.before.entries.find(
       ({ path: id }) => id === entry.path,
     )!;
-    for (const after of generatedViews(entry)) {
-      const before = generatedViews(previous).find(
+    for (const after of reviewViews(entry)) {
+      const before = reviewViews(previous).find(
         ({ path }) => path === after.path,
       )!;
       const root = "variantOf" in entry ? entry.variantOf : undefined;

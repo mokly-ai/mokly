@@ -11,7 +11,7 @@ import {
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
 import { compareComponentView } from "../dist/review/component_view.js";
-import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import { reviewViews as generatedViews } from "../dist/review/views.js";
 
 import { inlineChangesFixture } from "./helpers/inline_changes.js";
 import { pageContext } from "./helpers/page_comparison.js";
@@ -66,7 +66,7 @@ for (const mode of ["committed", "derived"] as const)
           ({ stage, event }) =>
             stage === "review.resource-graph" && event === "start",
         ).length,
-        owned ? 4 : mode === "committed" ? 1 : 2,
+        owned ? 4 : 2,
       );
     });
 

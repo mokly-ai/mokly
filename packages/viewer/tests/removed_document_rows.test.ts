@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ManifestEntry, ManifestV8 } from "../src/registry/types.js";
+import { currentManifest } from "../../../tests/helpers/current_manifest.js";
+import type { ManifestEntry, ManifestV9 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import type { ShellContext } from "../src/shell/context.js";
 import {
@@ -23,13 +24,13 @@ const entry = (kind: string, path: string, title: string): ManifestEntry =>
     ...(kind === "screen" ? { useCasePaths: [] } : {}),
   }) as unknown as ManifestEntry;
 
-const manifest: ManifestV8 = {
+const manifest: ManifestV9 = currentManifest({
   entries: [entry("screen", "guide/current", "Current")],
   folders: [],
   generatedBy: "mokly",
-  schemaVersion: 8,
+  schemaVersion: 9,
   sourceFiles: [],
-};
+});
 
 const removed = [
   entry("document", "guide/terms", "Terms"),

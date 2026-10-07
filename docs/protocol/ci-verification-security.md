@@ -25,3 +25,31 @@ exact-artifact checks.
 Fixture ownership, failure cleanup, browser shard balance, and acceptance
 measurement follow the separate
 [suite evidence contract](./ci-suite-evidence.md).
+
+## Testbox Key And Secret Boundary
+
+The [remote verification contract](./remote-verification.md) is an approved
+target under the active [plan](../../plans/blacksmith-remote-verification.md).
+The workflow secret boundary and executor key handling are implemented.
+Explicit and automatic modes use the same key handling.
+
+Xtask reads the org key only from `BLACKSMITH_ORG_TOKEN`.
+It sends the key to `blacksmith auth login --api-token -` on standard input.
+Login saves the key in `~/.blacksmith/credentials`.
+It replaces any saved login for the same organization.
+The key must never appear in arguments, logs, remote commands or reports.
+Explicit remote mode can use the current CLI login when the variable is unset
+or empty. Automatic mode selects local execution in that case.
+The cloud snapshot supplies tools but must not contain
+`~/.blacksmith/credentials`. Never copy saved CLI credentials to a box.
+
+The Testbox workflow uses no secrets and has only `contents: read` permission.
+Its full-history checkout sets `persist-credentials: false`.
+The repository is public. Boxes fetch pushed commits without a token.
+Send source files and verification inputs, not the local org key or credential
+files. Write only the job `PATH` and `PLAYWRIGHT_CHANNEL=chromium` entries for
+Testbox sessions in `/etc/environment`. Do not forward the caller's environment.
+
+GitHub Actions always uses local execution for the complete gate.
+An explicit remote request there fails. This boundary also applies to release
+publishing, even if an org key is present.

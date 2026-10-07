@@ -52,12 +52,12 @@ for (const mode of ["committed", "derived"] as const)
                   renderer: {
                     before: shell(
                       linked
-                        ? '<link rel="stylesheet" href="../sheet.css">'
+                        ? '<link rel="stylesheet" href="../../sheet.css">'
                         : `<style>${before}</style>`,
                     ),
                     after: shell(
                       linked
-                        ? '<link rel="stylesheet" href="../sheet.css">'
+                        ? '<link rel="stylesheet" href="../../sheet.css">'
                         : `<style>${after}</style>`,
                     ),
                   },

@@ -73,11 +73,11 @@ test(
       stylesheets: 1,
       stylesheetShare: 0.38,
     });
-    const fixture = await prepareFixture(repositoryRoot, size, false);
+    const fixture = await prepareFixture(repositoryRoot, size, false, true);
     testContext.after(async () => {
       await fs.rm(fixture.root, { recursive: true, force: true });
       await fs.rm(
-        path.join(repositoryRoot, ".context/large-1-2-2-1-0.38.json"),
+        path.join(repositoryRoot, ".context/large-1-2-2-1-0.38-tracked.json"),
         { force: true },
       );
     });
@@ -141,7 +141,7 @@ test(
     const before = await fs.readFile(
       path.join(
         fixture.root,
-        "mockups/area-1/screens/activity-group-1/screen-1/index.desktop.html",
+        "mockups/mokly-generated/area-1/screens/activity-group-1/screen-1/index.desktop.html",
       ),
       "utf8",
     );
@@ -150,7 +150,7 @@ test(
       await fs.readFile(
         path.join(
           fixture.root,
-          "mockups/area-1/screens/activity-group-1/screen-1/index.desktop.html",
+          "mockups/mokly-generated/area-1/screens/activity-group-1/screen-1/index.desktop.html",
         ),
         "utf8",
       ),

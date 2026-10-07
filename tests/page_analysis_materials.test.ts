@@ -6,6 +6,7 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
+import { compilationFiles } from "./helpers/component_fast_path.js";
 import { designLibraryFixture } from "./helpers/design_library_fixture.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 import { inlineChangesFixture } from "./helpers/inline_changes.js";
@@ -14,8 +15,11 @@ import { assertPageMaterialEquivalence } from "./helpers/page_material_oracle.js
 
 for (const mode of ["committed", "derived"] as const) {
   test(`design catalogue strings, resource seeds and closures equal the M6 oracle in ${mode}`, async (context) => {
-    const fixture = await designLibraryFixture(context, mode);
-    const files = new Map([...fixture.before.outputs, ...fixture.resources]);
+    const fixture = await designLibraryFixture(context);
+    const files = new Map([
+      ...compilationFiles(fixture.before),
+      ...fixture.resources,
+    ]);
     await assertPageMaterialEquivalence({
       before: fixture.before.manifest,
       after: fixture.before.manifest,
@@ -32,7 +36,7 @@ for (const mode of ["committed", "derived"] as const) {
       before: fixture.before.manifest,
       after: after.manifest,
       beforeFiles: files,
-      afterFiles: new Map([...after.outputs, ...fixture.resources]),
+      afterFiles: new Map([...compilationFiles(after), ...fixture.resources]),
       config: fixture.config,
       changedPaths: ["examples/basic/theme.ts"],
     });
@@ -46,7 +50,7 @@ for (const mode of ["committed", "derived"] as const) {
       await generateLargeFixture(
         root,
         { areas: 2, screens: 2, rows: 1, stylesheets: 1, inlineStyles },
-        mode,
+        mode === "committed",
       );
       const config = await loadConfig(root);
       const before = await compileCatalogue(config);
@@ -71,8 +75,8 @@ for (const mode of ["committed", "derived"] as const) {
       await assertPageMaterialEquivalence({
         before: before.manifest,
         after: after.manifest,
-        beforeFiles: new Map([...before.outputs, ...resources]),
-        afterFiles: new Map([...after.outputs, ...resources]),
+        beforeFiles: new Map([...compilationFiles(before), ...resources]),
+        afterFiles: new Map([...compilationFiles(after), ...resources]),
         config,
         changedPaths: ["renderer.tsx"],
       });

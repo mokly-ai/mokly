@@ -1,18 +1,15 @@
 import type { ComponentViewRecord } from "@mokly/viewer";
-import {
-  entryRoute,
-  documentRoute,
-  effectiveColorSchemes,
-  viewRoute,
-  VIEWPORTS,
-} from "@mokly/viewer/data";
-import type { ManifestV8, ArtifactView } from "@mokly/viewer/data";
+import type { ManifestV9, ArtifactView } from "@mokly/viewer/data";
 
-import { transformCompatibilityDocuments } from "../compatibility/transform.js";
 import { validateComponentRanges } from "../components/ranges.js";
-import { isComponentVariantDefinition } from "../components/types.js";
+import { PublicFilePolicy } from "../config/public_policy.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
+import {
+  gitBlobHash,
+  RepositoryObjectFormatReader,
+} from "../registry/blob_hash.js";
+import { generatedDocumentRoutes } from "../registry/generated_documents.js";
 import {
   createManifest,
   MANIFEST_NAME,
@@ -27,16 +24,21 @@ import {
   type BuildDiagnostic,
 } from "./build_warnings.js";
 import { rememberRuntime } from "./component_runtime.js";
-import { generatedByteLength, type GeneratedFile } from "./generated_file.js";
+import { resolveDocumentLinks } from "./document_links.js";
+import {
+  generatedByteLength,
+  generatedBytes,
+  type GeneratedFile,
+} from "./generated_file.js";
 import { validateHtmlLinks } from "./html_links.js";
 import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
 import { validateLogicalFragments } from "./logical_records.js";
+import { validateGeneratedOutputPaths } from "./output_paths.js";
 import {
   captureOutputSnapshot,
   assertSnapshotRoutes,
   type OutputSnapshot,
 } from "./output_snapshot.js";
-import { validateGeneratedOwnershipHeaders } from "./ownership.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
 import { renderCooperatively } from "./render_cooperative.js";
@@ -44,7 +46,7 @@ import { renderCooperatively } from "./render_cooperative.js";
 /** Complete in-memory static compilation result. */
 export interface Compilation {
   diagnostics: readonly BuildDiagnostic[];
-  manifest: ManifestV8;
+  manifest: ManifestV9;
   outputs: ReadonlyMap<string, GeneratedFile>;
   /** Repository-relative inputs of delivered CSS and asset routes. */
   deliveredStyleSources: readonly string[];
@@ -84,6 +86,17 @@ async function compileMeasured(
   const registry = timeSync("registry.prepare", () =>
     prepareRegistry(graph.definitions, config, graph.documents),
   );
+  validateGeneratedOutputPaths(
+    [
+      MANIFEST_NAME,
+      ...generatedDocumentRoutes(
+        createManifest(registry.entries, graph.sourceFiles, config.colorSchemes)
+          .entries,
+      ),
+      ...graph.styleOutputs.keys(),
+    ],
+    config,
+  );
   timingCounts("catalogue", () => ({
     entries: registry.entries.length,
     ...Object.fromEntries(
@@ -96,6 +109,7 @@ async function compileMeasured(
   const fragmentViews = new Map<string, ArtifactView>();
   const componentViews = new Map<string, ComponentViewRecord>();
   const pending = new PendingGeneratedFiles(graph.styleOutputs);
+  const policy = new PublicFilePolicy(config);
   const outputs = accepted
     ? await timeAsync("render", () =>
         renderCooperatively(
@@ -106,6 +120,7 @@ async function compileMeasured(
           componentViews,
           accepted.checkpoint,
           pending,
+          policy,
         ),
       )
     : timeSync("render", () =>
@@ -117,65 +132,23 @@ async function compileMeasured(
           graph.renderWithComponents,
           componentViews,
           undefined,
-          { routes: graph.stylesheetRoutes, pending },
+          { routes: graph.stylesheetRoutes, pending, policy },
         ),
       );
   pending.addHtmlMap(outputs);
-  const generatedOwners = new Map<string, string>();
-  for (const entry of registry.entries) {
-    if (entry.kind === "document")
-      for (const scheme of config.colorSchemes)
-        generatedOwners.set(
-          documentRoute(entry.path, scheme),
-          entry.sourceRelativePath,
-        );
-    if (entry.kind === "page")
-      generatedOwners.set(entryRoute(entry.path), entry.sourceRelativePath);
-    if (
-      entry.kind !== "screen" &&
-      !(entry.kind === "component" && isComponentVariantDefinition(entry))
-    )
-      continue;
-    {
-      for (const viewport of VIEWPORTS) {
-        for (const colorScheme of effectiveColorSchemes(
-          entry,
-          config.colorSchemes,
-        )) {
-          generatedOwners.set(
-            viewRoute(entry.path, viewport, colorScheme),
-            entry.sourceRelativePath,
-          );
-        }
-      }
-    }
-  }
-
   await accepted?.checkpoint();
-  const compatibility = timeSync("html.compatibility", () =>
-    transformCompatibilityDocuments(
-      outputs,
-      registry.entries,
-      config,
-      graph,
-      fragmentViews,
-      undefined,
-      undefined,
-      pending,
-    ),
+  const resolvedLinks = timeSync("html.links", () =>
+    resolveDocumentLinks(outputs, registry.entries, config, fragmentViews),
   );
   pending.addHtmlMap(outputs);
   timeSync("components.validate-metadata", () => {
     for (const [route, view] of componentViews)
       validateComponentRanges(outputs.get(route)!, view.ranges);
   });
-  timeSync("html.ownership", () =>
-    validateGeneratedOwnershipHeaders(outputs, generatedOwners),
-  );
   timeSync("html.logical-links", () =>
     validateLogicalFragments(
       outputs,
-      compatibility.records,
+      resolvedLinks.records,
       registry.entries,
       config,
     ),
@@ -186,7 +159,7 @@ async function compileMeasured(
       normalizeSingleDocument(content, route);
     }
   });
-  const manifest = timeSync("manifest.create", () =>
+  const draftManifest = timeSync("manifest.create", () =>
     createManifest(
       registry.entries,
       graph.sourceFiles,
@@ -195,28 +168,46 @@ async function compileMeasured(
       registry.folders,
     ),
   );
-  timeSync("manifest.validate", () => parseManifest(manifest));
   await accepted?.checkpoint();
-  timeSync("manifest.serialize", () =>
-    outputs.set(MANIFEST_NAME, serializeManifest(manifest)),
+  const assetClosure = timeSync("html.links-and-resources", () =>
+    validateHtmlLinks(outputs, config, {
+      pending,
+      parsed: new Map(),
+      onDemand: false,
+      policy,
+    }),
   );
   const compilationOutputs = new Map<string, GeneratedFile>(outputs);
   for (const [route, content] of graph.styleOutputs)
     compilationOutputs.set(route, content);
+  const blobHashAlgorithm = new RepositoryObjectFormatReader().format(
+    config.repoRoot,
+  );
+  const manifest: ManifestV9 = {
+    ...draftManifest,
+    assetClosure,
+    blobHashAlgorithm,
+    generatedFiles: [...compilationOutputs]
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([path, content]) => ({
+        path,
+        blobHash: gitBlobHash(generatedBytes(content), blobHashAlgorithm),
+      })),
+    schemaVersion: 9,
+  };
+  timeSync("manifest.validate", () => parseManifest(manifest));
+  timeSync("manifest.serialize", () =>
+    compilationOutputs.set(MANIFEST_NAME, serializeManifest(manifest)),
+  );
   const outputSnapshot =
     accepted?.outputSnapshot ??
     (await captureOutputSnapshot(compilationOutputs.keys(), config, signal));
   assertSnapshotRoutes(outputSnapshot, compilationOutputs.keys());
-  timeSync("html.links-and-resources", () =>
-    validateHtmlLinks(outputs, config, {
-      pending,
-      pendingOrphans: new Set(outputSnapshot.orphanRoutes),
-      parsed: new Map(),
-      onDemand: false,
-    }),
+  timeSync("output.paths", () =>
+    validateGeneratedOutputPaths(compilationOutputs.keys(), config),
   );
   const compilation: Compilation = {
-    diagnostics: normalizeBuildDiagnostics(compatibility.diagnostics),
+    diagnostics: normalizeBuildDiagnostics(resolvedLinks.diagnostics),
     manifest,
     outputs: compilationOutputs,
     deliveredStyleSources: graph.deliveredStyleSources,
@@ -238,7 +229,7 @@ async function compileMeasured(
       (total, content) => total + generatedByteLength(content),
       0,
     ),
-    manifestBytes: generatedByteLength(outputs.get(MANIFEST_NAME)!),
+    manifestBytes: generatedByteLength(compilationOutputs.get(MANIFEST_NAME)!),
     instances: [...componentViews.values()].reduce(
       (total, view) => total + view.instances.length,
       0,

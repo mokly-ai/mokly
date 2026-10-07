@@ -53,7 +53,6 @@ export class ChangedResourceGraph {
     private readonly changed: ReadonlySet<string>,
     private readonly documents: ReadonlyMap<string, string>,
     private readonly css: CssResourceAnalysis = new CssResourceAnalysis(),
-    private readonly compareBytes = false,
     private readonly documentResources: {
       before: DocumentResourceIndex;
       after: DocumentResourceIndex;
@@ -119,17 +118,11 @@ export class ChangedResourceGraph {
     before?: { path: string; html: string },
   ): Promise<ResourceEvidence & { resourceChanged?: true }> {
     const resources = await this.resources(source, document);
-    const changedStylesheet = [...resources].some(
-      (route) => isStylesheetPath(route) && this.isChanged(route),
-    );
-    const changedDocument =
-      before && (before.path !== source || before.html !== document);
-    const bases =
-      before && (this.compareBytes || changedStylesheet || changedDocument)
-        ? await this.#baseGraph.collect(
-            this.referencePaths(before.path, before.html, "before"),
-          )
-        : new Set<string>();
+    const bases = before
+      ? await this.#baseGraph.collect(
+          this.referencePaths(before.path, before.html, "before"),
+        )
+      : new Set<string>();
     const all = [...new Set([...bases, ...resources])];
     const equivalent = new Set(
       await equivalentDocumentResources(
@@ -144,10 +137,7 @@ export class ChangedResourceGraph {
     for (const route of this.identities?.equivalent(bases, resources) ?? [])
       equivalent.add(route);
     const eligible = all.filter(
-      (route) =>
-        !equivalent.has(route) &&
-        (this.changed.has(route) ||
-          this.changed.has(this.#physicalRoutes.get(route) ?? route)),
+      (route) => !equivalent.has(route) && this.isChanged(route),
     );
     const cssPaths = eligible.filter(isStylesheetPath);
     const baseCss = await this.#base.optionalTexts(cssPaths);
@@ -164,9 +154,10 @@ export class ChangedResourceGraph {
             )))
         : undefined;
       changes.push({
-        path: this.changed.has(route)
-          ? route
-          : this.#physicalRoutes.get(route)!,
+        path:
+          this.changed.has(route) || this.#byteChanges.has(route)
+            ? route
+            : this.#physicalRoutes.get(route)!,
         ...(baseCss.get(route) === undefined
           ? {}
           : { before: baseCss.get(route)! }),
@@ -236,8 +227,6 @@ export class ChangedResourceGraph {
             this.baseline.read(candidate),
         },
         { readIfExists: async () => asset.content },
-        this.isChanged(route),
-        this.compareBytes,
       );
       if (decision.kind === "verified-deletion") {
         this.#byteChanges.add(route);

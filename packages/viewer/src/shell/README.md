@@ -94,6 +94,8 @@ empty path segments and every earlier key form on restore.
 `disclosure_storage.ts` owns the v4 map codec and its storage key; early
 capture, hydration, the shell store, and watched-reload recovery share its
 validation. Earlier storage versions are never read, translated, or removed.
+Stored watched recovery separately requires `filterBaselineDisclosures` and
+`changesStatus`; missing fields reject the complete stored snapshot.
 `routes.ts` resolves URL paths to current or retained manifest entries;
 `target.ts` wraps a found entry as a route target without an extra routing
 filter. The [folder contract](../../../../docs/protocol/mokly-folders.md)
@@ -172,7 +174,10 @@ deployment continuity before a read-model route transition.
 `store_browser_actions.ts` owns DOM interaction and
 `store_browser_urls.ts` owns provider-normalized URL policy. Frame documents
 remain static while `frame_event_router.tsx` routes authenticated logical-link
-events from visible sessions in the owning `frame_registry.tsx`. An unavailable
+events from visible sessions in the owning `frame_registry.tsx`.
+`frame_mount_hook.ts` and `frame_session_usage.ts` retain mount-scoped usage
+adoption, including the mainline race fix when mounting finishes after a newer
+usage revision arrives. An unavailable
 frame destination changes only an uncontrolled or standalone display;
 controlled viewers report the frame error and wait for host-owned selection.
 
@@ -180,7 +185,7 @@ Static route parsing accepts the canonical slash, extensionless, and
 `index.html` forms; the shared parser resolves each path through `byPath`. Historical
 resolution binds that route to its published snapshot; an explicit query must
 match, while an inferred identity is canonicalized into the URL. Static
-delivery v3 carries only the page's canonical path, comparison URL, and
+delivery v5 carries only the page's canonical path, comparison URL, and
 deployment identity; entry destinations come from the shared route helpers.
 
 Authenticated frame navigation stays logical until `frame_event_router.tsx`

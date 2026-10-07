@@ -21,17 +21,12 @@ import {
 import { textOutput } from "./helpers/generated_text.js";
 import { styleFixture } from "./helpers/imported_styles_fixture.js";
 
-test("multiple on-demand views adopt retained orphans and parse CSS only once per generation", async (t) => {
+test("multiple on-demand views parse CSS only once per generation", async (t) => {
   const fixture = await styleFixture(".entry{color:red}");
   t.after(() => removeFixture(fixture));
   const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
-  let orphanScans = 0;
   let cssParses = 0;
   const seams = {
-    orphanRoutes: (snapshot) => {
-      orphanScans += 1;
-      return snapshot.orphanRoutes;
-    },
     parseCss: (text) => {
       cssParses += 1;
       return extractCssReferences(text);
@@ -43,13 +38,11 @@ test("multiple on-demand views adopt retained orphans and parse CSS only once pe
     "home/index.desktop.html",
     "home/index.mobile.html",
   ]) {
-    assert.match(compiler.render(route).html, /mokly-generated/);
+    assert.match(compiler.render(route).html, /\.\.\/styles\//);
   }
-  assert.equal(orphanScans, 1);
   assert.equal(cssParses, 1);
   const next = new DocumentCompiler(runtime, runtimeGraph(runtime), seams);
-  assert.match(next.render("home/index.mobile.html").html, /mokly-generated/);
-  assert.equal(orphanScans, 2);
+  assert.match(next.render("home/index.mobile.html").html, /\.\.\/styles\//);
   assert.equal(cssParses, 2);
 });
 
@@ -69,11 +62,13 @@ test("pending CSS and assets validate without reading stale reserved disk files"
   const compiler = new DocumentCompiler(runtime, runtimeGraph(runtime));
   assert.match(
     compiler.render("home/index.mobile.html").html,
-    /mokly-generated/,
+    /\.\.\/styles\//,
   );
   const missingRuntime = {
     ...runtime,
-    styleOutputs: runtime.styleOutputs.filter(([route]) => route !== asset),
+    styleOutputs: runtime.styleOutputs.filter(
+      ([route]) => route !== asset.slice("mokly-generated/".length),
+    ),
   };
   assert.throws(
     () =>
@@ -91,7 +86,7 @@ test("full compilation validates transitive public HTML resources", async (t) =>
   t.after(() => removeFixture(fixture));
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
-    'export default () => `<!doctype html><html><head></head><body><a href="../public.html">Public</a></body></html>`;',
+    'export default () => `<!doctype html><html><head></head><body><a href="../../public.html">Public</a></body></html>`;',
   );
   await fs.writeFile(
     path.join(fixture.mockupsDir, "public.html"),
@@ -116,11 +111,11 @@ test("full compilation never validates a missing reserved CSS target from disk",
   await fs.writeFile(stale, ".stale{color:red}");
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
-    'export default () => `<!doctype html><html><head><link rel="stylesheet" href="../mokly-generated/styles/stale.css"></head><body>View</body></html>`;',
+    'export default () => `<!doctype html><html><head><link rel="stylesheet" href="../styles/stale.css"></head><body>View</body></html>`;',
   );
   await assert.rejects(
     compileCatalogue(await loadConfig(fixture.root)),
-    /missing target .*mokly-generated\/styles\/stale\.css/,
+    /missing target .*styles\/stale\.css/,
   );
 });
 
@@ -147,7 +142,12 @@ test("on-demand Serve sends accepted stylesheet and asset bytes over stale disk"
   fixture.beforeRemove(() => server.close());
   const css = await fetch(`${server.url}/static/${cssRoute}`);
   assert.equal(css.status, 200);
-  assert.equal(await css.text(), new Map(runtime.styleOutputs).get(cssRoute));
+  assert.equal(
+    await css.text(),
+    new Map(runtime.styleOutputs).get(
+      cssRoute.slice("mokly-generated/".length),
+    ),
+  );
   const asset = await fetch(`${server.url}/static/${assetRoute}`);
   assert.equal(asset.status, 200);
   assert.deepEqual(Buffer.from(await asset.arrayBuffer()), assetBytes);
@@ -174,12 +174,9 @@ test("component HTML resources accept pending stylesheets before they exist on d
     `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => '<!doctype html><html><head>' + input.stylesheets.map(href => '<link rel="stylesheet" href="' + href + '">').join('') + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
   );
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
-  assert.ok(compiled.outputs.has(styleRoute));
+  assert.ok(compiled.outputs.has(styleRoute.slice("mokly-generated/".length)));
   const html = textOutput(compiled.outputs, "home/index.mobile.html")!;
-  assert.match(
-    html,
-    /mokly-generated\/styles\/entries\/fixture\.mockup\.tsx\.css/,
-  );
+  assert.match(html, /styles\/entries\/fixture\.mockup\.tsx\.css/);
   assert.ok(!fsSync.existsSync(path.join(fixture.mockupsDir, styleRoute)));
 });
 
@@ -194,14 +191,14 @@ test("component resources reject stale reserved disk files absent from pending o
   await fs.writeFile(stale, ".stale{color:red}");
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
-    `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => '<!doctype html><html><head><link rel="stylesheet" href="' + '../'.repeat(input.entry.path.split('/').length) + '${missing}"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
+    `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => '<!doctype html><html><head><link rel="stylesheet" href="' + '../'.repeat(input.entry.path.split('/').length) + '${missing.slice("mokly-generated/".length)}"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
   );
   await assert.rejects(
     compileCatalogue(await loadConfig(fixture.root)),
     (error: Error) => {
       assert.match(
         error.message,
-        /missing target (?:\.\.\/)+mokly-generated\/styles\/stale\.css/,
+        /missing target (?:\.\.\/)+styles\/stale\.css/,
       );
       assert.doesNotMatch(error.message, /escapes mockupsDir/);
       return true;
@@ -209,23 +206,14 @@ test("component resources reject stale reserved disk files absent from pending o
   );
 });
 
-test("compatibility route discovery includes pending styles and omits reserved disk orphans", async (t) => {
-  const fixture = await styleFixture(".entry{color:red}", {
-    extraConfig: 'compatibility: { transformer: "transform.ts" },',
-  });
+test("pending stylesheet delivery omits reserved disk orphans", async (t) => {
+  const fixture = await styleFixture(".entry{color:red}");
   t.after(() => removeFixture(fixture));
   const stale = path.join(fixture.mockupsDir, "mokly-generated/styles/old.css");
   await fs.mkdir(path.dirname(stale), { recursive: true });
   await fs.writeFile(stale, "stale");
-  await fs.writeFile(
-    path.join(fixture.root, "transform.ts"),
-    'export default ({content, availableRoutes}) => content.replace("</body>", `<output data-available="${availableRoutes.join("|")}"></output></body>`);',
-  );
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
   const html = compiled.outputs.get("home/index.mobile.html") as string;
-  assert.match(
-    html,
-    /mokly-generated\/styles\/entries\/fixture\.mockup\.tsx\.css/,
-  );
-  assert.doesNotMatch(html, /mokly-generated\/styles\/old\.css/);
+  assert.match(html, /styles\/entries\/fixture\.mockup\.tsx\.css/);
+  assert.doesNotMatch(html, /styles\/old\.css/);
 });

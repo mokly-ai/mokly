@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
 
-import { baselineManifestVersion } from "../dist/baseline/manifest.js";
+import { historicalCatalogueAt } from "../dist/baseline/manifest.js";
 import { compileCatalogue } from "../dist/build/compile.js";
+import { generatedBytes } from "../dist/build/generated_file.js";
 import { loadConfig } from "../dist/config/load.js";
 import { parseHistoricalManifest } from "../dist/registry/manifest.js";
 import {
@@ -15,11 +16,11 @@ import { baselineFixture } from "./helpers/baseline_fixture.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
-test("rebuilt v8 cache accepts retired arrays without changing retained bytes", async (context) => {
+test("rebuilt v9 cache accepts retired arrays without changing retained bytes", async (context) => {
   const catalogue = await createFixture(componentEntrySource());
   context.after(() => removeFixture(catalogue));
-  const original = (await compileCatalogue(await loadConfig(catalogue.root)))
-    .manifest;
+  const compilation = await compileCatalogue(await loadConfig(catalogue.root));
+  const original = compilation.manifest;
   const historical = structuredClone(original);
   for (const entry of historical.entries)
     if ("componentViews" in entry)
@@ -33,18 +34,37 @@ test("rebuilt v8 cache accepts retired arrays without changing retained bytes", 
   const run = fixture.runner.run;
   fixture.runner.run = async (command) => {
     const result = await run(command);
-    if (command.argv[0] !== "git")
+    if (command.argv[0] !== "git") {
+      const generated = path.join(command.cwd, "mockups/mokly-generated");
+      await fixture.fs.remove(generated);
+      for (const [route, bytes] of compilation.outputs) {
+        let directory = generated;
+        await fixture.fs.mkdir(directory);
+        for (const part of route.split("/").slice(0, -1)) {
+          directory = path.join(directory, part);
+          await fixture.fs.mkdir(directory);
+        }
+        fixture.fs.put(
+          path.join(generated, route),
+          "regular",
+          generatedBytes(bytes),
+        );
+      }
       fixture.fs.put(
-        path.join(command.cwd, "mockups/mokly-manifest.json"),
+        path.join(generated, "mokly-manifest.json"),
         "regular",
         raw,
       );
+    }
     return result;
   };
   const built = await fixture.builder.build(fixture.request);
-  assert.equal(built.marker.manifestVersion, 8);
+  assert.equal(built.marker.manifestVersion, 9);
   assert.equal((await fixture.builder.build(fixture.request)).cacheHit, true);
-  const manifestPath = path.join(built.outputDir, "mokly-manifest.json");
+  const manifestPath = path.join(
+    built.outputDir,
+    "mockups/mokly-generated/mokly-manifest.json",
+  );
   const retained = Buffer.from(await fixture.fs.read(manifestPath, raw.length));
   assert.deepEqual(retained, raw);
   assert.deepEqual(
@@ -70,10 +90,11 @@ test("rebuilt v8 cache accepts retired arrays without changing retained bytes", 
       Buffer.from(JSON.stringify(invalid)),
     );
     await assert.rejects(
-      baselineManifestVersion(
+      historicalCatalogueAt(
         fixture.fs,
-        fixture.request.repoRoot,
         built.outputDir,
+        path.join(built.outputDir, "mockups"),
+        fixture.request.commit,
       ),
       corruption === "props" ? /string does not satisfy/ : /must be an array/,
     );

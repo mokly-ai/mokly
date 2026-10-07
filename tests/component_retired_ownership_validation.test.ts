@@ -18,7 +18,7 @@ import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
-test("historical v8 null view records fail with typed plain-object validation", async (context) => {
+test("historical v9 null view records fail with typed plain-object validation", async (context) => {
   const fixture = await createFixture(componentEntrySource());
   context.after(() => removeFixture(fixture));
   const original = (await compileCatalogue(await loadConfig(fixture.root)))
@@ -43,7 +43,7 @@ test("historical v8 null view records fail with typed plain-object validation", 
   }
 });
 
-test("historical v8 retirement keeps instance props and slot validation strict", async (context) => {
+test("historical v9 retirement keeps instance props and slot validation strict", async (context) => {
   const fixture = await createFixture(componentEntrySource());
   context.after(() => removeFixture(fixture));
   const original = (await compileCatalogue(await loadConfig(fixture.root)))
@@ -85,7 +85,7 @@ test("historical v8 retirement keeps instance props and slot validation strict",
   }
 });
 
-test("v8 retirement accepts baseline arrays on screens and variant entries only", async (context) => {
+test("v9 retirement accepts baseline arrays on screens and variant entries only", async (context) => {
   const fixture = await createFixture(componentEntrySource());
   context.after(() => removeFixture(fixture));
   const original = (await compileCatalogue(await loadConfig(fixture.root)))

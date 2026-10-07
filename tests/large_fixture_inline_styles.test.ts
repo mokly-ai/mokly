@@ -7,11 +7,11 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 test(
@@ -22,13 +22,17 @@ test(
       path.join(repositoryRoot, ".context/large-inline-styles-"),
     );
     t.after(() => fs.rm(root, { recursive: true, force: true }));
-    await generateLargeFixture(root, {
-      areas: 2,
-      inlineStyles: true,
-      rows: 1,
-      screens: 3,
-      stylesheets: 0,
-    });
+    await generateLargeFixture(
+      root,
+      {
+        areas: 2,
+        inlineStyles: true,
+        rows: 1,
+        screens: 3,
+        stylesheets: 0,
+      },
+      true,
+    );
     const config = await loadConfig(root);
     const baselineCompilation = await compileCatalogue(config);
     await writeCompilation(baselineCompilation, config);
@@ -58,7 +62,11 @@ test(
       const entry = manifest.entries.find((candidate) => candidate.path === id);
       assert.ok(entry?.kind === "screen");
       return fs.readFile(
-        path.join(root, "mockups", generatedViews(entry)[0]!.path),
+        path.join(
+          root,
+          "mockups/mokly-generated",
+          generatedViews(entry)[0]!.path,
+        ),
         "utf8",
       );
     };
@@ -81,8 +89,8 @@ test(
       committedReviewRepository(config),
     );
     const result = snapshot.componentChanges?.result;
-    assert.equal(result?.schemaVersion, 5);
-    if (result?.schemaVersion !== 5) return;
+    assert.equal(result?.schemaVersion, 6);
+    if (result?.schemaVersion !== 6) return;
     assert.deepEqual(
       result.changes.map((change) => ({
         kind: change.kind,

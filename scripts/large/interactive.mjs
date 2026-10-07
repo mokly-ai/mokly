@@ -64,7 +64,8 @@ export async function measureInteractive(
   measured.propsMs = propsMs;
   const cached = performance.now();
   const response = await fetch(
-    url + "/static/area-1/screens/activity-group-1/screen-1/index.desktop.html",
+    url +
+      "/static/mokly-generated/area-1/screens/activity-group-1/screen-1/index.desktop.html",
   );
   if (!response.ok) throw new Error(`Cached preview: HTTP ${response.status}`);
   const bytes = (await response.arrayBuffer()).byteLength;

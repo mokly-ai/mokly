@@ -3,7 +3,7 @@ export interface PreparedLargeFixture {
   configPath: string;
   root: string;
   size: LargeSize;
-  generatedOutput: "committed" | "derived";
+  trackedOutput: boolean;
   routes: number;
   documents: number;
   templateDigest: string;
@@ -19,11 +19,11 @@ export function prepareFixture(
   repository: string,
   size: LargeSize,
   debug: boolean,
-  mode?: "committed" | "derived",
+  trackedOutput?: boolean,
 ): Promise<PreparedLargeFixture>;
 export function preparedFixture(
   repository: string,
   size: LargeSize,
-  mode?: "committed" | "derived",
+  trackedOutput?: boolean,
   configPath?: string,
 ): Promise<PreparedLargeFixture>;

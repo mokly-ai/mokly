@@ -21,7 +21,7 @@ shared loop retains its delivered matching and parsing. The separate
 also retains ignore-normalized matching and its existing parse/cache policy;
 it does not share the view analyses or their CSS cache. Duplicate page/resource
 parses from that separate path are counted, not removed by extending scope.
-Baseline admission is manifest **v8 only**, under
+Baseline admission is manifest **v9 only**, under
 [baseline compatibility](./mokly-baseline-compatibility.md): all ownership and
 review markers use the current `mokly-` syntax. No retired `mokabook-` dialect
 normalization or historical-dialect route exists; those strings are ordinary
@@ -190,8 +190,8 @@ serialization can decode escapes and join whitespace/comments into markers.
 
 Shared raw seeds include original **and** potential caller-slot-copy records.
 The [resource proof](./mokly-component-review-fast-path.md#resource-and-one-sided-rules)
-traverses only the head closure in committed mode, rejecting changed Git paths.
-Derived mode independently compares both closures' membership/bytes.
+rejects changed Git paths and independently compares both closures' membership
+and bytes for Git-blob and rebuilt baselines.
 A non-identical attempt's unattributed projection is not a complete inline result:
 fall-through builds attributed materials from the same original analyses.
 On success state is `unchanged`, `ignoredIds` is empty, `material`/inline/

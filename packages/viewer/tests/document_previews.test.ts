@@ -15,7 +15,7 @@ test("removed document descriptors and requests retain historical schemes", asyn
     }),
   );
   assert.ok(data);
-  const comparisonUrl = `__mokly/diffs/__generations/${"a".repeat(64)}/review.json`;
+  const comparisonUrl = `mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`;
   const request = previewEndpoint(
     data,
     { comparisonUrl },
@@ -52,11 +52,11 @@ test("removed document descriptors and requests retain historical schemes", asyn
     [
       [
         "light",
-        `/__mokly/diffs/__generations/${"a".repeat(64)}/snapshots/before/guide/index.html`,
+        `/mokly-viewer/diffs/generations/${"a".repeat(64)}/snapshots/before/mokly-generated/guide/index.html`,
       ],
       [
         "dark",
-        `/__mokly/diffs/__generations/${"a".repeat(64)}/snapshots/before/guide/index.dark.html`,
+        `/mokly-viewer/diffs/generations/${"a".repeat(64)}/snapshots/before/mokly-generated/guide/index.dark.html`,
       ],
     ],
   );

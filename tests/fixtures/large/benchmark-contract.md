@@ -33,7 +33,7 @@ Setup writes an authoritative `.mokly-large-fixture.json` beside the generated
 The fixture ignores this record in Git, so it is not a scenario edit or generated
 output. It contains `schemaVersion: 1`, all four identity fields, and the fixture's
 `areas`, `screens`, `rows`, `stylesheets`, `stylesheetShare`, `inlineStyles` and
-`generatedOutput`, plus `renderingDependencies`. The size-keyed record in this checkout's `.context/` remains
+`trackedOutput`, plus `renderingDependencies`. The size-keyed record in this checkout's `.context/` remains
 a lookup index; neither it nor `--config` may bypass the root identity record.
 
 `moklyCommit` is this checkout's HEAD; `moklyDirty` reports tracked/untracked
@@ -60,7 +60,7 @@ the digest and rejects a missing record or missing/mismatched `templateDigest`
 **before starting Serve or editing a scenario**. It names
 `npm run fixture:large --` followed by valid recorded areas, screens, rows
 or the requested dimensions when the record is malformed,
-stylesheet count/share and applicable `--inline-styles`/`--derived` flags.
+stylesheet count/share and applicable `--inline-styles`/`--tracked-output` flags.
 It does not silently regenerate or compare measurements from old templates.
 Only README reporting edits are excluded from the digest; other template-tree
 edits require preparation again. A changed Mokly commit or dirty flag alone

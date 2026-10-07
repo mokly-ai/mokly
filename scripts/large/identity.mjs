@@ -91,26 +91,26 @@ export async function moklyIdentity(repository) {
   };
 }
 
-export function preparationCommand(size, generatedOutput = "committed") {
-  return `npm run fixture:large -- --areas ${size.areas} --screens ${size.screens} --rows ${size.rows} --stylesheets ${size.stylesheets} --stylesheet-share ${size.stylesheetShare}${size.inlineStyles ? " --inline-styles" : ""}${generatedOutput === "derived" ? " --derived" : ""}`;
+export function preparationCommand(size, trackedOutput = false) {
+  return `npm run fixture:large -- --areas ${size.areas} --screens ${size.screens} --rows ${size.rows} --stylesheets ${size.stylesheets} --stylesheet-share ${size.stylesheetShare}${size.inlineStyles ? " --inline-styles" : ""}${trackedOutput ? " --tracked-output" : ""}`;
 }
 
 export async function readFixtureIdentity(
   repository,
   root,
   requestedSize,
-  generatedOutput,
+  trackedOutput,
 ) {
   let record;
   let preparationSize = requestedSize;
-  let preparationMode = generatedOutput;
+  let preparationMode = trackedOutput;
   try {
     record = JSON.parse(
       await fs.readFile(path.join(root, identityFilename), "utf8"),
     );
     validateFixtureDimensions(record);
     preparationSize = record;
-    preparationMode = record.generatedOutput;
+    preparationMode = record.trackedOutput;
     const digest = await templateDigest(
       path.join(repository, "tests/fixtures/large"),
     );
@@ -126,10 +126,7 @@ export async function readFixtureIdentity(
       )
     )
       throw new Error("Missing or mismatched large-fixture template identity");
-    if (
-      generatedOutput !== undefined &&
-      generatedOutput !== record.generatedOutput
-    )
+    if (trackedOutput !== undefined && trackedOutput !== record.trackedOutput)
       throw new Error("Fixture output mode changed");
     return record;
   } catch (error) {
@@ -155,7 +152,7 @@ function validateFixtureDimensions(record) {
     !Number.isFinite(record.stylesheetShare) ||
     record.stylesheetShare < 0 ||
     record.stylesheetShare > 1 ||
-    !["committed", "derived"].includes(record.generatedOutput)
+    typeof record.trackedOutput !== "boolean"
   )
     throw new Error("Invalid fixture dimensions/output mode");
 }

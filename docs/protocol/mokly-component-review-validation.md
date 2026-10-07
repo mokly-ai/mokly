@@ -3,7 +3,7 @@
 This spec validates and emits the [component comparison result schema](./mokly-component-review.md).
 Canonical order enforcement and the shared affected-consumer key are
 implemented by both the producer and the strict reader, which accept the
-path-keyed v5 described here.
+path-keyed v6 described here.
 
 ## Validation And Canonical Output
 
@@ -91,7 +91,7 @@ arrays remain explicit. Emit two-space JSON and a final LF, with no timestamp,
 absolute checkout path, or transient controls result. Serve no-store/nosniff
 headers and retain immutable snapshot generations and unmodified documents.
 
-Emit schema v5 for every result. Readers accept only v5; older and unknown
+Emit schema v6 for every result. Readers accept only v6; older and unknown
 versions fail. Shared fixture tests must
 cover valid/invalid schemas, deterministic round trips, current and removed
 variants/consumers, metadata-only changes, zero Changes with affected screens,

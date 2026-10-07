@@ -97,7 +97,7 @@ export function CataloguePage({ catalogueUrl }: CataloguePageProps) {
 ```
 
 `catalogueUrl` must be an absolute HTTP(S) URL such as
-`https://app.example.com/__mokly/catalogue.json`. When the catalogue artifacts
+`https://app.example.com/mokly-viewer/catalogue.json`. When the catalogue artifacts
 share the application's origin, the default frame adapter is all you need.
 
 The viewer fills its container and owns scrolling within the preview stage. It
@@ -143,11 +143,11 @@ configuration.
 
 `MoklyViewer` accepts one of three source forms:
 
-| Source                              | Use it when                                               |
-| ----------------------------------- | --------------------------------------------------------- |
-| Absolute `string` or `URL`          | The viewer should fetch `__mokly/catalogue.json` directly |
-| `CatalogueReadModel` plus `baseUrl` | The host already has the catalogue object                 |
-| `CatalogueFetcher`                  | The host needs custom request orchestration or caching    |
+| Source                              | Use it when                                                    |
+| ----------------------------------- | -------------------------------------------------------------- |
+| Absolute `string` or `URL`          | The viewer should fetch `mokly-viewer/catalogue.json` directly |
+| `CatalogueReadModel` plus `baseUrl` | The host already has the catalogue object                      |
+| `CatalogueFetcher`                  | The host needs custom request orchestration or caching         |
 
 A fetcher receives an `AbortSignal` and returns
 `{ catalogue: CatalogueReadModel, url: URL }`. The returned URL identifies the
@@ -163,7 +163,7 @@ or frame adapter intentionally remounts the viewer and cancels pending work.
 
 Markdown documents use the existing whole-page frame and the selected Light or
 Dark scheme. They have no viewport or usage axis. Removed documents load their
-historical scheme from the advertised preview generation. In catalogue v4, a
+historical scheme from the advertised preview generation. In catalogue v5, a
 related-doc match uses `mock:<path>`; source labels remain repository-relative.
 
 `screenPath` names one catalogue entry by its path, such as
@@ -236,12 +236,13 @@ at least one current variant.
 
 Every removed variant carries `parentTitle`, its parent's title at the branch
 point. Public and scoped readers require this field and reject it on removed
-non-variants. The unreleased read model remains v4.
+non-variants. The read model is v5.
 
 Current paired entries carry `previousPath`; comparisons select the original
 before-side path. Removed entries advertise an optional opaque `snapshotId`. Supply it with the
 removed entry's `screenPath` to select that exact historical record. The viewer
-carries it through controlled proposals, navigation events and axis/filter
+requires it whenever `comparisonUrl` is non-null; the reader never derives
+a missing id. It carries it through controlled proposals, navigation events and axis/filter
 changes. A path-only selection of a removed record normalizes to its published
 identity; stale or unknown snapshots render unavailable. Readers reject a
 catalogue in which a current and a removed record share a path. Live evidence
@@ -332,7 +333,7 @@ exposed as a host API.
 | `onScreenNavigate`                   | Reports logical navigation for host routing                                                                       |
 | `onInstanceHover`, `onInstanceClick` | Reports interaction with inspectable component instances                                                          |
 | `onPickStart`, `onPickEnd`           | Reports the instance-picking lifecycle                                                                            |
-| `onError`                            | Reports safe catalogue, selection, frame, comparison or marker errors                                             |
+| `onError`                            | Reports safe catalogue, version, selection, frame, comparison or marker errors                                    |
 | `ref`                                | Exposes the `MoklyViewerHandle` methods below                                                                     |
 
 `viewerId` must contain 1–64 ASCII letters, digits, hyphens or underscores and
@@ -369,10 +370,16 @@ React applications normally need only the root entry and stylesheet. Do not
 import `@mokly/viewer/browser` in an application-owned React root; it
 automatically hydrates a matching standalone Mokly document.
 
-`@mokly/viewer/data` also exports the shared path helpers `entryRoute`,
-`viewRoute`, `documentRoute`, `viewHref`, `parseViewHref`,
-`snapshotViewPath`, `snapshotDocumentPath`, `snapshotSidePath`,
-`snapshotResourcePath`, and `previewMetadataPath`. Entry helpers take a path;
+`@mokly/viewer/data` also exports the directory constants `GENERATED_DIRECTORY`
+and `VIEWER_DIRECTORY`, and the shared path helpers `entryRoute`, `viewRoute`,
+`documentRoute`, `viewHref`, `parseViewHref`, `snapshotViewPath`,
+`snapshotDocumentPath`, `snapshotSidePath`, `snapshotResourcePath`,
+`previewMetadataPath`, `currentDocumentPath`, `currentDocumentRoute`,
+`generatedResourcePath` and `generatedResourceRoute`. `currentDocumentPath`
+builds a current static-document path; `currentDocumentRoute` validates and
+reads its URL pathname. `generatedResourcePath` and `generatedResourceRoute`
+add or remove the generated-directory prefix of a catalogue-relative resource.
+Entry helpers take a path;
 `snapshotSidePath` takes a side, and `snapshotResourcePath` takes a side and
 resource path. `viewHref` returns the canonical `/view/<path>/` URL and `parseViewHref` reads
 the canonical, extensionless, and `index.html` forms of that URL back into a
@@ -432,7 +439,7 @@ retains usage only for that entry's derived scope; other views use the
 runtime-only `omitted` state. The matching private capability descriptor
 supplies complete cross-route Usage. Static pages keep their compact external
 reference and resolve the complete shared `catalogue.json`. The public `readCatalogue`
-boundary accepts only that complete v4 model and rejects `omitted`.
+boundary accepts only that complete v5 model and rejects `omitted`.
 
 The runtime subpath exposes `projectScopedCatalogue`, the
 `ShellCatalogueUsage`/`ShellCatalogueReadModel` types and the strict
@@ -515,6 +522,10 @@ search experience based on the viewer container—not the browser viewport.
 
 Mokly artifacts are static files. Deploy the exported directory at the root of
 an HTTP(S) origin with correct MIME types and without an SPA fallback.
+Catalogue v5 serves current documents only under
+`/static/mokly-generated/<route>`. The viewer uses the shared directory constant,
+not a model field or mount option. Older catalogue versions fail the version
+gate before URL derivation; no prefixless layout is supported. See the [generated delivery contract](../../docs/protocol/mokly-generated-delivery.md).
 
 - **Same origin:** no CORS configuration is needed. Omit `frameAdapter` or pass
   `sameOriginAdapter()` explicitly.
@@ -565,6 +576,11 @@ cargo xtask check
 The root build compiles the viewer before the CLI. Package smoke tests pack both
 workspaces and exercise every public entry from clean ESM and NodeNext
 consumers.
+
+Version failures use `MoklyVersionError`. The embedded viewer reports
+`onError` with code `version`, product copy, and separate diagnostic details.
+Standalone pages retain their server render and ordinary links when hydration
+is rejected. See the [namespace version gates](../../docs/protocol/mokly-viewer-namespace.md).
 
 ### Key Code
 
@@ -617,9 +633,13 @@ consumers.
 
 ### Related Docs
 
+The [path/output contract](../../docs/protocol/mokly-path-output-integration.md)
+defines the generated catalogue layout and format boundaries.
+
 - [Viewer behavior contract](../../docs/protocol/mokly-viewer.md)
 - [Markers and multi-instance highlights](../../docs/protocol/mokly-viewer-markers.md)
 - [Catalogue read model](../../docs/protocol/mokly-catalogue.md)
+- [Generated document delivery](../../docs/protocol/mokly-generated-delivery.md)
 - [Paths, roots, and identity](../../docs/protocol/mokly-paths.md)
 - [Standalone shell bootstrap](../../docs/protocol/mokly-shell-bootstrap.md)
 - [Frame adapter protocol](../../docs/protocol/mokly-frame-adapter.md)

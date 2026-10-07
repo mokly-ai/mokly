@@ -4,6 +4,9 @@ import {
   exampleServerPorts,
   ownExampleServerPort,
 } from "./tests/browser/example_servers.js";
+import { startBrowserSuiteTimer } from "./tests/helpers/browser_timing.js";
+
+startBrowserSuiteTimer();
 
 const ports = exampleServerPorts();
 

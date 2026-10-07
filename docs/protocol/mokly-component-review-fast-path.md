@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-The fast path and its strict-v8 baseline boundary are implemented under the
+The fast path and its strict-v9 baseline boundary are implemented under the
 [scalable analysis plan](../../plans/scalable-inline-style-analysis.md).
 The analysis-backed quick check runs no inline work; an equivalent style-only
 attempt precedes complete fall-through. Ownership-only projection and stable
@@ -42,7 +42,7 @@ Apply these steps in order:
    matcher below: serialization can decode escapes and join comments/whitespace.
    Also check after removing escaped newlines everywhere. These source-only
    checks run no inline analysis; failed proofs retain preparation.
-1. Retain v8 component markers on both sides and apply paired manual-ignore
+1. Retain v9 component markers on both sides and apply paired manual-ignore
    normalization. If documents differ outside paired ignored regions, take the
    fall-through. Marker-stripped equality is insufficient because marker
    positions participate in ownership projection. For non-identical sources,
@@ -61,12 +61,11 @@ Apply these steps in order:
 3. Strip package component markers from both sides and apply paired
    manual-ignore normalization. If the documents differ, take fall-through.
    Discover resources from the page analyses' derived records under the
-   [resource proof](#resource-and-one-sided-rules), preserving its mode-specific
-   reader and closure bounds.
+   [resource proof](#resource-and-one-sided-rules), preserving its reader and closure bounds on each side.
    Without ownership text edits, derive actual seeds directly from the analyses:
    do not prepare a projection merely because inline references may exist.
 4. When either usage record has instances or entry-owned slots,
-   compute the complete comparison's ownership projection, including v8 range
+   compute the complete comparison's ownership projection, including v9 range
    validation and root-specific ownership, but no inline analysis. Retain
    preparation on fall-through, so a side is parsed only once. Require equal
    projected material and use provenance-derived resources plus conservative
@@ -76,7 +75,7 @@ Apply these steps in order:
    for the same side, route, reference identity and exclusion policy.
 5. If an actual or projected resource is a changed Git path, take the complete
    fall-through; ownership, exclusion, and rule analysis are decided there.
-6. In derived mode, compare baseline/current closure membership and bytes
+6. Compare baseline/current closure membership and bytes
    independently for actual and projected material. Any difference takes the
    fall-through; equal unions do not replace equal per-comparison sets.
 7. Otherwise content and resources are unchanged. State is `unchanged` when
@@ -125,13 +124,10 @@ validation remain authoritative.
 
 ## Resource And One-Sided Rules
 
-Committed mode traverses only the head reader's actual closure, plus its
-projected closure when required below; a changed Git path in either takes
-fall-through. With shared seeds, a base-only dependency is reachable only
-through a resource whose content differs and whose changed Git path is already
-in the head closure. Base traversal is therefore redundant. Derived mode
-traverses both readers independently for each required material and compares
-membership and bytes; equal unions are not proof of equality. Traverse the
+For both Git-blob and rebuilt baselines, traverse both readers independently
+for each required material and compare membership and bytes. A changed Git
+path in either closure takes fall-through. Equal unions are not proof of
+equality. Traverse the
 proof's base closure with optional reads at every graph depth, for both actual
 and projected materials. Any missing seed or transitive file fails the proof;
 it never throws a missing-resource error from the optimization. Successful
@@ -159,7 +155,7 @@ complete material HTML as a map key. The page contract defines copy exposure
 and parser-context differences; do not reparse a projected page to compensate.
 
 Added and removed views do not use the paired decision. Before normalizing the
-one-sided v8 document, validate every recorded component range. A malformed
+one-sided v9 document, validate every recorded component range. A malformed
 ownership tree fails with `$document` validation instead of becoming an
 ordinary addition or removal.
 

@@ -33,15 +33,13 @@ publication.
 
 Accept a missing destination or an empty real directory. A nonempty directory
 must have a regular `.mokly-export-artifact` ownership file using the
-[public schema 2](./mokly-export-ownership.md) and its generated-file inventory.
+[public schema 3](./mokly-export-ownership.md) and its generated-file inventory.
 Reject missing/malformed markers, unexpected files outside the inventory,
 unsafe inventory paths, symlink entries, and unsupported versions, including
-schema 1 markers written by earlier releases. That case uses this exact message,
-where `<output>` is the resolved destination:
-
-```text
-[mokly/export-invalid] This folder holds an export from an earlier Mokly release. Move any files you added, then delete <output> and export again.
-```
+older marker versions. A regular marker that fails parsing uses
+`[mokly/export-invalid] Invalid export ownership inventory: <output>.` This includes
+unsupported versions and over-limit marker data. Missing ownership and unsafe
+filesystem entries keep their separate errors; no old marker grants adoption.
 
 Treat the marker as public-safe metadata: no absolute checkout paths,
 credentials, or timestamps. Never use its strings as unchecked deletion
@@ -60,13 +58,8 @@ regular `.owner` containing `mokly-export-reservations-v1` plus a newline and
 remains after cleanup; never put authored files or export destinations inside it.
 Unowned namespaces and symlinked namespace/lock directories are rejected.
 The `.mokly-export-transaction` marker records `schemaVersion: 2` and the
-output basename; `stage/` and `backup/` remain inside that reservation. Old
-`.mokly-export-<20-hex>.lock` siblings block new exports until explicitly
-recovered. Confirm no writer is active, inspect any retained backup, and recover
-it before moving an abandoned reservation aside. Nothing is silently stolen.
-
-Neither consumer export nor the repository preview adapter accepts an earlier
-`.mokly-preview-artifact` as replacement authority, including for pre-derived
-`view/` paths. A nonempty output needs the current schema-2 marker and exact
-inventory. An earlier marker alone fails without changing the output; preserve
-authored files, delete the earlier output, and run the command again.
+output basename; `stage/` and `backup/` remain inside that reservation.
+Only the current reservation namespace participates in writer admission.
+An unrelated sibling file cannot claim an export lock. For an abandoned current
+reservation, confirm no writer is active and inspect the retained backup before
+explicit recovery. Every adapter uses the same current ownership marker.

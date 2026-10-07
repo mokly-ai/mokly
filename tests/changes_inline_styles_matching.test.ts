@@ -5,9 +5,9 @@ import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { compareReview } from "../dist/review/compare.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { inlineComponentSource } from "./helpers/inline_changes.js";
 
 function renderer(color: string): string {
@@ -47,8 +47,8 @@ test("linked stylesheet matching uses real documents before inline material remo
     repository,
     "main",
   );
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   const home = result.screens.find((screen) => screen.path === "home")!;
   assert.ok(home.views.every((view) => view.state === "changed"));
   assert.ok(

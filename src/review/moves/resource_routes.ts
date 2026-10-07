@@ -1,6 +1,10 @@
 import path from "node:path";
 
-import type { ManifestEntry } from "@mokly/viewer/data";
+import {
+  GENERATED_DIRECTORY,
+  generatedResourcePath,
+  type ManifestEntry,
+} from "@mokly/viewer/data";
 
 import { documentResourceRoute } from "../../documents/resource_paths.js";
 
@@ -37,8 +41,8 @@ export function pairedResourceRoutes(
     const base = bases.get(moveIdentity(head));
     if (!base) continue;
     offer(
-      `mokly-generated/styles/${base.sourcePath}.css`,
-      `mokly-generated/styles/${head.sourcePath}.css`,
+      `${GENERATED_DIRECTORY}/styles/${base.sourcePath}.css`,
+      `${GENERATED_DIRECTORY}/styles/${head.sourcePath}.css`,
     );
     for (const view of moveDocuments(base)) {
       const other = moveDocuments(head).find(
@@ -48,7 +52,7 @@ export function pairedResourceRoutes(
       const left = baseViews.get(view.route) ?? new Set<string>(),
         right = headViews.get(other.route) ?? new Set<string>();
       for (const kind of ["styles", "assets"] as const) {
-        const prefix = `mokly-generated/${kind}/`;
+        const prefix = `${GENERATED_DIRECTORY}/${kind}/`;
         const removed = [...left].filter(
           (route) => route.startsWith(prefix) && !right.has(route),
         );
@@ -75,11 +79,11 @@ export function pairedResourceRoutes(
     const baseDirectory = path.posix.dirname(base.sourcePath),
       headDirectory = path.posix.dirname(head.sourcePath);
     for (const route of baseRoutes) {
-      const prefix = `mokly-generated/assets/${baseDirectory}/`;
+      const prefix = `${GENERATED_DIRECTORY}/assets/${baseDirectory}/`;
       if (route.startsWith(prefix))
         offer(
           route,
-          `mokly-generated/assets/${headDirectory}/${route.slice(prefix.length)}`,
+          `${GENERATED_DIRECTORY}/assets/${headDirectory}/${route.slice(prefix.length)}`,
         );
     }
     if (base.kind === "document" && head.kind === "document") {
@@ -92,7 +96,8 @@ export function pairedResourceRoutes(
       for (const resource of base.resources) {
         const previous = documentResourceRoute(base, resource),
           next = current.get(path.posix.relative(baseDirectory, resource));
-        if (previous && next) offer(previous, next);
+        if (previous && next)
+          offer(generatedResourcePath(previous), generatedResourcePath(next));
       }
     }
   }

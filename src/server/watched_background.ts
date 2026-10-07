@@ -1,10 +1,12 @@
+import path from "node:path";
+
 import type { BaselineBuilder, BaselineProgress } from "../baseline/types.js";
 import type { Compilation } from "../build/compile.js";
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { GeneratedOutputStore } from "../build/output_store.js";
 import type { ResolvedConfig } from "../config/types.js";
 
-import type { CatalogueChangeClassifier } from "./component_changes.js";
+import type { CatalogueChangeClassifier } from "./component_change_types.js";
 import { BackgroundGeneration } from "./demand/generation.js";
 import { reportCatalogueReady, type ServeReporter } from "./reporter.js";
 import type { ResourceWatcher } from "./resource_watcher.js";
@@ -22,6 +24,7 @@ interface WatchedBackgroundOptions {
   readonly running: ProcessSupervisor;
   readonly runtime: () => ComponentRuntime;
   readonly shutdown: Promise<void>;
+  readonly writeOutput: boolean;
 }
 
 /** Own background compilation, evidence reporting, and accepted output state. */
@@ -50,6 +53,16 @@ export class WatchedBackground {
           compilation.manifest,
           accepted.generation,
         );
+        options.running.notifyUpdate(
+          undefined,
+          undefined,
+          "pending",
+          "evidence",
+          undefined,
+          undefined,
+          undefined,
+          [...options.resources.closure],
+        );
       },
       (snapshot) => {
         const duration = Date.now() - this.changesStartedAt;
@@ -67,13 +80,15 @@ export class WatchedBackground {
         );
       },
       {
-        baselinePrepared: (commit) =>
+        baselinePrepared: (prepared) =>
           options.running.notifyUpdate(
             undefined,
             undefined,
             "pending",
             "evidence",
-            commit,
+            prepared?.commit ?? null,
+            prepared?.selection,
+            prepared?.descriptor,
           ),
         baselineStatus: (changesStatus) =>
           options.running.notifyUpdate(
@@ -88,6 +103,16 @@ export class WatchedBackground {
           options.reporter.incompatibleBaseline(commit),
         resources: options.resources,
         shutdown: options.shutdown,
+        writeOutput: options.writeOutput,
+        outputWritten: (compilation, duration) =>
+          options.reporter.outputWritten?.(
+            compilation.outputs.size,
+            path.relative(
+              options.config().repoRoot,
+              options.config().mockupsDir,
+            ),
+            duration,
+          ),
         ...(options.baselineBuilder
           ? { builder: options.baselineBuilder }
           : {}),

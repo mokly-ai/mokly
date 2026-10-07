@@ -2,19 +2,18 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { TestContext } from "node:test";
 
-import { generatedViews } from "@mokly/viewer/data";
-
 import { classificationContext } from "../../dist/review/component_classification_context.js";
 import { prepareMoveClassification } from "../../dist/review/moves/prepare.js";
+import { reviewViews } from "../../dist/review/views.js";
 
-import { memoryReader } from "./component_fast_path.js";
+import { compilationFiles, memoryReader } from "./component_fast_path.js";
 import { moveComponentSource } from "./move_catalogue_sources.js";
 import { pageSource, pathFixture } from "./path_fixture.js";
 
 /** Compile a stable link whose old page path can become a Markdown document. */
 export async function moveLinkShortcutFixture(
   t: TestContext,
-  mode: "committed" | "derived",
+  _mode: "committed" | "derived",
   styleEdit: boolean,
   move = true,
   styleLink = false,
@@ -30,7 +29,7 @@ export async function moveLinkShortcutFixture(
 export default defineScreen({title:'Guide',description:'Guide',dependencies:[],relatedDocs:[],desktop:<MockLink to="target">Target</MockLink>,mobile:<MockLink to="target">Target</MockLink>});`,
       "renderer.tsx": renderer("red", styleLink),
     },
-    `{mockupsDir:"generated",roots:[{dir:"specs"}],renderer:"./renderer.tsx",generatedOutput:${JSON.stringify(mode)}}`,
+    `{mockupsDir:"generated",roots:[{dir:"specs"}],renderer:"./renderer.tsx"}`,
   );
   t.after(fixture.remove);
   const before = await fixture.compile();
@@ -48,14 +47,14 @@ export default defineScreen({title:'Guide',description:'Guide',dependencies:[],r
     before: before.manifest,
     after: after.manifest,
     config: await fixture.config(),
-    beforeReader: memoryReader(before.outputs),
-    afterReader: memoryReader(after.outputs),
+    beforeReader: memoryReader(compilationFiles(before)),
+    afterReader: memoryReader(compilationFiles(after)),
     baseCommit: "a".repeat(40),
     baseRef: "main",
     changedPaths: [],
   });
   const views = (compilation: typeof before) =>
-    generatedViews(
+    reviewViews(
       compilation.manifest.entries.find((entry) => entry.path === "guide")!,
     );
   return {

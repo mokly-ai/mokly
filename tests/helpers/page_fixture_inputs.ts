@@ -3,15 +3,15 @@ import path from "node:path";
 
 import { compileCatalogue } from "../../dist/build/compile.js";
 import { readBaseManifest } from "../../dist/review/base_manifest.js";
-import { committedReviewRepository } from "../../dist/review/repository.js";
 
+import { committedReviewRepository } from "./committed_repository.js";
 import type { inlineChangesFixture } from "./inline_changes.js";
 
 export async function pageFixtureInput(
   fixture: Awaited<ReturnType<typeof inlineChangesFixture>>,
   mode: "committed" | "derived",
 ) {
-  const config = { ...fixture.config, generatedOutput: mode };
+  const config = fixture.config;
   const repository = committedReviewRepository(fixture.config);
   const commit = await repository.evidence.mergeBase("main", "HEAD");
   const before = await readBaseManifest(repository.reader, commit, config);
@@ -40,9 +40,12 @@ export async function pageFixtureInput(
     if ((await fs.stat(absolute)).isFile())
       afterFiles.set(route, await fs.readFile(absolute));
   }
-  for (const [route, content] of after.outputs) afterFiles.set(route, content);
+  for (const [route, content] of after.outputs)
+    afterFiles.set(`mokly-generated/${route}`, content);
   const outputs = new Set(
-    [...after.outputs.keys()].map((route) => `mockups/${route}`),
+    [...after.outputs.keys()].map(
+      (route) => `mockups/mokly-generated/${route}`,
+    ),
   );
   const changedPaths = (await repository.evidence.changedPaths(commit)).filter(
     (route) => mode === "committed" || !outputs.has(route),

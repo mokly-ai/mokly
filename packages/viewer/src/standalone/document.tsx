@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
+import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
 import type { ViewerHostCapabilities } from "../client/host_capabilities.js";
 import type { ViewerCapabilityDescriptor } from "../client/host_capability_descriptor.js";
 import { ViewerCapabilityBoundary } from "../shell/capability_context.js";
@@ -11,8 +12,10 @@ import { CatalogueNav } from "../shell/nav.js";
 import { useNavigationBounds } from "../shell/nav_resize.js";
 import { ShellStoreProvider } from "../shell/store.js";
 import { useShellStore } from "../shell/store_context.js";
-import type { ShellInitialState } from "../shell/store_state.js";
-import type { ShellRecoverySnapshot } from "../shell/store_state.js";
+import type {
+  ShellInitialState,
+  ShellRecoverySnapshot,
+} from "../shell/store_state.js";
 import { TopBar } from "../shell/top_bar.js";
 import { ShellMain, viewTitle } from "../shell/views.js";
 import type { ShellView } from "../shell/views.js";
@@ -116,8 +119,8 @@ function StandaloneDocumentContents({
         <meta content="width=device-width, initial-scale=1" name="viewport" />
         <title>{viewTitle(catalogue, view)}</title>
         {hydrated ? <link href="data:," rel="icon" /> : null}
-        <script src="/__mokly/client/appearance-startup.js" />
-        <link href="/__mokly/shell.css" rel="stylesheet" />
+        <script src={`/${VIEWER_DIRECTORY}/client/appearance-startup.js`} />
+        <link href={`/${VIEWER_DIRECTORY}/shell.css`} rel="stylesheet" />
       </head>
       <body
         className={`mbk-fs${store.state.expandedFrame ? " frame-expanded" : ""}`}
@@ -163,10 +166,10 @@ function StandaloneDocumentContents({
             dangerouslySetInnerHTML={{ __html: capabilityDescriptorJson }}
           />
         ) : null}
-        <script src="/__mokly/client/navigation-resize.js" />
+        <script src={`/${VIEWER_DIRECTORY}/client/navigation-resize.js`} />
         {hydrated ? (
           <script
-            src={`/__mokly/client/${capabilityDescriptorJson ? REACT_HOST_BUNDLE : REACT_SHELL_BUNDLE}`}
+            src={`/${VIEWER_DIRECTORY}/client/${capabilityDescriptorJson ? REACT_HOST_BUNDLE : REACT_SHELL_BUNDLE}`}
             type="module"
           />
         ) : null}

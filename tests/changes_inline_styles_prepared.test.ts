@@ -7,7 +7,7 @@ import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
 import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
-import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import { reviewViews as generatedViews } from "../dist/review/views.js";
 
 import { textOutput } from "./helpers/generated_text.js";
 import { inlineChangesFixture } from "./helpers/inline_changes.js";

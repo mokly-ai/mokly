@@ -9,8 +9,10 @@ import {
 import { PageAnalysisPair } from "../dist/review/page_pair.js";
 
 import { fingerprintComparison } from "./helpers/fingerprint_comparison.js";
-import { fingerprintRenderer } from "./helpers/fingerprint_fixture.js";
-import { inlineChangesFixture } from "./helpers/inline_changes.js";
+import {
+  inlineChangesFixture,
+  inlineRenderer,
+} from "./helpers/inline_changes.js";
 import { pageFixtureInput } from "./helpers/page_fixture_inputs.js";
 
 const style = '<style>.entry{color:red;content:"mokly"}</style>';
@@ -25,8 +27,8 @@ for (const mode of ["committed", "derived"] as const)
       const fixture = await inlineChangesFixture(context, "", "", {
         colorSchemes: false,
         renderer: {
-          before: fingerprintRenderer(head("same")),
-          after: fingerprintRenderer(head(changedIgnore ? "later" : "same")),
+          before: inlineRenderer(head("same")),
+          after: inlineRenderer(head(changedIgnore ? "later" : "same")),
         },
         files: {
           before: {

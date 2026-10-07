@@ -29,7 +29,10 @@ test(
       (snapshot) => {
         if (snapshot) classified++;
       },
-      { builder, baselinePrepared: (commit) => commits.push(commit) },
+      {
+        builder,
+        baselinePrepared: (prepared) => commits.push(prepared?.commit ?? null),
+      },
     );
     t.after(() => background.close());
     background.start(runtime, "origin/main", fixture.baseline);

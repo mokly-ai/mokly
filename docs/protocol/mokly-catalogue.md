@@ -2,8 +2,8 @@
 
 ## Location And Types
 
-Export writes `__mokly/catalogue.json` at the artifact root. Serve exposes
-GET/HEAD `/__mokly/catalogue.json` with `application/json; charset=utf-8`.
+Export writes `mokly-viewer/catalogue.json` at the artifact root. Serve exposes
+GET/HEAD `/mokly-viewer/catalogue.json` with `application/json; charset=utf-8`.
 Component value types follow the [manifest](./mokly-component-manifest.md),
 [props](./mokly-component-props.md), [controls](./mokly-component-controls.md)
 and [instance](./mokly-instances.md) contracts. The viewer exports these types
@@ -27,7 +27,7 @@ type ChangeKind = "added" | "changed" | "removed" | "unmodified";
 type PublicPath = string;
 
 interface CatalogueReadModel {
-  schemaVersion: 4;
+  schemaVersion: 5;
   identity: { id: string; title: string };
   deploymentId: string;
   revision: { content: number; evidence: number };
@@ -150,8 +150,8 @@ interface CatalogueComponentVariant extends CatalogueEntry {
 
 No record carries a route or file name. A reader uses the
 [artifact path contract](./mokly-artifact-paths.md): a current view is served
-at `static/<view route>`, a current page or document at
-`static/<document route>`, and the shell at `/view/<path>/`. Removed entries
+at `static/mokly-generated/<view route>`, a current page or document at
+`static/mokly-generated/<document route>`, and the shell at `/view/<path>/`. Removed entries
 have no current files; their historical documents come only from their
 `preview` descriptor. `PublicPath` is an artifact-root-relative POSIX file path,
 without a leading slash, origin, query or hash; resolve it against the source's

@@ -5,7 +5,7 @@ import {
   referenceRoutes,
 } from "../../dist/review/asset_references.js";
 import { prepareComponentProjection } from "../../dist/review/component_projection_resources.js";
-import { generatedViews } from "../../packages/viewer/dist/components/views.js";
+import { reviewViews as generatedViews } from "../../dist/review/views.js";
 
 import type { FastPathFixture } from "./component_fast_path.js";
 import { comparePageViews, pageContext } from "./page_comparison.js";

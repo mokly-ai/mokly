@@ -13,8 +13,9 @@ import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
 import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
-import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import { reviewViews as generatedViews } from "../dist/review/views.js";
 
+import { compilationFiles } from "./helpers/component_fast_path.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
@@ -57,28 +58,27 @@ for (const full of [false, true])
     );
     const reader = (outputs: ReadonlyMap<string, string | Uint8Array>) =>
       new ComponentMaterialReader({
-        read: async (route: string) => Buffer.from(textOutput(outputs, route)!),
+        read: async (route: string) => Buffer.from(outputs.get(route)!),
         readIfExists: async (route: string) =>
-          outputs.has(route)
-            ? Buffer.from(textOutput(outputs, route)!)
-            : undefined,
+          outputs.has(route) ? Buffer.from(outputs.get(route)!) : undefined,
       });
     const files = (side: typeof fixture.before, color: string) => {
-      const outputs = new Map(side.outputs);
+      const outputs = new Map(compilationFiles(side));
       if (full) {
         const selected = generatedViews(
           side.manifest.entries.find(({ path: id }) => id === "home")!,
         )[0]!;
         outputs.set(
           selected.path,
-          textOutput(outputs, selected.path)!
+          Buffer.from(outputs.get(selected.path)!)
+            .toString()
             .replace(
               "</head>",
-              `<style>main{color:${color}}</style><link rel="stylesheet" href="../sheet.css"></head>`,
+              `<style>main{color:${color}}</style><link rel="stylesheet" href="../../sheet.css"></head>`,
             )
             .replace(
               "</body>",
-              '<iframe src="../embedded.html"></iframe></body>',
+              '<iframe src="../../embedded.html"></iframe></body>',
             ),
         );
         outputs.set("sheet.css", `main{background:${color}}`);
@@ -114,7 +114,7 @@ for (const full of [false, true])
         changed,
         "mockups",
         undefined,
-        false,
+        undefined,
         true,
       ),
     };

@@ -231,7 +231,9 @@ test(
     );
     const running = await serve(fixture.config, { port: 0, watch: false });
     fixture.beforeRemove(() => running.close());
-    const response = await fetch(`${running.url}/static/${entryStyle}`);
+    const response = await fetch(
+      `${running.url}/static/mokly-generated/${entryStyle}`,
+    );
     assert.equal(response.status, 200);
     assert.match(await response.text(), /padding: 9px/);
   },

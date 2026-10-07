@@ -11,12 +11,12 @@ export function cssSchemaFiles(): Map<string, string> {
         [
           [`snapshots/${side}/shared.css`, ".auth { color: red; }"],
           [
-            `snapshots/${side}/auth/index.mobile.html`,
-            `<!doctype html><link rel="stylesheet" href="../shared.css"><button class="auth">${side === "before" ? "Sign in" : "Continue"}</button>`,
+            `snapshots/${side}/mokly-generated/auth/index.mobile.html`,
+            `<!doctype html><link rel="stylesheet" href="../../shared.css"><button class="auth">${side === "before" ? "Sign in" : "Continue"}</button>`,
           ],
           [
-            `snapshots/${side}/auth/index.desktop.html`,
-            '<!doctype html><link rel="stylesheet" href="../shared.css"><p>Guide</p>',
+            `snapshots/${side}/mokly-generated/auth/index.desktop.html`,
+            '<!doctype html><link rel="stylesheet" href="../../shared.css"><p>Guide</p>',
           ],
         ] as [string, string][],
     ),
@@ -67,7 +67,7 @@ export function cssSchemaFixture(_version: 5 = 5): ReviewResult {
   };
   return {
     ...common,
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     screens: [{ ...screen, before: address, after: address }],
     components: [],
     affectedConsumers: [],

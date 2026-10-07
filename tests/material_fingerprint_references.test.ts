@@ -11,7 +11,7 @@ for (const mode of ["committed", "derived"] as const)
   test(`fingerprints retain owned and entry references and omit excluded ones in ${mode}`, async (context) => {
     const base = await styleRouteFixture(context);
     const style =
-      '<style>.entry{background:url("../entry.svg")}.action{background:url("../owned.svg")}.missing{background:url("../unused.svg")}</style>';
+      '<style>.entry{background:url("../../entry.svg")}.action{background:url("../../owned.svg")}.missing{background:url("../../unused.svg")}</style>';
     const input = withHeadStyles(base, style, style, mode);
     const fixture = {
       ...input,
@@ -38,11 +38,11 @@ for (const mode of ["committed", "derived"] as const)
     );
     assert.deepEqual(
       new Set(prepared.references!.actualBefore),
-      new Set(["../entry.svg", "../owned.svg"]),
+      new Set(["../../entry.svg", "../../owned.svg"]),
     );
     assert.deepEqual(
       new Set(prepared.references!.before),
-      new Set(["../entry.svg"]),
+      new Set(["../../entry.svg"]),
     );
     assert.deepEqual(
       prepared.references,

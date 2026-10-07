@@ -5,7 +5,7 @@ baseline. The supported consumer interface remains the catalogue and CLI;
 these modules are not public package exports. `moves/prepare.ts` retains one
 accepted pairing and cached readers for classification and capture. The pure
 policy uses declared hints, identical material, source/title and document/page
-similarity in order. Review v5 emits `previousPath` on paired records; pure
+similarity in order. Review v6 emits `previousPath` on paired records; pure
 moves retain empty reasons and do not inflate material output counts.
 
 `git.ts` defines separate `RepositoryEvidence` (merge base and changed paths)
@@ -18,7 +18,7 @@ groups those independent dependencies for comparison orchestration.
 Production composition uses `ConfiguredGitCommandRunner` from `config/git.ts`.
 Its first read calls `requireGitTopLevel`, sharing validation across concurrent
 reads and retaining `config-invalid` for a nested `repoRoot`. Preparation also
-validates when handed an already resolved commit. Build and committed Check
+validates when handed an already resolved commit. Build and Check
 never construct this boundary; Serve can keep All available while an explicit
 comparison reports the configuration error. The worker's Git host is only a
 transport: the classification worker validates its configured runner before
@@ -26,11 +26,13 @@ requesting repository evidence.
 
 `git_batch.ts` bounds literal tree queries and blob reads by pathspec bytes,
 object count and output bytes. `assets.ts` applies the baseline manifest's
-source inventory and the active config’s public exclusions relative to the baseline
-mockups root. Historical reads reject non-regular files and do not resolve aliases
+source inventory and the historical manifest's referenced asset closure.
+Historical reads reject non-regular files and do not resolve aliases
 through the current filesystem.
 `compare.ts` builds complete comparisons; `selected.ts` retains only a requested
 view's checked snapshot closure. Neither reader executes historical code.
+`snapshot_resources.ts` copies transitive resources at catalogue-relative paths.
+Both sides use the v9 layout.
 `page_preview.ts` captures a page or every scheme of a document from an accepted removed-entry
 snapshot. Its caller supplies the pinned `BaselineReader`; the provider verifies
 the entry against that snapshot's baseline manifest, then reuses
@@ -39,10 +41,10 @@ the same confinement, source exclusions, regular-file checks, transitive
 resource traversal and 64 MiB bound as screen panes. It returns typed
 `RemovedPagePreview` metadata plus the baseline files; the artifact renderer adds
 strictly validated `preview.json` without creating page records in `review.json`.
-Current and baseline manifests both require v8; recognized earlier output is
+Current and baseline manifests both require v9; recognized earlier output is
 handled before comparison under the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
-Review result v5 first pairs by kind and case-folded path, then by the
+Review result v6 first pairs by kind and case-folded path, then by the
 [move contract](../../docs/protocol/mokly-moves.md). `ReviewArtifact.pairing`
 retains all-kind moves and diagnostics beside the visual result, so pages and
 documents contribute move counts without synthetic visual review records.
@@ -61,33 +63,35 @@ bulk-read capability. Current output and public assets have separate readers.
 
 `prepare.ts` is the asynchronous composition boundary for CLI/export,
 publication and the Serve parent. `prepareReviewRepository(config, base,
-{ signal, onProgress })` resolves one commit, awaits a derived rebuild when
-configured, and returns a branded `PreparedReviewRepository`: pinned `commit`,
-`evidence`, `reader`, completion `marker` (undefined in committed mode), and
-`assertUnchanged()` for the publication recheck. Only that factory constructs
-the prepared type.
+{ signal, onProgress })` resolves one commit, selects Git blobs when a valid
+historical manifest exists with a complete matching inventory, and rebuilds it otherwise. It returns a branded
+`PreparedReviewRepository`: pinned `commit`, `evidence`, `reader`, completion
+`marker` (undefined for Git-blob baselines), `selection`, and `assertUnchanged()`
+for the publication recheck. The historical v9 catalogue descriptor
+pairs routes and authored assets; Git changed paths remain repository-relative. See
+[baseline addressing](../../docs/protocol/mokly-baseline-addressing.md).
+Only that factory constructs the prepared type.
 
 `repository.ts` contains read-only factories and has no import path to the
 builder. `baselineReaderForCommit` and `readOnlyRepositoryForCommit` open an
-already prepared commit without rebuilding; `committedReviewRepository` can
-construct Git readers locally and rejects derived mode. Comparison and
+already prepared commit without rebuilding. Comparison and
 classification functions require an injected `ReadOnlyReviewRepository` and
 never prepare one implicitly. Serve hands its child the prepared commit in a
 versioned update; `ServedReviewRepository` swaps or revokes the child reader.
 Before preparation, an unselected comparison fails with `review-invalid`.
 
-`head_assets.ts` keeps derived generated bytes in memory and confines disk reads
+`head_assets.ts` keeps head generated bytes in memory and confines disk reads
 to authored public resources. Background evidence retains `headOutputs` as
 serializable `[route, content]` pairs (strings for documents, tagged base64 for
 binary files), alongside its digests, so selected diffs use the accepted
 compilation across worker and child-process boundaries without decoding assets.
-Derived classification compares all generated documents and reachable resource
+Classification compares all generated documents and reachable resource
 bytes even without changed Git output paths. Cache paths and their physical
 aliases are excluded before dependency or shared-impact matching. Component
 catalogues follow the [path evidence rule](../../docs/protocol/mokly-component-changes.md#dependencies-and-styles):
 `component_metadata.ts` owns glob matching, owned/exact reasons, and unowned
 directory evidence. The classifier combines that evidence with reasons to
-preserve the [v5 result set](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
+preserve the [v6 result set](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
 The classifier records each entry's scope-filtered path reasons, retained view
 paths, exact screen stylesheet reasons, and actual-invocation owned CSS by entry
 pair. Source validation accepts dependency reasons only from that record; it
@@ -106,30 +110,31 @@ and [export boundary](../export/README.md).
 
 `css/` provides parsing, diffing, and document matching for
 [CSS change attribution](../../docs/protocol/mokly-css-attribution.md).
-Review v5, live membership, watched updates and publishing use it to
+Review v6, live membership, watched updates and publishing use it to
 exclude changed stylesheets whose changed rules cannot match a view. Public
 resource globs cannot bypass the graph or restore excluded stylesheets. These
 review interfaces are internal; the package authoring API is unchanged.
 
-Review result v5 replaces both earlier result versions; a catalogue without
+Review result v6 replaces both earlier result versions; a catalogue without
 registered components emits the same shape with empty component arrays.
 
 `analysisOwnsStylesheet` owns the shared public-output boundary. Source/token
 stylesheets outside that boundary retain file-level evidence under
 [CSS attribution](../../docs/protocol/mokly-css-attribution.md) and the
-[v5 result definition](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
+[v6 result definition](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence).
 `imported_changes.ts` compares accepted generated CSS and binary asset bytes
-against the pinned branch-point reader, even when Git ignores derived output.
+against the pinned branch-point reader, even when Git ignores generated output.
 It merges those route changes with Git's authored paths and removes file-level
 shared impact for **every** delivered CSS source whenever any generated
 stylesheet's bytes change, or for an
-asset whose matching generated route changed. A baseline predating generated
-CSS makes a one-time jump; unrelated transformer-only and PostCSS candidate
-sources retain their independent impact. Review result v5 and live Changes
+asset whose matching generated route changed. Only v9 content is compared.
+The first imported stylesheet marks the views it affects as changed against a
+v9 baseline without imported CSS. Unrelated PostCSS candidate sources retain
+their independent impact. Review result v6 and live Changes
 use the same byte comparison and source filter.
 Accepted generations carry their stylesheet/asset route index, output bytes
 when available, and delivered sources through the runtime and background
-worker. Committed classification no longer reloads the graph or PostCSS;
+worker. Accepted-generation classification does not reload the graph or PostCSS;
 classification without an accepted generation performs one inventory load.
 After comparing views, both producers call `assertViewAnalysisScope` to reject
 analysed reasons outside that boundary with `review-invalid`. The shared decoder
@@ -245,22 +250,21 @@ depth; optional counterpart CSS reads distinguish missing files from invalid
 ones. Per-side readers cache bytes, and the injected parser caches identical CSS
 text for the run. Live resource validation additionally retains its alias and
 verified-deletion behavior. `deleted_resource.ts` owns that one decision for
-both unified and screen-level classification, including derived byte comparison
+both unified and screen-level classification, including baseline byte comparison
 and paired embedded-document normalization; each caller still supplies its
 confinement-aware current and baseline readers.
-Committed live classification batches base documents for changed or moved documents and
-for views with changed stylesheet resources. Only an unchanged, unmoved view
-without changed CSS skips base view reads and base graph traversal, so verified
-deletions of non-stylesheet resources are still discovered from the before side. Current resource validation still checks Git
-counterparts for verified deletions and pairs embedded documents' ignored regions.
-Changed documents retain discovery of resources removed from their before side.
-Derived classification reads every baseline view from its prepared reader. It
-applies rule attribution to stylesheets with Git change evidence and preserves
-material resource-byte changes without inventing dependency paths.
-Unexpected parser or matcher failures keep only the failing resource
-unresolved, with any recoverable changed selectors, and classification continues.
+Every classification reads baseline views through its prepared reader and
+compares generated and authored resource bytes independently of changed Git
+paths. There is no output-mode switch or byte-comparison opt-out. Changed paths
+remain source evidence; they do not replace rendered-resource comparison.
+Current validation still checks Git counterparts for verified deletions and
+pairs embedded documents' ignored regions. Changed documents retain discovery
+of resources removed from their before side. Rule attribution keeps material
+byte changes without inventing dependency paths. Unexpected parser or matcher
+failures keep only the failing resource unresolved, retain recoverable changed
+selectors and allow classification to continue.
 
-Review v5 retains `material: true` exactly when actual comparison material
+Review v6 retains `material: true` exactly when actual comparison material
 differs, including added/removed views. Component-aware paired views remove
 unowned style elements and append canonical retained rules before stripping
 markers and normalizing ignores. Component-aware linked selectors match original trees; other paths retain normalized matching. Ownership projections do not define the flag; material
@@ -276,7 +280,7 @@ component path rule.
 The screen-only live classifier retains a `ScreenResourceEvidence` slice from
 the same traversal that determines membership. The shell receives its selected
 `ViewResourceEvidence` records without requesting snapshots. Export projects
-the same slice from its unified v5 result;
+the same slice from its unified v6 result;
 both producers omit empty views and screens left without evidence. The inspector
 merges it with loaded comparison details. Result schemas and
 classification policy stay unchanged.
@@ -298,7 +302,7 @@ fall-through performs full attribution. Rules grouped by each inferred owner set
 the ordinary cached resource graph, preserving relative and transitive paths;
 unchanged owned or excluded reference rules are removed symmetrically without
 creating inline evidence. Diffed retained/excluded rules emit validated
-`inlineStyles` evidence on complete schema-v5 views; the full live result,
+`inlineStyles` evidence on complete schema-v6 views; the full live result,
 artifacts, publication and selected component-aware responses retain it.
 The screen-only resource slice has no inline analysis to copy. One-sided and
 missing-usage comparisons keep their existing behavior. Each call emits
@@ -325,7 +329,7 @@ Key code:
   with accepted generated stylesheet/asset bytes and delivered-source stripping;
   live, export and Changes-enabled publication use the same typed input for
   comparison and membership.
-- `compare.ts`, `component_compare.ts`: the unified v5 comparison and retained
+- `compare.ts`, `component_compare.ts`: the unified v6 comparison and retained
   artifacts for every catalogue.
 - `page_preview.ts`: typed before-only page capture from accepted removal state.
 - `artifact_files.ts` and the shared viewer-data builders: collision-checked
@@ -333,15 +337,15 @@ Key code:
 - `deleted_resource.ts`: shared verification and byte comparison for a
   currently referenced resource that may have been deleted.
 - `component_variant_classification.ts`: flat component variant entry pairing,
-  reasons, view evidence, and grouped v5 result records.
+  reasons, view evidence, and grouped v6 result records.
 - `component_classification_sources.ts`, `component_classification_entries.ts`,
   `component_reason_sources.ts`, and `component_result_sources.ts`:
-  source-complete v5 assembly, entry-view preparation, and validation.
+  source-complete v6 assembly, entry-view preparation, and validation.
 - `component_classification.ts`, `component_view.ts`: component ownership policy.
   `compareComponentView` first tries an unchanged decision that settles a
   paired view only when marker-retaining documents, routes, and usage topology
-  agree, followed by head resource discovery in committed mode or independent
-  discovery for both sides in derived mode. A proven single-style edit then
+  agree, followed by independent resource discovery and byte comparison
+  for both sides. A proven single-style edit then
   uses `component_style_route.ts`; remaining views use the complete comparison
   (projection, range validation, CSS analysis, implementation diffing).
   Entry-owned props may differ on the fast path and
@@ -357,8 +361,8 @@ Key code:
   the third for delivered M8 text materials. The decision rule lives in the
   [component change attribution contract](../../docs/protocol/mokly-component-review-fast-path.md).
   Identical source/path/topology shares head analysis and conservative original/
-  caller-copy seeds, with no projection, inline analysis or hashing. Committed
-  mode proves only the head closure; derived mode compares both independently.
+  caller-copy seeds, with no projection, inline analysis or hashing. The
+  proofs compare both closures and their bytes independently.
   Non-identical attempts project only for ownership text edits. Fall-through reuses
   trees/discovery and rebuilds any unattributed material for full attribution.
 - `component_style_route.ts`, `style_windows.ts`: the numbered
@@ -485,6 +489,15 @@ pairing, classification and capture. Optional absence does not satisfy a require
 read, and a failed batch cannot poison a later read of an existing file.
 The route also requires equal raw references in the edited element, including
 selector arguments, and guards reserved prefixes in original/composed CSS.
+
+`GitReviewAssetReader` retains one immutable byte cache per baseline reader.
+Imported CSS change detection and resource classification share those bytes,
+so a generated stylesheet or asset is read once within the accepted comparison.
+
+The approved [comparison inventory contract](../../docs/protocol/mokly-comparison-inventory.md)
+provides one reader per side. It distinguishes absent counterparts from invalid
+listed files, preserves targeted screen-only base reads and removes both
+historical and current generated roots from Git dependency evidence.
 
 Entry pairing uses kind and case-folded path, including component parents and
 variants at the same identity. Grouped comparison records retain their owning

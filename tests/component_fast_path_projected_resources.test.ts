@@ -14,7 +14,7 @@ const hiddenResourceCases = [
   {
     name: "srcset and inline style",
     content:
-      "<img srcSet=\"../one.svg 1x, ../two.svg 2x\" style={{ backgroundImage: 'url(../background.svg)' }} />",
+      "<img srcSet=\"../../one.svg 1x, ../../two.svg 2x\" style={{ backgroundImage: 'url(../../background.svg)' }} />",
     files: {
       "one.svg": "one",
       "two.svg": "two",
@@ -26,7 +26,7 @@ const hiddenResourceCases = [
   },
   {
     name: "embedded HTML closure",
-    content: '<iframe src="../embedded.html" />',
+    content: '<iframe src="../../embedded.html" />',
     files: {
       "embedded.html": '<img src="nested.svg">',
       "nested.svg": "nested",
@@ -37,7 +37,7 @@ const hiddenResourceCases = [
   },
   {
     name: "stylesheet import closure",
-    content: '<link rel="stylesheet" href="../main.css" />',
+    content: '<link rel="stylesheet" href="../../main.css" />',
     files: {
       "main.css": '@import "./nested.css";',
       "nested.css": "body { color: red; }",
@@ -49,8 +49,8 @@ const hiddenResourceCases = [
 ] as const;
 
 for (const resourceCase of hiddenResourceCases)
-  for (const generatedOutput of ["committed", "derived"] as const)
-    test(`select-hidden ${resourceCase.name} agrees in ${generatedOutput} mode`, async (t) => {
+  for (const evidenceKind of ["git", "bytes"] as const)
+    test(`select-hidden ${resourceCase.name} agrees in ${evidenceKind} mode`, async (t) => {
       const fixture = await createFixture(
         componentEntrySource({
           paneRender: "(props) => <select>{props.children}</select>",
@@ -86,11 +86,9 @@ for (const resourceCase of hiddenResourceCases)
           after: compilation.manifest,
           beforeReader: reader(resourceCase.before),
           afterReader: reader(resourceCase.after),
-          config: { ...config, generatedOutput },
+          config,
           changedPaths:
-            generatedOutput === "committed"
-              ? [`mockups/${resourceCase.changed}`]
-              : [],
+            evidenceKind === "git" ? [`mockups/${resourceCase.changed}`] : [],
           baseCommit: "a".repeat(40),
           baseRef: "main",
           useFastPath,
@@ -108,12 +106,10 @@ for (const resourceCase of hiddenResourceCases)
       );
       await assertParserRecoveryDifference(
         compilation,
-        { ...config, generatedOutput },
+        config,
         { ...resourceCase.files, [resourceCase.changed]: resourceCase.before },
         { ...resourceCase.files, [resourceCase.changed]: resourceCase.after },
-        generatedOutput === "committed"
-          ? [`mockups/${resourceCase.changed}`]
-          : [],
+        evidenceKind === "git" ? [`mockups/${resourceCase.changed}`] : [],
       );
     });
 
@@ -122,7 +118,7 @@ for (const direction of ["added", "removed"] as const)
     const fixture = await createFixture(
       componentEntrySource({
         paneRender: "(props) => <select>{props.children}</select>",
-        body: '<pane.Component><link rel="stylesheet" href="../main.css" /></pane.Component>',
+        body: '<pane.Component><link rel="stylesheet" href="../../main.css" /></pane.Component>',
       }),
     );
     t.after(() => removeFixture(fixture));
@@ -151,7 +147,7 @@ for (const direction of ["added", "removed"] as const)
         after: compilation.manifest,
         beforeReader: reader(direction === "removed"),
         afterReader: reader(direction === "added"),
-        config: { ...config, generatedOutput: "derived" },
+        config,
         changedPaths: [],
         baseCommit: "a".repeat(40),
         baseRef: "main",
@@ -173,7 +169,7 @@ for (const direction of ["added", "removed"] as const)
     });
     await assertParserRecoveryDifference(
       compilation,
-      { ...config, generatedOutput: "derived" },
+      config,
       sheets(direction === "removed"),
       sheets(direction === "added"),
       [],
@@ -181,12 +177,12 @@ for (const direction of ["added", "removed"] as const)
   });
 
 for (const context of ["select", "template"] as const)
-  for (const generatedOutput of ["committed", "derived"] as const)
-    test(`instance projection exposes a sibling hidden by unclosed ${context} HTML in ${generatedOutput} mode`, async (t) => {
+  for (const evidenceKind of ["git", "bytes"] as const)
+    test(`instance projection exposes a sibling hidden by unclosed ${context} HTML in ${evidenceKind} mode`, async (t) => {
       const fixture = await createFixture(
         componentEntrySource({
           actionRender: `(props) => <div dangerouslySetInnerHTML={{ __html: "<${context}>" }} />`,
-          body: '<action.Component label="Continue" /><img loading="lazy" src="../image.svg" />',
+          body: '<action.Component label="Continue" /><img loading="lazy" src="../../image.svg" />',
         }),
       );
       t.after(() => removeFixture(fixture));
@@ -208,9 +204,8 @@ for (const context of ["select", "template"] as const)
           after: compilation.manifest,
           beforeReader: reader("base image"),
           afterReader: reader("head image"),
-          config: { ...config, generatedOutput },
-          changedPaths:
-            generatedOutput === "committed" ? ["mockups/image.svg"] : [],
+          config,
+          changedPaths: evidenceKind === "git" ? ["mockups/image.svg"] : [],
           baseCommit: "a".repeat(40),
           baseRef: "main",
           useFastPath,
@@ -228,9 +223,9 @@ for (const context of ["select", "template"] as const)
       );
       await assertParserRecoveryDifference(
         compilation,
-        { ...config, generatedOutput },
+        config,
         { "image.svg": "base image" },
         { "image.svg": "head image" },
-        generatedOutput === "committed" ? ["mockups/image.svg"] : [],
+        evidenceKind === "git" ? ["mockups/image.svg"] : [],
       );
     });

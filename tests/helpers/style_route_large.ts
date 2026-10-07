@@ -6,6 +6,8 @@ import { compileCatalogue } from "../../dist/build/compile.js";
 import { loadConfig } from "../../dist/config/load.js";
 import { generateLargeFixture } from "../fixtures/large/generate.js";
 
+import { compilationFiles } from "./component_fast_path.js";
+
 export async function styleRouteLargeFixture(
   context: TestContext,
   inlineStyles = true,
@@ -40,8 +42,8 @@ export async function styleRouteLargeFixture(
   return {
     before: before.manifest,
     after: after.manifest,
-    beforeFiles: new Map([...before.outputs, ...resources]),
-    afterFiles: new Map([...after.outputs, ...resources]),
+    beforeFiles: new Map([...compilationFiles(before), ...resources]),
+    afterFiles: new Map([...compilationFiles(after), ...resources]),
     config,
     changedPaths: ["renderer.tsx"],
   };

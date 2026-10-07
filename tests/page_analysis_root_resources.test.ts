@@ -11,15 +11,17 @@ import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
 import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
-import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import { reviewViews as generatedViews } from "../dist/review/views.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 
 for (const receiver of ["template", "select"] as const)
   test(`full comparison applies root-specific ownership before reading projected ${receiver} copies`, async (t) => {
-    const image = '<img loading="lazy" src="../image.svg" />';
-    const componentImage = '<img loading="lazy" src="./image.svg" />';
+    const image = '<img loading="lazy" src="../../image.svg" />';
+    const componentImage =
+      '<img loading="lazy" src="../../../pane/default/image.svg" />';
     const source = componentEntrySource({
       paneRender: `(props) => <${receiver}><pane2.Component>{props.children}</pane2.Component></${receiver}>`,
       paneVariants: `[{ slug: "default", title: "Default", props: { children: ${componentImage} } }]`,
@@ -57,7 +59,7 @@ for (const receiver of ["template", "select"] as const)
           read: async (route) => {
             reads.push(route);
             const content =
-              compilation.outputs.get(route) ??
+              textOutput(compilation.outputs, route) ??
               (route.endsWith("image.svg") ? "image" : undefined);
             assert.notEqual(content, undefined, route);
             return Buffer.from(content!);
@@ -91,7 +93,7 @@ for (const receiver of ["template", "select"] as const)
           changed,
           "mockups",
           undefined,
-          false,
+          undefined,
           true,
         ),
       };

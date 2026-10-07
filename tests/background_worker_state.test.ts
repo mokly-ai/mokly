@@ -16,7 +16,7 @@ for (const mode of ["committed", "derived"] as const)
       const fixture = await componentReviewFixture(context, (source) => source);
       const runtime = {
         ...componentRuntime(fixture.after),
-        config: { ...fixture.config, generatedOutput: mode },
+        config: fixture.config,
         styleOutputs: [
           ["mokly-generated/styles/fixture.css", ".action{color:red}"],
         ] as const,
@@ -33,8 +33,7 @@ for (const mode of ["committed", "derived"] as const)
       const checkpoint = async () => {
         checkpoints++;
       };
-      if (existing && mode === "derived")
-        assert.equal(inputs.existingOutputs, fixture.after.outputs);
+      if (existing) assert.equal(inputs.existingOutputs, fixture.after.outputs);
       const state = new BackgroundWorkerState(inputs, checkpoint, {
         compile: async (supplied, check) => {
           compileCalls++;
@@ -51,13 +50,18 @@ for (const mode of ["committed", "derived"] as const)
           assert.deepEqual(Object.keys(accepted).sort(), [
             "commit",
             "generation",
+            "selection",
           ]);
           assert.equal(accepted.commit, "a".repeat(40));
+          assert.equal(
+            accepted.selection,
+            mode === "committed" ? "blobs" : "rebuild",
+          );
           assert.ok(accepted.generation);
           assert.deepEqual(Object.keys(accepted.generation).sort(), [
             "deliveredStyleSources",
             "documentMarkdown",
-            ...(mode === "derived" ? ["outputs"] : []),
+            "outputs",
             "routes",
           ]);
           assert.deepEqual(accepted.generation.routes, [
@@ -68,17 +72,18 @@ for (const mode of ["committed", "derived"] as const)
             runtime.deliveredStyleSources,
           );
           assert.deepEqual(accepted.generation.documentMarkdown, new Map());
-          assert.equal(
-            accepted.generation?.outputs,
-            mode === "derived" ? fixture.after.outputs : undefined,
-          );
+          assert.equal(accepted.generation?.outputs, fixture.after.outputs);
           return undefined;
         },
       });
       assert.equal(Object.hasOwn(inputs, "existingOutputs"), false);
       assert.equal(state.ready, existing);
       if (!existing) {
-        await state.classify({ base: "main", commit: "a".repeat(40) });
+        await state.classify({
+          base: "main",
+          commit: "a".repeat(40),
+          selection: mode === "committed" ? "blobs" : "rebuild",
+        });
         assert.equal(classifyCalls, 0);
       }
       await state.start();
@@ -93,7 +98,11 @@ for (const mode of ["committed", "derived"] as const)
         assert.equal(message.compilation, fixture.after);
         assert.equal(message.compilation.outputs, fixture.after.outputs);
       }
-      await state.classify({ base: "main", commit: "a".repeat(40) });
+      await state.classify({
+        base: "main",
+        commit: "a".repeat(40),
+        selection: mode === "committed" ? "blobs" : "rebuild",
+      });
       assert.equal(classifyCalls, 1);
       assert.equal(checkpoints, 1);
       assert.deepEqual(messages.at(-1), {

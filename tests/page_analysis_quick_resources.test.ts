@@ -11,9 +11,11 @@ import { compareComponentView } from "../dist/review/component_view.js";
 import { PageAnalysisPair } from "../dist/review/page_pair.js";
 import { identicalPageQuickCheck } from "../dist/review/page_quick_check.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
-import { generatedViews } from "../packages/viewer/dist/components/views.js";
+import { reviewViews as generatedViews } from "../dist/review/views.js";
 
+import { compilationFiles } from "./helpers/component_fast_path.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
+import { textOutput } from "./helpers/generated_text.js";
 import { pageContext } from "./helpers/page_comparison.js";
 
 for (const mode of ["committed", "derived"] as const)
@@ -24,8 +26,8 @@ for (const mode of ["committed", "derived"] as const)
         fixture.after.manifest.entries.find(({ path: id }) => id === "home")!,
       )[0]!;
       const html =
-        fixture.after.outputs.get(view.path)! +
-        '<link rel="stylesheet" href="../root.css">';
+        textOutput(fixture.after.outputs, view.path)! +
+        '<link rel="stylesheet" href="../../root.css">';
       const reads = { before: [] as string[], after: [] as string[] };
       const materialReader = (side: keyof typeof reads) =>
         new ComponentMaterialReader({
@@ -44,28 +46,26 @@ for (const mode of ["committed", "derived"] as const)
       const beforeReader = materialReader("before");
       const afterReader = materialReader("after");
       const changedPaths = changed ? ["mockups/leaf.css"] : [];
-      const compareResourceBytes = mode === "derived";
       const baseContext = pageContext({
         ...fixture,
         before: fixture.before.manifest,
         after: fixture.after.manifest,
-        beforeFiles: fixture.before.outputs,
-        afterFiles: fixture.after.outputs,
-        config: { ...fixture.config, generatedOutput: mode },
+        beforeFiles: compilationFiles(fixture.before),
+        afterFiles: compilationFiles(fixture.after),
+        config: fixture.config,
         changedPaths,
       });
       const comparisonContext = {
         ...baseContext,
         beforeReader,
         afterReader,
-        compareResourceBytes,
         resources: new ResourceComparison(
           beforeReader,
           afterReader,
           new Set(changedPaths),
           "mockups",
           undefined,
-          compareResourceBytes,
+          undefined,
           true,
         ),
       };
@@ -105,16 +105,14 @@ for (const mode of ["committed", "derived"] as const)
       );
       assert.deepEqual(
         reads.before.sort(),
-        !changed && mode === "committed"
-          ? [view.path]
-          : [view.path, "root.css", "leaf.css"].sort(),
+        [view.path, "root.css", "leaf.css"].sort(),
       );
       assert.equal(
         events.filter(
           ({ stage, event }) =>
             stage === "review.resource-graph" && event === "start",
         ).length,
-        changed ? 4 : compareResourceBytes ? 2 : 1,
+        changed ? 4 : 2,
       );
       if (!changed) {
         assert.ok(
@@ -132,8 +130,8 @@ test("derived quick check traverses differing memberships independently, without
     fixture.after.manifest.entries.find(({ path: id }) => id === "home")!,
   )[0]!;
   const html =
-    fixture.after.outputs.get(view.path)! +
-    '<link rel="stylesheet" href="../root.css">';
+    textOutput(fixture.after.outputs, view.path)! +
+    '<link rel="stylesheet" href="../../root.css">';
   const input = {
     ...fixture,
     before: fixture.before.manifest,
@@ -150,7 +148,7 @@ test("derived quick check traverses differing memberships independently, without
       ["root.css", '@import "after.css";'],
       ["after.css", ".none{}"],
     ]),
-    config: { ...fixture.config, generatedOutput: "derived" as const },
+    config: fixture.config,
     changedPaths: [],
   };
   const reads = { before: [] as string[], after: [] as string[] };
@@ -186,7 +184,7 @@ test("derived quick check traverses differing memberships independently, without
       new Set(),
       "mockups",
       undefined,
-      true,
+      undefined,
       true,
     ),
   };

@@ -52,7 +52,7 @@ test("published copies receive only accepted identities after ownership/range va
   }
   assert.match(
     adapted,
-    /<script src="\/__mokly\/client\/inspector.js" defer><\/script>/,
+    /<script src="\/mokly-viewer\/client\/inspector.js" defer><\/script>/,
   );
   assert.match(adapted, /data-mokly-inspector-link="0"/);
   assert.doesNotMatch(original, /inspector.js|data-mokly-inspector/);
@@ -143,8 +143,8 @@ test("export includes the inspector while generated and comparison bytes stay un
   const before = await directoryFiles(fixture.config.mockupsDir);
   const result = await exportCatalogue(fixture.config, { outDir: "site" });
   const files = await directoryFiles(fixture.output);
-  assert.ok(files.has("__mokly/client/appearance-startup.js"));
-  assert.ok(files.has("__mokly/client/inspector.js"));
+  assert.ok(files.has("mokly-viewer/client/appearance-startup.js"));
+  assert.ok(files.has("mokly-viewer/client/inspector.js"));
   assert.deepEqual(await directoryFiles(fixture.config.mockupsDir), before);
   const snapshotFiles = [...files].filter(
     ([name]) => name.includes("/snapshots/") && name.endsWith(".html"),
@@ -164,8 +164,8 @@ test("export includes the inspector while generated and comparison bytes stay un
   const ownedPaths = inventory.files.map(
     ({ path: name }: { path: string }) => name,
   );
-  assert.ok(ownedPaths.includes("__mokly/client/appearance-startup.js"));
-  assert.ok(ownedPaths.includes("__mokly/client/inspector.js"));
+  assert.ok(ownedPaths.includes("mokly-viewer/client/appearance-startup.js"));
+  assert.ok(ownedPaths.includes("mokly-viewer/client/inspector.js"));
   assert.ok(result.comparisonUrl);
 });
 
@@ -176,20 +176,28 @@ test("repository preview adds its inspector after validating portable consumer r
   const original = await directoryFiles(fixture.config.mockupsDir);
   await buildPreview(fixture.config, output);
   const published = await directoryFiles(output);
-  assert.ok(published.has("__mokly/client/appearance-startup.js"));
-  assert.ok(published.has("__mokly/client/inspector.js"));
+  assert.ok(published.has("mokly-viewer/client/appearance-startup.js"));
+  assert.ok(published.has("mokly-viewer/client/inspector.js"));
   assert.match(
-    published.get("static/home/index.mobile.html")!.toString(),
+    published.get("static/mokly-generated/home/index.mobile.html")!.toString(),
     /data-mokly-inspector/,
   );
   assert.deepEqual(await directoryFiles(fixture.config.mockupsDir), original);
   await fs.writeFile(
     path.join(fixture.config.mockupsDir, "unowned.html"),
-    '<!doctype html><script src="/__mokly/client/inspector.js"></script>',
+    '<!doctype html><script src="/mokly-viewer/client/inspector.js"></script>',
+  );
+  const entry = await fs.readFile(fixture.entryPath, "utf8");
+  await fs.writeFile(
+    fixture.entryPath,
+    entry.replaceAll(
+      "Open Action</MockLink>",
+      'Open Action</MockLink><a href="../../unowned.html">Nested</a>',
+    ),
   );
   await assert.rejects(
     buildPreview(fixture.config, output),
-    /non-portable asset URL/,
+    /root-absolute link is not portable/,
   );
   assert.deepEqual(await directoryFiles(output), published);
 });

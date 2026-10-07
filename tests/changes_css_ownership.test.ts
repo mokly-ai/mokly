@@ -6,15 +6,11 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { renderReviewArtifact } from "../dist/review/artifact.js";
 import { compareReview } from "../dist/review/compare.js";
-import {
-  NodeGitCommandRunner,
-  CommittedRepository,
-} from "../dist/review/git.js";
-import { committedReviewRepository } from "../dist/review/repository.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 
 for (const ownership of ["dependency", "migrated-renderer"] as const)
@@ -70,12 +66,12 @@ export default (input) => '<html><head><link rel="stylesheet" href="' + input.st
         const artifact = await compareReview(
           await compileCatalogue(fixture.config),
           fixture.config,
-          new CommittedRepository(new NodeGitCommandRunner(fixture.root)),
+          committedReviewRepository(fixture.config),
           "main",
         );
         const { result } = artifact;
-        assert.equal(result.schemaVersion, 5);
-        if (result.schemaVersion !== 5) return;
+        assert.equal(result.schemaVersion, 6);
+        if (result.schemaVersion !== 6) return;
         assert.deepEqual(live.componentChanges?.result, result);
         const reason = {
           kind: "dependency",
@@ -141,8 +137,8 @@ test("non-CSS declared public dependencies retain their existing file-level poli
   );
   assert.deepEqual(live.changedEntries, ["action"]);
   const result = live.componentChanges?.result;
-  assert.equal(result?.schemaVersion, 5);
-  if (result?.schemaVersion !== 5) return;
+  assert.equal(result?.schemaVersion, 6);
+  if (result?.schemaVersion !== 6) return;
   assert.deepEqual(result.changes[0]?.reasons, [
     { kind: "dependency", path: "mockups/asset.svg" },
   ]);

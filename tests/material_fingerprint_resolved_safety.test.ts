@@ -22,6 +22,8 @@ for (const mode of ["committed", "derived"] as const)
       },
     });
     const input = await pageFixtureInput(fixture, mode);
+    const deliveredStyle =
+      fingerprintMaterials(input).inlineAnalysis!.beforeSpans[0]!.source;
     assert.equal(
       fingerprintMaterials(input).inlineAnalysis?.status,
       "resolved",
@@ -33,7 +35,8 @@ for (const mode of ["committed", "derived"] as const)
       String.prototype,
       "includes",
       function (this: string, needle: string, start?: number) {
-        if (String(this) === style && needle === "<!--mokly-review-") scans++;
+        if (String(this) === deliveredStyle && needle === "<!--mokly-review-")
+          scans++;
         return includes.call(this, needle, start);
       },
     );

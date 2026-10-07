@@ -19,7 +19,7 @@ import {
 
 import { createFixture, validEntrySource } from "./helpers/fixture.js";
 
-test("render callbacks run after output snapshot lock release", async (t) => {
+test("render callbacks run without an output snapshot lock", async (t) => {
   const fixture = await createFixture();
   t.after(() => fixture.remove());
   const source =
@@ -58,6 +58,12 @@ test("private runtime transfer retains output proof and refuses a missing or mal
     null,
     { routes: [], orphanRoutes: [], extra: true },
     { routes: [4], orphanRoutes: [] },
+    { schemaVersion: 0, routes: [] },
+    { schemaVersion: 2, routes: [] },
+    { schemaVersion: 1, routes: [], extra: true },
+    { schemaVersion: 1, routes: ["../outside.html"] },
+    { schemaVersion: 1, routes: ["z/index.html", "a/index.html"] },
+    { schemaVersion: 1, routes: ["a/index.html", "a/index.html"] },
   ])
     assert.equal(
       parseRuntimeMessage({
@@ -76,7 +82,7 @@ test("private runtime transfer retains output proof and refuses a missing or mal
   );
 });
 
-test("a surviving unowned collision still fails at generation acceptance", async (t) => {
+test("authored files outside the generated tree do not change accepted routes", async (t) => {
   const fixture = await createFixture();
   t.after(() => fixture.remove());
   await fs.promises.writeFile(
@@ -84,12 +90,16 @@ test("a surviving unowned collision still fails at generation acceptance", async
     "Authored resource",
   );
   const config = await loadConfig(fixture.root);
-  await assert.rejects(
-    compileCatalogue(config),
-    /generated output collision: HOME and home\/index.desktop.html/,
+  const compiled = await compileCatalogue(config);
+  const live = await prepareLiveRuntime(config);
+  assert.deepEqual(
+    live.outputSnapshot.routes,
+    [...compiled.outputs.keys()].sort(),
   );
-  await assert.rejects(
-    prepareLiveRuntime(config),
-    /generated output collision: HOME and home\/index.desktop.html/,
+  assert.equal(
+    await fs.promises.readFile(path.join(fixture.mockupsDir, "HOME"), "utf8"),
+    "Authored resource",
   );
+  assert.ok(Object.isFrozen(live.outputSnapshot));
+  assert.ok(Object.isFrozen(live.outputSnapshot.routes));
 });
