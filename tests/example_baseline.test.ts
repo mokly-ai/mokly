@@ -9,32 +9,10 @@ import { RebuiltBaselineReader } from "../dist/baseline/reader.js";
 import { parseHistoricalManifest } from "../dist/registry/manifest.js";
 import { prepareReviewRepository } from "../dist/review/prepare.js";
 
-import {
-  createCommittedExampleBaseline,
-  createExampleBaseline,
-} from "./helpers/example_baseline.js";
+import { createExampleBaseline } from "./helpers/example_baseline.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const execute = promisify(execFile);
-
-test("committed example fixtures remove the complete multiline baseline recipe", async (context) => {
-  const root = await fs.mkdtemp(
-    path.join(repositoryRoot, ".context/example-committed-"),
-  );
-  context.after(() => fs.rm(root, { recursive: true, force: true }));
-  const config = await createCommittedExampleBaseline(root, "ordinary-preview");
-  assert.deepEqual(config.review.baselineBuild, [
-    ["npm", "ci"],
-    [
-      "npx",
-      "--no-install",
-      "mokly",
-      "build",
-      "--config",
-      "examples/basic/mokly.config.ts",
-    ],
-  ]);
-});
 
 test("the example fixture rebuilds an untracked baseline from its own source and lockfile", async (t) => {
   await fs.mkdir(path.join(repositoryRoot, ".context"), { recursive: true });

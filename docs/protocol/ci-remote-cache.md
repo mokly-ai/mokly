@@ -166,7 +166,7 @@ restore missing archived files and replace modified archived files with the
 cached bytes. Matching local files may avoid writes. Files absent from the
 archive remain in place, even inside an output directory. Restore is not a
 directory clean. Authored CSS is never an output and must survive unchanged.
-Test this with missing, corrupted, and extra files. Tests that require an empty
+The one-time proof covers missing, corrupted, and extra files. Tests that require an empty
 output tree must clean their own output first; they must not infer cleanup from
 a cache hit. Task execution cleans each package distribution first; packing
 cleans both before restoring/building. Example execution transactionally replaces its disposable generated tree,
@@ -222,6 +222,11 @@ artifacts under policy B. Capture, comparisons, publication, and deployment exec
 See the [workflow graph](./ci-workflow.md),
 [release evidence](./npm-release-evidence.md), and
 [Worker contract](./ci-remote-cache-worker.md).
+
+The [static guards](../../tests/turbo_static_guards.test.ts) protect the direct
+recipe, clean-first scripts, compiler exclusions and asset filtering. One-time
+output, baseline and restore proofs stay under `.context/`; the package suite
+still runs real `npm pack --json` through prepack.
 
 ## Verified Upstream References
 

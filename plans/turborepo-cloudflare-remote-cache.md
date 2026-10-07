@@ -729,6 +729,27 @@ before the merge.
 - [x] Add the exact AGENTS.md rule approved on 2026-10-07: keep one-time proofs
       under .context, require approval for permanent install/build tests, and
       prefer static checks and pure-function tests.
+- [x] Record the user's decision B on 2026-10-07: delete slow Turbo tests added
+      by this branch, retain cheap guards and keep one-time proof evidence in .context.
+- [x] Delete `tests/turbo_baselines.test.ts`, `tests/turbo_restore.test.ts`,
+      `tests/turbo_pack.test.ts` and `tests/turbo_source_inputs.test.ts`.
+      Replace them with `tests/turbo_static_guards.test.ts`: resolve direct npm
+      and workspace scripts, require clean-first commands, retain compiler
+      output exclusions and check the pure source-asset predicate.
+- [x] Remove only the added "committed example fixtures remove the complete
+      multiline baseline recipe" test from `tests/example_baseline.test.ts`.
+      Retain main's real rebuild and the cheap turbo.json/clean.mjs assertions.
+- [x] Remove dead baseline build/archive helpers and the fixture install path;
+      retain only directBaselineCommands in the baseline helper.
+- [x] Resolve the approved Milestone 2 findings 3, 5 and 9 through removal of
+      the wrong-root AGENTS diff check, the slow-test cuts and .context creation.
+      Resolve Milestone 3 re-review finding R2 by dropping only the plan drift
+      check while retaining the Worker contract checks.
+- [x] Withdraw the new-test options for Milestone 2 finding 4 and Milestone 3
+      finding 3 under decision B; the existing package and Worker checks remain.
+- [x] Validate changed/new test files and one complete default cargo xtask check;
+      report every remaining changed unit test file's runtime from observedFiles.
+- [x] Commit the approved slow-test batch and push after the gate passes.
 - [x] Run `cargo xtask check`.
 - [x] Run `git add -A`, commit with Conventional Commits, and push.
 - [x] Review the complete local diff against `origin/main` with
@@ -757,6 +778,7 @@ Remote-verification and publish-check integration decisions: `.context/turborepo
 Fixture-cleanup flake fix (Git 2.55 background maintenance) and gate runs: `.context/turborepo-cloudflare-remote-cache/m4-flake-turbo-inventory.md`.
 Milestone 4 review-fix evidence: `.context/turborepo-cloudflare-remote-cache/m4-review-fixes.md`.
 Hosted measurement record: `.context/turborepo-cloudflare-remote-cache/measurements.md`.
+Decision B test-removal evidence and main preservation: `.context/turborepo-cloudflare-remote-cache/slow-tests-batch.md`.
 
 ## Post-merge follow-up (non-blocking)
 

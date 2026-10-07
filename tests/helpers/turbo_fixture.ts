@@ -14,7 +14,6 @@ export interface TurboTask {
   hash: string;
   inputs: Readonly<Record<string, string>>;
   dependencies: readonly string[];
-  cache: { local: boolean; remote: boolean; status: string };
   resolvedTaskDefinition: { cache: boolean };
 }
 
@@ -25,7 +24,7 @@ export interface TurboDryRun {
 }
 
 /** Invoke the installed repository binary with no remote credentials. */
-export async function runTurbo(
+async function runTurbo(
   root: string,
   args: readonly string[],
 ): Promise<string> {
@@ -43,23 +42,17 @@ export async function runTurbo(
     "TURBO_FORCE",
   ])
     delete env[name];
-  try {
-    const { stdout } = await execute(
-      path.join(repositoryRoot, "node_modules/.bin/turbo"),
-      args,
-      {
-        cwd: root,
-        env,
-        maxBuffer: 8_000_000,
-        timeout: 120_000,
-      },
-    );
-    return stdout;
-  } finally {
-    await execute("git", ["diff", "--exit-code", "AGENTS.md"], {
-      cwd: repositoryRoot,
-    });
-  }
+  const { stdout } = await execute(
+    path.join(repositoryRoot, "node_modules/.bin/turbo"),
+    args,
+    {
+      cwd: root,
+      env,
+      maxBuffer: 8_000_000,
+      timeout: 120_000,
+    },
+  );
+  return stdout;
 }
 
 export async function dryTurbo(root: string): Promise<TurboDryRun> {
@@ -100,8 +93,8 @@ export async function gitInputFiles(
  */
 export async function createTurboFixture(
   context: TestContext,
-  install = false,
 ): Promise<string> {
+  await fs.mkdir(path.join(repositoryRoot, ".context"), { recursive: true });
   const root = await fs.mkdtemp(
     path.join(repositoryRoot, ".context/turbo-fixture-"),
   );
@@ -122,18 +115,11 @@ export async function createTurboFixture(
     await fs.mkdir(path.dirname(path.join(root, file)), { recursive: true });
     await fs.copyFile(path.join(repositoryRoot, file), path.join(root, file));
   }
-  if (install)
-    await execute("npm", ["ci", "--no-audit", "--no-fund"], {
-      cwd: root,
-      maxBuffer: 8_000_000,
-      timeout: 120_000,
-    });
-  else
-    await fs.symlink(
-      path.join(repositoryRoot, "node_modules"),
-      path.join(root, "node_modules"),
-      "junction",
-    );
+  await fs.symlink(
+    path.join(repositoryRoot, "node_modules"),
+    path.join(root, "node_modules"),
+    "junction",
+  );
   await execute("git", ["init", "-q", "-b", "main"], { cwd: root });
   for (const [name, value] of [
     ["maintenance.auto", "false"],
