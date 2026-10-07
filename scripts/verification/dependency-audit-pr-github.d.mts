@@ -10,13 +10,15 @@ export type PrFetch = (
 export interface PrPullRequest {
   number: number;
   state: string;
-  head: { ref: string; repo: { full_name: string } | null };
+  head: { ref: string; sha?: string; repo: { full_name: string } | null };
   labels?: readonly { name: string }[];
 }
 
 /** Repository operations needed to create, refresh and close update pull requests. */
 export interface PrGitHub {
   openPullRequests(): Promise<PrPullRequest[]>;
+  /** Return the closed update pull request whose head commit is `tip`, if any. */
+  closedPullRequestAt(tip: string): Promise<number | undefined>;
   ensureLabel(): Promise<void>;
   createPullRequest(body: string): Promise<number>;
   labelPullRequest(number: number): Promise<void>;

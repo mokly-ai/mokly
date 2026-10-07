@@ -25,12 +25,17 @@ function logTail(log, length) {
 }
 
 /** Retain the latest evidence with safe fences and a UTF-16 body size bound. */
-export function renderPrBody({ log, now, configuration }) {
+export function renderPrBody({ log, now, configuration, previous }) {
   const protocol = `${configuration.serverUrl}/${configuration.repository}/blob/main/docs/protocol/dependency-audit-update-pr.md`;
   const header =
     [
       `Strict dependency audit of main on ${now.toISOString().slice(0, 10)} (UTC).`,
       `[Audit run](${configuration.runUrl})`,
+      ...(previous === undefined
+        ? []
+        : [
+            `The previous update branch had maintainer commits. They stay in #${previous}.`,
+          ]),
       "Actions:",
       [
         "- Fix the dependencies with compatible updates.",

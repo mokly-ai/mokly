@@ -39,11 +39,16 @@ export async function runDependencyAuditPr({
         `Dependency audit is clean; ${pulls.length} update pull request(s) closed.${branch.tip && !branch.botOnly ? " Human commits were preserved." : ""}`,
       );
     } else {
-      if (!branch.botOnly && pulls.length === 0)
-        throw new Error(
-          "dependency-audit/main contains human commits and has no open pull request. Ask a maintainer to delete the branch or reopen its pull request, then retry.",
-        );
-      if (branch.botOnly) {
+      let previous;
+      if (!branch.botOnly && pulls.length === 0) {
+        previous = await github.closedPullRequestAt(branch.tip);
+        if (previous === undefined)
+          throw new Error(
+            "dependency-audit/main contains human commits that no closed update pull request preserves. Ask a maintainer to delete the branch or reopen its pull request, then retry.",
+          );
+      }
+      const recreate = branch.botOnly || previous !== undefined;
+      if (recreate) {
         const packages = [
           ...new Set(
             summary.issues
@@ -55,7 +60,11 @@ export async function runDependencyAuditPr({
       }
       await github.ensureLabel();
       if (pulls.length === 0) {
-        const number = await github.createPullRequest(body);
+        const number = await github.createPullRequest(
+          previous === undefined
+            ? body
+            : renderPrBody({ log, now, configuration, previous }),
+        );
         await github.labelPullRequest(number);
       } else {
         for (const pull of pulls) {
@@ -64,7 +73,7 @@ export async function runDependencyAuditPr({
         }
       }
       logger.notice(
-        `Dependency audit update pull request maintained.${branch.botOnly ? "" : " Human commits were preserved."}`,
+        `Dependency audit update pull request maintained.${recreate ? "" : " Human commits were preserved."}${previous === undefined ? "" : ` The previous branch commits stay in #${previous}.`}`,
       );
     }
     return { ok: true };

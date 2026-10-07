@@ -123,6 +123,12 @@ location is allowed. Adding a location creates a new issue, even for the same
 advisory. An advisory covered by a valid baseline exception is not a baseline
 finding and cannot cover a new uncovered head finding.
 
+npm reports install locations per package, not per advisory. So a location
+already flagged for one advisory of a package can become vulnerable to another
+advisory of that package, for example after a downgrade, and the new finding
+still counts as inherited. The strict scheduled and release audits still
+report the package.
+
 A head exception issue is inherited only when the strict baseline evaluation
 has an exception issue with the identical message. That evaluation uses the
 baseline report, lockfile, exception file, and shared clock. An unchanged

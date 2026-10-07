@@ -1,6 +1,12 @@
 # Baseline-Relative Dependency Audit
 
-Status: Active. Planned on 2026-10-06 after two registry advisories
+Status: Completed. [PR #157](https://github.com/mokly-ai/mokly/pull/157)
+merged on 2026-10-07. User decisions on 2026-10-07 for the open review
+findings: 1, the token gained the Workflows permission; 2, recover a human
+update branch whose tip is the head of a closed update pull request; 3,
+document the inheritance limit; 5, require a fine-grained personal access
+token; 8, add no real-Git test. Branch `calummoore/dx-dependency-audit-cron-v1`
+implements 1, 2, 3, and 5. Planned on 2026-10-06 after two registry advisories
 (`sharp` below 0.35.5, GHSA-wq5f-xc86-pv6w; `shell-quote` 1.10.0,
 GHSA-pqg4-j6r4-53mv) failed every branch at the live audit. Both fixes already
 landed on `main` in [PR #146](https://github.com/mokly-ai/mokly/pull/146): the

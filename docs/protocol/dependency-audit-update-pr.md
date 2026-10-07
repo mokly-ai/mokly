@@ -154,9 +154,15 @@ use `--force-with-lease=refs/heads/dependency-audit/main:` to require absence. A
 change must fail the push instead of overwriting a human commit.
 
 If the branch exists without an open pull request and contains a non-bot
-commit, fail before recreating it. Name `dependency-audit/main` and tell a
-maintainer to delete the branch or reopen its pull request. This includes a
-closed unmerged pull request and a merged pull request whose branch remains.
+commit, list the closed pull requests whose head is `dependency-audit/main` in
+this repository. When one of them has the inspected tip as its head commit,
+GitHub keeps those commits at `refs/pull/<number>/head`, so the branch is
+recoverable. Recreate it from current `main` with a lease for the inspected
+tip, and open a new pull request whose body links the closed one. This covers
+a pull request that the script closed on a clean audit and a merged pull
+request whose branch remains. Otherwise fail before recreating the branch.
+Name `dependency-audit/main` and tell a maintainer to delete the branch or
+reopen its pull request.
 
 Run all Git and npm child processes without `GITHUB_TOKEN` or `GH_TOKEN`.
 Both install and update commands use `--ignore-scripts` because a lockfile
@@ -184,7 +190,8 @@ clean run. Leave other pull requests open, including ones with the
 `dependency-audit` label. Delete
 `dependency-audit/main` only when every commit beyond current `main` passes
 the bot-only test, including when there are none. Preserve a branch with
-human commits. Delete with a leased Git push for the inspected tip, never
+human commits; its closed pull request keeps them, so a later failing audit
+recreates the branch under the closed pull request rule above. Delete with a leased Git push for the inspected tip, never
 through the REST API. If no update pull request or branch exists, success creates
 nothing. Report or operational failures never close pull requests.
 
@@ -196,21 +203,28 @@ Checkout and API calls must both use
 `secrets.DEPENDENCY_AUDIT_TOKEN || github.token`; otherwise a refreshed
 pull request would not run CI.
 
-The secret accepts a fine-grained personal access token or app installation
-token restricted to this repository with these repository permissions:
+The secret holds a fine-grained personal access token restricted to this
+repository with these repository permissions:
 
-| Permission    | Access         | Purpose                                            |
-| ------------- | -------------- | -------------------------------------------------- |
-| Contents      | Read and write | Read, push, and delete the update branch.          |
-| Pull requests | Read and write | Open, update, comment on, and close pull requests. |
-| Issues        | Read and write | Create the dependency audit label.                 |
-| Metadata      | Read, implicit | Required repository metadata access.               |
+| Permission    | Access         | Purpose                                                      |
+| ------------- | -------------- | ------------------------------------------------------------ |
+| Contents      | Read and write | Read, push, and delete the update branch.                    |
+| Pull requests | Read and write | Open, update, comment on, and close pull requests.           |
+| Issues        | Read and write | Create the dependency audit label.                           |
+| Workflows     | Read and write | Push a refreshed branch after `main` changed workflow files. |
+| Metadata      | Read, implicit | Required repository metadata access.                         |
 
-Grant no account or Workflows permission. A personal token is limited by its
-owner's write access. The owner is the pull request author and cannot approve
-that pull request. An app installation token acts as its app. If the
-organization requires fine-grained token approval, an organization owner
-approves it.
+A refresh moves the branch from an older `main` to the current one. GitHub
+rejects that push when it changes `.github/workflows/` and the token has no
+Workflows permission. The script still commits only `package-lock.json`.
+Grant no account permission. A personal token is limited by its owner's write
+access. The owner is the pull request author and cannot approve that pull
+request. If the organization requires fine-grained token approval, an
+organization owner approves it.
+
+A GitHub App installation token expires after one hour, so the secret cannot
+hold one. An app needs a workflow step that creates its installation token
+for each run, and this workflow has no such step.
 
 Maintainer `calummoore` created the repository secret on 2026-10-06. The token
 has no expiration date, so no scheduled rotation applies. Replace it when it
@@ -219,9 +233,12 @@ it. Keep the repository scope and permissions above in every replacement.
 A revoked token that stays in the secret fails checkout. Only an empty or
 deleted secret selects the `github.token` fallback.
 
-Without the secret, the fallback token can create the pull request and push
-its branch, but CI needs a maintainer push or close-and-reopen action. Every
-pull request body includes the exact missing-CI recovery action defined above.
+Without the secret, the fallback `github.token` pushes the branch and opens
+the pull request only while the repository lets GitHub Actions create pull
+requests, as the [maintainer setup](./npm-release-operations.md#maintainer-setup)
+requires. It has no Workflows permission, so a refresh across a workflow change
+fails. Its pushes and pull requests start no CI. Every pull request body
+includes the exact missing-CI recovery action defined above.
 
 Related contracts: [Dependency security](./dependency-security.md),
 [CI workflow graph](./ci-workflow.md), and

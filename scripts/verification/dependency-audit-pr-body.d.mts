@@ -5,6 +5,8 @@ export interface PrBodyInputs {
   log: string;
   now: Date;
   configuration: PrConfiguration;
+  /** Closed update pull request that keeps a replaced branch's maintainer commits. */
+  previous?: number;
 }
 
 /** Retain the latest evidence with safe fences and a UTF-16 body size bound. */

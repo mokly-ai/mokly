@@ -41,50 +41,56 @@ export function createPrGitHub(configuration, fetch) {
       throw failure(method, path, response.status, data);
     return { data, response };
   };
-  return {
-    async openPullRequests() {
-      const pulls = [];
-      let path = `${root}/pulls?state=open&head=${configuration.owner}:${BRANCH}`;
-      while (path) {
-        const { data, response } = await request("GET", path);
-        if (!Array.isArray(data))
-          throw new Error(
-            "GitHub pull request list is invalid. Restore API access and retry.",
-          );
-        for (const pull of data)
-          if (
-            pull.state === "open" &&
-            pull.head?.ref === BRANCH &&
-            pull.head?.repo?.full_name === configuration.repository
-          ) {
-            if (!Number.isSafeInteger(pull.number) || pull.number < 1)
-              throw new Error(
-                "GitHub pull request number is invalid. Check API output and retry.",
-              );
-            pulls.push(pull);
-          }
-        const next = response.headers
-          .get("link")
-          ?.match(/<([^>]+)>;\s*rel="next"/u)?.[1];
-        path = "";
-        if (next) {
-          const url = new URL(next);
-          const base = new URL(configuration.apiUrl);
-          const basePath = base.pathname.replace(/\/$/u, "");
-          const nextPath = url.pathname.slice(basePath.length);
-          if (
-            url.origin !== base.origin ||
-            !url.pathname.startsWith(`${basePath}/`) ||
-            (nextPath !== `${root}/pulls` &&
-              !/^\/repositories\/\d+\/pulls$/u.test(nextPath))
-          )
+  const listPullRequests = async (state) => {
+    const pulls = [];
+    let path = `${root}/pulls?state=${state}&head=${configuration.owner}:${BRANCH}`;
+    while (path) {
+      const { data, response } = await request("GET", path);
+      if (!Array.isArray(data))
+        throw new Error(
+          "GitHub pull request list is invalid. Restore API access and retry.",
+        );
+      for (const pull of data)
+        if (
+          pull.state === state &&
+          pull.head?.ref === BRANCH &&
+          pull.head?.repo?.full_name === configuration.repository
+        ) {
+          if (!Number.isSafeInteger(pull.number) || pull.number < 1)
             throw new Error(
-              "GitHub pagination URL is invalid. Check API output and retry.",
+              "GitHub pull request number is invalid. Check API output and retry.",
             );
-          path = `${nextPath}${url.search}`;
+          pulls.push(pull);
         }
+      const next = response.headers
+        .get("link")
+        ?.match(/<([^>]+)>;\s*rel="next"/u)?.[1];
+      path = "";
+      if (next) {
+        const url = new URL(next);
+        const base = new URL(configuration.apiUrl);
+        const basePath = base.pathname.replace(/\/$/u, "");
+        const nextPath = url.pathname.slice(basePath.length);
+        if (
+          url.origin !== base.origin ||
+          !url.pathname.startsWith(`${basePath}/`) ||
+          (nextPath !== `${root}/pulls` &&
+            !/^\/repositories\/\d+\/pulls$/u.test(nextPath))
+        )
+          throw new Error(
+            "GitHub pagination URL is invalid. Check API output and retry.",
+          );
+        path = `${nextPath}${url.search}`;
       }
-      return pulls;
+    }
+    return pulls;
+  };
+  return {
+    openPullRequests: () => listPullRequests("open"),
+    /** Find a closed update pull request that preserves this exact branch tip. */
+    async closedPullRequestAt(tip) {
+      const pulls = await listPullRequests("closed");
+      return pulls.find((pull) => pull.head?.sha === tip)?.number;
     },
     async ensureLabel() {
       const { response } = await request(
