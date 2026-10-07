@@ -1,6 +1,7 @@
 # Remote Verification Review Follow-Up
 
-Status: Active. No pull request exists yet. Work starts at Milestone 1.
+Status: Active. No pull request exists yet. Milestone 1 is completed.
+Milestone 2 is next.
 
 Fix the eleven open findings from the post-push review of
 [Blacksmith remote verification](./blacksmith-remote-verification.md)
@@ -95,23 +96,24 @@ The user approved these options on 2026-10-07.
 
 ## Milestone 1: Contract documentation
 
-Define every behavior change before any code changes.
+Completed. Define every behavior change before any code changes.
+Evidence: `.context/remote-verification-review-follow-up/milestone-1.md`.
 
-- [ ] Update `docs/protocol/remote-verification.md` for findings 5, 9, 12, 13
+- [x] Update `docs/protocol/remote-verification.md` for findings 5, 9, 12, 13
       and 14: the success rule, the cleanup count, the interrupt message, the
       missing-program diagnostic, the cancellation state check, warning-line
       formatting, run ID sources, stop retries and the manual cleanup warning.
-- [ ] Update `docs/protocol/remote-verification-testbox.md` for findings 6, 7
+- [x] Update `docs/protocol/remote-verification-testbox.md` for findings 6, 7
       and 10, and `docs/protocol/ci-workflow.md` for finding 6.
-- [ ] Update `docs/protocol/ci-verification-security.md` for finding 8.
-- [ ] Update `xtask/README.md` and `README.md` where they describe the same
+- [x] Update `docs/protocol/ci-verification-security.md` for finding 8.
+- [x] Update `xtask/README.md` and `README.md` where they describe the same
       behavior.
 - [x] Change the status paragraph of `plans/blacksmith-remote-verification.md`
       to `Status: Completed.` with the PR #160 link and merge date, and point
       its open findings to this plan.
-- [ ] Keep each protocol page at 250 lines or less, or split it. Run Prettier
+- [x] Keep each protocol page at 250 lines or less, or split it. Run Prettier
       and the protocol doc tests. Review the diff.
-- [ ] Commit.
+- [x] Commit.
 
 ## Milestone 2: Cleanup and reporting
 

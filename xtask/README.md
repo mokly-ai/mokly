@@ -119,6 +119,10 @@ Remote mode can use the current CLI login when the key is absent.
 Login saves the key in `~/.blacksmith/credentials`.
 It replaces any saved login for the same organization.
 The CLI never receives the key in arguments or remote commands.
+Every xtask child removes the shared secret environment list, which currently
+contains only `BLACKSMITH_ORG_TOKEN`. Key login still uses standard input.
+Availability checks name all missing programs in one diagnostic, in the order
+`blacksmith`, `rsync`, `ssh`, with their install hints.
 Warmup uses the Testbox workflow from `main`.
 Set `MOKLY_TESTBOX_REF=<pushed branch>` only to test a changed Testbox workflow
 before it merges.
@@ -130,10 +134,21 @@ Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
 Each command worker downloads its report and cleans up its box when it ends.
 It does not wait for other commands. Final cleanup covers only remaining boxes.
 The status table can prove a box already completed. That box needs no stop or
-GitHub cancellation. The aggregate runs after all commands and cleanup end.
+GitHub cancellation. Cleanup keeps run IDs from warmup and probe output as a
+fallback when status fails or names no run. A failed stop gets retries after
+5 seconds and 10 more seconds, with at most three attempts per box.
+Final cleanup counts each box once if it is neither stopped nor proven completed.
+That count fails the check. A recovered stop does not fail it.
+An interrupt reports the same count. Each remaining box gets a warning with
+its manual stop command and the 30-minute idle timeout.
+After a failed GitHub cancellation, xtask reads the run state. A completed run
+gets an information line. Other states and failed reads keep the warning.
+The aggregate runs after all commands and cleanup end.
 Each check creates new report and log directories under `.context/`.
 Their shared run name is UTC `YYYYMMDDTHHMMSSZ` followed by `-<process-id>`.
 Decision, information and warning lines start with `[xtask/executor]`.
+One function formats warnings that embed errors. Each error keeps its module
+prefix. Remote errors use `[xtask/remote]`. No line repeats a prefix.
 Suite progress and summaries start with `[xtask/remote]`.
 Failed commands show their last 60 log lines and the log path.
 Failed aggregate and fingerprint reads show captured stdout and stderr after
