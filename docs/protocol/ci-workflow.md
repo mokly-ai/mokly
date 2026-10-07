@@ -92,7 +92,10 @@ lockfile, README, `.nvmrc`, and the event-selected runtime profiles.
 Matrix jobs use `fail-fast: false`, so one failing shard does not erase evidence
 from its peers. Chromium is installed only in browser and hydration jobs. Rust
 formatting, Clippy, and tests run only in the repository job; selected suite
-jobs still compile xtask to dispatch their gate.
+jobs still compile xtask to dispatch their gate. Every cargo-running CI and
+release job runs `rustup toolchain install` before cargo. rustup installs the
+`rust-toolchain.toml` pin, Rust 1.95.0 with rustfmt and Clippy, and that file
+selects the toolchain for every cargo command in the checkout.
 
 Every npm-running CI job installs npm 11.21.0, the exact `packageManager`
 version in `package.json`, and runs `npm ci`. The scheduled audit installs no

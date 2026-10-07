@@ -99,7 +99,10 @@ Its error contains no usage text. Each script adds its own usage line.
 
 `blacksmith testbox run` syncs the local checkout before its command starts.
 It fetches local `HEAD` from GitHub and copies uncommitted, non-ignored files.
-It does not copy Git-ignored files. The probe command is:
+It does not copy Git-ignored files. The synced tree's `rust-toolchain.toml`
+selects the toolchain for the suite commands. A synced tree without that file
+uses the box's default toolchain, so merge `main` into the branch before
+remote verification. The probe command is:
 
 ```bash
 blacksmith testbox run --id <box-id> --wait-timeout 10m "node scripts/verification/source-tree.mjs --expect <fingerprint> --print-head"
