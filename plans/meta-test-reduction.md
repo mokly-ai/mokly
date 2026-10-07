@@ -340,7 +340,10 @@ pass 300 lines; `validateShardReports` calls it.
       merge main (never bulk-take a side), confirm the merge commit has
       exactly two parents, review `git show --remerge-diff` for every listed
       path, and record the justifications under
-      `.context/meta-test-reduction/merge-main.md`.
+      `.context/meta-test-reduction/merge-main.md`. Three merges: `a802cee`
+      (one `AGENTS.md` conflict), `db0cc77` (kept the inventory deletion of
+      `tests/ci_testbox_workflow.test.ts`), and `b9b62e7` (main at `fa8be32`,
+      PRs #168 and #169; no conflicts; run by a delegated Codex session).
 - [x] Run `cargo xtask check`. Save output under
       `.context/meta-test-reduction/final-check.md`.
       The gate passed under Node 22.14.0, the minimum tested version that
@@ -349,6 +352,7 @@ pass 300 lines; `validateShardReports` calls it.
       TODO below. After the second `origin/main` merge the complete gate ran
       again on `db0cc77` through the remote Testbox executor: 11 commands, 9
       reports, aggregate passed, tree unchanged (`final-check-2.txt`).
+      After the third merge the complete gate ran on `b9b62e7` through the remote Testbox executor with Node 22.14.0 and Rust 1.95.0: 11 commands, 9 reports, aggregate passed, tree unchanged (`final-check-3.txt`).
 - [x] Inspect `git diff --name-status origin/main` and
       `git diff --diff-filter=D --name-status origin/main`. Confirm every
       deletion is in the Inventory. Record the deletions in the commit and PR
@@ -369,8 +373,18 @@ pass 300 lines; `validateShardReports` calls it.
     (nodejs/node#60946) made `fs.cp` with `errorOnExist` reject an existing
     destination directory, and `tests/helpers/owned_example.ts` creates the
     root before the copy. Ordinary CI runs only Node 22.14.0; the Node 24
-    release profile will hit it. Fixed on `main` by PR #167, now merged into
-    this branch; not re-verified here on Node 24.
+    release profile will hit it. Fixed on `main` by PR #167, merged into this
+    branch; re-verified on Node 24.21.0 after the third merge, 3 of 3 pass
+    (`shared-example-node24-after-167.txt`). Closed.
+  - Unrelated environment finding (not fixed here): with the sandbox's default
+    Rust 1.99 toolchain, the repository suite fails at
+    `cargo clippy --workspace --all-targets -- -D warnings` on the deprecated
+    `Atomic::fetch_update` call in `xtask/src/remote/runtime.rs:117`, main's
+    code from PR #164. CI pins Rust 1.95.0 and passes; `RUSTUP_TOOLCHAIN=1.95.0`
+    passes locally (`merge-3-repository-check-rust195.txt`). Suspected source:
+    no `rust-toolchain.toml`, so local runs use the installed `rustup`
+    default. Recommendation: add `rust-toolchain.toml` pinning 1.95.0 in a
+    separate branch.
   - Review 1 (`.context/meta-test-reduction/review-1.md`), fixed: finding 1
     narrow fix (README examples now run `tests/ci_workflow_policies.test.ts`),
     finding 4 (shard bound named in release evidence validation and the
@@ -379,19 +393,28 @@ pass 300 lines; `validateShardReports` calls it.
   - Review 1, open, finding 1B (docs or spec, medium): add a check that every
     `tests/...` path in README and `docs/` command blocks exists.
     Recommendation: adopt it as an extension of `tests/markdown_links.test.ts`.
+    Re-evaluated after merge `b9b62e7`: no such path is missing on the merged
+    tree; the check stays preventive.
   - Review 1, open, finding 2 (test, medium): three deleted property checks
     have no test: Testbox workflow read-only permissions, no secrets and
     `persist-credentials: false`; the Dependency Audit job runs no `npm ci`
     before the audit; the CI native job runs `TESTED_NODE_VERSIONS[0]`.
     Recommendation: add them to `tests/ci_workflow_policies.test.ts`.
+    Re-evaluated after merge `b9b62e7`: all three properties hold on the merged
+    tree (Testbox `contents: read`, `persist-credentials: false`, no `secrets`;
+    the audit job runs only the global npm pin before the audit; the native job
+    runs 22.14.0) but none is tested. The policy file is at 289 lines, so the
+    checks need a second file; do them together with review 2 finding 1.
   - Review 1, open, finding 3 (docs or spec, medium): `mokly-guides.md`,
     `ci-workflow.md` and `AGENTS.md` claim stricter tests than kept (some
     value regexes and the job names in the policy test). Recommendation:
-    reword the sentences; do not change the tests.
+    reword the sentences; do not change the tests. Re-evaluated after merge
+    `b9b62e7`: main did not touch these sentences; unchanged.
   - Review 1, open, finding 6 (test, medium): `mokly/no-artifact-path-literals`
     covers nine fewer files than the deleted scanner (`packages/viewer/scripts/`,
     root `eslint.config.js`, `playwright.config.ts`). Recommendation: scope the
-    rule like the old scanner.
+    rule like the old scanner. Re-evaluated after merge `b9b62e7`: none of the
+    nine files contains a `snapshots/` or `pages/…json` literal; low risk.
   - Review 1, open, finding 7 (process, small): attribution plan Milestone 7
     finding 1 (the `beforeRemove` message for `designLibraryFixture` and the
     `owner.after` false positive inside a `fileFixture` setup) now applies to
@@ -400,7 +423,8 @@ pass 300 lines; `validateShardReports` calls it.
     option A); the attribution plan recommends its option C.
   - Review 1, open, finding 8 (repository rule, small): commit `4ce6d6c` has a
     61-character title. Recommendation: no history rewrite; the squash merge
-    keeps only the PR title.
+    keeps only the PR title. Re-evaluated after merge `b9b62e7`: the three
+    merge commits also carry Git's default 79-character titles; same answer.
   - Review 2 (`.context/meta-test-reduction/review-2.md`), fixed: finding 2
     (the finding 7 line above now states the finding and its owner correctly).
   - Review 2, open, finding 1 (test, medium): the second merge kept the
@@ -410,6 +434,9 @@ pass 300 lines; `validateShardReports` calls it.
     Testbox-only trigger check; B every workflow `push` trigger must declare a
     branch filter; C triggers stay review-owned, stated in `ci-workflow.md`.
     Recommendation: B. Needs approval because it replaces a test main added.
+    Re-evaluated after merge `b9b62e7`: every `push` trigger on the merged tree
+    declares `branches` (`ci`, `preview`, `release`: `[main]`; Testbox:
+    `["**"]`), so option B passes today; still untested.
 
 ## Post-merge follow-up (non-blocking)
 
