@@ -362,17 +362,17 @@ and option A for finding 4. Option A for finding 4 approves the deletion of
 
 Evidence: `.context/deterministic-test-timing-review-fixes/milestone-9.md`.
 
-- [ ] Update the ESLint Guard section of `docs/protocol/ci-test-timing.md`,
+- [x] Update the ESLint Guard section of `docs/protocol/ci-test-timing.md`,
       the duration-helper text in `docs/protocol/ci-test-timing-helpers.md`,
       `docs/protocol/ci-verification-repository.md` and `README.md` for the
       finding 3 forms and exemption.
-- [ ] Replace the in-page `setInterval` wait in
+- [x] Replace the in-page `setInterval` wait in
       `tests/browser/same_origin_reconnect.spec.ts` (finding 2). Run the spec
       three times.
-- [ ] Add the finding 3 forms and the exemption to
+- [x] Add the finding 3 forms and the exemption to
       `tests/test_timing_lint.test.ts` and watch the new cases fail. Then
       extend the selectors and the exemption in `eslint.config.js`.
-- [ ] Delete `tests/server_fixture.ts` (finding 4). Search `docs/`, `plans/`
+- [x] Delete `tests/server_fixture.ts` (finding 4). Search `docs/`, `plans/`
       and every `README.md` for its name.
 - [ ] Merge the latest `origin/main` with the Mainline Feature Preservation
       steps in `AGENTS.md`.
