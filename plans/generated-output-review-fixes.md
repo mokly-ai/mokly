@@ -4,8 +4,8 @@ Status: Active. This plan owns the remaining review fixes from
 [Generated Output Simplification](./generated-output-simplification.md), merged
 in [PR #156](https://github.com/mokly-ai/mokly/pull/156) on 2026-10-07. Milestones
 2–6 retain the former Milestones 24–28. Findings 17, 52 and 67–86 and the known
-status notes remain pending decisions, outside milestone scope. Milestone 1 is
-complete; Milestones 2–6 await their separate instructions.
+status notes remain pending decisions, outside milestone scope. Milestones 1–2 are
+complete; Milestones 3–6 await their separate instructions.
 
 ## Summary
 
@@ -137,7 +137,11 @@ Validation: `.context/generated-output-review-fixes/m1-validation.md`.
 
 ## Milestone 2: Shared watching and command output (was Milestone 24)
 
-Implements 40 B, 9 B, 41 B, 50 B, 18 A, 16 B and 51 A.
+Completed. Implements 40 B, 9 B, 41 B, 50 B, 18 A, 16 B and 51 A.
+
+Shared inventory ownership also restores repair watching after strict warnings
+in newly imported files (finding 70). Two regression cases cover this side
+effect. Finding 70 remains a pending decision; no option is claimed for it.
 
 - [x] Merge the captured latest main (`dc56e3d4`) under the user's direct
       2026-10-07 instruction. Preserve #145's cache ignore publication, #151's
@@ -176,7 +180,7 @@ Smoke evidence: `.context/generated-output-review-fixes/m2-smoke.md`.
 
 Gate evidence: `.context/generated-output-review-fixes/m2-gate.md`.
 
-- [ ] Write failing lifecycle tests first. Extract one watch-setup owner from
+- [x] Write failing lifecycle tests first. Extract one watch-setup owner from
       `server/serve_watched.ts`, `watch_inventory.ts`, `watch_paths.ts`,
       `watcher.ts` and `resource_watcher.ts`; use it from `cli/build_watch.ts`.
       Keep `watch_events.ts` notification gates, debounce and serialization.
@@ -184,7 +188,7 @@ Gate evidence: `.context/generated-output-review-fixes/m2-gate.md`.
       gates' events during replacement, and adopt checked resource watches only
       with their matching candidate. Preserve roots, folder records, Markdown
       inputs, path-based generated ignores and failed-candidate recovery.
-- [ ] Run one case matrix through watched Build and Serve using the existing
+- [x] Run one case matrix through watched Build and Serve using the existing
       injected watcher/queue seams in `tests/build_watch.test.ts`,
       `watch_startup.test.ts`, `watch_config_shutdown.test.ts`,
       `watch_postcss*.test.ts` and `watch_resource_*.test.ts`. Cover imports,
@@ -192,12 +196,12 @@ Gate evidence: `.context/generated-output-review-fixes/m2-gate.md`.
       HTML/PDF/CSS and repaired invalid resources. Extend
       `watched_authored_closure.test.ts` for closure changes. Keep the new
       `build_watch_warnings.test.ts` strict/normal writer coverage in the matrix.
-- [ ] Update `server/demand/generation.ts` and the shared resource lifecycle so
+- [x] Update `server/demand/generation.ts` and the shared resource lifecycle so
       `serve --build` writes a refreshed complete manifest after a stylesheet
       changes the closure. Plain Serve keeps checked memory; evidence-only
       actions never write. Preserve the child/parent boundary and immutable
       route snapshot through full-generation replacement.
-- [ ] Tie SIGINT/SIGTERM to immediate shutdown and active compile/write
+- [x] Tie SIGINT/SIGTERM to immediate shutdown and active compile/write
       cancellation in `cli/build_watch.ts`. Propagate through
       `build/compile.ts`, its graph/render lifecycle and `output_store.ts`.
       Test initial compilation and a held lock with explicit synchronization;
@@ -205,7 +209,7 @@ Gate evidence: `.context/generated-output-review-fixes/m2-gate.md`.
       persistent lock directories and foreign-lock protections. Preserve cache
       ignore publication before the writer acquires its lock; nonwriting
       consumers do not create a cache except through requested baseline rebuilds.
-- [ ] Share the generated summary for `cli/run.ts`, `cli/build_watch.ts`,
+- [x] Share the generated summary for `cli/run.ts`, `cli/build_watch.ts`,
       `server/serve.ts`, `server/watched_background.ts` and reporter calls.
       Keep #124’s `reportCatalogueReady` warning boundary separate from the generated
       writer summary; plain Serve still writes no output. Use the invocation-relative
@@ -215,17 +219,17 @@ Gate evidence: `.context/generated-output-review-fixes/m2-gate.md`.
       presentation. The empty-success-stderr assertion applies only to warning-free
       cases; test warnings together with successful baseline notices. Test
       the notice once per accepted base and reset after a base change.
-- [ ] Replace English-message matching in `build/tracked_output.ts` with the
+- [x] Replace English-message matching in `build/tracked_output.ts` with the
       exact machine-readable probe in `mokly-boundary-results.md`. Preserve
       process exit/signal/stdout and launch errors through `review/git_process.ts`
       or an equally narrow injectable probe. Cover ordinary nonrepositories,
       bare/corrupt/inaccessible repositories, missing Git, non-English stderr
       and explicit Git overrides. Carry the selected real indexed prefix into
       mixed and stale-output remedies in `build/check.ts`; test aliases.
-- [ ] Smoke both writing watch commands with Tailwind-style scanning, an edit
+- [x] Smoke both writing watch commands with Tailwind-style scanning, an edit
       during the initial build, stylesheet closure additions/removals and Ctrl+C
       under a held lock. Record command, URL, output bytes and process cleanup.
-- [ ] Complete the [full gate from the completed plan](./generated-output-simplification.md#milestone-20-one-public-file-policy):
+- [x] Complete the [full gate from the completed plan](./generated-output-simplification.md#milestone-20-one-public-file-policy):
       `git add -A`; commit with Conventional Commits and push; then run
       `cargo xtask check`. On Blacksmith it covers all seven gate commands.
       If it falls back to local, run the seven commands locally as listed under
