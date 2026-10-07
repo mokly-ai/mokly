@@ -346,7 +346,9 @@ pass 300 lines; `validateShardReports` calls it.
       The gate passed under Node 22.14.0, the minimum tested version that
       ordinary CI runs (`final-check-node22.txt`). Under Node 24.21.0 the
       unit suite fails two tests this branch does not touch; see the review
-      TODO below.
+      TODO below. After the second `origin/main` merge the complete gate ran
+      again on `db0cc77` through the remote Testbox executor: 11 commands, 9
+      reports, aggregate passed, tree unchanged (`final-check-2.txt`).
 - [x] Inspect `git diff --name-status origin/main` and
       `git diff --diff-filter=D --name-status origin/main`. Confirm every
       deletion is in the Inventory. Record the deletions in the commit and PR
@@ -367,7 +369,8 @@ pass 300 lines; `validateShardReports` calls it.
     (nodejs/node#60946) made `fs.cp` with `errorOnExist` reject an existing
     destination directory, and `tests/helpers/owned_example.ts` creates the
     root before the copy. Ordinary CI runs only Node 22.14.0; the Node 24
-    release profile will hit it. Fixed on `main` by PR #167 (merged after the first gate run).
+    release profile will hit it. Fixed on `main` by PR #167, now merged into
+    this branch; not re-verified here on Node 24.
   - Review 1 (`.context/meta-test-reduction/review-1.md`), fixed: finding 1
     narrow fix (README examples now run `tests/ci_workflow_policies.test.ts`),
     finding 4 (shard bound named in release evidence validation and the
@@ -389,14 +392,24 @@ pass 300 lines; `validateShardReports` calls it.
     covers nine fewer files than the deleted scanner (`packages/viewer/scripts/`,
     root `eslint.config.js`, `playwright.config.ts`). Recommendation: scope the
     rule like the old scanner.
-  - Review 1, open, finding 7 (process, small): the fixture-lifecycle finding in
-    `plans/attribution-test-consolidation.md` (wrong `beforeRemove` message and
-    a `fileFixture` false positive) has no owner; the ESLint rule keeps the
-    false positive by design. Recommendation: add it to this plan's post-merge
-    follow-up and reword that note.
+  - Review 1, open, finding 7 (process, small): attribution plan Milestone 7
+    finding 1 (the `beforeRemove` message for `designLibraryFixture` and the
+    `owner.after` false positive inside a `fileFixture` setup) now applies to
+    `scripts/eslint/no-late-fixture-teardown.mjs`, which ports the old check
+    unchanged. Recommendation: keep this line as its owner record (review 1
+    option A); the attribution plan recommends its option C.
   - Review 1, open, finding 8 (repository rule, small): commit `4ce6d6c` has a
     61-character title. Recommendation: no history rewrite; the squash merge
     keeps only the PR title.
+  - Review 2 (`.context/meta-test-reduction/review-2.md`), fixed: finding 2
+    (the finding 7 line above now states the finding and its owner correctly).
+  - Review 2, open, finding 1 (test, medium): the second merge kept the
+    deletion of `tests/ci_testbox_workflow.test.ts`, whose assertion main had
+    just extended for the Testbox push trigger's `branches: ["**"]` filter
+    (PR #164); no test reads any workflow trigger now. Options: A a
+    Testbox-only trigger check; B every workflow `push` trigger must declare a
+    branch filter; C triggers stay review-owned, stated in `ci-workflow.md`.
+    Recommendation: B. Needs approval because it replaces a test main added.
 
 ## Post-merge follow-up (non-blocking)
 
