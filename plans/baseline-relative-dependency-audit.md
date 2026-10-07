@@ -143,6 +143,8 @@ These decisions are fixed for every milestone below.
    `--suite repository`; any other suite rejects it with a typed error before
    a subprocess starts. The repository suite runs
    `npm run dependencies:check -- --baseline` or `npm run dependencies:check`.
+   A complete gate on Blacksmith Testboxes passes the same mode to its remote
+   repository command (`testbox-suite.mjs --dependency-audit <mode>`).
 9. **CI mode selection.** The repository job passes
    `--dependency-audit "$DEPENDENCY_AUDIT"`. The value is `strict` for a
    same-repository pull request whose head ref starts with
@@ -475,6 +477,32 @@ Review summary: round 1 reported 8 findings (1 Medium, 7 Low); `46b3f0b`
 fixed findings 4, 6, and 7; the re-review found no new finding. Reports:
 `.context/baseline-relative-dependency-audit/review-round-1.md` and
 `review-round-2.md`.
+
+## Milestone 6: Integrate with main's remote executor
+
+Main added complete-gate execution on Blacksmith Testboxes (#160) while this
+branch was open. Merge it and keep a strict complete gate strict on Testboxes.
+
+- [x] Merge `origin/main` (`3363022`, `64bf722`). Resolve conflicts path by
+      path. Keep main's guide-test split and port this branch's two
+      assertion changes into it.
+- [x] Pass `--dependency-audit` through the remote runner and plan to
+      `testbox-suite.mjs`, which accepts it only for the repository suite.
+      Test the plan command, strict reaching the remote runner, and wrapper
+      forwarding and rejections.
+- [x] Document the mode in the Testbox command table, the baseline contract,
+      and the xtask README. Keep the protocol index within 250 lines.
+- [ ] Confirm the complete gate passes on the merged tree. The local Node
+      24.21 run fails only main's `tests/shared_example.test.ts` (2 tests),
+      which also fail on unmodified `origin/main` and pass on Node 22.14;
+      confirm with PR CI.
+- [x] Commit and push.
+- [ ] Claude: review the integration diff with
+      `docs/implementation-review-prompt.md` after the push and apply the
+      review-fix rule.
+
+Merge justification: `.context/baseline-relative-dependency-audit/merge-3-justification.md`.
+Evidence: `.context/baseline-relative-dependency-audit/merge-3-xtask-check.log`.
 
 ## Post-merge follow-up (non-blocking)
 
