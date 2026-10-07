@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { setTimeout } from "node:timers/promises";
 
 import { MoklyError } from "../dist/errors.js";
 import { GitRepositoryEvidence } from "../dist/review/git_evidence.js";
@@ -17,6 +16,7 @@ import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
 import { documentText } from "./helpers/html.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 const page = `
 import { definePage } from "@mokly/mokly";
@@ -76,11 +76,16 @@ test("unavailable startup Changes leaves a complete current catalogue without re
   });
   fixture.beforeRemove(() => running.close());
   let home = "";
-  for (let attempt = 0; attempt < 100; attempt++) {
-    home = await (await fetch(running.url)).text();
-    if (home.includes('data-changes-status="unavailable"')) break;
-    await setTimeout(50);
-  }
+  await waitUntil(
+    async () => {
+      home = await (await fetch(running.url)).text();
+      return home.includes('data-changes-status="unavailable"');
+    },
+    {
+      intervalMs: 50,
+      message: "Serve did not report unavailable Changes",
+    },
+  );
   assert.match(home, /data-entry-id="home"/);
   assert.match(home, /data-changes-status="unavailable"/);
   assert.doesNotMatch(home, /data-removed-page/);

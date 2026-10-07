@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { setTimeout as pause } from "node:timers/promises";
 
 import { FULL_CATALOGUE_SETUP_TIMEOUT_MS } from "./helpers/fixture_timing.js";
 import { createOwnedExample } from "./helpers/owned_example.js";
 import { prepareSharedExample } from "./helpers/shared_example.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 test("shared preparation keeps the established 600-second ceiling", () => {
   assert.equal(FULL_CATALOGUE_SETUP_TIMEOUT_MS, 600_000);
@@ -110,14 +110,17 @@ test("cancelling example preparation drains its real process before deleting res
   );
   const rejected = assert.rejects(pending, /stop preparation/u);
   try {
-    let pid: number | undefined;
-    const end = Date.now() + 10_000;
-    while (!pid && Date.now() < end) {
-      pid = await fs
-        .readFile(path.join(owner.root, "started"), "utf8")
-        .then(Number, () => undefined);
-      if (!pid) await pause(10);
-    }
+    const pid = await waitUntil(
+      () =>
+        fs.readFile(path.join(owner.root, "started"), "utf8").then(
+          (text) => Number(text) || undefined,
+          () => undefined,
+        ),
+      {
+        intervalMs: 10,
+        message: "The real command must start before cancellation",
+      },
+    );
     assert.ok(pid, "The real command must start before cancellation");
     controller.abort(new Error("stop preparation"));
     await rejected;
