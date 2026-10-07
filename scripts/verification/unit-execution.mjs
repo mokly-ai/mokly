@@ -28,10 +28,13 @@ export async function executeUnitTests(repositoryRoot, options) {
 
   let evidence;
   let evidenceError;
+  let reporterUnavailable = false;
   try {
     const raw = await readReport(options.eventPath);
-    if (raw.reporterComplete !== true)
+    if (raw.reporterComplete !== true) {
+      reporterUnavailable = true;
       throw new Error("Node reporter did not complete");
+    }
     if (!Array.isArray(raw.summaries) || !Array.isArray(raw.failures))
       throw new Error("Node reporter output is invalid");
     evidence = {
@@ -75,6 +78,7 @@ export async function executeUnitTests(repositoryRoot, options) {
         sum(raw.summaries, "passed") + evidence.failed + evidence.cancelled;
     }
   } catch (error) {
+    reporterUnavailable ||= error.code === "ENOENT";
     evidenceError = error;
     evidence = {
       observedFiles: [],
@@ -89,6 +93,7 @@ export async function executeUnitTests(repositoryRoot, options) {
   return {
     ...evidence,
     evidenceError,
+    reporterUnavailable,
     durationMs: performance.now() - started,
     outcome: {
       exitCode: outcome.exitCode,
