@@ -1,10 +1,10 @@
 # Shared Example Compilation Snapshot
 
-Status: Active. Milestones 1 to 9 are complete on draft PR
-[#138](https://github.com/mokly-ai/mokly/pull/138); Milestone 10 merges main's
-#163 to #165 and #167 to #169. The plan closes when the PR merges. Review findings 2, 3, 10,
-and 11 stay open for the user to decide; Milestones 7 and 9 list them. Main's
-#165 resolved finding 7.
+Status: Active. Milestones 1 to 10 are complete on draft PR
+[#138](https://github.com/mokly-ai/mokly/pull/138). Milestone 10 merged main's
+#163 to #165 and #167 to #169. The plan closes when the PR merges. Review
+findings 2, 3, 10, and 11 stay open for the user to decide; Milestones 7 and 9
+list them. Main's #165 resolved finding 7.
 
 ## Status And Outcome
 
@@ -493,7 +493,7 @@ and `.context/shared-example-compilation-snapshot/milestone-9.md`. Review
 reports: `.context/shared-example-compilation-snapshot/review.md`. Flaky test:
 `.context/shared-example-compilation-snapshot/flaky/report.md`.
 
-## Milestone 10: Merge main's #163 to #165 and #167 to #169 — in progress
+## Milestone 10: Merge main's #163 to #165 and #167 to #169 — completed
 
 Main fixed remote verification review findings (#164), made the real SIGINT
 test deterministic (#165), fixed the shared example copy on Node 24 (#167),
@@ -513,17 +513,21 @@ merges main and confirms that the snapshot needs no change.
 - [x] Merge `origin/main` at `4727cecc` (#163, README setup steps only) with
       the preservation checks, validate the Markdown, and run the repository
       suite.
-- [ ] Only after the push, review the change with
+- [x] Only after the push, review the change with
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`, then apply the review-fix rule: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest.
   - [x] Fix finding 14 (Low, docs): the status paragraph and the heading no
         longer include #166, which is not on main.
-  - [ ] Re-run the review once on the fix.
+  - [x] Re-run the review once on the fix. The re-review confirmed the finding
+        14 fix and reported finding 15, `Auto-fix: yes`: the evidence line now
+        names the merge 14 audit. The fix round then stopped.
 
 Evidence: `.context/shared-example-compilation-snapshot/merge-13-audit.txt`,
-`.context/shared-example-compilation-snapshot/merges.md` (merge 13), and
-`.context/shared-example-compilation-snapshot/milestone-10.md`.
+`.context/shared-example-compilation-snapshot/merge-14-audit.txt`,
+`.context/shared-example-compilation-snapshot/merges.md` (merges 13 and 14),
+and `.context/shared-example-compilation-snapshot/milestone-10.md`. Review
+reports: `.context/shared-example-compilation-snapshot/review.md`.
 
 ## Post-merge follow-up (non-blocking)
 
