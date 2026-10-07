@@ -1,8 +1,8 @@
 # Remote Verification Review Follow-Up
 
 Status: Active. No pull request exists yet. Milestones 1 through 5 and the
-cleanup review changes are completed. The Testbox workflow passed in
-validation mode. Milestone 6 verification is next. Claude owns the final
+cleanup review changes are completed. Milestone 6 focused checks and the full
+local gate pass. The default remote smoke check is next. Claude owns the final
 review. The user approved the local and default remote gates for this work.
 
 Fix the eleven open findings from the post-push review of
@@ -196,11 +196,13 @@ Evidence: `.context/remote-verification-review-follow-up/milestone-5.md`.
 
 ## Milestone 6: Verification, close-out and review
 
-- [ ] Fetch `origin/main` and merge new commits under the mainline
+Evidence: `.context/remote-verification-review-follow-up/milestone-6.md` and `merge-justifications.md` in the same directory.
+
+- [x] Fetch `origin/main` and merge new commits under the mainline
       preservation rules, if needed.
-- [ ] Run all tests for this change with a 100% pass rate. Run
+- [x] Run all tests for this change with a 100% pass rate. Run
       `cargo fmt --all -- --check`, Clippy and the length lints.
-- [ ] Run `cargo xtask check --executor local`.
+- [x] Run `cargo xtask check --executor local`.
 - [ ] Push, then run the default `cargo xtask check` with the `main` Testbox
       workflow. Require 11/11 commands, 9/9 reports and no active box. This
       also covers the post-merge smoke check of the earlier plan.
