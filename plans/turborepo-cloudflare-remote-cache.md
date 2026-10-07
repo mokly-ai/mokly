@@ -726,6 +726,9 @@ before the merge.
       Run `37672567423` confirms the task path; R2 holds 3 objects (2.31 MB).
 - [x] Update the Delivery Status sections and the Contract Owners documents to
       implemented.
+- [x] Add the exact AGENTS.md rule approved on 2026-10-07: keep one-time proofs
+      under .context, require approval for permanent install/build tests, and
+      prefer static checks and pure-function tests.
 - [x] Run `cargo xtask check`.
 - [x] Run `git add -A`, commit with Conventional Commits, and push.
 - [x] Review the complete local diff against `origin/main` with

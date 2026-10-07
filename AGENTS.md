@@ -9,6 +9,11 @@
   [developer test commands](./docs/protocol/developer-test-commands.md).
 - Tests must not assert elapsed wall-clock time. Use operation counts, captured inputs, event order or fake-clock time.
   Follow [CI Test Timing](./docs/protocol/ci-test-timing.md).
+- Keep one-time proofs out of the permanent test suite. Output-equivalence
+  checks, migration checks, and checks of a third-party tool's own behavior are
+  one-time proofs. Save their evidence under `.context/<plan-name>/`. Do not
+  add a permanent test that runs `npm ci` or a full project build unless the
+  user approves it. Prefer static checks and pure-function tests.
 - Run `cargo xtask check --suite repository` early. Leave complete unit and
   browser suite runs to the complete gate.
 - Run the complete `cargo xtask check` once before saying work is complete.
