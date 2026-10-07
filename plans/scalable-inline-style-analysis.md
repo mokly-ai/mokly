@@ -2013,6 +2013,8 @@ Evidence: `.context/scalable-inline-style-analysis/m12-merge/`.
 - [x] Discovered: main advanced during integration. Merge the dependency-audit,
       test-consolidation and targeted-runner additions after reviewing the
       first merge. Keep two parents and a separate audit for each merge.
+- [x] Discovered: integrate main's plan-history policy and expanded link checks
+      after the implementation checks. Keep the recorded gate blockers pending.
 - [x] Integrate the branch with manifest v9, catalogue v5, review v6 and the
       generated-output layout. Preserve useful analysis and harness coverage.
 - [ ] Align the affected contracts and READMEs. Validate the merged code with
