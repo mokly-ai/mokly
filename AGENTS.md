@@ -65,8 +65,9 @@ and when to read it. Read the doc at that point instead of guessing the rule.
 - A flaky test that the diff adds or changes may be fixed without asking only
   under the flaky-test rule in [`docs/dev/review.md`](./docs/dev/review.md):
   reproduce the flake, name the nondeterminism source, make the test
-  deterministic, keep every assertion, and add no retry, sleep, skip, or
-  longer time limit. Do not fix a flaky test that the diff does not touch;
+  deterministic, keep every assertion, and add no retry, sleep, repeat, skip,
+  quarantine, or longer time limit. Do not fix a flaky test that the diff does
+  not touch;
   report it with its name, failure text, rerun outcome, and suspected source.
   Slow, custom, or low-value tests, gates, lints, and checks stay
   `Auto-fix: no`; ask the user whether to fix or remove each one, and state
@@ -148,8 +149,9 @@ The full rules, commit examples, and the mainline preservation procedure are in
 - Before you merge or rebase, and before and after you commit, run the mainline preservation audit in [`docs/dev/git.md`](./docs/dev/git.md); resolve conflicts path-by-path, and verify the worktree before saying a merge is complete
 - When a change removes or renames a feature, test, fixture, scenario, command,
   or file, search the active plans, `docs/`, and every `README.md` for its name
-  and update each stale reference in the same change. Leave completed plans
-  unchanged; they record history
+  and update each stale reference in the same change, and record each plan
+  edit in the commit or PR description. Leave completed plans unchanged; they
+  record history
 
 ## Bash Tool Timeout Configuration
 
