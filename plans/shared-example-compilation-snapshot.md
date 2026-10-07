@@ -443,7 +443,7 @@ snapshot so that the key and the test copy cover the same inputs.
       layout, and the new root-dependent config field `generatedDir`.
 - [x] Update the snapshot contract for the new inputs, manifest v9, and the
       fixture, and keep `docs/protocol/README.md` at 250 lines.
-- [ ] Run `cargo xtask check`, commit, and push.
+- [x] Run `cargo xtask check`, commit, and push.
 - [ ] Only after the push, review the change with
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`, then apply the review-fix rule: fix the
