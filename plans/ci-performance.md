@@ -27,7 +27,7 @@ Contract owners:
 - [CI and npm release](../docs/protocol/npm-release.md).
 - [Dependency security](../docs/protocol/dependency-security.md).
 - [Local verification](../xtask/README.md).
-- [Developer setup and fixture isolation](../README.md#developer-setup).
+- [Developer setup and fixture isolation](https://github.com/mokly-ai/mokly/blob/3f6ea42/README.md#developer-setup).
 
 ## Measured Baseline
 
