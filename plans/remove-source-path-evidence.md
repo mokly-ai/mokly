@@ -3,7 +3,8 @@
 Status: Active. Milestones 1 to 32 are implemented, verified and pushed through
 `506baeb5`. Milestone 32's review and both fix rounds are complete; its open
 findings wait for the user. Milestone 33 integrates latest main, including
-#160, #156 and #144, as the user asked on 2026-10-07. It is in progress locally.
+#160, #156 and #144, as the user asked on 2026-10-07. Its local work is complete,
+including the later separate merge through #168.
 The reviewer resolved the CSS alias and former-manifest sentinel conflicts
 under the user's main integration instruction. Push and post-push review remain open.
 
@@ -2563,7 +2564,7 @@ movement without another merge. The branch stays local.
 
 - [x] Amend the first merge with the three pending package/plan changes.
       Confirm its two captured parents and review the changed remerge paths.
-- [ ] Audit and merge latest main after `2013d289` as a second two-parent
+- [x] Audit and merge latest main after `2013d289` as a second two-parent
       merge. Resolve every path, preserve #164/#165/#167/#168, review all remerge
       paths, and classify every main-added nonblank line. Remove the duplicate
       Node 24 copy cleanup while retaining main's fix and all controls.
@@ -2574,10 +2575,10 @@ movement without another merge. The branch stays local.
       Keep the incoming statement and the fail-closed scanner unchanged.
 - [x] Align clean-Publish docs and release notes. Keep ordinary archive preview
       capture, plain memory Serve/export and the combined 9/5/6 records.
-- [ ] Run the early repository suite and targeted changed-area tests at 100%.
+- [x] Run the early repository suite and targeted changed-area tests at 100%.
       Then run the complete gate once on the final tree; rerun only failed
       files or suites before a new complete gate. Report unrelated flaky tests.
-- [ ] Fetch main for the final diff check without another merge. Record any
+- [x] Fetch main for the final diff check without another merge. Record any
       later movement and verify the four approved deletions.
 
 - [x] Preserve the added #139, #155, #162 and #161 changes. Keep grouped
@@ -2640,7 +2641,7 @@ movement without another merge. The branch stays local.
       rule evidence, projection-only CSS filtering, root/authored links and
       non-CSS behavior. Repeat the import, declaration-only and full/fast controls.
 
-- [ ] Audit main's additions from the source tip, merge `origin/main` with
+- [x] Audit main's additions from the source tip, merge `origin/main` with
       exactly two parents, resolve conflicts path by path and review every
       remerge-diff path.
 - [x] Combine the formats: main's unreleased manifest v9, catalogue read model
@@ -2653,19 +2654,20 @@ movement without another merge. The branch stays local.
       and ownership headers. Remove this branch's code, tests and docs that
       exist only for the removed transformer or headers, and record each
       removal here as an intended migration.
-- [ ] Compare every line that main added since `dc56e3d4` with the merged tree.
+- [x] Compare every line that main added since `dc56e3d4` with the merged tree.
       Classify each absent line as an intended migration, a move or a loss,
       and restore every loss before the push.
-- [ ] Run build, typecheck, lint, example build/check, docs tests, main's new
-      tests and the branch's focused tests. Run the exact complete unit suite
-      before the complete gate. Keep every assertion and test allowance.
-- [ ] Smoke-test `npm run dev` and the CLI at 390 and 1440 px. Cover Build,
+- [x] Run build, typecheck, lint, example build/check, docs tests, main's new
+      tests and the branch's focused tests. The earlier exact complete unit
+      command passed; under the shutdown continuation, the complete gate
+      supplies final unit/browser verification. Keep assertions and allowances.
+- [x] Smoke-test `npm run dev` and the CLI at 390 and 1440 px. Cover Build,
       Check, component-only and screen CSS rules, a moved component, exported
       Details, a removed-field warning and `build --strict`. Save Chrome
       screenshots under `.context/`. Restore every temporary edit.
-- [ ] Run `cargo xtask check` at 100%. Inspect the diff and the deletions
+- [x] Run `cargo xtask check` at 100%. Inspect the diff and the deletions
       against `origin/main` and record the result.
-- [ ] Run `git add -A` and make the checked local merge commit. Confirm both
+- [x] Run `git add -A` and make the checked local merge commit. Confirm both
       captured parents. Review every remerge path with `GIT_NO_LAZY_FETCH=1`.
       Amend any restoration, keep both parents and review again.
 - [ ] Push the branch after the reviewer checks the local commits.
@@ -2778,5 +2780,12 @@ Clean-Publish wording applies to the CLI; ordinary repository preview capture
 keeps its no-Git rule. The old “Only Check” index claims now include Publish.
 One exact docs-guard exception admits Git’s porcelain v1 status argv. Main’s
 #167 copy cleanup appears once. No unresolved conflict of meaning remains.
+
+All authorized local work is complete. The two separate merges retain their
+captured two-parent history. The latest integrated main is `acac1c73`; the final
+fetch found no later commit. Preservation checks retain every required main
+addition or classify its approved migration or move. Only the four approved
+files are deleted against main. No unresolved merge meaning conflict remains.
+Push and the post-push review remain unchecked, as the user directed.
 
 Evidence: `.context/remove-source-path-evidence/milestone-33.md`.
