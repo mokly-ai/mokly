@@ -177,9 +177,10 @@ fn each_remote_condition_fails_before_the_next_condition() {
             | (7, Err(Error::UnpublishedHead))
             | (8, Err(Error::Interrupted { cleanup: 0 }))
             | (9, Ok(Decision::Remote)) => {}
-            (1..=3, Err(Error::MissingProgram { program, hint })) => {
-                assert_eq!(program, all[stage - 1]);
-                assert!(hint.contains(if stage == 1 {
+            (1..=3, Err(Error::MissingPrograms { programs })) => {
+                assert_eq!(programs.len(), 1);
+                assert_eq!(programs[0].name(), all[stage - 1]);
+                assert!(programs[0].install_hint().contains(if stage == 1 {
                     "https://get.blacksmith.sh"
                 } else {
                     "package manager"
@@ -188,7 +189,12 @@ fn each_remote_condition_fails_before_the_next_condition() {
             (4..=6, Err(Error::Command { .. })) => {}
             (_, result) => panic!("stage={stage}: {result:?}"),
         }
-        assert_eq!(*events.lock().unwrap(), all[..stage.min(7)]);
+        let completed = if (1..=3).contains(&stage) {
+            3
+        } else {
+            stage.min(7)
+        };
+        assert_eq!(*events.lock().unwrap(), all[..completed]);
     }
 }
 

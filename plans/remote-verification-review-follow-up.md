@@ -1,7 +1,7 @@
 # Remote Verification Review Follow-Up
 
 Status: Active. No pull request exists yet. Milestones 1 and 2 are completed.
-The cleanup review changes are completed. Milestone 3 is next.
+The cleanup review changes and Milestone 3 are completed. Milestone 4 is next.
 The user approved those changes and a push after the listed checks.
 
 Fix the eleven open findings from the post-push review of
@@ -156,15 +156,16 @@ Evidence: `.context/remote-verification-review-follow-up/milestone-2-follow-up.m
 
 ## Milestone 3: Availability and subprocess environment
 
-Covers findings 8, 9 and 11.
+Completed. Covers findings 8, 9 and 11.
+Evidence: `.context/remote-verification-review-follow-up/milestone-3.md`.
 
-- [ ] Finding 9: write failing tests for two and three missing programs in
+- [x] Finding 9: write failing tests for two and three missing programs in
       `auto` and `remote` mode, then report all of them in one diagnostic.
-- [ ] Finding 8: write failing `Command::get_envs` tests for both runners,
+- [x] Finding 8: write failing `Command::get_envs` tests for both runners,
       then remove the shared secret list from every xtask subprocess.
-- [ ] Finding 11: change the `chrono` features with `cargo add`. Confirm the
+- [x] Finding 11: change the `chrono` features with `cargo add`. Confirm the
       `<run>` format test and the smaller lockfile.
-- [ ] Run the Rust checks again. Commit.
+- [x] Run the Rust checks again. Commit.
 
 ## Milestone 4: Scripts and workflow
 

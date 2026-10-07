@@ -197,6 +197,8 @@ cargo clippy --workspace --all-targets -- -D warnings
   child process groups on interrupts.
 - [`src/command.rs`](./src/command.rs) defines the injected command-runner
   boundary.
+- [`src/child_environment.rs`](./src/child_environment.rs) defines the shared
+  secret environment list for local commands, remote requests and helpers.
 - [`src/check.rs`](./src/check.rs) defines the complete source, packed-consumer,
   browser, hydration, and Rust verification sequence.
 - [`../scripts/package/browser_graph_analysis.mjs`](../scripts/package/browser_graph_analysis.mjs)

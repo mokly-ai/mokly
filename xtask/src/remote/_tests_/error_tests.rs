@@ -1,6 +1,7 @@
 //! Stable command termination and error-chain wording.
 
 use crate::error;
+use crate::remote::contracts::RequiredProgram;
 use crate::remote::error::{Error, Operation};
 
 #[test]
@@ -24,9 +25,8 @@ fn executor_selection_errors_keep_the_remote_module_prefix() {
         },
         Error::SelectedSuite,
         Error::GithubActions,
-        Error::MissingProgram {
-            program: "ssh",
-            hint: "install ssh",
+        Error::MissingPrograms {
+            programs: vec![RequiredProgram::Ssh],
         },
         Error::UnpublishedHead,
         Error::Captured {

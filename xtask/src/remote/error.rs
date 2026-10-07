@@ -4,7 +4,7 @@ use std::io;
 
 use thiserror::Error;
 
-use crate::remote::contracts::Output;
+use crate::remote::contracts::{Output, RequiredProgram};
 
 /// Remote verification result.
 pub(crate) type Result<T> = std::result::Result<T, Error>;
@@ -56,13 +56,11 @@ pub(crate) enum Error {
     /// Hosted workflows must use the local gate.
     #[error("[xtask/remote] remote execution is unavailable in GitHub Actions")]
     GithubActions,
-    /// Required executable is absent.
-    #[error("[xtask/remote] missing executable `{program}`; {hint}")]
-    MissingProgram {
-        /// Missing program name.
-        program: &'static str,
-        /// Installation instruction.
-        hint: &'static str,
+    /// One or more required executables are absent.
+    #[error("[xtask/remote] missing executables: {}", missing_programs(programs))]
+    MissingPrograms {
+        /// Every missing program in required lookup order.
+        programs: Vec<RequiredProgram>,
     },
     /// GitHub does not contain the local commit.
     #[error("[xtask/remote] local HEAD is not published; push the branch first")]
@@ -156,6 +154,15 @@ pub(crate) enum Error {
         /// Boxes that remain neither stopped nor proven completed.
         cleanup: usize,
     },
+}
+
+/// List each missing program beside its own installation guidance.
+fn missing_programs(programs: &[RequiredProgram]) -> String {
+    programs
+        .iter()
+        .map(|program| format!("`{}`; {}", program.name(), program.install_hint()))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 /// Keep this module's prefix once when an error wraps another remote error.

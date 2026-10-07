@@ -45,6 +45,37 @@ pub(crate) trait Programs: Send + Sync {
     fn find(&self, name: &str) -> Result<bool>;
 }
 
+/// Programs that must be available before remote verification can start.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum RequiredProgram {
+    /// The local Testbox command-line client.
+    Blacksmith,
+    /// File synchronization used by the client.
+    Rsync,
+    /// Secure shell used by the client.
+    Ssh,
+}
+
+impl RequiredProgram {
+    /// The executable name searched on PATH.
+    pub(crate) fn name(self) -> &'static str {
+        match self {
+            Self::Blacksmith => "blacksmith",
+            Self::Rsync => "rsync",
+            Self::Ssh => "ssh",
+        }
+    }
+
+    /// The installation guidance for this missing program.
+    pub(crate) fn install_hint(self) -> &'static str {
+        match self {
+            Self::Blacksmith => "install with curl -fsSL https://get.blacksmith.sh | sh",
+            Self::Rsync => "install rsync with the operating system package manager",
+            Self::Ssh => "install ssh with the operating system package manager",
+        }
+    }
+}
+
 /// Time used by run identifiers, durations and process polling.
 #[cfg_attr(test, unimock::unimock(api = [ClockStampMock, ClockMillisMock, ClockSleepMock, ClockWaitMock]))]
 pub(crate) trait Clock: Send + Sync {

@@ -1,7 +1,7 @@
 //! Trait-backed availability selection with ordered automatic fallback.
 
 use crate::executor::{Decision, Executor, LocalReason};
-use crate::remote::contracts::Dependencies;
+use crate::remote::contracts::{Dependencies, RequiredProgram};
 
 use crate::remote::error::{Error, Result};
 use crate::remote::policy::{Check, ordered_checks};
@@ -69,14 +69,27 @@ impl DefaultSelector {
                     return Ok(Some(LocalReason::NoKey));
                 }
             }
-            Check::Program(program) => {
-                if !dependencies.programs.find(program)? {
-                    let hint = if program == "blacksmith" {
-                        "install with curl -fsSL https://get.blacksmith.sh | sh"
-                    } else {
-                        "install rsync and ssh with the operating system package manager"
-                    };
-                    return Err(Error::MissingProgram { program, hint });
+            Check::Programs => {
+                let mut missing = Vec::new();
+                let mut lookup_error = None;
+                for program in [
+                    RequiredProgram::Blacksmith,
+                    RequiredProgram::Rsync,
+                    RequiredProgram::Ssh,
+                ] {
+                    match dependencies.programs.find(program.name()) {
+                        Ok(true) => {}
+                        Ok(false) => missing.push(program),
+                        Err(error) => {
+                            lookup_error.get_or_insert(error);
+                        }
+                    }
+                }
+                if let Some(error) = lookup_error {
+                    return Err(error);
+                }
+                if !missing.is_empty() {
+                    return Err(Error::MissingPrograms { programs: missing });
                 }
             }
             Check::Version => dependencies
@@ -112,3 +125,7 @@ impl DefaultSelector {
 #[cfg(test)]
 #[path = "_tests_/availability_tests.rs"]
 mod availability_tests;
+
+#[cfg(test)]
+#[path = "_tests_/missing_programs_tests.rs"]
+mod missing_programs_tests;

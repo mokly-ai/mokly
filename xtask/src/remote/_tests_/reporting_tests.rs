@@ -2,22 +2,22 @@
 
 use std::io;
 
+use crate::remote::contracts::RequiredProgram;
 use crate::remote::error::{Error, Operation};
 use crate::remote::reporting::warning;
 
 #[test]
 fn warning_keeps_the_error_module_and_reserves_the_reporter_prefix() {
-    let error = Error::MissingProgram {
-        program: "ssh",
-        hint: "install ssh",
+    let error = Error::MissingPrograms {
+        programs: vec![RequiredProgram::Ssh],
     };
     assert_eq!(
         warning("availability failed", &error),
-        "warning: availability failed: [xtask/remote] missing executable `ssh`; install ssh"
+        "warning: availability failed: [xtask/remote] missing executables: `ssh`; install ssh with the operating system package manager"
     );
     assert_eq!(
         warning("", &error),
-        "warning: [xtask/remote] missing executable `ssh`; install ssh"
+        "warning: [xtask/remote] missing executables: `ssh`; install ssh with the operating system package manager"
     );
 }
 

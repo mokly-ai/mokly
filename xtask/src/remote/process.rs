@@ -10,6 +10,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 
+use crate::child_environment::SECRET_VARIABLES;
 use crate::remote::contracts::{Clock, Interrupt, LogSink, Logs, Output};
 use crate::remote::error::{Error, Operation, Result};
 
@@ -71,23 +72,7 @@ impl Process for SystemProcess {
             Some(path) => Some(self.logs.open(path)?),
             None => None,
         };
-        let mut command = Command::new(&request.program);
-        command
-            .args(&request.args)
-            .current_dir(&request.cwd)
-            .env_remove("BLACKSMITH_ORG_TOKEN")
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .stdin(if request.input.is_some() {
-                Stdio::piped()
-            } else {
-                Stdio::null()
-            });
-        if request.blacksmith {
-            command.env("BLACKSMITH_DISABLE_AUTO_UPDATE", "1");
-        }
-        #[cfg(unix)]
-        command.process_group(0);
+        let mut command = build_command(request);
         let mut child = system(command.spawn(), request.operation)?;
         let stdout = match child.stdout.take() {
             Some(stream) => stream,
@@ -176,11 +161,7 @@ impl SystemProcess {
     fn terminate(&self, child: &mut Child) {
         #[cfg(unix)]
         {
-            let _ = Command::new("kill")
-                .args(["-KILL", "--", &format!("-{}", child.id())])
-                .stdout(Stdio::null())
-                .stderr(Stdio::null())
-                .status();
+            let _ = kill_command(child.id()).status();
         }
         let _ = child.kill();
     }
@@ -219,6 +200,44 @@ impl SystemProcess {
     }
 }
 
+/// Configure a request without starting it or reading ambient state.
+fn build_command(request: &Request) -> Command {
+    let mut command = Command::new(&request.program);
+    command
+        .args(&request.args)
+        .current_dir(&request.cwd)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .stdin(if request.input.is_some() {
+            Stdio::piped()
+        } else {
+            Stdio::null()
+        });
+    if request.blacksmith {
+        command.env("BLACKSMITH_DISABLE_AUTO_UPDATE", "1");
+    }
+    #[cfg(unix)]
+    command.process_group(0);
+    for name in SECRET_VARIABLES {
+        command.env_remove(name);
+    }
+    command
+}
+
+/// Configure a process-group stop without starting the helper.
+#[cfg(unix)]
+fn kill_command(pid: u32) -> Command {
+    let mut command = Command::new("kill");
+    command
+        .args(["-KILL", "--", &format!("-{pid}")])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+    for name in SECRET_VARIABLES {
+        command.env_remove(name);
+    }
+    command
+}
+
 /// Preserve the typed OS cause for this operation.
 fn system<T>(result: std::io::Result<T>, operation: Operation) -> Result<T> {
     match result {
@@ -226,3 +245,7 @@ fn system<T>(result: std::io::Result<T>, operation: Operation) -> Result<T> {
         Err(source) => Err(Error::Io { operation, source }),
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/process_command_tests.rs"]
+mod process_command_tests;
