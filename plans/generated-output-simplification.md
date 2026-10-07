@@ -2052,7 +2052,7 @@ Implements 40 B, 9 B, 41 B, 50 B, 18 A, 16 B and 51 A.
       split. Resolve each conflict, audit paths and titles, smoke the built
       CLI, run the full gate, commit with two parents, review every remerge
       path, and push. Tick this item after the push; start no other TODO here.
-- [ ] Merge the next captured main (`fcc50591`) as a separate two-parent
+- [x] Merge the next captured main (`fcc50591`) as a separate two-parent
       merge under the user's explicit 2026-10-07 approval for #160 and Blacksmith
       Testboxes. Preserve all incoming code, tests and contracts; keep the
       protocol index at 250 lines. Install the CLI under `.context/`, check the
