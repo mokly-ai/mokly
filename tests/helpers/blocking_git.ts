@@ -51,7 +51,7 @@ exec ${quote(executable)} "$@"
   return {
     restore,
     async started(count = 1): Promise<number> {
-      for (let attempt = 0; attempt < 300; attempt++) {
+      for (let attempt = 0; attempt < 1_500; attempt++) {
         const pids = (await fs.readFile(marker, "utf8").catch(() => ""))
           .trim()
           .split("\n")

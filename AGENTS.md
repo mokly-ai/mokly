@@ -5,6 +5,8 @@
 - When adding new packages or services, always attempt to build them to check for errors
 - Everything must be fully tested
 - Search for and run relevant tests after making changes, ensure all tests pass (100% pass rate required)
+- Tests must not assert elapsed wall-clock time. Use operation counts, captured inputs, event order or fake-clock time.
+  Follow [CI Test Timing](./docs/protocol/ci-test-timing.md).
 - Run `cargo xtask check` before saying work is complete; if it cannot be run, explain the blocker and the checks already run
 - After tests and `cargo xtask check` pass, run `git add -A`, commit the
   completed work using Conventional Commits, and push the branch; newly created
@@ -200,7 +202,7 @@
 - Mockup screens must not contain implementation hints, engineering notes, or
   explanatory annotations inside the rendered screen area. Put implementation
   hints below the screen or in a separate non-screen section.
-- Mokly's example catalogue under `examples/basic/generated/` is generated from
+- Mokly's example catalogue under `examples/basic/mokly-generated/` is generated from
   the structured definitions under `examples/basic/specs/` using
   `examples/basic/mokly.config.ts`. Canonical entry modules end in `.mockup.ts`
   or `.mockup.tsx`; shared TSX components and page-render helpers live alongside
@@ -209,10 +211,11 @@
   changing example entries, the renderer, configuration, or configured styles,
   run `npm run build`, run `npm run example:build`, run
   `npm run example:check`, and visually smoke-test the changed pages through
-  `npm run dev`. The example uses the default derived output mode: generated
-  HTML and `mokly-manifest.json` under `examples/basic/generated/` are ignored
-  local artifacts validated by `npm run example:check`. Commit only the tracked
-  authored CSS there; never force-add ignored generated output.
+  `npm run dev`. `npm run example:check` validates the compilation and ignores
+  the untracked local tree under `examples/basic/mokly-generated/`. Never commit
+  anything under that generated directory. Commit authored files normally,
+  including specs, configuration and CSS under `examples/basic/`,
+  `examples/basic/design-library/` and `examples/basic/src/components/workspace-note/`.
 - Do not hand-edit Mokly-owned generated HTML or `mokly-manifest.json` as source
   of truth. Update the entry, imported helper, renderer, or shared component
   first, then regenerate the example catalogue.

@@ -75,11 +75,9 @@ test("renderer @import at EOF keeps its closure out of the entry bundle", async 
     '\nimport "./token.css"; import "./entry.css";',
   );
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
-  const renderer = compiled.outputs.get(
-    "mokly-generated/styles/renderer.tsx.css",
-  ) as string;
+  const renderer = compiled.outputs.get("styles/renderer.tsx.css") as string;
   const entry = compiled.outputs.get(
-    "mokly-generated/styles/entries/fixture.mockup.tsx.css",
+    "styles/entries/fixture.mockup.tsx.css",
   ) as string;
   assert.match(renderer, /\.token/);
   assert.doesNotMatch(entry, /\.token/);

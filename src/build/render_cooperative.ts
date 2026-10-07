@@ -8,6 +8,7 @@ import {
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { isComponentVariantDefinition } from "../components/types.js";
+import type { PublicFilePolicy } from "../config/public_policy.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import type { LoadedGraph } from "./load_graph.js";
@@ -22,6 +23,7 @@ export async function renderCooperatively(
   componentViews: Map<string, ComponentViewRecord>,
   checkpoint: () => Promise<void>,
   pending: PendingGeneratedFiles,
+  policy: PublicFilePolicy,
 ): Promise<Map<string, string>> {
   const outputs = new Map<string, string>();
   const render = async (
@@ -36,7 +38,7 @@ export async function renderCooperatively(
       graph.renderWithComponents,
       componentViews,
       selection,
-      { routes: graph.stylesheetRoutes, pending },
+      { routes: graph.stylesheetRoutes, pending, policy },
     ))
       outputs.set(route, content);
   };

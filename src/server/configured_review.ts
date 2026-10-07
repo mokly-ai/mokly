@@ -1,4 +1,5 @@
 /** Configure Serve's repository-backed complete and selected Review providers. */
+
 import type { ResolvedConfig } from "../config/types.js";
 import type { ChangeEvidence } from "../review/change_evidence.js";
 import { RepositoryRemovedPagePreview } from "../review/page_preview.js";
@@ -13,7 +14,7 @@ import type {
 import type { ReviewArtifactProvider } from "./review_generations.js";
 import type { ReviewRepositorySource } from "./review_repository.js";
 
-/** How Browse obtains the Review artifact it serves under `/__mokly/diffs/`. */
+/** How Browse obtains the Review artifact it serves under `/mokly-viewer/diffs/`. */
 export interface ServedReview extends ReviewArtifactProvider {
   /** Comparison base ref, shown when the comparison cannot be generated. */
   base: string;
@@ -33,10 +34,7 @@ export function configuredServedReview(
   return {
     base,
     repository,
-    selected: new RepositorySelectedReview(
-      config,
-      "current" in git ? undefined : git.reader,
-    ),
+    selected: new RepositorySelectedReview(config, () => repository().reader),
     pagePreview: {
       generate: (source, selection, signal) =>
         new RepositoryRemovedPagePreview(config, repository().reader).generate(
@@ -51,7 +49,6 @@ export function configuredServedReview(
         base,
         config.review.outDir,
         repository(),
-        undefined,
         options.changedPathExclusions,
         changeEvidence,
       );

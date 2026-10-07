@@ -5,17 +5,17 @@ import type {
   ChangedEntry,
   EntryChangeReason,
   Manifest,
-  ReviewResultV5,
+  ReviewResultV6,
 } from "../../packages/viewer/dist/data.js";
 
 /** Sorted change paths, retaining duplicates so exact assertions reject them. */
-export function changedEntryPaths(result: ReviewResultV5): string[] {
+export function changedEntryPaths(result: ReviewResultV6): string[] {
   return result.changes.map(changePath).sort();
 }
 
 /** Exact reasons for an entry; missing or duplicate entries fail the test. */
 export function reasonsOf(
-  result: ReviewResultV5,
+  result: ReviewResultV6,
   path: string,
 ): readonly EntryChangeReason[] {
   const changes = result.changes.filter(
@@ -28,7 +28,7 @@ export function reasonsOf(
 }
 
 /** Sorted component identities that actually affect at least one consumer. */
-export function impactingIds(result: ReviewResultV5): string[] {
+export function impactingIds(result: ReviewResultV6): string[] {
   return [
     ...new Set(result.affectedConsumers.map((item) => item.changedComponentId)),
   ].sort();
@@ -36,7 +36,7 @@ export function impactingIds(result: ReviewResultV5): string[] {
 
 /** Sorted screen consumers for one changed component, never another owner. */
 export function screenConsumersOf(
-  result: ReviewResultV5,
+  result: ReviewResultV6,
   changedComponentId: string,
 ): string[] {
   return result.affectedConsumers
@@ -51,7 +51,7 @@ export function screenConsumersOf(
 
 /** Saved variants of a named component consumer for one changed component. */
 export function usageVariantsOf(
-  result: ReviewResultV5,
+  result: ReviewResultV6,
   changedComponentId: string,
   consumerPath: string,
 ): string[] {
@@ -71,7 +71,7 @@ export function usageVariantsOf(
 
 /** Unique component-id chains for one changed component and named consumer. */
 export function usageChainsOf(
-  result: ReviewResultV5,
+  result: ReviewResultV6,
   changedComponentId: string,
   consumerPath: string,
 ): string[][] {
@@ -91,7 +91,7 @@ export function usageChainsOf(
 
 /** Sorted entries whose dependency reasons name this exact stylesheet path. */
 export function stylesheetScope(
-  result: ReviewResultV5,
+  result: ReviewResultV6,
   stylesheetPath: string,
 ): string[] {
   return result.changes

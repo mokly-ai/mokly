@@ -13,7 +13,12 @@ export const sharedDesignStylesheets = [
 
 /** Owned stylesheet path for a shared design library component. */
 export function libraryStylesheetPath(group: string, slug: string): string {
-  return `examples/basic/generated/design-library/${group}/${slug}.css`;
+  return `examples/basic/design-library/${group}/${slug}.css`;
+}
+
+/** Authored path for one of the shared design stylesheets. */
+export function sharedStylesheetPath(stylesheet: string): string {
+  return `examples/basic/${stylesheet}`;
 }
 
 /** `body` is a kept global selector, so each owned sheet retains evidence. */

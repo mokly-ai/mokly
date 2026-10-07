@@ -14,16 +14,35 @@ import type {
   BaselineProcessResult,
   BaselineProcessRunner,
 } from "../../dist/baseline/types.js";
+import { gitBlobHash } from "../../dist/registry/blob_hash.js";
 
 import { MemoryBaselineFileSystem } from "./baseline_memory.js";
 
 export const baselineCommit = "a".repeat(40);
 export const baselineManifest = {
-  schemaVersion: 8 as const,
+  schemaVersion: 9 as const,
   folders: [],
   generatedBy: "mokly",
-  entries: [],
-  sourceFiles: [],
+  entries: [
+    {
+      kind: "page",
+      path: "page",
+      title: "Page",
+      description: "Baseline page",
+      relatedDocs: [],
+      declaredDependencies: [],
+      sourcePath: "catalogue.txt",
+    },
+  ],
+  sourceFiles: ["catalogue.txt"],
+  assetClosure: [],
+  blobHashAlgorithm: "sha1",
+  generatedFiles: [
+    {
+      path: "page/index.html",
+      blobHash: gitBlobHash(Buffer.from("<html>Baseline</html>"), "sha1"),
+    },
+  ],
 };
 export const success: BaselineProcessResult = {
   exitCode: 0,
@@ -90,12 +109,14 @@ export function baselineFixture() {
               : Buffer.alloc(0),
         };
       await fs.mkdir(path.join(request.cwd, "mockups"));
+      await fs.mkdir(path.join(request.cwd, "mockups/mokly-generated"));
+      await fs.mkdir(path.join(request.cwd, "mockups/mokly-generated/page"));
       await fs.write(
-        path.join(request.cwd, "mockups/mokly-manifest.json"),
+        path.join(request.cwd, "mockups/mokly-generated/mokly-manifest.json"),
         Buffer.from(JSON.stringify(baselineManifest)),
       );
       await fs.write(
-        path.join(request.cwd, "mockups/page.html"),
+        path.join(request.cwd, "mockups/mokly-generated/page/index.html"),
         Buffer.from("<html>Baseline</html>"),
       );
       return success;

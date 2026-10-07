@@ -1,10 +1,9 @@
-import path from "node:path";
-
 import { minimatch } from "minimatch";
 
 import type { ColorScheme, ComponentViewRecord } from "@mokly/viewer";
 import type { ArtifactView } from "@mokly/viewer/data";
 import {
+  GENERATED_DIRECTORY,
   entryRoute,
   documentRoute,
   effectiveColorSchemes,
@@ -20,17 +19,14 @@ import {
   isComponentVariantDefinition,
   type ComponentDefinition,
 } from "../components/types.js";
-import {
-  isPublicStaticFile,
-  publicFileFailureReason,
-} from "../config/public_files.js";
+import { PublicFilePolicy } from "../config/public_policy.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { documentTemplate } from "../documents/template.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { Renderer } from "../renderer/types.js";
 
-import { generatedHeader } from "./ownership.js";
+import { GENERATED_MARKER } from "./generated_marker.js";
 import { renderPage } from "./render_page.js";
 import { stylesheetHref, type StyleDelivery } from "./styles/links.js";
 import { isGeneratedRoute } from "./styles/routes.js";
@@ -69,7 +65,7 @@ export function renderFragments(
         addOutput(
           outputs,
           route,
-          generatedHeader(entry.sourceRelativePath) +
+          `${GENERATED_MARKER}\n` +
             documentTemplate(entry.title, entry.body, colorScheme),
         );
         fragmentViews.set(route, { colorScheme, viewport: "desktop" });
@@ -136,7 +132,7 @@ export function renderFragments(
                 ...output.view,
                 styles: rebaseStyleOwnership(
                   rendered,
-                  generatedHeader(entry.sourceRelativePath) + rendered,
+                  GENERATED_MARKER + rendered,
                   output.view.styles,
                 ),
               });
@@ -167,7 +163,7 @@ export function renderFragments(
           addOutput(
             outputs,
             route,
-            `${generatedHeader(entry.sourceRelativePath)}${serializeReviewSentinels(rendered)}`,
+            `${GENERATED_MARKER}${serializeReviewSentinels(rendered)}`,
           );
           fragmentViews.set(route, { colorScheme, viewport });
         }
@@ -211,18 +207,20 @@ export function stylesheetsFor(
   ];
   const local = configured.map((stylesheet) => {
     if (/^https?:\/\//.test(stylesheet)) return stylesheet;
-    const absolute = path.resolve(config.mockupsDir, stylesheet);
-    if (
-      !styles?.pending.has(stylesheet) &&
-      (isGeneratedRoute(stylesheet) || !isPublicStaticFile(absolute, config))
-    ) {
-      const denial = publicFileFailureReason(absolute, config);
-      throw new MoklyError(
-        "build-invalid",
-        `${catalogueRoute}: ${denial ? `stylesheet ${stylesheet} ${denial}` : `stylesheet does not exist: ${stylesheet}`}`,
+    if (!styles?.pending.has(stylesheet)) {
+      const decision = (styles?.policy ?? new PublicFilePolicy(config)).inspect(
+        stylesheet,
       );
+      if (isGeneratedRoute(stylesheet) || decision.kind !== "public") {
+        const denial =
+          decision.kind === "private" ? decision.reason : undefined;
+        throw new MoklyError(
+          "build-invalid",
+          `${catalogueRoute}: ${denial ? `stylesheet ${stylesheet} ${denial}` : `stylesheet does not exist: ${stylesheet}`}`,
+        );
+      }
     }
-    return stylesheetHref(viewPath, stylesheet);
+    return stylesheetHref(`${GENERATED_DIRECTORY}/${viewPath}`, stylesheet);
   });
   for (const root of [config.renderer, entryRoot]) {
     const route = root && styles?.routes.get(root);

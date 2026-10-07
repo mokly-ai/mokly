@@ -2,9 +2,11 @@ import type {
   ManifestComponent,
   ManifestComponentVariant,
 } from "../../packages/viewer/dist/components/manifest_types.js";
-import type { ManifestV8 } from "../../packages/viewer/dist/registry/types.js";
-import type { ReviewResultV5 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ManifestV9 } from "../../packages/viewer/dist/registry/types.js";
+import type { ReviewResultV6 } from "../../packages/viewer/dist/review/component_types.js";
 import type { ViewReview } from "../../packages/viewer/dist/review/types.js";
+
+import { currentManifest } from "./current_manifest.js";
 
 function variant(id: string, title: string): ManifestComponentVariant {
   return {
@@ -44,15 +46,15 @@ export const component: ManifestComponent = {
   title: "Badge",
 };
 
-export const componentManifest: ManifestV8 = {
+export const componentManifest: ManifestV9 = currentManifest({
   entries: [component, DEFAULT_VARIANT, SECOND_VARIANT],
   generatedBy: "mokly",
-  schemaVersion: 8 as const,
+  schemaVersion: 9,
   folders: [],
   sourceFiles: [component.sourcePath],
-};
+});
 
-export const componentBaseline: ManifestV8 = {
+export const componentBaseline: ManifestV9 = {
   ...componentManifest,
   entries: [component, DEFAULT_VARIANT, SECOND_VARIANT, REMOVED_VARIANT],
 };
@@ -70,16 +72,16 @@ export const screen = {
   useCasePaths: [],
 } as const;
 
-export const screenManifest: ManifestV8 = {
+export const screenManifest: ManifestV9 = currentManifest({
   entries: [screen],
   generatedBy: "mokly",
-  schemaVersion: 8 as const,
+  schemaVersion: 9,
   folders: [],
   sourceFiles: [screen.sourcePath],
-};
+});
 
 /** A v3 comparison whose only material difference is in dark renders. */
-export function darkOnlyResult(state: "changed" | "unchanged"): ReviewResultV5 {
+export function darkOnlyResult(state: "changed" | "unchanged"): ReviewResultV6 {
   return {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
@@ -88,7 +90,7 @@ export function darkOnlyResult(state: "changed" | "unchanged"): ReviewResultV5 {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     screens: [
       {
         after: { path: screen.path, title: screen.title },
@@ -125,7 +127,7 @@ function views(
   ]);
 }
 
-export function componentVariantResult(): ReviewResultV5 {
+export function componentVariantResult(): ReviewResultV6 {
   return {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
@@ -169,7 +171,7 @@ export function componentVariantResult(): ReviewResultV5 {
       },
     ],
     ignoredImpact: [],
-    schemaVersion: 5 as const,
+    schemaVersion: 6 as const,
     screens: [],
     sharedImpact: [],
   };

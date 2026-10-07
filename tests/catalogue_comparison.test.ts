@@ -1,11 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ConfiguredGitCommandRunner } from "../dist/config/git.js";
-import { CommittedRepository } from "../dist/review/git.js";
 import { configuredServedReview } from "../dist/server/configured_review.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 
+import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { createExportFixture } from "./helpers/export_fixture.js";
 
 test("Serve pins only a matching complete comparison and immutable reads never regenerate it", async (t) => {
@@ -14,7 +13,7 @@ test("Serve pins only a matching complete comparison and immutable reads never r
   const review = configuredServedReview(
     fixture.config,
     "origin/main",
-    new CommittedRepository(new ConfiguredGitCommandRunner(fixture.config)),
+    committedReviewRepository(fixture.config),
   );
   const generate = review.generate.bind(review);
   let generations = 0;
@@ -29,11 +28,11 @@ test("Serve pins only a matching complete comparison and immutable reads never r
   });
   t.after(() => server.close());
   const read = async () =>
-    (await fetch(`${server.url}/__mokly/catalogue.json`)).json();
+    (await fetch(`${server.url}/mokly-viewer/catalogue.json`)).json();
   const initial = await read();
   assert.equal(initial.comparisonUrl, null);
   const selected = await fetch(
-    `${server.url}/__mokly/diffs/review.json?path=home`,
+    `${server.url}/mokly-viewer/diffs/review.json?path=home`,
   );
   assert.equal(selected.status, 200);
   assert.equal(
@@ -41,13 +40,13 @@ test("Serve pins only a matching complete comparison and immutable reads never r
     null,
     "a selected response cannot represent all entries",
   );
-  const response = await fetch(`${server.url}/__mokly/diffs/review.json`);
+  const response = await fetch(`${server.url}/mokly-viewer/diffs/review.json`);
   assert.equal(response.status, 200);
   const bytes = await response.text();
   const pinned = await read();
   assert.match(
     pinned.comparisonUrl,
-    /^__mokly\/diffs\/__generations\/[a-f0-9]{64}\/review\.json$/,
+    /^mokly-viewer\/diffs\/generations\/[a-f0-9]{64}\/review\.json$/,
   );
   assert.equal(pinned.revision.content, initial.revision.content);
   assert.ok(pinned.revision.evidence > initial.revision.evidence);
@@ -67,7 +66,7 @@ test("Serve pins only a matching complete comparison and immutable reads never r
     bytes,
   );
   const unknown = await fetch(
-    `${server.url}/__mokly/diffs/__generations/${"f".repeat(64)}/review.json`,
+    `${server.url}/mokly-viewer/diffs/generations/${"f".repeat(64)}/review.json`,
   );
   assert.equal(unknown.status, 404);
   assert.equal(generations, 1);
@@ -79,7 +78,7 @@ test("a complete comparison finishing after an accepted update cannot pin stale 
   const review = configuredServedReview(
     fixture.config,
     "origin/main",
-    new CommittedRepository(new ConfiguredGitCommandRunner(fixture.config)),
+    committedReviewRepository(fixture.config),
   );
   const generate = review.generate.bind(review);
   const started = signal();
@@ -98,12 +97,12 @@ test("a complete comparison finishing after an accepted update cannot pin stale 
     resume.resolve();
     await server.close();
   });
-  const response = fetch(`${server.url}/__mokly/diffs/review.json`, {
+  const response = fetch(`${server.url}/mokly-viewer/diffs/review.json`, {
     redirect: "manual",
   });
   await started.promise;
   server.publishUpdate({ kind: "evidence", changedEntries: [], version: 2 });
-  const url = `${server.url}/__mokly/catalogue.json`;
+  const url = `${server.url}/mokly-viewer/catalogue.json`;
   const accepted = await (await fetch(url)).text();
   resume.resolve();
   assert.equal((await response).status, 302);

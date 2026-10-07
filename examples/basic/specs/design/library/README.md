@@ -112,7 +112,7 @@ retain that caller's ownership.
 ## Styles And Hosts
 
 `metadata.ts` declares exact ownership of a component's `.view.tsx` module and
-`generated/design-library/{group}/{slug}.css`. Keep registration, saved fixtures,
+`examples/basic/design-library/{group}/{slug}.css`. Keep registration, saved fixtures,
 controls metadata, shared helpers and navigation tables out of those dependencies.
 An example-only edit must not report implementation impact on every consumer.
 
@@ -190,10 +190,10 @@ owner chains, guard migrated composition points, and edit actual source files in
 isolated copies. They distinguish implementation changes, saved metadata changes,
 screen inputs/slots/order, exclusive CSS and conservative global dependencies.
 Serve and comparison share the same classification and bounded baseline reads.
-Full-catalogue browser fixtures share a five-minute setup budget to build the
-packages and example or the historical baseline, export every generated view
-and verify input stability. The cold preview-preparation spec uses a dedicated
-fixture so its build has that budget too. Browser interactions use the default
+Full-catalogue browser fixtures retain a 600-second fixture budget. Global setup
+currently prepares one rebuilt example baseline and shares its cache with the
+export fixtures; the approved fixture change will use committed output there.
+One cold-baseline test and the cold preview-preparation test keep real rebuilds. Browser interactions use the default
 one-minute limit, and server readiness keeps its own deadline.
 
 See the [adoption contract](../../../../../docs/protocol/mokly-design-components.md)

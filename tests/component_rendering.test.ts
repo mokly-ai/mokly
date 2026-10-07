@@ -23,7 +23,7 @@ export default function render(input) {
   return { html, styles: [{ startOffset: html.indexOf(css), endOffset: html.indexOf(css) + css.length, componentIds: ["action"] }], resources: [{ path: "action.css", componentIds: ["action"] }] };
 }`;
 
-test("component style ownership rebases through generated headers while preserving rendered CSS", async (t) => {
+test("component style ownership rebases through the generated notice while preserving rendered CSS", async (t) => {
   const fixture = await createFixture(componentEntrySource(), {
     extraConfig: 'renderer: "renderer.tsx",',
   });
@@ -56,7 +56,7 @@ test("component style ownership rebases through generated headers while preservi
   );
   await assert.rejects(compileCatalogue(config), /owners must render/);
   assert.equal(
-    await fs.readFile(path.join(fixture.mockupsDir, mobileView), "utf8"),
+    await fs.readFile(path.join(config.generatedDir, mobileView), "utf8"),
     html,
   );
 });

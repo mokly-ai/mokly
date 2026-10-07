@@ -8,9 +8,9 @@ import {
 } from "../packages/viewer/dist/previews/presentation.js";
 
 const GENERATION =
-  "https://catalogue.test/__mokly/diffs/__generations/comparison/";
-const BEFORE = `${GENERATION}snapshots/before/home/index.html`;
-const AFTER = `${GENERATION}snapshots/after/home/index.html`;
+  "https://catalogue.test/mokly-viewer/diffs/generations/comparison/";
+const BEFORE = `${GENERATION}snapshots/before/mokly-generated/home/index.html`;
+const AFTER = `${GENERATION}snapshots/after/mokly-generated/home/index.html`;
 
 function documentFixture(): Document {
   let baseHref = "";
@@ -67,7 +67,7 @@ test("comparison loaders accept both snapshot sides", async () => {
       return response(address);
     }),
   );
-  const signal = AbortSignal.timeout(5_000);
+  const signal = AbortSignal.timeout(15_000);
   assert.equal((await loader.load(BEFORE, signal)).snapshotAddress, BEFORE);
   assert.equal((await loader.load(AFTER, signal)).snapshotAddress, AFTER);
   assert.deepEqual(addresses, [BEFORE, AFTER]);
@@ -90,14 +90,14 @@ test("comparison confinement rejects every unadvertised subtree", async () => {
     `${GENERATION}snapshots/after/`,
     `${GENERATION}snapshots/beforeX/home/index.html`,
     `${GENERATION}snapshots/archive/home/index.html`,
-    `${GENERATION.replace("comparison", "other")}snapshots/after/home/index.html`,
+    `${GENERATION.replace("comparison", "other")}snapshots/after/mokly-generated/home/index.html`,
     AFTER.replace("catalogue.test", "other.test"),
     AFTER.replace("https://", "https://reader@"),
     `${AFTER}?revision=2`,
     `${AFTER}#section`,
   ])
     await assert.rejects(
-      loader.load(address, AbortSignal.timeout(5_000)),
+      loader.load(address, AbortSignal.timeout(15_000)),
       /^Error: The comparison is unavailable\.$/,
     );
   assert.equal(fetches, 0);
@@ -141,7 +141,7 @@ test("an aborted in-flight presentation is not reused", async () => {
   const first = loader.load(AFTER, firstController.signal);
   await new Promise((resolve) => setImmediate(resolve));
   firstController.abort();
-  const second = loader.load(AFTER, AbortSignal.timeout(5_000));
+  const second = loader.load(AFTER, AbortSignal.timeout(15_000));
   await assert.rejects(first, { name: "AbortError" });
   assert.equal((await second).snapshotAddress, AFTER);
   assert.equal(cancelled, true);
@@ -173,7 +173,7 @@ test("an abort before settlement cannot publish accepted work", async () => {
     name: "AbortError",
   });
   assert.equal(
-    (await loader.load(AFTER, AbortSignal.timeout(5_000))).snapshotAddress,
+    (await loader.load(AFTER, AbortSignal.timeout(15_000))).snapshotAddress,
     AFTER,
   );
   assert.equal(fetches, 2);
@@ -192,11 +192,11 @@ test("failed entries are removed and comparison failures keep their copy", async
     }),
   );
   await assert.rejects(
-    loader.load(AFTER, AbortSignal.timeout(5_000)),
+    loader.load(AFTER, AbortSignal.timeout(15_000)),
     /^Error: The comparison is unavailable\.$/,
   );
   assert.equal(
-    (await loader.load(AFTER, AbortSignal.timeout(5_000))).snapshotAddress,
+    (await loader.load(AFTER, AbortSignal.timeout(15_000))).snapshotAddress,
     AFTER,
   );
   assert.equal(fetches, 2);

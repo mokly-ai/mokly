@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import {
+  VIEWER_DIRECTORY,
   parseStaticDelivery,
   providerNormalizedHtmlPath,
   viewHref,
@@ -17,12 +18,6 @@ import { advertisePublicationShell } from "../../dist/publication/shell_previews
 
 import { comparisonMetadata } from "./comparisons.mjs";
 import { normalizeProviderHtmlAttributes } from "./html_paths.mjs";
-
-/** Adapter metadata; replacement authority comes only from export schema 2. */
-const previewMarker = {
-  marker: ".mokly-preview-artifact",
-  contents: "schemaVersion=1\n",
-};
 
 /** Share the exporter's alias checks, ownership inventory, and deployment identity. */
 export async function stagePreviewArtifact(
@@ -40,13 +35,15 @@ export async function stagePreviewArtifact(
     ...manifest.entries,
     ...removed.filter((entry) => !currentPaths.has(entry.path)),
   ];
-  const delivery = parseStaticDelivery({
-    schemaVersion: 3,
+  const parsedDelivery = parseStaticDelivery({
+    schemaVersion: 5,
     deploymentId: STAGED_DEPLOYMENT_ID,
     canonicalPath: "/",
     comparisonUrl: comparison ? `/${comparison.directory}/review.json` : null,
   });
-  if (!delivery) throw new Error("Invalid preview delivery metadata");
+  if (parsedDelivery.kind !== "valid")
+    throw new Error("Invalid preview delivery metadata");
+  const delivery = parsedDelivery.value;
   const shells = new Map();
   const addShell = (name, canonicalPath, source = name) => {
     const bytes = files.get(source);
@@ -82,7 +79,10 @@ export async function stagePreviewArtifact(
     const normalized = providerNormalizedHtmlPath(pathname);
     if (name.startsWith("static/") && normalized && !normalized.endsWith("/"))
       aliases.set(normalized.slice(1), name);
-    if (name.endsWith(".html") && !name.startsWith("__mokly/diffs/"))
+    if (
+      name.endsWith(".html") &&
+      !name.startsWith(`${VIEWER_DIRECTORY}/diffs/`)
+    )
       files.set(
         name,
         normalizeProviderHtmlAttributes(Buffer.from(bytes).toString("utf8")),
@@ -93,6 +93,5 @@ export async function stagePreviewArtifact(
     : undefined;
   files.set("_redirects", metadata ? `${metadata.redirect}\n` : "\n");
   if (metadata) files.set("_headers", metadata.headers);
-  files.set(previewMarker.marker, previewMarker.contents);
   await stageExport(stage, files, shells, aliases);
 }

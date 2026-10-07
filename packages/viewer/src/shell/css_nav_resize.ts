@@ -1,5 +1,7 @@
 /** Desktop navigation resize affordance and interaction states. */
 
+import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
+
 /** Styles for the navigation split-panel separator. */
 export const SHELL_NAV_RESIZE_CSS = `
 .mbk-nav-resize {
@@ -19,7 +21,7 @@ export const SHELL_NAV_RESIZE_CSS = `
 }
 
 html[data-mokly-hydrated] .mbk-nav[data-resize-ready] .mbk-nav-resize,
-:scope.mokly-viewer .mbk-nav[data-resize-ready] .mbk-nav-resize {
+:scope.${VIEWER_DIRECTORY} .mbk-nav[data-resize-ready] .mbk-nav-resize {
   display: block;
 }
 
@@ -65,7 +67,7 @@ body.mbk-nav-resizing iframe,
 
 @media (max-width: 56.25rem) {
   html[data-mokly-hydrated] .mbk-nav[data-resize-ready] .mbk-nav-resize,
-  :scope.mokly-viewer .mbk-nav[data-resize-ready] .mbk-nav-resize {
+  :scope.${VIEWER_DIRECTORY} .mbk-nav[data-resize-ready] .mbk-nav-resize {
     display: none;
   }
 }

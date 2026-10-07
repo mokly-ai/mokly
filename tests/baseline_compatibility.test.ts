@@ -44,8 +44,7 @@ test("Serve reports an earlier v7 baseline once and keeps All available", async 
 });
 
 for (const baseline of [
-  { name: "v7", version: 7 as const },
-  { name: "legacy manifest name", legacyName: "mokabook-manifest.json" },
+  ...[2, 3, 4, 5, 6, 7, 8].map((version) => ({ name: `v${version}`, version })),
 ]) {
   test(`export treats an earlier ${baseline.name} baseline as unavailable`, async (t) => {
     const fixture = await createExportFixture();
@@ -63,14 +62,16 @@ for (const baseline of [
     assert.equal(result.comparisonUrl, null);
     const catalogue = JSON.parse(
       await fs.readFile(
-        path.join(result.outDir, "__mokly/catalogue.json"),
+        path.join(result.outDir, "mokly-viewer/catalogue.json"),
         "utf8",
       ),
     );
     assert.equal(catalogue.changesStatus, "unavailable");
     assert.equal(catalogue.comparisonUrl, null);
     assert.equal(
-      (await fs.readdir(path.join(result.outDir, "__mokly"))).includes("diffs"),
+      (await fs.readdir(path.join(result.outDir, "mokly-viewer"))).includes(
+        "diffs",
+      ),
       false,
     );
     assert.deepEqual(messages, [EARLIER_BASELINE_LINE]);
@@ -149,10 +150,10 @@ test("publish uploads current-only output for an earlier baseline", async (t) =>
   assert.equal(manifest.baseSha, null);
 });
 
-test("a v9 baseline stays invalid and never uses earlier-version copy", async (t) => {
+test("a v10 baseline stays invalid and never uses earlier-version copy", async (t) => {
   const fixture = await createExportFixture();
   t.after(() => fixture.close());
-  await installBaseline(fixture, { version: 9 });
+  await installBaseline(fixture, { version: 10 });
   const messages: string[] = [];
   await assert.rejects(
     exportCatalogue(fixture.config, {
@@ -170,10 +171,10 @@ test("a v9 baseline stays invalid and never uses earlier-version copy", async (t
   assert.deepEqual(messages, []);
 });
 
-test("Serve reports v9 through its ordinary safe diagnostic", async (t) => {
+test("Serve reports v10 through its ordinary safe diagnostic", async (t) => {
   const fixture = await createExportFixture();
   t.after(() => fixture.close());
-  await installBaseline(fixture, { version: 9 });
+  await installBaseline(fixture, { version: 10 });
   const output: string[] = [];
   const running = await serve(
     fixture.config,
@@ -197,7 +198,7 @@ test("Serve reports v9 through its ordinary safe diagnostic", async (t) => {
   );
 });
 
-test("a controlled v8 baseline still produces Changes", async (t) => {
+test("a controlled v9 baseline still produces Changes", async (t) => {
   const fixture = await createExportFixture();
   t.after(() => fixture.close());
   await fs.writeFile(
@@ -211,7 +212,7 @@ test("a controlled v8 baseline still produces Changes", async (t) => {
   assert.ok(result.comparisonUrl);
   const catalogue = JSON.parse(
     await fs.readFile(
-      path.join(result.outDir, "__mokly/catalogue.json"),
+      path.join(result.outDir, "mokly-viewer/catalogue.json"),
       "utf8",
     ),
   );
@@ -220,21 +221,12 @@ test("a controlled v8 baseline still produces Changes", async (t) => {
 
 async function installBaseline(
   fixture: Awaited<ReturnType<typeof createExportFixture>>,
-  baseline:
-    | { version: number; legacyName?: never }
-    | { legacyName: string; version?: never },
+  baseline: { version: number },
 ): Promise<void> {
-  const canonical = path.join(fixture.mockupsDir, "mokly-manifest.json");
-  if (baseline.legacyName) {
-    await fs.rename(
-      canonical,
-      path.join(fixture.mockupsDir, baseline.legacyName),
-    );
-  } else {
-    const manifest = JSON.parse(await fs.readFile(canonical, "utf8"));
-    manifest.schemaVersion = baseline.version;
-    await fs.writeFile(canonical, `${JSON.stringify(manifest)}\n`);
-  }
+  const canonical = path.join(fixture.generatedDir, "mokly-manifest.json");
+  const manifest = JSON.parse(await fs.readFile(canonical, "utf8"));
+  manifest.schemaVersion = baseline.version;
+  await fs.writeFile(canonical, `${JSON.stringify(manifest)}\n`);
   await fixture.git("add", "-A");
   await fixture.git("commit", "-qm", "test: install historical baseline");
   await fixture.git("update-ref", "refs/remotes/origin/main", "HEAD");

@@ -29,9 +29,9 @@ inspection waiting, and retryable delivery failure.
 ## Owning Catalogue
 
 Source lives under `examples/basic/specs/design/components/`; generated
-artboards live under `examples/basic/generated/<path>/` as their path-derived
+artboards live under `examples/basic/mokly-generated/<path>/` as their path-derived
 `index.<viewport>.html` views. The existing
-Pages → Design → Component explorer folder reaches every
+Specs → Design → Component explorer folder reaches every
 screen.
 The canonical `overview` screen shows a component page, followed by links to the
 owning child pages outside the artboard. The original Pages, Inspection, and States child folders are gallery

@@ -43,15 +43,15 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
   const index = await read(output, "index.html");
   assert.match(index, /<title>Mokly<\/title>/);
   assert.match(index, /data-mokly-filter/);
-  assert.match(index, /\/__mokly\/client\/react-shell\.js/);
-  assert.doesNotMatch(index, /\/__mokly\/client\/browser\.js/);
+  assert.match(index, /\/mokly-viewer\/client\/react-shell\.js/);
+  assert.doesNotMatch(index, /\/mokly-viewer\/client\/browser\.js/);
   assert.match(index, /href="\/view\/example\/screens\/welcome\/"/);
   assert.doesNotMatch(
     index,
     /href="\/view\/example\/screens\/welcome\/index\.html"/,
   );
   const catalogue = JSON.parse(
-    await read(output, "__mokly/catalogue.json"),
+    await read(output, "mokly-viewer/catalogue.json"),
   ) as PublishedCatalogue;
   const changedEntries = [
     ...catalogue.components,
@@ -128,29 +128,35 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
     /<iframe[^>]*data-fragment-light="([^"]+)"[^>]*src="([^"]+)"/,
   );
   assert.ok(frame);
-  assert.equal(frame[1], "/static/example/screens/welcome/index.mobile");
+  assert.equal(
+    frame[1],
+    "/static/mokly-generated/example/screens/welcome/index.mobile",
+  );
   assert.equal(frame[2], frame[1]);
   assert.match(
     welcome,
-    /data-fragment-dark="\/static\/example\/screens\/welcome\/index\.mobile\.dark"/,
+    /data-fragment-dark="\/static\/mokly-generated\/example\/screens\/welcome\/index\.mobile\.dark"/,
   );
   assert.match(
     welcome,
-    /src="\/static\/example\/screens\/welcome\/index\.desktop"/,
+    /src="\/static\/mokly-generated\/example\/screens\/welcome\/index\.desktop"/,
   );
   assert.doesNotMatch(
     welcome,
-    /src="\/static\/example\/screens\/welcome\/index\.desktop\.html"/,
+    /src="\/static\/mokly-generated\/example\/screens\/welcome\/index\.desktop\.html"/,
   );
   assert.doesNotMatch(welcome, /data-fragment-(?:light|dark)="[^"]+\.html"/);
   assert.match(
-    await read(output, "static/example/screens/welcome/index.desktop.html"),
+    await read(
+      output,
+      "static/mokly-generated/example/screens/welcome/index.desktop.html",
+    ),
     /Welcome to Mokly/,
   );
   assert.match(
     await read(
       output,
-      "static/example/screens/welcome/index.desktop.dark.html",
+      "static/mokly-generated/example/screens/welcome/index.desktop.dark.html",
     ),
     /data-color-scheme="dark"/,
   );
@@ -158,23 +164,27 @@ test("preview build snapshots a static Browse catalogue", async (context) => {
     await read(output, "view/example/screens/details/index.html"),
     /class="mbk-entry-status" data-status="Unmodified" data-workspace-status="">Unmodified<\/span>/u,
   );
-  assert.match(await read(output, "__mokly/shell.css"), /--mbk-/);
+  assert.match(await read(output, "mokly-viewer/shell.css"), /--mbk-/);
   assert.match(
-    await read(output, "__mokly/client/appearance-startup.js"),
+    await read(output, "mokly-viewer/client/appearance-startup.js"),
     /mokly:theme/,
   );
   assert.ok(
     (
       await fs.promises.stat(
-        path.join(output, "__mokly/fonts/InterVariable.woff2"),
+        path.join(output, "mokly-viewer/fonts/InterVariable.woff2"),
       )
     ).size > 0,
   );
   assert.match(await read(output, "404.html"), /Item not found/);
   assert.doesNotMatch(await read(output, "_redirects"), /^\/id\//m);
   assert.equal(
-    await read(output, ".mokly-preview-artifact"),
-    "schemaVersion=1\n",
+    JSON.parse(await read(output, ".mokly-export-artifact")).schemaVersion,
+    3,
+  );
+  assert.equal(
+    fs.existsSync(path.join(output, ".mokly-preview-artifact")),
+    false,
   );
 });
 
@@ -198,7 +208,7 @@ test("preview build refuses to replace an unowned directory", async (context) =>
 });
 
 async function assertClientGraphIsComplete(output: string): Promise<void> {
-  const assetRoot = path.join(output, "__mokly");
+  const assetRoot = path.join(output, "mokly-viewer");
   const copied = await javascriptFiles(assetRoot);
   assert.ok(copied.length > 0);
   for (const module of copied) {

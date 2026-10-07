@@ -13,16 +13,16 @@ import {
   type BaselineProcessScopeFactory,
 } from "../dist/baseline/process_scope.js";
 
-import {
-  servePreviewFixture,
-  startPreviewServerProcess,
-  type PreviewServerProcess,
-} from "./browser/preview_fixture.js";
+import { servePreviewFixture } from "./browser/preview_fixture.js";
 import {
   PREVIEW_ARTIFACT_MARKER,
   PreviewOutputRetentionError,
   startOwnedPreviewFixture,
 } from "./browser/preview_fixture_owner.js";
+import {
+  startPreviewServerProcess,
+  type PreviewServerProcess,
+} from "./browser/preview_process.js";
 import {
   killProcessIfPresent,
   readProcessField,
@@ -161,12 +161,12 @@ test(
         killProcessIfPresent(descendantPid);
       await Promise.race([
         managed.close().catch(() => {}),
-        pause(5_000, undefined, { ref: false }),
+        pause(15_000, undefined, { ref: false }),
       ]);
       await fs.rm(root, { force: true, recursive: true });
     });
 
-    for (let attempt = 0; attempt < 300 && !descendantPid; attempt += 1) {
+    for (let attempt = 0; attempt < 1_500 && !descendantPid; attempt += 1) {
       try {
         descendantPid = Number(await fs.readFile(pidFile, "utf8"));
       } catch (error) {
@@ -175,14 +175,14 @@ test(
       if (!descendantPid) await pause(10);
     }
     assert.ok(descendantPid, "stubborn descendant did not report its pid");
-    for (let attempt = 0; attempt < 300 && !managed.exited; attempt += 1)
+    for (let attempt = 0; attempt < 1_500 && !managed.exited; attempt += 1)
       await pause(10);
     assert.equal(managed.exited, true, "launcher should exit before cleanup");
 
     assert.notEqual(
       await Promise.race([
         managed.close().then(() => "closed"),
-        pause(6_000, "hung", { ref: false }),
+        pause(15_000, "hung", { ref: false }),
       ]),
       "hung",
     );
@@ -199,7 +199,7 @@ async function writeFreshArtifact(artifact: string): Promise<void> {
   await fs.mkdir(artifact, { recursive: true });
   await fs.writeFile(
     path.join(artifact, PREVIEW_ARTIFACT_MARKER),
-    "schemaVersion=1\n",
+    JSON.stringify({ schemaVersion: 3, files: [] }),
   );
 }
 

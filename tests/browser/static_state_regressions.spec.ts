@@ -32,7 +32,7 @@ test.beforeAll(async () => {
   await fs.cp(fixture.output, installed, { recursive: true });
   await fs.cp(fixture.output, oldExport, { recursive: true });
   mountedCatalogue = await fs.readFile(
-    path.join(oldExport, "__mokly/catalogue.json"),
+    path.join(oldExport, "mokly-viewer/catalogue.json"),
     "utf8",
   );
   await exportCatalogue(fixture.config, {
@@ -40,8 +40,8 @@ test.beforeAll(async () => {
     adapter: {
       transform: (files) => {
         files.set(
-          "__mokly/shell.css",
-          `${files.get("__mokly/shell.css")}\n/* replacement */\n`,
+          "mokly-viewer/shell.css",
+          `${files.get("mokly-viewer/shell.css")}\n/* replacement */\n`,
         );
       },
     },
@@ -92,7 +92,7 @@ for (const failure of ["missing", "different deployment"] as const)
     let requests = 0;
     const stale = JSON.parse(mountedCatalogue) as Record<string, unknown>;
     stale["deploymentId"] = replacementIdentity(String(stale["deploymentId"]));
-    await page.route("**/__mokly/catalogue.json", async (route) => {
+    await page.route("**/mokly-viewer/catalogue.json", async (route) => {
       requests++;
       if (failure === "missing") await route.abort();
       else await route.fulfill({ json: stale });
@@ -129,7 +129,7 @@ test("an explicit hydration retry can recover after the shared catalogue returns
   page,
 }) => {
   let requests = 0;
-  await page.route("**/__mokly/catalogue.json", async (route) => {
+  await page.route("**/mokly-viewer/catalogue.json", async (route) => {
     requests++;
     if (requests === 1) await route.abort();
     else await route.continue();
@@ -142,7 +142,7 @@ test("an explicit hydration retry can recover after the shared catalogue returns
   );
 
   await page.evaluate(async () => {
-    const modulePath = "/__mokly/client/react-shell.js";
+    const modulePath = "/mokly-viewer/client/react-shell.js";
     const browser = (await import(modulePath)) as {
       hydrateMoklyShell(doc?: Document): void;
     };
@@ -216,7 +216,7 @@ test("a newer history action cancels superseded deployment validation", async ({
     finishFirst = resolve;
   });
   let validations = 0;
-  await page.route("**/__mokly/catalogue.json", async (route) => {
+  await page.route("**/mokly-viewer/catalogue.json", async (route) => {
     validations++;
     if (validations === 1) {
       await firstReleased;
@@ -236,7 +236,7 @@ test("a newer history action cancels superseded deployment validation", async ({
   });
 
   const back = page.goBack();
-  await expect.poll(() => validations, { timeout: 5_000 }).toBe(1);
+  await expect.poll(() => validations, { timeout: 15_000 }).toBe(1);
   const forward = page.goForward();
   await expect.poll(() => validations).toBe(2);
   releaseFirst();

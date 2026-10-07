@@ -5,6 +5,8 @@ import {
   isSafeRepositoryPath,
 } from "../navigation/logical.js";
 
+import { VIEWER_DIRECTORY } from "./delivery_paths.js";
+
 export function object(value: unknown): Record<string, unknown> {
   if (!record(value)) invalidData("$catalogue", "expected an object");
   return value;
@@ -60,7 +62,9 @@ export function comparisonPath(value: unknown): string | null {
   if (value === null) return null;
   const result = string(value);
   if (
-    !/^__mokly\/diffs\/__generations\/[a-f0-9]{64}\/review\.json$/.test(result)
+    !new RegExp(
+      `^${VIEWER_DIRECTORY}\\/diffs\\/generations\\/[a-f0-9]{64}\\/review\\.json$`,
+    ).test(result)
   )
     invalidData("$catalogue", "invalid comparison path");
   return result;

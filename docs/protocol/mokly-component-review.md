@@ -3,13 +3,13 @@
 ## Delivery Status
 
 The producer, source validator, artifact publisher, exporter, and browser
-decoder implement this path-keyed component-aware schema v5 for
+decoder implement this path-keyed component-aware schema v6 for
 [change attribution](./mokly-component-changes.md). `ReviewResult`,
 `ScreenReview`, `ViewReview`, and `ReviewState` refer to the base
 [Changes contract](./mokly-changes.md) and
 [named result interfaces](../../packages/viewer/src/review/types.ts).
 Manifest/usage types come from the
-[component manifest](./mokly-component-manifest.md). Version 5 addresses
+[component manifest](./mokly-component-manifest.md). Version 6 addresses
 screens, components, variants, and views by entry path and view axes, carries
 `previousPath` for paired moves, and stores no artifact path.
 
@@ -27,7 +27,7 @@ interface ReviewEntrySides {
   previousPath?: string;
 }
 
-interface ScreenReviewV5 extends ScreenReview, ReviewEntrySides {}
+interface ScreenReviewV6 extends ScreenReview, ReviewEntrySides {}
 
 type ReviewVariantAddress = Pick<
   ManifestComponentVariant,
@@ -100,12 +100,19 @@ interface AffectedConsumer {
   evidence: readonly AffectedUsageEvidence[];
 }
 
-interface ReviewResultV5 extends Omit<
-  ReviewResult,
-  "schemaVersion" | "screens"
-> {
-  schemaVersion: 5;
-  screens: readonly ScreenReviewV5[];
+interface ReviewResultV6 {
+  baseRef: string;
+  baseCommit: string;
+  changedPaths: readonly string[];
+  sharedImpact: readonly string[];
+  ignoredImpact: readonly {
+    id: string;
+    viewport: Viewport;
+    colorScheme: ColorScheme;
+    count: number;
+  }[];
+  schemaVersion: 6;
+  screens: readonly ScreenReviewV6[];
   components: readonly ComponentReview[];
   changes: readonly ChangedEntry[];
   affectedConsumers: readonly AffectedConsumer[];
@@ -218,7 +225,7 @@ Repeated physical placements do not duplicate logical evidence or screen counts;
 the inspector can resolve that logical instance to its current ranges.
 
 Result-level `sharedImpact` remains every changed path matching a configured
-`review.sharedImpact` glob. For each v5 screen or component record, entry
+`review.sharedImpact` glob. For each v6 screen or component record, entry
 `sharedImpact` is the sorted, duplicate-free union of:
 
 1. Every matched changed path that is not a stylesheet, regardless of owner.

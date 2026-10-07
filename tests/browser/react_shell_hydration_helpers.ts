@@ -25,7 +25,7 @@ export async function installDevelopmentBundle(
   page: Page,
   bundle: string,
 ): Promise<void> {
-  await page.route("**/__mokly/client/react-shell.js", (route) =>
+  await page.route("**/mokly-viewer/client/react-shell.js", (route) =>
     route.fulfill({ body: bundle, contentType: "text/javascript" }),
   );
 }
@@ -42,7 +42,7 @@ export async function delayHydration(
   const released = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await page.route("**/__mokly/client/react-shell.js", async (route) => {
+  await page.route("**/mokly-viewer/client/react-shell.js", async (route) => {
     markRequested();
     await released;
     await route.fulfill({ body: bundle, contentType: "text/javascript" });

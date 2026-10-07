@@ -25,7 +25,7 @@ const records: readonly ComponentRangeRecord[] = [
   { id: "r-0", target: { kind: "instance", instanceKey: "instance" } },
 ];
 
-test("baseline v7 ranges retain original offsets and validation", () => {
+test("baseline v8 ranges retain original offsets and validation", () => {
   const start = "<!--mokly-component:start:r-0-->";
   const end = "<!--mokly-component:end:r-0-->";
   const html = `<html><body>😀${start}<button>Action</button>${end}<style>.a{color:red}</style></body></html>`;

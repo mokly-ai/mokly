@@ -64,8 +64,11 @@ export type PickEnd =
         | "error";
     };
 export interface ViewerError {
-  code: "catalogue" | "selection" | "frame" | "comparison" | "markers";
+  code:
+    "catalogue" | "version" | "selection" | "frame" | "comparison" | "markers";
   message: string;
+  /** Version diagnostics for a host's details surface, separate from product copy. */
+  details?: string;
 }
 export interface ViewerSlots {
   topBarStart?: ReactNode;

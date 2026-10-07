@@ -6,7 +6,7 @@ import type {
   ComponentUsageContext,
   Manifest,
   ManifestScreen,
-  ReviewResultV5,
+  ReviewResultV6,
 } from "../packages/viewer/dist/data.js";
 
 import {
@@ -55,8 +55,8 @@ function evidence(
   };
 }
 
-const result: ReviewResultV5 = {
-  schemaVersion: 5,
+const result: ReviewResultV6 = {
+  schemaVersion: 6,
   baseCommit: "a".repeat(40),
   baseRef: "main",
   changedPaths: [otherSheet, chipSheet],
@@ -238,7 +238,10 @@ function screen(path: string, componentIds: readonly string[]): ManifestScreen {
 test("manifest consumers require real screen usage and count each screen once", () => {
   const manifest: Manifest = {
     generatedBy: "mokly",
-    schemaVersion: 8,
+    schemaVersion: 9,
+    assetClosure: [],
+    blobHashAlgorithm: "sha256",
+    generatedFiles: [],
     sourceFiles: [],
     folders: [],
     entries: [

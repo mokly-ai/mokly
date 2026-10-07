@@ -26,7 +26,7 @@ test("live host waits for explicit capabilities and repeated bootstrap stays sin
 
   await page.evaluate(
     (modulePath) => import(modulePath),
-    "/__mokly/client/react-shell.js",
+    "/mokly-viewer/client/react-shell.js",
   );
   await expect(page.locator("html")).not.toHaveAttribute(
     "data-mokly-hydrated",
@@ -40,7 +40,7 @@ test("live host waits for explicit capabilities and repeated bootstrap stays sin
 
   await page.evaluate(
     (modulePath) => import(modulePath),
-    "/__mokly/client/react-host.js?repeat",
+    "/mokly-viewer/client/react-host.js?repeat",
   );
   await expect.poll(() => hydrationCount(page)).toBe(1);
   expect(errors).toEqual([]);
@@ -61,7 +61,7 @@ test("export auto-hydrates once without live capabilities", async ({
 
   await page.evaluate(
     (modulePath) => import(modulePath),
-    "/__mokly/client/react-shell.js",
+    "/mokly-viewer/client/react-shell.js",
   );
   await expect.poll(() => hydrationCount(page)).toBe(1);
   expect(errors).toEqual([]);
@@ -99,7 +99,7 @@ async function delayHost(page: Page): Promise<{
   const released = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await page.route("**/__mokly/client/react-host.js", async (route) => {
+  await page.route("**/mokly-viewer/client/react-host.js", async (route) => {
     markRequested();
     await released;
     await route.continue();

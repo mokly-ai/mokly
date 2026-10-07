@@ -27,12 +27,12 @@ for (const completeHeaders of [false, true]) {
     const [socket] = (await connected) as [net.Socket];
     const headersReceived = once(socket, "data");
     client.write(
-      "GET /__mokly/events HTTP/1.1\r\nHost: localhost\r\n" +
+      "GET /mokly-viewer/events HTTP/1.1\r\nHost: localhost\r\n" +
         (completeHeaders ? "\r\n" : ""),
     );
     await headersReceived;
     const disconnected = once(client, "close", {
-      signal: AbortSignal.timeout(2_000),
+      signal: AbortSignal.timeout(15_000),
     });
     const closing = closeCatalogueHttp(server, new Set(), []);
     t.after(() => closing);

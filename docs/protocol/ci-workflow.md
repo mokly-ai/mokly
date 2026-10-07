@@ -75,12 +75,22 @@ from its peers. Chromium is installed only in browser and hydration jobs. Rust
 formatting, Clippy, and tests run only in the repository job; selected suite
 jobs still compile xtask to dispatch their gate.
 
-Every npm-running job installs npm 11.7.0 and runs `npm ci`. CI caches only npm
-downloads. Every npm-running job keys npm's download cache from the checked-out
+Every npm-running job installs npm 11.21.0, the exact `packageManager` version
+in `package.json`, and runs `npm ci`. CI caches only npm downloads. Every
+npm-running job keys npm's download cache from the checked-out
 `package-lock.json`; none reads a branch-point lockfile. The
 [deterministic repository-input rule](./ci-verification.md#deterministic-test-repository-inputs)
 and [cache and security semantics](./ci-verification-security.md#dependency-cache-and-security)
 own these boundaries.
+
+Make every lockfile change with the pinned npm. The pin must stay at npm 11.11.0
+or newer: older versions drop the lockfile's `libc` fields, which select the
+glibc or musl build of a native package
+([npm/cli#9025](https://github.com/npm/cli/pull/9025)). Without those fields,
+`npm ci` on Linux installs both builds.
+[`tests/npm_pin.test.ts`](../../tests/npm_pin.test.ts) keeps every workflow
+npm pin equal to `packageManager`, requires CI and release jobs to set up that
+npm before `npm ci`, and rejects pins older than npm 11.11.0.
 
 Linux and Windows jobs across CI, preview, and release workflows use
 Blacksmith's 2-vCPU tiers. Native macOS verification uses the provider's
@@ -117,9 +127,35 @@ report completeness, caching, and failure semantics. The
 [release verification evidence contract](./npm-release-evidence.md) defines when
 the dual-runtime aggregate can prove an immutable release tree.
 
+## Testbox Workflow Target
+
+The active [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
+approves `.github/workflows/blacksmith-testbox.yml`. The workflow is implemented.
+Validation mode and both box suite smoke checks pass.
+The complete explicit remote check also passes.
+The workflow has `workflow_dispatch` with an optional `testbox_id` input.
+It also has `push`, limited to changes of its own workflow file.
+An empty `testbox_id` makes `begin-testbox` use validation mode.
+The push run registers the workflow before merge.
+
+One job runs on `blacksmith-2vcpu-ubuntu-2404` with a 30-minute timeout.
+It has `contents: read` permission and no secrets.
+It checks out full history with `persist-credentials: false`.
+It prepares Node 22.14.0, npm 11.21.0, Rust 1.95.0 and Chromium.
+It records the installed lockfile digest and exposes the job environment to
+Testbox SSH sessions. `run-testbox` keeps the job alive until the idle timeout.
+
+The workflow pins `useblacksmith/checkout` v1, `useblacksmith/begin-testbox` v2,
+`actions/setup-node` v6.5.0 and `useblacksmith/run-testbox` v2 to reviewed commits.
+The [Testbox workflow contract](./remote-verification-testbox.md#workflow)
+defines the exact revisions and step order. `Required CI` does not depend on
+this workflow. The hosted CI graph and its release profile keep their current
+required jobs.
+
 ## Related Docs
 
 - [Protocol index](./README.md)
 - [CI verification](./ci-verification.md)
+- [Remote verification](./remote-verification.md)
 - [CI and npm release](./npm-release.md)
 - [Release verification evidence](./npm-release-evidence.md)

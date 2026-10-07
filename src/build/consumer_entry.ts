@@ -11,7 +11,7 @@ import type { ResolvedConfig } from "../config/types.js";
 /** Virtual module name for the complete consumer-owned build graph. */
 export const CONSUMER_ENTRY_PATH = "mokly:consumer-entry";
 
-/** Load every registry entry, renderer, and document transformer. */
+/** Load every registry entry and renderer. */
 export function consumerEntryPlugin(
   config: ResolvedConfig,
   entries: readonly string[],
@@ -84,9 +84,6 @@ function virtualEntryContents(
   const imports = entries.map(
     (source, index) => `import * as entry${index} from ${quote(source)};`,
   );
-  const transformerImport = config.compatibility.transformer
-    ? `import compatibilityTransformer from ${quote(config.compatibility.transformer)};`
-    : "";
   const rendererPath =
     config.renderer ??
     runtimeModule("../renderer/default.js", "../renderer/default.tsx");
@@ -96,13 +93,9 @@ function virtualEntryContents(
   );
   return [
     ...imports,
-    transformerImport,
     `import renderer from ${quote(rendererPath)};`,
     `import { collectModuleExports as collect } from ${quote(runtimeModule("../registry/export_collection.js", "../registry/export_collection.ts"))};`,
     `export const definitions = [${entryValues.join(",")}].flat();`,
-    ...(config.compatibility.transformer
-      ? [`export { compatibilityTransformer };`]
-      : []),
     `export { renderer };`,
     `export { renderWithComponents } from ${quote(runtimeModule("../components/render.js", "../components/render.tsx"))};`,
   ].join("\n");

@@ -3,7 +3,8 @@
 This document supplements the [CI verification contract](./ci-verification.md)
 with fixture ownership, test concurrency, failure cleanup, unit shard balance
 and scenario grouping, browser shard balance, and acceptance measurement rules
-for the unit, browser, and hydration suites.
+for the unit, browser, and hydration suites. Test timing follows
+[CI Test Timing](./ci-test-timing.md).
 
 ## Fixture Lifetime And Cleanup
 
@@ -46,7 +47,7 @@ inputs because preparation is part of what those tests verify. Fixture phases
 emit `[mokly:fixture-timing]` JSON with the fixture, phase, duration, status,
 and whether the operation itself is under test.
 
-Full-catalogue browser preparations share a five-minute setup budget in
+Full-catalogue browser preparations share a ten-minute setup budget in
 `tests/helpers/fixture_timing.ts`. Cold package/example builds, baseline
 exports, and ordinary publication fixtures use that budget independently of the
 default one-minute browser test timeout. Assertion deadlines and retries
@@ -92,9 +93,10 @@ assigns consecutive ports from `MOKLY_PLAYWRIGHT_PORT` (default 4517), one per
 worker, and each worker's `baseURL` uses the port at its `TEST_PARALLEL_INDEX`.
 A server renders on-demand pages through one worker thread, so a shared server
 would queue every worker's renders behind each other. Global setup waits until
-every server finishes its initial HEAD comparison. The servers write the
-example's generated output under the shared output lock, so they write it one
-at a time. Use `MOKLY_PLAYWRIGHT_WORKERS` rather than Playwright's `--workers`:
+every server finishes its initial HEAD comparison. These plain Serve processes
+retain their generated output in memory and do not take the output write lock.
+Package/example preparation writes the generated tree before the servers start.
+Use `MOKLY_PLAYWRIGHT_WORKERS` rather than Playwright's `--workers`:
 global setup rejects a worker count above the number of servers.
 
 Test files that run at the same time share only the suite's read-only prepared

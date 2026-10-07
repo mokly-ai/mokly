@@ -56,12 +56,8 @@ test("renderer and all entries use two stylesheet bundles with per-root outputs"
     ).length,
     2,
   );
-  const first = graph.styleOutputs.get(
-    "mokly-generated/styles/entries/fixture.mockup.tsx.css",
-  );
-  const second = graph.styleOutputs.get(
-    "mokly-generated/styles/entries/second.mockup.ts.css",
-  );
+  const first = graph.styleOutputs.get("styles/entries/fixture.mockup.tsx.css");
+  const second = graph.styleOutputs.get("styles/entries/second.mockup.ts.css");
   assert.ok(typeof first === "string");
   assert.ok(typeof second === "string");
   assert.match(first, /\.one/);
@@ -69,7 +65,7 @@ test("renderer and all entries use two stylesheet bundles with per-root outputs"
   assert.match(second, /\.two/);
   assert.doesNotMatch(second, /\.one|\.shared/);
   assert.deepEqual(
-    graph.styleOutputs.get("mokly-generated/assets/entries/icon.png"),
+    graph.styleOutputs.get("assets/entries/icon.png"),
     new Uint8Array([0, 1, 255]),
   );
   assert.ok(graph.sourceFiles.includes("entries/shared.css"));

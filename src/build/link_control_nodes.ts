@@ -24,10 +24,7 @@ export function controlError(route: string, detail: string): MoklyError {
   );
 }
 
-export function attribute(
-  node: ControlElement,
-  name: string,
-): string | undefined {
+function attribute(node: ControlElement, name: string): string | undefined {
   return node.attrs.find((candidate) => candidate.name === name)?.value;
 }
 

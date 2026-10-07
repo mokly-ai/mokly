@@ -10,31 +10,31 @@ import {
 } from "../packages/viewer/dist/shell/delivery.js";
 
 const descriptor = {
-  schemaVersion: 3,
+  schemaVersion: 5,
   deploymentId: "a".repeat(64),
   canonicalPath: "/view/home/",
-  comparisonUrl: `/__mokly/diffs/__generations/${"a".repeat(64)}/review.json`,
+  comparisonUrl: `/mokly-viewer/diffs/generations/${"a".repeat(64)}/review.json`,
 };
 
-test("delivery v3 accepts only same-origin canonical and comparison paths", () => {
+test("delivery v4 accepts only same-origin canonical and comparison paths", () => {
   const valid = parseStaticDelivery(descriptor);
-  assert.ok(valid);
+  assert.equal(valid.kind, "valid");
   for (const path of [
     "//example.com/home.html",
     "/view/../secret.html",
     "/view/%2e%2e/secret.html",
     "/view/page.html?next=evil",
   ])
-    assert.equal(
+    assert.deepEqual(
       parseStaticDelivery({ ...descriptor, canonicalPath: path }),
-      undefined,
+      { kind: "invalid" },
     );
-  assert.equal(
+  assert.deepEqual(
     parseStaticDelivery({
       ...descriptor,
       comparisonUrl: "https://example.com/review.json",
     }),
-    undefined,
+    { kind: "invalid" },
   );
 });
 
@@ -48,7 +48,10 @@ test("delivery canonical paths round trip through the shared entry route grammar
     "/view/Home/",
     "/view/tour/",
   ])
-    assert.ok(parseStaticDelivery({ ...descriptor, canonicalPath }));
+    assert.equal(
+      parseStaticDelivery({ ...descriptor, canonicalPath }).kind,
+      "valid",
+    );
 
   for (const canonicalPath of [
     "/view/screens/nested/home.html",
@@ -56,9 +59,9 @@ test("delivery canonical paths round trip through the shared entry route grammar
     "/view/con/",
     "/view/screens/home",
   ])
-    assert.equal(
+    assert.deepEqual(
       parseStaticDelivery({ ...descriptor, canonicalPath }),
-      undefined,
+      { kind: "invalid" },
       canonicalPath,
     );
 });
@@ -81,7 +84,7 @@ test("a static document with missing or malformed metadata never falls back to t
         "data-mokly-delivery": JSON.stringify(descriptor),
       }),
     ),
-    parseStaticDelivery(descriptor),
+    descriptor,
   );
 });
 
@@ -89,7 +92,7 @@ test("different deployment identities never validate the current route", async (
   const catalogue = readCatalogue(
     JSON.parse(
       fs.readFileSync(
-        new URL("../docs/protocol/fixtures/catalogue-v4.json", import.meta.url),
+        new URL("../docs/protocol/fixtures/catalogue-v5.json", import.meta.url),
         "utf8",
       ),
     ),
@@ -122,28 +125,32 @@ test("different deployment identities never validate the current route", async (
     true,
   );
   assert.deepEqual(checked, [
-    "https://example.test/__mokly/catalogue.json",
-    "https://example.test/__mokly/catalogue.json",
+    "https://example.test/mokly-viewer/catalogue.json",
+    "https://example.test/mokly-viewer/catalogue.json",
   ]);
 });
 
 test("delivery v2 and malformed deployment descriptors fail closed", () => {
+  for (const schemaVersion of [1, 2, 3])
+    assert.deepEqual(parseStaticDelivery({ ...descriptor, schemaVersion }), {
+      kind: "unsupported-version",
+      version: schemaVersion,
+    });
   for (const value of [
-    { ...descriptor, schemaVersion: 2 },
-    { ...descriptor, schemaVersion: 1 },
     { ...descriptor, deploymentId: undefined },
     { ...descriptor, deploymentId: "newest" },
     { ...descriptor, deploymentId: "A".repeat(64) },
   ])
-    assert.equal(parseStaticDelivery(value), undefined);
+    assert.deepEqual(parseStaticDelivery(value), { kind: "invalid" });
 });
 
 test("current-only publication explicitly disables comparisons", () => {
   const delivery = parseStaticDelivery({ ...descriptor, comparisonUrl: null });
-  assert.ok(delivery);
-  assert.equal(delivery.comparisonUrl, null);
-  assert.equal(
+  assert.equal(delivery.kind, "valid");
+  if (delivery.kind === "valid")
+    assert.equal(delivery.value.comparisonUrl, null);
+  assert.deepEqual(
     parseStaticDelivery({ ...descriptor, comparisonUrl: undefined }),
-    undefined,
+    { kind: "invalid" },
   );
 });

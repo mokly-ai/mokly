@@ -1,4 +1,6 @@
 /** Parent-owned masks and selection listeners; consumer DOM remains unchanged. */
+
+import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
 import type { ComponentViewRecord } from "../components/manifest_types.js";
 
 import {
@@ -43,7 +45,7 @@ export function installLocalHighlight(
     const layer = doc.createElement("div");
     layer.className = "mbk-highlight-layer";
     layer.dataset["highlightViewport"] = usage.viewport;
-    (root.matches(".mokly-viewer") ? root : doc.body).append(layer);
+    (root.matches(`.${VIEWER_DIRECTORY}`) ? root : doc.body).append(layer);
     cleanups.push(() => layer.remove());
     const keys =
       requestedKeys ??

@@ -1,5 +1,5 @@
 /** Project completed ownership evidence onto the one comparison being displayed. */
-import type { ReviewResultV5 } from "@mokly/viewer/data";
+import type { ReviewResultV6 } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 
@@ -7,9 +7,9 @@ import { aggregateIgnored } from "./screen_views.js";
 import type { ReviewSelection } from "./selection_types.js";
 
 export function selectedComponentResult(
-  result: ReviewResultV5,
+  result: ReviewResultV6,
   selection: ReviewSelection,
-): ReviewResultV5 {
+): ReviewResultV6 {
   const screens = result.screens.filter(
     (screen) => screen.path === selection.path,
   );

@@ -13,6 +13,7 @@ import { designLibraryFixture } from "./helpers/design_library_fixture.js";
 import {
   sharedDesignStylesheets,
   sharedStylesheetMarker,
+  sharedStylesheetPath,
 } from "./helpers/design_stylesheets.js";
 import { fileFixture } from "./helpers/file_fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
@@ -24,7 +25,7 @@ test("mixed component design styles retain their actual rendered resource scope 
   await fixture.reset();
   for (const [stylesheet] of sharedDesignStylesheets)
     await fixture.edit(
-      `examples/basic/generated/${stylesheet}`,
+      sharedStylesheetPath(stylesheet),
       (source) => source + sharedStylesheetMarker,
     );
   const result = await fixture.compare();
@@ -55,7 +56,7 @@ test("mixed component design styles retain their actual rendered resource scope 
     );
     const paths = expected.map(({ path }) => path).sort();
     assert.deepEqual(
-      stylesheetScope(result, `examples/basic/generated/${stylesheet}`),
+      stylesheetScope(result, sharedStylesheetPath(stylesheet)),
       paths,
       stylesheet,
     );
@@ -75,7 +76,7 @@ test("mixed component design styles retain their actual rendered resource scope 
       .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
       .map(([stylesheet]): DependencyReason => ({
         kind: "dependency",
-        path: `examples/basic/generated/${stylesheet}`,
+        path: sharedStylesheetPath(stylesheet),
         analysis: { status: "unresolved", selectors: ["body"] },
       }));
     assert.deepEqual(reasonsOf(result, path), expectedReasons, path);
@@ -89,8 +90,6 @@ test("mixed component design styles retain their actual rendered resource scope 
     [],
     "changes outside design.css's scope stay under design/",
   );
-  assert.deepEqual(result.sharedImpact, [
-    "examples/basic/generated/design.css",
-  ]);
+  assert.deepEqual(result.sharedImpact, [sharedStylesheetPath("design.css")]);
   assert.deepEqual(result.affectedConsumers, []);
 });

@@ -41,7 +41,7 @@ const statuses: ReadonlyArray<readonly [number, string, string]> = [
   [
     426,
     "upload-unsupported-version",
-    "The service does not support this upload version. Update Mokly or the receiver.",
+    "The catalogue service does not support this Mokly version. Update the service and try again.",
   ],
   [
     404,

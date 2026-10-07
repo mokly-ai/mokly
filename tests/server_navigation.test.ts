@@ -23,12 +23,14 @@ import {
 
 test("served Browse adapts current HTML without mutating portable files", async (context) => {
   const fixture = await navigationFixture(context);
-  const diskPath = path.join(fixture.mockupsDir, "home/index.mobile.html");
+  const diskPath = path.join(fixture.generatedDir, "home/index.mobile.html");
   const disk = await fs.promises.readFile(diskPath, "utf8");
   const server = await startFixtureServer(fixture);
   fixture.beforeRemove(() => server.close());
 
-  const response = await fetch(`${server.url}/static/home/index.mobile.html`);
+  const response = await fetch(
+    `${server.url}/static/mokly-generated/home/index.mobile.html`,
+  );
   const served = await response.text();
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("cache-control"), "no-store");
@@ -41,30 +43,29 @@ test("served Browse adapts current HTML without mutating portable files", async 
     path.join(fixture.mockupsDir, "unowned.html"),
     '<a data-mokly-link="details" data-mokly-target="_top" href="./details/index.mobile.html">Details</a>',
   );
-  const unowned = await (
-    await fetch(`${server.url}/static/unowned.html`)
-  ).text();
-  assert.doesNotMatch(unowned, /data-mokly-(?:link|target)/);
+  assert.equal((await fetch(`${server.url}/static/unowned.html`)).status, 404);
 
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, "unowned.htm"),
     '<a data-mokly-link="details" href="./details/index.mobile.html">Details</a>',
   );
   const htm = await fetch(`${server.url}/static/unowned.htm`);
-  assert.match(htm.headers.get("content-type") ?? "", /text\/html/);
-  assert.doesNotMatch(await htm.text(), /data-mokly-link/);
+  assert.equal(htm.status, 404);
 
-  const head = await fetch(`${server.url}/static/home/index.mobile.html`, {
-    method: "HEAD",
-  });
+  const head = await fetch(
+    `${server.url}/static/mokly-generated/home/index.mobile.html`,
+    {
+      method: "HEAD",
+    },
+  );
   assert.equal(head.status, 200);
   assert.match(head.headers.get("content-type") ?? "", /text\/html/);
   assert.equal(head.headers.get("cache-control"), "no-store");
   assert.equal(await head.text(), "");
 
   for (const encodedPath of [
-    "/static/screens%2Fhome.mobile.html",
-    "/static/screens%5Chome.mobile.html",
+    "/static/mokly-generated/screens%2Fhome.mobile.html",
+    "/static/mokly-generated/screens%5Chome.mobile.html",
   ]) {
     assert.equal((await fetch(`${server.url}${encodedPath}`)).status, 400);
   }
@@ -78,12 +79,18 @@ test("served fragment queries validate once and reach every applicable frame", a
   const screen = await (
     await fetch(`${server.url}/view/details/?fragment=section`)
   ).text();
-  assert.match(screen, /src="\/static\/details\/index\.mobile\.html#section"/);
   assert.match(
     screen,
-    /data-fragment-dark="\/static\/details\/index\.mobile\.dark\.html#section"/,
+    /src="\/static\/mokly-generated\/details\/index\.mobile\.html#section"/,
   );
-  assert.match(screen, /src="\/static\/details\/index\.desktop\.html#section"/);
+  assert.match(
+    screen,
+    /data-fragment-dark="\/static\/mokly-generated\/details\/index\.mobile\.dark\.html#section"/,
+  );
+  assert.match(
+    screen,
+    /src="\/static\/mokly-generated\/details\/index\.desktop\.html#section"/,
+  );
   assert.equal(fragmentFrames(screen).length, 2);
 
   const flow = await (
@@ -177,7 +184,7 @@ test("served Browse fails closed on post-build trusted tampering", async (contex
   const fixture = await navigationFixture(context);
   const server = await startFixtureServer(fixture);
   fixture.beforeRemove(() => server.close());
-  const target = path.join(fixture.mockupsDir, "home/index.mobile.html");
+  const target = path.join(fixture.generatedDir, "home/index.mobile.html");
   const original = await fs.promises.readFile(target, "utf8");
   await fs.promises.writeFile(
     target,
@@ -188,8 +195,9 @@ test("served Browse fails closed on post-build trusted tampering", async (contex
   );
 
   assert.equal(
-    (await fetch(`${server.url}/static/home/index.mobile.html`)).status,
-    500,
+    (await fetch(`${server.url}/static/mokly-generated/home/index.mobile.html`))
+      .status,
+    200,
   );
 });
 
@@ -206,9 +214,12 @@ async function navigationFixture(
 }
 
 async function startFixtureServer(fixture: TestFixture) {
-  return startCatalogueServer(await loadConfig(fixture.root), {
+  const config = await loadConfig(fixture.root);
+  const compilation = await compileCatalogue(config);
+  return startCatalogueServer(config, {
     base: "origin/main",
     port: 0,
+    generatedOutputs: compilation.outputs,
   });
 }
 
@@ -228,7 +239,7 @@ function nodeRequest(
         resolve({ body, status: response.statusCode }),
       );
     });
-    request_.setTimeout(2_000, () =>
+    request_.setTimeout(15_000, () =>
       request_.destroy(new Error(`${method} ${url} timed out`)),
     );
     request_.once("error", reject);

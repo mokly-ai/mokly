@@ -27,18 +27,18 @@ Example Action/Toolbar components, miniature subject screens and pictured usage
 fixtures keep their separate roles. New usage in the outer inspector comes from
 the real generated manifest, not from those pictured fixtures.
 
-All existing design entries, relationships, mobile/desktop artboards, copy,
-links and supported native controls remain. The requested normalization replaces
-the legacy Details disclosure and segmented viewport/theme controls throughout
-the catalogue with the shared icon inspector and view toolbar. The legacy footer
-variant and its presentation/behavior fields are removed, not retained as options.
+Preserve existing entries, relationships, both artboard sizes, copy, links and
+supported controls. Each screen uses the shared Details inspector and viewport
+toolbar. Top-bar Appearance owns the scheme.
+The footer has one current form; no alternative disclosure, presentation or
+behavior fields are supported. Comparison-mode controls keep their segments.
 New component entry metadata belongs outside the rendered sample;
 samples contain no implementation notes, environment badges or extra footers.
 
 ## Catalogue And Source Ownership
 
 Add `Components → Design → Shared components` beneath the same `Design` folder
-as `Pages → Design`: a folder holding both kinds appears in both
+as `Specs → Design`: a folder holding both kinds appears in both
 sections with its own children in each, under the
 [catalogue tree rule](./mokly-catalogue.md#tree). Keep the existing Component
 explorer design section and Components → Example → Components group. The
@@ -58,7 +58,7 @@ For inventory group `G` and slug `S`:
 - Registration/schema/variants: `specs/design/library/G/S.tsx`, split into
   short metadata siblings if needed. Render logic: `G/S.view.tsx` and its
   exclusive implementation helpers. Source and visible hierarchy must agree.
-- Public stylesheet: `generated/design-library/G/S.css` when styles are owned
+- Public stylesheet: `design-library/G/S.css` when styles are owned
   exclusively by that component. It is authored CSS, not generated HTML.
 - Variant entry slugs and exposed props are defined by the inventory. Each
   variant entry renders in both actual viewport contexts; the parent's page
@@ -227,7 +227,7 @@ Acceptance after a registered baseline exists:
 The initial registration migration may create legitimate one-time structural
 changes against an unregistered baseline. Do not add blanket Review ignores to
 hide them. Prove steady-state attribution with two fully registered snapshots.
-Update existing legacy style-attribution tests deliberately: retain meaningful
+Style-attribution tests cover the current model: retain meaningful
 global/layout assertions and use the shared component-aware classifier for
 owned styles, not the old raw changed-path helper.
 

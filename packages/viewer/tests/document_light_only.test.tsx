@@ -4,8 +4,9 @@ import test from "node:test";
 
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { currentManifest } from "../../../tests/helpers/current_manifest.js";
 import { readCatalogue } from "../src/catalogue/reader.js";
-import type { ManifestEntry, ManifestV8 } from "../src/registry/types.js";
+import type { ManifestEntry, ManifestV9 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import type { ShellContext } from "../src/shell/context.js";
 import { SHELL_PREVIEW_CSS } from "../src/shell/css_previews.js";
@@ -22,7 +23,7 @@ function fixtureDocument(colorSchemes: readonly ("light" | "dark")[]) {
   const model = JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v4.json",
+        "../../../docs/protocol/fixtures/catalogue-v5.json",
         import.meta.url,
       ),
       "utf8",
@@ -72,13 +73,13 @@ function removedStage(
   screenSchemes: readonly ("light" | "dark")[],
   documentSchemes: readonly ("light" | "dark")[],
 ): string {
-  const manifest: ManifestV8 = {
+  const manifest: ManifestV9 = currentManifest({
     entries: [entry("screen", "guide/screen", screenSchemes)],
     folders: [],
     generatedBy: "mokly",
-    schemaVersion: 8,
+    schemaVersion: 9,
     sourceFiles: [],
-  };
+  });
   const removed = entry("document", "guide/terms", documentSchemes);
   const catalogue = createCatalogue(manifest, [
     { entry: removed, folderTitles: ["Guide"] },

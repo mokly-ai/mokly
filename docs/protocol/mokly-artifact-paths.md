@@ -18,7 +18,7 @@ beside it with viewport and scheme suffixes. Because path segments contain no do
 with these HTML filenames, and a folder page coexists with the folder's children on every static
 host.
 
-| Kind              | Documents under `static/`                        |
+| Kind              | Documents under `static/mokly-generated/`        |
 | ----------------- | ------------------------------------------------ |
 | Screen            | `<path>/index.<viewport>[.dark].html` per view   |
 | Component variant | `<path>/index.<viewport>[.dark].html` per view   |
@@ -65,6 +65,11 @@ Property names inherited from JavaScript objects, including `constructor`,
 `__proto__`, and `toString`, are ordinary segments that resolve against the
 catalogue like any other and never against object prototypes.
 
+Entry and view routes are relative to `mokly-generated/`. The catalogue-relative
+resource helpers `generatedResourcePath` and `generatedResourceRoute` join and
+remove that exact prefix. `currentDocumentPath` adds `static/` for a frame URL.
+Authored closure resource paths remain catalogue-relative.
+
 ## Comparison And Preview Paths
 
 The same module exports:
@@ -86,8 +91,8 @@ function snapshotResourcePath(side: SnapshotSide, route: string): string;
 function previewMetadataPath(path: string): string;
 ```
 
-`snapshotViewPath` returns `snapshots/<side>/<viewRoute(...)>`.
-`snapshotDocumentPath` returns `snapshots/<side>/<documentRoute(...)>`; a
+`snapshotViewPath` returns `snapshots/<side>/mokly-generated/<viewRoute(...)>`.
+`snapshotDocumentPath` returns `snapshots/<side>/mokly-generated/<documentRoute(...)>`; a
 removed page or document has a before side only. `snapshotSidePath` returns
 the directory prefix `snapshots/<side>/`, including its trailing slash.
 `snapshotResourcePath` appends one nonempty path accepted by
@@ -130,17 +135,20 @@ separated query and hash. The former `unavailableViewHref` is unnecessary:
 
 ## Reserved Prefixes And Validation
 
-`view/`, `static/`, `__mokly/`, `snapshots/`, `previews/`, and
+`view/`, `static/`, `mokly-viewer/`, `snapshots/`, `previews/`, and
 `mokly-generated/` are reserved artifact prefixes. The last contains only
-generated CSS and assets beneath `mockupsDir` (or exported `static/`). An
+generated HTML, the private manifest, compiled CSS and copied resources beneath
+`mockupsDir`; public generated files appear below exported `static/`. An
 entry's first path segment cannot equal `mokly-generated`, compared
-case-insensitively, under the [path grammar](./mokly-paths.md#segment-grammar). No kind prefix exists, so a top-level folder may be
+case-insensitively, under the [path grammar](./mokly-paths.md#segment-grammar).
+Generated HTML also reserves `styles` and `assets` as its first segment under
+the [unified output contract](./mokly-unified-output.md#one-owned-tree). No kind prefix exists, so a top-level folder may be
 named `screens`, `pages`, or `components`. Generated file names use the
 authored case of each segment; the output inventory rejects two files whose
 case-folded paths collide, including a resource against a document directory.
 
-All returned paths are artifact-root-relative except `viewHref` and
-`providerNormalizedHtmlPath`, which begin with `/`. Callers still apply their
+Keep each helper's stated scope: generated-root, catalogue-root, comparison-generation
+or origin-relative. `viewHref` and `providerNormalizedHtmlPath` begin with `/`. Callers still apply their
 own output inventory, case-folded collision, source exclusion, regular-file,
 and generation-confinement checks. These builders centralise naming; they do
 not authorise reading or writing a path.

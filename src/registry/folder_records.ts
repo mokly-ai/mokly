@@ -1,6 +1,6 @@
 import { isEntryPath, isPathSegment } from "@mokly/viewer/data";
 
-import { validatePublicExclude } from "../config/public_exclusions.js";
+import { validateRelativeGlobs } from "../config/relative_globs.js";
 import { MoklyError } from "../errors.js";
 
 /** Authored folder data retained with its diagnostic and source location. */
@@ -71,7 +71,7 @@ export function validateFolderRecord(
   }
   if (fields.exclude !== undefined) {
     try {
-      validatePublicExclude(fields.exclude);
+      validateRelativeGlobs(fields.exclude, "exclude", true);
     } catch {
       fail("exclude must be an array of safe relative globs");
     }

@@ -1,0 +1,174 @@
+.mbk-comparison-stage {
+  background: radial-gradient(circle, var(--mbk-dot) 1px, transparent 1px) 0 0 /
+    22px 22px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 24px;
+}
+
+/* Only the stage's own heading; a depicted screen's headings keep its ink. */
+.mbk-comparison-stage > h3 {
+  color: var(--chrome-ink-2);
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.mbk-comparison-details {
+  background: var(--chrome-surface);
+  border: 1px solid var(--chrome-border);
+  border-radius: 8px;
+  color: var(--chrome-ink-2);
+  margin-top: 24px;
+  padding: 12px;
+}
+
+.mbk-comparison-details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* The inspector-scoped copies outrank the later `.ce-inspector p` rule, which
+   otherwise wins on equal specificity and takes the card's authored spacing. */
+.mbk-comparison-details p,
+.mbk-comparison-details ul,
+.ce-inspector .mbk-comparison-details p,
+.ce-inspector .mbk-comparison-details ul {
+  margin: 8px 0 0;
+}
+
+.mbk-comparison-details ul + p,
+.ce-inspector .mbk-comparison-details ul + p {
+  margin-top: 14px;
+}
+
+.mbk-compare {
+  align-items: start;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  isolation: isolate;
+}
+
+.mbk-compare .browser-frame {
+  height: 470px;
+  width: 100%;
+}
+
+/* Overlay and Difference draw one device chrome holding both versions. */
+.mbk-compare:is(
+  [data-compare-mode="overlay"],
+  [data-compare-mode="difference"]
+) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* The chrome's viewport, below the browser bar or the phone's status band, is
+   the only scroll container, so both versions always share one offset. */
+.mbk-stack-viewport {
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Both layers fill the viewport at device size and share one scroll offset. */
+.mbk-stack {
+  display: grid;
+  isolation: isolate;
+  min-height: 100%;
+}
+
+/* Each version paints its own opaque screen background in its own scheme, so
+   the Current layer only ever composites with the Before layer below it. */
+.mbk-stack-layer {
+  background-color: var(--mbk-screen-bg);
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+
+.mbk-compare[data-compare-mode="overlay"] .mbk-stack-layer--after {
+  opacity: 0.5;
+}
+
+.mbk-compare[data-compare-mode="difference"] .mbk-stack-layer--after {
+  mix-blend-mode: difference;
+}
+
+/* A long screen depicted part-way down: the shared stack moves as one, and
+   the viewport draws its scrollbar at the matching position. */
+.mbk-stack-viewport[data-scrolled] > .mbk-stack {
+  transform: translateY(-234px);
+}
+
+.phone-screen .mbk-stack-viewport[data-scrolled] > .mbk-stack {
+  transform: translateY(-326px);
+}
+
+.mbk-stack-scrollbar,
+.mbk-scrollbar {
+  background-color: color-mix(
+    in srgb,
+    var(--mbk-screen-ink) 4%,
+    var(--mbk-screen-bg)
+  );
+  border-left: 1px solid
+    color-mix(in srgb, var(--mbk-screen-ink) 10%, var(--mbk-screen-bg));
+  bottom: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 12px;
+}
+
+.mbk-stack-thumb,
+.mbk-scrollbar-thumb {
+  background-color: color-mix(
+    in srgb,
+    var(--mbk-screen-ink) 38%,
+    var(--mbk-screen-bg)
+  );
+  border-radius: 999px;
+  height: 54%;
+  left: 3px;
+  position: absolute;
+  right: 3px;
+  top: 29%;
+}
+
+/* A phone shows the thin indicator a touch screen draws while scrolling. */
+.phone-screen .mbk-stack-scrollbar {
+  background: none;
+  border: 0;
+  bottom: 18px;
+  top: 6px;
+  width: 8px;
+}
+
+.phone-screen .mbk-stack-thumb {
+  height: 52%;
+  left: 2px;
+  right: 3px;
+  top: 32%;
+}
+/* On a narrow layout the modes take the whole first row, so Scroll together
+   starts the second row and Refresh closes it. */
+.mbk-shell--mobile .mbk-cmp-toolbar .mbk-seg {
+  display: flex;
+  flex: 1 1 100%;
+}
+.mbk-shell--mobile .mbk-cmp-toolbar .mbk-seg > :is(span, a, button) {
+  flex: 1;
+  font-size: 11px;
+  padding: 4px 6px;
+  text-align: center;
+}
+.mbk-shell--mobile .mbk-comparison-stage {
+  padding: 16px;
+}
+.mbk-shell--mobile .mbk-compare {
+  grid-template-columns: minmax(0, 1fr);
+}

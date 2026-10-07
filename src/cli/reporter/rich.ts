@@ -1,4 +1,4 @@
-import type { ManifestV8 } from "@mokly/viewer/data";
+import type { ManifestV9 } from "@mokly/viewer/data";
 
 import { EARLIER_BASELINE_MESSAGE } from "../../baseline/compatibility.js";
 import { formatBuildDiagnostic } from "../../build/build_warnings.js";
@@ -55,6 +55,14 @@ export class RichReporter implements CliReporter {
     );
   }
 
+  outputWritten(count: number, directory: string, durationMs: number): void {
+    this.summary(
+      `Generated ${count} Mokly files.\n`,
+      `Generated ${count} files in ${directory}`,
+      durationMs,
+    );
+  }
+
   close(): void {
     this.#servePhase = undefined;
     this.clearPhase();
@@ -89,7 +97,7 @@ export class RichReporter implements CliReporter {
       this.warning(formatBuildDiagnostic(diagnostic));
   }
 
-  catalogueReady(manifest: ManifestV8, durationMs: number): void {
+  catalogueReady(manifest: ManifestV9, durationMs: number): void {
     this.settleServePhase();
     const counts = catalogueCounts(manifest);
     this.line(
