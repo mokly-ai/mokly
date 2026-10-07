@@ -1,8 +1,8 @@
 # Require A Clean Checkout For Publish
 
 Status: Active. The user approved this change and plan. The branch starts at
-`origin/main`. PR #135 is not part of this change. Completion requires the pull
-request to merge.
+`origin/main`. [PR #168](https://github.com/mokly-ai/mokly/pull/168) is open.
+PR #135 is not part of this change. Completion requires the pull request to merge.
 
 ## Contract And Decisions
 
@@ -109,21 +109,21 @@ Run focused tests during development. Run the complete gate before delivery.
       the failed package suite and focused generation and SIGINT tests.
 - [x] Run the complete `cargo xtask check`. Fix failures and rerun the narrowest
       failed tests or suite, then rerun the complete gate.
-- [ ] After checks pass, run `git add -A`, commit with
+- [x] After checks pass, run `git add -A`, commit with
       `feat(publish)!: require a clean checkout`, and push the current branch. Open
       a pull request against `main` without changing PR #135 or Mokly Cloud.
-- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
+- [x] After the push, use `docs/implementation-review-prompt.md` to review the
       complete local diff against `origin/main` read-only. Report findings. Apply
       the review-fix rule in `AGENTS.md`: fix `Auto-fix: yes` findings, run checks,
       commit and push, then review once more. Fix new auto-fix findings once more.
       Report fixed findings and open decisions. Record each open finding here.
-  - Open: `verification_unit_interrupt.test.ts`: the SIGINT test read an empty
-    marker instead of `ready`; the focused rerun and complete rerun passed.
-    It failed again in a later remote run. Suspect file creation before its
-    content is ready. Recommend a separate fix.
-  - Open: `watched_authored_closure.test.ts`: the watched page/PDF test read
-    `Not found` instead of `%PDF-1.4\nsecond`; the focused and complete reruns
-    passed. Suspect asset readiness after a watcher update. Recommend a separate fix.
+  - Open #1 (Low, test, small): `verification_unit_interrupt.test.ts` read `''` instead of `ready`; focused and final complete reruns passed; suspect marker creation before its content is ready; recommend a separate fix; Auto-fix: no.
+  - Open #2 (Low, test, small): `watched_authored_closure.test.ts` read `Not found` instead of `%PDF-1.4\nsecond`; focused and final complete reruns passed; suspect resource readiness after a watcher update; recommend a separate fix; Auto-fix: no.
+
+Milestone 5 is completed. Commit `38c17a5` contains the implementation. The
+post-push review found no implementation defect and no auto-fix finding. The
+two unrelated test findings need the user's choice in separate branches.
+Review: `.context/publish-clean-checkout/post-push-review.md`.
 
 Evidence: `.context/publish-clean-checkout/repository.log`,
 `.context/publish-clean-checkout/publish-tests.log`, and
