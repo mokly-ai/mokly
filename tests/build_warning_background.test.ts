@@ -3,6 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import {
+  normalizeBuildDiagnostics,
+  type BuildDiagnostic,
+} from "../dist/build/build_warnings.js";
+import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 import { PlainServeReporter } from "../dist/server/reporter.js";
 import { serve } from "../dist/server/serve.js";
@@ -12,6 +17,70 @@ import {
   fixtureWithSheets,
 } from "./helpers/component_stylesheet_fixture.js";
 import { removeFixture } from "./helpers/fixture.js";
+import { linkWarningFailureFixture } from "./helpers/link_control_warning_fixture.js";
+
+for (const outcome of ["resource", "transform", "success"] as const) {
+  test(`compilation forwards each link warning before ${outcome}`, async (t) => {
+    const fixture = await linkWarningFailureFixture(outcome);
+    t.after(() => fixture.remove());
+    const streamed: BuildDiagnostic[] = [];
+    const pending = compileCatalogue(
+      await loadConfig(fixture.root),
+      undefined,
+      undefined,
+      (warning) => streamed.push(warning),
+    );
+    if (outcome === "success")
+      assert.deepEqual((await pending).diagnostics, fixture.diagnostics);
+    else await assert.rejects(pending, fixture.failure);
+    assert.equal(streamed.length, fixture.diagnostics.length);
+    assert.deepEqual(normalizeBuildDiagnostics(streamed), fixture.diagnostics);
+  });
+
+  test(
+    `background build reports link warnings once before ${outcome}`,
+    { timeout: 30_000 },
+    async (t) => {
+      const fixture = await linkWarningFailureFixture(outcome);
+      t.after(() => fixture.remove());
+      const events: string[] = [];
+      const diagnostics: BuildDiagnostic[] = [];
+      let finish!: () => void;
+      const settled = new Promise<void>((resolve) => {
+        finish = resolve;
+      });
+      const reporter = new PlainServeReporter((line) => events.push(line));
+      const reportWarnings = reporter.buildWarnings.bind(reporter);
+      reporter.buildWarnings = (warnings) => {
+        diagnostics.push(...warnings);
+        reportWarnings(warnings);
+      };
+      reporter.catalogueReady = () => {
+        events.push("ready");
+        finish();
+      };
+      const reportFailure = reporter.runtimeDiagnostic.bind(reporter);
+      reporter.runtimeDiagnostic = (error) => {
+        reportFailure(error);
+        finish();
+      };
+      const running = await serve(
+        await loadConfig(fixture.root),
+        { port: 0, watch: false },
+        { reporter },
+      );
+      fixture.beforeRemove(() => running.close());
+      await settled;
+      assert.deepEqual(diagnostics, fixture.diagnostics);
+      assert.equal(events.length, fixture.diagnostics.length + 1);
+      assert.ok(
+        events.slice(0, -1).every((line) => line.startsWith("[mokly/warning]")),
+      );
+      if (outcome === "success") assert.equal(events.at(-1), "ready");
+      else assert.match(events.at(-1)!, fixture.failure);
+    },
+  );
+}
 
 test(
   "a failing watched compilation reports earlier render warnings before its failure",

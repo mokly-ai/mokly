@@ -324,7 +324,11 @@ record plus deterministic sorting and de-duplication. The child-control adapter
 and compatibility transform return diagnostics beside their output;
 `compile.ts` puts the normalized list on `Compilation`, while
 `document_compiler.ts` retains the requested document's list without reporting
-it. Diagnostics never enter generated files, the manifest, HTTP bytes, or
+it. During exhaustive compilation, each adapter also forwards its diagnostics
+through the compilation callback before logical-link rewriting or the consumer
+transformer runs. Later failures therefore retain all warnings already found.
+Successful results stay sorted, and the sink reports each warning once.
+Diagnostics never enter generated files, the manifest, HTTP bytes, or
 timing records. Authored C0/C1 controls become visible `\uXXXX` escapes before
 normalization, and reporters defensively apply the same encoder.
 `link_control_tiers.ts` owns the explicit ancestor and

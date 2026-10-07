@@ -182,6 +182,7 @@ async function compileMeasured(
       undefined,
       undefined,
       pending,
+      recordWarning,
     ),
   );
   pending.addHtmlMap(outputs);
@@ -255,10 +256,7 @@ async function compileMeasured(
     }),
   );
   const compilation: Compilation = {
-    diagnostics: normalizeBuildDiagnostics([
-      ...warnings,
-      ...compatibility.diagnostics,
-    ]),
+    diagnostics: normalizeBuildDiagnostics(warnings),
     manifest,
     outputs: compilationOutputs,
     deliveredStyleSources: graph.deliveredStyleSources,

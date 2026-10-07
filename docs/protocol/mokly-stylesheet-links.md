@@ -66,7 +66,9 @@ from final HTML, including inert content, without reserializing other bytes.
 
 On each comparison side, validate recorded spans against the original final
 HTML before removing links or normalizing ignored regions. Read the inserted
-links from those spans even if paired Review-ignore surrounds them. Combine
+links from those spans even if paired Review-ignore surrounds them. Resolve
+each side's links against that side's original document route, including for
+moved entries. A current route must not replace the baseline route. Combine
 them with non-ignored authored resource references by the usual resource
 identity rules. Follow CSS imports and referenced public resources normally.
 Do not infer extra starting points from declarations or from matching href text.

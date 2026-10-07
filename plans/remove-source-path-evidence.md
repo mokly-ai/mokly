@@ -1,8 +1,9 @@
 # Remove Source-Path Evidence
 
 Status: Active. Milestones 1 to 31 are implemented, verified and pushed; the
-branch contains main `dc56e3d4`. Milestone 32's final gate and push are done;
-its post-push review is in progress.
+branch contains main `dc56e3d4`. Milestone 32's post-push review reported five
+findings. Findings 1 and 3 are fixed and verified locally. The reviewer owns
+the next push and review. Findings 2, 4 and 5 wait for the user.
 
 ## Status And Outcome
 
@@ -2426,9 +2427,25 @@ Evidence: `.context/remove-source-path-evidence/milestone-31.md`.
 ## Milestone 32: Verify, deliver and review
 
 - [x] Run `cargo xtask check` at 100%, inspect the diff and deletions against
-      `origin/main`, and record the evidence. The gate passed at 100% on the
-      final code tree in Milestone 31; Milestone 32 changes only this plan.
+      `origin/main`, and record the evidence. The original gate passed on the
+      final code tree in Milestone 31; the initial Milestone 32 delivery
+      changed only this plan.
 - [x] Run `git add -A`, commit with a Conventional Commit, and push the branch.
+- [x] Fix M32 finding 1 with option A. First capture moved screen and component
+      failures with root and co-located CSS, same-depth and deeper routes,
+      complete and fast comparison, Serve and export. Check every inserted-link
+      resource caller and use each side's own document route.
+- [x] Fix M32 finding 3 with option A. First capture missing-image and transform
+      failures in Build, Check and background compilation. Forward adapter
+      diagnostics through the existing callback. Keep sorted successful results
+      and one warning per identity at the sink.
+- [x] Align the relevant READMEs and protocols with these fixes. Run build,
+      typecheck, lint, focused tests, the exact complete unit command and
+      `cargo xtask check` at 100%. Fetch main without merging. Inspect the diff
+      and confirm only the four approved files are deleted.
+- [x] Run `git add -A` and make a local Conventional Commit that names both
+      fixed findings. Do not push in this fix round; the reviewer checks and
+      pushes the commit before the next review.
 - [ ] After the push, use `docs/implementation-review-prompt.md` to review the
       complete diff against `origin/main` and report findings. Keep the review
       read-only. Then apply the General review-fix rule in `AGENTS.md`: fix
@@ -2436,5 +2453,19 @@ Evidence: `.context/remove-source-path-evidence/milestone-31.md`.
       Fix new `Auto-fix: yes` findings once more, then stop and report the rest.
       Ask the user for findings tagged `Auto-fix: no`. Add each open finding
       as one line under this TODO. Keep reports and evidence under `.context/`.
+  - [ ] M32 finding 2 (Medium): foreign-namespace links can suppress required CSS. Recommend B: use one namespace-aware rule, after the user decides the provenance boundary.
+  - [ ] M32 finding 4 (Low): control characters in config filenames can make ignored-field warnings fail. Recommend B: retain the path as data and encode controls for display.
+  - [ ] M32 finding 5 (Low): the watch contract restores the retired `entries` input. Recommend B: correct the text and extend the existing docs guard with the exact obsolete claim.
+  - [ ] Earlier timing item: `tests/browser/css_evidence_page.ts` uses a 1-second inner visibility wait within a 15-second retry. Keep it pending; recommend explicit events or an approved I/O allowance change.
+  - [ ] Earlier timing item: `tests/current_baseline_commands.test.ts` uses 200 polls with 25 ms pauses for unavailable Changes. Keep it pending; recommend explicit events or an approved I/O allowance change.
+  - [ ] Earlier timing item: `tests/current_baseline_invalid.test.ts` uses 200 polls with 25 ms pauses for invalid baselines. Keep it pending; recommend explicit events or an approved I/O allowance change.
+  - [ ] Earlier timing item: `tests/former_marker_baseline.test.ts` uses 200 polls with 25 ms pauses for invalid ranges. Keep it pending; recommend explicit events or an approved I/O allowance change.
+  - [ ] Earlier timing item: `tests/watch_stylesheet_order.test.ts` uses 500 polls with 10 ms pauses for watcher startup. Keep it pending; recommend explicit events or an approved I/O allowance change.
+  - [ ] Earlier timing item: `tests/helpers/warning_generations.ts` uses a 5-second renderer subprocess timeout. Keep it pending; recommend explicit events or an approved I/O allowance change.
+  - [ ] Earlier cold-preview item (Medium, also on main): inspection can expire before a cold document arrives. Recommend separate preparation and adapter-readiness budgets with delayed-response tests.
+  - [ ] Earlier schema example item (Low, also on main): variant description is required in the example but optional in the comparison type. Recommend correcting the example and extending its compiler-backed check.
+  - [ ] Earlier exported-view item: temporary navigation omits "Changed component" lines until destination data loads. Recommend a separate decision on public affected-consumer evidence.
+  - [ ] Earlier mockup item: mockups show a "Catalogue home" crumb that the viewer omits. Recommend a product decision on the shared navigation contract before changing either side.
 
 Evidence: `.context/remove-source-path-evidence/milestone-32.md`.
+Fix-round evidence: `.context/remove-source-path-evidence/milestone-32-fixes.md`.

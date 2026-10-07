@@ -39,6 +39,7 @@ export function transformCompatibilityDocuments(
   retainedRoutes?: readonly string[],
   context?: CompatibilityContext,
   pending?: PendingGeneratedFiles,
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): CompatibilityTransform {
   const byPath =
     context?.byPath ?? new Map(entries.map((entry) => [entry.path, entry]));
@@ -60,6 +61,7 @@ export function transformCompatibilityDocuments(
     };
     const adapted = adaptLinkControls(original, route);
     diagnostics.push(...adapted.diagnostics);
+    adapted.diagnostics.forEach((diagnostic) => onWarning?.(diagnostic));
     const linked = rewriteMockLinks(
       adapted.html,
       route,

@@ -109,8 +109,12 @@ retain coverage of renders needed to validate its references.
 Diagnostics are plain data. The background renderer's structured-clone message
 carries them to the Serve parent unchanged. Configuration and registry producers
 use the same record before rendering. The compilation includes their diagnostics
-as well as render diagnostics. A failed compilation can forward collected
-records through its callback without inventing a result. They are never written into generated files, never included in
+as well as render diagnostics. During exhaustive compilation, forward each
+adapter's diagnostics through the compilation callback as soon as the adapter
+returns, before logical-link rewriting or the consumer transformer runs. A
+later validation or transform failure retains those warnings without inventing
+a result. Keep the successful result sorted and deduplicate at the sink.
+They are never written into generated files, never included in
 `check` comparisons, never served over HTTP, and never uploaded.
 
 ## Reporting

@@ -11,9 +11,100 @@ import { catalogueWithChanges } from "../dist/server/baseline_catalogue.js";
 import { computeCatalogueChanges } from "../dist/server/changed.js";
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
 import { startCatalogueServer } from "../dist/server/http.js";
+import { PlainServeReporter } from "../dist/server/reporter.js";
 import { removedPagePreviewSource } from "../dist/server/review_sources.js";
+import { serve } from "../dist/server/serve.js";
 
 import { movedCatalogueFixture } from "./helpers/move_catalogue.js";
+import { stylesheetMoveFixture } from "./helpers/move_review_fixture.js";
+
+for (const kind of ["screen", "component"] as const)
+  for (const destination of ["new/home", "new/deep/home"])
+    for (const stylesheet of ["action.css", "old/action.css"])
+      test(
+        `${kind} move to ${destination} with ${stylesheet} keeps Serve and export Changes available`,
+        { timeout: 30_000 },
+        async (t) => {
+          const fixture = await stylesheetMoveFixture(
+            t,
+            kind,
+            destination,
+            stylesheet,
+          );
+          const check = (catalogue: ReturnType<typeof readCatalogue>) => {
+            assert.equal(catalogue.changesStatus, "ready");
+            const entry = (
+              kind === "screen" ? catalogue.screens : catalogue.components
+            ).find((entry) => entry.path === destination)!;
+            assert.equal(entry.previousPath, "old/home");
+            assert.deepEqual(entry.changes, {
+              status: "ready",
+              included: true,
+              kind: "unmodified",
+            });
+          };
+          await t.test("Serve", async () => {
+            const messages: string[] = [];
+            let finish!: (status: string) => void;
+            const settled = new Promise<string>((resolve) => {
+              finish = resolve;
+            });
+            const reporter = new PlainServeReporter((line) =>
+              messages.push(line),
+            );
+            reporter.changesReady = () => finish("ready");
+            reporter.changesUnavailable = () => finish("unavailable");
+            const running = await serve(
+              fixture.config,
+              { base: "main", port: 0, watch: false },
+              { reporter },
+            );
+            try {
+              assert.equal(await settled, "ready", messages.join(""));
+              check(
+                readCatalogue(
+                  await (
+                    await fetch(`${running.url}/__mokly/catalogue.json`)
+                  ).json(),
+                ),
+              );
+              assert.equal(
+                (await fetch(`${running.url}/view/${destination}/`)).status,
+                200,
+              );
+            } finally {
+              await running.close();
+            }
+          });
+          await t.test("export", async () => {
+            await exportCatalogue(fixture.config, {
+              outDir: "site",
+              base: "main",
+            });
+            const catalogue = readCatalogue(
+              JSON.parse(
+                await fs.readFile(
+                  path.join(fixture.root, "site/__mokly/catalogue.json"),
+                  "utf8",
+                ),
+              ),
+            );
+            check(catalogue);
+            assert.ok(catalogue.comparisonUrl);
+            const artifacts = path.dirname(
+              path.join(fixture.root, "site", catalogue.comparisonUrl),
+            );
+            for (const side of ["before", "after"])
+              assert.equal(
+                await fs.readFile(
+                  path.join(artifacts, "snapshots", side, stylesheet),
+                  "utf8",
+                ),
+                fixture.resources[stylesheet],
+              );
+          });
+        },
+      );
 
 test("Serve and export retain all moves without old routes or removed document previews", async (t) => {
   const fixture = await movedCatalogueFixture(t);

@@ -43,6 +43,8 @@ resource and CSS analysis still reads the final linked document.
 `component_stylesheet_resources.ts` reads inserted links from validated original
 spans and checks their recorded public paths. These paths supplement normalized
 author resource references on both comparison paths and in the CSS rule scope.
+Each side resolves inserted links against its own document route. A moved
+entry keeps the baseline route for its baseline spans and resource paths.
 CSS imports and referenced assets follow the usual graph.
 `artifact_stylesheets.ts` carries the same private spans from complete and
 selected captures to publication validation. It adds no public output field. Matching still uses

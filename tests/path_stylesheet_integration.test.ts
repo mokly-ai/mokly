@@ -5,7 +5,55 @@ import { parseManifest } from "../dist/registry/manifest.js";
 import { mapUsagePaths } from "../dist/review/moves/identity.js";
 import { validateCssAnalysis } from "../packages/viewer/dist/review/result_css.js";
 
+import {
+  assertFastPathEquivalent,
+  compilationFiles,
+} from "./helpers/component_fast_path.js";
+import { stylesheetMoveFixture } from "./helpers/move_review_fixture.js";
 import { pathFixture } from "./helpers/path_fixture.js";
+
+for (const kind of ["screen", "component"] as const)
+  for (const destination of ["new/home", "new/deep/home"])
+    for (const stylesheet of ["action.css", "old/action.css"])
+      test(`${kind} move to ${destination} with ${stylesheet} agrees on complete and fast comparison`, async (t) => {
+        const fixture = await stylesheetMoveFixture(
+          t,
+          kind,
+          destination,
+          stylesheet,
+        );
+        const result = await assertFastPathEquivalent({
+          before: fixture.before.manifest,
+          after: fixture.after.manifest,
+          beforeFiles: compilationFiles(fixture.before, fixture.resources),
+          afterFiles: compilationFiles(fixture.after, fixture.resources),
+          config: fixture.config,
+          changedPaths: [],
+        });
+        assert.deepEqual(
+          result.changes.map((entry) => [
+            entry.after?.path,
+            entry.previousPath,
+            entry.reasons,
+          ]),
+          kind === "screen"
+            ? [[destination, "old/home", []]]
+            : [
+                [destination, "old/home", []],
+                [`${destination}/default`, "old/home/default", []],
+              ],
+        );
+        assert.deepEqual(result.affectedConsumers, []);
+        const views =
+          kind === "screen"
+            ? result.screens.find((entry) => entry.path === destination)!.views
+            : result.components.find((entry) => entry.path === destination)!
+                .variants[0]!.views;
+        assert.equal(views.length, 2);
+        assert.ok(
+          views.every((view) => view.state === "unchanged" && !view.material),
+        );
+      });
 
 test("path definitions keep stylesheet provenance and removed-field warnings beside documents", async (t) => {
   const fixture = await pathFixture({

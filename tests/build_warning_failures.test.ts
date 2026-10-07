@@ -6,11 +6,13 @@ import test from "node:test";
 
 import { PlainReporter } from "../dist/cli/reporter/plain.js";
 import { RichReporter } from "../dist/cli/reporter/rich.js";
+import { run } from "../dist/cli/run.js";
 import { FileSystemConfigLoader } from "../dist/config/load.js";
 import { serve } from "../dist/server/serve.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { repositoryRoot, validEntrySource } from "./helpers/fixture.js";
+import { linkWarningFailureFixture } from "./helpers/link_control_warning_fixture.js";
 import { memoryTerminal } from "./helpers/terminal.js";
 import { warningFixture } from "./helpers/warning_generations.js";
 import {
@@ -22,6 +24,53 @@ import {
 
 const configMessage =
   "review.sharedImpact has been removed; ignoring it. Delete the field.";
+
+for (const mode of ["plain", "rich"] as const)
+  for (const outcome of ["resource", "transform", "success"] as const)
+    test(`${mode} Build and Check retain link warnings on ${outcome}`, async (t) => {
+      const fixture = await linkWarningFailureFixture(outcome);
+      t.after(() => fixture.remove());
+      for (const command of ["build", "check"])
+        await t.test(command, async () => {
+          const terminal = memoryTerminal({ isTTY: false, columns: 240 });
+          const reporter =
+            mode === "plain"
+              ? new PlainReporter(terminal.environment)
+              : new RichReporter(terminal.environment);
+          try {
+            const code = await run(
+              [command, "--config", fixture.configPath],
+              fixture.root,
+              terminal.environment,
+              reporter,
+            ).catch((error: unknown) => {
+              reporter.renderError(error, (value) => value);
+              return 1;
+            });
+            assert.equal(
+              code,
+              outcome === "success" ? 0 : 1,
+              terminal.stderr(),
+            );
+            const prefix = mode === "plain" ? "[mokly/warning]" : "  !";
+            const expected = fixture.diagnostics
+              .map(
+                (diagnostic) =>
+                  `${prefix} ${diagnostic.route ?? 'entry "home"'}: ${diagnostic.message}\n`,
+              )
+              .join("");
+            assert.equal(terminal.stderr().slice(0, expected.length), expected);
+            const rest = terminal.stderr().slice(expected.length);
+            if (outcome === "success") assert.equal(rest, "");
+            else {
+              assert.match(rest, fixture.failure);
+              assert.ok(!rest.includes(prefix), rest);
+            }
+          } finally {
+            reporter.close();
+          }
+        });
+    });
 
 for (const mode of ["plain", "rich"] as const) {
   for (const command of ["build", "check", "export", "publish"]) {

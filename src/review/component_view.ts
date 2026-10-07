@@ -48,16 +48,12 @@ export async function compareComponentView(
     ? await context.beforeReader.text(before.path)
     : undefined;
   const head = after ? await context.afterReader.text(after.path) : undefined;
-  const baseStylesheets = insertedStylesheetResources(
-    base,
-    before?.usage,
-    selected.path,
-  );
-  const headStylesheets = insertedStylesheetResources(
-    head,
-    after?.usage,
-    selected.path,
-  );
+  const baseStylesheets = before
+    ? insertedStylesheetResources(base, before.usage, before.path)
+    : [];
+  const headStylesheets = after
+    ? insertedStylesheetResources(head, after.usage, after.path)
+    : [];
   const view: ViewReview = {
     viewport: selected.viewport,
     colorScheme: selected.colorScheme,
