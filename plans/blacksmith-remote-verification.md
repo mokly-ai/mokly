@@ -1,6 +1,6 @@
 # Blacksmith Remote Verification
 
-Status: Active. Milestones 1 to 6 are complete. The user approved findings 1 to 3 for Milestone 7. Findings 4 to 14 stay open. The separate reviewer will review Milestone 7 and open the PR. The plan closes when its PR merges.
+Status: Active. Milestones 1 to 6 are complete. The approved fixes for findings 1 to 3 are implemented. All checks pass. Milestone 7 awaits the separate review. Findings 4 to 14 stay open. The separate reviewer will open the PR. The plan closes when its PR merges.
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
 Blacksmith key is available. Run it locally when no key is available. The key
@@ -436,16 +436,16 @@ Required work:
       lints, Prettier, ESLint, prepared TypeScript, protocol tests and the
       focused verification and CI Node tests with the pinned Node and npm.
 - [x] Commit the fixes. Name findings 1 to 3 and their options in the body.
-- [ ] Fetch and merge `origin/main` with a merge commit. Follow Mainline
+- [x] Fetch and merge `origin/main` with a merge commit. Follow Mainline
       Feature Preservation. Confirm two parents. Review each path in the
       remerge diff. Record all six merge resolutions in
       `.context/blacksmith-remote-verification/merge-justifications.md`.
-- [ ] Inspect the diff and deletions against `origin/main`. Push the branch.
-- [ ] Run `cargo xtask check` in default mode with
+- [x] Inspect the diff and deletions against `origin/main`. Push the branch.
+- [x] Run `cargo xtask check` in default mode with
       `MOKLY_TESTBOX_REF=calummoore/blacksmith-ci-remote-testing`. Require
       11/11 commands, 9/9 reports and no active box. If the API fails before
       suites start, clean up and retry once. Record both attempts.
-- [ ] Update the plan after all checks pass. Run `git add -A`. Commit with
+- [x] Update the plan after all checks pass. Run `git add -A`. Commit with
       Conventional Commits and push the branch.
 - [ ] After the push, a reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)
