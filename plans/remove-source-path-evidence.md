@@ -2677,6 +2677,8 @@ movement without another merge. The branch stays local.
       rest. Ask the user for findings tagged `Auto-fix: no`. Add each open
       finding as one line under this TODO. Keep reports and evidence under
       `.context/`.
+  - [ ] M33 finding 1 (Medium, performance): renderer resource checks build a new public-file policy per view, so the work grows with views times sources. Recommend A: reuse the compilation's policy.
+  - [x] Fix M33 findings 2 and 3 with approved option A. Capture the placement-warning failure, preserve sorted successful diagnostics and one callback delivery, correct the live closing status, run targeted checks and the complete gate, and make local commits. The reviewer owns push and one re-review.
 
 ### Approved migrations
 
@@ -2784,6 +2786,8 @@ captured two-parent history. The latest integrated main is `acac1c73`; the final
 fetch found no later commit. Preservation checks retain every required main
 addition or classify its approved migration or move. Only the four approved
 files are deleted against main. No unresolved merge meaning conflict remains.
-Push and the post-push review remain unchecked, as the user directed.
+The reviewer pushed `d1414026`; the Milestone 33 review-fix round is in progress.
 
 Evidence: `.context/remove-source-path-evidence/milestone-33.md`.
+
+Review-fix evidence: `.context/remove-source-path-evidence/milestone-33-fixes.md`.
