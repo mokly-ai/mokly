@@ -61,10 +61,10 @@ Prepack must keep stdout empty; build output goes to stderr so real
 `npm pack --json` lifecycle output remains parseable. POSIX and Windows cmd.exe
 both support the build script's `1>&2` redirection.
 
-The launcher uses the installed Turbo Node entry in both POSIX and Windows.
-It removes both credential variables and selects local:rw when either is absent.
-This prevents the 2.11.7 client's token-only status probe even in local mode.
-Direct Turbo invocations must apply the same shell setup; do not supply half a pair.
+The launcher leaves Windows TTY handling to the installed Turbo shim.
+It ignores SIGINT, forwards SIGTERM/SIGHUP, and preserves the child's exit signal.
+It unsets incomplete credential pairs and selects local:rw, preventing token-only probes.
+Direct Turbo invocations must use the same credential setup; do not supply half a pair.
 
 ## Global Settings And Environment
 

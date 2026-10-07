@@ -730,6 +730,16 @@ before the merge.
 - [ ] Review the complete local diff against `origin/main` with
       `docs/implementation-review-prompt.md` after the push. Report findings
       without changing the implementation.
+  - Finding 1 (high, security): the committed `remoteCache.apiUrl`/`teamSlug` plus Turbo's file-based login (turbo login or the Vercel CLI login under the user config directory) make every Turbo run without the env pair send a `POST /v8/artifacts/events?slug=mokly` with the developer's token to the Worker; recommend removing apiUrl/teamSlug from turbo.json, injecting TURBO_API and the team only when the pair is present, plus a capture-server regression test with synthetic login files. Waiting for the user.
+  - Finding 3 (low, repository rule): the protocol index format paragraph that merge `6dece14` shortened still lacks most of main's statements; needs the user's approval of the shortened text or a restored paragraph with a reviewed cap. Waiting for the user.
+  - [x] Fix finding 2: preserve launcher signal handling and Windows TTY
+        delegation; prove graceful child shutdown and exit signals through
+        event-order regressions before and after the fix.
+  - [ ] Fix finding 4: record PR #170 and its confirmed CI cache/native path,
+        retain the incomplete measurement TODO and move release force proof
+        to post-merge follow-up.
+  - [ ] Run focused and Markdown/protocol tests, then one complete default
+        `cargo xtask check`; commit each fix separately and push for re-review.
 
 Evidence: `.context/turborepo-cloudflare-remote-cache/m4-validation.md`.
 Main integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-main-decisions.md`.
@@ -739,6 +749,7 @@ Review-guidance integration decisions: `.context/turborepo-cloudflare-remote-cac
 Plan-history integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-history-main-decisions.md`.
 Remote-verification and publish-check integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-remote-main-decisions.md`.
 Fixture-cleanup flake fix (Git 2.55 background maintenance) and gate runs: `.context/turborepo-cloudflare-remote-cache/m4-flake-turbo-inventory.md`.
+Milestone 4 review-fix evidence: `.context/turborepo-cloudflare-remote-cache/m4-review-fixes.md`.
 
 ## Post-merge follow-up (non-blocking)
 
