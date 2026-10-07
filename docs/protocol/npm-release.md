@@ -110,8 +110,10 @@ independent suite and shard commands, including their complete command mapping
 and fail-closed inventory evidence, are defined by the
 [CI verification contract](./ci-verification.md). Selected suites and shards are
 partial checks; the unqualified command remains the complete release gate. The
-release workflow's `complete` verification mode runs this command directly. Its
-default `evidence` mode may instead consume a validated aggregate that proves
+release workflow's `complete` verification mode always runs the local gate.
+It runs in GitHub Actions, where `GITHUB_ACTIONS=true` forbids the remote
+executor under the [remote verification contract](./remote-verification.md).
+Its default `evidence` mode may instead consume a validated aggregate that proves
 the same tree under the
 [release verification evidence contract](./npm-release-evidence.md).
 
