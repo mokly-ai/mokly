@@ -408,13 +408,27 @@ Pull request titles use Conventional Commits and at most 72 Unicode code points.
 The separate title check runs when a PR opens, changes, or receives a push; see
 the [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).
 
-`npm run dependencies:check` audits every workspace dependency category against
-the live registry. It fails on Low-or-higher advisories unless an active reviewed
-exception covers the exact dev-only path. Exceptions expire on an inclusive UTC
-date and cannot extend more than 31 days from the current date. The packed ESM
-consumer's production audit stays strict and has no exceptions. See
-[dependency security](./docs/protocol/dependency-security.md) for the data file,
-review rules, and the temporary Braces exception.
+`npm run dependencies:check` runs the strict live audit of every workspace
+dependency category from the lockfile. It fails on uncovered Low-or-higher
+advisories and invalid exception records. Use
+`npm run dependencies:check -- --baseline` to report issues already present at
+the comparison commit as notices and fail on new issues. The
+[baseline audit contract](./docs/protocol/dependency-audit-baseline.md) defines
+byte comparison and inheritance. Baseline mode is the default for
+`cargo xtask check`, ordinary pull requests, and pushes. Select strict local
+verification with `cargo xtask check --dependency-audit strict`.
+Either mode can write a JSON summary with `--report <file>`.
+
+Release Please and dependency update pull requests, release publishing, and
+the daily `main` audit stay strict. The scheduled workflow creates or refreshes
+the [dependency update pull request](./docs/protocol/dependency-audit-update-pr.md)
+for findings and exception issues. It preserves human commits and closes the
+update pull request when `main` passes. It needs no installed dependencies for
+the audit or script load; only the failure path installs and updates packages.
+Reviewed exceptions keep their exact dev-only path, inclusive UTC end date,
+and maximum 31-day window. The packed ESM consumer's production audit stays
+strict with no exceptions. See [dependency security](./docs/protocol/dependency-security.md)
+for the review rules and temporary Braces exception.
 
 ### Key code
 
