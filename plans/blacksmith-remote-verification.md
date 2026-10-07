@@ -1,6 +1,6 @@
 # Blacksmith Remote Verification
 
-Status: Active. Milestones 1 to 6 are complete. The approved fixes for findings 1 to 3 are implemented. All checks pass. Milestone 7 awaits the separate review. Findings 4 to 14 stay open. The separate reviewer will open the PR. The plan closes when its PR merges.
+Status: Active. Milestones 1 to 7 are complete. The review of the approved fixes found no new findings. Findings 4 to 14 await the user's decision. The plan closes when its PR merges.
 
 Run the complete `cargo xtask check` gate on Blacksmith Testboxes when a
 Blacksmith key is available. Run it locally when no key is available. The key
@@ -407,7 +407,7 @@ Leave the final review to the separate reviewer.
 
 Evidence: `.context/blacksmith-remote-verification/milestone-6-evidence.md`.
 
-## Milestone 7: Approved review fixes
+## Milestone 7: Approved review fixes — completed
 
 Fix the three findings that the user approved on 2026-10-07. Keep findings 4
 through 14 open. Leave the final review and PR to the separate reviewer.
@@ -447,7 +447,7 @@ Required work:
       suites start, clean up and retry once. Record both attempts.
 - [x] Update the plan after all checks pass. Run `git add -A`. Commit with
       Conventional Commits and push the branch.
-- [ ] After the push, a reviewer uses
+- [x] After the push, a reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`. The reviewer
       reports the findings. Keep the review read-only. The implementer then
@@ -456,6 +456,7 @@ Required work:
       `Auto-fix: yes` findings once more. Run the checks. Commit and push.
       Then stop and report the rest. Add each open finding as one line under
       this TODO.
+  - Review of `546ee727` and merge `e17f24a0`: no new findings.
 
 Evidence: `.context/blacksmith-remote-verification/milestone-7-evidence.md`.
 
