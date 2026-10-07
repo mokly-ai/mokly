@@ -338,10 +338,10 @@ build; run `npm run prepare:verification` after a `src/` change before using
 them. Browser tests reject `.only`; select by path and `-g`. These selected runs
 are partial verification. See [developer test commands](./docs/protocol/developer-test-commands.md)
 for the argument and report rules.
-Selected unit runs report the number of tests that ran. They warn when a file
-runs no tests, including when a name pattern matches nothing.
-Developer argument errors print their message without a stack. Internal faults
-keep the full error report.
+Selected unit runs print the number of tests that ran. They print a warning
+for each selected file that reports zero tests; skipped and todo tests count
+as reported tests. Argument errors and selected-run failures print a short
+report without a stack trace. Internal faults keep the full error report.
 
 Run the complete repository gate before submitting a change:
 

@@ -314,6 +314,7 @@ and merged documentation-only main updates without another complete gate.
 This milestone applies the selected output and error improvements, shares the
 Windows-safe npm test launcher, and integrates main. Post-push review is pending.
 Evidence: `.context/targeted-developer-test-runs/milestone-4.md`.
+Review 3: .context/targeted-developer-test-runs/review-3.md.
 
 Decisions: The user selected finding 1 option A: count tests from file summaries,
 warn for each zero-test file, and keep a passing exit. The user selected finding
@@ -344,3 +345,8 @@ failing tests after a gate failure.
 - [ ] After the push, review the complete diff against `origin/main` with
       `docs/implementation-review-prompt.md`, report findings, then apply the
       review-fix rule in `AGENTS.md`. The orchestrating agent runs this review.
+  - Review 3 finding 1, Medium: pattern-only runs warn for nearly every file; recommend A.
+  - Review 3 finding 2, Low: the failure report mixes two counts; recommend A.
+  - Review 3 finding 3, Low: Ctrl+C shows a temp-file ENOENT stack; recommend A.
+  - Review 3 finding 4, Low: an empty test file fails as an internal fault; recommend A.
+  - Review 3 finding 6, Low: invalid-pattern errors escape backslashes; recommend A.
