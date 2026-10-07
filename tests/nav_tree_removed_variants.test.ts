@@ -5,7 +5,7 @@ import type {
   ManifestEntry,
   ManifestPage,
   ManifestScreen,
-  ManifestV8,
+  ManifestV9,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { targetHead } from "../packages/viewer/dist/shell/head.js";
@@ -15,6 +15,8 @@ import {
   type NavNode,
 } from "../packages/viewer/dist/shell/nav_tree.js";
 import { toRouteTarget } from "../packages/viewer/dist/shell/target.js";
+
+import { currentManifest } from "./helpers/current_manifest.js";
 
 const removed = {
   entryId: "welcome-error",
@@ -190,16 +192,16 @@ function page(id: string, title: string, _route: string): ManifestPage {
 function manifest(
   entries: readonly ManifestEntry[],
   pages: readonly ManifestPage[] = [],
-): ManifestV8 {
+): ManifestV9 {
   const all = [...entries, ...pages];
-  return {
+  return currentManifest({
     entries: all.map((entry) => ({
       ...entry,
       declaredDependencies: entry.declaredDependencies ?? [],
     })),
     generatedBy: "mokly",
-    schemaVersion: 8 as const,
+    schemaVersion: 9 as const,
     folders: [],
     sourceFiles: [...new Set(all.map(({ sourcePath }) => sourcePath))].sort(),
-  };
+  });
 }

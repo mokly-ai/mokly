@@ -112,7 +112,7 @@ retain that caller's ownership.
 ## Styles And Hosts
 
 `metadata.ts` declares exact ownership of a component's `.view.tsx` module and
-`generated/design-library/{group}/{slug}.css`. Keep registration, saved fixtures,
+`examples/basic/design-library/{group}/{slug}.css`. Keep registration, saved fixtures,
 controls metadata, shared helpers and navigation tables out of those dependencies.
 An example-only edit must not report implementation impact on every consumer.
 
@@ -167,16 +167,33 @@ saved variants and local edit/unset/reset behavior in Serve, plus read-only
 inspection after export. Keep the generated HTML and manifest as ignored local
 artifacts; commit their authored source instead.
 
+The command runs all design-library tests and the four attribution files once.
+`tests/design_library_attribution.test.ts` classifies all sixteen owned sheets
+once and keeps a single-change `tag-chip` control.
+`tests/component_design_attribution.test.ts` classifies all nine shared sheets
+once and checks exact scopes and per-entry dependency reasons.
+`tests/design_library_source_edits.test.ts` keeps impacting edits alone and
+same-file edits targeting different entries separate. Other edits may share a
+rebuild with distinct paths or disjoint reason kinds at the same path. The test
+checks the exact path/reason union and no affected consumers. An extra change
+within another member's expected path and reason kinds can be masked; this is a
+reviewed trade-off, not exact per-edit isolation.
+`tests/design_library_committed_baseline.test.ts` checks baseline reads and
+agreement between Serve and comparison. The three shared files use `fileFixture`,
+which starts setup on first use and registers teardown when the file loads. The
+committed-baseline file creates its fixture inside its single test. A filtered
+run with no matching test starts no fixture.
+
 The tests retain the established screen inventory with its file-derived paths,
 assert real consumers and
 owner chains, guard migrated composition points, and edit actual source files in
 isolated copies. They distinguish implementation changes, saved metadata changes,
 screen inputs/slots/order, exclusive CSS and conservative global dependencies.
 Serve and comparison share the same classification and bounded baseline reads.
-Full-catalogue browser fixtures share a five-minute setup budget to build the
-packages and example or the historical baseline, export every generated view
-and verify input stability. The cold preview-preparation spec uses a dedicated
-fixture so its build has that budget too. Browser interactions use the default
+Full-catalogue browser fixtures retain a 600-second fixture budget. Global setup
+currently prepares one rebuilt example baseline and shares its cache with the
+export fixtures; the approved fixture change will use committed output there.
+One cold-baseline test and the cold preview-preparation test keep real rebuilds. Browser interactions use the default
 one-minute limit, and server readiness keeps its own deadline.
 
 See the [adoption contract](../../../../../docs/protocol/mokly-design-components.md)

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { ManifestEntry } from "../packages/viewer/src/registry/types.js";
-import type { ReviewResultV5 } from "../packages/viewer/src/review/component_types.js";
+import type { ReviewResultV6 } from "../packages/viewer/src/review/component_types.js";
 import type { ShellContext } from "../packages/viewer/src/shell/context.js";
 import { workspaceData } from "../packages/viewer/src/shell/workspace_data.js";
 import { affectedUsageLinks } from "../packages/viewer/src/shell/workspace_usage_data.js";
@@ -165,7 +165,7 @@ test("affected evidence resolves each side and omits a before path another kind 
         ],
       },
     ],
-  } as unknown as ReviewResultV5;
+  } as unknown as ReviewResultV6;
   assert.deepEqual(
     affectedUsageLinks(catalogue, result, "lib/badge").map((link) => [
       link.entryId,

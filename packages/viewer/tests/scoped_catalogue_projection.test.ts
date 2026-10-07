@@ -81,6 +81,7 @@ function scopedBytes(
   view: ShellBootstrapView,
 ): string {
   return serializeShellBootstrap({
+    schemaVersion: 2,
     catalogue: projectScopedCatalogue(catalogue, view),
     context,
     view,

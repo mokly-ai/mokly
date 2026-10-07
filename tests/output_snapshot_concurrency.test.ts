@@ -45,7 +45,7 @@ function message(child: ChildProcess, type: string): Promise<void> {
 
 for (const previous of ["fixture/Case", "fixture/old"])
   test(
-    `compile snapshots wait for another process pruning ${previous}`,
+    `compile snapshots do not wait for another process replacing ${previous}`,
     { timeout: 30_000 },
     async (t) => {
       const current = previous.endsWith("Case")
@@ -120,8 +120,8 @@ for (const previous of ["fixture/Case", "fixture/old"])
         await done;
         assert.equal(
           outcome,
-          "waiting",
-          "validation must not capture the half-written output tree",
+          "finished",
+          "route validation uses memory while the old output tree is absent",
         );
         const accepted = await read;
         if ("bundle" in accepted) {
@@ -140,7 +140,7 @@ for (const previous of ["fixture/Case", "fixture/old"])
           assert.equal(
             outputScans,
             0,
-            "demand rendering reuses the accepted locked snapshot",
+            "demand rendering reuses the accepted in-memory route set",
           );
           spy.mock.restore();
         }

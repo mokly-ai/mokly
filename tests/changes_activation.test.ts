@@ -4,7 +4,7 @@ import test from "node:test";
 import { viewHref } from "../packages/viewer/dist/data.js";
 import type {
   ManifestScreen,
-  ManifestV8,
+  ManifestV9,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { changesActivation } from "../packages/viewer/dist/shell/changes_activation.js";
@@ -12,6 +12,8 @@ import type { ShellContext } from "../packages/viewer/dist/shell/context.js";
 import type { ShellRoute } from "../packages/viewer/dist/shell/routes.js";
 import { routeFromUrl } from "../packages/viewer/dist/shell/routes.js";
 import { defaultSelection } from "../packages/viewer/dist/viewer/selection.js";
+
+import { currentManifest } from "./helpers/current_manifest.js";
 
 type CurrentManifestScreen = ManifestScreen & {
   declaredDependencies: readonly string[];
@@ -27,13 +29,13 @@ const failure = {
   tags: ["errors"],
   variantOf: parent.path,
 };
-const manifest: ManifestV8 = {
+const manifest: ManifestV9 = currentManifest({
   entries: [parent, empty, failure],
   generatedBy: "mokly",
-  schemaVersion: 8 as const,
+  schemaVersion: 9,
   folders: [],
   sourceFiles: [parent.sourcePath],
-};
+});
 const catalogue = createCatalogue(manifest);
 const context: ShellContext = {
   activeId: parent.path,

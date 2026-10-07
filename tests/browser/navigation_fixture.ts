@@ -59,7 +59,7 @@ export async function startNavigationFixture(): Promise<NavigationFixture> {
   );
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, "fixture/nested/home", "nested.html"),
-    `<!doctype html><html><head><base target="_top"></head><body><div id="local"></div><a id="local-base" href="#local">Base-targeted</a><a id="local-unmarked" href="#local" target="_top">Local</a><a data-mokly-link="fixture/nested/details" href="../details/index.mobile.html" id="local-marked" target="_top">Marked-looking</a></body></html>`,
+    `<!doctype html><html><head><base target="_top"></head><body><div id="local"></div><a id="local-base" href="#local">Base-targeted</a><a id="local-unmarked" href="#local" target="_top">Local</a><a data-mokly-link="fixture/nested/details" href="../../../mokly-generated/fixture/nested/details/index.mobile.html" id="local-marked" target="_top">Marked-looking</a></body></html>`,
   );
   for (const viewport of ["desktop", "mobile"])
     await fs.promises.writeFile(
@@ -77,12 +77,14 @@ export async function startNavigationFixture(): Promise<NavigationFixture> {
     "legacy/guide.source.ts",
   );
   const config = await loadConfig(fixture.root);
-  await writeCompilation(await compileCatalogue(config), config);
+  const compilation = await compileCatalogue(config);
+  await writeCompilation(compilation, config);
   const server = await startCatalogueServer(config, {
     base: "origin/main",
+    generatedOutputs: compilation.outputs,
     snapshot: await loadCatalogueSnapshot(config, async () => ({
       movedEntries: [],
-      schemaVersion: 2,
+      schemaVersion: 3,
       baseRef: "origin/main",
       baseCommit: "a".repeat(40),
       changedEntries: [
@@ -112,7 +114,7 @@ const metadata = { dependencies: [], relatedDocs: [] };
 function Home({ compact }) {
   const nestedGenerated = compact ? "../details/index.mobile.html" : "../details/index.desktop.html";
   return <main id="home">
-    <img alt="" src={compact ? "../../../slow-navigation-mobile.svg" : "../../../slow-navigation-desktop.svg"} />
+    <img alt="" src={compact ? "../../../../slow-navigation-mobile.svg" : "../../../../slow-navigation-desktop.svg"} />
     {compact ? <MockLink fragment="section" id="mock-link" to="fixture/nested/details">MockLink details</MockLink> : <a href="mock:fixture/nested/details#section" id="raw-link">Raw details</a>}
     <map name="destinations"><area href="mock:fixture/nested/details#section" id="area-link" shape="default" /></map>
     <svg viewBox="0 0 100 30"><a href="mock:fixture/nested/details#section" id="svg-link"><text x="0" y="20">SVG details</text></a></svg>
@@ -130,7 +132,7 @@ function Home({ compact }) {
     <form action="#home" id="top-form" target="_top"><button type="submit">Submit</button></form>
     <script>window.__consumerScriptRan = true;</script>
     <iframe id="srcdoc-nested" srcDoc={'<a data-mokly-link="fixture/nested/details#section" href="../details/index.mobile.html" id="srcdoc-marked" target="_top">Marked</a><a href="#ordinary" id="srcdoc-unmarked" target="_top">Ordinary</a><a href="#popup" id="srcdoc-popup" target="_blank">Popup</a><script>parent.__nestedScriptRan=true</script>'} title="srcdoc nested" />
-    <iframe id="local-nested" src="./nested.html" title="local nested" />
+    <iframe id="local-nested" src="../../../../fixture/nested/home/nested.html" title="local nested" />
     <iframe id="generated-nested" src={nestedGenerated} title="generated nested" />
     <iframe id="cross-nested" src="https://cross-origin.example.test/nested.html" title="cross-origin nested" />
   </main>;

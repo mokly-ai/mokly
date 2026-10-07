@@ -1,10 +1,9 @@
-# Configuration Discovery And Exclusions
+# Configuration Discovery
 
 Configuration uses [roots](./mokly-configuration.md#roots). Every matched file
 has exactly one root. The [root discovery contract](./mokly-root-discovery.md)
 defines traversal, physical confinement, filesystem races and source ownership.
-The [public exclusion contract](./mokly-public-exclusions.md) defines exclusion
-globs and their resolved representation. The [folder contract](./mokly-folders.md)
+The [folder contract](./mokly-folders.md)
 defines collection exclusions; excluded root matches remain protected sources.
 
 ## Traversal And Ownership
@@ -47,3 +46,9 @@ skip the generated tree before reading folder records or entry modules.
 Discovery and watch share these boundaries. The
 [imported CSS configuration](./mokly-configuration-imported-styles.md) and
 [diagnostic catalogue](./mokly-imported-styles-errors.md) own the exact rules.
+
+`publicExclude` was removed. Supplying it, including as `undefined`, fails
+with `config-invalid` and the documented migration diagnostic. Public files
+are the validated referenced
+[asset closure](./mokly-generated-output.md#closure-urls-and-publication).
+Runtime source protection remains mandatory.

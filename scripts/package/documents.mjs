@@ -4,7 +4,12 @@ import path from "node:path";
 
 /** Prove the packed parser renders documents and exports byte-exact resources. */
 export async function inspectMarkdownDocuments(root, output, exported = false) {
-  const base = path.join(root, output, exported ? "static" : "");
+  const base = path.join(
+    root,
+    output,
+    exported ? "static" : "",
+    "mokly-generated",
+  );
   const html = await fs.readFile(
     path.join(base, "guides/markdown/index.html"),
     "utf8",
@@ -20,7 +25,7 @@ export async function inspectMarkdownDocuments(root, output, exported = false) {
   if (exported) {
     const catalogue = JSON.parse(
       await fs.readFile(
-        path.join(root, output, "__mokly/catalogue.json"),
+        path.join(root, output, "mokly-viewer/catalogue.json"),
         "utf8",
       ),
     );

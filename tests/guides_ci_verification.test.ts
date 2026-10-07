@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { release, verification, workflow } from "./helpers/guides_ci.js";
+import {
+  read,
+  protocol,
+  verification,
+  workflow,
+  release,
+  sources,
+} from "./helpers/guides_ci_context.js";
 
 test("test repository inputs are deterministic and title types stay fixed", () => {
   assert.match(verification, /isolated fixture repository/u);
@@ -69,7 +76,7 @@ test("test repository inputs are deterministic and title types stay fixed", () =
   assert.match(release, /CI workflow graph contract.*owns checkout history/u);
   assert.match(
     workflow,
-    /It must fetch release tags for the public-package-export ratchet, plus `origin\/main` and enough history for merge-base ratchets; it resolves `origin\/main` for nothing else/u,
+    /It must fetch release tags for the public-package-export ratchet, plus `origin\/main` and enough history for merge-base ratchets and the baseline dependency audit\. The baseline audit reads the root manifest, lockfile, and exception file from that comparison commit/u,
   );
   assert.match(
     workflow,
@@ -81,7 +88,7 @@ test("test repository inputs are deterministic and title types stay fixed", () =
   );
   assert.match(
     workflow,
-    /Every npm-running job keys npm's download cache from the checked-out `package-lock\.json`; none reads a branch-point lockfile/u,
+    /Every cached CI job keys npm's download cache from the checked-out `package-lock\.json`\. Only the repository audit reads a comparison-commit lockfile, for baseline evaluation rather than a cache key/u,
   );
   assert.match(
     verification,
@@ -133,4 +140,27 @@ test("browser shards stay whole and balanced by test count", () => {
     verification,
     /A failed browser discovery reports the load errors from Playwright's JSON output as well as its standard error/u,
   );
+});
+
+test("CI flags and credential sources exist in code and the upload contract", () => {
+  const parser = read("src/cli/arguments.ts");
+  const help = read("src/cli/help.ts");
+  for (const [id, source] of sources) {
+    for (const [, flags] of source.matchAll(
+      /\bnpx (?:--no-install )?mokly publish([^\n]*)/gu,
+    )) {
+      for (const [flag] of (flags ?? "").matchAll(/--[a-z]+(?:-[a-z]+)*/gu)) {
+        assert.ok(parser.includes(`"${flag}"`), `${id}: ${flag}`);
+        assert.ok(
+          help.includes(flag) && protocol.includes(flag),
+          `${id}: ${flag}`,
+        );
+      }
+    }
+  }
+  for (const name of ["MOKLY_ENDPOINT", "MOKLY_TOKEN"]) {
+    assert.ok(sources.get("ci/publish-from-ci")?.includes(name));
+    assert.ok(protocol.includes(name));
+    assert.ok(read("src/publish/options.ts").includes(name));
+  }
 });

@@ -1,8 +1,10 @@
 # CI Suite Evidence
 
 This document supplements the [CI verification contract](./ci-verification.md)
-with fixture ownership, failure cleanup, browser shard balance, and acceptance
-measurement rules for the unit, browser, and hydration suites.
+with fixture ownership, test concurrency, failure cleanup, unit shard balance
+and scenario grouping, browser shard balance, and acceptance measurement rules
+for the unit, browser, and hydration suites. Test timing follows
+[CI Test Timing](./ci-test-timing.md).
 
 ## Fixture Lifetime And Cleanup
 
@@ -45,11 +47,12 @@ inputs because preparation is part of what those tests verify. Fixture phases
 emit `[mokly:fixture-timing]` JSON with the fixture, phase, duration, status,
 and whether the operation itself is under test.
 
-Full-catalogue browser preparations share a five-minute setup budget in
+Full-catalogue browser preparations share a ten-minute setup budget in
 `tests/helpers/fixture_timing.ts`. Cold package/example builds, baseline
 exports, and ordinary publication fixtures use that budget independently of the
-default one-minute browser test timeout. Assertion deadlines, retries, and
-worker limits remain unchanged; server readiness retains its own bound.
+default one-minute browser test timeout. Assertion deadlines and retries
+remain unchanged, worker counts follow [Test Concurrency](#test-concurrency),
+and server readiness retains its own bound.
 
 Wrangler Pages fixtures pass port zero and adopt the exact readiness URL
 Wrangler reports; they do not release a probe socket before server startup.
@@ -58,6 +61,50 @@ directory beneath their temporary harness so runner metadata cannot enter the
 consumer repository's publication fingerprint. Unit tests that fork compiled CLI
 entrypoints set an empty `execArgv`, preventing the parent test runner's loader
 and concurrency flags from changing child startup behavior.
+
+## Test Concurrency
+
+[`scripts/verification/concurrency.mjs`](../../scripts/verification/concurrency.mjs)
+owns how many tests run at once. Node runs at most half of
+`os.availableParallelism()` test files at once, and never fewer than two.
+Playwright uses one worker unless `MOKLY_PLAYWRIGHT_WORKERS` is set. The
+hydration suite runner sets that variable to half the available CPUs, never
+fewer than one, when the caller leaves it unset. Each spec file still runs in
+one worker because `fullyParallel` stays `false`. The 2-vCPU hosted runners
+therefore keep two unit files and one worker in every Playwright suite, and an
+eight-CPU workstation runs four unit files and four hydration workers.
+
+Browser specs keep one worker by default. The viewer gives a same-origin
+preview five seconds to load, as the
+[frame adapter contract](./mokly-frame-adapter.md) states, and the first
+on-demand render of a page can exceed that while other workers load the CPU.
+Pages that load correctly alone then fail. Hydration specs check that pages
+hydrate, and they pass with parallel workers.
+
+`MOKLY_UNIT_CONCURRENCY` replaces the unit file limit and
+`MOKLY_PLAYWRIGHT_WORKERS` replaces the worker count of both Playwright suites.
+Each accepts only a positive decimal integer without a sign or leading zero, up
+to JavaScript's maximum safe integer. Any other value stops the command before
+tests start. The unit and Playwright runners print the value they use.
+
+Each Playwright worker owns one example server.
+[`tests/browser/example_servers.ts`](../../tests/browser/example_servers.ts)
+assigns consecutive ports from `MOKLY_PLAYWRIGHT_PORT` (default 4517), one per
+worker, and each worker's `baseURL` uses the port at its `TEST_PARALLEL_INDEX`.
+A server renders on-demand pages through one worker thread, so a shared server
+would queue every worker's renders behind each other. Global setup waits until
+every server finishes its initial HEAD comparison. These plain Serve processes
+retain their generated output in memory and do not take the output write lock.
+Package/example preparation writes the generated tree before the servers start.
+Use `MOKLY_PLAYWRIGHT_WORKERS` rather than Playwright's `--workers`:
+global setup rejects a worker count above the number of servers.
+
+Test files that run at the same time share only the suite's read-only prepared
+output. Every mutable tree, port, server and child process stays worker- or
+fixture-owned, as the section above requires. The hydration route-inventory
+spec opts into Playwright parallel mode, so its independent route tests spread
+across workers. It builds the development bundle in a worker-scoped fixture,
+because parallel mode reruns `beforeAll` hooks for every test.
 
 ## Failure, Cancellation And Cleanup
 
@@ -81,6 +128,40 @@ fixture helpers. Failed browser and hydration jobs retain only the uploaded
 diagnostic artifacts selected by the workflow. Jobs must not delete, overwrite
 or reuse another job's writable output.
 
+A fixture shared across a test file registers its teardown synchronously when
+the file loads and starts setup on first use. Teardown waits for setup to settle,
+then runs owned cleanups in reverse registration order, even if setup failed.
+It attempts every cleanup before reporting a cleanup failure. A run that selects
+none of the file's tests starts no setup and leaves no owned output. Module-scope
+code must not start fixture setup eagerly. `tests/helpers/file_fixture.ts`
+provides this boundary; source-level verification enforces lazy setup for shared
+design fixtures.
+
+## Unit Shard Balance
+
+Node's `--test-shard` assigns whole files by sorted index modulo the shard count
+(four in CI). `nodeShardFiles` in `scripts/verification/evidence.mjs` mirrors
+that split for the evidence reports. Each hosted shard runs two files at once,
+the limit that [Test Concurrency](#test-concurrency) derives for its 2-vCPU
+runner. Use per-file `durationMs` in the unit reports to measure balance; test
+counts do not represent compilation and classification costs. Record shard wall
+time separately from summed file time.
+
+A scenario suite classifies once per scenario, then projects that result for
+its assertions. Do not classify once per assertion or subtest when those checks
+describe the same scenario. An edit that makes a component impacting rebuilds
+alone. Edits to the same source file that target different entries rebuild
+separately. Other edits may share a rebuild only when each keeps a distinct
+detection signal: its own path, or reason kinds disjoint from every other member
+at the same path. The build asserts the exact union of paths and reason kinds
+and no affected consumers. An extra change on another member's path with a subset
+of that member's reason kinds is not visible. Grouping is a reviewed trade-off,
+not an exact per-edit proof. Retain exact isolation checks for single edits and
+for attribution outside a grouped build's expected union.
+
+File additions change later sorted indices, so confirm the resulting shard
+layout with actual CI reports before claiming a balance improvement.
+
 ## Browser Shard Balance
 
 Playwright assigns whole non-hydration spec files to the `chromium` browser
@@ -88,7 +169,9 @@ shards and balances them by test count. Specs whose filenames contain
 `hydration` run unsharded in the separate `hydration` project and CI job, so
 they do not participate in browser shard balance. The evidence aggregate
 requires browser shard file assignments to be pairwise disjoint; every browser
-spec therefore stays whole and no spec uses parallel mode.
+spec therefore stays whole and no spec uses parallel mode except the unsharded
+hydration route-inventory spec that [Test Concurrency](#test-concurrency)
+defines.
 
 [`tests/browser_shard_balance.test.ts`](../../tests/browser_shard_balance.test.ts)
 first lists the all-project Playwright inventory, then the complete `chromium`
@@ -134,7 +217,8 @@ partitioning. Coverage, assertion deadlines, worker limits, audits and zero
 retry behavior are never relaxed to meet the timing target. The
 [entry-shape contract](./ci-verification-hydration.md) defines development
 hydration route coverage. For that suite, this rule protects the measured shell
-code coverage that a shape-key change must keep.
+code coverage that a shape-key change must keep. Hosted runners keep the worker
+limits that [Test Concurrency](#test-concurrency) derives for their CPU count.
 
 Candidate `992c6a1` passed an empty-start cache attempt and two restored-cache
 attempts with complete dynamic inventories on both runtimes. The

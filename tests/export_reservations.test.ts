@@ -53,7 +53,7 @@ test("distinct output names can reserve concurrently without stealing stale rese
   await Promise.all(transactions.map((transaction) => transaction.close()));
 });
 
-test("legacy hashed reservations must be explicitly recovered", async (context) => {
+test("unrelated hashed sibling directories do not control export reservation", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const output = path.join(fixture.root, "site");
@@ -68,10 +68,10 @@ test("legacy hashed reservations must be explicitly recovered", async (context) 
     path.join(reservation, ".mokly-export-transaction"),
     JSON.stringify({ schemaVersion: 1, output: "site" }),
   );
-  await assert.rejects(
-    ExportTransaction.open(path.join(fixture.root, "Site")),
-    /reservation|recover/,
+  const transaction = await ExportTransaction.open(
+    path.join(fixture.root, "Site"),
   );
+  await transaction.close();
   assert.ok(fs.existsSync(reservation));
 });
 

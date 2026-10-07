@@ -7,8 +7,8 @@ and when to read it. Read the doc at that point instead of guessing the rule.
 ## Detailed rule docs
 
 - [Review](./docs/dev/review.md): the post-push implementation review. It
-  holds the review-fix rule, the `Auto-fix: yes` and `Auto-fix: no`
-  conditions, effort grades, the numbered finding format, the fix-round
+  holds the review-fix rule, the flaky-test rule, the `Auto-fix: yes` and
+  `Auto-fix: no` conditions, effort grades, the numbered finding format, the fix-round
   limit, and how to report fixed and open findings. Read it after you push,
   before you run or apply a review.
 - [Plans](./docs/dev/plans.md): plan files under `plans/`. It holds the
@@ -39,8 +39,21 @@ and when to read it. Read the doc at that point instead of guessing the rule.
 
 - When adding new packages or services, always attempt to build them to check for errors
 - Everything must be fully tested
-- Search for and run relevant tests after making changes, ensure all tests pass (100% pass rate required)
-- Run `cargo xtask check` before saying work is complete; if it cannot be run, explain the blocker and the checks already run
+- During development, run only tests that cover the change. Require a 100% pass
+  rate. Follow the commands and rebuild rules in
+  [developer test commands](./docs/protocol/developer-test-commands.md).
+- Tests must not assert elapsed wall-clock time. Use operation counts, captured inputs, event order or fake-clock time.
+  Follow [CI Test Timing](./docs/protocol/ci-test-timing.md).
+- Run `cargo xtask check --suite repository` early. Leave complete unit and
+  browser suite runs to the complete gate.
+- Run the complete `cargo xtask check` once before saying work is complete.
+  A local run stops at the first failed suite. A remote run reports every
+  failed suite. After a failure, fix it. Rerun only the
+  failing tests or the failed repository or package suite. Then rerun the
+  complete gate. If it cannot run, explain the blocker and the checks already run.
+  If a test that the diff does not touch fails and then passes on the rerun,
+  it is an unrelated flaky test. Do not fix it in this branch. Report it under
+  the flaky-test rule in [`docs/dev/review.md`](./docs/dev/review.md).
 - After tests and `cargo xtask check` pass, run `git add -A`, commit the
   completed work using Conventional Commits, and push the branch; newly created
   files must be tracked and included in the commit, push, and review diff
@@ -49,9 +62,15 @@ and when to read it. Read the doc at that point instead of guessing the rule.
   then apply the review-fix rule in [`docs/dev/review.md`](./docs/dev/review.md):
   fix only the findings tagged `Auto-fix: yes`, re-review once, and report
   the rest. The review itself stays read-only
-- Do not fix a flaky, slow, custom, or low-value test, gate, lint, or check
-  automatically. Ask the user whether to fix it or remove it, and state what
-  it protects and how long it runs
+- A flaky test that the diff adds or changes may be fixed without asking only
+  under the flaky-test rule in [`docs/dev/review.md`](./docs/dev/review.md):
+  reproduce the flake, name the nondeterminism source, make the test
+  deterministic, keep every assertion, and add no retry, sleep, skip, or
+  longer time limit. Do not fix a flaky test that the diff does not touch;
+  report it with its name, failure text, rerun outcome, and suspected source.
+  Slow, custom, or low-value tests, gates, lints, and checks stay
+  `Auto-fix: no`; ask the user whether to fix or remove each one, and state
+  what it protects and how long it runs
 - Keep review reports, verification evidence, measurements, and other scratch
   output under the git-ignored `.context/` directory. Do not create review
   records or evidence files in the repository
@@ -127,6 +146,10 @@ The full rules, commit examples, and the mainline preservation procedure are in
 - Use the **Conventional Commits** format for every commit message and pull request title. Commit titles use at most 50 characters; pull request titles and their squash commit titles use at most 72 Unicode code points. A commit may hold multiple entries separated by blank lines, ordered by type priority
 - Do not delete or override anything already on `origin/main`, including code, APIs, tests, docs, mockups, plans, migrations, and schema, without explicit user approval
 - Before you merge or rebase, and before and after you commit, run the mainline preservation audit in [`docs/dev/git.md`](./docs/dev/git.md); resolve conflicts path-by-path, and verify the worktree before saying a merge is complete
+- When a change removes or renames a feature, test, fixture, scenario, command,
+  or file, search the active plans, `docs/`, and every `README.md` for its name
+  and update each stale reference in the same change. Leave completed plans
+  unchanged; they record history
 
 ## Bash Tool Timeout Configuration
 

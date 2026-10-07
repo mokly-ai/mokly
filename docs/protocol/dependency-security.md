@@ -1,30 +1,46 @@
 # Dependency Security
 
+## Delivery Status
+
+Implemented. Baseline and strict audits share the reviewed exception rules.
+The scheduled workflow maintains the dependency update pull request.
+
 ## Verification Boundary
 
 `npm run dependencies:check` audits the workspace lockfile against the
 configured npm registry's current advisory database. It explicitly includes
 production, development, optional, and peer dependencies, even if local npm
 configuration would otherwise omit a category. The Node entry point is
-`scripts/verification/dependency-audit.mjs`. It runs `npm audit --json
---audit-level=low --include=prod --include=dev --include=optional --include=peer`
-against the live registry. Every Low, Moderate, High, or Critical advisory fails
-unless an active reviewed exception fully covers it. Registry or transport
-errors always fail.
+`scripts/verification/dependency-audit.mjs`. Both audit modes run `npm audit
+--json --audit-level=low --package-lock-only --include=prod --include=dev
+--include=optional --include=peer --prefix .` against the live registry.
+Strict mode fails on every uncovered Low-or-higher advisory or exception issue. Registry,
+transport, report, and input errors always fail. The
+[baseline audit contract](./dependency-audit-baseline.md) defines the
+implemented modes, CLI, JSON summary, and comparison rules.
 
-`cargo xtask check` runs this audit first and stops on failure. The release
-workflow always runs the live audit immediately after installing dependencies,
-before it selects reusable CI evidence or the complete fallback. Complete mode
-therefore repeats the audit when the full gate starts; evidence mode never
-relies on an earlier CI audit for time-sensitive security evidence. Parallel CI
-assigns the same live audit to the shared repository prerequisite, which must
-succeed before any package, unit, browser or native job starts. A cache hit
-never replaces an audit. Verification requires registry access and is
-deliberately sensitive to newly published advisories, even when source and
-lockfile have not changed. An audit is evidence about known advisories at
-execution time, not a guarantee that every dependency is safe. See the
-[CI workflow graph](./ci-workflow.md) for job ownership and the
-[CI verification contract](./ci-verification.md) for its fail-closed aggregate.
+`npm run dependencies:check` stays strict. Under this contract,
+`cargo xtask check` runs the baseline audit first by default. Ordinary pull
+requests and every push also use baseline mode in the shared repository
+prerequisite. It prints inherited findings and exception issues as notices;
+new issues fail. Release Please and dependency update pull requests use strict
+mode. The daily scheduled workflow audits `main` strictly and creates or
+refreshes the [dependency update pull request](./dependency-audit-update-pr.md).
+It closes that pull request when the strict audit of `main` passes and preserves
+branches with human commits. Audit command, registry, report, and input failures
+do not change pull requests.
+Dependency fixes, pinned-parent overrides, and reviewed exceptions land there.
+
+The release workflow retains its strict live audit immediately after install,
+before reusable evidence or the complete fallback. Complete mode runs
+`cargo xtask check --dependency-audit strict` and repeats the strict live audit
+when its gate starts. Evidence mode never reuses an earlier audit
+as time-sensitive security evidence. The CI repository prerequisite must pass
+before package, unit, browser, or native jobs start. A cache hit never replaces
+an audit. Both modes require registry access. An audit is evidence about known
+advisories at execution time, not a guarantee that every dependency is safe.
+See the [CI workflow graph](./ci-workflow.md) and
+[CI verification contract](./ci-verification.md) for job ownership and aggregation.
 
 The packed ESM-consumer smoke also audits its freshly resolved production,
 optional, and peer dependencies before exercising the installed CLI on every
@@ -92,9 +108,11 @@ calendar days after the current UTC date fails. Thus `2026-10-03` through
 `2026-11-03` is the maximum window. Renew only with a new risk review and a new
 end date in a reviewed change. Never extend a record automatically.
 
-Every record must be valid, active, and used. An expired record fails even when
-its advisory is gone. A stale record that matches no current finding also
-fails; remove it when the risk disappears. Any other advisory, including a
+Both modes evaluate every record with the same validity, expiry, and use
+rules. Baseline mode can inherit only an identical issue from the comparison
+commit; it does not relax exception coverage. An expired record remains an
+issue even when its advisory is gone. A stale record with no current finding
+also remains an issue; remove it when the risk disappears. Any other advisory, including a
 second advisory on the same package, fails. A changed path or production path
 fails. Malformed JSON, fields, dates, paths, and duplicate records fail.
 
@@ -128,7 +146,9 @@ Node floor, and regenerate the lockfile with npm. Do not blindly run
 or an incompatible toolchain replacement.
 
 Update from an installed tree: run `npm ci`, then `npm update <package>`.
-Lockfile-only mode can record bundled entries of optional platform packages
+Use the npm version that `packageManager` pins; the
+[CI workflow graph](./ci-workflow.md#job-execution) explains why lockfile
+changes need it. Lockfile-only mode can record bundled entries of optional platform packages
 that this machine does not install. Keep the lockfile diff to the intended
 entries.
 
@@ -143,6 +163,11 @@ condition. Write locked versions as `` `package` X.Y.Z ``, or add "or newer"
 for a declared floor; `tests/dependency_security.test.ts` matches each one to
 a `package-lock.json` install.
 
+List only reviewed exceptions, overrides, exact pins and holds here, because
+later updates must respect them. Explain a one-time update in its pull request,
+and describe a runtime dependency's role in the protocol doc of the feature that
+uses it.
+
 The current maintenance choices are:
 
 - [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
@@ -156,26 +181,6 @@ The current maintenance choices are:
   or when Metro drops Micromatch. Re-run the live audit and complete gate after
   that dependency update. Remove a stale record; expiry requires removal or
   a new explicit risk review, not an automatic extension.
-- The runtime glob dependency is `minimatch` 10.2.6 or newer; the workspace
-  locks `brace-expansion` 5.0.12. A bounded behavioral regression checks total
-  padded output and preserves normal brace alternatives. The
-  [upstream advisory](https://github.com/advisories/GHSA-rgw5-rvv9-x895)
-  explains why the intermediate-allocation fix requires 5.0.9, not 5.0.8.
-- [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q)
-  / CVE-2026-93749 affects `source-map-js >=1.0.0 <1.2.2`: a huge section
-  offset in an indexed source map can block the event loop. Runtime `postcss`
-  and development `@tailwindcss/node` share one copy, and both accept `^1.2.1`.
-  The workspace therefore locks `source-map-js` 1.2.2 as a lockfile-only
-  update, with no override or exception. Mokly disables PostCSS map output, so
-  its builds did not reach the blocking step. A bounded regression loads the
-  copy that PostCSS resolves. It keeps ordinary section offsets and rejects an
-  offset line above 10,000,000.
-- React Native's compatible Metro 0.84 line is updated to `metro` 0.84.6,
-  including its coupled packages. The
-  [0.84.5 security fix](https://github.com/react/metro/releases/tag/v0.84.5)
-  removes `image-size` in favor of maintained parsers. Do not override the image
-  parser to another affected release or jump Metro compatibility lines just to
-  change the audit report.
 - `wrangler` 4.113.0 stays exactly pinned with its existing Miniflare/Workerd
   versions. It requires `esbuild` 0.28.1 exactly, so the lockfile nests that
   copy under Wrangler until a Wrangler update accepts Mokly's esbuild release.
@@ -185,50 +190,13 @@ The current maintenance choices are:
   Remove each override when a deliberately upgraded Wrangler/Miniflare version
   resolves a patched version without it and passes the complete gate. These
   overrides do not apply to unrelated dependency parents.
-- Compatible Browserslist, browser-baseline data, and Nano ID patches remain
-  lockfile-only updates; they do not add direct runtime dependencies.
-- The PostCSS CSS Modules plugins and `icss-utils` are runtime dependencies
-  for rename-only local selectors and exports. Their transitive
-  `postcss-selector-parser`, `cssesc`, `util-deprecate` and
-  `postcss-value-parser` dependencies are MIT or ISC; they do not evaluate
-  consumer code or choose browser targets. Consumer PostCSS packages still
-  run only in the isolated worker.
-  Mokly now declares `postcss-selector-parser` and `postcss-value-parser`
-  directly for its lazy rename-only verification. The lockfile deduplicates
-  each with the plugins' existing runtime copies.
-- Lightning CSS is a production dependency only for read-only stylesheet rule
-  analysis and transformer-only dependency inventory. Its
-  MPL-2.0 native packages and Apache-2.0 `detect-libc` dependency participate in
-  the workspace and packed-consumer audits. Retain every platform's optional
-  lockfile entry when updating it; ordinary Ubuntu and native macOS/Windows jobs
-  exercise the minimum Node 22.14 runtime, and the release-gated Ubuntu matrix
-  adds Node 24. Native binaries must remain installed; the Node package does not
-  automatically fall back to WASM. See the
-  [release platform contract](./npm-release.md#continuous-integration).
-- [`marked`](https://github.com/markedjs/marked) 18.1.0 is the production
-  CommonMark/GFM parser for Markdown documents. It is MIT licensed, pure
-  JavaScript, ESM compatible, and has no runtime dependencies. Its typed token
-  renderers support destination rewriting, escaped raw HTML, heading anchors
-  and fenced-code language classes without plugins. Front matter uses Mokly's
-  small pure grammar parser, not a YAML dependency. Both workspace and packed
-  consumer checks exercise the installed parser. Adding it leaves the existing
-  13 development-tree findings from GHSA-vfj7-8cjw-p6xm unchanged; it adds no
-  advisory. npm changed its downgrade suggestions to `fixAvailable: false`
-  for ten existing records; the affected versions, paths and advisory are unchanged.
-  The live audit remains mandatory. Marked adds no advisory; the only exception
-  is the reviewed Braces record above.
-- [`es-module-lexer`](https://github.com/guybedford/es-module-lexer) 3.0.3 is
-  the production parser for export's package-owned JavaScript import references.
-  Its MIT-licensed minimal ESM build decodes static and literal dynamic specifiers
-  without executing the scanned code. It has no runtime dependencies. Its inline
-  WebAssembly initializes synchronously on first use in Node, so export validation
-  keeps its synchronous API. The smaller JavaScript-only grammar avoids unneeded
-  TypeScript analysis. Workspace and packed-consumer checks exercise it; it adds
-  no advisory or exception to the reviewed Braces record above.
-- `react-native-reanimated` 4.3.4 stays on its 4.3 line through a tilde range:
-  4.4 and later need `react-native-worklets` 0.9 or later, 4.7 needs React
-  Native 0.86, and the development `@firna/ui` 0.14 peer range ends below 0.86.
-  Lift the hold with a `@firna/ui` release that accepts both newer lines.
+- `react-native-reanimated` 4.3.4 stays on its 4.3 line through a tilde range.
+  Releases 4.4 through 4.6 each need a newer `react-native-worklets` line (0.9
+  through 0.12), which the root `^0.8.3` range excludes. Move to one of them
+  only in a reviewed change that also moves `react-native-worklets` to the
+  matching line. Release 4.7 needs React Native 0.86 or later, but every
+  `@firna/ui` release, including 0.15.0 and 4.0.0, accepts only React Native
+  below 0.86. Move to 4.7 only after `@firna/ui` accepts React Native 0.86.
 - `@playwright/test` 1.61.1 stays locked. Playwright 1.62 and later exit with
   status 1 when a reporter event write fails, but the wrapper test in
   `tests/verification_wrapper.test.ts` expects the 1.61 status 0. Update that
@@ -247,4 +215,4 @@ After dependency updates, use a clean `npm ci`, run the complete
 tests. Review lockfile removals, package engines, native optional packages, and
 the packed artifact. Commit and push all completed changes before using the
 [implementation review prompt](../implementation-review-prompt.md) against
-`origin/main`; report new findings for a maintainer's decision.
+`origin/main`; apply the repository review-fix rule to its findings.

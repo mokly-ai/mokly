@@ -28,7 +28,7 @@ export async function assertPublishedPagePreview(
   );
   assert.deepEqual(descriptor?.published, published);
   const catalogue = JSON.parse(
-    await fs.readFile(path.join(output, "__mokly/catalogue.json"), "utf8"),
+    await fs.readFile(path.join(output, "mokly-viewer/catalogue.json"), "utf8"),
   ) as { comparisonUrl: string };
   const generation = path.posix.dirname(catalogue.comparisonUrl);
   const previewPath = `${generation}/previews/${entryPath}/index.json`;
@@ -38,7 +38,11 @@ export async function assertPublishedPagePreview(
   assert.equal(preview.path, entryPath);
   assert.match(
     await fs.readFile(
-      path.join(output, generation, `snapshots/before/${entryPath}/index.html`),
+      path.join(
+        output,
+        generation,
+        `snapshots/before/mokly-generated/${entryPath}/index.html`,
+      ),
       "utf8",
     ),
     /Previous page/,

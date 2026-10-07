@@ -31,9 +31,9 @@ const MIME_TYPES = new Map([
   ["woff2", "font/woff2"],
 ]);
 
-for (const mode of ["committed", "derived"] as const) {
+for (const preparation of ["fresh", "retained"] as const) {
   test(
-    `${mode} generated assets have specific types in static, on-demand and transient delivery`,
+    `${preparation} generated assets have specific types in static, on-demand and transient delivery`,
     {
       timeout: 60_000,
     },
@@ -42,14 +42,6 @@ for (const mode of ["committed", "derived"] as const) {
         `.entry { ${[...MIME_TYPES.keys()].map((extension) => `--asset-${extension}: url("./asset.${extension}");`).join(" ")} }`,
       );
       context.after(() => removeFixture(fixture));
-      if (mode === "derived")
-        await fs.writeFile(
-          fixture.configPath,
-          (await fs.readFile(fixture.configPath, "utf8")).replace(
-            '"committed"',
-            '"derived"',
-          ),
-        );
       for (const extension of MIME_TYPES.keys())
         await fs.writeFile(
           path.join(fixture.entriesDir, `asset.${extension}`),
@@ -57,11 +49,11 @@ for (const mode of ["committed", "derived"] as const) {
         );
       const config = await loadConfig(fixture.root);
       const compiled = await compileCatalogue(config);
-      if (mode === "committed") await writeCompilation(compiled, config);
+      if (preparation === "fresh") await writeCompilation(compiled, config);
       const staticServer = await startCatalogueServer(config, {
         base: "main",
         port: 0,
-        ...(mode === "derived"
+        ...(preparation === "retained"
           ? {
               manifest: compiled.manifest,
               componentRuntime: componentRuntime(compiled),

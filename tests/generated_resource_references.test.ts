@@ -138,3 +138,38 @@ test("the audit counts the HTML files and stylesheet links it read", async (cont
   );
   assert.deepEqual(audit, { failures: [], htmlFiles: 2, stylesheetLinks: 2 });
 });
+
+test("generated resources resolve the authored closure without auditing private files", async (context) => {
+  const root = await site(context, {
+    "mokly-generated/home/index.html":
+      '<link rel="stylesheet" href="../../styles/theme.css"><img src="../../logo.png">',
+    "styles/theme.css":
+      '@import "./base.css"; .a { background: url(../logo.png); }',
+    "styles/base.css": "body { margin: 0; }",
+    "logo.png": "png",
+    "specs/private.html": '<img src="not-public.png">',
+  });
+  const audit = await auditGeneratedResourceReferences(root, [
+    "mokly-generated/home/index.html",
+    "styles/theme.css",
+    "styles/base.css",
+    "logo.png",
+  ]);
+  assert.deepEqual(audit, { failures: [], htmlFiles: 1, stylesheetLinks: 1 });
+});
+
+test("selected authored styles retain missing-resource and root-confinement checks", async (context) => {
+  const root = await site(context, {
+    "mokly-generated/home.html": '<link rel="stylesheet" href="../theme.css">',
+    "theme.css":
+      '@import "missing.css"; .a { background: url(../outside.png); }',
+  });
+  const audit = await auditGeneratedResourceReferences(root, [
+    "mokly-generated/home.html",
+    "theme.css",
+  ]);
+  assert.deepEqual(audit.failures, [
+    "theme.css: @import missing.css (missing file)",
+    "theme.css: url() ../outside.png (outside the generated root)",
+  ]);
+});

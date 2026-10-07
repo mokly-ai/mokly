@@ -1,47 +1,52 @@
-import type { AuditEvaluation } from "./dependency-audit-evaluation.mjs";
+import type { Buffer } from "node:buffer";
 
-/** One cross-platform audit command; CLI arguments never require shell quoting. */
-export interface AuditCommand {
-  file: string;
-  args: string[];
-  cwd: string;
-  shell: boolean;
+import type {
+  AuditBaselineDependencies,
+  InheritedAuditIssue,
+} from "./dependency-audit-baseline.mjs";
+import type {
+  AuditCommand,
+  AuditCommandResult,
+} from "./dependency-audit-command.mjs";
+import type { AuditIssue } from "./dependency-audit-evaluation.mjs";
+
+/** Strict summaries contain no inheritance flags or comparison commit. */
+export interface StrictAuditSummary {
+  mode: "strict";
+  ok: boolean;
+  issues: AuditIssue[];
 }
 
-/** Full output and process termination from the command boundary. */
-export interface AuditCommandResult {
-  exitCode: number | null;
-  signal?: string | null;
-  stdout: string;
-  stderr: string;
+/** Baseline summaries retain every issue with its explicit inheritance state. */
+export interface BaselineAuditSummary {
+  mode: "baseline";
+  ok: boolean;
+  comparisonCommit?: string;
+  issues: InheritedAuditIssue[];
 }
 
-/** Configuration from the composition root, separate from command execution. */
-export interface NpmAuditConfiguration {
-  npmExecPath?: string | undefined;
-  nodeExecPath: string;
-  cwd: string;
-  platform: string;
-}
+/** JSON report contract, discriminated by mode and by each issue's kind. */
+export type AuditSummary = StrictAuditSummary | BaselineAuditSummary;
 
-/** All runtime collaborators required by the workspace audit gate. */
+/** Human notices accompany the result but are not issues in JSON summaries. */
+export type AuditResult = AuditSummary & { notices: string[] };
+
+/** Runtime collaborators for auditing, including raw bytes and optional reports. */
 export interface AuditDependencies {
+  args?: readonly string[];
   command: AuditCommand;
   runCommand(command: AuditCommand): Promise<AuditCommandResult>;
-  readFile(file: string): Promise<string>;
+  readFile(file: string): Promise<Buffer>;
   clock(): Date;
+  baseline?: AuditBaselineDependencies;
+  writeReport?(file: string, summary: AuditSummary): Promise<void>;
   logger: {
     notice(message: string): void;
     error(message: string): void;
   };
 }
 
-/** Use npm's current CLI through Node, including on macOS and Windows. */
-export function npmAuditCommand(
-  configuration: NpmAuditConfiguration,
-): AuditCommand;
-
-/** Run the workspace gate through injected commands, file reads, time and logs. */
+/** Run strict or baseline auditing with injected process, bytes, time and logs. */
 export function runDependencyAudit(
   dependencies: AuditDependencies,
-): Promise<AuditEvaluation>;
+): Promise<AuditResult>;

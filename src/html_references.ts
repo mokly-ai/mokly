@@ -1,4 +1,8 @@
+import path from "node:path";
+
 import { parse } from "parse5";
+
+import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { extractCssReferences } from "./css_references.js";
 
@@ -133,6 +137,41 @@ function sourceSetReferences(
     while (position < value.length && value[position] !== ",") position += 1;
   }
   return references;
+}
+
+export type LocalReferencePath =
+  | { kind: "resolved"; path: string }
+  | { kind: "invalid-encoding" | "root-absolute" | "escape" };
+
+/** Resolve a URL's decoded path relative to its real catalogue location. */
+export function resolveLocalReferencePath(
+  source: string,
+  reference: string,
+  allowRootAbsolute = false,
+): LocalReferencePath {
+  const raw = reference.split(/[?#]/, 1)[0] ?? "";
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(raw);
+  } catch {
+    return { kind: "invalid-encoding" };
+  }
+  if (
+    decoded.startsWith("\\") ||
+    (decoded.startsWith("/") && !allowRootAbsolute)
+  )
+    return { kind: "root-absolute" };
+  if (allowRootAbsolute && decoded === "/")
+    return { kind: "resolved", path: "index.html" };
+  const resolved = path.posix.normalize(
+    decoded.startsWith("/")
+      ? decoded.slice(1)
+      : path.posix.join(path.posix.dirname(source), decoded),
+  );
+  const target = resolved.replace(/\/$/, "").replace(/^\.\//, "");
+  return isSafeRepositoryPath(target)
+    ? { kind: "resolved", path: target }
+    : { kind: "escape" };
 }
 
 function visit(node: HtmlNode, callback: (node: HtmlNode) => void): void {

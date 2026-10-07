@@ -1,3 +1,5 @@
+import { VIEWER_DIRECTORY } from "@mokly/viewer/data";
+
 import {
   invalidBundle,
   unsupportedUploadVersion,
@@ -34,14 +36,15 @@ const FIELDS = [
 const INVALID_MANIFEST_MESSAGE =
   "Upload metadata is invalid; check repository, revision and config paths.";
 
-/** Validate the generated v1 envelope before it enters the export snapshot. */
+/** Validate the generated v2 envelope before it enters the export snapshot. */
 export function validateUploadManifest(value: unknown): UploadManifest {
-  if (!isRecord(value) || !keys(value, FIELDS))
+  if (!isRecord(value) || !Object.hasOwn(value, "schemaVersion"))
     throw invalidBundle(INVALID_MANIFEST_MESSAGE);
-  if (value["schemaVersion"] !== 1)
+  if (value["schemaVersion"] !== 2)
     throw unsupportedUploadVersion(
-      "Use a receiver and Mokly version that support upload v1.",
+      "Use a receiver and Mokly version that support upload v2.",
     );
+  if (!keys(value, FIELDS)) throw invalidBundle(INVALID_MANIFEST_MESSAGE);
   const repository = value["repository"];
   if (
     !isRecord(repository) ||
@@ -77,9 +80,9 @@ export function validateUploadManifest(value: unknown): UploadManifest {
     typeof value["baseSha"] !== "string" ||
     !GIT_SHA.test(value["baseSha"]) ||
     typeof value["comparisonPath"] !== "string" ||
-    !/^__mokly\/diffs\/__generations\/[a-f0-9]{64}\/review\.json$/.test(
-      value["comparisonPath"],
-    )
+    !new RegExp(
+      `^${VIEWER_DIRECTORY}\\/diffs\\/generations\\/[a-f0-9]{64}\\/review\\.json$`,
+    ).test(value["comparisonPath"])
   )
     throw invalidBundle(INVALID_MANIFEST_MESSAGE);
   if (Buffer.byteLength(JSON.stringify(value)) > 16 * 1024)

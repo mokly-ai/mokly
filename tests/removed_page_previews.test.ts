@@ -109,7 +109,7 @@ for (const [name, reference, message] of [
   ["root absolute", "/assets/main.css", /root-absolute/],
   ["protocol relative", "//example.invalid/main.css", /protocol-relative/],
   ["unsupported scheme", "file:///tmp/main.css", /unsupported scheme/],
-  ["path traversal", "../../private.css", /escapes mockupsDir/],
+  ["path traversal", "../../../private.css", /escapes mockupsDir/],
 ] as const) {
   test(`removed page capture rejects ${name} resource URLs`, async (t) => {
     const fixture = await removedPagePreviewFixture(t);
@@ -131,11 +131,10 @@ for (const [name, reference, message] of [
 test("removed page capture denies symlinks, metadata, and authored sources", async (t) => {
   const fixture = await removedPagePreviewFixture(t);
   for (const [reference, denied] of [
-    ["../assets/linked.css", /not a regular Git file \(symlink\)/],
+    ["../../assets/linked.css", /not a regular Git file \(symlink\)/],
     ["../mokly-manifest.json", /internal catalogue metadata/],
-    ["../assets/helper.source.html", /reserved source basename/],
-    ["../assets/author.ts", /authoring input/],
-    ["../README.css", /public exclusion/],
+    ["../../assets/helper.source.html", /reserved source basename/],
+    ["../../assets/author.ts", /authoring input/],
   ] as const) {
     const files = new Map(fixture.files);
     files.set(`mockups/${PAGE_ROUTE}`, {
@@ -154,7 +153,13 @@ test("removed page capture denies symlinks, metadata, and authored sources", asy
             "mockups/assets/author.ts",
           ],
         }
-      : fixture.baseline;
+      : {
+          ...fixture.baseline,
+          assetClosure: [
+            ...fixture.baseline.assetClosure,
+            "assets/linked.css",
+          ].sort(),
+        };
     await assert.rejects(
       new RepositoryRemovedPagePreview(
         fixture.config,

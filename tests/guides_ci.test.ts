@@ -6,14 +6,14 @@ import { completeUpload } from "../src/publish/complete.js";
 import { requestUploadPlan } from "../src/publish/plan.js";
 
 import {
-  exchange,
-  prose,
   read,
+  exchange,
   recovery,
-  sources,
   terminal,
+  sources,
   upload,
-} from "./helpers/guides_ci.js";
+  prose,
+} from "./helpers/guides_ci_context.js";
 import { assertUploadRequest } from "./helpers/upload_request.js";
 
 test("CI code fences never invent a receiver request path", () => {

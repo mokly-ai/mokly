@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import type { ManifestV8 } from "../../packages/viewer/dist/registry/types.js";
+import type { ManifestV9 } from "../../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../../packages/viewer/dist/shell/catalogue.js";
 import {
   buildNavSections,
@@ -8,12 +8,14 @@ import {
   type NavNode,
 } from "../../packages/viewer/dist/shell/nav_tree.js";
 
+import { currentManifest } from "./current_manifest.js";
+
 /** A minimal current screen record, optionally a variant of `variantOf`. */
 export function screen(
   id: string,
   title: string,
   variantOf?: string,
-): ManifestV8["entries"][number] {
+): ManifestV9["entries"][number] {
   return {
     colorSchemes: ["light"],
     declaredDependencies: [],
@@ -33,7 +35,7 @@ export function page(
   id: string,
   title: string,
   _route: string,
-): ManifestV8["entries"][number] {
+): ManifestV9["entries"][number] {
   return {
     declaredDependencies: [],
     description: title,
@@ -47,16 +49,16 @@ export function page(
 }
 
 /** The catalogue, hierarchy, Specs rows, and sections built from entries. */
-export function tree(entries: ManifestV8["entries"]) {
-  const manifest: ManifestV8 = {
+export function tree(entries: ManifestV9["entries"]) {
+  const manifest: ManifestV9 = currentManifest({
     entries,
     generatedBy: "mokly",
-    schemaVersion: 8 as const,
+    schemaVersion: 9 as const,
     folders: [],
     sourceFiles: [
       ...new Set(entries.map(({ sourcePath }) => sourcePath)),
     ].sort(),
-  };
+  });
   const catalogue = createCatalogue(manifest);
   const sections = buildNavSections(catalogue.hierarchy);
   return {

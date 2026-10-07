@@ -36,7 +36,7 @@ Every invoice was due 14 days after it was issued.
 async function waitForChanges(url: string): Promise<void> {
   for (let attempt = 0; attempt < 600; attempt++) {
     const model = readCatalogue(
-      await (await fetch(`${url}/__mokly/catalogue.json`)).json(),
+      await (await fetch(`${url}/mokly-viewer/catalogue.json`)).json(),
     );
     if (model.changesStatus === "ready") return;
     await delay(50);

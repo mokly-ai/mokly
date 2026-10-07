@@ -2,9 +2,10 @@ import path from "node:path";
 
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
+import { MOKLY_CACHE } from "../config/cache_paths.js";
+
 import { BaselineError } from "./errors.js";
 
-const BASELINE_CACHE_PATH = ".mokly-cache/baselines";
 export const DEFAULT_RETAINED_COUNT = 3;
 export const LOCK_TIMEOUT_MS = 120_000;
 export const LOCK_POLL_MS = 100;
@@ -12,14 +13,18 @@ export const MAX_MARKER_BYTES = 1024 * 1024;
 
 /** Written only after output adoption and removal of the source extraction. */
 export interface CompletionMarker {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly commit: string;
   readonly finishedAt: string;
   readonly commands: readonly (readonly string[])[];
-  readonly manifestVersion: number;
+  readonly manifestVersion: 9;
+  readonly historicalCatalogueRoot: string;
+  readonly layout: "generated-v9";
 }
 
 export interface CacheLayout {
+  /** The repository's `.mokly-cache/` directory, which holds `root`. */
+  readonly cache: string;
   readonly root: string;
   readonly entry: string;
   readonly source: string;
@@ -34,9 +39,11 @@ export function cacheLayout(repoRoot: string, commit: string): CacheLayout {
       "baseline-history-unavailable",
       `Invalid baseline commit: ${commit}`,
     );
-  const root = path.join(repoRoot, BASELINE_CACHE_PATH);
+  const cache = path.join(repoRoot, MOKLY_CACHE);
+  const root = path.join(cache, "baselines");
   const entry = path.join(root, commit);
   return {
+    cache,
     root,
     entry,
     source: path.join(entry, "source"),
@@ -48,7 +55,7 @@ export function cacheLayout(repoRoot: string, commit: string): CacheLayout {
 
 export function assertMockupsPath(value: string): void {
   if (
-    !isSafeRepositoryPath(value) ||
+    (value !== "." && !isSafeRepositoryPath(value)) ||
     value === ".mokly-cache" ||
     value.startsWith(".mokly-cache/")
   )
@@ -83,14 +90,24 @@ export function parseCompletionMarker(
   if (!value || typeof value !== "object") return;
   const marker = value as Partial<CompletionMarker>;
   if (
-    marker.schemaVersion !== 1 ||
+    marker.schemaVersion !== 2 ||
     marker.commit !== commit ||
     typeof marker.finishedAt !== "string" ||
     !Number.isFinite(Date.parse(marker.finishedAt)) ||
     !validCommands(marker.commands) ||
-    !Number.isInteger(marker.manifestVersion) ||
-    (marker.manifestVersion as number) > 8
+    marker.manifestVersion !== 9 ||
+    marker.layout !== "generated-v9" ||
+    typeof marker.historicalCatalogueRoot !== "string" ||
+    (marker.historicalCatalogueRoot !== "." &&
+      !isSafeRepositoryPath(marker.historicalCatalogueRoot))
   )
     return;
   return marker as CompletionMarker;
+}
+
+/** A completion temporary belongs to the entry's exclusive writer. */
+export function isCompletionTemporary(name: string): boolean {
+  return /^complete-[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}\.tmp$/.test(
+    name,
+  );
 }

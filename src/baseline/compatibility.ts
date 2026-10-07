@@ -13,6 +13,8 @@ export function incompatibleEarlierBaseline(): MoklyError {
 }
 
 /** Distinguish expected earlier output without inspecting error text. */
-export function isIncompatibleEarlierBaseline(error: unknown): boolean {
+export function isIncompatibleEarlierBaseline(
+  error: unknown,
+): error is MoklyError {
   return isMoklyError(error) && error.code === "baseline-incompatible-earlier";
 }

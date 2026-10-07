@@ -13,7 +13,7 @@
   "bugs": {
     "url": "https://github.com/mokly-ai/mokly/issues"
   },
-  "packageManager": "npm@11.7.0",
+  "packageManager": "npm@11.21.0",
   "engines": {
     "node": ">=22.14.0 <24.14.0 || >=24.19.0"
   },
@@ -60,7 +60,8 @@
     "prepare:verification": "npm run build && npm run example:build",
     "prepack": "npm run build",
     "preview:build": "npm run build && npm run example:build && node scripts/preview/build.mjs",
-    "test": "npm run prepare:verification && node scripts/verification/run-unit-dev.mjs",
+    "test": "npm run test:unit --",
+    "test:unit": "npm run prepare:verification && node scripts/verification/run-unit-dev.mjs",
     "test:browser": "npm run prepare:verification && playwright test",
     "test:browser:prepared": "node scripts/verification/run-browser.mjs",
     "test:hydration:prepared": "node scripts/verification/run-browser.mjs --suite hydration",

@@ -59,6 +59,12 @@ docs, mockups, plans, migrations, or schema—without explicit user approval.
   Stop unless each deletion or feature-wide reduction is authorized, and record
   every approved removal plus related cleanup in the commit or PR description.
 
+- When a change removes or renames a feature, test, fixture, scenario, command,
+  or file, search the active plans, `docs/`, and every `README.md` for its name.
+  Update each stale reference in the same change and record each plan edit in
+  the commit or PR description. Leave completed plans unchanged because they
+  record history.
+
 ## Rules
 
 Use at most 50 characters for individual commit titles (the first line).

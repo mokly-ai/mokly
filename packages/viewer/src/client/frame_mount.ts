@@ -1,3 +1,7 @@
+import {
+  VIEWER_DIRECTORY,
+  currentDocumentRoute,
+} from "../catalogue/delivery_paths.js";
 import { origin } from "../inspector/values.js";
 
 import type { FrameMount } from "./frame_adapter.js";
@@ -22,9 +26,10 @@ export function frameUrl(
   view: FrameMount,
   expectedOrigin: string,
 ): URL {
-  return validatedFrameUrl(frame, view, expectedOrigin, (pathname) =>
-    pathname.startsWith("/static/"),
-  );
+  return validatedFrameUrl(frame, view, expectedOrigin, (pathname) => {
+    const route = currentDocumentRoute(pathname);
+    return route !== undefined;
+  });
 }
 
 /** Confine a private live preview mount to one authenticated render bundle. */
@@ -34,9 +39,9 @@ export function temporaryFrameUrl(
   expectedOrigin: string,
 ): URL {
   return validatedFrameUrl(frame, view, expectedOrigin, (pathname) =>
-    /^\/__mokly\/components\/renders\/[a-f0-9]{48}\.[a-f0-9]{64}\/.+\.html?$/.test(
-      pathname,
-    ),
+    new RegExp(
+      `^\\/${VIEWER_DIRECTORY}\\/components\\/renders\\/[a-f0-9]{48}\\.[a-f0-9]{64}\\/.+\\.html?$`,
+    ).test(pathname),
   );
 }
 

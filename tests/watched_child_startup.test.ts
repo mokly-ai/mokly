@@ -26,7 +26,7 @@ test(
     const compilation = await compileCatalogue(config);
     await writeCompilation(compilation, config);
     await fs.writeFile(
-      path.join(fixture.mockupsDir, MANIFEST_NAME),
+      path.join(fixture.generatedDir, MANIFEST_NAME),
       "invalid stale manifest\n",
     );
     const childBin = path.join(repositoryRoot, "dist/cli/bin.js");
@@ -55,7 +55,7 @@ test(
     const messages: unknown[] = [];
     child.on("message", (message) => messages.push(message));
 
-    const first = await waitForMessage(messages, 0);
+    const first = await waitForMessage(child, messages, 0);
     assert.equal(
       (first as { type?: unknown }).type,
       "component-runtime-startup-request",
@@ -66,11 +66,11 @@ test(
       type: "component-runtime-startup",
     });
 
-    const ready = await waitForMessage(messages, 1);
+    const ready = await waitForMessage(child, messages, 1);
     assert.equal((ready as { type?: unknown }).type, "ready");
     const port = (ready as { port?: unknown }).port;
     assert.equal(typeof port, "number");
-    const request = await waitForMessage(messages, 2);
+    const request = await waitForMessage(child, messages, 2);
     assert.equal(
       (request as { type?: unknown }).type,
       "component-runtime-request",
@@ -81,30 +81,42 @@ test(
       type: "component-runtime",
       version: 2,
     });
-    const html = await waitForRuntime(`http://127.0.0.1:${String(port)}`);
+    const html = await waitForRuntime(
+      child,
+      `http://127.0.0.1:${String(port)}`,
+    );
     assert.match(html, /data-mokly-update-version="2"/);
     assert.match(html, /"renderCapability"/);
   },
 );
 
+/** Wait within the test deadline; a loaded machine can delay child startup. */
 async function waitForMessage(
+  child: ChildProcess,
   messages: readonly unknown[],
   index: number,
 ): Promise<unknown> {
-  for (let attempt = 0; attempt < 100; attempt += 1) {
-    if (messages.length > index) return messages[index];
+  while (messages.length <= index) {
+    if (child.exitCode !== null || child.signalCode !== null)
+      throw new Error(
+        `child exited before sending message ${String(index + 1)}`,
+      );
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
-  throw new Error(`child did not send message ${String(index + 1)}`);
+  return messages[index];
 }
 
-async function waitForRuntime(url: string): Promise<string> {
-  for (let attempt = 0; attempt < 100; attempt += 1) {
+async function waitForRuntime(
+  child: ChildProcess,
+  url: string,
+): Promise<string> {
+  for (;;) {
+    if (child.exitCode !== null || child.signalCode !== null)
+      throw new Error("child exited before publishing its retained runtime");
     const html = await (await fetch(`${url}/view/action/`)).text();
     if (html.includes('data-mokly-update-version="2"')) return html;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
-  throw new Error("child did not publish its retained runtime");
 }
 
 async function stopChild(child: ChildProcess): Promise<void> {

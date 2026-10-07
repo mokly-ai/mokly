@@ -36,7 +36,11 @@ export function resolveExportOutput(
       );
   }
   const runtime = fileURLToPath(new URL("..", import.meta.url));
-  const protectedDirectories = [config.review.outDir, runtime];
+  const protectedDirectories = [
+    config.review.outDir,
+    runtime,
+    config.generatedDir,
+  ];
   const protectedFiles = [
     config.configPath,
     ...(config.renderer ? [config.renderer] : []),

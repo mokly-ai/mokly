@@ -17,7 +17,7 @@ for (const [name, change, routes] of componentChangeCases)
       fixture.git,
       "main",
     );
-    assert.equal(artifact.result.schemaVersion, 5);
+    assert.equal(artifact.result.schemaVersion, 6);
     assert.ok("changes" in artifact.result);
     const result = artifact.result;
     assert.deepEqual(
@@ -43,7 +43,7 @@ for (const [name, change, routes] of componentChangeCases)
     }
     if (name === "component-only implementation") {
       const current = artifact.files.get(
-        "snapshots/after/home/index.mobile.html",
+        "snapshots/after/mokly-generated/home/index.mobile.html",
       );
       assert.ok(
         typeof current === "string" && current.includes('class="new-action"'),
@@ -67,8 +67,8 @@ test("component title changes mark its variants without inventing affected consu
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   assert.deepEqual(
     result.changes.map((entry) => (entry.after ?? entry.before)!.path).sort(),
     ["action", "action/default", "action/disabled"].sort(),
@@ -89,8 +89,8 @@ test("an implementation edit visible only at real consumer props still identifie
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   assert.deepEqual(
     result.changes.map((entry) => entry.after!.path),
     ["action"],
@@ -125,8 +125,8 @@ for (const adopted of [false, true])
       fixture.git,
       "main",
     );
-    assert.equal(result.schemaVersion, 5);
-    if (result.schemaVersion !== 5) return;
+    assert.equal(result.schemaVersion, 6);
+    if (result.schemaVersion !== 6) return;
     assert.deepEqual(
       result.changes.map((entry) => entry.after!.path),
       adopted ? ["action"] : [],
@@ -146,8 +146,8 @@ test("affected-only views retain their real comparison state without entering Ch
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 5);
-  if (result.schemaVersion !== 5) return;
+  assert.equal(result.schemaVersion, 6);
+  if (result.schemaVersion !== 6) return;
   assert.deepEqual(
     result.changes.map((entry) => entry.after!.path),
     ["action"],

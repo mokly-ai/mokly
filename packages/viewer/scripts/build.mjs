@@ -23,6 +23,20 @@ await buildBrowserModules(
 );
 await build({
   bundle: true,
+  entryPoints: Object.fromEntries(
+    ["logical", "routes", "target", "delivery"].map((name) => [
+      name,
+      path.join(root, `src/navigation/${name}.ts`),
+    ]),
+  ),
+  format: "esm",
+  logLevel: "silent",
+  outdir: path.join(target, "browser-navigation"),
+  platform: "browser",
+  target: "es2023",
+});
+await build({
+  bundle: true,
   define: { "process.env.NODE_ENV": '"production"' },
   entryPoints: [path.join(root, "src/browser.tsx")],
   format: "esm",

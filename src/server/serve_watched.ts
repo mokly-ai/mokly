@@ -18,7 +18,7 @@ import type { RunningServe, ServeDependencies, ServeOptions } from "./serve.js";
 import {
   closeWatched,
   createWatchedSupervisor,
-  restartWithRecovery,
+  restartWatchedGeneration,
   watcherReadyBeforeShutdown,
 } from "./serve_lifecycle.js";
 import type { ProcessSupervisor } from "./supervisor.js";
@@ -116,6 +116,7 @@ export async function serveWatched(
     running,
     runtime: () => runtime,
     shutdown,
+    writeOutput: options.build ?? false,
   });
   running.onForeground?.((active) => background.foreground(active));
   let debouncer: WatchDebouncer | undefined;
@@ -128,19 +129,8 @@ export async function serveWatched(
     debouncer?.notify(action, event.path);
   };
 
-  const restart = async () => {
-    try {
-      await restartWithRecovery(running);
-      running.notifyUpdate(
-        undefined,
-        undefined,
-        background.changesStatus,
-        "evidence",
-      );
-    } finally {
-      if (!closed) background.schedule(background.compilation);
-    }
-  };
+  const restart = () =>
+    restartWatchedGeneration(running, background, () => closed);
 
   const reconfigure = async (candidate?: ResolvedConfig): Promise<void> => {
     const nextConfig =

@@ -24,6 +24,7 @@ how to run it, how to write findings, and how to apply them.
   small or medium effort findings in these categories: product bugs
   (including edge cases, races, and platform differences), security issues,
   docs or spec drift, mockup mismatches that a protocol doc already settles,
+  flaky tests that the diff adds or changes under the flaky-test rule below,
   and repository-rule violations such as file size, lint, and layout. Effort
   grades: small is one change in one or two files with no new module,
   dependency, migration, protocol section, or test file; medium is a few files
@@ -42,9 +43,28 @@ how to run it, how to write findings, and how to apply them.
   limit; or the fix needs an audit exception, credentials, or infrastructure.
   Findings about missing tests, performance, code structure, UX wording, and
   process always wait for the user
-- Do not fix a flaky, slow, custom, or low-value test, gate, lint, or check
-  automatically. Ask the user whether to fix it or remove it, and state what
-  it protects and how long it runs
+- Flaky-test rule: a flaky test that the diff adds or changes may be tagged
+  `Auto-fix: yes` only when all of these conditions hold. The fixer reproduces
+  the flake by repeating the test, and records the pass counts before and
+  after the fix under `.context/`. The finding names the nondeterminism
+  source, for example real timers, real signals, watcher readiness, port or
+  path reuse, async ordering, shared fixture state, or locale and platform
+  differences. The fix makes the test deterministic with the methods in
+  [CI Test Timing](../protocol/ci-test-timing.md): a fake clock, event
+  order, captured inputs, operation counts, an explicit readiness signal, or
+  isolated state. The fix keeps every existing assertion. The fix adds no
+  retry, sleep, repeat, skip, quarantine, or longer time limit. A source in
+  `src/` is a product bug: add the failing test first, then fix it under the
+  product-bug category. An unreproducible failure, an unknown source, or a
+  proposed removal stays `Auto-fix: no`
+- A flaky test that the diff does not touch is an unrelated flaky test. Do not
+  fix it in this branch, so that one fix in a separate branch reaches every
+  open branch quickly. Report it in the final message and, when a plan exists,
+  as one line under the plan's review TODO. Give the test name, the failure
+  text, the rerun outcome, and the suspected source. Slow, custom, or
+  low-value tests, gates, lints, and checks also stay `Auto-fix: no`. Ask the
+  user whether to fix or remove each one, and state what it protects and how
+  long it runs
 - Keep the review itself read-only. After it reports, fix the `Auto-fix: yes`
   findings, run the checks, commit, push, and re-run the review once on the
   fix. Fix any new `Auto-fix: yes` findings once more, then stop and report.

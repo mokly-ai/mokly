@@ -2,7 +2,7 @@ import { analyzeHierarchy } from "@mokly/viewer/data";
 import type {
   HistoricalManifest,
   HistoricalManifestEntry,
-  ManifestV8,
+  ManifestV9,
 } from "@mokly/viewer/data";
 
 import type { EntryMove } from "../review/moves/types.js";
@@ -17,14 +17,14 @@ export interface RemovedEntrySnapshot {
   parentTitle?: string;
   /** Complete baseline DTO, including `variantOf` when the screen was a variant. */
   entry: Exclude<
-    HistoricalManifestEntry | ManifestV8["entries"][number],
+    HistoricalManifestEntry | ManifestV9["entries"][number],
     { kind: "use-case" }
   >;
 }
 
 /** One pinned generation shared by Browse, watched updates and publication. */
 export interface CatalogueChangeSnapshot {
-  schemaVersion: 2;
+  schemaVersion: 3;
   baseRef: string;
   baseCommit: string;
   changedEntries: readonly string[];

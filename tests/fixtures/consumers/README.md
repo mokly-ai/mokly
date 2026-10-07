@@ -2,11 +2,19 @@
 
 These projects test the published packages the way a user installs them.
 [`scripts/package-smoke.mjs`](../../../scripts/package-smoke.mjs) packs
-`@mokly/mokly` and `@mokly/viewer`, copies each project into a temporary
-`.context/package-smoke-*` directory and installs both archives with npm. Each
-scenario then runs the installed `mokly` command and inspects its output. No
-check imports Mokly source files from this repository, and the original fixture
-files never change.
+`@mokly/mokly` and `@mokly/viewer`. With `--artifacts <directory>`, it reads
+archives that an earlier step packed instead. Each scenario copies one project
+into a temporary `.context/package-smoke-*` directory, so the original fixture
+files never change. Most scenarios install both archives with npm, run the
+installed `mokly` command and inspect its output. The clean-cache and `nodenext`
+scenarios work differently. The sections below describe them.
+
+The scenarios run Mokly only from the archives. Checks that read a protocol
+document or a protocol fixture read the copy in the installed package, so they
+test the files that users get. The checks use repository code in one place:
+[`scripts/package/catalogue.mjs`](../../../scripts/package/catalogue.mjs)
+imports `@mokly/viewer/data` from this repository's viewer build. The Export and
+Publish checks use it to calculate the expected routes.
 
 ```bash
 npm run package:smoke
@@ -30,18 +38,22 @@ copy it:
   and Publish to a local receiver.
 - clean cache
   ([`consumer_cases/clean_cache.mjs`](../../../scripts/package/consumer_cases/clean_cache.mjs))
-  runs Mokly through `npm exec` with an empty npm cache and no project install,
-  as `npx` users do. It also exports with a custom config file name.
+  installs only the `@mokly/viewer` archive in the project. It runs the packed
+  `@mokly/mokly` through `npm exec` with an empty npm cache, as `npx` users do.
+  It also exports with a custom config file name.
 - imported styles
   ([`imported_styles.mjs`](../../../scripts/package/imported_styles.mjs)) adds
   a CSS module, a binary asset and a project PostCSS config.
 
 ### `nodenext`
 
-TypeScript files only. The `nodenext` scenario type-checks the public
-`@mokly/mokly` and `@mokly/viewer` types and the renderer contract from
-[`mokly-rendering.md`](../../../docs/protocol/mokly-rendering.md) with strict
-`NodeNext` resolution. It then imports the package at runtime.
+TypeScript files and a strict `tsconfig.json`. It has no Mokly config. The
+`nodenext` scenario installs both archives but does not run `mokly`. It
+type-checks the public `@mokly/mokly` and `@mokly/viewer` types with `NodeNext`
+resolution. It also type-checks the renderer contract from the installed
+package's copy of
+[`mokly-rendering.md`](../../../docs/protocol/mokly-rendering.md). It then
+imports `@mokly/mokly` with Node.
 
 ### `themed`
 
@@ -65,4 +77,6 @@ Each scenario installs packages and runs real commands, so it is slow. Add a
 fixture only when the behavior depends on the packed package: its file list,
 exports, declarations, binaries or install-time dependency resolution. Test
 configuration and path behavior, such as a config file in a subdirectory, with
-unit tests under [`tests/`](../..) instead. Describe each new fixture here.
+unit tests under [`tests/`](../..) instead. A new check must read protocol
+documents and fixtures from the installed package, as the current checks do.
+Describe each new fixture here.

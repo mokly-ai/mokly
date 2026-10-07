@@ -98,7 +98,7 @@ test("external destinations and same-document anchors retain their semantics", a
     assert.ok(html.includes(value), value);
 });
 
-test("logical links to entries use the same final fragment and transformer checks", async (t) => {
+test("logical links to entries use the same final fragment checks", async (t) => {
   const fixture = await pathFixture({
     "specs/docs/README.md": "# Docs\n\n[Page](mock:../page#section)",
     "specs/page.mockup.ts": pageSource(
@@ -113,12 +113,8 @@ test("logical links to entries use the same final fragment and transformer check
     ).includes('data-mokly-link="page#section"'),
   );
   await fixture.write(
-    "mokly.config.ts",
-    'export default {mockupsDir:"generated",roots:[{dir:"specs"}],compatibility:{transformer:"transform.ts"}}',
-  );
-  await fixture.write(
-    "transform.ts",
-    'export default ({content,route}) => route === "page/index.html" ? content.replace(/id="section"/g, "") : content;',
+    "specs/page.mockup.ts",
+    pageSource("", "<html><body>Page without the anchor</body></html>"),
   );
   await assert.rejects(fixture.compile(), /logical fragment section.*missing/);
 });
@@ -175,7 +171,7 @@ for (const [destination, reason, extra] of [
 for (const [destination, detail] of [
   [
     "#missing",
-    "document links and resources are invalid:\n- guide/index.html: missing anchor #missing",
+    "document links and resources are invalid:\n- mokly-generated/guide/index.html: missing anchor #missing",
   ],
   [
     "other.md#missing",

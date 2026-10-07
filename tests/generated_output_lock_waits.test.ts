@@ -58,7 +58,7 @@ test(
     });
     const running = await serve(
       config,
-      { port: 0, watch: false },
+      { port: 0, watch: false, build: true },
       {
         reporter: new PlainServeReporter(() => {}),
         outputStore: {
@@ -91,7 +91,7 @@ test(
 );
 
 test(
-  "export cancellation stops its wait for the writer lock",
+  "cancelled export leaves the unrelated writer lock intact",
   { timeout: 60_000 },
   async (context) => {
     const fixture = await createFixture();
@@ -100,17 +100,14 @@ test(
     const holder = await acquireOutputLock(config.repoRoot);
     context.after(() => holder.release());
     const controller = new AbortController();
-    const exporting = observeLockWait(() =>
+    controller.abort();
+    await assert.rejects(
       exportCatalogue(config, {
         noChanges: true,
         outDir: "site",
         signal: controller.signal,
       }),
-    );
-    await exporting.reached;
-    controller.abort();
-    await assert.rejects(exporting.result, (error: Error) =>
-      isCancellation(error),
+      (error: Error) => isCancellation(error),
     );
     assertOutputLockHeld(holder, config.repoRoot);
     await assert.rejects(fs.access(path.join(fixture.root, "site")), {
@@ -120,26 +117,34 @@ test(
 );
 
 test(
-  "export waits for another writer, then completes",
+  "export completes while another process holds the writer lock",
   { timeout: 60_000 },
   async (context) => {
     const fixture = await createFixture();
     context.after(() => removeFixture(fixture));
     const config = await loadConfig(fixture.root);
     const holder = await acquireOutputLock(config.repoRoot);
-    const exporting = observeLockWait(() =>
-      exportCatalogue(config, { noChanges: true, outDir: "site" }),
+    context.after(() => holder.release());
+    let lockSpans = 0;
+    const result = await runWithTimings(
+      true,
+      "test",
+      () => exportCatalogue(config, { noChanges: true, outDir: "site" }),
+      {
+        write: (event) => {
+          if (event.stage === "output.lock") lockSpans++;
+        },
+      },
     );
-    await exporting.reached;
-    await holder.release();
-    const result = await exporting.result;
+    assert.equal(lockSpans, 0);
+    assertOutputLockHeld(holder, config.repoRoot);
     assert.equal(result.outDir, path.join(fixture.root, "site"));
     await fs.access(path.join(fixture.root, "site", "index.html"));
   },
 );
 
 test(
-  "the export input recheck waits for a writer that is replacing generated assets",
+  "export recheck uses memory while a writer replaces generated disk assets",
   { timeout: 60_000 },
   async (context) => {
     const fixture = await createFixture(
@@ -157,7 +162,11 @@ test(
       sourceFiles: compilation.manifest.sourceFiles,
     };
     await writeCompilation(compilation, config);
-    const publicFiles = await capturePublicFiles(config);
+    const publicFiles = await capturePublicFiles(
+      config,
+      compilation.outputs,
+      compilation.manifest.assetClosure,
+    );
     assert.ok(publicFiles.has("mokly-generated/assets/entries/mark.png"));
     const asset = path.join(
       fixture.mockupsDir,
@@ -165,29 +174,18 @@ test(
     );
     const writer = await acquireOutputLock(config.repoRoot);
     await fs.rename(asset, `${asset}.backup`);
-    const recheck = observeLockWait(() =>
-      assertInputsUnchanged(
-        config,
-        compilation,
-        publicFiles,
-        undefined,
-        [],
-        [],
-        false,
-      ),
+    context.after(() => writer.release());
+    await assertInputsUnchanged(
+      config,
+      compilation,
+      publicFiles,
+      undefined,
+      [],
+      [],
+      false,
     );
-    assert.equal(
-      await Promise.race([
-        recheck.reached.then(() => "waiting"),
-        recheck.result.then(
-          () => "finished",
-          () => "failed",
-        ),
-      ]),
-      "waiting",
-    );
+    assertOutputLockHeld(writer, config.repoRoot);
     await fs.rename(`${asset}.backup`, asset);
     await writer.release();
-    await recheck.result;
   },
 );

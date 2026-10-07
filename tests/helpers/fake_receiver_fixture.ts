@@ -14,7 +14,7 @@ export async function fakePlanArchive(
   } = {},
 ) {
   const manifest: UploadManifest = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     moklyVersion: "1.2.3",
     repository: { host: "github.com", owner: "sample", name: "catalogue" },
     branch: "main",
@@ -28,7 +28,7 @@ export async function fakePlanArchive(
   };
   const manifestBytes = Buffer.from(
     options.manifestText ??
-      `${JSON.stringify({ ...manifest, schemaVersion: options.manifestVersion ?? 1 })}\n`,
+      `${JSON.stringify({ ...manifest, schemaVersion: options.manifestVersion ?? 2 })}\n`,
   );
   const files = new Map<string, Buffer>([
     ["index.html", Buffer.from("home")],
@@ -42,7 +42,7 @@ export async function fakePlanArchive(
   if (options.markerSize !== undefined)
     marker.files[0]!.size = options.markerSize;
   const markerBytes = Buffer.from(
-    `${JSON.stringify({ ...marker, schemaVersion: options.markerVersion ?? 2 })}\n`,
+    `${JSON.stringify({ ...marker, schemaVersion: options.markerVersion ?? 3 })}\n`,
   );
   return {
     archive: await bundleUpload(

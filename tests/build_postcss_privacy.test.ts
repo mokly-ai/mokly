@@ -83,7 +83,7 @@ test("directory dependency accepts an in-repository symlinked directory", async 
   assert.ok(graph.sourceFiles.includes("candidates/source.txt"));
 });
 
-test("a symlink alias cannot hide a directory scan of generated output", async (t) => {
+test("directory reports skip physical aliases of generated output", async (t) => {
   const fixture = await styleFixture(".x{color:red}", {
     extraConfig: 'postcss: "postcss.config.mjs",',
   });
@@ -98,9 +98,13 @@ test("a symlink alias cannot hide a directory scan of generated output", async (
       result.messages.push({ type: "dir-dependency", plugin: "aliased-output", dir: new URL("./alias", import.meta.url).pathname });
     } }] };`,
   );
-  await assert.rejects(
-    loadConsumerGraph(await loadConfig(fixture.root), false),
-    /PostCSS plugin aliased-output directory dependency scans Mokly-generated output in entries\/fixture\.css: alias\/stale\.css; exclude mockupsDir by excluding the matching scan root/,
+  const config = await loadConfig(fixture.root);
+  const graph = await loadConsumerGraph(config, false);
+  assert.ok(graph.sourceFiles.every((file) => !file.includes("stale.css")));
+  assert.ok(
+    (config.postcssWatchDirectories ?? []).every(
+      (item) => item.directory !== path.join(fixture.root, "alias"),
+    ),
   );
 });
 

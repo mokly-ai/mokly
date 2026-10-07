@@ -41,17 +41,10 @@ export function isReservationDirectory(directory: string): boolean {
   }
 }
 
-/** Initialize metadata without adopting unowned directories or old reservations. */
+/** Initialize metadata without adopting unowned directories. */
 export async function prepareReservation(output: string): Promise<void> {
   const parent = path.dirname(output);
   await fs.promises.mkdir(parent, { recursive: true });
-  const old = (await fs.promises.readdir(parent)).find((name) =>
-    /^\.mokly-export-[a-f0-9]{20}\.lock$/.test(name),
-  );
-  if (old)
-    throw exportError(
-      `Legacy export reservation requires explicit recovery: ${path.join(parent, old)}. Confirm no writer is active before recovering it.`,
-    );
   const directory = path.join(parent, RESERVATION_DIRECTORY);
   try {
     await fs.promises.mkdir(directory);

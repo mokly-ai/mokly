@@ -8,6 +8,7 @@ import {
   useSyncExternalStore,
 } from "react";
 
+import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
 import type { ScrollTogetherPreference } from "../shell/comparison_scroll_preference.js";
 import { EmbeddedViewerShell } from "../shell/embedded_viewer.js";
 import { ShellIdentifierProvider } from "../shell/identifier_context.js";
@@ -68,7 +69,7 @@ export function ReadyViewer(props: ReadyProps) {
   if (!normalized)
     return (
       <div
-        className="mokly-viewer mbk-empty"
+        className={`${VIEWER_DIRECTORY} mbk-empty`}
         role="alert"
         {...themeAttributes(props.theme)}
       >

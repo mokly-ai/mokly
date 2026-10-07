@@ -1,22 +1,32 @@
 # Baseline Storage And Execution
 
-This is the storage and command contract for [derived baselines](./mokly-derived-baselines.md).
+This is the storage and command contract for [per-commit baseline selection](./mokly-derived-baselines.md).
 Historical commands execute trusted repository code; preparation is never an HTTP operation.
+This contract defines the v9 storage and compatibility boundary.
+The [v9 manifest gate](./mokly-generated-manifest.md#selection-cache-and-resource-addressing)
+permits only v9 content readers and retains earlier-version outcome.
+Process ownership, locking, confinement and metadata-only retention follow the rules below.
 
 ## Rebuild Procedure
 
 The builder runs the following steps for one merge-base commit.
 
 The [package `repoRoot` rule](./mokly-package.md#configuration-discovery) applies at
-every Git boundary in both output modes. A root mismatch remains `config-invalid`
+every Git boundary. A root mismatch remains `config-invalid`
 and is not converted to a baseline history error.
 
 1. Resolve the merge base of `HEAD` and the configured base ref with Git. A
    missing ref, shallow history, or unrelated histories fail as
    `baseline-history-unavailable`.
-2. Acquire the entry lock, including on cache hits. Sweep safe crash leftovers
+2. Probe only the canonical manifest in the requested generated subtree.
+   Complete v9 output uses blobs. A version below v9 at that current location
+   returns `baseline-incompatible-earlier`. A committed root-level manifest
+   is ignored. A missing manifest or incomplete inventory needs the builder;
+   acquire its entry lock, including on cache hits. Sweep safe crash leftovers
    under that lock as a best-effort maintenance step.
-3. Reuse a valid completion marker without executing any command. On a miss,
+3. Reuse only complete valid v9 output with the matching commit, requested
+   catalogue and recipe. Invalid, incomplete or unreadable data is partial; remove its owned
+   contents under the lock, then
    extract the commit with Git's archive format into
    the entry's `source` directory. Entries that escape the directory, symlinks
    that resolve outside it, hard links, and special files fail
@@ -32,23 +42,35 @@ and is not converted to a baseline history error.
    `baseline-command-failed` with the
    zero-based command index, argv, exit code or signal, and the last 40 output
    lines.
-5. Locate `<source>/<mockupsDir>` using the current config's repository-relative
-   `mockupsDir`. Apply the same v8
-   [compatibility gate](./mokly-baseline-compatibility.md) as committed baselines.
-   Missing or malformed output fails as `baseline-output-invalid`; recognized
-   earlier output is cached as a completed but incompatible base so commands do
-   not rerun on every classification. Moving `mockupsDir` between base and head
-   remains unsupported until the move is merged.
-6. Move `<source>/<mockupsDir>` to the entry's `output` directory, delete the
-   remaining `source` extraction including installed dependencies, write the
-   completion marker. Successful completion of that write is the commit point:
+5. Locate the historical catalogue using the ordered current-root lookup,
+   then bounded extraction scan in
+   [baseline addressing](./mokly-baseline-addressing.md#discovery-after-a-rebuild).
+   Zero or several eligible candidates fail `baseline-output-invalid` with
+   sorted candidates. The base and head may use different `mockupsDir` paths.
+6. If the selected output is earlier than v9, apply existing pre-adoption
+   cleanup and maintenance-error handling under the lock, then return
+   `baseline-incompatible-earlier`. Do not harvest old documents, write a
+   completion marker or upgrade the build's toolchain. The caller retains this
+   outcome for the pinned base and recipe in memory; no cache entry records it.
+   A later command invocation rebuilds again when current-location blobs cannot
+   establish the version.
+7. For valid, inventory-verified v9, move
+   `<source>/<historical mockupsDir>/mokly-generated/` into
+   `output/<historical mockupsDir>/mokly-generated/`, then copy exactly the
+   manifest's `assetClosure` beside it under the historical catalogue root.
+   Validate every file as a confined regular file; missing, symlinked or
+   protected sources fail `baseline-output-invalid`. Never harvest a flat tree. Readers map repository-relative paths directly into this v9
+   cache using the historical root. Delete the remaining extraction, including
+   installed dependencies. Write `inputs.json`, then write the completion
+   marker to a unique `complete-<uuid>.tmp` beside `complete.json`. Rename that
+   temporary file atomically to `complete.json`. Successful rename is the commit point:
    the result is adopted immediately and cannot be removed by this build's
    failure path. Retention cleanup and lock release are separate best-effort
    post-steps; their failures are reported on stderr and do not fail the build.
 
 Before the marker commit point, cancellation terminates the running command's
 owned process tree, waits for exit and output closure, removes the partial entry, and reports
-`baseline-interrupted`. Cancellation after the marker write returns the completed
+`baseline-interrupted`. Cancellation after the marker rename returns the completed
 cached result, skips remaining retention cleanup and still attempts lock release.
 If partial-entry removal or lock release fails while a build is already failing,
 report that maintenance failure separately and retain the original typed build
@@ -62,29 +84,73 @@ The cache lives at `<repoRoot>/.mokly-cache/baselines/`; the sibling
 `locks/` directory holds only the transient
 [generated-output writer lock](./mokly-rendering-generated.md#concurrent-writers).
 Its release removes only the lock file, never a directory, so creating a cache
-entry never races a directory removal. The cache is package owned: never served, never watched, never a comparison resource, excluded from
+entry does not race a writer removing its cache ancestors. The cache is package owned: never served, never watched, never a comparison resource, excluded from
 changed-path evidence and shared-impact globs before those globs are evaluated,
 and never a valid `mockupsDir`, root, resolved entry module or document,
-`review.outDir`, or export destination. Consumers add `.mokly-cache/` to their ignore file; derived
-`check` also fails when Git tracks anything under it.
+`review.outDir`, or export destination. Only `check` runs the index guard,
+failing if Git tracks anything under it. Its remedy is `git rm --cached`,
+without a cache ignore rule.
+
+The cache ignores itself. Before a writer acquires the generated-output lock,
+and after a rebuild validates the cache ancestors, Mokly creates
+`.mokly-cache/.gitignore` when no entry has that name. Its bytes are
+`# Created by Mokly automatically.\n*\n`: `*` matches every cache path,
+the ignore file included, so Git never shows or adds the cache, not even a
+lock that a stopped command left. Mokly writes a temporary sibling and renames
+it into place, so an interrupted write never leaves a partial file; failing to
+publish it fails that lock acquisition or rebuild. An existing entry is never
+replaced, so a consumer may edit it. A writer skips the file when
+`.mokly-cache` is a symbolic link, because Git does not read ignore files
+through a link. Consumers may still list `.mokly-cache/` in root ignore files
+that other tools read. Retention and debris cleanup preserve the ignore file.
+Only Build, watched Build and the `serve --build` parent take the output lock.
+Plain Serve, export, publication and Check do not create a cache themselves;
+requested baseline rebuilds can create it through the builder above.
 
 ```text
-.mokly-cache/baselines/<commit>/
-  lock            # holder pid and start time, created exclusively
-  source/         # extraction, removed after adoption
-  output/         # the rebuilt mockupsDir tree
-  complete.json   # completion marker
-  inputs.json     # JSON string containing repository-relative mockupsDir
+.mokly-cache/
+  .gitignore        # "*": Git ignores every cache path, this file included
+  locks/            # the generated-output writer lock
+  baselines/<commit>/
+    lock            # holder pid and start time, created exclusively
+    source/         # extraction, removed after adoption
+    output/         # v9: repo-relative generated tree plus authored closure
+    complete.json   # completion marker
+    inputs.json     # requested/current repo-relative mockupsDir ("." at repo root)
 ```
 
-`complete.json` is `{ schemaVersion: 1, commit, finishedAt, commands,
-manifestVersion }`. An entry is complete only when the marker parses, its
-`commit` matches the directory name, and `output/<manifest>` exists. Anything
-else is a partial entry and is removed under the lock before the next attempt.
-The manifest compatibility result is validated again on reuse. A complete entry with a
-different `inputs.json` output path or command list fails as
-`baseline-output-invalid` and remains intact. The commit-only cache holds one
-catalogue/build configuration; remove that entry before changing those settings.
+New `complete.json` markers are `{ schemaVersion: 2, commit, finishedAt,
+commands, manifestVersion: 9, historicalCatalogueRoot, layout: "generated-v9" }`.
+The root identifies the harvest; it never replaces the requested path in
+`inputs.json`. Reuse requires the matching commit, request and recipe, a valid
+v9 manifest and its verified inventory/closure. Keep the
+[reader mapping](./mokly-baseline-addressing.md#cache-identity-and-readers).
+
+A reusable entry requires regular bounded JSON files for `complete.json` and
+`inputs.json`, the exact schema-2 marker with `manifestVersion: 9` and
+`layout: "generated-v9"`, a safe historical root, matching commit, requested
+path and argv arrays, and complete valid v9 output. Verify generated membership,
+blob hashes and every authored closure file with the same confinement rules.
+Keep the completion-marker and manifest version checks; no earlier layout is
+parsed or adapted. Validate the marker first, then the stored catalogue path and
+command list, then the output. A valid v9 marker with settings different from
+the request fails intact with `Cached baseline uses different build settings; remove <entry> before changing catalogues or commands`.
+Invalid or earlier markers are partial before this comparison. Never replace a
+settings-mismatch error with a rebuild.
+
+Invalid or incomplete entry data is partial: missing files, invalid or empty JSON,
+truncation, unreadable data, earlier/newer marker versions, unsafe paths,
+invalid v9 data, stale bytes or incomplete closure. Return a miss,
+not a content reader or an earlier-version outcome. Cancellation still aborts
+instead of rebuilding. Under the held lock, remove only owned partial content
+without following symlinks; cleanup failure cannot permit reuse of bad bytes.
+
+The builder writes the temporary completion file only after adoption, source
+removal and input-record completion. Before the rename, failure or cancellation
+removes the partial entry and temporary marker. After the rename, the result is
+committed: cancellation and maintenance failure cannot remove it. A crash with
+only a temporary file leaves a partial entry for locked cleanup. Never expose
+partially written `complete.json`.
 
 Lock contents are published atomically using an exclusively linked temporary
 file. Its identity is captured before publication and returned with ownership;
@@ -100,8 +166,11 @@ the default two-minute lock timeout fails as `baseline-lock-timeout`.
 
 After a successful rebuild the builder removes complete entries beyond the
 retained count, newest markers first, defaulting to three. It never removes the
-entry it just built, an entry another process holds locked, or partial entries
-belonging to a live lock holder. Cleanup records each entry's stat, lock,
+entry it just built or an entry another process holds locked. Invalid and
+partial entries do not consume retention slots: acquire each candidate's own
+lock and remove it safely, regardless of the retained count. Retention classifies
+only the completion marker and `inputs.json`. It never reads or hashes output.
+Full inventory and closure validation runs only on reuse. Cleanup records each entry's stat, lock,
 rename, remove and release failures, continues with other eligible entries,
 and reports those failures on stderr. A concurrent entry removal is tolerated.
 Root listing failures skip cleanup. Failure or cancellation of these post-steps
@@ -149,12 +218,16 @@ Windows closes its job handle and terminates the owned tree.
 ## Crash Leftovers
 
 Before reading or rebuilding an entry under its lock, remove its owned
-`discard-<commit>` directories and regular `.lock-<pid>-<uuid>` temporary files
-whose process no longer exists. Skip live owners, unrecognized names, symlinks
+`discard-<commit>` directories, regular `complete-<uuid>.tmp` files and regular
+`.lock-<pid>-<uuid>` temporary files whose process no longer exists. Skip live owners, unrecognized names, symlinks
 and special files. Per-file failures are reported and do not invalidate a
 completed baseline. This sweep also runs on warm cache reuse.
 
 Identity-specific `lock.retired-<hash>` tombstones deliberately survive until
 the whole entry is retired: removing them independently would allow a delayed
-reclaimer to unlink a successor's lock. Legacy temporaries without a PID are
+reclaimer to unlink a successor's lock. Unrecognized temporaries without a PID are
 also retained until entry retirement because their owner cannot be checked.
+
+The pending [cache acquisition rule](./mokly-comparison-inventory.md#cache-acquisition-and-discovery)
+recreates an entry directory removed by retention and retries only ENOENT, at
+most three attempts. Existing lock deadlines, cancellation and ownership stay.

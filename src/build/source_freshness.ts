@@ -1,10 +1,9 @@
 import { isDeepStrictEqual } from "node:util";
 
-import { entryRoute, generatedViews } from "@mokly/viewer/data";
-
 import { loadConfig } from "../config/load.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { MoklyError } from "../errors.js";
+import { generatedDocumentRoutes } from "../registry/generated_documents.js";
 
 import type { ComponentRuntime } from "./component_runtime.js";
 import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
@@ -37,10 +36,7 @@ export async function assertFreshSourceInventory(
   config.postcssWatchDirectories = graph.postcssWatchDirectories ?? [];
   config.configSourceFiles = current.configSourceFiles ?? [];
   await captureOutputSnapshot(
-    manifest.entries.flatMap((entry) => {
-      if (entry.kind === "page") return [entryRoute(entry.path)];
-      return generatedViews(entry).map((view) => view.path);
-    }),
+    generatedDocumentRoutes(manifest.entries),
     config,
   );
   return graph;

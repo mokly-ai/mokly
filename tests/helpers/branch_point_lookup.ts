@@ -2,10 +2,12 @@ import type { ManifestComponent } from "../../packages/viewer/src/components/man
 import type {
   ManifestEntry,
   ManifestScreen,
-  ManifestV8,
+  ManifestV9,
 } from "../../packages/viewer/src/registry/types.js";
 import { createCatalogue } from "../../packages/viewer/src/shell/catalogue.js";
 import type { RemovedEntrySnapshot } from "../../packages/viewer/src/shell/metadata.js";
+
+import { currentManifest } from "./current_manifest.js";
 
 function metadata(path: string) {
   return {
@@ -45,12 +47,12 @@ export function lookupCatalogue(
   removed: readonly RemovedEntrySnapshot[] = [],
   moves: readonly { path: string; previousPath: string }[] = [],
 ) {
-  const manifest: ManifestV8 = {
-    schemaVersion: 8,
+  const manifest: ManifestV9 = currentManifest({
+    schemaVersion: 9,
     generatedBy: "mokly",
     entries,
     folders: [],
     sourceFiles: [],
-  };
+  });
   return createCatalogue(manifest, removed, moves);
 }

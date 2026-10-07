@@ -36,7 +36,9 @@ test("export confines output before any write and resolves against config", asyn
     fixture.mockupsDir,
     path.join(fixture.root, "alias"),
   );
-  assert.throws(() => resolveExportOutput(config, "alias/nested"));
+  assert.throws(() =>
+    resolveExportOutput(config, "alias/mokly-generated/nested"),
+  );
   await fs.promises.symlink(
     path.dirname(fixture.root),
     path.join(fixture.root, "outside"),
@@ -56,8 +58,8 @@ test("export refuses unowned, malformed, and mixed output", async (context) => {
   const marker = path.join(output, ".mokly-export-artifact");
   for (const content of [
     "{}",
-    '{"schemaVersion":3,"files":[]}',
-    '{"schemaVersion":2,"files":[{"path":"../keep.txt","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","size":10}]}',
+    '{"schemaVersion":5,"files":[]}',
+    '{"schemaVersion":3,"files":[{"path":"../keep.txt","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","size":10}]}',
   ]) {
     await fs.promises.writeFile(marker, content);
     await assert.rejects(assertExportOwnership(output), /export-invalid/);
@@ -66,16 +68,10 @@ test("export refuses unowned, malformed, and mixed output", async (context) => {
     marker,
     JSON.stringify({ schemaVersion: 1, files: ["index.html"] }),
   );
-  await assert.rejects(
-    assertExportOwnership(output),
-    (error: unknown) =>
-      error instanceof Error &&
-      "code" in error &&
-      error.code === "export-invalid" &&
-      error.message.includes(output) &&
-      error.message.includes("Move any files you added") &&
-      error.message.includes(`delete ${output} and export again`),
-  );
+  await assert.rejects(assertExportOwnership(output), {
+    code: "export-invalid",
+    message: `[mokly/export-invalid] Invalid export ownership inventory: ${output}.`,
+  });
   await fs.promises.writeFile(
     marker,
     JSON.stringify(

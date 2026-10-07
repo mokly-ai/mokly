@@ -41,11 +41,14 @@ test("CLI no-watch lifecycle becomes ready and exits cleanly on SIGTERM", async 
   const url = await outputUrl(child.stdout);
   assert.equal((await fetch(url)).status, 200);
   assert.match(
-    await (await fetch(`${url}/static/home/index.desktop.html`)).text(),
+    await (
+      await fetch(`${url}/static/mokly-generated/home/index.desktop.html`)
+    ).text(),
     /id="home"/,
   );
-  await waitFor(async () =>
-    fs.existsSync(path.join(fixture.mockupsDir, "mokly-manifest.json")),
+  assert.equal(
+    fs.existsSync(path.join(fixture.generatedDir, "mokly-manifest.json")),
+    false,
   );
   child.kill("SIGTERM");
   const code = await new Promise<number | null>((resolve) =>
@@ -53,8 +56,8 @@ test("CLI no-watch lifecycle becomes ready and exits cleanly on SIGTERM", async 
   );
   assert.equal(code, 0);
   assert.equal(
-    fs.existsSync(path.join(fixture.mockupsDir, "mokly-manifest.json")),
-    true,
+    fs.existsSync(path.join(fixture.generatedDir, "mokly-manifest.json")),
+    false,
   );
 });
 
@@ -72,6 +75,7 @@ test(
         fixture.configPath,
         "--port",
         "0",
+        "--build",
       ],
       { cwd: fixture.root, stdio: ["ignore", "pipe", "pipe"] },
     );
@@ -81,7 +85,7 @@ test(
     const stderr = captureOutput(child.stderr);
     const url = await outputUrl(child.stdout);
     const firstPort = new URL(url).port;
-    const events = await fetch(`${url}/__mokly/events`);
+    const events = await fetch(`${url}/mokly-viewer/events`);
     const eventReader = events.body?.getReader();
     assert.ok(eventReader);
     assert.match(await readEvent(eventReader), /event: ready/);
@@ -89,7 +93,7 @@ test(
       fixture.entryPath,
       validEntrySource({ body: '<a href="mock:home">Home</a>' }),
     );
-    let generated = path.join(fixture.mockupsDir, "home/index.desktop.html");
+    let generated = path.join(fixture.generatedDir, "home/index.desktop.html");
     await waitFor(async () =>
       (await fs.promises.readFile(generated, "utf8")).includes(
         'data-mokly-link="home"',
@@ -99,14 +103,16 @@ test(
     assert.equal(new URL(url).port, firstPort);
     await waitFor(async () =>
       (
-        await (await fetch(`${url}/static/home/index.desktop.html`)).text()
+        await (
+          await fetch(`${url}/static/mokly-generated/home/index.desktop.html`)
+        ).text()
       ).includes('data-mokly-link="home"'),
     );
     await fs.promises.writeFile(
       fixture.entryPath,
       sourceWithHomeRoute("start/index.html", "Watched Home"),
     );
-    generated = path.join(fixture.mockupsDir, "start/index.desktop.html");
+    generated = path.join(fixture.generatedDir, "start/index.desktop.html");
     await waitFor(async () =>
       (await fs.promises.readFile(generated, "utf8")).includes("Watched Home"),
     );
@@ -119,7 +125,9 @@ test(
       20_000,
     );
     assert.match(
-      await (await fetch(`${url}/static/start/index.desktop.html`)).text(),
+      await (
+        await fetch(`${url}/static/mokly-generated/start/index.desktop.html`)
+      ).text(),
       /data-mokly-link="details"/,
     );
     await fs.promises.writeFile(
@@ -138,7 +146,7 @@ test(
       fixture.entryPath,
       validEntrySource({ firstTitle: "Recovered Home" }),
     );
-    generated = path.join(fixture.mockupsDir, "home/index.desktop.html");
+    generated = path.join(fixture.generatedDir, "home/index.desktop.html");
     await waitFor(async () =>
       (await fs.promises.readFile(generated, "utf8")).includes(
         "Recovered Home",

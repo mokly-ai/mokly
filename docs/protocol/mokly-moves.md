@@ -171,7 +171,7 @@ paired baseline entry's documents as the before side. The
 [branch-point lookup](./mokly-branch-point-lookup.md) owns shell reference,
 counterpart and parent resolution, including supplied-input pairing.
 
-Review v5 continues to contain screen, component and use-case records only.
+Review v6 continues to contain screen, component and use-case records only.
 Each moved record carries `previousPath`; a pure move has an explicit empty
 `ChangedEntry.reasons` list. Page/document membership and prior paths belong to
 the catalogue snapshot and read model, not synthetic visual review records.

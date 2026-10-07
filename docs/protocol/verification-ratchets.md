@@ -4,7 +4,8 @@
 
 The file-length, protocol-cap, unused-internal-export, and
 public-package-export ratchets are implemented. Every ratchet in this document
-runs in the repository suite and the complete gate.
+runs in the repository suite and the complete gate. The baseline dependency
+audit uses the same comparison-commit resolver.
 
 This contract owns the maintainability ratchets run by the repository suite of
 `cargo xtask check`. The file-length, protocol-cap, and unused-internal-export
@@ -21,7 +22,9 @@ While a merge is uncommitted, use `MERGE_HEAD` only if it equals `origin/main`.
 If it is an ancestor of `origin/main`, main moved during the merge and the
 gate fails until the merge is refreshed. For any other merge, including a
 local `main` ahead of `origin/main`, retain the normal merge-base rule. The
-source-file-length audit uses the same Git comparison boundary.
+source-file-length audit uses the same Git comparison boundary. The
+[baseline dependency audit](./dependency-audit-baseline.md) also shares this
+comparison-commit rule through `GitWorkspace.requireBase()`.
 
 ## JavaScript And TypeScript File Length
 
@@ -208,3 +211,7 @@ newly unused symbols, CommonJS use, attempted baseline growth, stale baseline
 removal, release-tag selection, public name and subpath removals, explicit
 exports, recursive star re-exports, unresolved star targets, release-note
 retention, and a moving `origin/main` whose merge base stays fixed.
+
+The approved [API and member checks](./verification-api-members.md) add public
+signature reports with a release-note gate, an unused-member ratchet and a test
+for literal ESLint paths. Existing export-name and size checks remain independent.

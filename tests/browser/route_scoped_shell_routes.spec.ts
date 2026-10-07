@@ -100,7 +100,7 @@ test("development React hydrates a scoped live page with initial Usage ready", a
   const errors = captureBrowserErrors(page);
   await recordLoadingFlash(page);
   await installDevelopmentBundle(page, developmentBundle);
-  await page.route("**/__mokly/client/react-host.js", (route) =>
+  await page.route("**/mokly-viewer/client/react-host.js", (route) =>
     route.fulfill({
       body: developmentHostBundle,
       contentType: "text/javascript",

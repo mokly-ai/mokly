@@ -9,7 +9,7 @@ audit that replaces the frame loads the smaller sample no longer makes.
 Serve and export send the Browse shell as complete server HTML. The standalone
 entry then hydrates that tree in place, as
 [viewer SSR and hydration](./mokly-viewer-ssr.md) defines. Hydration specs
-replace `/__mokly/client/react-shell.js` with a development React build of
+replace `/mokly-viewer/client/react-shell.js` with a development React build of
 `packages/viewer/src/browser.tsx`. Development React reports each difference
 between the server HTML and the first client render as a console error.
 
@@ -27,7 +27,7 @@ hydrates one representative route per entry shape, not every route.
 ## Entry Shapes
 
 `tests/helpers/hydration_shapes.ts` reads the entries of
-`examples/basic/generated/mokly-manifest.json` in manifest order. The shape key
+`examples/basic/mokly-generated/mokly-manifest.json` in manifest order. The shape key
 of an entry `e` is the `JSON.stringify` text of an object with exactly these
 properties, in this order:
 
@@ -73,7 +73,9 @@ not report the document's own 404 as a console error.
 Playwright discovery time. It registers one test per representative with the
 title `development React hydrates fixture route <route>`. Each test keeps the
 normal Playwright deadline and the shared error assertions, so catalogue growth
-cannot exhaust a shared loop deadline.
+cannot exhaust a shared loop deadline. The spec runs these tests in Playwright
+parallel mode and builds the development bundle once per worker, as
+[Test Concurrency](./ci-suite-evidence.md#test-concurrency) defines.
 
 Each test opens `/view/<route>` with every path segment percent-encoded and
 requires status 200. It passes `<route> (<shape>)` as the failure context, so a
@@ -119,8 +121,11 @@ Measure the full list and the new sample against the same build:
 The full route list loaded the mockup frames of every entry, and a failed frame
 resource load reached the page console. The sample loads only its own frames.
 `tests/example_resource_references.test.ts` therefore audits every `.html` and
-`.css` file under `examples/basic/generated/` with
-`tests/helpers/generated_resource_references.ts`.
+`.css` file under `examples/basic/mokly-generated/` and in the v9 manifest
+`assetClosure` with `tests/helpers/generated_resource_references.ts`. The audit
+receives those inputs relative to `examples/basic/`, the catalogue root. It
+does not scan authored source or local cache directories. References can cross
+from the generated tree to the authored closure within that root.
 
 The audit checks these HTML references:
 
@@ -143,7 +148,7 @@ such as `data:` or `https:`, and protocol-relative values. These values fail:
 
 - a root-absolute value, because Serve and export deliver generated files under
   `/static/` and a file opened from disk has no site root;
-- a relative value that resolves outside `examples/basic/generated/`; and
+- a relative value that resolves outside the catalogue root `examples/basic/`; and
 - a relative value that does not name an existing regular file after the audit
   removes its query and fragment and percent-decodes it.
 

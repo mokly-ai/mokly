@@ -1,12 +1,14 @@
 import { defineConfig } from "@playwright/test";
 
-const configuredPort = process.env["MOKLY_PLAYWRIGHT_PORT"] ?? "4517";
-const port = Number(configuredPort);
-if (!Number.isSafeInteger(port) || port < 1 || port > 65_535) {
-  throw new Error(
-    `MOKLY_PLAYWRIGHT_PORT must be an available TCP port; received ${configuredPort}`,
-  );
-}
+import {
+  exampleServerPorts,
+  ownExampleServerPort,
+} from "./tests/browser/example_servers.js";
+import { startBrowserSuiteTimer } from "./tests/helpers/browser_timing.js";
+
+startBrowserSuiteTimer();
+
+const ports = exampleServerPorts();
 
 const hydrationSpecs = "**/*hydration*.spec.ts";
 const projectUse = {
@@ -36,13 +38,13 @@ export default defineConfig({
   testMatch: "**/*.spec.ts",
   timeout: 60_000,
   use: {
-    baseURL: `http://127.0.0.1:${port}`,
+    baseURL: `http://127.0.0.1:${ownExampleServerPort(ports)}`,
     trace: "retain-on-failure",
   },
-  webServer: {
+  webServer: ports.map((port) => ({
     command: `node dist/cli/bin.js serve --config examples/basic/mokly.config.ts --base HEAD --port ${port} --no-watch`,
     reuseExistingServer: false,
     url: `http://127.0.0.1:${port}/`,
-  },
-  workers: 1,
+  })),
+  workers: ports.length,
 });

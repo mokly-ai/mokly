@@ -13,7 +13,7 @@ export async function smokeExternalWatch(root) {
       /Mokly listening at (http:\/\/[^\s]+)/,
       "themed-consumer watched server",
     );
-    const response = await fetch(`${match[1]}/__mokly/events`);
+    const response = await fetch(`${match[1]}/mokly-viewer/events`);
     assert.ok(response.body);
     const reader = response.body.getReader();
     await readServerEvent(reader, "ready");
