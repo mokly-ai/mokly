@@ -5,6 +5,14 @@ The user chose option A for Review 4 finding 1, and branch
 `calummoore/fix-npm-test-command-follow-on-v1` fixes it.
 The user chose option C for Review 4 finding 2 and option A for finding 3,
 and branch `calummoore/fix-npm-test-command-follow-on-v2` fixes them.
+Review 5 finding 1 (Low) stays open: a file-only pass from a file outside the
+selection is no longer rejected; recommend A.
+Review 5 finding 2 (Low) stays open: no test covers the selected-run outcome
+order; recommend A.
+Unrelated flaky test: `component_controls_runtime.spec.ts` › "changing context
+while the first edit is pending cannot apply an obsolete preview" failed with
+`route.fulfill: Fetch response has been disposed` and passed on rerun; suspected
+source: a delayed route fulfillment races response cleanup.
 
 Before this change, developer commands forced repeated complete suites and
 delayed repository checks. This plan adds file and name selection, introduces
