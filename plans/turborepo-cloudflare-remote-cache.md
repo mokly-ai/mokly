@@ -1,10 +1,10 @@
 # Turborepo Remote Cache On Cloudflare
 
-Status: Active. Created on 2026-10-06. No pull request yet. Milestone 1 was
-accepted at `7b70b7e`. Milestone 2 local implementation and checks are complete; hosted native
-verification remains a pre-merge requirement. The supervising agent owns formal
+Status: Active. Created on 2026-10-06. [PR #170](https://github.com/mokly-ai/mokly/pull/170) is open. Milestone 1 was
+accepted at `7b70b7e`. Milestone 2 local implementation, checks and hosted native
+verification are complete. The supervising agent owns formal
 reviews in another worktree. Milestone 3 implementation, local smokes, and the full gate are complete;
-its supervising-agent review and final fix gate are complete. R2 and the open user decisions remain recorded. The user selected CI policy B on 2026-10-07. The Worker is deployed at `https://mokly-turbo-cache.calum-785.workers.dev`; Milestone 4 code, documentation and local verification are complete. The approved Node 24 shared-example copy fix and direct cold-baseline recipe checks pass the final gate. Hosted checks, token retirement, developer sharing and the supervising-agent review remain open.
+its supervising-agent review and final fix gate are complete. R2 and the open user decisions remain recorded. The user selected CI policy B on 2026-10-07. The Worker is deployed at `https://mokly-turbo-cache.calum-785.workers.dev`; Milestone 4 code, documentation and local verification are complete. The approved Node 24 shared-example copy fix and direct cold-baseline recipe checks pass the final gate. CI run `37672567423` confirms the PR cache and native paths. The R2 object count, main/release checks, token retirement, developer sharing and the supervising-agent re-review remain open.
 
 ## Summary
 
@@ -448,10 +448,10 @@ telemetry and forces release builds from the first Turbo use.
       document it, and add the failing configuration regression before the fix.
 - [x] Fix review finding 10: mark local task caching, forced release builds,
       and hosted telemetry opt-out as delivered in the index and CI contract.
-- [ ] Before merge, verify hosted workflow behavior after a PR exists. Confirm
-      telemetry/local-only settings, release force behavior, and native macOS
-      and Windows binary installation and execution. The Linux workspace cannot
-      prove native jobs; no hosted CI run exists yet.
+- [x] Before merge, confirm telemetry and native local-only settings through
+      workflow configuration and tests. Confirm native macOS and Windows binary
+      installation and execution through CI run `37672567423`. Release force
+      execution is a post-merge follow-up because that workflow runs from main.
 - [x] Run `cargo xtask check`.
 - [x] Run `git add -A`, commit with Conventional Commits, and push.
 - [x] Review the complete local diff against `origin/main` with
@@ -719,10 +719,11 @@ before the merge.
       reads and writes for the rest of the run while builds pass. Confirm
       `remote:r` prevents reader uploads. Document access-token rotation and
       new-namespace signature-key rotation.
-- [ ] Push and read the pull request run: `prepare` uploads three artifacts and
+- [ ] Push and read the pull request run: `prepare` uploads or restores the three tasks and
       ten ordinary downstream jobs report cache hits. Record
       per-job durations before and after, and the R2 object count, in
       `.context/turborepo-cloudflare-remote-cache/measurements.md`.
+      Run `37672567423` confirms the task path; the R2 object count is still missing.
 - [x] Update the Delivery Status sections and the Contract Owners documents to
       implemented.
 - [x] Run `cargo xtask check`.
@@ -735,10 +736,10 @@ before the merge.
   - [x] Fix finding 2: preserve launcher signal handling and Windows TTY
         delegation; prove graceful child shutdown and exit signals through
         event-order regressions before and after the fix.
-  - [ ] Fix finding 4: record PR #170 and its confirmed CI cache/native path,
+  - [x] Fix finding 4: record PR #170 and its confirmed CI cache/native path,
         retain the incomplete measurement TODO and move release force proof
         to post-merge follow-up.
-  - [ ] Run focused and Markdown/protocol tests, then one complete default
+  - [x] Run focused and Markdown/protocol tests, then one complete default
         `cargo xtask check`; commit each fix separately and push for re-review.
 
 Evidence: `.context/turborepo-cloudflare-remote-cache/m4-validation.md`.
@@ -750,8 +751,12 @@ Plan-history integration decisions: `.context/turborepo-cloudflare-remote-cache/
 Remote-verification and publish-check integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-remote-main-decisions.md`.
 Fixture-cleanup flake fix (Git 2.55 background maintenance) and gate runs: `.context/turborepo-cloudflare-remote-cache/m4-flake-turbo-inventory.md`.
 Milestone 4 review-fix evidence: `.context/turborepo-cloudflare-remote-cache/m4-review-fixes.md`.
+Hosted measurement record: `.context/turborepo-cloudflare-remote-cache/measurements.md`.
 
 ## Post-merge follow-up (non-blocking)
+
+- Confirm forced task execution in the release workflow on main. Its workflow
+  configuration and tests set `TURBO_FORCE=true`; PR CI cannot exercise that run.
 
 - Confirm the first main push accepts the conditional trusted environment,
   enforces the branch restriction, grants its token, and creates no deployment

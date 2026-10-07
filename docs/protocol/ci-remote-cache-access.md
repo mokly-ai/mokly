@@ -7,7 +7,7 @@ This is the approved access contract for the
 The three-principal authorization, namespace fallback, and local verification
 are implemented. The user selected policy B on 2026-10-07; its Worker secrets,
 GitHub secrets, and PR expiry rule are provisioned. Policy B CI and preview
-wiring is implemented. Hosted confirmation and developer sharing remain open.
+wiring and PR CI are confirmed. Main-push checks and developer sharing remain open.
 The [Worker contract](./ci-remote-cache-worker.md) owns routes and wire formats.
 
 ## Principals And Namespaces
@@ -105,7 +105,9 @@ Branch policies still apply; no deployment record is created for cache use.
 Custom GitHub App protection rules require deployment records and are incompatible
 with false. The configured environments use main-only branch policies.
 The first main push must confirm access and suppression of deployment records.
-A hosted PR run must confirm the empty-name path is accepted.
+[CI run 37672567423](https://github.com/mokly-ai/mokly/actions/runs/37672567423)
+confirmed PR #170's empty environment name, PR writer token, and
+`mokly-pr-170` namespace. Main-push confirmation remains post-merge.
 
 The PR writer reads its namespace before trusted and populates only its own
 namespace for later jobs. Its shared PR token still permits another PR's

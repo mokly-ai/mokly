@@ -4,7 +4,9 @@
 
 The job graph, parallel prepare job, and policy B remote task caching are
 implemented under the [task cache contract](./ci-remote-cache.md). Hosted
-verification remains open until the branch has a pull request.
+PR verification is confirmed by [CI run 37672567423](https://github.com/mokly-ai/mokly/actions/runs/37672567423):
+PR #170 uses an empty environment name, the PR writer token, and `mokly-pr-170`.
+The main-push environment path remains a post-merge check.
 Hosted telemetry opt-out is configured; release builds force execution.
 CI selects baseline or strict mode by event and pull request.
 The Dependency Audit workflow maintains strict findings on `main`.
