@@ -70,7 +70,9 @@ REST calls send Bearer authentication, `Accept: application/vnd.github+json`,
 `X-GitHub-Api-Version: 2022-11-28`, and a User-Agent. Errors name the method,
 path, status, and GitHub message. Never print the token or request headers.
 Discover open requests with `GET /repos/{owner}/{repo}/pulls?state=open&head={owner}:dependency-audit/main`.
-Follow pagination and verify each request's repository and head.
+Follow next-page links only on the API URL's origin and base path, with the
+remaining path `/repos/{owner}/{repo}/pulls` or `/repositories/<digits>/pulls`.
+Verify each request's repository and head.
 
 Before any Git or GitHub mutation, read and validate the summary and log.
 The summary must have `mode: strict`, boolean `ok`, and a structured `issues`
@@ -98,7 +100,11 @@ Add it through the issues labels endpoint. The title is
 `fix(deps): resolve dependency audit findings`. Create, refresh, and close
 select only open pull requests whose head is `dependency-audit/main` in this
 repository. The label is a marker and a strict-CI signal; it does not identify
-pull requests to close. Use the `github-actions[bot]`
+pull requests to close. Adding the label does not start CI. It takes effect at
+the next `opened`, `synchronize`, or `reopened` pull request event. After
+labelling, a maintainer pushes a commit or closes and reopens the pull request.
+The bot pull request already selects strict mode from its head ref.
+Use the `github-actions[bot]`
 Git author and committer identity with email
 `41898282+github-actions[bot]@users.noreply.github.com`.
 

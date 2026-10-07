@@ -460,7 +460,14 @@ The implementer stops after the commit and push. Claude runs the final review.
       re-review once; fix new eligible findings once more, then stop and
       report the rest. The implementer does not run this review TODO.
 
+  - Open review finding 1 (Medium): a refresh force-push may fail after `main` changes a workflow file; verify, then delete and recreate the branch if needed.
+  - Open review finding 2 (Low): document the reliance on automatic head-branch deletion and tell maintainers to delete an obsolete human update branch.
+  - Open review finding 3 (Low): inheritance cannot see a version change at an already-flagged location; document the limit.
+  - Open review finding 5 (Low): require a fine-grained personal access token and state the fallback token's repository-setting condition.
+  - Open review finding 8 (Low): add a real-Git test for the update script.
+
 Evidence: `.context/baseline-relative-dependency-audit/milestone-5-checks.md`.
+Review fix evidence: `.context/baseline-relative-dependency-audit/review-fixes-checks.md`.
 
 ## Post-merge follow-up (non-blocking)
 

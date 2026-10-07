@@ -16,6 +16,10 @@ It sets `strict` for same-repository dependency update and Release Please pull
 requests. The suite receives `--dependency-audit "$DEPENDENCY_AUDIT"`.
 Fork branch names and labels cannot select strict mode.
 
+The baseline audit for a push to `main` compares the pushed commit with itself.
+It fails only on audit errors (report, input, or registry). The daily strict
+audit and the strict release audit own new advisories on `main`.
+
 `.github/workflows/dependency-audit.yml` runs a daily off-hour
 strict audit on `main` and supports manual dispatch. Its write permissions,
 JSON report, token, branch, and create, refresh, and close behavior follow the

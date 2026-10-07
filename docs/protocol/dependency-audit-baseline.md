@@ -68,6 +68,11 @@ Workspace manifests and `npm ci` are not required. Evaluate the result with
 that commit's exceptions and lockfile. Always dispose of the temporary
 directory, including after a failure.
 
+On a push to `main`, `HEAD` and `origin/main` are the pushed commit. The audit
+compares that commit with itself, so it fails only on audit errors (report,
+input, or registry). The daily strict audit and the strict release audit own
+new advisories on `main`.
+
 ## Order And Structured Issues
 
 Run the head audit first. Evaluate it strictly with the current lockfile and
@@ -198,6 +203,12 @@ The CI repository job passes `--dependency-audit "$DEPENDENCY_AUDIT"`:
   the existing `release-please--` head-ref or `autorelease:` label detection.
 - Select `baseline` for all other pull requests and every push. A fork
   cannot select strict mode through a matching branch name or label.
+
+Adding the `dependency-audit` label does not start CI. The label takes effect
+at the next `opened`, `synchronize`, or `reopened` pull request event. After
+adding it, a maintainer pushes a commit or closes and reopens the pull request.
+The bot pull request selects strict mode from its head ref before the label
+is added.
 
 The Release workflow's direct `npm run dependencies:check` publish step stays
 strict. It runs before reusable evidence or the complete fallback is selected.

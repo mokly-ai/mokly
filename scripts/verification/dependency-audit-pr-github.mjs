@@ -70,14 +70,18 @@ export function createPrGitHub(configuration, fetch) {
         if (next) {
           const url = new URL(next);
           const base = new URL(configuration.apiUrl);
+          const basePath = base.pathname.replace(/\/$/u, "");
+          const nextPath = url.pathname.slice(basePath.length);
           if (
             url.origin !== base.origin ||
-            url.pathname !== `${base.pathname.replace(/\/$/u, "")}${root}/pulls`
+            !url.pathname.startsWith(`${basePath}/`) ||
+            (nextPath !== `${root}/pulls` &&
+              !/^\/repositories\/\d+\/pulls$/u.test(nextPath))
           )
             throw new Error(
               "GitHub pagination URL is invalid. Check API output and retry.",
             );
-          path = `${url.pathname.slice(base.pathname.replace(/\/$/u, "").length)}${url.search}`;
+          path = `${nextPath}${url.search}`;
         }
       }
       return pulls;

@@ -114,39 +114,74 @@ for (const errors of ["invalid label fields", { code: "invalid" }]) {
   });
 }
 
-test("REST pagination closes all matching requests with the enterprise API base", async () => {
-  const h = prHarness(true);
-  h.dependencies.env = {
-    ...h.dependencies.env,
-    GITHUB_API_URL: "https://enterprise.example/api/v3/",
-    GITHUB_SERVER_URL: "https://enterprise.example/",
-  };
-  const first =
-    "/api/v3/repos/mokly-ai/mokly/pulls?state=open&head=mokly-ai:dependency-audit/main";
-  const second = `${first}&page=2`;
-  h.responses.set(`GET ${first}`, {
-    status: 200,
-    body: [updatePullRequest()],
-    headers: { link: `<https://enterprise.example${second}>; rel="next"` },
+for (const apiUrl of [
+  "https://api.github.com",
+  "https://enterprise.example/api/v3",
+]) {
+  for (const route of [
+    "/repositories/1305675953/pulls",
+    "/repos/mokly-ai/mokly/pulls",
+  ]) {
+    test(`REST pagination closes all matching requests via ${apiUrl}${route}`, async () => {
+      const h = prHarness(true);
+      const base = new URL(apiUrl);
+      const prefix = base.pathname.replace(/\/$/u, "");
+      h.dependencies.env = {
+        ...h.dependencies.env,
+        GITHUB_API_URL: `${apiUrl}/`,
+        GITHUB_SERVER_URL: `${base.origin}/`,
+      };
+      const first = `${prefix}/repos/mokly-ai/mokly/pulls?state=open&head=mokly-ai:dependency-audit/main`;
+      const second = `${prefix}${route}?state=open&head=mokly-ai:dependency-audit/main&page=2`;
+      h.responses.set(`GET ${first}`, {
+        status: 200,
+        body: [updatePullRequest()],
+        headers: { link: `<${base.origin}${second}>; rel="next"` },
+      });
+      h.responses.set(`GET ${second}`, {
+        status: 200,
+        body: [updatePullRequest(8)],
+      });
+      assert.equal((await runDependencyAuditPr(h.dependencies)).ok, true);
+      assert.deepEqual(
+        h.requests.filter((r) => r.method === "PATCH").map((r) => r.path),
+        [
+          `${prefix}/repos/mokly-ai/mokly/pulls/7`,
+          `${prefix}/repos/mokly-ai/mokly/pulls/8`,
+        ],
+      );
+      assert.ok(h.requests.every((r) => r.url.startsWith(`${apiUrl}/`)));
+    });
+  }
+}
+
+for (const nextPath of [
+  "/api/v4/repositories/1305675953/pulls",
+  "/api/v30/repositories/1305675953/pulls",
+  "/api/v3/repositories/not-a-number/pulls",
+  "/api/v3/repos/another/repository/pulls",
+]) {
+  test(`pagination rejects paths outside the API base or pull request routes: ${nextPath}`, async () => {
+    const h = prHarness(true);
+    h.dependencies.env = {
+      ...h.dependencies.env,
+      GITHUB_API_URL: "https://enterprise.example/api/v3",
+    };
+    h.responses.set(
+      "GET /api/v3/repos/mokly-ai/mokly/pulls?state=open&head=mokly-ai:dependency-audit/main",
+      {
+        status: 200,
+        body: [],
+        headers: {
+          link: `<https://enterprise.example${nextPath}>; rel="next"`,
+        },
+      },
+    );
+    assert.equal((await runDependencyAuditPr(h.dependencies)).ok, false);
+    assert.equal(h.requests.length, 1);
+    assert.deepEqual(gitWrites(h.commands), []);
   });
-  h.responses.set(`GET ${second}`, {
-    status: 200,
-    body: [updatePullRequest(8)],
-  });
-  assert.equal((await runDependencyAuditPr(h.dependencies)).ok, true);
-  assert.deepEqual(
-    h.requests.filter((r) => r.method === "PATCH").map((r) => r.path),
-    [
-      "/api/v3/repos/mokly-ai/mokly/pulls/7",
-      "/api/v3/repos/mokly-ai/mokly/pulls/8",
-    ],
-  );
-  assert.ok(
-    h.requests.every((r) =>
-      r.url.startsWith("https://enterprise.example/api/v3/"),
-    ),
-  );
-});
+}
 
 test("pagination cannot send credentials to another server", async () => {
   const h = prHarness(true);
