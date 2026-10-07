@@ -65,9 +65,9 @@ first use of Turbo; developers can opt out through their environment. Historical
 example baselines use direct commands, with no Turbo cache or telemetry, even
 though the baseline environment strips Turbo opt-out variables.
 
-Fixture ownership, failure cleanup, browser shard balance, and acceptance
-measurement follow the separate
-[suite evidence contract](./ci-suite-evidence.md).
+Fixture ownership, test concurrency, failure cleanup, unit shard balance and
+scenario grouping, browser shard balance, and acceptance measurement follow the
+separate [suite evidence contract](./ci-suite-evidence.md).
 
 ## Testbox Key And Secret Boundary
 

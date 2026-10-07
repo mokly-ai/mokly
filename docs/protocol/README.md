@@ -42,8 +42,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
 - [Public API reports and unused members](./verification-api-members.md) —
   approved signature reports, release-note gate and member ratchet.
 
-- [CI verification](./ci-verification.md) — implemented suite, shard, evidence,
-  cache and aggregation contract.
+- [Developer test commands](./developer-test-commands.md) and [selected results](./developer-test-results.md) — preparation, selection, output and partial verification.
+- [CI verification](./ci-verification.md) — implemented suite, shard, evidence, cache and aggregation contract.
   - [CI dependency cache and security](./ci-verification-security.md).
   - [Repository gate and length audits](./ci-verification-repository.md).
   - [Development hydration coverage](./ci-verification-hydration.md) — one
@@ -57,10 +57,8 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
     R2 storage, and deployment workflow; deployed with policy B credentials.
   - [CI remote cache access](./ci-remote-cache-access.md) — implemented
     principals and namespaces; policy B provisioned; CI wiring planned.
-- [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, browser shard
-  balance, and acceptance measurement.
-- [CI test timing](./ci-test-timing.md) — deterministic assertions,
-  duration reporting, and lint guard.
+- [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, test concurrency, unit shard balance and scenario grouping, browser shard balance and acceptance measurement.
+- [CI test timing](./ci-test-timing.md) — deterministic assertions, duration reporting and lint guard.
 - [Repository verification ratchets](./verification-ratchets.md)
 - [Catalogue upload v2](./mokly-upload.md) — public CLI, repository identity,
   upload manifest, output entry point and composite action boundary.

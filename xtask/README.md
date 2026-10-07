@@ -40,6 +40,8 @@ positive integer to override these values. The
 [test concurrency contract](../docs/protocol/ci-suite-evidence.md#test-concurrency)
 defines them. Individual concurrency tests and their existing timeouts remain
 unchanged.
+For targeted unit and browser runs during development, use the
+[developer test commands](../docs/protocol/developer-test-commands.md).
 The [baseline audit contract](../docs/protocol/dependency-audit-baseline.md)
 defines the complete check's default, `npm run dependencies:check -- --baseline`,
 covering every dependency category from the lockfile. Issues already present at
@@ -206,6 +208,10 @@ cargo clippy --workspace --all-targets -- -D warnings
 - [`src/check/commands.rs`](./src/check/commands.rs) defines the shared suite
   commands. [`src/check/runner.rs`](./src/check/runner.rs) runs them through
   injected process and file auditors.
+- [`../scripts/verification/unit-selection.mjs`](../scripts/verification/unit-selection.mjs)
+  validates developer test arguments before preparation checks;
+  [`unit-execution.mjs`](../scripts/verification/unit-execution.mjs) shares
+  Node execution and reporter evidence across complete and selected runs.
 - [`../scripts/package/browser_graph_analysis.mjs`](../scripts/package/browser_graph_analysis.mjs)
   validates the delivered browser module graph;
   [`../scripts/package/consumer_cases`](../scripts/package/consumer_cases) and

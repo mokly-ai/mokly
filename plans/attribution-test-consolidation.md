@@ -1,0 +1,573 @@
+# Attribution Test Consolidation
+
+Status: Active. [PR #139](https://github.com/mokly-ai/mokly/pull/139) is open and
+ready for review. Milestone 7 finding 1 awaits the user's decision (see
+Milestone 8). The plan stays active until the PR merges.
+
+Restructure `tests/design_library_attribution.test.ts` and
+`tests/component_design_attribution.test.ts` to reduce repeated work. Keep exact
+stylesheet and consumer checks. Source-edit groups retain distinct detection
+signals with the reviewed masking limit described below. The change is test-only.
+It does not change
+classification, compilation, or any product behaviour. The dominant product
+cost is recorded under the non-blocking section as a separate plan candidate.
+
+Records: #147 moved review reports, verification evidence, and measurements out
+of the repository. This plan's measurement record is
+`.context/attribution-test-consolidation/measurements.md`, which Git ignores.
+The PR #139 description keeps the local and CI timing tables.
+
+Contract owners:
+
+- [Component design](../docs/protocol/mokly-component-design.md) names the
+  shared-stylesheet attribution test.
+- [CSS change attribution](../docs/protocol/mokly-css-attribution.md) defines
+  dependency reasons and the kept `body` selector.
+- [Component review result v5](../docs/protocol/mokly-component-review.md)
+  defines `changes`, `reasons`, and `affectedConsumers`.
+- [CI suite evidence](../docs/protocol/ci-suite-evidence.md) owns shard balance
+  and acceptance measurement.
+- [Design library README](../examples/basic/specs/design/library/README.md)
+  lists the verification commands and what the tests retain.
+
+## Measured Baseline
+
+The latest green main run,
+[GitHub Actions run 37354719684](https://github.com/mokly-ai/mokly/actions/runs/37354719684)
+on 2 vCPU runners, set the baseline. `tests/design_library_attribution.test.ts`
+took 615 s in shard 4 and `tests/component_design_attribution.test.ts` took
+192 s in shard 1. Those shards took 768 s and 691 s; shards 2 and 3 took 331 s
+and 290 s.
+
+Unit shards take whole files by sorted index modulo four
+(`nodeShardFiles` in `scripts/verification/evidence.mjs`) and run two files at
+a time. The two files hold 807 s of the 3492 s unit file time (23%) and set the
+unit critical path. The 33 tests are five top-level tests plus 28 subtests
+(16 + 5 + 5 + 2). The design library has sixteen components in
+`tests/helpers/design_library.ts`, not 23.
+
+The measurement record holds the per-file and per-shard CI tables and the
+local timings measured through the real fixture in
+`tests/helpers/design_library_fixture.ts`.
+
+Cost model: every `classifyComponents` call pays about 12 s before it looks at
+a change, because `classificationContext` builds new readers and caches and
+every view is normalized and parsed again. Affected views add about 0.04 s
+each. Every `compileCatalogue` call costs 16–20 s; a rebuild after one source
+edit plus its classification costs about 31 s. Today the two files make 19
+compilations and 40 classifications: six fixtures, thirteen rebuilds, sixteen
+library edits, nine shared edits, twelve source-edit classifications, and three
+classifications in the committed-baseline test (`fixture.compare`,
+`computeChangedPaths`, and `compareReview`). That is about 860 s at CI speed,
+close to the 807 s observed.
+
+The six original fixtures were five in the library file and one in the shared
+stylesheet file.
+
+## What The Tests Prove Today
+
+`tests/design_library_attribution.test.ts`:
+
+1. `each exclusive library stylesheet changes its component and only affects real consumers`
+   (16 subtests). Per component: reset, append `body { outline-width: 3px; }`
+   to its stylesheet, classify. The only change is `design/library/<group>/<slug>`.
+   Every shared component has real screen consumers in the manifest
+   (`generatedViews` usage instances). The affected screen consumers equal
+   exactly those consumers. For `tag-chip`, the `chrome/top-bar` consumer's
+   evidence lists only variant `design/library/chrome/top-bar/tag-picker` and
+   the chain `top-bar/tag-picker/tag-chip`.
+2. `real implementation and saved metadata edits have distinct impact`
+   (5 subtests). Each edit rebuilds and classifies. `top-bar.view.tsx` and
+   `tag-chip.view.tsx` edits change only their component and affect consumers.
+   The three `top-bar.tsx` metadata edits change only `chrome/top-bar/search`,
+   `chrome/top-bar`, and `chrome/top-bar/search`, and affect no consumer.
+3. `real screen inputs, destinations, slots and ordered instances remain screen-owned`
+   (5 subtests). Five `use-case.tsx` edits each change only
+   `design/browse/views/use-case` and affect no consumer.
+4. `screen query and field values remain direct changes in their owning designs`
+   (2 subtests). `picker.tsx` changes only `design/browse/views/screen/tag-picker`;
+   `fixtures.ts` changes only `design/components/controls/states/invalid`.
+5. `the committed catalogue uses one baseline view batch and agrees across Serve and comparison`.
+   A committed-mode fixture edits `tag-chip.view.tsx`, writes the build, and
+   proves `computeChangedPaths`, one baseline view batch, single resource
+   reads, and `compareReview` agreement with `classifyComponents`.
+
+`tests/component_design_attribution.test.ts` (9 subtests): per shared
+stylesheet, reset, append `body { gap: 17px; }`, classify. The expected entries
+are those whose rendered views link the stylesheet; their screen count is 39,
+11, 0, or every `design/` screen, and their component count is 69. `changes`
+equals that set exactly. Every change stays under `design/` except for
+`design.css`, whose change set is unchanged and whose path appears in
+`sharedImpact`.
+
+Isolation is part of every guarantee: a change to one stylesheet is never
+attributed to another component or to an unrelated screen.
+
+## Evidence For One Multi-Edit Pass
+
+Code evidence:
+
+- `affectedConsumers` in `src/review/component_affected.ts` groups records by
+  `affectedConsumerOrderKey({ changedComponentId, consumer })`. Each record
+  carries `changedComponentId`, so consumer attribution is per changed
+  component, not per classification.
+- `ChangedEntry.reasons` carries one `DependencyReason` per stylesheet path.
+  `CssResourceAnalysis.analyze` in `src/review/css/resource_analysis.ts`
+  analyses each changed resource independently against the same parsed
+  documents, and `uniqueReasons` merges reasons by `kind:path`. A view's
+  evidence for one stylesheet does not depend on which other stylesheets
+  changed.
+- `propagateOwnedCss` in `src/review/component_resource_attribution.ts` adds
+  each stylesheet path to its owning component's `sharedImpact`, so the owner
+  mapping is visible per path.
+- `body` is a kept global selector
+  ([CSS change attribution, Kept Constructs](../docs/protocol/mokly-css-attribution.md#kept-constructs)),
+  so the marker rule always keeps the stylesheet as evidence with
+  `analysis: { status: "unresolved", selectors: ["body"] }`.
+
+The measurement record's "Multi-Edit Pass Evidence" section holds the measured
+one-pass results for all sixteen library stylesheets and all nine shared
+stylesheets. They support this conclusion.
+
+Conclusion: one pass preserves every per-component and per-stylesheet
+assertion, and the exact reason lists make isolation explicit. A stylesheet
+attributed to the wrong component would appear as an extra reason or an extra
+change in the same result.
+
+## Options And Decisions
+
+| Option                                        | Evidence                                                                                             | Decision                                                                                                                                                                                                                               |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| One multi-edit pass per stylesheet family     | Per-change reasons and per-id consumers above; 18.7 s and 20.9 s instead of 16 × 13 s and 9 × 14 s   | Adopt for both files.                                                                                                                                                                                                                  |
+| A few single-edit cases for isolation         | The one-changed-resource fallback is the production case; one control costs about 13 s               | Keep one control (`tag-chip`, the deepest chain). No control in the shared file; the mechanism is the same.                                                                                                                            |
+| Group edits by directory or consumer set      | A single pass loses no information because reasons are per path                                      | Not needed.                                                                                                                                                                                                                            |
+| Reuse the before compilation across subtests  | The fixture already keeps `before` and `resources`; today each top-level test builds its own fixture | The three shared files each start one fixture lazily through `fileFixture`; the committed-baseline file creates its fixture inside its single test. The library file's five fixture compilations become three, one per resulting file. |
+| Reuse parsed resources across classifications | `classificationContext` constructs `ComponentMaterialReader` and `CssResourceAnalysis` per call      | Not reachable from tests; recorded as the product follow-up.                                                                                                                                                                           |
+| Source edits need a real rebuild              | `compileCatalogue` has no subset or incremental mode (`src/build/compile.ts`, `load_graph.ts`)       | Group edits only where expectations stay distinct; move them to their own files.                                                                                                                                                       |
+
+## Target Layout
+
+| File                                              | Content                                                          | Expected local time |
+| ------------------------------------------------- | ---------------------------------------------------------------- | ------------------: |
+| `tests/design_library_attribution.test.ts`        | One fixture, one sixteen-stylesheet pass, one `tag-chip` control |               ~50 s |
+| `tests/component_design_attribution.test.ts`      | One fixture, one nine-stylesheet pass                            |               ~38 s |
+| `tests/design_library_source_edits.test.ts`       | One fixture, five grouped rebuilds for the twelve source edits   |              ~170 s |
+| `tests/design_library_committed_baseline.test.ts` | The committed-mode baseline test, unchanged in substance         |               ~65 s |
+
+Adding files shifts the sorted index of every later file, so every shard
+assignment after index 339 rotates. A simulation with the CI durations and the
+estimates above predicts shard file time of roughly 740 / 680 / 1010 / 570 s
+(wall time about 505 s on the heaviest shard, down from 768 s) and total unit
+file time of about 3010 s, down from 3492 s. The heaviest
+remaining files are `example_baseline.test.ts` (83 s) and
+`publish_receiver_rejections.test.ts` (65 s). Milestone 6 confirms the real
+layout with a CI run.
+
+The shared compilation snapshot planned in another workspace would remove the
+17 s fixture compilation from each of these four files. Rebuilds inside the
+source-edit file are unaffected by that snapshot. This plan does not depend on
+it.
+
+## Milestone 1: Document the consolidated verification contract — completed
+
+Update every document that describes these tests or the fixture before the
+tests change. Documentation-only; validate the Markdown and review the diff.
+
+- [x] Update the `Verification And Maintenance` section of
+      `docs/protocol/mokly-component-design.md`: the shared-stylesheet test
+      changes all nine stylesheets in one classification, derives each
+      stylesheet's scope from the changed entries whose dependency reasons name
+      that stylesheet, and keeps the exact counts, the `design/` confinement,
+      and the `design.css` shared-impact evidence. The file is at its 250-line
+      cap; shorten text in place rather than growing it.
+- [x] Update the `Verification` section of
+      `examples/basic/specs/design/library/README.md`: name the four test files
+      in prose and run them once through the existing globs, describe the
+      one-pass library attribution with its single-change control, the grouped
+      source-edit file, and the committed baseline file, and keep the paragraph
+      about what the tests retain exact.
+- [x] Add a `Unit Shard Balance` section to `docs/protocol/ci-suite-evidence.md`:
+      whole-file partition by sorted index modulo four, two concurrent files,
+      per-file durations as the measure, and the rule that a scenario suite
+      classifies once per scenario rather than once per subtest. Link the
+      measurement record below. Do not name plan milestones in protocol
+      documents; `tests/protocol_doc_history.test.ts` rejects that pattern.
+- [x] Create `docs/reviews/attribution-test-consolidation.md` with the CI run
+      link, the per-file and per-shard baseline table, and the local operation
+      table above. Milestone 6 appends the after figures.
+- [x] Run `npx prettier --check` on the changed Markdown, run
+      `node --import tsx --test tests/protocol_doc_sizes.test.ts tests/protocol_doc_history.test.ts`,
+      and review the diff.
+
+## Milestone 2: Result projections and one fixture per file — completed
+
+Pure helpers that make the single-pass assertions readable, plus their own
+fast tests. No attribution test changes yet; the repository stays green.
+
+- [x] Add `tests/helpers/attribution_result.ts` with documented pure
+      projections over `ReviewResultV5`: `changedEntryPaths(result)`,
+      `reasonsOf(result, path)`, `impactingIds(result)`,
+      `screenConsumersOf(result, changedComponentId)`,
+      `usageVariantsOf(result, changedComponentId, consumerPath)`,
+      `usageChainsOf(result, changedComponentId, consumerPath)`, and
+      `stylesheetScope(result, stylesheetPath)`. Keep it under 300 lines.
+- [x] Add `manifestScreenConsumers(manifest, componentId)` beside those
+      projections; it replaces the inline `generatedViews` loop in the test.
+- [x] Add `tests/helpers/design_stylesheets.ts`: the nine shared stylesheet
+      records with their expected screen and component counts, the library
+      stylesheet path helper, and the two marker rules as named constants with
+      a doc comment that `body` is a kept global selector.
+- [x] Add `tests/attribution_result_helpers.test.ts`: unit tests of every
+      projection against a small hand-built v5 result with two changed
+      components, a nested consumer chain, a screen consumer, and two
+      stylesheet reasons. No compilation; it must run in well under a second.
+- [x] Document in `tests/helpers/design_library_fixture.ts` that a test file
+      passes the module-level `after` hook from `node:test` to share one
+      fixture across its top-level tests, and keep the `t.after` form for
+      single-test use. Keep the file under 300 lines.
+- [x] Run the new helper tests and both unchanged attribution files; all pass.
+
+## Milestone 3: One pass for the sixteen library stylesheets — completed
+
+Replace the sixteen-subtest loop with one classification and one control.
+Tests 2–4 share the new module-level fixture; test 5 keeps its committed
+fixture. All four stay in the file until Milestone 5 moves them.
+
+- [x] Record the before timing:
+      `node --import tsx --test tests/design_library_attribution.test.ts`
+      (local 8-core figure and the CI figure, 615 s) in the measurement record.
+- [x] Share one fixture across the file through the module-level `after` hook.
+- [x] Add `library stylesheets attribute only to their own component in one pass`:
+      append the marker rule to all sixteen stylesheets, classify once, and
+      assert: `changedEntryPaths` equals the sixteen library paths; for every
+      component, `reasonsOf` equals exactly the single dependency reason for its
+      own stylesheet with `status: "unresolved"` and `selectors: ["body"]`, its
+      `sharedImpact` equals `[<its stylesheet>]`, `screenConsumersOf` is
+      non-empty and equals `manifestScreenConsumers`; `impactingIds` equals the
+      sixteen paths; the `tag-chip` to `chrome/top-bar` evidence lists only the
+      `top-bar/tag-picker` variant and includes the
+      `top-bar/tag-picker/tag-chip` chain.
+- [x] Keep one single-change control subtest for `tag-chip` with today's
+      assertions (`changes`, manifest consumers, top-bar evidence) so the
+      one-changed-resource fallback stays covered and agrees with the
+      multi-pass projection for that component.
+- [x] Confirm both top-bar consumer chains from their manifest contexts and
+      require the exact pair in the grouped pass and single-change control.
+- [x] Run the file; record the after timing in the measurement record.
+
+## Milestone 4: One pass for the nine shared design stylesheets — completed
+
+Replace the nine-subtest loop with one classification whose per-stylesheet
+scope comes from the dependency reasons.
+
+- [x] Record the before timing:
+      `node --import tsx --test tests/component_design_attribution.test.ts`
+      (local figure and the CI figure, 192 s).
+- [x] Rewrite the file around one module-level fixture: append the marker rule
+      to all nine stylesheets, classify once, and per stylesheet compute the
+      expected entries from the rendered outputs as today, assert the counts
+      table (39, 11, 0, or every `design/` screen; 69 components), and assert
+      `stylesheetScope` equals the expected paths exactly.
+- [x] Assert that `changedEntryPaths` equals the union of the expected sets,
+      every path outside `design.css`'s scope starts with `design/`,
+      `sharedImpact` includes `examples/basic/generated/design.css`, and
+      `affectedConsumers` is empty because shared stylesheets have no owner.
+- [x] Per-entry reasons must equal exactly the dependency reasons for the sheets
+      whose expected scope contains that entry, including deterministic
+      `analysis: { status: "unresolved", selectors: ["body"] }`. No other reason
+      kind or dependency path is allowed.
+- [x] Run the file; record the after timing.
+
+## Milestone 5: Source-edit groups and the committed baseline in their own files — completed
+
+Move tests 2–5 out of `design_library_attribution.test.ts`. Keep impacting edits
+alone and same-file edits targeting different entries separate. Other edits may
+share a rebuild with distinct detection signals under the rules below. Exact
+union assertions cannot expose an extra change covered by another member's
+expected path and reason kinds. The user accepts this residual limit and the
+five-build trade-off under Milestone 7.
+
+Measured single-edit signatures (change path, reason kinds, impacting
+components) from the real fixture:
+
+| Edit                               | Change path                                 | Reasons                          | Impacting  |
+| ---------------------------------- | ------------------------------------------- | -------------------------------- | ---------- |
+| `top-bar.view.tsx` class           | `design/library/chrome/top-bar`             | dependency (view file), material | `top-bar`  |
+| `tag-chip.view.tsx` label          | `design/library/controls/tag-chip`          | dependency (view file), material | `tag-chip` |
+| `top-bar.tsx` `title: "Search"`    | `design/library/chrome/top-bar/search`      | material, metadata               | none       |
+| `top-bar.tsx` `label: "Query"`     | `design/library/chrome/top-bar`             | metadata                         | none       |
+| `top-bar.tsx` `query: "tag:forms"` | `design/library/chrome/top-bar/search`      | material, metadata               | none       |
+| `use-case.tsx` title               | `design/browse/views/use-case`              | inputs                           | none       |
+| `use-case.tsx` destination         | `design/browse/views/use-case`              | inputs                           | none       |
+| `use-case.tsx` slot                | `design/browse/views/use-case`              | material                         | none       |
+| `use-case.tsx` reorder             | `design/browse/views/use-case`              | material, structure              | none       |
+| `use-case.tsx` removal             | `design/browse/views/use-case`              | material, structure              | none       |
+| `picker.tsx` tag                   | `design/browse/views/screen/tag-picker`     | inputs                           | none       |
+| `fixtures.ts` cornerRadius         | `design/components/controls/states/invalid` | material                         | none       |
+
+Grouping rules, derived from those signatures:
+
+- An edit that makes a component impacting rebuilds alone. Sharing a build
+  with another impacting edit could hide a wrong attribution to the other
+  component, for example a `top-bar` edit attributed to nested `tag-chip`.
+- Edits that expect no impacting component may share one build. The merged
+  `affectedConsumers` must be empty, which proves each member individually
+  impacts nothing, and `changes` must equal the union of their expected paths
+  with the union of their reason kinds per path. This proves the distinct
+  detection signals, but an extra change on another member's path with a
+  subset of that member's reason kinds is not visible. Keep that residual
+  limit away from same-file variant attribution by the rule below.
+- Edits to the same source file that target different entries never share a
+  build. In particular, each `top-bar.tsx` edit runs separately, so a saved
+  variant title or query cannot acquire a masked base-component change from
+  the control-label edit. The old single-edit tests targeted this boundary.
+- Two edits with the same path share a build only when their reason kinds
+  are disjoint, so each edit keeps its own detection signal. Equal or subset
+  signatures (`title` and `destination`; `reorder` and `removal`; `slot`
+  against either) stay in separate builds.
+
+Resulting builds (five instead of twelve):
+
+| Build | Edits                                                                                       | Expected `changes`                                                                                                       |
+| ----- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 1     | `top-bar.view.tsx`                                                                          | `chrome/top-bar` {dependency, material}; `impactingIds` = `[top-bar]`; consumers equal the manifest                      |
+| 2     | `tag-chip.view.tsx`                                                                         | `controls/tag-chip` {dependency, material}; `impactingIds` = `[tag-chip]`; consumers equal the manifest                  |
+| 3     | `top-bar.tsx` title, `use-case.tsx` title, `use-case.tsx` slot, `picker.tsx`, `fixtures.ts` | `top-bar/search` {material, metadata}; `use-case` {inputs, material}; `tag-picker` {inputs}; `states/invalid` {material} |
+| 4     | `top-bar.tsx` query, `use-case.tsx` destination, `use-case.tsx` reorder                     | `top-bar/search` {material, metadata}; `use-case` {inputs, material, structure}                                          |
+| 5     | `top-bar.tsx` label, `use-case.tsx` removal                                                 | `top-bar` {metadata}; `use-case` {material, structure}                                                                   |
+
+Builds 3–5 assert `affectedConsumers` equals `[]`. Every build asserts
+`changedEntryPaths` equals exactly the listed paths and `reasonsOf` equals
+exactly the listed kinds per path (dependency reasons name the edited source
+file). Today's `affects` boolean becomes the exact `impactingIds` list.
+
+- [x] Create `tests/design_library_source_edits.test.ts` with one module-level
+      fixture and the five builds above as subtests. Each subtest resets,
+      applies its edits, rebuilds once, classifies once, and asserts the table.
+- [x] Keep the twelve source transformations in a typed helper so the group
+      table and its assertions stay readable and below the file-length cap.
+- [x] Add a doc comment above the table in the test that states the grouping
+      rules, so a future edit that changes a signature is regrouped rather than
+      silently merged.
+- [x] Create `tests/design_library_committed_baseline.test.ts` holding test 5
+      with its committed-mode fixture, unchanged in substance.
+- [x] Remove tests 2–5 from `tests/design_library_attribution.test.ts`; keep
+      every file under 300 lines.
+- [x] Run the four files individually and record each timing.
+
+## Milestone 6: Timing verification, measurement record, commit, and review — completed
+
+Prove the runtime reduction locally and in CI, record it, and close the plan
+with the required commit, push, and review steps.
+
+Decisions:
+
+- The branch carries a lockfile-only source-map-js 1.2.2 update for
+  GHSA-68fv-2mgg-jv7q, so the dependency audit that gates CI could pass.
+  `main` later merged the identical change in #140. After the branch merged
+  `main`, its lockfile diff against `main` is empty. The PR description
+  records this.
+- Keep the single-change `tag-chip` control. The library attribution file
+  stays below the 60 s CI threshold.
+
+The measurement record holds the local and CI timings, the complete-gate
+results, and the dependency audit history.
+
+- [x] Apply the orchestrator's review corrections in follow-up commits.
+  - [x] Separate same-file edits targeting different entries without adding a
+        build; document the grouping limit and rule.
+  - [x] Check every shared-style entry's complete dependency reasons and analysis.
+  - [x] Run the README's heavy files once and name all four in prose.
+  - [x] Restore the public-input, route-scope, and shared-metadata contract text.
+  - [x] Use current-merge before timings and identify scratch evidence as local-only.
+  - [x] Use the repository's completed-milestone heading convention.
+  - [x] Attribute the unit split to Node and describe the evidence mirror.
+  - [x] Remove the interrupted run's owned fixture directory.
+- [x] Run each of the four files individually with
+      `node --import tsx --test <file>` and record the after durations next to
+      the baseline in `docs/reviews/attribution-test-consolidation.md`.
+- [x] Commit the recorded local timings without pushing.
+- [x] Run `cargo xtask check`.
+- [x] Commit and push the branch. Wait for the CI run, then download the
+      `verification-unit-*` artifacts with
+      `gh run download <run-id> --name verification-unit-node-22.14.0-shard-<n>`
+      and record `durationMs` for the four files and the four shard wall
+      times against 615 s, 192 s, and 768 / 691 / 331 / 290 s. If the heaviest
+      shard is not clearly below the baseline, record the observed layout and
+      the next heaviest files before closing the plan.
+- [x] If `tests/design_library_attribution.test.ts` is above 60 s in CI,
+      decide whether to drop the 13 s `tag-chip` control and record the
+      decision in the measurement record.
+- [x] Mark the plan status and record any approved removals in the PR
+      description. Flag the lockfile-only source-map-js update for the user's
+      review.
+- [x] Run `git add -A`, commit with a Conventional Commits message, and push.
+- [x] After the push, review the complete local diff against `origin/main`
+      with [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      and report findings without changing the implementation.
+
+The review ran on `cb28f59b`. Milestone 7 applies the user's decisions below:
+
+1. Medium: grouped builds 3–5 can hide an extra change that lands on another
+   member's path with a subset of that member's reason kinds. The protocol and
+   README sentences describe the grouped proof as exact.
+   User decision: A (Milestone 7).
+2. Medium: `main` merged the identical source-map-js lockfile change in #140,
+   so the branch's dependency commit and its notes are stale until `main` is
+   merged into the branch. Resolved at the user's request: the branch merged
+   `main`, which includes #140, so its lockfile diff against `main` is empty.
+3. Low: a shared file-level fixture registers its teardown after two awaits,
+   so a filtered run that selects none of the file's tests leaves its
+   temporary directory behind.
+   User decision: A (Milestone 7).
+4. Low: the plan's cost model says five fixtures (six existed) and "five
+   compilations become one" (three files now compile once each).
+   User decision: A (Milestone 7).
+
+## Milestone 7: Apply approved review findings — completed
+
+Keep the five source-edit builds with an explicit grouping limit. Make shared
+file fixtures lazy and safe in filtered runs. Enforce their lifetime in tests
+and correct the plan's fixture counts.
+
+User approvals (2026-10-06):
+
+- Finding 1, option A: keep five builds and accept the residual masking limit.
+  Grouping is a reviewed trade-off, not an exact per-edit attribution proof.
+- Finding 2: resolved by merging `main`; no further action is needed.
+- Finding 3, option A: add one shared lazy file-scoped fixture helper, test it,
+  and extend the source-level fixture lifetime check.
+- Finding 4, option A: correct the two fixture compilation counts.
+
+Evidence: `.context/attribution-test-consolidation/milestone-7-plan-checks.log`.
+Evidence: `.context/attribution-test-consolidation/milestone-7-contract-checks.log`.
+Evidence: `.context/attribution-test-consolidation/eager-fixture-regression.log`.
+Evidence: `.context/attribution-test-consolidation/milestone-7-helper-checks.log`.
+Evidence: `.context/attribution-test-consolidation/milestone-7-source-checks.log`.
+Evidence: `.context/attribution-test-consolidation/milestone-7-source-checks-retry.log`.
+Evidence: `.context/attribution-test-consolidation/milestone-7-filtered-attribution.log`.
+Evidence: `.context/attribution-test-consolidation/design_library_attribution.log`.
+Evidence: `.context/attribution-test-consolidation/component_design_attribution.log`.
+Evidence: `.context/attribution-test-consolidation/design_library_source_edits.log`.
+Evidence: `.context/attribution-test-consolidation/design_library_committed_baseline.log`.
+Evidence: `.context/attribution-test-consolidation/milestone-7-scratch-independent-check.log`.
+Evidence: `.context/attribution-test-consolidation/milestone-7-review-correction-checks.log`.
+Evidence: `.context/attribution-test-consolidation/milestone-7-corrected-complete-gate.log`.
+Evidence: `.context/attribution-test-consolidation/gate-without-audit-summary.log`.
+Evidence: `.context/attribution-test-consolidation/complete-gate-52e30d8c.log`.
+
+`main` patched the `sharp` and `shell-quote` advisories that blocked the audit
+in #146, which the branch merged before the complete gate ran.
+
+- [x] Define the grouping rules and residual limit in the CI protocol, library
+      README, plan introduction, and source-edit test comment.
+- [x] Define synchronous hook registration and lazy setup in the CI protocol.
+- [x] Add a filtered child-process regression before the fix. Confirm the eager
+      pattern fails. Save its output in the ignored evidence directory.
+- [x] Add a typed `fileFixture` helper with one synchronously registered hook,
+      one memoized setup, setup settlement before cleanup, reverse cleanup
+      order, and cleanup failure propagation after every cleanup is attempted.
+- [x] Test helper behavior with an injected hook registrar and no compilation.
+- [x] Test child runs with no matching tests, two matching tests sharing one
+      setup, and failed setup that still removes its owned output.
+- [x] Use the lazy helper in the three shared attribution files. Update only
+      the fixture's sharing doc comment in `design_library_fixture.ts`.
+- [x] Reject module-scope calls to `designLibraryFixture` in the lifecycle
+      check. Test a bad source sample. Add it to the existing helper rule if
+      all consumers meet that rule.
+- [x] Correct six baseline fixtures and three resulting library compilations
+      in the plan. Name `fileFixture` as the shared mechanism.
+- [x] Run helper, lifecycle, and projection tests. Run each attribution file
+      individually. Check a no-match attribution run leaves no owned directory.
+- [x] Run Prettier, ESLint, prepared type checks, protocol size/history tests,
+      and changed-file size checks. Save logs and name them below.
+- [x] Remove the child regression's dependency on the plan evidence directory.
+      Use a neutral owned fixture root, an explicit TAP reporter, and a 60 s
+      hang guard. Prove it works with the evidence directory renamed away.
+- [x] Correct the README to distinguish the three lazy shared files from the
+      single-test committed-baseline fixture.
+- [x] Rerun the changed helper tests, lifecycle test, format, lint, and prepared
+      type checks after the review correction.
+- [x] Fetch `origin/main` and run one unqualified `cargo xtask check`. Fix any
+      in-scope failure and rerun. Save the complete output outside the plan.
+- [x] Commit completed work locally in logical Conventional Commits.
+- [x] Run git add -A, commit with a Conventional Commits message, and push.
+- [x] After the push, review the complete local diff against `origin/main`
+      with [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      and report findings without changing the implementation.
+
+The review ran on `78b35567`. Its findings go to the user for a decision and
+are not applied here:
+
+1. Low: `tests/fixture_lifecycle.test.ts` now lists `designLibraryFixture`, but
+   its message points to `beforeRemove`, which that fixture does not have. The
+   rule also flags a correct `owner.after` cleanup inside a `fileFixture` setup.
+   Auto-fix: no; open under Milestone 8.
+2. Low: the measurement record's first sentence and the PR summary still say
+   that every attribution guarantee is kept, despite the accepted grouping
+   limit. After #147 the record left the repository; the PR summary remains.
+   Auto-fix: yes; fixed in Milestone 8.
+3. Low: the introduction of `docs/protocol/ci-suite-evidence.md` and its entry
+   in `docs/protocol/README.md` do not mention the Unit Shard Balance section.
+   Auto-fix: yes; fixed in Milestone 8.
+4. Low: the plan status still calls PR #139 a draft; the decision table says
+   every file uses `fileFixture`, but the committed-baseline file does not; the
+   cost model counts two committed-baseline classifications instead of three.
+   Auto-fix: yes; fixed in Milestone 8.
+
+## Milestone 8: Apply the review-fix rule to the Milestone 7 review — completed
+
+Fix the Milestone 7 review findings tagged `Auto-fix: yes`, re-review once,
+and record the remaining findings for the user.
+
+User approval (2026-10-06): the user asked to apply the review-fix rule from
+#147 to the Milestone 7 review.
+
+Evidence: `.context/attribution-test-consolidation/review-78b35567.md`.
+Evidence: `.context/attribution-test-consolidation/milestone-8-validation.log`.
+Evidence: `.context/attribution-test-consolidation/review-da1fafc6.md`.
+Evidence: `.context/attribution-test-consolidation/milestone-8-round-2-validation.log`.
+
+- [x] Tag the Milestone 7 review findings under the review-fix rule.
+- [x] Finding 2 (Auto-fix: yes): correct the PR #139 summary and the local
+      measurement record so they state the accepted masking limit.
+- [x] Finding 3 (Auto-fix: yes): name unit shard balance, scenario grouping,
+      and test concurrency in the protocol summaries.
+- [x] Finding 4 (Auto-fix: yes): correct the plan status, the `fileFixture`
+      decision row, and the committed-baseline classification count.
+- [x] Validate the changed Markdown and review the diff.
+- [x] Run `git add -A`, commit with a Conventional Commits message that names
+      the fixed findings, and push.
+- [x] After the push, re-run the review once with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      against `origin/main`. Fix any new `Auto-fix: yes` findings once, then
+      stop and report the rest.
+  - [x] Re-review finding 1 (Low, docs or spec, small; Auto-fix: yes): correct
+        the PR #139 description: review status, grouping sentence, and plan link.
+  - [x] Re-review finding 2 (Low, docs or spec, small; Auto-fix: yes): name
+        test concurrency, unit shard balance, and scenario grouping in the suite
+        evidence summary in `docs/protocol/ci-verification-security.md`.
+  - [x] Commit the round-2 fixes with a message that names them, and push.
+  - Open: Milestone 7 finding 1 (Low, test, medium; Auto-fix: no) — the
+    lifecycle rule points designLibraryFixture users to a beforeRemove hook the
+    fixture lacks; recommended option C. Option B would still delete the
+    fixture directory after a failed dependent cleanup, which contradicts the
+    cleanup rule in `docs/protocol/ci-suite-evidence.md`; this supports option C.
+
+## Post-merge follow-up (non-blocking)
+
+- Product candidate plan, `classification document reuse`: a
+  `classifyComponents` call on the unchanged example costs about 12 s with
+  in-memory readers because every view is normalized and parsed again
+  (`normalizeReviewPair`, `referencedRoutes`, and CSS document matching all
+  parse with parse5; a CPU profile of compile plus classify shows 36% in
+  parse5 tokenizing). Candidate: cache normalized documents and reference
+  discovery by content digest across calls, or accept a caller-supplied cache
+  through `ComponentClassificationInput`. Measure with `--debug-timings` spans
+  `review.compare-screens`, `review.resource-graph`, and `review.css-analysis`.
+- Shared compilation snapshot (other workspace): after this plan each of the
+  four files still compiles the example once (17 s). The snapshot removes that
+  cost; the rebuilds in the source-edit file remain.
+- Unit shard balance: consider a ratchet or evidence check over the CI unit
+  reports that flags any unit file above a duration budget, as the browser
+  suite does by test count in `tests/browser_shard_balance.test.ts`.
