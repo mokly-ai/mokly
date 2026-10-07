@@ -5,7 +5,10 @@ import {
   createSelectedHarness,
   runSelected,
 } from "./helpers/verification_unit_selected.js";
-import { writeHarnessFile } from "./helpers/verification_wrapper.js";
+import {
+  runWrapper,
+  writeHarnessFile,
+} from "./helpers/verification_wrapper.js";
 
 test("zero-test files warn without a name pattern and still pass", async (context) => {
   const harness = await createSelectedHarness(context);
@@ -67,3 +70,26 @@ test("pattern-only runs warn once only when all files report zero tests", async 
   assert.doesNotMatch(empty.stdout, /warning: no test ran in/u);
   assert.equal(empty.stdout.match(/warning:/gu)?.length, 1);
 });
+
+for (const source of [
+  "",
+  'import test from "node:test";\nif (process.platform === "not-a-platform") test("absent", () => {});\n',
+]) {
+  test(
+    "named file-only passes warn and preserve strict summary requirements: " +
+      JSON.stringify(source),
+    async (context) => {
+      const harness = await createSelectedHarness(context);
+      await writeHarnessFile(harness.root, "tests/passing.test.ts", source);
+      const selected = await runSelected(harness, ["tests/passing.test.ts"]);
+      assert.match(
+        selected.stdout,
+        /warning: no test ran in tests\/passing\.test\.ts\nselected files: 1; tests run: 0;/u,
+      );
+      await assert.rejects(
+        runWrapper(harness.root, "run-unit.mjs", { args: ["--shard", "2/2"] }),
+        /unobserved|executed file|inventory|assigned/u,
+      );
+    },
+  );
+}

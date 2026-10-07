@@ -28,7 +28,7 @@ const mutations = [
   ],
   [
     "invalid reporter output",
-    "JSON.stringify({ reporterComplete, summaries, failures }, null, 2)",
+    "JSON.stringify({ reporterComplete, summaries, failures, fileResults }, null, 2)",
     '"invalid reporter JSON"',
   ],
   [

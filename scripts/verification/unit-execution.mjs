@@ -44,9 +44,18 @@ export async function executeUnitTests(repositoryRoot, options) {
       failed: sum(raw.summaries, "failed"),
       reporterComplete: true,
     };
-    if (options.selected)
+    if (options.selected) {
+      const summaries = new Set(evidence.observedFiles.map(({ file }) => file));
+      for (const fileResult of raw.fileResults ?? []) {
+        const file = fileEvidence(repositoryRoot, { ...fileResult, tests: 0 });
+        if (fileResult.status === "passed" && !summaries.has(file.file)) {
+          evidence.observedFiles.push(file);
+          summaries.add(file.file);
+        }
+      }
       evidence.testsRun =
         sum(raw.summaries, "passed") + evidence.failed + evidence.cancelled;
+    }
   } catch (error) {
     evidenceError = error;
     evidence = {
