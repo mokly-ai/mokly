@@ -65,3 +65,7 @@ All fixtures register owned resources before work starts. Drain processes and
 close servers/browsers on success, failure and cancellation. Use the existing
 verification owner cleanup and fail if termination cannot be confirmed. No
 writable checkout or cache is shared across independent suites or CI jobs.
+
+Shared-cache unit fixtures remove only the owner's empty repository placeholder
+before exclusive copying. `fs.rmdir` rejects unexpected contents; `fs.cp` keeps
+`force: false` and `errorOnExist: true`. Validate the copied cache before use.
