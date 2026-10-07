@@ -1975,10 +1975,11 @@ Evidence: `.context/scalable-inline-style-analysis/m11-merge/`.
       audit deletions. Preserve main's package files and agent rules exactly.
 - [x] Integrate #152's deterministic test rules and #148's parallel workers.
       Check #145's self-ignoring cache behavior and the protocol index.
-- [ ] Run the complete pinned-Chromium gate and real-server smoke tests.
+- [x] Run the complete pinned-Chromium gate and real-server smoke tests.
       Record the CPU and boot ID around browser and hydration verification.
 - [ ] Commit with Conventional Commits and push after the supervisor's check.
       Stop before the push for this integration checkpoint.
+      The local checkpoint is committed. Push awaits the supervisor's check.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`. Keep the review read-only, then apply main's
