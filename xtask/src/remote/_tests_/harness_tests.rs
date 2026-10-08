@@ -10,10 +10,12 @@ use crate::executor::Executor;
 use crate::remote::availability::{DefaultSelector, Selector};
 use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
+use crate::remote::git_identity::{BaseCommit, BaseLookup, CommitSha};
 
 use super::harness_client_tests::client;
 use super::harness_clock_tests::clock;
 use super::harness_github_tests::github;
+use super::harness_snapshot_tests::snapshot;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(super) enum Case {
@@ -103,17 +105,23 @@ pub(super) fn harness(case: Case) -> Harness {
             .answers(&|_, _| Ok(true)),
         GitHeadMock
             .each_call(matching!())
-            .answers(&|_| Ok("b".repeat(40))),
+            .answers(&|_| CommitSha::read(&"b".repeat(40))),
         GitPublishedMock
             .each_call(matching!())
             .answers(&|_| Ok(true)),
+        GitBaseMock.each_call(matching!(_)).answers(&|_, head| {
+            Ok(BaseLookup::Found(BaseCommit {
+                sha: head.clone(),
+                ahead: 0,
+            }))
+        }),
         FingerprintReadMock
-            .each_call(matching!())
-            .answers_arc(Arc::new(move |_| {
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, _cwd| {
                 let read = reads.fetch_add(1, Ordering::SeqCst);
                 Ok(format!(
                     "sha256:{}",
-                    if read > 0 && case == Case::ChangedTree {
+                    if read > 1 && case == Case::ChangedTree {
                         "c".repeat(64)
                     } else {
                         "a".repeat(64)
@@ -128,6 +136,9 @@ pub(super) fn harness(case: Case) -> Harness {
     let prepare = LogsPrepareMock
         .each_call(matching!("20261006T120000Z-42"))
         .answers(&|_, _| Ok(()));
+    let identity = LogsWriteIdentityMock
+        .each_call(matching!(_))
+        .answers(&|_, _| Ok(()));
     let logs = Arc::new(
         if matches!(
             case,
@@ -135,6 +146,7 @@ pub(super) fn harness(case: Case) -> Harness {
         ) {
             Unimock::new((
                 prepare,
+                identity,
                 LogsTailMock
                     .each_call(matching!(_))
                     .answers_arc(Arc::new(move |_, _| {
@@ -150,7 +162,7 @@ pub(super) fn harness(case: Case) -> Harness {
                     })),
             ))
         } else {
-            Unimock::new(prepare)
+            Unimock::new((prepare, identity))
         },
     );
     let progress_events = events.clone();
@@ -217,12 +229,14 @@ pub(super) fn harness(case: Case) -> Harness {
             )
         },
     );
+    let snapshot = snapshot(events.clone());
     let fixture = Harness {
         events,
         dependencies: Dependencies {
             environment: shared.clone(),
             programs: shared.clone(),
             clock,
+            snapshot,
             git: shared.clone(),
             blacksmith,
             github,

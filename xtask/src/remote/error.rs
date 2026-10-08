@@ -1,6 +1,8 @@
 //! Typed errors shared by remote verification boundaries.
 
 use std::io;
+use std::num::ParseIntError;
+use std::path::PathBuf;
 
 use thiserror::Error;
 
@@ -28,6 +30,8 @@ pub(crate) enum Operation {
     Logs,
     /// Inspect an executable path.
     Program,
+    /// Reserve or remove snapshot filesystem resources.
+    Snapshot,
 }
 
 #[cfg(test)]
@@ -37,6 +41,37 @@ mod error_tests;
 /// Failures that prevent a complete remote pass.
 #[derive(Debug, Error)]
 pub(crate) enum Error {
+    /// Git did not return a full lowercase object identity.
+    #[error("[xtask/remote] Git output must be one full 40-character lowercase hex SHA")]
+    InvalidGitSha,
+    /// The clock did not return the safe UTC run-name format.
+    #[error("[xtask/remote] invalid UTC run identifier")]
+    InvalidRunId,
+    /// Runner preparation cannot create a snapshot without a pushed ancestor.
+    #[error(
+        "[xtask/remote] no origin ref shares history with HEAD; fetch origin or push the branch"
+    )]
+    NoBase,
+    /// Captured snapshot files do not equal the live checkout source identity.
+    #[error("[xtask/remote] snapshot fingerprint differs: expected {expected}; actual {actual}")]
+    SnapshotFingerprint {
+        /// Source identity read from the checkout.
+        expected: String,
+        /// Source identity read from the built snapshot.
+        actual: String,
+    },
+    /// This run must never reuse or remove an already-existing path.
+    #[error("[xtask/remote] snapshot path already exists: {}", path.display())]
+    SnapshotExists {
+        /// Run-specific path that another owner already created.
+        path: PathBuf,
+    },
+    /// Git returned a count that cannot represent a nonnegative ahead distance.
+    #[error("[xtask/remote] invalid Git ahead count: {source}")]
+    AheadCount {
+        /// Original count parse error.
+        source: ParseIntError,
+    },
     /// HOME did not supply the CLI's control directory location.
     #[error("[xtask/remote] HOME is unset or empty; cannot close shared SSH connection")]
     MissingHome,

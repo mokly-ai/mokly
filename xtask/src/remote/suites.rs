@@ -6,6 +6,7 @@ use std::thread;
 use crate::check::request::DependencyAudit;
 use crate::remote::cleanup::contracts::BoxCleanup;
 use crate::remote::error::Error;
+use crate::remote::identity::RunIdentity;
 use crate::remote::plan::{RunCommand, commands};
 use crate::remote::reporting::warning;
 
@@ -30,12 +31,13 @@ impl DefaultRemoteRunner {
     pub(super) fn execute(
         &self,
         boxes: &[String],
-        fingerprint: &str,
-        run: &str,
+        identity: &RunIdentity,
+        snapshot: &Path,
         cleanup: &dyn BoxCleanup,
         dependency_audit: DependencyAudit,
     ) -> Vec<Completion> {
         let dependencies = &self.dependencies;
+        let run = identity.run().as_str();
         thread::scope(|scope| {
             let workers: Vec<_> = commands(dependency_audit)
                 .into_iter()
@@ -57,8 +59,9 @@ impl DefaultRemoteRunner {
                             .reporter
                             .progress(&format!("start {} box={id}", command.name));
                         let outcome = dependencies.blacksmith.run(
+                            snapshot,
                             id,
-                            &command.shell_command(fingerprint),
+                            &command.shell_command(identity.fingerprint()),
                             Some(&log),
                         );
                         let passed = match outcome {

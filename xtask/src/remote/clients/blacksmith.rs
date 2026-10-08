@@ -27,14 +27,27 @@ impl SystemBlacksmith {
         log: Option<PathBuf>,
         cancellable: bool,
     ) -> Result<Output> {
+        self.call_at(args, input, log, cancellable, &self.workspace)
+    }
+
+    /// Override only the synchronization source for probes and suite runs.
+    fn call_at(
+        &self,
+        args: Vec<String>,
+        input: Option<String>,
+        log: Option<PathBuf>,
+        cancellable: bool,
+        cwd: &Path,
+    ) -> Result<Output> {
         self.process.execute(&Request {
             program: "blacksmith".into(),
             args,
-            cwd: self.workspace.clone(),
+            cwd: cwd.to_owned(),
             operation: Operation::Blacksmith,
             input,
             log,
             cancellable,
+            git_index: None,
             blacksmith: true,
         })
     }
@@ -85,8 +98,8 @@ impl Blacksmith for SystemBlacksmith {
             false,
         )
     }
-    fn run(&self, id: &str, command: &str, log: Option<&Path>) -> Result<Output> {
-        self.call(
+    fn run(&self, cwd: &Path, id: &str, command: &str, log: Option<&Path>) -> Result<Output> {
+        self.call_at(
             vec![
                 "testbox".into(),
                 "run".into(),
@@ -99,6 +112,7 @@ impl Blacksmith for SystemBlacksmith {
             None,
             log.map(Path::to_path_buf),
             true,
+            cwd,
         )
     }
     fn download(&self, id: &str, source: &str, target: &Path) -> Result<()> {

@@ -6,6 +6,9 @@ use std::time::Duration;
 
 use crate::executor::Decision;
 use crate::remote::error::Result;
+use crate::remote::git_identity::{BaseLookup, CommitSha};
+use crate::remote::identity::RunIdentity;
+use crate::remote::snapshot::contracts::Snapshot;
 
 /// Captured process output and its real exit status.
 #[derive(Clone, Debug, Default)]
@@ -90,12 +93,14 @@ pub(crate) trait Clock: Send + Sync {
 }
 
 /// Local commit and origin reachability.
-#[cfg_attr(test, unimock::unimock(api = [GitHeadMock, GitPublishedMock]))]
+#[cfg_attr(test, unimock::unimock(api = [GitHeadMock, GitPublishedMock, GitBaseMock]))]
 pub(crate) trait Git: Send + Sync {
     /// Read the full local HEAD.
-    fn head(&self) -> Result<String>;
+    fn head(&self) -> Result<CommitSha>;
     /// Check whether an origin ref contains HEAD.
     fn published(&self) -> Result<bool>;
+    /// Find the nearest eligible pushed ancestor in local origin refs.
+    fn base(&self, head: &CommitSha) -> Result<BaseLookup>;
 }
 
 /// Blacksmith command boundary with secret-safe authentication.
@@ -110,7 +115,7 @@ pub(crate) trait Blacksmith: Send + Sync {
     /// Dispatch one warmup and retain its output for recovery.
     fn warmup(&self, reference: &str) -> Result<Output>;
     /// Run a probe or logged suite on one box.
-    fn run(&self, id: &str, command: &str, log: Option<&Path>) -> Result<Output>;
+    fn run(&self, cwd: &Path, id: &str, command: &str, log: Option<&Path>) -> Result<Output>;
     /// Download one required report.
     fn download(&self, id: &str, source: &str, target: &Path) -> Result<()>;
     /// Close the shared SSH connection without changing the box's stop state.
@@ -152,7 +157,7 @@ pub(crate) enum GithubRunState {
 #[cfg_attr(test, unimock::unimock(api = [FingerprintReadMock]))]
 pub(crate) trait Fingerprint: Send + Sync {
     /// Compute the local source fingerprint.
-    fn read(&self) -> Result<String>;
+    fn read(&self, cwd: &Path) -> Result<String>;
 }
 
 /// Existing nine-report aggregate script.
@@ -170,10 +175,12 @@ pub(crate) trait LogSink: Send + Sync {
 }
 
 /// Run-local logs and report directories.
-#[cfg_attr(test, unimock::unimock(api = [LogsPrepareMock, LogsOpenMock, LogsTailMock]))]
+#[cfg_attr(test, unimock::unimock(api = [LogsPrepareMock, LogsWriteIdentityMock, LogsOpenMock, LogsTailMock]))]
 pub(crate) trait Logs: Send + Sync {
     /// Allocate fresh directories for one run.
     fn prepare(&self, run: &str) -> Result<()>;
+    /// Write the typed run identity beside command logs, never among suite reports.
+    fn write_identity(&self, identity: &RunIdentity) -> Result<()>;
     /// Open one command's stream destination.
     fn open(&self, path: &Path) -> Result<Arc<dyn LogSink + Send + Sync>>;
     /// Read the last 60 lines of a failed command.
@@ -213,6 +220,8 @@ pub(crate) struct Dependencies {
     pub(crate) clock: Arc<dyn Clock + Send + Sync>,
     /// Git boundary.
     pub(crate) git: Arc<dyn Git + Send + Sync>,
+    /// Exclusive snapshot creation and best-effort removal.
+    pub(crate) snapshot: Arc<dyn Snapshot + Send + Sync>,
     /// Testbox client boundary.
     pub(crate) blacksmith: Arc<dyn Blacksmith + Send + Sync>,
     /// GitHub client boundary.

@@ -74,6 +74,7 @@ fn fixture(failed_stops: usize, completes: bool) -> (Dependencies, Arc<Mutex<Vec
             environment: unused.clone(),
             programs: shared.clone(),
             clock: shared.clone(),
+            snapshot: Arc::new(Unimock::new(())),
             git: unused.clone(),
             blacksmith: shared.clone(),
             github: Arc::new(Unimock::new(

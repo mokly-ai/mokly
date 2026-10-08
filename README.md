@@ -405,6 +405,9 @@ cargo xtask check --executor remote
 Warmup uses the Testbox workflow from `main`.
 Set `MOKLY_TESTBOX_REF=<pushed branch>` only to test a changed Testbox workflow
 before it merges. This variable does not change the source commit under test.
+Remote runs sync from a separate snapshot. The
+[base sync contract](./docs/protocol/remote-verification-base.md) defines
+checkout preservation, run identity and snapshot cleanup.
 
 Install `blacksmith`, `rsync` and `ssh`. Set `BLACKSMITH_ORG_TOKEN` for org-key
 login, or use the current CLI login. The remote gate runs 11 commands in parallel.

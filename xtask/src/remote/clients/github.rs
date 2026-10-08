@@ -27,6 +27,7 @@ impl Github for SystemGithub {
             input: None,
             log: None,
             cancellable: false,
+            git_index: None,
             blacksmith: false,
         })?;
         cleanup_success(&output, Operation::Github)
@@ -48,6 +49,7 @@ impl Github for SystemGithub {
             input: None,
             log: None,
             cancellable: false,
+            git_index: None,
             blacksmith: false,
         })?;
         cleanup_success(&output, Operation::Github)?;

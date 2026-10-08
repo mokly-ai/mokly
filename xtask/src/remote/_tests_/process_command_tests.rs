@@ -20,6 +20,7 @@ fn every_remote_request_removes_the_org_key_and_keeps_cli_configuration() {
             input: None,
             log: None,
             cancellable: true,
+            git_index: None,
             blacksmith,
         });
         assert_eq!(

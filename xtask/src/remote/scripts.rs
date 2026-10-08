@@ -6,6 +6,7 @@ use std::sync::Arc;
 use crate::remote::clients::outcome::success;
 use crate::remote::contracts::{Aggregate, Fingerprint, Git, Output};
 use crate::remote::error::{Error, Operation, Result};
+use crate::remote::git_identity::{BaseLookup, CommitSha};
 use crate::remote::parse::fingerprint_value;
 use crate::remote::process::{Process, Request};
 
@@ -19,15 +20,22 @@ pub(crate) struct SystemScripts {
 
 impl SystemScripts {
     /// Capture one local command and require its real zero exit.
-    fn capture(&self, program: &str, args: Vec<String>, operation: Operation) -> Result<Output> {
+    fn capture(
+        &self,
+        program: &str,
+        args: Vec<String>,
+        operation: Operation,
+        cwd: &Path,
+    ) -> Result<Output> {
         let output = self.process.execute(&Request {
             program: program.into(),
             args,
-            cwd: self.workspace.clone(),
+            cwd: cwd.to_owned(),
             operation,
             input: None,
             log: None,
             cancellable: true,
+            git_index: None,
             blacksmith: false,
         })?;
         if let Err(source) = success(&output, operation) {
@@ -41,16 +49,20 @@ impl SystemScripts {
 }
 
 impl Git for SystemScripts {
-    fn head(&self) -> Result<String> {
-        Ok(self
-            .capture(
-                "git",
-                vec!["rev-parse".into(), "HEAD".into()],
-                Operation::Git,
-            )?
-            .stdout
-            .trim()
-            .to_owned())
+    fn head(&self) -> Result<CommitSha> {
+        CommitSha::read(
+            &self
+                .capture(
+                    "git",
+                    vec!["rev-parse".into(), "HEAD".into()],
+                    Operation::Git,
+                    &self.workspace,
+                )?
+                .stdout,
+        )
+    }
+    fn base(&self, head: &CommitSha) -> Result<BaseLookup> {
+        self.lookup_base(head)
     }
     fn published(&self) -> Result<bool> {
         Ok(!self
@@ -64,6 +76,7 @@ impl Git for SystemScripts {
                     "refs/remotes/origin/".into(),
                 ],
                 Operation::Git,
+                &self.workspace,
             )?
             .stdout
             .trim()
@@ -72,11 +85,12 @@ impl Git for SystemScripts {
 }
 
 impl Fingerprint for SystemScripts {
-    fn read(&self) -> Result<String> {
+    fn read(&self, cwd: &Path) -> Result<String> {
         let output = self.capture(
             "node",
             vec!["scripts/verification/source-tree.mjs".into()],
             Operation::Fingerprint,
+            cwd,
         )?;
         match fingerprint_value(&output.stdout) {
             Ok(value) => Ok(value),
@@ -102,6 +116,7 @@ impl Aggregate for SystemScripts {
                 "node-22.14.0".into(),
             ],
             Operation::Aggregate,
+            &self.workspace,
         )?;
         Ok(())
     }

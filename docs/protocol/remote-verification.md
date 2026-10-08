@@ -16,9 +16,10 @@ It closes the shared SSH connection, cancels a known run once before stop and
 keeps one bounded diagnostic line for cleanup command failures.
 The complete default remote smoke check passes with prompt shutdown.
 The [base commit sync plan](../../plans/remote-verification-base-commit.md)
-approves the base lookup, snapshot and identity target below. Xtask currently
-requires a pushed local `HEAD` and syncs the checkout. The
-[base sync contract](./remote-verification-base.md) defines its replacement.
+approves the base lookup, snapshot and identity target below. Snapshot sync and
+identity evidence are implemented. Availability still requires pushed checkout
+`HEAD`; unpushed selection remains approved work under the
+[base sync contract](./remote-verification-base.md).
 
 ## Executor Selection
 

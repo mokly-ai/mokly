@@ -130,6 +130,7 @@ pub(super) fn fixture(config: Config) -> (Dependencies, Arc<Mutex<Vec<String>>>)
             environment: unused.clone(),
             programs: shared.clone(),
             clock: shared.clone(),
+            snapshot: Arc::new(Unimock::new(())),
             git: unused.clone(),
             blacksmith: shared.clone(),
             github: shared.clone(),

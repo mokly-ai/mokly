@@ -4,11 +4,11 @@ Continuation of [Remote Verification](./remote-verification.md).
 
 ## Delivery Status
 
-Approved target under the
-[base commit sync plan](../../plans/remote-verification-base-commit.md).
-Linked-worktree sync has passed a real Testbox spike. Xtask does not yet build
-snapshots or select remote execution for unpushed commits. It still requires
-a pushed local `HEAD`. The contract below defines the approved replacement.
+Base lookup, snapshot sync, cleanup and identity evidence are implemented under
+the [base commit sync plan](../../plans/remote-verification-base-commit.md).
+Linked-worktree sync has passed a real Testbox spike. The availability policy
+still requires pushed checkout `HEAD`, so the base currently equals `HEAD`.
+Selection for unpushed commits remains the approved target below.
 
 ## Base Commit
 
@@ -61,6 +61,11 @@ for the snapshot and temporary index:
 
 Allocate these paths under the checkout's ignored `.context/` directory.
 The index path must be absolute and must not select the checkout's index.
+Create `.context/verification-snapshots/` before the first index write.
+If either run-specific path already exists, fail preparation. Never reuse it
+or delete it. Reserve the directory and index with exclusive create operations.
+Track each successful reservation before the next operation. Partial-build
+cleanup removes only resources this run acquired, also after a raced collision.
 Run these three commands from the checkout root. Set `GIT_INDEX_FILE` to the
 temporary index only on these process requests:
 

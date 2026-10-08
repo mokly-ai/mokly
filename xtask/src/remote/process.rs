@@ -32,6 +32,8 @@ pub(crate) struct Request {
     pub(crate) cancellable: bool,
     /// Whether this is a Blacksmith invocation.
     pub(crate) blacksmith: bool,
+    /// A temporary Git index used only for snapshot tree construction.
+    pub(crate) git_index: Option<PathBuf>,
 }
 
 impl fmt::Debug for Request {
@@ -42,6 +44,7 @@ impl fmt::Debug for Request {
             .field("args", &self.args)
             .field("input", &self.input.as_ref().map(|_| "<redacted>"))
             .field("log", &self.log)
+            .field("git_index", &self.git_index)
             .finish()
     }
 }
@@ -216,6 +219,10 @@ fn build_command(request: &Request) -> Command {
     if request.blacksmith {
         command.env("BLACKSMITH_DISABLE_AUTO_UPDATE", "1");
     }
+    command.env_remove("GIT_INDEX_FILE");
+    if let Some(index) = &request.git_index {
+        command.env("GIT_INDEX_FILE", index);
+    }
     #[cfg(unix)]
     command.process_group(0);
     for name in SECRET_VARIABLES {
@@ -249,6 +256,10 @@ fn system<T>(result: std::io::Result<T>, operation: Operation) -> Result<T> {
 #[cfg(test)]
 #[path = "_tests_/process_command_tests.rs"]
 mod process_command_tests;
+
+#[cfg(test)]
+#[path = "_tests_/process_index_tests.rs"]
+mod process_index_tests;
 
 #[cfg(all(test, unix))]
 #[path = "_tests_/process_adapter_support.rs"]

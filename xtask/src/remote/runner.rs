@@ -1,5 +1,7 @@
 //! Fail-closed complete remote verification orchestration.
 
+use std::path::Path;
+
 use thiserror::Error;
 
 use crate::check::request::DependencyAudit;
@@ -7,7 +9,9 @@ use crate::remote::cleanup::contracts::BoxCleanup;
 use crate::remote::cleanup::guard::CleanupGuard;
 use crate::remote::contracts::Dependencies;
 use crate::remote::error::{self, Result};
+use crate::remote::preparation::PreparedRun;
 use crate::remote::reporting::warning;
+use crate::remote::snapshot::guard::{SnapshotGuard, SnapshotOwner};
 
 /// The stage boundary that controls automatic local fallback.
 #[derive(Debug, Error)]
@@ -39,10 +43,11 @@ pub(crate) struct DefaultRemoteRunner {
 
 impl RemoteRunner for DefaultRemoteRunner {
     fn run(&self, dependency_audit: DependencyAudit) -> RunResult {
+        let snapshot = SnapshotGuard::new(&self.dependencies);
         let cleanup = CleanupGuard::new(&self.dependencies);
         let mut boxes = Vec::new();
-        let preparation = self.prepare(&mut boxes, &cleanup);
-        let (head, fingerprint, run) = match preparation {
+        let preparation = self.prepare(&mut boxes, &cleanup, &snapshot);
+        let prepared = match preparation {
             Ok(identity) => identity,
             Err(source) => {
                 let failures = cleanup.finish();
@@ -62,63 +67,34 @@ impl RemoteRunner for DefaultRemoteRunner {
                 return Err(Failure::Unavailable(source));
             }
         };
-        match self.finish(
-            &boxes,
-            &fingerprint,
-            &run,
-            &head,
-            &cleanup,
-            dependency_audit,
-        ) {
+        let result = match self.finish(&boxes, &prepared, &cleanup, dependency_audit) {
             Ok(()) => Ok(()),
             Err(source) => Err(Failure::Failed(source)),
-        }
+        };
+        snapshot.finish();
+        result
     }
 }
 
 impl DefaultRemoteRunner {
-    /// Prepare all boxes before the first suite, preserving recoverable IDs.
-    fn prepare(
-        &self,
-        boxes: &mut Vec<String>,
-        cleanup: &dyn BoxCleanup,
-    ) -> Result<(String, String, String)> {
-        let dependencies = &self.dependencies;
-        let head = dependencies.git.head()?;
-        let fingerprint = self.fingerprint()?;
-        let run = format!(
-            "{}-{}",
-            dependencies.clock.stamp(),
-            dependencies.environment.pid()
-        );
-        dependencies.logs.prepare(&run)?;
-        let reference = match dependencies.environment.get("MOKLY_TESTBOX_REF") {
-            Some(reference) => reference,
-            None => "main".to_owned(),
-        };
-        dependencies.reporter.executor(&format!(
-            "information: run={run} ref={reference} HEAD={head}"
-        ));
-        self.warmup(&reference, boxes, cleanup)?;
-        self.probe(boxes, &fingerprint, &head, cleanup)?;
-        dependencies
-            .reporter
-            .executor("information: all 11 probes passed");
-        Ok((head, fingerprint, run))
-    }
-
     /// Execute the complete remote gate after the fallback boundary.
     fn finish(
         &self,
         boxes: &[String],
-        fingerprint: &str,
-        run: &str,
-        head: &str,
+        prepared: &PreparedRun,
         cleanup: &dyn BoxCleanup,
         dependency_audit: DependencyAudit,
     ) -> Result<()> {
         let dependencies = &self.dependencies;
-        let completed = self.execute(boxes, fingerprint, run, cleanup, dependency_audit);
+        let identity = &prepared.identity;
+        let run = identity.run().as_str();
+        let completed = self.execute(
+            boxes,
+            identity,
+            &prepared.snapshot,
+            cleanup,
+            dependency_audit,
+        );
         let reports = dependencies
             .workspace
             .join(".context/verification-reports/remote")
@@ -131,14 +107,17 @@ impl DefaultRemoteRunner {
         if dependencies.interrupt.requested() {
             return Err(error::Error::Interrupted { cleanup });
         }
-        let aggregate_failed = match dependencies.aggregate.validate(&reports, head) {
+        let aggregate_failed = match dependencies
+            .aggregate
+            .validate(&reports, identity.base().sha.as_str())
+        {
             Ok(()) => false,
             Err(error) => {
                 self.report_failure("report aggregate", &error);
                 true
             }
         };
-        let changed = self.fingerprint()? != fingerprint;
+        let changed = self.fingerprint(&dependencies.workspace)? != identity.fingerprint();
         let failures = 11 - completed.len()
             + completed
                 .iter()
@@ -158,11 +137,12 @@ impl DefaultRemoteRunner {
             ));
         }
         dependencies.reporter.progress(&format!(
-            "summary: commands={}/11 reports={}/9 aggregate={} unchanged-tree={} run={run}",
+            "summary: commands={}/11 reports={}/9 aggregate={} unchanged-tree={} run={run} base={}",
             11 - failures,
             9 - downloads,
             if aggregate_failed { "failed" } else { "passed" },
-            !changed
+            !changed,
+            identity.base().sha
         ));
         if failures != 0 || downloads != 0 || aggregate_failed || changed {
             return Err(error::Error::Verification {
@@ -179,8 +159,8 @@ impl DefaultRemoteRunner {
 
 impl DefaultRemoteRunner {
     /// Read the fingerprint and preserve failure output for diagnosis.
-    fn fingerprint(&self) -> Result<String> {
-        match self.dependencies.fingerprint.read() {
+    pub(super) fn fingerprint(&self, cwd: &Path) -> Result<String> {
+        match self.dependencies.fingerprint.read(cwd) {
             Ok(value) => Ok(value),
             Err(error) => {
                 self.report_failure("source fingerprint read", &error);
@@ -213,3 +193,7 @@ mod runner_tests;
 #[cfg(test)]
 #[path = "_tests_/early_failure_tests.rs"]
 mod early_failure_tests;
+
+#[cfg(test)]
+#[path = "_tests_/snapshot_runner_tests.rs"]
+mod snapshot_runner_tests;

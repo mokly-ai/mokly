@@ -97,6 +97,9 @@ of the [Blacksmith remote verification plan](./blacksmith-remote-verification.md
    fingerprint must equal the checkout fingerprint. A different value is a
    preparation failure. Put the temporary index beside the snapshot at
    `.context/verification-snapshots/<run>.index`. Set `GIT_INDEX_FILE` only
+   on requests that need it. Create the snapshot parent before the first index
+   write. Reject existing run-specific paths. Reserve them exclusively and
+   remove only resources this run created. Apply the index override
    on the three checkout tree-build requests. If `Request` needs an environment
    field, make it typed and retain shared secret variable removal. All snapshot
    build Git requests use `cancellable: false`. Check the interrupt flag
@@ -217,7 +220,7 @@ Evidence: `.context/remote-verification-base-commit/spike.md`.
       history tests, the protocol size check and `npm run format:check`.
       Commit and push.
 
-## Milestone 2: Base lookup and snapshot sync
+## Milestone 2: Base lookup and snapshot sync — completed
 
 Xtask syncs every remote run from a snapshot worktree at the base commit. The
 `Published` check still requires a pushed `HEAD` in this milestone, so the base
@@ -226,26 +229,26 @@ gets exercised.
 
 Evidence: `.context/remote-verification-base-commit/milestone-2.md`.
 
-- [ ] Extend the `Git` boundary with a base lookup that returns the base SHA
+- [x] Extend the `Git` boundary with a base lookup that returns the base SHA
       and the ahead count, or no base. Implement it in `SystemScripts` with
       the Decision 1 commands. Keep the full SHA validation of `head`.
-- [ ] Add a `Snapshot` boundary with create and remove operations. Implement
+- [x] Add a `Snapshot` boundary with create and remove operations. Implement
       it with the Decision 2 and Decision 7 commands through the existing
       process boundary, so the secret variable list and redaction apply. Put
       it in a new module under `xtask/src/remote/`, and keep every Rust file
       under 300 lines.
-- [ ] Give the fingerprint boundary a working-directory parameter, and give
+- [x] Give the fingerprint boundary a working-directory parameter, and give
       the Blacksmith `run` boundary a working-directory parameter. Keep the
       workspace directory for warmup, download, disconnect, status and stop.
-- [ ] In the runner, read `HEAD` and the base, build the snapshot, compare
+- [x] In the runner, read `HEAD` and the base, build the snapshot, compare
       both fingerprints, then warm up, probe against the base, run the suites
       from the snapshot and aggregate with the base. Print the identity line
       and the summary `base=` field. Write `identity.json` through the logs
       boundary.
-- [ ] Remove the snapshot in every path. Track it in the cleanup guard or a
+- [x] Remove the snapshot in every path. Track it in the cleanup guard or a
       sibling guard with the same unwind protection, so interrupts, preparation
       failures and panics remove it. A failed removal warns once.
-- [ ] Add unit tests with unimock. Use event order and captured inputs, not
+- [x] Add unit tests with unimock. Use event order and captured inputs, not
       elapsed time. Cover: base equal to `HEAD`; base behind `HEAD` with an
       ahead count; no base; snapshot built before warmup; a fingerprint
       mismatch as a preparation failure with snapshot removal; probe commands
@@ -253,24 +256,26 @@ Evidence: `.context/remote-verification-base-commit/milestone-2.md`.
       the identity line, summary field and file; removal on success, on
       preparation failure, on interrupt and on panic; and a failed removal that
       only warns.
-- [ ] Add adapter tests in the existing adapter test style for the exact
+- [x] Add adapter tests in the existing adapter test style for the exact
       `git` arguments of the base lookup, the snapshot build and the snapshot
       removal, including the scoped temporary index variable, disabled hooks
       and non-cancellable requests.
-- [ ] Add real-Git adapter tests in temporary directories for the base rule:
+- [x] Add real-Git adapter tests in temporary directories for the base rule:
       pushed `HEAD` with ahead 0; unpushed commits on a pushed branch; a local
       unpushed merge of `main` with more own commits than main's delta; a rebase
       onto newer `main` with the old origin branch tip; a stacked branch on a
       pushed branch; no shared history; symbolic `origin/HEAD` without duplicate
       candidates; and independent pushed candidates with unequal ahead counts,
       then equal counts resolved by the smallest SHA.
-- [ ] Add real-Git adapter tests for snapshot creation and removal: deletion,
+- [x] Add real-Git adapter tests for snapshot creation and removal: deletion,
       rename, mode change, symbolic link, untracked file, staged change and
       detached checkout `HEAD`. Require unchanged checkout `HEAD`, index,
       `git status --porcelain` and `git worktree list` after removal.
-- [ ] Update the xtask README key code section for the new module and its
+- [x] Test parent creation before index writes and existing-path collisions.
+      Require unchanged foreign paths and cleanup of only acquired resources.
+- [x] Update the xtask README key code section for the new module and its
       implemented snapshot behavior. Keep the pushed-HEAD policy text.
-- [ ] Run the xtask tests, `cargo fmt --all -- --check`, Clippy and the length
+- [x] Run the xtask tests, `cargo fmt --all -- --check`, Clippy and the length
       lints, the local repository gate and the Markdown checks. Commit and
       push.
 

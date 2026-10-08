@@ -33,7 +33,14 @@ fn warmup_probe_download_status_and_stop_use_the_contract_arguments() {
             .each_call(matching!(_))
             .answers(&|_, request| {
                 assert!(request.blacksmith);
-                assert_eq!(request.cwd, PathBuf::from("/workspace"));
+                assert_eq!(
+                    request.cwd,
+                    PathBuf::from(if request.args[1] == "run" {
+                        "/snapshot"
+                    } else {
+                        "/workspace"
+                    })
+                );
                 match request.args[1].as_str() {
                     "warmup" => {
                         assert_eq!(
@@ -89,7 +96,9 @@ fn warmup_probe_download_status_and_stop_use_the_contract_arguments() {
         home: None,
     };
     client.warmup("feature").unwrap();
-    client.run("tbx_a", "probe", None).unwrap();
+    client
+        .run(Path::new("/snapshot"), "tbx_a", "probe", None)
+        .unwrap();
     client
         .download(
             "tbx_a",

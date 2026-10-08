@@ -43,6 +43,7 @@ fn check(mode: Executor, missing: &'static [&'static str]) {
             environment: shared.clone(),
             programs: shared,
             clock: unused.clone(),
+            snapshot: Arc::new(Unimock::new(())),
             git: unused.clone(),
             blacksmith: unused.clone(),
             github: unused.clone(),

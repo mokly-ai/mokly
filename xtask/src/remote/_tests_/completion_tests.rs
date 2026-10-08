@@ -9,6 +9,8 @@ use crate::check::request::DependencyAudit;
 use crate::remote::cleanup::contracts::BoxCleanup;
 use crate::remote::cleanup::guard::CleanupGuard;
 use crate::remote::contracts::*;
+use crate::remote::git_identity::{BaseCommit, CommitSha};
+use crate::remote::identity::{RunId, RunIdentity};
 use crate::remote::runner::DefaultRemoteRunner;
 
 #[test]
@@ -27,8 +29,8 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
                 Ok(Disconnection::Closed)
             })),
         BlacksmithRunMock
-            .each_call(matching!(_, _, _))
-            .answers(&|_, _, _, _| {
+            .each_call(matching!(_, _, _, _))
+            .answers(&|_, _, _, _, _| {
                 Ok(Output {
                     code: Some(0),
                     ..Output::default()
@@ -44,7 +46,7 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
                 assert_eq!(
                     target,
                     &PathBuf::from(
-                        "/workspace/.context/verification-reports/remote/run/unit-1-of-4.json"
+                        "/workspace/.context/verification-reports/remote/20261006T120000Z-42/unit-1-of-4.json"
                     )
                 );
                 downloads.lock().unwrap().push(format!("download:{id}"));
@@ -82,6 +84,7 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
             environment: unused.clone(),
             programs: shared.clone(),
             clock: shared.clone(),
+            snapshot: Arc::new(Unimock::new(())),
             git: unused.clone(),
             blacksmith: shared.clone(),
             github: shared.clone(),
@@ -99,6 +102,17 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
         "tbx_unit".into(),
     ];
     let cleanup = CleanupGuard::new(&runner.dependencies);
+    let head = CommitSha::read(&"b".repeat(40)).unwrap();
+    let identity = RunIdentity::new(
+        RunId::new("20261006T120000Z", 42).unwrap(),
+        head.clone(),
+        BaseCommit {
+            sha: head,
+            ahead: 0,
+        },
+        &format!("sha256:{}", "a".repeat(64)),
+    )
+    .unwrap();
     for id in &boxes {
         cleanup.track(id);
     }
@@ -106,8 +120,8 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
         runner
             .execute(
                 &boxes,
-                "sha256:test",
-                "run",
+                &identity,
+                &PathBuf::from("/snapshot"),
                 &cleanup,
                 DependencyAudit::Baseline,
             )

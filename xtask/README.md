@@ -24,8 +24,9 @@ internal binary and is not published to npm or crates.io.
 
 The crate provides the implementation behind `cargo xtask check`,
 `cargo xtask rust-file-length-lint`, and `cargo xtask source-file-length-lint`.
-Every spawned command runs from the workspace root even if xtask starts in a
-subdirectory. The source audit finds that root with Git, covers `.ts`, `.tsx`,
+Local suite commands run from the workspace root even if xtask starts in a
+subdirectory. Snapshot operations and remote sync use the directories defined
+by the base sync contract. The source audit finds the workspace root with Git, covers `.ts`, `.tsx`,
 `.js`, `.jsx`, `.mjs`, `.cjs`, `.mts` and `.cts` anywhere in the repository plus
 `docs/protocol/**/*.md`, and excludes only Git-ignored untracked files.
 `--all` audits every tracked or non-ignored untracked scoped file.
@@ -150,6 +151,21 @@ Set `MOKLY_TESTBOX_REF=<pushed branch>` only to test a changed Testbox workflow
 before it merges.
 It does not change the required source fingerprint or `HEAD`.
 
+Every remote run builds a fresh detached snapshot under
+`.context/verification-snapshots/<run>/`. The snapshot has the checkout's
+working files and a pushed base as `HEAD`. The current availability policy
+still requires pushed checkout `HEAD`, so that base equals `HEAD`.
+Probes and suites sync from the snapshot. Management and report downloads
+keep the workspace root. Before warmup, both fingerprints must match.
+The final fingerprint still reads the checkout. Its `HEAD`, index and files
+stay unchanged by snapshot construction. Existing snapshot or temporary-index
+paths fail preparation. Cleanup removes only this run's owned paths.
+Snapshot Git requests cannot be cancelled. Cleanup also covers partial builds
+and panic unwind. A removal failure warns once with manual commands.
+It does not fail the check. The identity line and summary name the base.
+`identity.json` records checkout `HEAD`, base, ahead count and fingerprint
+beside the logs. Suite reports and aggregation use the base commit.
+
 The [remote contract](../docs/protocol/remote-verification.md) defines the
 availability order, probe barrier and report aggregate.
 The [cleanup contract](../docs/protocol/remote-verification-cleanup.md) defines
@@ -244,6 +260,16 @@ They do not assert elapsed time.
 - [`src/cli.rs`](./src/cli.rs) parses and dispatches commands.
 - [`src/application.rs`](./src/application.rs) selects the effective executor.
 - [`src/remote/runner.rs`](./src/remote/runner.rs) owns remote phase order.
+- [`src/remote/base.rs`](./src/remote/base.rs) selects the typed pushed ancestor
+  and preserves the main merge base. [`git_identity.rs`](./src/remote/git_identity.rs)
+  validates Git object names.
+- [`src/remote/preparation.rs`](./src/remote/preparation.rs) builds and compares
+  the snapshot before warmup. [`identity.rs`](./src/remote/identity.rs) formats
+  the typed run evidence.
+- [`src/remote/snapshot/system.rs`](./src/remote/snapshot/system.rs) creates
+  snapshots through injected process and file boundaries. Its
+  [runner guard](./src/remote/snapshot/guard.rs) and
+  [construction guard](./src/remote/snapshot/construction.rs) own cleanup.
 - [`src/remote/contracts.rs`](./src/remote/contracts.rs) defines injected
   environment, Git, CLI, clock, script, log, signal and output boundaries.
 - [`src/remote/cleanup/guard.rs`](./src/remote/cleanup/guard.rs) owns box state

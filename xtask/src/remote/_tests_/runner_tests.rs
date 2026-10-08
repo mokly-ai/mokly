@@ -20,6 +20,9 @@ mod harness_clock_tests;
 #[path = "harness_github_tests.rs"]
 mod harness_github_tests;
 
+#[path = "harness_snapshot_tests.rs"]
+mod harness_snapshot_tests;
+
 #[test]
 fn complete_remote_gate_downloads_nine_reports_after_eleven_suites() {
     let fixture = harness(Case::Success);
@@ -288,3 +291,6 @@ mod warning_paths_tests;
 
 #[path = "disconnect_runner_tests.rs"]
 mod disconnect_runner_tests;
+
+#[path = "snapshot_recovery_tests.rs"]
+mod snapshot_recovery_tests;

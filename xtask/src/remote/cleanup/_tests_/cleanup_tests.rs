@@ -92,6 +92,7 @@ fn cleanup_continues_after_status_stop_and_optional_github_failures() {
                 } else {
                     Unimock::new(())
                 }),
+                snapshot: Arc::new(Unimock::new(())),
                 git: unused.clone(),
                 blacksmith: shared.clone(),
                 github,

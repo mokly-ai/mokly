@@ -143,6 +143,7 @@ fn fixture(stage: usize, key: bool, mode: Executor) -> (DefaultSelector, Arc<Mut
                 environment,
                 programs,
                 git,
+                snapshot: Arc::new(Unimock::new(())),
                 blacksmith,
                 reporter,
                 interrupt,

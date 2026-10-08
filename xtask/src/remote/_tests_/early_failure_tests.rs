@@ -10,8 +10,13 @@ use crate::executor::Executor;
 use crate::remote::availability::{DefaultSelector, Selector};
 use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
+use crate::remote::git_identity::{BaseCommit, BaseLookup, CommitSha};
 use crate::remote::runner::{DefaultRemoteRunner, Failure, RemoteRunner};
+use crate::remote::snapshot::contracts::{
+    Ownership, SnapshotCreateMock, SnapshotHandle, SnapshotRemoveMock,
+};
 
+/// Preserve the operation identity without performing any I/O.
 fn failure(operation: Operation) -> Error {
     Error::Io {
         operation,
@@ -19,10 +24,11 @@ fn failure(operation: Operation) -> Error {
     }
 }
 
+/// HEAD, source and log failures remain typed preparation failures with no warmup.
 #[test]
 fn head_fingerprint_and_log_failures_stop_before_warmup() {
     for stage in 0..3 {
-        let environment = Arc::new(if stage == 2 {
+        let environment = Arc::new(if stage > 0 {
             Unimock::new((
                 EnvironmentGetMock.each_call(matching!(_)).returns(None),
                 EnvironmentPidMock.next_call(matching!()).returns(42u32),
@@ -41,27 +47,41 @@ fn head_fingerprint_and_log_failures_stop_before_warmup() {
             BlacksmithListMock
                 .next_call(matching!())
                 .answers(&|_| Ok(())),
-            GitPublishedMock
-                .next_call(matching!())
-                .answers(&|_| Ok(true)),
             InterruptRequestedMock.each_call(matching!()).returns(false),
-            GitHeadMock
-                .next_call(matching!())
-                .answers_arc(Arc::new(move |_| {
-                    if stage == 0 {
-                        Err(failure(Operation::Git))
-                    } else {
-                        Ok("b".repeat(40))
-                    }
-                })),
         )));
+        let published = GitPublishedMock
+            .next_call(matching!())
+            .answers(&|_| Ok(true));
+        let head = GitHeadMock
+            .next_call(matching!())
+            .answers_arc(Arc::new(move |_| {
+                if stage == 0 {
+                    Err(failure(Operation::Git))
+                } else {
+                    CommitSha::read(&"b".repeat(40))
+                }
+            }));
+        let git = Arc::new(if stage == 0 {
+            Unimock::new((published, head))
+        } else {
+            Unimock::new((
+                published,
+                head,
+                GitBaseMock.next_call(matching!(_)).answers(&|_, head| {
+                    Ok(BaseLookup::Found(BaseCommit {
+                        sha: head.clone(),
+                        ahead: 0,
+                    }))
+                }),
+            ))
+        });
         let fingerprint = Arc::new(if stage == 0 {
             Unimock::new(())
         } else {
             Unimock::new(
                 FingerprintReadMock
-                    .next_call(matching!())
-                    .answers_arc(Arc::new(move |_| {
+                    .each_call(matching!(_))
+                    .answers_arc(Arc::new(move |_, _| {
                         if stage == 1 {
                             Err(failure(Operation::Fingerprint))
                         } else {
@@ -70,7 +90,7 @@ fn head_fingerprint_and_log_failures_stop_before_warmup() {
                     })),
             )
         });
-        let clock = Arc::new(if stage == 2 {
+        let clock = Arc::new(if stage > 0 {
             Unimock::new(
                 ClockStampMock
                     .next_call(matching!())
@@ -88,13 +108,30 @@ fn head_fingerprint_and_log_failures_stop_before_warmup() {
         } else {
             Unimock::new(())
         });
+        let snapshot = Arc::new(if stage == 0 {
+            Unimock::new(())
+        } else {
+            Unimock::new((
+                SnapshotCreateMock
+                    .next_call(matching!(_, _))
+                    .answers(&|_, run, _| {
+                        let mut handle = SnapshotHandle::paths(&PathBuf::from("/workspace"), run);
+                        handle.ownership = Ownership::Linked;
+                        Ok(handle)
+                    }),
+                SnapshotRemoveMock
+                    .next_call(matching!(_))
+                    .answers(&|_, _| Ok(())),
+            ))
+        });
         let unused = Arc::new(Unimock::new(()));
         let runner = DefaultRemoteRunner {
             dependencies: Dependencies {
                 environment,
                 programs: shared.clone(),
                 clock,
-                git: shared.clone(),
+                git,
+                snapshot,
                 blacksmith: shared.clone(),
                 github: unused.clone(),
                 fingerprint,

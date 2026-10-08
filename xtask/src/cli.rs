@@ -28,6 +28,9 @@ use crate::remote::runtime::{
     SystemReporter,
 };
 use crate::remote::scripts::SystemScripts;
+use crate::remote::snapshot::contracts::Snapshot;
+use crate::remote::snapshot::filesystem::SystemSnapshotFiles;
+use crate::remote::snapshot::system::SystemSnapshot;
 use crate::rust_file_length::{RustFileLengthAuditor, SystemRustFileLengthAuditor};
 
 #[derive(Debug, Parser)]
@@ -148,15 +151,22 @@ fn remote_dependencies(workspace: PathBuf) -> Dependencies {
         home: environment.get("HOME").map(PathBuf::from),
     });
     let github: Arc<dyn Github + Send + Sync> = Arc::new(SystemGithub {
-        process,
+        process: process.clone(),
         workspace: workspace.clone(),
     });
     let reporter: Arc<dyn Reporter + Send + Sync> = Arc::new(SystemReporter);
+    let snapshot: Arc<dyn Snapshot + Send + Sync> = Arc::new(SystemSnapshot {
+        process,
+        files: Arc::new(SystemSnapshotFiles),
+        reporter: reporter.clone(),
+        workspace: workspace.clone(),
+    });
     Dependencies {
         environment,
         programs,
         clock,
         git,
+        snapshot,
         blacksmith,
         github,
         fingerprint,
