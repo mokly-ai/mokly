@@ -122,16 +122,14 @@ suite runs `npm run prepare:unit`, which also writes the
 that unit tests load instead of compiling the example in every test file; the
 other suites run `npm run prepare:verification`.
 
-The [task cache contract](../docs/protocol/ci-remote-cache.md) defines implemented
+The [task cache contract](../docs/protocol/ci-task-cache.md) defines implemented
 Turbo preparation. Each suite keeps its preparation call, which runs
 `npm run prepare:verification` and restores unchanged tasks from cache. Tests and reports still run. `.turbo/`
 holds the ignored local cache;
 linked Git worktrees share the main worktree's `.turbo/cache` automatically.
-Hosted suites use policy B remote caching; tests and reports still execute.
-Approved developers load the read-only token and signature key from the
-admin's private password-manager share. Set `TURBO_CACHE=local:rw,remote:r`.
-Without both values, use `TURBO_CACHE=local:rw`. See the contract for setup,
-restore limits, forced release builds, and telemetry opt-out.
+Hosted suites restore `.turbo/cache` from the GitHub Actions cache. Only the
+CI preparation job saves it. Developers need no credentials. See the contract
+for restore limits, forced release builds, and telemetry opt-out.
 
 `--dependency-audit <baseline|strict>` defaults to `baseline`. It is valid for
 the complete gate or repository suite. An explicit mode flag with another suite

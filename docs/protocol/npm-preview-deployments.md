@@ -4,16 +4,21 @@
 
 The main-branch and pull-request preview workflows, static capture, publication,
 replacement, and cleanup behavior are implemented.
-Local package preparation uses the [task cache contract](./ci-remote-cache.md).
-The direct example build, capture, and deployment remain uncached; policy B
-remote package preparation is configured. Hosted verification remains open.
+Local package preparation uses the [task cache contract](./ci-task-cache.md).
+Both deploy jobs restore the GitHub Actions cache before install. They never
+save it. The direct example build, capture, and deployment execute each time.
+Hosted verification remains open.
 
 ## Deployment Contract
 
-Main preview uses the trusted writer environment; same-repository PR preview
-uses its scoped PR namespace under [policy B](./ci-remote-cache-access.md).
-Guarded steps map the selected token and signature key through GITHUB_ENV when
-both exist; otherwise they use local cache only. Fork gating stays unchanged.
+Both preview deploy jobs use the pinned upstream `actions/cache/restore` for
+`.turbo/cache`, with the CI preparation job's key expression and restore prefix.
+They restore package tasks, then run the example CLI directly. This direct build
+does not add an example task artifact to `.turbo/cache`; a preview save could
+win the preparation job's key with an incomplete directory. Only CI preparation
+saves. Preview needs no task-cache credentials or environment. Fork gating for
+Pages credentials stays unchanged. Turbo prunes entries older than 14 days and
+evicts oldest entries above `cacheMaxSize: "50MB"` at run start.
 Hosted Turbo telemetry is disabled. Historical comparison rebuilds use the
 commit's source and lockfile with the configured direct build recipe. They never
 invoke Turbo, read/write its cache, or send its telemetry. Capture, input-mutation

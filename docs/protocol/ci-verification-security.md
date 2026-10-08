@@ -5,7 +5,7 @@ Continuation of [CI Verification](./ci-verification.md).
 ## Delivery Status
 
 The npm download cache, local task cache, and audit rules are implemented.
-Signed remote task-cache wiring is implemented under [CI Task Cache](./ci-remote-cache.md).
+The [CI Task Cache](./ci-task-cache.md) defines GitHub Actions cache sharing without credentials. Hosted verification remains open.
 Baseline and strict modes share the live lockfile audit.
 Scheduled strict failures use the dependency update pull request workflow.
 
@@ -38,35 +38,27 @@ runtimes. Intentionally isolated clean-cache consumer tests keep private empty
 npm caches. Release publishing retains its uncached, OIDC-scoped boundary and
 exact-artifact checks.
 
-## Task Cache Security And Remote Target
+## Task Cache Security
 
-The local task cache stores viewer, package, and example outputs. The remote
-Worker and policy B CI/preview wiring are delivered; the Worker
-uses the repository R2 bucket. It does not cache `npm ci`, audits, tests, or reports.
-Every job keeps its lockfile-keyed download cache and fresh install. Missing,
-unavailable, or rejected artifacts require task execution, not skipped checks.
+The local task cache stores viewer, package, and example outputs. Hosted jobs
+share `.turbo/cache` through the GitHub Actions cache. It does not cache
+`npm ci`, audits, tests, or reports. Every job keeps its lockfile-keyed download
+cache and fresh install. A cache miss or failure requires task execution.
 
-The [access contract](./ci-remote-cache-access.md) defines trusted writers,
-scoped PR writers, and readers. The user selected policy B. The trusted writer and deploy credential remain in
-main-only environments; PR jobs use the repository PR bearer. No Workers/R2
-write API credential may be a repository secret or reach a PR job. Pages
-credentials must lack those permissions; the admin owns permission verification.
-Developers receive the reader and signature key through a private password-manager share.
-They set `TURBO_CACHE=local:rw,remote:r` to prevent forbidden upload attempts.
-The signing key alone does not grant Worker write access. The Worker stores
-signatures without holding that key. Turbo verifies downloads before extraction.
-The key has at least 32 bytes; configuration enforces the minimum.
+Repository read access permits cache reads. Never store secrets in cached
+outputs or task logs. GitHub scope rules isolate pull request writes in each
+merge-ref scope, including forks; those runs can restore from their base branch.
+Only the CI preparation job saves. Suites and both preview jobs restore only.
+No task-cache secrets or protected environments are required. Pages deployment
+credentials remain separate and must lack Workers or R2 write permissions;
+the admin owns permission verification.
 
-Forks and clients without both credentials use local cache only and must pass
-builds without either value. Release publishing forces task execution with no
-remote credentials. Native jobs also receive no remote credentials.
-Write-once R2 keys prevent later clients from replacing the first artifact or
-its metadata. Expiry and key rotation follow the
-[Worker contract](./ci-remote-cache-worker.md). Access credentials never enter
-Git, task hashes, or logs. Telemetry is disabled in hosted workflows from the
-first use of Turbo; developers can opt out through their environment. Historical
-example baselines use direct commands, with no Turbo cache or telemetry, even
-though the baseline environment strips Turbo opt-out variables.
+Turbo disables remote caching in `turbo.json`, so developer login files cannot
+send remote cache requests. Developers, native jobs, and Testboxes use local
+cache only. Release forces task execution and uses no shared task cache.
+Hosted workflows disable telemetry. Developers can opt out through their
+environment. Historical example baselines use direct commands with no Turbo
+cache or telemetry. Builds must pass with no cache.
 
 Fixture ownership, test concurrency, failure cleanup, unit shard balance and
 scenario grouping, browser shard balance, and acceptance measurement follow the

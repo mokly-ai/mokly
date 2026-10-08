@@ -6,7 +6,7 @@ Breaking-change notes: [npm release notes](./npm-release-notes.md).
 
 Package, verification, publishing, and preview boundaries below are implemented.
 Local Turbo preparation and forced release builds are implemented under
-[CI Task Cache](./ci-remote-cache.md). Policy B remote credentials are configured only for CI preparation and eligible previews.
+[CI Task Cache](./ci-task-cache.md). CI shares the GitHub Actions cache; previews restore only. Release uses local cache only.
 
 ## Package Metadata
 
@@ -129,8 +129,8 @@ the same tree under the
 [release verification evidence contract](./npm-release-evidence.md).
 
 Task caching does not change evidence selection or exact-artifact checks.
-`release.yml` sets `TURBO_FORCE=true`, uses local cache only, and has no Turbo
-token and signature variables. Complete-mode preparation and every real
+`release.yml` sets `TURBO_FORCE=true`, uses local cache only, and has no shared
+task-cache restore or save step. Complete-mode preparation and every real
 `prepack` must execute; applicable CI reports cannot authorize cached release
 build outputs. Hosted telemetry is disabled. Every prepack build keeps stdout
 empty so `npm pack --json` parses only the archive report; lifecycle builds run.

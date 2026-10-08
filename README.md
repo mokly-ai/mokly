@@ -350,14 +350,13 @@ renderer, and stylesheets. Changes to Mokly's own `src/` files require
 restarting the command so the CLI is rebuilt.
 
 Turbo runs build and verification preparation through the
-[CI task cache contract](./docs/protocol/ci-remote-cache.md). Unchanged tasks
-restore from the ignored local cache in `.turbo/`. CI uses signed remote cache
-with scoped PR writes. Linked Git worktrees share the main worktree cache.
-Approved developers receive a
-read-only token and the shared signature key through a private password-manager
-share. Load both into the shell and set `TURBO_CACHE=local:rw,remote:r`.
-Without both values, use local caching only. Set `TURBO_TELEMETRY_DISABLED=1`
-to opt out of anonymous telemetry. The contract has the full setup steps.
+[CI task cache contract](./docs/protocol/ci-task-cache.md). Unchanged tasks
+restore from the ignored local cache in `.turbo/`. CI shares `.turbo/cache`
+through the GitHub Actions cache. One preparation job saves; suites and previews
+restore only. Pull requests, including forks, save in their own scope and can
+restore from main. Linked Git worktrees share the main worktree cache.
+Developers need no credentials. Set `TURBO_TELEMETRY_DISABLED=1` to opt out of
+anonymous telemetry. The contract defines cache limits and restore behavior.
 
 Run tests that cover the change while you develop:
 
@@ -560,11 +559,6 @@ for the review rules and temporary Braces exception.
   owns report downloads, logs and interrupt cleanup.
 - [`examples/basic`](./examples/basic/README.md) — reference consumer and design
   catalogue.
-
-The repository-owned [cache Worker](./scripts/turbo-cache/README.md) has local
-R2 development and runtime-neutral tests. The deployed Worker and policy B CI
-wiring use protected main environments and scoped PR credentials. Developer
-sharing and hosted verification remain open; local builds need no credentials.
 
 ## License
 

@@ -115,7 +115,7 @@ Keep transcripts under `.context/turborepo-cloudflare-remote-cache/`.
 
 These commands are documentation only for Milestone 4. An administrator must
 use the selected policy B. Read the
-[access contract](../../docs/protocol/ci-remote-cache-access.md) for the policy,
+[access contract](https://github.com/mokly-ai/mokly/blob/b9b952312ae50142c847aeca4993891766c9127f/docs/protocol/ci-remote-cache-access.md) for the policy,
 namespace boundaries, GitHub environment restrictions, and residual risk.
 Inspect the existing bucket and all-prefix 30-day rule before changing them.
 Do not recreate existing resources or replace the full lifecycle configuration.
@@ -175,7 +175,7 @@ Existing objects cannot be re-signed; let the old namespace expire.
 
 ## Related Docs
 
-- [Task contract](../../docs/protocol/ci-remote-cache.md)
-- [Worker wire contract](../../docs/protocol/ci-remote-cache-worker.md)
-- [Access contract](../../docs/protocol/ci-remote-cache-access.md)
+- [Task contract](https://github.com/mokly-ai/mokly/blob/b9b952312ae50142c847aeca4993891766c9127f/docs/protocol/ci-remote-cache.md)
+- [Worker wire contract](https://github.com/mokly-ai/mokly/blob/b9b952312ae50142c847aeca4993891766c9127f/docs/protocol/ci-remote-cache-worker.md)
+- [Access contract](https://github.com/mokly-ai/mokly/blob/b9b952312ae50142c847aeca4993891766c9127f/docs/protocol/ci-remote-cache-access.md)
 - [Active plan](../../plans/turborepo-cloudflare-remote-cache.md)

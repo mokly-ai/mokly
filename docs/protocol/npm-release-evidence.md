@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Both verification modes and exact-tree evidence checks are implemented. The
-[task cache contract](./ci-remote-cache.md) defines the implemented forced-build
+[task cache contract](./ci-task-cache.md) defines the implemented forced-build
 rule in the release workflow. Evidence selection and report inventories stay unchanged.
 
 ## Verification Modes
@@ -130,11 +130,11 @@ tags, guard existing registry versions, publish with trusted provenance, and
 verify registry bytes and attestations.
 
 Both release modes set `TURBO_FORCE=true`,
-select `TURBO_CACHE=local:rw`, and leave token and signature variables unset.
+select `TURBO_CACHE=local:rw`, and use no GitHub task-cache restore or save step.
 Complete-mode preparation and every archive lifecycle build execute from source.
 Force bypasses cache reads; it may refresh local entries. Neither mode reads or
 writes remote task artifacts. Live audits and installed-consumer smoke still
-execute independently, even when earlier CI preparation used the remote cache.
+execute independently, even when earlier CI preparation used the GitHub Actions cache.
 
 The v0.12.0 release measured about 54 minutes when complete verification was
 repeated in the publish job. Evidence mode is expected to take about 10 minutes,

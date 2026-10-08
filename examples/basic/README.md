@@ -322,7 +322,10 @@ tree, which can be absent or stale. Do not commit anything under `mokly-generate
 commit authored files, including specs, configuration and CSS, normally.
 Tracked output checks and historical manifest compatibility use isolated fixtures.
 Both `npm test` and `npm run test:browser` prepare the example through Turbo before tests read its
-generated files. When the saved snapshot is not fresh, `npm test` also saves one
+generated files. CI shares those task entries through the GitHub Actions cache;
+preview jobs restore only and run the example CLI directly. Developers need no
+cache credentials. The [task cache contract](../../docs/protocol/ci-task-cache.md)
+defines this boundary. When the saved snapshot is not fresh, `npm test` also saves one
 in-memory compilation of the example to
 `.context/verification/example-compilation.json`; when the snapshot is still
 fresh, it keeps that file. Unit tests that read compiled output load it instead

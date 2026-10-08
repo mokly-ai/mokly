@@ -10,7 +10,7 @@ Public argument forwarding, cancellation and title validation are implemented.
 Remote execution and automatic selection are implemented. Dependency audit
 modes and scheduled update pull requests are implemented under the
 [audit contracts](./dependency-audit-update-pr.md).
-[Task caching](./ci-remote-cache.md) defines local preparation and policy B hosted preparation.
+[Task caching](./ci-task-cache.md) defines local preparation and GitHub Actions cache sharing without credentials.
 
 ## Verification Boundary
 
@@ -99,7 +99,7 @@ Public `package:check` and `package:smoke` preserve caller arguments, including
 reject arguments other than the optional shard, and fail when required output is
 missing; prepared package commands may instead receive the gate's archive pair.
 Xtask calls preparation for each suite, then prepared consumers.
-[Task cache reuse](./ci-remote-cache.md#suite-preparation-and-restore) restores
+[Task cache reuse](./ci-task-cache.md#suite-preparation-and-restore) restores
 unchanged outputs across suites; every consumer still executes. `npm test` and
 the xtask unit suite run `npm run prepare:unit`; a complete unit run requires
 the example compilation [snapshot](./ci-example-snapshot.md) it writes.

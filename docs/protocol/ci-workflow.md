@@ -2,9 +2,9 @@
 
 ## Delivery Status
 
-The job graph, parallel prepare job, and policy B remote task caching are
-implemented under the [task cache contract](./ci-remote-cache.md); PR CI run
-[37672567423](https://github.com/mokly-ai/mokly/actions/runs/37672567423) confirmed the PR path; the main-push path is a post-merge check.
+The job graph and parallel prepare job are implemented. The
+[task cache contract](./ci-task-cache.md) replaces the Worker with the GitHub
+Actions cache. Hosted verification remains open; main checks follow merge.
 CI selects baseline or strict mode by event and pull request.
 The Dependency Audit workflow maintains strict findings on `main`.
 The workflow verification tests below replace the former literal workflow
@@ -161,23 +161,21 @@ the dual-runtime aggregate can prove an immutable release tree.
 
 ## Cached Preparation
 
-The [task cache contract](./ci-remote-cache.md#cache-correctness-and-ci-delivery)
+The [task cache contract](./ci-task-cache.md#cache-correctness-and-ci-delivery)
 defines one Node 22.14.0 `prepare` job beside `repository`: npm 11.21.0,
-`npm ci`, and `npm run prepare:verification`, without Rust or Chromium. The
-repository job keeps profile selection and audit-first verification. Package,
-unit, browser, and hydration jobs require both prerequisites; native jobs keep
-theirs and receive no remote credentials. Every suite still calls preparation;
-unchanged tasks restore from cache. The [access contract](./ci-remote-cache-access.md)
-owns the policy: main jobs use the main-only `turbo-cache-trusted` environment
-(`deployment: false`), PRs select no environment, and guarded steps map the
-trusted or scoped PR token and signature key through `$GITHUB_ENV` only when
-both exist, so forks and empty secrets build locally in each job. Preview main
-uses the trusted writer; same-repository PR preview uses `mokly-pr-<number>`.
-Release jobs force execution with `TURBO_FORCE=true` and `TURBO_CACHE=local:rw`
-and have no credentials; CI, preview, and release set
-`TURBO_TELEMETRY_DISABLED: "1"` at workflow scope. `Required CI` requires
-`prepare` success; the nine- and eighteen-report aggregates are unchanged, and a
-restored task never replaces executed suite evidence.
+`npm ci`, and `npm run prepare:verification`, without Rust or Chromium. It
+computes `turbo-cache-key`, restores `.turbo/cache` before install with the pinned
+upstream `actions/cache`, and saves at job end. It is the only cache saver.
+Package, unit, browser, and hydration require both prerequisites and restore
+that key through `actions/cache/restore` before install. Native jobs use only
+local task caching. Every suite still prepares; unchanged tasks restore.
+Both preview deploy jobs restore only with the same key expression and prefix.
+Their direct example CLI does not create an example task entry, so they must
+not save. No CI or preview job declares a cache environment or uses cache
+credentials. Fork pull requests restore from main and save in their own scope.
+Release forces execution with `TURBO_FORCE=true` and `TURBO_CACHE=local:rw`.
+CI, preview, and release disable telemetry at workflow scope. `Required CI`
+requires `prepare` success; report inventories and executed evidence stay intact.
 
 ## Testbox Workflow Target
 
