@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
 
 import { inspectPublicCatalogue } from "./catalogue.mjs";
+import { installedViewerData } from "./installed_viewer.mjs";
 import { assertOwnershipMarker, verifyOwnershipFiles } from "./ownership.mjs";
 /** Inspect only the installed CLI's artifact; never import the source exporter. */
 export async function inspectConsumerExport(
@@ -63,14 +63,11 @@ export async function inspectConsumerExport(
     /^mokly-viewer\/diffs\/generations\/[a-f0-9]{64}\/review\.json$/.test(name),
   );
   assert.ok(comparison);
-  await inspectPublicCatalogue(output, comparison);
+  await inspectPublicCatalogue(root, output, comparison);
   const review = JSON.parse(await read(comparison));
   assert.equal(review.baseRef, base);
   assert.equal(review.schemaVersion, schemaVersion);
-  const { snapshotViewPath } = await import(
-    pathToFileURL(path.join(root, "node_modules/@mokly/viewer/dist/data.js"))
-      .href
-  );
+  const { snapshotViewPath } = await installedViewerData(root);
   let snapshotsChecked = 0;
   for (const entry of [
     ...review.screens.map((screen) => ({ ...screen, kind: "screen" })),

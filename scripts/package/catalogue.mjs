@@ -2,12 +2,18 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { GENERATED_DIRECTORY, entryRoute, viewRoute } from "@mokly/viewer/data";
+import { installedViewerData } from "./installed_viewer.mjs";
 
 /** A packed consumer reads only public JSON and artifact files. */
-export async function inspectPublicCatalogue(root, comparisonPath) {
+export async function inspectPublicCatalogue(
+  consumerRoot,
+  artifactRoot,
+  comparisonPath,
+) {
+  const { GENERATED_DIRECTORY, entryRoute, viewRoute } =
+    await installedViewerData(consumerRoot);
   const json = await fs.readFile(
-    path.join(root, "mokly-viewer/catalogue.json"),
+    path.join(artifactRoot, "mokly-viewer/catalogue.json"),
     "utf8",
   );
   const model = JSON.parse(json);
@@ -38,12 +44,12 @@ export async function inspectPublicCatalogue(root, comparisonPath) {
   ];
   assert.ok(entries.length > 0);
   for (const entry of entries) {
-    const shell = path.join(root, "view", entryRoute(entry.path));
+    const shell = path.join(artifactRoot, "view", entryRoute(entry.path));
     assert.ok((await fs.stat(shell)).isFile(), shell);
     const views = "views" in entry ? entry.views : [];
     for (const view of views) {
       const file = path.join(
-        root,
+        artifactRoot,
         "static",
         GENERATED_DIRECTORY,
         viewRoute(entry.path, view.viewport, view.colorScheme),
