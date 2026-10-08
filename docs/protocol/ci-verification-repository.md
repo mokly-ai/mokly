@@ -38,8 +38,17 @@ subprocess starts at the workspace root, even when xtask starts elsewhere.
 Use `cargo xtask source-file-length-lint --all` to audit every scoped file
 instead of only the changed set. Source modules have a 300-line limit;
 protocol pages have a 250-line limit or their exact reviewed cap in
-`tests/protocol_doc_sizes.test.ts`. The independent ratchets remain
+`xtask/protocol-document-caps.json`. The independent ratchets remain
 additional gates under [Repository Verification Ratchets](./verification-ratchets.md).
 During an uncommitted merge, the changed-file audit uses the resolved tree
 against `origin/main`; outside a merge, it uses the branch-point diff and
 working-tree changes.
+
+ESLint carries the repository's source-level rules beyond style. The local
+`mokly` plugin provides `no-directory-literals` for Mokly-owned directory
+names, `no-artifact-path-literals` for comparison artifact paths under the
+[artifact path contract](./mokly-artifact-paths.md), and
+`no-late-fixture-teardown` and `no-eager-fixture-setup` for test fixture
+ownership under [CI suite evidence](./ci-suite-evidence.md). The PostCSS
+access restrictions and the test-timing guard are also ESLint rules. A rule
+that must scan every file belongs here, in `npm run lint`, not in a unit test.

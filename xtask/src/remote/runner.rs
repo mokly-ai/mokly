@@ -164,7 +164,7 @@ impl DefaultRemoteRunner {
             if aggregate_failed { "failed" } else { "passed" },
             !changed
         ));
-        if failures != 0 || downloads != 0 || aggregate_failed || changed || cleanup != 0 {
+        if failures != 0 || downloads != 0 || aggregate_failed || changed {
             return Err(error::Error::Verification {
                 commands: failures,
                 reports: downloads,

@@ -3,12 +3,14 @@ import path from "node:path";
 
 import {
   countPhysicalLines,
-  parseProtocolCaps,
+  parseLegacyProtocolCaps,
+  parseProtocolCapTable,
   allowedLines,
   PROTOCOL_LIMIT,
 } from "./length-policy.mjs";
 
-const CAP_TEST = "tests/protocol_doc_sizes.test.ts";
+const CAP_TABLE = "xtask/protocol-document-caps.json";
+const LEGACY_CAP_TEST = "tests/protocol_doc_sizes.test.ts";
 const PROTOCOL_ROOT = "docs/protocol";
 /** Enforce current exact caps and prevent policy growth from the baseline. */
 export function protocolCapFindings({
@@ -70,20 +72,13 @@ export function protocolCapFindings({
 
 /** Audit protocol documents and the cap table against the comparison commit. */
 export function auditProtocolCaps(repositoryRoot, git) {
-  const capSource = fs.readFileSync(path.join(repositoryRoot, CAP_TEST));
-  const candidateCaps = parseProtocolCaps(capSource, CAP_TEST);
-  if (!candidateCaps) throw new Error(`${CAP_TEST} has no oversizedCaps table`);
+  const candidateCaps = readCurrentCaps(repositoryRoot);
   const candidateDocuments = readCurrentDocuments(repositoryRoot);
   const baselineDocuments = readBaselineDocuments(git);
-  const hasBaselineTable = git.baseFileExists(CAP_TEST);
-  const baselineCaps = hasBaselineTable
-    ? parseProtocolCaps(git.readBase(CAP_TEST), `${git.base}:${CAP_TEST}`)
-    : undefined;
-  if (hasBaselineTable && !baselineCaps)
-    throw new Error(`${git.base}:${CAP_TEST} has no oversizedCaps table`);
+  const baselineCaps = readBaselineCaps(git);
   const predecessors = renamedProtocolDocuments(git);
   if (
-    !hasBaselineTable &&
+    baselineCaps === undefined &&
     Object.hasOwn(candidateDocuments, "mokly-variants.md") &&
     Object.hasOwn(baselineDocuments, "mokly-screen-variants.md")
   )
@@ -98,6 +93,29 @@ export function auditProtocolCaps(repositoryRoot, git) {
     }),
     summary: `${Object.keys(candidateDocuments).length} protocol document(s) and ${Object.keys(candidateCaps).length} cap(s)`,
   };
+}
+
+function readCurrentCaps(repositoryRoot) {
+  const file = path.join(repositoryRoot, CAP_TABLE);
+  if (!fs.existsSync(file)) throw new Error(`${CAP_TABLE} is missing`);
+  return parseProtocolCapTable(fs.readFileSync(file), CAP_TABLE);
+}
+
+/**
+ * Read the comparison commit's caps: the JSON table, else the legacy test
+ * table, else `undefined` so the audit bootstraps from baseline line counts.
+ */
+function readBaselineCaps(git) {
+  if (git.baseFileExists(CAP_TABLE))
+    return parseProtocolCapTable(
+      git.readBase(CAP_TABLE),
+      `${git.base}:${CAP_TABLE}`,
+    );
+  if (!git.baseFileExists(LEGACY_CAP_TEST)) return undefined;
+  const label = `${git.base}:${LEGACY_CAP_TEST}`;
+  const caps = parseLegacyProtocolCaps(git.readBase(LEGACY_CAP_TEST), label);
+  if (!caps) throw new Error(`${label} has no oversizedCaps table`);
+  return caps;
 }
 
 function readCurrentDocuments(repositoryRoot) {

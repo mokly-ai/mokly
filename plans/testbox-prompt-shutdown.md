@@ -1,6 +1,6 @@
 # Testbox Prompt Shutdown
 
-Status: Active. [PR #177](https://github.com/mokly-ai/mokly/pull/177) is open. The plan closes when its PR merges.
+Status: Completed. [PR #177](https://github.com/mokly-ai/mokly/pull/177) merged on 2026-10-08. Six Low review findings stay open under the Milestone 4 review TODO. The user decided docs #3 on 2026-10-08: a box that cleanup cannot stop after the suites only warns.
 
 Stop paying for idle Testbox time after each remote suite command. Today every
 box keeps running about 300 seconds after its last command. The Blacksmith CLI
@@ -244,7 +244,7 @@ Evidence: `.context/testbox-prompt-shutdown/smoke.md`, `.context/testbox-prompt-
   - Rust #3 (Low, test): Close tests omit both file-read error branches and a relative `HOME`.
   - Rust #4 (Low, test): A runner test name claims close-before-cancel coverage that it does not check.
   - docs #2 (Low, process): The headline compares billed time with job time; like-for-like job time is 100.3 against 140.6 minutes, 28.7% fewer.
-  - docs #3 (Low, process): The open warn-or-fail decision has no live home after the plan completes.
+  - docs #3 (Low, process): The open warn-or-fail decision has no live home after the plan completes. Resolved on 2026-10-08: the user chose a warning after the suites; a follow-on change implements it.
   - docs #4 (Low, process): Finding 7 names no evidence for the three checks, 17 boxes and `cancel_failed`.
   - RR4 (Low, process): The docs #2 record omits that the post-merge spend check has no per-check baseline.
   - Fixed in `9b68aecf`: R1, D1, D5, D6, D7, D8 and D9. Re-review of `9b68aecf`: RR1, RR2 and RR3 fixed in the next commit; RR4 is open.

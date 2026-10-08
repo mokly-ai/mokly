@@ -46,14 +46,13 @@ fn a_box_proven_completed_after_a_failed_stop_does_not_fail_the_check() {
 }
 
 #[test]
-fn an_unrecovered_box_counts_once_after_three_stop_attempts() {
+fn an_unrecovered_box_after_passing_suites_only_warns() {
     let fixture = harness(Case::CleanupSuites);
-    let error = DefaultRemoteRunner {
+    DefaultRemoteRunner {
         dependencies: fixture.dependencies,
     }
     .run(DependencyAudit::Baseline)
-    .unwrap_err();
-    assert!(error.to_string().contains("cleanup=1"), "{error}");
+    .unwrap();
     assert_eq!(
         fixture
             .events
@@ -74,8 +73,25 @@ fn each_remaining_box_gets_one_manual_cleanup_warning() {
             dependencies: fixture.dependencies
         }
         .run(DependencyAudit::Baseline)
-        .is_err()
+        .is_ok()
     );
+    assert_eq!(fixture.events.lock().unwrap().iter().filter(|event| *event == "message:warning: box=tbx_0 cleanup failed; run blacksmith testbox stop --id tbx_0; the 30-minute idle timeout ends it").count(), 1);
+}
+
+#[test]
+fn a_check_that_fails_for_another_reason_still_reports_the_unrecovered_box() {
+    let fixture = harness(Case::CleanupFailedSuite);
+    let error = DefaultRemoteRunner {
+        dependencies: fixture.dependencies,
+    }
+    .run(DependencyAudit::Baseline)
+    .unwrap_err();
+    let message = error.to_string();
+    assert!(
+        message.contains("verification failed: 1 commands"),
+        "{message}"
+    );
+    assert!(message.contains("cleanup=1"), "{message}");
     assert_eq!(fixture.events.lock().unwrap().iter().filter(|event| *event == "message:warning: box=tbx_0 cleanup failed; run blacksmith testbox stop --id tbx_0; the 30-minute idle timeout ends it").count(), 1);
 }
 

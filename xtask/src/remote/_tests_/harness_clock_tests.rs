@@ -21,6 +21,7 @@ pub(super) fn clock(case: Case, events: Arc<Mutex<Vec<String>>>) -> Arc<Unimock>
             | Case::CompletedOnFinal
             | Case::CleanupWarmup
             | Case::CleanupSuites
+            | Case::CleanupFailedSuite
             | Case::InterruptCleanupWarmup
             | Case::InterruptCleanupSuites
     ) {

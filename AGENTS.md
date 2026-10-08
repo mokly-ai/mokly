@@ -46,6 +46,14 @@ and when to read it. Read the doc at that point instead of guessing the rule.
   [developer test commands](./docs/protocol/developer-test-commands.md).
 - Tests must not assert elapsed wall-clock time. Use operation counts, captured inputs, event order or fake-clock time.
   Follow [CI Test Timing](./docs/protocol/ci-test-timing.md).
+- Do not test documentation wording with regular expressions or sentence
+  matches. Test documentation against code structurally: compare parsed
+  values, names, options, tables, links, and counts with the code or data
+  that owns them.
+- Verify workflow YAML by executing its scripts with controlled inputs and by
+  checking policy properties, such as pinned action revisions and no
+  untrusted interpolation in `run:` steps. Do not assert literal job names,
+  step order, matrix values, or run strings.
 - Run `cargo xtask check --suite repository` early. Leave complete unit and
   browser suite runs to the complete gate.
 - Run the complete `cargo xtask check` once before saying work is complete.

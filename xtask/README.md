@@ -10,7 +10,8 @@ internal binary and is not published to npm or crates.io.
   audit errors. Support strict mode for release and dependency update checks.
 - Enforce the Rust file-length limit.
 - Enforce changed repository-wide TypeScript/JavaScript (300 lines) and
-  protocol Markdown (250 lines or an exact reviewed cap) limits against the
+  protocol Markdown (250 lines or an exact reviewed cap in
+  `xtask/protocol-document-caps.json`) limits against the
   fetched `origin/main` baseline.
 - Ratchet JavaScript/TypeScript length, protocol caps, and internal exports
   against the branch point, and published-package exports against release tags.
@@ -177,7 +178,9 @@ unattempted GitHub cancellation. Cleanup keeps run IDs from warmup and probe out
 fallback when status fails or names no run. A failed stop gets retries after
 5 seconds and 10 more seconds, with at most three attempts per box.
 Final cleanup counts each box once if it is neither stopped nor proven completed.
-That count fails the check. A recovered stop does not fail it.
+After the suites start, that count does not fail the check. A failed check still
+reports it. Before the first suite, it blocks local fallback.
+A recovered stop does not fail the check.
 An interrupt reports the same count. Each remaining box gets a warning with
 its manual stop command and the 30-minute idle timeout.
 After a failed GitHub cancellation, xtask reads the run state with
@@ -298,9 +301,11 @@ They do not assert elapsed time.
   [`module-commonjs.mjs`](../scripts/verification/ratchets/module-commonjs.mjs)
   and
   [`module-imports.mjs`](../scripts/verification/ratchets/module-imports.mjs)
-  supply CommonJS export and import-use discovery, and
+  supply CommonJS export and import-use discovery,
   [`unused-internal-exports.txt`](./unused-internal-exports.txt) is the sorted
-  shrinking exception baseline.
+  shrinking exception baseline, and
+  [`protocol-document-caps.json`](./protocol-document-caps.json) holds the
+  reviewed protocol document caps.
 
 ### Related Docs
 
