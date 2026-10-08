@@ -8,9 +8,12 @@ import {
 } from "../../build/generated_file.js";
 import { isOutputSnapshot } from "../../build/output_snapshot.js";
 import type { ResolvedConfig } from "../../config/types.js";
+import { isAuthoredClosure } from "../served_closure.js";
 
 /** Accepted configuration and manifest transferred before watched readiness. */
 export interface RuntimeStartupMessage {
+  /** Last checked list under this configuration, kept across a child restart. */
+  assetClosure?: readonly string[];
   config: ResolvedConfig;
   manifest: ComponentRuntime["manifest"];
   type: "component-runtime-startup";
@@ -173,7 +176,13 @@ function parseRuntimeStartupMessage(
     !Array.isArray(manifest.sourceFiles)
   )
     return;
-  return { config, manifest, type: "component-runtime-startup" };
+  const assetClosure = "assetClosure" in value ? value.assetClosure : undefined;
+  return {
+    ...(isAuthoredClosure(assetClosure) ? { assetClosure } : {}),
+    config,
+    manifest,
+    type: "component-runtime-startup",
+  };
 }
 
 export function parseRuntimeMessage(

@@ -223,7 +223,7 @@ function validateTestEntries(entries, label, allowEmpty) {
     allowEmpty,
   );
   for (const entry of entries)
-    for (const field of ["project", "file", "title"])
+    for (const field of ["project", "specFile", "file", "title"])
       if (typeof entry[field] !== "string" || entry[field].length === 0)
         throw new Error(`${label} has an invalid ${field}`);
 }

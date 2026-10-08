@@ -81,6 +81,15 @@ Use at most 50 characters for individual commit titles (the first line).
 Pull request titles and their squash commit titles may use at most 72 Unicode
 code points. Keep the Conventional Commits format for both.
 Commit body (subsequent lines, after a blank line) has no strict length limit.
+
+Do not write angle-bracket placeholders such as `<path>` in commit messages or
+pull request descriptions. Write `{path}` instead. Release Please copies
+changelog text into the release PR body and parses that body as HTML, so an
+unclosed `<path>` tag stops the release. Code spans do not help, because the
+parser does not read Markdown. The
+[release recovery](../protocol/npm-release-management.md#release-recovery)
+section explains the failure and the fix.
+
 If a merge produces conflicts, resolve every conflict and verify the resulting
 worktree before saying the merge or work is complete.
 
