@@ -36,6 +36,8 @@ Continuation of the [protocol index](./README.md).
 
 - [npm breaking-change release notes](./npm-release-notes.md)
 
+- [npm format and tooling release notes](./npm-release-notes-formats.md)
+
 - [Repository preview deployments](./npm-preview-deployments.md)
 
 - [Release verification evidence](./npm-release-evidence.md)

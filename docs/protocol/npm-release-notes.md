@@ -29,12 +29,18 @@ Git-index tracking to choose its tracked or untracked validation boundary.
 Remove the old options; no default-output mode replaces them.
 
 `ManifestV10` replaces released `ManifestV9`; `Manifest` and `HistoricalManifest` now name v10.
-V10 still requires `assetClosure`, `generatedFiles` and `blobHashAlgorithm` in addition to the identity-only entries and source inventory.
-The combined shape requires root ranges and inserted-stylesheet provenance, and removes source dependency declarations.
-Only valid v10 baselines are read. npm 0.14.0 output (manifest v9, catalogue v5 and review v6) is earlier output.
-Former manifest filenames no longer act as sentinels. Missing canonical output uses normal absence and rebuild selection.
-Rebuild committed `mokly-generated/` once with Build, commit it, and regenerate exports. Do not hand-convert manifests.
-An earlier base gives Changes unavailable with the existing message. Build, Serve, export and publish succeed. Earlier outcomes are never cached.
+V10 still requires `assetClosure`, `generatedFiles` and `blobHashAlgorithm` in
+addition to the identity-only entries and source inventory.
+The combined shape requires root ranges and inserted-stylesheet provenance, and
+removes source dependency declarations.
+Only valid v10 baselines are read. npm 0.14.0 output (manifest v9, catalogue v5
+and review v6) is earlier output.
+Former manifest filenames no longer act as sentinels. Missing canonical output
+uses normal absence and rebuild selection.
+Rebuild committed `mokly-generated/` once with Build, commit it, and regenerate
+exports. Do not hand-convert manifests.
+An earlier base gives Changes unavailable with the existing message. Build,
+Serve, export and publish succeed. Earlier outcomes are never cached.
 
 ## Breaking Publish Checkout Release Note
 
@@ -125,8 +131,10 @@ This release also removes source-path evidence. Delete entry `dependencies`,
 removed component `ownedDependencies` and `review.sharedImpact`. Current authoring
 helpers warn once when these keys are present and ignore their values. Public
 input types use `?: never` for removed authoring fields; explicit `undefined`
-needs `exactOptionalPropertyTypes` for a type error. Strict commands count these warnings before any output write or upload.
-Declare separately authored component CSS with `stylesheets` and place it with `componentStylesheets` when
+needs `exactOptionalPropertyTypes` for a type error. Strict commands count these
+warnings before any output write or upload.
+Declare separately authored component CSS with `stylesheets` and place it with
+`componentStylesheets` when
 needed. The shared public-file policy refuses symbolic links at every public path
 component, including declared CSS and renderer links. Remove public stylesheet
 aliases and use regular files. Only configured links anchor component CSS
@@ -217,34 +225,5 @@ See [the historical note](./npm-release-history.md#historical-delta-publishing-r
 
 See [the historical note](./npm-release-history.md#historical-viewer-host-api-release-note).
 
-## Boundary And Tooling Changes
-
-`parseStaticDelivery` returns `valid`, `unsupported-version` or `invalid` results
-and never throws. Callers read the descriptor from a valid result's `value`.
-Browser boundary readers throw `MoklyVersionError`; export keeps `export-invalid`.
-`ViewerError.code` includes `version`, with optional diagnostic `details` beside
-the existing product-facing `message`.
-
-The approved watch-writer change moves successful plain baseline notes and
-the earlier-version notice to stdout;
-errors and requested timing JSON retain stderr. Referenced authored files are
-not private solely because of an extension or build-folder name; source inputs,
-protected locations, hidden segments and symlinks remain private.
-
-## Combined Path And Output Formats
-
-The path/output integration uses manifest v10, catalogue v6, review v7, delivery
-v5 and bootstrap v2. Live capability descriptors and the inspector wire use v2;
-the live index is `live-index-2`, catalogue change snapshots use v3 and baseline
-completion markers use v2 with `generated-v10`. Export ownership v3, upload v2
-and Plan v1 retain their shapes. See the
-[complete format inventory](./mokly-format-versions.md).
-
-File-derived paths replace `id`/`navPath`, and `roots` replaces `entries` and
-`entriesDir`. Markdown documents, folders and moves use the incoming path
-contract. Every generated file now lives under `mokly-generated/`, including
-Markdown resource copies. Manifest v9 and below are earlier baseline output; catalogue v5 and review v6
-and below are unsupported public payloads. Rebuild with the matching package; no converter is
-provided. The preview command against an earlier main base still succeeds with
-Changes unavailable. Only the explicit writers take the output lock; immutable
-in-memory route snapshots replace disk capture and reject undeclared worker routes.
+See [format and tooling release notes](./npm-release-notes-formats.md) for
+boundary changes and the combined path and output formats.

@@ -590,7 +590,7 @@
     "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
   },
   {
-    "file": "docs/protocol/npm-release-notes.md",
+    "file": "docs/protocol/npm-release-notes-formats.md",
     "statement": "Export ownership v3, upload v2 and Plan v1 retain their shapes.",
     "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
   },
@@ -600,7 +600,7 @@
     "reason": "Consumer release migration: names removed inputs, rejected formats or current wire identifiers."
   },
   {
-    "file": "docs/protocol/npm-release-notes.md",
+    "file": "docs/protocol/npm-release-notes-formats.md",
     "statement": "Live capability descriptors and the inspector wire use v2; the live index is `live-index-2`, catalogue change snapshots use v3 and baseline completion markers use v2 with `generated-v10`.",
     "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
   },
@@ -610,7 +610,7 @@
     "reason": "Consumer release migration: names removed inputs, rejected formats or current wire identifiers."
   },
   {
-    "file": "docs/protocol/npm-release-notes.md",
+    "file": "docs/protocol/npm-release-notes-formats.md",
     "statement": "Manifest v9 and below are earlier baseline output; catalogue v5 and review v6 and below are unsupported public payloads.",
     "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
   },
@@ -630,7 +630,7 @@
     "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
   },
   {
-    "file": "docs/protocol/npm-release-notes.md",
+    "file": "docs/protocol/npm-release-notes-formats.md",
     "statement": "The path/output integration uses manifest v10, catalogue v6, review v7, delivery v5 and bootstrap v2.",
     "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
   },
