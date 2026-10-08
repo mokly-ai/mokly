@@ -71,13 +71,16 @@ Git resolves symbolic refs, worktrees and packed refs. A changed or newly availa
 ref clears evidence and reclassifies existing completed output without rerendering
 views. Replacement and shutdown cancel old ref reads and discard stale results.
 
-A restarted child keeps the authored closure only within one configuration.
-The supervisor keeps the list from the last completion of the staged generation,
-even when no child is ready to receive that completion. It sends the list as
-`assetClosure` in the next child's `component-runtime-startup` message. This
-applies after a restart watch rule, a structural rebuild and crash recovery.
-A configuration change discards the list, so the new child serves no authored
-file until its first completion. The child ignores a completion or startup list
+A restarted child keeps the checked closure until the parent reloads the
+config file. The supervisor keeps the list from the last completion of the
+staged generation, even when no child is ready to receive that completion. It
+sends the list as `assetClosure` in the next child's
+`component-runtime-startup` message. This applies after a restart watch rule,
+crash recovery and a structural rebuild. A rebuild whose new imports replace the
+source watcher also keeps the list, because it does not reload the config file.
+A config-file change discards the list. The new child then starts without a
+checked closure, and until its first completion it serves only the on-demand
+additions of its own generation. The child ignores a completion or startup list
 that names an unsafe path or generated output. It then uses the manifest closure
 or starts with no authored closure.
 

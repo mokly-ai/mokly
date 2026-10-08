@@ -100,11 +100,13 @@ A resource reload reuses the earlier compilation, so the manifest closure of a
 completed reload pass can be older than the watched closure. Each completion
 therefore carries the parent's current checked closure, and the child serves
 that list instead of the manifest closure. A restarted watched child starts
-with the last checked closure when the configuration is unchanged. This covers
-a restart watch rule, a structural rebuild and crash recovery. After a
-configuration change, the new child starts with no authored closure until its
-first checked result, because the earlier list can name files that the new
-configuration does not reference.
+with the last checked closure unless the parent reloaded the config file. This
+covers a restart watch rule, crash recovery and a structural rebuild, including
+a rebuild whose new imports replace the source watcher. After a config-file
+change, the new child starts without a checked closure, because the earlier
+list can name files that the new configuration does not reference. Until its
+first checked result, it serves only the on-demand additions of its own
+generation.
 
 ## Serve Reads And Publication
 
@@ -131,7 +133,8 @@ the checked PDF stays readable, and a file that only an on-demand render of the
 earlier generation added returns 404. After two resource reloads, the second
 completion keeps the PDF that the first reload linked, although the reused
 manifest closure lacks it. Block the background write of a structural rebuild:
-the restarted child still serves the checked PDF. After a configuration change,
+the restarted child still serves the checked PDF. A rebuild that adds an
+import outside the entry roots also keeps the list. After a config-file change,
 the new child receives no list. Verify protected declarations fail with the
 referring route.
 Replace an accepted file and an ancestor with symlinks and require GET/HEAD 404.

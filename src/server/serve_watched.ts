@@ -161,7 +161,7 @@ export async function serveWatched(
       );
       signature = JSON.stringify(next.manifest);
       running.replaceComponentRuntime(next, "stage");
-      running.discardCheckedClosure?.();
+      if (!candidate) running.discardCheckedClosure?.();
       watcher = replacement;
       adopted = true;
       debouncer?.close();

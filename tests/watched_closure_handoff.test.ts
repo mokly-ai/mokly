@@ -206,12 +206,13 @@ test(
       validEntrySource({ body: '<a href="../../spec.pdf">PDF</a>' }),
       {
         extraConfig:
-          'watch: { debounceMs: 0, rules: [{ action: "restart", paths: ["**/*.txt"] }] },',
+          'watch: { debounceMs: 0, rules: [{ action: "restart", paths: ["restart/*.txt"] }] },',
       },
     );
     t.after(() => removeFixture(fixture));
     await fs.writeFile(path.join(fixture.mockupsDir, "spec.pdf"), "%PDF-1.4");
-    const trigger = path.join(fixture.root, "restart.txt");
+    const trigger = path.join(fixture.root, "restart", "now.txt");
+    await fs.mkdir(path.dirname(trigger));
     await fs.writeFile(trigger, "restart");
     const parent = await watchedParent(fixture, await loadConfig(fixture.root));
     const startup = (index: number) =>
@@ -226,11 +227,29 @@ test(
     parent.children[1]!.exit();
     assert.deepEqual((await startup(2)).assetClosure, ["spec.pdf"]);
     await settled(2);
-    parent.change(fixture.configPath);
-    assert.equal((await startup(3)).assetClosure, undefined);
+    await fs.mkdir(path.join(fixture.root, "lib"));
+    await fs.writeFile(
+      path.join(fixture.root, "lib", "label.ts"),
+      'export const label = "Label";\n',
+    );
+    await fs.writeFile(
+      fixture.entryPath,
+      `import { label } from "../lib/label";\n${validEntrySource({
+        body: '<a href="../../spec.pdf">PDF</a>{label}',
+      })}`,
+    );
+    parent.change(fixture.entryPath);
+    assert.deepEqual(
+      (await startup(3)).assetClosure,
+      ["spec.pdf"],
+      "a rebuild that replaces the source watcher keeps the list",
+    );
     await settled(3);
+    parent.change(fixture.configPath);
+    assert.equal((await startup(4)).assetClosure, undefined);
+    await settled(4);
     parent.change(trigger);
-    assert.deepEqual((await startup(4)).assetClosure, ["spec.pdf"]);
+    assert.deepEqual((await startup(5)).assetClosure, ["spec.pdf"]);
   },
 );
 
