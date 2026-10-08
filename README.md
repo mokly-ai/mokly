@@ -306,6 +306,7 @@ appearance with any preview scheme. See the
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
 - [Implementation plans](./plans/)
+- [Agent and contributor rules](./AGENTS.md) with the detailed rule docs under [`docs/dev`](./docs/dev/)
 - [Changelog](./CHANGELOG.md)
 
 The guides are user-facing and ship with the npm package. The protocol documents
@@ -327,13 +328,16 @@ For repository development, use the tested Node.js version in
 `package.json`), the Rust toolchain in
 [`rust-toolchain.toml`](./rust-toolchain.toml) (Rust 1.95.0 with rustfmt and
 Clippy), and Chromium for the browser suite. With nvm, run `nvm install` in
-the repository to install and use that Node.js version. rustup reads the
-toolchain file and installs the pinned Rust the first time `cargo` runs in the
-repository. Use the pinned npm version for dependency changes.
+the repository before the npm commands below to install and use that Node.js
+version. A global npm install applies only to the active Node.js version.
+rustup reads the toolchain file and installs the pinned Rust the first time
+`cargo` runs in the repository. Use the pinned npm version for dependency
+changes.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git
 cd mokly
+npm install --global npm@11.21.0
 npm ci
 npm run build
 npm run example:build
