@@ -8,6 +8,8 @@ import type {
 import { ReadyProcessSupervisor } from "../dist/server/supervisor.js";
 import type { ChildCommand } from "../dist/server/update_messages.js";
 
+import { waitUntil } from "./helpers/wait_until.js";
+
 test("supervisor waits for readiness and shuts down before restart", async () => {
   const factory = new ResponsiveChildFactory();
   const supervisor = new ReadyProcessSupervisor(factory, ["__serve-child"], 0);
@@ -188,9 +190,9 @@ class UnresponsiveChild implements ChildHandle {
 }
 
 async function waitFor(condition: () => boolean): Promise<void> {
-  for (let attempt = 0; attempt < 100; attempt += 1) {
-    if (condition()) return;
-    await new Promise((resolve) => setTimeout(resolve, 5));
-  }
-  throw new Error("shutdown escalation did not complete");
+  await waitUntil(condition, {
+    timeoutMs: 15_000,
+    intervalMs: 5,
+    message: "shutdown escalation did not complete",
+  });
 }

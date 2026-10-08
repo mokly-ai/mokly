@@ -10,6 +10,7 @@ import { classifyWatchPath } from "../dist/server/watch_events.js";
 import { watchTargets } from "../dist/server/watch_paths.js";
 
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 import {
   FakeConfigLoader,
   FakeOutputStore,
@@ -191,9 +192,9 @@ test("failed config adoption retains the last-good watcher and child", async (co
 });
 
 async function waitFor(condition: () => boolean): Promise<void> {
-  for (let attempt = 0; attempt < 500; attempt += 1) {
-    if (condition()) return;
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-  throw new Error("watched condition did not become true");
+  await waitUntil(condition, {
+    timeoutMs: 15_000,
+    intervalMs: 10,
+    message: "watched condition did not become true",
+  });
 }

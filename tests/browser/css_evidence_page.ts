@@ -28,16 +28,17 @@ export const INSPECTOR_VIEWPORTS = [
 /**
  * Open the Details tab and return the evidence panel it reveals.
  *
- * A mounted component workspace already starts on Details, so clicking the tab
- * unconditionally would close it. Select it only while it is not selected, and
- * retry until the mounted shell answers the click.
+ * A mounted component workspace already starts on Details. An unconditional
+ * click would close it. Click only when the tab is not selected.
+ * Each attempt waits up to one second for the panel. The 15-second loop can
+ * then retry a lost click.
  */
 export async function openEvidence(page: Page): Promise<Locator> {
   const tab = page.getByRole("tab", { name: "Details", exact: true });
   const evidence = page.locator("[data-workspace-evidence]");
   await expect(async () => {
     if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
-    await expect(evidence).toBeVisible({ timeout: 15_000 });
+    await expect(evidence).toBeVisible({ timeout: 1_000 });
   }).toPass({ timeout: 15_000 });
   await expect(evidence).toContainText("Comparison details");
   return evidence;

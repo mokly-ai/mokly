@@ -8,6 +8,8 @@ import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
 import { repositoryRoot } from "./helpers/fixture.js";
+import { readPidFile } from "./helpers/pid_file.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 const execute = promisify(execFile);
 
@@ -71,13 +73,8 @@ test("verification cancellation terminates the owned process tree", async () => 
       },
     );
     await waitFor(async () => {
-      try {
-        grandchild = Number(await fs.readFile(pidFile, "utf8"));
-        return Number.isSafeInteger(grandchild);
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
-        throw error;
-      }
+      grandchild = await readPidFile(pidFile);
+      return grandchild !== undefined;
     });
     wrapper.kill("SIGTERM");
     const result = await new Promise<{
@@ -136,14 +133,16 @@ test(
       if (processExists(wrapper.pid)) wrapper.kill("SIGKILL");
     });
     await waitFor(async () => {
+      const pid = await readPidFile(pidFile);
+      if (pid === undefined) return false;
+      ownedPid = pid;
       try {
-        ownedPid = Number(await fs.readFile(pidFile, "utf8"));
         resourceRoot = await fs.readFile(resourceFile, "utf8");
-        return Number.isSafeInteger(ownedPid) && ownedPid > 0;
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
         throw error;
       }
+      return true;
     });
     await fs.access(path.join(resourceRoot, "owned.txt"));
     wrapper.kill("SIGTERM");
@@ -223,12 +222,11 @@ async function writePlaywrightScopeHarness(
 }
 
 async function waitFor(predicate: () => boolean | Promise<boolean>) {
-  const deadline = Date.now() + 15_000;
-  while (Date.now() < deadline) {
-    if (await predicate()) return;
-    await delay(25);
-  }
-  assert.fail("timed out waiting for verification process state");
+  await waitUntil(predicate, {
+    timeoutMs: 15_000,
+    intervalMs: 25,
+    message: "timed out waiting for verification process state",
+  });
 }
 
 function processExists(pid: number | undefined): boolean {

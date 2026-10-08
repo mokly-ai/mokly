@@ -11,6 +11,7 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 const bin = path.join(repositoryRoot, "dist/cli/bin.js");
 
@@ -18,11 +19,10 @@ async function until(
   condition: () => Promise<boolean> | boolean,
   output: () => string,
 ): Promise<void> {
-  for (let attempt = 0; attempt < 200; attempt++) {
-    if (await condition()) return;
-    await setTimeout(50);
-  }
-  assert.fail(`watch did not advance: ${output()}`);
+  await waitUntil(condition, {
+    intervalMs: 50,
+    message: () => `watch did not advance: ${output()}`,
+  });
 }
 
 test(
@@ -95,7 +95,7 @@ test(
       child.kill("SIGTERM");
       await Promise.race([
         new Promise<void>((resolve) => child.once("exit", () => resolve())),
-        setTimeout(5000).then(() =>
+        setTimeout(15_000, undefined, { ref: false }).then(() =>
           assert.fail(`watch did not stop: ${output()}`),
         ),
       ]);

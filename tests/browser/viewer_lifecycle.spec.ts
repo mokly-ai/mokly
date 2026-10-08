@@ -52,7 +52,7 @@ test("callback exceptions preserve identity and are not viewer failures", async 
   await page.waitForFunction(() =>
     Boolean(window.viewerHarness.get("one").ref.current),
   );
-  const result = await page.evaluate(async () => {
+  const failure = await page.evaluateHandle(() => {
     const host = window.viewerHarness.get("one");
     const error = new Error("Host callback failed");
     host.props.onPickStart = () => {
@@ -60,11 +60,17 @@ test("callback exceptions preserve identity and are not viewer failures", async 
     };
     host.props.slots = { topBarStart: "Callbacks installed" };
     host.render();
-    while (
-      document.querySelector('[data-mokly-slot="topBarStart"]')?.textContent !==
-      "Callbacks installed"
-    )
-      await new Promise(requestAnimationFrame);
+    return error;
+  });
+  await page.waitForFunction(
+    () =>
+      document.querySelector('[data-mokly-slot="topBarStart"]')?.textContent ===
+      "Callbacks installed",
+    undefined,
+    { timeout: 15_000, polling: "raf" },
+  );
+  const result = await page.evaluate(async (error) => {
+    const host = window.viewerHarness.get("one");
     try {
       await host.ref.current.startPick();
     } catch (caught) {
@@ -75,7 +81,8 @@ test("callback exceptions preserve identity and are not viewer failures", async 
       };
     }
     return null;
-  });
+  }, failure);
+  await failure.dispose();
   expect(result).toEqual({ same: true, errors: [] });
 });
 

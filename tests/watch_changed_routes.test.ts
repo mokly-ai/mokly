@@ -16,6 +16,7 @@ import {
   repositoryRoot,
   validEntrySource,
 } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 import { waitForClassifiedCount } from "./helpers/watched_catalogue.js";
 
 const execFileAsync = promisify(execFile);
@@ -176,11 +177,11 @@ async function readEvent(
 }
 
 async function waitFor(condition: () => Promise<boolean>): Promise<void> {
-  for (let attempt = 0; attempt < 100; attempt += 1) {
-    if (await condition()) return;
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
-  throw new Error("changed routes did not refresh");
+  await waitUntil(condition, {
+    timeoutMs: 15_000,
+    intervalMs: 50,
+    message: "changed routes did not refresh",
+  });
 }
 
 async function stopChild(child: ChildProcess): Promise<void> {

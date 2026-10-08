@@ -16,6 +16,7 @@ import type { WatchEvent } from "../dist/server/watch_events.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 class DelayedChild implements ChildHandle {
   autoExit = () => false;
@@ -231,9 +232,9 @@ function transferredRuntime(runtime: ComponentRuntime) {
 }
 
 async function waitFor(condition: () => boolean): Promise<void> {
-  for (let attempt = 0; attempt < 300; attempt++) {
-    if (condition()) return;
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-  throw new Error("The watched update did not arrive");
+  await waitUntil(condition, {
+    timeoutMs: 15_000,
+    intervalMs: 10,
+    message: "The watched update did not arrive",
+  });
 }

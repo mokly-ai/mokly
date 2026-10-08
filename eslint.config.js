@@ -10,6 +10,7 @@ import noArtifactPathLiterals from "./scripts/eslint/no-artifact-path-literals.m
 import noDirectoryLiterals from "./scripts/eslint/no-directory-literals.mjs";
 import noEagerFixtureSetup from "./scripts/eslint/no-eager-fixture-setup.mjs";
 import noLateFixtureTeardown from "./scripts/eslint/no-late-fixture-teardown.mjs";
+import { TEST_ROOTS } from "./scripts/verification/test-roots.mjs";
 
 const gitignorePath = path.join(import.meta.dirname, ".gitignore");
 const sourceFiles = ["src/**/*.ts", "src/**/*.tsx"];
@@ -31,6 +32,32 @@ const sourcePathRestriction = {
   message:
     "Sort source paths with compareCodeUnits to avoid locale-dependent inventories and diagnostics.",
 };
+const clockCalls = (at) => {
+  const callee = `${at}callee`;
+  return {
+    now: `[${at}type='CallExpression'][${callee}.property.name='now']:matches([${callee}.object.name=/^(performance|Date)$/], [${callee}.object.type='MemberExpression'][${callee}.object.property.name=/^(performance|Date)$/])`,
+    hrtime: `[${at}type='CallExpression'][${callee}.property.name='bigint'][${callee}.object.property.name='hrtime']`,
+    currentDate: `[${at}type='CallExpression'][${callee}.property.name='getTime'][${callee}.object.type='NewExpression'][${callee}.object.arguments.length=0]:matches([${callee}.object.callee.name='Date'], [${callee}.object.callee.property.name='Date'])`,
+  };
+};
+const leftClock = clockCalls("left.");
+const operandClock = clockCalls("");
+const elapsedClockSelector = `BinaryExpression[operator='-'][right.type!='Literal']:matches(${[
+  leftClock.now,
+  leftClock.hrtime,
+  leftClock.currentDate,
+].join(", ")})`;
+const summedClockSelector = `BinaryExpression[operator='-'][right.type!='Literal'] > BinaryExpression.left[operator='+'] > CallExpression:matches(${[
+  operandClock.now,
+  operandClock.hrtime,
+  operandClock.currentDate,
+].join(", ")})`;
+const shortDeadlineSelector = `BinaryExpression[operator='+'][right.type='Literal'][right.value<10000]:matches(${[
+  leftClock.now,
+  leftClock.currentDate,
+].join(", ")})`;
+const elapsedClockMessage =
+  "Use operation counts, captured watcher targets, event order, or fake clocks in tests. Report duration text with tests/helpers/durations.ts. See docs/protocol/ci-test-timing.md.";
 
 export default tseslint.config(
   includeIgnoreFile(gitignorePath, "Repository .gitignore patterns"),
@@ -96,20 +123,15 @@ export default tseslint.config(
     },
   },
   {
-    files: ["tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}"],
-    ignores: ["tests/helpers/durations.ts"],
+    files: TEST_ROOTS.map((root) => `${root}/**/*.{js,mjs,cjs,ts,tsx,mts,cts}`),
+    ignores: ["tests/helpers/durations.ts", "tests/helpers/browser_timing.ts"],
     rules: {
       "no-restricted-syntax": [
         "error",
+        { selector: elapsedClockSelector, message: elapsedClockMessage },
+        { selector: summedClockSelector, message: elapsedClockMessage },
         {
-          selector:
-            "BinaryExpression[operator='-'][right.type!='Literal']:matches([left.type='CallExpression'][left.callee.property.name='now'][left.callee.object.name=/^(performance|Date)$/], [left.callee.property.name='bigint'][left.callee.object.property.name='hrtime'])",
-          message:
-            "Use operation counts, captured watcher targets, event order, or fake clocks in tests. Report duration text with tests/helpers/durations.ts. See docs/protocol/ci-test-timing.md.",
-        },
-        {
-          selector:
-            "BinaryExpression[operator='+'][left.callee.property.name='now'][left.callee.object.name=/^(performance|Date)$/][right.type='Literal'][right.value<10000]",
+          selector: shortDeadlineSelector,
           message:
             "Use polling deadlines of at least 10,000 ms. See docs/protocol/ci-test-timing.md.",
         },

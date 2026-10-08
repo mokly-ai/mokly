@@ -7,6 +7,7 @@ import { compareReview } from "../dist/review/compare.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 test("Browse responds before separately computed component evidence arrives", async (t) => {
   const fixture = await componentReviewFixture(t, (source) =>
@@ -105,10 +106,15 @@ test("ordinary Browse serves cached component evidence without generating or wri
 });
 
 async function waitForClassifiedShell(url: string): Promise<string> {
-  for (let attempt = 0; attempt < 100; attempt += 1) {
-    const html = await (await fetch(url)).text();
-    if (html.includes('data-mokly-update-version="2"')) return html;
-    await new Promise((resolve) => setTimeout(resolve, 10));
-  }
-  throw new Error("component classification did not publish");
+  return waitUntil(
+    async () => {
+      const html = await (await fetch(url)).text();
+      return html.includes('data-mokly-update-version="2"') ? html : undefined;
+    },
+    {
+      timeoutMs: 15_000,
+      intervalMs: 10,
+      message: "component classification did not publish",
+    },
+  );
 }

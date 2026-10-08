@@ -62,7 +62,11 @@ CSS Modules mutation checklist:
 - Output combinators after escapes: `tests/css_module_output_combinators.test.ts` and `tests/browser/css_module_escape_fuzz.spec.ts`.
 - Wrapper list joins: `tests/css_module_selector_plugin_acceptance.test.ts`.
   Graph and stylesheet metafiles each resolve their physical working directory
-  once for path mapping. Root-import diagnostics build edge provenance only
+  a fixed number of times per mapper. The count stays fixed for symlinked roots.
+  Source inventories cache repository and location roots for one call.
+  PostCSS dependency checks share these roots and the mockups projection,
+  including physical reports and public-source aliases.
+  Root-import diagnostics build edge provenance only
   when an outside-repository CSS file actually fails validation; successful
   graphs do not project every edge through the filesystem.
   CSS `url()` assets become

@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { setTimeout } from "node:timers/promises";
 
 import { readCatalogue } from "@mokly/viewer";
 import type { CatalogueReadModel, CatalogueUsage } from "@mokly/viewer";
@@ -13,6 +12,7 @@ import { exportCatalogue } from "../dist/export/run.js";
 import { serve } from "../dist/server/serve.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 function source(reuse = false): string {
   return `import React from "react";
@@ -99,15 +99,23 @@ for (const delivery of ["Serve", "export"] as const) {
         watch: false,
       });
       t.after(() => server.close());
-      for (let attempt = 0; attempt < 100; attempt++) {
-        const response = await fetch(
-          `${server.url}/mokly-viewer/catalogue.json`,
-        );
-        assert.equal(response.status, 200);
-        model = (await response.json()) as CatalogueReadModel;
-        if (model.changesStatus === "ready") break;
-        await setTimeout(25);
-      }
+      let latestStatus: string | undefined;
+      model = await waitUntil(
+        async () => {
+          const response = await fetch(
+            `${server.url}/mokly-viewer/catalogue.json`,
+          );
+          assert.equal(response.status, 200);
+          const current = (await response.json()) as CatalogueReadModel;
+          latestStatus = current.changesStatus;
+          return current.changesStatus === "ready" ? current : undefined;
+        },
+        {
+          intervalMs: 25,
+          message: () =>
+            `Serve did not report ready Changes; last status ${latestStatus}`,
+        },
+      );
       assert.equal(model?.changesStatus, "ready");
       const holder = await fetch(`${server.url}/view/holder/`);
       assert.equal(holder.status, 200);

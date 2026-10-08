@@ -148,12 +148,19 @@ test(
           files: count,
           totals: counted.counts.totals,
           fixedRoots: {
-            repository: counted.counts.byPath["fs.realpathSync.native"].get(
-              config.repoRoot,
-            ),
-            mockups: counted.counts.byPath["fs.realpathSync.native"].get(
-              config.mockupsDir,
-            ),
+            repository:
+              (counted.counts.byPath["fs.realpathSync"].get(config.repoRoot) ??
+                0) +
+              (counted.counts.byPath["fs.realpathSync.native"].get(
+                config.repoRoot,
+              ) ?? 0),
+            mockups:
+              (counted.counts.byPath["fs.realpathSync"].get(
+                config.mockupsDir,
+              ) ?? 0) +
+              (counted.counts.byPath["fs.realpathSync.native"].get(
+                config.mockupsDir,
+              ) ?? 0),
           },
         })}`,
       );
@@ -168,8 +175,8 @@ test(
       smaller,
       larger,
       [
-        { operation: "fs.realpathSync.native", path: config.repoRoot },
-        { operation: "fs.realpathSync.native", path: config.mockupsDir },
+        { operation: "realpath", path: config.repoRoot },
+        { operation: "realpath", path: config.mockupsDir },
         { operation: "Array.prototype.sort" },
       ],
       scaledTotals,

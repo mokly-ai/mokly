@@ -9,6 +9,7 @@ import type { TimingEvent } from "../dist/diagnostics/timings.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { repositoryRoot } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 const exec = promisify(execFile);
 const bin = path.join(repositoryRoot, "dist/cli/bin.js");
@@ -126,12 +127,18 @@ test(
       }
     });
     const wait = async (predicate: () => boolean) => {
-      for (let attempt = 0; attempt < 300; attempt++) {
-        if (predicate()) return;
-        assert.equal(child.exitCode, null, stderr);
-        await new Promise((resolve) => setTimeout(resolve, 25));
-      }
-      assert.fail(`Timed server did not reach expected state\n${stderr}`);
+      await waitUntil(
+        () => {
+          if (predicate()) return true;
+          assert.equal(child.exitCode, null, stderr);
+          return false;
+        },
+        {
+          timeoutMs: 15_000,
+          intervalMs: 25,
+          message: () => `Timed server did not reach expected state\n${stderr}`,
+        },
+      );
     };
     await wait(() => stdout.includes("Mokly listening at"));
     assert.ok(

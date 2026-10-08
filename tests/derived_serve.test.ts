@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { setTimeout } from "node:timers/promises";
 
 import { CachedBaselineBuilder } from "../dist/baseline/rebuild.js";
 import { serve } from "../dist/server/serve.js";
@@ -13,7 +12,9 @@ import { parseReviewResult } from "../packages/viewer/dist/review/result_validat
 import { processExists } from "./helpers/blocking_git.js";
 import { derivedFixture } from "./helpers/derived_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
+import { readPidFile } from "./helpers/pid_file.js";
 import { removedDeliverySource } from "./helpers/removed_delivery_fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 for (const watch of [false, true]) {
   test(
@@ -210,11 +211,7 @@ test(
     let closing: Promise<void> | undefined;
     const close = () => (closing ??= running.close());
     try {
-      const pid = Number(
-        await waitFor(() =>
-          fs.readFile(pidFile, "utf8").catch(() => undefined),
-        ),
-      );
+      const pid = await waitFor(() => readPidFile(pidFile));
       assert.equal(processExists(pid), true);
       assert.equal((await fetch(running.url)).status, 200);
       await close();
@@ -276,10 +273,9 @@ async function readOutput(file: string): Promise<string | undefined> {
 }
 
 async function waitFor<T>(read: () => Promise<T | undefined>): Promise<T> {
-  for (let attempt = 0; attempt < 200; attempt++) {
-    const value = await read();
-    if (value !== undefined) return value;
-    await setTimeout(50);
-  }
-  throw new Error("Derived Serve did not settle");
+  return waitUntil(read, {
+    timeoutMs: 15_000,
+    intervalMs: 50,
+    message: "Derived Serve did not settle",
+  });
 }

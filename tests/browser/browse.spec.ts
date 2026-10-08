@@ -9,6 +9,8 @@ import {
   welcomeRow,
   workspaceRoute,
 } from "./browse_assertions.js";
+import { passRenderingUpdates } from "./comparison_regions_helpers.js";
+import { settlement } from "./removed_preview_assertions.js";
 
 test("durable links load complete server-rendered views", async ({ page }) => {
   await page.goto("/view/example/screens/welcome/");
@@ -154,16 +156,32 @@ test("overlapping navigations are latest-wins", async ({ page }) => {
   await page.goto("/");
   await markPage(page);
   await openScreensGroup(page);
+  let release = () => {};
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
   await page.route("**/view/example/screens/welcome/", async (route) => {
     if (route.request().resourceType() !== "fetch") return route.continue();
-    await new Promise((resolve) => setTimeout(resolve, 700));
+    await released;
     return route.continue();
   });
-  await page.click(welcomeRow);
-  await page.click(detailsRow);
-  await expect(page.locator("#mb-main h2")).toHaveText("Details");
-  await expect(page).toHaveURL(/details\/$/);
-  await page.waitForTimeout(900);
+  const settled = settlement(page, "/view/example/screens/welcome/");
+  try {
+    const held = page.waitForRequest(
+      (request) =>
+        request.resourceType() === "fetch" &&
+        request.url().endsWith("/view/example/screens/welcome/"),
+    );
+    await page.click(welcomeRow);
+    await held;
+    await page.click(detailsRow);
+    await expect(page.locator("#mb-main h2")).toHaveText("Details");
+    await expect(page).toHaveURL(/details\/$/);
+  } finally {
+    release();
+  }
+  await expect.poll(settled).toBe(true);
+  await passRenderingUpdates(page);
   await expect(page.locator("#mb-main h2")).toHaveText("Details");
   expect(await hasMarker(page)).toBe(true);
 });

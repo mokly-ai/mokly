@@ -39,7 +39,7 @@ export function blocksRequiredInput(
   return reason !== undefined && (reason !== "denied" || !required);
 }
 
-/** Classify a path by both its authored name and projected physical location. */
+/** Classify logical and physical paths, reusing supplied root projections. */
 export function packageOwnedPath(
   candidate: string,
   config: ResolvedConfig,
@@ -47,7 +47,11 @@ export function packageOwnedPath(
   deniedRoot = config.repoRoot,
   roots?: PackageOwnedRoots,
 ): PackageOwnedReason | undefined {
-  const absolute = logicalRepositoryPath(candidate, config.repoRoot);
+  const absolute = logicalRepositoryPath(
+    candidate,
+    config.repoRoot,
+    roots?.repo,
+  );
   if (!isInside(config.repoRoot, absolute)) return "outside";
   let isDirectory: boolean;
   try {

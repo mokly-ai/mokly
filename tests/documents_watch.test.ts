@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
-import { setTimeout } from "node:timers/promises";
 
 import { readCatalogue } from "@mokly/viewer";
 
@@ -11,6 +10,7 @@ import { serve } from "../dist/server/serve.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 import {
   version,
   waitForChangedCount,
@@ -118,9 +118,12 @@ test(
     await fs.unlink(resource);
     const missing =
       "[mokly/build-invalid] entries/guide.md: link target diagram.svg does not exist\n";
-    const deadline = Date.now() + 20_000;
-    while (!diagnostics.includes(missing) && Date.now() < deadline)
-      await setTimeout(25);
+    await waitUntil(() => diagnostics.includes(missing), {
+      timeoutMs: 20_000,
+      intervalMs: 25,
+      message: () =>
+        `the missing Markdown resource was not reported: ${diagnostics.join("")}`,
+    });
     assert.ok(diagnostics.includes(missing), diagnostics.join(""));
     assert.equal(await copied(), svg("blue"));
 

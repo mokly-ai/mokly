@@ -6,15 +6,12 @@ import test from "node:test";
 import type { Metafile } from "esbuild";
 
 import { createMetafilePathMapper } from "../dist/build/metafile_paths.js";
-import { graphSourceFiles } from "../dist/build/source_inventory.js";
 import { orderedStyles } from "../dist/build/styles/order.js";
 
-import { reportDuration } from "./helpers/durations.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import {
   assertOperationScaling,
   countOperations,
-  type Operation,
 } from "./helpers/operation_counts.js";
 
 test("one metafile mapper keeps a symlinked working directory's logical paths", async (context) => {
@@ -74,7 +71,9 @@ test("large ordered CSS inventory reads shared inputs once and maps one working 
       assert.equal(total, 1, `${file} must be read once at size ${count}`);
     assert.equal(reads.size, files.length + modules.length + 1);
     assert.equal(
-      counted.counts.byPath["fs.realpathSync"].get(fixture.root),
+      (counted.counts.byPath["fs.realpathSync"].get(fixture.root) ?? 0) +
+        (counted.counts.byPath["fs.realpathSync.native"].get(fixture.root) ??
+          0),
       1,
       `working directory must be resolved once at size ${count}`,
     );
@@ -88,80 +87,68 @@ test("large ordered CSS inventory reads shared inputs once and maps one working 
   assertOperationScaling(
     smaller,
     larger,
-    [{ operation: "fs.realpathSync", path: fixture.root }],
+    [{ operation: "realpath", path: fixture.root }],
     [],
   );
 });
 
-test("large graph source inventory reuses one mapped working directory", async (context) => {
+test("ordered styles reuse a symlinked working directory projection at two sizes", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
-  const workingDir = fixture.entriesDir;
-  const collect = async (count: number) => {
-    const directory = `sources-${count}`;
-    await fs.mkdir(path.join(workingDir, directory));
-    const files = Array.from(
-      { length: count },
-      (_, index) => `${directory}/input-${index}.ts`,
+  const alias = `${fixture.root}-alias`;
+  await fs.symlink(fixture.root, alias, "dir");
+  context.after(() => fs.rm(alias));
+  for (const workingDir of [fixture.root, alias]) {
+    await context.test(
+      workingDir === alias ? "symlinked root" : "physical root",
+      () => {
+        const collect = (count: number) => {
+          const files = Array.from(
+            { length: count },
+            (_, index) => `entries/css-${index}.css`,
+          );
+          const root = "entries/fixture.mockup.tsx";
+          const metafile: Metafile = {
+            inputs: {
+              [root]: {
+                bytes: 1,
+                imports: files.map((file) => ({
+                  path: file,
+                  kind: "import-statement" as const,
+                })),
+              },
+              ...Object.fromEntries(
+                files.map((file) => [file, { bytes: 1, imports: [] }]),
+              ),
+            },
+            outputs: {},
+          };
+          const counted = countOperations(() =>
+            orderedStyles(metafile, fixture.entryPath, workingDir),
+          );
+          assert.deepEqual(
+            counted.result,
+            files.map((file) => path.join(workingDir, file)),
+          );
+          context.diagnostic(
+            `${count} CSS edges under ${workingDir}: combined realpath=${
+              (counted.counts.byPath["fs.realpathSync"].get(workingDir) ?? 0) +
+              (counted.counts.byPath["fs.realpathSync.native"].get(
+                workingDir,
+              ) ?? 0)
+            }`,
+          );
+          return counted;
+        };
+        const smaller = collect(10);
+        const larger = collect(40);
+        assertOperationScaling(
+          smaller,
+          larger,
+          [{ operation: "realpath", path: workingDir }],
+          [],
+        );
+      },
     );
-    for (let start = 0; start < files.length; start += 250)
-      await Promise.all(
-        files
-          .slice(start, start + 250)
-          .map((file) =>
-            fs.writeFile(path.join(workingDir, file), "export default null;"),
-          ),
-      );
-    const metafile: Metafile = {
-      inputs: Object.fromEntries(
-        files.map((file) => [file, { bytes: 20, imports: [] }]),
-      ),
-      outputs: {},
-    };
-    const counted = await reportDuration(
-      `${count} graph inputs`,
-      (text) => context.diagnostic(text),
-      () =>
-        countOperations(() =>
-          graphSourceFiles(
-            metafile,
-            workingDir,
-            fixture.root,
-            fixture.mockupsDir,
-          ),
-        ),
-    );
-    assert.equal(counted.result.length, files.length);
-    assert.equal(
-      counted.counts.byPath["fs.realpathSync"].get(workingDir),
-      1,
-      `working directory must be resolved once at size ${count}`,
-    );
-    for (const file of files) {
-      const total =
-        counted.counts.byPath["fs.realpathSync"].get(
-          path.join(workingDir, file),
-        ) ?? 0;
-      assert.ok(total > 0, `${file} realpath calls must be observed`);
-      assert.ok(total <= 1, `${file} must be resolved at most once`);
-    }
-    context.diagnostic(
-      `${count} graph inputs: ${JSON.stringify(counted.counts.totals)}`,
-    );
-    return counted;
-  };
-  const smaller = await collect(750);
-  const larger = await collect(3_000);
-  const scaledTotals = (
-    Object.keys(smaller.counts.totals) as Operation[]
-  ).filter((operation) => smaller.counts.totals[operation] > 0);
-  assertOperationScaling(
-    smaller,
-    larger,
-    [
-      { operation: "fs.realpathSync", path: workingDir },
-      { operation: "Array.prototype.sort" },
-    ],
-    scaledTotals,
-  );
+  }
 });

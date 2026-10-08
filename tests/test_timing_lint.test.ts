@@ -1,23 +1,39 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { TEST_ROOTS } from "../scripts/verification/test-roots.mjs";
+
 import { lintProbe, requireLintRule } from "./helpers/lint_config.js";
 
 const extensions = ["js", "mjs", "cjs", "ts", "tsx", "mts", "cts"];
-const testPaths = extensions.flatMap((extension) => [
-  `tests/example.test.${extension}`,
-  `tests/browser/example.spec.${extension}`,
-  `tests/helpers/nested/example.${extension}`,
-]);
+const testPaths = TEST_ROOTS.flatMap((root) =>
+  extensions.flatMap((extension) => [
+    `${root}/example.test.${extension}`,
+    `${root}/browser/example.spec.${extension}`,
+    `${root}/helpers/nested/example.${extension}`,
+  ]),
+);
 const elapsedExpressions = [
   "performance.now() - started",
   "Date.now() - started",
   "process.hrtime.bigint() - started",
+  "window.performance.now() - started",
+  "globalThis.performance.now() - started",
+  "new Date().getTime() - started",
+  "globalThis.Date.now() - started",
+  "window.Date.now() - started",
+  "new globalThis.Date().getTime() - started",
+  "performance.timeOrigin + performance.now() - started",
+  "Date.now() + offset - started",
 ];
 const rejectedExpressions = [
   ...elapsedExpressions,
   "Date.now() + 5_000",
   "performance.now() + 2000",
+  "window.performance.now() + 2000",
+  "new Date().getTime() + 9_999",
+  "globalThis.Date.now() + 5_000",
+  "new globalThis.Date().getTime() + 9_999",
 ];
 const allowedExpressions = [
   "performance.now() + 20_000",
@@ -26,35 +42,54 @@ const allowedExpressions = [
   "Date.now() + timeoutMs",
   "new Date(Date.now() - 10_000)",
   "clock() - started",
+  "new Date(value).getTime() - started",
+  "new Date(0).getTime() - started",
+  "window.performance.now() + 10_000",
+  "new Date().getTime() + 10_000",
+  "globalThis.Date.now() + 10_000",
+  "new globalThis.Date(value).getTime() - started",
+  "performance.timeOrigin + performance.now()",
+  "performance.timeOrigin + performance.now() - 10_000",
+  "performance.timeOrigin - started",
+  "timer.now() - started",
+  "first + second - started",
 ];
 
 for (const filePath of testPaths) {
-  test(`timing lint rejects elapsed subtraction and short deadlines in ${filePath}`, async () => {
+  test(`timing lint rejects elapsed subtraction and short deadlines in ${filePath}`, async (context) => {
     await requireLintRule(filePath, "no-restricted-syntax");
     for (const expression of rejectedExpressions) {
-      for (const input of [expression, `page.evaluate(() => ${expression})`]) {
-        const messages = await restrictedSyntaxMessages(input, filePath);
-        assert.equal(messages.length, 1, `${filePath}: ${input}`);
-        assert.equal(messages[0]!.severity, 2, `${filePath}: ${input}`);
-        assert.match(
-          messages[0]!.message,
-          /docs\/protocol\/ci-test-timing\.md/u,
-        );
-        assert.match(messages[0]!.message, /[Uu]se/u);
-      }
+      await context.test(expression, async () => {
+        for (const input of [
+          expression,
+          `page.evaluate(() => ${expression})`,
+        ]) {
+          const messages = await restrictedSyntaxMessages(input, filePath);
+          assert.equal(messages.length, 1, `${filePath}: ${input}`);
+          assert.equal(messages[0]!.severity, 2, `${filePath}: ${input}`);
+          assert.match(
+            messages[0]!.message,
+            /docs\/protocol\/ci-test-timing\.md/u,
+          );
+          assert.match(messages[0]!.message, /[Uu]se/u);
+        }
+      });
     }
   });
 
   test(`timing lint allows deadlines and timestamp data in ${filePath}`, async () => {
     for (const expression of allowedExpressions) {
-      const messages = await restrictedSyntaxMessages(expression, filePath);
-      assert.deepEqual(messages, [], `${filePath}: ${expression}`);
+      for (const input of [expression, `page.evaluate(() => ${expression})`]) {
+        const messages = await restrictedSyntaxMessages(input, filePath);
+        assert.deepEqual(messages, [], `${filePath}: ${input}`);
+      }
     }
   });
 }
 
 for (const filePath of [
   "tests/helpers/durations.ts",
+  "tests/helpers/browser_timing.ts",
   "src/example.ts",
   "scripts/large/example.mjs",
 ]) {

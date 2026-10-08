@@ -30,6 +30,11 @@ protection is based on the resolved file set and complete graph inventory.
 Path projection retries a vanished ordinary ancestor at most five times.
 Dangling symlinks still fail. An internal manifest that disappears between an
 existence check and realpath is absent; lexical metadata denials still apply.
+`file_locations.ts` maps physical paths back through configured logical roots.
+`createPathLocator` caches root lookups for one inventory.
+It still projects each candidate to reject escaping or dangling links.
+`locatePath` uses fresh roots for each call and returns no location when a
+lookup fails.
 `public_names.ts` owns pure lexical rules for copied Markdown resources.
 `public_denial.ts` owns authored-closure privacy shared with export, using
 configuration and projected filesystem paths.

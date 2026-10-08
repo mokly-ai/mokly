@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { setTimeout as delay } from "node:timers/promises";
 
 import {
   ExportIgnoredMatcher,
@@ -18,6 +17,7 @@ import { isPackageOwnedIgnoredWatchPath } from "../dist/server/watch_paths.js";
 import { ChokidarWatcherFactory } from "../dist/server/watcher.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 test("watch ownership follows the inventory and does not suppress unowned descendants", async (context) => {
   const fixture = await createExportFixture();
@@ -161,8 +161,11 @@ test("the real watcher traverses owned directories to observe later unowned addi
   const unowned = path.join(fixture.output, "static", "notes.md");
   await fs.promises.writeFile(unowned, "An authored input\n");
   await fs.promises.appendFile(path.join(fixture.output, "index.html"), "\n");
-  const deadline = Date.now() + 15_000;
-  while (!events.includes(unowned) && Date.now() < deadline) await delay(25);
+  await waitUntil(() => events.includes(unowned), {
+    timeoutMs: 15_000,
+    intervalMs: 25,
+    message: "an unlisted file must reach the real watcher",
+  });
   assert.ok(
     events.includes(unowned),
     "an unlisted file must reach the real watcher",

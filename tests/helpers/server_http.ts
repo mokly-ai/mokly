@@ -2,6 +2,7 @@ import type { Agent } from "node:http";
 import { request } from "node:http";
 
 import { validEntrySource } from "./fixture.js";
+import { waitUntil } from "./wait_until.js";
 
 export function captureOutput(stream: NodeJS.ReadableStream): () => string {
   let output = "";
@@ -44,20 +45,26 @@ export function outputUrl(stream: NodeJS.ReadableStream): Promise<string> {
   });
 }
 
+/** Wait for a watched state, including while its child restarts. */
 export async function waitFor(
   predicate: () => Promise<boolean>,
-  timeoutMilliseconds = 12_000,
+  timeoutMilliseconds = 15_000,
 ): Promise<void> {
-  const deadline = Date.now() + timeoutMilliseconds;
-  while (Date.now() < deadline) {
-    try {
-      if (await predicate()) return;
-    } catch {
-      // The watched child may be between close and readiness on its stable port.
-    }
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
-  throw new Error("watched condition did not become true");
+  await waitUntil(
+    async () => {
+      try {
+        return await predicate();
+      } catch {
+        // The watched child may be between close and readiness on its stable port.
+        return false;
+      }
+    },
+    {
+      timeoutMs: Math.max(15_000, timeoutMilliseconds),
+      intervalMs: 50,
+      message: "watched condition did not become true",
+    },
+  );
 }
 
 export function sourceWithHomeRoute(route: string, title: string): string {

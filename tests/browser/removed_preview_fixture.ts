@@ -1,11 +1,10 @@
-import { setTimeout as delay } from "node:timers/promises";
-
 import { readCatalogue } from "@mokly/viewer";
 
 import { exportCatalogue } from "../../dist/export/run.js";
 import { serve } from "../../dist/server/serve.js";
 import { createRemovedPreviewFixture } from "../helpers/removed_preview_fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
+import { waitUntil } from "../helpers/wait_until.js";
 
 import { hostExportedViewer } from "./viewer_host.js";
 
@@ -16,14 +15,19 @@ export interface RemovedPreviewHost {
 }
 
 async function waitForChanges(url: string): Promise<void> {
-  for (let attempt = 0; attempt < 600; attempt++) {
-    const model = readCatalogue(
-      await (await fetch(`${url}/mokly-viewer/catalogue.json`)).json(),
-    );
-    if (model.changesStatus === "ready") return;
-    await delay(50);
-  }
-  throw new Error("The fixture did not publish its removed entries");
+  await waitUntil(
+    async () => {
+      const model = readCatalogue(
+        await (await fetch(`${url}/mokly-viewer/catalogue.json`)).json(),
+      );
+      return model.changesStatus === "ready";
+    },
+    {
+      timeoutMs: 30_000,
+      intervalMs: 50,
+      message: "The fixture did not publish its removed entries",
+    },
+  );
 }
 
 /** Serve the fixture in development, where previews use the stable endpoint. */

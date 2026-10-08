@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
 
+import type {
+  FrameAdapter,
+  FrameMount,
+} from "../../packages/viewer/dist/client/frame_adapter.js";
 import type * as LocalAdapter from "../../packages/viewer/dist/client/same_origin_adapter.js";
 import type { ComponentViewRecord } from "../../packages/viewer/dist/components/manifest_types.js";
 
@@ -7,6 +11,16 @@ import {
   crossOriginFixture,
   type FrameTestWindow,
 } from "./frame_adapter_fixture.js";
+
+/** Page state that the replaced-document wait reads between evaluations. */
+interface ReconnectWindow extends Window {
+  reconnect: {
+    adapter: FrameAdapter;
+    authenticated: Document | null;
+    frame: HTMLIFrameElement;
+    view: FrameMount;
+  };
+}
 
 let fixture: Awaited<ReturnType<typeof crossOriginFixture>>;
 test.beforeAll(async () => {
@@ -48,7 +62,7 @@ for (const kind of ["current", "temporary"] as const) {
     });
 
     try {
-      const result = await page.evaluate(
+      await page.evaluate(
         async ({ kind, path }) => {
           const { sameOriginAdapter, temporaryPreviewAdapter } = (await import(
             `${location.origin}/mokly-viewer/client/same_origin_adapter.js`
@@ -70,26 +84,38 @@ for (const kind of ["current", "temporary"] as const) {
           const first = await adapter.mount(frame, view);
           const authenticated = frame.contentDocument;
           first.dispose();
-          await new Promise<void>((resolve) => {
-            const poll = setInterval(() => {
-              if (
-                frame.contentDocument !== authenticated &&
-                frame.contentDocument?.readyState === "interactive"
-              ) {
-                clearInterval(poll);
-                resolve();
-              }
-            }, 0);
-            frame.contentWindow!.location.replace(view.url.href);
-          });
-          const unowned = frame.contentDocument;
-          const mounted = await adapter.mount(frame, view);
-          const replaced = frame.contentDocument !== unowned;
-          mounted.dispose();
-          return replaced;
+          (window as unknown as ReconnectWindow).reconnect = {
+            adapter,
+            authenticated,
+            frame,
+            view,
+          };
+          frame.contentWindow!.location.replace(view.url.href);
         },
         { kind, path },
       );
+      await page.waitForFunction(
+        () => {
+          const { authenticated, frame } = (
+            window as unknown as ReconnectWindow
+          ).reconnect;
+          return (
+            frame.contentDocument !== authenticated &&
+            frame.contentDocument?.readyState === "interactive"
+          );
+        },
+        undefined,
+        { timeout: 15_000 },
+      );
+      const result = await page.evaluate(async () => {
+        const { adapter, frame, view } = (window as unknown as ReconnectWindow)
+          .reconnect;
+        const unowned = frame.contentDocument;
+        const mounted = await adapter.mount(frame, view);
+        const replaced = frame.contentDocument !== unowned;
+        mounted.dispose();
+        return replaced;
+      });
       expect(result).toBe(true);
       expect(requests).toBe(3);
     } finally {

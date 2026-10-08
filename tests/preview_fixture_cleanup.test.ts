@@ -23,10 +23,12 @@ import {
   startPreviewServerProcess,
   type PreviewServerProcess,
 } from "./browser/preview_process.js";
+import { readPidFile } from "./helpers/pid_file.js";
 import {
   killProcessIfPresent,
   readProcessField,
 } from "./helpers/process_state.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 test("startup process cleanup failure retains its owned artifact", async (context) => {
   const contextRoot = await fs.mkdtemp(
@@ -35,12 +37,17 @@ test("startup process cleanup failure retains its owned artifact", async (contex
   const cleanupFailure = new Error("injected process cleanup failure");
   let closes = 0;
   let artifact = "";
+  let probed: () => void = () => {};
+  const probeStarted = new Promise<void>((resolve) => {
+    probed = resolve;
+  });
   context.after(() => fs.rm(contextRoot, { force: true, recursive: true }));
   const process: PreviewServerProcess = {
     get exited() {
       return false;
     },
     get output() {
+      probed();
       return "not ready";
     },
     close: async () => {
@@ -49,7 +56,7 @@ test("startup process cleanup failure retains its owned artifact", async (contex
     },
   };
 
-  await assert.rejects(
+  const rejected = assert.rejects(
     startOwnedPreviewFixture({
       build: async (output) => {
         artifact = output;
@@ -59,16 +66,21 @@ test("startup process cleanup failure retains its owned artifact", async (contex
       prefix: "worker-",
       serve: (output) =>
         servePreviewFixture(output, {
-          launch: async () => process,
-          pause: async () => {},
+          launch: async () => {
+            context.mock.timers.enable({ apis: ["Date", "setTimeout"] });
+            return process;
+          },
           request: async () => new Response(undefined, { status: 503 }),
-          startupAttempts: 1,
         }),
     }),
     (error) =>
       error instanceof PreviewOutputRetentionError &&
       error.cause === cleanupFailure,
   );
+  await probeStarted;
+  await new Promise(setImmediate);
+  context.mock.timers.tick(30_000);
+  await rejected;
   assert.equal(closes, 1);
   await fs.access(artifact);
 });
@@ -166,17 +178,17 @@ test(
       await fs.rm(root, { force: true, recursive: true });
     });
 
-    for (let attempt = 0; attempt < 1_500 && !descendantPid; attempt += 1) {
-      try {
-        descendantPid = Number(await fs.readFile(pidFile, "utf8"));
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-      }
-      if (!descendantPid) await pause(10);
-    }
+    descendantPid = await waitUntil(() => readPidFile(pidFile), {
+      timeoutMs: 15_000,
+      intervalMs: 10,
+      message: "stubborn descendant did not report its pid",
+    });
     assert.ok(descendantPid, "stubborn descendant did not report its pid");
-    for (let attempt = 0; attempt < 1_500 && !managed.exited; attempt += 1)
-      await pause(10);
+    await waitUntil(() => managed.exited, {
+      timeoutMs: 15_000,
+      intervalMs: 10,
+      message: "launcher should exit before cleanup",
+    });
     assert.equal(managed.exited, true, "launcher should exit before cleanup");
 
     assert.notEqual(

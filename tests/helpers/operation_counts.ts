@@ -28,10 +28,11 @@ export interface OperationCountResult<T> {
   readonly counts: OperationCounts;
 }
 
-/** A once-per-run total, or a count for one operation's first path argument. */
+/** A fixed per-run total or path count, including both realpath functions for one path. */
 export type OnceOnlyOperation =
   | { readonly operation: PathOperation; readonly path?: string }
-  | { readonly operation: "Array.prototype.sort" };
+  | { readonly operation: "Array.prototype.sort" }
+  | { readonly operation: "realpath"; readonly path: string };
 
 const pathOperations: readonly PathOperation[] = [
   "fs.statSync",
@@ -127,7 +128,7 @@ export function countOperations<T>(callback: () => T): OperationCountResult<T> {
   }
 }
 
-/** Check once-only counts and scaled totals at two input sizes. */
+/** Check fixed counts, including combined realpath path counts, and scaled totals at two input sizes. */
 export function assertOperationScaling(
   smaller: OperationCountResult<unknown>,
   larger: OperationCountResult<unknown>,
@@ -168,6 +169,11 @@ function selectedCount(
   counts: OperationCounts,
   selection: OnceOnlyOperation,
 ): number {
+  if (selection.operation === "realpath")
+    return (
+      (counts.byPath["fs.realpathSync"].get(selection.path) ?? 0) +
+      (counts.byPath["fs.realpathSync.native"].get(selection.path) ?? 0)
+    );
   if (
     selection.operation === "Array.prototype.sort" ||
     selection.path === undefined

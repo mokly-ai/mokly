@@ -23,6 +23,7 @@ import {
   reviewStages,
   timingEvents,
 } from "./helpers/timing_events.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 const exec = promisify(execFile);
 const bin = path.join(repositoryRoot, "dist/cli/bin.js");
@@ -149,19 +150,27 @@ for (const [components, watch] of [
         child.once("exit", () => resolve()),
       );
       try {
-        const deadline = Date.now() + 90000;
-        while (
-          !timingEvents(stderr).some(
-            (event) =>
-              event.role === "background" &&
-              event.stage === "changes.classify" &&
-              event.event === "end",
-          )
-        ) {
-          assert.equal(child.exitCode, null, stderr);
-          assert.ok(Date.now() < deadline, stderr);
-          await new Promise((resolve) => setTimeout(resolve, 25));
-        }
+        await waitUntil(
+          () => {
+            if (
+              timingEvents(stderr).some(
+                (event) =>
+                  event.role === "background" &&
+                  event.stage === "changes.classify" &&
+                  event.event === "end",
+              )
+            )
+              return true;
+            assert.equal(child.exitCode, null, stderr);
+            return false;
+          },
+          {
+            timeoutMs: 90_000,
+            intervalMs: 25,
+            message: () =>
+              `background Changes classification did not end\n${stderr}`,
+          },
+        );
       } finally {
         child.kill("SIGTERM");
         const timer = setTimeout(() => child.kill("SIGKILL"), 10000);

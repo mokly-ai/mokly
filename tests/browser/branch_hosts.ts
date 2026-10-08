@@ -6,7 +6,6 @@
 import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { setTimeout as delay } from "node:timers/promises";
 
 import type { Page } from "@playwright/test";
 
@@ -18,6 +17,7 @@ import { exportCatalogue } from "../../dist/export/run.js";
 import { serve } from "../../dist/server/serve.js";
 import { pathFixture } from "../helpers/path_fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
+import { waitUntil } from "../helpers/wait_until.js";
 
 import { hostExportedViewer } from "./viewer_host.js";
 
@@ -74,14 +74,19 @@ export async function branchCatalogue(
 }
 
 async function waitForChanges(url: string): Promise<void> {
-  for (let attempt = 0; attempt < 600; attempt++) {
-    const model = readCatalogue(
-      await (await fetch(`${url}/mokly-viewer/catalogue.json`)).json(),
-    );
-    if (model.changesStatus === "ready") return;
-    await delay(50);
-  }
-  throw new Error("The branch catalogue did not publish its Changes");
+  await waitUntil(
+    async () => {
+      const model = readCatalogue(
+        await (await fetch(`${url}/mokly-viewer/catalogue.json`)).json(),
+      );
+      return model.changesStatus === "ready";
+    },
+    {
+      timeoutMs: 30_000,
+      intervalMs: 50,
+      message: "The branch catalogue did not publish its Changes",
+    },
+  );
 }
 
 /** A host whose entries open at their shell URLs. */

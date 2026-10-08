@@ -11,6 +11,7 @@ import { serve } from "../dist/server/serve.js";
 import { controlsEntrySource } from "./helpers/component_controls_fixture.js";
 import { settledRenderCapability } from "./helpers/component_controls_state.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 test(
   "watched controls adopt only successful graphs and never publish edits or delay Browse",
@@ -26,15 +27,17 @@ test(
     const server = await serve(config, { port: 0, watch: true });
     fixture.beforeRemove(() => server.close());
     const capabilities = async () => {
-      const deadline = Date.now() + 15_000;
-      while (Date.now() < deadline) {
-        const html = await (await fetch(`${server.url}/view/action/`)).text();
-        const capability = settledRenderCapability(html);
-        if (capability) return capability;
-        await delay(25);
-      }
-      throw new Error(
-        "component controls did not settle after background work",
+      return waitUntil(
+        async () => {
+          const html = await (await fetch(`${server.url}/view/action/`)).text();
+          const capability = settledRenderCapability(html);
+          return capability;
+        },
+        {
+          timeoutMs: 15_000,
+          intervalMs: 25,
+          message: "component controls did not settle after background work",
+        },
       );
     };
     const first = await capabilities();
@@ -100,11 +103,17 @@ test(
       ),
     );
     let latest = first;
-    const deadline = Date.now() + 15_000;
-    while (latest.generation === first.generation && Date.now() < deadline) {
-      await delay(50);
-      latest = await capabilities();
-    }
+    await waitUntil(
+      async () => {
+        latest = await capabilities();
+        return latest.generation !== first.generation;
+      },
+      {
+        timeoutMs: 15_000,
+        intervalMs: 50,
+        message: "component controls did not publish the new generation",
+      },
+    );
     assert.notEqual(latest.generation, first.generation);
     assert.equal((await render(first, "Obsolete")).status, 409);
     const response = await render(latest, "Fresh");

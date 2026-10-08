@@ -55,9 +55,27 @@ test(
     );
     t.after(() => removeFixture(fixture));
     const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
+    t.mock.timers.enable({ apis: ["setTimeout"] });
     const service = new DocumentService(runtime, () => {}, { timeoutMs: 1000 });
     fixture.beforeRemove(() => service.close());
-    await assert.rejects(service.read("home/index.desktop.html"), /too long/);
+    let settled = false;
+    const pending = service.read("home/index.desktop.html");
+    void pending.then(
+      () => {
+        settled = true;
+      },
+      () => {
+        settled = true;
+      },
+    );
+    await new Promise(setImmediate);
+    t.mock.timers.tick(999);
+    await new Promise(setImmediate);
+    assert.equal(settled, false, "the render stays pending before the timeout");
+    t.mock.timers.tick(1);
+    await new Promise(setImmediate);
+    assert.equal(settled, true, "the render settles at the timeout boundary");
+    await assert.rejects(pending, /too long/);
     assert.match(
       (await service.read("details/index.desktop.html")).html,
       /id="details"/,

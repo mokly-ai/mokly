@@ -1,5 +1,4 @@
 import fs from "node:fs/promises";
-import { setTimeout as delay } from "node:timers/promises";
 
 import { readCatalogue } from "@mokly/viewer";
 
@@ -7,6 +6,7 @@ import { exportCatalogue } from "../../dist/export/run.js";
 import { serve } from "../../dist/server/serve.js";
 import { createExportFixture } from "../helpers/export_fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
+import { waitUntil } from "../helpers/wait_until.js";
 
 export const HISTORY_ENTRIES = [
   {
@@ -65,23 +65,28 @@ export async function startHistoricalSelectionHistory(
             return serveStaticFiles(fixture.output);
           })();
     closeHost = () => host.close();
-    for (let attempt = 0; attempt < 600; attempt++) {
-      const catalogue = readCatalogue(
-        await (await fetch(`${host.url}/mokly-viewer/catalogue.json`)).json(),
-      );
-      if (catalogue.changesStatus === "ready")
-        return {
-          baseCommit,
-          catalogue,
-          url: host.url,
-          close: async () => {
-            await host.close();
-            await fixture.close();
-          },
-        };
-      await delay(50);
-    }
-    throw new Error("The fixture did not publish its historical records");
+    const catalogue = await waitUntil(
+      async () => {
+        const catalogue = readCatalogue(
+          await (await fetch(`${host.url}/mokly-viewer/catalogue.json`)).json(),
+        );
+        return catalogue.changesStatus === "ready" ? catalogue : undefined;
+      },
+      {
+        timeoutMs: 30_000,
+        intervalMs: 50,
+        message: "The fixture did not publish its historical records",
+      },
+    );
+    return {
+      baseCommit,
+      catalogue,
+      url: host.url,
+      close: async () => {
+        await host.close();
+        await fixture.close();
+      },
+    };
   } catch (error) {
     await closeHost?.();
     await fixture.close();

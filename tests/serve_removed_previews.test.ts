@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { setTimeout } from "node:timers/promises";
 
 import { readCatalogue } from "@mokly/viewer";
 import {
@@ -13,6 +12,7 @@ import {
 import { serve } from "../dist/server/serve.js";
 
 import { createRemovedDeliveryFixture } from "./helpers/removed_delivery_fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 for (const watch of [false, true]) {
   test(
@@ -118,12 +118,17 @@ for (const watch of [false, true]) {
 }
 
 async function waitForReady(url: string): Promise<void> {
-  for (let attempt = 0; attempt < 400; attempt++) {
-    const model = readCatalogue(
-      await (await fetch(`${url}/mokly-viewer/catalogue.json`)).json(),
-    );
-    if (model.changesStatus === "ready") return;
-    await setTimeout(50);
-  }
-  throw new Error("Serve did not publish removed-entry evidence");
+  await waitUntil(
+    async () => {
+      const model = readCatalogue(
+        await (await fetch(`${url}/mokly-viewer/catalogue.json`)).json(),
+      );
+      return model.changesStatus === "ready";
+    },
+    {
+      timeoutMs: 20_000,
+      intervalMs: 50,
+      message: "Serve did not publish removed-entry evidence",
+    },
+  );
 }

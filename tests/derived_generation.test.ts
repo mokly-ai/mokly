@@ -12,6 +12,7 @@ import { BackgroundGeneration } from "../dist/server/demand/generation.js";
 
 import { GatedBaselineBuilder } from "./helpers/baseline_builders.js";
 import { derivedFixture } from "./helpers/derived_fixture.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 test(
   "content generations share a baseline build until the merge base changes",
@@ -78,11 +79,11 @@ test(
 );
 
 async function waitFor(ready: () => boolean): Promise<void> {
-  for (let attempt = 0; attempt < 300; attempt++) {
-    if (ready()) return;
-    await setTimeout(25);
-  }
-  assert.fail("Background generation did not settle");
+  await waitUntil(ready, {
+    timeoutMs: 15_000,
+    intervalMs: 25,
+    message: "Background generation did not settle",
+  });
 }
 
 test("failed preparation can retry and missing history revokes a retained reader", async (t) => {

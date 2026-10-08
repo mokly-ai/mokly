@@ -10,6 +10,7 @@ import { ReadyProcessSupervisor } from "../dist/server/supervisor.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { ObservedChildFactory } from "./helpers/observed_child.js";
 import { settlement } from "./helpers/supervised_child.js";
+import { waitUntil } from "./helpers/wait_until.js";
 
 test(
   "child-initiated IPC loss restarts an unresponsive HTTP child on the same port",
@@ -94,10 +95,18 @@ server.listen(Number(process.argv[process.argv.indexOf("--port") + 1]), "127.0.0
     assert.deepEqual(await state(port), { connected: true, updates: 0 });
     supervisor.notifyUpdate(["home"]);
     let current = await state(port);
-    for (let attempt = 0; attempt < 1_500 && current.updates === 0; attempt++) {
-      await delay(10);
-      current = await state(port);
-    }
+    await waitUntil(
+      async () => {
+        if (current.updates !== 0) return true;
+        current = await state(port);
+        return current.updates !== 0;
+      },
+      {
+        timeoutMs: 15_000,
+        intervalMs: 10,
+        message: "the replacement child did not receive the update",
+      },
+    );
     assert.deepEqual(current, { connected: true, updates: 1 });
     await supervisor.close();
     assert.equal(factory.children[1]!.exited, true);
