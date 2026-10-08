@@ -33,6 +33,7 @@ import {
   removedPagePreviewSource,
   selectedReviewSource,
 } from "./review_sources.js";
+import { ServedClosure } from "./served_closure.js";
 import type { ChangesStatus } from "./update_messages.js";
 
 /** Start Browse only after manifest validation succeeds. */
@@ -45,7 +46,7 @@ export async function startCatalogueServer(
   const changes = validated.changes;
   let catalogue = validated.catalogue;
   let manifest = catalogue.manifest;
-  let assetClosure: ReadonlySet<string> = new Set(
+  const assetClosure = new ServedClosure(
     "assetClosure" in manifest ? manifest.assetClosure : [],
   );
   let acceptedGenerated: ReadonlyMap<string, GeneratedFile> =
@@ -66,8 +67,7 @@ export async function startCatalogueServer(
       runtime,
       activity.channel(),
       (document) => {
-        if (document.assetClosure)
-          assetClosure = new Set([...assetClosure, ...document.assetClosure]);
+        if (document.assetClosure) assetClosure.visit(document.assetClosure);
         if (runtime.generation === controls?.capability().generation)
           publicCatalogue.acceptDocument(
             document,
@@ -174,7 +174,7 @@ export async function startCatalogueServer(
       activeCatalogue: () => activeCatalogue,
       assets: { clientModules, fontAssets, navigationModules },
       acceptedGenerated: () => acceptedGenerated,
-      assetClosure: () => assetClosure,
+      assetClosure: () => assetClosure.current,
       changedEntries: () => changedEntries,
       changesStatus: () => changesStatus,
       componentChanges: () => componentChanges,
@@ -213,7 +213,7 @@ export async function startCatalogueServer(
         contentVersion,
       );
       manifest = complete;
-      assetClosure = new Set(complete.assetClosure);
+      assetClosure.accept(complete.assetClosure);
       catalogue = nextCatalogue;
       activeCatalogue = nextActive;
       return true;
@@ -230,8 +230,10 @@ export async function startCatalogueServer(
       movedLinks.clear();
       acceptedGenerated = acceptedGeneratedStatic(runtime);
       publicCatalogue.clearUsage();
-      assetClosure = new Set(
-        "assetClosure" in runtime.manifest ? runtime.manifest.assetClosure : [],
+      assetClosure.advance(
+        "assetClosure" in runtime.manifest
+          ? runtime.manifest.assetClosure
+          : undefined,
       );
       void documents?.close();
       documents = createDocuments(runtime);
@@ -249,7 +251,7 @@ export async function startCatalogueServer(
         );
     },
     publishUpdate(update = {}): void {
-      if (update.assetClosure) assetClosure = new Set(update.assetClosure);
+      if (update.assetClosure) assetClosure.accept(update.assetClosure);
       const next = advanceCatalogueState(
         {
           catalogue,

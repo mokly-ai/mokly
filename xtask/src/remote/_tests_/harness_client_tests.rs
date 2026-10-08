@@ -26,6 +26,16 @@ pub(super) fn client(
     let download_events = Arc::clone(&events);
     let stop_events = Arc::clone(&events);
     let status_events = Arc::clone(&events);
+    let close_events = Arc::clone(&events);
+    let disconnect = BlacksmithDisconnectMock
+        .each_call(matching!(_))
+        .answers_arc(Arc::new(move |_, id| {
+            close_events
+                .lock()
+                .unwrap()
+                .push(format!("disconnect:{id}"));
+            Ok(Disconnection::Closed)
+        }));
     let warmup = BlacksmithWarmupMock
         .each_call(matching!(_))
         .answers_arc(Arc::new(move |_, reference| {
@@ -135,6 +145,7 @@ pub(super) fn client(
                 return Err(Error::Command {
                     operation: Operation::Blacksmith,
                     code: Some(1),
+                    detail: None,
                 });
             }
             Ok(())
@@ -147,6 +158,7 @@ pub(super) fn client(
                 return Err(Error::Command {
                     operation: Operation::Blacksmith,
                     code: Some(1),
+                    detail: None,
                 });
             }
             Ok(
@@ -189,6 +201,7 @@ pub(super) fn client(
                 return Err(Error::Command {
                     operation: Operation::Blacksmith,
                     code: Some(1),
+                    detail: None,
                 });
             }
             Ok(())
@@ -201,6 +214,7 @@ pub(super) fn client(
             .each_call(matching!())
             .answers(&|_| Ok(())),
         warmup,
+        disconnect,
         status,
         stop,
     );

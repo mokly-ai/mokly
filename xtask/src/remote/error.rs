@@ -16,6 +16,8 @@ pub(crate) enum Operation {
     Git,
     /// Authenticate or manage a Testbox.
     Blacksmith,
+    /// Close the CLI's existing shared SSH connection.
+    Ssh,
     /// Read or cancel a GitHub workflow run.
     Github,
     /// Compute the source fingerprint.
@@ -35,6 +37,9 @@ mod error_tests;
 /// Failures that prevent a complete remote pass.
 #[derive(Debug, Error)]
 pub(crate) enum Error {
+    /// HOME did not supply the CLI's control directory location.
+    #[error("[xtask/remote] HOME is unset or empty; cannot close shared SSH connection")]
+    MissingHome,
     /// A child did not expose its configured output pipe.
     #[error("[xtask/remote] child output pipe is unavailable")]
     Pipe,
@@ -77,12 +82,14 @@ pub(crate) enum Error {
     #[error("[xtask/remote] GitHub run state is empty")]
     EmptyGithubState,
     /// A command returned a failed or signal exit.
-    #[error("[xtask/remote] {operation:?} command failed with {}", termination(*code))]
+    #[error("[xtask/remote] {operation:?} command failed with {}{}", termination(*code), command_detail(detail))]
     Command {
         /// Command responsibility.
         operation: Operation,
         /// Numeric exit code, absent for a signal.
         code: Option<i32>,
+        /// One bounded diagnostic line for cleanup commands only.
+        detail: Option<String>,
     },
     /// Preserve both script streams alongside the original typed failure.
     #[error("[xtask/remote] {}", remote_message(source))]
@@ -179,5 +186,13 @@ fn termination(code: Option<i32>) -> String {
     match code {
         Some(code) => format!("exit {code}"),
         None => "a signal".to_owned(),
+    }
+}
+
+/// Append a diagnostic only when the cleanup command supplied a line.
+fn command_detail(detail: &Option<String>) -> String {
+    match detail {
+        Some(detail) => format!(": {detail}"),
+        None => String::new(),
     }
 }

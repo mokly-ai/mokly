@@ -14,6 +14,7 @@ fn command_failure() -> Error {
     Error::Command {
         operation: Operation::Blacksmith,
         code: Some(1),
+        detail: None,
     }
 }
 

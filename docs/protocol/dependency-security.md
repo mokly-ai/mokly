@@ -69,7 +69,7 @@ record has exactly these six required fields, with no unknown keys:
     "node_modules/braces"
   ],
   "until": "2026-11-03",
-  "reason": "Dev-only Metro is not run by this repository; it receives no untrusted patterns.",
+  "reason": "Dev-only React Native peer dependency. The repository does not run Metro or send untrusted patterns to it. No patched release is available.",
   "tracking": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm"
 }
 ```
@@ -194,9 +194,11 @@ The current maintenance choices are:
   Releases 4.4 through 4.6 each need a newer `react-native-worklets` line (0.9
   through 0.12), which the root `^0.8.3` range excludes. Move to one of them
   only in a reviewed change that also moves `react-native-worklets` to the
-  matching line. Release 4.7 needs React Native 0.86 or later, but every
-  `@firna/ui` release, including 0.15.0 and 4.0.0, accepts only React Native
-  below 0.86. Move to 4.7 only after `@firna/ui` accepts React Native 0.86.
+  matching line. Release 4.7 needs React Native 0.86 through 0.88 and
+  `react-native-worklets` 0.13, but every `@firna/ui` release, including
+  0.15.0 and 4.0.0, accepts only React Native below 0.86. Move to 4.7 only
+  after `@firna/ui` accepts React Native 0.86, in a reviewed change that also
+  moves `react-native-worklets` to 0.13.
 - `@playwright/test` 1.61.1 stays locked. Playwright 1.62 and later exit with
   status 1 when a reporter event write fails, but the wrapper test in
   `tests/verification_wrapper.test.ts` expects the 1.61 status 0. Update that

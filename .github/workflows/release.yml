@@ -116,9 +116,7 @@ jobs:
         run: node scripts/release/evidence.mjs
       - name: Set up Rust
         if: steps.evidence.outputs.mode != 'evidence'
-        run: |
-          rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy
-          rustup default 1.95.0
+        run: rustup toolchain install
       - name: Install Chromium
         if: steps.evidence.outputs.mode != 'evidence'
         run: npx playwright install --with-deps chromium

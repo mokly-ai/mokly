@@ -118,10 +118,7 @@ test("Testbox toolchains and npm cache match the CI minimum runtime", async () =
     steps[4]?.run,
     repository.find(({ name }) => name === "Set up Rust")?.run,
   );
-  assert.equal(
-    steps[4]?.run,
-    "rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy\nrustup default 1.95.0\n",
-  );
+  assert.equal(steps[4]?.run, "rustup toolchain install");
   assert.equal(steps[5]?.run, "npm ci");
   assert.equal(steps[7]?.run, "npx playwright install --with-deps chromium");
 });

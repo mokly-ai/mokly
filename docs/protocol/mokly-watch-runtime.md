@@ -63,7 +63,9 @@ When a successful rebuild leaves the manifest structure unchanged, or a
 resource edit or explicit watch rule requests a reload, the parent keeps the
 ready child. It first publishes a typed update that clears stale entry and
 component evidence, making the successful content generation visible without
-waiting on Git. The parent then computes one complete classification outside the
+waiting on Git. The child keeps its last checked authored closure through this
+update, as the [public closure contract](./mokly-public-closure.md#one-closure-builder)
+requires. The parent then computes one complete classification outside the
 HTTP request path. A sequence token discards results superseded by a newer watch
 action; the current successful result publishes a second typed update that
 atomically replaces changed-entry membership, removed-entry baseline data, and

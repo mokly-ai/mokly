@@ -16,7 +16,8 @@ const listed = execFileSync(
 const markdown = listed.filter(
   (file) =>
     file.endsWith(".md") &&
-    (file.startsWith("docs/") ||
+    (file === "AGENTS.md" ||
+      file.startsWith("docs/") ||
       file.startsWith("plans/") ||
       path.basename(file) === "README.md"),
 );

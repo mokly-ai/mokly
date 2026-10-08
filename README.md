@@ -326,6 +326,7 @@ appearance with any preview scheme. See the
 - [Variants](./docs/protocol/mokly-variants.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
+- [Agent and contributor rules](./AGENTS.md) with the detailed rule docs under [`docs/dev`](./docs/dev/)
 - [Changelog](./CHANGELOG.md)
 
 The guides are user-facing and ship with the npm package. The protocol documents
@@ -343,10 +344,14 @@ receiver and viewer update before publication.
 
 For repository development, use the tested Node.js version in
 [`.nvmrc`](./.nvmrc), npm 11.21.0 (the `packageManager` version in
-`package.json`), Rust 1.95, and Chromium for the browser suite. With nvm, run
-`nvm install` in the repository before the npm commands below to install and
-use that Node.js version. A global npm install applies only to the active
-Node.js version. Use the pinned npm version for dependency changes.
+`package.json`), the Rust toolchain in
+[`rust-toolchain.toml`](./rust-toolchain.toml) (Rust 1.95.0 with rustfmt and
+Clippy), and Chromium for the browser suite. With nvm, run `nvm install` in
+the repository before the npm commands below to install and use that Node.js
+version. A global npm install applies only to the active Node.js version.
+rustup reads the toolchain file and installs the pinned Rust the first time
+`cargo` runs in the repository. Use the pinned npm version for dependency
+changes.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git
@@ -430,13 +435,17 @@ Login saves the key in `~/.blacksmith/credentials`.
 It replaces any saved login for the same organization.
 Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
 Each ended command downloads its report and cleans up its box at once.
-The gate requires nine reports. It skips stop and cancellation for a status
-table row that proves the box is completed. A failed stop gets retries after
+The gate requires nine reports. Cleanup closes the shared SSH connection first.
+When `gh` is available, it cancels a known GitHub run right after the close.
+An ID first found in status is cancelled before stop. A completed status skips
+stop and any cancellation not tried yet. The
+[cleanup contract](./docs/protocol/remote-verification-cleanup.md)
+defines this order. A failed stop gets retries after
 5 seconds and 10 more seconds. A recovered stop does not fail the gate.
 Final cleanup counts each box once if it is neither stopped nor proven completed.
 A nonzero count fails the gate. Interrupts report the same count.
 Warnings name each remaining box's manual stop command and its idle timeout.
-Cleanup uses run IDs from warmup or probe output when status names no run.
+Cleanup records run IDs from warmup and probe output for the first cancellation.
 A failed GitHub cancellation checks the run state. An ended run gets an
 information line. Logs stay under `.context/`.
 Availability checks name all missing programs with install hints.
