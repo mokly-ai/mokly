@@ -4,6 +4,8 @@ import path from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 
+import { EXAMPLE_SNAPSHOT_PATH } from "../scripts/verification/example-snapshot-key.mjs";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 import {
   createHarness,
@@ -76,6 +78,14 @@ fs.writeFileSync = function (file, ...args) {
     assert.equal(failed.outcome.status, "failed");
 
     const unitReport = path.join(root, "unit-report.json");
+    const snapshot = path.join(root, EXAMPLE_SNAPSHOT_PATH);
+    await fs.rm(snapshot);
+    await assert.rejects(
+      runWrapper(root, "run-unit.mjs", { report: unitReport }),
+      /missing: \.context\/verification\/example-compilation\.json; run npm run prepare:unit first/u,
+    );
+    await assert.rejects(fs.stat(unitReport), { code: "ENOENT" });
+    await fs.writeFile(snapshot, "{}\n");
     await assert.rejects(
       runWrapper(root, "run-unit.mjs", { report: unitReport }),
     );

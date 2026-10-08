@@ -1,17 +1,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { EXAMPLE_SOURCE_PATHS } from "../../scripts/verification/example-snapshot-key.mjs";
+
 import { repositoryRoot } from "./fixture.js";
 
 /** Copy the authored example and CSS package without reusing generated output. */
 export async function copyExampleSources(root: string): Promise<void> {
-  for (const name of [
-    "examples/basic",
-    "examples/imported-assets",
-    "docs/protocol",
-    "README.md",
-    "plans",
-  ])
+  for (const name of EXAMPLE_SOURCE_PATHS)
     await fs.cp(path.join(repositoryRoot, name), path.join(root, name), {
       recursive: true,
       filter: (source) =>

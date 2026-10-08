@@ -28,7 +28,7 @@ interface, so it works with any service that implements the upload contract.
 
 It is maintained in the Mokly repository at
 `.github/actions/publish`. Pin it to a reviewed commit, and set `version` to
-an exact published release such as 0.13.0; a range or a tag is refused.
+an exact published release such as 0.14.0; a range or a tag is refused.
 <!-- x-release-please-end -->
 
 ## A workflow

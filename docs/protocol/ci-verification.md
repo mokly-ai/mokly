@@ -54,7 +54,7 @@ hydration suite fail before any subprocess starts.
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Repository       | Live audit first: baseline for ordinary PRs, pushes, and local checks; strict for release and dependency update PRs. Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                  |
 | Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; every clean consumer smoke using that pair. Real `prepack` builds remain part of packing. |
-| Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. A shard runs its whole-file partition.                                                                                                                                                               |
+| Unit/integration | One ordinary package/example preparation and one example compilation snapshot, followed by every discovered Node test file, with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. A shard runs its whole-file partition.                                                                                                                         |
 | Browser          | One ordinary package/example preparation followed by every non-hydration Playwright spec, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                  |
 | Hydration        | One ordinary package/example preparation followed by every Playwright spec whose filename contains `hydration`, using the same browser settings without sharding and with the [hydration worker default](./ci-suite-evidence.md#test-concurrency). Its route-inventory spec runs its independent route tests in parallel mode.                                                         |
 | Native platforms | On macOS and Windows, build once and run export transaction, destination-race, writer-lock and cache-ignore tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                             |
@@ -98,7 +98,9 @@ Public `package:check` and `package:smoke` preserve caller arguments, including
 reject arguments other than the optional shard, and fail when required output is
 missing; prepared package commands may instead receive the gate's archive pair.
 Xtask prepares output per suite and calls only prepared consumers; output is
-reused only within that suite.
+reused only within that suite. `npm test` and the xtask unit suite run
+`npm run prepare:unit`; a complete unit run requires the example compilation
+[snapshot](./ci-example-snapshot.md) it writes.
 
 Builds under test are not removed. Package dry-run allowlist inspection retains
 `--ignore-scripts`, while real packing keeps lifecycle builds. Historical

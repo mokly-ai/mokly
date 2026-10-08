@@ -4,6 +4,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { Marked, type Token } from "marked";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const listed = execFileSync(
@@ -21,7 +23,7 @@ const markdown = listed.filter(
       file.startsWith("plans/") ||
       path.basename(file) === "README.md"),
 );
-const codeSpan = /(?<!`)(`+)(?!`)(.+?)(?<!`)\1(?!`)/g;
+const parser = new Marked({ gfm: true });
 const contents = new Map<string, string>();
 
 async function read(file: string): Promise<string> {
@@ -34,34 +36,12 @@ async function read(file: string): Promise<string> {
 }
 
 function links(text: string): string[] {
-  const result: string[] = [];
-  const lines = text.split("\n");
-  let fenced = false;
-  for (const line of lines) {
-    if (/^\s*(```|~~~)/.test(line)) {
-      fenced = !fenced;
-      continue;
-    }
-    if (fenced) continue;
-    const prose = line.replace(codeSpan, (span) => " ".repeat(span.length));
-    for (
-      let start = prose.indexOf("](");
-      start !== -1;
-      start = prose.indexOf("](", start + 2)
-    ) {
-      let depth = 1;
-      let end = start + 2;
-      for (; end < prose.length && depth; end++) {
-        if (prose[end] === "(" && prose[end - 1] !== "\\") depth++;
-        if (prose[end] === ")" && prose[end - 1] !== "\\") depth--;
-      }
-      if (!depth)
-        result.push(prose.slice(start + 2, end - 1).split(/\s+"/)[0]!);
-    }
-    const definition = /^\s*\[[^\]]+\]:\s*<?([^>\s]+)>?/.exec(prose);
-    if (definition) result.push(definition[1]!);
-  }
-  return result;
+  const tokens = parser.lexer(text);
+  const result = new Set(Object.values(tokens.links).map((link) => link.href));
+  parser.walkTokens(tokens, (token: Token) => {
+    if (token.type === "link" || token.type === "image") result.add(token.href);
+  });
+  return [...result];
 }
 
 function anchors(text: string): Set<string> {
@@ -91,9 +71,15 @@ function anchors(text: string): Set<string> {
   return found;
 }
 
-test("Markdown inside code spans is not read as a link", () => {
+test("a Markdown parser decides which text is a link", () => {
   assert.deepEqual(links("`[a](a.md)` ``[b](`b`)`` [c](c.md)"), ["c.md"]);
   assert.deepEqual(links("an unclosed ` [d](d.md)"), ["d.md"]);
+  assert.deepEqual(links("`a span that\nwraps [e](e.md)` [f](f.md)"), ["f.md"]);
+  assert.deepEqual(links("`a wrapped\nspan` [g](g.md) `h`"), ["g.md"]);
+  assert.deepEqual(links("\\` [i](i.md) \\`"), ["i.md"]);
+  assert.deepEqual(links("```\n[j](j.md)\n```"), []);
+  assert.deepEqual(links('![k](k.png) [l](l.md "Title")'), ["k.png", "l.md"]);
+  assert.deepEqual(links("[m][ref]\n\n[ref]: m.md"), ["m.md"]);
 });
 
 test("local documentation and plan links resolve and anchors match GitHub headings", async () => {
