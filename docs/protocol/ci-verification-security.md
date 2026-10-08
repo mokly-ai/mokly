@@ -53,8 +53,8 @@ No task-cache secrets or protected environments are required. Pages deployment
 credentials remain separate and must lack Workers or R2 write permissions;
 the admin owns permission verification.
 
-Turbo disables remote caching in `turbo.json`, so developer login files cannot
-send remote cache requests. Developers, native jobs, and Testboxes use local
+Turbo disables remote caching in `turbo.json` and supplies no endpoint or team.
+Developer login files alone send no requests. Developers, native jobs, and Testboxes use local
 cache only. Release forces task execution and uses no shared task cache.
 Hosted workflows disable telemetry. Developers can opt out through their
 environment. Historical example baselines use direct commands with no Turbo

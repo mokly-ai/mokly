@@ -45,7 +45,6 @@ async function copyExampleRepository(root: string): Promise<void> {
     "tsconfig.json",
     "tsconfig.build.json",
     "scripts/clean.mjs",
-    "scripts/turbo-run.mjs",
     "scripts/copy-assets.mjs",
     "scripts/preview",
     "packages/viewer",

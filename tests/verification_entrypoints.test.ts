@@ -44,7 +44,7 @@ test("npm test and the strict gate share recursive unit discovery", async () => 
   );
   assert.equal(
     packageJson.scripts["prepare:verification"],
-    "node scripts/turbo-run.mjs example:build",
+    "turbo run example:build",
     "package, browser, and hydration suites never read the snapshot",
   );
   assert.equal(

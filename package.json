@@ -40,7 +40,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "build": "node scripts/turbo-run.mjs build:package 1>&2",
+    "build": "turbo run build:package 1>&2",
     "clean": "node scripts/clean.mjs",
     "dependencies:check": "node scripts/verification/dependency-audit.mjs",
     "dev": "npm run -s build && node dist/cli/bin.js serve --config examples/basic/mokly.config.ts",
@@ -58,7 +58,7 @@
     "package:smoke": "npm run build && npm run package:smoke:prepared --",
     "package:smoke:prepared": "node scripts/verification/prepared.mjs package && node scripts/package-smoke.mjs",
     "prepare:unit": "npm run prepare:verification && node scripts/verification/example-snapshot.mjs",
-    "prepare:verification": "node scripts/turbo-run.mjs example:build",
+    "prepare:verification": "turbo run example:build",
     "prepack": "node scripts/clean.mjs && npm run --silent build",
     "preview:build": "npm run build && npm run example:build && node scripts/preview/build.mjs",
     "test": "npm run test:unit --",
@@ -68,8 +68,7 @@
     "test:hydration:prepared": "node scripts/verification/run-browser.mjs --suite hydration",
     "test:prepared": "node scripts/verification/run-unit.mjs",
     "typecheck": "npm run build && npm run typecheck:prepared",
-    "typecheck:prepared": "node scripts/verification/prepared.mjs package && tsc --project tsconfig.json --noEmit && npm run typecheck --workspace @mokly/viewer && npm run typecheck:script-declarations && npm run typecheck:turbo-cache",
-    "typecheck:turbo-cache": "tsc --project scripts/turbo-cache/tsconfig.json --noEmit",
+    "typecheck:prepared": "node scripts/verification/prepared.mjs package && tsc --project tsconfig.json --noEmit && npm run typecheck --workspace @mokly/viewer && npm run typecheck:script-declarations",
     "typecheck:script-declarations": "tsc --project tsconfig.scripts-declarations.json --noEmit",
     "build:package": "node scripts/clean.mjs --package @mokly/mokly && tsc --project tsconfig.build.json && node scripts/copy-assets.mjs"
   },
@@ -100,7 +99,6 @@
     "react-dom": ">=19.0.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20261006.1",
     "@eslint/js": "^10.0.1",
     "@firna/ui": "^0.14.0",
     "@gorhom/bottom-sheet": "^5.2.14",

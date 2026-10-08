@@ -50,7 +50,7 @@ test("direct baseline commands and their npm scripts never invoke Turbo", async 
     command: readonly string[],
     metadata: PackageMetadata,
   ) => {
-    assert.doesNotMatch(command.join(" "), /\bturbo\b|turbo-run\.mjs/iu);
+    assert.doesNotMatch(command.join(" "), /\bturbo\b/iu);
     const npm = command.indexOf("npm");
     if (npm === -1) return;
     const positional: string[] = [];
@@ -91,6 +91,8 @@ test("package builds and root prepack begin with their clean step", async () => 
   const viewer = (await readJson(
     "packages/viewer/package.json",
   )) as PackageMetadata;
+  assert.equal(root.scripts.build, "turbo run build:package 1>&2");
+  assert.equal(root.scripts["prepare:verification"], "turbo run example:build");
   for (const [metadata, script, prefix] of [
     [
       root,

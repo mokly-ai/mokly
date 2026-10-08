@@ -42,7 +42,7 @@ suite boundaries, shard evidence, and fail-closed aggregate stay unchanged.
 | Cached tasks   | `@mokly/viewer#build`, root `build:package`, and root `example:build`. Test suites are not cached by this plan.                                                                                   |
 | Cache store    | The GitHub Actions cache through upstream `actions/cache` v6.1.0, pinned by SHA (decided 2026-10-08). No Vercel account, Worker, bucket, or secret.                                               |
 | Write policy   | GitHub scope rules: main saves in the main scope; a pull request saves in its own merge-ref scope and restores from main. Forks behave the same.                                                  |
-| Integrity      | `remoteCache.enabled` is false; Turbo never contacts a remote endpoint. GitHub owns cache integrity; repository read access reads caches.                                                         |
+| Integrity      | `remoteCache.enabled` is false; no endpoint or team is supplied. Login files alone send no requests; an explicit team override can send diagnostics. Repository read access reads caches.         |
 | Release        | `release.yml` forces task execution with `TURBO_FORCE=true`, local cache only, and no remote credentials. Force can refresh local entries.                                                        |
 | Native CI jobs | The macOS and Windows jobs keep building from source with no remote token.                                                                                                                        |
 | Agent guidance | `agentGuidance: false`, so `turbo` never edits `AGENTS.md`.                                                                                                                                       |
@@ -212,8 +212,10 @@ action to their colocated cache with no code change; Blacksmith's own
   No cache step may fail a job.
 - `turbo.json` sets `"remoteCache": { "enabled": false }` and drops `apiUrl`,
   `teamSlug`, `signature`, timeouts, `preflight`, and `futureFlags`. Turbo then
-  never contacts a remote endpoint, including with a developer's `turbo login`
-  or Vercel CLI file, which closes Milestone 4 review finding 1.
+  has no configured endpoint or team. The one-time login-file proof records
+  zero requests without a team override, which closes Milestone 4 review finding 1.
+  An explicit developer team override can still send a diagnostic request;
+  CI supplies none.
 - The launcher `scripts/turbo-run.mjs` and `scripts/verification/turbo-cache-env.mjs`
   are removed. `build` runs `turbo run build:package 1>&2`;
   `prepare:verification` runs `turbo run example:build`. The installed Turbo
@@ -826,30 +828,30 @@ Replace the Worker wiring with the GitHub Actions cache, remove the Worker and
 its credentials from the repository, and keep every suite, test, and report
 boundary unchanged.
 
-- [ ] `turbo.json`: set `"remoteCache": { "enabled": false }`; remove
+- [x] `turbo.json`: set `"remoteCache": { "enabled": false }`; remove
       `apiUrl`, `teamSlug`, `signature`, `timeout`, `uploadTimeout`,
       `preflight`, and `futureFlags`. Add `cacheMaxSize: "50MB"` next to
       `cacheMaxAge`. Keep every other setting.
-- [ ] `package.json`: `build` runs `turbo run build:package 1>&2`;
+- [x] `package.json`: `build` runs `turbo run build:package 1>&2`;
       `prepare:verification` runs `turbo run example:build`; remove
       `typecheck:turbo-cache` from `typecheck:prepared` and the script list;
       remove `@cloudflare/workers-types`. Refresh `package-lock.json` with the
       pinned npm 11.21.0 and change no other lock entry.
-- [ ] Delete `scripts/turbo-run.mjs`, `scripts/verification/turbo-cache-env.mjs`,
+- [x] Delete `scripts/turbo-run.mjs`, `scripts/verification/turbo-cache-env.mjs`,
       `scripts/turbo-cache/**`, `.github/workflows/turbo-cache.yml`, and the
       `/scripts/turbo-cache/.dev.vars*` ignore rule. Stop copying the launcher
       in `tests/helpers/example_baseline.ts`.
-- [ ] `ci.yml`: remove every `environment` block, `TURBO_CACHE`, and the
+- [x] `ci.yml`: remove every `environment` block, `TURBO_CACHE`, and the
       "Configure trusted/PR Turbo cache" steps. Add the key step and the
       `actions/cache` step to `prepare` with the `turbo-cache-key` output; add
       `actions/cache/restore` to `package`, `unit`, `browser`, and `hydration`
       before `npm ci`. Pin both action references to
       `55cc8345863c7cc4c66a329aec7e433d2d1c52a9` with a `# v6.1.0` comment.
-- [ ] `preview.yml`: remove the environment block, `TURBO_CACHE`, and both
+- [x] `preview.yml`: remove the environment block, `TURBO_CACHE`, and both
       credential steps; add `actions/cache/restore` with the same key expression,
       path, and restore prefix as `prepare` to both deploy jobs. Preview jobs
       never save. Leave `release.yml` as it is.
-- [ ] Tests: delete `tests/turbo_cache_*.test.ts`, `tests/turbo_credentials.test.ts`,
+- [x] Tests: delete `tests/turbo_cache_*.test.ts`, `tests/turbo_credentials.test.ts`,
       `tests/turbo_ci_mapping.test.ts`, `tests/workflow_cache_credentials.test.ts`,
       `tests/turbo_workflows.test.ts`, and the helpers only they use
       (`tests/helpers/turbo_cache.ts`, `turbo_ci.ts`,
@@ -861,7 +863,7 @@ boundary unchanged.
       restores it, with one
       shared pinned revision, the same path, and a key that references the
       saving job's output; both preview deploy jobs restore only with the
-      same `hashFiles` expression as the saving job; no preview job saves; no job declares an
+      same `hashFiles` expression as the saving job; no preview job saves; no CI or preview job declares an
       `environment`; no workflow references `TURBO_TOKEN`,
       `TURBO_REMOTE_CACHE_SIGNATURE_KEY`, or a `secrets.TURBO_` value; the CI,
       preview, and release workflows disable telemetry; the release workflow
@@ -870,13 +872,13 @@ boundary unchanged.
       `apiUrl`), `tests/turbo_static_guards.test.ts`, and
       `tests/verification_entrypoints.test.ts` for the new scripts. Every new
       check must be static; no subprocess, install, or build.
-- [ ] Record one-time size eviction evidence in
+- [x] Record one-time size eviction evidence in
       `.context/turborepo-cloudflare-remote-cache/m6-cache-max-size.md` with a
       temporary cache copy and a small `TURBO_CACHE_MAX_SIZE`; keep all three hits.
-- [ ] Record zero remote requests with synthetic Turbo and Vercel login files
+- [x] Record zero remote requests with synthetic Turbo and Vercel login files
       in `.context/turborepo-cloudflare-remote-cache/m6-no-remote-requests.md`.
       Remove the capture server and temporary config files after the proof.
-- [ ] Run the changed test files, `cargo xtask check --suite repository`, then
+- [x] Run the changed test files, `cargo xtask check --suite repository`, then
       one complete `cargo xtask check`. Commit with Conventional Commits and
       push.
 - [ ] Confirm in the PR CI run: `prepare` reports a cache save, every suite job
@@ -884,6 +886,11 @@ boundary unchanged.
       `environment`, and the preview job deploys. Record the run and the
       per-job preparation times beside the earlier numbers in
       `.context/turborepo-cloudflare-remote-cache/measurements.md`.
+
+Implementation checks: `.context/turborepo-cloudflare-remote-cache/m6-validation.md`.
+Size proof: `.context/turborepo-cloudflare-remote-cache/m6-cache-max-size.md`.
+Login-file proof and override limit: `.context/turborepo-cloudflare-remote-cache/m6-no-remote-requests.md`.
+Remote index failure: `.context/turborepo-cloudflare-remote-cache/m6-remote-index-failure.md`.
 
 ### Milestone 7: Decommission And Review
 

@@ -24,13 +24,16 @@ interface TurboConfiguration {
   agentGuidance: boolean;
   envMode: string;
   globalPassThroughEnv: string[];
+  cacheMaxAge: string;
+  cacheMaxSize: string;
   remoteCache: {
-    signature: boolean;
+    enabled: boolean;
+    signature?: boolean;
     apiUrl?: string;
     teamSlug?: string;
     teamId?: string;
   };
-  futureFlags: { longerSignatureKey: boolean };
+  futureFlags?: unknown;
   tasks: Record<string, TaskDefinition>;
 }
 
@@ -41,14 +44,10 @@ test("Turbo configuration preserves guidance, integrity, and generated ownership
   assert.equal(config.agentGuidance, false);
   assert.equal(config.envMode, "strict");
   assert.ok(config.globalPassThroughEnv.includes("MOKLY_DIAGNOSTIC"));
-  assert.equal(config.remoteCache.signature, true);
-  assert.equal(config.futureFlags.longerSignatureKey, true);
-  assert.equal(
-    config.remoteCache.apiUrl,
-    "https://mokly-turbo-cache.calum-785.workers.dev",
-  );
-  assert.equal(config.remoteCache.teamSlug, "mokly");
-  assert.equal(config.remoteCache.teamId, undefined);
+  assert.deepEqual(config.remoteCache, { enabled: false });
+  assert.equal(config.futureFlags, undefined);
+  assert.equal(config.cacheMaxAge, "14d");
+  assert.equal(config.cacheMaxSize, "50MB");
   const ignored = (
     await fs.readFile(path.join(repositoryRoot, ".gitignore"), "utf8")
   )
@@ -154,7 +153,7 @@ test("unrelated files and ignored leftovers do not affect task hashes", async (c
   const root = await createTurboFixture(context);
   const before = taskHashes(await dryTurbo(root));
   for (const relative of [
-    "docs/protocol/ci-remote-cache.md",
+    "docs/protocol/ci-task-cache.md",
     "README.md",
     "tests/unrelated.test.ts",
     "plans/unrelated.md",

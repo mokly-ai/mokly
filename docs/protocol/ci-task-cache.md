@@ -2,10 +2,9 @@
 
 ## Delivery Status
 
-The task graph, strict environment, and local cache are implemented. The
-[plan](../../plans/turborepo-cloudflare-remote-cache.md) replaces the Cloudflare
-Worker with the GitHub Actions cache. Hosted verification and admin removal
-remain open. Tests, reports, and `npm run example:check` stay uncached; check
+The task graph, strict environment, local cache, and GitHub Actions cache
+wiring are implemented. Hosted verification and admin removal remain open in
+the [plan](../../plans/turborepo-cloudflare-remote-cache.md). Tests, reports, and `npm run example:check` stay uncached; check
 revalidates referenced paths and Git state outside the build hash.
 
 ## Task Graph And Files
@@ -77,8 +76,9 @@ The root configuration uses this shape, in addition to `tasks`:
 
 Do not set deprecated `daemon` or an explicit `cacheDir`. Do not set `apiUrl`,
 `teamSlug`, `teamId`, `signature`, timeouts, `preflight`, or `futureFlags`.
-With remote caching disabled, Turbo makes no remote cache requests, including
-when a developer has a Turbo or Vercel CLI login file.
+The repository supplies no remote endpoint or team. With this configuration,
+Turbo makes no requests with Turbo or Vercel CLI login files alone. An explicit
+developer team override can still send a diagnostic request; CI supplies none.
 
 Strict mode admits only declared variables and Turbo's built-in system list.
 Each cached task declares `env: ["NODE_ENV"]`, so its value is hashed.

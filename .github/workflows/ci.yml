@@ -11,7 +11,6 @@ permissions:
 env:
   PLAYWRIGHT_CHANNEL: chromium
   TURBO_TELEMETRY_DISABLED: "1"
-  TURBO_CACHE: local:rw
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -84,11 +83,10 @@ jobs:
 
   prepare:
     name: Prepare
-    environment:
-      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'turbo-cache-trusted' || '' }}
-      deployment: false
     runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 30
+    outputs:
+      turbo-cache-key: ${{ steps.key.outputs.key }}
     steps:
       - name: Check out repository
         uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
@@ -103,30 +101,25 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Set up npm
         run: npm install --global npm@11.21.0
+      - name: Compute Turbo cache key
+        id: key
+        env:
+          CACHE_HASH: ${{ hashFiles('package-lock.json', 'package.json', 'turbo.json', 'tsconfig.json', 'tsconfig.build.json', 'scripts/clean.mjs', 'scripts/copy-assets.mjs', 'src/**', 'packages/viewer/**', '!packages/viewer/dist/**', '!packages/viewer/node_modules/**', 'examples/basic/**', '!examples/basic/mokly-generated/**', 'examples/imported-assets/**', 'docs/protocol/mokly-*.md') }}
+        run: echo "key=turbo-${RUNNER_OS}-${CACHE_HASH}" >> "$GITHUB_OUTPUT"
+      - name: Restore Turbo task cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .turbo/cache
+          key: ${{ steps.key.outputs.key }}
+          restore-keys: turbo-${{ runner.os }}-
       - name: Install dependencies
         run: npm ci
-      - name: Configure trusted Turbo cache
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          CACHE_TOKEN: ${{ secrets.TURBO_CACHE_TRUSTED_WRITE_TOKEN }}
-          CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
-        run: node scripts/verification/turbo-cache-env.mjs
-      - name: Configure PR Turbo cache
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          CACHE_TOKEN: ${{ secrets.TURBO_CACHE_PR_WRITE_TOKEN }}
-          CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
-          CACHE_TEAM: mokly-pr-${{ github.event.pull_request.number }}
-        run: node scripts/verification/turbo-cache-env.mjs
       - name: Prepare verification outputs
         run: npm run prepare:verification
 
   package:
     name: Package (Node ${{ matrix.node }})
     needs: [repository, prepare]
-    environment:
-      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'turbo-cache-trusted' || '' }}
-      deployment: false
     runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 30
     strategy:
@@ -149,30 +142,20 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      - name: Restore Turbo task cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .turbo/cache
+          key: ${{ needs.prepare.outputs.turbo-cache-key }}
+          restore-keys: turbo-${{ runner.os }}-
       - name: Install dependencies
         run: npm ci
-      - name: Configure trusted Turbo cache
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          CACHE_TOKEN: ${{ secrets.TURBO_CACHE_TRUSTED_WRITE_TOKEN }}
-          CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
-        run: node scripts/verification/turbo-cache-env.mjs
-      - name: Configure PR Turbo cache
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          CACHE_TOKEN: ${{ secrets.TURBO_CACHE_PR_WRITE_TOKEN }}
-          CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
-          CACHE_TEAM: mokly-pr-${{ github.event.pull_request.number }}
-        run: node scripts/verification/turbo-cache-env.mjs
       - name: Run package verification
         run: cargo xtask check --suite package
 
   unit:
     name: Unit (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
     needs: [repository, prepare]
-    environment:
-      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'turbo-cache-trusted' || '' }}
-      deployment: false
     runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 30
     strategy:
@@ -199,21 +182,14 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      - name: Restore Turbo task cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .turbo/cache
+          key: ${{ needs.prepare.outputs.turbo-cache-key }}
+          restore-keys: turbo-${{ runner.os }}-
       - name: Install dependencies
         run: npm ci
-      - name: Configure trusted Turbo cache
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          CACHE_TOKEN: ${{ secrets.TURBO_CACHE_TRUSTED_WRITE_TOKEN }}
-          CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
-        run: node scripts/verification/turbo-cache-env.mjs
-      - name: Configure PR Turbo cache
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          CACHE_TOKEN: ${{ secrets.TURBO_CACHE_PR_WRITE_TOKEN }}
-          CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
-          CACHE_TEAM: mokly-pr-${{ github.event.pull_request.number }}
-        run: node scripts/verification/turbo-cache-env.mjs
       - name: Run unit shard
         run: cargo xtask check --suite unit --shard ${{ matrix.shard }}/4
       - name: Retain unit inventory and timings
@@ -230,9 +206,6 @@ jobs:
   browser:
     name: Browser (Node ${{ matrix.node }}, shard ${{ matrix.shard }}/4)
     needs: [repository, prepare]
-    environment:
-      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'turbo-cache-trusted' || '' }}
-      deployment: false
     runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 30
     strategy:
@@ -259,21 +232,14 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      - name: Restore Turbo task cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .turbo/cache
+          key: ${{ needs.prepare.outputs.turbo-cache-key }}
+          restore-keys: turbo-${{ runner.os }}-
       - name: Install dependencies
         run: npm ci
-      - name: Configure trusted Turbo cache
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          CACHE_TOKEN: ${{ secrets.TURBO_CACHE_TRUSTED_WRITE_TOKEN }}
-          CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
-        run: node scripts/verification/turbo-cache-env.mjs
-      - name: Configure PR Turbo cache
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          CACHE_TOKEN: ${{ secrets.TURBO_CACHE_PR_WRITE_TOKEN }}
-          CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
-          CACHE_TEAM: mokly-pr-${{ github.event.pull_request.number }}
-        run: node scripts/verification/turbo-cache-env.mjs
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Run browser shard
@@ -299,9 +265,6 @@ jobs:
   hydration:
     name: Hydration (Node ${{ matrix.node }})
     needs: [repository, prepare]
-    environment:
-      name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'turbo-cache-trusted' || '' }}
-      deployment: false
     runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 30
     strategy:
@@ -327,21 +290,14 @@ jobs:
         run: npm install --global npm@11.21.0
       - name: Set up Rust
         run: rustup toolchain install
+      - name: Restore Turbo task cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .turbo/cache
+          key: ${{ needs.prepare.outputs.turbo-cache-key }}
+          restore-keys: turbo-${{ runner.os }}-
       - name: Install dependencies
         run: npm ci
-      - name: Configure trusted Turbo cache
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          CACHE_TOKEN: ${{ secrets.TURBO_CACHE_TRUSTED_WRITE_TOKEN }}
-          CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
-        run: node scripts/verification/turbo-cache-env.mjs
-      - name: Configure PR Turbo cache
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          CACHE_TOKEN: ${{ secrets.TURBO_CACHE_PR_WRITE_TOKEN }}
-          CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
-          CACHE_TEAM: mokly-pr-${{ github.event.pull_request.number }}
-        run: node scripts/verification/turbo-cache-env.mjs
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Run hydration verification

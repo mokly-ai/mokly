@@ -2,9 +2,9 @@
 
 ## Delivery Status
 
-The job graph and parallel prepare job are implemented. The
-[task cache contract](./ci-task-cache.md) replaces the Worker with the GitHub
-Actions cache. Hosted verification remains open; main checks follow merge.
+The job graph, parallel prepare job, and GitHub Actions cache wiring are
+implemented under the [task cache contract](./ci-task-cache.md).
+Hosted verification remains open; main checks follow merge.
 CI selects baseline or strict mode by event and pull request.
 The Dependency Audit workflow maintains strict findings on `main`.
 The workflow verification tests below replace the former literal workflow

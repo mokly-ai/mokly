@@ -5,6 +5,7 @@
   "noUpdateNotifier": true,
   "ui": "stream",
   "cacheMaxAge": "14d",
+  "cacheMaxSize": "50MB",
   "globalPassThroughEnv": [
     "CI",
     "MOKLY_OUTPUT",
@@ -17,17 +18,8 @@
     "COLUMNS",
     "BROWSERSLIST_IGNORE_OLD_DATA"
   ],
-  "futureFlags": {
-    "longerSignatureKey": true
-  },
   "remoteCache": {
-    "enabled": true,
-    "signature": true,
-    "timeout": 30,
-    "uploadTimeout": 60,
-    "preflight": false,
-    "apiUrl": "https://mokly-turbo-cache.calum-785.workers.dev",
-    "teamSlug": "mokly"
+    "enabled": false
   },
   "tasks": {
     "build": {
