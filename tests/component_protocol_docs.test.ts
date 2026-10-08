@@ -20,12 +20,6 @@ test("manifest v9 and review v6 share path identity", async (t) => {
     "docs/protocol/mokly-generated-manifest.md",
   );
   assert.match(outputContract, /schemaVersion: 9/);
-  assert.match(outputContract, /assetClosure: readonly string\[\]/);
-  assert.match(
-    outputContract,
-    /generatedFiles: readonly \{ path: string; blobHash: string \}\[\]/,
-  );
-  assert.match(outputContract, /blobHashAlgorithm: "sha1" \| "sha256"/);
   const plain = validEntrySource();
   const components = componentEntrySource();
   for (const [before, after] of [
@@ -50,38 +44,4 @@ test("manifest v9 and review v6 share path identity", async (t) => {
         : /Without registered components\s*\|\s*9\s*\|\s*6/,
     );
   }
-});
-
-test("delivered component contracts do not retain superseded status or version instructions", async () => {
-  const families = [
-    "mokly-components",
-    "mokly-changes",
-    "mokly-component-props",
-    "mokly-component-changes",
-  ];
-  const files = (
-    await fs.readdir(path.join(repositoryRoot, "docs/protocol"))
-  ).filter(
-    (file) =>
-      file.endsWith(".md") &&
-      families.some((family) => file.startsWith(family)),
-  );
-  assert.ok(files.length > families.length);
-  for (const file of files) {
-    const text = await read(`docs/protocol/${file}`);
-    assert.doesNotMatch(
-      text,
-      /not available in the current package|is planned, not implemented|implementation TODOs|does not claim a shipped validator|raw-file logic must be integrated/,
-      file,
-    );
-  }
-  for (const file of (
-    await fs.readdir(path.join(repositoryRoot, "docs/protocol"))
-  ).filter((file) => file.startsWith("mokly-export") && file.endsWith(".md")))
-    assert.doesNotMatch(
-      await read(`docs/protocol/${file}`),
-      /Keep `ReviewResult\.schemaVersion` at 2/,
-      file,
-    );
-  assert.match(await read("README.md"), /Current output uses manifest v9/);
 });

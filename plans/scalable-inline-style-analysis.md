@@ -2074,6 +2074,10 @@ Evidence: `.context/scalable-inline-style-analysis/m13-merge/`.
       tests. Record CPU model and boot ID, and report unrelated flaky tests
       under the [review rule](../docs/dev/review.md).
 - [x] After checks pass, commit with Conventional Commits and push the branch.
+- [ ] Discovered: merge main's Markdown parser, release and gate updates.
+      Keep main's test deletions, reconcile the protocol caps, check branch
+      dependencies, and repeat the complete gate and four smoke tests before
+      committing and pushing. Evidence: `.context/scalable-inline-style-analysis/m13-merge/second/`.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`. Keep the review read-only, then apply the

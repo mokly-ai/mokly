@@ -90,8 +90,8 @@ test("moving a capped protocol document into a subfolder keeps its cap", async (
     `${longProtocolDocument}one more line\n`,
   );
   await fs.writeFile(
-    path.join(fixture.root, "tests/protocol_doc_sizes.test.ts"),
-    'const oversizedCaps = { "nested/long.md": 252 };\n',
+    path.join(fixture.root, "xtask/protocol-document-caps.json"),
+    '{ "nested/long.md": 252 }\n',
   );
   git(fixture.root, "add", "--all");
 
@@ -110,7 +110,6 @@ async function createDivergedRepository() {
     fs.mkdir(path.join(root, "docs/protocol/fixtures"), { recursive: true }),
     fs.mkdir(path.join(root, "packages/viewer"), { recursive: true }),
     fs.mkdir(path.join(root, "scripts"), { recursive: true }),
-    fs.mkdir(path.join(root, "tests"), { recursive: true }),
     fs.mkdir(path.join(root, "xtask"), { recursive: true }),
   ]);
   await Promise.all([
@@ -144,8 +143,8 @@ async function createDivergedRepository() {
       "fixture line\n".repeat(400),
     ),
     fs.writeFile(
-      path.join(root, "tests/protocol_doc_sizes.test.ts"),
-      'const oversizedCaps = { "long.md": 251 };\n',
+      path.join(root, "xtask/protocol-document-caps.json"),
+      '{ "long.md": 251 }\n',
     ),
     fs.writeFile(
       path.join(root, "xtask/unused-internal-exports.txt"),
@@ -169,10 +168,7 @@ async function createDivergedRepository() {
       path.join(root, "docs/protocol/long.md"),
       "# Shorter contract\n" + "contract line\n".repeat(249),
     ),
-    fs.writeFile(
-      path.join(root, "tests/protocol_doc_sizes.test.ts"),
-      "const oversizedCaps = {};\n",
-    ),
+    fs.writeFile(path.join(root, "xtask/protocol-document-caps.json"), "{}\n"),
     fs.writeFile(path.join(root, "xtask/unused-internal-exports.txt"), ""),
   ]);
   git(root, "add", "--all");

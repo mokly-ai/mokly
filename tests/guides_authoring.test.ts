@@ -70,18 +70,6 @@ test("the Config guide and MoklyConfig fields agree", () => {
     assert.ok(fields.includes(field), `${field} is not a configuration field`);
 });
 
-test("the generated-output guides agree with index-derived tracking", () => {
-  assert.match(sources.get("authoring/config") ?? "", /head Git tracking/u);
-  assert.match(
-    GUIDES.find((guide) => guide.id === "start/build")?.source ?? "",
-    /Git/u,
-  );
-  assert.match(
-    GUIDES.find((guide) => guide.id === "cli/build")?.source ?? "",
-    /--watch/u,
-  );
-});
-
 test("every named authoring concept retains its guide", () => {
   assert.deepEqual(
     pages.map((page) => page.slug),

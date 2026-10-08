@@ -352,8 +352,8 @@ restarting the command so the CLI is rebuilt.
 Run tests that cover the change while you develop:
 
 ```bash
-npm test -- tests/ci_workflow.test.ts
-npm run test:unit -- tests/ci_workflow.test.ts --test-name-pattern="CI shards complete verification"
+npm test -- tests/ci_workflow_policies.test.ts
+npm run test:unit -- tests/ci_workflow_policies.test.ts --test-name-pattern="pins uses"
 npm run test:browser -- tests/browser/pages.spec.ts -g "retain metadata"
 ```
 
