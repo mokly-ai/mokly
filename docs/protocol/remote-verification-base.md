@@ -9,6 +9,10 @@ the [base commit sync plan](../../plans/remote-verification-base-commit.md).
 Linked-worktree sync has passed a real Testbox spike. Automatic and explicit
 remote checks accept unpushed checkout commits when a pushed base is available.
 The executor command uses the same implemented base selection.
+The complete automatic gate passed after a local, unpushed merge of `main`.
+It selected the main tip as the base. All 11 commands and nine reports passed.
+The aggregate passed. The checkout stayed unchanged. Cleanup stopped every
+box and removed the snapshot and temporary index.
 
 ## Base Commit
 

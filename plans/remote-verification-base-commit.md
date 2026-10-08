@@ -335,20 +335,21 @@ Evidence: `.context/remote-verification-base-commit/milestone-3.md` and
 The complete gate passes on Testboxes from a branch with unpushed commits. The
 review runs after the push.
 
-Evidence: `.context/remote-verification-base-commit/gate.log` and the review
-files under `.context/remote-verification-base-commit/`.
+Evidence: `.context/remote-verification-base-commit/gate.log`,
+`.context/remote-verification-base-commit/merge-audit.md` and the review files
+under `.context/remote-verification-base-commit/`.
 
-- [ ] Run all tests for this change with a 100% pass rate. Run
+- [x] Run all tests for this change with a 100% pass rate. Run
       `cargo fmt --all -- --check`, Clippy and the length lints.
-- [ ] Run the complete `cargo xtask check` with at least one unpushed commit
+- [x] Run the complete `cargo xtask check` with at least one unpushed commit
       on the branch. Require the remote executor, 11/11 commands, 9/9 reports,
       a passed aggregate, an unchanged tree and `cleanup=0`. Save the output
       as `gate.log`.
-- [ ] Update the delivery status of the new protocol page and of
+- [x] Update the delivery status of the new protocol page and of
       `remote-verification.md`.
-- [ ] Inspect the diff and the deletions against `origin/main`. Run the
+- [x] Inspect the diff and the deletions against `origin/main`. Run the
       mainline preservation audit from the Git rules.
-- [ ] After the checks pass, run `git add -A`, commit with Conventional
+- [x] After the checks pass, run `git add -A`, commit with Conventional
       Commits and push the branch.
 - [ ] After the push, a reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)

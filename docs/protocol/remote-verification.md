@@ -20,6 +20,10 @@ approves the base lookup, snapshot and identity contract below. Base selection,
 snapshot sync and identity evidence are implemented. Automatic and explicit
 remote checks accept unpushed `HEAD` when local origin history provides a base.
 The [base sync contract](./remote-verification-base.md) defines this behavior.
+The complete automatic gate passed after a local, unpushed merge of `main`.
+It selected the main tip as the base. All 11 commands and nine reports passed.
+The aggregate passed. The checkout stayed unchanged. Cleanup stopped every
+box and removed the snapshot and temporary index.
 
 ## Executor Selection
 
