@@ -1,6 +1,6 @@
 # Testbox Prompt Shutdown
 
-Status: Active. No pull request exists yet. The plan closes when its PR merges.
+Status: Active. [PR #177](https://github.com/mokly-ai/mokly/pull/177) is open. The plan closes when its PR merges.
 
 Stop paying for idle Testbox time after each remote suite command. Today every
 box keeps running about 300 seconds after its last command. The Blacksmith CLI
