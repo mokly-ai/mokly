@@ -6,8 +6,9 @@ Milestone 4. Milestone 5 is complete. Milestone 6 implementation, one-time
 proofs, and the complete local gate are complete; its hosted CI check stays
 open. Milestone 7 repository work is complete. Admin removal and the final
 plan commit remain open. [PR #170](https://github.com/mokly-ai/mokly/pull/170)
-closed on 2026-10-08. The supervisor owns the next PR decision, hosted checks,
-and formal review in another worktree. Milestone 4 finding 3, Milestone 2
+closed on 2026-10-08. The user chooses whether to reopen PR #170 or open a new
+pull request. The supervisor owns hosted checks and formal review in another
+worktree. Milestone 4 finding 3, Milestone 2
 findings 1, 3, 6, and 9, Testbox telemetry, and the old Pages token retirement
 still need the user.
 
@@ -905,8 +906,9 @@ Remote index failure: `.context/turborepo-cloudflare-remote-cache/m6-remote-inde
 ### Milestone 7: Decommission And Review
 
 Remove the Cloudflare and GitHub resources that the Worker needed. Prepare the
-PR text and hand off the formal review. PR #170 is closed. The supervisor owns
-the next PR decision and the review in another worktree. The account steps need
+PR text and hand off the formal review. PR #170 is closed. The user chooses
+whether to reopen PR #170 or open a new pull request. The supervisor owns
+hosted checks and formal review in another worktree. The account steps need
 the Cloudflare account owner and a repository admin. They run from the admin's
 Mac with per-command approval after the new hosted CI run passes.
 
@@ -932,7 +934,8 @@ Mac with per-command approval after the new hosted CI run passes.
       `pr-body.md` beside it. Keep merge decisions and list every deleted file.
       No PR action ran because PR #170 is closed.
 - [ ] Supervisor: apply the prepared PR title and body after the user chooses
-      the PR state. Then complete the hosted cache and preview checks.
+      whether to reopen PR #170 or open a new pull request. Then complete the
+      hosted cache and preview checks.
 - [ ] Review the diff against `origin/main`, then `git add -A`, commit with
       Conventional Commits, and push.
 - [ ] Review the complete local diff against `origin/main` with
@@ -940,6 +943,13 @@ Mac with per-command approval after the new hosted CI run passes.
       then apply the review-fix rule in `docs/dev/review.md`: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest.
   - Unmodified Markdown link check: ENOENT for the deleted Worker README in the Testbox index; local rerun passed 2/2 checks. Source: the remote exporter kept HEAD index state. No test or exporter change. See `.context/turborepo-cloudflare-remote-cache/m6-remote-index-failure.md`.
+  - Finding 1 (medium): the contract names GitHub scopes and limits for Blacksmith storage. Recommend C: correct the store and limits, record Branch Protected Caches, and check main/PR isolation after merge. On 2026-10-08, `blacksmith cache list` showed branch and merge-ref scopes. One npm key was saved separately in 18 pull-request scopes. Branch Protected Caches was on that day. Waits for the user.
+  - Finding 2 (low): the 14-day prune can discard entries from an immutable exact-key hit and cause repeated builds. Recommend A: set `TURBO_CACHE_MAX_AGE=0` in CI and preview; keep the developer age limit. Waits for the user.
+  - Finding 3 (low): the key has no task-input coverage check and includes 113 unread protocol files. Recommend C: use the ten declared protocol paths and add a pure input/environment coverage check. Waits for the user.
+  - Finding 4 (low): fixed in this commit; the contract links the workflow cache test and names its properties.
+  - Finding 5 (low): the test selects jobs by run strings and expects two previews. Recommend A and B: select jobs by structure and keep every assertion. Waits for the user.
+
+Review and scope evidence: `.context/turborepo-cloudflare-remote-cache/m7-review.md` and `.context/turborepo-cloudflare-remote-cache/m7-blacksmith-scopes.md`.
 
 The final commit TODO stays open for the supervisor after admin work. The
 repository handoff has its own pushed commit. The supervisor owns formal review.

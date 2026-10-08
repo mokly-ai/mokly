@@ -199,8 +199,13 @@ See the [workflow graph](./ci-workflow.md),
 [preview contract](./npm-preview-deployments.md).
 
 The [static guards](../../tests/turbo_static_guards.test.ts) protect the direct
-recipe, clean-first scripts, compiler exclusions, and asset filtering. One-time
-output and restore proofs stay under `.context/`. The package suite still
+recipe, clean-first scripts, compiler exclusions, and asset filtering.
+The [workflow cache test](../../tests/turbo_workflow_cache.test.ts) keeps one
+task-cache saver, restore-only suite and preview steps, one pinned revision,
+the shared path and restore prefix, the key output reference, no `environment`
+in CI or preview, no task-cache credentials, telemetry off, release force, and
+no task-cache step in native jobs.
+One-time output and restore proofs stay under `.context/`. The package suite still
 runs real `npm pack --json` through prepack.
 
 ## References
