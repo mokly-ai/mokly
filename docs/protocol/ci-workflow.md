@@ -216,8 +216,9 @@ their outputs.
 [`tests/release_evidence_contract.test.ts`](../../tests/release_evidence_contract.test.ts)
 and
 [`tests/workflow_runner_sizes.test.ts`](../../tests/workflow_runner_sizes.test.ts)
-keep their property checks. The policy and script tests assert no literal job
-names, step order, matrix values or run strings; review owns those.
+keep their property checks. The policy and script tests may find a job or a step
+by its name and fail with a clear message when it is missing. They do not assert
+the set of job names, step order, matrix values or run strings; review owns those.
 
 ## Related Docs
 

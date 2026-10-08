@@ -28,8 +28,8 @@ The remaining automated checks for repository inputs are deliberately narrow:
   resolve `origin/main` or a branch-point lockfile.
 
 These checks are properties of the workflow, not copies of its text. Review
-owns workflow literals such as job names, step order, matrix values and run
-strings. Nothing scans test code for remote-branch reads. New tests rely on
+owns workflow literals such as the set of job names, step order, matrix values
+and run strings. Nothing scans test code for remote-branch reads. New tests rely on
 review to keep this deterministic-input rule.
 
 No workflow or composite-action `run:` step may delete remote Git state. In a

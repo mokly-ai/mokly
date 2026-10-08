@@ -52,8 +52,9 @@ and when to read it. Read the doc at that point instead of guessing the rule.
   that owns them.
 - Verify workflow YAML by executing its scripts with controlled inputs and by
   checking policy properties, such as pinned action revisions and no
-  untrusted interpolation in `run:` steps. Do not assert literal job names,
-  step order, matrix values, or run strings.
+  untrusted interpolation in `run:` steps. Tests may find a job or step by name
+  and fail clearly when it is missing; do not assert the set of job names, step
+  order, matrix values, or run strings.
 - Run `cargo xtask check --suite repository` early. Leave complete unit and
   browser suite runs to the complete gate.
 - Run the complete `cargo xtask check` once before saying work is complete.
