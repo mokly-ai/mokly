@@ -13,7 +13,7 @@ fn explicit_remote_conditions_follow_the_contract_order() {
             Check::Version,
             Check::Login,
             Check::Access,
-            Check::Published,
+            Check::Base,
             Check::Interrupt,
         ]
     );

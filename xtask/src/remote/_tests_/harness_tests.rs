@@ -106,9 +106,6 @@ pub(super) fn harness(case: Case) -> Harness {
         GitHeadMock
             .each_call(matching!())
             .answers(&|_| CommitSha::read(&"b".repeat(40))),
-        GitPublishedMock
-            .each_call(matching!())
-            .answers(&|_| Ok(true)),
         GitBaseMock.each_call(matching!(_)).answers(&|_, head| {
             Ok(BaseLookup::Found(BaseCommit {
                 sha: head.clone(),

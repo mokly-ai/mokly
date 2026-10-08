@@ -6,9 +6,9 @@ Continuation of [Remote Verification](./remote-verification.md).
 
 Base lookup, snapshot sync, cleanup and identity evidence are implemented under
 the [base commit sync plan](../../plans/remote-verification-base-commit.md).
-Linked-worktree sync has passed a real Testbox spike. The availability policy
-still requires pushed checkout `HEAD`, so the base currently equals `HEAD`.
-Selection for unpushed commits remains the approved target below.
+Linked-worktree sync has passed a real Testbox spike. Automatic and explicit
+remote checks accept unpushed checkout commits when a pushed base is available.
+The executor command uses the same implemented base selection.
 
 ## Base Commit
 
@@ -152,7 +152,8 @@ Before warmup, print this executor line:
 
 `HEAD` names the checkout commit. `base` names the pushed snapshot commit.
 `ahead` is the selected base's commit count to checkout `HEAD`.
-Append `base=<base>` to the existing remote summary line.
+Append `base=<base>` and `cleanup=<count>` to the remote summary line.
+The cleanup count names boxes neither stopped nor proven completed.
 
 Write `.context/verification-logs/remote/<run>/identity.json` before warmup.
 Use a typed struct with these fields, in this order:
@@ -172,7 +173,7 @@ Do not put it in the report directory; the aggregate accepts suite reports only.
 
 ## Executor Decision And Fallback
 
-The availability policy replaces its `Published` check with a `Base` check.
+The availability policy uses a `Base` check after Blacksmith access.
 No shared origin history selects local mode in `auto`, with one warning:
 
 ```text
@@ -184,6 +185,16 @@ Explicit `remote` fails with the same reason. A valid base allows this decision:
 ```text
 remote: Blacksmith access and a pushed base commit are available
 ```
+
+In automatic mode, no base prints this executor decision on standard output:
+
+```text
+local: a pushed base commit is unavailable
+```
+
+A failed Git lookup uses the same local reason and its typed command warning.
+Explicit remote mode returns that command error. Never infer no history from
+command failure text.
 
 `cargo xtask executor` performs this lookup without building a snapshot.
 `MOKLY_TESTBOX_REF` selects the warmup workflow ref only.

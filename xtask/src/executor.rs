@@ -36,8 +36,8 @@ pub(crate) enum LocalReason {
     Login,
     /// Testbox list access failed.
     Access,
-    /// Origin reachability failed.
-    Published,
+    /// No eligible pushed base is available or its lookup failed.
+    Base,
     /// A box preparation phase failed before any suite.
     Preparation,
 }
@@ -56,7 +56,7 @@ impl fmt::Display for Decision {
         let reason = match self {
             Self::Remote => {
                 return formatter
-                    .write_str("remote: Blacksmith access and pushed HEAD are available");
+                    .write_str("remote: Blacksmith access and a pushed base commit are available");
             }
             Self::Local(reason) => match reason {
                 LocalReason::Requested => "local mode was requested",
@@ -67,7 +67,7 @@ impl fmt::Display for Decision {
                 LocalReason::Version => "Blacksmith version lookup failed",
                 LocalReason::Login => "Blacksmith key login failed",
                 LocalReason::Access => "Blacksmith Testbox access failed",
-                LocalReason::Published => "local HEAD is not reachable from origin refs",
+                LocalReason::Base => "a pushed base commit is unavailable",
                 LocalReason::Preparation => "remote preparation failed before any suite started",
             },
         };

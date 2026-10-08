@@ -2,6 +2,7 @@
 
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use unimock::{MockFn, Unimock, matching};
 
@@ -49,32 +50,25 @@ fn head_fingerprint_and_log_failures_stop_before_warmup() {
                 .answers(&|_| Ok(())),
             InterruptRequestedMock.each_call(matching!()).returns(false),
         )));
-        let published = GitPublishedMock
-            .next_call(matching!())
-            .answers(&|_| Ok(true));
-        let head = GitHeadMock
-            .next_call(matching!())
-            .answers_arc(Arc::new(move |_| {
-                if stage == 0 {
-                    Err(failure(Operation::Git))
-                } else {
-                    CommitSha::read(&"b".repeat(40))
-                }
-            }));
-        let git = Arc::new(if stage == 0 {
-            Unimock::new((published, head))
-        } else {
-            Unimock::new((
-                published,
-                head,
-                GitBaseMock.next_call(matching!(_)).answers(&|_, head| {
-                    Ok(BaseLookup::Found(BaseCommit {
-                        sha: head.clone(),
-                        ahead: 0,
-                    }))
-                }),
-            ))
-        });
+        let reads = AtomicUsize::new(0);
+        let git = Arc::new(Unimock::new((
+            GitHeadMock
+                .each_call(matching!())
+                .answers_arc(Arc::new(move |_| {
+                    let read = reads.fetch_add(1, Ordering::SeqCst);
+                    if stage == 0 && read > 0 {
+                        Err(failure(Operation::Git))
+                    } else {
+                        CommitSha::read(&"b".repeat(40))
+                    }
+                })),
+            GitBaseMock.each_call(matching!(_)).answers(&|_, head| {
+                Ok(BaseLookup::Found(BaseCommit {
+                    sha: head.clone(),
+                    ahead: 0,
+                }))
+            }),
+        )));
         let fingerprint = Arc::new(if stage == 0 {
             Unimock::new(())
         } else {

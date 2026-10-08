@@ -4,6 +4,7 @@ use crate::executor::{Decision, Executor, LocalReason};
 use crate::remote::contracts::{Dependencies, RequiredProgram};
 
 use crate::remote::error::{Error, Result};
+use crate::remote::git_identity::BaseLookup;
 use crate::remote::policy::{Check, ordered_checks};
 use crate::remote::reporting::warning;
 /// Availability selection without box warmup or suite execution.
@@ -107,9 +108,10 @@ impl DefaultSelector {
                 }
             }
             Check::Access => dependencies.blacksmith.list()?,
-            Check::Published => {
-                if !dependencies.git.published()? {
-                    return Err(Error::UnpublishedHead);
+            Check::Base => {
+                let head = dependencies.git.head()?;
+                if matches!(dependencies.git.base(&head)?, BaseLookup::NoBase) {
+                    return Err(Error::NoBase);
                 }
             }
             Check::Interrupt => {
@@ -129,3 +131,7 @@ mod availability_tests;
 #[cfg(test)]
 #[path = "_tests_/missing_programs_tests.rs"]
 mod missing_programs_tests;
+
+#[cfg(test)]
+#[path = "_tests_/base_availability_tests.rs"]
+mod base_availability_tests;

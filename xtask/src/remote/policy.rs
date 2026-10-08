@@ -17,8 +17,8 @@ pub(super) enum Check {
     Login,
     /// Verify access through the box list.
     Access,
-    /// Require an origin ref that contains HEAD.
-    Published,
+    /// Require an eligible pushed ancestor from local origin history.
+    Base,
     /// Reject a pending interrupt before any warmup.
     Interrupt,
 }
@@ -37,7 +37,7 @@ pub(super) fn ordered_checks(mode: Executor) -> Vec<Check> {
         Check::Version,
         Check::Login,
         Check::Access,
-        Check::Published,
+        Check::Base,
         Check::Interrupt,
     ]);
     checks
@@ -53,7 +53,7 @@ impl Check {
             Self::Version => LocalReason::Version,
             Self::Login => LocalReason::Login,
             Self::Access => LocalReason::Access,
-            Self::Published | Self::Interrupt => LocalReason::Published,
+            Self::Base | Self::Interrupt => LocalReason::Base,
         }
     }
 }

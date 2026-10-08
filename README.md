@@ -396,7 +396,8 @@ export fixtures use isolated, validated copies; dedicated tests retain cold
 baseline and preview builds. See [fixture preparation](./docs/protocol/ci-fixture-preparation.md).
 
 The [remote verification contract](./docs/protocol/remote-verification.md)
-defines the Testbox gate. Push your branch before an explicit remote check:
+defines the Testbox gate. A remote check needs a pushed ancestor in the local
+origin refs. Checkout `HEAD` can include unpushed commits:
 
 ```bash
 cargo xtask check --executor remote
@@ -404,7 +405,8 @@ cargo xtask check --executor remote
 
 Warmup uses the Testbox workflow from `main`.
 Set `MOKLY_TESTBOX_REF=<pushed branch>` only to test a changed Testbox workflow
-before it merges. This variable does not change the source commit under test.
+before it merges. This variable changes neither the source fingerprint nor
+the selected base commit.
 Remote runs sync from a separate snapshot. The
 [base sync contract](./docs/protocol/remote-verification-base.md) defines
 checkout preservation, run identity and snapshot cleanup.

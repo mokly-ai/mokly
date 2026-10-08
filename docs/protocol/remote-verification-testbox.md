@@ -12,7 +12,7 @@ checks pass. Main's dependency fixes are merged. Automatic selection and
 `cargo xtask executor` are implemented.
 Workflow verification executes the Testbox scripts instead of matching their text.
 The [base sync plan](../../plans/remote-verification-base-commit.md) approves
-the snapshot and base identity below. Xtask now syncs a snapshot at pushed `HEAD`.
+the implemented snapshot and base identity below. Xtask accepts unpushed `HEAD`.
 
 ## Workflow
 

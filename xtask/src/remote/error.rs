@@ -102,9 +102,6 @@ pub(crate) enum Error {
         /// Every missing program in required lookup order.
         programs: Vec<RequiredProgram>,
     },
-    /// GitHub does not contain the local commit.
-    #[error("[xtask/remote] local HEAD is not published; push the branch first")]
-    UnpublishedHead,
     /// A system operation failed before returning an exit status.
     #[error("[xtask/remote] {operation:?} operation failed: {source}")]
     Io {

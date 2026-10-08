@@ -135,7 +135,8 @@ complete gate passes the same mode to the repository command on its Testbox.
 `--executor auto|local|remote` overrides `MOKLY_CHECK_EXECUTOR`.
 An absent flag and variable select `auto`. Explicit `local` skips remote checks.
 Explicit `remote` rejects `--suite` and GitHub Actions.
-Push local `HEAD` before a remote check. Install `blacksmith`, `rsync` and `ssh`.
+Remote checks need a pushed ancestor in local origin refs. Unpushed checkout
+commits can use that base. Install `blacksmith`, `rsync` and `ssh`.
 PATH lookup skips entries when file access fails.
 Set `BLACKSMITH_ORG_TOKEN` to use org-key login through stdin.
 Remote mode can use the current CLI login when the key is absent.
@@ -149,12 +150,13 @@ Availability checks name all missing programs in one diagnostic, in the order
 Warmup uses the Testbox workflow from `main`.
 Set `MOKLY_TESTBOX_REF=<pushed branch>` only to test a changed Testbox workflow
 before it merges.
-It does not change the required source fingerprint or `HEAD`.
+It changes neither the source fingerprint nor the selected base commit.
 
 Every remote run builds a fresh detached snapshot under
 `.context/verification-snapshots/<run>/`. The snapshot has the checkout's
-working files and a pushed base as `HEAD`. The current availability policy
-still requires pushed checkout `HEAD`, so that base equals `HEAD`.
+working files and a pushed base as `HEAD`. That base can equal checkout
+`HEAD` or precede unpushed commits. The main merge-base filter keeps the
+checkout and box comparison bases equal.
 Probes and suites sync from the snapshot. Management and report downloads
 keep the workspace root. Before warmup, both fingerprints must match.
 The final fingerprint still reads the checkout. Its `HEAD`, index and files
@@ -163,6 +165,7 @@ paths fail preparation. Cleanup removes only this run's owned paths.
 Snapshot Git requests cannot be cancelled. Cleanup also covers partial builds
 and panic unwind. A removal failure warns once with manual commands.
 It does not fail the check. The identity line and summary name the base.
+The summary also gives the remaining box cleanup count.
 `identity.json` records checkout `HEAD`, base, ahead count and fingerprint
 beside the logs. Suite reports and aggregation use the base commit.
 

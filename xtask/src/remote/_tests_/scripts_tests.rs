@@ -17,21 +17,8 @@ fn git_and_script_contracts_use_the_exact_arguments_and_runtime_profile() {
             .each_call(matching!(_))
             .answers(&|_, request| {
                 let output = if request.program == "git" {
-                    if request.args == ["rev-parse", "HEAD"] {
-                        "b".repeat(40)
-                    } else {
-                        assert_eq!(
-                            request.args,
-                            [
-                                "for-each-ref",
-                                "--contains",
-                                "HEAD",
-                                "--format=%(refname)",
-                                "refs/remotes/origin/"
-                            ]
-                        );
-                        "refs/remotes/origin/main\n".into()
-                    }
+                    assert_eq!(request.args, ["rev-parse", "HEAD"]);
+                    "b".repeat(40)
                 } else if request.args[0] == "scripts/verification/source-tree.mjs" {
                     format!("sha256:{}\n", "a".repeat(64))
                 } else {
@@ -61,7 +48,6 @@ fn git_and_script_contracts_use_the_exact_arguments_and_runtime_profile() {
         workspace: PathBuf::from("/workspace"),
     };
     assert_eq!(scripts.head().unwrap().as_str(), "b".repeat(40));
-    assert!(scripts.published().unwrap());
     assert_eq!(
         scripts.read(&PathBuf::from("/workspace")).unwrap(),
         format!("sha256:{}", "a".repeat(64))

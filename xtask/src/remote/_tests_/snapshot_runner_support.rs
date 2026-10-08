@@ -1,7 +1,7 @@
 //! Unimock event and input captures for snapshot runner phase order.
 
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
@@ -12,6 +12,8 @@ use crate::remote::git_identity::{BaseCommit, BaseLookup, CommitSha};
 use crate::remote::snapshot::contracts::{
     Ownership, SnapshotCreateMock, SnapshotHandle, SnapshotRemoveMock,
 };
+
+use super::snapshot_runner_client::client;
 
 /// A controlled outcome at one snapshot lifecycle boundary.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -51,7 +53,7 @@ pub(super) struct Fixture {
 }
 
 /// Keep captured event insertion independent of operation behavior.
-fn event(events: &Mutex<Vec<String>>, value: &str) {
+pub(super) fn event(events: &Mutex<Vec<String>>, value: &str) {
     events.lock().unwrap().push(value.to_owned());
 }
 
@@ -64,7 +66,7 @@ fn failure(operation: Operation) -> Error {
 }
 
 /// A pure valid mock process result.
-fn output(stdout: String) -> Output {
+pub(super) fn output(stdout: String) -> Output {
     Output {
         stdout,
         code: Some(0),
@@ -229,33 +231,7 @@ pub(super) fn fixture(case: Case) -> Fixture {
         ))
         .no_verify_in_drop(),
     );
-    let warm_events = events.clone();
-    let run_events = events.clone();
-    let download_events = events.clone();
-    let next_box = AtomicUsize::new(0);
-    let blacksmith = Arc::new(Unimock::new((
-        BlacksmithWarmupMock.each_call(matching!("main")).answers_arc(Arc::new(move |_, _| {
-            event(&warm_events, "warmup"); Ok(output(format!("tbx_{}\n", next_box.fetch_add(1, Ordering::SeqCst))))
-        })),
-        BlacksmithRunMock.each_call(matching!(_, _, _, _)).answers_arc(Arc::new(move |_, cwd, _, command, log| {
-            assert_eq!(cwd, Path::new("/workspace/.context/verification-snapshots/20261006T120000Z-42"));
-            event(&run_events, if log.is_none() { "probe" } else { "suite" });
-            if let Some(log) = log {
-                assert!(log.starts_with("/workspace/.context/verification-logs/remote"));
-                assert!(command.starts_with("node scripts/verification/testbox-suite.mjs --expect sha256:"));
-                Ok(output(String::new()))
-            } else {
-                assert_eq!(command, format!("node scripts/verification/source-tree.mjs --expect sha256:{} --print-head", "a".repeat(64)));
-                Ok(output(format!("sha256:{}\n{}\n", "a".repeat(64), if case == Case::BehindHead { "d".repeat(40) } else { "b".repeat(40) })))
-            }
-        })),
-        BlacksmithDownloadMock.each_call(matching!(_, _, _)).answers_arc(Arc::new(move |_, _, _, target| {
-            assert!(target.starts_with("/workspace/.context/verification-reports/remote"));
-            event(&download_events, "download"); Ok(())
-        })),
-        BlacksmithDisconnectMock.each_call(matching!(_)).answers(&|_, _| Ok(Disconnection::Closed)),
-        BlacksmithStatusMock.each_call(matching!(_)).answers(&|_, id| Ok(format!("ID STATUS\n{id} completed\n"))),
-    )).no_verify_in_drop());
+    let blacksmith = client(case, events.clone());
     let report_events = events.clone();
     let progress_events = events.clone();
     let reporter = Arc::new(

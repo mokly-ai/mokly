@@ -24,49 +24,6 @@ mod harness_github_tests;
 mod harness_snapshot_tests;
 
 #[test]
-fn complete_remote_gate_downloads_nine_reports_after_eleven_suites() {
-    let fixture = harness(Case::Success);
-    DefaultRemoteRunner {
-        dependencies: fixture.dependencies,
-    }
-    .run(DependencyAudit::Baseline)
-    .unwrap();
-    let events = fixture.events.lock().unwrap();
-    assert_eq!(
-        events
-            .iter()
-            .filter(|event| event.starts_with("suite:"))
-            .count(),
-        11
-    );
-    assert_eq!(
-        events
-            .iter()
-            .filter(|event| event.starts_with("download:"))
-            .count(),
-        9
-    );
-    assert_eq!(
-        events
-            .iter()
-            .filter(|event| event.starts_with("stop:"))
-            .count(),
-        11
-    );
-    let aggregate = events
-        .iter()
-        .position(|event| event == "aggregate")
-        .unwrap();
-    assert!(
-        events
-            .iter()
-            .enumerate()
-            .filter(|(_, event)| event.starts_with("stop:"))
-            .all(|(index, _)| index < aggregate)
-    );
-}
-
-#[test]
 fn every_failed_run_cleans_all_recoverable_boxes() {
     for case in [
         Case::Warmup,
@@ -229,51 +186,6 @@ fn preparation_cleanup_failure_cannot_allow_local_fallback() {
     );
 }
 
-#[test]
-fn aggregate_summary_names_the_failed_outcome() {
-    let fixture = harness(Case::Aggregate);
-    assert!(
-        DefaultRemoteRunner {
-            dependencies: fixture.dependencies
-        }
-        .run(DependencyAudit::Baseline)
-        .is_err()
-    );
-    assert!(fixture.events.lock().unwrap().iter().any(|event| event.contains("summary: commands=") && event.contains("aggregate=failed")));
-}
-
-#[test]
-fn each_report_download_precedes_its_box_stop() {
-    let fixture = harness(Case::Success);
-    DefaultRemoteRunner {
-        dependencies: fixture.dependencies,
-    }
-    .run(DependencyAudit::Baseline)
-    .unwrap();
-    let events = fixture.events.lock().unwrap();
-    for id in events
-        .iter()
-        .filter_map(|event| event.strip_prefix("download:"))
-    {
-        let download = events
-            .iter()
-            .position(|event| event == &format!("download:{id}"))
-            .unwrap();
-        let stop = events
-            .iter()
-            .position(|event| event == &format!("stop:{id}"))
-            .unwrap();
-        assert!(download < stop);
-        assert_eq!(
-            events
-                .iter()
-                .filter(|event| **event == format!("stop:{id}"))
-                .count(),
-            1
-        );
-    }
-}
-
 #[path = "panic_cleanup_tests.rs"]
 mod panic_cleanup_tests;
 
@@ -294,3 +206,6 @@ mod disconnect_runner_tests;
 
 #[path = "snapshot_recovery_tests.rs"]
 mod snapshot_recovery_tests;
+
+#[path = "runner_evidence_tests.rs"]
+mod runner_evidence_tests;

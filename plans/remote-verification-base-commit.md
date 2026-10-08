@@ -2,15 +2,14 @@
 
 Status: Active
 
-Let the remote complete gate run when local `HEAD` is not on GitHub. Today
-`cargo xtask check` selects Testboxes only when an `origin` branch contains
-`HEAD`. Any unpushed commit, such as a checkpoint commit, a fix commit after a
-failed gate, a merge of `main` or a rebase, sends the gate to the local
-executor. A local run takes 40 to 47 minutes. A remote run takes 9 to 13
-minutes. The agent rules order the work as gate, commit, push. Agents that
-follow that order lose about 30 minutes on each gate run. Agents that push
-first break the order. The post-push review of the bootstrap work reported
-this as a Medium process finding.
+Let the remote complete gate run when local `HEAD` is not on GitHub.
+The previous policy selected Testboxes only when an `origin` branch contained
+`HEAD`. Unpushed checkpoint commits, fix commits, main merges and rebases
+therefore selected local execution. The bootstrap trials took 40 to 47 minutes
+locally and 9 to 13 minutes remotely. The agent rules order the work as gate,
+commit, push. The previous policy added about 30 minutes for agents that
+followed that order. The bootstrap review reported this as a Medium process
+finding. Base selection and snapshot sync now remove that policy restriction.
 
 On 2026-10-08 the user chose option C, the nearest pushed ancestor variant:
 each box fetches the nearest commit that is already on GitHub, and the local
@@ -48,10 +47,11 @@ of the [Blacksmith remote verification plan](./blacksmith-remote-verification.md
    The suite wrapper unshallows the box clone before each suite.
 2. The source-tree fingerprint ignores commit identity. An unpushed commit and
    the same uncommitted change give the same fingerprint.
-3. Xtask's `Published` check runs `git for-each-ref --contains HEAD` over
-   `refs/remotes/origin/`. A miss selects local mode with the warning
-   `local HEAD is not published; push the branch first`. The probe requires
-   the box `HEAD` to equal local `HEAD`. The aggregate runs with local `HEAD`.
+3. Before this plan, Xtask's `Published` check ran
+   `git for-each-ref --contains HEAD` over `refs/remotes/origin/`.
+   A miss selected local mode with the warning
+   `local HEAD is not published; push the branch first`. The probe required
+   the box `HEAD` to equal local `HEAD`. The aggregate used local `HEAD`.
 4. Suite reports take their commit from `GITHUB_SHA` or `git rev-parse HEAD`
    on the box and reject a mismatch. The wrapper removes `GITHUB_SHA`. The
    report commit is therefore always the box `HEAD`.
@@ -62,7 +62,7 @@ of the [Blacksmith remote verification plan](./blacksmith-remote-verification.md
    contain M when it exists. Then `git merge-base <base> origin/main` equals
    M, so the box uses the checkout's ratchet base. A newer main tip that is
    not an ancestor of local `HEAD` would also add reversed main changes.
-6. The protocol lists remote execution without a pushed `HEAD` and copying
+6. The earlier protocol listed execution without a pushed `HEAD` and copying
    unpushed commits as out of scope. This plan removes both items.
 7. `remote-verification-testbox.md` has 250 lines, the protocol cap. The new
    contract needs its own page.
@@ -124,6 +124,7 @@ of the [Blacksmith remote verification plan](./blacksmith-remote-verification.md
    struct with `run`, `head`, `base`, `ahead` and `fingerprint` fields. Use
    serde with derive and serde_json, added with `cargo add` without versions,
    or a pure formatter over validated fields. Test the exact file bytes.
+   The summary also reports the existing remaining-box count as `cleanup=<n>`.
 6. **Executor decision.** The `Published` check becomes a `Base` check. No
    base selects local mode in `auto` with the warning
    `no origin ref shares history with HEAD; fetch origin or push the branch`,
@@ -292,15 +293,17 @@ Evidence: `.context/remote-verification-base-commit/milestone-3.md` and
 - [x] Fix review R1 in its own commit. Reserve only the run directory.
       Leave the temporary index absent until Git creates it. Keep the index
       absence check and claim its cleanup immediately before the first write.
-- [ ] Replace the `Published` check with the `Base` check in the policy, the
+- [x] Replace the `Published` check with the `Base` check in the policy, the
       availability selector, the local reasons, the decision text and the
       typed error. Remove the `published` boundary method and its
       `UnpublishedHead` error.
-- [ ] Update the unit tests for the policy order, the `auto` warning, the
+- [x] Update the unit tests for the policy order, the `auto` warning, the
       explicit `remote` error and the `cargo xtask executor` output.
-- [ ] Update the xtask README executor text. Replace the pushed-HEAD
+- [x] Update the xtask README executor text. Replace the pushed-HEAD
       requirement with the base rule. State that `MOKLY_TESTBOX_REF` changes
       neither the fingerprint nor the base commit.
+- [x] Split the near-cap runner test and snapshot fixture modules. Keep every
+      assertion and scenario.
 - [ ] Smoke test from this branch with one unpushed commit that modifies,
       adds, deletes and renames files, plus one uncommitted change. Run the
       complete `cargo xtask check`. Require the remote decision, the identity
@@ -308,11 +311,19 @@ Evidence: `.context/remote-verification-base-commit/milestone-3.md` and
       aggregate for the base, an unchanged tree and `cleanup=0`. Check that
       `git status`, `git symbolic-ref HEAD` and `git worktree list` are
       unchanged after the run and that the snapshot directory is gone.
+      First commit and push the policy code and a separate small text fixture
+      directory. Modify, add, delete and rename fixtures in one unpushed commit.
+      Apply one uncommitted fixture change. Require the pushed fixture commit
+      as the base with ahead 1, rather than the main tip.
 - [ ] Smoke test an interrupt: send SIGINT during the probe phase. Require
       stopped boxes, a removed snapshot and the existing interrupted result.
 - [ ] Smoke test `cargo xtask executor` with the same unpushed commit. Require
       the remote decision. Then run it in a clone without origin refs that
       share history. Require the local decision and the no-base warning.
+      Run Cargo inside the scratch clone so its manifest selects that checkout.
+- [ ] After the smoke checks, discard only the unpushed fixture commit and its
+      uncommitted change. Keep every pushed commit. Commit fixture removal,
+      tick this milestone and push. Leave no fixture directory in the final tree.
 - [ ] Record the smoke results in
       `.context/remote-verification-base-commit/smoke.md`.
 - [ ] Run the xtask tests, `cargo fmt --all -- --check`, Clippy and the length

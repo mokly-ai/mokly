@@ -64,24 +64,6 @@ impl Git for SystemScripts {
     fn base(&self, head: &CommitSha) -> Result<BaseLookup> {
         self.lookup_base(head)
     }
-    fn published(&self) -> Result<bool> {
-        Ok(!self
-            .capture(
-                "git",
-                vec![
-                    "for-each-ref".into(),
-                    "--contains".into(),
-                    "HEAD".into(),
-                    "--format=%(refname)".into(),
-                    "refs/remotes/origin/".into(),
-                ],
-                Operation::Git,
-                &self.workspace,
-            )?
-            .stdout
-            .trim()
-            .is_empty())
-    }
 }
 
 impl Fingerprint for SystemScripts {

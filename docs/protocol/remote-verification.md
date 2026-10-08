@@ -16,10 +16,10 @@ It closes the shared SSH connection, cancels a known run once before stop and
 keeps one bounded diagnostic line for cleanup command failures.
 The complete default remote smoke check passes with prompt shutdown.
 The [base commit sync plan](../../plans/remote-verification-base-commit.md)
-approves the base lookup, snapshot and identity target below. Snapshot sync and
-identity evidence are implemented. Availability still requires pushed checkout
-`HEAD`; unpushed selection remains approved work under the
-[base sync contract](./remote-verification-base.md).
+approves the base lookup, snapshot and identity contract below. Base selection,
+snapshot sync and identity evidence are implemented. Automatic and explicit
+remote checks accept unpushed `HEAD` when local origin history provides a base.
+The [base sync contract](./remote-verification-base.md) defines this behavior.
 
 ## Executor Selection
 

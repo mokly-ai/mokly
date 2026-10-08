@@ -137,7 +137,7 @@ impl DefaultRemoteRunner {
             ));
         }
         dependencies.reporter.progress(&format!(
-            "summary: commands={}/11 reports={}/9 aggregate={} unchanged-tree={} run={run} base={}",
+            "summary: commands={}/11 reports={}/9 aggregate={} unchanged-tree={} run={run} base={} cleanup={cleanup}",
             11 - failures,
             9 - downloads,
             if aggregate_failed { "failed" } else { "passed" },

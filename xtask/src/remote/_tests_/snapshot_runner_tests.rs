@@ -11,6 +11,9 @@ use self::snapshot_runner_support::{Case, fixture};
 #[path = "snapshot_runner_support.rs"]
 mod snapshot_runner_support;
 
+#[path = "snapshot_runner_client.rs"]
+mod snapshot_runner_client;
+
 /// The expected count is operation count, never elapsed wall-clock time.
 fn count(events: &[String], name: &str) -> usize {
     events.iter().filter(|event| event.as_str() == name).count()

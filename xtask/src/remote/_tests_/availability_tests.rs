@@ -9,6 +9,7 @@ use crate::executor::{Decision, Executor};
 use crate::remote::availability::{DefaultSelector, Selector};
 use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
+use crate::remote::git_identity::{BaseCommit, BaseLookup, CommitSha};
 
 fn command_failure() -> Error {
     Error::Command {
@@ -101,18 +102,32 @@ fn fixture(stage: usize, key: bool, mode: Executor) -> (DefaultSelector, Arc<Mut
     } else {
         Unimock::new((version, list))
     });
-    let publish_events = events.clone();
+    let head_events = events.clone();
+    let base_events = events.clone();
     let git = Arc::new(if stage < 7 || early_local {
         Unimock::new(())
     } else {
-        Unimock::new(
-            GitPublishedMock
+        Unimock::new((
+            GitHeadMock
                 .next_call(matching!())
                 .answers_arc(Arc::new(move |_| {
-                    publish_events.lock().unwrap().push("published".into());
-                    Ok(stage != 7)
+                    head_events.lock().unwrap().push("head".into());
+                    CommitSha::read(&"b".repeat(40))
                 })),
-        )
+            GitBaseMock
+                .next_call(matching!(_))
+                .answers_arc(Arc::new(move |_, head| {
+                    base_events.lock().unwrap().push("base".into());
+                    Ok(if stage == 7 {
+                        BaseLookup::NoBase
+                    } else {
+                        BaseLookup::Found(BaseCommit {
+                            sha: head.clone(),
+                            ahead: 0,
+                        })
+                    })
+                })),
+        ))
     });
     let reporter = Arc::new(if mode == Executor::Auto && stage == 0 {
         Unimock::new(())
@@ -168,7 +183,8 @@ fn each_remote_condition_fails_before_the_next_condition() {
         "version",
         "login",
         "list",
-        "published",
+        "head",
+        "base",
     ];
     for stage in 0..=9 {
         let (runner, events) = fixture(stage, true, Executor::Remote);
@@ -176,7 +192,7 @@ fn each_remote_condition_fails_before_the_next_condition() {
         assert_eq!(result.is_ok(), stage == 9, "stage={stage}");
         match (stage, result) {
             (0, Err(Error::GithubActions))
-            | (7, Err(Error::UnpublishedHead))
+            | (7, Err(Error::NoBase))
             | (8, Err(Error::Interrupted { cleanup: 0 }))
             | (9, Ok(Decision::Remote)) => {}
             (1..=3, Err(Error::MissingPrograms { programs })) => {
@@ -194,7 +210,7 @@ fn each_remote_condition_fails_before_the_next_condition() {
         let completed = if (1..=3).contains(&stage) {
             3
         } else {
-            stage.min(7)
+            if stage >= 7 { 8 } else { stage }
         };
         assert_eq!(*events.lock().unwrap(), all[..completed]);
     }
@@ -206,7 +222,15 @@ fn explicit_remote_uses_current_login_when_the_key_is_missing() {
     assert_eq!(runner.select(Executor::Remote).unwrap(), Decision::Remote);
     assert_eq!(
         *events.lock().unwrap(),
-        ["blacksmith", "rsync", "ssh", "version", "list", "published"]
+        [
+            "blacksmith",
+            "rsync",
+            "ssh",
+            "version",
+            "list",
+            "head",
+            "base"
+        ]
     );
 }
 

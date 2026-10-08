@@ -93,12 +93,10 @@ pub(crate) trait Clock: Send + Sync {
 }
 
 /// Local commit and origin reachability.
-#[cfg_attr(test, unimock::unimock(api = [GitHeadMock, GitPublishedMock, GitBaseMock]))]
+#[cfg_attr(test, unimock::unimock(api = [GitHeadMock, GitBaseMock]))]
 pub(crate) trait Git: Send + Sync {
     /// Read the full local HEAD.
     fn head(&self) -> Result<CommitSha>;
-    /// Check whether an origin ref contains HEAD.
-    fn published(&self) -> Result<bool>;
     /// Find the nearest eligible pushed ancestor in local origin refs.
     fn base(&self, head: &CommitSha) -> Result<BaseLookup>;
 }
