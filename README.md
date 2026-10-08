@@ -420,7 +420,8 @@ stop and any cancellation not tried yet. The
 defines this order. A failed stop gets retries after
 5 seconds and 10 more seconds. A recovered stop does not fail the gate.
 Final cleanup counts each box once if it is neither stopped nor proven completed.
-A nonzero count fails the gate. Interrupts report the same count.
+After the suites start, a nonzero count does not fail the gate. Before the
+first suite, it blocks local fallback. Interrupts report the same count.
 Warnings name each remaining box's manual stop command and its idle timeout.
 Cleanup records run IDs from warmup and probe output for the first cancellation.
 A failed GitHub cancellation checks the run state. An ended run gets an
