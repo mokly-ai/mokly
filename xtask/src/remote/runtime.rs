@@ -114,7 +114,7 @@ impl Interrupt for SystemInterrupt {
     fn arm(&self) -> Result<()> {
         let state = Arc::clone(&self.state);
         match ctrlc::set_handler(move || {
-            let previous = match state.fetch_update(Ordering::SeqCst, Ordering::SeqCst, |bits| {
+            let previous = match state.try_update(Ordering::SeqCst, Ordering::SeqCst, |bits| {
                 Some(signal_request(bits).0)
             }) {
                 Ok(previous) | Err(previous) => previous,
