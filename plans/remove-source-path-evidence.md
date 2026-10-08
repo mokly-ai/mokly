@@ -1,8 +1,8 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestones 1 to 34 are implemented, verified and pushed; the
-branch contains main `d1579e9f`. The open review findings of Milestones 32 to
-34 wait for the user.
+Status: Active. Milestones 1 to 34 are implemented, verified and pushed.
+Milestone 35 merges main `1086732a`. The open review findings of Milestones 32
+to 34 and two Milestone 35 decisions wait for the user.
 
 ## Status And Outcome
 
@@ -2846,3 +2846,37 @@ rules split into `docs/dev`), #172 (Serve keeps the checked closure on reload),
   - [ ] M34 finding 1 (Medium, test): main #138's example snapshot codec rejects two valid forms of this branch's compilation: `resourceSeeds` (encode fails) and warnings with a `subject` (decode fails, so tests compile again). Recommend A: extend the existing codec and its field table and round-trip tests.
 
 Evidence: `.context/remove-source-path-evidence/milestone-34.md`.
+
+## Milestone 35: Integrate `main` #175 and #181
+
+On 2026-10-08 the user asked again to merge the latest `main`, resolve the
+conflicts, commit and push. Main `1086732a` adds #175 (gates replace
+documentation prose-regex and workflow-literal tests; the protocol cap table
+moves to `xtask/protocol-document-caps.json`) and #181 (warnings for stuck
+Testbox boxes after suites).
+
+- [x] Capture the source tip `34002c26`, the merge base `d1579e9f` and main
+      `1086732a`. Audit main's 67 changed files.
+- [x] Merge main as one commit with exactly two parents. Take #175's deletion
+      of `tests/protocol_doc_sizes.test.ts`, and move the branch's lower caps
+      into `xtask/protocol-document-caps.json`. Review the remerge diff.
+- [x] Run the line-level loss check. Only the five caps that the branch lowers
+      or removes are absent.
+- [ ] Decide whether the branch keeps its documentation-wording tests
+      (`tests/current_docs_contract.test.ts` with its helper and fixtures, and
+      `tests/mainline_preservation_docs.test.ts`) under #175's new rule. They
+      stay unchanged until the user decides. Recommend: remove them and keep
+      the written documentation rule.
+- [ ] Decide the format versions after main's #127 sets 0.14.0, which ships
+      main's manifest v9, catalogue v5 and review v6. Recommend: bump them to
+      manifest v10, catalogue v6 and review v7.
+- [ ] Run build, typecheck, lint, the targeted tests, the repository suite and
+      the complete `cargo xtask check` at 100%. Inspect the deletions against
+      `origin/main`. Commit, push, and update the PR description.
+- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
+      complete diff against `origin/main` and report findings. Keep the review
+      read-only. Then apply the review-fix rule in `docs/dev/review.md`: fix
+      `Auto-fix: yes` findings, re-review once, and report the rest. Add each
+      open finding as one line under this TODO.
+
+Evidence: `.context/remove-source-path-evidence/milestone-35.md`.
