@@ -7,7 +7,9 @@ recommended option for findings 1 to 5 of the
 needs no change: the squash title of PR #152 is within the limit. Milestones 1
 to 9 are complete. After the merge with main in Milestone 8, review finding 1
 no longer applies. Milestone 9 fixed findings 2 to 4 with the options that the
-user chose. The post-push review found no issues.
+user chose. The post-push review found no issues. Milestone 10 fixes items 4
+and 5 of the outstanding review list with the options that the user chose on
+2026-10-08.
 
 Fix the five open findings from the PR #152 review. Keep browser retries
 working, give Playwright assertions the contract's 10-second minimum, replace
@@ -386,6 +388,50 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-9.md`.
       re-review once, and report the rest.
   - Review 2 (`.context/deterministic-test-timing-review-fixes/review-2.md`):
     no findings, so there is no fix round.
+
+## Milestone 10: Fix outstanding review items 4 and 5
+
+On 2026-10-08 the user chose option B for item 4 and option B for item 5 of
+the outstanding review list. Review 2 recorded both as residual risks, not as
+findings.
+
+- Item 4: a test's child process writes its process ID with `writeFileSync`.
+  That call creates the file before it writes the number, so a read in between
+  returns an empty string, and `Number("")` is 0. Add `readPidFile` in
+  `tests/helpers/pid_file.ts` and use it in every process-ID poll. It returns
+  `undefined` for a missing or blank file and the ID for a positive whole
+  number. It rejects for any other content.
+- Item 5: the latest-wins test in `tests/browser/browse.spec.ts` waits a fixed
+  900 ms to show that a late response did not replace the page. Hold the first
+  view's request until the second view renders, then release it. Wait until
+  the request settles, let rendering updates pass with `passRenderingUpdates`,
+  and then check the page. This also replaces the fixed 700 ms hold. The fixed
+  waits in `tests/build_watch.test.ts` stay, because the watcher has no idle
+  signal.
+
+Evidence: `.context/deterministic-test-timing-review-fixes/milestone-10.md`.
+
+- [x] Add the process-ID file rule to the Polling section of
+      `docs/protocol/ci-test-timing.md`, the `readPidFile` contract to
+      `docs/protocol/ci-test-timing-helpers.md`, and a pointer to `README.md`.
+- [x] Add `tests/pid_file.test.ts` and watch it fail. Then add `readPidFile` in
+      `tests/helpers/pid_file.ts`.
+- [x] Use `readPidFile` in every process-ID poll:
+      `tests/baseline_integration.test.ts`,
+      `tests/baseline_process_tree.test.ts`, `tests/derived_serve.test.ts`,
+      `tests/preview_fixture_cleanup.test.ts`,
+      `tests/shared_example_lifecycle.test.ts` and
+      `tests/verification_process.test.ts`. Keep every assertion, interval and
+      message. Run the changed files.
+- [x] Replace the fixed waits in the latest-wins test of
+      `tests/browser/browse.spec.ts` (item 5). Run the spec three times.
+- [x] Run `cargo xtask check --suite repository`, then the complete gate with
+      the local executor.
+- [ ] Commit and push the branch.
+- [ ] After the push, use `docs/implementation-review-prompt.md` to review
+      the complete local diff against `origin/main` and report the findings.
+      Then apply the review-fix rule: fix the `Auto-fix: yes` findings,
+      re-review once, and report the rest.
 
 ## Post-merge follow-up (non-blocking)
 
