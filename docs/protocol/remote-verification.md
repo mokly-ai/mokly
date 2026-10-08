@@ -135,8 +135,8 @@ Run local scripts and management commands from the workspace root.
 Run probes and suite commands from the snapshot under the
 [sync-source contract](./remote-verification-base.md#sync-source-and-probe).
 
-1. Read local `HEAD` and the base commit. Compute the checkout fingerprint.
-   Build the snapshot and require its fingerprint to match before warmup.
+1. Read local `HEAD` and the base commit. Build the snapshot. Then read the
+   checkout and snapshot fingerprints and require equal values before warmup.
    Record the [run identity](./remote-verification-base.md#identity-output-and-file).
 2. Warm up 11 boxes in parallel through `blacksmith testbox warmup`.
    Use `.github/workflows/blacksmith-testbox.yml`, `--ref main` and

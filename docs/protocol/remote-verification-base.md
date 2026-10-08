@@ -190,7 +190,8 @@ Explicit `remote` fails with the same reason. A valid base allows this decision:
 remote: Blacksmith access and a pushed base commit are available
 ```
 
-In automatic mode, no base prints this executor decision on standard output:
+In automatic mode, no base prints this executor decision. `cargo xtask check`
+writes it to standard error. `cargo xtask executor` writes it to standard output:
 
 ```text
 local: a pushed base commit is unavailable

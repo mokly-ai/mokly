@@ -250,10 +250,12 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 
-The `*_adapter_tests.rs` files under `src/remote/_tests_/` and
-`src/remote/clients/_tests_/` test operating-system boundaries with real shell
-children and temporary directories. They cover streamed logs, private stdin,
-child environments, process-group cleanup, fresh log files, PATH permissions
+The `*_adapter_tests.rs` files under `src/remote/_tests_/`,
+`src/remote/clients/_tests_/` and `src/remote/snapshot/_tests_/` test
+operating-system boundaries with real shell children and temporary directories.
+The base and snapshot adapter tests create real Git repositories in temporary
+directories. The adapter tests cover streamed logs, private stdin, child
+environments, process-group cleanup, fresh log files, PATH permissions
 and interrupt state order. They also cover the SSH close request, socket path
 and cleanup details. They use readiness signals and expected-state waits.
 They do not assert elapsed time.
@@ -346,7 +348,7 @@ They do not assert elapsed time.
 - [CI suite evidence](../docs/protocol/ci-suite-evidence.md)
 - [CI example compilation snapshot](../docs/protocol/ci-example-snapshot.md)
 - [Remote verification](../docs/protocol/remote-verification.md)
-- [Approved base commit sync target](../docs/protocol/remote-verification-base.md)
+- [Base commit sync](../docs/protocol/remote-verification-base.md)
 - [Cleanup and interrupts](../docs/protocol/remote-verification-cleanup.md)
 - [Testbox execution](../docs/protocol/remote-verification-testbox.md)
 - [Dependency security](../docs/protocol/dependency-security.md)

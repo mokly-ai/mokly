@@ -360,6 +360,10 @@ under `.context/remote-verification-base-commit/`.
       once, fix any new `Auto-fix: yes` findings once more, then stop and
       report the rest. Add each open finding as one line under this TODO.
 
+  - Finding 1 (High): inherited Git variables can corrupt checkout state. Recommend B: clear repository variables in remote and local children and test Git helpers.
+  - Finding 2 (Medium): synced renames and deletions break index-based checks. Recommend B: stage the synced tree in the suite wrapper after the fingerprint check.
+  - Finding 3 (Medium): real-Git tests depend on global settings. Recommend B: isolate global and system Git config in test helpers.
+
 ## Post-merge follow-up (non-blocking)
 
 - [ ] During the first week after the merge, record under
