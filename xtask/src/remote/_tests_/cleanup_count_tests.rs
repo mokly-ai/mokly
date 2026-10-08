@@ -1,9 +1,10 @@
 //! Final cleanup counts boxes instead of stop attempts.
 
 use crate::check::request::DependencyAudit;
-use crate::remote::runner::{DefaultRemoteRunner, RemoteRunner};
+use crate::remote::error::{Error, TreeCheck};
+use crate::remote::runner::{DefaultRemoteRunner, Failure, RemoteRunner};
 
-use super::harness_tests::{Case, harness};
+use super::harness_tests::{Case, harness, stuck_harness};
 
 #[test]
 fn a_stop_that_succeeds_on_retry_does_not_fail_the_check() {
@@ -145,4 +146,60 @@ fn final_status_completion_clears_an_exhausted_box_without_another_stop() {
             .iter()
             .any(|event| event.contains("box=tbx_0 cleanup failed"))
     );
+}
+
+#[test]
+fn every_result_after_final_cleanup_reports_the_exact_cleanup_count() {
+    for stuck in [false, true] {
+        let expected = usize::from(stuck);
+        for case in [
+            Case::Suite,
+            Case::Download,
+            Case::Aggregate,
+            Case::ChangedTree,
+            Case::FinalFingerprint,
+            Case::LateInterrupt,
+            Case::SignalledFingerprint,
+        ] {
+            let fixture = if stuck {
+                stuck_harness(case)
+            } else {
+                harness(case)
+            };
+            let result = DefaultRemoteRunner {
+                dependencies: fixture.dependencies,
+            }
+            .run(DependencyAudit::Baseline);
+            let cleanup = match (case, result) {
+                (
+                    Case::LateInterrupt | Case::SignalledFingerprint,
+                    Err(Failure::Failed(Error::Interrupted { cleanup })),
+                ) => cleanup,
+                (
+                    _,
+                    Err(Failure::Failed(Error::Verification {
+                        commands,
+                        reports,
+                        aggregate_failed,
+                        tree,
+                        cleanup,
+                    })),
+                ) => {
+                    let failure = (commands, reports != 0, aggregate_failed, tree);
+                    let required = match case {
+                        Case::Suite => (1, false, false, TreeCheck::Unchanged),
+                        Case::Download => (0, true, false, TreeCheck::Unchanged),
+                        Case::Aggregate => (0, false, true, TreeCheck::Unchanged),
+                        Case::ChangedTree => (0, false, false, TreeCheck::Changed),
+                        Case::FinalFingerprint => (0, false, false, TreeCheck::Unreadable),
+                        _ => panic!("{case:?} stuck={stuck} must end as interrupted"),
+                    };
+                    assert_eq!(failure, required, "{case:?} stuck={stuck}");
+                    cleanup
+                }
+                (_, other) => panic!("{case:?} stuck={stuck}: {other:?}"),
+            };
+            assert_eq!(cleanup, expected, "{case:?} stuck={stuck}");
+        }
+    }
 }

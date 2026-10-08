@@ -133,7 +133,10 @@ pub(crate) enum Error {
     /// A worker panicked instead of producing a result.
     #[error("[xtask/remote] verification worker did not return a result")]
     Worker,
-    /// The user interrupted the check.
+    /// An interrupt cancelled a step before the final cleanup count exists.
+    #[error("[xtask/remote] an interrupt cancelled the operation")]
+    Cancelled,
+    /// The user interrupted the check; only a final result carries this count.
     #[error("[xtask/remote] verification interrupted; cleanup={cleanup} boxes remain")]
     Interrupted {
         /// Boxes that remain neither stopped nor proven completed.
@@ -147,7 +150,8 @@ pub(crate) enum Error {
     },
     /// At least one complete-gate requirement failed.
     #[error(
-        "[xtask/remote] verification failed: {commands} commands, {reports} downloads, aggregate-failed={aggregate_failed}, changed-tree={changed}, cleanup={cleanup}"
+        "[xtask/remote] verification failed: {commands} commands, {reports} downloads, aggregate-failed={aggregate_failed}, changed-tree={}, cleanup={cleanup}",
+        tree.changed()
     )]
     Verification {
         /// Failed suite commands.
@@ -156,11 +160,42 @@ pub(crate) enum Error {
         reports: usize,
         /// Aggregate failure.
         aggregate_failed: bool,
-        /// Local source tree changed.
-        changed: bool,
+        /// Final source-tree comparison.
+        tree: TreeCheck,
         /// Boxes that remain neither stopped nor proven completed; reported only.
         cleanup: usize,
     },
+}
+
+/// Final source-tree comparison after the suites.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum TreeCheck {
+    /// The final fingerprint equals the starting fingerprint.
+    Unchanged,
+    /// The final fingerprint differs from the starting fingerprint.
+    Changed,
+    /// The final fingerprint read failed.
+    Unreadable,
+}
+
+impl TreeCheck {
+    /// Summary value for `unchanged-tree=`.
+    pub(crate) fn unchanged(self) -> &'static str {
+        match self {
+            Self::Unchanged => "true",
+            Self::Changed => "false",
+            Self::Unreadable => "unknown",
+        }
+    }
+
+    /// Error value for `changed-tree=`.
+    pub(crate) fn changed(self) -> &'static str {
+        match self {
+            Self::Unchanged => "false",
+            Self::Changed => "true",
+            Self::Unreadable => "unknown",
+        }
+    }
 }
 
 /// List each missing program beside its own installation guidance.

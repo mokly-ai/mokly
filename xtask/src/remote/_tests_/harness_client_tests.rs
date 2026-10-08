@@ -14,6 +14,7 @@ pub(super) fn client(
     case: Case,
     events: Arc<Mutex<Vec<String>>>,
     interrupted: Arc<AtomicBool>,
+    stuck: bool,
 ) -> Unimock {
     let warmups = Arc::new(AtomicUsize::new(0));
     let probes = Arc::new(AtomicUsize::new(0));
@@ -191,15 +192,17 @@ pub(super) fn client(
                 0
             };
             if id == "tbx_0"
-                && (matches!(
-                    case,
-                    Case::CleanupWarmup
-                        | Case::CompletedOnFinal
-                        | Case::CleanupSuites
-                        | Case::CleanupFailedSuite
-                        | Case::InterruptCleanupWarmup
-                        | Case::InterruptCleanupSuites
-                ) || (matches!(case, Case::RetryStop | Case::CompletedOnRetry) && attempt == 0))
+                && (stuck
+                    || matches!(
+                        case,
+                        Case::CleanupWarmup
+                            | Case::CompletedOnFinal
+                            | Case::CleanupSuites
+                            | Case::CleanupFailedSuite
+                            | Case::InterruptCleanupWarmup
+                            | Case::InterruptCleanupSuites
+                    )
+                    || (matches!(case, Case::RetryStop | Case::CompletedOnRetry) && attempt == 0))
             {
                 return Err(Error::Command {
                     operation: Operation::Blacksmith,

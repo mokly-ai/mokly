@@ -38,6 +38,9 @@ pub(super) enum Case {
     RetryStop,
     CleanupSuites,
     CleanupFailedSuite,
+    FinalFingerprint,
+    LateInterrupt,
+    SignalledFingerprint,
     CompletedOnRetry,
     InterruptCleanupWarmup,
     InterruptCleanupSuites,
@@ -86,10 +89,21 @@ pub(super) fn output(text: String, code: i32) -> Output {
 }
 
 pub(super) fn harness(case: Case) -> Harness {
+    build(case, false)
+}
+
+/// Build the same case with box `tbx_0` failing every stop attempt.
+pub(super) fn stuck_harness(case: Case) -> Harness {
+    build(case, true)
+}
+
+fn build(case: Case, stuck: bool) -> Harness {
     let events = Arc::new(Mutex::new(Vec::new()));
     let interrupted = Arc::new(AtomicBool::new(false));
-    let blacksmith = Arc::new(client(case, events.clone(), interrupted.clone()));
+    let blacksmith = Arc::new(client(case, events.clone(), interrupted.clone(), stuck));
     let reads = Arc::new(AtomicUsize::new(0));
+    let read_signal = interrupted.clone();
+    let aggregate_signal = interrupted.clone();
     let shared = Arc::new(Unimock::new((
         EnvironmentGetMock
             .each_call(matching!(_))
@@ -111,6 +125,9 @@ pub(super) fn harness(case: Case) -> Harness {
             .each_call(matching!())
             .answers_arc(Arc::new(move |_| {
                 let read = reads.fetch_add(1, Ordering::SeqCst);
+                if read > 0 {
+                    final_read(case, &read_signal)?;
+                }
                 Ok(format!(
                     "sha256:{}",
                     if read > 0 && case == Case::ChangedTree {
@@ -124,7 +141,7 @@ pub(super) fn harness(case: Case) -> Harness {
             .each_call(matching!())
             .answers_arc(Arc::new(move |_| interrupted.load(Ordering::SeqCst))),
     )));
-    let clock = clock(case, events.clone());
+    let clock = clock(case, events.clone(), stuck);
     let prepare = LogsPrepareMock
         .each_call(matching!("20261006T120000Z-42"))
         .answers(&|_, _| Ok(()));
@@ -205,6 +222,9 @@ pub(super) fn harness(case: Case) -> Harness {
                         aggregate_events.lock().unwrap().push("aggregate".into());
                         assert_eq!(head, "b".repeat(40));
                         assert!(path.to_string_lossy().ends_with("20261006T120000Z-42"));
+                        if case == Case::LateInterrupt {
+                            aggregate_signal.store(true, Ordering::SeqCst);
+                        }
                         if case == Case::Aggregate {
                             return Err(Error::Command {
                                 operation: Operation::Aggregate,
@@ -240,4 +260,25 @@ pub(super) fn harness(case: Case) -> Harness {
     .select(Executor::Remote)
     .unwrap();
     fixture
+}
+
+/// Fail the final fingerprint read the way each late-failure case requires.
+fn final_read(case: Case, interrupted: &AtomicBool) -> Result<(), Error> {
+    match case {
+        Case::FinalFingerprint => Err(Error::Command {
+            operation: Operation::Fingerprint,
+            code: Some(1),
+            detail: None,
+        }),
+        Case::LateInterrupt if interrupted.load(Ordering::SeqCst) => Err(Error::Cancelled),
+        Case::SignalledFingerprint => {
+            interrupted.store(true, Ordering::SeqCst);
+            Err(Error::Command {
+                operation: Operation::Fingerprint,
+                code: None,
+                detail: None,
+            })
+        }
+        _ => Ok(()),
+    }
 }

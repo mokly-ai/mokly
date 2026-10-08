@@ -25,7 +25,7 @@ impl DefaultRemoteRunner {
                 .map(|_| {
                     scope.spawn(|| {
                         if dependencies.interrupt.requested() {
-                            return Err(Error::Interrupted { cleanup: 0 });
+                            return Err(Error::Cancelled);
                         }
                         let output = dependencies.blacksmith.warmup(reference)?;
                         let text = output.combined();
@@ -77,7 +77,7 @@ impl DefaultRemoteRunner {
             }
         }
         if dependencies.interrupt.requested() {
-            return Err(Error::Interrupted { cleanup: 0 });
+            return Err(Error::Cancelled);
         }
         match failure {
             Some(error) => Err(error),
@@ -131,7 +131,7 @@ impl DefaultRemoteRunner {
                 .collect::<Vec<_>>()
         });
         if dependencies.interrupt.requested() {
-            return Err(Error::Interrupted { cleanup: 0 });
+            return Err(Error::Cancelled);
         }
         for result in results {
             result?;

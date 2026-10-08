@@ -135,7 +135,8 @@ Run all local and CLI operations from the workspace root.
    stop rules. Do not wait for another command.
 6. After all commands end, clean up boxes that are not yet stopped.
 7. Run the local report aggregate with local `HEAD` and `node-22.14.0`.
-8. Compute the local fingerprint again. Fail if the source tree changed.
+8. Compute the local fingerprint again. Fail if the source tree changed or
+   the read fails.
 
 A successful check requires all 11 commands to exit 0. It also requires all
 nine downloads, a valid aggregate and an unchanged local source tree.
@@ -167,7 +168,9 @@ Write each command's standard output and standard error to
 `.context/verification-logs/remote/<run>/<command>.log`.
 For each failed command, print the last 60 log lines and the log path.
 The summary lists command durations and box IDs. Preserve logs after cleanup.
-Print `aggregate=passed` or `aggregate=failed` in the summary.
+Print `aggregate=passed` or `aggregate=failed` in the summary. Print
+`unchanged-tree=true`, `false` or `unknown`. `unknown` means that the final
+fingerprint read failed.
 On aggregate or fingerprint read failure, print a warning first.
 Then print that command's captured stdout and stderr with the executor prefix.
 Describe command termination as `exit <code>` or `a signal`.
