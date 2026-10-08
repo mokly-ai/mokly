@@ -1,5 +1,42 @@
 # A guide for agents
 
+This file holds the rules that apply in every session. Detailed procedures
+live under [`docs/dev`](./docs/dev). Each entry below says what the doc covers
+and when to read it. Read the doc at that point instead of guessing the rule.
+
+## Detailed rule docs
+
+- [Review](./docs/dev/review.md): the post-push implementation review. It
+  holds the review-fix rule, the flaky-test rule, the `Auto-fix: yes` and
+  `Auto-fix: no` conditions, effort grades, the numbered finding format, the fix-round
+  limit, and how to report fixed and open findings. Read it after you push,
+  before you run or apply a review.
+- [Plans](./docs/dev/plans.md): plan files under `plans/`. It holds the
+  status paragraph, milestone and TODO rules, `ui` and `mockup` tags, the
+  PR-merge completion boundary, post-merge follow-up sections, and where
+  evidence logs go. Read it before you create, edit, or tick a plan.
+- [Documentation](./docs/dev/documentation.md): README structure, Rust crate
+  README sections, rules for `docs/`, protocol docs, and mockups including
+  screen components and user flows. Read it before you edit a README, a doc,
+  a protocol doc, or a mockup.
+- [Rust](./docs/dev/rust.md): the full Rust conventions with examples. It
+  holds crate layout, traits and `dyn` dispatch, file size limits, imports,
+  test layout, visibility and modules, explicit drops, typing, panics,
+  unsafe code, and the error-handling contract. Read it before you edit Rust
+  under `xtask/` or any crate.
+- [Databases](./docs/dev/databases.md): query separation, migration naming
+  and freezing, the migration lock, and `*-store-pg` crate boundaries. Read
+  it before you touch migrations, Diesel, or store crates.
+- [Git](./docs/dev/git.md): Conventional Commits, title limits, commit
+  examples, the mainline feature preservation procedure with its merge audit
+  commands, the stale-reference and history rules for removals and renames,
+  and the permalink fix for failed history links. Read it before you commit,
+  merge, rebase, or open a PR.
+- [Product UI](./docs/dev/product-ui.md): where screens live, component
+  reuse, forbidden visual patterns, environment labels, real data, and
+  user-facing copy. Read it before you implement or change a user-facing
+  screen or copy.
+
 ## General
 
 - When adding new packages or services, always attempt to build them to check for errors
@@ -18,92 +55,27 @@
   complete gate. If it cannot run, explain the blocker and the checks already run.
   If a test that the diff does not touch fails and then passes on the rerun,
   it is an unrelated flaky test. Do not fix it in this branch. Report it under
-  the flaky-test rule below.
+  the flaky-test rule in [`docs/dev/review.md`](./docs/dev/review.md).
 - After tests and `cargo xtask check` pass, run `git add -A`, commit the
   completed work using Conventional Commits, and push the branch; newly created
   files must be tracked and included in the commit, push, and review diff
-- Every implementation plan must end with the post-check commit-and-push step,
-  followed by a review item that uses
-  [`docs/implementation-review-prompt.md`](./docs/implementation-review-prompt.md)
-  to review the complete local diff against `origin/main`; run the review only
-  after the push, then apply the review-fix rule below
-- Treat existing plan items that name the removed `cargo xtask review` command
-  as review items that use `docs/implementation-review-prompt.md`
-- Review-fix rule: after the post-push review reports, fix the findings that
-  the reviewer tagged `Auto-fix: yes` without waiting for the user. The
-  reviewer may use that tag only when the finding has one clear fix, for
-  small or medium effort findings in these categories: product bugs
-  (including edge cases, races, and platform differences), security issues,
-  docs or spec drift, mockup mismatches that a protocol doc already settles,
-  flaky tests that the diff adds or changes under the flaky-test rule below,
-  and repository-rule violations such as file size, lint, and layout. Effort
-  grades: small is one change in one or two files with no new module,
-  dependency, migration, protocol section, or test file; medium is a few files
-  and may change tests in existing files; large adds a new module, dependency,
-  migration, protocol section, or mockup, crosses a package boundary, or
-  touches more than five files. Large findings always ask
-- The reviewer tags a finding `Auto-fix: no` and the agent asks the user when
-  the finding needs a decision: more than one option has real trade-offs and
-  the recommendation is not clearly best; the fix changes the meaning of a
-  protocol contract or decides which side of a mockup/product mismatch is
-  right; the fix changes user-visible behaviour beyond what the contract says;
-  the fix adds a new build error, rejection, gate, or stricter validation; a
-  narrow fix and a better broader fix (a rule, test, lint, guard, abstraction,
-  or architectural change) both exist, so the user chooses between them; the
-  fix deletes, skips, or weakens a test or gate, or raises a time
-  limit; or the fix needs an audit exception, credentials, or infrastructure.
-  Findings about missing tests, performance, code structure, UX wording, and
-  process always wait for the user
-- Flaky-test rule: a flaky test that the diff adds or changes may be tagged
-  `Auto-fix: yes` only when all of these conditions hold. The fixer reproduces
-  the flake by repeating the test, and records the pass counts before and
-  after the fix under `.context/`. The finding names the nondeterminism
-  source, for example real timers, real signals, watcher readiness, port or
-  path reuse, async ordering, shared fixture state, or locale and platform
-  differences. The fix makes the test deterministic with the methods in
-  [CI Test Timing](./docs/protocol/ci-test-timing.md): a fake clock, event
-  order, captured inputs, operation counts, an explicit readiness signal, or
-  isolated state. The fix keeps every existing assertion. The fix adds no
-  retry, sleep, repeat, skip, quarantine, or longer time limit. A source in
-  `src/` is a product bug: add the failing test first, then fix it under the
-  product-bug category. An unreproducible failure, an unknown source, or a
-  proposed removal stays `Auto-fix: no`
-- A flaky test that the diff does not touch is an unrelated flaky test. Do not
-  fix it in this branch, so that one fix in a separate branch reaches every
-  open branch quickly. Report it in the final message and, when a plan exists,
-  as one line under the plan's review TODO. Give the test name, the failure
-  text, the rerun outcome, and the suspected source. Slow, custom, or
-  low-value tests, gates, lints, and checks also stay `Auto-fix: no`. Ask the
-  user whether to fix or remove each one, and state what it protects and how
-  long it runs
-- Keep the review itself read-only. After it reports, fix the `Auto-fix: yes`
-  findings, run the checks, commit, push, and re-run the review once on the
-  fix. Fix any new `Auto-fix: yes` findings once more, then stop and report.
-  Do not start a third fix round without the user
-- In the final message, list the auto-fixed findings (number, severity, plain
-  explanation, what changed, commit) separately from the findings that need a
-  decision, each with a clear recommendation. Name the fixed finding in its
-  commit message. Add each open finding as one line under the plan's review
-  TODO so that it is not lost when the session ends
+- After the push, review the complete local diff against `origin/main` with
+  [`docs/implementation-review-prompt.md`](./docs/implementation-review-prompt.md),
+  then apply the review-fix rule in [`docs/dev/review.md`](./docs/dev/review.md):
+  fix only the findings tagged `Auto-fix: yes`, re-review once, and report
+  the rest. The review itself stays read-only
+- A flaky test that the diff adds or changes may be fixed without asking only
+  under the flaky-test rule in [`docs/dev/review.md`](./docs/dev/review.md):
+  reproduce the flake, name the nondeterminism source, make the test
+  deterministic, keep every assertion, and add no retry, sleep, repeat, skip,
+  quarantine, or longer time limit. Do not fix a flaky test that the diff does
+  not touch; report it with its name, failure text, rerun outcome, and
+  suspected source. Slow, custom, or low-value tests, gates, lints, and checks
+  stay `Auto-fix: no`; ask the user whether to fix or remove each one, and
+  state what it protects and how long it runs
 - Keep review reports, verification evidence, measurements, and other scratch
   output under the git-ignored `.context/` directory. Do not create review
   records or evidence files in the repository
-- When providing review comments or review output, number each review item, give
-  each item a severity, a category (product bug, security, docs or spec,
-  mockup, repository rule, test, performance, code structure, UX wording, or
-  process), and an effort grade (small, medium, or large, as defined in the
-  review-fix rule), and explain it in simple language that assumes the reader has no
-  prior codebase or feature context. State the impact of not making the change
-  / doing nothing, provide solution options with lettered labels, clearly state
-  the recommended option, and end the item with `Auto-fix: yes` or
-  `Auto-fix: no, because …` according to the review-fix rule
-- When suggesting fixes for review items, evaluate whether the direct fix is
-  enough or whether a broader rule, test, lint, abstraction, or architectural
-  change would prevent the same class of issue from recurring, and explain the
-  tradeoff. Give the broader change its own lettered option and say which
-  option best protects the codebase. When a narrow fix and a better broader fix
-  both exist, tag the finding `Auto-fix: no`: the choice between them is the
-  user's decision
 - Write agent responses to the user, including summaries, plans, and review
   output, in Simplified Technical English (STE, ASD-STE100): short sentences,
   one instruction per sentence, active voice, and simple, consistent words
@@ -113,535 +85,69 @@
 - Prefer graceful handling. When input is recoverable, warn and continue; fail
   only when the output would be wrong or unsafe. Do not add a new build error,
   rejection, gate, or stricter validation without asking the user
-- Read the README.md for the relevant section of code you are working on, and update it with any new useful context
-- Make sure README.md is up to date based on changes in the code you make
+- Read the README.md for the relevant section of code you are working on, and
+  update it with any new useful context. Keep every README.md up to date with
+  the code you change, and follow
+  [`docs/dev/documentation.md`](./docs/dev/documentation.md) for the required
+  structure
+- Docs under `docs/`, protocol docs, and mockups are part of the spec. Keep
+  them aligned with the implementation in the same change, and follow
+  [`docs/dev/documentation.md`](./docs/dev/documentation.md)
+- Plans live under `plans/`. Create one only with the user's consent and
+  follow [`docs/dev/plans.md`](./docs/dev/plans.md). Tick TODOs as you
+  complete them, and add any TODO you discover under the relevant milestone
 - If you get compile errors, keep working to fix them until you no longer have errors
 - If you get a command error, like invalid parameter error, don't give up immediately, try at least once again
-- Keep files short - around 300 lines is an ideal length, split up the file if longer
+- Keep files short - around 300 lines is an ideal length, split up the file if
+  longer. The repository gate caps changed TypeScript/JavaScript at 300 lines
+  and protocol Markdown at 250 lines
 - Take as long as you need
 - Be careful; think carefully about the best impl
 - Use best practises
 - Code quality is important
-- Keep this file limited to general repo-wide agent rules. Application-specific,
-  crate-specific, or feature-specific rules should live in the relevant
-  README.md, docs, or protocol files near the code they describe.
+- Keep this file limited to general repo-wide rules that apply in every
+  session. Put detailed procedures under `docs/dev` and list them above.
+  Application-specific, crate-specific, or feature-specific rules should live
+  in the relevant README.md, docs, or protocol files near the code they
+  describe.
 - Whenever adding new features, run smoke tests (i.e. start the server, try commands, etc)
 - Whenever you find bugs like this ensure you add a test first to capture the failure, and then fix it
-- Native product screens, logged-in web product screens, and logged-out web
-  marketing routes all belong in the Expo app under `ts/app`; marketing routes
-  must stay hidden from native mobile navigation.
-- When implementing UI under `ts/app`, always check the available reusable/base
-  components in `ts/app/src/components` first and use them where possible. If a
-  component or pattern is used many times across the app, extract it or add it
-  to `ts/app/src/components` instead of duplicating the implementation.
-- Product UI and mockups must never use a left-edge accent border or vertical
-  accent rail to emphasize, select, categorize, decorate, or communicate the
-  status of content. This prohibited pattern includes a contrasting stroke
-  attached to the left side of a card, panel, callout, banner, list row,
-  navigation item, or other content surface, including strokes with rounded
-  ends or corners. Do not recreate the pattern with a pseudo-element, inset
-  shadow, gradient, outline, or separate adjacent bar; use the established
-  component system's typography, spacing, icons, full-surface treatments, or
-  standard selection controls instead.
-- Normal product views must not expose sandbox, test, or preview environment
-  labels, badges, or explanatory copy in the implementation. The same view
-  should render across environments, with environment-specific data selected
-  from the URL or environment configuration.
-- Data displayed to the user MUST never be faked, stubbed, hardcoded, or mocked
-  in product code. Every value shown in a view must come from a real data
-  source (API, database, store, or live computation). Do not ship placeholder
-  numbers, dummy rows, lorem-ipsum content, or "TODO: wire up real data"
-  values in screens users can reach. If the real source is not available yet,
-  render an explicit empty, loading, or error state instead of inventing data,
-  and wire the view to the real source before the feature is considered
-  complete. Faked or stubbed data is only acceptable in tests, mocks,
-  fixtures, and mockups under `docs/mockups`.
-- User-facing copy must read as product language written for the user, not
-  engineer-facing build or status output. Lead with the outcome or action the
-  user cares about, keep it plain and professional, and never leak internal
-  implementation detail into text users read — validation-artefact, schema, or
-  pipeline names (for example RIM, XSD, Schematron), internal flags, message
-  classes, file formats, environment names, or code identifiers. When such
-  technical detail has genuine product value, surface it in a clearly secondary
-  place (a details or profile panel), not in the headline copy. This applies to
-  both mockups under `docs/mockups` and product implementation (`ts/app` and
-  other user-facing surfaces).
-
-## Readme (README.md)
-
-- Summary of the key features of the project (not a long list of every single feature)
-- User facing interface documentation (e.g. CLI, API, etc)
-- Developer get started
-- Key code jumping in points
-- Links to protocol docs and plans
-
-### Rust Crate READMEs
-
-- Treat every Rust crate `README.md` as user-facing documentation that should be good enough to publish on crates.io
-- Start with a short statement of what the crate is for, where it fits in the workspace, and when a caller should depend on it
-- Document the crate's public behavior and integration boundary, not just its internal implementation details
-- Every Rust crate README must include these sections, in this order:
-  - `## Responsibilities`
-  - `## What This Crate Does`
-  - `## Quick Start`
-  - `## Development`
-  - `### Key Code`
-  - `### Related Docs`
-- `## Quick Start` must include example code or runnable commands, not just prose
-- For binary crates or user-facing tools, document the CLI or external interface in the README, not just internal architecture
-- Keep examples and guidance aligned with the real public API and current behavior; do not describe internals that callers cannot use directly
-- Keep crate READMEs concise and high-signal; explain the main use cases and boundaries rather than listing every file or every minor feature
-- When a crate has important neighboring crates, name them and explain the boundary between them so ownership is clear
-
-
-## Docs (./docs)
-
-- Docs must be kept up to date with implementation at all times
-- Any discovered gaps in the docs during implementation should involve an update to the protocol docs
-- Must be consistent with itself (i.e. no conflicting statements)
-- Must cover entire impl (i.e. no guess work should be needed)
-- Any time you make a change to the code, think about whether a doc could be clarified or enhanced
-- Docs may be nested in multiple directories
-
-### Protocol Docs (./docs/protocol) aka Specs
-- These define the specs contract with code
-- Should be as detailed as possible
-- Must remained aligned with impl
-- Must be complete, there should be no guess work needed during impl
-- If there are bugs in the code, review whether the specs need to be better defined
-- Keep each doc short (~250 lines)
-
-### Mockups (./docs/mockups)
-- Mockups are part of the spec and must stay aligned with the implementation at all times
-- Any work that requires design implementation must update an existing mockup or create a new one first, before the implementation lands
-- Every mockup must include two variants: a mobile variant and a web/desktop variant
-- A generated screen-spec mockup page may render no more than five screen
-  mockups. If a product area needs more states, screens, or flows, split it into
-  linked nested sub-pages instead of adding a sixth mockup to the same page.
-  User-flow sequence pages are exempt because they reuse screens from the owning
-  screen-spec pages.
-- Non-terminal mockup pages (pages with child mockup pages) must render one
-  canonical "best representation" screen for that page, then list links to the
-  child sub-pages underneath. Put each child page in its own matching directory
-  so the `docs/mockups` generated output and `docs/mockups/src/pages` source
-  tree mirror the visible mockup page hierarchy. Pure gallery/catalog index
-  pages are exempt from the canonical-screen requirement.
-- When creating or changing mockups, consider where each screen sits in the
-  wider app. Do not build an isolated mockup that cannot be reached from
-  another relevant screen, flow, or navigation surface, and keep new mockups
-  visually and structurally consistent with existing screens.
-- Mockup screens must not contain implementation hints, engineering notes, or
-  explanatory annotations inside the rendered screen area. Put implementation
-  hints below the screen or in a separate non-screen section.
-- Mokly's example catalogue under `examples/basic/mokly-generated/` is generated from
-  the structured definitions under `examples/basic/specs/` using
-  `examples/basic/mokly.config.ts`. Canonical entry modules end in `.mockup.ts`
-  or `.mockup.tsx`; shared TSX components and page-render helpers live alongside
-  them in the example source tree. Definitions and helpers should compose TSX
-  components, not large raw HTML strings or generated static-tree data. When
-  changing example entries, the renderer, configuration, or configured styles,
-  run `npm run build`, run `npm run example:build`, run
-  `npm run example:check`, and visually smoke-test the changed pages through
-  `npm run dev`. `npm run example:check` validates the compilation and ignores
-  the untracked local tree under `examples/basic/mokly-generated/`. Never commit
-  anything under that generated directory. Commit authored files normally,
-  including specs, configuration and CSS under `examples/basic/`,
-  `examples/basic/design-library/` and `examples/basic/src/components/workspace-note/`.
-- Do not hand-edit Mokly-owned generated HTML or `mokly-manifest.json` as source
-  of truth. Update the entry, imported helper, renderer, or shared component
-  first, then regenerate the example catalogue.
-- Each app screen must be its own component: one screen = one component, for
-  both the mobile and web/desktop variants. Screen components are the reusable
-  building blocks that user flows compose, so do not inline a screen's markup
-  directly into a flow.
-- User flows:
-  - A user flow is designed to show a sequence of screens across a scenario
-    flow (the steps a user takes through a scenario), not a single standalone
-    screen.
-  - User flows in mockups must use ONLY existing screen components, and each
-    must link back to the screen component it uses. If a flow needs a screen
-    that does not exist yet, do not create it inside the flow: first add the
-    screen component to the relevant app screen-spec section so it renders as a
-    standalone screen on its owning app mockup page, then import that component
-    into the user flow and link back to it. A user flow is never the original
-    home of a screen.
-  - Each screen shown in a user flow must have a link back to its original
-    standalone screen mockup.
-
-
-## Plans (./plans)
-
-- Plans should only be created with consent from the user and after the relevant
-  protocol docs provide enough context to plan the work safely
-- Plans do not live at the repo root anymore; they live under `./plans`
-- Create one plan file per change, named after the change in concise kebab-case, for example `tool-request-error-contract-alignment.md`
-- Do not combine unrelated work into a shared plan file; create a new plan file for each distinct change
-- There is no plans index file. Each plan records its own status in the first
-  paragraph directly below its title. That paragraph starts with
-  `Status: Active` while the plan is open, or with `Status: Completed` when it
-  is closed. List the open plans with `grep -l '^Status: Active' plans/*.md`
-- When creating a new plan file, start it with a `Status: Active` paragraph
-- When a plan's PR merges, change its status paragraph to start with
-  `Status: Completed. [PR #<number>](<url>) merged on <YYYY-MM-DD>.` and keep
-  any open review findings or follow-up owners in that paragraph
-- Each plan describes work needed to ensure complete alignment with the protocol docs
-- The PR merge is the completion boundary for a plan. Every milestone and its
-  required TODOs must be completable on the branch before the PR merges or by
-  the merge itself. Never add a milestone or required TODO that depends on the
-  PR already being merged.
-- Put post-merge work, including additional tasks and smoke tests that require
-  the merged or deployed change, in a `## Post-merge follow-up (non-blocking)`
-  section outside the milestones. Items in this section do not affect
-  milestone or plan completion and must not prevent the plan from being marked
-  completed when the PR merges.
-- Keep smoke tests that can and should run before merge as required milestone
-  TODOs under the normal testing rules.
-- Each plan should break up the work into concrete units called Milestones. At the end of each milestone there should be a functioning product. Never leave the code base or feature in a broken state.
-- The first milestone in every plan must update the relevant documentation and
-  protocol/spec documents so they define the complete contract for the work
-  that follows.
-- When a plan requires mockup work, its second milestone must be the initial
-  mockup milestone, immediately after the documentation and protocol/spec
-  milestone. Include all mockup work known during initial planning in that
-  single milestone. Additional mockup milestones may be added later when a
-  genuine mockup gap is discovered during implementation; do not add
-  speculative duplicate mockup milestones during initial planning.
-- Each plan must end with a review TODO after its commit-and-push TODO. The
-  review TODO must direct a reviewer to use
-  `docs/implementation-review-prompt.md` against `origin/main` after the push,
-  to report findings, and then to apply the review-fix rule from the General
-  section: fix the `Auto-fix: yes` findings, re-review once, and report the
-  rest.
-  Read existing plan review TODOs that say "without changing the
-  implementation" under the same rule.
-- When a plan includes backend changes, mockup or design updates, and UI
-  implementation, keep each area in its own milestone. Mockup/design work and
-  UI implementation must be separate milestones, with mockups completed before
-  UI implementation begins. Do not combine backend, mockup/design, or UI
-  implementation tasks in the same milestone.
-- Milestones that include UI or mockup work must include an explicit tag line
-  immediately below the milestone heading: `Tags: ui` or `Tags: mockup`. A
-  milestone tagged `ui` or `mockup` must not include backend work. If backend
-  work is found to be missing while implementing a `ui` or `mockup` milestone,
-  always create new milestones; never add the backend work to the current
-  milestone, never add it to an existing milestone, and never move the blocked
-  UI/mockup TODOs into an existing milestone. First create a new backend
-  milestone immediately after the current milestone for the required backend
-  work. Then create a new tagged UI/mockup milestone immediately after that
-  backend milestone and move the blocked UI/mockup TODOs there, preserving their
-  incomplete status.
-- Milestones should have a short summary of what it includes
-- All milestones have TODO checklists, lists of tasks that must be completed to achieve the milestone.
-- Any time a new TODO is discovered during implementation, it should be added under the relevant milestone (just add the new TODO, and then continue with the active TODO)
-- If a TODO is complex, break it down into sub-tasks/TODOs
-- As you complete items, you should tick them off in the relevant file under `./plans`
-- Do not put evidence logs in plan files. Evidence logs show how work was
-  checked: command output, test and gate results or timings, smoke-test
-  output, search results, audit and preservation records, test-title
-  inventories, and full reviewer reports. Save them under
-  `.context/<plan-name>/`, which Git ignores. Under the related milestone, add
-  one line that names the file. A plan keeps only its summary, milestones,
-  TODOs, contracts, decisions, user approvals, and short review summaries.
-  Agents read the whole plan, so logs in a plan slow every session.
-- The workspace `README.md` should link to the `plans/` directory, not to an individual plan file unless a specific change needs to be referenced
-- Mark a milestone as completed when all the tasks are completed, do not re-open existing milestones - create a new milestone if new tasks are needed that do not fit into an existing milestone
+- Data displayed to the user must never be faked, stubbed, hardcoded, or
+  mocked in product code; render an explicit empty, loading, or error state
+  until the real source is wired. User-facing copy must read as product
+  language, never as engineer-facing build or status output. Follow
+  [`docs/dev/product-ui.md`](./docs/dev/product-ui.md) for UI and copy work
 
 ## Rust
 
-- Use a workspace with multiple crates to split up the code into concrete units
-- Run `cargo fmt --all -- --check` after Rust changes; if it fails, run `cargo fmt --all` and re-run the check before clippy/tests are considered complete
-- Run cargo clippy after making any changes
-- When adding **external** dependencies (from [crates.io](https://crates.io)), use `cargo add` without a version so the newest version is used instead of guessing a version in Cargo.toml. For **workspace internal crates**, add them manually with `dependency = { workspace = true }` (see `docs/dev/rust/architecture/dependencies.md`).
-- Treat traits/interfaces as the default for all non-pure behavior, even when there is only a single implementation and that implementation lives in the same crate.
-- The only routine exception is small pure free functions or small pure inherent methods on data/value structs.
-  - If code has dependencies, uses injected collaborators, reaches ambient state, performs side effects, or owns hidden mutable runtime state, model it behind a trait.
-  - Exported library entrypoints like `run`, `serve`, `start`, `sync`, `execute`, or similar runtime operations count as non-pure behavior and should be trait methods, not impure free functions.
-- Managers/services and any impure collaborators should depend on trait objects, not concrete implementations.
-  - If a struct has runtime dependencies, it should itself usually implement a trait and be consumed through `dyn Trait`, not be passed around as a concrete impure type.
-  - Prefer `Arc<dyn Trait + Send + Sync>` for shared runtime dependencies.
-  - Use `Box<dyn Trait>` only when ownership is truly single-owner and shared access is not needed.
-  - When another crate depends on that behavior, it should depend on the `dyn Trait`; the binary/composition root should construct and inject the concrete implementation.
-  - Avoid constructing concrete side-effecting dependencies directly inside manager/service structs.
-  - Injecting trait-typed dependencies into a concrete manager/runner/service is not sufficient by itself; if the manager/runner/service has side effects, runtime orchestration, or hidden mutable state, that manager/runner/service must also be behind a trait when used outside the composition root.
-  - Factory traits for impure behavior should return `Arc<dyn Trait + Send + Sync>` or `Box<dyn Trait>` as appropriate, not concrete runtime/service/runner structs.
-- Concrete structs are still fine for pure/basic data/value types and tiny pure helpers with no runtime dependencies.
-  - Small pure inherent methods on those types are fine when they improve clarity.
-  - Stateful orchestrators, runners, managers, caches, schedulers, and runtime coordinators are not pure helpers and should themselves be trait-backed.
-- If there is only a single implementation and the interface is local to one crate, the trait should usually live in that crate rather than forcing a separate interface crate.
-- If multiple implementations are expected or the interface is shared across crates, extract the trait into a dedicated `-interface` crate and keep implementations in separate crates.
-- Use diesel for database interactions (where target database is supported by it)
-  - database migrations and schema should be in its own crate
-  - structs for DB should not be exposed in the library but mapped to a interface struct if needed
-- Prefer using `clap` library for CLI parsing
-- Use `unimock` as the required mocking library for Rust unit tests at trait boundaries, including same-crate traits with a single concrete implementation.
-  - Unit tests should mock trait implementations instead of using real disk IO, databases, Docker, subprocesses, clocks, network calls, or other impure dependencies.
-  - Integration tests can still use real implementations when validating end-to-end behavior.
-- Use `tracing` for Rust diagnostics in libraries, servers, workers, and other
-  non-interactive runtime binaries. Do not use `print!`, `println!`,
-  `eprint!`, `eprintln!`, or `dbg!` for logging or diagnostics in those paths.
-- Direct Rust terminal output is allowed only when it is the intended
-  user-facing interface: CLI command results, prompts, raw command/data output,
-  interactive REPL messages, build-script `cargo:` directives, tests, examples,
-  and `xtask` developer command output.
-- Every crate should have its own README.md
-- Inline comments should be avoided
-- Rust modules must have module-level doc comments.
-- Rust public API items must have doc comments, including public functions, structs, enums, traits, type aliases, constants, statics, enum variants, and public struct fields.
-- Add doc comments to private Rust items when they define non-obvious behavior, invariants, or contracts that a maintainer would otherwise need to infer from the implementation.
+The full conventions with examples are in [`docs/dev/rust.md`](./docs/dev/rust.md).
+These rules apply to every Rust edit:
 
-### Rust File Size Limits
-
-The repository gate also limits changed TypeScript/JavaScript anywhere in the repository to 300 lines and protocol Markdown to 250 lines, except pages with exact reviewed caps in `tests/protocol_doc_sizes.test.ts`; fetch `origin/main` before `cargo xtask source-file-length-lint`. It excludes only Git-ignored untracked files.
-
-The file length linter enforces a **300-line** hard cap for Rust files under `crates/` and `xtask/` when they are changed relative to `origin/main` or present in the working tree. Run `cargo xtask rust-file-length-lint --all` to audit every Rust file under those directories. Files exceeding 300 lines must be refactored into multiple modules; there is no override mechanism.
-
-### File Size Management
-
-Keep files at reasonable sizes for maintainability:
-* **Target**: 200 lines per file
-* **Hard Limit**: 300 lines (enforced by linter, refactor immediately)
-* **Do not** work around limits by removing blank lines or compacting code
-* **Do not** use `include!` instead of Rust's module system. If code can't be cleanly split into modules, leave it in one big file. The only case where you should even consider `include!` is when the included code isn't meant to be read, like code generated in a build step.
-* **Allow exceptions** for:
-  * Complex state machines or protocol implementations
-  * Generated code or large data structures
-  * Files where splitting would harm cohesion
-* When files grow large, consider refactoring into logical modules
-* Example split for a large `tools.rs` file:
-  * `tools/mod.rs`: module declarations and intentionally exported types only
-  * `tools/error.rs`: error definitions
-  * `tools/types.rs`: shared structs, enums, and type aliases
-  * `tools/<name>.rs`: implementation modules for a coherent responsibility, named after the function, struct, or feature they implement
-
-### Imports
-
-- Organize imports in this order: standard library (`std`, `core`, `alloc`), external crates, current crate modules (`crate::`), then relative modules (`self::`, `super::`)
-- Declare all imports at the top of the file; never place `use` statements inside functions, methods, or nested code blocks
-- Before adding imports, check whether the item is already imported and extend existing groups instead of duplicating imports
-- Do not rename modules or crates with `as` in import statements; use the real module path directly
-- Prefer imports over inline `crate::...` paths in code, type aliases, and `dyn` trait objects; keep `crate::` paths in `use` declarations instead
-- Treat ast-grep import rules such as `no-inline-use` and `prefer-imports-over-crate-paths` as required style checks, not optional cleanups
-
-### Testing
-
-- All test implementations must live outside production source files. Do not
-  define `#[test]`, `#[tokio::test]`, or similar test bodies inline with
-  non-test code; the only allowed same-file test code is the external test
-  module declaration.
-- For Rust tests that live under `src`, test-only directories must be named
-  `_tests_` so they sort first and stand out in listings.
-- Rust unit tests and other source-adjacent Rust tests under `src` should live
-  in a `_tests_` subdirectory beside the owning source file and be declared
-  with an explicit path module, for example
-  `src/exa_web_search.rs` uses
-  `#[cfg(test)] #[path = "_tests_/exa_web_search_tests.rs"] mod exa_web_search_tests;`
-  with the test file at `src/_tests_/exa_web_search_tests.rs`; nested modules
-  follow the same relative pattern such as `src/chat/app.rs` using
-  `src/chat/_tests_/app_tests.rs`.
-- When splitting a Rust test file into submodules, keep the directory name free
-  of the `_tests` suffix and keep `_tests.rs` on the leaf test files. For
-  example, split `src/tools/_tests_/environments_tests.rs` into
-  `src/tools/_tests_/environments/mod.rs`,
-  `src/tools/_tests_/environments/spawn_tests.rs`, and sibling `*_tests.rs`
-  files. Apply the same rule to crate-root integration tests under `tests/`.
-- When using `insta` for Rust snapshots, always use file-based snapshots stored
-  under a `snapshots/` directory. Do not use inline snapshots.
-- Cargo integration tests may continue to live in crate-root `tests/`
-  directories.
-
-### Visibility and Modules
-
-- Default to the narrowest visibility that works: private items/modules first, then `pub(super)` or `pub(crate)`, and only use `pub` for intentional external API.
-- Only declare `pub mod` when the module is intentionally part of the crate's external API.
-- Use normal Rust module resolution for non-test modules; do not use `#[path = "..."]` outside test-only module declarations.
-- Add `#![warn(unreachable_pub)]` to internal crates so over-exposed items are surfaced during linting.
-- For intentional dead code, use `#[expect(dead_code, reason = "...")]`; do not add silent `#[allow(dead_code)]` without a documented reason.
-- Do not create a child module directory unless it has more than one sibling
-  module at the same level. Submodules are fine when they organize a real module
-  family, but a single nested module in a crate is pointless.
-- Keep `lib.rs`, `mod.rs`, and `bin.rs` as thin module root files. They may
-  contain doc comments, module declarations, imports, and intentional type
-  exports, but they should not contain runtime logic, business logic, function
-  bodies, impl blocks, or other concrete code. Move real implementation into
-  named sibling modules.
-- When splitting `foo.rs` into a module directory, move the root module to
-  `foo/mod.rs`. Do not keep `foo.rs` alongside `foo/*.rs`; apply the same rule
-  to test module trees such as `tests/foo/mod.rs` and
-  `src/**/_tests_/foo/mod.rs`.
-- Remove empty directories after moving or deleting files. Do not leave stale
-  module directories behind as placeholders; if the directory has no files, it
-  should not exist.
-- Do not use public re-exports to avoid updating source imports or call sites.
-  Define items at their real owner module path and update downstream imports to
-  use that path directly.
-- Do not create pure pass-through modules whose public API is only `pub use`
-  from another crate or module. Delete the wrapper and import the real owner
-  directly instead.
-
-### Explicit drops
-
-Do not use the `drop` function unless absolutely necessary. Usually, if the code compiles without it, it is better to just leave it out.
-
-Some resources, like mutexes should be dropped as soon as possible. This can be accomplished using scopes.
-
-#### Bad (using drop)
-
-```rust
-let resource = mutex.lock();
-let result = resource.use();
-drop(resource);
-```
-
-#### Good (using a scope)
-
-```rust
-let result = {
-    let resource = mutex.lock();
-    resource.use()
-};
-```
-
-### Generics
-
-Prefer `dyn T` runtime dynamic dispatch generics over parametric / static-dispatch / monomorphization generics.
-- This is an architectural rule, not just a preference for generic syntax. The goal is testable seams and swappable implementations at side-effect boundaries.
-
-### Typing
-
-- Prefer enums and structs over raw strings when the set of states or variants is known.
-- Always fully type new domain, service, and interface code. Avoid introducing `serde_json::Value` or other untyped JSON blobs where a structured Rust type can model the contract.
-- If a boundary is forced to accept or emit JSON (external API, persistence, protobuf/HTTP passthrough, etc.), convert it into a structured type as close to that boundary as possible and keep the rest of the code typed.
-
-### Panic and Expect Guidelines
-
-- **NEVER** use `panic!()`, `unwrap()` `expect()` in production code (test code these are fine) - always use proper error handling with Results and defined error types
-
-### Unsafe Code Guidelines
-
-- **AVOID** `unsafe` code blocks unless absolutely necessary for FFI (Foreign Function Interface) operations
-- All `unsafe` usage MUST be accompanied by detailed safety comments explaining why it's safe
-- Never use `unsafe` for performance optimizations - prefer safe alternatives
-- `unsafe` blocks should be as minimal as possible and isolated to dedicated functions
-- All `unsafe` code requires additional code review and documentation
-
-### Error Handling Standards
-
-- IMPORTANT: ALWAYS use defined enum errors with the `thiserror` macro
-- Public error enums should normally be `typed handled variants + Internal(InternalError)` when the boundary needs internal fallback
-- Only errors that callers explicitly branch on should stay typed; storage, provider, serialization, and other unhandled failures should collapse into `Internal(InternalError)`
-- For reusable public library crates, downstream consumers count as callers, so the stable typed surface may be broader when those variants are part of the documented public API contract
-- Trait/interface crates should own the error contract for their trait methods; implementation crates should return those interface errors directly instead of maintaining mirror wrapper enums
-- Error-contract modules with internal fallback should normally derive `internal_error::ErrorContract`, keep the explicit `Internal(#[from] InternalError)` variant, and use the generated `#[track_caller]` helpers to capture call sites; feature code should not pass `Location::caller()` directly
-- Handwritten module-local `DEFINED_AT` traits or result adapters are a fallback only when the shared derive cannot be used cleanly
-- Prefix the string in thiserror's `#[error]` attribute with crate and mod name e.g. `#[error("[crate/mod] <msg>")]`
-- Each crate / mod should should define its own error/result - e.g `notes::{Error, Result}`
-- Always define enum variants specifically, never use strings to differentiate them
-  - Good: `return Err(Error::DiffNoFilePatches);`
-  - Bad: `return Err(Error::Parse { reason: "diff no file patches" });`
-- For the canonical internal fallback path, prefer `Internal(#[from] InternalError)` over a manual `impl From<InternalError>` so `?` can promote internal failures without boilerplate
-- Use `res?;` or `Ok(res?)`, rather than `.into()` or `.map_err(Error::Variant)`
-- Never use `#[error(transparent)]`
-- For base/originating errors, use enum varient fields to provide additional data and include that in `#[error]` message
-
-- Counterexamples to avoid:
-  - NEVER use `eyre` or `anyhow` dependencies
-  - Reserve thiserror `#[from]` for the canonical `Internal(#[from] InternalError)` path; do not use it for public wrapper variants or cross-crate error translation
-  - Never match errors using `.contains()` on error strings
-  - Never use generic catch-all: `Other(String)`
-  - Never use `format!`/`to_string()` in call sites for errors.
-  - Never stringify internal failures into ad hoc message variants such as `Json { message: String }`, `Store { message: String }`, or similar string-based error buckets. Preserve the source error type in `InternalError` or in a specific typed enum variant.
-  - Never use `map_err(...)` directly in production Rust code for error conversion or context. It hides the real caller location from `#[track_caller]`-based helpers. Use `?`, typed branching, or a `#[track_caller]` result/error helper method instead. The only routine exception is inside the shared helper implementation that preserves caller capture.
-  - Avoid using `.into()` for errors or `.map_err(Error::Variant)`, use `res?;` or `Ok(res?)` instead
-
-## Databases
-
-Separate database operations from business logic:
-* Database queries should be in dedicated functions, separate from business logic
-* Makes testing easier and improves code organization
-* Enables better error handling and query optimization
-* Database migrations are frozen once they have been merged to the target
-  branch. Do not edit an existing merged migration to change schema history;
-  create a new forward migration instead, with a matching rollback when
-  rollback is supported.
-* Preview seed migrations under `crates/bkf-db/seed_migrations` are also
-  immutable once committed or applied by a preview database. Do not rewrite,
-  delete, renumber, or "clean up" an existing seed migration file; add a new
-  forward seed migration for fixture changes or repairs.
-
-Database migrations:
-
-- Name new migrations with a full date, hour, and minute prefix in the format
-  `<YYYYMMDDHHMM>_<description>` to avoid timestamp conflicts.
-- Never update an existing migration after it has been committed to `main`;
-  create a new follow-up migration instead.
-- `cargo xtask check` enforces the migration lock for Diesel migrations and
-  preview seed migrations. When adding a new migration, add only the new file
-  and its checksum lock entry; never update a lock entry for an existing file.
-
-Postgres store crates:
-* Crates named `*-store-pg` must contain only database query implementations, Diesel row mappings, migrations/schema integration, and mappings to their store-interface DTOs/errors
-* `*-store-pg` crates may depend on their store-interface crate and `juno-db` for shared schema/migrations, plus necessary external database/serialization/error crates
-* Do not put business logic, service orchestration, runtime wiring, agent turn runners, model/tool providers, queue scheduling, HTTP/gRPC clients, KMS composition, or other side-effecting service adapters in `*-store-pg` crates
-* If a Postgres-backed service needs more than query execution and interface mapping, keep the query code in the `*-store-pg` crate and put the service/composition logic in a separate non-store crate
-* Existing `*-store-pg` code that violates this rule should be treated as legacy structure to extract, not as precedent for new code
-
+- Use a workspace with multiple crates to split up the code into concrete units; every crate has its own README.md
+- Run `cargo fmt --all -- --check` after Rust changes; if it fails, run `cargo fmt --all` and re-run the check. Run `cargo clippy` after making any changes
+- Add **external** dependencies with `cargo add` without a version; add **workspace internal crates** manually with `dependency = { workspace = true }`
+- Model all non-pure behavior behind traits and consume it through `dyn Trait`, with `Arc<dyn Trait + Send + Sync>` for shared runtime dependencies. Prefer `dyn` dispatch over parametric generics. Only small pure free functions and pure value types are exempt
+- Use `unimock` to mock trait boundaries in unit tests, including same-crate traits with one implementation; unit tests must not use real disk IO, databases, Docker, subprocesses, clocks, or network calls
+- Use `tracing` for diagnostics in libraries, servers, and workers; never `println!`, `eprintln!`, or `dbg!` there. Direct terminal output is only for CLI results, prompts, raw data output, REPL messages, build-script directives, tests, examples, and `xtask` output
+- Every Rust module has a module-level doc comment and every public item has a doc comment; avoid inline comments
+- Rust files under `crates/` and `xtask/` have a 300-line hard cap enforced by `cargo xtask rust-file-length-lint`; target 200 lines, split into modules, and never use `include!` to get around it
+- Order imports std, external crates, `crate::`, then `self::`/`super::`. Declare them at the top of the file, never rename with `as`, and prefer imports over inline `crate::` paths
+- Keep tests out of production files. Put them in a `_tests_` directory beside the source and declare them with `#[cfg(test)] #[path = "_tests_/<name>_tests.rs"]`. Use file-based `insta` snapshots only
+- Use the narrowest visibility that works, keep `lib.rs`, `mod.rs`, and `bin.rs` as thin module roots, use `#[path]` only for test modules, and use `#[expect(dead_code, reason = "...")]` rather than a silent `allow`
+- Do not call `drop` unless absolutely necessary; end a borrow with a scope instead
+- Prefer enums and structs over raw strings and `serde_json::Value`; fully type domain, service, and interface code
+- **NEVER** use `panic!()`, `unwrap()`, or `expect()` in production code; test code may use them
+- Avoid `unsafe` except for FFI, keep it minimal, and add a safety comment
+- Define errors as `thiserror` enums per crate or module with `[crate/mod]` message prefixes, typed variants that callers branch on, and `Internal(#[from] InternalError)` as the fallback. Propagate with `?`. Never use `anyhow`, `eyre`, `#[error(transparent)]`, `Other(String)`, string matching on errors, or `map_err` in production code
 
 ## Git
 
-This project uses the **Conventional Commits** format for all commit messages. This standardized format improves readability, enables automated changelog generation, and makes it easier to understand the project history.
+The full rules, commit examples, and the mainline preservation procedure are in
+[`docs/dev/git.md`](./docs/dev/git.md). These rules apply to every commit:
 
-### Mainline Feature Preservation
-
-Do not delete or override anything already on `origin/main`—code, APIs, tests,
-docs, mockups, plans, migrations, or schema—without explicit user approval.
-
-- Before integration begins, fetch main and audit its additions from the source
-  tip. Capture that tip before merging or rebasing; never recalculate it from a
-  rebased `HEAD` (when merging into main, use the other branch's tip):
-
-  ```sh
-  git fetch origin main
-  source_tip=$(git rev-parse HEAD)
-  base=$(git merge-base "$source_tip" origin/main)
-  git diff --name-status "$base"..origin/main
-  ```
-
-- Resolve conflicts path-by-path; never bulk-take `--ours` or `--theirs` for a
-  tree, directory, or feature. Passing CI does not prove preservation.
-- Immediately after committing each merge, before another commit, name it and
-  confirm it has exactly two parents; merge one branch at a time because Git
-  skips remerge diffs for octopus merges. Stop if the parent check fails.
-  Review every listed path before pushing:
-
-  ```sh
-  merge=$(git rev-parse HEAD)
-  git rev-parse --verify --quiet "$merge^2" >/dev/null &&
-    ! git rev-parse --verify --quiet "$merge^3" >/dev/null # succeeds only for exactly two parents
-  git show --remerge-diff --stat "$merge"
-  git show --remerge-diff "$merge" -- <path> # repeat for every listed path
-  git diff "$merge" HEAD # review commits made after the merge
-  ```
-
-  The remerge diff shows conflict resolutions, edits to one-sided files,
-  undone changes and deletions. Restore lost content before pushing with
-  `git commit --amend`, which keeps both parents; then review the merge again.
-  After pushing, use a follow-up commit.
-  Justify each intentional decision in the PR description, naming every path
-  it affects. If no PR exists yet, save the justifications under
-  `.context/<plan-name>/`, name that file in the active plan milestone, and
-  copy them into the PR description when it opens.
-
-- Before commit and after commit, inspect the diff and deletions against main:
-
-  ```sh
-  git diff --name-status origin/main
-  git diff --diff-filter=D --name-status origin/main
-  git diff --name-status origin/main..HEAD # after commit
-  ```
-
-  Stop unless each deletion or feature-wide reduction is authorized, and record
-  every approved removal plus related cleanup in the commit or PR description.
-
+- Use the **Conventional Commits** format for every commit message and pull request title. Commit titles use at most 50 characters; pull request titles and their squash commit titles use at most 72 Unicode code points. A commit may hold multiple entries separated by blank lines, ordered by type priority
+- Do not delete or override anything already on `origin/main`, including code, APIs, tests, docs, mockups, plans, migrations, and schema, without explicit user approval
+- Before you merge or rebase, and before and after you commit, run the mainline preservation audit in [`docs/dev/git.md`](./docs/dev/git.md); resolve conflicts path-by-path, and verify the worktree before saying a merge is complete
 - When a change removes or renames a feature, test, fixture, scenario,
   command, or file, search `docs/`, `plans/`, and every `README.md` for its
   name. Update each stale reference in live content in the same change.
@@ -651,82 +157,17 @@ docs, mockups, plans, migrations, or schema—without explicit user approval.
   live. In a completed plan, open review findings and unchecked post-merge
   follow-ups are live; all other content is history. Do not change the
   words of history.
-- `tests/markdown_links.test.ts` checks the local links in `docs/`, `plans/`,
-  and every `README.md`. If a history link fails this check, replace it with
-  a GitHub permalink at a commit where the target still matches the text.
-  Start with the commit that wrote the link. For a squash-merged PR, look for
-  that commit in `refs/pull/<number>/head`. For a line in a Markdown file,
-  put `?plain=1` before `#L<number>`.
-
-### Rules
-
-Use at most 50 characters for individual commit titles (the first line).
-Pull request titles and their squash commit titles may use at most 72 Unicode
-code points. Keep the Conventional Commits format for both.
-Commit body (subsequent lines, after a blank line) has no strict length limit.
-If a merge produces conflicts, resolve every conflict and verify the resulting
-worktree before saying the merge or work is complete.
-
-You may include MULTIPLE entries in a single commit message if there are distinct change types.
-If you use multiple entries (feat/fix/refactor/...):
-- Separate multiple entries with a blank line.
-- Order them by Conventional Commits type priority.
-
-### Examples from the Codebase
-
-These are compact examples of commit titles that don't include the commit descriptions, please include descriptions in your messages:
-
-```
-feat: add cargo xtask lint command
-fix(linear-webhook): include check run URLs in failure handling
-build(ios): skip device arch in dev builds
-chore: update app version to 2.0.11
-refactor(linear-webhook): extract reusable webhook actions
-feat(wallet): add rewards transfer to merge_wallet_admin endpoint
-fix(bungee): enforce $1.00 minimum USD output amount threshold
-docs(claude): prefer `dyn T` over generics
-perf(bungee-client-http): optimize request batching
-```
-
-### Cherry-picked example (one commit message that has both `refactor` and `chore`):
-
-This is a commit that has multiple distinct change types - refactor and chore:
-
-```
-refactor: adopt Rust 1.90 idioms, fix new lints
-
-- Replace nested conditionals with if-let chains across crates (bungee-client-http, contracts, guild, merge-cli, node, providers, wallet-core, wallet-mobile, zk-primitives)
-- Remove unused structs/imports and dead test helpers (panic_handler, utxo, firebase, p2p tests, node rpc/http_error, client tests, smirk iterator, wallet-core send_link, element serde)
-- Add #[expect(dead_code)] with reasons where code is gated by features (util, rollup, doomslug)
-- Inline include_bytes! for verification key fields and drop redundant constants (barretenberg circuits)
-- Tighten lifetimes and return types (Tree::elements, middle_truncate Cow, diesel BoxedQuery lifetime, SemaphorePermit borrows)
-- Use .is_multiple_of and from_ref helpers; simplify assertions and formatting utilities
-- Minor logic cleanups and early returns; no functional changes intended
-
-chore(rust): bump workspace to Rust 1.90
-
-- Update codebase to compile cleanly under Rust 1.90 and new lints
-```
+- `tests/markdown_links.test.ts` checks the local links in `AGENTS.md`,
+  `docs/`, `plans/`, and every `README.md`. If a history link fails this
+  check, do not change the words of history; replace the link with a GitHub
+  permalink as described in [`docs/dev/git.md`](./docs/dev/git.md).
 
 ## Bash Tool Timeout Configuration
 
-**CRITICAL**: Claude Code's environment variable timeout configuration has known issues. Always use explicit `timeout` parameters in Bash tool calls to prevent command timeouts.
+**CRITICAL**: Claude Code's environment variable timeout configuration has known issues. Every Bash **tool call** (not command) MUST include an explicit `timeout` parameter in milliseconds:
 
-### Required Timeout Parameters
-
-All Bash **tool calls** (not commands) MUST include explicit `timeout` parameter (in milliseconds):
-
-**Timeout Guidelines:**
 - **Default commands**: 600000ms (10 minutes)
 - **Long operations** (cargo check, yarn install): 900000ms (15 minutes)
 - **Very long operations** (full workspace builds): 1800000ms (30 minutes)
 
-### Retry Logic for Timeouts
-
-If a command times out but shows progress, retry.
-
-### Reminder
-
-- ✅ Always use explicit `timeout` parameter in **Bash** tool calls
-- ✅ Monitor command output for progress indicators before retry
-- ✅ Use longer timeouts for workspace operation
+If a command times out but shows progress, retry it. Monitor command output for progress indicators before you retry, and use longer timeouts for workspace operations.

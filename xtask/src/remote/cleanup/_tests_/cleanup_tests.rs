@@ -5,19 +5,28 @@ use std::sync::{Arc, Mutex};
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::remote::cleanup::{BoxCleanup, CleanupGuard};
+use crate::remote::cleanup::contracts::BoxCleanup;
+use crate::remote::cleanup::guard::CleanupGuard;
 use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
 use crate::remote::runner::DefaultRemoteRunner;
+
+#[path = "disconnect_cleanup_tests.rs"]
+mod disconnect_cleanup_tests;
 
 #[test]
 fn cleanup_continues_after_status_stop_and_optional_github_failures() {
     for case in 0..5 {
         let events = Arc::new(Mutex::new(Vec::new()));
         let status_events = events.clone();
+        let close_events = events.clone();
         let stop_events = events.clone();
         let cancel_events = events.clone();
         let shared = Arc::new(Unimock::new((
+            BlacksmithDisconnectMock.each_call(matching!(_)).answers_arc(Arc::new(move |_, id| {
+                close_events.lock().unwrap().push(format!("close:{id}"));
+                Ok(Disconnection::Closed)
+            })),
             ProgramsFindMock
                 .next_call(matching!("gh"))
                 .answers_arc(Arc::new(move |_, _| {
@@ -38,6 +47,7 @@ fn cleanup_continues_after_status_stop_and_optional_github_failures() {
                         Err(Error::Command {
                             operation: Operation::Blacksmith,
                             code: Some(1),
+                            detail: None,
                         })
                     } else if case == 4 && id == "tbx_a" {
                         Ok("ID STATUS REPO\ntbx_other completed mokly\ntbx_a completed mokly\n/actions/runs/123".into())
@@ -53,12 +63,12 @@ fn cleanup_continues_after_status_stop_and_optional_github_failures() {
                         Err(Error::Command {
                             operation: Operation::Blacksmith,
                             code: Some(1),
+                            detail: None,
                         })
                     } else {
                         Ok(())
                     }
                 })),
-            ReporterExecutorMock.each_call(matching!(_)).returns(()),
         )));
         let github = Arc::new(if case < 2 {
             Unimock::new(())
@@ -89,7 +99,11 @@ fn cleanup_continues_after_status_stop_and_optional_github_failures() {
                 aggregate: unused.clone(),
                 logs: unused.clone(),
                 interrupt: unused,
-                reporter: shared,
+                reporter: Arc::new(if case == 0 {
+                    Unimock::new(())
+                } else {
+                    Unimock::new(ReporterExecutorMock.each_call(matching!(_)).returns(()))
+                }),
                 workspace: PathBuf::from("/workspace"),
             },
         };
@@ -102,6 +116,21 @@ fn cleanup_continues_after_status_stop_and_optional_github_failures() {
         );
         let events = events.lock().unwrap();
         for id in ["tbx_a", "tbx_b"] {
+            assert_eq!(
+                events
+                    .iter()
+                    .filter(|event| **event == format!("close:{id}"))
+                    .count(),
+                1
+            );
+            assert!(
+                events
+                    .iter()
+                    .position(|event| *event == format!("close:{id}"))
+                    < events
+                        .iter()
+                        .position(|event| *event == format!("status:{id}"))
+            );
             assert_eq!(
                 events
                     .iter()

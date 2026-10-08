@@ -103,6 +103,7 @@ test("npm omissions of -- fail instead of launching or widening unit tests", asy
         test: scripts.test,
         "test:unit": scripts["test:unit"],
         "prepare:verification": 'node -e ""',
+        "prepare:unit": 'node -e ""',
       },
     }),
   );
