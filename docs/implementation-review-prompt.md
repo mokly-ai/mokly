@@ -66,11 +66,11 @@ Return numbered findings first. For every finding:
   option. When a narrow fix and a better broader fix both exist, tag the
   finding `Auto-fix: no` so that the user chooses between them.
 - End the finding with `Auto-fix: yes` or `Auto-fix: no, because …`, following
-  the review-fix rule and its ask conditions in `AGENTS.md`. A flaky test that
-  the diff adds or changes may be `Auto-fix: yes` under the flaky-test rule:
-  name the nondeterminism source and the deterministic fix from
-  `docs/protocol/ci-test-timing.md`, and require the fixer to reproduce the
-  flake and record pass counts before and after. Tag a flaky test that the
+  the review-fix rule and its ask conditions in `docs/dev/review.md`. A flaky
+  test that the diff adds or changes may be `Auto-fix: yes` under the
+  flaky-test rule: name the nondeterminism source and the deterministic fix
+  from `docs/protocol/ci-test-timing.md`, and require the fixer to reproduce
+  the flake and record pass counts before and after. Tag a flaky test that the
   diff does not touch `Auto-fix: no`, so that the user can fix it in a
   separate branch; report its name, failure text, and suspected source. Tag a
   slow, custom, or low-value test, gate, lint, or check `Auto-fix: no` and ask
@@ -82,7 +82,7 @@ If there are no findings, say so clearly and mention residual test risk.
 ## After The Review
 
 The reviewer stays read-only. The implementer then applies the review-fix rule
-from [`AGENTS.md`](../AGENTS.md):
+from [`docs/dev/review.md`](./dev/review.md):
 
 1. Fix the findings tagged `Auto-fix: yes`. The tag is allowed only when the
    finding has one clear fix, for small or medium effort findings about
