@@ -1,8 +1,8 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestones 1 to 33 are implemented, verified and pushed through
-`d1414026`; the branch contains main `acac1c73`. Milestone 32's open findings
-wait for the user. Milestone 33's post-push review is in progress.
+Status: Active. Milestones 1 to 33 are implemented, verified and pushed; the
+branch contains main `4727cecc`. The open review findings of Milestones 32 and
+33 wait for the user.
 
 ## Status And Outcome
 
@@ -2669,16 +2669,22 @@ movement without another merge. The branch stays local.
 - [x] Push the branch after the reviewer checks the local commits. The
       reviewer checked both merges, the loss audit, the gate reports and the
       smoke screenshots, and pushed `d1414026`.
-- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
+- [x] Merge the docs-only main changes #169 (`fa8be322`) and #163
+      (`4727cecc`). Neither merge has a conflict. Each merge has exactly two
+      parents and an empty remerge diff, and no main line is lost. Evidence:
+      `.context/remove-source-path-evidence/m33-main-docs-merges.md`.
+- [x] After the push, use `docs/implementation-review-prompt.md` to review the
       complete diff against `origin/main` and report findings. Keep the review
       read-only. Then apply the review-fix rule in `AGENTS.md`: fix
       `Auto-fix: yes` findings, run checks, commit, push and re-review once.
       Fix new `Auto-fix: yes` findings once more, then stop and report the
       rest. Ask the user for findings tagged `Auto-fix: no`. Add each open
       finding as one line under this TODO. Keep reports and evidence under
-      `.context/`.
+      `.context/`. Both reviews are complete. The re-review has no
+      `Auto-fix: yes` finding, so no third review follows.
   - [ ] M33 finding 1 (Medium, performance): renderer resource checks build a new public-file policy per view, so the work grows with views times sources. Recommend A: reuse the compilation's policy.
   - [x] Fix M33 findings 2 and 3 with approved option A. Capture the placement-warning failure, preserve sorted successful diagnostics and one callback delivery, correct the live closing status, run targeted checks and the complete gate, and make local commits. The reviewer owns push and one re-review.
+  - [ ] M33 re-review finding 1 (Low, product bug, large): failed on-demand and temporary-props previews in Serve drop their stylesheet-placement warnings. Recommend B: stream foreground worker warnings through the generation-tagged warning record, as background workers do.
 
 ### Approved migrations
 
@@ -2786,7 +2792,9 @@ captured two-parent history. The latest integrated main is `acac1c73`; the final
 fetch found no later commit. Preservation checks retain every required main
 addition or classify its approved migration or move. Only the four approved
 files are deleted against main. No unresolved merge meaning conflict remains.
-The reviewer pushed `d1414026`; the Milestone 33 review-fix round is in progress.
+The reviewer pushed `d1414026` and then the review fixes. Later docs-only merges
+integrate main #169 and #163. The re-review is complete; its open finding waits
+for the user.
 
 Evidence: `.context/remove-source-path-evidence/milestone-33.md`.
 
