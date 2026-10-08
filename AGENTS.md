@@ -161,13 +161,3 @@ The full rules, commit examples, and the mainline preservation procedure are in
   `docs/`, `plans/`, and every `README.md`. If a history link fails this
   check, do not change the words of history; replace the link with a GitHub
   permalink as described in [`docs/dev/git.md`](./docs/dev/git.md).
-
-## Bash Tool Timeout Configuration
-
-**CRITICAL**: Claude Code's environment variable timeout configuration has known issues. Every Bash **tool call** (not command) MUST include an explicit `timeout` parameter in milliseconds:
-
-- **Default commands**: 600000ms (10 minutes)
-- **Long operations** (cargo check, yarn install): 900000ms (15 minutes)
-- **Very long operations** (full workspace builds): 1800000ms (30 minutes)
-
-If a command times out but shows progress, retry it. Monitor command output for progress indicators before you retry, and use longer timeouts for workspace operations.
