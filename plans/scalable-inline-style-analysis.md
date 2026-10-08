@@ -1984,11 +1984,12 @@ Evidence: `.context/scalable-inline-style-analysis/m11-merge/`.
       The M11 review and CI found two branch tests that still conflict with these rules; see the Discovered TODO and the review lines.
 - [x] Run the complete pinned-Chromium gate and real-server smoke tests.
       Record the CPU and boot ID around browser and hydration verification.
-- [ ] Discovered: PR #158 CI fails 6 unit tests on Node 22.14.0; pending the user's decision (fix or remove; slow custom tests). Logs: `.context/scalable-inline-style-analysis/m11-ci/`.
+- [x] Discovered: PR #158 CI fails 6 unit tests on Node 22.14.0; pending the user's decision (fix or remove; slow custom tests). Logs: `.context/scalable-inline-style-analysis/m11-ci/`.
       Replay test (material_fingerprint_catalogues): Node 22.14 prefixes child test output lines with "# ", so it reads 0 records.
       Speed-test tool tests (large_scenario_cancellation x4, large_material_companion x1): they launch Chromium, which the CI unit job does not install; under parallel load, the companion test's browser waits use Playwright's 5-second default (review finding 2).
       User decision (2026-10-07): option C. Remove the five speed-test tool tests; benchmarks run separately. This also resolves M11 review finding 2. The replay test decision is still pending.
       User decision (2026-10-07): option A for the replay test. Accept the `# ` output prefix of Node 22.14. M11 review finding 1 (the nested runner's fixed concurrency) stays open.
+      Resolved by `2ea17c96` (tool-test removal) and `18e87fd5` (Node 22 replay parser).
 - [x] Commit with Conventional Commits and push after the supervisor's check.
       Pushed after the supervisor's check (2026-10-07).
 - [x] After the push, use
@@ -2047,6 +2048,7 @@ Evidence: `.context/scalable-inline-style-analysis/m12-merge/`.
       [review-fix rule](../AGENTS.md#general): fix `Auto-fix: yes` findings,
       re-review once and report fixed and open findings separately.
       Unrelated flaky test: `viewer.spec.ts`, "uncontrolled selection, slots and handle lifecycle", failed with "Execution context was destroyed, most likely because of a navigation"; isolated reruns passed 9/10 on both branch and clean main in the same boot; suspect navigation racing `page.evaluate` at line 31. Evidence: `.context/scalable-inline-style-analysis/m12-merge/fourth/viewer-repeat-summary.md`.
+      Flake follow-up (2026-10-08): the same test and error recurred in gate-6 and its first branch rerun; later bounded reruns passed 10/10 on both branch and clean main, and gate-7 passed. Navigation racing `page.evaluate` at line 31 remains the suspected source. Evidence: `.context/scalable-inline-style-analysis/m12-merge/sixth/viewer-followup-summary.md`.
       Review complete; report: `.context/scalable-inline-style-analysis/m12-review/report.md`.
       Finding 1 (Medium, test): 43 branch test files repeat identical committed/derived passes after #156 removed the modes; titles and mokly-material-work-counts.md claim coverage that no longer exists; pending the user's decision.
       Finding 2 (Low, docs): main's open 58 A TODO and the comparison-inventory target name the deleted style_ownership.ts and recorded style ranges; pending the user's decision.
