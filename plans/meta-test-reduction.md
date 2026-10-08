@@ -343,7 +343,16 @@ pass 300 lines; `validateShardReports` calls it.
       `.context/meta-test-reduction/merge-main.md`. Three merges: `a802cee`
       (one `AGENTS.md` conflict), `db0cc77` (kept the inventory deletion of
       `tests/ci_testbox_workflow.test.ts`), and `b9b62e7` (main at `fa8be32`,
-      PRs #168 and #169; no conflicts; run by a delegated Codex session).
+      PRs #168 and #169; no conflicts; run by a delegated Codex session), and
+      `f75ea2c` (main at `3a7be25`, PRs #163, #171, #172, #177 and #178).
+      That merge had three conflicts: `AGENTS.md`, resolved to main's short
+      Rust section that points at `docs/dev/rust.md` while keeping this
+      branch's two General rules; and the inventory files
+      `tests/ci_testbox_workflow.test.ts` and
+      `tests/guides_ci_verification.test.ts`, which main had edited for the
+      Rust pin and the moved commit examples, kept deleted. The cap reference
+      that main moved into `docs/dev/rust.md` was updated in the follow-up
+      commit.
 - [x] Run `cargo xtask check`. Save output under
       `.context/meta-test-reduction/final-check.md`.
       The gate passed under Node 22.14.0, the minimum tested version that
@@ -383,8 +392,9 @@ pass 300 lines; `validateShardReports` calls it.
     code from PR #164. CI pins Rust 1.95.0 and passes; `RUSTUP_TOOLCHAIN=1.95.0`
     passes locally (`merge-3-repository-check-rust195.txt`). Suspected source:
     no `rust-toolchain.toml`, so local runs use the installed `rustup`
-    default. Recommendation: add `rust-toolchain.toml` pinning 1.95.0 in a
-    separate branch.
+    default. Resolved on `main`: PR #178 added `rust-toolchain.toml` pinning
+    1.95.0 and PR #177 removed the `fetch_update` call; merged in `f75ea2c`.
+    Closed.
   - Review 1 (`.context/meta-test-reduction/review-1.md`), fixed: finding 1
     narrow fix (README examples now run `tests/ci_workflow_policies.test.ts`),
     finding 4 (shard bound named in release evidence validation and the
