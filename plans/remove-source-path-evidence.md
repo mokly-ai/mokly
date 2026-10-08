@@ -1,7 +1,7 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestones 1 to 34 are implemented, verified and pushed.
-Milestone 35 merges main `1086732a`. The open review findings of Milestones 32
+Status: Active. Milestones 1 to 35 are implemented, verified and pushed.
+Milestone 36 merges main `a90badb6`. The open review findings of Milestones 32
 to 34 and two Milestone 35 decisions wait for the user.
 
 ## Status And Outcome
@@ -2881,3 +2881,30 @@ Testbox boxes after suites).
       no new finding.
 
 Evidence: `.context/remove-source-path-evidence/milestone-35.md`.
+
+## Milestone 36: Integrate `main` #183, #184 and #185
+
+On 2026-10-08 the user asked again to merge the latest `main`, resolve the
+conflicts, commit and push. Main `a90badb6` adds #184 (the controls test
+teardown race), #183 (release evidence and manual complete retries) and #185
+(authored files stay readable across Serve reloads and restarts).
+
+- [x] Capture the source tip `7dc77575`, the merge base `1086732a` and main
+      `a90badb6`. Audit main's 35 changed files.
+- [x] Merge main as one commit with exactly two parents. In
+      `src/server/child.ts` and `src/cli/run.ts`, keep #185's `assetClosure` as
+      the eighth `runServerChild` parameter and add the branch's `onWarning`
+      as the ninth. Review the remerge diff.
+- [x] Run the line-level loss check. Every main-added line is present.
+- [x] Keep `src/server/supervisor.ts` under the 300-line limit: move the child
+      diagnostic and warning forwarding into one shared helper.
+- [ ] Run build, typecheck, lint, the targeted tests, the repository suite and
+      the complete `cargo xtask check` at 100%. Inspect the deletions against
+      `origin/main`. Commit, push, and update the PR description.
+- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
+      complete diff against `origin/main` and report findings. Keep the review
+      read-only. Then apply the review-fix rule in `docs/dev/review.md`: fix
+      `Auto-fix: yes` findings, re-review once, and report the rest. Add each
+      open finding as one line under this TODO.
+
+Evidence: `.context/remove-source-path-evidence/milestone-36.md`.
