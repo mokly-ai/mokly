@@ -5,9 +5,9 @@ open. On 2026-10-06 the user chose the
 recommended option for findings 1 to 5 of the
 [Deterministic Test Timing](./deterministic-test-timing.md) review. Finding 6
 needs no change: the squash title of PR #152 is within the limit. Milestones 1
-to 8 are complete. After the merge with main in Milestone 8, review finding 1
-no longer applies. Milestone 9 fixes findings 2 to 4 with the options that the
-user chose.
+to 9 are complete. After the merge with main in Milestone 8, review finding 1
+no longer applies. Milestone 9 fixed findings 2 to 4 with the options that the
+user chose. The post-push review found no issues.
 
 Fix the five open findings from the PR #152 review. Keep browser retries
 working, give Playwright assertions the contract's 10-second minimum, replace
@@ -344,7 +344,7 @@ Evidence: `.context/deterministic-test-timing-review-fixes/merge-7d3b232.md`.
   - Findings 2 and 3 still apply. Finding 3 also covers `performance.timeOrigin + performance.now() - started`, which main's `tests/helpers/browser_timing.ts` uses for fixture timing.
   - 4 (Low, test): `tests/server_fixture.ts` is an unused copy of `tests/helpers/server_http.ts` from PR #156. It keeps a 12 s deadline loop and a 2 s request timeout. Recommended: delete it.
 
-## Milestone 9: Fix review findings 2 to 4
+## Milestone 9: Fix review findings 2 to 4 — completed
 
 On 2026-10-07 the user chose option A for finding 2, option B for finding 3
 and option A for finding 4. Option A for finding 4 approves the deletion of
@@ -380,10 +380,12 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-9.md`.
 - [x] Run `cargo xtask check --suite repository`, then the complete gate, with
       the CI toolchain (Rust 1.95.0) and the local executor.
 - [x] Commit and push the branch, and open the pull request.
-- [ ] After the push, use `docs/implementation-review-prompt.md` to review
+- [x] After the push, use `docs/implementation-review-prompt.md` to review
       the complete local diff against `origin/main` and report the findings.
       Then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Review 2 (`.context/deterministic-test-timing-review-fixes/review-2.md`):
+    no findings, so there is no fix round.
 
 ## Post-merge follow-up (non-blocking)
 
@@ -391,3 +393,7 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-9.md`.
   test roots.
 - Decide whether to delete the unused `mountedRegistrySessions` helper in
   `packages/viewer/tests/frame_registry_harness.tsx`.
+- Decide whether the timing guard should also match the clock forms that
+  review 2 found unmatched: a named `hrtime` import, optional calls, type
+  casts, computed calls, a clock deeper in a sum and a literal-first deadline.
+  Also decide whether it should allow a fake clock's `clock.Date.now()`.
