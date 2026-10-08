@@ -328,13 +328,14 @@ Evidence: `.context/shared-example-rebuild-removal/milestone-4-unit.log`, `.cont
       `.context/shared-example-rebuild-removal/` before checkpoint 4. Include
       the approved file removals and rename, test titles, plan edits and
       reviewer decisions. Follow the title limits and placeholder rule.
-- [ ] Run `git add -A`, commit with Conventional Commits, for example
+- [x] Run `git add -A`, commit with Conventional Commits, for example
       `test(browser): remove shared example rebuild`, list
       every deleted and renamed file in the commit body, and push. Open a PR
       against `main` that links this plan, the parent plan's Milestone 27,
       and the fixture preparation contract, and that lists the deleted and
       renamed files and the plan edits.
-- [ ] Repeat the mainline preservation audit after the authorized commit.
+      Opened [PR #188](https://github.com/mokly-ai/mokly/pull/188) against `main`.
+- [x] Repeat the mainline preservation audit after the authorized commit.
       Add the committed diff and deletion check to the same audit file.
 - [ ] Review: after the push, use
       [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
