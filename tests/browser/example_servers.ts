@@ -23,6 +23,14 @@ export function exampleServerPorts(
   return Array.from({ length: count }, (_, offset) => first + offset);
 }
 
+/**
+ * The example server command for one port. `--base HEAD` compares with the
+ * checked-out commit, so results depend only on the tree under test.
+ */
+export function exampleServerCommand(port: number): string {
+  return `node dist/cli/bin.js serve --config examples/basic/mokly.config.ts --base HEAD --port ${port} --no-watch`;
+}
+
 /** The server port the current worker owns; the runner process uses the first. */
 export function ownExampleServerPort(
   ports: readonly number[],

@@ -6,7 +6,10 @@ import importPlugin from "eslint-plugin-import-x";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
+import noArtifactPathLiterals from "./scripts/eslint/no-artifact-path-literals.mjs";
 import noDirectoryLiterals from "./scripts/eslint/no-directory-literals.mjs";
+import noEagerFixtureSetup from "./scripts/eslint/no-eager-fixture-setup.mjs";
+import noLateFixtureTeardown from "./scripts/eslint/no-late-fixture-teardown.mjs";
 import { TEST_ROOTS } from "./scripts/verification/test-roots.mjs";
 
 const gitignorePath = path.join(import.meta.dirname, ".gitignore");
@@ -77,7 +80,14 @@ export default tseslint.config(
   {
     plugins: {
       import: importPlugin,
-      mokly: { rules: { "no-directory-literals": noDirectoryLiterals } },
+      mokly: {
+        rules: {
+          "no-artifact-path-literals": noArtifactPathLiterals,
+          "no-directory-literals": noDirectoryLiterals,
+          "no-eager-fixture-setup": noEagerFixtureSetup,
+          "no-late-fixture-teardown": noLateFixtureTeardown,
+        },
+      },
     },
     settings: {
       "import-x/internal-regex": "^@mokly/(?:mokly|viewer)(?:/|$)",
@@ -129,6 +139,13 @@ export default tseslint.config(
     },
   },
   {
+    files: ["tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}"],
+    rules: {
+      "mokly/no-eager-fixture-setup": "error",
+      "mokly/no-late-fixture-teardown": "error",
+    },
+  },
+  {
     files: sourceFiles,
     rules: {
       "no-restricted-syntax": ["error", ...postcssLoadRestrictions],
@@ -175,6 +192,18 @@ export default tseslint.config(
     ignores: ["packages/viewer/src/catalogue/delivery_paths.ts"],
     rules: {
       "mokly/no-directory-literals": "error",
+    },
+  },
+  {
+    files: [
+      "src/**/*.{ts,tsx}",
+      "packages/viewer/src/**/*.{ts,tsx}",
+      "scripts/**/*.{mjs,mts,ts}",
+      "examples/**/*.{ts,tsx,mjs}",
+    ],
+    ignores: ["packages/viewer/src/navigation/routes.ts", "**/tests/**"],
+    rules: {
+      "mokly/no-artifact-path-literals": "error",
     },
   },
   {

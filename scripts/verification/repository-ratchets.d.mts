@@ -15,6 +15,10 @@ export function countPhysicalLines(value: string | Buffer): number;
 export function typeScriptLengthFindings(
   changes: readonly TypeScriptLengthInput[],
 ): string[];
+export function parseProtocolCapTable(
+  source: string | Buffer,
+  label: string,
+): Record<string, number>;
 export function protocolCapFindings(input: {
   candidateDocuments: Readonly<Record<string, string | Buffer>>;
   candidateCaps: Readonly<Record<string, number>>;
@@ -29,6 +33,10 @@ export function internalExportAudit(input: {
   baselineAtComparison?: readonly string[];
   aliases?: Readonly<Record<string, string>>;
 }): { findings: string[]; unused: string[] };
+export function protocolCapAudit(repositoryRoot: string): {
+  findings: string[];
+  summary: string;
+};
 export function publicPackageExportAudit(repositoryRoot: string): {
   findings: string[];
   summary: string;

@@ -502,7 +502,9 @@ are not applied here:
 1. Low: `tests/fixture_lifecycle.test.ts` now lists `designLibraryFixture`, but
    its message points to `beforeRemove`, which that fixture does not have. The
    rule also flags a correct `owner.after` cleanup inside a `fileFixture` setup.
-   Auto-fix: no; open under Milestone 8.
+   Auto-fix: no; open under Milestone 8. The scan moves to the ESLint rule
+   `mokly/no-late-fixture-teardown` under `plans/meta-test-reduction.md`;
+   fix the message and the `fileFixture` false positive there.
 2. Low: the measurement record's first sentence and the PR summary still say
    that every attribution guarantee is kept, despite the accepted grouping
    limit. After #147 the record left the repository; the PR summary remains.
@@ -570,4 +572,6 @@ Evidence: `.context/attribution-test-consolidation/milestone-8-round-2-validatio
   cost; the rebuilds in the source-edit file remain.
 - Unit shard balance: consider a ratchet or evidence check over the CI unit
   reports that flags any unit file above a duration budget, as the browser
-  suite does by test count in `tests/browser_shard_balance.test.ts`.
+  suite does by test count in `tests/browser_shard_balance.test.ts`
+  (`plans/meta-test-reduction.md` moves that bound into the evidence
+  aggregate's `validateShardReports`).

@@ -73,7 +73,7 @@ shrink-only baselines, and recursive `docs/protocol/**` scan excluding
 The repository prerequisite also runs the workspace-root source/protocol
 length audit. It covers changed repository TypeScript/JavaScript and protocol
 Markdown plus non-ignored untracked files. Protocol pages over 250 lines use
-only the exact reviewed caps in `tests/protocol_doc_sizes.test.ts`; `cargo xtask
+only the exact reviewed caps in `xtask/protocol-document-caps.json`; `cargo xtask
 source-file-length-lint --all` audits every scoped file. This remains in
 addition to the repository ratchets.
 The full scope and failure semantics are in
@@ -198,8 +198,9 @@ discovery exactly once. Each runtime requires one unsharded hydration report;
 every browser-like report must carry the same all-project inventory, and the
 browser and hydration file inventories must be disjoint and exhaust it. A
 missing file or test, duplicate assignment or observed test, unexpected file or
-test, skipped or cancelled test, non-zero exit, signal exit, or absent/invalid
-report fails verification. Per-file and per-test durations are retained so
+test, skipped or cancelled test, browser shard above the
+[share limit](./ci-suite-evidence.md#browser-shard-balance), non-zero exit,
+signal exit, or absent/invalid report fails verification. Per-file and per-test durations are retained so
 imbalance can be measured without changing whole-file partitioning.
 
 Report artifacts have stable, unique suite, runtime and shard names and use
