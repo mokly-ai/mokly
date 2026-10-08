@@ -251,6 +251,7 @@ async function execute(
       arguments_.strictPort ?? false,
       arguments_.retainedRuntime ?? false,
       runtimeStartup?.manifest,
+      runtimeStartup?.assetClosure,
       (warning) => warnings.add(warning),
     );
     return 0;

@@ -202,7 +202,9 @@ executes the Node profile selector with and without a release pull request and
 derives the expected outputs from the CLI's tested Node versions and the
 release evidence runtimes. It also executes the Testbox lockfile stamp and the
 Testbox environment step on Linux hosts with controlled inputs and asserts
-their outputs.
+their outputs. It executes the release workflow's complete verification step
+in a temporary Git checkout, with a newer `GITHUB_SHA` and a stub `cargo`, and
+asserts that the gate receives the checked-out commit.
 
 [`tests/ci_required_guard.test.ts`](../../tests/ci_required_guard.test.ts),
 [`tests/ci_workflow_remote_state.test.ts`](../../tests/ci_workflow_remote_state.test.ts),

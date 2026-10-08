@@ -32,6 +32,8 @@ export interface ServerOptions {
   componentChangeSource?: ComponentChangeSource;
   /** Parent-validated manifest supplied to a watched server child. */
   manifest?: ComponentRuntime["manifest"];
+  /** Last checked closure a restarted watched child serves until its first result. */
+  assetClosure?: readonly string[];
   /** Immutable compiled documents supplied by a static capture. */
   generatedOutputs?: ReadonlyMap<string, GeneratedFile>;
   port: number;
@@ -43,7 +45,12 @@ export interface ServerOptions {
 
 /** Running server lifecycle and update-stream boundary. */
 export interface RunningServer {
-  completeCatalogue?(manifest: ManifestV9, generation: string): boolean;
+  /** Adopt a complete catalogue and serve a supplied list over its manifest closure. */
+  completeCatalogue?(
+    manifest: ManifestV9,
+    generation: string,
+    assetClosure?: readonly string[],
+  ): boolean;
   close(): Promise<void>;
   publishUpdate(update?: CatalogueUpdate): void;
   replaceComponentRuntime(runtime: ComponentRuntime): void;

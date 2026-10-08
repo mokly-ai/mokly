@@ -214,7 +214,9 @@ The supervisor retains the five-minute readiness safety allowance for the child
 to receive the accepted config, live index and retained renderer, construct its
 catalogue and bind. The interactive performance target is under five seconds;
 the timeout is not an acceptable startup duration. Startup transfers no complete
-rendered view files and avoids rereading the large manifest file. The retained
+rendered view files and avoids rereading the large manifest file. Until the
+parent reloads the config file, a restarted child also receives the last checked
+authored closure, as [Watch Runtime And Recovery](./mokly-watch-runtime.md) describes. The retained
 graph includes parsed Markdown bodies for demand compilation in each scheme. The child
 still validates the transferred metadata and re-resolves the config and consumer
 input graphs to enforce source-inventory freshness before binding. These checks

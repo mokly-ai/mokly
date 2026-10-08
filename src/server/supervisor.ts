@@ -27,7 +27,14 @@ import {
 
 /** Restartable child interface used by watched Serve. */
 export interface ProcessSupervisor {
-  completeCatalogue?(manifest: ManifestV9, generation: string): void;
+  /** Deliver a checked result and keep its list for this config's next child. */
+  completeCatalogue?(
+    manifest: ManifestV9,
+    generation: string,
+    assetClosure: readonly string[],
+  ): void;
+  /** Start later children without the checked list of an earlier config. */
+  discardCheckedClosure?(): void;
   onForeground?(callback: (active: boolean) => void): void;
   onDiagnostic?(callback: (message: string) => void): void;
   onWarning?(callback: (event: GenerationWarning) => void): void;
@@ -48,7 +55,6 @@ export interface ProcessSupervisor {
     baselineCommit?: string | null,
     baselineSelection?: BaselineSelection,
     baselineDescriptor?: BaselineCatalogue,
-    assetClosure?: readonly string[],
   ): void;
   /** Register the watched-runtime handler for a post-readiness child failure. */
   onUnexpectedExit(callback: (error: Error) => void): void;
@@ -87,6 +93,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   #resolvedPort: number | undefined;
   #updateVersion = 0;
   #runtime: ComponentRuntime | undefined;
+  #checkedClosure: readonly string[] | undefined;
   #foreground: ((active: boolean) => void) | undefined;
   #diagnostic: ((message: string) => void) | undefined;
   #warning: ((event: GenerationWarning) => void) | undefined;
@@ -105,6 +112,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     const resolvedPort = this.#resolvedPort;
     this.#updateVersion++;
     const runtime = this.#runtime;
+    const assetClosure = this.#checkedClosure;
     const handle = this.factory.spawn([
       ...this.baseArguments,
       ...(runtime ? ["--retained-runtime"] : []),
@@ -164,6 +172,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
         )
           timeSync("child.send-startup", () =>
             child.send({
+              ...(assetClosure ? { assetClosure } : {}),
               type: "component-runtime-startup",
               config: runtime.config,
               manifest: runtime.manifest,
@@ -222,7 +231,6 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     baselineCommit?: string | null,
     baselineSelection?: BaselineSelection,
     baselineDescriptor?: BaselineCatalogue,
-    assetClosure?: readonly string[],
   ): void {
     const child = this.#child;
     if (!child || child.stopping || child.exited) return;
@@ -237,24 +245,28 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
         baselineCommit,
         baselineSelection,
         baselineDescriptor,
-        assetClosure,
       ),
     );
   }
 
-  completeCatalogue(manifest: ManifestV9, generation: string): void {
-    if (
-      this.#runtime?.generation !== generation ||
-      !this.#child ||
-      this.#child.stopping
-    )
-      return;
+  completeCatalogue(
+    manifest: ManifestV9,
+    generation: string,
+    assetClosure: readonly string[],
+  ): void {
+    if (this.#runtime?.generation !== generation) return;
+    this.#checkedClosure = assetClosure;
+    if (!this.#child || this.#child.stopping) return;
     this.#child.send({
       type: "catalogue-complete",
       manifest,
       generation,
       version: ++this.#updateVersion,
+      assetClosure,
     });
+  }
+  discardCheckedClosure(): void {
+    this.#checkedClosure = undefined;
   }
   onForeground(callback: (active: boolean) => void): void {
     this.#foreground = callback;
