@@ -20,7 +20,7 @@ pub(crate) struct SystemBlacksmith {
 
 impl SystemBlacksmith {
     /// Build one private-input-safe CLI request.
-    pub(super) fn call(
+    fn call(
         &self,
         args: Vec<String>,
         input: Option<String>,

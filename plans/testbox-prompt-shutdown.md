@@ -38,10 +38,12 @@ The design depends on these measurements from 2026-10-07:
    While an SSH session is open, it waits and logs
    `Active SSH sessions detected. Will wait upto 290 seconds before force shutdown.`
 3. Blacksmith CLI 0.4.65 runs `ssh` with `ControlMaster=auto`, a
-   `ControlPath` and `ControlPersist=<seconds>`. It never closes the shared
-   connection. The control sockets are probably in `~/.blacksmith/c`. The CLI
+   `ControlPath` and `ControlPersist=300`. It never closes the shared
+   connection. The control sockets use
+   `~/.blacksmith/c/<first 16 hex characters of SHA-256(box ID)>.sock`. The CLI
    stores each box's address and SSH port in
    `~/.blacksmith/testboxes/<id>/connection.json`.
+   Source: `.context/testbox-prompt-shutdown/spike.md`.
 4. Blacksmith bills the wait. Run 37636091796 lasted 432 seconds, with 240
    seconds in "Complete runner". Blacksmith billed 16 vCPU-minutes for it.
 5. In a normal check, 55 of 141 box-minutes come after the last command: 45 in
@@ -237,6 +239,12 @@ Evidence: `.context/testbox-prompt-shutdown/smoke.md` and `.context/testbox-prom
       the checks, commit and push, re-review once, fix any new
       `Auto-fix: yes` findings once more, then stop and report the rest. Add
       each open finding as one line under this TODO.
+  - Rust #2 (Low, code structure): SSH close checks files directly; a trait seam would make every branch unit-testable.
+  - Rust #3 (Low, test): Close tests omit both file-read error branches and a relative `HOME`.
+  - Rust #4 (Low, test): A runner test name claims close-before-cancel coverage that it does not check.
+  - docs #2 (Low, process): The headline compares billed time with job time; like-for-like job time is 100.3 against 140.6 minutes, 28.7% fewer.
+  - docs #3 (Low, process): The open warn-or-fail decision has no live home after the plan completes.
+  - docs #4 (Low, process): Finding 7 names no evidence for the three checks, 17 boxes and `cancel_failed`.
 
 ## Post-merge follow-up (non-blocking)
 

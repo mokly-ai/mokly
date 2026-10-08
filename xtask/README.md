@@ -151,8 +151,9 @@ The [cleanup contract](../docs/protocol/remote-verification-cleanup.md) defines
 cleanup rules. The full cleanup contract is implemented: close the shared SSH
 connection, cancel a known run once, then check status and stop. Cleanup
 command errors retain one bounded diagnostic line. The complete default remote
-smoke check passes. The [prompt shutdown plan](../plans/testbox-prompt-shutdown.md)
-awaits final review.
+smoke check passes. The cleanup contract is delivered. The
+[prompt shutdown plan](../plans/testbox-prompt-shutdown.md) records verification
+and open findings.
 Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
 Each command worker downloads its report and cleans up its box when it ends.
 It does not wait for other commands. Final cleanup covers only remaining boxes.
@@ -161,7 +162,7 @@ Cleanup closes each box's shared SSH connection once before status, stop and
 cancellation. It records the attempt before the call, so retries and the panic
 guard do not repeat it. The composition root reads `HOME` through the environment
 boundary and supplies it to the Blacksmith adapter. The close reads no key.
-An unset or empty `HOME` warns once. A missing control directory or socket
+An unset or empty `HOME` warns once per box. A missing control directory or socket
 starts no process and prints `information: no shared SSH connection for <box-id>`
 once. A failed close warns once and does not change the cleanup failure count.
 A socket that disappears during a failed close counts as closed and prints
@@ -188,10 +189,10 @@ Their shared run name is UTC `YYYYMMDDTHHMMSSZ` followed by `-<process-id>`.
 Decision, information and warning lines start with `[xtask/executor]`.
 One function formats warnings that embed errors. Each error keeps its module
 prefix. Remote errors use `[xtask/remote]`. No line repeats a prefix.
-Status, stop, cancel, run-state and SSH close failures keep the last nonempty
-stderr line, or stdout when stderr has no line. Trim the line and keep at most
-200 characters. Append it after the exit or signal wording. Other command
-errors keep their existing text.
+For status, stop, cancel, run-state and SSH close failures, trim each line.
+Select the last stderr line that is not empty after trimming. If there is none,
+select the last such stdout line. Keep at most 200 characters. Append the line
+after the exit or signal wording. Other command errors keep their existing text.
 Suite progress and summaries start with `[xtask/remote]`.
 Failed commands show their last 60 log lines and the log path.
 Failed aggregate and fingerprint reads show captured stdout and stderr after
@@ -223,11 +224,13 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 
-The `*_adapter_tests.rs` files under `src/remote/_tests_/` test the operating
-system boundaries with real shell children and temporary directories. They
-cover streamed logs, private stdin, child environments, process-group cleanup,
-fresh log files, PATH permissions and interrupt state order. They use readiness
-signals and expected-state waits. They do not assert elapsed time.
+The `*_adapter_tests.rs` files under `src/remote/_tests_/` and
+`src/remote/clients/_tests_/` test operating-system boundaries with real shell
+children and temporary directories. They cover streamed logs, private stdin,
+child environments, process-group cleanup, fresh log files, PATH permissions
+and interrupt state order. They also cover the SSH close request, socket path
+and cleanup details. They use readiness signals and expected-state waits.
+They do not assert elapsed time.
 
 ### Key Code
 
@@ -297,6 +300,7 @@ signals and expected-state waits. They do not assert elapsed time.
 - [CI and npm release contract](../docs/protocol/npm-release.md)
 - [CI verification](../docs/protocol/ci-verification.md)
 - [Remote verification](../docs/protocol/remote-verification.md)
+- [Cleanup and interrupts](../docs/protocol/remote-verification-cleanup.md)
 - [Testbox execution](../docs/protocol/remote-verification-testbox.md)
 - [Dependency security](../docs/protocol/dependency-security.md)
 - [Baseline dependency audit](../docs/protocol/dependency-audit-baseline.md)

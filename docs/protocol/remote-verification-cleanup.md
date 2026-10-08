@@ -8,8 +8,9 @@ Implemented. Cleanup closes the shared SSH connection, cancels a known run
 once, then checks status and stops the box. Cleanup command errors retain one
 bounded diagnostic line. Stop retries, completion proof, interrupts and the
 panic guard use the same rules. The complete default remote smoke check passes.
-The [prompt shutdown plan](../../plans/testbox-prompt-shutdown.md) awaits final
-review.
+The cleanup contract is delivered. The
+[prompt shutdown plan](../../plans/testbox-prompt-shutdown.md) records verification
+and open findings.
 
 ## Cleanup And Interrupts
 
@@ -66,15 +67,16 @@ completion proof for a box. Keep the stop result as the other success proof.
 
 Blacksmith CLI 0.4.65 uses this control socket name:
 
-Read the home directory from `HOME` through the environment boundary.
-The CLI also uses `HOME` on Linux and macOS. Do not guess another directory.
-If `HOME` is unset or empty, print the close warning once with a typed error.
-Then continue with cancellation, status and stop.
-
 1. Hash the box ID's UTF-8 bytes with SHA-256. Add no newline.
 2. Encode the digest as lowercase hexadecimal. Keep its first 16 characters.
 3. Add `.sock`. Resolve that name under the local home directory's
    `.blacksmith/c/` directory.
+
+Read the home directory from `HOME` through the environment boundary.
+The spike verified the CLI's use of `HOME` on Linux. The close step uses
+`HOME` on every platform. Do not guess another directory.
+If `HOME` is unset or empty, print the close warning once with a typed error.
+Then continue with cancellation, status and stop.
 
 Use only the current box ID and that exact path. Do not scan sockets, match
 processes, kill an SSH process or close another box's connection.
@@ -164,7 +166,8 @@ information: GitHub run=<id> already ended; cancellation not needed
 ```
 
 Any other state, empty output or failed state read keeps the cancellation
-warning. A failed state read also prints its own warning with its typed error.
+warning. A failed state read prints its run-state warning before the cancellation
+warning. Both warnings retain their typed errors.
 Never decide from error text. Cancellation failure alone does not fail the
 check or prove that a box completed.
 
@@ -172,9 +175,9 @@ check or prove that a box completed.
 
 For failed status, stop, cancel, run-state and close commands, store the
 diagnostic line in the typed command error. Do not format it at the call site.
-Select the last nonempty standard-error line. If standard error has no
-nonempty line, select the last nonempty standard-output line instead.
-Trim the selected line. Use output after process input redaction.
+Trim each line. Select the last standard-error line that is not empty after
+trimming. If there is none, select the last such standard-output line.
+Use output after process input redaction.
 Keep at most 200 characters. Use character boundaries, not byte boundaries.
 These five requests have no input and remove the shared secret environment
 variables. Never pass a key to them. Errors from other commands stay unchanged.
@@ -186,6 +189,25 @@ Process-start or file-read errors retain their typed source error.
 Use the shared warning formatter. Keep each module prefix once.
 Error text supplies diagnostics only. It must never decide completion,
 whether to retry, cancellation suppression or the cleanup failure count.
+
+## Cleanup Output
+
+Use these exact lines. The reporter adds `[xtask/executor]` once.
+Use the shared warning formatter for each line that embeds a typed error.
+Keep the error's defining module prefix once. Do not repeat a prefix.
+
+```text
+[xtask/executor] information: box=<box-id> already completed; cleanup skipped
+[xtask/executor] warning: status for <box-id> failed: <typed-error>
+[xtask/executor] warning: could not stop <box-id>: <typed-error>
+[xtask/executor] warning: cancellation for <run> failed: <typed-error>
+[xtask/executor] warning: run state for <run> failed: <typed-error>
+[xtask/executor] warning: GitHub lookup failed: <typed-error>
+[xtask/executor] warning: cleanup worker for <box-id> failed: <typed-error>
+```
+
+After a failed run-state read, print the run-state warning first, then the
+cancellation warning.
 
 ## Final Cleanup Warning And Limits
 
