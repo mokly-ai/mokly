@@ -2870,7 +2870,7 @@ Testbox boxes after suites).
 - [ ] Decide the format versions after main's #127 sets 0.14.0, which ships
       main's manifest v9, catalogue v5 and review v6. Recommend: bump them to
       manifest v10, catalogue v6 and review v7.
-- [ ] Run build, typecheck, lint, the targeted tests, the repository suite and
+- [x] Run build, typecheck, lint, the targeted tests, the repository suite and
       the complete `cargo xtask check` at 100%. Inspect the deletions against
       `origin/main`. Commit, push, and update the PR description.
 - [ ] After the push, use `docs/implementation-review-prompt.md` to review the
