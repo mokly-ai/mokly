@@ -11,6 +11,7 @@ import type { BaselineSelection } from "../review/repository.js";
 
 import { ManagedChild, type ChildShutdownTimings } from "./child_lifecycle.js";
 import { NodeChildFactory, type ChildFactory } from "./child_process.js";
+import { forwardChildReport } from "./child_reports.js";
 import type { ComponentChangeSnapshot } from "./component_change_types.js";
 import { componentRuntimeMessage } from "./controls/runtime_ipc.js";
 import {
@@ -19,8 +20,6 @@ import {
 } from "./demand/observation.js";
 import {
   childUpdateMessage,
-  parseChildDiagnosticMessage,
-  parseChildWarningMessage,
   type ChangesStatus,
   type CatalogueUpdateKind,
 } from "./update_messages.js";
@@ -137,11 +136,8 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     this.#child = child;
     child.onMessage(
       bindTimings((message: unknown) => {
-        const diagnostic = parseChildDiagnosticMessage(message);
-        if (diagnostic && this.#child === child)
-          this.#diagnostic?.(diagnostic.message);
-        const warning = parseChildWarningMessage(message);
-        if (warning && this.#child === child) this.#warning?.(warning);
+        if (this.#child === child)
+          forwardChildReport(message, this.#diagnostic, this.#warning);
         if (
           message &&
           typeof message === "object" &&
