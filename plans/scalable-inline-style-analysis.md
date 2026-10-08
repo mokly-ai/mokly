@@ -1,7 +1,6 @@
 # Scalable Inline Style Analysis
 
-Status: Active. Mainline integration is in progress. Review findings stay recorded
-for the user's decision. Performance acceptance is deferred to a later plan.
+Status: Active. All milestones are complete; the plan closes when PR #158 merges. Review findings stay recorded for the user's decision. Performance acceptance is deferred to a later plan.
 
 Make inferred inline style ownership work, and work fast, on a full-size React
 Native Web catalogue. Mokly must stop retaining memory it does not need, bound
@@ -2085,7 +2084,7 @@ Evidence: `.context/scalable-inline-style-analysis/m13-merge/`.
       release fixes. Preserve the HTML-only renderer contract, check the
       branch's worker and head integration, and run the complete gate and four
       smoke tests before committing and pushing. Evidence: `.context/scalable-inline-style-analysis/m13-merge/third/`.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`. Keep the review read-only, then apply the
       [review-fix rule](../docs/dev/review.md): fix `Auto-fix: yes` findings,
@@ -2098,6 +2097,7 @@ Evidence: `.context/scalable-inline-style-analysis/m13-merge/`.
       Finding 2 (Low, repository rule): five branch test cases check documentation wording with regular expressions, which the rule from #175 forbids; pending the user's decision.
       Finding 4 (Low, process): main's #171 makes `docs/dev/` the rule directory, which makes M10 review finding 3 (the 31 `docs/dev` reports) worse; four reports also name the deleted `tests/protocol_doc_sizes.test.ts`; pending the user's decision.
       Finding 5 (Low, process): `82af7361` added a flake follow-up line under the checked M12 review TODO; pending the user's decision.
+      Re-review of the fix round (`2be09cb4..a3cb179e`) complete; report: `.context/scalable-inline-style-analysis/m13-review/rereview.md`. No findings; finding 3 is fixed in `a3cb179e`.
 
 ## Post-merge follow-up (non-blocking)
 
