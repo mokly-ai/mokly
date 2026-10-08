@@ -2820,10 +2820,10 @@ rules split into `docs/dev`), #172 (Serve keeps the checked closure on reload),
       for the `docs/dev` rule statements, and move main's plan link in
       `xtask/README.md` into a Delivery Status section. Keep
       `src/server/http.ts` under the 300-line limit with one shared factory.
-- [ ] Run build, typecheck, lint, the targeted tests,
+- [x] Run build, typecheck, lint, the targeted tests,
       `cargo xtask check --suite repository` and the complete
       `cargo xtask check` at 100%.
-- [ ] Inspect the diff and the deletions against `origin/main`; only the four
+- [x] Inspect the diff and the deletions against `origin/main`; only the four
       approved files may be deleted. Commit, push, and add the merge decisions
       to the PR description.
 - [ ] After the push, use `docs/implementation-review-prompt.md` to review the
