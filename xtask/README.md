@@ -182,6 +182,10 @@ fallback when status fails or names no run. A failed stop gets retries after
 Final cleanup counts each box once if it is neither stopped nor proven completed.
 After the suites start, that count does not fail the check. A failed check still
 reports it. Before the first suite, it blocks local fallback.
+After final cleanup, one step adds the real count to every failed or interrupted
+result, including a late interrupt and a failed final fingerprint read
+(`changed-tree=unknown`).
+Earlier steps that see an interrupt return a cancellation with no box count.
 A recovered stop does not fail the check.
 An interrupt reports the same count. Each remaining box gets a warning with
 its manual stop command and the 30-minute idle timeout.
@@ -190,7 +194,8 @@ After a failed GitHub cancellation, xtask reads the run state with
 gets an information line. Other states and failed reads keep the warning.
 Failed state reads also print their own warning. Before each cancellation
 attempt, print `information: cleanup box=<box-id> GitHub run=<id>` once.
-The aggregate runs after all commands and cleanup end.
+The aggregate runs after all commands and cleanup end. An interrupt that is
+already set then skips the aggregate, the final fingerprint read and the summary.
 Each check creates new report and log directories under `.context/`.
 Their shared run name is UTC `YYYYMMDDTHHMMSSZ` followed by `-<process-id>`.
 Decision, information and warning lines start with `[xtask/executor]`.

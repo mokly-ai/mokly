@@ -1,6 +1,6 @@
 # Remote Verification Review Follow-Up
 
-Status: Completed. [PR #164](https://github.com/mokly-ai/mokly/pull/164) merged on 2026-10-07. Six Low review findings still await the user's decision; they are listed under the Milestone 6 review TODO.
+Status: Completed. [PR #164](https://github.com/mokly-ai/mokly/pull/164) merged on 2026-10-07. Five Low review findings still await the user's decision; they are listed under the Milestone 6 review TODO. Rust #1 was resolved on 2026-10-08.
 
 Fix the eleven open findings from the post-push review of
 [Blacksmith remote verification](./blacksmith-remote-verification.md)
@@ -216,7 +216,7 @@ Evidence: `.context/remote-verification-review-follow-up/milestone-6.md`, `merge
       `Auto-fix: yes` findings once more, then stop and report the rest. Add
       each open finding as one line under this TODO.
   - scripts/docs #3 (Low, process): The snapshot workspace, executor output and three timed runs with cost remain open.
-  - Rust #1 (Low, product bug): A late interrupt can lose the real box cleanup count or return a fingerprint error.
+  - Rust #1 (Low, product bug): A late interrupt can lose the real box cleanup count or return a fingerprint error. Resolved on 2026-10-08: one post-cleanup step adds the real count, and earlier steps return a count-free cancellation.
   - Rust #2 (Low, test): The grandchild termination test counts a zombie as a live process.
   - Rust #3 (Low, test): The isolated environment tests can pass when the child matches no test.
   - Rust #5 (Low, test): No test checks the real `SystemClock::stamp()` format.

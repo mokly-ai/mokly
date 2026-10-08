@@ -75,7 +75,7 @@ impl Xtask for Application {
                         },
                     );
                 }
-                match remote(self.selector.select(mode))? {
+                match remote(before_boxes(self.selector.select(mode)))? {
                     Decision::Local(reason) => self.local(request, reason),
                     Decision::Remote => {
                         remote(self.interrupt.arm())?;
@@ -85,7 +85,7 @@ impl Xtask for Application {
                             Err(Failure::Unavailable(source)) if mode == Executor::Auto => {
                                 self.interrupt.release();
                                 if self.interrupt.requested()
-                                    || matches!(source, error::Error::Interrupted { .. })
+                                    || matches!(source, error::Error::Cancelled)
                                 {
                                     return Err(Error::Remote {
                                         source: error::Error::Interrupted { cleanup: 0 },
@@ -124,6 +124,14 @@ impl Application {
     fn local(&self, request: CheckRequest, reason: LocalReason) -> Result<()> {
         self.reporter.executor(&Decision::Local(reason).to_string());
         self.check_runner.run(request)
+    }
+}
+
+/// Report an interrupt before warmup with the real count: no box exists yet.
+fn before_boxes<T>(result: error::Result<T>) -> error::Result<T> {
+    match result {
+        Err(error::Error::Cancelled) => Err(error::Error::Interrupted { cleanup: 0 }),
+        other => other,
     }
 }
 

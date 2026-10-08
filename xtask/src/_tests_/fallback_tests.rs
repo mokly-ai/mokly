@@ -46,7 +46,7 @@ fn fallback_requires_auto_and_an_unavailable_preparation() {
                             code: Some(1),
                             detail: None,
                         }),
-                        2 => Failure::Unavailable(Error::Interrupted { cleanup: 0 }),
+                        2 => Failure::Unavailable(Error::Cancelled),
                         _ => Failure::Unavailable(Error::WarmupIds { count: 0 }),
                     })
                 })),

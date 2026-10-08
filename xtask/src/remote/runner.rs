@@ -8,6 +8,7 @@ use crate::remote::cleanup::guard::CleanupGuard;
 use crate::remote::contracts::Dependencies;
 use crate::remote::error::{self, Result};
 use crate::remote::reporting::warning;
+use crate::remote::verdict::conclude;
 
 /// The stage boundary that controls automatic local fallback.
 #[derive(Debug, Error)]
@@ -47,7 +48,7 @@ impl RemoteRunner for DefaultRemoteRunner {
             Err(source) => {
                 let failures = cleanup.finish();
                 if self.dependencies.interrupt.requested()
-                    || matches!(source, error::Error::Interrupted { .. })
+                    || matches!(source, error::Error::Cancelled)
                 {
                     return Err(Failure::Failed(error::Error::Interrupted {
                         cleanup: failures,
@@ -128,52 +129,9 @@ impl DefaultRemoteRunner {
             .filter(|completion| completion.report_downloaded)
             .count();
         let cleanup = cleanup.finish();
-        if dependencies.interrupt.requested() {
-            return Err(error::Error::Interrupted { cleanup });
-        }
-        let aggregate_failed = match dependencies.aggregate.validate(&reports, head) {
-            Ok(()) => false,
-            Err(error) => {
-                self.report_failure("report aggregate", &error);
-                true
-            }
-        };
-        let changed = self.fingerprint()? != fingerprint;
-        let failures = 11 - completed.len()
-            + completed
-                .iter()
-                .filter(|completion| !completion.passed)
-                .count();
-        for completion in &completed {
-            dependencies.reporter.progress(&format!(
-                "summary {} box={} duration={}ms result={}",
-                completion.command.name,
-                completion.box_id,
-                completion.elapsed,
-                if completion.passed {
-                    "passed"
-                } else {
-                    "failed"
-                }
-            ));
-        }
-        dependencies.reporter.progress(&format!(
-            "summary: commands={}/11 reports={}/9 aggregate={} unchanged-tree={} run={run}",
-            11 - failures,
-            9 - downloads,
-            if aggregate_failed { "failed" } else { "passed" },
-            !changed
-        ));
-        if failures != 0 || downloads != 0 || aggregate_failed || changed {
-            return Err(error::Error::Verification {
-                commands: failures,
-                reports: downloads,
-                aggregate_failed,
-                changed,
-                cleanup,
-            });
-        }
-        Ok(())
+        let evidence = (!dependencies.interrupt.requested())
+            .then(|| self.evidence(&completed, downloads, &reports, head, fingerprint, run));
+        conclude(cleanup, dependencies.interrupt.requested(), evidence)
     }
 }
 

@@ -29,7 +29,7 @@ impl Selector for DefaultSelector {
             match self.check(check, mode, &mut key) {
                 Ok(Some(reason)) => return Ok(Decision::Local(reason)),
                 Ok(None) => {}
-                Err(error @ Error::Interrupted { .. }) => return Err(error),
+                Err(error @ Error::Cancelled) => return Err(error),
                 Err(error) if mode == Executor::Remote => return Err(error),
                 Err(error) => {
                     self.dependencies.reporter.executor(&warning("", &error));
@@ -114,7 +114,7 @@ impl DefaultSelector {
             }
             Check::Interrupt => {
                 if dependencies.interrupt.requested() {
-                    return Err(Error::Interrupted { cleanup: 0 });
+                    return Err(Error::Cancelled);
                 }
             }
         }

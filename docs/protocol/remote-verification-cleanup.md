@@ -28,6 +28,17 @@ boundary, a nonzero count does not fail the check. Each remaining box gets the
 final cleanup warning. A check that fails for another reason still reports the
 count in its error. An interrupted check cannot pass or start fallback.
 Its final error is `verification interrupted; cleanup=<count> boxes remain`.
+
+After final cleanup, one step decides the result. It adds the real count to
+every failed or interrupted result. It reads the interrupt state when final
+cleanup ends. If the state is set, it skips the aggregate, the final
+fingerprint read and the summary. Otherwise it reads the state again after
+them. An interrupt seen after final cleanup gives the interrupted error. This
+includes a cancelled or signal-stopped aggregate or fingerprint read. Every
+other failure gives `verification failed: ... cleanup=<count>`. A failed final
+fingerprint read gives `changed-tree=unknown`. A step that an interrupt
+cancels returns `an interrupt cancelled the operation`, with no box count.
+Before warmup, no box exists, so an interrupted check reports `cleanup=0`.
 A close warning or cancellation failure alone does not fail the check.
 A successful cancellation does not prove that the box is stopped or completed.
 

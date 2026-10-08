@@ -422,6 +422,8 @@ defines this order. A failed stop gets retries after
 Final cleanup counts each box once if it is neither stopped nor proven completed.
 After the suites start, a nonzero count does not fail the gate. Before the
 first suite, it blocks local fallback. Interrupts report the same count.
+Every failed or interrupted result after final cleanup carries that count,
+including a late interrupt and a failed final fingerprint read.
 Warnings name each remaining box's manual stop command and its idle timeout.
 Cleanup records run IDs from warmup and probe output for the first cancellation.
 A failed GitHub cancellation checks the run state. An ended run gets an
