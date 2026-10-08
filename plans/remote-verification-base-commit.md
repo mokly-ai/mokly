@@ -282,7 +282,7 @@ Evidence: `.context/remote-verification-base-commit/milestone-2.md`.
       lints, the local repository gate and the Markdown checks. Commit and
       push.
 
-## Milestone 3: Unpushed commits select remote
+## Milestone 3: Unpushed commits select remote — completed
 
 The executor policy accepts any `HEAD` with a base commit. A branch with
 unpushed commits now runs the complete gate on Testboxes.
@@ -304,7 +304,7 @@ Evidence: `.context/remote-verification-base-commit/milestone-3.md` and
       neither the fingerprint nor the base commit.
 - [x] Split the near-cap runner test and snapshot fixture modules. Keep every
       assertion and scenario.
-- [ ] Smoke test from this branch with one unpushed commit that modifies,
+- [x] Smoke test from this branch with one unpushed commit that modifies,
       adds, deletes and renames files, plus one uncommitted change. Run the
       complete `cargo xtask check`. Require the remote decision, the identity
       line with `ahead` above 0, 11/11 commands, 9/9 reports, a passed
@@ -315,18 +315,18 @@ Evidence: `.context/remote-verification-base-commit/milestone-3.md` and
       directory. Modify, add, delete and rename fixtures in one unpushed commit.
       Apply one uncommitted fixture change. Require the pushed fixture commit
       as the base with ahead 1, rather than the main tip.
-- [ ] Smoke test an interrupt: send SIGINT during the probe phase. Require
+- [x] Smoke test an interrupt: send SIGINT during the probe phase. Require
       stopped boxes, a removed snapshot and the existing interrupted result.
-- [ ] Smoke test `cargo xtask executor` with the same unpushed commit. Require
+- [x] Smoke test `cargo xtask executor` with the same unpushed commit. Require
       the remote decision. Then run it in a clone without origin refs that
       share history. Require the local decision and the no-base warning.
       Run Cargo inside the scratch clone so its manifest selects that checkout.
-- [ ] After the smoke checks, discard only the unpushed fixture commit and its
+- [x] After the smoke checks, discard only the unpushed fixture commit and its
       uncommitted change. Keep every pushed commit. Commit fixture removal,
       tick this milestone and push. Leave no fixture directory in the final tree.
-- [ ] Record the smoke results in
+- [x] Record the smoke results in
       `.context/remote-verification-base-commit/smoke.md`.
-- [ ] Run the xtask tests, `cargo fmt --all -- --check`, Clippy and the length
+- [x] Run the xtask tests, `cargo fmt --all -- --check`, Clippy and the length
       lints, the local repository gate and the Markdown checks. Commit and
       push.
 

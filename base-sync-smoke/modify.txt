@@ -1,1 +1,0 @@
-Base sync smoke: modify in pushed base.
