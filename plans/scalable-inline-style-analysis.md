@@ -2074,10 +2074,12 @@ Evidence: `.context/scalable-inline-style-analysis/m13-merge/`.
       tests. Record CPU model and boot ID, and report unrelated flaky tests
       under the [review rule](../docs/dev/review.md).
 - [x] After checks pass, commit with Conventional Commits and push the branch.
-- [ ] Discovered: merge main's Markdown parser, release and gate updates.
+- [x] Discovered: merge main's Markdown parser, release and gate updates.
       Keep main's test deletions, reconcile the protocol caps, check branch
       dependencies, and repeat the complete gate and four smoke tests before
       committing and pushing. Evidence: `.context/scalable-inline-style-analysis/m13-merge/second/`.
+      Publication blocker: "a failed matrix retains every cold/warm sample and restores real generated setup source and outputs" and "both indexed and --config fixture reuse require the authoritative root digest before any edits" fail with `ETARGET: No matching version found for @mokly/viewer@0.5.0.` Main #127 pins the unpublished viewer 0.5.0 and Mokly 0.14.0 releases. Their exact fixture-setup calls reproduce the error on clean main `1086732a` in the same boot; the branch-only test files are absent there. Proof: `.context/scalable-inline-style-analysis/m13-merge/second/publication-blocker-proof.json`.
+      Supervisor instruction (2026-10-08): keep the toolchain and tests unchanged; push after all other checks pass. Browser, hydration and direct-build real-server smokes pass. CI may retain these two failures until npm publishes viewer 0.5.0.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`. Keep the review read-only, then apply the
