@@ -1,8 +1,8 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestones 1 to 33 are implemented, verified and pushed.
-Milestone 34 merges main `d1579e9f`. The open review findings of Milestones 32
-and 33 wait for the user.
+Status: Active. Milestones 1 to 34 are implemented, verified and pushed; the
+branch contains main `d1579e9f`. The open review findings of Milestones 32 to
+34 wait for the user.
 
 ## Status And Outcome
 
@@ -2837,10 +2837,12 @@ rules split into `docs/dev`), #172 (Serve keeps the checked closure on reload),
 - [x] Run the targeted tests, the repository suite and the complete
       `cargo xtask check` at 100% on the final tree, then push and update the
       PR description.
-- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
+- [x] After the push, use `docs/implementation-review-prompt.md` to review the
       complete diff against `origin/main` and report findings. Keep the review
       read-only. Then apply the review-fix rule in `docs/dev/review.md`: fix
       `Auto-fix: yes` findings, re-review once, and report the rest. Add each
-      open finding as one line under this TODO.
+      open finding as one line under this TODO. The review is complete. It has
+      no `Auto-fix: yes` finding, so no fix round follows.
+  - [ ] M34 finding 1 (Medium, test): main #138's example snapshot codec rejects two valid forms of this branch's compilation: `resourceSeeds` (encode fails) and warnings with a `subject` (decode fails, so tests compile again). Recommend A: extend the existing codec and its field table and round-trip tests.
 
 Evidence: `.context/remove-source-path-evidence/milestone-34.md`.
