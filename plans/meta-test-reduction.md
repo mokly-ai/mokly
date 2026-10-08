@@ -361,7 +361,12 @@ pass 300 lines; `validateShardReports` calls it.
       TODO below. After the second `origin/main` merge the complete gate ran
       again on `db0cc77` through the remote Testbox executor: 11 commands, 9
       reports, aggregate passed, tree unchanged (`final-check-2.txt`).
-      After the third merge the complete gate ran on `b9b62e7` through the remote Testbox executor with Node 22.14.0 and Rust 1.95.0: 11 commands, 9 reports, aggregate passed, tree unchanged (`final-check-3.txt`).
+      After the third merge the complete gate ran on `b9b62e7` through the
+      remote Testbox executor with Node 22.14.0 and Rust 1.95.0: 11 commands,
+      9 reports, aggregate passed, tree unchanged (`final-check-3.txt`).
+      After the fourth merge the gate ran again on `a099542` remotely: 11
+      commands, 9 reports, aggregate passed, tree unchanged
+      (`final-check-4.txt`); the PR's Required CI also passed on that commit.
 - [x] Inspect `git diff --name-status origin/main` and
       `git diff --diff-filter=D --name-status origin/main`. Confirm every
       deletion is in the Inventory. Record the deletions in the commit and PR
