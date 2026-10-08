@@ -2834,7 +2834,7 @@ rules split into `docs/dev`), #172 (Serve keeps the checked closure on reload),
       verification links and take #138's CI suite evidence line.
 - [x] Merge main `d1579e9f` (#180, `AGENTS.md` only) as a third commit with
       exactly two parents; it has no conflict.
-- [ ] Run the targeted tests, the repository suite and the complete
+- [x] Run the targeted tests, the repository suite and the complete
       `cargo xtask check` at 100% on the final tree, then push and update the
       PR description.
 - [ ] After the push, use `docs/implementation-review-prompt.md` to review the
