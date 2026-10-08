@@ -1,5 +1,3 @@
-import { setTimeout as delay } from "node:timers/promises";
-
 import { expect, test } from "@playwright/test";
 
 import { componentRuntime } from "../../dist/build/component_runtime.js";
@@ -222,25 +220,22 @@ test("component navigation discards a pending edit owned by the previous route",
     const response = await route.fetch();
     received();
     await held;
-    await route.fulfill({ response }).catch(() => undefined);
+    await route.fulfill({ response });
   });
-  try {
-    await page.getByLabel("Label", { exact: true }).fill("Previous route");
-    await requested;
-    await page.locator('[data-nav-row][data-entry-id="alternate"]').click();
-    await expect(
-      page.getByRole("heading", { name: "Alternate", exact: true }),
-    ).toBeVisible();
-    await expect(page.getByLabel("Label", { exact: true })).toHaveValue(
-      "Continue",
-    );
-    release();
-    await expect(page.getByLabel("Label", { exact: true })).toHaveValue(
-      "Continue",
-    );
-  } finally {
-    release();
-  }
+  await page.getByLabel("Label", { exact: true }).fill("Previous route");
+  await requested;
+  await page.locator('[data-nav-row][data-entry-id="alternate"]').click();
+  await expect(
+    page.getByRole("heading", { name: "Alternate", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Label", { exact: true })).toHaveValue(
+    "Continue",
+  );
+  release();
+  await page.unrouteAll({ behavior: "wait" });
+  await expect(page.getByLabel("Label", { exact: true })).toHaveValue(
+    "Continue",
+  );
 });
 
 test("changing context while the first edit is pending cannot apply an obsolete preview", async ({
@@ -249,21 +244,30 @@ test("changing context while the first edit is pending cannot apply an obsolete 
   await page.goto(`${server.url}/view/action/`);
   await page.getByLabel("Viewport", { exact: true }).selectOption("desktop");
   await page.getByRole("tab", { name: "Props", exact: true }).click();
+  let release: () => void = () => undefined;
+  let received: () => void = () => undefined;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const requested = new Promise<void>((resolve) => {
+    received = resolve;
+  });
   await page.route("**/mokly-viewer/components/render", async (route) => {
     const response = await route.fetch();
-    if (route.request().postDataJSON().colorScheme === "light")
-      await delay(250);
+    if (route.request().postDataJSON().colorScheme === "light") {
+      received();
+      await held;
+    }
     await route.fulfill({ response });
   });
-  const pending = page.waitForRequest((request) =>
-    request.url().endsWith("/components/render"),
-  );
+  const preview = page
+    .frameLocator('[data-workspace-frame="desktop"]')
+    .getByRole("button", { name: "Context edit" });
   await page.getByLabel("Label", { exact: true }).fill("Context edit");
-  await pending;
+  await requested;
   await chooseScheme(page, "dark");
-  await expect(
-    page
-      .frameLocator('[data-workspace-frame="desktop"]')
-      .getByRole("button", { name: "Context edit" }),
-  ).toHaveAttribute("data-scheme", "dark");
+  await expect(preview).toHaveAttribute("data-scheme", "dark");
+  release();
+  await page.unrouteAll({ behavior: "wait" });
+  await expect(preview).toHaveAttribute("data-scheme", "dark");
 });
