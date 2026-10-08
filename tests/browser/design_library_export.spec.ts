@@ -1,31 +1,16 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 
-import { exportCatalogue } from "../../dist/export/run.js";
-import { validateWarmExample } from "../helpers/example_preparation.js";
-import type { PreparedExample } from "../helpers/example_preparation.js";
-import {
-  FULL_CATALOGUE_SETUP_TIMEOUT_MS,
-  timeExportPreparation,
-} from "../helpers/fixture_timing.js";
-import { acquireSharedExample } from "../helpers/shared_example.js";
-import { serveStaticFiles } from "../helpers/static_server.js";
-
-import { assertServedShellMarker } from "./export_shell.js";
+import { committedExportTest } from "./committed_export_fixture.js";
 import { chooseVariant, chooseViewport } from "./workspace_actions.js";
 
-let site: Awaited<ReturnType<typeof serveStaticFiles>>;
-let root: string;
-let prepared: PreparedExample;
-test.beforeAll(async () => {
-  test.setTimeout(FULL_CATALOGUE_SETUP_TIMEOUT_MS);
-  prepared = await acquireSharedExample("design-library-export");
-  root = prepared.root;
-  const config = prepared.config;
-  try {
-    await validateWarmExample(config, prepared.commit);
+const test = committedExportTest({
+  profile: "design-library",
+  prefix: "mokly-design-export-",
+  shellPath: "/view/design/library/chrome/top-bar/search/",
+  editSource: async (root) => {
     const file = path.join(
       root,
       "examples/basic/specs/design/library/controls/tag-chip.view.tsx",
@@ -33,36 +18,13 @@ test.beforeAll(async () => {
     const source = await fs.readFile(file, "utf8");
     expect(source).toContain("{label}");
     await fs.writeFile(file, source.replace("{label}", "{label} revised"));
-    const output = path.join(root, "site");
-    await timeExportPreparation(
-      "design-library-export",
-      () =>
-        exportCatalogue(config, {
-          base: "HEAD",
-          outDir: output,
-          signal: prepared.signal,
-        }),
-      { operationUnderTest: false, expectWarmBaseline: true },
-    );
-    site = await serveStaticFiles(output);
-    await assertServedShellMarker(
-      site.url,
-      "/view/design/library/chrome/top-bar/search/",
-    );
-  } catch (error) {
-    await site?.close();
-    await prepared.close();
-    throw error;
-  }
-});
-test.afterAll(async () => {
-  await site?.close();
-  await prepared?.close();
+  },
 });
 
 for (const viewport of ["desktop", "mobile"] as const)
   test(`${viewport}: exported design components retain saved variants, affected consumers and read-only props`, async ({
     page,
+    committedExport: { server: site },
   }) => {
     await page.setViewportSize(
       viewport === "mobile"

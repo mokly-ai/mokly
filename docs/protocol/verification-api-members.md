@@ -5,6 +5,8 @@
 This is the approved target in
 [Generated Output Simplification](../../plans/generated-output-simplification.md).
 These checks extend the [repository ratchets](./verification-ratchets.md).
+The browser fixture-scope paragraph under "ESLint Paths And Fixture Scope" is
+implemented; [CI fixture preparation](./ci-fixture-preparation.md) owns it.
 
 ## Public API Reports
 

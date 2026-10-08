@@ -4,47 +4,51 @@ import path from "node:path";
 import test from "node:test";
 import { setTimeout as pause } from "node:timers/promises";
 
+import { prepareIndependentExample } from "./helpers/example_preparation.js";
 import { FULL_CATALOGUE_SETUP_TIMEOUT_MS } from "./helpers/fixture_timing.js";
 import { createOwnedExample } from "./helpers/owned_example.js";
-import { prepareSharedExample } from "./helpers/shared_example.js";
 
-test("shared preparation keeps the established 600-second ceiling", () => {
+test("preparation keeps the established 600-second ceiling", () => {
   assert.equal(FULL_CATALOGUE_SETUP_TIMEOUT_MS, 600_000);
 });
 
-test("cancelled global setup publishes no descriptor and drains its owner", async () => {
+test("cancelled preparation drains its owner", async () => {
   const controller = new AbortController();
   const owner = await createOwnedExample({ signal: controller.signal });
   let entered = (): void => {};
   const started = new Promise<void>((resolve) => {
     entered = resolve;
   });
-  const preparation = prepareSharedExample({
-    createOwner: async () => owner,
-    createSource: async (root) => {
-      await fs.writeFile(path.join(root, "partial"), "partial");
-      entered();
-      return new Promise<never>((_resolve, reject) => {
-        owner.signal.addEventListener(
-          "abort",
-          () => reject(owner.signal.reason),
-          { once: true },
-        );
-      });
+  const preparation = prepareIndependentExample(
+    "owned-example-lifecycle",
+    false,
+    {
+      createOwner: async () => owner,
+      createSource: async (root) => {
+        await fs.writeFile(path.join(root, "partial"), "partial");
+        entered();
+        return new Promise<never>((_resolve, reject) => {
+          owner.signal.addEventListener(
+            "abort",
+            () => reject(owner.signal.reason),
+            { once: true },
+          );
+        });
+      },
     },
-  });
-  const rejected = assert.rejects(preparation, /stop global setup/u);
+  );
+  const rejected = assert.rejects(preparation, /stop independent preparation/u);
   await started;
-  controller.abort(new Error("stop global setup"));
+  controller.abort(new Error("stop independent preparation"));
   await rejected;
   await assert.rejects(fs.access(path.dirname(owner.root)), { code: "ENOENT" });
 });
 
-test("failed shared preparation publishes no descriptor and removes its owned tree", async () => {
+test("failed preparation removes its owned tree", async () => {
   const owner = await createOwnedExample();
   const failure = new Error("source setup failed");
   await assert.rejects(
-    prepareSharedExample({
+    prepareIndependentExample("owned-example-lifecycle", false, {
       createOwner: async () => owner,
       createSource: async (root) => {
         await fs.writeFile(path.join(root, "partial"), "partial");
@@ -62,7 +66,7 @@ test("unconfirmed cleanup retains preparation diagnostics and both failures", as
     cleanup = new Error("termination unconfirmed");
   try {
     await assert.rejects(
-      prepareSharedExample({
+      prepareIndependentExample("owned-example-lifecycle", false, {
         createOwner: async () => ({
           ...owner,
           close: async () => {

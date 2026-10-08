@@ -1,57 +1,17 @@
-import path from "node:path";
+import { expect } from "@playwright/test";
 
-import { expect, test } from "@playwright/test";
-
-import { exportCatalogue } from "../../dist/export/run.js";
-import { validateWarmExample } from "../helpers/example_preparation.js";
-import type { PreparedExample } from "../helpers/example_preparation.js";
-import {
-  FULL_CATALOGUE_SETUP_TIMEOUT_MS,
-  timeExportPreparation,
-} from "../helpers/fixture_timing.js";
-import { acquireSharedExample } from "../helpers/shared_example.js";
-import { serveStaticFiles } from "../helpers/static_server.js";
-
-import { assertServedShellMarker } from "./export_shell.js";
+import { committedExportTest } from "./committed_export_fixture.js";
 import { chooseViewport, expectFrameSource } from "./workspace_actions.js";
 
-let prepared: PreparedExample;
-let output: string;
-let root: string;
-let server: Awaited<ReturnType<typeof serveStaticFiles>>;
-test.beforeAll(async () => {
-  test.setTimeout(FULL_CATALOGUE_SETUP_TIMEOUT_MS);
-  prepared = await acquireSharedExample("static-example");
-  root = prepared.root;
-  const config = prepared.config;
-  try {
-    await validateWarmExample(config, prepared.commit);
-    output = path.join(root, "site");
-    await timeExportPreparation(
-      "static-example",
-      () =>
-        exportCatalogue(config, {
-          base: "HEAD",
-          outDir: output,
-          signal: prepared.signal,
-        }),
-      { operationUnderTest: false, expectWarmBaseline: true },
-    );
-    server = await serveStaticFiles(output);
-    await assertServedShellMarker(server.url, "/view/example/screens/welcome/");
-  } catch (error) {
-    await server?.close();
-    await prepared.close();
-    throw error;
-  }
-});
-test.afterAll(async () => {
-  await server?.close();
-  await prepared?.close();
+const test = committedExportTest({
+  profile: "static-example",
+  prefix: "mokly-static-export-",
+  shellPath: "/view/example/screens/welcome/",
 });
 
 test("the owning example stays usable when HEAD is the unchanged baseline", async ({
   page,
+  committedExport: { server },
 }, info) => {
   const failures: string[] = [];
   page.on("response", (response) => {
@@ -92,6 +52,7 @@ test("the owning example stays usable when HEAD is the unchanged baseline", asyn
 
 test("the exported example discloses a screen's variants without a server", async ({
   page,
+  committedExport: { server },
 }) => {
   const list = page.locator(
     '[data-nav-disclosure="variants:example/screens/welcome"]',
@@ -129,6 +90,7 @@ test("the exported example discloses a screen's variants without a server", asyn
 
 test("the exported example opens a Markdown document from each URL form", async ({
   page,
+  committedExport: { server },
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   const frame = page.locator(".mbk-stage-embed iframe");

@@ -390,6 +390,10 @@ pass 300 lines; `validateShardReports` calls it.
     release profile will hit it. Fixed on `main` by PR #167, merged into this
     branch; re-verified on Node 24.21.0 after the third merge, 3 of 3 pass
     (`shared-example-node24-after-167.txt`). Closed.
+    Annotation (2026-10-08): [Shared Example Rebuild Removal](./shared-example-rebuild-removal.md)
+    deletes the shared example tests and helpers under the approved inventory.
+    Cancellation and failure coverage now lives in
+    `tests/owned_example_lifecycle.test.ts`.
   - Unrelated environment finding (not fixed here): with the sandbox's default
     Rust 1.99 toolchain, the repository suite fails at
     `cargo clippy --workspace --all-targets -- -D warnings` on the deprecated

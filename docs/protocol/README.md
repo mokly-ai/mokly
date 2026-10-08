@@ -90,7 +90,7 @@ unsupported versions before content or path interpretation.
   — approved `mokly-viewer/` paths, version errors and upload compatibility.
   - [Entry discovery](./mokly-configuration-discovery.md).
   - [Imported CSS configuration](./mokly-configuration-imported-styles.md).
-- [CI fixture preparation](./ci-fixture-preparation.md) — the implementation plan target.
+- [CI fixture preparation](./ci-fixture-preparation.md) — committed-output export fixtures, cold operations, timing and cleanup.
 - [Directory constants and import lint](./mokly-directory-lint.md)
   — approved independent literal guard, retained source-ordering rule and
   duplicate-import enforcement with folder coverage probes.
