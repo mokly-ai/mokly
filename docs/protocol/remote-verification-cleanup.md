@@ -22,8 +22,11 @@ Clean up boxes in parallel. Each box keeps its own attempt order.
 A panic in one cleanup worker must not stop cleanup of the other boxes.
 
 Count each box once after its last cleanup attempt. Count only boxes that are
-neither stopped nor proven completed. A nonzero count fails the check and
-prevents local fallback. An interrupted check cannot pass or start fallback.
+neither stopped nor proven completed. Before the first suite command starts, a
+nonzero count fails preparation and prevents local fallback. After that
+boundary, a nonzero count does not fail the check. Each remaining box gets the
+final cleanup warning. A check that fails for another reason still reports the
+count in its error. An interrupted check cannot pass or start fallback.
 Its final error is `verification interrupted; cleanup=<count> boxes remain`.
 A close warning or cancellation failure alone does not fail the check.
 A successful cancellation does not prove that the box is stopped or completed.
@@ -218,7 +221,8 @@ After final cleanup, print this warning once for each remaining box:
 ```
 
 The 30-minute idle timeout and 30-minute workflow timeout limit cost if the
-local process is killed before cleanup. Do not change either timeout.
+local process is killed before cleanup. They also limit the cost of a box that
+cleanup cannot stop. Do not change either timeout.
 Do not reuse boxes between checks.
 Terminal output is best effort. A closed stdout or stderr never stops cleanup.
 Ignore terminal write errors.
