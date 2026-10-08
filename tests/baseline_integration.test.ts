@@ -15,6 +15,7 @@ import { RebuiltBaselineReader } from "../dist/baseline/reader.js";
 import { CachedBaselineBuilder } from "../dist/baseline/rebuild.js";
 import type { BaselineProcessRunner } from "../dist/baseline/types.js";
 
+import { readPidFile } from "./helpers/pid_file.js";
 import { waitUntil } from "./helpers/wait_until.js";
 
 /** Exercise the actual host boundaries only here; unit tests use an injected host. */
@@ -151,40 +152,18 @@ test("real Git baseline lifecycle: reuse, interruption, failure and confinement"
   const rejected = assert.rejects(pending, { code: "baseline-interrupted" });
   const interruptedLayout = cacheLayout(root, interrupted.commit);
   const pidPath = path.join(interruptedLayout.source, "command.pid");
-  let pid: number | undefined;
-  await waitUntil(
-    async () => {
-      try {
-        pid = Number(await fs.readFile(pidPath, "utf8"));
-      } catch {
-        return false;
-      }
-      return pid !== undefined;
-    },
-    {
-      timeoutMs: 15_000,
-      intervalMs: 20,
-      message: "the baseline command did not report its pid",
-    },
-  );
+  const pid = await waitUntil(() => readPidFile(pidPath), {
+    timeoutMs: 15_000,
+    intervalMs: 20,
+    message: "the baseline command did not report its pid",
+  });
   assert.ok(pid);
   const descendantPath = path.join(interruptedLayout.source, "descendant.pid");
-  let descendant: number | undefined;
-  await waitUntil(
-    async () => {
-      try {
-        descendant = Number(await fs.readFile(descendantPath, "utf8"));
-      } catch {
-        return false;
-      }
-      return descendant !== undefined;
-    },
-    {
-      timeoutMs: 15_000,
-      intervalMs: 20,
-      message: "the baseline descendant did not report its pid",
-    },
-  );
+  const descendant = await waitUntil(() => readPidFile(descendantPath), {
+    timeoutMs: 15_000,
+    intervalMs: 20,
+    message: "the baseline descendant did not report its pid",
+  });
   assert.ok(descendant);
   controller.abort();
   await rejected;

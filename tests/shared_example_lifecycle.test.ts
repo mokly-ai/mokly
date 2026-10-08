@@ -5,6 +5,7 @@ import test from "node:test";
 
 import { FULL_CATALOGUE_SETUP_TIMEOUT_MS } from "./helpers/fixture_timing.js";
 import { createOwnedExample } from "./helpers/owned_example.js";
+import { readPidFile } from "./helpers/pid_file.js";
 import { prepareSharedExample } from "./helpers/shared_example.js";
 import { waitUntil } from "./helpers/wait_until.js";
 
@@ -111,11 +112,7 @@ test("cancelling example preparation drains its real process before deleting res
   const rejected = assert.rejects(pending, /stop preparation/u);
   try {
     const pid = await waitUntil(
-      () =>
-        fs.readFile(path.join(owner.root, "started"), "utf8").then(
-          (text) => Number(text) || undefined,
-          () => undefined,
-        ),
+      () => readPidFile(path.join(owner.root, "started")),
       {
         intervalMs: 10,
         message: "The real command must start before cancellation",

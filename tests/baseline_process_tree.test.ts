@@ -7,6 +7,7 @@ import { setTimeout } from "node:timers/promises";
 
 import { NodeBaselineProcessRunner } from "../dist/baseline/process.js";
 
+import { readPidFile } from "./helpers/pid_file.js";
 import {
   killProcessIfPresent,
   readProcessField,
@@ -55,25 +56,13 @@ for (const exitLauncher of [false, true]) {
         (error: unknown) => error,
       );
       for (const file of ["launcher.pid", "descendant.pid"]) {
-        let value = "";
-        await waitUntil(
-          async () => {
-            try {
-              value = await fs.readFile(path.join(root, file), "utf8");
-            } catch (error) {
-              if ((error as NodeJS.ErrnoException).code !== "ENOENT")
-                throw error;
-            }
-            return Boolean(value);
-          },
-          {
-            timeoutMs: 15_000,
-            intervalMs: 10,
-            message: `Missing ${file}`,
-          },
-        );
-        assert.ok(value, `Missing ${file}`);
-        pids.push(Number(value));
+        const pid = await waitUntil(() => readPidFile(path.join(root, file)), {
+          timeoutMs: 15_000,
+          intervalMs: 10,
+          message: `Missing ${file}`,
+        });
+        assert.ok(pid, `Missing ${file}`);
+        pids.push(pid);
       }
       if (exitLauncher) {
         await waitUntil(() => !runner.isAlive(pids[0]!), {

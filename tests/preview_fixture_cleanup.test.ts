@@ -23,6 +23,7 @@ import {
   startPreviewServerProcess,
   type PreviewServerProcess,
 } from "./browser/preview_process.js";
+import { readPidFile } from "./helpers/pid_file.js";
 import {
   killProcessIfPresent,
   readProcessField,
@@ -177,21 +178,11 @@ test(
       await fs.rm(root, { force: true, recursive: true });
     });
 
-    await waitUntil(
-      async () => {
-        try {
-          descendantPid = Number(await fs.readFile(pidFile, "utf8"));
-        } catch (error) {
-          if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-        }
-        return Boolean(descendantPid);
-      },
-      {
-        timeoutMs: 15_000,
-        intervalMs: 10,
-        message: "stubborn descendant did not report its pid",
-      },
-    );
+    descendantPid = await waitUntil(() => readPidFile(pidFile), {
+      timeoutMs: 15_000,
+      intervalMs: 10,
+      message: "stubborn descendant did not report its pid",
+    });
     assert.ok(descendantPid, "stubborn descendant did not report its pid");
     await waitUntil(() => managed.exited, {
       timeoutMs: 15_000,

@@ -12,6 +12,7 @@ import { parseReviewResult } from "../packages/viewer/dist/review/result_validat
 import { processExists } from "./helpers/blocking_git.js";
 import { derivedFixture } from "./helpers/derived_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
+import { readPidFile } from "./helpers/pid_file.js";
 import { removedDeliverySource } from "./helpers/removed_delivery_fixture.js";
 import { waitUntil } from "./helpers/wait_until.js";
 
@@ -210,11 +211,7 @@ test(
     let closing: Promise<void> | undefined;
     const close = () => (closing ??= running.close());
     try {
-      const pid = Number(
-        await waitFor(() =>
-          fs.readFile(pidFile, "utf8").catch(() => undefined),
-        ),
-      );
+      const pid = await waitFor(() => readPidFile(pidFile));
       assert.equal(processExists(pid), true);
       assert.equal((await fetch(running.url)).status, 200);
       await close();

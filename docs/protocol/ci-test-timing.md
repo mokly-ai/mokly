@@ -134,6 +134,10 @@ must use `waitUntil` and keep their public signatures. Each replacement wait
 allows at least the larger of 15 seconds and its current allowance.
 Keep its current poll interval.
 
+A probe that reads a process ID file from a test's child process must use
+`readPidFile` from `tests/helpers/pid_file.ts`. A plain `Number(text)` turns
+a file that exists but is still empty into 0.
+
 In a Playwright spec, poll page state with `expect.poll` or
 `page.waitForFunction`. Allow at least 10 seconds for that wait.
 Code that runs inside the page cannot import `waitUntil`.
@@ -144,7 +148,7 @@ For example, a loop can retry an operation that has side effects.
 ## Shared Evidence Helpers
 
 See [CI Test Timing Helpers](./ci-test-timing-helpers.md) for the polling,
-operation counting, and duration reporting contracts.
+process ID file, operation counting, and duration reporting contracts.
 
 ## Benchmark Boundary
 

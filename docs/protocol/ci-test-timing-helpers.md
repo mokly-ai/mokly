@@ -33,6 +33,23 @@ current time with `<`. It pauses with the global `setTimeout` wrapped in a
 promise. Its own tests use `t.mock.timers` to drive both APIs without waiting
 in real time.
 
+### Process ID File Helper
+
+A child process in a test often reports its process ID with
+`writeFileSync(file, String(process.pid))`. That call creates the file before
+it writes the text, so a read in between returns an empty string.
+
+Use `readPidFile(path)` from `tests/helpers/pid_file.ts` as the `waitUntil`
+probe for such a file. It reads the file as UTF-8 and trims the text:
+
+- A missing file (`ENOENT`) or blank text gives `undefined`, so the wait
+  probes again.
+- Decimal digits without a sign or a leading zero give that number, up to
+  `Number.MAX_SAFE_INTEGER`.
+- Any other text rejects with `Error`. The message names the path and the
+  text.
+- Other read errors reject unchanged.
+
 ### Operation Counting Helper
 
 `tests/helpers/operation_counts.ts` counts calls made by one synchronous
