@@ -6,7 +6,10 @@ The npm release workflow has two verification modes. A release push and a manual
 dispatch default to `evidence`. In that mode, publishing reuses complete CI
 evidence for the exact Git tree at the immutable release tags. A manual dispatch
 may instead select `complete`, which skips all GitHub evidence requests and runs
-`cargo xtask check --dependency-audit strict` in the release checkout.
+`cargo xtask check --dependency-audit strict` in the release checkout. That step
+sets `GITHUB_SHA` to the checked-out tag commit. A manual retry dispatches from
+`main`, whose head can be newer than the tag, and the suite runners require
+reports to name the checked-out commit.
 
 Both modes run the live workspace dependency audit after `npm ci`. Evidence mode
 does not treat an earlier audit as current security evidence. Complete mode then
@@ -62,8 +65,10 @@ suite, shard, assignment, observed result, exit outcome, and complete inventory
 defined by the [CI verification contract](./ci-verification.md). In addition,
 the unit reports' complete inventory must equal `discoverUnitFiles` on the tag
 checkout, and every browser/hydration report's all-project inventory must equal
-the tag checkout's `tests/browser/**/*.spec.ts` inventory. These comparisons
-prevent reports from proving only the test files present in another tree.
+the tag checkout's `tests/browser/**/*.spec.ts` inventory. CI names the spec
+that loaded each test, including a test defined in a shared helper module, so
+both inventories list spec files. These comparisons prevent reports from
+proving only the test files present in another tree.
 
 ## Outcomes And Failure Semantics
 
