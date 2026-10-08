@@ -1,6 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
 import {
+  exampleServerCommand,
   exampleServerPorts,
   ownExampleServerPort,
 } from "./tests/browser/example_servers.js";
@@ -42,7 +43,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: ports.map((port) => ({
-    command: `node dist/cli/bin.js serve --config examples/basic/mokly.config.ts --base HEAD --port ${port} --no-watch`,
+    command: exampleServerCommand(port),
     reuseExistingServer: false,
     url: `http://127.0.0.1:${port}/`,
   })),
