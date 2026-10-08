@@ -47,7 +47,8 @@ export async function startCatalogueServer(
   let catalogue = validated.catalogue;
   let manifest = catalogue.manifest;
   const assetClosure = new ServedClosure(
-    "assetClosure" in manifest ? manifest.assetClosure : [],
+    options.assetClosure ??
+      ("assetClosure" in manifest ? manifest.assetClosure : []),
   );
   let acceptedGenerated: ReadonlyMap<string, GeneratedFile> =
     options.generatedOutputs ??
@@ -197,7 +198,7 @@ export async function startCatalogueServer(
     );
   }
   return {
-    completeCatalogue(complete, generation): boolean {
+    completeCatalogue(complete, generation, checked): boolean {
       if (controls?.capability().generation !== generation) return false;
       parseManifest(complete);
       const nextCatalogue = createCatalogue(complete);
@@ -209,7 +210,7 @@ export async function startCatalogueServer(
         contentVersion,
       );
       manifest = complete;
-      assetClosure.accept(complete.assetClosure);
+      assetClosure.accept(checked ?? complete.assetClosure);
       catalogue = nextCatalogue;
       activeCatalogue = nextActive;
       return true;

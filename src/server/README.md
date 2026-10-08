@@ -295,7 +295,12 @@ runs in the watched child and in single-process Serve (`--no-watch`),
 `served_closure.ts` holds the read authority: the last checked closure plus
 on-demand additions from the current generation. A reloaded runtime keeps the
 checked closure, so its update cannot hide a listed file before the background
-pass completes.
+pass completes. A checked result keeps the on-demand additions of the same
+generation. `watched_background.ts` sends the resource watcher's current closure
+with each completion, because a reload reuses an older compilation manifest.
+`supervisor.ts` keeps that list and sends it in a restarted child's startup
+message; `serve_watched.ts` discards it on a configuration change. The child
+ignores a list that `isAuthoredClosure` rejects.
 
 The approved [path/output integration](../../docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
 Markdown documents and moves inside one generated tree. It introduces manifest

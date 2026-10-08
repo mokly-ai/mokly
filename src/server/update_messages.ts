@@ -1,8 +1,4 @@
-import {
-  isEntryPath,
-  isSafeRepositoryPath,
-  GENERATED_DIRECTORY,
-} from "@mokly/viewer/data";
+import { isEntryPath } from "@mokly/viewer/data";
 import type { ManifestV9 } from "@mokly/viewer/data";
 
 import {
@@ -16,6 +12,7 @@ import type {
   RuntimeMessage,
   RuntimeStartupMessage,
 } from "./controls/runtime_ipc.js";
+import { isAuthoredClosure } from "./served_closure.js";
 /** Typed watched-server updates crossing the parent/child IPC boundary. */
 
 /**
@@ -62,6 +59,8 @@ export interface CatalogueCompleteMessage {
   manifest: ManifestV9;
   generation: string;
   version: number;
+  /** The parent's current checked list; a reload's reused manifest can be older. */
+  assetClosure?: readonly string[];
 }
 
 /** Child-to-parent runtime diagnostic kept separate from command envelopes. */
@@ -88,7 +87,10 @@ export function parseChildDiagnosticMessage(
   return { type: "diagnostic", message: value.message };
 }
 
-/** Validate the envelope here; the active server validates matching manifest contents. */
+/**
+ * Validate the envelope here; the active server validates matching manifest
+ * contents. An unsafe list is dropped, so the manifest's closure applies.
+ */
 export function parseCatalogueCompleteMessage(
   value: unknown,
 ): CatalogueCompleteMessage | undefined {
@@ -110,7 +112,10 @@ export function parseCatalogueCompleteMessage(
     candidate.manifest.schemaVersion !== 9
   )
     return;
-  return candidate as CatalogueCompleteMessage;
+  const { assetClosure, ...complete } = candidate as CatalogueCompleteMessage;
+  return isAuthoredClosure(assetClosure)
+    ? { ...complete, assetClosure }
+    : complete;
 }
 
 /** Commands accepted by the watched server child. */
@@ -186,13 +191,7 @@ export function parseChildUpdateMessage(
       (candidate.baselineSelection !== undefined ||
         candidate.baselineDescriptor !== undefined)) ||
     (candidate.assetClosure !== undefined &&
-      (!Array.isArray(candidate.assetClosure) ||
-        !candidate.assetClosure.every(
-          (route: unknown) =>
-            typeof route === "string" &&
-            isSafeRepositoryPath(route) &&
-            !route.startsWith(`${GENERATED_DIRECTORY}/`),
-        ))) ||
+      !isAuthoredClosure(candidate.assetClosure)) ||
     !Number.isSafeInteger(candidate.version) ||
     (candidate.version as number) <= 0 ||
     !isChangedPaths(candidate.changedEntries) ||

@@ -8,6 +8,7 @@ import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import { loadConfig } from "../dist/config/load.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 import { serve } from "../dist/server/serve.js";
+import type { WatchEvent } from "../dist/server/watch_events.js";
 
 import {
   createFixture,
@@ -87,6 +88,71 @@ test(
       (await fetch(running.url + "/static/.private/secret.svg")).status,
       404,
     );
+  },
+);
+
+test(
+  "a restarted watched child serves the checked PDF before its background pass completes",
+  { timeout: 60_000 },
+  async (t) => {
+    const body = '<a href="../../spec.pdf">PDF</a>';
+    const fixture = await createFixture(validEntrySource({ body }), {
+      extraConfig: "watch: { debounceMs: 0 },",
+    });
+    t.after(() => removeFixture(fixture));
+    await fs.writeFile(
+      path.join(fixture.mockupsDir, "spec.pdf"),
+      "%PDF-1.4\nchecked",
+    );
+    let writes = 0;
+    let startedRestartWrite: () => void = () => {};
+    const restartWrite = new Promise<void>((resolve) => {
+      startedRestartWrite = resolve;
+    });
+    let release: () => void = () => {};
+    const released = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let changed: ((event: WatchEvent) => void) | undefined;
+    const running = await serve(
+      await loadConfig(fixture.root),
+      { build: true, port: 0, watch: true },
+      {
+        outputStore: {
+          check() {},
+          async write() {
+            if (++writes !== 2) return;
+            startedRestartWrite();
+            await released;
+          },
+        },
+        watcherFactory: {
+          create: () => ({
+            async ready() {},
+            async close() {},
+            onError() {},
+            onChange(callback) {
+              changed ??= callback;
+            },
+          }),
+        },
+      },
+    );
+    fixture.beforeRemove(() => {
+      release();
+      return running.close();
+    });
+    await waitForInitialChanges(running.url);
+    const pdf = running.url + "/static/spec.pdf";
+    assert.equal(await (await fetch(pdf)).text(), "%PDF-1.4\nchecked");
+    await fs.writeFile(
+      fixture.entryPath,
+      validEntrySource({ body, firstTitle: "Renamed home" }),
+    );
+    assert.ok(changed, "watched Serve registered a source watcher");
+    changed({ path: fixture.entryPath, kind: "change" });
+    await restartWrite;
+    assert.equal(await (await fetch(pdf)).text(), "%PDF-1.4\nchecked");
   },
 );
 

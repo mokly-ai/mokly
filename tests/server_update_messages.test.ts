@@ -182,3 +182,30 @@ test("catalogue completion accepts manifest v8 and rejects the preceding v7 enve
     undefined,
   );
 });
+
+test("catalogue completion keeps a safe authored list and ignores an unsafe one", () => {
+  const message = {
+    type: "catalogue-complete",
+    generation: "a".repeat(32),
+    version: 2,
+    manifest: {
+      schemaVersion: 9,
+      generatedBy: "mokly",
+      entries: [],
+      folders: [],
+      sourceFiles: [],
+    },
+  };
+  const listed = { ...message, assetClosure: ["guide.html", "docs/spec.pdf"] };
+  assert.deepEqual(parseCatalogueCompleteMessage(listed), listed);
+  for (const assetClosure of [
+    ["../secret.pdf"],
+    ["mokly-generated/home/index.mobile.html"],
+    [42],
+    "spec.pdf",
+  ])
+    assert.deepEqual(
+      parseCatalogueCompleteMessage({ ...message, assetClosure }),
+      message,
+    );
+});
