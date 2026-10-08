@@ -779,6 +779,7 @@ Developer-test integration decisions: `.context/turborepo-cloudflare-remote-cach
 Review-guidance integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-agent-main-decisions.md`.
 Plan-history integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-history-main-decisions.md`.
 Remote-verification and publish-check integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-remote-main-decisions.md`.
+Example-snapshot integration decisions: `.context/turborepo-cloudflare-remote-cache/m4-snapshot-main-decisions.md`.
 Fixture-cleanup flake fix (Git 2.55 background maintenance) and gate runs: `.context/turborepo-cloudflare-remote-cache/m4-flake-turbo-inventory.md`.
 Milestone 4 review-fix evidence: `.context/turborepo-cloudflare-remote-cache/m4-review-fixes.md`.
 Hosted measurement record: `.context/turborepo-cloudflare-remote-cache/measurements.md`.
