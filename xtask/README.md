@@ -64,10 +64,13 @@ an org key and every availability check pass. It otherwise selects local mode.
 The [repository ratchet contract](../docs/protocol/verification-ratchets.md) owns
 the exact scopes and exceptions. Length, protocol-cap, unused-internal-export,
 and unused-test-helper-export analysis compare against
-`git merge-base HEAD origin/main`; module analysis covers `.ts`, `.tsx`, `.mts`,
-`.cts`, `.js`, `.mjs`, and `.cjs` under the three source roots, the
-internal-export baseline rejects entries absent at that merge base, and protocol
-caps scan `docs/protocol/**` recursively except `fixtures/`. The
+`git merge-base HEAD origin/main`. Export findings come from candidates under
+`src/`, `packages/viewer/src/`, and `scripts/` for the source scope, and under
+`tests/` and `packages/viewer/tests/` for the test helper scope. Both scopes share
+a graph of every regular repository module with a `.ts`, `.tsx`, `.mts`, `.cts`,
+`.js`, `.mjs`, or `.cjs` extension, except declaration files (`.d.ts`, `.d.mts`,
+and `.d.cts`). The internal-export baseline rejects entries absent at that merge
+base, and protocol caps scan `docs/protocol/**` recursively except `fixtures/`. The
 public-package-export ratchet instead compares each released package with its
 newest matching release tag reachable from `HEAD`. Full history and tags are
 required; when a release manifest records a release but the tag is unavailable,

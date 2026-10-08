@@ -1,8 +1,9 @@
 # Test Helper Export Ratchet
 
 Status: Active. Plan created on 2026-10-08 with the user's consent. Milestones
-1 to 4 are complete. The test helper baseline is empty. In Milestone 5, the
-complete gate has passed. The commit, push, and post-push review follow.
+1 to 4 are complete. The test helper baseline is empty. The complete gate has
+passed. Commit `82029ec` is pushed. The first review fix round is in progress.
+Finding 2 awaits the user.
 
 ## Status And Outcome
 
@@ -28,6 +29,9 @@ The scan found six orphan files: `tests/helpers/fake_dom.ts`,
 duplicate that its `.ts` sibling shadows during module resolution.
 `tests/component_authoring_types.tsx` is a compile-only type test; its eight
 exported witnesses are live type checks that nothing imports.
+
+Milestone 4 found a seventh orphan, `tests/server_fixture.ts`; the viewer
+fixture with the same stem is `packages/viewer/tests/server_fixture.tsx`.
 
 This plan extends the ratchet to the two test roots, bootstraps a separate
 shrink-only baseline for them, and deletes the dead helpers. It also resolves
@@ -213,16 +217,21 @@ Evidence: `.context/test-helper-export-ratchet/milestone-4-evidence.md`.
 - [x] Run `cargo xtask check --suite repository` and the complete
       `cargo xtask check`. Require a 100% pass rate. Rerun only failing
       tests after a fix, then rerun the complete gate.
-- [ ] Run the mainline preservation audit in `docs/dev/git.md` before and
+- [x] Run the mainline preservation audit in `docs/dev/git.md` before and
       after the commit. Confirm every deletion is one this plan approves.
-- [ ] Run `git add -A`, commit with Conventional Commits, and push the branch
+- [x] Run `git add -A`, commit with Conventional Commits, and push the branch
       with every new file tracked.
 - [ ] After the push, review the complete diff against `origin/main` with
       `docs/implementation-review-prompt.md`, report numbered findings, then
       apply the review-fix rule in `docs/dev/review.md`: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest.
 
+Review: `.context/test-helper-export-ratchet/review-1.md`; findings 1 and 3 are fixed in this round.
+
+2 — Low, test: no test proves that the helper scope skips linked module files; recommended option A adds one Git-backed test. Awaits the user.
+
 Evidence: `.context/test-helper-export-ratchet/milestone-5-evidence.md`.
+Review fix evidence: `.context/test-helper-export-ratchet/review-1-fixes-evidence.md`.
 
 ## Post-merge follow-up (non-blocking)
 

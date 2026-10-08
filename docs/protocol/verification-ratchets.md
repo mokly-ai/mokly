@@ -170,8 +170,11 @@ that removal; until then, the same reachable baseline still reports it.
 
 ## Unused Internal Exports
 
-The auditor follows imports and re-exports across `.ts`, `.tsx`, `.mts`, `.cts`,
-`.js`, `.mjs`, and `.cjs` modules beneath the three source roots. A named export
+Findings come from modules under `src/`, `packages/viewer/src/`, and `scripts/`.
+The [shared import graph](./verification-ratchets-test-helpers.md#import-graph-and-export-use)
+follows imports and re-exports across every regular repository module with a
+`.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.mjs`, or `.cjs` extension, except
+declaration files (`.d.ts`, `.d.mts`, and `.d.cts`). A named export
 is internal when no package export-map entry or documented public barrel
 exposes it. It is unused when no distinct workspace module imports or
 re-exports that symbol through a statically resolvable path; same-file
