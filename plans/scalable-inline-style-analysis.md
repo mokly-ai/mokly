@@ -2070,10 +2070,10 @@ Evidence: `.context/scalable-inline-style-analysis/m13-merge/`.
 - [x] Integrate #138's shared example snapshot and fallback, #171's rule
       documents and #172's checked closure on reload. Preserve all assertions
       and keep main's package, lock, toolchain and rule files unchanged.
-- [ ] Run the complete pinned-Chromium gate and the four real-server smoke
+- [x] Run the complete pinned-Chromium gate and the four real-server smoke
       tests. Record CPU model and boot ID, and report unrelated flaky tests
       under the [review rule](../docs/dev/review.md).
-- [ ] After checks pass, commit with Conventional Commits and push the branch.
+- [x] After checks pass, commit with Conventional Commits and push the branch.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`. Keep the review read-only, then apply the
