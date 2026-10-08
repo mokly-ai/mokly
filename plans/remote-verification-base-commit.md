@@ -262,7 +262,8 @@ Evidence: `.context/remote-verification-base-commit/milestone-2.md`.
       unpushed merge of `main` with more own commits than main's delta; a rebase
       onto newer `main` with the old origin branch tip; a stacked branch on a
       pushed branch; no shared history; symbolic `origin/HEAD` without duplicate
-      candidates; and independent pushed candidates with count and SHA ties.
+      candidates; and independent pushed candidates with unequal ahead counts,
+      then equal counts resolved by the smallest SHA.
 - [ ] Add real-Git adapter tests for snapshot creation and removal: deletion,
       rename, mode change, symbolic link, untracked file, staged change and
       detached checkout `HEAD`. Require unchanged checkout `HEAD`, index,
