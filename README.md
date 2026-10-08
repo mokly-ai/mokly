@@ -391,8 +391,9 @@ ESLint requires shared directory constants, locale-independent source ordering,
 and unique imports. Tests probe every covered source folder through the real
 flat config. See the [lint contract](./docs/protocol/mokly-directory-lint.md).
 
-Browser global setup prepares one real example baseline and cache. Ordinary
-export fixtures use isolated, validated copies; dedicated tests retain cold
+Browser global setup checks the worker count, waits for Serve readiness and
+reports startup. Ordinary export fixtures own repositories with committed
+output and verify Git-blob baseline selection. Dedicated tests retain cold
 baseline and preview builds. See [fixture preparation](./docs/protocol/ci-fixture-preparation.md).
 
 The [remote verification contract](./docs/protocol/remote-verification.md)

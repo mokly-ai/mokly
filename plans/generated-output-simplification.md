@@ -2228,14 +2228,14 @@ Polling for expected state allows at least 10,000 ms. Keep the real-config
 timing selectors, directory guard, source-order guard and import rules active.
 The npm pin is 11.21.0; preserve its workflow and lockfile-shape checks.
 
-- [ ] Record a comparable full browser run and actual fixture timings before
+- [x] Record a comparable full browser run and actual fixture timings before
       changing setup. Replace `acquireSharedExample` in
       `tests/browser/static_example.spec.ts` and `design_library_export.spec.ts`
       with each fixture's `createCommittedExampleBaseline` profile from
       `tests/helpers/example_baseline.ts`. Keep isolated repositories and the
       design edit after the baseline commit. Retain new Markdown URL/appearance
       assertions and every existing export/inspection assertion from #131.
-- [ ] Remove only shared rebuilt-cache preparation from `tests/browser/setup.ts`
+- [x] Remove only shared rebuilt-cache preparation from `tests/browser/setup.ts`
       and its now-unused descriptor/cache-copy helpers and tests. Preserve
       global Serve readiness and process/resource ownership cleanup. Keep
       `example_baseline_cold.spec.ts` as the single cold example-baseline browser
@@ -2291,6 +2291,8 @@ The npm pin is 11.21.0; preserve its workflow and lockfile-shape checks.
       Test signatures, new/removed subpaths, stale reports, missing refs and
       release-note gating; preserve the released-name audit (42 B).
 - [ ] Run the full gate as in Milestone 20; `git add -A`; commit; push.
+
+Evidence: `.context/generated-output-simplification/shared-setup-removal.md`.
 
 ## Milestone 28: Verify and review the review fixes
 

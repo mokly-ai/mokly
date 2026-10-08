@@ -26,14 +26,13 @@ export async function createOwnedExample(
   options: {
     signal?: AbortSignal;
     timeoutMs?: number;
-    environment?: NodeJS.ProcessEnv;
   } = {},
 ): Promise<OwnedExample> {
   const owner = await createVerificationProcessOwner({
     cwd: repositoryRoot,
-    env: options.environment ?? process.env,
+    env: process.env,
   });
-  const environment = owner.environment(options.environment ?? process.env);
+  const environment = owner.environment(process.env);
   const resources = environment[VERIFICATION_RESOURCE_ROOT_ENV]!;
   const context = path.join(repositoryRoot, ".context");
   if (!resources.startsWith(`${context}${path.sep}`)) {

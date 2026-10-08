@@ -20,11 +20,10 @@ import { timeBaselinePreparation, timeFixturePhase } from "./fixture_timing.js";
 import { createOwnedExample } from "./owned_example.js";
 import type { OwnedExample } from "./owned_example.js";
 
-export const EXAMPLE_CONFIG_PATH = "examples/basic/mokly.config.ts";
-export const EXAMPLE_CATALOGUE_PATH = "examples/basic";
+const EXAMPLE_CATALOGUE_PATH = "examples/basic";
 const execute = promisify(execFile);
 
-export interface PreparedExample extends OwnedExample {
+interface PreparedExample extends OwnedExample {
   readonly config: ResolvedConfig;
   readonly commit: string;
 }
@@ -56,7 +55,7 @@ export async function prepareIndependentExample(
 }
 
 /** Run the actual recipe inside the caller-owned deadline and process boundary. */
-export async function buildExampleBaseline(
+async function buildExampleBaseline(
   owned: OwnedExample,
   fixture: string,
   operationUnderTest: boolean,
@@ -104,7 +103,7 @@ export async function buildExampleBaseline(
 }
 
 /** Cleanup never hides the originating error or deletes outside the owner. */
-export async function closeExampleAfterFailure(
+async function closeExampleAfterFailure(
   owned: OwnedExample,
   error: unknown,
 ): Promise<never> {
@@ -155,13 +154,13 @@ export async function validateWarmExample(
   assert.equal(manifest.schemaVersion, 9);
 }
 
-export async function exampleCommit(root: string): Promise<string> {
+async function exampleCommit(root: string): Promise<string> {
   return (
     await execute("git", ["rev-parse", "HEAD"], { cwd: root })
   ).stdout.trim();
 }
 
-export async function assertSourceOnlyExample(
+async function assertSourceOnlyExample(
   config: ResolvedConfig,
   commit: string,
 ): Promise<void> {
@@ -178,7 +177,7 @@ export async function assertSourceOnlyExample(
   await assert.rejects(fs.access(config.generatedDir), { code: "ENOENT" });
 }
 
-export function exampleBuilder(owned: OwnedExample): CachedBaselineBuilder {
+function exampleBuilder(owned: OwnedExample): CachedBaselineBuilder {
   return new CachedBaselineBuilder(
     new NodeBaselineFileSystem(),
     owned.runner,

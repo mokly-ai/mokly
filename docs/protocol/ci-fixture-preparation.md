@@ -2,8 +2,7 @@
 
 ## Delivery Status
 
-The committed-output export fixtures below are the approved target in
-[Generated Output Simplification](../../plans/generated-output-simplification.md).
+The committed-output export fixtures below are implemented.
 The [CI verification](./ci-verification.md) and
 [CI suite evidence](./ci-suite-evidence.md) contracts own suite boundaries,
 process lifetime, cleanup and evidence.
@@ -15,13 +14,16 @@ own repository with the committed-output baseline helper. Each fixture owns
 its source files, Git refs/index, output, export destination, ports and servers.
 The design-library fixture applies its source edit only after that baseline
 commit. Static-example keeps the unchanged-HEAD comparison assertions.
+Each export fixture asserts that baseline preparation selects committed Git
+blobs and requests no baseline rebuild.
 
-Playwright global setup retains Serve readiness. It does not build an example
-baseline or publish a shared repository/cache descriptor. Ordinary export
-fixtures do not copy a warmed cache or pay for a separate baseline recipe when
-their committed v9 output already supplies a complete verified inventory.
-They use the normal Git-blob baseline selection and retain every existing UI,
-source-isolation, exact export and comparison assertion.
+Playwright global setup retains the worker-count check, Serve readiness and the
+startup report. It does not build an example baseline or publish a shared
+repository/cache descriptor. Ordinary export fixtures do not copy a warmed cache
+or pay for a separate baseline recipe when their committed v9 output already
+supplies a complete verified inventory. They use the normal Git-blob baseline
+selection and retain every existing UI, source-isolation, exact export and
+comparison assertion.
 
 Preparation is not the operation under test for these export fixtures. Keep
 fixture setup separate from the real cold-operation regressions below. Do not
@@ -55,6 +57,8 @@ Retain useful `[mokly:fixture-timing]` records for preparation that actually
 runs. Records include schema version, fixture, phase, `durationMs`, status and
 `operationUnderTest`. Ordinary setup is false; cold baseline/preview operations
 are true. A phase that does not run has no invented zero duration.
+Committed-output export fixtures record `baseline`, `export` and `serve`
+phases with `operationUnderTest: false`.
 
 Record full browser-suite wall time and fixture phase timings on this machine
 before and after changing setup. Name runtime, npm, browser and cache conditions.
