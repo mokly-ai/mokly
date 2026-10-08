@@ -7,19 +7,27 @@ use std::time::Duration;
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::remote::cleanup::{BoxCleanup, CleanupGuard};
+use crate::remote::cleanup::contracts::BoxCleanup;
+use crate::remote::cleanup::guard::CleanupGuard;
 use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
 
 fn fixture(failed_stops: usize, completes: bool) -> (Dependencies, Arc<Mutex<Vec<String>>>) {
     let events = Arc::new(Mutex::new(Vec::new()));
     let status_events = events.clone();
+    let close_events = events.clone();
     let stop_events = events.clone();
     let wait_events = events.clone();
     let cancel_events = events.clone();
     let attempts = Arc::new(AtomicUsize::new(0));
     let observed_attempts = attempts.clone();
     let shared = Arc::new(Unimock::new((
+        BlacksmithDisconnectMock
+            .each_call(matching!("tbx_a"))
+            .answers_arc(Arc::new(move |_, _| {
+                close_events.lock().unwrap().push("close".into());
+                Ok(Disconnection::Closed)
+            })),
         ProgramsFindMock
             .each_call(matching!("gh"))
             .answers(&|_, _| Ok(true)),
@@ -43,6 +51,7 @@ fn fixture(failed_stops: usize, completes: bool) -> (Dependencies, Arc<Mutex<Vec
                     Err(Error::Command {
                         operation: Operation::Blacksmith,
                         code: Some(1),
+                        detail: None,
                     })
                 } else {
                     Ok(())
@@ -67,18 +76,14 @@ fn fixture(failed_stops: usize, completes: bool) -> (Dependencies, Arc<Mutex<Vec
             clock: shared.clone(),
             git: unused.clone(),
             blacksmith: shared.clone(),
-            github: Arc::new(if completes {
-                Unimock::new(())
-            } else {
-                Unimock::new(
-                    GithubCancelMock
-                        .each_call(matching!(123))
-                        .answers_arc(Arc::new(move |_, _| {
-                            cancel_events.lock().unwrap().push("cancel".into());
-                            Ok(())
-                        })),
-                )
-            }),
+            github: Arc::new(Unimock::new(
+                GithubCancelMock
+                    .each_call(matching!(123))
+                    .answers_arc(Arc::new(move |_, _| {
+                        cancel_events.lock().unwrap().push("cancel".into());
+                        Ok(())
+                    })),
+            )),
             fingerprint: unused.clone(),
             aggregate: unused.clone(),
             logs: unused.clone(),
@@ -99,7 +104,8 @@ fn failed_stops_use_three_attempts_with_five_and_ten_second_waits() {
     assert_eq!(
         *events.lock().unwrap(),
         [
-            "status", "stop", "wait:5", "status", "stop", "wait:10", "status", "stop", "cancel"
+            "close", "status", "cancel", "stop", "wait:5", "status", "stop", "wait:10", "status",
+            "stop"
         ]
     );
 }
@@ -113,12 +119,14 @@ fn a_second_attempt_success_has_no_ten_second_wait() {
     assert!(cleanup.pending().is_empty());
     assert_eq!(
         *events.lock().unwrap(),
-        ["status", "stop", "wait:5", "status", "stop", "cancel"]
+        [
+            "close", "status", "cancel", "stop", "wait:5", "status", "stop"
+        ]
     );
 }
 
 #[test]
-fn completed_status_before_a_retry_skips_stop_and_cancellation() {
+fn completed_status_before_a_retry_skips_stop_and_additional_cancellation() {
     let (dependencies, events) = fixture(1, true);
     let cleanup = CleanupGuard::new(&dependencies);
     cleanup.track("tbx_a");
@@ -126,7 +134,7 @@ fn completed_status_before_a_retry_skips_stop_and_cancellation() {
     assert!(cleanup.pending().is_empty());
     assert_eq!(
         *events.lock().unwrap(),
-        ["status", "stop", "wait:5", "status"]
+        ["close", "status", "cancel", "stop", "wait:5", "status"]
     );
 }
 
@@ -139,6 +147,7 @@ fn later_cleanup_calls_cannot_exceed_three_stop_attempts() {
         assert_eq!(cleanup.stop_boxes(&["tbx_a".into()]), 1);
     }
     let events = events.lock().unwrap();
+    assert_eq!(events.iter().filter(|event| *event == "close").count(), 1);
     assert_eq!(events.iter().filter(|event| *event == "stop").count(), 3);
     assert_eq!(events.iter().filter(|event| *event == "cancel").count(), 1);
     assert_eq!(

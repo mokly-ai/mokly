@@ -156,9 +156,11 @@ cache in tests; removing a linked checkout's cache path may clear shared data.
 
 ## Suite Preparation And Restore
 
-Each package, unit, browser, and hydration suite still calls
-`npm run prepare:verification`. Unchanged tasks restore from local cache; misses
-execute. Authorized hosted jobs can restore from the remote cache. Every prepared consumer and suite
+Each package, browser, and hydration suite still calls
+`npm run prepare:verification`. The unit suite calls it through
+`npm run prepare:unit`, which then writes the
+[example compilation snapshot](./ci-example-snapshot.md) outside task caching.
+Unchanged tasks restore from local cache; misses execute. Authorized hosted jobs can restore from the remote cache. Every prepared consumer and suite
 assertion still executes.
 
 Restore semantics verified against the local client:

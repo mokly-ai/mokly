@@ -41,7 +41,7 @@ fn complete_gate_is_the_ordered_union_of_every_suite() {
             "npm run package:artifacts -- --out .context/verification/package-artifacts",
             "npm run package:check:prepared -- --artifacts .context/verification/package-artifacts",
             "npm run package:smoke:prepared -- --artifacts .context/verification/package-artifacts",
-            "npm run prepare:verification",
+            "npm run prepare:unit",
             "npm run test:prepared",
             "npm run prepare:verification",
             "npm run test:browser:prepared",
@@ -55,7 +55,7 @@ fn complete_gate_is_the_ordered_union_of_every_suite() {
 fn selected_unit_shard_prepares_then_propagates_the_shard() {
     let command_runner = Arc::new(Unimock::new((
         CommandRunnerRunMock
-            .next_call(matching!((command) if command.display() == "npm run prepare:verification" && command.working_directory() == Some(Path::new("/workspace"))))
+            .next_call(matching!((command) if command.display() == "npm run prepare:unit" && command.working_directory() == Some(Path::new("/workspace"))))
             .returns(Ok(())),
         CommandRunnerRunMock
             .next_call(
@@ -73,6 +73,30 @@ fn selected_unit_shard_prepares_then_propagates_the_shard() {
     .expect("unit suites support shards");
 
     runner.run(request).expect("selected shard succeeds");
+}
+
+#[test]
+fn only_the_unit_suite_prepares_the_example_compilation_snapshot() {
+    for (suite, preparation) in [
+        (VerificationSuite::Package, "npm run prepare:verification"),
+        (VerificationSuite::Unit, "npm run prepare:unit"),
+        (VerificationSuite::Browser, "npm run prepare:verification"),
+        (VerificationSuite::Hydration, "npm run prepare:verification"),
+    ] {
+        let commands = commands_for(suite, None, DependencyAudit::Baseline)
+            .iter()
+            .map(|command| command.display())
+            .collect::<Vec<_>>();
+        assert_eq!(commands.first().map(String::as_str), Some(preparation));
+        assert_eq!(
+            commands
+                .iter()
+                .filter(|command| command.starts_with("npm run prepare:"))
+                .count(),
+            1,
+            "{suite} prepares exactly once",
+        );
+    }
 }
 
 #[test]

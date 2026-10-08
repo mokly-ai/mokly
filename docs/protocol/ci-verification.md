@@ -55,7 +55,7 @@ hydration suite fail before any subprocess starts.
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Repository       | Live audit first: baseline for ordinary PRs, pushes, and local checks; strict for release and dependency update PRs. Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                  |
 | Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; every clean consumer smoke using that pair. Real `prepack` builds remain part of packing. |
-| Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. A shard runs its whole-file partition.                                                                                                                                                               |
+| Unit/integration | One ordinary package/example preparation and one example compilation snapshot, followed by every discovered Node test file, with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. A shard runs its whole-file partition.                                                                                                                         |
 | Browser          | One ordinary package/example preparation followed by every non-hydration Playwright spec, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                  |
 | Hydration        | One ordinary package/example preparation followed by every Playwright spec whose filename contains `hydration`, using the same browser settings without sharding and with the [hydration worker default](./ci-suite-evidence.md#test-concurrency). Its route-inventory spec runs its independent route tests in parallel mode.                                                         |
 | Native platforms | On macOS and Windows, build once and run export transaction, destination-race, writer-lock and cache-ignore tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                             |
@@ -100,7 +100,9 @@ reject arguments other than the optional shard, and fail when required output is
 missing; prepared package commands may instead receive the gate's archive pair.
 Xtask calls preparation for each suite, then prepared consumers.
 [Task cache reuse](./ci-remote-cache.md#suite-preparation-and-restore) restores
-unchanged outputs across suites; every consumer still executes.
+unchanged outputs across suites; every consumer still executes. `npm test` and
+the xtask unit suite run `npm run prepare:unit`; a complete unit run requires
+the example compilation [snapshot](./ci-example-snapshot.md) it writes.
 
 Builds under test are not removed. Dry-run package inspection retains
 `--ignore-scripts`; real packing keeps lifecycle builds with empty stdout.
@@ -136,9 +138,9 @@ and ends with a non-whitespace character, and contains no newline. Examples
 include `fix: preserve upload counts`, `chore(main): release 0.13.0` and
 `feat(publish)!: upload catalogue content deltas`.
 
-This type list is fixed. Its unit test checks that it covers the Conventional
-Commit examples in `AGENTS.md`; it does not derive policy from Git history or
-remote-tracking references.
+This type list is fixed. The unit test asserts the list directly; it does not
+derive policy from Git history, remote-tracking references, or the commit
+examples in `docs/dev/git.md`.
 
 An invalid title exits unsuccessfully and prints exactly:
 

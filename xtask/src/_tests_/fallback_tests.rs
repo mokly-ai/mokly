@@ -44,6 +44,7 @@ fn fallback_requires_auto_and_an_unavailable_preparation() {
                         1 => Failure::Failed(Error::Command {
                             operation: Operation::Blacksmith,
                             code: Some(1),
+                            detail: None,
                         }),
                         2 => Failure::Unavailable(Error::Interrupted { cleanup: 0 }),
                         _ => Failure::Unavailable(Error::WarmupIds { count: 0 }),

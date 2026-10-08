@@ -115,11 +115,15 @@ cargo xtask source-file-length-lint --all
 
 `--shard INDEX/TOTAL` is valid only for the unit and browser suites. Omitting it
 runs the full selected suite. Package, unit, browser, and hydration suites
-prepare their required output before invoking prepared npm scripts.
+prepare their required output before invoking prepared npm scripts. The unit
+suite runs `npm run prepare:unit`, which also writes the
+[example compilation snapshot](../docs/protocol/ci-example-snapshot.md)
+that unit tests load instead of compiling the example in every test file; the
+other suites run `npm run prepare:verification`.
 
 The [task cache contract](../docs/protocol/ci-remote-cache.md) defines implemented
-Turbo preparation. Each suite keeps its `npm run prepare:verification` call and
-restores unchanged tasks from cache. Tests and reports still run. `.turbo/`
+Turbo preparation. Each suite keeps its preparation call, which runs
+`npm run prepare:verification` and restores unchanged tasks from cache. Tests and reports still run. `.turbo/`
 holds the ignored local cache;
 linked Git worktrees share the main worktree's `.turbo/cache` automatically.
 Hosted suites use policy B remote caching; tests and reports still execute.
@@ -157,13 +161,32 @@ before it merges.
 It does not change the required source fingerprint or `HEAD`.
 
 The [remote contract](../docs/protocol/remote-verification.md) defines the
-availability order, probe barrier, report aggregate and cleanup.
+availability order, probe barrier and report aggregate.
+The [cleanup contract](../docs/protocol/remote-verification-cleanup.md) defines
+cleanup rules. The full cleanup contract is implemented: close the shared SSH
+connection, cancel a known run once, then check status and stop. Cleanup
+command errors retain one bounded diagnostic line. The complete default remote
+smoke check passes. The cleanup contract is delivered. The
+[prompt shutdown plan](../plans/testbox-prompt-shutdown.md) records verification
+and open findings.
 Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
 Each command worker downloads its report and cleans up its box when it ends.
 It does not wait for other commands. Final cleanup covers only remaining boxes.
 Different boxes clean up in parallel. Each box keeps its own attempt order.
+Cleanup closes each box's shared SSH connection once before status, stop and
+cancellation. It records the attempt before the call, so retries and the panic
+guard do not repeat it. The composition root reads `HOME` through the environment
+boundary and supplies it to the Blacksmith adapter. The close reads no key.
+An unset or empty `HOME` warns once per box. A missing control directory or socket
+starts no process and prints `information: no shared SSH connection for <box-id>`
+once. A failed close warns once and does not change the cleanup failure count.
+A socket that disappears during a failed close counts as closed and prints
+nothing. A recorded run ID is cancelled immediately after close when `gh` is
+available. An ID first found in status is cancelled before stop. Record the
+cancel attempt before its call. Retries, final cleanup and panic cleanup do
+not repeat it, even after a failed cancel or a different later ID.
 The status table can prove a box already completed. That box needs no stop or
-GitHub cancellation. Cleanup keeps run IDs from warmup and probe output as a
+unattempted GitHub cancellation. Cleanup keeps run IDs from warmup and probe output as a
 fallback when status fails or names no run. A failed stop gets retries after
 5 seconds and 10 more seconds, with at most three attempts per box.
 Final cleanup counts each box once if it is neither stopped nor proven completed.
@@ -173,12 +196,18 @@ its manual stop command and the 30-minute idle timeout.
 After a failed GitHub cancellation, xtask reads the run state with
 `gh run view <id> --json status --jq .status`. A completed run
 gets an information line. Other states and failed reads keep the warning.
+Failed state reads also print their own warning. Before each cancellation
+attempt, print `information: cleanup box=<box-id> GitHub run=<id>` once.
 The aggregate runs after all commands and cleanup end.
 Each check creates new report and log directories under `.context/`.
 Their shared run name is UTC `YYYYMMDDTHHMMSSZ` followed by `-<process-id>`.
 Decision, information and warning lines start with `[xtask/executor]`.
 One function formats warnings that embed errors. Each error keeps its module
 prefix. Remote errors use `[xtask/remote]`. No line repeats a prefix.
+For status, stop, cancel, run-state and SSH close failures, trim each line.
+Select the last stderr line that is not empty after trimming. If there is none,
+select the last such stdout line. Keep at most 200 characters. Append the line
+after the exit or signal wording. Other command errors keep their existing text.
 Suite progress and summaries start with `[xtask/remote]`.
 Failed commands show their last 60 log lines and the log path.
 Failed aggregate and fingerprint reads show captured stdout and stderr after
@@ -210,11 +239,13 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 
-The `*_adapter_tests.rs` files under `src/remote/_tests_/` test the operating
-system boundaries with real shell children and temporary directories. They
-cover streamed logs, private stdin, child environments, process-group cleanup,
-fresh log files, PATH permissions and interrupt state order. They use readiness
-signals and expected-state waits. They do not assert elapsed time.
+The `*_adapter_tests.rs` files under `src/remote/_tests_/` and
+`src/remote/clients/_tests_/` test operating-system boundaries with real shell
+children and temporary directories. They cover streamed logs, private stdin,
+child environments, process-group cleanup, fresh log files, PATH permissions
+and interrupt state order. They also cover the SSH close request, socket path
+and cleanup details. They use readiness signals and expected-state waits.
+They do not assert elapsed time.
 
 ### Key Code
 
@@ -223,8 +254,12 @@ signals and expected-state waits. They do not assert elapsed time.
 - [`src/remote/runner.rs`](./src/remote/runner.rs) owns remote phase order.
 - [`src/remote/contracts.rs`](./src/remote/contracts.rs) defines injected
   environment, Git, CLI, clock, script, log, signal and output boundaries.
-- [`src/remote/cleanup.rs`](./src/remote/cleanup.rs) owns box state, captured run
-  IDs, stop retries and final cleanup counts.
+- [`src/remote/cleanup/guard.rs`](./src/remote/cleanup/guard.rs) owns box state
+  and final counts. [`steps.rs`](./src/remote/cleanup/steps.rs) owns close,
+  status and stop retries. [`cancellation.rs`](./src/remote/cleanup/cancellation.rs)
+  owns the single cancel attempt and run-state diagnostics.
+- [`src/remote/clients/outcome.rs`](./src/remote/clients/outcome.rs) owns command
+  errors and bounded cleanup details for the Blacksmith, GitHub and SSH adapters.
 - [`src/remote/reporting.rs`](./src/remote/reporting.rs) formats error warnings
   with one copy of each module prefix.
 - [`src/remote/process.rs`](./src/remote/process.rs) streams output and kills
@@ -249,6 +284,12 @@ signals and expected-state waits. They do not assert elapsed time.
   own every clean packed-consumer smoke. The
   [consumer fixtures README](../tests/fixtures/consumers/README.md) states what
   each copied project tests.
+- [`../scripts/verification/example-snapshot.mjs`](../scripts/verification/example-snapshot.mjs)
+  produces, encodes, and decodes the example compilation snapshot, and
+  [`example-snapshot-key.mjs`](../scripts/verification/example-snapshot-key.mjs)
+  owns its path, source inventory, and freshness key;
+  [`prepared.mjs`](../scripts/verification/prepared.mjs) checks that prepared
+  output exists before a runner starts.
 - [`../scripts/verification/repository-ratchets.mjs`](../scripts/verification/repository-ratchets.mjs)
   dispatches the repository ratchets, and
   [`../scripts/verification/ratchets/git.mjs`](../scripts/verification/ratchets/git.mjs)
@@ -279,7 +320,10 @@ signals and expected-state waits. They do not assert elapsed time.
 - [Repository README](../README.md)
 - [CI and npm release contract](../docs/protocol/npm-release.md)
 - [CI verification](../docs/protocol/ci-verification.md)
+- [CI suite evidence](../docs/protocol/ci-suite-evidence.md)
+- [CI example compilation snapshot](../docs/protocol/ci-example-snapshot.md)
 - [Remote verification](../docs/protocol/remote-verification.md)
+- [Cleanup and interrupts](../docs/protocol/remote-verification-cleanup.md)
 - [Testbox execution](../docs/protocol/remote-verification-testbox.md)
 - [Dependency security](../docs/protocol/dependency-security.md)
 - [Baseline dependency audit](../docs/protocol/dependency-audit-baseline.md)

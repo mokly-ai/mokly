@@ -3,7 +3,8 @@
 use thiserror::Error;
 
 use crate::check::request::DependencyAudit;
-use crate::remote::cleanup::{BoxCleanup, CleanupGuard};
+use crate::remote::cleanup::contracts::BoxCleanup;
+use crate::remote::cleanup::guard::CleanupGuard;
 use crate::remote::contracts::Dependencies;
 use crate::remote::error::{self, Result};
 use crate::remote::reporting::warning;

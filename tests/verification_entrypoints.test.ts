@@ -34,8 +34,18 @@ test("npm test and the strict gate share recursive unit discovery", async () => 
   );
   assert.equal(
     packageJson.scripts["test:unit"],
-    "npm run prepare:verification && node scripts/verification/run-unit-dev.mjs",
+    "npm run prepare:unit && node scripts/verification/run-unit-dev.mjs",
     "npm test must use the developer runner, not shell globs that silently skip root-level unit files",
+  );
+  assert.equal(
+    packageJson.scripts["prepare:unit"],
+    "npm run prepare:verification && node scripts/verification/example-snapshot.mjs",
+    "unit preparation must add the example compilation snapshot to the ordinary preparation",
+  );
+  assert.equal(
+    packageJson.scripts["prepare:verification"],
+    "node scripts/turbo-run.mjs example:build",
+    "package, browser, and hydration suites never read the snapshot",
   );
   assert.equal(
     packageJson.scripts["test:prepared"],
@@ -59,6 +69,19 @@ test("npm test and the strict gate share recursive unit discovery", async () => 
       `${entrypoint} must keep the ${policy} skip policy; test:prepared rejects skipped tests`,
     );
   }
+  const runner = await fs.readFile(
+    path.join(repositoryRoot, "scripts/verification/unit-runner.mjs"),
+    "utf8",
+  );
+  assert.ok(
+    runner.includes('await requirePrepared(repositoryRoot, "unit");'),
+    "both unit runners must require the example compilation snapshot",
+  );
+  assert.doesNotMatch(
+    runner,
+    /example-snapshot\.mjs|dist\//u,
+    "the unit runner checks that the snapshot exists and never imports the compiler",
+  );
 });
 
 test("unit discovery never loads a file from Playwright's testDir", async () => {
@@ -148,6 +171,7 @@ test("public package and test wrappers preserve caller arguments through nested 
         scripts: {
           build: 'node -e ""',
           "prepare:verification": 'node -e ""',
+          "prepare:unit": 'node -e ""',
           test: scripts.test,
           "test:unit": scripts["test:unit"],
           "package:check": scripts["package:check"],

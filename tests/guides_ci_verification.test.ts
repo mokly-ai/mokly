@@ -63,7 +63,7 @@ test("test repository inputs are deterministic and title types stay fixed", () =
     /tests\/ci_workflow_remote_state\.test\.ts.*text check.*command scanner in.*tests\/helpers\/remote_state_commands\.ts.*cannot see commands inside scripts that a step calls/u,
   );
   assert.match(verification, /This type list is fixed/u);
-  assert.match(verification, /examples in `AGENTS\.md`/u);
+  assert.match(verification, /asserts the list directly/u);
   assert.match(verification, /does not derive policy from Git history/u);
   assert.doesNotMatch(
     verification,

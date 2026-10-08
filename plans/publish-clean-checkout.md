@@ -2,9 +2,9 @@
 
 Status: Completed. [PR #168](https://github.com/mokly-ai/mokly/pull/168) merged on
 2026-10-07. Review finding #1 was resolved by
-[PR #165](https://github.com/mokly-ai/mokly/pull/165). Review finding #2 remains
-open. The user must choose whether to fix or remove the watched page/PDF test
-in a separate branch.
+[PR #165](https://github.com/mokly-ai/mokly/pull/165). Review finding #2 was
+resolved by [PR #172](https://github.com/mokly-ai/mokly/pull/172). No review
+finding remains open.
 
 ## Contract And Decisions
 
@@ -119,8 +119,8 @@ Run focused tests during development. Run the complete gate before delivery.
       the review-fix rule in `AGENTS.md`: fix `Auto-fix: yes` findings, run checks,
       commit and push, then review once more. Fix new auto-fix findings once more.
       Report fixed findings and open decisions. Record each open finding here.
-  - Open #1 (Low, test, small): `verification_unit_interrupt.test.ts` read `''` instead of `ready`; focused and final complete reruns passed; suspect marker creation before its content is ready; recommend a separate fix; Auto-fix: no.
-  - Open #2 (Low, test, small): `watched_authored_closure.test.ts` read `Not found` instead of `%PDF-1.4\nsecond`; focused and final complete reruns passed; suspect resource readiness after a watcher update; recommend a separate fix; Auto-fix: no.
+  - Open #1 (Low, test, small): `verification_unit_interrupt.test.ts` read `''` instead of `ready`; focused and final complete reruns passed; suspect marker creation before its content is ready; recommend a separate fix; Auto-fix: no. Resolved by [PR #165](https://github.com/mokly-ai/mokly/pull/165).
+  - Open #2 (Low, test, small): `watched_authored_closure.test.ts` read `Not found` instead of `%PDF-1.4\nsecond`; focused and final complete reruns passed; suspect resource readiness after a watcher update; recommend a separate fix; Auto-fix: no. Resolved by [PR #172](https://github.com/mokly-ai/mokly/pull/172): a reload made the child server drop its checked closure until the background pass completed.
 
 Milestone 5 is completed. Commit `38c17a5` contains the implementation. The
 post-push review found no implementation defect and no auto-fix finding. The
