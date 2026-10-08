@@ -6,7 +6,8 @@ use std::sync::{Arc, Mutex};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::check::request::DependencyAudit;
-use crate::remote::cleanup::{BoxCleanup, CleanupGuard};
+use crate::remote::cleanup::contracts::BoxCleanup;
+use crate::remote::cleanup::guard::CleanupGuard;
 use crate::remote::contracts::*;
 use crate::remote::runner::DefaultRemoteRunner;
 
@@ -15,9 +16,16 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
     let events = Arc::new(Mutex::new(Vec::new()));
     let downloads = events.clone();
     let statuses = events.clone();
+    let closes = events.clone();
     let stops = events.clone();
     let cancels = events.clone();
     let shared = Arc::new(Unimock::new((
+        BlacksmithDisconnectMock
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, id| {
+                closes.lock().unwrap().push(format!("close:{id}"));
+                Ok(Disconnection::Closed)
+            })),
         BlacksmithRunMock
             .each_call(matching!(_, _, _))
             .answers(&|_, _, _, _| {
@@ -110,6 +118,10 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
     let events = events.lock().unwrap();
     assert!(events.iter().any(|event| event == "download:tbx_unit"));
     for id in boxes {
+        let close = events
+            .iter()
+            .position(|event| event == &format!("close:{id}"))
+            .unwrap();
         let status = events
             .iter()
             .position(|event| event == &format!("status:{id}"))
@@ -119,5 +131,13 @@ fn command_workers_download_and_stop_before_the_execution_phase_returns() {
             .position(|event| event == &format!("stop:{id}"))
             .unwrap();
         assert!(status < stop);
+        assert!(close < status);
+        assert_eq!(
+            events
+                .iter()
+                .filter(|event| **event == format!("close:{id}"))
+                .count(),
+            1
+        );
     }
 }

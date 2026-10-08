@@ -1,6 +1,6 @@
 # Remote Verification Review Follow-Up
 
-Status: Active. No pull request exists yet. Milestones 1 to 6 are complete. The review is complete; six Low findings await the user's decision. The plan closes when its PR merges.
+Status: Completed. [PR #164](https://github.com/mokly-ai/mokly/pull/164) merged on 2026-10-07. Six Low review findings still await the user's decision; they are listed under the Milestone 6 review TODO.
 
 Fix the eleven open findings from the post-push review of
 [Blacksmith remote verification](./blacksmith-remote-verification.md)

@@ -99,7 +99,7 @@ pub(crate) trait Git: Send + Sync {
 }
 
 /// Blacksmith command boundary with secret-safe authentication.
-#[cfg_attr(test, unimock::unimock(api = [BlacksmithVersionMock, BlacksmithLoginMock, BlacksmithListMock, BlacksmithWarmupMock, BlacksmithRunMock, BlacksmithDownloadMock, BlacksmithStatusMock, BlacksmithStopMock]))]
+#[cfg_attr(test, unimock::unimock(api = [BlacksmithVersionMock, BlacksmithLoginMock, BlacksmithListMock, BlacksmithWarmupMock, BlacksmithRunMock, BlacksmithDownloadMock, BlacksmithDisconnectMock, BlacksmithStatusMock, BlacksmithStopMock]))]
 pub(crate) trait Blacksmith: Send + Sync {
     /// Read the CLI version.
     fn version(&self) -> Result<String>;
@@ -113,10 +113,21 @@ pub(crate) trait Blacksmith: Send + Sync {
     fn run(&self, id: &str, command: &str, log: Option<&Path>) -> Result<Output>;
     /// Download one required report.
     fn download(&self, id: &str, source: &str, target: &Path) -> Result<()>;
+    /// Close the shared SSH connection without changing the box's stop state.
+    fn disconnect(&self, id: &str) -> Result<Disconnection>;
     /// Read status before stopping a box.
     fn status(&self, id: &str) -> Result<String>;
     /// Stop one warmed box even after an interrupt.
     fn stop(&self, id: &str) -> Result<()>;
+}
+
+/// Whether the CLI's shared SSH connection was closed or absent before cleanup.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum Disconnection {
+    /// The close succeeded or the socket disappeared during a failed close.
+    Closed,
+    /// The control directory or socket was absent before the close attempt.
+    Absent,
 }
 
 /// Optional GitHub workflow cancellation.

@@ -51,7 +51,17 @@ Warmup selects a 30-minute idle timeout. Readiness still uses `10m`.
 The pinned action does not detect the SSH session in this environment.
 Only the start of each `testbox run` resets the observed idle timer.
 Download a report as its command ends. Then clean up that box at once under
-the [cleanup contract](./remote-verification.md#cleanup-and-interrupts).
+the [cleanup contract](./remote-verification-cleanup.md#cleanup-and-interrupts).
+
+Blacksmith's "Complete runner" step runs `/job_completed.sh`.
+It waits for open SSH sessions before shutdown. Blacksmith bills that wait.
+CLI 0.4.65 uses `ControlMaster=auto`, `ControlPersist=300` and a control
+socket under `~/.blacksmith/c/`. Its shared connection stays open after a
+command ends. The [close step](./remote-verification-cleanup.md#close-the-shared-ssh-connection)
+defines the socket name and the local command that closes it.
+CI jobs and Testboxes that reach the 30-minute job limit have no open SSH
+connection at job end. Their "Complete runner" step takes 0 to 1 seconds.
+
 Key login saves the key in the local CLI credential file.
 It replaces any saved login for the same organization.
 The [key contract](./remote-verification.md#key-and-cli-handling) names that file.
@@ -228,5 +238,6 @@ identity. The final local fingerprint check rejects changes made during the run.
 ## Related Docs
 
 - [Protocol index](./README.md)
+- [Cleanup and interrupts](./remote-verification-cleanup.md)
 - [CI workflow graph](./ci-workflow.md#testbox-workflow-target)
 - [CI dependency cache and security](./ci-verification-security.md)
