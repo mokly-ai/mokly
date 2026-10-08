@@ -24,6 +24,20 @@ function isTeardownHook(node) {
   );
 }
 
+/** Identify the cleanup owner passed to a fileFixture setup callback. */
+function fixtureOwner(node) {
+  const call = node.parent;
+  if (
+    call?.type !== "CallExpression" ||
+    call.callee.type !== "Identifier" ||
+    call.callee.name !== "fileFixture" ||
+    call.arguments[0] !== node ||
+    node.params[0]?.type !== "Identifier"
+  )
+    return undefined;
+  return node.params[0].name;
+}
+
 export default {
   meta: {
     type: "problem",
@@ -39,8 +53,8 @@ export default {
   },
   create(context) {
     const scopes = [];
-    function enter() {
-      scopes.push({ fixtureStarts: [], hooks: [] });
+    function enter(node) {
+      scopes.push({ fixtureStarts: [], hooks: [], owner: fixtureOwner(node) });
     }
     function exit() {
       const { fixtureStarts, hooks } = scopes.pop();
@@ -63,7 +77,11 @@ export default {
           fixtureHelpers.has(node.callee.name)
         )
           scope.fixtureStarts.push(node.range[0]);
-        else if (isTeardownHook(node)) scope.hooks.push(node);
+        else if (isTeardownHook(node)) {
+          const object = node.callee.object;
+          if (object.type !== "Identifier" || object.name !== scope.owner)
+            scope.hooks.push(node);
+        }
       },
     };
   },

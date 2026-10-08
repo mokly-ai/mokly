@@ -123,16 +123,19 @@ dependent servers, workers, watchers, and other runtime resources in reverse
 registration order before removing its workspace. Concurrent or repeated fixture
 removal shares one teardown, and a dependent cleanup failure retains the
 workspace for diagnosis. Tests that create a runtime after obtaining a shared
-fixture register that cleanup through the fixture's `beforeRemove` lifecycle;
-they must not add a later test-runner teardown hook that can race workspace
-removal. The ESLint rule `mokly/no-late-fixture-teardown` enforces this
+fixture, including `designLibraryFixture`, register that cleanup through the
+fixture's `beforeRemove` lifecycle. They must not add a later test-runner
+teardown hook that can race workspace removal. The ESLint rule
+`mokly/no-late-fixture-teardown` enforces this
 ownership rule in every JavaScript and TypeScript module under `tests/`. Within
 the module scope and within each function, it reports a member call named
 `after`, such as `t.after(...)`, that starts at or after the first
 `changedFixture`, `componentReviewFixture` or `designLibraryFixture` call in
 the same scope. A call inside a nested function belongs only to that
-function's scope. Failed browser and hydration jobs retain only the uploaded
-diagnostic artifacts selected by the workflow. Jobs must not delete, overwrite
+function's scope. In the first setup callback passed to `fileFixture`, an
+`after` call on its first parameter is exempt: it registers fixture-owned cleanup.
+Failed browser and hydration jobs retain only the uploaded diagnostic artifacts
+selected by the workflow. Jobs must not delete, overwrite
 or reuse another job's writable output.
 
 A fixture shared across a test file registers its teardown synchronously when

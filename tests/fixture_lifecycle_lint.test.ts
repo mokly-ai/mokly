@@ -37,6 +37,16 @@ test("review", async (t) => {
   t?.after(() => review.close());
 });
 test("chained", () => changedFixture(owner).after(() => undefined));
+const owned = fileFixture(async (owner) => {
+  const f = await designLibraryFixture(owner);
+  other.after(async () => {});
+  return f;
+});
+test("test owner", async (t) => {
+  const f = await designLibraryFixture(t);
+  t.after(async () => {});
+  return f;
+});
 `;
 const acceptedSample = `test("early", async (t) => {
   t.after(() => cleanup());
@@ -56,6 +66,11 @@ test("outer", async (t) => {
 const expression = function () { return designLibraryFixture(owner); };
 const object = { setup(t) { return designLibraryFixture(t); }, set value(t) { designLibraryFixture(t); } };
 class Accessors { set value(t) { designLibraryFixture(t); } static create() { return designLibraryFixture(owner); } }
+const owned = fileFixture(async (owner) => {
+  const f = await designLibraryFixture(owner);
+  owner.after(async () => {});
+  return f;
+});
 `;
 
 async function fixtureMessages(source: string, filePath: string) {
@@ -83,7 +98,7 @@ for (const filePath of probes) {
     await requireLintRule(filePath, teardownRule);
     assert.deepEqual(
       await fixtureMessages(lateSample, filePath),
-      [3, 6, 9, 11].map((line) => ({
+      [3, 6, 9, 11, 14, 19].map((line) => ({
         ruleId: teardownRule,
         line,
         message: teardownMessage,

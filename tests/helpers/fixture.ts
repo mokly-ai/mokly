@@ -1,11 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { ownedWorkspace, type FixtureCleanup } from "./owned_workspace.js";
+
+export type { FixtureCleanup } from "./owned_workspace.js";
+
 /** Repository root containing the package under test. */
 export const repositoryRoot = path.resolve(import.meta.dirname, "../..");
-
-/** Dependent resource that must close before a fixture workspace is removed. */
-export type FixtureCleanup = () => Promise<void> | void;
 
 /** One isolated consumer repository under the ignored test context. */
 export interface TestFixture {
@@ -48,23 +49,13 @@ ${options?.extraConfig ? `  ${options.extraConfig}\n` : ""}  review: { outDir: "
 });
 `,
   );
-  const cleanups: FixtureCleanup[] = [];
-  let removal: Promise<void> | undefined;
   return {
-    beforeRemove(cleanup) {
-      if (removal)
-        throw new Error("cannot register cleanup after fixture removal starts");
-      cleanups.push(cleanup);
-    },
+    ...ownedWorkspace(root),
     configPath,
     entriesDir,
     entryPath,
     mockupsDir,
     generatedDir: path.join(mockupsDir, "mokly-generated"),
-    remove() {
-      removal ??= removeOwnedFixture(root, cleanups);
-      return removal;
-    },
     root,
   };
 }
@@ -72,24 +63,6 @@ ${options?.extraConfig ? `  ${options.extraConfig}\n` : ""}  review: { outDir: "
 /** Remove a synthetic consumer after a test. */
 export function removeFixture(fixture: TestFixture): Promise<void> {
   return fixture.remove();
-}
-
-async function removeOwnedFixture(
-  root: string,
-  cleanups: readonly FixtureCleanup[],
-): Promise<void> {
-  const failures: unknown[] = [];
-  for (const cleanup of [...cleanups].reverse()) {
-    try {
-      await cleanup();
-    } catch (error) {
-      failures.push(error);
-    }
-  }
-  if (failures.length === 1) throw failures[0];
-  if (failures.length > 1)
-    throw new AggregateError(failures, "fixture dependent cleanup failed");
-  await fs.promises.rm(root, { force: true, recursive: true });
 }
 
 /** Explicitly register an imported complete-document helper in a test consumer. */

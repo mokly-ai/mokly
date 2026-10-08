@@ -17,6 +17,7 @@ import type { ReadOnlyReviewRepository } from "../../dist/review/repository.js";
 import { exampleCompilation } from "./example_compilation.js";
 import { copyExampleSources } from "./example_sources.js";
 import { repositoryRoot } from "./fixture.js";
+import { ownedWorkspace } from "./owned_workspace.js";
 
 /**
  * Copy the actual consumer so edits never mutate the working catalogue. The
@@ -33,7 +34,8 @@ export async function designLibraryFixture(t: {
   const root = await fs.mkdtemp(
     path.join(repositoryRoot, ".context/design-library-test-"),
   );
-  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const owned = ownedWorkspace(root);
+  t.after(() => owned.remove());
   await copyExampleSources(root);
   const config = await loadConfig(path.join(root, "examples/basic"));
   const before = await exampleCompilation();
@@ -135,6 +137,7 @@ export async function designLibraryFixture(t: {
     };
   }
   return {
+    beforeRemove: owned.beforeRemove,
     root,
     config,
     before,
