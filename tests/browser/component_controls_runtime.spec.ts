@@ -220,25 +220,22 @@ test("component navigation discards a pending edit owned by the previous route",
     const response = await route.fetch();
     received();
     await held;
-    await route.fulfill({ response }).catch(() => undefined);
+    await route.fulfill({ response });
   });
-  try {
-    await page.getByLabel("Label", { exact: true }).fill("Previous route");
-    await requested;
-    await page.locator('[data-nav-row][data-entry-id="alternate"]').click();
-    await expect(
-      page.getByRole("heading", { name: "Alternate", exact: true }),
-    ).toBeVisible();
-    await expect(page.getByLabel("Label", { exact: true })).toHaveValue(
-      "Continue",
-    );
-    release();
-    await expect(page.getByLabel("Label", { exact: true })).toHaveValue(
-      "Continue",
-    );
-  } finally {
-    release();
-  }
+  await page.getByLabel("Label", { exact: true }).fill("Previous route");
+  await requested;
+  await page.locator('[data-nav-row][data-entry-id="alternate"]').click();
+  await expect(
+    page.getByRole("heading", { name: "Alternate", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Label", { exact: true })).toHaveValue(
+    "Continue",
+  );
+  release();
+  await page.unrouteAll({ behavior: "wait" });
+  await expect(page.getByLabel("Label", { exact: true })).toHaveValue(
+    "Continue",
+  );
 });
 
 test("changing context while the first edit is pending cannot apply an obsolete preview", async ({
