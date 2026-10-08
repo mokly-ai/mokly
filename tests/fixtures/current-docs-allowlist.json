@@ -1,5 +1,155 @@
 [
   {
+    "file": "docs/dev/git.md",
+    "statement": "If no PR exists yet, save the justifications under `.context/<plan-name>/`, name that file in the active plan milestone, and copy them into the PR description when it opens.",
+    "reason": "#171 moved the mainline preservation procedure from AGENTS.md into this rule doc. It defines where merge justifications and plan history belong; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/git.md",
+    "statement": "In an active plan, completed milestones and checked TODOs are history; all other content is live.",
+    "reason": "#171 moved the mainline preservation procedure from AGENTS.md into this rule doc. It defines where merge justifications and plan history belong; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Rules for the implementation plan files under `plans/`.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "A plan records the work needed to align the implementation with the protocol docs, its milestones, and its TODOs.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Every milestone and its required TODOs must be completable on the branch before the PR merges or by the merge itself.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Never add a milestone or required TODO that depends on the PR already being merged.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- Put post-merge work, including additional tasks and smoke tests that require the merged or deployed change, in a `## Post-merge follow-up (non-blocking)` section outside the milestones.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Items in this section do not affect milestone or plan completion and must not prevent the plan from being marked completed when the PR merges.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- Keep smoke tests that can and should run before merge as required milestone TODOs under the normal testing rules.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- Each plan should break up the work into concrete units called Milestones.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "At the end of each milestone there should be a functioning product.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- The first milestone in every plan must update the relevant documentation and protocol/spec documents so they define the complete contract for the work that follows.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- When a plan requires mockup work, its second milestone must be the initial mockup milestone, immediately after the documentation and protocol/spec milestone.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Include all mockup work known during initial planning in that single milestone.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Additional mockup milestones may be added later when a genuine mockup gap is discovered during implementation; do not add speculative duplicate mockup milestones during initial planning.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- When a plan includes backend changes, mockup or design updates, and UI implementation, keep each area in its own milestone.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Mockup/design work and UI implementation must be separate milestones, with mockups completed before UI implementation begins.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Do not combine backend, mockup/design, or UI implementation tasks in the same milestone.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- Milestones that include UI or mockup work must include an explicit tag line immediately below the milestone heading: `Tags: ui` or `Tags: mockup`.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "A milestone tagged `ui` or `mockup` must not include backend work.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "If backend work is found to be missing while implementing a `ui` or `mockup` milestone, always create new milestones; never add the backend work to the current milestone, never add it to an existing milestone, and never move the blocked UI/mockup TODOs into an existing milestone.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "First create a new backend milestone immediately after the current milestone for the required backend work.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Then create a new tagged UI/mockup milestone immediately after that backend milestone and move the blocked UI/mockup TODOs there, preserving their incomplete status.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- Milestones should have a short summary of what it includes",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- All milestones have TODO checklists, lists of tasks that must be completed to achieve the milestone.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- Any time a new TODO is discovered during implementation, it should be added under the relevant milestone (just add the new TODO, and then continue with the active TODO)",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Under the related milestone, add one line that names the file.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "A plan keeps only its summary, milestones, TODOs, contracts, decisions, user approvals, and short review summaries.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- Mark a milestone as completed when all the tasks are completed, do not re-open existing milestones - create a new milestone if new tasks are needed that do not fit into an existing milestone",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/review.md",
+    "statement": "- Every implementation plan must end with the post-check commit-and-push step, followed by a review item that uses [`docs/implementation-review-prompt.md`](../implementation-review-prompt.md) to review the complete local diff against `origin/main`; run the review only after the push, then apply the review-fix rule below",
+    "reason": "#171 moved the review rules from AGENTS.md into this rule doc. It requires the review item at the end of each plan; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
     "file": "docs/guides/authoring/config.md",
     "statement": "`review.sharedImpact` is removed: if the key is still present, Mokly warns and ignores it.",
     "reason": "Consumer migration instruction: the obsolete config key is ignored with a warning."
