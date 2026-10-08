@@ -151,9 +151,7 @@ The [cleanup contract](../docs/protocol/remote-verification-cleanup.md) defines
 cleanup rules. The full cleanup contract is implemented: close the shared SSH
 connection, cancel a known run once, then check status and stop. Cleanup
 command errors retain one bounded diagnostic line. The complete default remote
-smoke check passes. The cleanup contract is delivered. The
-[prompt shutdown plan](../plans/testbox-prompt-shutdown.md) records verification
-and open findings.
+smoke check passes. The cleanup contract is delivered.
 Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
 Each command worker downloads its report and cleans up its box when it ends.
 It does not wait for other commands. Final cleanup covers only remaining boxes.
@@ -305,3 +303,8 @@ They do not assert elapsed time.
 - [Dependency security](../docs/protocol/dependency-security.md)
 - [Baseline dependency audit](../docs/protocol/dependency-audit-baseline.md)
 - [Dependency update pull request](../docs/protocol/dependency-audit-update-pr.md)
+
+## Delivery Status
+
+The [prompt shutdown plan](../plans/testbox-prompt-shutdown.md) records verification
+and open findings.
