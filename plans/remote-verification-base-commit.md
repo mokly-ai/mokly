@@ -30,6 +30,7 @@ aggregate script or the Blacksmith CLI.
 Contract owners:
 
 - [Remote verification](../docs/protocol/remote-verification.md).
+- [Base commit sync](../docs/protocol/remote-verification-base.md).
 - [Testbox execution](../docs/protocol/remote-verification-testbox.md).
 - [Cleanup and interrupts](../docs/protocol/remote-verification-cleanup.md).
 - [CI verification](../docs/protocol/ci-verification.md) for the report
@@ -54,11 +55,13 @@ of the [Blacksmith remote verification plan](./blacksmith-remote-verification.md
 4. Suite reports take their commit from `GITHUB_SHA` or `git rev-parse HEAD`
    on the box and reject a mismatch. The wrapper removes `GITHUB_SHA`. The
    report commit is therefore always the box `HEAD`.
-5. The repository ratchets diff from `git merge-base HEAD origin/main`. When
-   the box `HEAD` is a commit of the branch, the change set equals the
-   branch's changes. When the box `HEAD` is the tip of `main` and the branch
-   base is older, the change set also contains the newer `main` changes in
-   reverse. The base commit must therefore be an ancestor of local `HEAD`.
+5. The repository ratchets and baseline dependency audit use
+   `M = git merge-base HEAD origin/main`. An ancestor of local `HEAD` alone
+   does not preserve M after a local, unpushed merge of `main`. The old
+   pushed branch tip can have fewer commits ahead than M. The base must also
+   contain M when it exists. Then `git merge-base <base> origin/main` equals
+   M, so the box uses the checkout's ratchet base. A newer main tip that is
+   not an ancestor of local `HEAD` would also add reversed main changes.
 6. The protocol lists remote execution without a pushed `HEAD` and copying
    unpushed commits as out of scope. This plan removes both items.
 7. `remote-verification-testbox.md` has 250 lines, the protocol cap. The new
@@ -66,26 +69,38 @@ of the [Blacksmith remote verification plan](./blacksmith-remote-verification.md
 
 ## Decisions
 
-1. **Base commit.** The base commit is the nearest ancestor of local `HEAD`
-   that an `origin` ref contains. Read the local `refs/remotes/origin/*` refs
-   only. Do not fetch. For each origin ref, take `git merge-base HEAD <ref>`
-   and skip refs without a common ancestor. Reduce the candidates with
-   `git merge-base --independent`. When several remain, choose the one with
-   the fewest commits in `git rev-list --count <candidate>..HEAD`, then the
-   smallest SHA. When an origin ref contains `HEAD`, the base is `HEAD` and
-   the ahead count is 0. When no origin ref shares history with `HEAD`, there
-   is no base.
+1. **Base commit.** Select a pushed ancestor of local `HEAD` that satisfies
+   the main merge-base rule below. Read the local `refs/remotes/origin/*` refs
+   only. Do not fetch. Skip symbolic refs, including `origin/HEAD`. For each
+   origin ref, take `git merge-base HEAD <ref>` and skip refs without a common
+   ancestor. Deduplicate the candidates. Reduce them with
+   `git merge-base --independent`. When `refs/remotes/origin/main` exists and
+   shares history with `HEAD`, compute
+   `M = git merge-base HEAD refs/remotes/origin/main`. Keep only candidates
+   for which `git merge-base --is-ancestor M <candidate>` succeeds. M itself,
+   or a candidate that contains it, always remains. Then choose the candidate
+   with the fewest commits in `git rev-list --count <candidate>..HEAD`, then
+   the smallest SHA. Accept only full 40-character lowercase hex SHAs from
+   Git output. Pass SHAs and paths as separate process arguments. When an
+   origin ref contains `HEAD`, the base is `HEAD` and the ahead count is 0.
+   When no origin ref shares history with `HEAD`, there is no base.
 2. **Snapshot worktree.** Xtask builds a tree object from the checkout: a
    temporary index seeded with `git read-tree HEAD`, then `git add -A`, then
    `git write-tree`. Tracked paths that match an ignore rule stay included.
    Xtask adds a detached linked worktree at the base commit under
-   `.context/verification-snapshots/<run>/`, loads the tree into it with
+   `.context/verification-snapshots/<run>/`, with
+   `-c core.hooksPath=/dev/null` to disable checkout hooks. It loads the tree with
    `git read-tree -u --reset <tree>`, then resets the snapshot index to the
    base. Every difference is then unstaged or untracked, like a developer
    checkout. The checkout's `HEAD`, index and files never change, and a
    detached local `HEAD` works the same way. Before warmup, the snapshot
    fingerprint must equal the checkout fingerprint. A different value is a
-   preparation failure.
+   preparation failure. Put the temporary index beside the snapshot at
+   `.context/verification-snapshots/<run>.index`. Set `GIT_INDEX_FILE` only
+   on the three checkout tree-build requests. If `Request` needs an environment
+   field, make it typed and retain shared secret variable removal. All snapshot
+   build Git requests use `cancellable: false`. Check the interrupt flag
+   after the build, before warmup.
 3. **Sync source.** The probe and the 11 suite commands run with the snapshot
    directory as the working directory, so the CLI fetches the base commit and
    copies the differences. Warmup, download, disconnect, status and stop keep
@@ -100,7 +115,10 @@ of the [Blacksmith remote verification plan](./blacksmith-remote-verification.md
    before warmup and adds `base=<base>` to the summary line. It also writes
    `identity.json` with the run, `HEAD`, base, ahead count and fingerprint to
    `.context/verification-logs/remote/<run>/`, not the report directory, so
-   the aggregate still sees exactly nine reports.
+   the aggregate still sees exactly nine reports. Model the identity as a typed
+   struct with `run`, `head`, `base`, `ahead` and `fingerprint` fields. Use
+   serde with derive and serde_json, added with `cargo add` without versions,
+   or a pure formatter over validated fields. Test the exact file bytes.
 6. **Executor decision.** The `Published` check becomes a `Base` check. No
    base selects local mode in `auto` with the warning
    `no origin ref shares history with HEAD; fetch origin or push the branch`,
@@ -110,13 +128,24 @@ of the [Blacksmith remote verification plan](./blacksmith-remote-verification.md
    snapshot.
 7. **Snapshot cleanup.** Every path removes the snapshot and the temporary
    index: success, preparation failure, interrupt and panic unwind. Use
-   `git worktree remove --force` and then `git worktree prune`. A failed
-   removal prints one warning with the manual command and never fails the
-   check. Logs stay.
+   `git worktree remove --force --force <path>`. Always run
+   `git worktree prune`, also when the path is already gone. Remove the
+   temporary index too. All removal Git requests use `cancellable: false`.
+   Attempt every cleanup step even if an earlier step fails. A failed step
+   prints one warning that names the manual worktree removal, prune and index
+   removal commands. It never fails the check. Logs stay.
 8. **Rules.** The agent rules keep the order gate, commit, push. The xtask
-   README sentence `Push local HEAD before a remote check` is replaced by the
-   base commit rule. The `MOKLY_TESTBOX_REF` note says that the ref changes
-   neither the fingerprint nor the base commit.
+   README describes the implemented code at every commit. Keep
+   `Push local HEAD before a remote check` until Milestone 3 changes the
+   policy. Add snapshot behavior text in Milestone 2. Replace the push sentence
+   and the `MOKLY_TESTBOX_REF` identity note with the base rule in Milestone 3.
+   Protocol Delivery Status can name the approved target and link this plan
+   until the implementation lands.
+9. **Known limit.** A new file since the base that is tracked in `HEAD` and
+   force-added despite an ignore rule becomes untracked and ignored in the
+   snapshot. The CLI does not sync it. Its fingerprint then differs from the
+   checkout, so preparation fails and `auto` falls back to local. Document the
+   limit. Add no code for it.
 
 ### Contingency
 
@@ -137,53 +166,54 @@ the user's approval.
   another clone. The probe fails and the existing preparation fallback applies.
 - Fetching `origin` inside xtask.
 
-## Milestone 1: Spike and contract
+## Milestone 1: Spike and contract — completed
 
 The spike proves the sync behavior with a real box. The protocol then defines
 the complete contract for the work that follows.
 
 Evidence: `.context/remote-verification-base-commit/spike.md`.
 
-- [ ] In a scratch clone of this repository, create an unpushed commit that
+- [x] In a scratch clone of this repository, create an unpushed commit that
       modifies, adds, deletes and renames a file, and add one uncommitted
       change and one untracked file on top. Compute the base commit with the
       Decision 1 commands and the checkout fingerprint.
-- [ ] Build the snapshot worktree with the Decision 2 commands. Check that
+- [x] Build the snapshot worktree with the Decision 2 commands. Check that
       `git status` in the checkout is unchanged, that the snapshot fingerprint
       equals the checkout fingerprint and that `git status` in the snapshot
       shows only unstaged and untracked differences.
-- [ ] Warm up one box from `main` with
+- [x] Warm up one box from `main` with
       `blacksmith testbox warmup blacksmith-testbox.yml --ref main --idle-timeout 30`.
       Run the probe command from the snapshot directory with
       `blacksmith testbox run`. Require the checkout fingerprint and the base
       commit in its output. This proves that the CLI syncs a linked worktree
       and propagates the deletion and the rename.
-- [ ] On the box, run `git merge-base HEAD origin/main` and
+- [x] On the box, run `git merge-base HEAD origin/main` and
       `git status --short` through `blacksmith testbox run`. Record that the
       change set equals the branch's changes.
-- [ ] Remove the snapshot with the Decision 7 commands. Check that the
+- [x] Remove the snapshot with the Decision 7 commands. Check that the
       checkout, `git worktree list` and the reflog are unchanged. Stop the box
       and close its connection under the cleanup contract.
-- [ ] Record the spike in `.context/remote-verification-base-commit/spike.md`.
+- [x] Record the spike in `.context/remote-verification-base-commit/spike.md`.
       Apply the contingency rule if any step fails.
-- [ ] Add `docs/protocol/remote-verification-base.md`, titled
+- [x] Add `docs/protocol/remote-verification-base.md`, titled
       `Remote Verification: Base Commit Sync`, as a continuation of
       `remote-verification.md`. Define the base commit rule, the snapshot
       worktree steps, the sync source, the probe identity, the identity
       output and file, the executor decision, the snapshot cleanup and the
       no-base fallback. Keep it at or below 250 lines and free of plan
       milestone references.
-- [ ] Update `remote-verification.md`: the `Base` row of the executor table,
+- [x] Update `remote-verification.md`: the `Base` row of the executor table,
       the base lookup commands, steps 1 and 3 of the run sequence, the
       `MOKLY_TESTBOX_REF` note and the out-of-scope list. Link the new page.
-- [ ] Update `remote-verification-testbox.md`: the sync probe section and the
+- [x] Update `remote-verification-testbox.md`: the sync probe section and the
       aggregate paragraph that requires the box `HEAD` to equal local `HEAD`.
       Keep the page at or below 250 lines.
-- [ ] Add the new page to the protocol index in `docs/protocol/README.md` and
+- [x] Add the new page to the protocol index in `docs/protocol/README.md` and
       to the split page list in `tests/protocol_split_links.test.ts`.
-- [ ] Update the xtask README quick start and behavior text for the base
-      commit rule and the snapshot.
-- [ ] Run the Markdown link test, the protocol structure, split-link and
+- [x] Link the base sync contract from the xtask README. Keep its quick start
+      and behavior text true for the current code, including the pushed-HEAD
+      requirement. Add the new behavior in the milestone that implements it.
+- [x] Run the Markdown link test, the protocol structure, split-link and
       history tests, the protocol size check and `npm run format:check`.
       Commit and push.
 
@@ -225,8 +255,20 @@ Evidence: `.context/remote-verification-base-commit/milestone-2.md`.
       only warns.
 - [ ] Add adapter tests in the existing adapter test style for the exact
       `git` arguments of the base lookup, the snapshot build and the snapshot
-      removal, including the temporary index variable.
-- [ ] Update the xtask README key code section for the new module.
+      removal, including the scoped temporary index variable, disabled hooks
+      and non-cancellable requests.
+- [ ] Add real-Git adapter tests in temporary directories for the base rule:
+      pushed `HEAD` with ahead 0; unpushed commits on a pushed branch; a local
+      unpushed merge of `main` with more own commits than main's delta; a rebase
+      onto newer `main` with the old origin branch tip; a stacked branch on a
+      pushed branch; no shared history; symbolic `origin/HEAD` without duplicate
+      candidates; and independent pushed candidates with count and SHA ties.
+- [ ] Add real-Git adapter tests for snapshot creation and removal: deletion,
+      rename, mode change, symbolic link, untracked file, staged change and
+      detached checkout `HEAD`. Require unchanged checkout `HEAD`, index,
+      `git status --porcelain` and `git worktree list` after removal.
+- [ ] Update the xtask README key code section for the new module and its
+      implemented snapshot behavior. Keep the pushed-HEAD policy text.
 - [ ] Run the xtask tests, `cargo fmt --all -- --check`, Clippy and the length
       lints, the local repository gate and the Markdown checks. Commit and
       push.
@@ -245,7 +287,9 @@ Evidence: `.context/remote-verification-base-commit/milestone-3.md` and
       `UnpublishedHead` error.
 - [ ] Update the unit tests for the policy order, the `auto` warning, the
       explicit `remote` error and the `cargo xtask executor` output.
-- [ ] Update the xtask README executor text.
+- [ ] Update the xtask README executor text. Replace the pushed-HEAD
+      requirement with the base rule. State that `MOKLY_TESTBOX_REF` changes
+      neither the fingerprint nor the base commit.
 - [ ] Smoke test from this branch with one unpushed commit that modifies,
       adds, deletes and renames files, plus one uncommitted change. Run the
       complete `cargo xtask check`. Require the remote decision, the identity

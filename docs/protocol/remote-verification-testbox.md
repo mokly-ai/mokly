@@ -7,11 +7,12 @@ Continuation of [Remote Verification](./remote-verification.md).
 The [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
 approves this target. Explicit remote execution, the fingerprint, suite wrapper
 and workflow are implemented. The wrapper selects `--executor local`.
-Workflow validation and both box suite smoke checks pass.
-Main's dependency fixes are merged. The complete explicit remote check passes.
-Automatic remote selection and `cargo xtask executor` are implemented.
-The complete automatic smoke check passes.
+Workflow validation, both box suite smokes and complete explicit and automatic
+checks pass. Main's dependency fixes are merged. Automatic selection and
+`cargo xtask executor` are implemented.
 Workflow verification executes the Testbox scripts instead of matching their text.
+The [base sync plan](../../plans/remote-verification-base-commit.md) approves
+the snapshot and base identity below. Xtask still syncs a pushed checkout `HEAD`.
 
 ## Workflow
 
@@ -114,24 +115,23 @@ Its error contains no usage text. Each script adds its own usage line.
 
 ## Readiness And Sync Probe
 
-`blacksmith testbox run` syncs the local checkout before its command starts.
-It fetches local `HEAD` from GitHub and copies uncommitted, non-ignored files.
-It does not copy Git-ignored files. The synced tree's `rust-toolchain.toml`
-selects the toolchain for the suite commands. A synced tree without that file
-uses the box's default toolchain, so merge `main` into the branch before
-remote verification. The probe command is:
+Run `blacksmith testbox run` from the
+[snapshot worktree](./remote-verification-base.md#snapshot-worktree).
+The CLI fetches its `HEAD`, the base commit, then copies uncommitted,
+non-ignored files. The synced `rust-toolchain.toml` selects the suite toolchain.
+Without it, the box uses its default toolchain. Merge `main` into the branch
+before remote verification. Run this probe from the snapshot directory:
 
 ```bash
 blacksmith testbox run --id <box-id> --wait-timeout 10m "node scripts/verification/source-tree.mjs --expect <fingerprint> --print-head"
 ```
 
 The probe uses `--wait-timeout 10m`. Xtask does not retry it.
-The CLI prints status lines around the command output. Xtask reads the
-fingerprint from the one line that matches `^sha256:[0-9a-f]{64}$`.
-It reads `HEAD` from the one line that matches `^[0-9a-f]{40}$`.
+Read whole lines that match `^sha256:[0-9a-f]{64}$` for the fingerprint or
+`^[0-9a-f]{40}$` for `HEAD`. Ignore other CLI status lines.
 Zero or several matches for either value fail the probe.
-Any nonzero exit, a missing or different fingerprint line, or a missing or
-different `HEAD` line fails the probe phase.
+A nonzero exit, missing or different fingerprint, missing `HEAD`, or `HEAD`
+that differs from the base fails the probe phase.
 Require successful probes on every box before any suite command starts.
 The [executor contract](./remote-verification.md#executor-selection) defines
 fallback at this boundary.
@@ -231,16 +231,16 @@ blacksmith testbox download --id <box-id> .context/verification-reports/remote/<
 Run the existing aggregate after box cleanup:
 
 ```bash
-node scripts/verification/aggregate.mjs --reports .context/verification-reports/remote/<run> --commit <local-head> --runtimes node-22.14.0
+node scripts/verification/aggregate.mjs --reports .context/verification-reports/remote/<run> --commit <base> --runtimes node-22.14.0
 ```
 
 The [existing evidence rules](./ci-verification.md#inventory-and-report-evidence)
 still apply. Keep the report schema unchanged. The aggregate must accept
 exactly nine reports for the expected commit and runtime profile.
 It must prove complete shard coverage and the browser/hydration partition.
-The box `HEAD` must equal local `HEAD`, so the commit checks stay valid.
-The fingerprint covers uncommitted source changes without changing report
-identity. The final local fingerprint check rejects changes made during the run.
+The box `HEAD` and reports name the base; the
+[identity contract](./remote-verification-base.md#identity-output-and-file) records
+checkout `HEAD`. Fingerprints cover source changes and reject edits during the run.
 
 ## Related Docs
 

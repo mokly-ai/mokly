@@ -22,6 +22,7 @@ const pages = [
   "mokly-rendering-generated.md",
   "mokly-watch-runtime.md",
   "npm-release-management.md",
+  "remote-verification-base.md",
 ] as const;
 
 test("every split protocol page is indexed and its relative links resolve", async () => {

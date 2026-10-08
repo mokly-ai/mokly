@@ -15,6 +15,10 @@ The [cleanup contract](./remote-verification-cleanup.md) is fully implemented.
 It closes the shared SSH connection, cancels a known run once before stop and
 keeps one bounded diagnostic line for cleanup command failures.
 The complete default remote smoke check passes with prompt shutdown.
+The [base commit sync plan](../../plans/remote-verification-base-commit.md)
+approves the base lookup, snapshot and identity target below. Xtask currently
+requires a pushed local `HEAD` and syncs the checkout. The
+[base sync contract](./remote-verification-base.md) defines its replacement.
 
 ## Executor Selection
 
@@ -31,22 +35,31 @@ For `auto` and `remote`, check the following conditions in this order.
 The first terminating result decides the executor. The missing-key row lets
 `remote` continue with the current CLI login. Skip key login in that case.
 
-| Condition                                            | `auto`                              | `remote`                        |
-| ---------------------------------------------------- | ----------------------------------- | ------------------------------- |
-| `GITHUB_ACTIONS` is `true`                           | Local                               | Error                           |
-| `BLACKSMITH_ORG_TOKEN` is empty or unset             | Local; one information line         | Use current CLI login; continue |
-| `blacksmith`, `rsync` or `ssh` is missing            | Local; warning with an install hint | Error with an install hint      |
-| Login with the key fails                             | Local; warning                      | Error                           |
-| `blacksmith testbox list` fails                      | Local; warning                      | Error                           |
-| No `refs/remotes/origin/*` ref contains local `HEAD` | Local; warning to push first        | Error                           |
-| Warmup, readiness or sync probe fails                | Stop warmed boxes; then local       | Stop warmed boxes; then error   |
-| All checks pass                                      | Remote                              | Remote                          |
+| Condition                                      | `auto`                              | `remote`                        |
+| ---------------------------------------------- | ----------------------------------- | ------------------------------- |
+| `GITHUB_ACTIONS` is `true`                     | Local                               | Error                           |
+| `BLACKSMITH_ORG_TOKEN` is empty or unset       | Local; one information line         | Use current CLI login; continue |
+| `blacksmith`, `rsync` or `ssh` is missing      | Local; warning with an install hint | Error with an install hint      |
+| Login with the key fails                       | Local; warning                      | Error                           |
+| `blacksmith testbox list` fails                | Local; warning                      | Error                           |
+| Base: no origin ref shares history with `HEAD` | Local; warning to fetch or push     | Error                           |
+| Warmup, readiness or sync probe fails          | Stop warmed boxes; then local       | Stop warmed boxes; then error   |
+| All checks pass                                | Remote                              | Remote                          |
 
-Require this command to print at least one origin ref:
+Look up the base from local origin refs with these command forms:
 
 ```bash
-git for-each-ref --contains HEAD --format=%(refname) refs/remotes/origin/
+git for-each-ref '--format=%(refname) %(symref)' refs/remotes/origin/
+git merge-base HEAD <origin-ref>
+git merge-base --independent <candidate>...
+git merge-base HEAD refs/remotes/origin/main
+git merge-base --is-ancestor <main-merge-base> <candidate>
+git rev-list --count <candidate>..HEAD
 ```
+
+The [base rule](./remote-verification-base.md#base-commit) defines symbolic-ref
+exclusion, common-history handling, the main merge-base filter and the tie-break.
+It also defines the no-base warning. This lookup does not fetch.
 
 Detect `blacksmith`, `rsync` and `ssh` by searching `PATH` for an executable
 file. Do not run those programs to detect them. Run `blacksmith --version`
@@ -105,17 +118,21 @@ defines the local key and remote secret boundary.
 
 ## Environment Variables
 
-| Variable               | Contract                                                                                                                                                        |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BLACKSMITH_ORG_TOKEN` | Local org key. An empty or unset value disables automatic remote selection. Explicit remote mode may use the current CLI login.                                 |
-| `MOKLY_CHECK_EXECUTOR` | Default mode: `auto`, `local` or `remote`. The CLI flag takes precedence. The default is `auto`.                                                                |
-| `MOKLY_TESTBOX_REF`    | Workflow ref for warmup. The default is `main`. Use a branch ref to test the target before merge. It does not change the required source fingerprint or `HEAD`. |
+| Variable               | Contract                                                                                                                                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BLACKSMITH_ORG_TOKEN` | Local org key. An empty or unset value disables automatic remote selection. Explicit remote mode may use the current CLI login.                                  |
+| `MOKLY_CHECK_EXECUTOR` | Default mode: `auto`, `local` or `remote`. The CLI flag takes precedence. The default is `auto`.                                                                 |
+| `MOKLY_TESTBOX_REF`    | Workflow ref for warmup. The default is `main`. Use a branch ref to test the target before merge. It changes neither the source fingerprint nor the base commit. |
 
 ## Remote Run Sequence
 
-Run all local and CLI operations from the workspace root.
+Run local scripts and management commands from the workspace root.
+Run probes and suite commands from the snapshot under the
+[sync-source contract](./remote-verification-base.md#sync-source-and-probe).
 
-1. Read local `HEAD`. Compute the local source-tree fingerprint.
+1. Read local `HEAD` and the base commit. Compute the checkout fingerprint.
+   Build the snapshot and require its fingerprint to match before warmup.
+   Record the [run identity](./remote-verification-base.md#identity-output-and-file).
 2. Warm up 11 boxes in parallel through `blacksmith testbox warmup`.
    Use `.github/workflows/blacksmith-testbox.yml`, `--ref main` and
    `--idle-timeout 30`. Use `MOKLY_TESTBOX_REF` when it is set.
@@ -123,7 +140,7 @@ Run all local and CLI operations from the workspace root.
    box ID per request. Missing, multiple or repeated IDs fail warmup.
 3. Probe every box through `blacksmith testbox run`.
    Allow at most 10 minutes for readiness. The probe must confirm both the
-   expected fingerprint and local `HEAD` on every box.
+   checkout fingerprint and selected base commit on every box.
 4. Start the [11 suite commands](./remote-verification-testbox.md#remote-commands)
    in parallel. Assign one command to each box. No suite may start until
    all probes pass.
@@ -134,8 +151,10 @@ Run all local and CLI operations from the workspace root.
    shared SSH connection, cancel the known GitHub run, then apply status and
    stop rules. Do not wait for another command.
 6. After all commands end, clean up boxes that are not yet stopped.
-7. Run the local report aggregate with local `HEAD` and `node-22.14.0`.
+7. Run the local report aggregate with the base commit and `node-22.14.0`.
 8. Compute the local fingerprint again. Fail if the source tree changed.
+9. Remove the snapshot and temporary index under the
+   [snapshot cleanup contract](./remote-verification-base.md#snapshot-cleanup).
 
 A successful check requires all 11 commands to exit 0. It also requires all
 nine downloads, a valid aggregate and an unchanged local source tree.
@@ -167,6 +186,8 @@ Write each command's standard output and standard error to
 `.context/verification-logs/remote/<run>/<command>.log`.
 For each failed command, print the last 60 log lines and the log path.
 The summary lists command durations and box IDs. Preserve logs after cleanup.
+The [identity contract](./remote-verification-base.md#identity-output-and-file)
+adds the base field and identity file without changing the suite report schema.
 Print `aggregate=passed` or `aggregate=failed` in the summary.
 On aggregate or fingerprint read failure, print a warning first.
 Then print that command's captured stdout and stderr with the executor prefix.
@@ -188,8 +209,7 @@ A socket that disappears during a failed close prints no close output.
 ## Out Of Scope
 
 - Remote execution for a selected `--suite`.
-- Remote execution when GitHub does not have local `HEAD`.
-- Copying unpushed commits to boxes.
+- A selected base commit that GitHub no longer has.
 - Reusing boxes between checks.
 - Native macOS and Windows tests. They remain in hosted CI.
 - The Node 24 release profile. It remains in hosted CI.
@@ -198,6 +218,7 @@ A socket that disappears during a failed close prints no close output.
 ## Related Docs
 
 - [Protocol index](./README.md)
+- [Base commit sync](./remote-verification-base.md)
 - [Testbox execution](./remote-verification-testbox.md)
 - [Cleanup and interrupts](./remote-verification-cleanup.md)
 - [CI workflow graph](./ci-workflow.md)

@@ -317,6 +317,7 @@ They do not assert elapsed time.
 - [CI suite evidence](../docs/protocol/ci-suite-evidence.md)
 - [CI example compilation snapshot](../docs/protocol/ci-example-snapshot.md)
 - [Remote verification](../docs/protocol/remote-verification.md)
+- [Approved base commit sync target](../docs/protocol/remote-verification-base.md)
 - [Cleanup and interrupts](../docs/protocol/remote-verification-cleanup.md)
 - [Testbox execution](../docs/protocol/remote-verification-testbox.md)
 - [Dependency security](../docs/protocol/dependency-security.md)
