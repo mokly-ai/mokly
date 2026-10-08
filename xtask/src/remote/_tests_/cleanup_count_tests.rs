@@ -203,3 +203,30 @@ fn every_result_after_final_cleanup_reports_the_exact_cleanup_count() {
         }
     }
 }
+
+#[test]
+fn a_cancelled_final_read_prints_its_warning_and_ends_interrupted() {
+    let fixture = harness(Case::LateInterrupt);
+    let result = DefaultRemoteRunner {
+        dependencies: fixture.dependencies,
+    }
+    .run(DependencyAudit::Baseline);
+    assert!(
+        matches!(
+            result,
+            Err(Failure::Failed(Error::Interrupted { cleanup: 0 }))
+        ),
+        "{result:?}"
+    );
+    assert_eq!(
+        fixture
+            .events
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|event| *event
+                == "message:warning: source fingerprint read failed: [xtask/remote] an interrupt cancelled the operation")
+            .count(),
+        1
+    );
+}

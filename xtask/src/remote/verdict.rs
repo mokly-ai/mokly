@@ -60,11 +60,8 @@ impl DefaultRemoteRunner {
         let mut cancelled = false;
         let aggregate_failed = match dependencies.aggregate.validate(reports, head) {
             Ok(()) => false,
-            Err(Error::Cancelled) => {
-                cancelled = true;
-                true
-            }
             Err(error) => {
+                cancelled |= matches!(error, Error::Cancelled);
                 self.report_failure("report aggregate", &error);
                 true
             }
@@ -72,11 +69,8 @@ impl DefaultRemoteRunner {
         let tree = match dependencies.fingerprint.read() {
             Ok(value) if value == fingerprint => TreeCheck::Unchanged,
             Ok(_) => TreeCheck::Changed,
-            Err(Error::Cancelled) => {
-                cancelled = true;
-                TreeCheck::Unreadable
-            }
             Err(error) => {
+                cancelled |= matches!(error, Error::Cancelled);
                 self.report_failure("source fingerprint read", &error);
                 TreeCheck::Unreadable
             }
