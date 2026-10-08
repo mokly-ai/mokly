@@ -40,16 +40,16 @@ suite boundaries, shard evidence, and fail-closed aggregate stay unchanged.
 | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Task runner    | Turborepo 2.11.7 as a root `turbo` devDependency. npm workspaces and `package-lock.json` stay as they are.                                                      |
 | Cached tasks   | `@mokly/viewer#build`, root `build:package`, and root `example:build`. Test suites are not cached by this plan.                                                 |
-| Cache store    | The GitHub Actions cache through upstream `actions/cache` v6.1.0, pinned by SHA (decided 2026-10-08). No Vercel account, Worker, bucket, or secret. |
-| Write policy   | GitHub scope rules: main saves in the main scope; a pull request saves in its own merge-ref scope and restores from main. Forks behave the same. |
-| Integrity      | `remoteCache.enabled` is false; Turbo never contacts a remote endpoint. GitHub owns cache integrity; repository read access reads caches.              |
+| Cache store    | The GitHub Actions cache through upstream `actions/cache` v6.1.0, pinned by SHA (decided 2026-10-08). No Vercel account, Worker, bucket, or secret.             |
+| Write policy   | GitHub scope rules: main saves in the main scope; a pull request saves in its own merge-ref scope and restores from main. Forks behave the same.                |
+| Integrity      | `remoteCache.enabled` is false; Turbo never contacts a remote endpoint. GitHub owns cache integrity; repository read access reads caches.                       |
 | Release        | `release.yml` forces task execution with `TURBO_FORCE=true`, local cache only, and no remote credentials. Force can refresh local entries.                      |
 | Native CI jobs | The macOS and Windows jobs keep building from source with no remote token.                                                                                      |
 | Agent guidance | `agentGuidance: false`, so `turbo` never edits `AGENTS.md`.                                                                                                     |
-| Expiry         | GitHub removes entries unused for 7 days and evicts by oldest access above 10 GB. `cacheMaxAge: "14d"` prunes old local entries each run.                |
+| Expiry         | GitHub removes entries unused for 7 days and evicts by oldest access above 10 GB. `cacheMaxAge: "14d"` prunes old local entries each run.                       |
 | Node in hashes | Exclude the Node version only after proving declared outputs match on Node 22.14 and Node 24. The prepare job must serve both Linux profiles.                   |
 | Telemetry      | Disable Turbo telemetry at workflow scope in CI, preview, and release from Milestone 2. Developers can export `TURBO_TELEMETRY_DISABLED=1` or `DO_NOT_TRACK=1`. |
-| Cache key      | `turbo-${{ runner.os }}-` plus `hashFiles` over the task inputs; the prefix is the restore key. Turbo's own task hashes decide reuse.                 |
+| Cache key      | `turbo-${{ runner.os }}-` plus `hashFiles` over the task inputs; the prefix is the restore key. Turbo's own task hashes decide reuse.                           |
 
 Rejected alternatives:
 
@@ -110,7 +110,7 @@ viewer prepack redirects build output to stderr, preserving pack JSON.
 | `build`                | viewer build, then `tsc`, then `copy-assets` | `turbo run build:package 1>&2` (Milestones 2 to 4 used the launcher `node scripts/turbo-run.mjs build:package 1>&2`) |
 | `build:package`        | none                                         | `node scripts/clean.mjs --package @mokly/mokly && tsc --project tsconfig.build.json && node scripts/copy-assets.mjs` |
 | `example:build`        | direct CLI build                             | `node dist/cli/bin.js build --config examples/basic/mokly.config.ts`                                                 |
-| `prepare:verification` | `npm run build && npm run example:build`     | `turbo run example:build` (Milestones 2 to 4 used `node scripts/turbo-run.mjs example:build`)                       |
+| `prepare:verification` | `npm run build && npm run example:build`     | `turbo run example:build` (Milestones 2 to 4 used `node scripts/turbo-run.mjs example:build`)                        |
 
 `turbo.json` registers these tasks:
 
