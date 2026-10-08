@@ -306,6 +306,7 @@ appearance with any preview scheme. See the
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
 - [Implementation plans](./plans/)
+- [Agent and contributor rules](./AGENTS.md) with the detailed rule docs under [`docs/dev`](./docs/dev/)
 - [Changelog](./CHANGELOG.md)
 
 The guides are user-facing and ship with the npm package. The protocol documents
@@ -324,13 +325,19 @@ receiver and viewer update before publication. Progress remains in the
 
 For repository development, use the tested Node.js version in
 [`.nvmrc`](./.nvmrc), npm 11.21.0 (the `packageManager` version in
-`package.json`), Rust 1.95, and Chromium for the browser suite. With nvm, run
-`nvm install` in the repository to install and use that Node.js version. Use
-the pinned npm version for dependency changes.
+`package.json`), the Rust toolchain in
+[`rust-toolchain.toml`](./rust-toolchain.toml) (Rust 1.95.0 with rustfmt and
+Clippy), and Chromium for the browser suite. With nvm, run `nvm install` in
+the repository before the npm commands below to install and use that Node.js
+version. A global npm install applies only to the active Node.js version.
+rustup reads the toolchain file and installs the pinned Rust the first time
+`cargo` runs in the repository. Use the pinned npm version for dependency
+changes.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git
 cd mokly
+npm install --global npm@11.21.0
 npm ci
 npm run build
 npm run example:build
@@ -405,13 +412,17 @@ Login saves the key in `~/.blacksmith/credentials`.
 It replaces any saved login for the same organization.
 Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
 Each ended command downloads its report and cleans up its box at once.
-The gate requires nine reports. It skips stop and cancellation for a status
-table row that proves the box is completed. A failed stop gets retries after
+The gate requires nine reports. Cleanup closes the shared SSH connection first.
+When `gh` is available, it cancels a known GitHub run right after the close.
+An ID first found in status is cancelled before stop. A completed status skips
+stop and any cancellation not tried yet. The
+[cleanup contract](./docs/protocol/remote-verification-cleanup.md)
+defines this order. A failed stop gets retries after
 5 seconds and 10 more seconds. A recovered stop does not fail the gate.
 Final cleanup counts each box once if it is neither stopped nor proven completed.
 A nonzero count fails the gate. Interrupts report the same count.
 Warnings name each remaining box's manual stop command and its idle timeout.
-Cleanup uses run IDs from warmup or probe output when status names no run.
+Cleanup records run IDs from warmup and probe output for the first cancellation.
 A failed GitHub cancellation checks the run state. An ended run gets an
 information line. Logs stay under `.context/`.
 Availability checks name all missing programs with install hints.
@@ -446,6 +457,23 @@ Use the shared helpers in `tests/helpers/operation_counts.ts` and
 Pull request titles use Conventional Commits and at most 72 Unicode code points.
 The separate title check runs when a PR opens, changes, or receives a push; see
 the [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).
+
+`npm test` and `npm run test:unit` run `npm run prepare:unit` and then the
+Node unit tests.
+`prepare:unit` builds the package and the example. When the saved snapshot is
+not fresh, it then compiles the example once more in memory and saves the
+result to `.context/verification/example-compilation.json`; when the snapshot
+is still fresh, it skips that compile. Test files that read the
+compiled example load this snapshot instead of compiling the example again. The
+snapshot stores a key of the example sources, the built package and the
+lockfile, and a test file uses it only while that key still matches. When you
+run one file by hand, for example
+`node --import tsx --test tests/design_screens.test.tsx`, the file uses a fresh
+snapshot or compiles the full example itself, which is much slower.
+Run `npm run prepare:unit` again after you change the example or rebuild the
+package. The
+[snapshot contract](./docs/protocol/ci-example-snapshot.md)
+gives the details.
 
 `npm run dependencies:check` runs the strict live audit of every workspace
 dependency category from the lockfile. It fails on uncovered Low-or-higher

@@ -2,22 +2,20 @@ import assert from "node:assert/strict";
 
 import { parse, type DefaultTreeAdapterMap } from "parse5";
 
-import { compileCatalogue } from "../../dist/build/compile.js";
-import { loadConfig } from "../../dist/config/load.js";
 import { viewRoute } from "../../packages/viewer/dist/data.js";
 import type { ManifestScreen } from "../../packages/viewer/dist/registry/types.js";
 
-import { repositoryRoot } from "./fixture.js";
+import { exampleCompilation } from "./example_compilation.js";
 import { textOutput } from "./generated_text.js";
 
 type Node = DefaultTreeAdapterMap["node"];
 export type Element = DefaultTreeAdapterMap["element"];
 
-/** Compile the real consumer once per test process without writing output. */
-export const designCatalogue = loadConfig(
-  repositoryRoot,
-  "examples/basic/mokly.config.ts",
-).then(compileCatalogue);
+/**
+ * The real consumer's compilation, loaded once per test process from the
+ * prepared snapshot or compiled in memory when the snapshot is not fresh.
+ */
+export const designCatalogue = exampleCompilation();
 
 export function elements(
   node: Node,

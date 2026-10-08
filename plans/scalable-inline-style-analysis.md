@@ -2055,6 +2055,33 @@ Evidence: `.context/scalable-inline-style-analysis/m12-merge/`.
       Finding 3 (Low, docs): closure contracts describe configured-stylesheet seeds that production never supplies; pending the user's decision.
       Finding 6 (Low, test): the replay keeps two exclusions for tests that main removed; pending the user's decision.
 
+## Milestone 13: Mainline Integration (2026-10-08)
+
+Integrate main's shared example snapshot, checked closure on reload, dependency
+updates and repository rules. Preserve the branch's analysis and all remaining
+assertions. Leave the registered open decisions unchanged.
+
+User decision (2026-10-08): merge the latest `origin/main`, resolve conflicts, commit and push.
+
+Evidence: `.context/scalable-inline-style-analysis/m13-merge/`.
+
+- [ ] Merge `origin/main` once with two parents. Resolve conflicts by
+      responsibility, then review every remerge path and audit deletions.
+- [ ] Integrate #138's shared example snapshot and fallback, #171's rule
+      documents and #172's checked closure on reload. Preserve all assertions
+      and keep main's package, lock, toolchain and rule files unchanged.
+- [ ] Run the complete pinned-Chromium gate and the four real-server smoke
+      tests. Record CPU model and boot ID, and report unrelated flaky tests
+      under the [review rule](../docs/dev/review.md).
+- [ ] After checks pass, commit with Conventional Commits and push the branch.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against `origin/main`. Keep the review read-only, then apply the
+      [review-fix rule](../docs/dev/review.md): fix `Auto-fix: yes` findings,
+      re-review once, and record every open finding. Keep this TODO unticked
+      until the review, its fix round, the re-review and all open findings are
+      recorded here. The supervisor runs the review.
+
 ## Post-merge follow-up (non-blocking)
 
 - Smoke the published package against a React Native Web catalogue whose

@@ -3,6 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 
+import { EXAMPLE_SNAPSHOT_PATH } from "../../scripts/verification/example-snapshot-key.mjs";
+
 import { repositoryRoot } from "./fixture.js";
 
 const execute = promisify(execFile);
@@ -25,6 +27,7 @@ export async function createHarness(): Promise<string> {
     ["dist/cli/bin.js", ""],
     ["packages/viewer/dist/browser/inspector.js", ""],
     ["examples/basic/mokly-generated/mokly-manifest.json", "{}\n"],
+    [EXAMPLE_SNAPSHOT_PATH, "{}\n"],
     [
       "playwright.config.mjs",
       "export default " +

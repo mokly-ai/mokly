@@ -88,6 +88,11 @@ edges solely so a repair triggers another pass. Invalid/recovery evidence never
 adds serving authority. Serve replaces its full closure only with a successful
 checked result; on-demand additions belong only to the same accepted generation.
 A failed candidate retains the last accepted generation and its authority.
+A running server can adopt a new source generation before its checked result,
+for example after a resource reload or a rebuild that keeps the manifest
+structure. It then keeps the last checked closure and drops only the on-demand
+additions of the earlier generation. The update that announces the generation
+must not make a file in the checked closure return 404.
 
 ## Serve Reads And Publication
 
@@ -108,8 +113,12 @@ binary bytes, manifest/cache privacy, ownership, collision checks and rollback.
 Write failing regressions before implementation. Use one fixture with a linked
 authored page, PDF, `data-nav-href`, preload, iframe, `srcset`, CSS dependencies
 and resources linked only by the renderer. Assert exact equality between
-compiler and Watch closures. Fetch the linked page and PDF through watched Serve before and after
-resource changes. Verify protected links fail with the referring route.
+compiler and Watch closures. Fetch the linked page and PDF through watched
+Serve before and after resource changes. In-process, adopt a new generation
+before its checked result:
+the checked PDF stays readable, and a file that only an on-demand render of the
+earlier generation added returns 404. Verify protected links fail with
+the referring route.
 Replace an accepted file and an ancestor with symlinks and require GET/HEAD 404.
 
 Exercise allowed authored script/map/build-folder names and denied actual
