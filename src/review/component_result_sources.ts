@@ -7,7 +7,7 @@ import {
 } from "@mokly/viewer/data";
 import type {
   Manifest,
-  ReviewResultV6,
+  ReviewResultV7,
   ViewReview,
   DependencyReason,
 } from "@mokly/viewer/data";
@@ -42,7 +42,7 @@ export interface DependencyReasonSources {
 
 /** Validate result coverage, addresses, dependency sources, and usage against both manifests. */
 export function validateComponentReviewSources(
-  result: ReviewResultV6,
+  result: ReviewResultV7,
   before: Manifest,
   after: Manifest,
   implementationImpact: ReadonlySet<string>,
@@ -174,7 +174,7 @@ export function validateComponentReviewSources(
 }
 
 function validateChange(
-  result: ReviewResultV6,
+  result: ReviewResultV7,
   beforeEntry: ReviewEntry | undefined,
   afterEntry: ReviewEntry | undefined,
   sources: DependencyReasonSources,

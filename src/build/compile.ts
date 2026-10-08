@@ -1,5 +1,5 @@
 import type { ComponentViewRecord } from "@mokly/viewer";
-import type { ManifestV9, ArtifactView } from "@mokly/viewer/data";
+import type { ManifestV10, ArtifactView } from "@mokly/viewer/data";
 
 import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
@@ -51,7 +51,7 @@ import { componentResourceSeeds } from "./resource_seeds.js";
 /** Complete in-memory static compilation result. */
 export interface Compilation {
   diagnostics: readonly BuildDiagnostic[];
-  manifest: ManifestV9;
+  manifest: ManifestV10;
   outputs: ReadonlyMap<string, GeneratedFile>;
   /** Repository-relative inputs of delivered CSS and asset routes. */
   deliveredStyleSources: readonly string[];
@@ -242,7 +242,7 @@ async function compileMeasured(
   const blobHashAlgorithm = new RepositoryObjectFormatReader().format(
     config.repoRoot,
   );
-  const manifest: ManifestV9 = {
+  const manifest: ManifestV10 = {
     ...draftManifest,
     assetClosure,
     blobHashAlgorithm,
@@ -252,7 +252,7 @@ async function compileMeasured(
         path,
         blobHash: gitBlobHash(generatedBytes(content), blobHashAlgorithm),
       })),
-    schemaVersion: 9,
+    schemaVersion: 10,
   };
   timeSync("manifest.validate", () => parseManifest(manifest));
   timeSync("manifest.serialize", () =>

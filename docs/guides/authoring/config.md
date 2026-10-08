@@ -138,7 +138,7 @@ config-relative artifact directory. `review.sharedImpact` is removed: if the
 key is still present, Mokly warns and ignores it. Source
 files without a changed render or referenced public resource no longer create
 Changes or comparison evidence.
-`review.baselineBuild` runs when a pinned historical v9 inventory is missing
+`review.baselineBuild` runs when a pinned historical v10 inventory is missing
 or incomplete: an ordered list of argv
 arrays run without a shell to rebuild the historical catalogue. It defaults to
 `npm ci` followed by `npx --no-install mokly build --config` and the config

@@ -64,7 +64,7 @@ generated HTML route uses reserved first segment <segment>: <route>; styles and 
 Substitute the original segment spelling and generated-root-relative route,
 without quotes. Existing invalid-route checks run first. Check reserved
 segments next, then duplicate/case-folded/file-directory collisions. Path-derived entries can reach these prefixes; test both compilation and the
-lower-level route boundary. This does not add an authored `route` option. Only v9 baselines
+lower-level route boundary. This does not add an authored `route` option. Only v10 baselines
 reach a content reader; there is no earlier route model to adapt.
 
 Generated HTML uses the path-derived document and view names in
@@ -196,10 +196,10 @@ under the [manifest contract](./mokly-generated-manifest.md). Do not inspect
 the current index or require head disk equality. Reuse accepted outputs and
 the retained delivered-source map instead of rescanning a newer consumer graph.
 
-Compare resource membership on both v9 sides using each side's own descriptor.
+Compare resource membership on both v10 sides using each side's own descriptor.
 Use generated-relative stylesheet/asset keys and separate catalogue-relative
 authored closure keys, including when catalogue roots move. Do not normalize
-older layouts into v9. A pre-v9 manifest selected inside the generated tree or found after the base's
+older layouts into v10. A pre-v10 manifest selected inside the generated tree or found after the base's
 own build produces the typed earlier-baseline unavailable outcome. Committed
 root-level metadata cannot suppress a rebuild; invalid caches rebuild.
 Feed changed compiled CSS to uniform rule attribution. Its private sources
@@ -207,18 +207,18 @@ and PostCSS candidates are rebuild inputs, never comparison evidence. Equal
 normalized changed rules join generated copies across entry roots. Kept own-page
 matches change components; outside matches and unresolved rules give pages
 direct rows. Preserve inserted-link provenance, removed-resource rules,
-component fast paths and generation consistency. Pre-v9 baselines do not
+component fast paths and generation consistency. Pre-v10 baselines do not
 produce a one-time stylesheet Changes jump because their content is not read.
 
 Acceptance covers CSS/Modules/PostCSS regressions and the
 tracking, transaction, baseline and closure tests. Add reserved-route rejection,
 raw binary inventory hashes, no stale-disk fallback, all three styled delivery
-surfaces, watcher success/failure, output-independent PostCSS scans, and v9
+surfaces, watcher success/failure, output-independent PostCSS scans, and v10
 comparisons across moved catalogue roots. Test the exact unavailable outcome
-for every pre-v9 base instead of accepting a v7-to-v9 content comparison.
+for every pre-v10 base instead of accepting a v7-to-v10 content comparison.
 
 The approved [path/output integration](./mokly-path-output-integration.md)
 defines the current path-derived layout. Its
-[format inventory](./mokly-format-versions.md) defines manifest v9, catalogue v5,
-review v6 and all other boundaries. Only v9 baseline content is readable after
+[format inventory](./mokly-format-versions.md) defines manifest v10, catalogue v6,
+review v7 and all other boundaries. Only v10 baseline content is readable after
 that integration; the earlier-version product outcome remains unchanged.

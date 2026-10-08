@@ -1,11 +1,11 @@
 import { isStylesheetPath } from "@mokly/viewer/data";
-import type { ResourceEvidence, ReviewResultV6 } from "@mokly/viewer/data";
+import type { ResourceEvidence, ReviewResultV7 } from "@mokly/viewer/data";
 
 import type { DocumentPair } from "./changed_document_pairs.js";
 
 /** Reuse the complete classifier's screen CSS while preserving live non-CSS policy. */
 export function classifiedScreenCss(
-  result: ReviewResultV6 | undefined,
+  result: ReviewResultV7 | undefined,
   view: DocumentPair["view"],
   prefix: string,
 ): ResourceEvidence | undefined {

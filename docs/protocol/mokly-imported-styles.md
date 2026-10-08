@@ -13,7 +13,7 @@ Custom renderers must emit the supplied stylesheet links; pages link CSS
 themselves. This contract extends
 [configuration](./mokly-configuration.md),
 [rendering](./mokly-rendering.md), and [source protection](./mokly-source-protection.md)
-without changing manifest v9. [Exact diagnostics](./mokly-imported-styles-errors.md)
+without changing manifest v10. [Exact diagnostics](./mokly-imported-styles-errors.md)
 are normative.
 
 ## Routes And Ownership
@@ -21,7 +21,7 @@ are normative.
 `<mockupsDir>/mokly-generated/` is wholly Mokly-owned. Its output map uses
 `styles/<repository-relative root module path>.css` and
 `assets/<repository-relative asset path>`, relative to that generated root.
-Pages, screen/component views and the private v9 manifest share the same tree.
+Pages, screen/component views and the private v10 manifest share the same tree.
 Preserve the module extension before `.css`: `src/home.mockup.tsx` becomes
 `styles/src/home.mockup.tsx.css`. Identical asset routes from multiple roots
 must carry identical bytes; disagreeing bytes fail Build. Sources stay private.

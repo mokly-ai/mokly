@@ -59,9 +59,9 @@ test("canonical and display catalogue producers retain source metadata without r
     async () => {},
   );
   for (const [label, manifest] of [
-    ["v9 build", compilation.manifest],
+    ["v10 build", compilation.manifest],
     [
-      "v9 JSON",
+      "v10 JSON",
       parseManifest(JSON.parse(serializeManifest(compilation.manifest))),
     ],
     ["live index", live.manifest],

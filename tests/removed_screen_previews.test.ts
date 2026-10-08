@@ -8,8 +8,8 @@ import {
   generatedViews,
   viewRoute,
   type ManifestScreen,
-  type ManifestV9,
-  type ReviewResultV6,
+  type ManifestV10,
+  type ReviewResultV7,
 } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../dist/build/compile.js";
@@ -58,7 +58,7 @@ const commit = "a".repeat(40);
       new AbortController().signal,
     );
 
-    assert.equal(artifact.result.schemaVersion, 6);
+    assert.equal(artifact.result.schemaVersion, 7);
     const screen = artifact.result.screens[0]!;
     assert.equal(screen.state, "removed");
     assert.equal(screen.views.length, 4);
@@ -83,7 +83,7 @@ const commit = "a".repeat(40);
       fixture.git,
       "main",
     );
-    assert.equal(complete.result.schemaVersion, 6);
+    assert.equal(complete.result.schemaVersion, 7);
     const selected = await new RepositorySelectedReview(
       fixture.config,
       fixture.git.reader,
@@ -107,7 +107,7 @@ const commit = "a".repeat(40);
       new AbortController().signal,
     );
 
-    assert.equal(selected.result.schemaVersion, 6);
+    assert.equal(selected.result.schemaVersion, 7);
     const screen = selected.result.screens[0]!;
     assert.equal(screen.state, "removed");
     assert.ok(screen.views.length > 0);
@@ -176,7 +176,7 @@ async function screenFixture(t: test.TestContext) {
     title: "Removed",
     useCasePaths: [],
   };
-  const storedBaseline: ManifestV9 = {
+  const storedBaseline: ManifestV10 = {
     ...currentManifest({
       entries: [
         {
@@ -184,7 +184,7 @@ async function screenFixture(t: test.TestContext) {
         },
       ],
       generatedBy: "mokly",
-      schemaVersion: 9,
+      schemaVersion: 10,
       sourceFiles: current.manifest.sourceFiles,
     }),
     assetClosure: ["assets/removed.css"],
@@ -228,7 +228,7 @@ function selectedSource(fixture: Awaited<ReturnType<typeof screenFixture>>) {
   };
 }
 
-function removedScreenResult(screen: ManifestScreen): ReviewResultV6 {
+function removedScreenResult(screen: ManifestScreen): ReviewResultV7 {
   return {
     affectedConsumers: [],
     baseCommit: commit,
@@ -237,7 +237,7 @@ function removedScreenResult(screen: ManifestScreen): ReviewResultV6 {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     screens: [
       {
         before: { path: screen.path, title: screen.title },

@@ -2,9 +2,9 @@
 
 This is the storage and command contract for [per-commit baseline selection](./mokly-derived-baselines.md).
 Historical commands execute trusted repository code; preparation is never an HTTP operation.
-This contract defines the v9 storage and compatibility boundary.
-The [v9 manifest gate](./mokly-generated-manifest.md#selection-cache-and-resource-addressing)
-permits only v9 content readers and retains earlier-version outcome.
+This contract defines the v10 storage and compatibility boundary.
+The [v10 manifest gate](./mokly-generated-manifest.md#selection-cache-and-resource-addressing)
+permits only v10 content readers and retains earlier-version outcome.
 Process ownership, locking, confinement and metadata-only retention follow the rules below.
 
 ## Delivery Status
@@ -26,12 +26,12 @@ and is not converted to a baseline history error.
    missing ref, shallow history, or unrelated histories fail as
    `baseline-history-unavailable`.
 2. Probe only the canonical manifest in the requested generated subtree.
-   Complete v9 output uses blobs. A version below v9 at that current location
+   Complete v10 output uses blobs. A version below v10 at that current location
    returns `baseline-incompatible-earlier`. A committed root-level manifest
    is ignored. A missing manifest or incomplete inventory needs the builder;
    acquire its entry lock, including on cache hits. Sweep safe crash leftovers
    under that lock as a best-effort maintenance step.
-3. Reuse only complete valid v9 output with the matching commit, requested
+3. Reuse only complete valid v10 output with the matching commit, requested
    catalogue and recipe. Invalid, incomplete or unreadable data is partial; remove its owned
    contents under the lock, then
    extract the commit with Git's archive format into
@@ -54,19 +54,19 @@ and is not converted to a baseline history error.
    [baseline addressing](./mokly-baseline-addressing.md#discovery-after-a-rebuild).
    Zero or several eligible candidates fail `baseline-output-invalid` with
    sorted candidates. The base and head may use different `mockupsDir` paths.
-6. If the selected output is earlier than v9, apply existing pre-adoption
+6. If the selected output is earlier than v10, apply existing pre-adoption
    cleanup and maintenance-error handling under the lock, then return
    `baseline-incompatible-earlier`. Do not harvest old documents, write a
    completion marker or upgrade the build's toolchain. The caller retains this
    outcome for the pinned base and recipe in memory; no cache entry records it.
    A later command invocation rebuilds again when current-location blobs cannot
    establish the version.
-7. For valid, inventory-verified v9, move
+7. For valid, inventory-verified v10, move
    `<source>/<historical mockupsDir>/mokly-generated/` into
    `output/<historical mockupsDir>/mokly-generated/`, then copy exactly the
    manifest's `assetClosure` beside it under the historical catalogue root.
    Validate every file as a confined regular file; missing, symlinked or
-   protected sources fail `baseline-output-invalid`. Never harvest a flat tree. Readers map repository-relative paths directly into this v9
+   protected sources fail `baseline-output-invalid`. Never harvest a flat tree. Readers map repository-relative paths directly into this v10
    cache using the historical root. Delete the remaining extraction, including
    installed dependencies. Write `inputs.json`, then write the completion
    marker to a unique `complete-<uuid>.tmp` beside `complete.json`. Rename that
@@ -121,33 +121,33 @@ requested baseline rebuilds can create it through the builder above.
   baselines/<commit>/
     lock            # holder pid and start time, created exclusively
     source/         # extraction, removed after adoption
-    output/         # v9: repo-relative generated tree plus authored closure
+    output/         # v10: repo-relative generated tree plus authored closure
     complete.json   # completion marker
     inputs.json     # requested/current repo-relative mockupsDir ("." at repo root)
 ```
 
 New `complete.json` markers are `{ schemaVersion: 2, commit, finishedAt,
-commands, manifestVersion: 9, historicalCatalogueRoot, layout: "generated-v9" }`.
+commands, manifestVersion: 10, historicalCatalogueRoot, layout: "generated-v10" }`.
 The root identifies the harvest; it never replaces the requested path in
 `inputs.json`. Reuse requires the matching commit, request and recipe, a valid
-v9 manifest and its verified inventory/closure. Keep the
+v10 manifest and its verified inventory/closure. Keep the
 [reader mapping](./mokly-baseline-addressing.md#cache-identity-and-readers).
 
 A reusable entry requires regular bounded JSON files for `complete.json` and
-`inputs.json`, the exact schema-2 marker with `manifestVersion: 9` and
-`layout: "generated-v9"`, a safe historical root, matching commit, requested
-path and argv arrays, and complete valid v9 output. Verify generated membership,
+`inputs.json`, the exact schema-2 marker with `manifestVersion: 10` and
+`layout: "generated-v10"`, a safe historical root, matching commit, requested
+path and argv arrays, and complete valid v10 output. Verify generated membership,
 blob hashes and every authored closure file with the same confinement rules.
 Keep the completion-marker and manifest version checks; no earlier layout is
 parsed or adapted. Validate the marker first, then the stored catalogue path and
-command list, then the output. A valid v9 marker with settings different from
+command list, then the output. A valid v10 marker with settings different from
 the request fails intact with `Cached baseline uses different build settings; remove <entry> before changing catalogues or commands`.
 Invalid or earlier markers are partial before this comparison. Never replace a
 settings-mismatch error with a rebuild.
 
 Invalid or incomplete entry data is partial: missing files, invalid or empty JSON,
 truncation, unreadable data, earlier/newer marker versions, unsafe paths,
-invalid v9 data, stale bytes or incomplete closure. Return a miss,
+invalid v10 data, stale bytes or incomplete closure. Return a miss,
 not a content reader or an earlier-version outcome. Cancellation still aborts
 instead of rebuilding. Under the held lock, remove only owned partial content
 without following symlinks; cleanup failure cannot permit reuse of bad bytes.

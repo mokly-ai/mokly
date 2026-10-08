@@ -16,7 +16,7 @@ import {
 
 const catalogue = readCatalogue(
   JSON.parse(
-    fs.readFileSync("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
+    fs.readFileSync("docs/protocol/fixtures/catalogue-v6.json", "utf8"),
   ),
 );
 const view = {

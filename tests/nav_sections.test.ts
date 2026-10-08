@@ -8,7 +8,7 @@ import type {
 import type {
   ManifestEntry,
   ManifestScreen,
-  ManifestV9,
+  ManifestV10,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { reconcileDisclosures } from "../packages/viewer/dist/shell/disclosure_storage.js";
@@ -226,7 +226,7 @@ function component(id: string, title: string): ManifestComponent {
   };
 }
 
-function manifest(entries: readonly ManifestEntry[]): ManifestV9 {
+function manifest(entries: readonly ManifestEntry[]): ManifestV10 {
   return currentManifest({
     entries: entries.flatMap((entry) => [
       entry,
@@ -235,7 +235,7 @@ function manifest(entries: readonly ManifestEntry[]): ManifestV9 {
         : []),
     ]),
     generatedBy: "mokly",
-    schemaVersion: 9 as const,
+    schemaVersion: 10 as const,
     folders: [],
     sourceFiles: [
       ...new Set(entries.map(({ sourcePath }) => sourcePath)),

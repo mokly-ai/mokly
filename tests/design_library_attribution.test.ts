@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ReviewResultV6 } from "../packages/viewer/dist/data.js";
+import type { ReviewResultV7 } from "../packages/viewer/dist/data.js";
 
 import {
   changedEntryPaths,
@@ -181,7 +181,7 @@ test("library stylesheets attribute only to their own component in one pass", as
   );
 });
 
-function assertTagChipEvidence(result: ReviewResultV6): void {
+function assertTagChipEvidence(result: ReviewResultV7): void {
   const id = "design/library/controls/tag-chip";
   const topBar = "design/library/chrome/top-bar";
   assert.deepEqual(usageVariantsOf(result, id, topBar), [

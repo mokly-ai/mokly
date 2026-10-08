@@ -22,7 +22,7 @@ independent of the visual [comparison result](./mokly-changes.md);
 
 One package-internal catalogue-change module owns this typed snapshot and its
 pure selection rules. The Git-backed loader supplies validated current and
-baseline v9 manifests plus one resolved branch-point commit. Server, watcher,
+baseline v10 manifests plus one resolved branch-point commit. Server, watcher,
 preview capture, and publication consume the same
 snapshot for a catalogue generation:
 
@@ -59,7 +59,7 @@ optional calculation omits the entire Changes result, including removed
 entries; invalid current manifests or stale source inventories still prevent
 listening. On-demand comparisons use the accepted generation and pinned base.
 
-The entry types are validated manifest-v9 DTOs, including their common metadata
+The entry types are validated manifest-v10 DTOs, including their common metadata
 and tags. A removed record carries no route: its URL and artifact names derive
 from its path. `folderTitles` holds the baseline titles of its folders from the
 top level down, resolved from the baseline manifest's folder records and index
@@ -89,15 +89,15 @@ continues to propagate to use cases through their screen steps. Current display
 metadata comes from the matching current catalogue; removed display metadata
 comes from `removedEntries`. No removed-use-case support is introduced here.
 
-Visual comparisons use [review result v6](./mokly-changes-serving.md#comparison-engine)
+Visual comparisons use [review result v7](./mokly-changes-serving.md#comparison-engine)
 for every catalogue. Pages and documents add no comparison records. Neither
 catalogue change detection nor page or document removal requires snapshot
 generation. The publisher must not discover removed pages or documents by reading
 `ReviewResult.screens`; that array remains the source of screen comparisons.
 The shared catalogue snapshot drives its removed-entry pages, shell metadata,
 and filter/search rows before HTML capture. It requires no additional public
-endpoint. CSS page evidence is carried by catalogue v5 `resourceEvidence`;
-[comparison v6 evidence](./mokly-css-attribution-membership.md) changes in place.
+endpoint. CSS page evidence is carried by catalogue v6 `resourceEvidence`;
+[comparison v7 evidence](./mokly-css-attribution-membership.md) carries the combined shape.
 
 ## Removal Selection And Precedence
 

@@ -37,13 +37,13 @@ function identityManifest() {
   return currentManifest({
     entries: [currentScreen()],
     generatedBy: "mokly" as const,
-    schemaVersion: 9 as const,
+    schemaVersion: 10 as const,
     folders: [],
     sourceFiles: [sourcePath],
   });
 }
 
-test("manifest v9 carries paths and configuration but no derived artifact names", () => {
+test("manifest v10 carries paths and configuration but no derived artifact names", () => {
   const parsed = parseManifest(identityManifest());
   assert.deepEqual(parsed, identityManifest());
   assert.throws(
@@ -51,7 +51,7 @@ test("manifest v9 carries paths and configuration but no derived artifact names"
     {
       code: "manifest-invalid",
       message:
-        "[mokly/manifest-invalid] expected Mokly manifest schema version 9; run mokly build",
+        "[mokly/manifest-invalid] expected Mokly manifest schema version 10; run mokly build",
     },
   );
 
@@ -77,7 +77,7 @@ test("manifest v9 carries paths and configuration but no derived artifact names"
 });
 
 test("baseline parsing rejects lower versions and derives current view paths", () => {
-  for (const schemaVersion of [2, 3, 4, 5, 6, 7, 8])
+  for (const schemaVersion of [2, 3, 4, 5, 6, 7, 8, 9])
     assert.throws(
       () => parseHistoricalManifest({ schemaVersion }),
       (error: unknown) =>
@@ -95,7 +95,7 @@ test("baseline parsing rejects lower versions and derives current view paths", (
   );
 });
 
-test("review v5 is the only accepted comparison result", () => {
+test("review v7 is the only accepted comparison result", () => {
   const result = {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
@@ -104,7 +104,7 @@ test("review v5 is the only accepted comparison result", () => {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     screens: [],
   };
   assert.deepEqual(parseReviewResult(result), result);

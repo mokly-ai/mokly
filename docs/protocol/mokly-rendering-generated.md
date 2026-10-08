@@ -3,7 +3,7 @@
 Continuation of [Mokly Rendering And Generated Output](./mokly-rendering.md).
 The [artifact path contract](./mokly-artifact-paths.md) owns exact routes,
 and the [component manifest contract](./mokly-component-manifest.md) owns
-component-specific v9 records.
+component-specific v10 records.
 
 ## Generated Contract
 
@@ -36,16 +36,16 @@ marker. It does not establish ownership. The whole generated tree is disposable;
 authored closure assets stay outside it. The [unified output contract](./mokly-unified-output.md)
 defines the inventory, reserved styles/assets routes and reference policy.
 
-All catalogues emit [manifest v9](./mokly-component-manifest.md), including
+All catalogues emit [manifest v10](./mokly-component-manifest.md), including
 pages, documents, folder records, source inventory, component variant entries and per-view
-invocation/ownership records. Current and baseline readers accept only v9;
+invocation/ownership records. Current and baseline readers accept only v10;
 earlier output follows [baseline compatibility](./mokly-baseline-compatibility.md).
 Version 9 stores no route, view path, or other value derivable from path, kind, and
 configuration. The common shape is:
 
 ```ts
-interface ManifestV9 {
-  schemaVersion: 9;
+interface ManifestV10 {
+  schemaVersion: 10;
   generatedBy: "mokly";
   entries: readonly ManifestEntry[];
   folders: readonly ManifestFolder[];
@@ -142,7 +142,7 @@ Imported CSS adds deterministic routes under `mokly-generated/`:
 
 Every regular file in the reserved tree is owned output. Whole-tree replacement
 removes files absent from the next accepted compilation. Authored CSS
-sources remain private. Manifest v9 inventories these files by exact Git blob hashes; entry routes
+sources remain private. Manifest v10 inventories these files by exact Git blob hashes; entry routes
 still derive from path and kind.
 
 Resolve generated stylesheet links from the complete view path so screens,

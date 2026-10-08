@@ -33,7 +33,7 @@ for (const [name, edit, resource] of [
   ["formatting-only changes", "\n", "shared.css"],
   ["non-CSS resources", "\n", "image.svg"],
 ] as const) {
-  test(`screen-only classification delivers ${name} in unified v5 results`, async (t) => {
+  test(`screen-only classification delivers ${name} in unified v7 results`, async (t) => {
     const fixture = await cssAttributionFixture(t, false);
     await fixture.append(edit, resource);
     const changes = await computeCatalogueChanges(
@@ -44,7 +44,7 @@ for (const [name, edit, resource] of [
     const snapshot = changes.componentChanges;
     assert.ok(snapshot);
     const artifact = await fixture.compare();
-    assert.equal(artifact.result.schemaVersion, 6);
+    assert.equal(artifact.result.schemaVersion, 7);
     assert.deepEqual(snapshot.result, artifact.result);
     assert.deepEqual(
       snapshot.screenEvidence,
@@ -112,7 +112,7 @@ function renderEvidence(data: WorkspaceData): string {
   return renderToStaticMarkup(createElement(WorkspaceEvidence, { data }));
 }
 
-test("static screen-only shells project evidence from the unified v5 comparison", async (t) => {
+test("static screen-only shells project evidence from the unified v7 comparison", async (t) => {
   const fixture = await cssAttributionFixture(t, false);
   await fixture.append(".auth { padding: 2px; }");
   const changes = await computeCatalogueChanges(

@@ -10,7 +10,7 @@ import { parseHistoricalManifest } from "../../dist/registry/manifest.js";
 import { componentEntrySource } from "./component_fixture.js";
 import { createExportFixture } from "./export_fixture.js";
 
-/** Commit valid current v9 metadata whose ranges use unsupported comment spelling. */
+/** Commit valid current v10 metadata whose ranges use unsupported comment spelling. */
 export async function formerMarkerBaselineFixture(context: TestContext) {
   const fixture = await createExportFixture(componentEntrySource());
   context.after(() => fixture.close());

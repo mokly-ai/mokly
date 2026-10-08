@@ -1,4 +1,4 @@
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { GeneratedFile } from "../build/generated_file.js";
@@ -47,7 +47,7 @@ export interface ServerOptions {
 export interface RunningServer {
   /** Adopt a complete catalogue and serve a supplied list over its manifest closure. */
   completeCatalogue?(
-    manifest: ManifestV9,
+    manifest: ManifestV10,
     generation: string,
     assetClosure?: readonly string[],
   ): boolean;

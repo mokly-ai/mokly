@@ -45,7 +45,7 @@ test("Review artifact paths are collision-free for distinct valid routes", async
     currentManifest({
       entries: [],
       generatedBy: "mokly",
-      schemaVersion: 9,
+      schemaVersion: 10,
       sourceFiles: [],
     }),
   );
@@ -121,7 +121,7 @@ test("Comparison artifacts retain snapshots without standalone UI", () => {
       baseRef: "HEAD",
       changedPaths: [],
       ignoredImpact: [],
-      schemaVersion: 6 as const,
+      schemaVersion: 7 as const,
       screens: [
         {
           after: { path: "home", title: "Home" },
@@ -162,7 +162,7 @@ test("Review retains marker-bearing pane bytes as portable output", async (conte
     currentManifest({
       entries: [],
       generatedBy: "mokly",
-      schemaVersion: 9,
+      schemaVersion: 10,
       sourceFiles: [],
     }),
   );

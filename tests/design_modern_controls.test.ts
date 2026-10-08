@@ -7,14 +7,14 @@ import {
   generatedViews,
   isManifestComponentVariant,
 } from "../packages/viewer/dist/data.js";
-import type { ManifestV9 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV10 } from "../packages/viewer/dist/registry/types.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const generated = path.join(repositoryRoot, "examples/basic/mokly-generated");
 const manifest = JSON.parse(
   await fs.readFile(path.join(generated, "mokly-manifest.json"), "utf8"),
-) as ManifestV9;
+) as ManifestV10;
 
 function component(id: string) {
   const entry = manifest.entries.find((entry) => entry.path === id);

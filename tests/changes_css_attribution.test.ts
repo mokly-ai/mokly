@@ -16,7 +16,7 @@ for (const components of [false, true]) {
     ["custom property", ".guide { --tone: red; }", true, "unresolved"],
     ["formatting only", "\n", false, undefined],
   ] as const) {
-    test(`CSS attribution v5 (components=${components}): ${name} agrees across all views and live membership`, async (t) => {
+    test(`CSS attribution v7 (components=${components}): ${name} agrees across all views and live membership`, async (t) => {
       const fixture = await cssAttributionFixture(t, components);
       await fixture.append(css);
       const live = await computeCatalogueChanges(
@@ -57,7 +57,7 @@ for (const components of [false, true]) {
         ),
         included,
       );
-      if (artifact.result.schemaVersion === 6) {
+      if (artifact.result.schemaVersion === 7) {
         assert.deepEqual(live.componentChanges?.result, artifact.result);
         assert.equal(
           artifact.result.changes.some((entry) => entry.after?.path === "home"),
@@ -66,7 +66,7 @@ for (const components of [false, true]) {
       }
       if (status === "unresolved") {
         const views = artifact.result.screens.flatMap((entry) => entry.views);
-        if (artifact.result.schemaVersion === 6)
+        if (artifact.result.schemaVersion === 7)
           views.push(
             ...artifact.result.components.flatMap((entry) =>
               entry.variants.flatMap((variant) => variant.views),
@@ -86,7 +86,7 @@ for (const components of [false, true]) {
       assert.ok(files.has("snapshots/after/shared.css"));
       assert.match(
         String(files.get("summary.md")),
-        artifact.result.schemaVersion === 6
+        artifact.result.schemaVersion === 7
           ? new RegExp(`Changes: ${artifact.result.changes.length};`)
           : new RegExp(
               `output changes: ${artifact.result.screens.filter((screen) => screen.state === "changed").length};`,
@@ -96,7 +96,7 @@ for (const components of [false, true]) {
   }
 
   for (const resource of ["image.svg", "font.woff2"]) {
-    test(`CSS attribution v5 (components=${components}) preserves ${resource} impact`, async (t) => {
+    test(`CSS attribution v7 (components=${components}) preserves ${resource} impact`, async (t) => {
       const fixture = await cssAttributionFixture(t, components);
       await fixture.append("\n", resource);
       const live = await computeCatalogueChanges(

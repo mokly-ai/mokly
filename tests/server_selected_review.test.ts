@@ -76,12 +76,12 @@ function RenderProbe() { appendFileSync(${JSON.stringify(renderLog)}, "render\\n
   );
   assert.equal(response.status, 200, await response.clone().text());
   const result = parseReviewResult(await response.json());
-  assert.equal(result.schemaVersion, 6);
+  assert.equal(result.schemaVersion, 7);
   assert.deepEqual(
     result.screens.map((screen) => screen.path),
     ["home"],
   );
-  if (result.schemaVersion === 6) assert.deepEqual(result.components, []);
+  if (result.schemaVersion === 7) assert.deepEqual(result.components, []);
   assert.equal(reads.length, 4);
   assert.equal(await fs.readFile(renderLog, "utf8"), "");
   assert.ok(
@@ -191,8 +191,8 @@ test("component comparison snapshots contain only the selected saved variant", a
   );
   assert.equal(response.status, 200, await response.clone().text());
   const result = parseReviewResult(await response.json());
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   assert.deepEqual(result.screens, []);
   assert.equal(result.components.length, 1);
   assert.deepEqual(

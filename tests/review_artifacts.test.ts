@@ -63,7 +63,7 @@ test("Review compares Git base without checkout and writes deterministic artifac
       "utf8",
     ),
   ) as { baseCommit: string; schemaVersion: number };
-  assert.equal(reviewJson.schemaVersion, 6);
+  assert.equal(reviewJson.schemaVersion, 7);
   assert.match(reviewJson.baseCommit, /^[a-f0-9]{40}$/);
   assert.equal(
     fs.existsSync(path.join(config.review.outDir, "index.html")),

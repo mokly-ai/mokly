@@ -129,7 +129,7 @@ origin root. A URL/string source must be an absolute HTTP(S) catalogue URL;
 its validated final response URL establishes that root. A fetcher returns the
 same pair explicitly and must honor cancellation; `baseUrl` is invalid for URL
 or fetcher sources. Do not resolve artifact paths relative to the embedding app.
-Validate every source as [catalogue v5](./mokly-catalogue.md) before rendering.
+Validate every source as [catalogue v6](./mokly-catalogue.md) before rendering.
 Fetchers are host-supplied source transports, not permission for viewer telemetry.
 Fetch failure renders an explicit error/retry state and emits `onError`.
 The [version contract](./mokly-viewer-namespace.md#compatibility-failure) owns

@@ -113,14 +113,14 @@ equality remains an export-only `export-invalid` check.
 
 ## Baselines And Required Smoke
 
-Only the complete combined manifest-v9 shape is readable. Required saved-view
+Only the complete combined manifest-v10 shape is readable. Required saved-view
 root ranges and inserted-link provenance remain part of admission. Stored CSS
-owners and removed source declarations are invalid. A different v9 shape is
+owners and removed source declarations are invalid. A different v10 shape is
 invalid data, not earlier-version output, and receives no conversion.
 The generated subtree, exact
 inventory and blob hashes still select per-commit Git blobs or the base's own
 rebuild. A committed root-level manifest never decides selection. After the
-base's own recipe, a recognized pre-v9 manifest at its canonical generated or
+base's own recipe, a recognized pre-v10 manifest at its canonical generated or
 root-level location produces `baseline-incompatible-earlier`, with no content
 read and no cached incompatible entry. Keep partial-cache cleanup, valid
 settings-mismatch failure and the current moved-root discovery boundary.
@@ -135,13 +135,13 @@ Changes are unavailable because the comparison base was built with an earlier ve
 
 Use each pinned base's own recipe and package. A lower-version base must finish
 current preview delivery with the exact earlier-version line and unavailable
-Changes. A v9 base without required combined proof follows the invalid-data
+Changes. A v10 base without required combined proof follows the invalid-data
 contract: Serve keeps All usable; explicit comparison captures fail safely.
 Do not inject the current package into a historical build or cache an
 earlier-format result.
 
 Smoke Build, tracked/untracked Check, Serve and static export with Markdown,
-folders and a moved entry. Use a complete combined-v9 baseline to prove moved
+folders and a moved entry. Use a complete combined-v10 baseline to prove moved
 comparisons and resources. Check lower-version and invalid-current baselines,
 all format rejection boundaries, namespace paths, lock-free nonwriters and
 worker route rejection. Keep unrelated tests and assertions.

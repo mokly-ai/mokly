@@ -41,11 +41,11 @@ normalizes this owned JSON's top-level `deploymentId` to 64 zeroes before hashin
 and stamps it afterward, alongside shell descriptors. Other catalogue bytes
 participate unchanged. Export revisions are `{ content: 0, evidence: 0 }`.
 
-Readers require `schemaVersion: 5` and reject older and unknown versions;
+Readers require `schemaVersion: 6` and reject older and unknown versions;
 writers remain allowlisted. Version 5 keys every record by path, adds
 documents, folder titles, `previousPath`, and one tree, and removes `id`,
 `navPath`, `useCaseIds`, `screenId`, and the per-section trees. Removed variants
-require `parentTitle`. Readers accept only catalogue v5 and
+require `parentTitle`. Readers accept only catalogue v6 and
 do not translate earlier output. Optional
 fields are additive; removals, required additions, changed meaning, new union
 discriminants or incompatible paths require a new version. This file and the
@@ -54,7 +54,7 @@ remain unchanged; the review result and delivery descriptor follow the
 [Changes](./mokly-changes.md) and [static delivery](./mokly-export-delivery.md)
 contracts.
 
-The [public v5 fixture](./fixtures/catalogue-v5.json) ships in the npm package
+The [public v6 fixture](./fixtures/catalogue-v6.json) ships in the npm package
 and is checked by the reader/projection conformance tests.
 
 The reader requires `tree`; `[]` is valid when the catalogue has no current entries. A nonempty tree must follow the [path contract](./mokly-paths.md):

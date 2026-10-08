@@ -18,7 +18,7 @@ defines producer tagging, child messages and completion without replay.
 ## Scope
 
 Build and Check load consumer definitions, validate their paths and relationships,
-render the selected views, and produce deterministic HTML and manifest v9. Serve,
+render the selected views, and produce deterministic HTML and manifest v10. Serve,
 export, publication and local component controls share the same graph and validators.
 Final Markdown documents also pass `documents/safety.ts` after logical links and
 final HTML composition. This independent parse5 allowlist rejects unsafe body
@@ -260,7 +260,7 @@ must survive the boundary. `MoklyError` carries a `Symbol.for` brand and
 facade adds the source module; `load_graph.ts` reconstructs branded errors as
 CLI `MoklyError`s without double prefixes. Unrelated evaluation failures remain
 bundling errors. `src/registry/manifest_validation.ts` validates current and
-baseline data against one strict v9 shape. Only the canonical generated
+baseline data against one strict v10 shape. Only the canonical generated
 manifest decides selection. Earlier output at that location, or root-level
 earlier output produced by the base's own recipe, uses the unavailable outcome
 without conversion or caching.
@@ -406,7 +406,7 @@ carry those seeds through the existing preview observation.
 
 The approved [path/output integration](../../docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
 Markdown documents and moves inside one generated tree. It introduces manifest
-v9, catalogue v5 and review v6, with explicit versions for the other boundaries.
+v10, catalogue v6 and review v7, with explicit versions for the other boundaries.
 Accepted workers use immutable in-memory route sets; only writing commands
 acquire the output lock. The integration plan records verification and scope.
 

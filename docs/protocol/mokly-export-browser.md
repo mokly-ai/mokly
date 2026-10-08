@@ -91,7 +91,7 @@ shell descriptor. Its other bytes, the inspector script and inert per-document
 maps participate normally. Validate the catalogue's owned identity field before
 finalization and replace its staging placeholder before installation. This
 prevents self-reference without changing delivery descriptor v5, ownership v3,
-upload v2 or review result v6.
+upload v2 or review result v7.
 
 Stamp the resulting identity into those owned root descriptors and the owned
 catalogue field, changing no other non-marker bytes. Then compute the ownership

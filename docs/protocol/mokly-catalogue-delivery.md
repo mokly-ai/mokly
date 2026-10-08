@@ -8,7 +8,7 @@ Path-based projection, root usage ranges and resource evidence are implemented.
 
 ## Projection And Privacy
 
-Construct an explicit allowlist projection from validated manifest v9, the
+Construct an explicit allowlist projection from validated manifest v10, the
 validated folder records, and the accepted Changes/comparison snapshot. Do not
 spread a manifest, entry, or internal evidence object into public JSON.
 

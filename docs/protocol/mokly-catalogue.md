@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Optional per-view/page `resourceEvidence` and root usage ranges are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md); screen and saved-view display is implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence), and the whole-document page display is implemented in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
-Read model v5 changes in place. `ResourceEvidence` follows the
+Read model v6 replaces released v5. `ResourceEvidence` follows the
 [CSS evidence schema](./mokly-css-attribution-membership.md).
 
 ## Supported Formats
@@ -13,7 +13,7 @@ Read model v5 changes in place. `ResourceEvidence` follows the
 | Without registered components | 9                  | 6                 |
 | With registered components    | 9                  | 6                 |
 
-Current output uses manifest v9, review result v6, and public read model v5,
+Current output uses manifest v10, review result v7, and public read model v6,
 with globally unique entry paths. The private catalogue-change snapshot is v3 and removed
 page preview metadata is v3. Delivery descriptors are v5. The manifest stores
 folder records, component variants, per-view usage, root output ranges and
@@ -51,7 +51,7 @@ type ChangeKind = "added" | "changed" | "removed" | "unmodified";
 type PublicPath = string;
 
 interface CatalogueReadModel {
-  schemaVersion: 5;
+  schemaVersion: 6;
   identity: { id: string; title: string };
   deploymentId: string;
   revision: { content: number; evidence: number };

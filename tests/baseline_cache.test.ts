@@ -41,7 +41,7 @@ test("an unrecognized rebuilt filename cannot identify output", async () => {
   );
 });
 
-test("current v9 baselines remain reusable after marker validation", async () => {
+test("current v10 baselines remain reusable after marker validation", async () => {
   const fixture = baselineFixture();
   const run = fixture.runner.run;
   fixture.runner.run = async (command) => {
@@ -52,13 +52,13 @@ test("current v9 baselines remain reusable after marker validation", async () =>
       );
       await fixture.fs.write(
         path.join(command.cwd, "mockups/mokly-generated/mokly-manifest.json"),
-        Buffer.from(JSON.stringify({ ...baselineManifest, schemaVersion: 9 })),
+        Buffer.from(JSON.stringify({ ...baselineManifest, schemaVersion: 10 })),
       );
     }
     return result;
   };
   const first = await fixture.builder.build(fixture.request);
-  assert.equal(first.marker.manifestVersion, 9);
+  assert.equal(first.marker.manifestVersion, 10);
   const second = await fixture.builder.build(fixture.request);
   assert.equal(second.cacheHit, true);
   assert.deepEqual(second.marker, first.marker);

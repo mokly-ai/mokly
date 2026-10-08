@@ -24,8 +24,8 @@ creates a new checked set under the [route-set contract](./mokly-generation-rout
 It does not render every document, write output, classify Git changes or transfer
 generated HTML as a prerequisite for Browse. This applies with and without watch.
 
-The live catalogue index is a distinct internal format, not a schema-v9 manifest.
-It describes available views, not completed rendering or usage evidence. A v9
+The live catalogue index is a distinct internal format, not a schema-v10 manifest.
+It describes available views, not completed rendering or usage evidence. A v10
 manifest still requires every view's validated records. Build, Check and Export
 remain exhaustive and produce the same portable artifacts regardless of
 Git tracking; only explicit Build and `serve --build` write them to disk, and

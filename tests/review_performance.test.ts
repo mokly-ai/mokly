@@ -46,13 +46,13 @@ test("Review batches base viewport reads", async (context) => {
   let individualReads = 0;
   let batchedPathCount = 0;
   const git: ReadOnlyReviewRepository = {
-    descriptor: baselineCatalogue("a".repeat(40), "mockups", "generated-v9"),
+    descriptor: baselineCatalogue("a".repeat(40), "mockups", "generated-v10"),
     evidence: {
       changedPaths: async () => [],
       mergeBase: async () => "a".repeat(40),
     },
     reader: {
-      catalogue: baselineCatalogue("a".repeat(40), "mockups", "generated-v9"),
+      catalogue: baselineCatalogue("a".repeat(40), "mockups", "generated-v10"),
       fileExists: async (_commit, repoPath) => files.has(repoPath),
       fileKind: async (_commit, repoPath) =>
         files.has(repoPath) ? "regular" : "missing",
@@ -220,7 +220,7 @@ test("Comparison metadata has no per-screen HTML or navigation copies", () => {
     baseRef: "origin/main",
     changedPaths: [],
     ignoredImpact: [],
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     screens,
     components: [],
     changes: [],

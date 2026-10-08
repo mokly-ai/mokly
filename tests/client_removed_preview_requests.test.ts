@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { requestPreview } from "../packages/viewer/dist/previews/request.js";
-import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV7 } from "../packages/viewer/dist/review/component_types.js";
 
 import {
   COMPARISON,
@@ -113,7 +113,7 @@ test("a historical response must belong to the selected baseline", async () => {
     catalogueIdentity: "c".repeat(64),
     snapshotId: snapshotId("baseline", "a".repeat(40), removedScreen),
   };
-  const views: ReviewResultV6["screens"][number]["views"] = [
+  const views: ReviewResultV7["screens"][number]["views"] = [
     {
       viewport: "mobile",
       colorScheme: "light",
@@ -148,7 +148,7 @@ test("a generation-backed selection accepts only its immutable generation", asyn
     catalogueIdentity: "c".repeat(64),
     snapshotId: snapshotId("generation", GENERATION, removedScreen),
   };
-  const views: ReviewResultV6["screens"][number]["views"] = [
+  const views: ReviewResultV7["screens"][number]["views"] = [
     {
       viewport: "mobile",
       colorScheme: "light",

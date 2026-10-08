@@ -3,9 +3,9 @@
 ## Delivery Status
 
 The expanded `DependencyAnalysis` from the [CSS evidence schema](./mokly-css-attribution-membership.md)
-is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md), within v6.
+is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md), within v7.
 
-Implemented for the unified comparison v6 format. The [comparison contract](./mokly-component-review.md) owns attribution, and [validation](./mokly-component-review-validation.md) owns source coverage.
+Implemented for the unified comparison v7 format. The [comparison contract](./mokly-component-review.md) owns attribution, and [validation](./mokly-component-review-validation.md) owns source coverage.
 
 ## Normative Result
 
@@ -21,7 +21,7 @@ interface ReviewEntrySides {
   previousPath?: string;
 }
 
-interface ScreenReviewV6 extends ScreenReview, ReviewEntrySides {}
+interface ScreenReviewV7 extends ScreenReview, ReviewEntrySides {}
 
 type ReviewVariantAddress = Pick<
   ManifestComponentVariant,
@@ -91,7 +91,7 @@ interface AffectedConsumer {
   evidence: readonly AffectedUsageEvidence[];
 }
 
-interface ReviewResultV6 {
+interface ReviewResultV7 {
   baseCommit: string;
   baseRef: string;
   changedPaths: readonly string[];
@@ -101,8 +101,8 @@ interface ReviewResultV6 {
     id: string;
     count: number;
   }[];
-  schemaVersion: 6;
-  screens: readonly ScreenReviewV6[];
+  schemaVersion: 7;
+  screens: readonly ScreenReviewV7[];
   components: readonly ComponentReview[];
   changes: readonly ChangedEntry[];
   affectedConsumers: readonly AffectedConsumer[];

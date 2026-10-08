@@ -1,10 +1,10 @@
 # Remove Source-Path Evidence
 
 Status: Active. Milestones 1 to 36 are implemented, verified and pushed; the
-branch contains main `a90badb6`. Milestone 37 moves the combined formats to
-manifest v10, catalogue read model v6 and review result v7. The open review
-findings of Milestones 32 to 34 and one Milestone 35 decision wait for the
-user.
+branch contains main `a90badb6`. Milestone 37 is implemented and verified at
+manifest v10, catalogue read model v6 and review result v7. Its local commit
+awaits the reviewer's push and review. The open review findings of Milestones
+32 to 34 and one Milestone 35 decision wait for the user.
 
 ## Status And Outcome
 
@@ -2930,38 +2930,38 @@ rules that kept the branch's records in main's unreleased numbers. It also
 fixes the failing Deploy PR Preview check, which rebuilds `origin/main` with
 main's own Mokly and then reads main's v9 manifest as current output.
 
-- [ ] Update the contracts first: the version inventory, rejection and
+- [x] Update the contracts first: the version inventory, rejection and
       acceptance rules in `docs/protocol/mokly-format-versions.md`, every
       protocol doc, guide and README that names these versions, and
       `docs/protocol/npm-release-notes.md` (0.14.0 output is earlier output;
       rebuild committed output and regenerate exports). Keep history text and
       the protocol caps.
-- [ ] Capture the failures first. The command
+- [x] Capture the failures first. The command
       `npm run preview:build -- --include-changes --base origin/main` fails
       with `$component.declaredDependencies: unknown field`. A new test with a
       base whose own recipe writes main's released v9 manifest expects the
       earlier-baseline outcome. Record that both fail before the change.
-- [ ] Move the writers, readers, validators, types and tests to manifest v10,
+- [x] Move the writers, readers, validators, types and tests to manifest v10,
       catalogue v6 and review v7. Rename the versioned types, for example
       `ManifestV9` to `ManifestV10`, `ReviewResultV6` to `ReviewResultV7` and
       `ScreenReviewV6` to `ScreenReviewV7`. Manifest v9, catalogue v5 and
       review v6 go through the existing earlier-output and unsupported-version
       gates. The baseline completion marker requires manifest v10.
-- [ ] Restore main's released `docs/protocol/fixtures/catalogue-v5.json` bytes
+- [x] Restore main's released `docs/protocol/fixtures/catalogue-v5.json` bytes
       as an earlier-version fixture, as main keeps `catalogue-v4.json`. Ship
       the current shape as `catalogue-v6.json` and update every reference.
-- [ ] Update the docs guard's version patterns and exact allow-list entries for
+- [x] Update the docs guard's version patterns and exact allow-list entries for
       the new current names. Add no other check; the Milestone 35 decision on
       documentation-wording tests is still open.
-- [ ] Compare every other boundary in the version inventory with `origin/main`.
+- [x] Compare every other boundary in the version inventory with `origin/main`.
       Report any format that this branch changes under a number that 0.14.0
       released. Do not change such a format without the user's decision.
-- [ ] Run build, typecheck, lint, the targeted tests and
+- [x] Run build, typecheck, lint, the targeted tests and
       `cargo xtask check --suite repository`. Smoke-test the preview build
       against `origin/main` (the build succeeds; Changes are unavailable with
       the earlier-baseline message), Serve and Check against a base built by
       0.14.0, and Serve on the example.
-- [ ] Run the complete `cargo xtask check` at 100%. Inspect the deletions
+- [x] Run the complete `cargo xtask check` at 100%. Inspect the deletions
       against `origin/main`; only the four approved files may be deleted.
       Commit locally; the reviewer pushes and updates the PR description.
 - [ ] After the push, use `docs/implementation-review-prompt.md` to review the
@@ -2969,5 +2969,7 @@ main's own Mokly and then reads main's v9 manifest as current output.
       read-only. Then apply the review-fix rule in `docs/dev/review.md`: fix
       `Auto-fix: yes` findings, re-review once, and report the rest. Add each
       open finding as one line under this TODO.
+
+- Unrelated flaky test: `route_scoped_shell_routes.spec.ts` — `use-case and page frames keep loading and navigating while evidence is unavailable` failed because the `Getting started` iframe heading was not found within 5,000 ms; the unchanged test passed on rerun. Suspected source: frame navigation/readiness ordering under parallel browser load.
 
 Evidence: `.context/remove-source-path-evidence/milestone-37.md`.

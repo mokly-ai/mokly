@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import { isIncompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { ConfiguredGitCommandRunner } from "../config/git.js";
@@ -55,7 +55,7 @@ export class RepositoryCatalogueChangeClassifier implements CatalogueChangeClass
 
   async read(
     config: ResolvedConfig,
-    manifest: ManifestV9,
+    manifest: ManifestV10,
     base: string,
     signal?: AbortSignal,
     accepted?: CatalogueClassificationInputs,
@@ -91,7 +91,7 @@ export class RepositoryComponentChanges implements ComponentChangeSource {
   private git: ReadOnlyReviewRepository;
   constructor(
     private readonly config: ResolvedConfig,
-    private readonly manifest: ManifestV9,
+    private readonly manifest: ManifestV10,
     private readonly base: string,
     private readonly signal?: AbortSignal,
     commands?: GitCommandRunner,
@@ -134,7 +134,7 @@ export class RepositoryComponentChanges implements ComponentChangeSource {
 /** Classify pages and ownership-aware component views against one pinned baseline. */
 export async function readCatalogueChanges(
   config: ResolvedConfig,
-  manifest: ManifestV9,
+  manifest: ManifestV10,
   base: string,
   git: ReadOnlyReviewRepository,
   commit: string,

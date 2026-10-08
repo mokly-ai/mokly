@@ -216,7 +216,7 @@
   },
   {
     "file": "docs/protocol/mokly-baseline-addressing.md",
-    "statement": "Do not normalize v2–v8 document hrefs into v9 ones, rewrite paired HTML to accommodate an older layout, or use Git changed-path strings to locate a base resource.",
+    "statement": "Do not normalize v2–v9 document hrefs into v10 ones, rewrite paired HTML to accommodate an older layout, or use Git changed-path strings to locate a base resource.",
     "reason": "Explicit rejection of earlier document layouts; no v2-v8 content or URL conversion is allowed."
   },
   {
@@ -266,7 +266,7 @@
   },
   {
     "file": "docs/protocol/mokly-comparison-inventory.md",
-    "statement": "Test a unique moved v9 catalogue plus stale root v7, multiple v9 candidates, and an actual pre-v9 rebuild with no v9 result.",
+    "statement": "Test a unique moved v10 catalogue plus stale root v7, multiple v10 candidates, and an actual pre-v10 rebuild with no v10 result.",
     "reason": "Rejection coverage distinguishes valid current v9 candidates from stale v7 metadata and earlier rebuilt output."
   },
   {
@@ -276,7 +276,7 @@
   },
   {
     "file": "docs/protocol/mokly-component-review.md",
-    "statement": "The v6 result has no `sharedImpact`; its entries omit `dependencies` and `sharedImpact` (both removed).",
+    "statement": "The v7 result has no `sharedImpact`; its entries omit `dependencies` and `sharedImpact` (both removed).",
     "reason": "The current v6 comparison privacy contract explicitly omits the removed source-path fields."
   },
   {
@@ -306,7 +306,7 @@
   },
   {
     "file": "docs/protocol/mokly-derived-baselines.md",
-    "statement": "- Test v9 absent/complete/missing/mismatched/extra inventory at **each** base commit, tracking transitions and moved v9 roots; test v2–v8 incompatibility at the selected generated location and after a rebuild, plus once-per-base reporting and v9 recovery.",
+    "statement": "- Test v10 absent/complete/missing/mismatched/extra inventory at **each** base commit, tracking transitions and moved v10 roots; test v2–v9 incompatibility at the selected generated location and after a rebuild, plus once-per-base reporting and v10 recovery.",
     "reason": "Earlier versions appear only as rejection fixtures; stale root-level metadata and invalid caches cannot select content readers."
   },
   {
@@ -326,12 +326,12 @@
   },
   {
     "file": "docs/protocol/mokly-export-browser.md",
-    "statement": "This prevents self-reference without changing delivery descriptor v5, ownership v3, upload v2 or review result v6.",
+    "statement": "This prevents self-reference without changing delivery descriptor v5, ownership v3, upload v2 or review result v7.",
     "reason": "Current delivery v5, ownership v3, upload v2 and review v6 have independent supported format numbers."
   },
   {
     "file": "docs/protocol/mokly-export-public-files.md",
-    "statement": "Ownership v3 and upload v2 gate the viewer namespace; the review result is v6 and the delivery descriptor v5.",
+    "statement": "Ownership v3 and upload v2 gate the viewer namespace; the review result is v7 and the delivery descriptor v5.",
     "reason": "Current publication format gates distinguish ownership v3 and upload v2 from review v6 and delivery v5."
   },
   {
@@ -351,12 +351,12 @@
   },
   {
     "file": "docs/protocol/mokly-format-versions.md",
-    "statement": "Cache marker v1, invalid/truncated markers and incomplete output are partial entries, removed under their own lock before rebuilding.",
+    "statement": "Cache marker v1, 0.14.0 marker v2 with manifest 9 or `generated-v9`, invalid/truncated markers and incomplete output are partial entries, removed under their own lock before rebuilding.",
     "reason": "Earlier cache-marker v1 entries are partial and must rebuild; they never provide incompatibility evidence."
   },
   {
     "file": "docs/protocol/mokly-format-versions.md",
-    "statement": "Do not export a v8 content reader or cast either pre-merge v8 shape into this one.",
+    "statement": "Do not export a v9 content reader or cast released v9 output into this shape.",
     "reason": "Explicit rejection of earlier manifest, catalogue or review formats; no conversion or content reader is permitted."
   },
   {
@@ -366,23 +366,23 @@
   },
   {
     "file": "docs/protocol/mokly-format-versions.md",
-    "statement": "Public catalogue v4 from either parent is unsupported by the v5 reader; manifest v8 from either parent is earlier output, not current metadata.",
+    "statement": "Public catalogue v5 and below are unsupported by the v6 reader; manifest v9 and below are earlier output, not current metadata.",
     "reason": "Explicit rejection of earlier manifest, catalogue or review formats; no conversion or content reader is permitted."
   },
   {
     "file": "docs/protocol/mokly-format-versions.md",
-    "statement": "Review v5 and below are unsupported comparison results.",
+    "statement": "Review v6 and below are unsupported comparison results.",
     "reason": "Explicit rejection of earlier manifest, catalogue or review formats; no conversion or content reader is permitted."
   },
   {
     "file": "docs/protocol/mokly-format-versions.md",
-    "statement": "The Cloud follow-up must adopt catalogue v5, review v6, delivery v5, bootstrap v2 and inspector v2 in addition to upload v2/ownership v3.",
+    "statement": "The Cloud follow-up must adopt catalogue v6, review v7, delivery v5, bootstrap v2 and inspector v2 in addition to upload v2/ownership v3.",
     "reason": "The Cloud receiver must adopt the exact supported catalogue, review, delivery, bootstrap and inspector protocol versions."
   },
   {
     "file": "docs/protocol/mokly-format-versions.md",
-    "statement": "Validate marker v2, then compare settings, then validate v9 output.",
-    "reason": "The current baseline completion marker is independently versioned as v2 and validates combined-v9 output."
+    "statement": "Validate marker v2 with manifest 10 and `generated-v10`, then compare settings, then validate v10 output.",
+    "reason": "The current baseline completion marker is independently versioned as v2 and validates combined-v10 output."
   },
   {
     "file": "docs/protocol/mokly-format-versions.md",
@@ -396,12 +396,12 @@
   },
   {
     "file": "docs/protocol/mokly-generated-delivery.md",
-    "statement": "Current delivery uses catalogue v5, static delivery v5 and bootstrap v2.",
+    "statement": "Current delivery uses catalogue v6, static delivery v5 and bootstrap v2.",
     "reason": "Exact current catalogue v5 and delivery/bootstrap/ownership/upload format boundary; unsupported catalogue shapes remain rejected."
   },
   {
     "file": "docs/protocol/mokly-generated-delivery.md",
-    "statement": "Only v5 is readable.",
+    "statement": "Only v6 is readable.",
     "reason": "Exact current catalogue v5 and delivery/bootstrap/ownership/upload format boundary; unsupported catalogue shapes remain rejected."
   },
   {
@@ -421,7 +421,7 @@
   },
   {
     "file": "docs/protocol/mokly-generated-manifest.md",
-    "statement": "Tests cover committed stale root-level v7 with a successful v9 rebuild, earlier root-level output produced by the base's own rebuild, partial cache rebuilds and atomic marker publication.",
+    "statement": "Tests cover committed stale root-level v7 with a successful v10 rebuild, earlier root-level output produced by the base's own rebuild, partial cache rebuilds and atomic marker publication.",
     "reason": "Stale root-level v7 is a rejection/selection fixture, never a readable baseline or fallback manifest."
   },
   {
@@ -441,8 +441,8 @@
   },
   {
     "file": "docs/protocol/mokly-shell-bootstrap.md",
-    "statement": "The public canonical serializer and `docs/protocol/fixtures/catalogue-v5.json` cover that complete v5 contract, with one fixed generated-tree layout.",
-    "reason": "The shipped current catalogue-v5 fixture and canonical serializer define the one supported catalogue layout."
+    "statement": "The public canonical serializer and `docs/protocol/fixtures/catalogue-v6.json` cover that complete v6 contract, with one fixed generated-tree layout.",
+    "reason": "The shipped current catalogue-v6 fixture and canonical serializer define the one supported catalogue layout."
   },
   {
     "file": "docs/protocol/mokly-shell-brand.md",
@@ -451,8 +451,8 @@
   },
   {
     "file": "docs/protocol/mokly-unified-output.md",
-    "statement": "Test the exact unavailable outcome for every pre-v9 base instead of accepting a v7-to-v9 content comparison.",
-    "reason": "The v7-to-v9 case names forbidden earlier-content conversion; current readers retain only the unavailable result."
+    "statement": "Test the exact unavailable outcome for every pre-v10 base instead of accepting a v7-to-v10 content comparison.",
+    "reason": "The v7-to-v10 case names forbidden earlier-content conversion; current readers retain only the unavailable result."
   },
   {
     "file": "docs/protocol/mokly-upload-exchange.md",
@@ -491,7 +491,7 @@
   },
   {
     "file": "docs/protocol/mokly-viewer-namespace.md",
-    "statement": "A v4 catalogue reader cannot interpret a v5 model.",
+    "statement": "A v5 catalogue reader cannot interpret a v6 model.",
     "reason": "Exact namespace/version-gate statement for current independent protocols, or explicit older-version rejection coverage."
   },
   {
@@ -506,12 +506,12 @@
   },
   {
     "file": "docs/protocol/mokly-viewer-namespace.md",
-    "statement": "Catalogue v5, delivery v5 and bootstrap v2 identify the unified layout.",
+    "statement": "Catalogue v6, delivery v5 and bootstrap v2 identify the unified layout.",
     "reason": "Exact namespace/version-gate statement for current independent protocols, or explicit older-version rejection coverage."
   },
   {
     "file": "docs/protocol/mokly-viewer-namespace.md",
-    "statement": "Regression tests cover failure cases for an old receiver rejecting new current-only and Changes-enabled uploads, new readers rejecting old/unknown versions before path use, and a strict older catalogue reader rejecting v5.",
+    "statement": "Regression tests cover failure cases for an old receiver rejecting new current-only and Changes-enabled uploads, new readers rejecting old/unknown versions before path use, and a strict older catalogue reader rejecting v6.",
     "reason": "Explicit older-receiver/catalogue/ownership rejection coverage; old versions are not admitted or converted."
   },
   {
@@ -526,7 +526,7 @@
   },
   {
     "file": "docs/protocol/mokly-viewer-namespace.md",
-    "statement": "Update installed-package fixtures for catalogue v5, ownership v3 and upload v2.",
+    "statement": "Update installed-package fixtures for catalogue v6, ownership v3 and upload v2.",
     "reason": "Exact namespace/version-gate statement for current independent protocols, or explicit older-version rejection coverage."
   },
   {
@@ -541,7 +541,7 @@
   },
   {
     "file": "docs/protocol/mokly-viewer-namespace.md",
-    "statement": "Use path-derived names and the current review-v6 content shape.",
+    "statement": "Use path-derived names and the current review-v7 content shape.",
     "reason": "Exact namespace/version-gate statement for current independent protocols, or explicit older-version rejection coverage."
   },
   {
@@ -576,7 +576,7 @@
   },
   {
     "file": "docs/protocol/npm-release-notes.md",
-    "statement": "Consumers must adopt manifest v9, catalogue read model v5, review result v6, disclosure storage v4, and `/view/<path>/` URLs.",
+    "statement": "Consumers must adopt manifest v10, catalogue read model v6, review result v7, disclosure storage v4, and `/view/<path>/` URLs.",
     "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
   },
   {
@@ -601,7 +601,7 @@
   },
   {
     "file": "docs/protocol/npm-release-notes.md",
-    "statement": "Live capability descriptors and the inspector wire use v2; the live index is `live-index-2`, catalogue change snapshots use v3 and baseline completion markers use v2 with `generated-v9`.",
+    "statement": "Live capability descriptors and the inspector wire use v2; the live index is `live-index-2`, catalogue change snapshots use v3 and baseline completion markers use v2 with `generated-v10`.",
     "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
   },
   {
@@ -611,17 +611,17 @@
   },
   {
     "file": "docs/protocol/npm-release-notes.md",
-    "statement": "Old manifest v8 or catalogue v4 payloads from either parent are unsupported.",
+    "statement": "Manifest v9 and below are earlier baseline output; catalogue v5 and review v6 and below are unsupported public payloads.",
     "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
   },
   {
     "file": "docs/protocol/npm-release-notes.md",
-    "statement": "Readers accept source manifest v9, public catalogue v5, delivery v5 and bootstrap v2 only.",
+    "statement": "Readers accept source manifest v10, public catalogue v6, delivery v5 and bootstrap v2 only.",
     "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
   },
   {
     "file": "docs/protocol/npm-release-notes.md",
-    "statement": "Replace `ManifestV7` with `ManifestV9`, `ReviewResultV4` with `ReviewResultV6`, and `ScreenReviewV4` with `ScreenReviewV6`.",
+    "statement": "Replace released `ManifestV9` with `ManifestV10`, `ReviewResultV6` with `ReviewResultV7`, and `ScreenReviewV6` with `ScreenReviewV7`.",
     "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
   },
   {
@@ -631,12 +631,12 @@
   },
   {
     "file": "docs/protocol/npm-release-notes.md",
-    "statement": "The path/output integration uses manifest v9, catalogue v5, review v6, delivery v5 and bootstrap v2.",
+    "statement": "The path/output integration uses manifest v10, catalogue v6, review v7, delivery v5 and bootstrap v2.",
     "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
   },
   {
     "file": "docs/protocol/npm-release-notes.md",
-    "statement": "`ManifestV9` replaces the incompatible pre-merge `ManifestV8` shapes.",
+    "statement": "`ManifestV10` replaces released `ManifestV9`; `Manifest` and `HistoricalManifest` now name v10.",
     "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
   },
   {
@@ -656,8 +656,8 @@
   },
   {
     "file": "packages/viewer/README.md",
-    "statement": "The read model is v5.",
-    "reason": "The complete public catalogue read model currently uses v5; older formats remain unsupported."
+    "statement": "The read model is v6.",
+    "reason": "The complete public catalogue read model currently uses v6; older formats remain unsupported."
   },
   {
     "file": "packages/viewer/README.md",
@@ -688,5 +688,15 @@
     "file": "src/publish/README.md",
     "statement": "Publishing uses the content-addressed Plan → Blobs → Complete exchange over a schema 3 ownership marker and upload v2 envelope.",
     "reason": "The current publication exchange uses ownership v3 and upload v2 with independent schema numbers."
+  },
+  {
+    "file": "docs/protocol/mokly-format-versions.md",
+    "statement": "Verify the exact earlier-version line, successful current output and unavailable Changes with a pinned base whose own recipe writes main's released v9 manifest, including `declaredDependencies`.",
+    "reason": "Released v9 rejection coverage names the earlier shape that the baseline recipe must write."
+  },
+  {
+    "file": "docs/protocol/npm-release-notes.md",
+    "statement": "npm 0.14.0 output (manifest v9, catalogue v5 and review v6) is earlier output.",
+    "reason": "Consumer migration identifies the released earlier formats that require regenerated output."
   }
 ]

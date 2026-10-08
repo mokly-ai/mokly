@@ -42,7 +42,7 @@ export async function smokeRegisteredComponents(
       "utf8",
     ),
   );
-  assert.equal(manifest.schemaVersion, 9);
+  assert.equal(manifest.schemaVersion, 10);
   const componentEntries = manifest.entries.filter(
     (entry) => entry.kind === "component",
   );
@@ -152,7 +152,7 @@ export async function smokeRegisteredComponents(
     "published",
     "HEAD",
     ["view/packed-action/index.html", "view/packed-panel/index.html"],
-    6,
+    7,
   );
   assert.equal(review.components.length, 2);
   const published = await fs.readFile(

@@ -139,6 +139,6 @@ before/after tuples join copies across generated entry roots. Components change
 only from kept own-page matches after nested filtering; outside matches and
 unresolved rules give a page its own row. Consumer invocation matches alone
 never change that component. Private CSS inputs are rebuild inputs only.
-Both comparison sides use v9. Earlier output at the selected generated location
+Both comparison sides use v10. Earlier output at the selected generated location
 or after the base's own rebuild returns [Changes unavailable](./mokly-baseline-compatibility.md), with no old
 resource reader or one-time cross-layout stylesheet comparison.

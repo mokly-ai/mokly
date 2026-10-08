@@ -72,7 +72,7 @@ export default defineScreen({title:'Home',description:'Home',relatedDocs:[],
   });
   t.after(fixture.remove);
   const built = await fixture.compile();
-  assert.equal(parseManifest(built.manifest).schemaVersion, 9);
+  assert.equal(parseManifest(built.manifest).schemaVersion, 10);
   assert.deepEqual(
     built.diagnostics?.map((warning) => [warning.subject?.path]),
     [["library/action"], ["library/action"]],
@@ -183,7 +183,7 @@ test("a moved whole-document page retains Unmodified evidence status", async () 
   const { pageComparisonEvidence } =
     await import("../packages/viewer/dist/shell/page_evidence_data.js");
   const before = currentManifest({
-    schemaVersion: 9 as const,
+    schemaVersion: 10 as const,
     generatedBy: "mokly" as const,
     folders: [],
     sourceFiles: ["specs/page.mockup.ts"],

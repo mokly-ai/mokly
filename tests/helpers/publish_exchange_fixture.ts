@@ -42,7 +42,7 @@ export function dependencies(duplicate = false) {
         [
           comparisonPath,
           JSON.stringify({
-            schemaVersion: 5,
+            schemaVersion: 7,
             baseRef: "origin/main",
             baseCommit: base,
             changedPaths: [],

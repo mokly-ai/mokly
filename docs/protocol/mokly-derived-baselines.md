@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-Only v9 baselines are readable. Per-commit selection, rebuilds and `preparing`
-apply the [v9 version gate](./mokly-generated-manifest.md) before creating a reader.
+Only v10 baselines are readable. Per-commit selection, rebuilds and `preparing`
+apply the [v10 version gate](./mokly-generated-manifest.md) before creating a reader.
 `check` inspects head Git index tracking. CLI publish also checks committed
 generated output and requires ignored derived output. Implementation and verification
 are tracked by [Generated Output Simplification](../../plans/generated-output-simplification.md).
@@ -14,7 +14,7 @@ The head side always uses the current validated **in-memory compilation**;
 neither tracked nor untracked head output has to match local generated files
 to compare. For each pinned merge-base commit, probe only its canonical
 generated-location manifest. Earlier output there gives the typed unavailable
-outcome. Otherwise use complete v9 Git blobs, or rebuild the commit using its own
+outcome. Otherwise use complete v10 Git blobs, or rebuild the commit using its own
 lockfile, dependencies, config, entries, renderer, and Mokly version. A change
 in tracking policy across history does not change this rule. Neither HTTP
 request paths nor disposable Serve children may run the baseline build.
@@ -81,27 +81,27 @@ for debounce, one-shot and child/parent behavior.
 
 Resolve and pin the merge base once. List only the requested generated
 subtree and inspect its canonical `mokly-manifest.json`. Ignore committed
-root-level and noncanonical filenames. A complete v9 inventory selects Git
+root-level and noncanonical filenames. A complete v10 inventory selects Git
 blobs; missing or incomplete output selects the base's own recipe. Keep the
 version gate on a selected current-location manifest and normal I/O errors.
 
-After the rebuild, a canonical root-level manifest below v9 returns
+After the rebuild, a canonical root-level manifest below v10 returns
 `baseline-incompatible-earlier`. A current generated manifest takes precedence.
 Do not cache earlier output or its outcome. Invalid, missing or older cached
 entries are partial and are deleted under the cache lock before rebuilding.
-Valid v9 metadata with different catalogue/build settings fails intact before
+Valid v10 metadata with different catalogue/build settings fails intact before
 output validation. Retention inspects only marker and input metadata, as the
 [storage contract](./mokly-baseline-storage.md#cache-layout) requires.
 No head-index state participates in these decisions.
 
 Both readable implementations accept a commit and repository-relative path.
-The Git reader reads blobs. The rebuilt v9 reader appends that path beneath
+The Git reader reads blobs. The rebuilt v10 reader appends that path beneath
 its cache `output/`, using the pinned historical root. There is no flat alternative
 reader. Keep regular-file/symlink checks, 4,096-object and 48 MiB batch bounds,
-and at most 32 disk reads in flight. Authored resources come from the v9
+and at most 32 disk reads in flight. Authored resources come from the v10
 closure; generated CSS and opaque assets come from its verified inventory.
 
-Both sides are v9. Pair documents by kind/path and view axes; address generated
+Both sides are v10. Pair documents by kind/path and view axes; address generated
 resources relative to each generated root and authored resources relative to
 each catalogue root. Preserve moved-root handling, independent byte/membership
 checks, CSS attribution and component fast paths. Remove only old-schema
@@ -111,7 +111,7 @@ source/dependency evidence. See the
 
 ### Earlier-Baseline Availability
 
-Preserve typed outcome for every pre-v9 base. Serve keeps All usable
+Preserve typed outcome for every pre-v10 base. Serve keeps All usable
 with Changes unavailable and no changed/removed entries, comparisons or previous
 versions. Export and Changes-enabled publication succeed with current content,
 `changesStatus: "unavailable"`, `comparisonUrl: null`, and no historical files.
@@ -124,7 +124,7 @@ Changes are unavailable because the comparison base was built with an earlier ve
 ```
 
 Retain the outcome for unchanged content generations; do not repeat the line or
-rebuild. A new base can restore Changes through normal preparation. A v9 source
+rebuild. A new base can restore Changes through normal preparation. A v10 source
 failure or invalid/newer baseline does not receive this graceful exception.
 
 ## Preparation And Serve
@@ -181,10 +181,10 @@ flag. Navigation targets and `preparing → pending` timing remain measurable.
 - Test tracking outcomes (including no Git), mixed-state path guidance,
   tracked missing/stale/extra output, and untracked local-output independence.
   Cache paths need only `git rm --cached`, because the cache ignores itself.
-- Test v9 absent/complete/missing/mismatched/extra inventory at **each** base
-  commit, tracking transitions and moved v9 roots; test v2–v8 incompatibility
+- Test v10 absent/complete/missing/mismatched/extra inventory at **each** base
+  commit, tracking transitions and moved v10 roots; test v2–v9 incompatibility
   at the selected generated location and after a rebuild, plus once-per-base
-  reporting and v9 recovery. Prove stale committed root-level v7 and invalid
+  reporting and v10 recovery. Prove stale committed root-level v7 and invalid
   caches rebuild rather than deciding unavailability.
 - Test cache hits, interruption, bounded command errors, path/symlink
   confinement, child handoff, and in-memory head comparisons.

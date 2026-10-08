@@ -52,7 +52,7 @@ test("dark views compare and classify against a pre-dark base", async (context) 
   const reviewJson = JSON.parse(
     renderReviewArtifact(artifact).get("review.json") as string,
   ) as ReviewResult;
-  assert.equal(reviewJson.schemaVersion, 6);
+  assert.equal(reviewJson.schemaVersion, 7);
   const jsonHome = reviewJson.screens.find((screen) => screen.path === "home");
   assert.ok(jsonHome);
   assert.deepEqual(

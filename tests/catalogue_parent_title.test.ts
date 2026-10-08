@@ -104,7 +104,7 @@ for (const [name, reader] of [
   for (const kind of ["screen", "component"] as const) {
     test(`${name} reader requires parentTitle exactly on removed ${kind} variants`, async () => {
       const model = JSON.parse(
-        await fs.readFile("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
+        await fs.readFile("docs/protocol/fixtures/catalogue-v6.json", "utf8"),
       );
       const source = kind === "screen" ? model.screens[0] : model.components[1];
       const entry = {

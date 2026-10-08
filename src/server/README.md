@@ -93,7 +93,7 @@ lexical fallback if its projection fails. Source notifications
 are isolated at the gate: classifier failures are reported, that notification
 is dropped, and later notifications continue through the same watcher.
 
-GET/HEAD `/mokly-viewer/catalogue.json` returns the public v5
+GET/HEAD `/mokly-viewer/catalogue.json` returns the public v6
 [read model](../catalogue/README.md) as complete JSON with
 `Cache-Control: no-store`; it never contains bootstrap-only omitted usage.
 `public_catalogue.ts` serializes an atomic snapshot when accepted content,
@@ -176,7 +176,7 @@ uses `ServedReviewRepository` in `review_repository.ts` to open a confined cache
 reader through `readOnlyRepositoryForCommit` / `baselineReaderForCommit` and
 ignore stale versions. The single-process host uses the same holder directly.
 The Serve parent selects the pinned baseline reader per commit, using the
-historical manifest's presence and matching v9 inventory
+historical manifest's presence and matching v10 inventory
 or the rebuild cache. The child receives that selection; it neither
 builds baselines nor writes output. `serve --build` writes in the parent only
 after complete compilation and resource-watch readiness, including once with
@@ -189,19 +189,19 @@ unselected route reports `config-invalid` for a nested `repoRoot` while All
 remains available. Parent preparation, classification and selected readers use
 the same config-owned validation.
 
-Both readers accept only manifest v9. Recognized earlier output follows the
+Both readers accept only manifest v10. Recognized earlier output follows the
 successful unavailable behavior and single terminal line in the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
 `classification_result.ts` carries that expected typed outcome across the
 background worker without converting it into a generic classifier failure;
-unsupported newer or malformed v9 data keeps the normal safe diagnostic path.
-V9 data with removed fields, missing required roots or provenance, or CSS
+unsupported newer or malformed v10 data keeps the normal safe diagnostic path.
+v10 data with removed fields, missing required roots or provenance, or CSS
 owners is invalid. All stays usable. No schema or stored layout is converted.
 
 `configured_review.ts` requires an injected `ReadOnlyReviewRepository` or a
 `ReviewRepositorySource` that supplies the current reader. The full comparison
 route fails with typed `review-invalid` ("The comparison is not prepared")
-until a selected v9 reader is available. `selected_review_routes.ts` owns one
+until a selected v10 reader is available. `selected_review_routes.ts` owns one
 bounded generation service for screen/component comparisons and removed-page
 previews. Pages use `review.json?page=<page-path>`, while screens and component
 variants use `review.json?path=<entry-path>`; each redirects to immutable metadata
@@ -347,7 +347,7 @@ watcher keeps it. The child ignores a list that `isAuthoredClosure` rejects.
 
 The approved [path/output integration](../../docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
 Markdown documents and moves inside one generated tree. It introduces manifest
-v9, catalogue v5 and review v6, with explicit versions for the other boundaries.
+v10, catalogue v6 and review v7, with explicit versions for the other boundaries.
 Accepted workers use immutable in-memory route sets; only writing commands
 acquire the output lock. The integration plan records verification and scope.
 

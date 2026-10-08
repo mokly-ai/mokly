@@ -27,7 +27,7 @@ const COMMON_KEYS = [
   "tags",
 ] as const;
 
-/** Validate one identity-only v9 component parent or flattened variant. */
+/** Validate one identity-only v10 component parent or flattened variant. */
 export function validateManifestComponent(
   value: Record<string, unknown>,
 ): void {
@@ -77,7 +77,7 @@ function validateVariantEntry(value: Record<string, unknown>): void {
   decodeProps(value.props);
 }
 
-/** Validate a v9 variant's data against its already-validated parent. */
+/** Validate a v10 variant's data against its already-validated parent. */
 export function validateVariantAgainstParent(
   variant: Record<string, unknown>,
   parent: ManifestComponent,

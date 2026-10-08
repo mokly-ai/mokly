@@ -64,7 +64,7 @@ export async function removedPagePreviewFixture(t: TestContext) {
   const metadata = currentManifest({
     entries: [page],
     generatedBy: "mokly",
-    schemaVersion: 9,
+    schemaVersion: 10,
     sourceFiles: ["entries/guide.mockup.tsx"],
   });
   const baseline: HistoricalManifest = {

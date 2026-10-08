@@ -158,7 +158,7 @@ test("Changes activation searches a removed variant as its row does", () => {
       entries: [parent, current],
       folders: [record("start", { title: "Launchpad" })],
       generatedBy: "mokly",
-      schemaVersion: 9,
+      schemaVersion: 10,
       sourceFiles: [],
     }),
     [
@@ -197,7 +197,7 @@ test("a route reveal keeps a search that the destination's folder title matches"
     JSON.parse(
       fs.readFileSync(
         new URL(
-          "../../../docs/protocol/fixtures/catalogue-v5.json",
+          "../../../docs/protocol/fixtures/catalogue-v6.json",
           import.meta.url,
         ),
         "utf8",

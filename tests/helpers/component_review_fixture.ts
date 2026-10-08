@@ -58,12 +58,12 @@ export function componentGit(
   inputs: ReadonlyMap<string, GeneratedFile> = new Map(),
 ): ReadOnlyReviewRepository {
   const commit = "a".repeat(40);
-  const generated = compilation.manifest.schemaVersion === 9;
+  const generated = compilation.manifest.schemaVersion === 10;
   const assetClosure =
     "assetClosure" in compilation.manifest
       ? compilation.manifest.assetClosure
       : [];
-  const descriptor = baselineCatalogue(commit, "mockups", "generated-v9");
+  const descriptor = baselineCatalogue(commit, "mockups", "generated-v10");
   const files = new Map(
     [...compilation.outputs].map(([route, html]) => [
       `mockups/${generated && !assetClosure.includes(route) ? "mokly-generated/" : ""}${route}`,

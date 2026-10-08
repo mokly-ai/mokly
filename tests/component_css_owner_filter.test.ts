@@ -34,7 +34,7 @@ test("declared links retain provenance without CSS resource owners", async (t) =
   }
 });
 
-test("baseline and current v9 both reject CSS owners and missing roots", async (t) => {
+test("baseline and current v10 both reject CSS owners and missing roots", async (t) => {
   const fixture = await fixtureWithSheets();
   t.after(() => removeFixture(fixture));
   const { manifest } = await compileCatalogue(await loadConfig(fixture.root));

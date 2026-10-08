@@ -17,7 +17,7 @@ import { invalidCurrentManifest } from "./helpers/current_baseline_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 const current = () => ({
-  schemaVersion: 9,
+  schemaVersion: 10,
   folders: [],
   generatedBy: "mokly",
   sourceFiles: [],
@@ -50,7 +50,7 @@ test("comparison requires explicit provenance on a present private usage record"
   assert.equal(comparisonStylesheetMaterial(html, undefined).html, html);
 });
 
-for (const version of [3, 4, 5, 6, 7, 8])
+for (const version of [3, 4, 5, 6, 7, 8, 9])
   test(`baseline v${version} is incompatible without metadata conversion`, () => {
     assert.throws(
       () => parseHistoricalManifest({ ...current(), schemaVersion: version }),
@@ -58,12 +58,12 @@ for (const version of [3, 4, 5, 6, 7, 8])
     );
   });
 
-test("current v9 uses the same validation at both manifest boundaries", () => {
+test("current v10 uses the same validation at both manifest boundaries", () => {
   assert.deepEqual(
     parseHistoricalManifest(current()),
     parseManifest(current()),
   );
-  for (const schemaVersion of [10, 9.5, 8.5, 7.5, "7", null]) {
+  for (const schemaVersion of [11, 10.5, 9.5, 8.5, 7.5, "7", null]) {
     assert.throws(
       () => parseHistoricalManifest({ ...current(), schemaVersion }),
       { code: "manifest-invalid" },
@@ -76,7 +76,7 @@ for (const shape of [
   "missing provenance",
   "CSS owners",
 ] as const)
-  test(`earlier v9 with ${shape} is invalid at both boundaries`, async (context) => {
+  test(`current v10 with ${shape} is invalid at both boundaries`, async (context) => {
     const fixture = await createFixture(componentEntrySource());
     context.after(() => removeFixture(fixture));
     const { manifest } = await compileCatalogue(await loadConfig(fixture.root));
@@ -110,7 +110,7 @@ for (const filename of ["mokabook-manifest.json", "mockbook-manifest.json"])
     assert.deepEqual(reads, []);
   });
 
-test("invalid canonical v9 never falls back to a former filename", async (context) => {
+test("invalid canonical v10 never falls back to a former filename", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);

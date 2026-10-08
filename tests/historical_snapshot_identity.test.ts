@@ -7,9 +7,9 @@ import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import type { CatalogueReadModel } from "../packages/viewer/src/catalogue/types.js";
 import type {
   ManifestScreen,
-  ManifestV9,
+  ManifestV10,
 } from "../packages/viewer/src/registry/types.js";
-import type { ReviewResultV6 } from "../packages/viewer/src/review/component_types.js";
+import type { ReviewResultV7 } from "../packages/viewer/src/review/component_types.js";
 import { createCatalogue } from "../packages/viewer/src/shell/catalogue.js";
 import {
   displayEntry,
@@ -36,7 +36,7 @@ const currentScreen = screen(
 const baseline = manifest([oldScreen]);
 const current = currentManifest({
   ...manifest([currentScreen]),
-  schemaVersion: 9 as const,
+  schemaVersion: 10 as const,
 });
 
 test("projection publishes stable per-record identity before comparison generation", () => {
@@ -116,7 +116,7 @@ test("reader rejects malformed and duplicate published identities", () => {
 
 test("reader rejects current and removed records sharing an id", () => {
   const fixture = readCatalogue(
-    JSON.parse(requireFixture("../docs/protocol/fixtures/catalogue-v5.json")),
+    JSON.parse(requireFixture("../docs/protocol/fixtures/catalogue-v6.json")),
   );
   const current = fixture.screens[0]!;
   const removed = {
@@ -195,7 +195,7 @@ function snapshot(model: CatalogueReadModel): string {
   return model.removedEntries[0]?.snapshotId ?? "";
 }
 
-function review(baseCommit: string): ReviewResultV6 {
+function review(baseCommit: string): ReviewResultV7 {
   return {
     affectedConsumers: [],
     baseCommit,
@@ -204,16 +204,16 @@ function review(baseCommit: string): ReviewResultV6 {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     screens: [],
   };
 }
 
-function manifest(entries: readonly CurrentManifestScreen[]): ManifestV9 {
+function manifest(entries: readonly CurrentManifestScreen[]): ManifestV10 {
   return currentManifest({
     entries,
     generatedBy: "mokly",
-    schemaVersion: 9,
+    schemaVersion: 10,
     folders: [],
     sourceFiles: [
       ...new Set(entries.map(({ sourcePath }) => sourcePath)),

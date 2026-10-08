@@ -39,7 +39,7 @@ test("combined manifest gates reject both earlier v8 shapes before entries", () 
     },
     { schemaVersion: 8, entries: [{ path: "home" }], folders: [] },
   ]) {
-    assert.throws(() => parseManifest(earlier), /schema version 9/);
+    assert.throws(() => parseManifest(earlier), /schema version 10/);
     assert.throws(() => parseHistoricalManifest(earlier), {
       code: "baseline-incompatible-earlier",
     });
@@ -47,34 +47,39 @@ test("combined manifest gates reject both earlier v8 shapes before entries", () 
 });
 
 test("current and historical manifest versions precede payload validation", () => {
-  for (const version of [8, 10]) {
+  for (const version of [8, 9, 11]) {
     assert.throws(
       () => parseManifest(unsupported(version)),
-      /schema version 9/,
+      /schema version 10/,
     );
     assert.throws(
       () => parseHistoricalManifest(unsupported(version)),
-      version === 8
+      version < 10
         ? { code: "baseline-incompatible-earlier" }
-        : /schema version 9/,
+        : /schema version 10/,
     );
   }
 });
 
 test("combined public formats reject parent versions before payload fields", async () => {
-  const earlier = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v4.json", "utf8"),
-  );
-  assert.throws(
-    () => readCatalogue(earlier),
-    /Unsupported Mokly catalogue version 4/,
-  );
-  for (const version of [4, 6])
+  for (const version of [4, 5]) {
+    const earlier = JSON.parse(
+      await fs.readFile(
+        `docs/protocol/fixtures/catalogue-v${version}.json`,
+        "utf8",
+      ),
+    );
+    assert.throws(() => readCatalogue(earlier), {
+      name: "MoklyVersionError",
+      boundary: "catalogue",
+    });
+  }
+  for (const version of [4, 5, 7])
     assert.throws(
       () => readCatalogue(unsupported(version)),
       /Unsupported Mokly catalogue version/,
     );
-  for (const version of [4, 5, 7])
+  for (const version of [4, 5, 6, 8])
     assert.throws(
       () => parseReviewResult(unsupported(version)),
       /unsupported schemaVersion/,

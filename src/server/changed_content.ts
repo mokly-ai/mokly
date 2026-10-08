@@ -4,10 +4,10 @@ import path from "node:path";
 
 import type {
   HistoricalManifest,
-  ManifestV9,
+  ManifestV10,
   ScreenResourceEvidence,
   PageResourceEvidence,
-  ReviewResultV6,
+  ReviewResultV7,
   ViewResourceEvidence,
 } from "@mokly/viewer/data";
 
@@ -66,7 +66,7 @@ export interface ChangedContentComparison {
  * Exclude authoring paths lexically so retargeted public aliases still reach validation.
  */
 export async function changedContentPaths(
-  manifest: ManifestV9,
+  manifest: ManifestV10,
   baseline: HistoricalManifest,
   config: ResolvedConfig,
   git: BaselineReader,
@@ -95,7 +95,7 @@ export async function changedContentPaths(
 
 /** Preserve rendered-resource evidence from membership without repeating analysis. */
 export async function classifyChangedContent(
-  manifest: ManifestV9,
+  manifest: ManifestV10,
   baseline: HistoricalManifest,
   config: ResolvedConfig,
   git: BaselineReader,
@@ -107,7 +107,7 @@ export async function classifyChangedContent(
   documents: "all" | "pages" = "all",
   comparison?: ChangedContentComparison,
   css: CssResourceAnalysis = new CssResourceAnalysis(),
-  classified?: ReviewResultV6,
+  classified?: ReviewResultV7,
 ): Promise<ChangedContent> {
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const repoPath = (route: string) => (prefix ? `${prefix}/${route}` : route);

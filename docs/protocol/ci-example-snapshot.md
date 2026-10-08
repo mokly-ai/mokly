@@ -17,7 +17,7 @@ with exactly these fields:
 | `schemaVersion`         | `1`.                                                                                                                  |
 | `key`                   | The freshness key, as 64 lowercase hexadecimal characters.                                                            |
 | `diagnostics`           | The compilation's normalized build diagnostics as `{ code, route, message }` records.                                 |
-| `manifest`              | The compilation's manifest v9 object.                                                                                 |
+| `manifest`              | The compilation's manifest v10 object.                                                                                |
 | `outputs`               | `[route, file]` pairs in compilation order. Text stays a string; binary output is `{ "kind": "bytes", "base64": … }`. |
 | `deliveredStyleSources` | The compilation's repository-relative delivered style inputs.                                                         |
 | `documentMarkdown`      | `[sourcePath, markdown]` pairs; omitted when the compilation has none.                                                |
@@ -29,7 +29,7 @@ field.
 
 Decoding requires the manifest object to serialize exactly to the snapshot's
 `mokly-manifest.json` output. The compile writes that output only after its
-strict manifest v9 validation, so decoding does not repeat the validation, which
+strict manifest v10 validation, so decoding does not repeat the validation, which
 costs seconds per test process. Diagnostics pass the build-warning validator.
 Decoding rejects another schema version, a malformed key, unknown fields,
 duplicate routes or document paths, and invalid binary transfer values. A

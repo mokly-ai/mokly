@@ -8,8 +8,8 @@ Markdown files are documents, and moves are paired with their baseline.
 ## Delivery Status
 
 The generated tree, file-derived paths, component stylesheets and uniform CSS
-evidence are implemented under the combined manifest v9, catalogue v5 and
-review v6. [Documentation policy](./documentation-policy.md#delivery-status)
+evidence are implemented under the combined manifest v10, catalogue v6 and
+review v7. [Documentation policy](./documentation-policy.md#delivery-status)
 records the earlier delivery items. The [implementation plans](../../plans/)
 record active work.
 
@@ -28,7 +28,7 @@ and publish fail before writes or uploads. Serve refuses strict mode.
 The [catalogue format table](./mokly-catalogue.md#supported-formats) lists the
 manifest and comparison versions for both catalogue kinds.
 
-Current output uses manifest v9, review result v6 and public read model v5.
+Current output uses manifest v10, review result v7 and public read model v6.
 The catalogue contract owns their metadata, move fields and current-reader
 rules.
 
@@ -43,7 +43,7 @@ unsupported versions before content or path interpretation.
 - [Path identity in one generated tree](./mokly-path-output-integration.md) —
   approved combined layout, Markdown resource closure and baseline behavior.
 - [Combined format versions](./mokly-format-versions.md) — the complete public
-  and private version inventory, including manifest v9, catalogue v5 and review v6.
+  and private version inventory, including manifest v10, catalogue v6 and review v7.
 - [Accepted generation routes](./mokly-generation-routes.md) — immutable
   in-memory route snapshots, strict IPC and writer-only output locking.
 
@@ -83,20 +83,20 @@ unsupported versions before content or path interpretation.
   cloud documentation site.
 - [Configuration contract](./mokly-configuration.md) — catalogue paths and settings.
 - [Generated output, Git state and asset closure](./mokly-generated-output.md)
-  — implemented layout, manifest v9, tracked-state, closure and writer contracts.
+  — implemented layout, manifest v10, tracked-state, closure and writer contracts.
 - [Unified generated output and imported styles](./mokly-unified-output.md)
   — approved single-tree layout, reserved routes, reference policy, PostCSS and
   CSS delivery without output modes.
 - [Generated manifest and baseline version gate](./mokly-generated-manifest.md)
-  — approved v9 identity schema/inventory, earlier-version outcome and cache policy.
+  — approved v10 identity schema/inventory, earlier-version outcome and cache policy.
 - [Portable viewer namespace and version gates](./mokly-viewer-namespace.md)
   — approved `mokly-viewer/` paths, version errors and upload compatibility.
   - [Entry discovery](./mokly-configuration-discovery.md).
   - [Imported CSS configuration](./mokly-configuration-imported-styles.md).
 - [Historical catalogue discovery and addressing](./mokly-baseline-addressing.md)
-  — approved moved-root v9 discovery and descriptors without older-format content readers.
+  — approved moved-root v10 discovery and descriptors without older-format content readers.
 - [Generated document delivery](./mokly-generated-delivery.md)
-  — identity-derived HTML prefixes, catalogue-v5 policy and static/frame URL mapping.
+  — identity-derived HTML prefixes, catalogue-v6 policy and static/frame URL mapping.
 - [Public authoring API](./mokly-authoring.md)
 - [Paths, roots, and identity](./mokly-paths.md) — path derivation, segment
   grammar, index pages, URLs, and collision diagnostics.
@@ -188,7 +188,7 @@ unsupported versions before content or path interpretation.
   [preview frames](./mokly-removed-preview-frames.md) for the frame lifecycle.
 - [Removed preview acceptance](./mokly-removed-preview-acceptance.md) —
   regression and presentation coverage.
-- [Per-commit baselines](./mokly-derived-baselines.md) — verified v9 Git blobs
+- [Per-commit baselines](./mokly-derived-baselines.md) — verified v10 Git blobs
   or rebuilt output, independent of head tracking.
   - [Baseline storage and execution](./mokly-baseline-storage.md) — archive
     limits, command environments, locking and crash cleanup.

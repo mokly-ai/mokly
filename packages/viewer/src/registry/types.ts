@@ -58,19 +58,19 @@ export type ManifestEntry =
   | ManifestComponentVariant;
 
 /** Current canonical identity-only manifest. */
-export interface ManifestV9 {
+export interface ManifestV10 {
   assetClosure: readonly string[];
   blobHashAlgorithm: "sha1" | "sha256";
   generatedFiles: readonly { path: string; blobHash: string }[];
   entries: readonly ManifestEntry[];
   generatedBy: "mokly";
-  schemaVersion: 9;
+  schemaVersion: 10;
   folders: readonly ManifestFolder[];
   sourceFiles: readonly string[];
 }
 
-/** A baseline accepted by the historical boundary is exactly manifest v9. */
-export type HistoricalManifest = ManifestV9;
+/** A baseline accepted by the historical boundary is exactly manifest v10. */
+export type HistoricalManifest = ManifestV10;
 
 /** Historical names express caller intent without introducing a second shape. */
 export type HistoricalManifestEntry = ManifestEntry;
@@ -78,8 +78,8 @@ export type HistoricalManifestScreen = ManifestScreen;
 export type HistoricalManifestPage = ManifestPage;
 export type HistoricalManifestUseCase = ManifestUseCase;
 
-/** Current and historical comparison inputs share the exact v9 contract. */
-export type Manifest = ManifestV9;
+/** Current and historical comparison inputs share the exact v10 contract. */
+export type Manifest = ManifestV10;
 
 /** Whole-document entry rendered from Markdown. */
 export interface ManifestDocument extends ManifestEntryBase {

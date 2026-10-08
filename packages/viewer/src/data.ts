@@ -129,7 +129,7 @@ export type {
 } from "./navigation/routes.js";
 export type {
   ReviewEntryAddress,
-  ScreenReviewV6,
+  ScreenReviewV7,
   ReviewVariantAddress,
   ComponentVariantReview,
   ComponentReview,
@@ -138,7 +138,7 @@ export type {
   ComponentUsageContext,
   AffectedUsageEvidence,
   AffectedConsumer,
-  ReviewResultV6,
+  ReviewResultV7,
 } from "./review/component_types.js";
 export { affectedConsumerOrderKey } from "./review/order.js";
 export type {
@@ -184,7 +184,7 @@ export type {
   ManifestDocument,
   ManifestFolder,
   ManifestEntry,
-  ManifestV9,
+  ManifestV10,
   Manifest,
   HistoricalManifestEntry,
   HistoricalManifestScreen,

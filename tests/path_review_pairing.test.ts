@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import type { ManifestDocument, ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestDocument, ManifestV10 } from "@mokly/viewer/data";
 import { parseReviewResult } from "@mokly/viewer/data";
 
 import { entryChanges } from "../dist/catalogue/changes.js";
@@ -140,8 +140,8 @@ test("reserved documents are not component review pairs", async (t) => {
     relatedDocs: [],
     resources: [],
   };
-  const manifest: ManifestV9 = currentManifest({
-    schemaVersion: 9,
+  const manifest: ManifestV10 = currentManifest({
+    schemaVersion: 10,
     generatedBy: "mokly",
     folders: [],
     sourceFiles: ["specs/guide.md"],

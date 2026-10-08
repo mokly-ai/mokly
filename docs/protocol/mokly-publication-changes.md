@@ -38,7 +38,7 @@ exporter's typed removed-preview descriptor builder and adds each descriptor to
 the matching captured static shell. This artifact-only step does not advertise
 page paths from the development server used during capture.
 
-Missing history, an invalid v9 baseline, capture inconsistency, or comparison
+Missing history, an invalid v10 baseline, capture inconsistency, or comparison
 failure aborts publication and preserves previous output. Recognized earlier
 output instead completes with Changes unavailable under the
 [baseline compatibility contract](./mokly-baseline-compatibility.md). Preserve

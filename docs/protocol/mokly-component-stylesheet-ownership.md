@@ -22,13 +22,13 @@ each inserted link's public path, real file and rendered declaring component
 paths until ordinary package link edits finish. Use the
 [shared active link finder](./mokly-stylesheet-links.md) on that final document.
 Match each insertion to its real file and record the active full-link UTF-16
-span, public path and declaring `componentPaths` in the private v9 view's
+span, public path and declaring `componentPaths` in the private v10 view's
 `insertedStylesheets` array. A reused renderer or configured link receives no
 inserted-link span. No reserved token, transient attribute or wrapper is used.
 
 Offsets refer to the final HTML, including the current plain generated notice.
 Validate each span against those exact bytes. Rebase component ranges and
-document-style offsets through ordinary package edits. Each persisted v9 usage
+document-style offsets through ordinary package edits. Each persisted v10 usage
 record contains `insertedStylesheets`, including an empty array when no link was
 inserted. Missing provenance is invalid; never infer it or replace a missing
 array with an empty one.
@@ -67,14 +67,14 @@ The audit of existing uses requires these changes:
 | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `render.tsx` derives resource records during link insertion/reuse.                            | Keep link order, deduplication and declarer data in the linking pass; write no CSS resource records.                                   |
 | `stylesheet_provenance.ts` finalizes inserted links from the linking pass.                    | Resolve final active links against issued linking data. Preserve spans, validated public paths, final-link checks and offset rebasing. |
-| Manifest serialization and resource validation carry the records.                             | Current v9 writes only non-stylesheet resource owners. Validate public CSS through declarations and the resource graph.                |
+| Manifest serialization and resource validation carry the records.                             | Current v10 writes only non-stylesheet resource owners. Validate public CSS through declarations and the resource graph.               |
 | `component_projection_resources.ts` suppresses owned CSS in consumers.                        | Never suppress a stylesheet through resource ownership. Match rules against actual normalized documents.                               |
 | `component_view.ts` treats root resource-owner changes as material.                           | Retain that check only for non-CSS owners. An added/removed declaration with no link, byte or other rendered change gives no reason.   |
 | `component_resource_attribution.ts` promotes invocation CSS to component reasons.             | Keep invocation attribution only for non-CSS resources. CSS requires own-page rule matches.                                            |
-| Fast-path usage equality, source validation and affected-consumer assembly use those records. | Require valid v9 records without CSS owners, validate frozen per-rule proof and preserve complete/fast equivalence.                    |
+| Fast-path usage equality, source validation and affected-consumer assembly use those records. | Require valid v10 records without CSS owners, validate frozen per-rule proof and preserve complete/fast equivalence.                   |
 | Public catalogue/inspection projection strips resource ownership.                             | Keep it private; expose rule evidence instead. No export, watch or publication file list depends on derived owners.                    |
 
-Current and baseline v9 usage records reject CSS resource entries. A current record that retains them is invalid data. Readers never
+Current and baseline v10 usage records reject CSS resource entries. A current record that retains them is invalid data. Readers never
 drop those records or reconstruct them from declarations. The renderer filter
 below acts on authoring output before manifest validation.
 

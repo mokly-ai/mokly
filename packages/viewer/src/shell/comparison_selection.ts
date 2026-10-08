@@ -16,7 +16,7 @@ export interface SelectedComparisonView {
   viewport: "desktop" | "mobile";
 }
 
-/** Find the path-addressed v6 result record for one routed screen or variant. */
+/** Find the path-addressed v7 result record for one routed screen or variant. */
 function comparisonEntry(
   loaded: LoadedComparison,
   kind: ViewRouteKind,

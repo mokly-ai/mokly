@@ -64,7 +64,7 @@ for (const variantPath of ["elsewhere/empty", "product/browse/home/deep/empty"])
     assert.throws(
       () =>
         parseManifest({
-          schemaVersion: 9,
+          schemaVersion: 10,
           generatedBy: "mokly",
           folders: [],
           sourceFiles: [base.sourcePath],
@@ -77,7 +77,7 @@ for (const variantPath of ["elsewhere/empty", "product/browse/home/deep/empty"])
     );
     const model = JSON.parse(
       fs.readFileSync(
-        new URL("../docs/protocol/fixtures/catalogue-v5.json", import.meta.url),
+        new URL("../docs/protocol/fixtures/catalogue-v6.json", import.meta.url),
         "utf8",
       ),
     );
@@ -103,7 +103,7 @@ for (const variantPath of ["elsewhere/empty", "product/browse/home/deep/empty"])
 test("a public variant cannot become a folder page", () => {
   const model = JSON.parse(
     fs.readFileSync(
-      new URL("../docs/protocol/fixtures/catalogue-v5.json", import.meta.url),
+      new URL("../docs/protocol/fixtures/catalogue-v6.json", import.meta.url),
       "utf8",
     ),
   );

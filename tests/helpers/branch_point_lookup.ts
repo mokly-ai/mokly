@@ -2,7 +2,7 @@ import type { ManifestComponent } from "../../packages/viewer/src/components/man
 import type {
   ManifestEntry,
   ManifestScreen,
-  ManifestV9,
+  ManifestV10,
 } from "../../packages/viewer/src/registry/types.js";
 import { createCatalogue } from "../../packages/viewer/src/shell/catalogue.js";
 import type { RemovedEntrySnapshot } from "../../packages/viewer/src/shell/metadata.js";
@@ -45,8 +45,8 @@ export function lookupCatalogue(
   removed: readonly RemovedEntrySnapshot[] = [],
   moves: readonly { path: string; previousPath: string }[] = [],
 ) {
-  const manifest: ManifestV9 = currentManifest({
-    schemaVersion: 9,
+  const manifest: ManifestV10 = currentManifest({
+    schemaVersion: 10,
     generatedBy: "mokly",
     entries,
     folders: [],

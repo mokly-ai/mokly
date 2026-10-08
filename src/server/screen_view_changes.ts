@@ -2,11 +2,11 @@ import path from "node:path";
 
 import { GENERATED_DIRECTORY, generatedViews } from "@mokly/viewer/data";
 import type {
-  ReviewResultV6,
+  ReviewResultV7,
   ScreenResourceEvidence,
   HistoricalManifest,
   ManifestEntry,
-  ManifestV9,
+  ManifestV10,
   ViewReview,
 } from "@mokly/viewer/data";
 
@@ -21,7 +21,7 @@ export interface ScreenViewChanges {
 
 /** Retain the completed material pass's per-view decisions without generating comparisons. */
 export function screenViewChanges(
-  current: ManifestV9,
+  current: ManifestV10,
   baseline: HistoricalManifest,
   config: ResolvedConfig,
   materialPaths: readonly string[],
@@ -89,7 +89,7 @@ export function screenViewChanges(
 }
 
 /** Project complete visual evidence without changing membership or view readiness. */
-export function screenResultEvidence(result: ReviewResultV6): {
+export function screenResultEvidence(result: ReviewResultV7): {
   screenViews: ScreenViewChanges[];
   screenEvidence: ScreenResourceEvidence[];
 } {

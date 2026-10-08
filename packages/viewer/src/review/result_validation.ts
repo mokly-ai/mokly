@@ -1,6 +1,6 @@
 import { canonicalJson } from "../components/data.js";
 
-import type { ReviewResultV6 } from "./component_types.js";
+import type { ReviewResultV7 } from "./component_types.js";
 import { affectedConsumerOrderKey } from "./order.js";
 import {
   requireEqual,
@@ -21,7 +21,7 @@ import {
 import { validateResultReferences } from "./result_references.js";
 import type { ReviewResult } from "./types.js";
 
-/** Decode the path-addressed v6 result shared by every catalogue. */
+/** Decode the path-addressed v7 result shared by every catalogue. */
 export function parseReviewResult(value: unknown): ReviewResult {
   try {
     return validateResult(value);
@@ -37,7 +37,7 @@ function validateResult(value: unknown): ReviewResult {
     !value ||
     typeof value !== "object" ||
     !("schemaVersion" in value) ||
-    value.schemaVersion !== 6
+    value.schemaVersion !== 7
   )
     reviewInvalid("unsupported schemaVersion");
   const result = reviewObject(value, [
@@ -121,12 +121,12 @@ function validateResult(value: unknown): ReviewResult {
   const affected = reviewArray(result.affectedConsumers).map(validateAffected);
   requireOrdered(affected, (item) =>
     affectedConsumerOrderKey(
-      item as unknown as ReviewResultV6["affectedConsumers"][number],
+      item as unknown as ReviewResultV7["affectedConsumers"][number],
     ),
   );
   validateIgnoredImpact(result.ignoredImpact, screens);
-  validateResultReferences(value as ReviewResultV6);
-  validateResultMoves(value as ReviewResultV6);
+  validateResultReferences(value as ReviewResultV7);
+  validateResultMoves(value as ReviewResultV7);
   return value as ReviewResult;
 }
 

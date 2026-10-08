@@ -171,12 +171,12 @@ its first variant. Exact names follow the
 [artifact path contract](./mokly-artifact-paths.md). Output collision,
 source protection, resource validation, generated-tree inventory and transactional-write checks apply.
 
-Every current catalogue emits manifest schema v9, including typed component
+Every current catalogue emits manifest schema v10, including typed component
 parent and variant entries and per-view usage records for screens and component
 variants; no entry stores a route or view path. The
 [manifest schema](./mokly-component-manifest.md) defines every record,
 reference, ordering rule, and validation boundary. Baseline readers accept the
-same current v9 shape without conversion, with availability defined by
+same current v10 shape without conversion, with availability defined by
 [baseline compatibility](./mokly-baseline-compatibility.md).
 
 Inert, package-owned DOM markers bind generated ranges to their usage records.

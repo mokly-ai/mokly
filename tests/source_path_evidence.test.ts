@@ -62,7 +62,7 @@ for (const components of [false, true])
     assert.deepEqual(current.outputs, compilation.outputs);
     const git = componentGit(compilation, ["notes.md"]);
     const { result } = await compareReview(current, config, git, "main");
-    assert.equal(result.schemaVersion, 6);
+    assert.equal(result.schemaVersion, 7);
     assert.equal(Object.hasOwn(result, "sharedImpact"), false);
     assert.ok(
       result.screens.every((screen) => !Object.hasOwn(screen, "sharedImpact")),
@@ -72,7 +72,7 @@ for (const components of [false, true])
         screen.views.every((view) => !view.reasons && !view.excludedResources),
       ),
     );
-    if (result.schemaVersion === 6) {
+    if (result.schemaVersion === 7) {
       assert.deepEqual(result.changes, []);
       assert.ok(
         result.components.every(

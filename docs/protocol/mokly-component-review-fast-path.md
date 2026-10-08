@@ -8,8 +8,8 @@ Removal of baseline compatibility is implemented in
 Uniform CSS eligibility, root-boundary handling and catalogue-wide rule proof
 are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
-The fast path and its strict-v9 baseline boundary are implemented.
-The fast path is implemented over the strict path-keyed manifest-v9 baseline boundary.
+The fast path and its strict-v10 baseline boundary are implemented.
+The fast path is implemented over the strict path-keyed manifest-v10 baseline boundary.
 
 This contract owns the unchanged-view decision used by component-aware Changes
 classification. Input ownership and materiality remain defined by
@@ -31,14 +31,14 @@ because those views do not repeat range validation.
 
 Apply these steps in order:
 
-1. Retain v9 component markers on both sides and apply paired manual-ignore
+1. Retain v10 component markers on both sides and apply paired manual-ignore
    normalization. If documents differ outside paired ignored regions, take the
    complete path. Marker-stripped equality is insufficient because marker
    positions participate in ownership projection.
 2. Compare usage records canonically. Neither side having usage is eligible;
    exactly one side having it takes the complete path. When both exist, every
    field must match except `props` and `propsKey` on entry-owned instances.
-   Both records must pass current v9 validation, including rejection of CSS owners.
+   Both records must pass current v10 validation, including rejection of CSS owners.
    View axes, instance identity/ownership/order, instance-owned props, and every
    slot, range, style, and resource record must match. Optional invocation
    `source` is excluded, as it is from every Changes projection.
@@ -46,7 +46,7 @@ Apply these steps in order:
    manual-ignore normalization. If the documents differ, take the complete
    path. Discover both closures independently.
 4. When either usage record has instances, a root range, styles, or entry-owned slots,
-   compute the complete comparison's ownership projection, including v9 range
+   compute the complete comparison's ownership projection, including v10 range
    validation and root-specific ownership. Require equal projected HTML and
    discover resources independently on both sides with the same exclusions.
 5. If an actual or projected resource is a changed Git path, take the complete
@@ -92,6 +92,6 @@ one classification never repeats discovery for the same document and policy or
 retains a complete document as a map key.
 
 Added and removed views do not use the paired decision. Before normalizing the
-one-sided v9 document, validate every recorded component range. A malformed
+one-sided v10 document, validate every recorded component range. A malformed
 ownership tree fails with `$document` validation instead of becoming an
 ordinary addition or removal.

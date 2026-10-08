@@ -63,7 +63,7 @@ explicit `--base`. Both modes build and validate the catalogue.
 
 Publish requires a Git checkout with a commit even without comparisons, to
 identify the uploaded revision. With comparisons enabled, the pinned base uses
-verified v9 blobs or its own rebuild recipe. `--no-changes` requires neither
+verified v10 blobs or its own rebuild recipe. `--no-changes` requires neither
 that history nor a historical install or build. Publish requires a clean
 checkout. `headSha` names the commit whose tracked files produced the catalogue.
 Dependencies and other ignored build products come from the local environment.
@@ -133,7 +133,7 @@ Readers reject missing/extra upload-manifest fields and duplicate JSON keys.
 
 - `moklyVersion` is the installed package's exact SemVer, including prerelease
   or build metadata, at most 255 UTF-8 bytes. `schemaVersion` versions this
-  envelope independently of catalogue manifest v9 and review result v6.
+  envelope independently of catalogue manifest v10 and review result v7.
 - `repository` obeys the identity grammar above; it is an assertion to authorize,
   not proof of repository ownership. `host` is at most 253 bytes; owner and name
   are each at most 255 bytes.

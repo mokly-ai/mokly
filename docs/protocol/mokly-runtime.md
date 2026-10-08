@@ -1,7 +1,7 @@
 # Mokly Build And Browse Runtime
 
 [Whole-document pages](./mokly-pages.md) share the same path-derived folder
-hierarchy as screens and flows. Current and baseline output use manifest v9
+hierarchy as screens and flows. Current and baseline output use manifest v10
 under the [compatibility contract](./mokly-baseline-compatibility.md).
 
 ## Source Of Truth
@@ -23,7 +23,7 @@ Canonical outer navigation from links inside fragment frames, request-visible
 fragment transport, manifest-bound preview adaptation, and active-tree
 disclosure are implemented. Their delivery history is recorded in the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
-Path identity, manifest v9, Markdown documents, and move detection are
+Path identity, manifest v10, Markdown documents, and move detection are
 implemented.
 
 This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
@@ -55,7 +55,7 @@ Changes. Screen-owned prop and slot changes still count as screen changes.
 4. Render screen views, whole-document pages, and Markdown documents in
    deterministic order.
 5. Resolve path links and validate document links and anchors.
-6. Build the version 9 manifest, asset closure, generated-file inventory and
+6. Build the version 10 manifest, asset closure, generated-file inventory and
    resolved source inventory; validate closure and hrefs from `mokly-generated/`.
 7. Stage the entire `mokly-generated/` tree before changing the last-good output.
 8. Replace that tree transactionally; restore it on failure.
@@ -114,7 +114,7 @@ static delivery metadata, and lazy immutable comparisons are defined by
 No server or watcher is started for export; served behavior below is unchanged.
 
 Serve validates its distinct live catalogue index and independently resolves both
-source graphs before binding. Full-manifest consumers still require validated v9
+source graphs before binding. Full-manifest consumers still require validated v10
 output and a current source inventory. These scans never render pages or rewrite
 output. The [on-demand contract](./mokly-on-demand.md) defines completeness,
 worker isolation and generation-local caches. Browse exposes:
@@ -161,10 +161,10 @@ backslash separators introduced by decoding one original URL segment before
 any filesystem resolution.
 
 Browse projects one [catalogue tree](./mokly-catalogue.md#tree) from validated
-manifest v9 paths and folder records and splits it into the Components and
+manifest v10 paths and folder records and splits it into the Components and
 Specs sections. The serve-mode `live-index-2` retains that literal
-`schemaVersion` but carries the v9 entry shape and folder records (with
-unrendered usage metadata omitted), validated through the v9 metadata schema.
+`schemaVersion` but carries the v10 entry shape and folder records (with
+unrendered usage metadata omitted), validated through the v10 metadata schema.
 
 ## Browse Shell
 

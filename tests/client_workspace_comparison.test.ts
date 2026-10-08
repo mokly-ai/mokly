@@ -4,7 +4,7 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV7 } from "../packages/viewer/dist/review/component_types.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
@@ -109,7 +109,7 @@ test("loaded comparisons for another screen cannot add evidence to the selected 
   assert.doesNotMatch(renderEvidence(data, loaded), /mockups\/logo.svg/);
 });
 
-test("v5 workspace evidence omits source-only paths and keeps excluded stylesheets separate", () => {
+test("v7 workspace evidence omits source-only paths and keeps excluded stylesheets separate", () => {
   const data = workspace();
   data.status = "Unmodified";
   data.comparison = componentComparison(
@@ -130,7 +130,7 @@ test("v5 workspace evidence omits source-only paths and keeps excluded styleshee
   assert.doesNotMatch(markup, /Changed styles that apply to this screen/);
 });
 
-test("loaded v5 evidence omits source-only paths and deduplicates retained resources", () => {
+test("loaded v7 evidence omits source-only paths and deduplicates retained resources", () => {
   const loaded = parseReviewResult(
     componentComparison(
       ["entries/alpha.ts", "entries/beta.ts"],
@@ -163,10 +163,10 @@ function componentComparison(
   sourcePaths: string[],
   reasonPath?: string,
   excludedCss?: string,
-): ReviewResultV6 {
+): ReviewResultV7 {
   const address = { path: "home", title: "Home" };
   return {
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: [
@@ -211,9 +211,9 @@ function componentComparison(
   };
 }
 
-function comparison(): ReviewResultV6 {
+function comparison(): ReviewResultV7 {
   return {
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: [

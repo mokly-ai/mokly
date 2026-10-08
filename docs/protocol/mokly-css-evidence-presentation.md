@@ -30,12 +30,12 @@ visual rules remain in [CSS Evidence In The Shell](./mokly-css-evidence-shell.md
 
 Live classification retains resource evidence for every entry kind, including
 screen-only `screenEvidence`, with per-view axes, optional reasons and optional
-excluded resources. Catalogue v5 exposes it as `resourceEvidence` on views and
+excluded resources. Catalogue v6 exposes it as `resourceEvidence` on views and
 single-document pages under the [evidence schema](./mokly-css-attribution-membership.md). Paths remain repository-relative. The workspace projects the
 selected screen's views as optional `resourceEvidence`; it does not invent
 component reasons, component results, or comparison states. Static exports
-project the same slice from review result v6. A workspace built only from the
-published catalogue projects the catalogue v5 `resourceEvidence` of the
+project the same slice from review result v7. A workspace built only from the
+published catalogue projects the catalogue v6 `resourceEvidence` of the
 selected screen's views, or of the selected saved view's views on a component
 route: the routed variant, or the first saved variant on a parent route. A new
 classification generation replaces the slice and clears stale evidence while
@@ -55,7 +55,7 @@ loaded comparison subset. A page-only component-view reason adds no Affected
 screens. Pending or unavailable generations clear all page evidence.
 
 A whole-document page has no workspace and no views. Its Details read the
-page record's catalogue v5 `resourceEvidence` when the shell renders a public
+page record's catalogue v6 `resourceEvidence` when the shell renders a public
 catalogue, which Serve, exports and hosts all do. A shell rendered from private
 live data reads the matching live `pageEvidence` instead. That one record holds
 the page's reasons and exclusions, so no view merge applies. The grouping is

@@ -49,7 +49,7 @@ test("filesystem manifest loading never accepts v2 under the canonical filename"
     JSON.stringify(legacy),
   );
 
-  assert.throws(() => readManifest(config), /schema version 9/);
+  assert.throws(() => readManifest(config), /schema version 10/);
 });
 
 test("manifest loading rejects stored routes", async (context) => {
@@ -112,7 +112,7 @@ test("light-only manifests remain deterministic without variant metadata", () =>
       ],
       generatedBy: "mokly",
       sourceFiles: ["entries/a.mockup.tsx"],
-      schemaVersion: 9 as const,
+      schemaVersion: 10 as const,
       folders: [],
     }),
   );

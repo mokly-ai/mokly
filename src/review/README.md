@@ -22,7 +22,7 @@ baseline. The supported consumer interface remains the catalogue and CLI;
 these modules are not public package exports. `moves/prepare.ts` retains one
 accepted pairing and cached readers for classification and capture. The pure
 policy uses declared hints, identical material, source/title and document/page
-similarity in order. Review v6 emits `previousPath` on paired records; pure
+similarity in order. Review v7 emits `previousPath` on paired records; pure
 moves retain empty reasons and do not inflate material output counts.
 
 Unrendered source edits do not change catalogue membership or evidence.
@@ -33,8 +33,8 @@ checked delivery closure and watch inputs, including unlinked files. Private
 closure seeds grant no component reason or inserted provenance. Review needs
 actual linked stylesheet discovery and eligible changed-rule proof; declaring
 an unlinked file alone supplies no CSS evidence.
-Only canonical, valid manifest v9 input reaches comparison. Every
-catalogue uses the same public comparison v6 format.
+Only canonical, valid manifest v10 input reaches comparison. Every
+catalogue uses the same public comparison v7 format.
 Baseline and current documents use the same marker grammar. Former-spelling
 comments and script text stay ordinary content; comparison never renames them.
 Missing recorded ranges fail normal validation: Serve keeps Browse usable with Changes
@@ -85,7 +85,7 @@ through the current filesystem.
 `compare.ts` builds complete comparisons; `selected.ts` retains only a requested
 view's checked snapshot closure. Neither reader executes historical code.
 `snapshot_resources.ts` copies transitive resources at catalogue-relative paths.
-Both sides use the v9 layout.
+Both sides use the v10 layout.
 `page_preview.ts` captures a page or every scheme of a document from an accepted removed-entry
 snapshot. Its caller supplies the pinned `BaselineReader`; the provider verifies
 the entry against that snapshot's baseline manifest, then reuses
@@ -94,10 +94,10 @@ the same confinement, source exclusions, regular-file checks, transitive
 resource traversal and 64 MiB bound as screen panes. It returns typed
 `RemovedPagePreview` metadata plus the baseline files; the artifact renderer adds
 strictly validated `preview.json` without creating page records in `review.json`.
-Current and baseline manifests both require v9; recognized earlier output is
+Current and baseline manifests both require v10; recognized earlier output is
 handled before comparison under the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
-Review result v6 first pairs by kind and case-folded path, then by the
+Review result v7 first pairs by kind and case-folded path, then by the
 [move contract](../../docs/protocol/mokly-moves.md). `ReviewArtifact.pairing`
 retains all-kind moves and diagnostics beside the visual result, so pages and
 documents contribute move counts without synthetic visual review records.
@@ -115,7 +115,7 @@ current variant path, including when a move adds or removes Dark views.
 
 Earlier output at the selected generated location or after the base's own
 rebuild gives the typed unavailable outcome. Only the canonical manifest name
-is recognized. Invalid v9 data stays invalid, including missing roots or
+is recognized. Invalid v10 data stays invalid, including missing roots or
 provenance and stored CSS owners. Panes keep identity-derived paths and unchanged HTML; there
 is no schema, stored-layout or URL-rewriting fallback.
 
@@ -129,7 +129,7 @@ publication and the Serve parent. `prepareReviewRepository(config, base,
 historical manifest exists with a complete matching inventory, and rebuilds it otherwise. It returns a branded
 `PreparedReviewRepository`: pinned `commit`, `evidence`, `reader`, completion
 `marker` (undefined for Git-blob baselines), `selection`, and `assertUnchanged()`
-for the publication recheck. The historical v9 catalogue descriptor
+for the publication recheck. The historical v10 catalogue descriptor
 pairs routes and authored assets; Git changed paths remain repository-relative. See
 [baseline addressing](../../docs/protocol/mokly-baseline-addressing.md).
 Only that factory constructs the prepared type.
@@ -168,7 +168,7 @@ and [export boundary](../export/README.md).
 
 `css/` provides parsing, diffing, and document matching for
 [CSS change attribution](../../docs/protocol/mokly-css-attribution.md).
-Review v6, live membership, watched updates and publishing use it to
+Review v7, live membership, watched updates and publishing use it to
 exclude changed stylesheets whose changed rules cannot match a view. Public
 resource globs cannot bypass the graph or restore excluded stylesheets. These
 review interfaces are internal; the package authoring API is unchanged.
@@ -190,10 +190,10 @@ saved entry a row, but adds no affected consumers. Resource ownership cannot
 filter CSS or turn an invocation match into a component change. Declared links
 keep `insertedStylesheets` provenance, without derived `resources` records.
 The [evidence schema](../../docs/protocol/mokly-css-attribution-membership.md)
-defines the in-place review result v6, catalogue v5 and manifest v9 updates
+defines the current review result v7, catalogue v6 and manifest v10 updates
 and complete/fast/selected agreement.
 
-Review result v6 replaces both earlier result versions; a catalogue without
+Review result v7 replaces both earlier result versions; a catalogue without
 registered components emits the same shape with empty component arrays.
 
 `analysisOwnsStylesheet` owns the shared public-output boundary. Source/token
@@ -204,7 +204,7 @@ It merges changed generated routes with Git's authored paths. Only rendered
 documents, reachable resources and reviewable metadata can produce evidence;
 private CSS and PostCSS candidates do not add
 source-path evidence. A baseline predating generated CSS produces a one-time
-change for linked views. Review result v6 and live Changes use the same byte
+change for linked views. Review result v7 and live Changes use the same byte
 comparison and accepted input set.
 Accepted generations carry their stylesheet/asset route index, output bytes
 when available, and delivered sources through the runtime and background
@@ -338,7 +338,7 @@ byte changes without inventing dependency paths. Unexpected parser or matcher
 failures keep only the failing resource unresolved, retain recoverable changed
 selectors and allow classification to continue.
 
-Review v6 retains `material: true` exactly when the actual paired,
+Review v7 retains `material: true` exactly when the actual paired,
 ignore-normalized documents differ, including added and removed views. Ownership
 projections do not define this flag. A material change keeps the ordinary screen
 heading even when stylesheet evidence is also present. Complete and selected results retain
@@ -353,9 +353,9 @@ independent evidence, even for CSS.
 The screen-only live classifier retains a `ScreenResourceEvidence` slice from
 the same traversal that determines membership. The shell receives its selected
 `ViewResourceEvidence` records without requesting snapshots. Export projects
-the same slice from its unified v6 result;
+the same slice from its unified v7 result;
 both producers omit empty views and screens left without evidence. The inspector
-merges it with loaded comparison details. The public review result is v6; every catalogue uses the same
+merges it with loaded comparison details. The public review result is v7; every catalogue uses the same
 rendered-resource policy.
 
 With `--debug-timings`, `review.css-analysis` measures each stylesheet/view's
@@ -388,7 +388,7 @@ Key code:
   with accepted generated stylesheet/asset bytes and delivered-source stripping;
   live, export and Changes-enabled publication use the same typed input for
   comparison and membership.
-- `compare.ts`, `component_compare.ts`: the unified v6 comparison and retained
+- `compare.ts`, `component_compare.ts`: the unified v7 comparison and retained
   artifacts for every catalogue.
 - `page_preview.ts`: typed before-only page capture from accepted removal state.
 - `artifact_files.ts` and the shared viewer-data builders: collision-checked
@@ -396,10 +396,10 @@ Key code:
 - `deleted_resource.ts`: shared verification and byte comparison for a
   currently referenced resource that may have been deleted.
 - `component_variant_classification.ts`: flat component variant entry pairing,
-  reasons, view evidence, and grouped v6 result records.
+  reasons, view evidence, and grouped v7 result records.
 - `component_classification_sources.ts`, `component_classification_entries.ts`,
   `component_reason_sources.ts`, and `component_result_sources.ts`:
-  source-complete v6 assembly, entry-view preparation, and validation.
+  source-complete v7 assembly, entry-view preparation, and validation.
 - `component_classification.ts`, `component_view.ts`: component ownership policy.
   `compareComponentView` has two paths: an unchanged decision that settles a
   paired view only when marker-retaining documents, routes, and usage topology

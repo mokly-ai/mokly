@@ -18,9 +18,9 @@ export type PublicPath = string;
 export type RemovedEntryPreview =
   { kind: "screen" } | { kind: "page" } | { kind: "document" };
 
-/** Public v5 contract, independent of private build and comparison inventories. */
+/** Public v6 contract, independent of private build and comparison inventories. */
 export interface CatalogueReadModel {
-  schemaVersion: 5;
+  schemaVersion: 6;
   identity: { id: string; title: string };
   deploymentId: string;
   revision: { content: number; evidence: number };

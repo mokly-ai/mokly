@@ -23,7 +23,7 @@ const compilation: Compilation = {
     },
   ],
   manifest: {
-    schemaVersion: 9,
+    schemaVersion: 10,
     generatedBy: "mokly",
     folders: [],
     entries: [],

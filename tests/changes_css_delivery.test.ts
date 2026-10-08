@@ -17,7 +17,7 @@ import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
 for (const components of [false, true])
-  test(`v5 (components=${components}) CSS evidence survives selected HTTP, watched cache, and static export`, async (t) => {
+  test(`v7 (components=${components}) CSS evidence survives selected HTTP, watched cache, and static export`, async (t) => {
     const fixture = await cssAttributionFixture(t, components);
     const manifest = readManifest(fixture.config);
     const prepared = await prepareReviewRepository(fixture.config, "main");
@@ -100,12 +100,12 @@ for (const components of [false, true])
     assert.ok(updated);
     assert.ok(updated?.changedEntries?.includes("home"));
     const complete = await fixture.compare();
-    if (complete.result.schemaVersion === 6)
+    if (complete.result.schemaVersion === 7)
       assert.deepEqual(updated.result, complete.result);
   });
 
 for (const components of [false, true])
-  test(`v5 (components=${components}) aggregates only the views that kept a stylesheet`, async (t) => {
+  test(`v7 (components=${components}) aggregates only the views that kept a stylesheet`, async (t) => {
     const fixture = await cssAttributionFixture(t, components);
     await fixture.append(
       '[data-mokly-viewport="desktop"] .auth { padding: 3px; }',
@@ -129,7 +129,7 @@ for (const components of [false, true])
       ],
       ["mockups/shared.css"],
     );
-    if (result.schemaVersion === 6)
+    if (result.schemaVersion === 7)
       assert.deepEqual(
         result.changes.find((entry) => entry.after?.path === "home")?.reasons,
         home.views.find((view) => view.viewport === "desktop")?.reasons,
@@ -137,7 +137,7 @@ for (const components of [false, true])
   });
 
 for (const components of [false, true])
-  test(`v5 (components=${components}) a broad glob adds no unreferenced CSS resource`, async (t) => {
+  test(`v7 (components=${components}) a broad glob adds no unreferenced CSS resource`, async (t) => {
     const fixture = await cssAttributionFixture(t, components);
     await fixture.append("body { --tone: red; }", "unused.css");
     const { result } = await fixture.compare();
@@ -146,5 +146,5 @@ for (const components of [false, true])
         entry.views.every((view) => !view.reasons && !view.excludedResources),
       ),
     );
-    if (result.schemaVersion === 6) assert.deepEqual(result.changes, []);
+    if (result.schemaVersion === 7) assert.deepEqual(result.changes, []);
   });

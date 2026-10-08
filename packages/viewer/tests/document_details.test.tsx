@@ -16,7 +16,7 @@ function catalogue() {
   const model = JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v5.json",
+        "../../../docs/protocol/fixtures/catalogue-v6.json",
         import.meta.url,
       ),
       "utf8",
@@ -94,7 +94,7 @@ test("the served manifest's source path links its current document", () => {
       ],
       folders: [],
       generatedBy: "mokly",
-      schemaVersion: 9,
+      schemaVersion: 10,
       sourceFiles: [],
     }),
     [
@@ -138,7 +138,7 @@ test("a served document shows its source without the removed dependency list", (
       entries: [document],
       folders: [],
       generatedBy: "mokly",
-      schemaVersion: 9,
+      schemaVersion: 10,
       sourceFiles: [],
     }),
   );

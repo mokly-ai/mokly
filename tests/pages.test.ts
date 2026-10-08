@@ -29,7 +29,7 @@ test("a page renders exactly one complete document even with dark screens enable
     "handbook/index.html",
     "mokly-manifest.json",
   ]);
-  assert.equal(result.manifest.schemaVersion, 9);
+  assert.equal(result.manifest.schemaVersion, 10);
   assert.match(
     textOutput(result.outputs, "handbook/index.html") ?? "",
     /Whole document/,

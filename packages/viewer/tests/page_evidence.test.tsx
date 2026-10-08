@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { currentManifest } from "../../../tests/helpers/current_manifest.js";
 import { readCatalogue } from "../src/catalogue/reader.js";
-import type { ManifestPage, ManifestV9 } from "../src/registry/types.js";
+import type { ManifestPage, ManifestV10 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { renderHydratedShellPage } from "../src/shell/document.js";
 import { ShellMain } from "../src/shell/views.js";
@@ -87,9 +87,9 @@ test("live classification supplies the same page facts without a published catal
     relatedDocs: [],
     sourcePath: page.details.sourcePath,
   };
-  const manifest: ManifestV9 = currentManifest({
+  const manifest: ManifestV10 = currentManifest({
     folders: [],
-    schemaVersion: 9,
+    schemaVersion: 10,
     generatedBy: "mokly",
     sourceFiles: [entry.sourcePath],
     entries: [entry],

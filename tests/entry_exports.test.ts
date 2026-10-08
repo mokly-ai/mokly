@@ -108,7 +108,7 @@ test("component registrations collect their entries and typed links resolve befo
     textOutput(built.outputs, "account/links/index.html")!,
     /href="\.\.\/invoice\/index.desktop.html" data-mokly-link="account\/invoice"/,
   );
-  assert.equal(built.manifest.schemaVersion, 9);
+  assert.equal(built.manifest.schemaVersion, 10);
   assert.equal(JSON.stringify(built.manifest).includes('"navPath"'), false);
 });
 

@@ -27,7 +27,7 @@ const source: RemovedPagePreviewSource = {
   baseline: currentManifest({
     entries: [page],
     generatedBy: "mokly",
-    schemaVersion: 9,
+    schemaVersion: 10,
     folders: [],
     sourceFiles: [page.sourcePath],
   }),

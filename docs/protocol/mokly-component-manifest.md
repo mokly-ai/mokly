@@ -5,9 +5,9 @@
 Removal of baseline compatibility is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
-Root output ranges and removal of CSS resource owners are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md). The combined manifest v9 retains these proof fields.
+Root output ranges and removal of CSS resource owners are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md). The combined manifest v10 retains these proof fields.
 
-Builds emit manifest v9 with paths, folder records, and rendered Markdown
+Builds emit manifest v10 with paths, folder records, and rendered Markdown
 documents. Copied document resources also remain private watched source inputs.
 
 These are the normative interfaces for the generated `mokly-manifest.json`.
@@ -26,8 +26,8 @@ path, or other value derivable from its path, kind, and configuration.
 ## Entries, Folders, And Variants
 
 ```ts
-interface ManifestV9 {
-  schemaVersion: 9;
+interface ManifestV10 {
+  schemaVersion: 10;
   generatedBy: "mokly";
   entries: readonly ManifestEntry[];
   folders: readonly ManifestFolder[];
@@ -194,10 +194,10 @@ JSON object keys sort lexically; arrays follow their stated order. Omit absent
 optional fields; emit required empty arrays and objects. Serialize with
 two-space indentation and a final LF.
 
-Emit v9 for every catalogue, including one without components or documents.
+Emit v10 for every catalogue, including one without components or documents.
 Its sorted private `sourceFiles` inventory, explicit page and document
 entries, folder records, component records, and usage proof are required.
-Current and baseline readers accept only v9; the
+Current and baseline readers accept only v10; the
 [baseline compatibility contract](./mokly-baseline-compatibility.md) owns the
 clean unavailable outcome for earlier output. Contract fixtures, schema round
 trips, deterministic output, and ownership and path regressions cover these

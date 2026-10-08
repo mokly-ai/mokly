@@ -8,7 +8,7 @@ import { analysisOwnsStylesheet } from "../dist/review/css/paths.js";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
 for (const components of [false, true])
-  test(`v5 (components=${components}) excludes unrendered source token stylesheets from evidence`, async (t) => {
+  test(`v7 (components=${components}) excludes unrendered source token stylesheets from evidence`, async (t) => {
     const tokenPath = "src/styles/tokens.css";
     const fixture = await cssAttributionFixture(t, components, {
       prepare: async ({ root }) => {
@@ -39,7 +39,7 @@ for (const components of [false, true])
       }),
       false,
     );
-    assert.equal(result.schemaVersion, 6);
+    assert.equal(result.schemaVersion, 7);
     assert.equal(Object.hasOwn(result, "sharedImpact"), false);
     for (const screen of result.screens) {
       assert.equal(Object.hasOwn(screen, "sharedImpact"), false);

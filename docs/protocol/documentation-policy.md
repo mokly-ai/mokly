@@ -68,8 +68,8 @@ Removal of baseline compatibility is implemented in
 Uniform CSS attribution, root boundaries, evidence fields and stylesheet-owner
 warnings are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 Comparison details for screens and component saved views are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence);
-the whole-document page display is implemented in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence). The combined formats retain the branch records in manifest v9, catalogue v5
-and review v6.
+the whole-document page display is implemented in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence). The combined formats retain the branch records in manifest v10, catalogue v6
+and review v7.
 
 The [id-derived routes plan](../../plans/id-derived-routes.md) records the
 identity-only format delivery. The 2026-10-05 decisions are documented in

@@ -9,10 +9,10 @@ CSS rule attribution and ignored stylesheet owner records are planned for
 [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
 Other behavior below remains implemented.
 
-Public catalogue v5 and source-path-free comparison were planned by
+Public catalogue v6 and source-path-free comparison were planned by
 [remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
-implemented in Milestones 7 and 4. Current packages emit manifest v9,
-catalogue v5 and comparison v6 without source-path evidence.
+implemented in Milestones 7 and 4. Current packages emit manifest v10,
+catalogue v6 and comparison v7 without source-path evidence.
 
 ## Rule
 
@@ -81,7 +81,7 @@ never imports the CLI, Node built-ins, Git or consumer application code. Its `./
 is explicitly Node-only SSR and is excluded from the browser entry graph.
 
 The public boundary consists of [scoped instances](../protocol/mokly-instances.md),
-the [catalogue v5 projection](../protocol/mokly-catalogue.md), the
+the [catalogue v6 projection](../protocol/mokly-catalogue.md), the
 [React/SSR viewer API](../protocol/mokly-viewer.md) and
 [FrameAdapter](../protocol/mokly-frame-adapter.md). Hosts consume packages and
 documented public artifacts, without private manifest access, deep imports or
@@ -116,7 +116,7 @@ Mokly renders while its source remains protected and watched. A page callback
 may reuse an existing render helper; consumer policy owns source allowlists and
 document-stage rules. The configured renderer supplies screen and component
 views before link validation; pages keep their own complete-document callbacks.
-Current and comparison-base manifests both require v9 under the
+Current and comparison-base manifests both require v10 under the
 [baseline compatibility contract](../protocol/mokly-baseline-compatibility.md).
 [Paths and roots](../protocol/mokly-paths.md) determine identity for every kind.
 [Move detection](../protocol/mokly-moves.md) pairs entries across accepted builds.

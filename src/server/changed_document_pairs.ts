@@ -2,7 +2,7 @@
 import path from "node:path";
 
 import type { ColorScheme, Viewport } from "@mokly/viewer";
-import type { HistoricalManifest, ManifestV9 } from "@mokly/viewer/data";
+import type { HistoricalManifest, ManifestV10 } from "@mokly/viewer/data";
 import {
   entryRoute,
   documentRoute,
@@ -30,7 +30,7 @@ export interface DocumentPair {
 /** Use accepted byte inventories to select baseline bodies without relying on Git tracking. */
 export function markChangedDocumentBytes(
   pairs: readonly DocumentPair[],
-  manifest: ManifestV9,
+  manifest: ManifestV10,
   baseline: HistoricalManifest,
 ): void {
   const hashes = (value: HistoricalManifest) =>
@@ -51,7 +51,7 @@ export function markChangedDocumentBytes(
 }
 
 export function documentPairs(
-  manifest: ManifestV9,
+  manifest: ManifestV10,
   baseline: HistoricalManifest,
   changed: ReadonlySet<string>,
   documents: "all" | "pages",

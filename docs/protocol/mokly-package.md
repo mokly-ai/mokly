@@ -22,7 +22,7 @@ the completed
 This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 [Whole-document pages](./mokly-pages.md) use the same paths and hierarchy as
 screens and flows, and [Markdown documents](./mokly-documents.md) join them by
-file. Current and comparison-base manifests require v9; consumers use ordinary
+file. Current and comparison-base manifests require v10; consumers use ordinary
 page definitions. Path identity, `roots` discovery, Markdown documents, and move
 detection are implemented. The earlier
 co-located layout was delivered by the
@@ -147,14 +147,14 @@ consumer renderer, React resolution, stylesheet application, and validation.
 ## Generated Contract
 
 The [generated-output contract](./mokly-rendering.md#generated-contract) defines
-fragments, manifest v9, deterministic ordering, and generated-file ownership;
+fragments, manifest v10, deterministic ordering, and generated-file ownership;
 the [imported-styles contract](./mokly-imported-styles.md) defines binary CSS
 assets and per-root stylesheet routes in that output.
 
 ## Pages And Baseline Comparisons
 
 Register complete synchronous HTML with `definePage`; Markdown documents need
-no registration. Current reads require canonical manifest v9 and validate the
+no registration. Current reads require canonical manifest v10 and validate the
 [resolved source inventory](./mokly-source-protection.md). Git comparisons use
 the same version boundary; the
 [baseline compatibility contract](./mokly-baseline-compatibility.md) defines
@@ -186,7 +186,7 @@ literals, and package boundary.
 
 ## Related Docs
 
-- [Generated output and manifest v9](./mokly-rendering-generated.md#generated-contract)
+- [Generated output and manifest v10](./mokly-rendering-generated.md#generated-contract)
 - [Build, Browse, and Review runtime](./mokly-runtime.md)
 - [Packaged CLI guides](./mokly-guides.md)
 - [CI and npm release](./npm-release.md)

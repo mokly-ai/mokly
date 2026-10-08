@@ -13,7 +13,7 @@ import type {
   ComponentViewRecord,
 } from "../packages/viewer/dist/components/manifest_types.js";
 import type {
-  ManifestV9,
+  ManifestV10,
   ManifestScreen,
 } from "../packages/viewer/dist/registry/types.js";
 
@@ -26,26 +26,26 @@ type ComponentManifestScreen = ManifestScreen & {
 
 async function example(t: {
   after: (fn: () => Promise<void>) => void;
-}): Promise<ManifestV9> {
+}): Promise<ManifestV10> {
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const result = await compileCatalogue(await loadConfig(fixture.root));
-  assert.equal(result.manifest.schemaVersion, 9);
+  assert.equal(result.manifest.schemaVersion, 10);
   return result.manifest;
 }
 
-test("manifest v9 rejects broken identities, ownership references and props before readers can suppress changes", async (t) => {
+test("manifest v10 rejects broken identities, ownership references and props before readers can suppress changes", async (t) => {
   const original = await example(t);
   const edits: readonly [
     string,
     (
-      value: ManifestV9,
+      value: ManifestV10,
       screen: ComponentManifestScreen,
       component: ManifestComponent,
       variant: ManifestComponentVariant,
     ) => void,
   ][] = [
-    ["unknown schema", (value) => Object.assign(value, { schemaVersion: 10 })],
+    ["unknown schema", (value) => Object.assign(value, { schemaVersion: 11 })],
     [
       "removed dependency field",
       (_v, screen) => Object.assign(screen, { dependencies: [] }),
@@ -197,7 +197,7 @@ test("manifest v9 rejects broken identities, ownership references and props befo
   }
 });
 
-test("historical reader still rejects removed fields on current v9 manifests", async (context) => {
+test("historical reader still rejects removed fields on current v10 manifests", async (context) => {
   const original = await example(context);
   for (const field of [
     "dependencies",

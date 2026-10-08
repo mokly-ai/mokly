@@ -135,13 +135,13 @@ export function docStatements(file: string, source: string): DocStatement[] {
 export function restrictedStatement(text: string): boolean {
   text = normalizeStatement(text);
   if (
-    /\b(?:manifest[ -](?:schema[ -])?v[1-8]|v[1-8][ -]manifest|schema[ -]v[1-8]|(?:catalogue(?: read model)?|read model)[ -]v[1-4]|(?:comparison(?: result)?|review(?:[ -]result)?)[ -]v[1-5]|v[1-5][ -](?:comparison|review result))\b/i.test(
+    /\b(?:manifest[ -](?:schema[ -])?v[1-9]|v[1-9][ -]manifest|schema[ -]v[1-9]|(?:catalogue(?: read model)?|read model)[ -]v[1-5]|(?:comparison(?: result)?|review(?:[ -]result)?)[ -]v[1-6]|v[1-6][ -](?:comparison|review result))\b/i.test(
       text,
     )
   )
     return true;
   const currentNames =
-    /\b(?:manifest[ -](?:schema )?v9|catalogue[ -](?:read model )?v5|read model v5|(?:comparison(?: result)?|review(?:[ -]result)?) (?:is )?v6|(?:ReviewResultV|ScreenReviewV)6|(?:public|catalogue) v5|v6 (?:comparison|result|reason|assembly)|v5 (?:model|catalogues?|fixture|fields)|read model remains v5|review result schema is v6)\b/gi;
+    /\b(?:manifest[ -](?:schema )?v10|catalogue[ -](?:read model )?v6|read model v6|(?:comparison(?: result)?|review(?:[ -]result)?) (?:is )?v7|(?:ReviewResultV|ScreenReviewV)7|(?:public|catalogue) v6|v7 (?:comparison|result|reason|assembly)|v6 (?:model|catalogues?|fixture|fields)|read model remains v6|review result schema is v7)\b/gi;
   const independentNames =
     /\b(?:Tailwind v4|actions\/(?:checkout|setup-node)@v6|(?:catalogue )?upload(?: exchange| validation)?[ -]v1|(?:export[ -])?ownership[ -]v3|(?:wire|inspector)[ -]protocol[ -]v2|delivery(?: descriptors?)?(?: remain)? v5|(?:private )?catalogue-change snapshot is v3|removed page preview metadata is v3)\b/gi;
   const value = normalizeStatement(text)
@@ -154,7 +154,7 @@ export function restrictedStatement(text: string): boolean {
     /(?:validates any missing configured neighbour|planned diagnostic channel|remaining review fixes|current code rejects the removed field|builds the local CLI, generates the catalogue, and watches entries)/i.test(
       value,
     ) ||
-    /\b(?:v[1-8]|(?:ManifestV|ReviewResultV|ScreenReviewV)[1-8]|version [1-8] manifest)\b/i.test(
+    /\b(?:v[1-9]|(?:ManifestV|ReviewResultV|ScreenReviewV)[1-9]|version [1-9] manifest)\b/i.test(
       value,
     ) ||
     /\b(?:ownedDependencies|declaredDependencies|sharedImpact)\b|`(?:[a-zA-Z]+\.)?dependencies`|["']dependencies["']\s*:|\bentry['’]s dependencies|\bdependencies\s*\??\s*:|\bdependencies has been removed|\bentry\s+dependencies\b|\bshared[ -]impact\s+(?:paths?|files|patterns?|globs?|evidence|reasons)\b/i.test(

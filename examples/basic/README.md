@@ -7,7 +7,7 @@ See the [implementation plans](../../plans/).
 Uniform CSS rule attribution in this guide is implemented in Milestone 19 of the
 [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
-The example declares component CSS with `stylesheets`, uses manifest v9 and
+The example declares component CSS with `stylesheets`, uses manifest v10 and
 classifies Changes from rendered output rather than source-path declarations.
 The [source-path removal plan](../../plans/remove-source-path-evidence.md)
 records the delivered migration. Its M27 implements the excluded-only screen
@@ -343,7 +343,7 @@ npm run example:check
 npm run preview:build
 ```
 
-This example uses `mockupsDir: "."`; its schema-v9 manifest and HTML under
+This example uses `mockupsDir: "."`; its schema-v10 manifest and HTML under
 `mokly-generated/` are ignored local artifacts, absent in a fresh clone.
 `example:build` replaces the entire disposable `mokly-generated/` tree as one
 transaction; unexpected files inside it are removed without touching authored CSS.

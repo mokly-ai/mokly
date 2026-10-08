@@ -13,7 +13,7 @@ output boundaries are implemented in [M19](../../plans/remove-source-path-eviden
 
 The remaining contract is implemented.
 Rendering and the generated-output lifecycle use path-derived file names and
-manifest v9. Mokly renders discovered Markdown definitions under the
+manifest v10. Mokly renders discovered Markdown definitions under the
 [document contract](./mokly-documents.md); source Markdown stays private.
 
 ## Rendering Boundary
@@ -149,6 +149,6 @@ never copied into the npm package.
 
 ## Generated Contract
 
-The deterministic generated views, manifest v9 shape, CSS/assets and ownership
+The deterministic generated views, manifest v10 shape, CSS/assets and ownership
 rules are defined in the linked [Generated Rendering Contract](./mokly-rendering-generated.md).
 Exact identity-derived routes follow [Artifact Paths](./mokly-artifact-paths.md).

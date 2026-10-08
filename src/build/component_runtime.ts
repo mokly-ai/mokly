@@ -1,7 +1,7 @@
 /** The last successfully compiled consumer graph, passed to Serve only in memory. */
 import { randomBytes } from "node:crypto";
 
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import type { ResolvedConfig } from "../config/types.js";
 import type { CatalogueIndex } from "../registry/catalogue_index.js";
@@ -24,7 +24,7 @@ export interface ComponentRuntime {
   generation: string;
   /** Build attempt identity; resource reloads retain it while replacing caches. */
   warningGeneration: string;
-  manifest: ManifestV9 | CatalogueIndex;
+  manifest: ManifestV10 | CatalogueIndex;
   outputs: readonly (readonly [string, GeneratedFile])[];
   stylesheetRoutes: readonly (readonly [string, string])[];
   styleOutputs: readonly (readonly [string, GeneratedFile])[];
@@ -32,7 +32,7 @@ export interface ComponentRuntime {
 }
 const runtimes = new WeakMap<Compilation, ComponentRuntime>();
 const accepted = new WeakMap<
-  ManifestV9,
+  ManifestV10,
   { compilation: Compilation; config: string }
 >();
 export function rememberRuntime(
@@ -82,7 +82,7 @@ export function componentRuntime(compilation: Compilation): ComponentRuntime {
 
 /** Reuse the exact accepted bytes when a snapshot receives its producer's manifest. */
 export function compilationForManifest(
-  manifest: ManifestV9,
+  manifest: ManifestV10,
   config: ResolvedConfig,
 ): Compilation | undefined {
   const found = accepted.get(manifest);

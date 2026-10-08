@@ -6,7 +6,7 @@ import {
   viewPage as renderViewPage,
 } from "../../dist/server/pages.js";
 import { parseViewHref } from "../../packages/viewer/dist/data.js";
-import type { ManifestV9 } from "../../packages/viewer/dist/registry/types.js";
+import type { ManifestV10 } from "../../packages/viewer/dist/registry/types.js";
 import type { Catalogue } from "../../packages/viewer/dist/shell/catalogue.js";
 import type { ShellContext } from "../../packages/viewer/dist/shell/context.js";
 import { renderViewer } from "../../packages/viewer/dist/viewer/server.js";
@@ -14,7 +14,7 @@ import { renderViewer } from "../../packages/viewer/dist/viewer/server.js";
 import { currentManifest } from "./current_manifest.js";
 import { publicShellContext } from "./public_shell.js";
 
-export const manifest: ManifestV9 = currentManifest({
+export const manifest: ManifestV10 = currentManifest({
   entries: [
     {
       kind: "page",
@@ -74,11 +74,11 @@ export const manifest: ManifestV9 = currentManifest({
   ],
   generatedBy: "mokly",
   sourceFiles: ["entries/fixture.mockup.tsx"],
-  schemaVersion: 9 as const,
+  schemaVersion: 10 as const,
   folders: [],
 });
 
-export const darkManifest: ManifestV9 = {
+export const darkManifest: ManifestV10 = {
   ...manifest,
   entries: manifest.entries.map((entry) =>
     entry.kind === "screen" && entry.path === "example/screens/welcome"
@@ -90,7 +90,7 @@ export const darkManifest: ManifestV9 = {
   ),
 };
 
-export const taggedFlowManifest: ManifestV9 = {
+export const taggedFlowManifest: ManifestV10 = {
   ...manifest,
   entries: manifest.entries.map((entry) =>
     entry.kind === "use-case"
@@ -99,7 +99,7 @@ export const taggedFlowManifest: ManifestV9 = {
   ),
 };
 
-export const untaggedManifest: ManifestV9 = {
+export const untaggedManifest: ManifestV10 = {
   ...manifest,
   entries: manifest.entries.map((entry) => {
     const { tags: _tags, ...untagged } = entry;

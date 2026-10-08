@@ -138,12 +138,12 @@ For this configuration, `build` writes only under `specs/generated/mokly-generat
 assets stay under `specs/generated/` and are served and exported in place. To
 commit generated output instead, commit every generated file. `check`
 compares compiled output only when the generated tree is indexed; a partial
-index fails with both remedies. A committed baseline's v9 inventory must
+index fails with both remedies. A committed baseline's v10 inventory must
 match its Git blobs; otherwise the baseline is rebuilt.
 Build and Serve do not inspect head tracking: a new route builds successfully,
 and `check` then lists it under `untracked:` until staged. Only `check` rejects
 an indexed `.mokly-cache/` path.
-Current output uses manifest v9. The manifest records the referenced asset closure and Git blob-hash
+Current output uses manifest v10. The manifest records the referenced asset closure and Git blob-hash
 inventory. Earlier baseline formats make Changes unavailable under
 [baseline compatibility](./docs/protocol/mokly-baseline-compatibility.md).
 
@@ -531,10 +531,10 @@ for the review rules and temporary Braces exception.
 - [`src/build/mock_link_routes.ts`](./src/build/mock_link_routes.ts) —
   identity-derived logical-link targets and portable artifact URLs.
 - [`src/components/manifest_entry_validation.ts`](./src/components/manifest_entry_validation.ts)
-  — manifest-v9 component-entry validation.
+  — manifest-v10 component-entry validation.
 - [`src/registry/changed_paths.ts`](./src/registry/changed_paths.ts) and
   [`manifest_validation.ts`](./src/registry/manifest_validation.ts) —
-  identity-keyed change membership and the strict baseline-v9 boundary.
+  identity-keyed change membership and the strict baseline-v10 boundary.
 - [`src/baseline/compatibility.ts`](./src/baseline/compatibility.ts) and
   [`src/server/classification_result.ts`](./src/server/classification_result.ts)
   — the typed earlier-baseline outcome from admission through Serve.

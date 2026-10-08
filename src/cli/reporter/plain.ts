@@ -1,4 +1,4 @@
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import { EARLIER_BASELINE_MESSAGE } from "../../baseline/compatibility.js";
 import {
@@ -46,7 +46,7 @@ export class PlainReporter implements CliReporter {
       );
   }
 
-  catalogueReady(_manifest: ManifestV9, _durationMs: number): void {}
+  catalogueReady(_manifest: ManifestV10, _durationMs: number): void {}
 
   outputWritten(count: number): void {
     this.write(`Generated ${count} Mokly files.\n`);

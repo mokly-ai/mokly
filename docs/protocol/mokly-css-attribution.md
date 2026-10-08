@@ -86,7 +86,7 @@ selectors. Their original `.css` and `.module.css` files and plugin
 dependencies remain private `sourceFiles`: they trigger rebuilds but are not
 additional public CSS analyzed as if linked. One imported source can
 contribute to multiple root bundles; analyze each reachable generated route.
-Adding generated CSS links against a compatible v9 baseline without those
+Adding generated CSS links against a compatible v10 baseline without those
 links can change the linked views. Earlier-format baselines provide no comparison.
 
 Git does not report ignored generated routes. Compare the

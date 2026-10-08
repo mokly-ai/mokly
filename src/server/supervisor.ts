@@ -1,6 +1,6 @@
 /** Restart supervision retains ownership until each child's cleanup completes. */
 
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import type { BaselineCatalogue } from "../baseline/catalogue.js";
 import type { ComponentRuntime } from "../build/component_runtime.js";
@@ -28,7 +28,7 @@ import {
 export interface ProcessSupervisor {
   /** Deliver a checked result and keep its list for this config's next child. */
   completeCatalogue?(
-    manifest: ManifestV9,
+    manifest: ManifestV10,
     generation: string,
     assetClosure: readonly string[],
   ): void;
@@ -246,7 +246,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   }
 
   completeCatalogue(
-    manifest: ManifestV9,
+    manifest: ManifestV10,
     generation: string,
     assetClosure: readonly string[],
   ): void {

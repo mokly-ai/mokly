@@ -212,7 +212,7 @@ test("changed-route detection degrades to undefined when Git fails", async (cont
   );
   const succeeding: ReadOnlyReviewRepository = {
     ...failing,
-    descriptor: baselineCatalogue("a".repeat(40), "mockups", "generated-v9"),
+    descriptor: baselineCatalogue("a".repeat(40), "mockups", "generated-v10"),
     evidence: {
       ...failing.evidence,
       changedPaths: () => Promise.resolve(["notes.md"]),

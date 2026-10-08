@@ -3,7 +3,7 @@ import path from "node:path";
 import type { TestContext } from "node:test";
 
 import type { ComponentViewRecord } from "@mokly/viewer";
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 import { generatedViews } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../../dist/build/compile.js";
@@ -14,7 +14,8 @@ import { componentEntrySource } from "./component_fixture.js";
 import { createExportFixture } from "./export_fixture.js";
 
 export const earlierBaselines = [
-  { name: "previous v8", version: 8 },
+  { name: "released v9", version: 9 },
+  { name: "v8", version: 8 },
   { name: "v7", version: 7 },
   { name: "v3", version: 3 },
   { name: "v4", version: 4 },
@@ -34,9 +35,9 @@ export type InvalidCurrentShape =
   "missing root" | "missing provenance" | "CSS owners";
 
 export function invalidCurrentManifest(
-  manifest: ManifestV9,
+  manifest: ManifestV10,
   shape: InvalidCurrentShape,
-): ManifestV9 {
+): ManifestV10 {
   const alter = (view: ComponentViewRecord): ComponentViewRecord => {
     if (shape === "missing root") return { ...view, ranges: [] };
     if (shape === "CSS owners")

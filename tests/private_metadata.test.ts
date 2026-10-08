@@ -240,7 +240,7 @@ test("a former manifest filename cannot supply canonical baseline output or ente
   };
   assert.throws(
     () => parseManifest(formerManifest),
-    /expected Mokly manifest schema version 9/,
+    /expected Mokly manifest schema version 10/,
   );
   await fs.promises.writeFile(
     path.join(fixture.mockupsDir, formerFilename),

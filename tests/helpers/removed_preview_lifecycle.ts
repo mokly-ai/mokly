@@ -31,7 +31,7 @@ export const page = {
 export const baseline = currentManifest({
   entries: [page],
   generatedBy: "mokly" as const,
-  schemaVersion: 9 as const,
+  schemaVersion: 10 as const,
   folders: [],
   sourceFiles: [page.sourcePath],
 });
@@ -50,7 +50,7 @@ export const reviewSource: SelectedReviewSource = {
   after: currentManifest({
     entries: [],
     generatedBy: "mokly",
-    schemaVersion: 9 as const,
+    schemaVersion: 10 as const,
     folders: [],
     sourceFiles: [],
   }),
@@ -67,7 +67,7 @@ export const reviewSource: SelectedReviewSource = {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     screens: [],
   },
 };
@@ -105,7 +105,7 @@ export function reviewArtifact(): ReviewArtifact {
       baseRef: reviewSource.baseRef,
       changedPaths: [],
       ignoredImpact: [],
-      schemaVersion: 6 as const,
+      schemaVersion: 7 as const,
       screens: [],
       components: [],
       changes: [],

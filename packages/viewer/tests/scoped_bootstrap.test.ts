@@ -185,17 +185,17 @@ test("scoped reader rejects unknown targets and complete live bootstraps", () =>
   );
 });
 
-test("the canonical public v5 fixture bytes are pinned", () => {
+test("the canonical public v6 fixture bytes are pinned", () => {
   const bytes = fs.readFileSync(
     new URL(
-      "../../../docs/protocol/fixtures/catalogue-v5.json",
+      "../../../docs/protocol/fixtures/catalogue-v6.json",
       import.meta.url,
     ),
   );
   assert.equal(bytes.byteLength, 12585);
   assert.equal(
     createHash("sha256").update(bytes).digest("hex"),
-    "296a0d1076115c831ae6907a14c735ea9c8fe15199f1ebb719ede4c3f0f321b0",
+    "4514996f3e6a2cddeb5d015cdf6d58bb7a2b68cdda1283ac119b601060700793",
   );
   assert.doesNotThrow(() => readCatalogue(JSON.parse(bytes.toString("utf8"))));
 });

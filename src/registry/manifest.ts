@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import type { ColorScheme, ComponentViewRecord } from "@mokly/viewer";
-import type { ManifestV9, HistoricalManifest } from "@mokly/viewer/data";
+import type { ManifestV10, HistoricalManifest } from "@mokly/viewer/data";
 import {
   canonicalJson,
   effectiveColorSchemes,
@@ -29,7 +29,7 @@ export const MANIFEST_NAME = "mokly-manifest.json";
 
 /** Entry/source metadata before a complete compilation supplies its inventory. */
 export type ManifestMetadata = Pick<
-  ManifestV9,
+  ManifestV10,
   "entries" | "folders" | "generatedBy" | "schemaVersion" | "sourceFiles"
 >;
 
@@ -56,24 +56,24 @@ export function createManifest(
         ...folders.map((folder) => folder.sourcePath),
       ]),
     ].sort(),
-    schemaVersion: 9,
+    schemaVersion: 10,
   };
 }
 
 /** Serialize the current manifest with canonical object-key ordering. */
-export function serializeManifest(manifest: ManifestV9): string {
+export function serializeManifest(manifest: ManifestV10): string {
   return `${canonicalJson(manifest, 2)}\n`;
 }
 
-/** Read strictly current schema-v9 canonical output. */
-export function readManifest(config: ResolvedConfig): ManifestV9 {
+/** Read strictly current schema-v10 canonical output. */
+export function readManifest(config: ResolvedConfig): ManifestV10 {
   const canonicalPath = path.join(config.generatedDir, MANIFEST_NAME);
   const manifest = readManifestFile(canonicalPath);
   config.sourceFiles = manifest.sourceFiles;
   return manifest;
 }
 
-function readManifestFile(candidate: string): ManifestV9 {
+function readManifestFile(candidate: string): ManifestV10 {
   let value: unknown;
   try {
     value = JSON.parse(fs.readFileSync(candidate, "utf8"));
@@ -89,12 +89,12 @@ function readManifestFile(candidate: string): ManifestV9 {
   return parseManifest(value);
 }
 
-/** Validate manifest-shaped JSON against the current v9 contract. */
-export function parseManifest(value: unknown): ManifestV9 {
+/** Validate manifest-shaped JSON against the current v10 contract. */
+export function parseManifest(value: unknown): ManifestV10 {
   return validateManifest(value);
 }
 
-/** Apply the earlier/newer version gate, then fully validate historical v9. */
+/** Apply the earlier/newer version gate, then fully validate historical v10. */
 export function parseHistoricalManifest(value: unknown): HistoricalManifest {
   return validateManifest(value, true);
 }
@@ -104,7 +104,7 @@ function toManifestEntry(
   catalogueSchemes: readonly ColorScheme[],
   componentViews: ReadonlyMap<string, ComponentViewRecord>,
   entries: readonly ResolvedRegistryEntry[],
-): ManifestV9["entries"][number] {
+): ManifestV10["entries"][number] {
   const common = {
     description: entry.description,
     path: entry.path,

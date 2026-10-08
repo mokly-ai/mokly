@@ -4,7 +4,7 @@ import test from "node:test";
 import { viewHref } from "../packages/viewer/dist/data.js";
 import type {
   ManifestScreen,
-  ManifestV9,
+  ManifestV10,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { changesActivation } from "../packages/viewer/dist/shell/changes_activation.js";
@@ -25,10 +25,10 @@ const failure = {
   tags: ["errors"],
   variantOf: parent.path,
 };
-const manifest: ManifestV9 = currentManifest({
+const manifest: ManifestV10 = currentManifest({
   entries: [parent, empty, failure],
   generatedBy: "mokly",
-  schemaVersion: 9,
+  schemaVersion: 10,
   folders: [],
   sourceFiles: [parent.sourcePath],
 });

@@ -88,7 +88,7 @@ test(
     );
     assert.equal(response.status, 200);
     const review = await response.json();
-    assert.equal(review.schemaVersion, 6);
+    assert.equal(review.schemaVersion, 7);
     assert.deepEqual(
       review.changes
         .map((entry: { after: { path: string } }) => entry.after.path)

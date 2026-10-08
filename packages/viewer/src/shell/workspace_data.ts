@@ -9,7 +9,7 @@ import {
 import type {
   ChangedEntry,
   ComponentReview,
-  ScreenReviewV6,
+  ScreenReviewV7,
 } from "../review/component_types.js";
 import type { ViewResourceEvidence } from "../review/types.js";
 import { publicWorkspace } from "../viewer/public_workspace.js";
@@ -77,7 +77,7 @@ export interface WorkspaceData {
   affected: readonly UsageLink[];
   status?: EntryStatus;
   change?: ChangedEntry;
-  comparison?: ComponentReview | ScreenReviewV6;
+  comparison?: ComponentReview | ScreenReviewV7;
   resourceEvidence?: readonly ViewResourceEvidence[];
   base: string;
   comparisons: boolean;

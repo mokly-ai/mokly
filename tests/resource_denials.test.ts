@@ -107,7 +107,7 @@ test("export comparison rejects protected source files in a snapshot", async (t)
             changedPaths: [],
             ignoredImpact: [],
             screens: [],
-            schemaVersion: 6 as const,
+            schemaVersion: 7 as const,
             components: [],
             changes: [],
             affectedConsumers: [],

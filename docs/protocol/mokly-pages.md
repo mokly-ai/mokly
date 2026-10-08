@@ -105,7 +105,7 @@ ownership; the validated manifest and pending output set bind each document.
 
 ## Manifest And Runtime Model
 
-New builds write schema v9 at `mokly-generated/mokly-manifest.json`:
+New builds write schema v10 at `mokly-generated/mokly-manifest.json`:
 
 ```ts
 interface ManifestPage extends ManifestEntryBase {
@@ -127,7 +127,7 @@ the complete config/consumer authoring graph, validated against current inputs.
 Reserved source basenames stay protected even when unimported. Serving, resource
 validation, Review, and publication share that policy.
 
-Current and baseline readers accept the same v9 shape under the
+Current and baseline readers accept the same v10 shape under the
 [compatibility contract](./mokly-baseline-compatibility.md). Catalogue lookup,
 hierarchy, navigation, breadcrumbs, details, search, route targets, and static
 publication consume one validated entry model. Page leaves use

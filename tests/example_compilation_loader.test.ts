@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import type { Compilation } from "../dist/build/compile.js";
 import type { ExampleSnapshotRead } from "../scripts/verification/example-snapshot.mjs";
@@ -16,7 +16,7 @@ import type { FixturePhaseTiming } from "./helpers/fixture_timing.js";
 function compilation(name: string): Compilation {
   return {
     diagnostics: [],
-    manifest: { name } as unknown as ManifestV9,
+    manifest: { name } as unknown as ManifestV10,
     outputs: new Map(),
     deliveredStyleSources: [],
   };

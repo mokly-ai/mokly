@@ -65,8 +65,8 @@ export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' +
         "main",
       );
       const { result } = artifact;
-      assert.equal(result.schemaVersion, 6);
-      if (result.schemaVersion !== 6) return;
+      assert.equal(result.schemaVersion, 7);
+      if (result.schemaVersion !== 7) return;
       assert.deepEqual(live.componentChanges?.result, result);
       const reason = {
         kind: "dependency",
@@ -132,8 +132,8 @@ test("unreferenced public assets do not create file-level evidence", async (t) =
   );
   assert.deepEqual(live.changedEntries, []);
   const result = live.componentChanges?.result;
-  assert.equal(result?.schemaVersion, 6);
-  if (result?.schemaVersion !== 6) return;
+  assert.equal(result?.schemaVersion, 7);
+  if (result?.schemaVersion !== 7) return;
   assert.deepEqual(result.changes, []);
   assert.equal(Object.hasOwn(result, "sharedImpact"), false);
 });

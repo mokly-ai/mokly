@@ -1,9 +1,9 @@
 import type {
   HistoricalManifest,
   HistoricalManifestEntry,
-  ManifestV9,
+  ManifestV10,
 } from "../registry/types.js";
-import type { ReviewResultV6 } from "../review/component_types.js";
+import type { ReviewResultV7 } from "../review/component_types.js";
 import type {
   ScreenResourceEvidence,
   PageResourceEvidence,
@@ -12,16 +12,16 @@ import type {
 } from "../review/types.js";
 
 export type CatalogueMetadata =
-  | ManifestV9
+  | ManifestV10
   | {
       schemaVersion: "live-index-2";
-      entries: ManifestV9["entries"];
-      folders: ManifestV9["folders"];
+      entries: ManifestV10["entries"];
+      folders: ManifestV10["folders"];
       generatedBy: "mokly";
       sourceFiles: readonly string[];
     };
 export interface RemovedEntrySnapshot {
-  entry: HistoricalManifestEntry | ManifestV9["entries"][number];
+  entry: HistoricalManifestEntry | ManifestV10["entries"][number];
   folderTitles: readonly string[];
   /** Baseline parent title, present exactly for a removed variant. */
   parentTitle?: string;
@@ -41,7 +41,7 @@ export interface ShellEvidence {
   /** Actual material/metadata changes, independent of pure-move membership. */
   changedEntries?: readonly string[];
   pairing?: NonNullable<ReviewArtifact["pairing"]>;
-  result?: ReviewResultV6;
+  result?: ReviewResultV7;
   screenEvidence?: readonly ScreenResourceEvidence[];
   pageEvidence?: readonly PageResourceEvidence[];
   screenViews?: readonly ScreenViewChanges[];

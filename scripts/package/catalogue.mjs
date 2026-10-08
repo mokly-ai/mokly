@@ -11,7 +11,7 @@ export async function inspectPublicCatalogue(root, comparisonPath) {
     "utf8",
   );
   const model = JSON.parse(json);
-  assert.equal(model.schemaVersion, 5);
+  assert.equal(model.schemaVersion, 6);
   assert.equal(Object.hasOwn(model, "generatedPathPrefix"), false);
   assert.match(model.identity.id, /^[a-f0-9]{64}$/);
   assert.match(model.deploymentId, /^[a-f0-9]{64}$/);

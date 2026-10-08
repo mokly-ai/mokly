@@ -3,8 +3,8 @@ import type {
   ChangedEntry,
   ComponentReview,
   EntryChangeReason,
-  ReviewResultV6,
-  ScreenReviewV6,
+  ReviewResultV7,
+  ScreenReviewV7,
 } from "@mokly/viewer/data";
 
 import { timeAsync, timingCounts } from "../diagnostics/timings.js";
@@ -38,7 +38,7 @@ import { aggregateState } from "./screen_views.js";
 
 /** Internal classifier output for source validation and its regression fixtures. */
 export interface ComponentClassificationWithSources {
-  result: ReviewResultV6;
+  result: ReviewResultV7;
   implementationImpact: ReadonlySet<string>;
   sources: DependencyReasonSources;
   pairing: MovePairing;
@@ -72,7 +72,7 @@ export async function classifyComponentsWithSources(
     before,
     after,
   );
-  const screens: ScreenReviewV6[] = [];
+  const screens: ScreenReviewV7[] = [];
   const components: ComponentReview[] = [];
   const changes: ChangedEntry[] = [];
   const impacting = new Set<string>();

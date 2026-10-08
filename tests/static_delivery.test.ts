@@ -92,7 +92,7 @@ test("different deployment identities never validate the current route", async (
   const catalogue = readCatalogue(
     JSON.parse(
       fs.readFileSync(
-        new URL("../docs/protocol/fixtures/catalogue-v5.json", import.meta.url),
+        new URL("../docs/protocol/fixtures/catalogue-v6.json", import.meta.url),
         "utf8",
       ),
     ),

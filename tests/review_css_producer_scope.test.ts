@@ -9,7 +9,7 @@ import type { ResourceEvidence } from "../packages/viewer/dist/data.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { fixtureCssAnalysis } from "./helpers/css_evidence.js";
 
-test("v5 asserts analysed reason scope at the producer boundary", async (t) => {
+test("v7 asserts analysed reason scope at the producer boundary", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const config = {
     ...fixture.config,

@@ -1,8 +1,8 @@
 /** Shared contracts for accepted catalogue Changes and background classification. */
 import type {
   HistoricalManifest,
-  ManifestV9,
-  ReviewResultV6,
+  ManifestV10,
+  ReviewResultV7,
   ScreenResourceEvidence,
   PageResourceEvidence,
 } from "@mokly/viewer/data";
@@ -21,7 +21,7 @@ export interface ComponentChangeSnapshot {
   baseline: HistoricalManifest;
   pairing?: MovePairing;
   changedEntries?: readonly string[];
-  result?: ReviewResultV6;
+  result?: ReviewResultV7;
   comparison?: ReviewEvidence;
   screenEvidence?: readonly ScreenResourceEvidence[];
   pageEvidence?: readonly PageResourceEvidence[];
@@ -44,7 +44,7 @@ export interface CatalogueClassificationInputs {
 export interface CatalogueChangeClassifier {
   read(
     config: ResolvedConfig,
-    manifest: ManifestV9,
+    manifest: ManifestV10,
     base: string,
     signal?: AbortSignal,
     accepted?: CatalogueClassificationInputs,

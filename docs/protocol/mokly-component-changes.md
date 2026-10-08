@@ -107,8 +107,8 @@ that affect its inputs. No-watch Serve and publication instead reuse their
 validated startup snapshot, including ownership evidence and unavailable-history
 state, for the lifetime of that capture.
 
-The comparison artifact is the review result v6 with component/variant records
-and explicit affected-consumer evidence. Readers accept only review result v6.
+The comparison artifact is the review result v7 with component/variant records
+and explicit affected-consumer evidence. Readers accept only review result v7.
 Every record addresses its entry by path. Screen entries retain their actual view
 results, with affected-only evidence separate from direct Changes membership.
 All comparisons keep accepted before/after bytes and isolated assets.

@@ -25,17 +25,16 @@ exported Mokly catalogue inside another product. It provides the same browsing,
 comparison and inspection experience as Mokly's standalone catalogue while
 your application keeps control of its navigation, branding, authentication and
 collaboration UI.
-The `@mokly/viewer/data` boundary also validates Mokly's private manifest v9
+The `@mokly/viewer/data` boundary also validates Mokly's private manifest v10
 component view records, including optional inserted-stylesheet provenance.
 That provenance is not part of the public catalogue read model; see the
 [component manifest contract](../../docs/protocol/mokly-component-manifest.md).
 
 Saved component views have one explicit root boundary. It does not add a Used
-by instance. Catalogue v5 exposes optional `resourceEvidence` on views and
-whole-document pages while Changes is ready. Comparison v6 carries the same
+by instance. Catalogue v6 exposes optional `resourceEvidence` on views and
+whole-document pages while Changes is ready. Comparison v7 carries the same
 rule identities, changed component paths and page evidence. The readers validate
-these fields without receiving private match coordinates. These unreleased
-formats change in place; regenerate earlier output. Details show the selected
+these fields without receiving private match coordinates. These formats replace the released shapes; regenerate earlier output. Details show the selected
 screen's or saved view's evidence in Current, before a comparison loads: each
 changed stylesheet once, with its sentences and selectors under it, as the
 [CSS evidence presentation](../../docs/protocol/mokly-css-evidence-presentation.md)
@@ -183,7 +182,7 @@ or frame adapter intentionally remounts the viewer and cancels pending work.
 
 Markdown documents use the existing whole-page frame and the selected Light or
 Dark scheme. They have no viewport or usage axis. Removed documents load their
-historical scheme from the advertised preview generation. In catalogue v5, a
+historical scheme from the advertised preview generation. In catalogue v6, a
 related-doc match uses `mock:<path>`; source labels remain repository-relative.
 
 `screenPath` names one catalogue entry by its path, such as
@@ -256,7 +255,7 @@ at least one current variant.
 
 Every removed variant carries `parentTitle`, its parent's title at the branch
 point. Public and scoped readers require this field and reject it on removed
-non-variants. The read model is v5.
+non-variants. The read model is v6.
 
 Current paired entries carry `previousPath`; comparisons select the original
 before-side path. Removed entries advertise an optional opaque `snapshotId`. Supply it with the
@@ -447,7 +446,7 @@ retains usage only for that entry's derived scope; other views use the
 runtime-only `omitted` state. The matching private capability descriptor
 supplies complete cross-route Usage. Static pages keep their compact external
 reference and resolve the complete shared `catalogue.json`. The public `readCatalogue`
-boundary accepts only that complete v5 model and rejects `omitted`.
+boundary accepts only that complete v6 model and rejects `omitted`.
 
 The runtime subpath exposes `projectScopedCatalogue`, the
 `ShellCatalogueUsage`/`ShellCatalogueReadModel` types and the strict
@@ -530,7 +529,7 @@ search experience based on the viewer container—not the browser viewport.
 
 Mokly artifacts are static files. Deploy the exported directory at the root of
 an HTTP(S) origin with correct MIME types and without an SPA fallback.
-Catalogue v5 serves current documents only under
+Catalogue v6 serves current documents only under
 `/static/mokly-generated/<route>`. The viewer uses the shared directory constant,
 not a model field or mount option. Older catalogue versions fail the version
 gate before URL derivation; no prefixless layout is supported. See the [generated delivery contract](../../docs/protocol/mokly-generated-delivery.md).

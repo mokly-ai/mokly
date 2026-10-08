@@ -23,7 +23,7 @@ const COMMON_FIELDS = [
   "title",
 ] as const;
 
-/** Validate the public fields for one path-addressed v9 entry. */
+/** Validate the public fields for one path-addressed v10 entry. */
 export function validateManifestEntry(
   entry: Record<string, unknown>,
   components: boolean,

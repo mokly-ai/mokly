@@ -69,8 +69,8 @@ test("regular shared declarations retain both declarers and symlinked declaratio
     componentGit(baseline, ["mockups/action.css"]),
     "main",
   );
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   assert.deepEqual(result.changes.map((entry) => entry.after?.path).sort(), [
     "action",
     "action/default",

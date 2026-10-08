@@ -117,7 +117,7 @@ watched catalogue then reports existing lifecycle boundaries:
 
 Catalogue counts come from accepted manifest entries. Zero-valued kinds are
 omitted. A baseline cache hit says `Baseline ready · reused <short-sha>`; a
-complete committed v9 output omits rebuild progress. Unavailable Changes says
+complete committed v10 output omits rebuild progress. Unavailable Changes says
 `! Changes unavailable` and preserves All browsing. Serve reports each
 generation's build warnings immediately before `Catalogue ready`; on-demand
 previews never repeat them. Typed non-page subjects and current-attempt

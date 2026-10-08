@@ -1,4 +1,4 @@
-/** Generated-file and authored-closure validation for the v9 manifest envelope. */
+/** Generated-file and authored-closure validation for the v10 manifest envelope. */
 import {
   GENERATED_DIRECTORY,
   documentRoute,

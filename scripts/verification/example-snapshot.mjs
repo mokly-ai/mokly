@@ -61,7 +61,7 @@ export function encodeCompilation(compilation, key) {
 /**
  * Validate a parsed snapshot and rebuild the compilation it encodes. The
  * manifest must serialize to the compiled manifest output, which the compile
- * wrote only after its strict schema-v8 validation; repeating that validation
+ * wrote only after its strict schema-v10 validation; repeating that validation
  * here would cost seconds in every test process.
  */
 export function decodeCompilation(value) {

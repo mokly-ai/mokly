@@ -28,7 +28,7 @@ test("viewer rebuilds current and removed screen variant relationships", () => {
   const manifest = currentManifest({
     entries: [parent, current],
     generatedBy: "mokly" as const,
-    schemaVersion: 9 as const,
+    schemaVersion: 10 as const,
     folders: [],
     sourceFiles: [parent.sourcePath, current.sourcePath].sort(),
   });

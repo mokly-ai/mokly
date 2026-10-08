@@ -1,7 +1,7 @@
-import type { ReviewResultV6 } from "./component_types.js";
+import type { ReviewResultV7 } from "./component_types.js";
 import { requireEqual, reviewInvalid } from "./result_helpers.js";
 
-export function validateResultReferences(result: ReviewResultV6): void {
+export function validateResultReferences(result: ReviewResultV7): void {
   for (const component of result.components)
     if (
       !component.variants.length &&

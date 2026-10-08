@@ -61,7 +61,7 @@ export async function smokeThemedConsumer(context) {
       "utf8",
     ),
   );
-  assert.equal(pageManifest.schemaVersion, 9);
+  assert.equal(pageManifest.schemaVersion, 10);
   assert.ok(
     pageManifest.entries.some(
       (entry) => entry.path === "themed-notice" && entry.kind === "page",
@@ -86,7 +86,7 @@ export async function smokeThemedConsumer(context) {
     assert.equal(response.status, 200);
     review = await response.json();
   });
-  assert.equal(review.schemaVersion, 6);
+  assert.equal(review.schemaVersion, 7);
   assert.equal(Object.hasOwn(review, "sharedImpact"), false);
   assert.deepEqual(
     review.changes.map(({ before, after }) => (after ?? before).path).sort(),

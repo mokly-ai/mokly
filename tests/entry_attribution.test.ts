@@ -207,7 +207,7 @@ test("runtime startup rejects missing or invalid resolved roots", async () => {
     manifest: currentManifest({
       entries: [],
       folders: [],
-      schemaVersion: 9,
+      schemaVersion: 10,
       sourceFiles: [],
     }),
   };

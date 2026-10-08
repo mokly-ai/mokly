@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { currentManifest } from "../../../tests/helpers/current_manifest.js";
-import type { ManifestV9 } from "../src/registry/types.js";
+import type { ManifestV10 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { EntryDetailsBody } from "../src/shell/details.js";
 
@@ -15,7 +15,7 @@ const common = {
   sourcePath: "entries/fixture.mockup.tsx",
   title: "Example",
 };
-const manifest: ManifestV9 = currentManifest({
+const manifest: ManifestV10 = currentManifest({
   folders: [],
   entries: [
     { ...common, path: "page", kind: "page" },
@@ -46,7 +46,7 @@ const manifest: ManifestV9 = currentManifest({
     },
   ],
   generatedBy: "mokly",
-  schemaVersion: 9,
+  schemaVersion: 10,
   sourceFiles: [common.sourcePath],
 });
 

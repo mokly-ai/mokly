@@ -5,7 +5,7 @@ import test, { type TestContext } from "node:test";
 
 import { compileCatalogue, type Compilation } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
-import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV7 } from "../packages/viewer/dist/review/component_types.js";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
 import { componentChangeCases } from "./helpers/component_change_cases.js";
@@ -233,7 +233,7 @@ async function assetFiles(directory: string) {
   return files;
 }
 
-function allViews(result: ReviewResultV6) {
+function allViews(result: ReviewResultV7) {
   return [
     ...result.screens.flatMap((screen) => screen.views),
     ...result.components.flatMap((component) =>

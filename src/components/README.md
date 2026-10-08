@@ -26,7 +26,7 @@ Callers render the returned `Component` and export the registration or its
 the registration retains its defining module as source attribution. Mokly renders
 the wrapper in the consumer's existing React/provider graph.
 
-Current output uses manifest v9. Mokly groups declarations by validated file,
+Current output uses manifest v10. Mokly groups declarations by validated file,
 merges rendered declarers and reuses valid renderer links without exposing
 declarations through
 `RenderInput.entry`. The first rendered declaration determines a new link's
@@ -88,7 +88,7 @@ real href values for resource traversal and CSS selector matching. Move pairing
 aligns component identities without changing captured bytes or instance offsets.
 
 Compiled JSX invocations record optional `source: { path, line, column }` in
-manifest v9. The path identifies the caller inside the repository, with 1-based
+manifest v10. The path identifies the caller inside the repository, with 1-based
 coordinates. Programmatic or already-compiled calls can omit it. The internal
 `__moklySource` prop is reserved from data schemas and slots and stripped before
 validation, hashing and rendering. Source metadata never affects identity or
@@ -152,7 +152,7 @@ links or ignored regions. Ignored author links and markup stay ignored.
 file checks and emits the stylesheet warning. `render.tsx` returns temporary
 link declarations separately from the private usage record. Build, Check, export, publish and Serve now report those warnings
 through the shared invocation sink.
-Current and baseline v9 manifests require complete usage records, including
+Current and baseline v10 manifests require complete usage records, including
 root ranges on component saved views and an `insertedStylesheets` array even
 when it is empty. Public inspection omits that private provenance. Missing
 baseline fields are invalid; comparison never fills them in.
@@ -163,7 +163,7 @@ ranges that its document cannot prove follow the
 [invalid-baseline contract](../../docs/protocol/mokly-baseline-compatibility.md#invalid-or-missing-data).
 Historical marker translation is not supported. The frozen instance and slot
 key domain strings are unchanged.
-Compatible v9 baselines preserve each document’s UTF-16 coordinates when
+Compatible v10 baselines preserve each document’s UTF-16 coordinates when
 applying recorded style ownership.
 
 Comparison projection can expose caller-owned slot material that HTML parsing
@@ -189,7 +189,7 @@ node --import tsx --test tests/component_*.test.ts
   boundary and inference.
 - [`manifest_build.ts`](./manifest_build.ts) and
   [`manifest_entry_validation.ts`](./manifest_entry_validation.ts): flattened
-  parent/variant records and manifest-v9 validation.
+  parent/variant records and manifest-v10 validation.
 - Viewer [`props.ts`](../../packages/viewer/src/components/props.ts),
   [`schema.ts`](../../packages/viewer/src/components/schema.ts), and
   [`codec.ts`](../../packages/viewer/src/components/codec.ts): declarative

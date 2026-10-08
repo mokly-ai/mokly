@@ -4,7 +4,7 @@
 
 Ignoring all CSS owner records after safety checks remains implemented.
 
-Build, Check, Serve, Review, export and publication share validated manifest-v9
+Build, Check, Serve, Review, export and publication share validated manifest-v10
 source inventories. Exact generated files and the checked authored closure are
 public under the [shared policy](./mokly-public-closure.md). Source, alias and
 metadata denials win. Preview replacement requires current export ownership.
@@ -132,7 +132,7 @@ as a source. Every file below `mokly-generated/` remains package-owned output,
 not an authored input, even without an HTML header. See
 [imported stylesheet delivery](./mokly-imported-styles.md).
 
-Manifest v9 `sourceFiles` is a sorted, unique array of repository-relative POSIX
+Manifest v10 `sourceFiles` is a sorted, unique array of repository-relative POSIX
 paths. Derive it from the union of file inputs resolved by both the config
 bundle and the consumer bundle, including inputs eliminated by tree shaking:
 
@@ -174,7 +174,7 @@ inside `repoRoot` or explicitly configure a common root containing it.
 ## Freshness And Lifecycle
 
 Build/check derive the inventory from the same resolved graphs used for that
-compilation. Before serving or publishing a current v9 catalogue, independently
+compilation. Before serving or publishing a current v10 catalogue, independently
 resolve the config and consumer input graphs and require the accepted in-memory
 inventory to match. This scan may bundle modules but must not run page render callbacks,
 rewrite generated output, or read Git history. A missing, malformed, or stale
@@ -190,10 +190,10 @@ the browser. A failed candidate keeps the last-good generation. Asset checks
 recheck realpath confinement and regular-file identity at read time; a
 retargeted symlink is not an accepted closure file.
 
-For baseline Review resources, use the accepted v9 inventory, entry sources,
+For baseline Review resources, use the accepted v10 inventory, entry sources,
 and reserved-name rules. Never execute baseline config with the current package;
 a [derived baseline](./mokly-derived-baselines.md) is built by its own commit's
-tooling and then read through the v9 boundary. The accepted baseline's closure is the only public authored set. Baseline
+tooling and then read through the v10 boundary. The accepted baseline's closure is the only public authored set. Baseline
 paths use the reader's validated file kinds, never current disk targets. Git and
 derived-baseline resource readers reject symlinks rather than
 following them.

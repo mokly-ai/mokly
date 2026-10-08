@@ -15,7 +15,7 @@ const result: ReviewResult = {
   baseRef: "origin/main",
   changedPaths: [],
   ignoredImpact: [],
-  schemaVersion: 6 as const,
+  schemaVersion: 7 as const,
   screens: [
     {
       after: { path: "home", title: "Home" },
@@ -41,7 +41,7 @@ const result: ReviewResult = {
 test("component summary titles are literal single-line Markdown", () => {
   const summary = summaryMarkdown({
     ...result,
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     screens: [],
     components: [],
     affectedConsumers: [],

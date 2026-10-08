@@ -62,7 +62,7 @@ Review phases use the same session, role and parent context as their caller:
   Pinned readers reuse the resolved commit without another Git span.
 - `review.changed-paths` covers output exclusions, tracked/untracked discovery,
   deduplication and sorting, including later input-freshness checks.
-- `review.base-manifest` covers canonical baseline reading, v9 validation, and
+- `review.base-manifest` covers canonical baseline reading, v10 validation, and
   incompatible-version detection.
 - `review.base-documents` covers each bulk baseline-document read, including
   live component prefetch and bounded live document-comparison batches. It does

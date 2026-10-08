@@ -18,7 +18,7 @@ import { textOutput } from "./helpers/generated_text.js";
 test("component metadata reflects authored paths without a hierarchy projection", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const manifest = fixture.after.manifest;
-  assert.equal(manifest.schemaVersion, 9);
+  assert.equal(manifest.schemaVersion, 10);
   const entry = manifest.entries.find((item) => item.kind === "screen");
   assert.ok(entry);
   assert.notEqual(metadata(entry), metadata({ ...entry, path: "other/home" }));

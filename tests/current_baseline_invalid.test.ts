@@ -20,7 +20,7 @@ for (const shape of [
   "CSS owners",
 ] as const) {
   for (const watch of [false, true])
-    test(`invalid v9 ${shape} keeps Browse without earlier-version copy, watch=${watch}`, async (context) => {
+    test(`invalid v10 ${shape} keeps Browse without earlier-version copy, watch=${watch}`, async (context) => {
       const fixture = await currentBaselineFixture(context, { shape });
       const messages: string[] = [];
       const running = await serve(
@@ -48,7 +48,7 @@ for (const shape of [
       );
     });
 
-  test(`invalid v9 ${shape} stops export and preserves the installed site`, async (context) => {
+  test(`invalid v10 ${shape} stops export and preserves the installed site`, async (context) => {
     const fixture = await currentBaselineFixture(context, { shape });
     await exportCatalogue(fixture.config, { outDir: "site", noChanges: true });
     const file = path.join(fixture.output, "mokly-viewer/catalogue.json");
@@ -65,7 +65,7 @@ for (const shape of [
     assert.deepEqual(messages, []);
   });
 
-  test(`invalid v9 ${shape} stops publish before uploading`, async (context) => {
+  test(`invalid v10 ${shape} stops publish before uploading`, async (context) => {
     const fixture = await currentBaselineFixture(context, { shape });
     const receiver = await startFakeReceiver(context);
     const messages: string[] = [];

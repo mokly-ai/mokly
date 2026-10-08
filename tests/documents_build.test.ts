@@ -66,7 +66,7 @@ test("document-only roots emit manifest, tree, resources and both schemes", asyn
     ]).hasDarkFragments,
     true,
   );
-  assert.equal(manifest.schemaVersion, 9);
+  assert.equal(manifest.schemaVersion, 10);
   assert.deepEqual(
     manifest.entries.map((e) => [e.path, e.kind]),
     [
@@ -99,7 +99,7 @@ test("document-only roots emit manifest, tree, resources and both schemes", asyn
     comparisonUrl: null,
     revision: { content: 0, evidence: 0 },
   });
-  assert.equal(model.schemaVersion, 5);
+  assert.equal(model.schemaVersion, 6);
   assert.equal(model.documents.length, 2);
   assert.deepEqual(readCatalogue(model), model);
   assert.deepEqual(model.tree[0], {

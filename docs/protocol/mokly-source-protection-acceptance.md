@@ -18,7 +18,7 @@ current and historical Review reads, and both publication options. Verify that
 CSS, fonts, images, and public scripts still work. Test watcher reclassification
 after dependency changes and prove default repository preview validation uses no Git.
 Cover internal manifests, their symlink aliases, generated links/resources,
-ordinary public JSON, v9 internal reads and earlier-envelope rejection.
+ordinary public JSON, v10 internal reads and earlier-envelope rejection.
 Cover unreferenced files at root and nested paths, aliases in either direction,
 missing and protected closure references, and `mokly-generated/` escapes. Prove
 unreferenced README edits create no public content evidence, real imported

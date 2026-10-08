@@ -173,7 +173,7 @@ function parseRuntimeStartupMessage(
     typeof config.generatedDir !== "string" ||
     !manifest ||
     !Array.isArray(manifest.entries) ||
-    (manifest.schemaVersion !== 9 &&
+    (manifest.schemaVersion !== 10 &&
       manifest.schemaVersion !== "live-index-2") ||
     !Array.isArray(manifest.sourceFiles)
   )

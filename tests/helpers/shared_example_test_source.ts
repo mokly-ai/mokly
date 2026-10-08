@@ -10,7 +10,7 @@ import { repositoryRoot } from "./fixture.js";
 
 const execute = promisify(execFile);
 
-/** Small source-only repository using the actual v9 builder for isolation tests. */
+/** Small source-only repository using the actual v10 builder for isolation tests. */
 export async function createMiniExample(root: string) {
   const basic = path.join(root, "examples/basic");
   await fs.mkdir(path.join(basic, "entries"), { recursive: true });

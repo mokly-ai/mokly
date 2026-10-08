@@ -25,7 +25,7 @@ export function cssSchemaFiles(): Map<string, string> {
   );
 }
 
-/** Shared server/browser schema fixture uses the path-addressed v5 result. */
+/** Shared server/browser schema fixture uses the path-addressed v7 result. */
 export function cssSchemaFixture(): ReviewResult {
   const address = { path: "auth", title: "Sign in" };
   const views: ViewReview[] = [
@@ -66,7 +66,7 @@ export function cssSchemaFixture(): ReviewResult {
   };
   return {
     ...common,
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     screens: [{ ...screen, before: address, after: address }],
     components: [],
     affectedConsumers: [],

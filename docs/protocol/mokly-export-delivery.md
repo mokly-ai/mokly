@@ -66,7 +66,7 @@ and keeps the authored case of each segment when written into URLs.
 | `view/<path>/index.html`           | Full shell for current and removed entries, served at `/view/<path>/` |
 | `static/<public-path>`             | Adapted current views, documents, and public consumer resources       |
 | `mokly-viewer/`                    | Required shell CSS, fonts, browser modules, and comparison generation |
-| `mokly-viewer/catalogue.json`      | Public catalogue read model v5                                        |
+| `mokly-viewer/catalogue.json`      | Public catalogue read model v6                                        |
 | `mokly-viewer/client/inspector.js` | Inert cross-origin frame inspector                                    |
 | `404.html`                         | Existing catalogue not-found view                                     |
 | `.mokly-export-artifact`           | Public-safe versioned ownership inventory with per-file digests       |

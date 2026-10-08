@@ -37,12 +37,12 @@ export function projectCatalogue(
 ): CatalogueReadModel {
   const { catalogue } = input;
   if (
-    catalogue.manifest.schemaVersion !== 9 &&
+    catalogue.manifest.schemaVersion !== 10 &&
     catalogue.manifest.schemaVersion !== "live-index-2"
   )
     invalidData(
       "$catalogue",
-      "current projection requires manifest v9 or live metadata",
+      "current projection requires manifest v10 or live metadata",
     );
   const comparisonUrl = comparisonPath(input.comparisonUrl);
   const identity = catalogueIdentity(input.configPath);
@@ -193,7 +193,7 @@ export function projectCatalogue(
     if (!removedPaths.has(id))
       invalidData("$catalogue", "preview path is not a removed entry");
   return {
-    schemaVersion: 5,
+    schemaVersion: 6,
     identity,
     deploymentId: ZERO_DEPLOYMENT_ID,
     revision: {

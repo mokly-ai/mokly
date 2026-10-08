@@ -5,7 +5,7 @@ import type {
   ChangedEntry,
   ComponentVariantReview,
   EntryChangeReason,
-  ReviewResultV6,
+  ReviewResultV7,
 } from "../../packages/viewer/dist/review/component_types.js";
 import {
   createCatalogue,
@@ -166,7 +166,7 @@ const result = {
     },
   ],
   screens: [],
-} as unknown as ReviewResultV6;
+} as unknown as ReviewResultV7;
 
 /**
  * The shell catalogue and server context for the moved library, as Serve and
@@ -185,7 +185,7 @@ export function movedComponentEvidence(): {
       entries: library("ui", "chevron", true),
       folders: [],
       generatedBy: "mokly",
-      schemaVersion: 9,
+      schemaVersion: 10,
       sourceFiles: [],
     }),
     [{ entry: secondary, folderTitles: ["Components"], parentTitle: "Action" }],

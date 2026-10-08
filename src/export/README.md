@@ -72,7 +72,7 @@ asset reader and merged evidence as comparisons, preserving Serve's
 material-output/resource Changes
 membership without reading a different current-file snapshot.
 For screen-only catalogues, `site.ts` projects per-view resource evidence from
-the unified v6 comparison into shell workspace data. Details can show matched,
+the unified v7 comparison into shell workspace data. Details can show matched,
 unresolved, and excluded stylesheets in Current without fetching comparison
 JSON, and no extra classification pass is needed for this projection.
 The projection omits views without retained or excluded resources and drops
@@ -84,7 +84,7 @@ It publishes the same `resourceEvidence` on catalogue views and whole-document
 pages. Publication capture uses the same ready snapshot. Neither path infers
 component changes from stylesheet declarations or resource owners.
 
-Review result v6 is the only comparison result: a catalogue without
+Review result v7 is the only comparison result: a catalogue without
 registered components emits the same shape with empty component arrays.
 Snapshot roots and resources use `snapshotSidePath` and
 `snapshotResourcePath`; all builders are exported from `@mokly/viewer/data` and owned by the
@@ -220,7 +220,7 @@ validator enforces that scope at preflight and before installation.
 `reservation.ts` uses filesystem-native per-output directory names under an
 owned `.mokly-export-reservations` namespace, retaining only its metadata
 after cleanup. Case and symlink aliases cannot bypass an active lock. Only the current reservation namespace controls writer admission.
-Export captures only compiled `mokly-generated/` files and the v9
+Export captures only compiled `mokly-generated/` files and the v10
 `assetClosure`. Reference validation, Review and content-change classification
 use the same confined closure. Comparison copies also pass the same lexical
 consumer-package and source policy. Manifest and cache privacy is unconditional.
@@ -275,7 +275,7 @@ removes extension/build-folder-only denials while preserving source privacy.
 
 The approved [path/output integration](../../docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
 Markdown documents and moves inside one generated tree. It introduces manifest
-v9, catalogue v5 and review v6, with explicit versions for the other boundaries.
+v10, catalogue v6 and review v7, with explicit versions for the other boundaries.
 Accepted workers use immutable in-memory route sets; only writing commands
 acquire the output lock. The integration plan records verification and scope.
 

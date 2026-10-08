@@ -48,7 +48,7 @@ test("a ready comparison names the views it marked changed", () => {
   );
 });
 
-test("a v5 component result keys every saved variant's view states", () => {
+test("a v7 component result keys every saved variant's view states", () => {
   const result = componentVariantResult();
   const comparison = result.components[0];
   assert.ok(comparison);

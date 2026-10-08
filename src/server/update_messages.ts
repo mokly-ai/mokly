@@ -1,5 +1,5 @@
 import { isEntryPath } from "@mokly/viewer/data";
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import {
   parseBaselineCatalogue,
@@ -58,7 +58,7 @@ export interface ChildUpdateMessage {
 
 export interface CatalogueCompleteMessage {
   type: "catalogue-complete";
-  manifest: ManifestV9;
+  manifest: ManifestV10;
   generation: string;
   version: number;
   /** The parent's current checked list; a reload's reused manifest can be older. */
@@ -131,7 +131,7 @@ export function parseCatalogueCompleteMessage(
     (candidate.version ?? 0) <= 0 ||
     !candidate.manifest ||
     typeof candidate.manifest !== "object" ||
-    candidate.manifest.schemaVersion !== 9
+    candidate.manifest.schemaVersion !== 10
   )
     return;
   const { assetClosure, ...complete } = candidate as CatalogueCompleteMessage;

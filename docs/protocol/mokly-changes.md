@@ -10,7 +10,7 @@ The remaining contract is implemented.
 The implemented [component attribution extension](./mokly-component-changes.md)
 keeps affected-only consumers out of Changes and links them from the component.
 Screen and Review-ignore behavior remains below. Pairing uses kind and path,
-then the move signals; review result v6 carries `previousPath` on paired moves.
+then the move signals; review result v7 carries `previousPath` on paired moves.
 Documents use the page material rules. The viewer presents paired entries under
 the [move contract](./mokly-moves.md).
 
@@ -132,14 +132,14 @@ The shell receives this per-view resource evidence for screen-only catalogues
 as well as component catalogues, including in Current before snapshots exist.
 Live screen-only classification retains its analysis as `screenEvidence`, keyed
 by entry path; the workspace selects its `resourceEvidence` slice without a
-second analysis pass. Static exports select that slice from their packaged v6
+second analysis pass. Static exports select that slice from their packaged v7
 comparison. Details merge the loaded comparison's evidence
 with classification evidence, preserving retained stylesheet selectors,
 exclusions and ignored-content details without duplicate cards.
 See [CSS evidence presentation](./mokly-css-evidence-presentation.md).
 
 Classification reads baseline files without writing snapshots or a comparison;
-per-commit selection uses verified Git blobs or a completed rebuilt v9 cache. Baseline reads are batched, shared
+per-commit selection uses verified Git blobs or a completed rebuilt v10 cache. Baseline reads are batched, shared
 resource edges are cached, and cycles terminate. Apart from verified deletions,
 an unavailable or invalid input makes Changes unavailable while preserving the
 tabs and access through All in live Serve.
