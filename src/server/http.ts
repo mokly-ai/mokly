@@ -243,7 +243,6 @@ export async function startCatalogueServer(
       else controls = new ComponentRenderService(runtime, movedLinks.read);
     },
     publishUpdate(update = {}): void {
-      if (update.assetClosure) assetClosure.accept(update.assetClosure);
       const next = advanceCatalogueState(
         {
           catalogue,

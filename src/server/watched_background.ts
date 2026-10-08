@@ -49,21 +49,16 @@ export class WatchedBackground {
             this.changesStartedAt - this.generationStartedAt,
           );
         this.activeCompilation = compilation;
-        const closure = [...options.resources.closure];
         options.running.completeCatalogue?.(
           compilation.manifest,
           accepted.generation,
-          closure,
+          [...options.resources.closure],
         );
         options.running.notifyUpdate(
           undefined,
           undefined,
           "pending",
           "evidence",
-          undefined,
-          undefined,
-          undefined,
-          closure,
         );
       },
       (snapshot) => {

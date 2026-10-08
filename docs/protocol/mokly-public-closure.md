@@ -99,7 +99,8 @@ must not make a file in the checked closure return 404.
 A resource reload reuses the earlier compilation, so the manifest closure of a
 completed reload pass can be older than the watched closure. Each completion
 therefore carries the parent's current checked closure, and the child serves
-that list instead of the manifest closure. A restarted watched child starts
+that list instead of the manifest closure. An update message carries no list,
+so it cannot change the checked closure. A restarted watched child starts
 with the last checked closure unless the parent reloaded the config file. This
 covers a restart watch rule, crash recovery and a structural rebuild, including
 a rebuild whose new imports replace the source watcher. After a config-file

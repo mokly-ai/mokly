@@ -26,7 +26,6 @@ export type CatalogueUpdateKind = "content" | "evidence";
 
 /** Mutable running-server state published before clients refresh. */
 export interface CatalogueUpdate {
-  assetClosure?: readonly string[];
   /** Defaults to content, requiring clients to refresh their rendered documents. */
   kind?: CatalogueUpdateKind;
   /** Omit to retain status unless the update replaces change evidence. */
@@ -41,7 +40,6 @@ export interface CatalogueUpdate {
 
 /** Parent-to-child update command with an explicit changed-id snapshot. */
 export interface ChildUpdateMessage {
-  assetClosure?: readonly string[];
   /** Omit to retain the reader; null revokes it while the parent prepares. */
   baselineCommit?: string | null;
   baselineSelection?: BaselineSelection;
@@ -136,13 +134,11 @@ export function childUpdateMessage(
   baselineCommit?: string | null,
   baselineSelection?: BaselineSelection,
   baselineDescriptor?: BaselineCatalogue,
-  assetClosure?: readonly string[],
 ): ChildUpdateMessage {
   return {
     ...(baselineCommit !== undefined ? { baselineCommit } : {}),
     ...(baselineSelection ? { baselineSelection } : {}),
     ...(baselineDescriptor ? { baselineDescriptor } : {}),
-    ...(assetClosure ? { assetClosure: [...assetClosure] } : {}),
     ...(kind ? { kind } : {}),
     ...(changesStatus ? { changesStatus } : {}),
     changedEntries: changedEntries ? [...changedEntries] : null,
@@ -167,7 +163,6 @@ export function parseChildUpdateMessage(
     baselineCommit?: unknown;
     baselineSelection?: unknown;
     baselineDescriptor?: unknown;
-    assetClosure?: unknown;
     kind?: unknown;
     changesStatus?: unknown;
     changedEntries?: unknown;
@@ -190,8 +185,6 @@ export function parseChildUpdateMessage(
     (typeof candidate.baselineCommit !== "string" &&
       (candidate.baselineSelection !== undefined ||
         candidate.baselineDescriptor !== undefined)) ||
-    (candidate.assetClosure !== undefined &&
-      !isAuthoredClosure(candidate.assetClosure)) ||
     !Number.isSafeInteger(candidate.version) ||
     (candidate.version as number) <= 0 ||
     !isChangedPaths(candidate.changedEntries) ||
@@ -218,9 +211,6 @@ export function parseChildUpdateMessage(
             candidate.baselineCommit,
           )!,
         }
-      : {}),
-    ...(candidate.assetClosure !== undefined
-      ? { assetClosure: candidate.assetClosure as string[] }
       : {}),
     ...(candidate.kind ? { kind: candidate.kind } : {}),
     ...(candidate.changesStatus

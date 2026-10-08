@@ -298,7 +298,8 @@ checked closure, so its update cannot hide a listed file before the background
 pass completes. A checked result keeps the on-demand additions of the same
 generation. `watched_background.ts` sends the resource watcher's current closure
 with each completion, because a reload reuses an older compilation manifest.
-`supervisor.ts` keeps that list and sends it in a restarted child's startup
+Update messages carry no list, so only a completion changes a running child's
+checked closure. `supervisor.ts` keeps that list and sends it in a restarted child's startup
 message. `serve_watched.ts` discards it only when `reconfigure` reloads the
 config file; a rebuild that only replaces the source watcher keeps it. The child
 ignores a list that `isAuthoredClosure` rejects.

@@ -18,7 +18,6 @@ import { ReadyProcessSupervisor } from "../dist/server/supervisor.js";
 import type {
   CatalogueCompleteMessage,
   ChildCommand,
-  ChildUpdateMessage,
 } from "../dist/server/update_messages.js";
 import type { WatchEvent } from "../dist/server/watch_events.js";
 
@@ -185,16 +184,14 @@ test(
       ["guide.html", "spec.pdf"],
       "the second reload's completion keeps the PDF that the first linked",
     );
-    for (const [index, message] of child.messages.entries()) {
-      if (message.type !== "catalogue-complete") continue;
-      const update = child.messages
-        .slice(index + 1)
-        .find(
-          (next): next is ChildUpdateMessage =>
-            next.type === "update" && next.assetClosure !== undefined,
-        );
-      assert.deepEqual(message.assetClosure, update?.assetClosure);
-    }
+    assert.ok(child.completions().every((message) => message.assetClosure));
+    assert.equal(
+      child.messages.some(
+        (message) => message.type === "update" && "assetClosure" in message,
+      ),
+      false,
+      "only a completion carries the checked list",
+    );
   },
 );
 

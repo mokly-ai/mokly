@@ -52,7 +52,6 @@ export interface ProcessSupervisor {
     baselineCommit?: string | null,
     baselineSelection?: BaselineSelection,
     baselineDescriptor?: BaselineCatalogue,
-    assetClosure?: readonly string[],
   ): void;
   /** Register the watched-runtime handler for a post-readiness child failure. */
   onUnexpectedExit(callback: (error: Error) => void): void;
@@ -226,7 +225,6 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     baselineCommit?: string | null,
     baselineSelection?: BaselineSelection,
     baselineDescriptor?: BaselineCatalogue,
-    assetClosure?: readonly string[],
   ): void {
     const child = this.#child;
     if (!child || child.stopping || child.exited) return;
@@ -241,7 +239,6 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
         baselineCommit,
         baselineSelection,
         baselineDescriptor,
-        assetClosure,
       ),
     );
   }

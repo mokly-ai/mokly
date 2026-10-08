@@ -199,7 +199,10 @@ test("the in-process child keeps its checked authored closure when a reload adop
   server.replaceComponentRuntime({ ...runtime, generation: "b".repeat(32) });
   server.publishUpdate({ version: 2 });
   assert.equal(await (await fetch(pdf)).text(), "%PDF-1.4\nsecond");
-  server.publishUpdate({ assetClosure: [], kind: "evidence", version: 3 });
+  assert.equal(
+    server.completeCatalogue!(complete.manifest, "b".repeat(32), []),
+    true,
+  );
   assert.equal((await fetch(pdf)).status, 404);
 });
 

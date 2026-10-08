@@ -132,7 +132,6 @@ function waitForChildShutdown(
             (update.changedEntries === null ? "pending" : "ready"),
           changedEntries: update.changedEntries,
           componentChanges: update.componentChanges,
-          ...(update.assetClosure ? { assetClosure: update.assetClosure } : {}),
           version: update.version,
         });
       }

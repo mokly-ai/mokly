@@ -209,3 +209,12 @@ test("catalogue completion keeps a safe authored list and ignores an unsafe one"
       message,
     );
 });
+
+test("watch updates carry no checked list", () => {
+  const message = childUpdateMessage(2, undefined);
+  assert.equal(Object.hasOwn(message, "assetClosure"), false);
+  assert.deepEqual(
+    parseChildUpdateMessage({ ...message, assetClosure: ["spec.pdf"] }),
+    message,
+  );
+});
