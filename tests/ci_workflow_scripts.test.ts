@@ -17,6 +17,7 @@ import { readTestboxWorkflow } from "./helpers/testbox_workflow.js";
 
 const execute = promisify(execFile);
 const PROFILE_SELECTOR = "Select Node verification profile";
+const RELEASE_GATE = "Run complete verification";
 const SELECTOR_OUTPUTS = ["node-matrix", "verification-runtimes"];
 
 interface CiStep {
@@ -35,7 +36,7 @@ interface CiWorkflow {
 }
 
 test("the Node profile selector adds release runtimes only for release pull requests", async (context) => {
-  const { job, step } = await ciStep(PROFILE_SELECTOR);
+  const { job, step } = await workflowStep("ci.yml", PROFILE_SELECTOR);
   const { id, run } = step;
   assert.ok(id, `"${PROFILE_SELECTOR}" needs an id to publish its outputs`);
   assert.ok(run, `"${PROFILE_SELECTOR}" must run a shell script`);
@@ -118,10 +119,50 @@ test("Testbox sessions receive the job PATH and Playwright channel only", async 
   );
 });
 
-async function ciStep(name: string): Promise<{ job: CiJob; step: CiStep }> {
+test("the release complete gate verifies the checked-out tag commit", async (context) => {
+  const { run } = (await workflowStep("release.yml", RELEASE_GATE)).step;
+  assert.ok(run, `"${RELEASE_GATE}" must run a shell script`);
+  if (process.platform === "win32") return;
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-release-gate-"));
+  context.after(() => fs.rm(root, { recursive: true, force: true }));
+  const git = (...args: string[]) => execute("git", args, { cwd: root });
+  await git("init", "-q");
+  await git(
+    "-c",
+    "user.name=Fixture",
+    "-c",
+    "user.email=fixture@example.test",
+    "commit",
+    "-q",
+    "--allow-empty",
+    "-m",
+    "chore: release",
+  );
+  const tagCommit = (await git("rev-parse", "HEAD")).stdout.trim();
+  const bin = path.join(root, "bin");
+  await fs.mkdir(bin);
+  await fs.writeFile(
+    path.join(bin, "cargo"),
+    '#!/bin/sh\nprintf %s "$GITHUB_SHA" > "$GATE_COMMIT"\n',
+    { mode: 0o755 },
+  );
+  const record = path.join(root, "gate-commit");
+  await runBash(run, root, {
+    PATH: `${bin}${path.delimiter}${process.env.PATH ?? ""}`,
+    HOME: root,
+    GITHUB_SHA: "f".repeat(40),
+    GATE_COMMIT: record,
+  });
+  assert.equal(await fs.readFile(record, "utf8"), tagCommit);
+});
+
+async function workflowStep(
+  file: string,
+  name: string,
+): Promise<{ job: CiJob; step: CiStep }> {
   const workflow = parse(
     await fs.readFile(
-      path.join(repositoryRoot, ".github/workflows/ci.yml"),
+      path.join(repositoryRoot, ".github/workflows", file),
       "utf8",
     ),
   ) as CiWorkflow;
@@ -130,8 +171,8 @@ async function ciStep(name: string): Promise<{ job: CiJob; step: CiStep }> {
       .filter((step) => step.name === name)
       .map((step) => ({ job, step })),
   );
-  assert.ok(match, `ci.yml must have a "${name}" step`);
-  assert.equal(others.length, 0, `ci.yml must have one "${name}" step`);
+  assert.ok(match, `${file} must have a "${name}" step`);
+  assert.equal(others.length, 0, `${file} must have one "${name}" step`);
   return match;
 }
 

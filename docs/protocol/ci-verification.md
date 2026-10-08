@@ -180,8 +180,13 @@ Each suite report records the commit SHA, runtime, suite, optional shard,
 complete discovered file inventory, assigned file inventory, observed executed
 files, per-file timing, process outcome, and skipped/cancelled evidence. Browser
 and hydration reports also record the all-project spec inventory and every test
-by stable project, relative file, line, column and title path; the Playwright
-reporter records each observed test's result, duration, and serialized errors.
+by stable project, spec file, defining file, line, column and title path; the
+Playwright reporter records each observed test's result, duration, and
+serialized errors. A test's spec file is the `*.spec.ts` file that Playwright
+loaded. Its defining file, line and column locate the `test()` call, which can
+be in a helper module that the spec imports. Every Playwright file inventory,
+assignment, observed file and per-file timing names spec files, so a shared
+helper never joins an inventory or spans shards.
 Unit reports retain the Node reporter's failure names and diagnostics. Once
 execution starts, the wrapper writes a report after the test process exits on
 success or failure, then validates it. A discovery or preparation failure before
