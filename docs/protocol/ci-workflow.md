@@ -197,6 +197,11 @@ npm and Rust steps match the CI repository job. The
 [repository input contract](./ci-test-repository-inputs.md) describes its
 example server check.
 
+[`tests/ci_workflow_safeguards.test.ts`](../../tests/ci_workflow_safeguards.test.ts)
+checks Testbox read-only permissions, no secrets and no persisted checkout
+credentials; no dependency installs before the main audit; the native job's
+minimum tested Node version; and a non-empty branch filter on every push trigger.
+
 [`tests/ci_workflow_scripts.test.ts`](../../tests/ci_workflow_scripts.test.ts)
 executes the Node profile selector with and without a release pull request and
 derives the expected outputs from the CLI's tested Node versions and the
