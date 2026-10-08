@@ -127,7 +127,6 @@ impl Application {
     }
 }
 
-/// Promote the remote typed error without converting it to text.
 /// Report an interrupt before warmup with the real count: no box exists yet.
 fn before_boxes<T>(result: error::Result<T>) -> error::Result<T> {
     match result {
@@ -136,6 +135,7 @@ fn before_boxes<T>(result: error::Result<T>) -> error::Result<T> {
     }
 }
 
+/// Promote the remote typed error without converting it to text.
 fn remote<T>(result: error::Result<T>) -> Result<T> {
     match result {
         Ok(value) => Ok(value),

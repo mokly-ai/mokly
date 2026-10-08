@@ -20,7 +20,7 @@ pub(super) struct Evidence {
     cancelled: bool,
 }
 
-/// Attach the final cleanup count to every result after the suites start.
+/// Attach the final cleanup count to every failed or interrupted result.
 pub(super) fn conclude(
     cleanup: usize,
     interrupted: bool,

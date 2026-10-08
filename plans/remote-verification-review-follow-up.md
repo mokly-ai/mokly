@@ -1,6 +1,6 @@
 # Remote Verification Review Follow-Up
 
-Status: Completed. [PR #164](https://github.com/mokly-ai/mokly/pull/164) merged on 2026-10-07. Six Low review findings still await the user's decision; they are listed under the Milestone 6 review TODO.
+Status: Completed. [PR #164](https://github.com/mokly-ai/mokly/pull/164) merged on 2026-10-07. Five Low review findings still await the user's decision; they are listed under the Milestone 6 review TODO. Rust #1 was resolved on 2026-10-08.
 
 Fix the eleven open findings from the post-push review of
 [Blacksmith remote verification](./blacksmith-remote-verification.md)

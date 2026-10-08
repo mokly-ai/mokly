@@ -133,7 +133,7 @@ pub(crate) enum Error {
     /// A worker panicked instead of producing a result.
     #[error("[xtask/remote] verification worker did not return a result")]
     Worker,
-    /// An interrupt cancelled a step before the final cleanup count exists.
+    /// An interrupt cancelled a step; only a final result adds the box count.
     #[error("[xtask/remote] an interrupt cancelled the operation")]
     Cancelled,
     /// The user interrupted the check; only a final result carries this count.
@@ -180,7 +180,7 @@ pub(crate) enum TreeCheck {
 
 impl TreeCheck {
     /// Summary value for `unchanged-tree=`.
-    pub(crate) fn unchanged(self) -> &'static str {
+    pub(super) fn unchanged(self) -> &'static str {
         match self {
             Self::Unchanged => "true",
             Self::Changed => "false",
@@ -189,7 +189,7 @@ impl TreeCheck {
     }
 
     /// Error value for `changed-tree=`.
-    pub(crate) fn changed(self) -> &'static str {
+    fn changed(self) -> &'static str {
         match self {
             Self::Unchanged => "false",
             Self::Changed => "true",

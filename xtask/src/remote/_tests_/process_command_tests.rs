@@ -1,4 +1,4 @@
-//! Pure process configuration removes secrets for requests and the kill helper.
+//! Process configuration removes secrets, and an interrupted request never starts.
 
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
