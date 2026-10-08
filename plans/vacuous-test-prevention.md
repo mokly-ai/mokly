@@ -1,9 +1,9 @@
 # Vacuous Test Prevention
 
-Status: Active; Milestones 1 through 8 completed. The
+Status: Active; Milestones 1 through 9 completed. The
 reviewer agent runs the post-push review, and the implementation agent applies
-`Auto-fix: yes` findings. Finding 4 remains for the user to decide. The plan
-closes when its PR merges.
+`Auto-fix: yes` findings. Finding 4 of review 1 and findings 1 and 3 of
+review 4 remain for the user to decide. The plan closes when its PR merges.
 Created 2026-10-06 with the user's consent after a report that four
 unit tests check nothing. The user chose four options: rewrite
 the empty checks with checked helpers, test-first; add a zero-assertion guard to
@@ -69,10 +69,11 @@ occupy.
   `--import tsx --import ./scripts/verification/assertion-guard.mjs` under both
   policies. Since main's #155, `executeUnitTests` in
   `scripts/verification/unit-execution.mjs` holds these flags for both policies
-  and the targeted developer runs. Every `node --test` command in a CI
-  workflow or composite action passes the same flags. Since main's #175
-  deleted `tests/ci_workflow.test.ts`, `tests/verification_entrypoints.test.ts`
-  checks this as a policy property. A direct run uses
+  and the targeted developer runs. Every `node --test` or `tsx --test`
+  command in a CI workflow or composite action uses the direct-run form below.
+  Since main's #175 deleted `tests/ci_workflow.test.ts`,
+  `tests/verification_entrypoints.test.ts` checks this as a policy property.
+  A direct run uses
   `node --import tsx --import ./scripts/verification/assertion-guard.mjs --test <file>`.
   A run without the guard is partial verification.
 - A resolve hook, registered with `module.register`, maps `node:assert`,
@@ -520,6 +521,34 @@ Evidence: `.context/vacuous-test-prevention/merge-2/` and `merge-3/`.
       `AGENTS.md` review-fix rule.
       Review 3 found one auto-fixed docs finding; finding 4 of review 1 stays
       open. Evidence: `.context/vacuous-test-prevention/review-3.md`.
+
+## Milestone 9: Move the native guard check after main's workflow tests — completed
+
+Merge the newer `origin/main` at the user's request. Main's #175 deletes
+`tests/ci_workflow.test.ts`, which held this branch's check that the native
+`node --test` steps load the guard. Main's new rule forbids workflow tests that
+assert literal job names, step order, matrix values, or run strings.
+
+Evidence: `.context/vacuous-test-prevention/merge-9/`.
+
+- [x] Merge `origin/main` at `1086732` (#166, #127, #180, #175, #181). Keep
+      main's deletion of `tests/ci_workflow.test.ts`.
+- [x] Add the check to `tests/verification_entrypoints.test.ts` as a policy
+      property: every `node --test` or `tsx --test` command in a CI workflow
+      or composite action uses the guarded `node` form. Confirm that an
+      unguarded workflow step and an unguarded composite-action step each
+      fail it.
+- [x] State the property in `docs/protocol/ci-test-assertions.md`,
+      `docs/protocol/ci-workflow.md`, and the Decisions above.
+- [x] Run `cargo xtask check`.
+- [x] Run `git add -A`, commit with Conventional Commits, and push the branch.
+- [x] After the push, the reviewer agent reviews the merge resolution with
+      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+      The implementation agent applies the `Auto-fix: yes` findings under the
+      `AGENTS.md` review-fix rule. Review 4 finding 2 (docs) is fixed.
+      Open: the check reads each `run:` line alone, so a command wrapped with backslash continuations escapes it (review 4, finding 1); the user decides.
+      Open: `automationRunLines` copies the workflow readers of `tests/ci_workflow_policies.test.ts` (review 4, finding 3); the user decides.
+      Evidence: `.context/vacuous-test-prevention/review-4.md`.
 
 ## Post-merge follow-up (non-blocking)
 
