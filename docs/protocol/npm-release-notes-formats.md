@@ -10,6 +10,14 @@ results and never throws. Callers read the descriptor from a valid result's
 `export-invalid`. `ViewerError.code` includes `version`, with optional
 diagnostic `details` beside the existing product-facing `message`.
 
+`MoklyVersionError.boundary` now also accepts `"review"`. The review reader
+throws that error for numeric versions other than 7 before reading content.
+Comparison requests preserve its code, boundary, received version and supported
+version. Malformed current results keep a plain invalid-review error with one
+`[mokly/review]` prefix. Comparison failures use the existing compatible-viewer
+message, with version numbers only in diagnostic details. Embedded viewers emit
+`onError` with code `"version"`; Current remains available without comparison panes.
+
 The approved watch-writer change moves successful plain baseline notes and the
 earlier-version notice to stdout; errors and requested timing JSON retain
 stderr. Referenced authored files are not private solely because of an extension

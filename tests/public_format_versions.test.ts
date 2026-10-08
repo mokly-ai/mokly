@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import test from "node:test";
 
+import { MoklyVersionError } from "@mokly/viewer";
+
 import { projectCatalogue } from "../dist/catalogue/projection.js";
 import { compareReview } from "../dist/review/compare.js";
 import { readCatalogue } from "../packages/viewer/dist/catalogue/reader.js";
@@ -65,7 +67,16 @@ test("comparison v7 omits legacy evidence and rejects v6 and earlier", async (t)
       ...cssSchemaFixture(),
       schemaVersion: oldVersion,
     };
-    assert.throws(() => parseReviewResult(legacy), /unsupported schemaVersion/);
+    assert.throws(
+      () => parseReviewResult(legacy),
+      (error: unknown) => {
+        assert.ok(error instanceof MoklyVersionError);
+        assert.equal(error.version, oldVersion);
+        assert.equal(error.supported, 7);
+        assert.equal(error.boundary, "review");
+        return true;
+      },
+    );
   }
   const fixture = await componentReviewFixture(t, (source) =>
     source.replace(

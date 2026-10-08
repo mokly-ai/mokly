@@ -110,7 +110,7 @@ test("review v7 is the only accepted comparison result", () => {
   assert.deepEqual(parseReviewResult(result), result);
   assert.throws(
     () => parseReviewResult({ ...result, schemaVersion: 5 }),
-    /unsupported schemaVersion/,
+    /Unsupported Mokly review version 5; this viewer supports version 7/,
   );
 });
 

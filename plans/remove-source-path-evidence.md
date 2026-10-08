@@ -1,10 +1,10 @@
 # Remove Source-Path Evidence
 
 Status: Active. Milestones 1 to 36 are implemented, verified and pushed; the
-branch contains main `a90badb6`. Milestone 37 is implemented and verified at
-manifest v10, catalogue read model v6 and review result v7. Its local commit
-awaits the reviewer's push and review. The open review findings of Milestones
-32 to 34 and one Milestone 35 decision wait for the user.
+branch contains main `a90badb6`. Milestone 37 was pushed at `29e6deb6` with
+manifest v10, catalogue read model v6 and review result v7. Its review is
+complete. The fix round for its two findings is in progress. The open review
+findings of Milestones 32 to 34 and one Milestone 35 decision wait for the user.
 
 ## Status And Outcome
 
@@ -2969,7 +2969,10 @@ main's own Mokly and then reads main's v9 manifest as current output.
       read-only. Then apply the review-fix rule in `docs/dev/review.md`: fix
       `Auto-fix: yes` findings, re-review once, and report the rest. Add each
       open finding as one line under this TODO.
-
-- Unrelated flaky test: `route_scoped_shell_routes.spec.ts` — `use-case and page frames keep loading and navigating while evidence is unavailable` failed because the `Getting started` iframe heading was not found within 5,000 ms; the unchanged test passed on rerun. Suspected source: frame navigation/readiness ordering under parallel browser load.
+  - [x] Fix M37 finding 1 (Medium, product bug): keep the typed review version error through the browser request and comparison UI, and remove the repeated invalid-review prefix.
+  - [x] Fix M37 finding 2 (Low, docs): correct the live status to record the pushed tip, the completed review and the fix round.
+  - Unrelated flaky test: `route_scoped_shell_routes.spec.ts` › `use-case and page frames keep loading and navigating while evidence is unavailable` did not find the `Getting started` iframe heading within 5,000 ms; the unchanged test passed on rerun. Suspected source: frame navigation and readiness order under parallel browser load.
 
 Evidence: `.context/remove-source-path-evidence/milestone-37.md`.
+
+Fix-round evidence: `.context/remove-source-path-evidence/milestone-37-fixes.md`.

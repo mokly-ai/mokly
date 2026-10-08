@@ -584,7 +584,10 @@ The root build compiles the viewer before the CLI. Package smoke tests pack both
 workspaces and exercise every public entry from clean ESM and NodeNext
 consumers.
 
-Version failures use `MoklyVersionError`. The embedded viewer reports
+Version failures use `MoklyVersionError`, including unsupported numeric review
+versions with boundary `"review"`. Comparison requests retain that typed error.
+The comparison error surface keeps Current available and shows the existing
+compatible-viewer message with separate version diagnostics. The embedded viewer reports
 `onError` with code `version`, product copy, and separate diagnostic details.
 Standalone pages retain their server render and ordinary links when hydration
 is rejected. See the [namespace version gates](../../docs/protocol/mokly-viewer-namespace.md).

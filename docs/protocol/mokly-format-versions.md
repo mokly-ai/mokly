@@ -79,9 +79,13 @@ v6 and below are unsupported comparison results. Unknown newer versions remain
 invalid/unsupported, never the graceful earlier-baseline result.
 
 Use the existing typed viewer version boundary and product copy. Delivery stays
-a `valid`/`unsupported-version`/`invalid` classifier; only browser boundary
-readers throw `MoklyVersionError`. Export maps invalid/unsupported delivery to
-its existing `export-invalid` context. Inspector peers reject a mismatched wire
+a `valid`/`unsupported-version`/`invalid` classifier. Catalogue, bootstrap and
+review readers use `MoklyVersionError` at their version gates. The review gate
+rejects numeric versions other than 7 before content validation; malformed
+current results keep the plain invalid-review error. Comparison requests retain
+the typed error, and the viewer uses the existing version product copy and
+diagnostic details. Export maps invalid/unsupported delivery to its existing
+`export-invalid` context. Inspector peers reject a mismatched wire
 version before processing navigation. No field renaming or path conversion
 rescues an unsupported payload.
 

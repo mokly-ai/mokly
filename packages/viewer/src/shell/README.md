@@ -154,6 +154,9 @@ entry's fallback status and eligibility.
 the top-bar Appearance indicator and workspace. `workspace.tsx` consumes that
 shared resolution on every viewport, scheme, component variant, or evidence
 change and passes the effective scheme to controls and comparison presentation.
+Numeric review version failures retain `MoklyVersionError` through the request
+and comparison controller. The failure surface shows the shared compatible-viewer
+message and separate version details; Current remains available.
 `use_comparison.ts` is the single owner of comparison mode: component sibling
 navigation keeps that owner mounted, and the workspace reads its mode directly
 so Props and highlighting remain read-only until Current is selected.

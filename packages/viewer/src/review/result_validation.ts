@@ -1,3 +1,4 @@
+import { MoklyVersionError } from "../catalogue/version_error.js";
 import { canonicalJson } from "../components/data.js";
 
 import type { ReviewResultV7 } from "./component_types.js";
@@ -26,6 +27,7 @@ export function parseReviewResult(value: unknown): ReviewResult {
   try {
     return validateResult(value);
   } catch (error) {
+    if (error instanceof MoklyVersionError) throw error;
     reviewInvalid(
       error instanceof Error ? error.message : "invalid comparison",
     );
@@ -33,13 +35,11 @@ export function parseReviewResult(value: unknown): ReviewResult {
 }
 
 function validateResult(value: unknown): ReviewResult {
-  if (
-    !value ||
-    typeof value !== "object" ||
-    !("schemaVersion" in value) ||
-    value.schemaVersion !== 7
-  )
+  if (!value || typeof value !== "object" || !("schemaVersion" in value))
     reviewInvalid("unsupported schemaVersion");
+  if (typeof value.schemaVersion === "number" && value.schemaVersion !== 7)
+    throw new MoklyVersionError("review", value.schemaVersion, 7);
+  if (value.schemaVersion !== 7) reviewInvalid("unsupported schemaVersion");
   const result = reviewObject(value, [
     "schemaVersion",
     "baseCommit",

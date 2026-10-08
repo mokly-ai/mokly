@@ -125,7 +125,11 @@ The current viewer exposes a typed version failure that a host can distinguish
 from malformed data; its diagnostic is `Unsupported Mokly catalogue version <version>; this viewer supports version 6.`
 Unknown delivery/bootstrap versions likewise fail before any resource request
 or hydration. Use `Unsupported Mokly <boundary> version <version>; this viewer supports version <supported>.`
-with boundary `delivery` or `bootstrap` and the table's supported version.
+with boundary `delivery`, `bootstrap` or `review` and the table's supported version.
+Numeric review versions other than 7 fail before comparison content is read.
+The comparison error surface uses the same product message and keeps version
+numbers in its diagnostic details. Current remains available; rejected results
+produce no comparison panes. Malformed current results remain invalid data.
 Do not infer a version from file existence or silently fall back to a live URL.
 
 First-party loaders and embedding hosts present a version failure through their
