@@ -24,6 +24,7 @@ import { compareReview } from "../dist/review/compare.js";
 import type { BaselineReader, GitFile } from "../dist/review/git.js";
 import { RepositorySelectedReview } from "../dist/review/selected.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { currentManifest } from "./helpers/current_manifest.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
@@ -166,10 +167,7 @@ async function screenFixture(t: test.TestContext) {
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const current = await compileCatalogue(config);
-  const currentHome = current.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.path === "home",
-  );
-  assert.ok(currentHome?.kind === "screen");
+  const currentHome = entryAt(current.manifest, "home", "screen");
   const screen: ManifestScreen = {
     ...currentHome,
     path: "removed",

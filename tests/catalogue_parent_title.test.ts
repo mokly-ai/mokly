@@ -12,6 +12,7 @@ import { viewerCatalogue } from "../packages/viewer/src/viewer/projection.js";
 import { projectCatalogue } from "../src/catalogue/projection.js";
 import { removedManifestEntries } from "../src/registry/changes.js";
 
+import { entriesWhere, entryAt } from "./helpers/catalogue_selection.js";
 import { pathFixture } from "./helpers/path_fixture.js";
 
 for (const kind of ["screen", "component"] as const) {
@@ -26,9 +27,7 @@ for (const kind of ["screen", "component"] as const) {
     });
     t.after(fixture.remove);
     const baseline = (await fixture.compile()).manifest;
-    const parent = baseline.entries.find(
-      (entry) => entry.path === "library/action",
-    )!;
+    const parent = entryAt(baseline, "library/action", kind);
     for (const replacement of ["absent", "document", "retitled"] as const) {
       const current = {
         ...baseline,
@@ -36,13 +35,15 @@ for (const kind of ["screen", "component"] as const) {
           replacement === "absent"
             ? []
             : replacement === "retitled"
-              ? baseline.entries
-                  .filter((entry) => entry.path !== "library/action/old")
-                  .map((entry) =>
-                    entry.path === parent.path
-                      ? { ...entry, title: "New title" }
-                      : entry,
-                  )
+              ? entriesWhere(
+                  baseline,
+                  "entries without the removed action variant",
+                  (entry) => entry.path !== "library/action/old",
+                ).map((entry) =>
+                  entry.path === parent.path
+                    ? { ...entry, title: "New title" }
+                    : entry,
+                )
               : [
                   {
                     kind: "document" as const,

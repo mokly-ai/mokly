@@ -7,6 +7,7 @@ import { compileCatalogue, type Compilation } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import {
   assertFastPathEquivalent,
   compilationFiles,
@@ -116,10 +117,7 @@ async function relocatedFixture(t: TestContext) {
 }
 
 function actionViewPath(compilation: Compilation): string {
-  const action = compilation.manifest.entries.find(
-    (entry) => entry.kind === "component" && entry.path === "action/default",
-  );
-  assert.ok(action);
+  const action = entryAt(compilation.manifest, "action/default", "component");
   return generatedViews(action)[0]!.path;
 }
 

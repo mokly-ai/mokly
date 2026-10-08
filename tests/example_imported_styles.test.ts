@@ -6,6 +6,7 @@ import { parse } from "parse5";
 
 import { generatedViews } from "../packages/viewer/dist/data.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import {
   attribute,
   designCatalogue,
@@ -35,9 +36,7 @@ test("example Welcome delivers scoped CSS, Tailwind utilities, prefixes and a bi
     [137, 80, 78, 71, 13, 10, 26, 10],
   );
 
-  const welcome = manifest.entries.find(
-    (entry) => entry.path === "example/screens/welcome",
-  );
+  const welcome = entryAt(manifest, "example/screens/welcome", "screen");
   assert.ok(
     welcome?.kind === "screen" && welcome.colorSchemes.includes("dark"),
   );

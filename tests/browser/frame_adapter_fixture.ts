@@ -20,6 +20,7 @@ import type * as PostAdapter from "../../packages/viewer/dist/client/post_messag
 import type { ComponentViewRecord } from "../../packages/viewer/dist/components/manifest_types.js";
 import { viewRoute } from "../../packages/viewer/dist/data.js";
 import { createCatalogue } from "../../packages/viewer/dist/shell/catalogue.js";
+import { entryAt } from "../helpers/catalogue_selection.js";
 import { componentEntrySource } from "../helpers/component_fixture.js";
 import { createFixture, removeFixture } from "../helpers/fixture.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
@@ -89,10 +90,7 @@ export async function crossOriginFixture(
   }
   const host = await serveStaticFiles(root);
   const frames = await serveStaticFiles(root, { allowedOrigin: host.url });
-  const home = compilation.manifest.entries.find(
-    (entry) => entry.kind === "screen" && entry.path === "home",
-  );
-  if (home?.kind !== "screen") throw new Error("No fixture screen");
+  const home = entryAt(compilation.manifest, "home", "screen");
   const mobileView = viewRoute(home.path, "mobile", "light");
   const renderId = `${"a".repeat(48)}.${"b".repeat(64)}`;
   const temporaryPath = `/mokly-viewer/components/renders/${renderId}/mokly-generated/${mobileView}`;

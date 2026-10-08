@@ -1,16 +1,61 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
 import { minimatch } from "minimatch";
+import { parse } from "yaml";
 
 import browserConfig from "../playwright.config.js";
 import { discoverUnitFiles } from "../scripts/verification/evidence.mjs";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 import { runNpm } from "./helpers/npm.js";
+
+const NODE_TEST_COMMAND = /\b(?:node|tsx)\b.*\s--test(?:\s|$)/u;
+const GUARDED_NODE_TEST =
+  /\bnode --import tsx --import \.\/scripts\/verification\/assertion-guard\.mjs --test\s/u;
+
+interface AutomationSteps {
+  readonly steps?: readonly { readonly run?: string }[];
+}
+
+interface AutomationDocument {
+  readonly jobs?: Readonly<Record<string, AutomationSteps>>;
+  readonly runs?: AutomationSteps;
+}
+
+test("every unit run loads the assertion guard after tsx", async () => {
+  const read = (file: string) =>
+    fs.readFile(
+      path.join(repositoryRoot, "scripts/verification", file),
+      "utf8",
+    );
+  assert.match(
+    await read("unit-execution.mjs"),
+    /"--import",\s*"tsx",\s*"--import",\s*"\.\/scripts\/verification\/assertion-guard\.mjs"/u,
+  );
+  for (const runner of ["unit-runner.mjs", "unit-selected-run.mjs"])
+    assert.match(
+      await read(runner),
+      /from "\.\/unit-execution\.mjs"[\s\S]*executeUnitTests\(/u,
+      `${runner} must run tests through executeUnitTests`,
+    );
+});
+
+test("every CI node --test command loads the assertion guard after tsx", async () => {
+  const commands = (await automationRunLines()).filter((line) =>
+    NODE_TEST_COMMAND.test(line),
+  );
+  assert.ok(commands.length > 0, "CI must run some Node test files directly");
+  assert.deepEqual(
+    commands.filter((command) => !GUARDED_NODE_TEST.test(command)),
+    [],
+    "load tsx, then the assertion guard, in every CI node --test command",
+  );
+});
 
 test("public browser test command retains the Playwright entrypoint", async () => {
   const packageJson = JSON.parse(
@@ -227,4 +272,27 @@ async function specFiles(directory: string, root: string): Promise<string[]> {
       files.push(path.relative(root, target).split(path.sep).join("/"));
   }
   return files.sort();
+}
+
+async function automationRunLines(): Promise<string[]> {
+  const github = path.join(repositoryRoot, ".github");
+  const workflows = (await fs.readdir(path.join(github, "workflows")))
+    .filter((name) => /\.ya?ml$/u.test(name))
+    .map((name) => path.join(github, "workflows", name));
+  const actions = (
+    await fs.readdir(path.join(github, "actions"), { withFileTypes: true })
+  )
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => path.join(github, "actions", entry.name, "action.yml"))
+    .filter((file) => existsSync(file));
+  const lines: string[] = [];
+  for (const file of [...workflows, ...actions]) {
+    const document = parse(
+      await fs.readFile(file, "utf8"),
+    ) as AutomationDocument;
+    const owners = [...Object.values(document.jobs ?? {}), document.runs ?? {}];
+    for (const step of owners.flatMap((owner) => owner.steps ?? []))
+      lines.push(...(step.run ?? "").split("\n").map((line) => line.trim()));
+  }
+  return lines;
 }

@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { generatedViews, viewRoute } from "../packages/viewer/dist/data.js";
 
+import { entriesUnder } from "./helpers/catalogue_selection.js";
 import {
   componentParent,
   componentVariants,
@@ -56,14 +57,12 @@ test("standalone variants emit only the exclusive child styles they actually ren
 
 test("ownership includes implementation and CSS, while variants stay outside impact dependencies", async () => {
   const { manifest } = await designCatalogue;
-  for (const entry of manifest.entries) {
-    if (
-      entry.kind !== "component" ||
-      "variantOf" in entry ||
-      !entry.path.startsWith("design-ui-")
-    )
-      continue;
-    const slug = entry.path.slice("design-ui-".length);
+  const entries = entriesUnder(manifest, "design/library", {
+    kind: "component",
+    variants: "exclude",
+  });
+  for (const entry of entries) {
+    const slug = entry.path.slice(entry.path.lastIndexOf("/") + 1);
     assert.ok(
       entry.ownedDependencies.some((file) =>
         file.endsWith("/" + slug + ".css"),

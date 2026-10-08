@@ -6,6 +6,7 @@ import test from "node:test";
 import { readManifest } from "../dist/registry/manifest.js";
 import { serve } from "../dist/server/serve.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
 import {
@@ -39,9 +40,11 @@ test(
       watch: true,
     });
     try {
-      const before = readManifest(fixture.config).entries.find(
-        (entry) => entry.path === "home",
-      )?.title;
+      const before = entryAt(
+        readManifest(fixture.config),
+        "home",
+        "screen",
+      ).title;
       const previousVersion = version(
         await waitForClassifiedCount(running.url, 0),
       );
@@ -51,9 +54,11 @@ test(
       );
       await waitForUpdate(running.url, previousVersion);
       const html = await waitForClassifiedCount(running.url, 2);
-      const after = readManifest(fixture.config).entries.find(
-        (entry) => entry.path === "home",
-      )?.title;
+      const after = entryAt(
+        readManifest(fixture.config),
+        "home",
+        "screen",
+      ).title;
       assert.ok(after);
       assert.notEqual(after, before);
       assert.ok(html.includes(after));

@@ -6,6 +6,7 @@ import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 import { changedManifestPaths } from "../dist/registry/changed_paths.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 test("changed routes select fragment edits rather than source or dependency edits", async (context) => {
@@ -46,8 +47,7 @@ test("manifest entry changes are attributed to their route", async (context) => 
   const config = await loadConfig(fixture.root);
   const manifest = (await compileCatalogue(config)).manifest;
   const baseManifest = structuredClone(manifest);
-  const baseHome = baseManifest.entries.find((entry) => entry.path === "home");
-  if (!baseHome) throw new Error("fixture base home missing");
+  const baseHome = entryAt(baseManifest, "home", "screen");
   baseHome.title = "Previous home";
 
   assert.deepEqual(

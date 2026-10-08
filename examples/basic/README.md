@@ -328,7 +328,11 @@ in-memory compilation of the example to
 fresh, it keeps that file. Unit tests that read compiled output load it instead
 of compiling the example again, as the
 [snapshot contract](../../docs/protocol/ci-example-snapshot.md)
-defines. Baseline fixtures copy authored inputs and use the normal cached
+defines. Under the
+[test assertion contract](../../docs/protocol/ci-test-assertions.md), tests use
+checked catalogue selections. A moved or renamed spec makes a test fail.
+It cannot leave the test empty. Baseline fixtures copy authored inputs and use
+the normal cached
 rebuild through the historical commit's own package source and lockfile. The
 hand-authored stylesheets (`styles.css`, `design.css`, `design-stage.css`,
 `design-documents.css`, `design-review.css`, `design-review-scroll.css`, and the component design stylesheets) stay under the catalogue root and remain tracked. Imported styles live under

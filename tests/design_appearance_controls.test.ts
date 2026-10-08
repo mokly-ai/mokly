@@ -4,7 +4,13 @@ import test from "node:test";
 import { parse } from "parse5";
 
 import { generatedViews, viewRoute } from "../packages/viewer/dist/data.js";
+import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 
+import {
+  assertAbsent,
+  entriesUnder,
+  entriesWhere,
+} from "./helpers/catalogue_selection.js";
 import {
   attribute,
   designCatalogue,
@@ -29,8 +35,7 @@ function countClass(html: string, className: string): number {
 
 test("no design artboard depicts a scheme control", async () => {
   const { manifest, outputs } = await designCatalogue;
-  for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
+  for (const entry of entriesUnder(manifest, "design", { kind: "screen" })) {
     for (const route of generatedViews(entry).map((view) => view.path)) {
       const html = textOutput(outputs, route)!;
       assert.equal(countClass(html, "ce-theme-control"), 0, route);
@@ -66,19 +71,15 @@ test("retained Welcome variants follow the single Appearance setting", async () 
       assert.equal(countClass(dark, "mbk-frame-scheme-note") > 0, !darkDevice);
     }
   }
-  assert.equal(
-    manifest.entries.find(
-      (entry) => entry.path === "design-review-dark-scheme",
-    ),
-    undefined,
-  );
+  assertAbsent(manifest, "design/changes/outcomes/dark-scheme");
 });
 
 test("every artboard with a top bar draws one Appearance control", async () => {
   const { manifest, outputs } = await designCatalogue;
   let checked = 0;
-  for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
+  for (const entry of entriesUnder(manifest, "design", {
+    kind: "screen",
+  })) {
     for (const route of generatedViews(entry).map((view) => view.path)) {
       const html = textOutput(outputs, route)!;
       if (countClass(html, "mbk-topbar") === 0) continue;
@@ -91,9 +92,15 @@ test("every artboard with a top bar draws one Appearance control", async () => {
 
 test("the depicted Appearance control names the scheme it rendered for", async () => {
   const { manifest, outputs } = await designCatalogue;
-  for (const entry of manifest.entries) {
-    if (entry.kind !== "screen" || !entry.path.startsWith("design/")) continue;
-    if (entry.path === "design/browse/appearance/states/auto") continue;
+  const screens = entriesWhere(
+    manifest,
+    "design screens except the Auto appearance sample",
+    (entry): entry is ManifestScreen =>
+      entry.kind === "screen" &&
+      entry.path.startsWith("design/") &&
+      entry.path !== "design/browse/appearance/states/auto",
+  );
+  for (const entry of screens) {
     for (const scheme of entry.colorSchemes) {
       const routes: string[] = generatedViews(entry)
         .filter((view) => view.colorScheme === scheme)

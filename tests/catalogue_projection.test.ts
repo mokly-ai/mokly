@@ -10,6 +10,7 @@ import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import { projectCatalogue } from "../src/catalogue/projection.js";
 import { serializeCatalogue } from "../src/catalogue/serialization.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 
 test("projection exposes real usage and attribution without private evidence", async (t) => {
@@ -153,11 +154,7 @@ test("projection exposes screen variants beneath their parent entry", async (t) 
 
 test("removed variants keep baseline authored order at a surviving parent's position", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
-  const current = fixture.after.manifest.entries.find(
-    (entry): entry is CurrentManifestScreen =>
-      entry.kind === "screen" && entry.path === "home",
-  );
-  assert.ok(current);
+  const current = entryAt(fixture.after.manifest, "home", "screen");
   const removedScreen = (id: string, variantOf?: string) => ({
     folderTitles: [],
     ...(variantOf === undefined ? {} : { parentTitle: current.title }),

@@ -15,6 +15,7 @@ import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { computeChangedPaths } from "../dist/server/changed.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import { committedReviewRepository } from "./helpers/committed_repository.js";
 import {
   createFixture,
@@ -33,12 +34,7 @@ test("tag-only manifest changes mark their route as changed", async (context) =>
   const manifest = (await compileCatalogue(config)).manifest;
 
   const taggedScreenBase = structuredClone(manifest);
-  const baseDetails = taggedScreenBase.entries.find(
-    (entry) => entry.path === "details",
-  );
-  if (baseDetails?.kind !== "screen") {
-    throw new Error("fixture base details missing");
-  }
+  const baseDetails = entryAt(taggedScreenBase, "details", "screen");
   baseDetails.tags = ["forms"];
   assert.deepEqual(
     changedManifestPaths(manifest, taggedScreenBase, config, []),
@@ -46,11 +42,7 @@ test("tag-only manifest changes mark their route as changed", async (context) =>
   );
 
   const taggedUseCaseBase = structuredClone(manifest);
-  const baseTour = taggedUseCaseBase.entries.find(
-    (entry) => entry.path === "tour",
-  );
-  if (baseTour?.kind !== "use-case")
-    throw new Error("fixture base tour missing");
+  const baseTour = entryAt(taggedUseCaseBase, "tour", "use-case");
   baseTour.tags = ["onboarding"];
   assert.deepEqual(
     changedManifestPaths(manifest, taggedUseCaseBase, config, []),
@@ -78,11 +70,8 @@ test("changed screens propagate to use cases authored separately", async (contex
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const manifest = structuredClone((await compileCatalogue(config)).manifest);
-  const home = manifest.entries.find((entry) => entry.path === "home");
-  const tour = manifest.entries.find((entry) => entry.path === "tour");
-  if (!home || home.kind !== "screen" || !tour || tour.kind !== "use-case") {
-    throw new Error("fixture entries missing");
-  }
+  const home = entryAt(manifest, "home", "screen");
+  const tour = entryAt(manifest, "tour", "use-case");
   home.sourcePath = "entries/home.mockup.tsx";
   home.declaredDependencies = [];
   tour.sourcePath = "entries/tour.mockup.tsx";
@@ -101,8 +90,7 @@ test("shared entry changes do not mark unchanged sibling screens", async (contex
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const manifest = (await compileCatalogue(config)).manifest;
-  const home = manifest.entries.find((entry) => entry.path === "home");
-  if (!home || home.kind !== "screen") throw new Error("fixture home missing");
+  const home = entryAt(manifest, "home", "screen");
 
   assert.deepEqual(
     changedManifestPaths(manifest, manifest, config, [
@@ -170,8 +158,7 @@ test("directory dependency edits alone leave unchanged routes out of Changes", a
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const manifest = structuredClone((await compileCatalogue(config)).manifest);
-  const home = manifest.entries.find((entry) => entry.path === "home");
-  if (!home) throw new Error("fixture home entry missing");
+  const home = entryAt(manifest, "home", "screen");
   home.declaredDependencies = ["src/components"];
 
   assert.deepEqual(

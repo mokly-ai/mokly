@@ -9,6 +9,7 @@ import { assertExportOwnership } from "../dist/export/ownership.js";
 import { capturePublicFiles } from "../dist/export/public_files.js";
 import { parseStaticDelivery } from "../packages/viewer/dist/navigation/delivery.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 test("equal package roots remain accepted by config and Build but fail export", async (t) => {
@@ -49,7 +50,7 @@ test("an unrelated mokly-generated source folder remains discoverable", async (t
     ),
   );
   const compiled = await compileCatalogue(config);
-  assert.ok(compiled.manifest.entries.some((entry) => entry.path === "extra"));
+  entryAt(compiled.manifest, "extra", "page");
 });
 
 test("static delivery classifies invalid and unsupported versions without throwing", () => {

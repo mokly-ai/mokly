@@ -9,6 +9,7 @@ import type {
   ManifestScreen,
   ManifestV9,
 } from "../../packages/viewer/dist/registry/types.js";
+import { entriesUnder } from "../helpers/catalogue_selection.js";
 import { paletteColor } from "../helpers/design_palette.js";
 import { repositoryRoot } from "../helpers/fixture.js";
 
@@ -94,9 +95,7 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ? { width: 390, height: 844 }
         : { width: 1440, height: 1000 },
     );
-    for (const entry of manifest.entries) {
-      if (entry.kind !== "screen" || !entry.path.startsWith("design/"))
-        continue;
+    for (const entry of entriesUnder(manifest, "design", { kind: "screen" })) {
       for (const [appearance, fragment] of [
         ["light", viewRoute(entry.path, viewport, "light")],
         [

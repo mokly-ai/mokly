@@ -123,7 +123,9 @@ test("the consumer authoring facade exports the instance resolution helper", asy
     }),
   );
   t.after(() => removeFixture(fixture));
-  await compileCatalogue(await loadConfig(fixture.root));
+  await assert.doesNotReject(async () =>
+    compileCatalogue(await loadConfig(fixture.root)),
+  );
 });
 
 test("source capture resolves a nested configuration against repoRoot", async (t) => {

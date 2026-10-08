@@ -63,7 +63,9 @@ test("unrelated dangling and cyclic links do not prevent publication", async (co
     path.join(fixture.root, "dangling.txt"),
   );
   await fs.promises.symlink("cycle", path.join(fixture.root, "cycle"));
-  await buildPreview(config, path.join(fixture.root, ".context/published"));
+  await assert.doesNotReject(() =>
+    buildPreview(config, path.join(fixture.root, ".context/published")),
+  );
 });
 
 test("publication ignores an escaping local generated manifest without reading its bytes", async (context) => {

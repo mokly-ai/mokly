@@ -15,6 +15,7 @@ import { CompiledReviewAssetReader } from "../dist/review/head_assets.js";
 import { classifyChangedContent } from "../dist/server/changed_content.js";
 import { generatedViews } from "../packages/viewer/dist/data.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import { changedFixture } from "./helpers/changed_fixture.js";
 import {
   assertRejectedResource,
@@ -137,7 +138,7 @@ for (const scenario of deletionCases) {
       };
     }
     const manifest = readManifest(fixture.config);
-    const home = manifest.entries.find((entry) => entry.path === "home")!;
+    const home = entryAt(manifest, "home", "screen");
     const viewPaths = generatedViews(home).map((view) => view.path);
     const outputs = new Map(fixture.compilation.outputs);
     if (scenario.unsafe)

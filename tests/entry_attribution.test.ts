@@ -9,6 +9,7 @@ import { resolveExportOutput } from "../dist/export/paths.js";
 import { receiveComponentRuntimeStartup } from "../dist/server/controls/runtime_ipc.js";
 import { classifyWatchPath } from "../dist/server/watch_events.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import { currentManifest } from "./helpers/current_manifest.js";
 import {
   createFixture,
@@ -71,14 +72,10 @@ test("a component defined in a helper beside its implementation is attributed to
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
-  const button = compilation.manifest.entries.find(
-    (entry) => entry.path === "button",
-  );
+  const button = entryAt(compilation.manifest, "button", "component");
   assert.equal(button?.sourcePath, "src/components/button/button.mokly.tsx");
   assert.deepEqual(button?.declaredDependencies, ["notes.md"]);
-  const demo = compilation.manifest.entries.find(
-    (entry) => entry.path === "button-demo",
-  );
+  const demo = entryAt(compilation.manifest, "button-demo", "screen");
   assert.equal(demo?.sourcePath, "src/components/button/button.mockup.tsx");
   assert.ok(
     compilation.manifest.sourceFiles.includes(
@@ -111,9 +108,7 @@ export const late = defineScreen({ ...metadata, useCasePaths: [], path: "late", 
     '\nimport { late } from "../lib/screens.js";\nmockups.push(late);\n',
   );
   const compilation = await compileCatalogue(await loadConfig(fixture.root));
-  const late = compilation.manifest.entries.find(
-    (entry) => entry.path === "late",
-  );
+  const late = entryAt(compilation.manifest, "late", "screen");
   assert.equal(late?.sourcePath, "lib/screens.ts");
   assert.ok(compilation.manifest.sourceFiles.includes("lib/screens.ts"));
 });

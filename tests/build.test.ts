@@ -9,6 +9,7 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import {
   createFixture,
   removeFixture,
@@ -79,12 +80,8 @@ test("dark schemes render dark fragments per view", async (context) => {
     textOutput(compilation.outputs, "home/index.mobile.dark.html") ?? "",
     /details\/index\.mobile\.html/,
   );
-  const home = compilation.manifest.entries.find(
-    (entry) => entry.path === "home",
-  );
-  const details = compilation.manifest.entries.find(
-    (entry) => entry.path === "details",
-  );
+  const home = entryAt(compilation.manifest, "home", "screen");
+  const details = entryAt(compilation.manifest, "details", "screen");
   assert.equal(home?.kind, "screen");
   assert.deepEqual(home?.kind === "screen" ? home.colorSchemes : undefined, [
     "light",

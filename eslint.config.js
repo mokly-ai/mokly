@@ -32,6 +32,52 @@ const sourcePathRestriction = {
     "Sort source paths with compareCodeUnits to avoid locale-dependent inventories and diagnostics.",
 };
 
+/** Test timing restrictions from docs/protocol/ci-test-timing.md. */
+const testTimingRestrictions = [
+  {
+    selector:
+      "BinaryExpression[operator='-'][right.type!='Literal']:matches([left.type='CallExpression'][left.callee.property.name='now'][left.callee.object.name=/^(performance|Date)$/], [left.callee.property.name='bigint'][left.callee.object.property.name='hrtime'])",
+    message:
+      "Use operation counts, captured watcher targets, event order, or fake clocks in tests. Report duration text with tests/helpers/durations.ts. See docs/protocol/ci-test-timing.md.",
+  },
+  {
+    selector:
+      "BinaryExpression[operator='+'][left.callee.property.name='now'][left.callee.object.name=/^(performance|Date)$/][right.type='Literal'][right.value<10000]",
+    message:
+      "Use polling deadlines of at least 10,000 ms. See docs/protocol/ci-test-timing.md.",
+  },
+];
+
+/** Catalogue selection restrictions from docs/protocol/ci-test-assertions.md. */
+const catalogueSelectionRestrictions = [
+  {
+    selector:
+      "ForOfStatement[right.type='MemberExpression'][right.property.name='entries'] > BlockStatement > IfStatement:matches([consequent.type='ContinueStatement'], [consequent.type='BlockStatement'][consequent.body.length=1][consequent.body.0.type='ContinueStatement'])",
+    message:
+      "Select catalogue entries with entriesUnder or entriesWhere so an empty selection fails.",
+  },
+  {
+    selector:
+      "CallExpression[callee.object.property.name='entries'][callee.property.name=/^(filter|flatMap|find|findLast|findIndex|some|every)$/] CallExpression[callee.property.name=/^(startsWith|endsWith)$/][callee.object.property.name='path']",
+    message:
+      "Select catalogue entries with entriesUnder or entriesWhere so an empty selection fails.",
+  },
+  {
+    selector:
+      "CallExpression[callee.object.property.name='entries'][callee.property.name=/^(filter|flatMap|find|findLast|findIndex|some|every)$/] BinaryExpression[operator=/^[!=]==$/][left.property.name='path'][right.type=/^(Literal|TemplateLiteral)$/]",
+    message:
+      "Select literal catalogue paths with entryAt, entriesAt or assertAbsent.",
+  },
+];
+
+/**
+ * ESLint keeps only the last `no-restricted-syntax` options for a file, so a
+ * block must list every restriction set that applies to its files.
+ */
+function restrictedSyntax(...restrictionSets) {
+  return { "no-restricted-syntax": ["error", ...restrictionSets.flat()] };
+}
+
 export default tseslint.config(
   includeIgnoreFile(gitignorePath, "Repository .gitignore patterns"),
   {
@@ -98,23 +144,22 @@ export default tseslint.config(
   {
     files: ["tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}"],
     ignores: ["tests/helpers/durations.ts"],
-    rules: {
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector:
-            "BinaryExpression[operator='-'][right.type!='Literal']:matches([left.type='CallExpression'][left.callee.property.name='now'][left.callee.object.name=/^(performance|Date)$/], [left.callee.property.name='bigint'][left.callee.object.property.name='hrtime'])",
-          message:
-            "Use operation counts, captured watcher targets, event order, or fake clocks in tests. Report duration text with tests/helpers/durations.ts. See docs/protocol/ci-test-timing.md.",
-        },
-        {
-          selector:
-            "BinaryExpression[operator='+'][left.callee.property.name='now'][left.callee.object.name=/^(performance|Date)$/][right.type='Literal'][right.value<10000]",
-          message:
-            "Use polling deadlines of at least 10,000 ms. See docs/protocol/ci-test-timing.md.",
-        },
-      ],
-    },
+    rules: restrictedSyntax(testTimingRestrictions),
+  },
+  {
+    files: ["tests/**/*.{ts,tsx}"],
+    ignores: [
+      "tests/helpers/catalogue_selection.ts",
+      "tests/helpers/durations.ts",
+    ],
+    rules: restrictedSyntax(
+      testTimingRestrictions,
+      catalogueSelectionRestrictions,
+    ),
+  },
+  {
+    files: ["tests/helpers/durations.ts"],
+    rules: restrictedSyntax(catalogueSelectionRestrictions),
   },
   {
     files: ["tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}"],

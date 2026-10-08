@@ -6,11 +6,12 @@ import { validateExportReferences } from "../dist/export/references.js";
 const source = "mokly-viewer/client/app.js";
 
 test("export ignores import-like prose, comments, templates and regular expressions", () => {
-  validateExportReferences(
-    new Map([
-      [
-        source,
-        `
+  assert.doesNotThrow(() =>
+    validateExportReferences(
+      new Map([
+        [
+          source,
+          `
           const text = 'Copied from "Draft"';
           const template = \`Copied from "Template"\`;
           const pattern = /from "Pattern"/;
@@ -18,8 +19,9 @@ test("export ignores import-like prose, comments, templates and regular expressi
           /* export { x } from "./block-comment.js"; */
           const meta = import.meta.url;
         `,
-      ],
-    ]),
+        ],
+      ]),
+    ),
   );
 });
 

@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { compileCatalogue } from "../../dist/build/compile.js";
 import { loadConfig } from "../../dist/config/load.js";
+import { entriesWhere } from "../helpers/catalogue_selection.js";
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 import {
   createFixture,
@@ -67,7 +68,9 @@ test("background baselines reconcile removed rows and invalidate changed histori
     const document = page.locator('a[data-route="old-page/index.html"]');
     const component = page.locator('a[data-route="old-component/index.html"]');
     publish(
-      baseline.entries.filter(
+      entriesWhere(
+        baseline,
+        "baseline entries without the old component family",
         (entry) =>
           entry.path !== "old-component" &&
           (!("variantOf" in entry) || entry.variantOf !== "old-component"),

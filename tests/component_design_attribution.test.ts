@@ -9,6 +9,7 @@ import {
   reasonsOf,
   stylesheetScope,
 } from "./helpers/attribution_result.js";
+import { entriesUnder } from "./helpers/catalogue_selection.js";
 import { designLibraryFixture } from "./helpers/design_library_fixture.js";
 import {
   sharedDesignStylesheets,
@@ -40,9 +41,9 @@ test("mixed component design styles retain their actual rendered resource scope 
     );
     const expectedScreens = expected.filter((entry) => entry.kind === "screen");
     if (screens === "all-design") {
-      const allDesignScreens = fixture.before.manifest.entries.filter(
-        (entry) => entry.kind === "screen" && entry.path.startsWith("design/"),
-      );
+      const allDesignScreens = entriesUnder(fixture.before.manifest, "design", {
+        kind: "screen",
+      });
       assert.deepEqual(
         expectedScreens.map(({ path }) => path).sort(),
         allDesignScreens.map(({ path }) => path).sort(),

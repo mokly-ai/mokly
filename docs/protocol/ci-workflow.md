@@ -204,6 +204,11 @@ release evidence runtimes. It also executes the Testbox lockfile stamp and the
 Testbox environment step on Linux hosts with controlled inputs and asserts
 their outputs.
 
+[`tests/verification_entrypoints.test.ts`](../../tests/verification_entrypoints.test.ts)
+requires every `node --test` or `tsx --test` command in the workflows and
+composite actions to load `tsx`, then the
+[assertion guard](./ci-test-assertions.md#zero-assertion-guard).
+
 [`tests/ci_required_guard.test.ts`](../../tests/ci_required_guard.test.ts),
 [`tests/ci_workflow_remote_state.test.ts`](../../tests/ci_workflow_remote_state.test.ts),
 [`tests/ci_pull_request_title.test.ts`](../../tests/ci_pull_request_title.test.ts),

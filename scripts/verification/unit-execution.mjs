@@ -10,6 +10,8 @@ export async function executeUnitTests(repositoryRoot, options) {
   const args = [
     "--import",
     "tsx",
+    "--import",
+    "./scripts/verification/assertion-guard.mjs",
     "--test",
     `--test-concurrency=${options.concurrency}`,
     "--test-reporter=./scripts/verification/node-reporter.mjs",

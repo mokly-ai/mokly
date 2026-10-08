@@ -11,6 +11,7 @@ import { loadConfig } from "../dist/config/load.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 import { classifyWatchPath } from "../dist/server/watch_events.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import {
   createFixture,
   removeFixture,
@@ -133,9 +134,7 @@ test("an imported JSON input remains watched, not public by directory membership
     "rebuild",
   );
   assert.equal(
-    (await compileCatalogue(config)).manifest.entries.find(
-      (entry) => entry.path === "home",
-    )?.title,
+    entryAt((await compileCatalogue(config)).manifest, "home", "screen").title,
     "After",
   );
 });

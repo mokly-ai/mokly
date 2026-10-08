@@ -12,6 +12,7 @@ import {
 } from "../packages/viewer/dist/components/keys.js";
 import { viewRoute } from "../packages/viewer/dist/data.js";
 
+import { entryAt } from "./helpers/catalogue_selection.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentVariants } from "./helpers/component_views.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
@@ -31,10 +32,7 @@ async function compile(
 test("component registration emits deterministic variants and actual per-view ownership", async (t) => {
   const result = await compile(t);
   assert.equal(result.manifest.schemaVersion, 9);
-  const action = result.manifest.entries.find(
-    (entry) => entry.path === "action",
-  );
-  assert.ok(action?.kind === "component");
+  const action = entryAt(result.manifest, "action", "component");
   assert.equal("variants" in action, false);
   assert.equal("componentViews" in action, false);
   const variants = componentVariants(result.manifest, action.path);
@@ -61,8 +59,7 @@ test("component registration emits deterministic variants and actual per-view ow
       ["desktop", "dark", 0],
     ],
   );
-  const screen = result.manifest.entries.find((entry) => entry.path === "home");
-  assert.ok(screen?.kind === "screen");
+  const screen = entryAt(result.manifest, "home", "screen");
   const view = screen.componentViews![0]!;
   assert.equal(view.instances.length, 5);
   const pane = view.instances.find(
@@ -105,8 +102,7 @@ test("one captured slot can render twice without duplicating its logical inputs"
     paneRender:
       "(props) => <section>{props.children}<aside>{props.children}</aside></section>",
   });
-  const home = result.manifest.entries.find((entry) => entry.path === "home");
-  assert.ok(home?.kind === "screen");
+  const home = entryAt(result.manifest, "home", "screen");
   const view = home.componentViews![0]!;
   const slotted = view.instances.filter((instance) => instance.slotKey);
   assert.equal(slotted.length, 1);
@@ -171,9 +167,7 @@ for (const [name, options, error] of [
 
 test("v8 retains only explicit dependency declarations", async (t) => {
   const result = await compile(t);
-  const action = result.manifest.entries.find(
-    (entry) => entry.path === "action",
-  )!;
+  const action = entryAt(result.manifest, "action", "component");
   assert.deepEqual(Reflect.get(action, "declaredDependencies"), ["notes.md"]);
   assert.equal("dependencies" in action, false);
 });

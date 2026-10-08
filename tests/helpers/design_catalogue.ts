@@ -1,3 +1,4 @@
+/** Read and inspect the compiled design catalogue for tests. */
 import assert from "node:assert/strict";
 
 import { parse, type DefaultTreeAdapterMap } from "parse5";
@@ -5,6 +6,7 @@ import { parse, type DefaultTreeAdapterMap } from "parse5";
 import { viewRoute } from "../../packages/viewer/dist/data.js";
 import type { ManifestScreen } from "../../packages/viewer/dist/registry/types.js";
 
+import { entryAt } from "./catalogue_selection.js";
 import { exampleCompilation } from "./example_compilation.js";
 import { textOutput } from "./generated_text.js";
 
@@ -55,8 +57,7 @@ export async function designDocument(
   route: string;
 }> {
   const compilation = await designCatalogue;
-  const entry = compilation.manifest.entries.find((entry) => entry.path === id);
-  assert.ok(entry?.kind === "screen", `Missing screen ${id}`);
+  const entry = entryAt(compilation.manifest, id, "screen");
   const route = viewRoute(entry.path, viewport, "light");
   const html = textOutput(compilation.outputs, route);
   assert.ok(html, `Missing ${viewport} output for ${id}`);

@@ -4,6 +4,7 @@ import test from "node:test";
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
 
+import { assertAbsent, entryAt } from "./helpers/catalogue_selection.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
@@ -170,8 +171,6 @@ test("unbranded component-shaped helper exports are ignored", async (t) => {
   );
   t.after(() => removeFixture(fixture));
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
-  assert.equal(
-    compiled.manifest.entries.some((entry) => entry.path === "helper"),
-    false,
-  );
+  entryAt(compiled.manifest, "action", "component");
+  assertAbsent(compiled.manifest, "helper");
 });

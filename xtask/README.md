@@ -41,6 +41,13 @@ positive integer to override these values. The
 [test concurrency contract](../docs/protocol/ci-suite-evidence.md#test-concurrency)
 defines them. Individual concurrency tests and their existing timeouts remain
 unchanged.
+
+The [test assertion contract](../docs/protocol/ci-test-assertions.md)
+adds an assertion guard to every unit run, including targeted developer
+runs, and to the native test steps.
+A unit test that makes no assertion fails. Catalogue tests use checked
+selection helpers; selection alone does not count as an assertion.
+
 For targeted unit and browser runs during development, use the
 [developer test commands](../docs/protocol/developer-test-commands.md).
 The [baseline audit contract](../docs/protocol/dependency-audit-baseline.md)

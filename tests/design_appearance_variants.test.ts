@@ -9,6 +9,11 @@ import { DUAL_SCHEME_SAMPLES } from "../examples/basic/specs/design/library/meta
 import { viewRoute } from "../packages/viewer/dist/data.js";
 import { AppearanceSelect } from "../packages/viewer/dist/shell/appearance.js";
 
+import {
+  assertAbsent,
+  entriesAt,
+  entriesUnder,
+} from "./helpers/catalogue_selection.js";
 import { componentVariants } from "./helpers/component_views.js";
 import {
   attribute,
@@ -22,15 +27,15 @@ const dualSchemeComponents = [...DUAL_SCHEME_SAMPLES].map(
   (slug) => `design/library/chrome/${slug}`,
 );
 const previewScreens = [
-  "design-appearance-overview",
-  "design-appearance-auto",
-  "design-appearance-props",
-  "design-appearance-instance",
-  "design-appearance-loading",
-  "design-appearance-unavailable",
-  "design-appearance-side-by-side",
-  "design-appearance-difference",
-  "design-appearance-flow",
+  "design/browse/appearance/overview",
+  "design/browse/appearance/states/auto",
+  "design/browse/appearance/workspaces/props",
+  "design/browse/appearance/workspaces/instance",
+  "design/browse/appearance/status/loading",
+  "design/browse/appearance/status/unavailable",
+  "design/browse/appearance/workspaces/side-by-side",
+  "design/browse/appearance/workspaces/difference",
+  "design/browse/appearance/status/flow",
 ];
 
 function appearanceOf(html: string): string | undefined {
@@ -44,11 +49,9 @@ function appearanceOf(html: string): string | undefined {
 
 test("appearance screens publish both schemes for both viewports", async () => {
   const { manifest } = await designCatalogue;
-  const screens = manifest.entries.filter(
-    (entry) =>
-      entry.kind === "screen" &&
-      entry.path.startsWith("design/browse/appearance/"),
-  );
+  const screens = entriesUnder(manifest, "design/browse/appearance", {
+    kind: "screen",
+  });
   assert.ok(screens.length > 0, "the appearance section exists");
   for (const entry of screens) {
     assert.ok(entry.kind === "screen");
@@ -62,11 +65,9 @@ test("appearance screens publish both schemes for both viewports", async () => {
 
 test("each generated appearance variant draws the scheme it was rendered for", async () => {
   const { manifest, outputs } = await designCatalogue;
-  const screens = manifest.entries.filter(
-    (entry) =>
-      entry.kind === "screen" &&
-      entry.path.startsWith("design/browse/appearance/"),
-  );
+  const screens = entriesUnder(manifest, "design/browse/appearance", {
+    kind: "screen",
+  });
   for (const entry of screens) {
     assert.ok(entry.kind === "screen");
     for (const viewport of ["mobile", "desktop"] as const) {
@@ -114,18 +115,17 @@ async function appearanceFragments(): Promise<
   { id: string; scheme: "light" | "dark"; viewport: string; html: string }[]
 > {
   const { manifest, outputs } = await designCatalogue;
-  return manifest.entries.flatMap((entry) =>
-    entry.kind === "screen" &&
-    entry.path.startsWith("design/browse/appearance/")
-      ? (["mobile", "desktop"] as const).flatMap((viewport) =>
-          (["light", "dark"] as const).map((scheme) => ({
-            id: entry.path,
-            scheme,
-            viewport,
-            html: textOutput(outputs, viewRoute(entry.path, viewport, scheme))!,
-          })),
-        )
-      : [],
+  return entriesUnder(manifest, "design/browse/appearance", {
+    kind: "screen",
+  }).flatMap((entry) =>
+    (["mobile", "desktop"] as const).flatMap((viewport) =>
+      (["light", "dark"] as const).map((scheme) => ({
+        id: entry.path,
+        scheme,
+        viewport,
+        html: textOutput(outputs, viewRoute(entry.path, viewport, scheme))!,
+      })),
+    ),
   );
 }
 
@@ -202,8 +202,12 @@ test("the Appearance selector reads Auto, or the scheme it rendered for", async 
 });
 
 test("depicted previews follow the artboard's scheme", async () => {
-  for (const view of await appearanceFragments()) {
-    if (!previewScreens.includes(view.id)) continue;
+  const { manifest } = await designCatalogue;
+  const screens = entriesAt(manifest, previewScreens, "screen");
+  const views = (await appearanceFragments()).filter((view) =>
+    screens.some((screen) => screen.path === view.id),
+  );
+  for (const view of views) {
     const dark = countClass(view.html, "mbk-screen-dark");
     const where = `${view.id} ${view.viewport} ${view.scheme}`;
     if (view.scheme === "dark") assert.ok(dark > 0, `${where}: dark previews`);
@@ -231,14 +235,10 @@ test("the light-only subject keeps light frames and names its fallback under Dar
 test("the removed fixed-theme scenarios are gone", async () => {
   const { manifest } = await designCatalogue;
   for (const id of [
-    "design-appearance-light-preview",
-    "design-appearance-dark-preview",
+    "design/browse/appearance/states/light-preview",
+    "design/browse/appearance/states/dark-preview",
   ])
-    assert.equal(
-      manifest.entries.find((entry) => entry.path === id),
-      undefined,
-      id,
-    );
+    assertAbsent(manifest, id);
 });
 
 /** Canonical screens that replaced the removed head-band scheme depictions. */
