@@ -150,9 +150,9 @@ availability order, probe barrier and report aggregate.
 The [cleanup contract](../docs/protocol/remote-verification-cleanup.md) defines
 cleanup rules. The full cleanup contract is implemented: close the shared SSH
 connection, cancel a known run once, then check status and stop. Cleanup
-command errors retain one bounded diagnostic line. The
-[prompt shutdown plan](../plans/testbox-prompt-shutdown.md) keeps complete remote
-verification and cost measurement pending.
+command errors retain one bounded diagnostic line. The complete default remote
+smoke check passes. The [prompt shutdown plan](../plans/testbox-prompt-shutdown.md)
+awaits final review.
 Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
 Each command worker downloads its report and cleans up its box when it ends.
 It does not wait for other commands. Final cleanup covers only remaining boxes.

@@ -211,18 +211,23 @@ Evidence: `.context/testbox-prompt-shutdown/milestone-3.md`; repeat results: `.c
 
 ## Milestone 4: Verification, close-out and review
 
-- [ ] Run all tests for this change with a 100% pass rate. Run
+Verification and close-out are complete. The user runs the final review after
+the push. The review TODO remains open.
+
+Evidence: `.context/testbox-prompt-shutdown/smoke.md` and `.context/testbox-prompt-shutdown/gate.log`.
+
+- [x] Run all tests for this change with a 100% pass rate. Run
       `cargo fmt --all -- --check`, Clippy and the length lints.
-- [ ] Push the branch. Run the complete `cargo xtask check` on Testboxes.
+- [x] Push the branch. Run the complete `cargo xtask check` on Testboxes.
       Require 11/11 commands, 9/9 reports, a passed aggregate and
       `cleanup=0`.
-- [ ] For each job of that check, record the time from its last command to
+- [x] For each job of that check, record the time from its last command to
       the job end and its "Complete runner" log. Require no
       `Active SSH sessions detected` line. Compare the billed box-minutes
       with the 141-minute baseline. Save the result in
       `.context/testbox-prompt-shutdown/smoke.md`.
-- [ ] Inspect the diff and the deletions against `origin/main`.
-- [ ] After the checks pass, run `git add -A`, commit with Conventional
+- [x] Inspect the diff and the deletions against `origin/main`.
+- [x] After the checks pass, run `git add -A`, commit with Conventional
       Commits and push the branch.
 - [ ] After the push, a reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)

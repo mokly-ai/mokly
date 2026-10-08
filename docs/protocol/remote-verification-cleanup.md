@@ -7,9 +7,9 @@ Continuation of [Remote Verification](./remote-verification.md).
 Implemented. Cleanup closes the shared SSH connection, cancels a known run
 once, then checks status and stops the box. Cleanup command errors retain one
 bounded diagnostic line. Stop retries, completion proof, interrupts and the
-panic guard use the same rules. The
-[prompt shutdown plan](../../plans/testbox-prompt-shutdown.md) keeps complete
-remote verification and cost measurement pending.
+panic guard use the same rules. The complete default remote smoke check passes.
+The [prompt shutdown plan](../../plans/testbox-prompt-shutdown.md) awaits final
+review.
 
 ## Cleanup And Interrupts
 

@@ -14,6 +14,7 @@ download and aggregation.
 The [cleanup contract](./remote-verification-cleanup.md) is fully implemented.
 It closes the shared SSH connection, cancels a known run once before stop and
 keeps one bounded diagnostic line for cleanup command failures.
+The complete default remote smoke check passes with prompt shutdown.
 
 ## Executor Selection
 
