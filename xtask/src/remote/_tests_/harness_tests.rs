@@ -137,6 +137,7 @@ pub(super) fn harness(case: Case) -> Harness {
                         Err(Error::Command {
                             operation: Operation::Logs,
                             code: Some(1),
+                            detail: None,
                         })
                     } else {
                         Ok("failed command tail".into())
@@ -202,6 +203,7 @@ pub(super) fn harness(case: Case) -> Harness {
                             return Err(Error::Command {
                                 operation: Operation::Aggregate,
                                 code: Some(1),
+                                detail: None,
                             });
                         }
                         Ok(())

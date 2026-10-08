@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::thread;
 
 use crate::check::request::DependencyAudit;
-use crate::remote::cleanup::BoxCleanup;
+use crate::remote::cleanup::contracts::BoxCleanup;
 use crate::remote::error::Error;
 use crate::remote::plan::{RunCommand, commands};
 use crate::remote::reporting::warning;

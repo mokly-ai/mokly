@@ -57,6 +57,6 @@ fn failed_probe_output_still_records_run_ids() {
 }
 
 #[test]
-fn status_run_ids_take_priority_over_captured_warmup_and_probe_ids() {
-    check_recovery(Case::StatusRunId, 123, false);
+fn the_recorded_probe_run_is_cancelled_before_a_different_status_run_id() {
+    check_recovery(Case::StatusRunId, 789, false);
 }

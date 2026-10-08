@@ -3,8 +3,8 @@
 use std::collections::BTreeSet;
 use std::thread;
 
-use crate::remote::cleanup::BoxCleanup;
-use crate::remote::clients::success;
+use crate::remote::cleanup::contracts::BoxCleanup;
+use crate::remote::clients::outcome::success;
 use crate::remote::error::{Error, Operation, Result};
 use crate::remote::parse::{probe_identity, require_warmup_id, warmup_ids};
 use crate::remote::reporting::warning;

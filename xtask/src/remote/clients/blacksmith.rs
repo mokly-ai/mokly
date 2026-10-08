@@ -1,11 +1,11 @@
-//! Blacksmith and GitHub command adapters with explicit secret boundaries.
+//! Blacksmith CLI requests and the shared SSH close trait entrypoint.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use crate::remote::contracts::{Blacksmith, Github, GithubRunState, Output};
-use crate::remote::error::{Error, Operation, Result};
-use crate::remote::parse::github_run_state;
+use crate::remote::clients::outcome::{cleanup_success, success};
+use crate::remote::contracts::{Blacksmith, Disconnection, Output};
+use crate::remote::error::{Operation, Result};
 use crate::remote::process::{Process, Request};
 
 /// Blacksmith client backed by an injected process host.
@@ -14,6 +14,8 @@ pub(crate) struct SystemBlacksmith {
     pub(crate) process: Arc<dyn Process + Send + Sync>,
     /// Checkout root.
     pub(crate) workspace: PathBuf,
+    /// HOME supplied by the environment boundary at the composition root.
+    pub(crate) home: Option<PathBuf>,
 }
 
 impl SystemBlacksmith {
@@ -39,6 +41,9 @@ impl SystemBlacksmith {
 }
 
 impl Blacksmith for SystemBlacksmith {
+    fn disconnect(&self, id: &str) -> Result<Disconnection> {
+        self.disconnect_shared(id)
+    }
     fn version(&self) -> Result<String> {
         let output = self.call(vec!["--version".into()], None, None, true)?;
         success(&output, Operation::Blacksmith)?;
@@ -119,7 +124,7 @@ impl Blacksmith for SystemBlacksmith {
             None,
             false,
         )?;
-        success(&output, Operation::Blacksmith)?;
+        cleanup_success(&output, Operation::Blacksmith)?;
         Ok(output.combined())
     }
     fn stop(&self, id: &str) -> Result<()> {
@@ -129,65 +134,7 @@ impl Blacksmith for SystemBlacksmith {
             None,
             false,
         )?;
-        success(&output, Operation::Blacksmith)
-    }
-}
-
-/// Optional GitHub cancellation backed by the same process boundary.
-pub(crate) struct SystemGithub {
-    /// Process boundary.
-    pub(crate) process: Arc<dyn Process + Send + Sync>,
-    /// Checkout root.
-    pub(crate) workspace: PathBuf,
-}
-
-impl Github for SystemGithub {
-    fn cancel(&self, id: u64) -> Result<()> {
-        let output = self.process.execute(&Request {
-            program: "gh".into(),
-            args: vec!["run".into(), "cancel".into(), id.to_string()],
-            cwd: self.workspace.clone(),
-            operation: Operation::Github,
-            input: None,
-            log: None,
-            cancellable: false,
-            blacksmith: false,
-        })?;
-        success(&output, Operation::Github)
-    }
-    fn state(&self, id: u64) -> Result<GithubRunState> {
-        let output = self.process.execute(&Request {
-            program: "gh".into(),
-            args: vec![
-                "run".into(),
-                "view".into(),
-                id.to_string(),
-                "--json".into(),
-                "status".into(),
-                "--jq".into(),
-                ".status".into(),
-            ],
-            cwd: self.workspace.clone(),
-            operation: Operation::Github,
-            input: None,
-            log: None,
-            cancellable: false,
-            blacksmith: false,
-        })?;
-        success(&output, Operation::Github)?;
-        github_run_state(&output.stdout)
-    }
-}
-
-/// Convert process termination into a typed boundary failure.
-pub(crate) fn success(output: &Output, operation: Operation) -> Result<()> {
-    if output.success() {
-        Ok(())
-    } else {
-        Err(Error::Command {
-            operation,
-            code: output.code,
-        })
+        cleanup_success(&output, Operation::Blacksmith)
     }
 }
 
