@@ -550,11 +550,11 @@ Evidence: `.context/attribution-test-consolidation/milestone-8-round-2-validatio
         test concurrency, unit shard balance, and scenario grouping in the suite
         evidence summary in `docs/protocol/ci-verification-security.md`.
   - [x] Commit the round-2 fixes with a message that names them, and push.
-  - Open: Milestone 7 finding 1 (Low, test, medium; Auto-fix: no) — the
-    lifecycle rule points designLibraryFixture users to a beforeRemove hook the
-    fixture lacks; recommended option C. Option B would still delete the
-    fixture directory after a failed dependent cleanup, which contradicts the
-    cleanup rule in `docs/protocol/ci-suite-evidence.md`; this supports option C.
+  - Fixed: Milestone 7 finding 1 (Low, test, medium; Auto-fix: no) — option C
+    is implemented on `calummoore/chore-non-product-tests-eval-v1`
+    (commit `02271bd7`). `designLibraryFixture` registers dependents through
+    `beforeRemove`, and the lint accepts fixture-owned `owner.after` calls in
+    `fileFixture` setup callbacks.
 
 ## Post-merge follow-up (non-blocking)
 

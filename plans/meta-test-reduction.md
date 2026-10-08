@@ -1,12 +1,7 @@
 # Meta-Test Reduction
 
-Status: Active. Planned on 2026-10-07. The user approved this direction on
-2026-10-07: delete the documentation prose-regex tests and keep the structural
-ones, reduce the workflow YAML tests to property tests, move the whole-tree
-lints out of the unit suite with the protocol cap table in a data file, leave
-the harness and ratchet tests alone, and add two agent rules. That approval
-covers every deletion in the Inventory section. `tests/release.test.ts` was
-found after the approval and waits for a decision (Decision 7).
+Status: Completed. [PR #175](https://github.com/mokly-ai/mokly/pull/175) merged on 2026-10-08.
+Review 1 finding 1B, finding 8, Decision 2 and Decision 7 stay open.
 
 ## Status And Outcome
 
@@ -410,48 +405,30 @@ pass 300 lines; `validateShardReports` calls it.
     Recommendation: adopt it as an extension of `tests/markdown_links.test.ts`.
     Re-evaluated after merge `b9b62e7`: no such path is missing on the merged
     tree; the check stays preventive.
-  - Review 1, open, finding 2 (test, medium): three deleted property checks
-    have no test: Testbox workflow read-only permissions, no secrets and
-    `persist-credentials: false`; the Dependency Audit job runs no `npm ci`
-    before the audit; the CI native job runs `TESTED_NODE_VERSIONS[0]`.
-    Recommendation: add them to `tests/ci_workflow_policies.test.ts`.
-    Re-evaluated after merge `b9b62e7`: all three properties hold on the merged
-    tree (Testbox `contents: read`, `persist-credentials: false`, no `secrets`;
-    the audit job runs only the global npm pin before the audit; the native job
-    runs 22.14.0) but none is tested. The policy file is at 289 lines, so the
-    checks need a second file; do them together with review 2 finding 1.
-  - Review 1, open, finding 3 (docs or spec, medium): `mokly-guides.md`,
-    `ci-workflow.md` and `AGENTS.md` claim stricter tests than kept (some
-    value regexes and the job names in the policy test). Recommendation:
-    reword the sentences; do not change the tests. Re-evaluated after merge
-    `b9b62e7`: main did not touch these sentences; unchanged.
-  - Review 1, open, finding 6 (test, medium): `mokly/no-artifact-path-literals`
-    covers nine fewer files than the deleted scanner (`packages/viewer/scripts/`,
-    root `eslint.config.js`, `playwright.config.ts`). Recommendation: scope the
-    rule like the old scanner. Re-evaluated after merge `b9b62e7`: none of the
-    nine files contains a `snapshots/` or `pages/…json` literal; low risk.
-  - Review 1, open, finding 7 (process, small): attribution plan Milestone 7
-    finding 1 (the `beforeRemove` message for `designLibraryFixture` and the
-    `owner.after` false positive inside a `fileFixture` setup) now applies to
-    `scripts/eslint/no-late-fixture-teardown.mjs`, which ports the old check
-    unchanged. Recommendation: keep this line as its owner record (review 1
-    option A); the attribution plan recommends its option C.
+  - Review 1, fixed, finding 2 (test, medium):
+    `tests/ci_workflow_safeguards.test.ts` restores the Testbox access,
+    dependency audit install and minimum tested Node checks on
+    `calummoore/chore-non-product-tests-eval-v1` (commit `7a4faa41`).
+  - Review 1, fixed, finding 3 (docs or spec, medium): guide and workflow test
+    wording now matches the kept checks on
+    `calummoore/chore-non-product-tests-eval-v1` (commit `3cabf4ff`).
+  - Review 1, fixed, finding 6 (test, medium): `mokly/no-artifact-path-literals`
+    restores the scanner's scope with added lint probes on
+    `calummoore/chore-non-product-tests-eval-v1` (commit `4189542d`).
+  - Review 1, fixed, finding 7 (process, small): attribution plan option C
+    gives `designLibraryFixture` owned removal and `beforeRemove`, and exempts
+    fixture-owned `owner.after` in `fileFixture` setup callbacks on
+    `calummoore/chore-non-product-tests-eval-v1` (commit `02271bd7`).
   - Review 1, open, finding 8 (repository rule, small): commit `4ce6d6c` has a
     61-character title. Recommendation: no history rewrite; the squash merge
     keeps only the PR title. Re-evaluated after merge `b9b62e7`: the three
     merge commits also carry Git's default 79-character titles; same answer.
   - Review 2 (`.context/meta-test-reduction/review-2.md`), fixed: finding 2
     (the finding 7 line above now states the finding and its owner correctly).
-  - Review 2, open, finding 1 (test, medium): the second merge kept the
-    deletion of `tests/ci_testbox_workflow.test.ts`, whose assertion main had
-    just extended for the Testbox push trigger's `branches: ["**"]` filter
-    (PR #164); no test reads any workflow trigger now. Options: A a
-    Testbox-only trigger check; B every workflow `push` trigger must declare a
-    branch filter; C triggers stay review-owned, stated in `ci-workflow.md`.
-    Recommendation: B. Needs approval because it replaces a test main added.
-    Re-evaluated after merge `b9b62e7`: every `push` trigger on the merged tree
-    declares `branches` (`ci`, `preview`, `release`: `[main]`; Testbox:
-    `["**"]`), so option B passes today; still untested.
+  - Review 2, fixed, finding 1 (test, medium): option B replaces the deleted
+    PR #164 Testbox trigger assertion with a non-empty `branches` array check
+    for every workflow `push` trigger on
+    `calummoore/chore-non-product-tests-eval-v1` (commit `7a4faa41`).
 
 ## Post-merge follow-up (non-blocking)
 
