@@ -2065,9 +2065,9 @@ User decision (2026-10-08): merge the latest `origin/main`, resolve conflicts, c
 
 Evidence: `.context/scalable-inline-style-analysis/m13-merge/`.
 
-- [ ] Merge `origin/main` once with two parents. Resolve conflicts by
+- [x] Merge `origin/main` once with two parents. Resolve conflicts by
       responsibility, then review every remerge path and audit deletions.
-- [ ] Integrate #138's shared example snapshot and fallback, #171's rule
+- [x] Integrate #138's shared example snapshot and fallback, #171's rule
       documents and #172's checked closure on reload. Preserve all assertions
       and keep main's package, lock, toolchain and rule files unchanged.
 - [ ] Run the complete pinned-Chromium gate and the four real-server smoke
