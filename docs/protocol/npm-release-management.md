@@ -115,10 +115,12 @@ that body. The parser treats the placeholder as an unclosed tag that hides the
 `</details>` boundaries. Release Please then finds one release without a
 component and logs `PR component: undefined does not match configured
 component`. It creates no tags, and every later run stops with
-`There are untagged, merged release PRs outstanding`. To recover, edit the
-merged PR body so that no angle-bracket text remains, for example `{path}`, and
-rerun the Release workflow. HTML entities such as `&lt;path&gt;` do not work:
-Release Please decodes them when it rewrites the body for a second parse.
+`There are untagged, merged release PRs outstanding`. To recover, edit only the
+changelog text in the merged PR body: replace each angle-bracket placeholder,
+for example with `{path}`. Keep the `<details>` and `<summary>` markup that
+Release Please wrote, because it marks each component's release. Then rerun the
+Release workflow. HTML entities such as `&lt;path&gt;` do not work: Release
+Please decodes them when it rewrites the body for a second parse.
 
 When the tags exist but `publish` fails, rerun only the failed job. That rerun
 keeps the selected tags and keeps the release commit as `GITHUB_SHA`. A full
