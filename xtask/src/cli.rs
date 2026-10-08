@@ -14,7 +14,8 @@ use crate::command::{CommandRunner, SystemCommandRunner};
 use crate::error::{Error, Result};
 use crate::executor::Executor;
 use crate::remote::availability::{DefaultSelector, Selector};
-use crate::remote::clients::{SystemBlacksmith, SystemGithub};
+use crate::remote::clients::blacksmith::SystemBlacksmith;
+use crate::remote::clients::github::SystemGithub;
 use crate::remote::contracts::{
     Aggregate, Blacksmith, Clock, Dependencies, Environment, Fingerprint, Git, Github, Interrupt,
     Logs, Programs, Reporter,
@@ -144,6 +145,7 @@ fn remote_dependencies(workspace: PathBuf) -> Dependencies {
     let blacksmith: Arc<dyn Blacksmith + Send + Sync> = Arc::new(SystemBlacksmith {
         process: Arc::clone(&process),
         workspace: workspace.clone(),
+        home: environment.get("HOME").map(PathBuf::from),
     });
     let github: Arc<dyn Github + Send + Sync> = Arc::new(SystemGithub {
         process,

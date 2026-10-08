@@ -8,7 +8,8 @@ use std::time::Duration;
 
 use unimock::{MockFn, Unimock, matching};
 
-use crate::remote::cleanup::{BoxCleanup, CleanupGuard};
+use crate::remote::cleanup::contracts::BoxCleanup;
+use crate::remote::cleanup::guard::CleanupGuard;
 use crate::remote::contracts::*;
 use crate::remote::error::{Error, Operation};
 
@@ -22,6 +23,7 @@ enum Case {
 fn fixture(case: Case) -> (Dependencies, Arc<Mutex<Vec<String>>>) {
     let events = Arc::new(Mutex::new(Vec::new()));
     let statuses = events.clone();
+    let closes = events.clone();
     let stops = events.clone();
     let waits = events.clone();
     let cancels = events.clone();
@@ -29,6 +31,12 @@ fn fixture(case: Case) -> (Dependencies, Arc<Mutex<Vec<String>>>) {
     let (sender, receiver) = mpsc::channel();
     let receiver = Mutex::new(receiver);
     let shared = Arc::new(Unimock::new((
+        BlacksmithDisconnectMock
+            .each_call(matching!(_))
+            .answers_arc(Arc::new(move |_, id| {
+                closes.lock().unwrap().push(format!("close:{id}"));
+                Ok(Disconnection::Closed)
+            })),
         ProgramsFindMock
             .each_call(matching!("gh"))
             .answers(&|_, _| Ok(true)),
@@ -43,6 +51,7 @@ fn fixture(case: Case) -> (Dependencies, Arc<Mutex<Vec<String>>>) {
                     return Err(Error::Command {
                         operation: Operation::Blacksmith,
                         code: Some(1),
+                        detail: None,
                     });
                 }
                 Ok(format!(
@@ -69,6 +78,7 @@ fn fixture(case: Case) -> (Dependencies, Arc<Mutex<Vec<String>>>) {
                     Err(Error::Command {
                         operation: Operation::Blacksmith,
                         code: Some(1),
+                        detail: None,
                     })
                 } else {
                     Ok(())
@@ -136,8 +146,9 @@ fn a_retrying_box_does_not_block_another_box_and_keeps_its_order() {
     let events = events.lock().unwrap();
     let position = |event| events.iter().position(|entry| entry == event).unwrap();
     assert!(position("stop:tbx_b:1") < position("stop:tbx_a:2"));
+    assert!(position("close:tbx_b") < position("status:tbx_b"));
     assert!(position("status:tbx_b") < position("stop:tbx_b:1"));
-    assert!(position("stop:tbx_b:1") < position("cancel:456"));
+    assert!(position("cancel:456") < position("stop:tbx_b:1"));
     let own: Vec<_> = events
         .iter()
         .filter(|event| !event.contains("tbx_b") && *event != "cancel:456")
@@ -146,13 +157,14 @@ fn a_retrying_box_does_not_block_another_box_and_keeps_its_order() {
     assert_eq!(
         own,
         [
+            "close:tbx_a",
             "status:tbx_a",
+            "cancel:123",
             "stop:tbx_a:1",
             "wait:start",
             "wait:end",
             "status:tbx_a",
-            "stop:tbx_a:2",
-            "cancel:123"
+            "stop:tbx_a:2"
         ]
     );
 }

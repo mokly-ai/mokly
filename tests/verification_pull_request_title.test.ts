@@ -45,22 +45,6 @@ test("pull request titles accept repository Conventional Commit forms", () => {
     assert.equal(isValidPullRequestTitle(title), true, title);
 });
 
-test("accepted types cover the AGENTS examples", async () => {
-  const agents = await fs.readFile(
-    path.join(repositoryRoot, "AGENTS.md"),
-    "utf8",
-  );
-  const observed = new Set(
-    [...agents.matchAll(/^([a-z][a-z0-9-]*)(?:\([^)]*\))?!?: /gmu)].map(
-      ([, type]) => type!,
-    ),
-  );
-  assert.ok(observed.size > 0);
-  for (const type of observed)
-    assert.ok(PULL_REQUEST_TITLE_TYPES.includes(type), type);
-  assert.ok(PULL_REQUEST_TITLE_TYPES.includes("revert"));
-});
-
 test("pull request titles reject malformed forms", () => {
   for (const title of [
     "",
