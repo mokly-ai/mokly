@@ -1,0 +1,302 @@
+# Remote Verification Base Commit
+
+Status: Active
+
+Let the remote complete gate run when local `HEAD` is not on GitHub. Today
+`cargo xtask check` selects Testboxes only when an `origin` branch contains
+`HEAD`. Any unpushed commit, such as a checkpoint commit, a fix commit after a
+failed gate, a merge of `main` or a rebase, sends the gate to the local
+executor. A local run takes 40 to 47 minutes. A remote run takes 9 to 13
+minutes. The agent rules order the work as gate, commit, push. Agents that
+follow that order lose about 30 minutes on each gate run. Agents that push
+first break the order. The post-push review of the bootstrap work reported
+this as a Medium process finding.
+
+On 2026-10-08 the user chose option C, the nearest pushed ancestor variant:
+each box fetches the nearest commit that is already on GitHub, and the local
+changes are applied on top. The agent rules keep their order.
+
+The Blacksmith CLI already does most of this. Its sync fetches local `HEAD`
+from GitHub and copies the non-ignored, uncommitted files on top. Xtask
+therefore prepares a snapshot worktree whose `HEAD` is the base commit and
+whose files equal the checkout. The CLI syncs that snapshot. The checkout's
+`HEAD`, index and files never change.
+
+This change covers xtask, the remote verification contract and the xtask
+README. It has no product UI or mockup work. It does not change the Testbox
+workflow, the suite wrapper, the suite reports, the report schema, the
+aggregate script or the Blacksmith CLI.
+
+Contract owners:
+
+- [Remote verification](../docs/protocol/remote-verification.md).
+- [Testbox execution](../docs/protocol/remote-verification-testbox.md).
+- [Cleanup and interrupts](../docs/protocol/remote-verification-cleanup.md).
+- [CI verification](../docs/protocol/ci-verification.md) for the report
+  evidence rules.
+- The [xtask README](../xtask/README.md).
+
+## Findings
+
+These facts were confirmed on 2026-10-08 from the code and the trial evidence
+of the [Blacksmith remote verification plan](./blacksmith-remote-verification.md#trial-evidence):
+
+1. The CLI sync fetches local `HEAD` with `git fetch --no-tags --depth 50` and
+   copies non-ignored uncommitted files. When GitHub does not have `HEAD`, the
+   box keeps its old `HEAD` and gets the new commits as uncommitted changes.
+   The suite wrapper unshallows the box clone before each suite.
+2. The source-tree fingerprint ignores commit identity. An unpushed commit and
+   the same uncommitted change give the same fingerprint.
+3. Xtask's `Published` check runs `git for-each-ref --contains HEAD` over
+   `refs/remotes/origin/`. A miss selects local mode with the warning
+   `local HEAD is not published; push the branch first`. The probe requires
+   the box `HEAD` to equal local `HEAD`. The aggregate runs with local `HEAD`.
+4. Suite reports take their commit from `GITHUB_SHA` or `git rev-parse HEAD`
+   on the box and reject a mismatch. The wrapper removes `GITHUB_SHA`. The
+   report commit is therefore always the box `HEAD`.
+5. The repository ratchets diff from `git merge-base HEAD origin/main`. When
+   the box `HEAD` is a commit of the branch, the change set equals the
+   branch's changes. When the box `HEAD` is the tip of `main` and the branch
+   base is older, the change set also contains the newer `main` changes in
+   reverse. The base commit must therefore be an ancestor of local `HEAD`.
+6. The protocol lists remote execution without a pushed `HEAD` and copying
+   unpushed commits as out of scope. This plan removes both items.
+7. `remote-verification-testbox.md` has 250 lines, the protocol cap. The new
+   contract needs its own page.
+
+## Decisions
+
+1. **Base commit.** The base commit is the nearest ancestor of local `HEAD`
+   that an `origin` ref contains. Read the local `refs/remotes/origin/*` refs
+   only. Do not fetch. For each origin ref, take `git merge-base HEAD <ref>`
+   and skip refs without a common ancestor. Reduce the candidates with
+   `git merge-base --independent`. When several remain, choose the one with
+   the fewest commits in `git rev-list --count <candidate>..HEAD`, then the
+   smallest SHA. When an origin ref contains `HEAD`, the base is `HEAD` and
+   the ahead count is 0. When no origin ref shares history with `HEAD`, there
+   is no base.
+2. **Snapshot worktree.** Xtask builds a tree object from the checkout: a
+   temporary index seeded with `git read-tree HEAD`, then `git add -A`, then
+   `git write-tree`. Tracked paths that match an ignore rule stay included.
+   Xtask adds a detached linked worktree at the base commit under
+   `.context/verification-snapshots/<run>/`, loads the tree into it with
+   `git read-tree -u --reset <tree>`, then resets the snapshot index to the
+   base. Every difference is then unstaged or untracked, like a developer
+   checkout. The checkout's `HEAD`, index and files never change, and a
+   detached local `HEAD` works the same way. Before warmup, the snapshot
+   fingerprint must equal the checkout fingerprint. A different value is a
+   preparation failure.
+3. **Sync source.** The probe and the 11 suite commands run with the snapshot
+   directory as the working directory, so the CLI fetches the base commit and
+   copies the differences. Warmup, download, disconnect, status and stop keep
+   the workspace directory. Every run uses the snapshot, including runs where
+   the base equals `HEAD`, so one path covers all cases.
+4. **Probe identity.** The probe requires the checkout fingerprint and the
+   base commit on every box. The final fingerprint check still reads the
+   checkout, so changes made during the run still fail the check.
+5. **Evidence identity.** Suite reports and the aggregate name the base
+   commit, because the wrapper and the strict runners stay unchanged. Xtask
+   prints `information: run=<run> ref=<ref> HEAD=<head> base=<base> ahead=<n>`
+   before warmup and adds `base=<base>` to the summary line. It also writes
+   `identity.json` with the run, `HEAD`, base, ahead count and fingerprint to
+   `.context/verification-logs/remote/<run>/`, not the report directory, so
+   the aggregate still sees exactly nine reports.
+6. **Executor decision.** The `Published` check becomes a `Base` check. No
+   base selects local mode in `auto` with the warning
+   `no origin ref shares history with HEAD; fetch origin or push the branch`,
+   and fails explicit `remote` mode. The remote decision line becomes
+   `remote: Blacksmith access and a pushed base commit are available`.
+   `cargo xtask executor` reports the same decision without building a
+   snapshot.
+7. **Snapshot cleanup.** Every path removes the snapshot and the temporary
+   index: success, preparation failure, interrupt and panic unwind. Use
+   `git worktree remove --force` and then `git worktree prune`. A failed
+   removal prints one warning with the manual command and never fails the
+   check. Logs stay.
+8. **Rules.** The agent rules keep the order gate, commit, push. The xtask
+   README sentence `Push local HEAD before a remote check` is replaced by the
+   base commit rule. The `MOKLY_TESTBOX_REF` note says that the ref changes
+   neither the fingerprint nor the base commit.
+
+### Contingency
+
+The Milestone 1 spike must show that the CLI syncs a linked worktree and
+propagates deletions and renames. If it does not, stop and ask the user before
+Milestone 2. The fallback design detaches the checkout's own `HEAD` at the
+base commit with `git update-ref --no-deref HEAD <base>` for the run and
+restores it after. That design changes the checkout during the run, so it needs
+the user's approval.
+
+### Out Of Scope
+
+- Changing the agent rule order or the hosted CI triggers (options A and B).
+- Changes to the Testbox workflow, the suite wrapper, the report schema, the
+  aggregate script or the Blacksmith CLI.
+- Remote execution for a selected `--suite`.
+- A base commit that GitHub no longer has, for example after a force push from
+  another clone. The probe fails and the existing preparation fallback applies.
+- Fetching `origin` inside xtask.
+
+## Milestone 1: Spike and contract
+
+The spike proves the sync behavior with a real box. The protocol then defines
+the complete contract for the work that follows.
+
+Evidence: `.context/remote-verification-base-commit/spike.md`.
+
+- [ ] In a scratch clone of this repository, create an unpushed commit that
+      modifies, adds, deletes and renames a file, and add one uncommitted
+      change and one untracked file on top. Compute the base commit with the
+      Decision 1 commands and the checkout fingerprint.
+- [ ] Build the snapshot worktree with the Decision 2 commands. Check that
+      `git status` in the checkout is unchanged, that the snapshot fingerprint
+      equals the checkout fingerprint and that `git status` in the snapshot
+      shows only unstaged and untracked differences.
+- [ ] Warm up one box from `main` with
+      `blacksmith testbox warmup blacksmith-testbox.yml --ref main --idle-timeout 30`.
+      Run the probe command from the snapshot directory with
+      `blacksmith testbox run`. Require the checkout fingerprint and the base
+      commit in its output. This proves that the CLI syncs a linked worktree
+      and propagates the deletion and the rename.
+- [ ] On the box, run `git merge-base HEAD origin/main` and
+      `git status --short` through `blacksmith testbox run`. Record that the
+      change set equals the branch's changes.
+- [ ] Remove the snapshot with the Decision 7 commands. Check that the
+      checkout, `git worktree list` and the reflog are unchanged. Stop the box
+      and close its connection under the cleanup contract.
+- [ ] Record the spike in `.context/remote-verification-base-commit/spike.md`.
+      Apply the contingency rule if any step fails.
+- [ ] Add `docs/protocol/remote-verification-base.md`, titled
+      `Remote Verification: Base Commit Sync`, as a continuation of
+      `remote-verification.md`. Define the base commit rule, the snapshot
+      worktree steps, the sync source, the probe identity, the identity
+      output and file, the executor decision, the snapshot cleanup and the
+      no-base fallback. Keep it at or below 250 lines and free of plan
+      milestone references.
+- [ ] Update `remote-verification.md`: the `Base` row of the executor table,
+      the base lookup commands, steps 1 and 3 of the run sequence, the
+      `MOKLY_TESTBOX_REF` note and the out-of-scope list. Link the new page.
+- [ ] Update `remote-verification-testbox.md`: the sync probe section and the
+      aggregate paragraph that requires the box `HEAD` to equal local `HEAD`.
+      Keep the page at or below 250 lines.
+- [ ] Add the new page to the protocol index in `docs/protocol/README.md` and
+      to the split page list in `tests/protocol_split_links.test.ts`.
+- [ ] Update the xtask README quick start and behavior text for the base
+      commit rule and the snapshot.
+- [ ] Run the Markdown link test, the protocol structure, split-link and
+      history tests, the protocol size check and `npm run format:check`.
+      Commit and push.
+
+## Milestone 2: Base lookup and snapshot sync
+
+Xtask syncs every remote run from a snapshot worktree at the base commit. The
+`Published` check still requires a pushed `HEAD` in this milestone, so the base
+always equals `HEAD` and the product keeps today's behavior while the new path
+gets exercised.
+
+Evidence: `.context/remote-verification-base-commit/milestone-2.md`.
+
+- [ ] Extend the `Git` boundary with a base lookup that returns the base SHA
+      and the ahead count, or no base. Implement it in `SystemScripts` with
+      the Decision 1 commands. Keep the full SHA validation of `head`.
+- [ ] Add a `Snapshot` boundary with create and remove operations. Implement
+      it with the Decision 2 and Decision 7 commands through the existing
+      process boundary, so the secret variable list and redaction apply. Put
+      it in a new module under `xtask/src/remote/`, and keep every Rust file
+      under 300 lines.
+- [ ] Give the fingerprint boundary a working-directory parameter, and give
+      the Blacksmith `run` boundary a working-directory parameter. Keep the
+      workspace directory for warmup, download, disconnect, status and stop.
+- [ ] In the runner, read `HEAD` and the base, build the snapshot, compare
+      both fingerprints, then warm up, probe against the base, run the suites
+      from the snapshot and aggregate with the base. Print the identity line
+      and the summary `base=` field. Write `identity.json` through the logs
+      boundary.
+- [ ] Remove the snapshot in every path. Track it in the cleanup guard or a
+      sibling guard with the same unwind protection, so interrupts, preparation
+      failures and panics remove it. A failed removal warns once.
+- [ ] Add unit tests with unimock. Use event order and captured inputs, not
+      elapsed time. Cover: base equal to `HEAD`; base behind `HEAD` with an
+      ahead count; no base; snapshot built before warmup; a fingerprint
+      mismatch as a preparation failure with snapshot removal; probe commands
+      and suite commands with the snapshot directory; aggregate with the base;
+      the identity line, summary field and file; removal on success, on
+      preparation failure, on interrupt and on panic; and a failed removal that
+      only warns.
+- [ ] Add adapter tests in the existing adapter test style for the exact
+      `git` arguments of the base lookup, the snapshot build and the snapshot
+      removal, including the temporary index variable.
+- [ ] Update the xtask README key code section for the new module.
+- [ ] Run the xtask tests, `cargo fmt --all -- --check`, Clippy and the length
+      lints, the local repository gate and the Markdown checks. Commit and
+      push.
+
+## Milestone 3: Unpushed commits select remote
+
+The executor policy accepts any `HEAD` with a base commit. A branch with
+unpushed commits now runs the complete gate on Testboxes.
+
+Evidence: `.context/remote-verification-base-commit/milestone-3.md` and
+`.context/remote-verification-base-commit/smoke.md`.
+
+- [ ] Replace the `Published` check with the `Base` check in the policy, the
+      availability selector, the local reasons, the decision text and the
+      typed error. Remove the `published` boundary method and its
+      `UnpublishedHead` error.
+- [ ] Update the unit tests for the policy order, the `auto` warning, the
+      explicit `remote` error and the `cargo xtask executor` output.
+- [ ] Update the xtask README executor text.
+- [ ] Smoke test from this branch with one unpushed commit that modifies,
+      adds, deletes and renames files, plus one uncommitted change. Run the
+      complete `cargo xtask check`. Require the remote decision, the identity
+      line with `ahead` above 0, 11/11 commands, 9/9 reports, a passed
+      aggregate for the base, an unchanged tree and `cleanup=0`. Check that
+      `git status`, `git symbolic-ref HEAD` and `git worktree list` are
+      unchanged after the run and that the snapshot directory is gone.
+- [ ] Smoke test an interrupt: send SIGINT during the probe phase. Require
+      stopped boxes, a removed snapshot and the existing interrupted result.
+- [ ] Smoke test `cargo xtask executor` with the same unpushed commit. Require
+      the remote decision. Then run it in a clone without origin refs that
+      share history. Require the local decision and the no-base warning.
+- [ ] Record the smoke results in
+      `.context/remote-verification-base-commit/smoke.md`.
+- [ ] Run the xtask tests, `cargo fmt --all -- --check`, Clippy and the length
+      lints, the local repository gate and the Markdown checks. Commit and
+      push.
+
+## Milestone 4: Verification, close-out and review
+
+The complete gate passes on Testboxes from a branch with unpushed commits. The
+review runs after the push.
+
+Evidence: `.context/remote-verification-base-commit/gate.log` and the review
+files under `.context/remote-verification-base-commit/`.
+
+- [ ] Run all tests for this change with a 100% pass rate. Run
+      `cargo fmt --all -- --check`, Clippy and the length lints.
+- [ ] Run the complete `cargo xtask check` with at least one unpushed commit
+      on the branch. Require the remote executor, 11/11 commands, 9/9 reports,
+      a passed aggregate, an unchanged tree and `cleanup=0`. Save the output
+      as `gate.log`.
+- [ ] Update the delivery status of the new protocol page and of
+      `remote-verification.md`.
+- [ ] Inspect the diff and the deletions against `origin/main`. Run the
+      mainline preservation audit from the Git rules.
+- [ ] After the checks pass, run `git add -A`, commit with Conventional
+      Commits and push the branch.
+- [ ] After the push, a reviewer uses
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main` and reports the
+      findings. Keep the review read-only. The implementer then applies the
+      review-fix rule in [the review rules](../docs/dev/review.md): fix the
+      `Auto-fix: yes` findings, run the checks, commit and push, re-review
+      once, fix any new `Auto-fix: yes` findings once more, then stop and
+      report the rest. Add each open finding as one line under this TODO.
+
+## Post-merge follow-up (non-blocking)
+
+- [ ] During the first week after the merge, record under
+      `.context/remote-verification-base-commit/` every remote check that fell
+      back to local mode because of a probe failure, with the warning text.
+- [ ] If Blacksmith adds a CLI option that selects the commit to fetch, a
+      later plan can remove the snapshot worktree.
