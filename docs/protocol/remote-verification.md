@@ -139,8 +139,10 @@ Run all local and CLI operations from the workspace root.
 
 A successful check requires all 11 commands to exit 0. It also requires all
 nine downloads, a valid aggregate and an unchanged local source tree.
-Every box must be stopped or proven completed after all cleanup attempts.
-A stop that succeeds on a retry does not fail the check.
+A box that is neither stopped nor proven completed after all cleanup attempts
+does not fail the check. The
+[cleanup contract](./remote-verification-cleanup.md#cleanup-and-interrupts)
+defines its warning. A stop that succeeds on a retry does not fail the check.
 Preparation, discovery, missing reports and invalid reports cannot produce
 success. Never substitute local suite results after remote execution starts.
 
