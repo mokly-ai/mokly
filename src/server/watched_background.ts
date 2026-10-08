@@ -52,16 +52,13 @@ export class WatchedBackground {
         options.running.completeCatalogue?.(
           compilation.manifest,
           accepted.generation,
+          [...options.resources.closure],
         );
         options.running.notifyUpdate(
           undefined,
           undefined,
           "pending",
           "evidence",
-          undefined,
-          undefined,
-          undefined,
-          [...options.resources.closure],
         );
       },
       (snapshot) => {

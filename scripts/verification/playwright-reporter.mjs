@@ -70,17 +70,32 @@ export default class VerificationReporter {
 }
 
 function identity(test, root) {
+  const repository = path.resolve(root, "../..");
   const location = test.location;
-  const relative = path.relative(path.resolve(root, "../.."), location.file);
   const project = test.parent.project()?.name ?? "unknown";
   return {
     id: `${project}:${test.id}`,
     project,
-    file: relative.split(path.sep).join("/"),
+    specFile: repositoryFile(repository, specFileOf(test)),
+    file: repositoryFile(repository, location.file),
     line: location.line,
     column: location.column,
     title: test.titlePath().filter(Boolean).join(" › "),
   };
+}
+
+/**
+ * Return the spec file that Playwright loaded to register the test. A test
+ * defined in an imported helper module has its location in that helper.
+ */
+function specFileOf(test) {
+  for (let suite = test.parent; suite; suite = suite.parent)
+    if (suite.type === "file" && suite.location) return suite.location.file;
+  throw new Error(`Playwright test ${test.id} has no spec file suite`);
+}
+
+function repositoryFile(repository, file) {
+  return path.relative(repository, file).split(path.sep).join("/");
 }
 
 function errorEvidence(error) {
