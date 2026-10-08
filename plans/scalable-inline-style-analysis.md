@@ -194,6 +194,7 @@ fixed before this plan can prove its result.
     templates because it requires entry `id`s. A later run must re-measure its
     reference in the same session as the candidate, on one machine, in
     alternating order. Keep all harness code, fixtures, tools and their tests.
+    Amended (2026-10-07): the user removed the five browser-backed tool tests (`tests/large_scenario_cancellation.test.ts`, four tests; `tests/large_material_companion.test.ts`, one test) and the helper `tests/helpers/large_interruption_worker.mjs`, because benchmarks run separately. The tool code stays. The decision is recorded under [Milestone 11](#milestone-11-latest-mainline-integration).
 
 ## Non-Goals
 
@@ -2091,6 +2092,12 @@ Evidence: `.context/scalable-inline-style-analysis/m13-merge/`.
       re-review once, and record every open finding. Keep this TODO unticked
       until the review, its fix round, the re-review and all open findings are
       recorded here. The supervisor runs the review.
+      Review complete; report: `.context/scalable-inline-style-analysis/m13-review/report.md`.
+      Finding 3 (Low, docs): fixed in this fix round; see the commit.
+      Finding 1 (Medium, test): two branch unit tests (`large_scenario_matrix`, `large_template_identity`) install `@mokly/viewer` from npm through `scripts/large/toolchain.mjs`, so each release PR fails them until npm publishes the new viewer; pending the user's decision.
+      Finding 2 (Low, repository rule): five branch test cases check documentation wording with regular expressions, which the rule from #175 forbids; pending the user's decision.
+      Finding 4 (Low, process): main's #171 makes `docs/dev/` the rule directory, which makes M10 review finding 3 (the 31 `docs/dev` reports) worse; four reports also name the deleted `tests/protocol_doc_sizes.test.ts`; pending the user's decision.
+      Finding 5 (Low, process): `82af7361` added a flake follow-up line under the checked M12 review TODO; pending the user's decision.
 
 ## Post-merge follow-up (non-blocking)
 
