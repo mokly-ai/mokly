@@ -113,13 +113,14 @@ reports a string literal whose value contains `snapshots/`, or contains
 its raw text with each substitution replaced by `${}`, and reports it at most
 once. Regular-expression literals and comments are outside the rule. It
 applies to `.cjs`, `.cts`, `.js`, `.jsx`, `.mjs`, `.mts`, `.ts` and `.tsx`
-modules in every directory. It excludes every `tests`, `generated` and
-`.mokly-cache` directory; root `docs`, `plans`, `coverage`, `playwright-report`
-and `test-results` directories; globally ignored context, build output and
-dependencies (`.context`, `.wrangler`, `dist`, `node_modules`, `target` and
-`examples/basic/mokly-generated`); and the builder module
-`packages/viewer/src/navigation/routes.ts`. The rule lives in `scripts/eslint/`
-and runs with `npm run lint` in the repository suite.
+modules in every directory. It excludes every `tests` and `generated`
+directory, the root `docs` and `plans` directories, the builder module
+`packages/viewer/src/navigation/routes.ts`, and every path that ESLint ignores
+for the whole repository: the `.gitignore` patterns, which exclude `.context`,
+`.mokly-cache`, `.wrangler`, `coverage`, `dist`, `node_modules`,
+`playwright-report`, `target` and `test-results` directories at any depth, and
+`examples/basic/mokly-generated`. The rule lives in `scripts/eslint/` and runs
+with `npm run lint` in the repository suite.
 
 ## Shell Documents And Browser Paths
 

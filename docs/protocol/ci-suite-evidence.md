@@ -132,8 +132,10 @@ the module scope and within each function, it reports a member call named
 `after`, such as `t.after(...)`, that starts at or after the first
 `changedFixture`, `componentReviewFixture` or `designLibraryFixture` call in
 the same scope. A call inside a nested function belongs only to that
-function's scope. In the first setup callback passed to `fileFixture`, an
-`after` call on its first parameter is exempt: it registers fixture-owned cleanup.
+function's scope. In a setup function written inline as the first argument of
+a `fileFixture(...)` call, an `after` call on that function's first parameter
+is exempt: it registers fixture-owned cleanup. A setup function passed by name
+gets no exemption.
 Failed browser and hydration jobs retain only the uploaded diagnostic artifacts
 selected by the workflow. Jobs must not delete, overwrite
 or reuse another job's writable output.

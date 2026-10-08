@@ -3,6 +3,14 @@
 Status: Completed. [PR #175](https://github.com/mokly-ai/mokly/pull/175) merged on 2026-10-08.
 Review 1 finding 1B, finding 8, Decision 2 and Decision 7 stay open.
 
+Planned on 2026-10-07. The user approved this direction on 2026-10-07: delete
+the documentation prose-regex tests and keep the structural ones, reduce the
+workflow YAML tests to property tests, move the whole-tree lints out of the
+unit suite with the protocol cap table in a data file, leave the harness and
+ratchet tests alone, and add two agent rules. That approval covers every
+deletion in the Inventory section. `tests/release.test.ts` was found after the
+approval and waits for a decision (Decision 7).
+
 ## Status And Outcome
 
 About 76 of the 771 unit test files test other tests, CI workflow files,
@@ -367,7 +375,7 @@ pass 300 lines; `validateShardReports` calls it.
       deletion is in the Inventory. Record the deletions in the commit and PR
       description.
 - [x] Run `git add -A`, commit with Conventional Commits, and push.
-- [ ] Review: after the push, use `docs/implementation-review-prompt.md` to
+- [x] Review: after the push, use `docs/implementation-review-prompt.md` to
       review the complete local diff against `origin/main`. Report the
       findings. Apply the review-fix rule: fix the `Auto-fix: yes` findings,
       run the checks, commit, push, re-run the review once, and report the
@@ -429,6 +437,34 @@ pass 300 lines; `validateShardReports` calls it.
     PR #164 Testbox trigger assertion with a non-empty `branches` array check
     for every workflow `push` trigger on
     `calummoore/chore-non-product-tests-eval-v1` (commit `7a4faa41`).
+  - Review 3 (`.context/meta-test-reduction/review-fix-4567-1.md`, on branch
+    `calummoore/chore-non-product-tests-eval-v1`; evidence
+    `fix-4567-results.txt` and `fix-4567-complete-gate.txt`), fixed: finding 3
+    (the approval paragraph above is restored below the status line), finding
+    6 (the exemption sentence names the inline-setup limit), finding 7 (the
+    lint scope paragraph names the ignore patterns at any depth).
+  - Review 3, open, finding 1 (test, small): in
+    `tests/ci_workflow_safeguards.test.ts` the secrets check is case-sensitive
+    and misses `toJSON(secrets)`, the push-trigger check reads only `.yml`
+    files, and the install check misses `clean-install`, `ic`, `it`, `cit` and
+    `update`. Options: A fix the three patterns; B one shared workflow helper
+    for both workflow tests plus an install allow-list; C adopt `zizmor`.
+    Recommendation: A.
+  - Review 3, open, finding 2 (docs or spec, small): the status paragraph of
+    `plans/attribution-test-consolidation.md` still says its finding 1 awaits
+    a decision and PR #139 is open, while its finding line now says fixed and
+    PR #139 merged on 2026-10-07. Options: A close that plan with the PR link
+    and the fixed note; B change only the finding sentence. Recommendation: A.
+  - Review 3, open, finding 4 (test, small): no lint test pins the `fileFixture`
+    name and first-argument conditions of the new exemption. Recommendation:
+    add two rejected cases, `test(async (t) => …)` with `t.after` after a
+    fixture call and `wrap(async (owner) => …)` with `owner.after`.
+  - Review 3, open, finding 5 (docs or spec, small): the `AGENTS.md`
+    documentation-wording rule still forbids the kept copy-policy test that
+    `mokly-guides.md` now allows. Options: A narrow the rule to allow
+    one-value extraction and the listed-phrase copy test; B make the copy test
+    a repository-suite lint named as the only exception; C delete the copy
+    test. Recommendation: A.
 
 ## Post-merge follow-up (non-blocking)
 
