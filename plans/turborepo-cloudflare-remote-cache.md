@@ -806,7 +806,10 @@ remaining real-token checks. Milestone 4 finding 3, Milestone 2 findings 1, 3,
       `turbo-cache-env.mjs`, and `scripts/turbo-cache`; update each live
       reference. This plan's live sections were updated on 2026-10-08.
 - [ ] Validate the Markdown with `tests/markdown_links.test.ts` and
-      `tests/protocol_doc_sizes.test.ts`, review the diff, commit, and push.
+      `tests/protocol_caps_table.test.ts`, review the diff, commit, and push.
+
+Main integration decisions (meta-test reduction, #175, and the 2026-10-08
+release): `.context/turborepo-cloudflare-remote-cache/m5-meta-main-decisions.md`.
 
 ### Milestone 6: GitHub Actions Cache Implementation
 
@@ -840,18 +843,21 @@ boundary unchanged.
       `tests/turbo_workflows.test.ts`, and the helpers only they use
       (`tests/helpers/turbo_cache.ts`, `turbo_ci.ts`,
       `workflow_cache_credentials.ts`). Add one static test,
-      `tests/turbo_workflow_cache.test.ts`, that parses the three workflows and
-      asserts: the cache steps, their path, key, restore keys, and shared SHA;
-      the `prepare` output and its use in the four suite jobs; identical key
-      expressions in `ci.yml` and `preview.yml`; no `environment` blocks; no
-      `TURBO_TOKEN`, `TURBO_REMOTE_CACHE_SIGNATURE_KEY`, or `secrets.TURBO_`
-      reference; `TURBO_TELEMETRY_DISABLED` in all three workflows;
-      `TURBO_FORCE` in `release.yml`; and no cache step in native jobs. Update
+      `tests/turbo_workflow_cache.test.ts`, that follows main's workflow rule
+      (policy properties, no literal job names, step order, matrix values, or
+      run strings): in `ci.yml`, exactly one job saves the Turbo cache and every
+      other job that installs dependencies on Linux restores it, with one
+      shared pinned revision, the same path, and a key that references the
+      saving job's output; both preview deploy jobs restore and save with the
+      same `hashFiles` expression as the saving job; no job declares an
+      `environment`; no workflow references `TURBO_TOKEN`,
+      `TURBO_REMOTE_CACHE_SIGNATURE_KEY`, or a `secrets.TURBO_` value; the CI,
+      preview, and release workflows disable telemetry; the release workflow
+      forces execution; and no macOS or Windows job has a cache step. Update
       `tests/turbo_config.test.ts` (`remoteCache.enabled` is false, no
-      `apiUrl`), `tests/turbo_static_guards.test.ts`,
-      `tests/verification_entrypoints.test.ts`, and `tests/ci_workflow.test.ts`
-      for the new scripts and steps. Every new check must be static; no
-      subprocess, install, or build.
+      `apiUrl`), `tests/turbo_static_guards.test.ts`, and
+      `tests/verification_entrypoints.test.ts` for the new scripts. Every new
+      check must be static; no subprocess, install, or build.
 - [ ] Run the changed test files, `cargo xtask check --suite repository`, then
       one complete `cargo xtask check`. Commit with Conventional Commits and
       push.

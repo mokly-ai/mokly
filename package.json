@@ -1,6 +1,6 @@
 {
   "name": "@mokly/mokly",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "App-independent static mockup catalogues, development browsing, and on-demand visual comparisons.",
   "type": "module",
   "license": "MIT",
@@ -74,7 +74,7 @@
     "build:package": "node scripts/clean.mjs --package @mokly/mokly && tsc --project tsconfig.build.json && node scripts/copy-assets.mjs"
   },
   "dependencies": {
-    "@mokly/viewer": "0.4.0",
+    "@mokly/viewer": "0.5.0",
     "chokidar": "^5.0.0",
     "css-select": "^7.0.0",
     "css-what": "^8.0.0",

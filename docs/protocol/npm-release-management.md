@@ -107,6 +107,27 @@ normal checks. The workflow falls back to `GITHUB_TOKEN`; GitHub suppresses most
 follow-on workflow events created with that token, so maintainers must verify
 the release PR's required checks when using the fallback.
 
+## Release Recovery
+
+Release Please reads the merged release PR body as HTML. Changelog text can
+carry an angle-bracket placeholder such as `<path>` from a commit message into
+that body. The parser treats the placeholder as an unclosed tag that hides the
+`</details>` boundaries. Release Please then finds one release without a
+component and logs `PR component: undefined does not match configured
+component`. It creates no tags, and every later run stops with
+`There are untagged, merged release PRs outstanding`. To recover, edit only the
+changelog text in the merged PR body: replace each angle-bracket placeholder,
+for example with `{path}`. Keep the `<details>` and `<summary>` markup that
+Release Please wrote, because it marks each component's release. Then rerun the
+Release workflow. HTML entities such as `&lt;path&gt;` do not work: Release
+Please decodes them when it rewrites the body for a second parse.
+
+When the tags exist but `publish` fails, rerun only the failed job. That rerun
+keeps the selected tags and keeps the release commit as `GITHUB_SHA`. A full
+rerun repeats Release Please, which no longer reports a created release, so
+`publish` is skipped. A manual dispatch is the retry path once the run can no
+longer be rerun.
+
 ## Registry Operations And Evidence
 
 Registry bootstrap history, maintainer setup, retained release evidence, and

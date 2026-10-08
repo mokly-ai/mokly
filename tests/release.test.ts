@@ -129,7 +129,7 @@ test("release workflow selects only releases and isolates OIDC publish", async (
   assert.equal(
     publish.steps.find((step) => step.name === "Run complete verification")
       ?.run,
-    "cargo xtask check --dependency-audit strict",
+    'GITHUB_SHA="$(git rev-parse HEAD)" cargo xtask check --dependency-audit strict',
   );
   const fallbackCondition = "steps.evidence.outputs.mode != 'evidence'";
   for (const name of [

@@ -125,9 +125,11 @@ jobs:
       - name: Install Chromium
         if: steps.evidence.outputs.mode != 'evidence'
         run: npx playwright install --with-deps chromium
+      # A manual retry dispatches from main, whose head can be newer than the
+      # checked-out tag; the suite runners require GITHUB_SHA to match HEAD.
       - name: Run complete verification
         if: steps.evidence.outputs.mode != 'evidence'
-        run: cargo xtask check --dependency-audit strict
+        run: GITHUB_SHA="$(git rev-parse HEAD)" cargo xtask check --dependency-audit strict
       - name: Prepare exact publish artifacts
         id: package
         run: node scripts/release/pack.mjs .context/release-artifact

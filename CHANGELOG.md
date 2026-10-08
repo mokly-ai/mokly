@@ -1,5 +1,59 @@
 # Changelog
 
+## [0.14.0](https://github.com/mokly-ai/mokly/compare/v0.13.0...v0.14.0) (2026-10-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **publish:** mokly publish now requires a clean checkout. Commit, stash or ignore uncommitted files before publishing. There is no override flag.
+* Use mokly-viewer/ and generations/, ownership v3 and upload v2. Older services reject publication with the documented version error until their receiver and viewer are updated.
+* file-path identity and Markdown documents ([#131](https://github.com/mokly-ai/mokly/issues/131))
+* Path identity removes id, navPath, entries and entriesDir. Use roots and file-derived paths. Rebuild manifest v8 and consume read model v4, review result v5, disclosure storage v4 and /view/<path>/ URLs. Earlier formats, URLs, ids, disclosure keys and configuration are not read or translated. The release note documents manual migration only.
+
+### Features
+
+* **cache:** make .mokly-cache ignore itself ([#145](https://github.com/mokly-ai/mokly/issues/145)) ([43ae07b](https://github.com/mokly-ai/mokly/commit/43ae07b6b25ee8af5805430e43ca70f4f20dcff3))
+* **deps:** baseline-relative audit and daily update PRs ([#157](https://github.com/mokly-ai/mokly/issues/157)) ([6bb6421](https://github.com/mokly-ai/mokly/commit/6bb642193bd6d3fce4a304ab9a8eab25ff85a3d2))
+* file-path identity and Markdown documents ([#131](https://github.com/mokly-ai/mokly/issues/131)) ([c4138a0](https://github.com/mokly-ai/mokly/commit/c4138a0b9578448d81ce2a2868bd7ec47f5a88c6))
+* **publish:** require a clean checkout ([#168](https://github.com/mokly-ai/mokly/issues/168)) ([acac1c7](https://github.com/mokly-ai/mokly/commit/acac1c73b9f3379ef14338485c3dccfa074b7b1c))
+* simplify generated output and delivery ([#156](https://github.com/mokly-ai/mokly/issues/156)) ([b39d89a](https://github.com/mokly-ai/mokly/commit/b39d89a48b4013c331ac0d20072b1ffb9136c1af))
+* tier MockLink asChild placement and add build warnings ([#124](https://github.com/mokly-ai/mokly/issues/124)) ([f66c274](https://github.com/mokly-ai/mokly/commit/f66c274d0098ce3c67ff933b043a2cc38661b91e))
+* **viewer:** add route-scoped shell bootstraps ([#120](https://github.com/mokly-ai/mokly/issues/120)) ([b2c82c1](https://github.com/mokly-ai/mokly/commit/b2c82c1591c91f2550a66c464833b1f864bdab07))
+* **xtask:** run the complete gate on Blacksmith Testboxes ([#160](https://github.com/mokly-ai/mokly/issues/160)) ([fcc5059](https://github.com/mokly-ai/mokly/commit/fcc50591dd1a8d6d3b85c9c3c8160a6a4270294e))
+
+
+### Bug Fixes
+
+* **build:** ignore source maps in CSS Modules ([#144](https://github.com/mokly-ai/mokly/issues/144)) ([f8ab241](https://github.com/mokly-ai/mokly/commit/f8ab241ff646662b1eb588f0d8ea42331784da24))
+* **build:** keep lock directories on release ([#132](https://github.com/mokly-ai/mokly/issues/132)) ([781da7a](https://github.com/mokly-ai/mokly/commit/781da7ae3261e6694a5ef5608a91f3e34061f6d0))
+* **ci:** publish npm releases from GitHub runners ([#126](https://github.com/mokly-ai/mokly/issues/126)) ([b4a02a3](https://github.com/mokly-ai/mokly/commit/b4a02a3014732d6488bdd2f1c33a0efff6421520))
+* **deps:** add expiring braces audit exception ([#130](https://github.com/mokly-ai/mokly/issues/130)) ([1dc9158](https://github.com/mokly-ai/mokly/commit/1dc91580c750020d8badad81c89987b06c447efa))
+* **deps:** apply in-range dependency updates ([#146](https://github.com/mokly-ai/mokly/issues/146)) ([f1ab129](https://github.com/mokly-ai/mokly/commit/f1ab12923fdcc848d7f87c5694aa2fdb88d28d5f))
+* **deps:** patch source-map-js advisory ([#140](https://github.com/mokly-ai/mokly/issues/140)) ([ad2b3ec](https://github.com/mokly-ai/mokly/commit/ad2b3ece65205f45e4aab4c70106dc60c8c95563))
+* **export:** read only specifiers in scripts ([c4138a0](https://github.com/mokly-ai/mokly/commit/c4138a0b9578448d81ce2a2868bd7ec47f5a88c6))
+* prevent output write and frame usage races ([#129](https://github.com/mokly-ai/mokly/issues/129)) ([800fe9f](https://github.com/mokly-ai/mokly/commit/800fe9f88a0173429b25baa1bcf41ed9e59b2256))
+* **server:** keep the checked closure on reload ([#172](https://github.com/mokly-ai/mokly/issues/172)) ([eea44b6](https://github.com/mokly-ai/mokly/commit/eea44b6b4ccb722270a1227244b225b49309da06))
+* **viewer:** keep stacked narrow frames reachable ([c4138a0](https://github.com/mokly-ai/mokly/commit/c4138a0b9578448d81ce2a2868bd7ec47f5a88c6))
+* **xtask:** close Testbox SSH before cleanup to end boxes promptly ([#177](https://github.com/mokly-ai/mokly/issues/177)) ([3a7be25](https://github.com/mokly-ai/mokly/commit/3a7be25aad57184ad6e62e7466210f9959e1533e))
+* **xtask:** resolve remote verification review findings 4 to 14 ([#164](https://github.com/mokly-ai/mokly/issues/164)) ([3ce2fb5](https://github.com/mokly-ai/mokly/commit/3ce2fb554ede6448a9940222ad1ea01e93b1bdd5))
+
+
+### Performance Improvements
+
+* **test:** run more tests in parallel locally ([#148](https://github.com/mokly-ai/mokly/issues/148)) ([6bf6251](https://github.com/mokly-ai/mokly/commit/6bf6251791dc3c02e9c3190a10c0167db156173e))
+
+
+### Documentation
+
+* present moves in the guides and contracts ([c4138a0](https://github.com/mokly-ai/mokly/commit/c4138a0b9578448d81ce2a2868bd7ec47f5a88c6))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @mokly/viewer bumped from 0.4.0 to 0.5.0
+
 ## [0.13.0](https://github.com/mokly-ai/mokly/compare/v0.12.0...v0.13.0) (2026-09-30)
 
 

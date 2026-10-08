@@ -1,4 +1,18 @@
 /** Authored-file read authority for one running catalogue server. */
+import { GENERATED_DIRECTORY, isSafeRepositoryPath } from "@mokly/viewer/data";
+
+/** Accept an IPC list only when it names safe authored paths outside generated output. */
+export function isAuthoredClosure(value: unknown): value is readonly string[] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (route: unknown) =>
+        typeof route === "string" &&
+        isSafeRepositoryPath(route) &&
+        !route.startsWith(`${GENERATED_DIRECTORY}/`),
+    )
+  );
+}
 
 /**
  * Serve the last checked closure plus on-demand additions from the current

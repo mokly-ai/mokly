@@ -51,6 +51,14 @@ and when to read it. Read the doc at that point instead of guessing the rule.
   one-time proofs. Save their evidence under `.context/<plan-name>/`. Do not
   add a permanent test that runs `npm ci` or a full project build unless the
   user approves it. Prefer static checks and pure-function tests.
+- Do not test documentation wording with regular expressions or sentence
+  matches. Test documentation against code structurally: compare parsed
+  values, names, options, tables, links, and counts with the code or data
+  that owns them.
+- Verify workflow YAML by executing its scripts with controlled inputs and by
+  checking policy properties, such as pinned action revisions and no
+  untrusted interpolation in `run:` steps. Do not assert literal job names,
+  step order, matrix values, or run strings.
 - Run `cargo xtask check --suite repository` early. Leave complete unit and
   browser suite runs to the complete gate.
 - Run the complete `cargo xtask check` once before saying work is complete.
@@ -166,13 +174,3 @@ The full rules, commit examples, and the mainline preservation procedure are in
   `docs/`, `plans/`, and every `README.md`. If a history link fails this
   check, do not change the words of history; replace the link with a GitHub
   permalink as described in [`docs/dev/git.md`](./docs/dev/git.md).
-
-## Bash Tool Timeout Configuration
-
-**CRITICAL**: Claude Code's environment variable timeout configuration has known issues. Every Bash **tool call** (not command) MUST include an explicit `timeout` parameter in milliseconds:
-
-- **Default commands**: 600000ms (10 minutes)
-- **Long operations** (cargo check, yarn install): 900000ms (15 minutes)
-- **Very long operations** (full workspace builds): 1800000ms (30 minutes)
-
-If a command times out but shows progress, retry it. Monitor command output for progress indicators before you retry, and use longer timeouts for workspace operations.

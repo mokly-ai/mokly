@@ -3,13 +3,12 @@
 ## Delivery Status
 
 The job graph, parallel prepare job, and policy B remote task caching are
-implemented under the [task cache contract](./ci-remote-cache.md). Hosted
-PR verification is confirmed by [CI run 37672567423](https://github.com/mokly-ai/mokly/actions/runs/37672567423):
-PR #170 uses an empty environment name, the PR writer token, and `mokly-pr-170`.
-The main-push environment path remains a post-merge check.
-Hosted telemetry opt-out is configured; release builds force execution.
+implemented under the [task cache contract](./ci-remote-cache.md); PR CI run
+[37672567423](https://github.com/mokly-ai/mokly/actions/runs/37672567423) confirmed the PR path; the main-push path is a post-merge check.
 CI selects baseline or strict mode by event and pull request.
 The Dependency Audit workflow maintains strict findings on `main`.
+The workflow verification tests below replace the former literal workflow
+tests.
 
 ## Workflow Boundary
 
@@ -160,36 +159,25 @@ report completeness, caching, and failure semantics. The
 [release verification evidence contract](./npm-release-evidence.md) defines when
 the dual-runtime aggregate can prove an immutable release tree.
 
-Release jobs force task execution with `TURBO_FORCE=true`, use
-`TURBO_CACHE=local:rw`, and have no remote credentials. CI, preview, and release
-workflows set `TURBO_TELEMETRY_DISABLED: "1"` at workflow scope.
-
 ## Cached Preparation
 
 The [task cache contract](./ci-remote-cache.md#cache-correctness-and-ci-delivery)
-defines one Node 22.14.0 `prepare` job beside `repository`. It uses npm 11.21.0,
-`npm ci`, and `npm run prepare:verification`, without Rust or Chromium.
-The repository job still owns profile selection and audit-first verification.
-Package, unit, browser, and hydration jobs require both prerequisites. Native
-jobs keep their existing prerequisite and receive no remote credentials.
-Every suite still calls preparation; unchanged tasks restore from cache.
-The prepare job uses the selected [access policy](./ci-remote-cache-access.md);
-only authorized writers upload through Turbo.
-
-Main jobs use the main-only turbo-cache-trusted environment with deployment: false;
-PRs select no environment. Guarded steps map the trusted or scoped PR token
-and signature key through `$GITHUB_ENV` only
-when both values exist. Empty secrets leave both variables unset and select
-local cache only; forks therefore build independently in each job.
-Read-only developer clients select `local:rw,remote:r`. Tests, audits, installs,
-capture, deployment, and report validation remain outside task caching.
-Preview main uses the trusted writer; same-repository PR preview uses mokly-pr-<number>.
-The [access contract](./ci-remote-cache-access.md) owns scopes and hosted follow-ups.
-Native jobs remain local.
-
-`Required CI` includes `prepare` in its prerequisites and requires its exact success.
-The ordinary nine-report and Release Please eighteen-report aggregates remain
-unchanged. A restored task never substitutes for executed suite evidence.
+defines one Node 22.14.0 `prepare` job beside `repository`: npm 11.21.0,
+`npm ci`, and `npm run prepare:verification`, without Rust or Chromium. The
+repository job keeps profile selection and audit-first verification. Package,
+unit, browser, and hydration jobs require both prerequisites; native jobs keep
+theirs and receive no remote credentials. Every suite still calls preparation;
+unchanged tasks restore from cache. The [access contract](./ci-remote-cache-access.md)
+owns the policy: main jobs use the main-only `turbo-cache-trusted` environment
+(`deployment: false`), PRs select no environment, and guarded steps map the
+trusted or scoped PR token and signature key through `$GITHUB_ENV` only when
+both exist, so forks and empty secrets build locally in each job. Preview main
+uses the trusted writer; same-repository PR preview uses `mokly-pr-<number>`.
+Release jobs force execution with `TURBO_FORCE=true` and `TURBO_CACHE=local:rw`
+and have no credentials; CI, preview, and release set
+`TURBO_TELEMETRY_DISABLED: "1"` at workflow scope. `Required CI` requires
+`prepare` success; the nine- and eighteen-report aggregates are unchanged, and a
+restored task never replaces executed suite evidence.
 
 ## Testbox Workflow Target
 
@@ -217,6 +205,41 @@ The [Testbox workflow contract](./remote-verification-testbox.md#workflow)
 defines the exact revisions and step order. `Required CI` does not depend on
 this workflow. The hosted CI graph and its release profile keep their current
 required jobs.
+
+## Workflow Verification
+
+Tests verify workflow files by their properties and by running their scripts.
+[`tests/ci_workflow_policies.test.ts`](../../tests/ci_workflow_policies.test.ts)
+requires every `uses:` revision across the workflows and composite actions to
+be a 40-character lowercase commit. It forbids untrusted pull request fields in
+`ci.yml` `run:` steps and `${{` in Dependency Audit `run:` steps. It requires a
+full-history checkout in every CI and preview job that installs dependencies.
+It keeps the package, unit, browser and hydration jobs on the checked-out
+lockfile. It checks that `.nvmrc`, the package and lockfile engines and the
+README agree with the CLI's tested Node versions and supported range. It checks
+that the Testbox Node.js version matches the CI native job and that the Testbox
+npm and Rust steps match the CI repository job. The
+[repository input contract](./ci-test-repository-inputs.md) describes its
+example server check.
+
+[`tests/ci_workflow_scripts.test.ts`](../../tests/ci_workflow_scripts.test.ts)
+executes the Node profile selector with and without a release pull request and
+derives the expected outputs from the CLI's tested Node versions and the
+release evidence runtimes. It also executes the Testbox lockfile stamp and the
+Testbox environment step on Linux hosts with controlled inputs and asserts
+their outputs. It executes the release workflow's complete verification step
+in a temporary Git checkout, with a newer `GITHUB_SHA` and a stub `cargo`, and
+asserts that the gate receives the checked-out commit.
+
+[`tests/ci_required_guard.test.ts`](../../tests/ci_required_guard.test.ts),
+[`tests/ci_workflow_remote_state.test.ts`](../../tests/ci_workflow_remote_state.test.ts),
+[`tests/ci_pull_request_title.test.ts`](../../tests/ci_pull_request_title.test.ts),
+[`tests/npm_pin.test.ts`](../../tests/npm_pin.test.ts),
+[`tests/release_evidence_contract.test.ts`](../../tests/release_evidence_contract.test.ts)
+and
+[`tests/workflow_runner_sizes.test.ts`](../../tests/workflow_runner_sizes.test.ts)
+keep their property checks. The policy and script tests assert no literal job
+names, step order, matrix values or run strings; review owns those.
 
 ## Related Docs
 

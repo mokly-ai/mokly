@@ -74,7 +74,7 @@ shrink-only baselines, and recursive `docs/protocol/**` scan excluding
 The repository prerequisite also runs the workspace-root source/protocol
 length audit. It covers changed repository TypeScript/JavaScript and protocol
 Markdown plus non-ignored untracked files. Protocol pages over 250 lines use
-only the exact reviewed caps in `tests/protocol_doc_sizes.test.ts`; `cargo xtask
+only the exact reviewed caps in `xtask/protocol-document-caps.json`; `cargo xtask
 source-file-length-lint --all` audits every scoped file. This remains in
 addition to the repository ratchets.
 The full scope and failure semantics are in
@@ -182,8 +182,13 @@ Each suite report records the commit SHA, runtime, suite, optional shard,
 complete discovered file inventory, assigned file inventory, observed executed
 files, per-file timing, process outcome, and skipped/cancelled evidence. Browser
 and hydration reports also record the all-project spec inventory and every test
-by stable project, relative file, line, column and title path; the Playwright
-reporter records each observed test's result, duration, and serialized errors.
+by stable project, spec file, defining file, line, column and title path; the
+Playwright reporter records each observed test's result, duration, and
+serialized errors. A test's spec file is the `*.spec.ts` file that Playwright
+loaded. Its defining file, line and column locate the `test()` call, which can
+be in a helper module that the spec imports. Every Playwright file inventory,
+assignment, observed file and per-file timing names spec files, so a shared
+helper never joins an inventory or spans shards.
 Unit reports retain the Node reporter's failure names and diagnostics. Once
 execution starts, the wrapper writes a report after the test process exits on
 success or failure, then validates it. A discovery or preparation failure before
@@ -200,8 +205,9 @@ discovery exactly once. Each runtime requires one unsharded hydration report;
 every browser-like report must carry the same all-project inventory, and the
 browser and hydration file inventories must be disjoint and exhaust it. A
 missing file or test, duplicate assignment or observed test, unexpected file or
-test, skipped or cancelled test, non-zero exit, signal exit, or absent/invalid
-report fails verification. Per-file and per-test durations are retained so
+test, skipped or cancelled test, browser shard above the
+[share limit](./ci-suite-evidence.md#browser-shard-balance), non-zero exit,
+signal exit, or absent/invalid report fails verification. Per-file and per-test durations are retained so
 imbalance can be measured without changing whole-file partitioning.
 
 Report artifacts have stable, unique suite, runtime and shard names and use
