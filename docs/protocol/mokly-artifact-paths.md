@@ -117,10 +117,11 @@ modules in every directory. It excludes every `tests` and `generated`
 directory, the root `docs` and `plans` directories, the builder module
 `packages/viewer/src/navigation/routes.ts`, and every path that ESLint ignores
 for the whole repository: the `.gitignore` patterns, which exclude `.context`,
-`.mokly-cache`, `.wrangler`, `coverage`, `dist`, `node_modules`,
-`playwright-report`, `target` and `test-results` directories at any depth, and
-`examples/basic/mokly-generated`. The rule lives in `scripts/eslint/` and runs
-with `npm run lint` in the repository suite.
+`.mokly-cache`, `.mokly-review-*`, `.mokly-write-*`, `.superpowers`,
+`.wrangler`, `coverage`, `dist`, `node_modules`, `playwright-report`, `target`
+and `test-results` directories at any depth, plus the root `.claude/worktrees`
+and `examples/basic/mokly-generated` directories. The rule lives in
+`scripts/eslint/` and runs with `npm run lint` in the repository suite.
 
 ## Shell Documents And Browser Paths
 

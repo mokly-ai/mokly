@@ -1,7 +1,9 @@
 # Meta-Test Reduction
 
 Status: Completed. [PR #175](https://github.com/mokly-ai/mokly/pull/175) merged on 2026-10-08.
-Review 1 finding 1B, finding 8, Decision 2 and Decision 7 stay open.
+Review 1 finding 1B, finding 8, Decision 2, Decision 7, and Review 3
+findings 1, 2, 4 and 5 stay open; the review TODO under Milestone 4 lists
+each one.
 
 Planned on 2026-10-07. The user approved this direction on 2026-10-07: delete
 the documentation prose-regex tests and keep the structural ones, reduce the
@@ -442,7 +444,8 @@ pass 300 lines; `validateShardReports` calls it.
     `fix-4567-results.txt` and `fix-4567-complete-gate.txt`), fixed: finding 3
     (the approval paragraph above is restored below the status line), finding
     6 (the exemption sentence names the inline-setup limit), finding 7 (the
-    lint scope paragraph names the ignore patterns at any depth).
+    lint scope paragraph names the ignore patterns at any depth); commit
+    `9328213`.
   - Review 3, open, finding 1 (test, small): in
     `tests/ci_workflow_safeguards.test.ts` the secrets check is case-sensitive
     and misses `toJSON(secrets)`, the push-trigger check reads only `.yml`
@@ -452,19 +455,27 @@ pass 300 lines; `validateShardReports` calls it.
     Recommendation: A.
   - Review 3, open, finding 2 (docs or spec, small): the status paragraph of
     `plans/attribution-test-consolidation.md` still says its finding 1 awaits
-    a decision and PR #139 is open, while its finding line now says fixed and
+    a decision and PR #139 is open, while its finding line now says fixed;
     PR #139 merged on 2026-10-07. Options: A close that plan with the PR link
     and the fixed note; B change only the finding sentence. Recommendation: A.
   - Review 3, open, finding 4 (test, small): no lint test pins the `fileFixture`
     name and first-argument conditions of the new exemption. Recommendation:
-    add two rejected cases, `test(async (t) => …)` with `t.after` after a
-    fixture call and `wrap(async (owner) => …)` with `owner.after`.
+    add three rejected cases, each with a fixture call before the hook:
+    `test(async (t) => …)` with `t.after`, `wrap(async (owner) => …)` with
+    `owner.after`, and `fileFixture(setup, async (owner) => …)` with
+    `owner.after`.
   - Review 3, open, finding 5 (docs or spec, small): the `AGENTS.md`
     documentation-wording rule still forbids the kept copy-policy test that
     `mokly-guides.md` now allows. Options: A narrow the rule to allow
     one-value extraction and the listed-phrase copy test; B make the copy test
     a repository-suite lint named as the only exception; C delete the copy
     test. Recommendation: A.
+  - Review 4 (`.context/meta-test-reduction/review-fix-4567-2.md`, the
+    re-review of commit `9328213`), fixed in the commit titled "docs: apply
+    review round-2 fixes": finding 1 (the status paragraph names the Review 3
+    open findings), finding 2 (the finding 4 and finding 2 lines above are
+    exact), finding 3 (the lint scope list names every `.gitignore` entry).
+    Evidence: `fix-4567-round2.txt`. No third fix round without the user.
 
 ## Post-merge follow-up (non-blocking)
 
