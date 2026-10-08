@@ -1,10 +1,11 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestones 1 to 36 are implemented, verified and pushed; the
-branch contains main `a90badb6`. Milestone 37 was pushed at `29e6deb6` with
-manifest v10, catalogue read model v6 and review result v7. Its review is
-complete. The fix round for its two findings is in progress. The open review
-findings of Milestones 32 to 34 and one Milestone 35 decision wait for the user.
+Status: Active. Milestones 1 to 37 are implemented, verified and pushed; the
+branch contains main `a90badb6`. Milestone 37 moved the combined formats to
+manifest v10, catalogue read model v6 and review result v7; its review and one
+re-review are complete, and both review findings are fixed. The open review
+findings of Milestones 32 to 34 and one Milestone 35 decision wait for the
+user.
 
 ## Status And Outcome
 
@@ -2964,11 +2965,12 @@ main's own Mokly and then reads main's v9 manifest as current output.
 - [x] Run the complete `cargo xtask check` at 100%. Inspect the deletions
       against `origin/main`; only the four approved files may be deleted.
       Commit locally; the reviewer pushes and updates the PR description.
-- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
+- [x] After the push, use `docs/implementation-review-prompt.md` to review the
       complete diff against `origin/main` and report findings. Keep the review
       read-only. Then apply the review-fix rule in `docs/dev/review.md`: fix
       `Auto-fix: yes` findings, re-review once, and report the rest. Add each
-      open finding as one line under this TODO.
+      open finding as one line under this TODO. The review and one re-review
+      are complete. Both findings are fixed; the re-review has no new finding.
   - [x] Fix M37 finding 1 (Medium, product bug): keep the typed review version error through the browser request and comparison UI, and remove the repeated invalid-review prefix.
   - [x] Fix M37 finding 2 (Low, docs): correct the live status to record the pushed tip, the completed review and the fix round.
   - Unrelated flaky test: `route_scoped_shell_routes.spec.ts` › `use-case and page frames keep loading and navigating while evidence is unavailable` did not find the `Getting started` iframe heading within 5,000 ms; the unchanged test passed on rerun. Suspected source: frame navigation and readiness order under parallel browser load.
