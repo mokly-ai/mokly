@@ -54,12 +54,14 @@ export async function startCatalogueServer(
     snapshot.outputs ??
     acceptedGeneratedStatic(options.componentRuntime);
   const movedLinks = new RenderMoveTargets();
+  const renderService = (runtime: ComponentRuntime) =>
+    new ComponentRenderService(
+      runtime,
+      movedLinks.read,
+      options.onBuildWarning,
+    );
   let controls = options.componentRuntime
-    ? new ComponentRenderService(
-        options.componentRuntime,
-        movedLinks.read,
-        options.onBuildWarning,
-      )
+    ? renderService(options.componentRuntime)
     : undefined;
   const activity = new ForegroundActivity(options.onForeground ?? (() => {}));
   const createDocuments = (runtime: ComponentRuntime) =>
@@ -243,12 +245,7 @@ export async function startCatalogueServer(
         activeCatalogue = catalogue;
       }
       if (controls) controls.replace(runtime);
-      else
-        controls = new ComponentRenderService(
-          runtime,
-          movedLinks.read,
-          options.onBuildWarning,
-        );
+      else controls = renderService(runtime);
     },
     publishUpdate(update = {}): void {
       if (update.assetClosure) assetClosure.accept(update.assetClosure);
