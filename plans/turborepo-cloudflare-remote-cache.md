@@ -1,10 +1,15 @@
 # Turborepo Remote Cache On Cloudflare
 
-Status: Active. Created on 2026-10-06. [PR #170](https://github.com/mokly-ai/mokly/pull/170) closed on 2026-10-08. The supervisor owns the next PR decision. Milestone 1 was
-accepted at `7b70b7e`. Milestone 2 local implementation, checks and hosted native
-verification are complete. The supervising agent owns formal
-reviews in another worktree. Milestone 3 implementation, local smokes, and the full gate are complete;
-its supervising-agent review and final fix gate are complete. R2 and the open user decisions remain recorded. The user selected CI policy B on 2026-10-07. The Worker is deployed at `https://mokly-turbo-cache.calum-785.workers.dev`; Milestone 4 code, documentation and local verification are complete. The approved Node 24 shared-example copy fix and direct cold-baseline recipe checks pass the final gate. CI run `37672567423` confirms the PR cache and native paths. The R2 object count, main/release checks, token retirement, developer sharing and the supervising-agent re-review remain open. On 2026-10-08 the user replaced the Cloudflare remote cache with the GitHub Actions cache (option 3 of the reviewed alternatives); Milestones 5 to 7 own that change and decommission the Worker, bucket, tokens, and environments.
+Status: Active. Created on 2026-10-06. Milestones 1 to 3 are complete. The
+2026-10-08 GitHub Actions cache decision supersedes the Worker work in
+Milestone 4. Milestone 5 is complete. Milestone 6 implementation, one-time
+proofs, and the complete local gate are complete; its hosted CI check stays
+open. Milestone 7 repository work is complete. Admin removal and the final
+plan commit remain open. [PR #170](https://github.com/mokly-ai/mokly/pull/170)
+closed on 2026-10-08. The supervisor owns the next PR decision, hosted checks,
+and formal review in another worktree. Milestone 4 finding 3, Milestone 2
+findings 1, 3, 6, and 9, Testbox telemetry, and the old Pages token retirement
+still need the user.
 
 ## Summary
 
@@ -652,9 +657,10 @@ before the merge.
 - [x] Admin: generate the three Worker tokens and the signature key with
       `openssl rand -hex 32`. Done on 2026-10-07 on the admin's Mac; values
       never left it in any output.
-- [ ] Verify the rotation runbook changes the Worker team, all client team
+- [x] Verify the rotation runbook changes the Worker team, all client team
       settings, and the 7-day PR lifecycle prefix together, preserving old
       namespace expiry.
+      Superseded on 2026-10-08: the GitHub Actions cache decision removes the Worker (Milestone 5).
 - [x] Admin: run the first deploy from this branch with pinned Wrangler 4.113.0
       and the admin's login. Done on 2026-10-07 at `11b207d`:
       `https://mokly-turbo-cache.calum-785.workers.dev`. With no secrets it answers 401 to every
@@ -668,10 +674,11 @@ before the merge.
       `TURBO_CACHE_PR_WRITE_TOKEN` and `TURBO_CACHE_SIGNATURE_KEY` as repository
       secrets. The read-only token and key are in the admin's Keychain item
       `mokly-turbo-cache-developer`.
-- [ ] Admin: give approved developers the read-only token and signature key
+- [x] Admin: give approved developers the read-only token and signature key
       through a private password-manager share. Confirm `local:rw,remote:r`
       suppresses uploads and that a read-only token without a key cannot
       accept a signed download.
+      Superseded on 2026-10-08: the GitHub Actions cache decision removes the Worker (Milestone 5).
 - [x] Confirm token rotation makes old tokens return 401 and a known old
       version's preview URL cannot reach the Worker; keep preview_urls false.
       Done on 2026-10-07 for the PR token.
@@ -680,8 +687,9 @@ before the merge.
       fallback batches; a 1,024-hash query can exceed that subrequest budget.
       Done on 2026-10-07: a 40 MiB upload and a 3-hash batch passed; a
       1,024-hash PR batch returned 500, and Turbo falls back to HEAD.
-- [ ] Decide whether to cap batch queries below the subrequest budget, so a
+- [x] Decide whether to cap batch queries below the subrequest budget, so a
       large batch gets 413 instead of 500. Turbo falls back to HEAD either way.
+      Superseded on 2026-10-08: the GitHub Actions cache decision removes the Worker (Milestone 5).
 - [x] Confirm the configured apiUrl has no trailing slash. Verify requests use
       /v8 paths, since a trailing slash can produce //v8 paths and silent misses.
 - [x] Confirm production R2 conditional behavior: absent-key PUT succeeds,
@@ -701,15 +709,17 @@ before the merge.
 - [x] Verify fork behavior locally: run `npm run prepare:verification` with
       the Worker URL configured, both credentials unset, and local cache only.
       Confirm exit 0 and no remote requests. Test either credential missing too.
-- [ ] Verify the remote path in an isolated checkout with an empty private
+- [x] Verify the remote path in an isolated checkout with an empty private
       cache, the read-only token/key, and `local:rw,remote:r`. Confirm three
       remote hits after CI fills the cache. Do not delete a shared worktree cache.
-- [ ] Smoke-test real signed round trips, rejected unsigned/invalid artifacts,
+      Superseded on 2026-10-08: the GitHub Actions cache decision removes the Worker (Milestone 5).
+- [x] Smoke-test real signed round trips, rejected unsigned/invalid artifacts,
       response length, batch-to-HEAD fallback, and safe cache errors. Prove a
       parsed `forbidden` from a reader upload or wrong team disables remote
       reads and writes for the rest of the run while builds pass. Confirm
       `remote:r` prevents reader uploads. Document access-token rotation and
       new-namespace signature-key rotation.
+      Superseded on 2026-10-08: the GitHub Actions cache decision removes the Worker (Milestone 5).
 - [x] Push and read the pull request run: `prepare` uploads or restores the three tasks and
       ten ordinary downstream jobs report cache hits. Record
       per-job durations before and after, and the R2 object count, in
@@ -752,7 +762,7 @@ before the merge.
       without changing the implementation.
   - Re-review of `5211ab11` (finding 2) and `ed1ee254` (finding 4): no new findings. Findings 1 and 3 wait for the user.
   - Unrelated flaky test (not fixed here): `tests/browser/component_design_navigation.spec.ts` "the served catalogue reaches component designs and follows their variant links" failed once in PR #170 run 37685140800 (the frame `readyState` stayed `interactive` past the 5 s `expectFrameLoaded` wait) and passed on the rerun; suspected source: frame load timing on a busy runner.
-  - Finding 1 (high, security): the committed `remoteCache.apiUrl`/`teamSlug` plus Turbo's file-based login (turbo login or the Vercel CLI login under the user config directory) make every Turbo run without the env pair send a `POST /v8/artifacts/events?slug=mokly` with the developer's token to the Worker; recommend removing apiUrl/teamSlug from turbo.json, injecting TURBO_API and the team only when the pair is present, plus a capture-server regression test with synthetic login files. Waiting for the user.
+  - Finding 1 (high, security): the committed `remoteCache.apiUrl`/`teamSlug` plus Turbo's file-based login (turbo login or the Vercel CLI login under the user config directory) make every Turbo run without the env pair send a `POST /v8/artifacts/events?slug=mokly` with the developer's token to the Worker; recommend removing apiUrl/teamSlug from turbo.json, injecting TURBO_API and the team only when the pair is present, plus a capture-server regression test with synthetic login files. Closed on 2026-10-08: the repository no longer supplies an endpoint or team. The one-time login-file proof records zero requests; see `.context/turborepo-cloudflare-remote-cache/m6-no-remote-requests.md` for the explicit-team override limit.
   - Finding 3 (low, repository rule): the protocol index format paragraph that merge `6dece14` shortened still lacks most of main's statements; needs the user's approval of the shortened text or a restored paragraph with a reviewed cap. Waiting for the user.
   - [x] Fix finding 2: preserve launcher signal handling and Windows TTY
         delegation; prove graceful child shutdown and exit signals through
@@ -894,31 +904,47 @@ Remote index failure: `.context/turborepo-cloudflare-remote-cache/m6-remote-inde
 
 ### Milestone 7: Decommission And Review
 
-Remove the Cloudflare and GitHub resources that the Worker needed, update the
-pull request, and run the review. The account steps need the Cloudflare account
-owner and a repository admin; they run from the admin's machine with
-per-command approval after Milestone 6 is pushed and its CI run passes.
+Remove the Cloudflare and GitHub resources that the Worker needed. Prepare the
+PR text and hand off the formal review. PR #170 is closed. The supervisor owns
+the next PR decision and the review in another worktree. The account steps need
+the Cloudflare account owner and a repository admin. They run from the admin's
+Mac with per-command approval after the new hosted CI run passes.
 
 - [ ] Admin: delete the objects in the `mokly-turbo-cache` R2 bucket, the
       bucket and its lifecycle rules, and the Worker `mokly-turbo-cache` with
       its secrets.
 - [ ] Admin: delete the Cloudflare API token
       `github-actions-mokly-turbo-cache-deploy`.
-- [ ] Admin: delete the repository secrets `TURBO_CACHE_TRUSTED_WRITE_TOKEN`,
-      `TURBO_CACHE_PR_WRITE_TOKEN`, and `TURBO_CACHE_SIGNATURE_KEY`, the
-      `turbo-cache-deploy` environment secret `CLOUDFLARE_WORKERS_API_TOKEN`,
-      and the environments `turbo-cache-trusted` and `turbo-cache-deploy`.
-- [ ] Admin: delete the Keychain items that hold the developer read token and
-      signature key.
-- [ ] Record the decommission under `.context/turborepo-cloudflare-remote-cache/`
-      and update the PR #170 title and description to
-      "ci: cache build tasks with Turbo and the GitHub Actions cache".
+- [ ] Admin: delete `TURBO_CACHE_TRUSTED_WRITE_TOKEN` from the environment
+      `turbo-cache-trusted`. Delete the repository secrets
+      `TURBO_CACHE_PR_WRITE_TOKEN` and `TURBO_CACHE_SIGNATURE_KEY`. Delete
+      `CLOUDFLARE_WORKERS_API_TOKEN` from `turbo-cache-deploy`, then delete both
+      cache environments. Keep `CLOUDFLARE_ACCOUNT_ID` and
+      `CLOUDFLARE_PAGES_API_TOKEN` for preview deployment.
+- [ ] Admin: delete the Keychain item `mokly-turbo-cache-developer`, which holds
+      the developer read token and signature key.
+- [x] Write the Mac decommission runbook in
+      `.context/turborepo-cloudflare-remote-cache/m7-decommission.md`. Check
+      command syntax against installed Wrangler 4.113.0 help and source.
+      List each resource before deletion and check it afterward. Run no admin step.
+- [x] Write the new title to
+      `.context/turborepo-cloudflare-remote-cache/pr-title.txt` and rewrite
+      `pr-body.md` beside it. Keep merge decisions and list every deleted file.
+      No PR action ran because PR #170 is closed.
+- [ ] Supervisor: apply the prepared PR title and body after the user chooses
+      the PR state. Then complete the hosted cache and preview checks.
 - [ ] Review the diff against `origin/main`, then `git add -A`, commit with
       Conventional Commits, and push.
 - [ ] Review the complete local diff against `origin/main` with
       `docs/implementation-review-prompt.md` after the push. Report findings,
       then apply the review-fix rule in `docs/dev/review.md`: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest.
+  - Unmodified Markdown link check: ENOENT for the deleted Worker README in the Testbox index; local rerun passed 2/2 checks. Source: the remote exporter kept HEAD index state. No test or exporter change. See `.context/turborepo-cloudflare-remote-cache/m6-remote-index-failure.md`.
+
+The final commit TODO stays open for the supervisor after admin work. The
+repository handoff has its own pushed commit. The supervisor owns formal review.
+Runbook syntax checks: `.context/turborepo-cloudflare-remote-cache/m7-runbook-validation.md`.
+Delivery and pending work: `.context/turborepo-cloudflare-remote-cache/m5-m7-delivery.md`.
 
 ## Post-merge follow-up (non-blocking)
 
@@ -933,11 +959,7 @@ per-command approval after Milestone 6 is pushed and its CI run passes.
   this change merges. Release Please creates that pull request from main, so
   this measurement cannot be a pre-merge milestone requirement.
 
-- Confirm that PR-area objects expire after 7 days, the earlier of the two
-  lifecycle rules.
-- Watch the first five `main` runs for remote cache errors in the `turbo` logs
-  and in Worker observability.
-- Rotate the read-only token and record the rotation date when the first
-  external contributor receives it.
+- Watch the first five `main` runs for cache save and restore warnings. Confirm
+  that the saved directory stays under the `cacheMaxSize` limit.
 - Open a follow-up plan for cached test suites once the suite evidence
   contract defines replayed reports.
