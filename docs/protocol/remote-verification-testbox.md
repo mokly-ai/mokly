@@ -11,6 +11,7 @@ Workflow validation and both box suite smoke checks pass.
 Main's dependency fixes are merged. The complete explicit remote check passes.
 Automatic remote selection and `cargo xtask executor` are implemented.
 The complete automatic smoke check passes.
+Workflow verification executes the Testbox scripts instead of matching their text.
 
 ## Workflow
 
@@ -65,6 +66,12 @@ connection at job end. Their "Complete runner" step takes 0 to 1 seconds.
 Key login saves the key in the local CLI credential file.
 It replaces any saved login for the same organization.
 The [key contract](./remote-verification.md#key-and-cli-handling) names that file.
+
+[`tests/ci_workflow_scripts.test.ts`](../../tests/ci_workflow_scripts.test.ts)
+executes the lockfile stamp step and the environment step on Linux hosts with
+controlled inputs and asserts the written files. The environment run redirects
+`/etc/environment` to a temporary file and stubs `sudo`. Step order and action
+pins are review-owned literals.
 
 Pin each action to these immutable revisions. Keep the version comments.
 

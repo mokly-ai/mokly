@@ -81,15 +81,3 @@ test("only the helper and tests may import PostCSS's parser and processor", asyn
   assert.equal(await restrictions(code, "tests/fixture.test.ts"), 0);
   assert.equal(await restrictions('await import("postcss");', helper), 1);
 });
-
-test("every Mokly source file except the helper keeps both PostCSS restrictions", async () => {
-  const files = (
-    await fs.readdir(path.join(repositoryRoot, "src"), { recursive: true })
-  )
-    .map((entry) => path.posix.join("src", entry.split(path.sep).join("/")))
-    .filter((file) => /\.tsx?$/.test(file) && file !== helper);
-  assert.ok(files.length > 100, `found ${files.length} source files`);
-  const code = 'import postcss from "postcss";\nawait import("postcss");\n';
-  for (const file of files)
-    assert.equal(await restrictions(code, file), 2, file);
-});

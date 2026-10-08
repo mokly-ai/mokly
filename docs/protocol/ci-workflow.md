@@ -4,6 +4,8 @@
 
 Implemented. CI selects baseline or strict mode by event and pull request.
 The Dependency Audit workflow maintains strict findings on `main`.
+The workflow verification tests below replace the former literal workflow
+tests.
 
 ## Workflow Boundary
 
@@ -178,6 +180,39 @@ The [Testbox workflow contract](./remote-verification-testbox.md#workflow)
 defines the exact revisions and step order. `Required CI` does not depend on
 this workflow. The hosted CI graph and its release profile keep their current
 required jobs.
+
+## Workflow Verification
+
+Tests verify workflow files by their properties and by running their scripts.
+[`tests/ci_workflow_policies.test.ts`](../../tests/ci_workflow_policies.test.ts)
+requires every `uses:` revision across the workflows and composite actions to
+be a 40-character lowercase commit. It forbids untrusted pull request fields in
+`ci.yml` `run:` steps and `${{` in Dependency Audit `run:` steps. It requires a
+full-history checkout in every CI and preview job that installs dependencies.
+It keeps the package, unit, browser and hydration jobs on the checked-out
+lockfile. It checks that `.nvmrc`, the package and lockfile engines and the
+README agree with the CLI's tested Node versions and supported range. It checks
+that the Testbox Node.js version matches the CI native job and that the Testbox
+npm and Rust steps match the CI repository job. The
+[repository input contract](./ci-test-repository-inputs.md) describes its
+example server check.
+
+[`tests/ci_workflow_scripts.test.ts`](../../tests/ci_workflow_scripts.test.ts)
+executes the Node profile selector with and without a release pull request and
+derives the expected outputs from the CLI's tested Node versions and the
+release evidence runtimes. It also executes the Testbox lockfile stamp and the
+Testbox environment step on Linux hosts with controlled inputs and asserts
+their outputs.
+
+[`tests/ci_required_guard.test.ts`](../../tests/ci_required_guard.test.ts),
+[`tests/ci_workflow_remote_state.test.ts`](../../tests/ci_workflow_remote_state.test.ts),
+[`tests/ci_pull_request_title.test.ts`](../../tests/ci_pull_request_title.test.ts),
+[`tests/npm_pin.test.ts`](../../tests/npm_pin.test.ts),
+[`tests/release_evidence_contract.test.ts`](../../tests/release_evidence_contract.test.ts)
+and
+[`tests/workflow_runner_sizes.test.ts`](../../tests/workflow_runner_sizes.test.ts)
+keep their property checks. The policy and script tests assert no literal job
+names, step order, matrix values or run strings; review owns those.
 
 ## Related Docs
 

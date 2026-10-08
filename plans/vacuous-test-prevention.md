@@ -69,8 +69,10 @@ occupy.
   `--import tsx --import ./scripts/verification/assertion-guard.mjs` under both
   policies. Since main's #155, `executeUnitTests` in
   `scripts/verification/unit-execution.mjs` holds these flags for both policies
-  and the targeted developer runs. The three native-platform `node --test` steps in
-  `.github/workflows/ci.yml` pass the same flags. A direct run uses
+  and the targeted developer runs. Every `node --test` command in a CI
+  workflow or composite action passes the same flags. Since main's #175
+  deleted `tests/ci_workflow.test.ts`, `tests/verification_entrypoints.test.ts`
+  checks this as a policy property. A direct run uses
   `node --import tsx --import ./scripts/verification/assertion-guard.mjs --test <file>`.
   A run without the guard is partial verification.
 - A resolve hook, registered with `module.register`, maps `node:assert`,

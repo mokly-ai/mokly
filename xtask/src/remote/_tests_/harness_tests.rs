@@ -37,6 +37,7 @@ pub(super) enum Case {
     MissingRun,
     RetryStop,
     CleanupSuites,
+    CleanupFailedSuite,
     CompletedOnRetry,
     InterruptCleanupWarmup,
     InterruptCleanupSuites,
@@ -127,26 +128,31 @@ pub(super) fn harness(case: Case) -> Harness {
     let prepare = LogsPrepareMock
         .each_call(matching!("20261006T120000Z-42"))
         .answers(&|_, _| Ok(()));
-    let logs = Arc::new(if matches!(case, Case::Suite | Case::LogUnavailable) {
-        Unimock::new((
-            prepare,
-            LogsTailMock
-                .each_call(matching!(_))
-                .answers_arc(Arc::new(move |_, _| {
-                    if case == Case::LogUnavailable {
-                        Err(Error::Command {
-                            operation: Operation::Logs,
-                            code: Some(1),
-                            detail: None,
-                        })
-                    } else {
-                        Ok("failed command tail".into())
-                    }
-                })),
-        ))
-    } else {
-        Unimock::new(prepare)
-    });
+    let logs = Arc::new(
+        if matches!(
+            case,
+            Case::Suite | Case::LogUnavailable | Case::CleanupFailedSuite
+        ) {
+            Unimock::new((
+                prepare,
+                LogsTailMock
+                    .each_call(matching!(_))
+                    .answers_arc(Arc::new(move |_, _| {
+                        if case == Case::LogUnavailable {
+                            Err(Error::Command {
+                                operation: Operation::Logs,
+                                code: Some(1),
+                                detail: None,
+                            })
+                        } else {
+                            Ok("failed command tail".into())
+                        }
+                    })),
+            ))
+        } else {
+            Unimock::new(prepare)
+        },
+    );
     let progress_events = events.clone();
     let progress = ReporterProgressMock
         .each_call(matching!(_))

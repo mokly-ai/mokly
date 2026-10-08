@@ -124,8 +124,10 @@ pub(super) fn client(
             }
             Ok(output(
                 String::new(),
-                if matches!(case, Case::Suite | Case::LogUnavailable)
-                    && command.contains("--suite repository")
+                if matches!(
+                    case,
+                    Case::Suite | Case::LogUnavailable | Case::CleanupFailedSuite
+                ) && command.contains("--suite repository")
                 {
                     1
                 } else {
@@ -194,6 +196,7 @@ pub(super) fn client(
                     Case::CleanupWarmup
                         | Case::CompletedOnFinal
                         | Case::CleanupSuites
+                        | Case::CleanupFailedSuite
                         | Case::InterruptCleanupWarmup
                         | Case::InterruptCleanupSuites
                 ) || (matches!(case, Case::RetryStop | Case::CompletedOnRetry) && attempt == 0))

@@ -21,8 +21,9 @@ Each module stays under 300 lines.
 `executeUnitTests` in `scripts/verification/unit-execution.mjs` loads `tsx`
 first, then the guard. The unit runner uses it under both its developer and
 strict policies, and so do the targeted
-[developer test commands](./developer-test-commands.md). The three
-native-platform `node --test` steps load the same imports. A direct run uses:
+[developer test commands](./developer-test-commands.md). Every `node --test`
+command in a CI workflow or composite action loads the same imports.
+`tests/verification_entrypoints.test.ts` checks both rules. A direct run uses:
 
 ```bash
 node --import tsx --import ./scripts/verification/assertion-guard.mjs --test <file>

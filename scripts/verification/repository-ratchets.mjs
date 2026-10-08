@@ -6,6 +6,7 @@ import {
   auditInternalExports,
   internalExportAudit,
 } from "./ratchets/internal-exports.mjs";
+import { parseProtocolCapTable } from "./ratchets/length-policy.mjs";
 import { countPhysicalLines } from "./ratchets/lines.mjs";
 import {
   auditProtocolCaps,
@@ -20,9 +21,15 @@ import {
 export {
   countPhysicalLines,
   internalExportAudit,
+  parseProtocolCapTable,
   protocolCapFindings,
   typeScriptLengthFindings,
 };
+
+/** Run the protocol document cap audit in isolation. */
+export function protocolCapAudit(repositoryRoot) {
+  return auditProtocolCaps(repositoryRoot, new GitWorkspace(repositoryRoot));
+}
 
 /** Run the release-tag public package export audit in isolation. */
 export function publicPackageExportAudit(repositoryRoot) {

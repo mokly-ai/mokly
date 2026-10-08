@@ -158,7 +158,7 @@ pub(crate) enum Error {
         aggregate_failed: bool,
         /// Local source tree changed.
         changed: bool,
-        /// Boxes that remain neither stopped nor proven completed.
+        /// Boxes that remain neither stopped nor proven completed; reported only.
         cleanup: usize,
     },
 }
