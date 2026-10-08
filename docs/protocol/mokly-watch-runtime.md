@@ -55,9 +55,10 @@ update, as the [public closure contract](./mokly-public-closure.md#one-closure-b
 requires. When the background pass completes, its `catalogue-complete` message
 carries the parent's current checked closure as `assetClosure`. A reload reuses
 the earlier compilation, so the child does not serve that compilation's older
-manifest closure. The completion is the only message of a running child that
-carries the list; `update` messages carry none. The parent then computes one complete classification outside the
-HTTP request path. A sequence token discards results superseded by a newer watch
+manifest closure. The completion is the only message to a running child that
+carries the list; `update` messages carry none. The parent then computes one
+complete classification outside the HTTP request path. A sequence token
+discards results superseded by a newer watch
 action; the current successful result publishes a second typed update that
 atomically replaces changed-entry membership, removed-entry baseline data, and
 component evidence. Both tabs are present from startup: pending status shows a
