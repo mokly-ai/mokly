@@ -63,8 +63,10 @@ Allocate these paths under the checkout's ignored `.context/` directory.
 The index path must be absolute and must not select the checkout's index.
 Create `.context/verification-snapshots/` before the first index write.
 If either run-specific path already exists, fail preparation. Never reuse it
-or delete it. Reserve the directory and index with exclusive create operations.
-Track each successful reservation before the next operation. Partial-build
+or delete it. Reserve the run name with exclusive directory creation.
+Check the index path again before the first Git write. Leave it absent so
+Git creates a valid index. Mark that path as owned immediately before the
+first `read-tree` request. Track directory ownership before the next operation. Partial-build
 cleanup removes only resources this run acquired, also after a raced collision.
 Run these three commands from the checkout root. Set `GIT_INDEX_FILE` to the
 temporary index only on these process requests:

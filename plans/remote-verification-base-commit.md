@@ -98,8 +98,10 @@ of the [Blacksmith remote verification plan](./blacksmith-remote-verification.md
    preparation failure. Put the temporary index beside the snapshot at
    `.context/verification-snapshots/<run>.index`. Set `GIT_INDEX_FILE` only
    on requests that need it. Create the snapshot parent before the first index
-   write. Reject existing run-specific paths. Reserve them exclusively and
-   remove only resources this run created. Apply the index override
+   write. Reject existing run-specific paths. Reserve the run name by exclusive
+   directory creation. Keep the index path absent for Git to create. Check it
+   again before the first Git write and mark it owned immediately before that
+   request. Remove only resources this run created. Apply the index override
    on the three checkout tree-build requests. If `Request` needs an environment
    field, make it typed and retain shared secret variable removal. All snapshot
    build Git requests use `cancellable: false`. Check the interrupt flag
@@ -287,6 +289,9 @@ unpushed commits now runs the complete gate on Testboxes.
 Evidence: `.context/remote-verification-base-commit/milestone-3.md` and
 `.context/remote-verification-base-commit/smoke.md`.
 
+- [x] Fix review R1 in its own commit. Reserve only the run directory.
+      Leave the temporary index absent until Git creates it. Keep the index
+      absence check and claim its cleanup immediately before the first write.
 - [ ] Replace the `Published` check with the `Base` check in the policy, the
       availability selector, the local reasons, the decision text and the
       typed error. Remove the `published` boundary method and its

@@ -1,6 +1,6 @@
 //! Exclusive filesystem reservations for snapshot directories and indexes.
 
-use std::fs::{self, OpenOptions};
+use std::fs;
 use std::io::{self, ErrorKind};
 use std::path::Path;
 
@@ -32,14 +32,6 @@ impl SnapshotFiles for SystemSnapshotFiles {
 
     fn directory(&self, path: &Path) -> Result<()> {
         reserve(fs::create_dir(path), path)
-    }
-
-    fn index(&self, path: &Path) -> Result<()> {
-        reserve(
-            OpenOptions::new().write(true).create_new(true).open(path),
-            path,
-        )?;
-        Ok(())
     }
 
     fn remove_directory(&self, path: &Path) -> Result<()> {

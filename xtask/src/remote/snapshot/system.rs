@@ -38,9 +38,9 @@ impl Snapshot for SystemSnapshot {
         };
         self.files.directory(&guard.handle.directory)?;
         guard.handle.ownership = Ownership::Directory;
-        self.files.index(&guard.handle.index)?;
-        guard.handle.ownership = Ownership::Indexed;
+        self.files.absent(&guard.handle.index)?;
         let index = Some(guard.handle.index.clone());
+        guard.handle.ownership = Ownership::Indexed;
         self.git(
             vec!["read-tree".into(), "HEAD".into()],
             &self.workspace,
@@ -126,3 +126,7 @@ mod snapshot_adapter_tests;
 #[cfg(test)]
 #[path = "_tests_/system_tests.rs"]
 mod system_tests;
+
+#[cfg(test)]
+#[path = "_tests_/index_adapter_tests.rs"]
+mod index_adapter_tests;

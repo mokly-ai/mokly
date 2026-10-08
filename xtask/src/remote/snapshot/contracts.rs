@@ -14,7 +14,7 @@ pub(crate) enum Ownership {
     None,
     /// Only the empty snapshot directory belongs to this build.
     Directory,
-    /// The directory and temporary index both belong to this build.
+    /// The reserved directory owns the index path for the pending Git write.
     Indexed,
     /// Worktree registration was attempted; remove its admin entry too.
     Linked,
@@ -68,7 +68,7 @@ pub(crate) trait Snapshot: Send + Sync {
 }
 
 /// Filesystem ownership operations kept separate from unit-tested orchestration.
-#[cfg_attr(test, unimock::unimock(api = [SnapshotFilesParentMock, SnapshotFilesAbsentMock, SnapshotFilesDirectoryMock, SnapshotFilesIndexMock, SnapshotFilesRemoveDirectoryMock, SnapshotFilesRemoveIndexMock]))]
+#[cfg_attr(test, unimock::unimock(api = [SnapshotFilesParentMock, SnapshotFilesAbsentMock, SnapshotFilesDirectoryMock, SnapshotFilesRemoveDirectoryMock, SnapshotFilesRemoveIndexMock]))]
 pub(crate) trait SnapshotFiles: Send + Sync {
     /// Create the shared snapshot parent before any temporary-index write.
     fn parent(&self, workspace: &Path) -> Result<()>;
@@ -76,8 +76,6 @@ pub(crate) trait SnapshotFiles: Send + Sync {
     fn absent(&self, path: &Path) -> Result<()>;
     /// Exclusively create one empty snapshot directory.
     fn directory(&self, path: &Path) -> Result<()>;
-    /// Exclusively create one empty temporary-index file.
-    fn index(&self, path: &Path) -> Result<()>;
     /// Remove only a directory owned by this build before worktree registration.
     fn remove_directory(&self, path: &Path) -> Result<()>;
     /// Remove only this run's owned temporary index, including an already-gone file.
