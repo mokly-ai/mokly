@@ -1,7 +1,7 @@
 # Remove Source-Path Evidence
 
 Status: Active. Milestones 1 to 33 are implemented, verified and pushed.
-Milestone 34 merges main `4bd0e78e`. The open review findings of Milestones 32
+Milestone 34 merges main `d1579e9f`. The open review findings of Milestones 32
 and 33 wait for the user.
 
 ## Status And Outcome
@@ -2826,6 +2826,17 @@ rules split into `docs/dev`), #172 (Serve keeps the checked closure on reload),
 - [x] Inspect the diff and the deletions against `origin/main`; only the four
       approved files may be deleted. Commit, push, and add the merge decisions
       to the PR description.
+- [x] Main advanced to `a9381ed6` with #138 (one shared example compilation
+      for unit test files), #166 (links read with the Markdown parser) and #127
+      (release 0.14.0) during the gate. Merge it as a second commit with exactly
+      two parents. Take #138's shared source list and add `plans` to it,
+      because the example's Markdown links into `plans/`. Keep the moved
+      verification links and take #138's CI suite evidence line.
+- [x] Merge main `d1579e9f` (#180, `AGENTS.md` only) as a third commit with
+      exactly two parents; it has no conflict.
+- [ ] Run the targeted tests, the repository suite and the complete
+      `cargo xtask check` at 100% on the final tree, then push and update the
+      PR description.
 - [ ] After the push, use `docs/implementation-review-prompt.md` to review the
       complete diff against `origin/main` and report findings. Keep the review
       read-only. Then apply the review-fix rule in `docs/dev/review.md`: fix
