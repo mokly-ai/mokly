@@ -82,8 +82,9 @@ The design depends on these measurements from 2026-10-07:
    If it fails, keep today's order (stop, then cancel) and record that in the
    contract.
 4. **Keep the error text.** When a status, stop, cancel, run state or close
-   command fails, its warning adds the last nonempty line of the command's
-   standard error. It uses standard output when standard error is empty. The
+   command fails, its warning keeps one line. Trim each line. Select the last
+   standard-error line that is not empty after trimming. If there is none,
+   select the last such standard-output line. The
    line uses the existing redaction and has at most 200 characters. It is a
    field of the typed error, not text formatted at the call site.
 5. **Keep the failure rule.** A box that is neither stopped nor proven
@@ -213,10 +214,10 @@ Evidence: `.context/testbox-prompt-shutdown/milestone-3.md`; repeat results: `.c
 
 ## Milestone 4: Verification, close-out and review
 
-Verification and close-out are complete. The user runs the final review after
-the push. The review TODO remains open.
+Verification, close-out and review are complete. This is the last fix round.
+The listed open findings remain for the user.
 
-Evidence: `.context/testbox-prompt-shutdown/smoke.md` and `.context/testbox-prompt-shutdown/gate.log`.
+Evidence: `.context/testbox-prompt-shutdown/smoke.md`, `.context/testbox-prompt-shutdown/gate.log`, `.context/testbox-prompt-shutdown/review-rust.md`, `.context/testbox-prompt-shutdown/review-docs.md`, `.context/testbox-prompt-shutdown/review-fixes.md`, `.context/testbox-prompt-shutdown/review-round2.md` and `.context/testbox-prompt-shutdown/review-round2-fixes.md`.
 
 - [x] Run all tests for this change with a 100% pass rate. Run
       `cargo fmt --all -- --check`, Clippy and the length lints.
@@ -231,7 +232,7 @@ Evidence: `.context/testbox-prompt-shutdown/smoke.md` and `.context/testbox-prom
 - [x] Inspect the diff and the deletions against `origin/main`.
 - [x] After the checks pass, run `git add -A`, commit with Conventional
       Commits and push the branch.
-- [ ] After the push, a reviewer uses
+- [x] After the push, a reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and reports the
       findings. Keep the review read-only. The implementer then applies the
@@ -245,6 +246,8 @@ Evidence: `.context/testbox-prompt-shutdown/smoke.md` and `.context/testbox-prom
   - docs #2 (Low, process): The headline compares billed time with job time; like-for-like job time is 100.3 against 140.6 minutes, 28.7% fewer.
   - docs #3 (Low, process): The open warn-or-fail decision has no live home after the plan completes.
   - docs #4 (Low, process): Finding 7 names no evidence for the three checks, 17 boxes and `cancel_failed`.
+  - RR4 (Low, process): The docs #2 record omits that the post-merge spend check has no per-check baseline.
+  - Fixed in `9b68aecf`: R1, D1, D5, D6, D7, D8 and D9. Re-review of `9b68aecf`: RR1, RR2 and RR3 fixed in the next commit; RR4 is open.
 
 ## Post-merge follow-up (non-blocking)
 

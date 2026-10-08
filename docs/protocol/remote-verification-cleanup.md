@@ -200,8 +200,8 @@ Keep the error's defining module prefix once. Do not repeat a prefix.
 [xtask/executor] information: box=<box-id> already completed; cleanup skipped
 [xtask/executor] warning: status for <box-id> failed: <typed-error>
 [xtask/executor] warning: could not stop <box-id>: <typed-error>
-[xtask/executor] warning: cancellation for <run> failed: <typed-error>
-[xtask/executor] warning: run state for <run> failed: <typed-error>
+[xtask/executor] warning: cancellation for <github-run-id> failed: <typed-error>
+[xtask/executor] warning: run state for <github-run-id> failed: <typed-error>
 [xtask/executor] warning: GitHub lookup failed: <typed-error>
 [xtask/executor] warning: cleanup worker for <box-id> failed: <typed-error>
 ```
