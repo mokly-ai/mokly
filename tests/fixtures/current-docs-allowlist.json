@@ -621,7 +621,7 @@
   },
   {
     "file": "docs/protocol/npm-release-notes.md",
-    "statement": "Replace released `ManifestV9` with `ManifestV10`, `ReviewResultV6` with `ReviewResultV7`, and `ScreenReviewV6` with `ScreenReviewV7`.",
+    "statement": "Replace `ManifestV7` (0.13.0) or released `ManifestV9` (0.14.0) with `ManifestV10`, `ReviewResultV4` or `ReviewResultV6` with `ReviewResultV7`, and `ScreenReviewV4` or `ScreenReviewV6` with `ScreenReviewV7`.",
     "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
   },
   {
