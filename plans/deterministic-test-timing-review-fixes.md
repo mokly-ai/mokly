@@ -7,9 +7,9 @@ recommended option for findings 1 to 5 of the
 needs no change: the squash title of PR #152 is within the limit. Milestones 1
 to 9 are complete. After the merge with main in Milestone 8, review finding 1
 no longer applies. Milestone 9 fixed findings 2 to 4 with the options that the
-user chose. The post-push review found no issues. Milestone 10 fixes items 4
+user chose. The post-push review found no issues. Milestone 10 fixed items 4
 and 5 of the outstanding review list with the options that the user chose on
-2026-10-08.
+2026-10-08. Review 3 finding 1 is open and waits for the user's decision.
 
 Fix the five open findings from the PR #152 review. Keep browser retries
 working, give Playwright assertions the contract's 10-second minimum, replace
@@ -389,7 +389,7 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-9.md`.
   - Review 2 (`.context/deterministic-test-timing-review-fixes/review-2.md`):
     no findings, so there is no fix round.
 
-## Milestone 10: Fix outstanding review items 4 and 5
+## Milestone 10: Fix outstanding review items 4 and 5 — completed
 
 On 2026-10-08 the user chose option B for item 4 and option B for item 5 of
 the outstanding review list. Review 2 recorded both as residual risks, not as
@@ -427,11 +427,18 @@ Evidence: `.context/deterministic-test-timing-review-fixes/milestone-10.md`.
       `tests/browser/browse.spec.ts` (item 5). Run the spec three times.
 - [x] Run `cargo xtask check --suite repository`, then the complete gate with
       the local executor.
-- [ ] Commit and push the branch.
-- [ ] After the push, use `docs/implementation-review-prompt.md` to review
+- [x] Commit and push the branch.
+- [x] After the push, use `docs/implementation-review-prompt.md` to review
       the complete local diff against `origin/main` and report the findings.
       Then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Review 3 (`.context/deterministic-test-timing-review-fixes/review-3.md`):
+    finding 2 (protocol index entry) is fixed in `b514122b`. The re-review
+    found no new findings.
+  - Open: finding 1 (Low, docs or spec). The process-ID file rule also covers
+    the multi-ID `git-pid` marker that `tests/helpers/blocking_git.ts` reads,
+    which cannot use `readPidFile`. Recommended: option A, narrow the rule to
+    one-ID files and describe multi-ID markers.
 
 ## Post-merge follow-up (non-blocking)
 
