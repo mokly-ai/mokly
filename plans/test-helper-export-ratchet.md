@@ -1,9 +1,8 @@
 # Test Helper Export Ratchet
 
-Status: Active. Plan created on 2026-10-08 with the user's consent. Milestones
-1 to 4 are complete. The test helper baseline is empty. The complete gate has
-passed. Commit `82029ec` is pushed. The first review fix round is in progress.
-Finding 2 awaits the user.
+Status: Active. Plan created on 2026-10-08 with the user's consent. All five
+milestones are complete. The test helper baseline is empty. Finding 2 awaits
+the user.
 
 ## Status And Outcome
 
@@ -212,7 +211,7 @@ viewer fixture, not the root fixture.
 
 Evidence: `.context/test-helper-export-ratchet/milestone-4-evidence.md`.
 
-## Milestone 5: Verify and deliver
+## Milestone 5: Verify and deliver — completed
 
 - [x] Run `cargo xtask check --suite repository` and the complete
       `cargo xtask check`. Require a 100% pass rate. Rerun only failing
@@ -221,17 +220,20 @@ Evidence: `.context/test-helper-export-ratchet/milestone-4-evidence.md`.
       after the commit. Confirm every deletion is one this plan approves.
 - [x] Run `git add -A`, commit with Conventional Commits, and push the branch
       with every new file tracked.
-- [ ] After the push, review the complete diff against `origin/main` with
+- [x] After the push, review the complete diff against `origin/main` with
       `docs/implementation-review-prompt.md`, report numbered findings, then
       apply the review-fix rule in `docs/dev/review.md`: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest.
 
 Review: `.context/test-helper-export-ratchet/review-1.md`; findings 1 and 3 are fixed in this round.
 
+Re-review: `.context/test-helper-export-ratchet/review-2.md`; the re-review confirmed fixes for findings 1 and 3; finding 4 is fixed in round 2.
+
 2 — Low, test: no test proves that the helper scope skips linked module files; recommended option A adds one Git-backed test. Awaits the user.
 
 Evidence: `.context/test-helper-export-ratchet/milestone-5-evidence.md`.
 Review fix evidence: `.context/test-helper-export-ratchet/review-1-fixes-evidence.md`.
+Round 2 evidence: `.context/test-helper-export-ratchet/review-2-fixes-evidence.md`.
 
 ## Post-merge follow-up (non-blocking)
 

@@ -64,13 +64,15 @@ an org key and every availability check pass. It otherwise selects local mode.
 The [repository ratchet contract](../docs/protocol/verification-ratchets.md) owns
 the exact scopes and exceptions. Length, protocol-cap, unused-internal-export,
 and unused-test-helper-export analysis compare against
-`git merge-base HEAD origin/main`. Export findings come from candidates under
-`src/`, `packages/viewer/src/`, and `scripts/` for the source scope, and under
-`tests/` and `packages/viewer/tests/` for the test helper scope. Both scopes share
-a graph of every regular repository module with a `.ts`, `.tsx`, `.mts`, `.cts`,
-`.js`, `.mjs`, or `.cjs` extension, except declaration files (`.d.ts`, `.d.mts`,
-and `.d.cts`). The internal-export baseline rejects entries absent at that merge
-base, and protocol caps scan `docs/protocol/**` recursively except `fixtures/`. The
+`git merge-base HEAD origin/main`. The length ratchet covers added, renamed, or
+changed `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.mjs`, and `.cjs` modules under
+`src/`, `packages/viewer/src/`, and `scripts/`. Export findings come from
+candidates under these three roots for the source scope, and under `tests/` and
+`packages/viewer/tests/` for the test helper scope. Both scopes share a graph of
+every regular repository module with these extensions, except declaration
+files (`.d.ts`, `.d.mts`, and `.d.cts`). Other non-candidate modules stay in that
+graph. The internal-export baseline rejects entries absent at that merge base,
+and protocol caps scan `docs/protocol/**` recursively except `fixtures/`. The
 public-package-export ratchet instead compares each released package with its
 newest matching release tag reachable from `HEAD`. Full history and tags are
 required; when a release manifest records a release but the tag is unavailable,
@@ -86,11 +88,8 @@ bootstrap; after the file lands, candidate entries must already exist at the
 merge base.
 
 The [test helper scope](../docs/protocol/verification-ratchets-test-helpers.md)
-scans candidates under `tests/` and `packages/viewer/tests/` with the same
-module extensions and merge-base rule.
-Both scopes share a graph that excludes declaration files. Other non-candidate
-modules stay in that graph. The audit runs after unused-internal-export
-and before public-package-export in both gates.
+audit runs after unused-internal-export and before public-package-export in both
+gates.
 Test helper exceptions use a separate shrink-only baseline,
 [`unused-test-helper-exports.txt`](./unused-test-helper-exports.txt).
 It requires exact sorted keys and the same discovered-set, stale-entry,
