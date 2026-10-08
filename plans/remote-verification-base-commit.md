@@ -330,7 +330,7 @@ Evidence: `.context/remote-verification-base-commit/milestone-3.md` and
       lints, the local repository gate and the Markdown checks. Commit and
       push.
 
-## Milestone 4: Verification, close-out and review
+## Milestone 4: Verification, close-out and review — completed
 
 The complete gate passes on Testboxes from a branch with unpushed commits. The
 review runs after the push.
@@ -351,7 +351,7 @@ under `.context/remote-verification-base-commit/`.
       mainline preservation audit from the Git rules.
 - [x] After the checks pass, run `git add -A`, commit with Conventional
       Commits and push the branch.
-- [ ] After the push, a reviewer uses
+- [x] After the push, a reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and reports the
       findings. Keep the review read-only. The implementer then applies the
