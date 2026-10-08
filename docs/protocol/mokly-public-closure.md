@@ -87,12 +87,27 @@ for identical input bytes. Watch can retain invalid logical locations and prior
 edges solely so a repair triggers another pass. Invalid/recovery evidence never
 adds serving authority. Serve replaces its full closure only with a successful
 checked result; on-demand additions belong only to the same accepted generation.
+A checked result replaces only the checked closure. The on-demand additions of
+the same generation remain until the generation changes.
 A failed candidate retains the last accepted generation and its authority.
 A running server can adopt a new source generation before its checked result,
 for example after a resource reload or a rebuild that keeps the manifest
 structure. It then keeps the last checked closure and drops only the on-demand
 additions of the earlier generation. The update that announces the generation
 must not make a file in the checked closure return 404.
+
+A resource reload reuses the earlier compilation, so the manifest closure of a
+completed reload pass can be older than the watched closure. Each completion
+therefore carries the parent's current checked closure, and the child serves
+that list instead of the manifest closure. An update message carries no list,
+so it cannot change the checked closure. A restarted watched child starts
+with the last checked closure unless the parent reloaded the config file. This
+covers a restart watch rule, crash recovery and a structural rebuild, including
+a rebuild whose new imports replace the source watcher. After a config-file
+change, the new child starts without a checked closure, because the earlier
+list can name files that the new configuration does not reference. Until its
+first checked result, it serves only the on-demand additions of its own
+generation.
 
 ## Serve Reads And Publication
 
@@ -116,8 +131,13 @@ and renderer resources. Assert exact equality between compiler and Watch
 closures. Fetch the linked page and PDF through watched Serve before and after
 resource changes. In-process, adopt a new generation before its checked result:
 the checked PDF stays readable, and a file that only an on-demand render of the
-earlier generation added returns 404. Verify protected declarations fail with
-the referring route.
+earlier generation added returns 404. After two resource reloads, the second
+completion keeps the PDF that the first reload linked, although the reused
+manifest closure lacks it. Block the background write of a structural rebuild:
+the restarted child still serves the checked PDF. A rebuild that adds an
+import outside the entry roots also keeps the list. After a config-file change,
+the new child receives no list. Verify protected declarations fail with the
+referring route.
 Replace an accepted file and an ancestor with symlinks and require GET/HEAD 404.
 
 Exercise allowed authored script/map/build-folder names and denied actual
