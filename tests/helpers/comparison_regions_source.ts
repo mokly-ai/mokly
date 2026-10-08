@@ -14,10 +14,10 @@
 export const REGIONS_CHANGED_COUNT = 4;
 
 /** Height in CSS pixels of every block inside a main panel or page. */
-export const REGION_BLOCK_HEIGHT = 300;
+const REGION_BLOCK_HEIGHT = 300;
 
 /** Blocks in the shell's main panel; Current's panel is the shorter one. */
-export const REGION_MAIN_BLOCKS = { before: 10, after: 8 } as const;
+const REGION_MAIN_BLOCKS = { before: 10, after: 8 } as const;
 
 /** The stylesheet every region document links. */
 export const REGION_STYLES = `body { margin: 0; font: 16px/1.5 sans-serif; background: rgb(250, 250, 250); }

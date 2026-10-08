@@ -29,7 +29,7 @@ export const page = {
   title: "Removed page",
 };
 
-export const baseline = currentManifest({
+const baseline = currentManifest({
   entries: [page],
   generatedBy: "mokly" as const,
   schemaVersion: 9 as const,
@@ -47,7 +47,7 @@ export const pageSource: RemovedPagePreviewSource = {
   schemaVersion: 3,
 };
 
-export const reviewSource: SelectedReviewSource = {
+const reviewSource: SelectedReviewSource = {
   after: currentManifest({
     entries: [],
     generatedBy: "mokly",
@@ -94,7 +94,7 @@ export function pageArtifact(
   };
 }
 
-export function reviewArtifact(): ReviewArtifact {
+function reviewArtifact(): ReviewArtifact {
   return {
     files: new Map([
       [

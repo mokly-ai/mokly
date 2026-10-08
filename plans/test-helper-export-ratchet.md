@@ -1,13 +1,15 @@
 # Test Helper Export Ratchet
 
-Status: Active. Plan created on 2026-10-08 with the user's consent. No
-milestone has started.
+Status: Active. Plan created on 2026-10-08 with the user's consent. Milestones
+1 to 4 are complete. The test helper baseline is empty. In Milestone 5, the
+complete gate has passed. The commit, push, and post-push review follow.
 
 ## Status And Outcome
 
-The unused-internal-export ratchet scans `src`, `packages/viewer/src`, and
-`scripts`. It never scans `tests` or `packages/viewer/tests`. A test helper can
-therefore export a function that no test imports, and no gate reports it. The
+Before this plan, the unused-internal-export ratchet scanned `src`,
+`packages/viewer/src`, and `scripts`. It did not scan `tests` or
+`packages/viewer/tests`. A test helper could therefore export a function that no
+test imported, and no gate reported it. The
 post-push review of this branch found one such helper,
 `mountedRegistrySessions` in `packages/viewer/tests/frame_registry_harness.tsx`.
 A scan of both test roots with the existing resolver found more:
@@ -18,7 +20,7 @@ A scan of both test roots with the existing resolver found more:
 | Unused named value exports                    | 81    |
 | Helper files that no module imports           | 6     |
 
-The six orphan files are `tests/helpers/fake_dom.ts`,
+The scan found six orphan files: `tests/helpers/fake_dom.ts`,
 `tests/helpers/fake_markup.ts`, `tests/helpers/publish_exchange_fixture.ts`,
 `tests/removed_preview_delivery_fixture.ts`,
 `tests/browser/removed_preview_observers.ts`, and
@@ -39,7 +41,7 @@ product behavior, UI, or mockups.
 Contract owners:
 
 - [Repository verification ratchets](../docs/protocol/verification-ratchets.md)
-  and its new continuation page for test helper exports.
+  and the [test helper export contract](../docs/protocol/verification-ratchets-test-helpers.md).
 - [CI verification](../docs/protocol/ci-verification.md).
 - [Local verification](../xtask/README.md).
 
@@ -55,8 +57,9 @@ scan output, measured at merge base `1086732`.
   extensions under a test helper root. These files are not candidates:
   `.test.ts` and `.test.tsx` files, which the strict unit discovery runs;
   `.spec.ts` files, which Playwright runs; declaration files; and every file
-  under `tests/fixtures/`, which tests load by path. Non-candidate files stay in
-  the module graph, so their imports still count as uses.
+  under `tests/fixtures/`, which tests load by path. Declaration files are
+  neither candidates nor importers in either scope. Other non-candidate modules
+  stay in the shared graph, so their imports still count as uses.
 - **Path-loaded modules.** A module that only a path string loads, such as an
   esbuild entry point or the Playwright `globalSetup` file, has no static
   importer. Such a module must not have a named value export that nothing
@@ -79,83 +82,135 @@ scan output, measured at merge base `1086732`.
   the six orphan files, and the deletion of `mountedRegistrySessions`. Every
   further deletion in Milestone 4 is listed in the commit description.
 
-## Milestone 1: Define the test helper export contract
+## Milestone 1: Define the test helper export contract — completed
 
 Document the new scope before changing the ratchet.
 
-- [ ] Add `docs/protocol/verification-ratchets-test-helpers.md` as a
+- [x] Add `docs/protocol/verification-ratchets-test-helpers.md` as a
       continuation of the ratchet contract. Define the roots, the candidate
       rule, the non-candidate files, the path-loaded module rule, the baseline
       file and its bootstrap, the finding and summary text, and gate placement
       after the internal-export audit in the repository suite and the complete
       gate.
-- [ ] Link the new page from `verification-ratchets.md` and keep that page at
+- [x] Link the new page from `verification-ratchets.md` and keep that page at
       or under 250 lines. Index the page in `docs/protocol/README.md` and add
       it to the page list in `tests/protocol_split_links.test.ts`.
-- [ ] Update the repository row and the ratchet paragraph in
+- [x] Update the repository row and the ratchet paragraph in
       `docs/protocol/ci-verification.md`, and the scope, exception, and file
       list paragraphs in `xtask/README.md`.
-- [ ] Run `npm run format:check`, the Markdown link test, and the protocol
-      structure tests. Review the documentation diff.
+- [x] Run `npm run format:check`, the Markdown link test, and the protocol
+      structure tests. Run `cargo xtask source-file-length-lint`. Review the
+      documentation diff.
 
-## Milestone 2: Scan the test helper roots
+Evidence: `.context/test-helper-export-ratchet/milestone-1-evidence.md`.
+
+## Milestone 2: Scan the test helper roots — completed
 
 Add the second scope to the ratchet without changing the source-root results.
 
-- [ ] Parameterize `scripts/verification/ratchets/internal-exports.mjs` by
+- [x] Apply the reviewer's documentation corrections: exclude declarations from
+      both import graphs, correct the live test TODO, group the README scope
+      and baseline text, and move the unchanged Node CI text to its own paragraph.
+- [x] Parameterize `scripts/verification/ratchets/internal-exports.mjs` by
       scope: label, roots, baseline file, non-candidate rule, and message
       prefix. Split a module if any file would pass 300 lines.
-- [ ] Register the `Unused test helper export` audit in
+- [x] Register the `Unused test helper export` audit in
       `scripts/verification/repository-ratchets.mjs` after the internal-export
       audit. Update `repository-ratchets.d.mts` for any changed signature.
-- [ ] Bootstrap `xtask/unused-test-helper-exports.txt` from the scan of this
+- [x] Analyze both candidate sets once per run. Share the graph result and any
+      operational error across the two export audits.
+- [x] Preserve source counts for linked paths. Keep unused keys with a hash in
+      the module path during scope partition. Add regression tests first.
+- [x] Bootstrap `xtask/unused-test-helper-exports.txt` from the scan of this
       branch, sorted and exact.
-- [ ] Add unit tests in `tests/repository_ratchets.test.ts`: a `.test.ts`
-      file and a `.spec.ts` file are not candidates but their imports count; a
-      `tests/fixtures/` module is not a candidate; a declaration file is not a
-      candidate; the scope-specific baseline prefix check; the finding and
-      summary text.
-- [ ] Add Git-backed tests in `tests/repository_ratchets_git.test.ts`: a new
+- [x] Add unit tests in the new `tests/test_helper_export_ratchet.test.ts`:
+      `.test.ts`, `.test.tsx`, and `.spec.ts` files are not candidates but their
+      imports count; exact suffix and `tests/fixtures/` exclusions; declaration
+      files are neither candidates nor importers in either scope; root config
+      and source imports count; path-only loads do not use named exports; the
+      scope-specific baseline prefix check; the finding, format-error, and
+      summary text. Do not extend the 301-line `repository_ratchets.test.ts`.
+- [x] Add Git-backed tests in the new
+      `tests/test_helper_export_ratchet_git.test.ts`: a new
       unused export under `tests/helpers` fails; the same export in a
       `.test.ts` file passes; a comparison commit that predates the baseline
       file permits the bootstrap; an entry absent at the comparison commit
-      fails afterwards; the source-root audit output is unchanged.
-- [ ] Run the focused ratchet tests and
-      `cargo xtask check --suite repository`. Require a 100% pass rate.
+      fails afterwards; a missing current baseline fails and names its file;
+      the source-root audit output is unchanged. Keep changed test files at or
+      under 300 lines.
+- [x] Add the new baseline file to the fixture repositories in
+      `tests/repository_ratchets_git.test.ts`, which run every repository
+      ratchet. Check their updated output without changing their existing
+      assertions.
+- [x] Change the test helper protocol page's Delivery Status to implemented.
+      Align the current ratchet count and scope in `verification-ratchets.md`,
+      `ci-verification.md`, and `xtask/README.md` with the implementation.
+- [x] Smoke-test a temporary unused export in a real helper. Confirm the exact
+      finding with the repository ratchets, then remove the temporary export.
+- [x] Run the focused ratchet tests, protocol structure and Markdown link
+      tests, Prettier, ESLint on changed files, the source file-length audit,
+      and `cargo xtask check --suite repository`. Require a 100% pass rate.
 
-## Milestone 3: Delete the orphan helpers
+Evidence: `.context/test-helper-export-ratchet/milestone-2-evidence.md`.
+
+## Milestone 3: Delete the orphan helpers — completed
 
 Remove the approved dead code and shrink the new baseline.
 
-- [ ] Delete the six orphan files named above and `mountedRegistrySessions`
+- [x] Apply the reviewer's scope correction: remove the unused candidate flag
+      branch and narrow the shared analysis input to module path and source.
+- [x] Prove each orphan has no loader before deleting it. Search all repository
+      file-stem references, including path strings and configuration.
+- [x] Delete the six orphan files named above and `mountedRegistrySessions`
       with its unused `ShellFrameRegistry` import.
-- [ ] Rewrite `tests/component_authoring_types.tsx` so it exports nothing, in
+- [x] Rewrite `tests/component_authoring_types.tsx` so it exports nothing, in
       the style of `tests/authoring_variant_types.ts`. Keep every type check.
-- [ ] Remove the matching baseline lines. Search `docs/`, `plans/`, and every
+- [x] Confirm both TypeScript projects include the remaining viewer fixture.
+      Confirm the root project includes the authoring type checks. Remove one
+      expected-error directive temporarily, confirm the type error, then restore it.
+- [x] Remove the matching baseline lines. Search `docs/`, `plans/`, and every
       `README.md` for the deleted names; `plans/screen-variants.md` names
       `fake_dom.ts` only in history, so leave it.
-- [ ] Record under finding 83 in `plans/generated-output-simplification.md`
-      that this plan removes the helpers. Do not change the finding's words.
-- [ ] Run the focused tests for the frame registry harness, the component
+- [x] Add a sentence to the live status paragraph of
+      `plans/generated-output-simplification.md`: finding 83 is resolved by
+      [Test Helper Export Ratchet](./test-helper-export-ratchet.md).
+      Do not change the historical finding list under completed Milestone 23.
+- [x] Run the focused tests for the frame registry harness, the component
       workspace fixture, and the ratchets. Require a 100% pass rate.
 
-## Milestone 4: Triage the remaining baseline entries
+Evidence: `.context/test-helper-export-ratchet/milestone-3-evidence.md`.
+
+## Milestone 4: Triage the remaining baseline entries — completed
 
 Apply the cleanup policy to every entry left after Milestone 3. Work file by
 file. Keep the tree green after each file.
 
-- [ ] Triage `tests/server_fixture.ts`, `tests/review_fixture.ts`,
+- [x] Triage `tests/server_fixture.ts`, `tests/review_fixture.ts`,
       `tests/authoring_fixture.tsx`, and `tests/browser/*.ts` entries.
-- [ ] Triage the `tests/helpers/*.ts` entries.
-- [ ] Triage the `packages/viewer/tests/*.ts` entries.
-- [ ] Record each kept entry and its reason in this section. Record each
+- [x] Triage the `tests/helpers/*.ts` entries.
+- [x] Triage the `packages/viewer/tests/*.ts` entries.
+- [x] Record each kept entry and its reason in this section. Record each
       deletion in the commit description.
-- [ ] Run the focused tests for every changed helper and the ratchet tests.
-      Require a 100% pass rate.
+- [x] Record every action and cascade in
+      `.context/test-helper-export-ratchet/milestone-4-triage.md`.
+      Resolve cascades without adding baseline entries.
+- [x] Run every unit test and Playwright spec that imports a changed helper,
+      directly or transitively. Run both TypeScript projects, ESLint, Prettier,
+      the source file-length audit, ratchet tests, and the repository suite.
+      Require a 100% pass rate. Rerun an unrelated failure once and report it.
+
+No baseline entry is kept. No cascade arose during cleanup.
+
+Decision: Delete `tests/server_fixture.ts` as the seventh orphan. No module
+loads it, and its seven definitions are unused. The file probe missed it because
+`packages/viewer/tests/server_fixture.ts` has the same file stem. Tests load the
+viewer fixture, not the root fixture.
+
+Evidence: `.context/test-helper-export-ratchet/milestone-4-evidence.md`.
 
 ## Milestone 5: Verify and deliver
 
-- [ ] Run `cargo xtask check --suite repository` and the complete
+- [x] Run `cargo xtask check --suite repository` and the complete
       `cargo xtask check`. Require a 100% pass rate. Rerun only failing
       tests after a fix, then rerun the complete gate.
 - [ ] Run the mainline preservation audit in `docs/dev/git.md` before and
@@ -166,6 +221,8 @@ file. Keep the tree green after each file.
       `docs/implementation-review-prompt.md`, report numbered findings, then
       apply the review-fix rule in `docs/dev/review.md`: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest.
+
+Evidence: `.context/test-helper-export-ratchet/milestone-5-evidence.md`.
 
 ## Post-merge follow-up (non-blocking)
 

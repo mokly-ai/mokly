@@ -1,15 +1,18 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { isSourceModulePath } from "./lines.mjs";
+import {
+  analyzeExportScopes,
+  INTERNAL_EXPORT_SCOPE,
+  isExportModulePath,
+  TEST_HELPER_EXPORT_SCOPE,
+} from "./export-scopes.mjs";
 import { discoverUnusedInternalExports } from "./module-graph.mjs";
 import {
   javascriptExportTargets,
   sourcePathForExport,
 } from "./package-exports.mjs";
 
-const BASELINE = "xtask/unused-internal-exports.txt";
-const SOURCE_ROOTS = ["src", "packages/viewer/src", "scripts"];
 const PACKAGE_ROOTS = ["", "packages/viewer"];
 
 /** Compare discovered unused exports with one exact shrinking baseline. */
@@ -25,7 +28,18 @@ export function internalExportAudit({
     publicEntrypoints,
     ...(aliases ? { aliases } : {}),
   });
-  const findings = baselineFormatFindings(baseline);
+  return exportScopeAudit(
+    { unused, baseline, baselineAtComparison },
+    INTERNAL_EXPORT_SCOPE,
+  );
+}
+
+/** Compare one scope's discovered keys with its own exact shrinking baseline. */
+export function exportScopeAudit(
+  { unused, baseline, baselineAtComparison },
+  scope,
+) {
+  const findings = baselineFormatFindings(baseline, scope);
   const allowed = new Set(baseline);
   const discovered = new Set(unused);
   if (baselineAtComparison) {
@@ -38,7 +52,7 @@ export function internalExportAudit({
     }
   }
   for (const key of unused) {
-    if (!allowed.has(key)) findings.push(`new unused internal export: ${key}`);
+    if (!allowed.has(key)) findings.push(`new ${scope.label}: ${key}`);
   }
   for (const key of baseline) {
     if (!discovered.has(key))
@@ -47,40 +61,92 @@ export function internalExportAudit({
   return { findings: [...new Set(findings)].sort(), unused };
 }
 
-/** Audit current source exports and the reviewed baseline. */
-export function auditInternalExports(repositoryRoot, git) {
-  const candidateFiles = new Set(
-    git
-      .currentFiles(SOURCE_ROOTS)
-      .filter((file) => isSourceModulePath(file) && !isDeclarationPath(file))
-      .filter((file) => fs.existsSync(path.join(repositoryRoot, file)))
-      .map(normalize),
+/** Lazily share one graph result or one operational failure across both audits. */
+export function createExportAnalysis(repositoryRoot, git) {
+  let outcome;
+  return () => {
+    if (!outcome) {
+      try {
+        const { modules, internalModuleCount } = readModules(
+          repositoryRoot,
+          git,
+        );
+        const surface = readPublicSurface(repositoryRoot);
+        outcome = {
+          value: analyzeExportScopes({
+            modules,
+            publicEntrypoints: surface.entrypoints,
+            aliases: surface.aliases,
+          }),
+        };
+        outcome.value.internal.moduleCount = internalModuleCount;
+      } catch (error) {
+        outcome = { error };
+      }
+    }
+    if ("error" in outcome) throw outcome.error;
+    return outcome.value;
+  };
+}
+
+/** Audit current source exports without changing the existing scope's output. */
+export function auditInternalExports(
+  repositoryRoot,
+  git,
+  analyze = createExportAnalysis(repositoryRoot, git),
+) {
+  return auditScopeExports(repositoryRoot, git, INTERNAL_EXPORT_SCOPE, analyze);
+}
+
+/** Audit test helper exports with a separate baseline and separate diagnostics. */
+export function auditTestHelperExports(
+  repositoryRoot,
+  git,
+  analyze = createExportAnalysis(repositoryRoot, git),
+) {
+  return auditScopeExports(
+    repositoryRoot,
+    git,
+    TEST_HELPER_EXPORT_SCOPE,
+    analyze,
   );
-  const modules = git
+}
+
+/** Keep the source scope's existing count while parsing only regular modules. */
+function readModules(repositoryRoot, git) {
+  const files = git
     .currentFiles(["."])
-    .filter(isModulePath)
-    .filter((file) => fs.existsSync(path.join(repositoryRoot, file)))
+    .filter(isExportModulePath)
+    .filter((file) => fs.existsSync(path.join(repositoryRoot, file)));
+  const internalModuleCount = new Set(
+    files
+      .map(normalize)
+      .filter((file) =>
+        INTERNAL_EXPORT_SCOPE.roots.some((root) => file.startsWith(`${root}/`)),
+      ),
+  ).size;
+  const modules = files
     .filter((file) => fs.lstatSync(path.join(repositoryRoot, file)).isFile())
     .map((file) => ({
       path: normalize(file),
       source: fs.readFileSync(path.join(repositoryRoot, file), "utf8"),
-      candidate: candidateFiles.has(normalize(file)),
     }));
-  const baseline = readBaseline(path.join(repositoryRoot, BASELINE));
-  const baselineAtComparison = git.baseFileExists(BASELINE)
-    ? parseBaseline(git.readBase(BASELINE))
+  return { modules, internalModuleCount };
+}
+
+function auditScopeExports(repositoryRoot, git, scope, analyze) {
+  const { unused, moduleCount } = analyze()[scope.id];
+  const baseline = readBaseline(path.join(repositoryRoot, scope.baseline));
+  const baselineAtComparison = git.baseFileExists(scope.baseline)
+    ? parseBaseline(git.readBase(scope.baseline))
     : undefined;
-  const publicSurface = readPublicSurface(repositoryRoot);
-  const result = internalExportAudit({
-    modules,
-    publicEntrypoints: publicSurface.entrypoints,
-    baseline,
-    baselineAtComparison,
-    aliases: publicSurface.aliases,
-  });
+  const result = exportScopeAudit(
+    { unused, baseline, baselineAtComparison },
+    scope,
+  );
   return {
     findings: result.findings,
-    summary: `${candidateFiles.size} JavaScript/TypeScript module(s), ${result.unused.length} baseline exception(s)`,
+    summary: `${moduleCount} ${scope.moduleLabel} module(s), ${unused.length} baseline exception(s)`,
   };
 }
 
@@ -95,28 +161,18 @@ function parseBaseline(value) {
   return lines;
 }
 
-function baselineFormatFindings(baseline) {
+function baselineFormatFindings(baseline, scope) {
   const findings = [];
   const sorted = [...baseline].sort();
   if (baseline.some((entry, index) => entry !== sorted[index]))
-    findings.push("unused internal export baseline must be sorted");
+    findings.push(`${scope.label} baseline must be sorted`);
   if (new Set(baseline).size !== baseline.length)
-    findings.push("unused internal export baseline contains duplicates");
+    findings.push(`${scope.label} baseline contains duplicates`);
   for (const entry of baseline) {
-    if (
-      !/^(?:src|packages\/viewer\/src|scripts)\/[^#\s]+#[^#\s]+$/u.test(entry)
-    )
-      findings.push(`invalid unused internal export baseline entry: ${entry}`);
+    if (!scope.baselinePattern.test(entry))
+      findings.push(`invalid ${scope.label} baseline entry: ${entry}`);
   }
   return findings;
-}
-
-function isModulePath(file) {
-  return isSourceModulePath(file) && !isDeclarationPath(file);
-}
-
-function isDeclarationPath(file) {
-  return /\.d\.[cm]?ts$/u.test(file);
 }
 
 function readPublicSurface(repositoryRoot) {

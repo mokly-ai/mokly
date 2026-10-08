@@ -10,7 +10,7 @@ export const SCHEME_DOT = '[data-view-changed="scheme"]';
 
 export const VIEWPORT_DOT = '[data-view-changed="viewport"]';
 
-export const TOOLBAR = ".mbk-diff-toolbar";
+const TOOLBAR = ".mbk-diff-toolbar";
 
 /** The mark's painted geometry, so a hidden dot cannot pass as a drawn one. */
 export async function dotStyle(page: Page, selector: string) {

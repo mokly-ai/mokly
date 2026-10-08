@@ -36,23 +36,6 @@ export async function chooseVariant(page: Page, title: string): Promise<void> {
     .getByRole("link", { name: title, exact: true })
     .click();
 }
-/** Assert the actual immediate document, including history-replacing frame swaps. */
-export async function expectFramePath(
-  page: Page,
-  selector: string,
-  path: RegExp,
-): Promise<void> {
-  await expect
-    .poll(() =>
-      page
-        .locator(selector)
-        .evaluate(
-          (frame: HTMLIFrameElement) =>
-            frame.contentWindow?.location.href ?? "",
-        ),
-    )
-    .toMatch(path);
-}
 export async function expectFrameSource(
   frame: Locator,
   source: RegExp | string,

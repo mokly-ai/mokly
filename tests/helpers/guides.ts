@@ -68,7 +68,7 @@ function parseGuide(filename: string, section: GuideSection): GuidePage {
   };
 }
 
-export function loadGuides(): readonly GuidePage[] {
+function loadGuides(): readonly GuidePage[] {
   return GUIDE_SECTIONS.flatMap((section) => {
     const directory = path.join(guidesRoot, section);
     return readdirSync(directory, { withFileTypes: true })

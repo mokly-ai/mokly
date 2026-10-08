@@ -11,6 +11,38 @@ export interface InternalExportModule {
   candidate?: boolean;
 }
 
+/** One export candidate policy, baseline, and diagnostic vocabulary. */
+export interface ExportScope {
+  id: "internal" | "testHelpers";
+  roots: readonly string[];
+  baseline: string;
+  label: string;
+  moduleLabel: string;
+  baselinePattern: RegExp;
+  excludes(file: string): boolean;
+}
+
+/** Candidate count and unused keys from the shared graph. */
+export interface ExportScopeDiscovery {
+  moduleCount: number;
+  unused: string[];
+}
+
+export const TEST_HELPER_EXPORT_SCOPE: ExportScope;
+export function analyzeExportScopes(input: {
+  modules: readonly { path: string; source: string }[];
+  publicEntrypoints: readonly string[];
+  aliases?: Readonly<Record<string, string>>;
+}): { internal: ExportScopeDiscovery; testHelpers: ExportScopeDiscovery };
+export function exportScopeAudit(
+  input: {
+    unused: readonly string[];
+    baseline: readonly string[];
+    baselineAtComparison?: readonly string[];
+  },
+  scope: ExportScope,
+): { findings: string[]; unused: readonly string[] };
+
 export function countPhysicalLines(value: string | Buffer): number;
 export function typeScriptLengthFindings(
   changes: readonly TypeScriptLengthInput[],

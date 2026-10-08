@@ -154,13 +154,11 @@ export function assertViolation(
   );
 }
 
-export function attributed<T extends object>(
-  value: T,
-): T & { definedIn: string } {
+function attributed<T extends object>(value: T): T & { definedIn: string } {
   return __attributeDefinition(value, sourceRelativePath);
 }
 
-export function resolved(definition: EntryDefinition): ResolvedRegistryEntry {
+function resolved(definition: EntryDefinition): ResolvedRegistryEntry {
   return Object.assign(
     definition,
     resolvedEntry(definition, sourceRelativePath),

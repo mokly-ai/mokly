@@ -177,7 +177,7 @@ export function scrollRegion(
 }
 
 /** Let a few rendering updates of the page pass. */
-export async function passRenderingUpdates(page: Page): Promise<void> {
+async function passRenderingUpdates(page: Page): Promise<void> {
   for (let frames = 0; frames < 3; frames += 1)
     await page.evaluate(
       () => new Promise((resolve) => requestAnimationFrame(resolve)),

@@ -11,7 +11,7 @@ export const BRANCH_POINT_WIDTHS = [
 ] as const;
 
 /** One crumb as `label -> href`, `label [button]`, or `label [text]`. */
-export async function crumbs(page: Page): Promise<string[]> {
+async function crumbs(page: Page): Promise<string[]> {
   return page
     .locator(".mbk-screen-head .mbk-crumbs > span")
     .evaluateAll((spans) =>

@@ -70,7 +70,7 @@ export function browseRecovery() {
   return { ...recovery, changedOnly: true };
 }
 
-export class FakeSource {
+class FakeSource {
   closed = false;
   private listeners = new Map<string, (event: { data: string }) => void>();
 

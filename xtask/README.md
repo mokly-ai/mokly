@@ -13,8 +13,9 @@ internal binary and is not published to npm or crates.io.
   protocol Markdown (250 lines or an exact reviewed cap in
   `xtask/protocol-document-caps.json`) limits against the
   fetched `origin/main` baseline.
-- Ratchet JavaScript/TypeScript length, protocol caps, and internal exports
-  against the branch point, and published-package exports against release tags.
+- Ratchet JavaScript/TypeScript length, protocol caps, internal exports, and
+  test helper exports against the branch point, and published-package exports
+  against release tags.
 - Keep the complete local gate aligned with the approved independent CI suites.
 - Run explicit and automatic remote checks on 11 Testboxes with complete shard
   evidence.
@@ -61,8 +62,8 @@ are partial verification. The unqualified command runs the complete gate.
 `--executor remote` runs that gate on Testboxes. `auto` selects remote mode when
 an org key and every availability check pass. It otherwise selects local mode.
 The [repository ratchet contract](../docs/protocol/verification-ratchets.md) owns
-the exact scopes and exceptions. Length, protocol-cap, and
-unused-internal-export analysis compare against
+the exact scopes and exceptions. Length, protocol-cap, unused-internal-export,
+and unused-test-helper-export analysis compare against
 `git merge-base HEAD origin/main`; module analysis covers `.ts`, `.tsx`, `.mts`,
 `.cts`, `.js`, `.mjs`, and `.cjs` under the three source roots, the
 internal-export baseline rejects entries absent at that merge base, and protocol
@@ -70,17 +71,32 @@ caps scan `docs/protocol/**` recursively except `fixtures/`. The
 public-package-export ratchet instead compares each released package with its
 newest matching release tag reachable from `HEAD`. Full history and tags are
 required; when a release manifest records a release but the tag is unavailable,
-fetch them with `git fetch --tags origin` and retry. All four checks belong to
+fetch them with `git fetch --tags origin` and retry. All five checks belong to
 the repository suite and complete gate.
 
-The sole current unused-export exception is the component renderer imported by
-generated consumer-module source: `src/build/consumer_entry.ts` emits that
-re-export as source text, so there is no static module edge for the analyser to
-follow. Its exact entry lives in the shrink-only reviewed baseline. A comparison
-commit that predates the baseline file permits that one-time bootstrap; after
-the file lands, candidate entries must already exist at the merge base. Ordinary
-CI runs functional suites on the minimum Node 22.14 runtime. Release Please pull
-requests add Node 24; CI resolves the latest patch in its repository
+The sole current unused-internal-export exception is the component renderer
+imported by generated consumer-module source: `src/build/consumer_entry.ts`
+emits that re-export as source text, so there is no static module edge for the
+analyser to follow. Its exact entry lives in the shrink-only reviewed baseline.
+A comparison commit that predates the baseline file permits that one-time
+bootstrap; after the file lands, candidate entries must already exist at the
+merge base.
+
+The [test helper scope](../docs/protocol/verification-ratchets-test-helpers.md)
+scans candidates under `tests/` and `packages/viewer/tests/` with the same
+module extensions and merge-base rule.
+Both scopes share a graph that excludes declaration files. Other non-candidate
+modules stay in that graph. The audit runs after unused-internal-export
+and before public-package-export in both gates.
+Test helper exceptions use a separate shrink-only baseline,
+[`unused-test-helper-exports.txt`](./unused-test-helper-exports.txt).
+It requires exact sorted keys and the same discovered-set, stale-entry,
+comparison-commit, and one-time bootstrap rules. A missing current baseline
+fails and names the file, including during bootstrap.
+The test helper baseline is currently empty. Keep the empty file in Git.
+
+Ordinary CI runs functional suites on the minimum Node 22.14 runtime. Release
+Please pull requests add Node 24; CI resolves the latest patch in its repository
 prerequisite and explicitly shares that exact result with dependent jobs,
 keeping shard evidence consistent across runner caches. The single release
 publishing job independently resolves the latest Node 24.
@@ -295,9 +311,11 @@ They do not assert elapsed time.
   [`internal-exports.mjs`](../scripts/verification/ratchets/internal-exports.mjs),
   and
   [`public-exports.mjs`](../scripts/verification/ratchets/public-exports.mjs)
-  own the four policies.
+  own the five policies.
+  [`export-scopes.mjs`](../scripts/verification/ratchets/export-scopes.mjs)
+  selects both candidate sets for one shared module graph.
   [`package-exports.mjs`](../scripts/verification/ratchets/package-exports.mjs)
-  maps package export targets to source for both export audits, while
+  maps package export targets to source for the export audits, while
   [`public-export-surface.mjs`](../scripts/verification/ratchets/public-export-surface.mjs)
   expands relative star re-exports with the shared module resolver;
   [`module-commonjs.mjs`](../scripts/verification/ratchets/module-commonjs.mjs)
@@ -308,6 +326,10 @@ They do not assert elapsed time.
   shrinking exception baseline, and
   [`protocol-document-caps.json`](./protocol-document-caps.json) holds the
   reviewed protocol document caps.
+  [`unused-test-helper-exports.txt`](./unused-test-helper-exports.txt) is the
+  separate shrinking test helper baseline.
+- [`../tests/helpers/repository_ratchets.ts`](../tests/helpers/repository_ratchets.ts)
+  owns isolated Git fixtures and captured audit output for the focused tests.
 
 ### Related Docs
 

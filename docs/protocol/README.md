@@ -61,7 +61,7 @@ unsupported versions before content or path interpretation.
 - [CI workflow graph](./ci-workflow.md)
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, test concurrency, unit shard balance and scenario grouping, browser shard balance and acceptance measurement; the [example compilation snapshot](./ci-example-snapshot.md) defines the compiled example that unit test files share.
 - [CI test timing](./ci-test-timing.md) — deterministic assertions, duration reporting and lint guard.
-- [Repository verification ratchets](./verification-ratchets.md)
+- [Repository verification ratchets](./verification-ratchets.md), with the implemented [test helper export contract](./verification-ratchets-test-helpers.md).
 - [Catalogue upload v2](./mokly-upload.md) — public CLI, repository identity,
   upload manifest, output entry point and composite action boundary.
 - [Catalogue upload exchange v1](./mokly-upload-exchange.md) — Plan, Blob and

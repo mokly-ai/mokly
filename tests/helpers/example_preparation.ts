@@ -161,7 +161,7 @@ export async function exampleCommit(root: string): Promise<string> {
   ).stdout.trim();
 }
 
-export async function assertSourceOnlyExample(
+async function assertSourceOnlyExample(
   config: ResolvedConfig,
   commit: string,
 ): Promise<void> {
@@ -178,7 +178,7 @@ export async function assertSourceOnlyExample(
   await assert.rejects(fs.access(config.generatedDir), { code: "ENOENT" });
 }
 
-export function exampleBuilder(owned: OwnedExample): CachedBaselineBuilder {
+function exampleBuilder(owned: OwnedExample): CachedBaselineBuilder {
   return new CachedBaselineBuilder(
     new NodeBaselineFileSystem(),
     owned.runner,

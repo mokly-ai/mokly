@@ -26,9 +26,9 @@ function variant(id: string, title: string): ManifestComponentVariant {
   };
 }
 
-export const DEFAULT_VARIANT = variant("badge/default", "Default");
-export const SECOND_VARIANT = variant("badge/second", "Second");
-export const REMOVED_VARIANT = variant("badge/removed", "Removed");
+const DEFAULT_VARIANT = variant("badge/default", "Default");
+const SECOND_VARIANT = variant("badge/second", "Second");
+const REMOVED_VARIANT = variant("badge/removed", "Removed");
 
 export const component: ManifestComponent = {
   colorSchemes: ["light", "dark"],

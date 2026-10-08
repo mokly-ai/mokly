@@ -7,6 +7,7 @@ generated tree, a referenced authored closure, writer-only output locks, current
 The combined formats are manifest v9, catalogue v5 and review v6. Milestones
 24–28 contain the remaining review fixes. Findings 17 and 52 still await user
 decisions. Cloud rollout remains a non-blocking post-merge follow-up.
+Finding 83 is resolved by [Test Helper Export Ratchet](./test-helper-export-ratchet.md).
 
 ## Summary
 

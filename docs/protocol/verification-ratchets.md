@@ -2,16 +2,19 @@
 
 ## Delivery Status
 
-The file-length, protocol-cap, unused-internal-export, and
-public-package-export ratchets are implemented. Every ratchet in this document
+The file-length, protocol-cap, unused-internal-export, unused-test-helper-export,
+and public-package-export ratchets are implemented. Every ratchet in this document
 runs in the repository suite and the complete gate. The baseline dependency
 audit uses the same comparison-commit resolver. The protocol caps live in the
 JSON table `xtask/protocol-document-caps.json`, with a legacy reader for older
 comparison commits.
 
+The [test helper export contract](./verification-ratchets-test-helpers.md)
+owns the helper candidate rules and its separate baseline.
+
 This contract owns the maintainability ratchets run by the repository suite of
-`cargo xtask check`. The file-length, protocol-cap, and unused-internal-export
-ratchets resolve one comparison commit with
+`cargo xtask check`. The file-length, protocol-cap, unused-internal-export, and
+unused-test-helper-export ratchets resolve one comparison commit with
 `git merge-base HEAD origin/main`, then compare the working tree, including
 untracked files, with the tree or policy at that commit. Outside an uncommitted
 merge, the tip of `origin/main` is never their comparison tree. The
@@ -217,7 +220,7 @@ baseline entry rather than a wildcard suppression.
 
 ## Gate Placement And Evidence
 
-All four auditors are repository-suite operations and therefore run in both
+All five auditors are repository-suite operations and run in both
 `cargo xtask check --suite repository` and the unqualified complete gate. They
 run after the live dependency audit and report all findings in their own audit
 before returning failure. Focused unit tests cover boundary counts, new and
@@ -228,6 +231,10 @@ CommonJS use, attempted baseline growth, stale baseline removal, release-tag
 selection, public name and subpath removals, explicit exports, recursive star
 re-exports, unresolved star targets, release-note retention, and a moving
 `origin/main` whose merge base stays fixed.
+
+The test helper export audit shares one module graph with the internal-export
+audit. It runs after the unused-internal-export audit and before the
+public-package-export audit in both gates.
 
 The approved [API and member checks](./verification-api-members.md) add public
 signature reports with a release-note gate, an unused-member ratchet and a test

@@ -1,16 +1,13 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { runRepositoryRatchets } from "../scripts/verification/repository-ratchets.mjs";
-
-const legacyModule =
-  "export const knownUnused = 1;\n" + "void 0;\n".repeat(300);
-const longProtocolDocument =
-  "# Long contract\n" + "contract line\n".repeat(250);
+import {
+  captureRatchets,
+  createDivergedRepository,
+  git,
+} from "./helpers/repository_ratchets.js";
 
 test("repository ratchets stay anchored when origin/main moves", async (context) => {
   const fixture = await createDivergedRepository();
@@ -87,7 +84,7 @@ test("moving a capped protocol document into a subfolder keeps its cap", async (
   );
   await fs.writeFile(
     path.join(nested, "long.md"),
-    `${longProtocolDocument}one more line\n`,
+    `# Long contract\n${"contract line\n".repeat(250)}one more line\n`,
   );
   await fs.writeFile(
     path.join(fixture.root, "xtask/protocol-document-caps.json"),
@@ -102,97 +99,6 @@ test("moving a capped protocol document into a subfolder keeps its cap", async (
     /nested\/long\.md: cap 252 exceeds predecessor long\.md cap 251/u,
   );
 });
-
-async function createDivergedRepository() {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "mokly-ratchets-"));
-  await Promise.all([
-    fs.mkdir(path.join(root, "docs/protocol"), { recursive: true }),
-    fs.mkdir(path.join(root, "docs/protocol/fixtures"), { recursive: true }),
-    fs.mkdir(path.join(root, "packages/viewer"), { recursive: true }),
-    fs.mkdir(path.join(root, "scripts"), { recursive: true }),
-    fs.mkdir(path.join(root, "xtask"), { recursive: true }),
-  ]);
-  await Promise.all([
-    fs.writeFile(
-      path.join(root, "package.json"),
-      '{ "name": "ratchet-fixture", "exports": {} }\n',
-    ),
-    fs.writeFile(
-      path.join(root, "release-please-config.json"),
-      '{ "packages": { ".": {}, "packages/viewer": {} } }\n',
-    ),
-    fs.writeFile(
-      path.join(root, ".release-please-manifest.json"),
-      '{ ".": "0.0.0", "packages/viewer": "0.0.0" }\n',
-    ),
-    fs.writeFile(
-      path.join(root, "packages/viewer/package.json"),
-      '{ "name": "ratchet-viewer-fixture", "exports": {} }\n',
-    ),
-    fs.writeFile(
-      path.join(root, "docs/protocol/npm-release-notes.md"),
-      "# Release notes\n",
-    ),
-    fs.writeFile(path.join(root, "scripts/legacy.mjs"), legacyModule),
-    fs.writeFile(
-      path.join(root, "docs/protocol/long.md"),
-      longProtocolDocument,
-    ),
-    fs.writeFile(
-      path.join(root, "docs/protocol/fixtures/ignored.md"),
-      "fixture line\n".repeat(400),
-    ),
-    fs.writeFile(
-      path.join(root, "xtask/protocol-document-caps.json"),
-      '{ "long.md": 251 }\n',
-    ),
-    fs.writeFile(
-      path.join(root, "xtask/unused-internal-exports.txt"),
-      "scripts/legacy.mjs#knownUnused\n",
-    ),
-  ]);
-  git(root, "init", "--quiet", "--initial-branch=feature");
-  git(root, "config", "user.name", "Ratchet Tests");
-  git(root, "config", "user.email", "ratchets@example.invalid");
-  git(root, "add", ".");
-  git(root, "commit", "--quiet", "-m", "test: branch point");
-  const branchPoint = git(root, "rev-parse", "HEAD").trim();
-  git(root, "branch", "main");
-  await fs.writeFile(path.join(root, "feature.txt"), "feature branch\n");
-  git(root, "add", "feature.txt");
-  git(root, "commit", "--quiet", "-m", "test: feature work");
-  git(root, "switch", "--quiet", "main");
-  await Promise.all([
-    fs.rm(path.join(root, "scripts/legacy.mjs")),
-    fs.writeFile(
-      path.join(root, "docs/protocol/long.md"),
-      "# Shorter contract\n" + "contract line\n".repeat(249),
-    ),
-    fs.writeFile(path.join(root, "xtask/protocol-document-caps.json"), "{}\n"),
-    fs.writeFile(path.join(root, "xtask/unused-internal-exports.txt"), ""),
-  ]);
-  git(root, "add", "--all");
-  git(root, "commit", "--quiet", "-m", "test: advance main");
-  git(root, "update-ref", "refs/remotes/origin/main", "HEAD");
-  git(root, "switch", "--quiet", "feature");
-  return { branchPoint, root };
-}
-
-function captureRatchets(root: string) {
-  const output: string[] = [];
-  const original = console.error;
-  console.error = (...values: unknown[]) => output.push(values.join(" "));
-  try {
-    const passed = runRepositoryRatchets(root);
-    return { output: output.join("\n"), passed };
-  } finally {
-    console.error = original;
-  }
-}
-
-function git(root: string, ...args: string[]) {
-  return execFileSync("git", args, { cwd: root, encoding: "utf8" });
-}
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");

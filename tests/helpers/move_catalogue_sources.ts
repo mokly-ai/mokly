@@ -15,7 +15,7 @@ export interface MoveCatalogueOptions {
   unrelatedDocuments?: boolean;
 }
 
-export const meetingMarkdown =
+const meetingMarkdown =
   "# Meeting notes\n\nBudget estimates need approval.\nReview vendor invoices.\n\nArchive the quarterly minutes.";
 export const onboardingMarkdown =
   "# Onboarding\n\nCreate a personal account.\nChoose a profile picture.\n\nMeet your project team.";

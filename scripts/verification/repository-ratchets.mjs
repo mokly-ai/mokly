@@ -1,9 +1,16 @@
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import {
+  analyzeExportScopes,
+  TEST_HELPER_EXPORT_SCOPE,
+} from "./ratchets/export-scopes.mjs";
 import { GitWorkspace } from "./ratchets/git.mjs";
 import {
   auditInternalExports,
+  auditTestHelperExports,
+  createExportAnalysis,
+  exportScopeAudit,
   internalExportAudit,
 } from "./ratchets/internal-exports.mjs";
 import { parseProtocolCapTable } from "./ratchets/length-policy.mjs";
@@ -19,10 +26,13 @@ import {
 } from "./ratchets/typescript-length.mjs";
 
 export {
+  analyzeExportScopes,
   countPhysicalLines,
+  exportScopeAudit,
   internalExportAudit,
   parseProtocolCapTable,
   protocolCapFindings,
+  TEST_HELPER_EXPORT_SCOPE,
   typeScriptLengthFindings,
 };
 
@@ -43,13 +53,21 @@ export function publicPackageExportAudit(repositoryRoot) {
 export function runRepositoryRatchets(repositoryRoot) {
   const git = new GitWorkspace(repositoryRoot);
   git.requireBase();
+  const analyzeExports = createExportAnalysis(repositoryRoot, git);
   const audits = [
     [
       "JavaScript/TypeScript file-length",
       () => auditTypeScriptLength(repositoryRoot, git),
     ],
     ["Protocol document cap", () => auditProtocolCaps(repositoryRoot, git)],
-    ["Unused internal export", () => auditInternalExports(repositoryRoot, git)],
+    [
+      "Unused internal export",
+      () => auditInternalExports(repositoryRoot, git, analyzeExports),
+    ],
+    [
+      "Unused test helper export",
+      () => auditTestHelperExports(repositoryRoot, git, analyzeExports),
+    ],
     [
       "Public package export",
       () => auditPublicPackageExports(repositoryRoot, git),

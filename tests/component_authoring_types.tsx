@@ -68,7 +68,7 @@ if (renderInput.entry.kind === "component") {
 // @ts-expect-error The component parent does not retain a nested variants list.
 void definition.entries[0].variants;
 
-export const valid = (
+void (
   <definition.Component
     label="Confirm"
     intent="quiet"
@@ -80,35 +80,35 @@ export const valid = (
 );
 type Props = ComponentProps<typeof definition.Component>;
 // @ts-expect-error Required data cannot be omitted.
-export const missing: Props = { intent: "primary", nested: { enabled: true } };
-export const badEnum: Props = {
+void ({ intent: "primary", nested: { enabled: true } } satisfies Props);
+void ({
   label: "Hello",
   nested: { enabled: true },
   // @ts-expect-error Literal enum values stay narrow.
   intent: "unknown",
-};
-export const badOptional: Props = {
+} satisfies Props);
+void ({
   label: "Hello",
   intent: "primary",
   nested: { enabled: true },
   // @ts-expect-error Optional data keeps its declared type.
   optional: "1",
-};
-export const badNested: Props = {
+} satisfies Props);
+void ({
   label: "Hello",
   intent: "primary",
   // @ts-expect-error Nested fields are derived from the schema.
   nested: { enabled: "yes" },
-};
-export const badSlot: Props = {
+} satisfies Props);
+void ({
   label: "Hello",
   intent: "primary",
   nested: { enabled: true },
   // @ts-expect-error Slots are declared separately, with no catch-all JSX props.
   icon: <i />,
-};
+} satisfies Props);
 
-export const invalidVariant = defineComponent({
+void defineComponent({
   ...metadata,
   propSchema: {
     kind: "object",
@@ -127,7 +127,7 @@ export const invalidVariant = defineComponent({
     },
   ],
 });
-export const invalidControl = defineComponent({
+void defineComponent({
   ...metadata,
   propSchema: {
     kind: "object",

@@ -150,7 +150,7 @@ export async function designLibraryFixture(t: {
 }
 
 /** Read compiled documents and captured stylesheet bytes without disk reads. */
-export function snapshotReader(
+function snapshotReader(
   compilation: Compilation,
   resources: ReadonlyMap<string, GeneratedFile>,
 ) {

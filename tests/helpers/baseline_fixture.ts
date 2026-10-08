@@ -77,7 +77,7 @@ export function archive(
   ]);
 }
 
-export class FakeBaselineClock implements BaselineClock {
+class FakeBaselineClock implements BaselineClock {
   time = Date.parse("2026-09-14T00:00:00.000Z");
   onSleep: (() => void) | undefined;
   now(): number {

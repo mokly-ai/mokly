@@ -1,7 +1,7 @@
 import type { CatalogueNode, CatalogueReadModel } from "@mokly/viewer";
 import type {} from "./viewer_harness.js";
 
-export function appendScreenVariant(
+function appendScreenVariant(
   node: CatalogueNode,
   parentId: string,
   variantPath: string,

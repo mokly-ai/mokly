@@ -43,7 +43,7 @@ export function ownershipMarkerFromFiles(
 }
 
 /** Build a schema 3 ownership marker from every regular file below a directory. */
-export async function ownershipMarkerFromDirectory(
+async function ownershipMarkerFromDirectory(
   directory: string,
 ): Promise<TestOwnershipMarker> {
   return ownershipMarkerFromFiles(await directoryFileMap(directory));

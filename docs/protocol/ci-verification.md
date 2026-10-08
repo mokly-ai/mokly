@@ -2,14 +2,16 @@
 
 ## Delivery Status
 
-The suite CLI, evidence, workflow graph, fixture reuse, and every repository
-ratchet are implemented. [Hosted measurements](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md)
+The suite CLI, evidence, workflow graph, fixture reuse, and all five
+repository ratchets are implemented. [Hosted measurements](https://github.com/mokly-ai/mokly/blob/f66c274/docs/reviews/ci-performance.md)
 record timing and coverage. `cargo xtask check` is the complete gate.
 A validated hosted aggregate is reusable evidence for its exact tree.
 Public argument forwarding, cancellation and title validation are implemented.
 Remote execution and automatic selection are implemented. Dependency audit
 modes and scheduled update pull requests are implemented under the
 [audit contracts](./dependency-audit-update-pr.md).
+The [test helper export ratchet](./verification-ratchets-test-helpers.md) is
+implemented with its own shrink-only baseline.
 
 ## Verification Boundary
 
@@ -52,7 +54,7 @@ hydration suite fail before any subprocess starts.
 
 | Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                                                            |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Repository       | Live audit first: baseline for ordinary PRs, pushes, and local checks; strict for release and dependency update PRs. Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                  |
+| Repository       | Live audit first: baseline for ordinary PRs, pushes, and local checks; strict for release and dependency update PRs. Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, unused-test-helper-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                       |
 | Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; every clean consumer smoke using that pair. Real `prepack` builds remain part of packing. |
 | Unit/integration | One ordinary package/example preparation and one example compilation snapshot, followed by every discovered Node test file, with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. A shard runs its whole-file partition.                                                                                                                         |
 | Browser          | One ordinary package/example preparation followed by every non-hydration Playwright spec, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                  |
@@ -63,9 +65,9 @@ hydration suite fail before any subprocess starts.
 Complete and selected suites share gate definitions; adding a suite command adds
 it to the complete gate. In-process auditors fail like subprocesses.
 
-File-length, protocol-cap, and unused-internal-export ratchets use
-`git merge-base HEAD origin/main`; the public-package-export ratchet instead
-uses the newest matching release tags reachable from `HEAD`. The
+File-length, protocol-cap, unused-internal-export, and unused-test-helper-export
+ratchets use `git merge-base HEAD origin/main`. The public-package-export
+ratchet instead uses the newest matching release tags reachable from `HEAD`. The
 [owning contract](./verification-ratchets.md) defines the module extensions,
 shrink-only baselines, and recursive `docs/protocol/**` scan excluding
 `fixtures/`.

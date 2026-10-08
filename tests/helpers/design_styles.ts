@@ -49,10 +49,7 @@ export async function designStyleRules(): Promise<StyleRule[]> {
 }
 
 /** Reads one declaration's value, ignoring shorthand extras like `1px solid`. */
-export function declaration(
-  body: string,
-  property: string,
-): string | undefined {
+function declaration(body: string, property: string): string | undefined {
   return new RegExp(`(?:^|;|\\{)\\s*${property}\\s*:\\s*([^;]+)`, "u")
     .exec(body)?.[1]
     ?.trim();
@@ -65,9 +62,7 @@ export interface ColorReference {
 }
 
 /** Pulls the colour out of a declaration, whether tokenised or hardcoded. */
-export function colorReference(
-  value: string | undefined,
-): ColorReference | undefined {
+function colorReference(value: string | undefined): ColorReference | undefined {
   if (!value) return undefined;
   const token = /var\((--[a-z0-9-]+)\)/u.exec(value)?.[1];
   if (token) return { token };

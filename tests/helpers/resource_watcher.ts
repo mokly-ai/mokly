@@ -56,7 +56,7 @@ export class ResourceWatcherFactory implements ConsumerWatcherFactory {
 }
 
 /** Observe cleanup and emit queued events without real operating-system watches. */
-export class ResourceTestWatcher implements ConsumerWatcher {
+class ResourceTestWatcher implements ConsumerWatcher {
   closeCount = 0;
   private changed: ((event: WatchEvent) => void) | undefined;
 

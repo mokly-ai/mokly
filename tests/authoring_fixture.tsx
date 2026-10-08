@@ -88,7 +88,7 @@ export function resolved(definition: EntryDefinition): ResolvedRegistryEntry {
   };
 }
 
-export function singleDefinition(
+function singleDefinition(
   definition: ScreenDefinition | readonly ScreenDefinition[],
 ): ScreenDefinition {
   if (!("kind" in definition)) throw new Error("expected one screen");

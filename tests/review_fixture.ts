@@ -107,11 +107,11 @@ export function withHomeIgnoredRegions(
   return { ...compilation, outputs };
 }
 
-export function screenFragments(screen: ManifestScreen): string[] {
+function screenFragments(screen: ManifestScreen): string[] {
   return generatedViews(screen).map((view) => view.path);
 }
 
-export function insertIgnoredRegions(
+function insertIgnoredRegions(
   content: string,
   label: string,
   ids: readonly string[],

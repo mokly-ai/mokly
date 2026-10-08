@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { attribute, documentElements, type HtmlElement } from "./html.js";
 
 /** The shell's tag glyph at one rendered size. */
-export function tagIcon(size: number): string {
+function tagIcon(size: number): string {
   return (
     `<svg aria-hidden="true" fill="none" height="${size}" stroke="currentColor" ` +
     'stroke-linecap="round" stroke-linejoin="round" stroke-width="2" ' +
@@ -14,7 +14,7 @@ export function tagIcon(size: number): string {
 }
 
 /** One tag chip exactly as the approved mockup draws it, on either surface. */
-export function tagChip(tag: string): string {
+function tagChip(tag: string): string {
   return (
     `<button aria-pressed="false" class="mbk-chip tag" ` +
     `data-mokly-tag="${tag}" type="button">${tagIcon(11)}${tag}</button>`

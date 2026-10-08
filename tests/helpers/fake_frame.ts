@@ -1,12 +1,6 @@
 import { webcrypto } from "node:crypto";
 
-import type {
-  FrameEvent,
-  FrameMount,
-  MountedFrame,
-  FrameAdapter,
-  InstanceBoundary,
-} from "../../packages/viewer/dist/client/frame_adapter.js";
+import type { FrameMount } from "../../packages/viewer/dist/client/frame_adapter.js";
 import {
   encodeMessage,
   type MessageBody,
@@ -103,38 +97,4 @@ export function fakeFrame() {
       }
     },
   };
-}
-
-/** Host UI tests can drive the interface without depending on either transport. */
-export class FakeFrameAdapter implements FrameAdapter {
-  readonly mounts: FrameMount[] = [];
-  readonly highlights: { keys: readonly string[]; mode: string }[] = [];
-  readonly scrolls: string[] = [];
-  readonly listeners = new Set<(event: FrameEvent) => void>();
-  boundaries: readonly InstanceBoundary[] = [];
-  async mount(
-    _frame: HTMLIFrameElement,
-    view: FrameMount,
-  ): Promise<MountedFrame> {
-    this.mounts.push(view);
-    return {
-      listInstanceBoundaries: async () => this.boundaries,
-      highlight: async (keys, mode) => {
-        this.highlights.push({ keys, mode });
-      },
-      scrollTo: async (key) => {
-        this.scrolls.push(key);
-      },
-      subscribe: (listener) => {
-        this.listeners.add(listener);
-        return () => {
-          this.listeners.delete(listener);
-        };
-      },
-      dispose: () => this.listeners.clear(),
-    };
-  }
-  emit(event: FrameEvent): void {
-    for (const listener of this.listeners) listener(event);
-  }
 }

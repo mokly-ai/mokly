@@ -5,7 +5,7 @@ import type {
 import type { ChildCommand } from "../../dist/server/update_messages.js";
 
 /** Controllable child that retains exit state and otherwise ignores shutdown. */
-export class ControlledChild implements ChildHandle {
+class ControlledChild implements ChildHandle {
   readonly messages: ChildCommand[] = [];
   terminations = 0;
   forceKills = 0;

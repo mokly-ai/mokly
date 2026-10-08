@@ -11,7 +11,7 @@
 export const ALIGNMENT_CHANGED_COUNT = 5;
 
 /** Height in CSS pixels of every block below the tall screen's hero. */
-export const ALIGNMENT_BLOCK_HEIGHT = 300;
+const ALIGNMENT_BLOCK_HEIGHT = 300;
 
 /** The late image's rendered height once it loads (a 10×120 SVG at 100px). */
 export const ALIGNMENT_LATE_IMAGE_HEIGHT = 1200;

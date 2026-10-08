@@ -63,7 +63,7 @@ export class FakeWatcherFactory implements ConsumerWatcherFactory {
 }
 
 /** Deliver typed changes while retaining observable close state. */
-export class FakeWatcher implements ConsumerWatcher {
+class FakeWatcher implements ConsumerWatcher {
   closed = false;
   private changeCallback: ((event: WatchEvent) => void) | undefined;
   constructor(private readonly failReady = false) {}
