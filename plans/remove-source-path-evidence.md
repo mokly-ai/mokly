@@ -1,8 +1,8 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestones 1 to 33 are implemented, verified and pushed; the
-branch contains main `4727cecc`. The open review findings of Milestones 32 and
-33 wait for the user.
+Status: Active. Milestones 1 to 33 are implemented, verified and pushed.
+Milestone 34 merges main `4bd0e78e`. The open review findings of Milestones 32
+and 33 wait for the user.
 
 ## Status And Outcome
 
@@ -2799,3 +2799,37 @@ for the user.
 Evidence: `.context/remove-source-path-evidence/milestone-33.md`.
 
 Review-fix evidence: `.context/remove-source-path-evidence/milestone-33-fixes.md`.
+
+## Milestone 34: Integrate `main` #171, #172 and #176 to #178
+
+On 2026-10-08 the user asked to merge the latest `main` into the branch,
+resolve the conflicts, commit and push. Main `4bd0e78e` adds #171 (the agent
+rules split into `docs/dev`), #172 (Serve keeps the checked closure on reload),
+#178 (the Rust 1.95.0 pin), #177 (Testbox SSH closes before cleanup) and #176
+(in-range dependency updates).
+
+- [x] Capture the source tip `7b08f824`, the merge base `4727cecc` and main
+      `4bd0e78e`. Audit main's 80 changed files.
+- [x] Merge main as one commit with exactly two parents. Resolve
+      `src/server/http.ts`, `README.md` and `docs/protocol/README.md` path by
+      path, and review the remerge diff of every path.
+- [x] Run the line-level loss check. Every main-added line is present, except
+      one line moved to `docs/protocol/verification-protocol-index.md` and one
+      line reformatted inside the branch's call.
+- [x] Keep the branch's rules for main's new text: add exact docs-guard entries
+      for the `docs/dev` rule statements, and move main's plan link in
+      `xtask/README.md` into a Delivery Status section. Keep
+      `src/server/http.ts` under the 300-line limit with one shared factory.
+- [ ] Run build, typecheck, lint, the targeted tests,
+      `cargo xtask check --suite repository` and the complete
+      `cargo xtask check` at 100%.
+- [ ] Inspect the diff and the deletions against `origin/main`; only the four
+      approved files may be deleted. Commit, push, and add the merge decisions
+      to the PR description.
+- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
+      complete diff against `origin/main` and report findings. Keep the review
+      read-only. Then apply the review-fix rule in `docs/dev/review.md`: fix
+      `Auto-fix: yes` findings, re-review once, and report the rest. Add each
+      open finding as one line under this TODO.
+
+Evidence: `.context/remove-source-path-evidence/milestone-34.md`.
