@@ -2898,7 +2898,7 @@ teardown race), #183 (release evidence and manual complete retries) and #185
 - [x] Run the line-level loss check. Every main-added line is present.
 - [x] Keep `src/server/supervisor.ts` under the 300-line limit: move the child
       diagnostic and warning forwarding into one shared helper.
-- [ ] Run build, typecheck, lint, the targeted tests, the repository suite and
+- [x] Run build, typecheck, lint, the targeted tests, the repository suite and
       the complete `cargo xtask check` at 100%. Inspect the deletions against
       `origin/main`. Commit, push, and update the PR description.
 - [ ] After the push, use `docs/implementation-review-prompt.md` to review the
