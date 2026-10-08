@@ -1,4 +1,4 @@
-//! Process configuration removes secrets, and an interrupted request never starts.
+//! Process configuration removes secrets, and an interrupted cancellable request never starts.
 
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
