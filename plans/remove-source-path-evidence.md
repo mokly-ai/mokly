@@ -2873,10 +2873,11 @@ Testbox boxes after suites).
 - [x] Run build, typecheck, lint, the targeted tests, the repository suite and
       the complete `cargo xtask check` at 100%. Inspect the deletions against
       `origin/main`. Commit, push, and update the PR description.
-- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
+- [x] After the push, use `docs/implementation-review-prompt.md` to review the
       complete diff against `origin/main` and report findings. Keep the review
       read-only. Then apply the review-fix rule in `docs/dev/review.md`: fix
       `Auto-fix: yes` findings, re-review once, and report the rest. Add each
-      open finding as one line under this TODO.
+      open finding as one line under this TODO. The review is complete and has
+      no new finding.
 
 Evidence: `.context/remove-source-path-evidence/milestone-35.md`.
