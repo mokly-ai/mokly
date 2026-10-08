@@ -14,11 +14,14 @@ import { loadConfig } from "../../dist/config/load.js";
 import { classifyComponents } from "../../dist/review/component_classification.js";
 import type { ReadOnlyReviewRepository } from "../../dist/review/repository.js";
 
+import { exampleCompilation } from "./example_compilation.js";
 import { copyExampleSources } from "./example_sources.js";
 import { repositoryRoot } from "./fixture.js";
 
 /**
- * Copy the actual consumer so edits never mutate the working catalogue.
+ * Copy the actual consumer so edits never mutate the working catalogue. The
+ * unedited copy compiles to the shared example compilation, so the before
+ * state reuses it.
  * Share across a file with `fileFixture((owner) => designLibraryFixture(owner))`.
  * That helper registers teardown immediately and starts setup on first use.
  * Pass `t` to `designLibraryFixture(t)` for a single test's lifetime instead.
@@ -33,7 +36,7 @@ export async function designLibraryFixture(t: {
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   await copyExampleSources(root);
   const config = await loadConfig(path.join(root, "examples/basic"));
-  const before = await compileCatalogue(config);
+  const before = await exampleCompilation();
   const resources = new Map<string, GeneratedFile>();
   for (const file of await fs.readdir(config.mockupsDir, { recursive: true })) {
     if (file.endsWith(".css"))

@@ -10,7 +10,9 @@ owns prepared commands, strict discovery, shards, and complete report evidence.
 
 ## Public Commands And Preparation
 
-- `npm run test:unit` prepares package and example output, then calls the
+- `npm run test:unit` prepares package and example output with
+  `npm run prepare:unit`, which also writes the
+  [example compilation snapshot](./ci-example-snapshot.md), then calls the
   developer unit runner. With no arguments, it runs the complete discovered
   unit inventory under the existing developer skip policy and writes the
   existing evidence report.
@@ -27,8 +29,9 @@ starts; argument rejection must still happen before any test process starts.
 The raw commands `node --import tsx --test <file>` and
 `npx playwright test <spec>` skip preparation and test the last build. After a
 `src/` change, run `npm run prepare:verification` before using either raw
-command. One preparation can serve repeated raw runs while source stays
-unchanged.
+command; for raw unit commands, `npm run prepare:unit` also refreshes the
+example compilation snapshot. One preparation can serve repeated raw runs
+while source stays unchanged.
 
 The `test:prepared`, `test:browser:prepared`, and `test:hydration:prepared`
 commands keep the [strict runner contract](./ci-verification.md#gate-ownership).
@@ -62,7 +65,9 @@ Before starting a test process, the developer runner follows this order:
 3. Discover the unit inventory with `discoverUnitFiles(repositoryRoot)` and
    validate file membership against that inventory.
 4. Check required package and example output with
-   `requirePrepared(repositoryRoot)`.
+   `requirePrepared(repositoryRoot)`. A complete run uses
+   `requirePrepared(repositoryRoot, "unit")`, which also requires the example
+   compilation snapshot file.
 5. Run tests.
 
 The [strict discovery rules](./ci-verification.md#gate-ownership) define the

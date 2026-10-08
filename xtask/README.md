@@ -115,7 +115,11 @@ cargo xtask source-file-length-lint --all
 
 `--shard INDEX/TOTAL` is valid only for the unit and browser suites. Omitting it
 runs the full selected suite. Package, unit, browser, and hydration suites
-prepare their required output before invoking prepared npm scripts.
+prepare their required output before invoking prepared npm scripts. The unit
+suite runs `npm run prepare:unit`, which also writes the
+[example compilation snapshot](../docs/protocol/ci-example-snapshot.md)
+that unit tests load instead of compiling the example in every test file; the
+other suites run `npm run prepare:verification`.
 
 `--dependency-audit <baseline|strict>` defaults to `baseline`. It is valid for
 the complete gate or repository suite. An explicit mode flag with another suite
@@ -269,6 +273,12 @@ They do not assert elapsed time.
   own every clean packed-consumer smoke. The
   [consumer fixtures README](../tests/fixtures/consumers/README.md) states what
   each copied project tests.
+- [`../scripts/verification/example-snapshot.mjs`](../scripts/verification/example-snapshot.mjs)
+  produces, encodes, and decodes the example compilation snapshot, and
+  [`example-snapshot-key.mjs`](../scripts/verification/example-snapshot-key.mjs)
+  owns its path, source inventory, and freshness key;
+  [`prepared.mjs`](../scripts/verification/prepared.mjs) checks that prepared
+  output exists before a runner starts.
 - [`../scripts/verification/repository-ratchets.mjs`](../scripts/verification/repository-ratchets.mjs)
   dispatches the repository ratchets, and
   [`../scripts/verification/ratchets/git.mjs`](../scripts/verification/ratchets/git.mjs)
@@ -299,6 +309,8 @@ They do not assert elapsed time.
 - [Repository README](../README.md)
 - [CI and npm release contract](../docs/protocol/npm-release.md)
 - [CI verification](../docs/protocol/ci-verification.md)
+- [CI suite evidence](../docs/protocol/ci-suite-evidence.md)
+- [CI example compilation snapshot](../docs/protocol/ci-example-snapshot.md)
 - [Remote verification](../docs/protocol/remote-verification.md)
 - [Cleanup and interrupts](../docs/protocol/remote-verification-cleanup.md)
 - [Testbox execution](../docs/protocol/remote-verification-testbox.md)

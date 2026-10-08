@@ -458,6 +458,23 @@ Pull request titles use Conventional Commits and at most 72 Unicode code points.
 The separate title check runs when a PR opens, changes, or receives a push; see
 the [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).
 
+`npm test` and `npm run test:unit` run `npm run prepare:unit` and then the
+Node unit tests.
+`prepare:unit` builds the package and the example. When the saved snapshot is
+not fresh, it then compiles the example once more in memory and saves the
+result to `.context/verification/example-compilation.json`; when the snapshot
+is still fresh, it skips that compile. Test files that read the
+compiled example load this snapshot instead of compiling the example again. The
+snapshot stores a key of the example sources, the built package and the
+lockfile, and a test file uses it only while that key still matches. When you
+run one file by hand, for example
+`node --import tsx --test tests/design_screens.test.tsx`, the file uses a fresh
+snapshot or compiles the full example itself, which is much slower.
+Run `npm run prepare:unit` again after you change the example or rebuild the
+package. The
+[snapshot contract](./docs/protocol/ci-example-snapshot.md)
+gives the details.
+
 `npm run dependencies:check` runs the strict live audit of every workspace
 dependency category from the lockfile. It fails on uncovered Low-or-higher
 advisories and invalid exception records. Use
