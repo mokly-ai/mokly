@@ -173,13 +173,18 @@ export default tseslint.config(
     },
   },
   {
-    files: [
-      "src/**/*.{ts,tsx}",
-      "packages/viewer/src/**/*.{ts,tsx}",
-      "scripts/**/*.{mjs,mts,ts}",
-      "examples/**/*.{ts,tsx,mjs}",
+    files: ["**/*.{cjs,cts,js,jsx,mjs,mts,ts,tsx}"],
+    ignores: [
+      "**/tests/**",
+      "docs/**",
+      "plans/**",
+      "**/generated/**",
+      "coverage/**",
+      "playwright-report/**",
+      "test-results/**",
+      "**/.mokly-cache/**",
+      "packages/viewer/src/navigation/routes.ts",
     ],
-    ignores: ["packages/viewer/src/navigation/routes.ts", "**/tests/**"],
     rules: {
       "mokly/no-artifact-path-literals": "error",
     },

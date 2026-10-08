@@ -112,12 +112,14 @@ reports a string literal whose value contains `snapshots/`, or contains
 `pages/` followed later by `.json`. It tests a template literal as one string,
 its raw text with each substitution replaced by `${}`, and reports it at most
 once. Regular-expression literals and comments are outside the rule. It
-applies to `.ts` and `.tsx` modules under `src/` and `packages/viewer/src/`, to
-`.mjs`, `.mts` and `.ts` modules under `scripts/`, and to `.ts`, `.tsx` and
-`.mjs` modules under `examples/`. The builder module
-`packages/viewer/src/navigation/routes.ts` and every `tests` directory are
-exempt. The rule lives in `scripts/eslint/` and runs with `npm run lint` in the
-repository suite.
+applies to `.cjs`, `.cts`, `.js`, `.jsx`, `.mjs`, `.mts`, `.ts` and `.tsx`
+modules in every directory. It excludes every `tests`, `generated` and
+`.mokly-cache` directory; root `docs`, `plans`, `coverage`, `playwright-report`
+and `test-results` directories; globally ignored context, build output and
+dependencies (`.context`, `.wrangler`, `dist`, `node_modules`, `target` and
+`examples/basic/mokly-generated`); and the builder module
+`packages/viewer/src/navigation/routes.ts`. The rule lives in `scripts/eslint/`
+and runs with `npm run lint` in the repository suite.
 
 ## Shell Documents And Browser Paths
 

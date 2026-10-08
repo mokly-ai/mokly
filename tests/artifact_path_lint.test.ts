@@ -11,10 +11,14 @@ const rule = "mokly/no-artifact-path-literals";
 const message =
   "Build comparison artifact paths with the shared builders in packages/viewer/src/navigation/routes.ts instead of spelling snapshot paths or pages/…json.";
 const scopedProbes = [
+  "probe.ts",
+  "src/artifact-path-probe.cjs",
+  "src/artifact-path-probe.jsx",
   "src/artifact-path-probe.ts",
   "src/review/artifact-path-probe.tsx",
   "packages/viewer/src/artifact-path-probe.ts",
   "packages/viewer/src/navigation/artifact-path-probe.tsx",
+  "packages/viewer/scripts/probe.mjs",
   "scripts/artifact-path-probe.mjs",
   "scripts/verification/artifact-path-probe.mts",
   "scripts/nested/artifact-path-probe.ts",
@@ -23,6 +27,8 @@ const scopedProbes = [
   "examples/basic/artifact-path-probe.mjs",
 ];
 const exemptProbes = [
+  "docs/probe.ts",
+  "plans/probe.ts",
   "packages/viewer/src/navigation/routes.ts",
   "tests/artifact-path-probe.test.ts",
   "src/review/tests/artifact-path-probe.ts",
