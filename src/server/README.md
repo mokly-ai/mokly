@@ -19,6 +19,10 @@ classification and build output are unchanged.
 
 ## Scope
 
+Watch uses explicit renderer resource seeds when supplied. Otherwise it recovers
+non-CSS seeds from accepted manifest usage. CSS declarations keep their checked
+private seeds even when the renderer supplies no document link.
+
 Serve publishes a validated catalogue, renders requested documents and exposes
 comparison snapshots. `serve.ts` owns single-process Serve; `serve_watched.ts`
 owns watchers, background work and the supervised HTTP child. `http.ts` and

@@ -7,7 +7,10 @@ import {
   type PublicClosureSnapshot,
 } from "../build/html_links.js";
 import { PendingGeneratedFiles } from "../build/pending_generated.js";
-import type { ResourceSeed } from "../build/resource_seeds.js";
+import {
+  manifestResourceSeeds,
+  type ResourceSeed,
+} from "../build/resource_seeds.js";
 import type { ResolvedConfig } from "../config/types.js";
 import type { CatalogueMetadata } from "../registry/catalogue_index.js";
 import { generatedDocumentRoutes } from "../registry/generated_documents.js";
@@ -63,7 +66,8 @@ export async function discoverWatchResources(
       onDemand: compilation.manifest?.schemaVersion === "live-index-2",
       watch: true,
     },
-    compilation.resourceSeeds ?? [],
+    compilation.resourceSeeds ??
+      (compilation.manifest ? manifestResourceSeeds(compilation.manifest) : []),
     allowInvalid || previous !== undefined
       ? (previous ?? {
           closure: new Set(),
