@@ -40,6 +40,16 @@ export function withInlineAppendix(
   return result;
 }
 
+/** Compose source edits without losing the canonical appendix's resource seeds. */
+export function withInlineReplacements(
+  projection: InlineMaterialProjection,
+  replacements: readonly InlineMaterialReplacement[],
+): InlineMaterialProjection {
+  const result = { ...projection, replacements };
+  producerReferences.set(result, inlineMaterialReferences(projection));
+  return result;
+}
+
 /** Actual and entry-projected material for one side of a paired view. */
 export interface InlineMaterialReplacements {
   actual: InlineMaterialProjection;

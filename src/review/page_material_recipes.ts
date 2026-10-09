@@ -2,6 +2,8 @@
 import type { ComponentInlineMaterial } from "../components/comparison_projection.js";
 import { materialRecipe } from "../components/material_recipe.js";
 
+import { withInlineReplacements } from "./css/inline_rendering.js";
+
 import type { PageAnalysisPair } from "./page_pair.js";
 
 export function pageMaterialRecipes(
@@ -21,13 +23,11 @@ export function pageMaterialRecipes(
   }
   const side = (which: "before" | "after") => {
     const page = which === "before" ? before : after;
-    const includeLinks = (material: typeof inline.before.actual) => ({
-      ...material,
-      replacements: [
+    const includeLinks = (material: typeof inline.before.actual) =>
+      withInlineReplacements(material, [
         ...material.replacements,
         ...page.stylesheetEdits(pages.root),
-      ],
-    });
+      ]);
     return {
       actual: materialRecipe(page.source, includeLinks(inline[which].actual)),
       projected: materialRecipe(

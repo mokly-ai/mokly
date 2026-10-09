@@ -229,7 +229,8 @@ removes ignored elements from matches while keeping original selector context.
 
 Validate full-link provenance and decoded hrefs against the existing original
 tree. Convert non-root-owned spans to empty replacement edits in the material
-recipe. Keep root-owned links on a saved component page. Resource discovery
+recipe. Preserve the canonical inline producer's stored resource seeds when
+adding these edits. Keep root-owned links on a saved component page. Resource discovery
 also uses those validated paths inside paired ignores. Never parse a link
 fragment or a link-removed page to recover its references or ranges.
 
