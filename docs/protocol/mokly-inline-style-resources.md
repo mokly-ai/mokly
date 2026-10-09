@@ -15,31 +15,31 @@ the page contract owns the precise provenance-reference equality domain.
 
 This contract owns resource propagation for the attributions and canonical
 materials defined by [inline style ownership](./mokly-inline-styles.md).
-[Component attribution](./mokly-component-changes.md#dependencies-and-styles)
+[Component attribution](./mokly-component-changes.md#rendered-resources-and-styles)
 owns Changes membership; [review validation](./mokly-component-review-validation.md)
 owns recorded reason sources and exact implementation-impact validation.
 
 ## Resolution And Propagation
 
-A `url()` or `@import` reference inside an owned rule follows that rule's
-owner: the projected material omits the rule, so the referenced file is not
-discovered as entry material, and an actual-view dependency reason for a path
-reached only through owned rules is attributed to those owners in the same
-way `ownedDependencies` owners are. A reference inside an `excluded` rule is
-discovered by neither material. A reference inside an `unresolved` or `entry`
-rule remains entry material.
+A non-CSS reference inside an owned rule follows that rule's owner. The
+projected material omits the rule, so a file reached only through that rule
+has no entry reason. References inside excluded rules supply no retained
+material. References inside unresolved or entry rules remain entry material.
 
-For ownership, use the stored reference values of retained rules for each distinct
-component-owner set and traverse those seeds through the corresponding
-side's ordinary resource reader at the view route. Relative paths, the
-catalogue prefix, CSS imports and all transitive resources therefore resolve
-exactly as they do for actual material. Owners for one retained actual-view
-dependency reason are the union of matching inline owner sets and
-`ownedDependencies`, filtered to components present in that view. If projected
-entry material independently reaches the same path, its entry reason remains.
-For either baseline source, a byte-only difference without Git evidence gives inferred
-owners a component `material` reason, matching `ownedDependencies`; it does not
-invent a dependency reason or changed path.
+For ownership, use stored reference values for each distinct component-owner
+set and traverse the corresponding side's ordinary resource graph at the view
+route. Relative paths, the catalogue prefix, CSS imports and transitive assets
+therefore resolve as they do for actual material. Traverse CSS files to find
+non-CSS assets, but never add a CSS path to the owner map. Every CSS file uses
+own-page rule membership, even when reached through an owned inline rule.
+
+For each retained non-CSS dependency reason, union inferred inline owners with
+renderer `resources` owners. Keep only components present in that view,
+including the saved root. Independently reached entry resources retain their
+entry reason. A byte-only difference without Git evidence gives the same
+owners a component material reason; it invents no dependency reason or changed
+path. Move normalization maps recorded component ids while preserving resource
+paths and original document coordinates.
 
 An unchanged reference-bearing rule contributes on both actual sides. If it is
 owned or excluded, its paired rule objects remove it symmetrically from both

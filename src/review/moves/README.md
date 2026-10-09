@@ -30,6 +30,8 @@ Equal mapped bytes suppress current generated rendered-resource
 reasons; changed resources retain normal attribution. The shared CSS tokenizer
 in `src/css_references.ts` resolves URL tokens without rewriting other CSS.
 `identity.ts` maps catalogue references without confusing a reused path's kind.
+It maps non-CSS resource owners with instance identities and inserted-link
+declarers, while keeping each public resource path unchanged.
 `links.ts` also proves when equal original text has equal link material on both
 sides, using the accepted entry/route maps and resource identities. Identical-text
 and style-only shortcuts require that proof; they never add a source rewrite

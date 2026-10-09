@@ -49,5 +49,9 @@ export function mapUsagePaths(
       ...instance,
       componentId: mapPath(instance.componentId),
     })),
+    resources: view.resources.map((resource) => ({
+      ...resource,
+      componentIds: resource.componentIds.map(mapPath).sort(),
+    })),
   };
 }

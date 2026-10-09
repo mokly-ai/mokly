@@ -1,4 +1,6 @@
 /** Discover transitive resource ownership from inferred inline rule groups. */
+import { isStylesheetPath } from "@mokly/viewer/data";
+
 import { documentWorkSync } from "../diagnostics/timings.js";
 
 import type { ComponentMaterialReader } from "./component_resources.js";
@@ -47,6 +49,7 @@ export async function discoverInlineResourceOwners(
   const owners = new Map<string, Set<string>>();
   for (const discovery of discoveries)
     for (const route of discovery.resources) {
+      if (isStylesheetPath(route)) continue;
       const path = prefix ? `${prefix}/${route}` : route;
       const componentIds = owners.get(path) ?? new Set<string>();
       for (const id of discovery.componentIds) componentIds.add(id);
