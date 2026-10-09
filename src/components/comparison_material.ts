@@ -64,6 +64,13 @@ export function componentUsageTopologyEqual(
     if (!beforeView || !afterView) return !beforeView && !afterView;
     const topology = (view: ComponentViewRecord) => ({
       ...view,
+      ...(view.insertedStylesheets === undefined
+        ? {}
+        : {
+            insertedStylesheets: view.insertedStylesheets.map(
+              ({ path, componentPaths }) => ({ path, componentPaths }),
+            ),
+          }),
       instances: view.instances.map((instance) =>
         instance.owner.kind === "entry"
           ? instanceStructure(instance)

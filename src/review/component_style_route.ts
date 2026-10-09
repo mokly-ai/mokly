@@ -21,6 +21,7 @@ import type { InlineRunOccurrence } from "./css/inline_rule_runs.js";
 import { cssRuleData } from "./css/rule_identity.js";
 import { styleRouteRulesSafe } from "./css/style_route_rules.js";
 import type { PageAnalysisPair } from "./page_pair.js";
+import { insertedLinksFollowStyleWindow } from "./page_stylesheet_links.js";
 import { unchangedPageResources } from "./page_quick_check.js";
 import {
   changedStyleWindows,
@@ -45,7 +46,7 @@ export async function compareStyleOnlyView(
   )
     return;
   const windows = changedStyleWindows(baseText, headText);
-  if (!windows) return;
+  if (!windows || !insertedLinksFollowStyleWindow(pages, windows)) return;
   const spans = styleWindowSpans(pages, windows);
   if (!spans) return;
   if (

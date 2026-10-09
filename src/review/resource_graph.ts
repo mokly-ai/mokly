@@ -12,6 +12,16 @@ export class ResourceGraph {
 
   constructor(private readonly reader: ResourceReferenceReader) {}
 
+  /** Reuse the same checked edges for a stylesheet's document scope. */
+  references(route: string): Promise<readonly string[]> {
+    let references = this.#references.get(route);
+    if (!references) {
+      references = this.reader.readReferences(route);
+      this.#references.set(route, references);
+    }
+    return references;
+  }
+
   collect(seeds: readonly string[]): Promise<ReadonlySet<string>>;
   collect(
     seeds: readonly string[],
@@ -32,12 +42,7 @@ export class ResourceGraph {
       pending = [];
       for (const route of batch) {
         seen.add(route);
-        let references = this.#references.get(route);
-        if (!references) {
-          references = this.reader.readReferences(route);
-          this.#references.set(route, references);
-        }
-        pending.push(...(await references));
+        pending.push(...(await this.references(route)));
       }
     }
     return seen;

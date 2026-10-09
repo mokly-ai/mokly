@@ -9,6 +9,7 @@ import type {
   ComponentViewContext,
 } from "./component_view.js";
 import type { PageAnalysisPair } from "./page_pair.js";
+import { identicalInsertedResources } from "./page_stylesheet_links.js";
 import { styleNeedsFullValidation } from "./style_source_safety.js";
 
 export async function identicalPageQuickCheck(
@@ -53,6 +54,7 @@ export async function unchangedPageResources(
   requiredReferences?: Iterable<string>,
 ): Promise<boolean> {
   const head = pages.afterAnalysis;
+  const insertedStylesheets = identicalInsertedResources(pages);
   const seeds = head.conservativeReferences(pages.pairedIgnoreIds);
   if (requiredReferences) {
     const covered = new Set(seeds);
@@ -63,13 +65,13 @@ export async function unchangedPageResources(
     head.route,
     head.source,
     undefined,
-    { references: seeds },
+    { references: seeds, insertedStylesheets },
   );
   const beforeResources = await context.beforeReader.resourcesIfPresent(
     head.route,
     head.source,
     undefined,
-    { references: seeds },
+    { references: seeds, insertedStylesheets },
   );
   if (!beforeResources) return false;
   const path = (route: string) =>

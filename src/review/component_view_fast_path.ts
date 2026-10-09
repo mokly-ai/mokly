@@ -25,6 +25,7 @@ import {
 } from "./css/inline_styles.js";
 import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
 import type { PageAnalysisPair } from "./page_pair.js";
+import { insertedComparisonSource } from "./page_stylesheet_links.js";
 import { identicalPageQuickCheck } from "./page_quick_check.js";
 import { styleNeedsFullValidation } from "./style_source_safety.js";
 
@@ -48,8 +49,6 @@ export async function compareUnchangedComponentView(
   const links = context.links?.(before.path, after.path);
   if (
     pages &&
-    !before.usage?.insertedStylesheets?.length &&
-    !after.usage?.insertedStylesheets?.length &&
     (!pages.links || pages.links.equalSource === true) &&
     base === head &&
     componentUsageTopologyEqual(before.usage, after.usage)
@@ -57,20 +56,25 @@ export async function compareUnchangedComponentView(
     const comparison = await identicalPageQuickCheck(context, pages, view);
     return comparison ? { comparison } : {};
   }
+  const baseSource = insertedComparisonSource(base, before.usage, root);
+  const headSource = insertedComparisonSource(head, after.usage, root);
+  const retained =
+    pages?.normalize(baseSource, headSource) ??
+    normalizeReviewPair(baseSource, headSource, after.path, links);
+  if (retained.base !== retained.head) return {};
+  if (!componentUsageTopologyEqual(before.usage, after.usage)) return {};
   const baseStylesheets = insertedStylesheetResources(
     base,
     before.usage,
     before.path,
+    pages?.beforeAnalysis.document,
   );
   const headStylesheets = insertedStylesheetResources(
     head,
     after.usage,
     after.path,
+    pages?.afterAnalysis.document,
   );
-  const retained =
-    pages?.normalization ?? normalizeReviewPair(base, head, after.path, links);
-  if (retained.base !== retained.head) return {};
-  if (!componentUsageTopologyEqual(before.usage, after.usage)) return {};
   let safeStyles: readonly InlineStyleSpan[] | undefined;
   if (pages) {
     const paired = pages.pairedIgnoreIds;
@@ -100,11 +104,11 @@ export async function compareUnchangedComponentView(
   };
 
   const strippedBase = stripMarkers(
-    base,
+    baseSource,
     before.usage,
     pages?.beforeAnalysis.ranges,
   );
-  const strippedHead = stripComponentMarkers(head);
+  const strippedHead = stripComponentMarkers(headSource);
   const actual =
     pages?.normalize(strippedBase, strippedHead) ??
     normalizeReviewPair(strippedBase, strippedHead, after.path, links);

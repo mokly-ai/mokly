@@ -1,5 +1,3 @@
-import { isStylesheetPath } from "@mokly/viewer/data";
-
 import { parseHtml } from "../diagnostics/html_parse.js";
 import { documentResourceReferences } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
@@ -13,6 +11,7 @@ import {
 } from "./resource_document_analysis.js";
 import { normalizeResourceDocuments } from "./resource_documents.js";
 import { ResourceGraph } from "./resource_graph.js";
+import { collectStylesheetScope } from "./stylesheet_scope.js";
 import { prefetchProofReads } from "./resource_proof_reads.js";
 import {
   ViewResourceCache,
@@ -244,21 +243,18 @@ export class ComponentMaterialReader {
     html: string,
     options: ViewResourceOptions = {},
   ): Promise<ReadonlySet<string>> {
-    const found = new Set<string>();
-    const pending = [
-      ...(options.references === undefined
-        ? referencedRoutes(route, html, { resourceHints: false })
-        : referenceRoutes(route, options.references)),
-      ...(options.insertedStylesheets ?? []),
-    ].filter(isStylesheetPath);
-    while (pending.length) {
-      const stylesheet = pending.pop()!;
-      if (found.has(stylesheet)) continue;
-      found.add(stylesheet);
-      const references = await this.resourceReferences(stylesheet);
-      pending.push(...references.filter(isStylesheetPath));
-    }
-    return found;
+    const references =
+      options.references !== undefined
+        ? referenceRoutes(route, options.references)
+        : this.componentAware &&
+            /\.html?$/i.test(route) &&
+            html === (await this.resourceText(route))
+          ? await this.graph.references(route)
+          : referencedRoutes(route, html, { resourceHints: false });
+    return collectStylesheetScope(
+      [...references, ...(options.insertedStylesheets ?? [])],
+      (path) => this.graph.references(path),
+    );
   }
 
   private async prefetchResources(routes: readonly string[]): Promise<void> {

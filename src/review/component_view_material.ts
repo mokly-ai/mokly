@@ -74,6 +74,7 @@ export async function compareOneSidedComponentView(
     source,
     selected.usage,
     selected.path,
+    analysis?.document,
   );
   const evidence = await context.resources.compare(
     before
@@ -107,6 +108,12 @@ export async function compareOneSidedComponentView(
         before?.usage,
         after?.usage,
         root,
+        analysis
+          ? {
+              before: before ? analysis : undefined,
+              after: after ? analysis : undefined,
+            }
+          : undefined,
       ),
     ],
   );

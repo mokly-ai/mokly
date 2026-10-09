@@ -23,15 +23,20 @@ export function linkRelTokens(
 }
 
 /** Find active links once, without treating template or noscript text as resources. */
-export function parseHtmlLinks(html: string): {
+export function parseHtmlLinks(
+  html: string,
+  existing?: DefaultTreeAdapterMap["document"],
+): {
   document: DefaultTreeAdapterMap["document"];
   head?: Element;
   links: readonly HtmlLink[];
 } {
-  const document = parse(html, {
-    sourceCodeLocationInfo: true,
-    scriptingEnabled: true,
-  });
+  const document =
+    existing ??
+    parse(html, {
+      sourceCodeLocationInfo: true,
+      scriptingEnabled: true,
+    });
   const links: HtmlLink[] = [];
   let head: Element | undefined;
   function visit(node: Node, scope: "head" | "body"): void {

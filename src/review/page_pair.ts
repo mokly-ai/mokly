@@ -27,6 +27,7 @@ export class PageAnalysisPair {
     readonly baseText: string,
     readonly headText: string,
     readonly links?: ReviewLinkNormalization,
+    readonly root?: string,
   ) {}
 
   get beforeAnalysis(): PageAnalysis {

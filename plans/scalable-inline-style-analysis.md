@@ -2167,7 +2167,7 @@ for approval. D12 makes no change to PR #182 or any other PR.
       release state before relying on unreleased format numbers.
 - [x] Integrate D5's ownership rules by delivery path, including root ownership
       and root boundaries in Review-ignore regions.
-- [ ] Integrate D6's inserted-link removal and membership into original-page
+- [x] Integrate D6's inserted-link removal and membership into original-page
       recipes. Keep parse counts and add full-comparison differential tests.
 - [ ] Align live docs and READMEs, update false live statements in the #179
       plan, preserve historical records, and meet the protocol and source caps.

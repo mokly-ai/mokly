@@ -122,3 +122,7 @@ See [parse reuse](../../../docs/protocol/mokly-css-parse-reuse.md),
 [inline ownership](../../../docs/protocol/mokly-inline-styles.md),
 [CSS attribution](../../../docs/protocol/mokly-css-attribution.md) and
 [diagnostic counts](../../../docs/protocol/mokly-timings.md#component-analysis-counts).
+
+`containment.ts` binds each original page tree to its original root and instance
+ranges. It uses the existing paired-ignore subject filter. Inserted-link removal
+changes comparison recipes, not the matching coordinate space.

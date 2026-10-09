@@ -71,6 +71,7 @@ export function prepareComponentProjection(
         base,
         head,
         context.links?.(before.path, after.path),
+        root,
       )
     : undefined;
   const baseRanges = pages

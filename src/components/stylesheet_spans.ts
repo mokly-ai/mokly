@@ -2,6 +2,7 @@ import type {
   ComponentViewRecord,
   InsertedComponentStylesheet,
 } from "@mokly/viewer";
+import type { DefaultTreeAdapterMap } from "parse5";
 
 import { MoklyError } from "../errors.js";
 import { parseHtmlLinks } from "../html_links.js";
@@ -10,6 +11,7 @@ import { parseHtmlLinks } from "../html_links.js";
 export function insertedStylesheetSpans(
   html: string,
   usage: Pick<ComponentViewRecord, "insertedStylesheets"> | undefined,
+  document?: DefaultTreeAdapterMap["document"],
 ): readonly InsertedComponentStylesheet[] {
   if (!usage) return [];
   const spans = usage.insertedStylesheets;
@@ -20,7 +22,10 @@ export function insertedStylesheetSpans(
     );
   if (!spans.length) return spans;
   const links = new Map(
-    parseHtmlLinks(html).links.map((link) => [link.location.startOffset, link]),
+    parseHtmlLinks(html, document).links.map((link) => [
+      link.location.startOffset,
+      link,
+    ]),
   );
   let previousEnd = 0;
   for (const span of spans) {

@@ -479,6 +479,11 @@ Key code:
   clone object identity. Construction validates provenance once during the shared
   style/reference traversal, outside the matcher catch boundary. Entrypoint-count
   tests still prove one parse; these assertions guard the internal Parser hook.
+- `page_stylesheet_links.ts`: original-coordinate removal, identical-source
+  provenance validation and style-window offset proofs. Link paths and declarers
+  define topology; their offsets do not.
+- `component_view_complete.ts`: full evidence assembly over the shared analyses.
+- `stylesheet_scope.ts`: follows CSS edges already cached by the resource graph.
 - `page_projection.ts`, `page_reference_records.ts`: delivered string materials
   whose references come from kept/copy/producer recipes, without reparsing them
   for resource discovery.

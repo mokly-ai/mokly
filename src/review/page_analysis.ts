@@ -31,6 +31,7 @@ import {
   type PageReferenceRecord,
 } from "./page_reference_records.js";
 import { pageSubjectFilter } from "./page_subjects.js";
+import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
 
 export class PageAnalysis {
   readonly regions: readonly ReviewIgnoreRegion[];
@@ -44,6 +45,7 @@ export class PageAnalysis {
   readonly references: readonly PageReferenceRecord[];
   private readonly removedMarkers: readonly SourceSpan[];
   private readonly styles: readonly InlineStyleSpan[];
+  private inserted?: readonly string[];
 
   constructor(
     readonly source: string,
@@ -116,6 +118,26 @@ export class PageAnalysis {
 
   get materialIds(): ReadonlySet<string> {
     return (this.ids ??= new Set(this.originalMaterials?.keys()));
+  }
+
+  get stylesheetResources(): readonly string[] {
+    return (this.inserted ??= insertedStylesheetResources(
+      this.source,
+      this.usage,
+      this.route,
+      this.document,
+    ));
+  }
+
+  stylesheetEdits(root?: string) {
+    void this.stylesheetResources;
+    return (this.usage?.insertedStylesheets ?? [])
+      .filter((span) => !root || !span.componentPaths.includes(root))
+      .map((span) => ({
+        start: span.startOffset,
+        end: span.endOffset,
+        text: "",
+      }));
   }
 
   get openForeignContent(): boolean {

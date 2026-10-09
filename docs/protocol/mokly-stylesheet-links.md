@@ -70,8 +70,9 @@ Do not infer extra starting points from declarations or from matching href text.
 Use this same resource set for complete comparison, the unchanged-view fast
 path and CSS rule analysis. An edit to inserted CSS can therefore change its
 component and affect consumers even when its head anchor was ignored. Selector
-matching still uses the Review-ignore-normalized document: the exception does
-not restore ignored authored markup, styles or links. Page material separately
+matching uses original trees and ranges, with ignored subjects excluded.
+Ignored nodes remain structural selector context; their resource references
+stay ignored unless a validated inserted span supplies the resource. Page material separately
 removes the recorded links under the provenance contract. Template content and
 reused renderer links receive no exception. Complete and selected artifacts
 retain the same private spans until snapshot-resource validation finishes.

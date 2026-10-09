@@ -21,11 +21,18 @@ export function pageMaterialRecipes(
   }
   const side = (which: "before" | "after") => {
     const page = which === "before" ? before : after;
+    const includeLinks = (material: typeof inline.before.actual) => ({
+      ...material,
+      replacements: [
+        ...material.replacements,
+        ...page.stylesheetEdits(pages.root),
+      ],
+    });
     return {
-      actual: materialRecipe(page.source, inline[which].actual),
+      actual: materialRecipe(page.source, includeLinks(inline[which].actual)),
       projected: materialRecipe(
         page.source,
-        inline[which].projected,
+        includeLinks(inline[which].projected),
         page.usage,
         page.ranges,
         before.usage && after.usage ? pairs : undefined,

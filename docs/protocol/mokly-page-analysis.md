@@ -224,3 +224,18 @@ fall inside Review-ignore regions. Instance and caller-slot boundaries retain
 the existing exclusion rule. Styles within root output remain eligible entry
 styles; a root alone is not a nested component owner. Subject filtering still
 removes ignored elements from matches while keeping original selector context.
+
+## Inserted Stylesheet Links
+
+Validate full-link provenance and decoded hrefs against the existing original
+tree. Convert non-root-owned spans to empty replacement edits in the material
+recipe. Keep root-owned links on a saved component page. Resource discovery
+also uses those validated paths inside paired ignores. Never parse a link
+fragment or a link-removed page to recover its references or ranges.
+
+Topology compares link paths and declarers without offsets. A style-only edit
+proves unchanged link bytes and the exact shift of each recorded span against
+the validated head tree. Identical text validates both provenance arrays on
+that tree. Other full comparisons retain one original tree per side. CSS
+membership uses their original root/instance ranges. Embedded stylesheet scope
+reuses the reader graph's checked edges without a second reference parse.
