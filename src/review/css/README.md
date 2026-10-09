@@ -130,3 +130,7 @@ changes comparison recipes, not the matching coordinate space.
 Rule-identity collisions are typed review failures and propagate to the caller.
 The conservative parser/matcher fallback must not turn them into unresolved
 CSS evidence.
+
+`attribution.ts` freezes derived component ids, selector text and numeric range
+records. It retains no parse5 nodes or documents, so completed view trees can
+be collected while CSS membership proof remains available.
