@@ -1,6 +1,6 @@
 # Scalable Inline Style Analysis
 
-Status: Active. All milestones are complete; the plan closes when PR #158 merges. Review findings stay recorded for the user's decision. Performance acceptance is deferred to a later plan.
+Status: Active. Milestone 14 is in progress; the plan closes when PR #158 merges. Review findings stay recorded for the user's decision. Performance acceptance is deferred to a later plan.
 
 Make inferred inline style ownership work, and work fast, on a full-size React
 Native Web catalogue. Mokly must stop retaining memory it does not need, bound
@@ -2098,6 +2098,38 @@ Evidence: `.context/scalable-inline-style-analysis/m13-merge/`.
       Finding 4 (Low, process): main's #171 makes `docs/dev/` the rule directory, which makes M10 review finding 3 (the 31 `docs/dev` reports) worse; four reports also name the deleted `tests/protocol_doc_sizes.test.ts`; pending the user's decision.
       Finding 5 (Low, process): `82af7361` added a flake follow-up line under the checked M12 review TODO; pending the user's decision.
       Re-review of the fix round (`2be09cb4..a3cb179e`) complete; report: `.context/scalable-inline-style-analysis/m13-review/rereview.md`. No findings; finding 3 is fixed in `a3cb179e`.
+
+## Milestone 14: Release-Safe Large Fixture Toolchain (2026-10-09)
+
+Package the fixture's CLI and viewer together so setup works before a release
+is published. Verify that both local archives enter the fixture baseline and
+that its derived rebuild uses them. Preserve all other test assertions.
+
+User decision (2026-10-09): Milestone 13 review finding 1, option B. Setup packs the workspace viewer with the CLI and installs both from local archives. The user approved the change to main's `scripts/large/toolchain.mjs` and to the expectation in main's `tests/large_derived.test.ts`.
+
+Evidence: `.context/scalable-inline-style-analysis/m14/`.
+
+- [x] Extend `tests/large_derived.test.ts` for both archives and the ordered
+      pack/install calls. Confirm that it fails before the toolchain fix.
+- [x] Pack the workspace viewer through the injected runner, preserve the CLI
+      archive, and install both from fixture-local archives.
+- [x] Prove setup and the two affected test files at the current version and
+      an unpublished release version in a temporary worktree. Check local
+      lockfile resolution and rebuild the archived fixture baseline.
+- [x] Update the fixture and harness documentation and every stale live
+      toolchain statement. Preserve historical records and template identity
+      unless a contract statement requires a change.
+- [x] Run the targeted tests, the complete pinned-Chromium gate and the four
+      real-server smoke tests through the updated toolchain.
+- [x] Commit with Conventional Commits and push. Fetch `origin/main` and
+      report any new conflict from a dry run without merging again.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against `origin/main`. Keep the review read-only, then apply the
+      [review-fix rule](../docs/dev/review.md): fix `Auto-fix: yes` findings,
+      re-review once, and record every open finding. Keep this TODO unticked
+      until the review, its fix round, the re-review and all open findings are
+      recorded here. The supervisor runs the review.
 
 ## Post-merge follow-up (non-blocking)
 

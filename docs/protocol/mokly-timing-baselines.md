@@ -43,8 +43,9 @@ exhaustive Build when `--tracked-output` is set. Setup time is reported separate
 Rebuild Mokly explicitly after package-source edits. A fixture whose generated
 output is tracked reuses complete Git blobs. The default fixture ignores
 `mokly-generated/` and commits only source, authored resources and tooling.
-Setup always archives a packaged Mokly version and a consumer lockfile and
-installs the fixture's toolchain. For the default fixture, Serve rebuilds the archived
+Setup always archives the built Mokly CLI and workspace viewer with a consumer
+lockfile. It installs both packages from those local archives as part of the
+fixture's toolchain. For the default fixture, Serve rebuilds the archived
 commit through its `baselineBuild` recipe; no cached or committed HTML stands in
 for that build.
 The benchmark launches Chrome before timing a fresh Serve subprocess and measures

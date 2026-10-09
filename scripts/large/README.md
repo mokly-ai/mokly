@@ -9,6 +9,11 @@ The user deferred performance acceptance for the scalable analysis plan under
 its Decision 13 on 2026-10-06. Future limits require fresh same-session reference
 and candidate measurements; the M9A results are indicative only.
 
+`toolchain.mjs` packs the built CLI and workspace viewer with scripts disabled.
+Setup installs `tooling/mokly.tgz` and `tooling/viewer.tgz` from local files,
+then commits both archives with the fixture's lockfile. An unpublished viewer
+version therefore works in setup and in a later archived-baseline rebuild.
+
 ```bash
 npm run fixture:large
 npm run benchmark:large -- --scenario no-changes --scenario linked-stylesheet

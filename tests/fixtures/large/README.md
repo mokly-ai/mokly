@@ -183,10 +183,13 @@ reach the delivery ceiling without a recorded heap-limit failure.
 ### Untracked baselines
 
 The default uses a separate record for the same dimensions and leaves generated
-HTML and the manifest untracked. Setup packs the already-built Mokly package
-into `tooling/mokly.tgz`, pins Firna and its peers from this repository's
-lockfile, creates the consumer's own lockfile and installs it. Source, public
-CSS/SVG, the package archive and lockfile form the fixture's Git baseline.
+HTML and the manifest untracked. Setup packs the already-built Mokly CLI into
+`tooling/mokly.tgz` and the workspace viewer into `tooling/viewer.tgz`, both
+with `--ignore-scripts`. It installs both from those local archives, so setup
+also works before a release's viewer version is published. It pins Firna and
+its peers from this repository's lockfile, creates the consumer's own lockfile
+and installs it. Source, public CSS/SVG, both package archives and the lockfile
+form the fixture's Git baseline.
 `node_modules` and `.mokly-cache` remain ignored. Source-only setup does not
 build or prewarm the baseline cache.
 
@@ -281,7 +284,8 @@ and `screens.tsx` define the catalogue; `theme.ts` owns digest-covered tokens;
 `renderer.tsx` collects native styles;
 `renderer_inline.tsx` and `inline_styles.tsx` provide the cumulative variant;
 `scripts/large/setup.mjs` owns baseline setup and `identity.mjs` validates provenance;
-`toolchain.mjs` archives derived tooling; `baseline.mjs` resets the pinned cache;
+`toolchain.mjs` archives the CLI and workspace viewer and installs the fixture's
+locked dependencies; `baseline.mjs` resets the pinned cache;
 `scenarios.mjs` applies edits; `cancellation.mjs` owns signal cleanup;
 `matrix.mjs` restores setup; `sample.mjs` retains events; `outcomes.mjs` derives
 outcomes; `interactive.mjs` checks browser behavior; `timings.mjs` aggregates
