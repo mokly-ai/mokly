@@ -81,25 +81,36 @@ function validateInlineStyles(
   view: Record<string, unknown>,
   paired: boolean,
 ): void {
-  const shape = reviewObject(view.inlineStyles, ["status"], ["selectors"]);
+  const shape = validateInlineStyleEvidence(view.inlineStyles);
   if (!paired || view.state === "added" || view.state === "removed")
     reviewInvalid("inline style evidence requires a paired view");
   if (shape.status === "matched" || shape.status === "unresolved") {
-    const evidence = reviewObject(view.inlineStyles, ["status", "selectors"]);
-    const selectors = reviewStrings(evidence.selectors);
-    if (shape.status === "matched" && selectors.length === 0)
-      reviewInvalid("matched inline styles require selectors");
     if (view.state !== "changed" || view.material !== true)
       reviewInvalid("retained inline styles require changed material");
     return;
   }
-  if (shape.status !== "excluded")
-    reviewInvalid("invalid inline style evidence status");
-  reviewObject(view.inlineStyles, ["status"]);
+
   if (
     view.state !== "unchanged" ||
     view.material !== undefined ||
     view.reasons !== undefined
   )
     reviewInvalid("excluded inline styles require an unchanged view");
+}
+
+/** The evidence payload also crosses the state-free public catalogue boundary. */
+export function validateInlineStyleEvidence(
+  value: unknown,
+): Record<string, unknown> {
+  const shape = reviewObject(value, ["status"], ["selectors"]);
+  if (shape.status === "matched" || shape.status === "unresolved") {
+    const evidence = reviewObject(value, ["status", "selectors"]);
+    const selectors = reviewStrings(evidence.selectors);
+    if (shape.status === "matched" && selectors.length === 0)
+      reviewInvalid("matched inline styles require selectors");
+    return shape;
+  }
+  if (shape.status !== "excluded")
+    reviewInvalid("invalid inline style evidence status");
+  return reviewObject(value, ["status"]);
 }

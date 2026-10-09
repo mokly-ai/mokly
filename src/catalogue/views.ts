@@ -72,9 +72,15 @@ export function projectViews(
           )
         : undefined;
     return {
-      ...(evidence && ("reasons" in evidence || "excludedResources" in evidence)
+      ...(evidence &&
+      ("reasons" in evidence ||
+        "excludedResources" in evidence ||
+        "inlineStyles" in evidence)
         ? {
             resourceEvidence: {
+              ...("inlineStyles" in evidence && evidence.inlineStyles
+                ? { inlineStyles: evidence.inlineStyles }
+                : {}),
               ...("reasons" in evidence && evidence.reasons?.length
                 ? { reasons: evidence.reasons }
                 : {}),

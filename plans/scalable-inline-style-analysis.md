@@ -2161,9 +2161,9 @@ for approval. D12 makes no change to PR #182 or any other PR.
 - [x] Audit and merge `origin/main` once with two parents. Resolve each path,
       inspect every auto-merged path changed on both sides, review all remerge
       paths, audit deletions, and freeze the merge SHA before follow-up commits.
-- [ ] Integrate D1, D3, D4 and D10: graceful renderer results, checked CSS
+- [x] Integrate D1, D3, D4 and D10: graceful renderer results, checked CSS
       closure seeds, non-CSS ownership and main's output validation.
-- [ ] Integrate D2's v10/v6/v7 shapes and inline evidence fields. Check PR #182's
+- [x] Integrate D2's v10/v6/v7 shapes and inline evidence fields. Check PR #182's
       release state before relying on unreleased format numbers.
 - [ ] Integrate D5's ownership rules by delivery path, including root ownership
       and root boundaries in Review-ignore regions.

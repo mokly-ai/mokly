@@ -61,7 +61,6 @@ export function validateComponentViews(
         "instances",
         "slots",
         "ranges",
-        "styles",
         "resources",
         "insertedStylesheets",
       ],
@@ -73,7 +72,6 @@ export function validateComponentViews(
       "instances",
       "slots",
       "ranges",
-      "styles",
       "resources",
       "insertedStylesheets",
     ])

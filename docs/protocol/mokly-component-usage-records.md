@@ -205,6 +205,22 @@ missing usage is never normalized to empty.
 
 Readers reject unknown fields, invalid hashes, missing references, cycles,
 incorrect ordering, duplicate records, invalid source locations, unsafe
-resource paths, overlapping styles, and owners absent from the view. Optional
+resource paths, overlapping inserted links, and owners absent from the view. Optional
 invocation source is secondary metadata and never enters keys, props hashes, or
 Changes projections.
+
+The public validators require an explicit options object.
+`validateComponentViews(value, components, at, { dark, rootId?, historical? })`
+checks the complete axis-ordered list; `dark` is required.
+`validateComponentViewRecord(view, components, at, { rootId?, historicalUsage? })`
+checks one render. Pass `{}` for a current screen. `rootId` names the component
+parent for a saved view, including its root's non-CSS resource ownership.
+
+`historicalUsage` defaults to false. It keeps already-admitted historical
+inspection props and slots when current schemas change. It does not admit an
+earlier manifest shape. Current and historical manifest usage have the same
+v10 fields, with no `styles` array. The `historical` list option is retained
+for callers, but it does not remove fields or translate input. Options are
+plain objects with only the named fields. `rootId` is a string; the other fields
+are booleans. Missing options, positional arguments, unknown keys, invalid
+option types and extra arguments fail with `ComponentValidationError`.

@@ -10,19 +10,6 @@ export function validateViewMaterials(
   rendered: ReadonlySet<string>,
   at: string,
 ): void {
-  let end = 0;
-  for (const style of view.styles) {
-    exactKeys(style, ["startOffset", "endOffset", "componentIds"], at);
-    if (
-      !Number.isSafeInteger(style.startOffset) ||
-      !Number.isSafeInteger(style.endOffset) ||
-      style.startOffset < end ||
-      style.endOffset <= style.startOffset
-    )
-      invalidData(at, "invalid or overlapping style range");
-    end = style.endOffset;
-    validateOwners(style.componentIds, rendered, at);
-  }
   for (const resource of view.resources) {
     exactKeys(resource, ["path", "componentIds"], at);
     validateResourcePath(resource.path, at);

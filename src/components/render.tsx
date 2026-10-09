@@ -151,7 +151,6 @@ export const renderWithComponents: ComponentGraphRenderer = (
       a.key < b.key ? -1 : 1,
     ),
     ranges: serialized.ranges,
-    styles: [],
     resources:
       typeof result === "string"
         ? []
