@@ -44,8 +44,10 @@ co-located layout was delivered by the
   `MOKLY_*` environment variables do not include the npm scope.
 
 The supported runtime is Node.js `>=22.14.0 <24.14.0` or `>=24.19.0`. CI tests
-the minimum supported release, 22.14.0, and the pinned 24.21.0 release; these are
-tested representatives, not the support bounds. Node 24.14–24.18 are excluded
+the minimum supported release, 22.14.0, on every run. Release Please pull
+requests also test the latest Node 24 patch. Local verification and `.nvmrc`
+use 24.21.0. These are tested representatives, not the support bounds.
+Node 24.14–24.18 are excluded
 because their native CommonJS export pre-parser can abort under concurrent
 ESM-to-CommonJS loading. A minimal CLI bootstrap rejects unsupported Node
 versions with an actionable error before loading other application modules.
