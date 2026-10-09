@@ -8,13 +8,13 @@ import {
 } from "../components/comparison_material.js";
 import { materialRecipe } from "../components/material_recipe.js";
 import { mayContainCssReferences } from "../css_references.js";
-import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
 
 import {
   prepareComponentProjection,
   type PreparedComponentComparison,
 } from "./component_projection_resources.js";
 import { changedResourceBytes } from "./component_resource_changes.js";
+import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
 import type {
   ComparedComponentView,
   ComponentViewContext,
@@ -25,8 +25,8 @@ import {
 } from "./css/inline_styles.js";
 import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
 import type { PageAnalysisPair } from "./page_pair.js";
-import { insertedComparisonSource } from "./page_stylesheet_links.js";
 import { identicalPageQuickCheck } from "./page_quick_check.js";
+import { insertedComparisonSource } from "./page_stylesheet_links.js";
 import { styleNeedsFullValidation } from "./style_source_safety.js";
 
 export interface UnchangedComponentAttempt {
@@ -56,8 +56,22 @@ export async function compareUnchangedComponentView(
     const comparison = await identicalPageQuickCheck(context, pages, view);
     return comparison ? { comparison } : {};
   }
-  const baseSource = insertedComparisonSource(base, before.usage, root);
-  const headSource = insertedComparisonSource(head, after.usage, root);
+  const rootOnly =
+    Boolean(pages) &&
+    [before.usage, after.usage].every(
+      (usage) =>
+        usage &&
+        usage.instances.length === 0 &&
+        usage.slots.length === 0 &&
+        usage.ranges.length === 1 &&
+        usage.ranges[0]!.target.kind === "root",
+    );
+  const comparisonSource = (source: string, usage: typeof before.usage) => {
+    const material = insertedComparisonSource(source, usage, root);
+    return rootOnly ? stripComponentMarkers(material) : material;
+  };
+  const baseSource = comparisonSource(base, before.usage);
+  const headSource = comparisonSource(head, after.usage);
   const retained =
     pages?.normalize(baseSource, headSource) ??
     normalizeReviewPair(baseSource, headSource, after.path, links);
@@ -110,15 +124,18 @@ export async function compareUnchangedComponentView(
   );
   const strippedHead = stripComponentMarkers(headSource);
   const actual =
-    pages?.normalize(strippedBase, strippedHead) ??
-    normalizeReviewPair(strippedBase, strippedHead, after.path, links);
+    strippedBase === baseSource && strippedHead === headSource
+      ? retained
+      : (pages?.normalize(strippedBase, strippedHead) ??
+        normalizeReviewPair(strippedBase, strippedHead, after.path, links));
   if (actual.base !== actual.head) return fallback();
 
   const hasOwnershipEdits = [before.usage, after.usage].some(
     (usage) =>
       usage &&
       (usage.instances.length > 0 ||
-        usage.ranges.some((range) => range.target.kind === "root") ||
+        (!pages &&
+          usage.ranges.some((range) => range.target.kind === "root")) ||
         usage.slots.some((slot) => slot.owner.kind === "entry")),
   );
   const hasInlineReferences = [base, head].some(mayContainCssReferences);
@@ -177,7 +194,6 @@ export async function compareUnchangedComponentView(
           excluded,
           {
             references: prepared?.references?.after,
-            insertedStylesheets: headStylesheets,
           },
         )
       : new Set<string>();
@@ -189,7 +205,6 @@ export async function compareUnchangedComponentView(
           excluded,
           {
             references: prepared?.references?.before,
-            insertedStylesheets: baseStylesheets,
           },
         )
       : projectedAfterResources;

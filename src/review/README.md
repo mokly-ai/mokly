@@ -453,7 +453,8 @@ Key code:
   Identical source/path/topology shares head analysis and conservative original/
   caller-copy seeds, with no projection, inline analysis or hashing. The
   proofs compare both closures and their bytes independently.
-  Non-identical attempts project only for ownership text edits. Fall-through reuses
+  Non-identical attempts project only for ownership text edits. A root alone
+  needs validation but no projection. Fall-through reuses
   trees/discovery and rebuilds any unattributed material for full attribution.
 - `component_style_route.ts`, `style_windows.ts`: the numbered
   [style-only proof](../../docs/protocol/mokly-style-only-route.md), with one

@@ -16,19 +16,18 @@ import {
   ownedResourceReasons,
   rootResourcesChanged,
 } from "./component_resource_attribution.js";
+import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
+import { deliveredInlineStyles } from "./component_view_material.js";
 import {
   componentResourceByteChanges,
   byteMaterialChanged,
 } from "./component_view_resources.js";
-import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
-import { componentCssDocuments } from "./css/containment.js";
-import { deliveredInlineStyles } from "./component_view_material.js";
-import type { PageAnalysisPair } from "./page_pair.js";
-
 import type {
   ComparedComponentView,
   ComponentViewContext,
 } from "./component_view_types.js";
+import { componentCssDocuments } from "./css/containment.js";
+import type { PageAnalysisPair } from "./page_pair.js";
 /** Complete comparison shares the original analyses left by either shortcut. */
 export async function compareCompleteComponentView(
   context: ComponentViewContext,
@@ -75,23 +74,25 @@ export async function compareCompleteComponentView(
     after!.path,
     pages?.afterAnalysis.document,
   );
-  const cssDocuments = () => [
-    componentCssDocuments(
-      base,
-      head,
-      selected.path,
-      before?.usage,
-      after?.usage,
-      root,
-      pages
-        ? {
-            before: pages.beforeAnalysis,
-            after: pages.afterAnalysis,
-            paired: pages.pairedIgnoreIds,
-          }
-        : undefined,
-    ),
-  ];
+  const cssDocuments = pages
+    ? () => [
+        componentCssDocuments(
+          base,
+          head,
+          selected.path,
+          before?.usage,
+          after?.usage,
+          root,
+          pages
+            ? {
+                before: pages.beforeAnalysis,
+                after: pages.afterAnalysis,
+                paired: pages.pairedIgnoreIds,
+              }
+            : undefined,
+        ),
+      ]
+    : undefined;
   const rootOwnershipChanged = rootResourcesChanged(
     before?.usage,
     after?.usage,
@@ -113,13 +114,11 @@ export async function compareCompleteComponentView(
     {
       path: before!.path,
       html: resourceBefore,
-      insertedStylesheets: baseStylesheets,
       ...(references ? { references: references.before } : {}),
     },
     {
       path: after!.path,
       html: resourceAfter,
-      insertedStylesheets: headStylesheets,
       ...(references ? { references: references.after } : {}),
     },
     excluded,
@@ -156,13 +155,11 @@ export async function compareCompleteComponentView(
     {
       path: before!.path,
       html: resourceBefore,
-      insertedStylesheets: baseStylesheets,
       ...(references ? { references: references.before } : {}),
     },
     {
       path: after!.path,
       html: resourceAfter,
-      insertedStylesheets: headStylesheets,
       ...(references ? { references: references.after } : {}),
     },
     excluded,

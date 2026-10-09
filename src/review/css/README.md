@@ -126,3 +126,7 @@ See [parse reuse](../../../docs/protocol/mokly-css-parse-reuse.md),
 `containment.ts` binds each original page tree to its original root and instance
 ranges. It uses the existing paired-ignore subject filter. Inserted-link removal
 changes comparison recipes, not the matching coordinate space.
+
+Rule-identity collisions are typed review failures and propagate to the caller.
+The conservative parser/matcher fallback must not turn them into unresolved
+CSS evidence.

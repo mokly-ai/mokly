@@ -44,7 +44,9 @@ declared. Public output and snapshots keep the final documents.
 Resource discovery uses the final documents before comparison-only link removal.
 It finds Mokly-inserted links from validated `insertedStylesheets` spans, even
 inside paired Review-ignore regions. Include those links and their transitive
-resources in the CSS rule scope on both the complete and fast comparison paths.
+resources in actual CSS evidence on both the complete and fast comparison paths.
+Do not add all inserted paths to projected discovery or projected byte checks.
+A nested declaration alone cannot create consumer material in bytes mode.
 The author's own ignored links, styles and markup stay ignored under the usual
 paired Review-ignore rule. Do not restore the surrounding ignored region or
 use its elements as selector matches. A reused authored link gets no inserted-link exception. Provenance supplies resource

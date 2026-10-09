@@ -12,13 +12,13 @@ import { validateComponentRanges } from "../components/ranges.js";
 
 import type { InlineResourceOwners } from "./component_inline_resources.js";
 import type { PreparedInlineStyleEvidence } from "./component_projection_resources.js";
-import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
-import { componentCssDocuments } from "./css/containment.js";
 import { ownedResourceReasons } from "./component_resource_attribution.js";
+import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
 import type {
   ComponentViewContext,
   ComparedComponentView,
 } from "./component_view.js";
+import { componentCssDocuments } from "./css/containment.js";
 import { normalizeSingleDocument } from "./ignore.js";
 import { PageAnalysis } from "./page_analysis.js";
 
@@ -100,22 +100,24 @@ export async function compareOneSidedComponentView(
           after: after ? analysis.matching([]) : undefined,
         }
       : undefined,
-    () => [
-      componentCssDocuments(
-        before ? source : undefined,
-        after ? source : undefined,
-        selected.path,
-        before?.usage,
-        after?.usage,
-        root,
-        analysis
-          ? {
-              before: before ? analysis : undefined,
-              after: after ? analysis : undefined,
-            }
-          : undefined,
-      ),
-    ],
+    analysis
+      ? () => [
+          componentCssDocuments(
+            before ? source : undefined,
+            after ? source : undefined,
+            selected.path,
+            before?.usage,
+            after?.usage,
+            root,
+            analysis
+              ? {
+                  before: before ? analysis : undefined,
+                  after: after ? analysis : undefined,
+                }
+              : undefined,
+          ),
+        ]
+      : undefined,
   );
   return {
     comparisonPath: "complete",

@@ -7,19 +7,20 @@ import type {
 } from "@mokly/viewer/data";
 
 import { documentWorkSync } from "../../diagnostics/timings.js";
+import { MoklyError } from "../../errors.js";
 
 import { analyzeStylesheetChange } from "./analyze.js";
-import { ByteBoundedLru } from "./byte_lru.js";
-import { diffCssRules } from "./diff.js";
-import { detachParseResult } from "./parse_cache.js";
 import {
   CssAttribution,
   outputMatch,
   type CollectedCssRule,
 } from "./attribution.js";
+import { ByteBoundedLru } from "./byte_lru.js";
 import type { CssMatchingPair } from "./containment.js";
+import { diffCssRules } from "./diff.js";
 import { CssRuleIdentities } from "./identity.js";
 import { matchCssRules } from "./match.js";
+import { detachParseResult } from "./parse_cache.js";
 import { LightningCssRuleParser } from "./rules.js";
 import { CssSegmentAnalysis } from "./segment_analysis.js";
 import {
@@ -100,7 +101,8 @@ export class CssResourceAnalysis {
       let rules: CollectedCssRule[];
       try {
         rules = this.rules(resource, documents);
-      } catch {
+      } catch (error) {
+        if (error instanceof MoklyError) throw error;
         rules = [
           {
             status: "unresolved",
