@@ -4,7 +4,7 @@ use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use crate::child_environment::SECRET_VARIABLES;
+use crate::child_environment::{GIT_REPOSITORY_VARIABLES, SECRET_VARIABLES};
 use crate::error::{Error, Result};
 
 /// One deterministic subprocess invocation.
@@ -94,6 +94,9 @@ fn build_command(spec: &CommandSpec) -> Command {
     command.args(spec.args.iter().map(OsStr::new));
     if let Some(directory) = spec.working_directory() {
         command.current_dir(directory);
+    }
+    for name in GIT_REPOSITORY_VARIABLES {
+        command.env_remove(name);
     }
     for name in SECRET_VARIABLES {
         command.env_remove(name);

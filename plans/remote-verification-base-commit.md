@@ -152,6 +152,20 @@ of the [Blacksmith remote verification plan](./blacksmith-remote-verification.md
    snapshot. The CLI does not sync it. Its fingerprint then differs from the
    checkout, so preparation fails and `auto` falls back to local. Document the
    limit. Add no code for it.
+10. **Git child environment.** On 2026-10-09 the user chose option B for
+    review finding 1. Define one shared `GIT_REPOSITORY_VARIABLES` list beside
+    `SECRET_VARIABLES` in `xtask/src/child_environment.rs`. Use the 15 names
+    from `git rev-parse --local-env-vars` with Git 2.50.1:
+    `GIT_ALTERNATE_OBJECT_DIRECTORIES`, `GIT_CONFIG`, `GIT_CONFIG_PARAMETERS`,
+    `GIT_CONFIG_COUNT`, `GIT_OBJECT_DIRECTORY`, `GIT_DIR`, `GIT_WORK_TREE`,
+    `GIT_IMPLICIT_WORK_TREE`, `GIT_GRAFT_FILE`, `GIT_INDEX_FILE`,
+    `GIT_NO_REPLACE_OBJECTS`, `GIT_REPLACE_REF_BASE`, `GIT_PREFIX`,
+    `GIT_SHALLOW_FILE` and `GIT_COMMON_DIR`. Hooks, `git rebase -x` and aliases
+    in linked worktrees can export repository variables. Every local runner,
+    remote process request and helper such as `kill` removes the list. Rust
+    test Git helpers follow the same rule. Remove the list before applying a
+    request's temporary index. Retain secret removal. Preserve other variables,
+    including Git network and prompt settings. Do not change findings 2 or 3.
 
 ### Contingency
 
@@ -364,6 +378,56 @@ under `.context/remote-verification-base-commit/`.
   - Finding 2 (Medium): synced renames and deletions break index-based checks. Recommend B: stage the synced tree in the suite wrapper after the fingerprint check.
   - Finding 3 (Medium): real-Git tests depend on global settings. Recommend B: isolate global and system Git config in test helpers.
 
+## Milestone 5: Git repository variables (review finding 1)
+
+Xtask children use their requested directory without inherited Git repository
+variables. Linked-worktree snapshot commands preserve the checkout and its
+index when a hook, rebase command or alias starts xtask.
+
+Evidence: `.context/remote-verification-base-commit/finding1.md`.
+
+- [x] Define the shared 15-name Git repository variable list. Name
+      `git rev-parse --local-env-vars` and Git 2.50.1 in its doc comment.
+- [x] Remove the list in both remote spawn builders and the local builder.
+      Apply the temporary index afterwards. Preserve secrets, network and
+      prompt rules. Cover Rust test Git helpers through the same boundary.
+- [x] Add structural tests for both builders and the kill helper. Require
+      every removal, scoped temporary indexes, secret removal and preserved
+      network and prompt variables. Record failures before the fix and passes
+      after it.
+- [x] Add a re-exec real-child test for inherited `GIT_DIR`, `GIT_WORK_TREE`,
+      `GIT_INDEX_FILE` and `GIT_PREFIX`. Record its failing and passing runs.
+- [x] Add re-exec snapshot regressions with a linked checkout, one pushed
+      commit, one unpushed commit and a staged file. Test `GIT_DIR` alone and
+      with `GIT_WORK_TREE`. Require expected snapshot files and unchanged
+      checkout HEAD, index, status, config and worktree list. Record both runs.
+- [x] Keep every Rust file at or below 300 lines. Split support modules when
+      needed. Keep tests under `_tests_`.
+- [x] Define the Git child environment rule in the security protocol. Link
+      it from the base snapshot section. Update both READMEs. Keep the base
+      protocol under 250 lines. Add no lines to the protocol index or Testbox
+      page, which are at their caps.
+- [x] Run the full xtask tests before and after the fix with `GIT_DIR` naming
+      only a scratch linked worktree under `/tmp`. Record config, status and
+      worktree list before and after each run. Require damage before the fix
+      and unchanged state afterwards. Never use this checkout or its hooks.
+- [x] Run xtask tests, Rust fmt, Clippy, both length lints, the repository
+      suite, Markdown and protocol tests, and `npm run format:check`.
+- [ ] Run the complete default automatic gate from the unpushed fix commit.
+      Require the pushed branch tip as base, ahead 1, 11/11 commands, 9/9
+      reports, a passed aggregate, an unchanged tree and cleanup=0. Save
+      `finding1-gate.log`. Require no box, snapshot or extra worktree remains.
+- [ ] Commit with a Conventional Commits title of at most 50 characters that
+      names finding 1. Keep it unpushed for the complete gate. After the gate
+      passes, record the completed TODOs and push. Keep all evidence ignored.
+- [ ] After the push, the user reviews the complete local diff against
+      `origin/main` with
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      and reports findings. Keep the review read-only. The implementer then
+      applies the [review-fix rule](../docs/dev/review.md): fix the
+      `Auto-fix: yes` findings, run checks, commit and push, re-review once,
+      fix new `Auto-fix: yes` findings once more, then stop and report the rest.
+
 ## Post-merge follow-up (non-blocking)
 
 - [ ] During the first week after the merge, record under
@@ -371,3 +435,7 @@ under `.context/remote-verification-base-commit/`.
       back to local mode because of a probe failure, with the warning text.
 - [ ] If Blacksmith adds a CLI option that selects the commit to fetch, a
       later plan can remove the snapshot worktree.
+- [ ] TypeScript test helpers still inherit `GIT_DIR` when a hook runs
+      `npm test` directly; `tests/verification_source_tree.test.ts` is one
+      example. This issue already exists on main. A separate plan can isolate
+      those helpers.

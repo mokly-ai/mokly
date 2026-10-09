@@ -114,6 +114,8 @@ remove. Check the interrupt flag immediately after construction finishes.
 An interrupt removes the snapshot and prevents warmup and local fallback.
 If the process request needs an environment field, keep it typed.
 Retain the shared secret environment removal and input redaction.
+Apply the [child environment rule](./ci-verification-security.md#child-environment):
+remove Git repository variables before applying the temporary index override.
 
 Compute the source-tree fingerprint from the checkout and from the snapshot.
 Require equal values before warmup. A mismatch fails preparation.

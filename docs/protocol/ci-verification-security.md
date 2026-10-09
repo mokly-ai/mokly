@@ -52,10 +52,22 @@ It sends the key to `blacksmith auth login --api-token -` on standard input.
 Login saves the key in `~/.blacksmith/credentials`.
 It replaces any saved login for the same organization.
 The key must never appear in arguments, logs, remote commands or reports.
-One shared list defines secret environment variables for xtask children.
-The list currently contains only `BLACKSMITH_ORG_TOKEN`.
-Every local runner and remote process request removes each listed variable
-from its child environment. This includes helper processes such as `kill`.
+
+### Child Environment
+
+`SECRET_VARIABLES` defines secret variables for xtask children. It currently
+contains only `BLACKSMITH_ORG_TOKEN`.
+`GIT_REPOSITORY_VARIABLES` holds the 15 repository-local names from
+`git rev-parse --local-env-vars` in Git 2.50.1. Git can export these variables
+to hooks, `git rebase -x` commands and `!` aliases in linked worktrees.
+Inherited repository selection can redirect snapshot commands to the checkout's
+index or make test Git commands alter its config.
+Every local runner and remote process request removes both lists from its
+child environment. This includes helpers such as `kill` and Rust test Git
+requests. Children then use their requested working directory.
+Remote requests set `GIT_INDEX_FILE` only for the three snapshot tree-build
+requests, after removing the inherited list. Other variables stay, including
+network and prompt settings such as `GIT_ASKPASS` and `GIT_SSH_COMMAND`.
 Key login uses standard input, never a child environment variable.
 Explicit remote mode can use the current CLI login when the variable is unset
 or empty. Automatic mode selects local execution in that case.

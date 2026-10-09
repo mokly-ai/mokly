@@ -10,7 +10,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 
-use crate::child_environment::SECRET_VARIABLES;
+use crate::child_environment::{GIT_REPOSITORY_VARIABLES, SECRET_VARIABLES};
 use crate::remote::contracts::{Clock, Interrupt, LogSink, Logs, Output};
 use crate::remote::error::{Error, Operation, Result};
 
@@ -219,7 +219,9 @@ fn build_command(request: &Request) -> Command {
     if request.blacksmith {
         command.env("BLACKSMITH_DISABLE_AUTO_UPDATE", "1");
     }
-    command.env_remove("GIT_INDEX_FILE");
+    for name in GIT_REPOSITORY_VARIABLES {
+        command.env_remove(name);
+    }
     if let Some(index) = &request.git_index {
         command.env("GIT_INDEX_FILE", index);
     }
@@ -239,6 +241,9 @@ fn kill_command(pid: u32) -> Command {
         .args(["-KILL", "--", &format!("-{pid}")])
         .stdout(Stdio::null())
         .stderr(Stdio::null());
+    for name in GIT_REPOSITORY_VARIABLES {
+        command.env_remove(name);
+    }
     for name in SECRET_VARIABLES {
         command.env_remove(name);
     }

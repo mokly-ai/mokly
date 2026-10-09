@@ -144,7 +144,10 @@ Login saves the key in `~/.blacksmith/credentials`.
 It replaces any saved login for the same organization.
 The CLI never receives the key in arguments or remote commands.
 Every xtask child removes the shared secret environment list, which currently
-contains only `BLACKSMITH_ORG_TOKEN`. Key login still uses standard input.
+contains only `BLACKSMITH_ORG_TOKEN`, and the shared Git repository variable
+list. This keeps hooks, `git rebase -x` and aliases from redirecting children to
+the caller's repository. Remote requests set their temporary index afterwards.
+Git network and prompt settings stay. Key login still uses standard input.
 Availability checks name all missing programs in one diagnostic, in the order
 `blacksmith`, `rsync`, `ssh`, with their install hints.
 Warmup uses the Testbox workflow from `main`.
@@ -290,7 +293,8 @@ They do not assert elapsed time.
 - [`src/command.rs`](./src/command.rs) defines the injected command-runner
   boundary.
 - [`src/child_environment.rs`](./src/child_environment.rs) defines the shared
-  secret environment list for local commands, remote requests and helpers.
+  secret and Git repository variable lists for local commands, remote requests,
+  helpers and Rust test Git requests.
 - [`src/check/request.rs`](./src/check/request.rs) validates suite, shard, and
   dependency audit selections before subprocesses start.
 - [`src/check/commands.rs`](./src/check/commands.rs) defines the shared suite

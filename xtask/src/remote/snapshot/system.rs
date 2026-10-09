@@ -130,3 +130,7 @@ mod system_tests;
 #[cfg(test)]
 #[path = "_tests_/index_adapter_tests.rs"]
 mod index_adapter_tests;
+
+#[cfg(test)]
+#[path = "_tests_/environment_adapter_tests.rs"]
+mod environment_adapter_tests;
