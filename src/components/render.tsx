@@ -7,8 +7,8 @@ import type { ComponentViewRecord } from "@mokly/viewer";
 import { invalidData } from "@mokly/viewer/data";
 
 import { definitionPath } from "../authoring/identity.js";
-import { rendererDocument } from "../renderer/result.js";
 import type { BuildDiagnostic } from "../build/build_warnings.js";
+import { rendererDocument } from "../renderer/result.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { RenderInput, Renderer } from "../renderer/types.js";
 

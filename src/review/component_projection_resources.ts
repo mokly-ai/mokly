@@ -12,8 +12,8 @@ import {
 } from "../components/ranges.js";
 import { parseHtml } from "../diagnostics/html_parse.js";
 
-import type { ComponentViewContext } from "./component_view_types.js";
 import { projectedResourceExclusion } from "./component_resource_exclusion.js";
+import type { ComponentViewContext } from "./component_view_types.js";
 import type { CssDocument } from "./css/document.js";
 import {
   attributeInlineRules,

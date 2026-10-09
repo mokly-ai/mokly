@@ -31,7 +31,9 @@ spread a manifest, entry, or internal evidence object into public JSON.
   require a current parent. Variants follow their parent in authored order;
   the first current variant is the default. Ready usage copies only
   instances/slots/ranges with validated props and supplied slot names.
-- Ready view/page `resourceEvidence` copies only the [public resource fields](./mokly-css-attribution-membership.md), including rule keys, changed component paths and page selectors. Root boundaries create no instance. Private inserted-link provenance is omitted; no match nodes, source paths or declarations enter evidence.
+- Ready view/page `resourceEvidence` copies only the [public resource fields](./mokly-css-attribution-membership.md), including rule keys, changed component paths and page selectors. View evidence
+  also retains `inlineStyles`, alone or beside file evidence, in both Serve and
+  export. Whole-document page evidence has no inline payload. Root boundaries create no instance. Private inserted-link provenance is omitted; no match nodes, source paths or declarations enter evidence.
 - Details retain authored display metadata already exposed by the inspector.
   `sourcePath`, optional invocation `source.path`, and local related-doc paths stay repository-relative metadata. They never become source-serving URLs.
   The removed `details.dependencies` field is absent.

@@ -4,7 +4,7 @@ Continuation of [Catalogue Read Model](./mokly-catalogue.md).
 
 ## Projection And Privacy
 
-Construct an explicit allowlist projection from validated manifest v9, the
+Construct an explicit allowlist projection from validated manifest v10, the
 validated folder records, and the accepted Changes/comparison snapshot. Do not
 spread a manifest, entry, or internal evidence object into public JSON.
 
@@ -25,8 +25,6 @@ spread a manifest, entry, or internal evidence object into public JSON.
   the first current variant is the default. Ready usage copies only
   instances/slots/ranges with validated props and supplied slot names.
 - Details retain authored display metadata already exposed by the inspector.
-  `details.dependencies` lists the entry's source path, declared paths, and
-  for a document its resources as repository-relative display labels only.
   Source paths stay repository-relative and never serve source bytes. Matched
   `relatedDocs` use validated `mock:<path>` references to current documents
   under the [document contract](./mokly-documents.md).
@@ -35,7 +33,7 @@ Never emit `sourceFiles`, `declaredDependencies`, `ownedDependencies`,
 `movedFrom`, folder `exclude` globs, resolved dependency evidence,
 changed-path inventories, source graphs, Git commands, private manifest
 envelopes, content digests for source inputs, style offsets
-(`startOffset`/`endOffset`), retired style/resource ownership tables, absolute
+(`startOffset`/`endOffset`), resource ownership tables, absolute
 filesystem paths, credentials, or render-capability tokens. No source bytes,
 HTML, runtime React values, or source maps belong in this JSON. This privacy
 rule applies recursively, including removed entries and extension fields.
@@ -68,3 +66,8 @@ arrays require proven empty usage, never a failed or incomplete render.
 pinned to this content's evidence. Resolve snapshots against that JSON response
 URL. Null forbids fallback requests to `/mokly-viewer/diffs/review.json`.
 Comparison files load only on selection.
+
+Ready screen and saved-component views retain `inlineStyles` in their optional
+`resourceEvidence`. The payload has the review contract's canonical shape; the
+catalogue does not copy private style coordinates or invent a file path.
+Pending, unavailable and disabled evidence omits the field.

@@ -11,7 +11,6 @@ import {
   discoverInlineResourceOwners,
   type InlineResourceOwners,
 } from "../../../dist/review/component_inline_resources.js";
-import type { ComponentDependencyPolicy } from "../../../dist/review/component_metadata.js";
 import {
   ownedResourceComponents,
   ownedResourceReasons,
@@ -42,7 +41,6 @@ export interface ComparedComponentView {
 export interface ComponentViewContext {
   beforeReader: ComponentMaterialReader;
   afterReader: ComponentMaterialReader;
-  dependencies: ComponentDependencyPolicy;
   changed: ReadonlySet<string>;
   prefix: string;
   resources: ResourceComparison;
@@ -90,7 +88,7 @@ export async function compareComponentView(
       changedImplementations: new Set(),
       ownedResources: ownedResourceReasons(
         evidence.reasons ?? [],
-        context.dependencies,
+        context.prefix,
         EMPTY_INLINE_OWNERS,
         before?.usage,
         after?.usage,
@@ -191,7 +189,7 @@ export async function compareComponentView(
     [...actualByteChanges]
       .map(repoPath)
       .filter((path) => !context.changed.has(path)),
-    context.dependencies,
+    context.prefix,
     inlineOwners,
     before?.usage,
     after?.usage,
@@ -213,7 +211,7 @@ export async function compareComponentView(
     comparisonPath: "complete",
     ownedResources: ownedResourceReasons(
       actualEvidence.reasons ?? [],
-      context.dependencies,
+      context.prefix,
       inlineOwners,
       before?.usage,
       after?.usage,

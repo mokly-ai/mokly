@@ -9,6 +9,7 @@ import {
 } from "../dist/diagnostics/timings.js";
 import { classifyComponentsWithSources } from "../dist/review/component_classification_sources.js";
 
+import { assertClassificationEqual } from "./helpers/classification_equality.js";
 import { memoryReader } from "./helpers/component_fast_path.js";
 import { styleRouteLargeFixture } from "./helpers/style_route_large.js";
 
@@ -42,7 +43,7 @@ test("ordinary RNW fixtures retain complete-path fingerprints and exact text-ora
           () => runWithComparisonWork(() => classify(true), true),
           { write: (event) => events.push(event) },
         );
-        assert.deepEqual(actual, await classify(false));
+        assertClassificationEqual(actual, await classify(false));
         const counts = events.find(
           ({ stage, event }) =>
             stage === "review.material-work" && event === "counts",

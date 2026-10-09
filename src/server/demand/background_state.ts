@@ -3,10 +3,10 @@ import type { ManifestV10 } from "@mokly/viewer/data";
 
 import type { BaselineCatalogue } from "../../baseline/catalogue.js";
 import type { BuildDiagnostic } from "../../build/build_warnings.js";
-import type { GenerationWarning } from "../../build/warning_generation.js";
 import type { Compilation } from "../../build/compile.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import type { GeneratedFile } from "../../build/generated_file.js";
+import type { GenerationWarning } from "../../build/warning_generation.js";
 import type { ResolvedConfig } from "../../config/types.js";
 import { errorMessage } from "../../errors.js";
 import type { BaselineSelection } from "../../review/repository.js";

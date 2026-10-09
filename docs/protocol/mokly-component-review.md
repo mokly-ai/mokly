@@ -12,10 +12,9 @@ decoder implement this path-keyed component-aware schema v7 for
 [Changes contract](./mokly-changes.md) and
 [named result interfaces](../../packages/viewer/src/review/types.ts).
 Manifest/usage types come from the
-[component manifest](./mokly-component-manifest.md). Version 6 addresses
+[component manifest](./mokly-component-manifest.md). Version 7 addresses
 screens, components, variants, and views by entry path and view axes, carries
 `previousPath` for paired moves, and stores no artifact path.
-Optional `inlineStyles` evidence follows [inline style ownership](./mokly-inline-styles.md).
 
 ## Normative Result
 
@@ -23,23 +22,26 @@ Every catalogue emits the [comparison v7 records](./mokly-component-comparison-r
 
 ## Reasons And Secondary Evidence
 
-See [Component review reasons and evidence](./mokly-component-review-evidence.md) for the complete rules.
+Changed entries have duplicate-free reasons, empty only for a paired pure move. Added/removed reasons
+require the corresponding missing side; metadata compares the explicit entry
+projection, including a parent's schema/controls and a variant entry's props
+and supplied slots. Material means a
+normalized content change; inputs means caller-owned data changed; structure
+means caller-owned logical occurrence identity/order changed. Record every
+applicable reason, without deriving membership from raw fragment paths alone.
 
-## Inline Style Evidence
-
-The [inline evidence contract](./mokly-inline-style-evidence.md) owns its typed
-shape, emission conditions and delivery through every v7 result and catalogue-v6 view evidence boundary.
 A dependency reason names a `changedPaths` path. Independent reasons follow
 [component change attribution](./mokly-component-changes.md#rendered-resources-and-styles):
 only retained rendered resources supply path evidence. Non-CSS file ownership
-comes from `resources` and inferred inline-rule references; inline document
-material uses range-based inference. CSS uses own-page rule
+comes from renderer `resources` and inferred inline references. Inline document
+material uses inferred owners, and returned renderer `styles` is ignored. CSS uses own-page rule
 matches kept after nested filtering, never stylesheet owner records. A
 stylesheet reason may carry the
 [CSS change attribution](./mokly-css-attribution.md) `analysis` record;
 its `selectors` are sorted and duplicate-free, `analysis` appears only on
 stylesheet paths in analysis scope, a view carries `material: true` exactly
-when its actual materials differ after normalization and inline canonicalization, and a view's `excludedResources` paths must be in
+when its actual materials differ after normalization, inserted-link removal
+and inline canonicalization, and a view's `excludedResources` paths must be in
 `changedPaths` and never coincide with that view's dependency reasons. A screen reason names a step's `screenPath`, is allowed only on a use case, and
 must reference a directly changed screen actually used on at least one side.
 Use cases also retain their own metadata reasons. One screen with
@@ -48,7 +50,7 @@ An affected-only consumer has no ChangedEntry unless it has another direct
 reason. Its full comparison remains available through the other result arrays.
 For a non-stylesheet resource, a retained view `dependency` reason is also a
 direct component reason for each rendered owner named by that view's
-`resources` record or an inferred inline owner, even if no saved variant uses the resource. A consuming
+`resources` record, even if no saved variant uses the resource. A consuming
 screen with no independent change remains affected-only; unowned resources
 retain ordinary view-level evidence.
 
@@ -100,6 +102,15 @@ and view `ignoredIds` retain manual
 Review-ignore evidence for screens; component variant views retain their own
 manual ids. Component suppression is described through `affectedConsumers`,
 not by pretending instance keys are legacy ignore ids.
+
+## Inline Style Evidence
+
+The [inline evidence contract](./mokly-inline-style-evidence.md) owns the typed
+`inlineStyles` payload, emission conditions and paired-view validation. Complete,
+live, selected and published v7 results retain it. Catalogue v6 carries it in
+view `resourceEvidence`, including through the Serve/export screen-evidence
+projection. It has no synthetic stylesheet path. Supplemental inline reason
+rules are in [review evidence](./mokly-component-review-evidence.md).
 
 ## Validation And Publication
 

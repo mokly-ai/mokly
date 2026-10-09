@@ -1,5 +1,6 @@
-import type { ComponentViewRecord } from "@mokly/viewer";
 import type { DefaultTreeAdapterMap } from "parse5";
+
+import type { ComponentViewRecord } from "@mokly/viewer";
 
 import { insertedStylesheetSpans } from "../components/stylesheet_spans.js";
 import { MoklyError } from "../errors.js";

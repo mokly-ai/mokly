@@ -35,7 +35,7 @@ for (const edit of [
   "material-key",
   "implementation",
 ])
-  test(`historical v9 retired arrays preserve inline attribution: ${edit}`, async (t) => {
+  test(`historical v10 original bytes preserve inline attribution: ${edit}`, async (t) => {
     const fixture = await createFixture(source, {
       extraConfig: 'renderer: "renderer.tsx", colorSchemes: ["light", "dark"],',
     });
@@ -72,8 +72,8 @@ for (const edit of [
     );
     const git = componentGit(before, changedPaths);
     const artifact = await compareReview(after, config, git, "main");
-    assert.equal(artifact.result.schemaVersion, 6);
-    if (artifact.result.schemaVersion !== 6) return;
+    assert.equal(artifact.result.schemaVersion, 7);
+    if (artifact.result.schemaVersion !== 7) return;
     const expected =
       edit === "owned-css" || edit === "implementation"
         ? ["action"]
@@ -132,7 +132,7 @@ export default (input) => {
 };`;
 }
 
-/** Keep obsolete ownership data in the baseline blob, not in the accepted records. */
+/** Keep original UTF-16 document bytes while v10 admits only the current usage shape. */
 function historical(compilation: Compilation): Compilation {
   const manifest = structuredClone(compilation.manifest);
   const outputs = new Map(
@@ -155,16 +155,8 @@ function historical(compilation: Compilation): Compilation {
         html.slice(startOffset, startOffset + originalCss.length),
         originalCss,
       );
-      Object.assign(view.usage!, {
-        styles: [
-          {
-            startOffset,
-            endOffset: startOffset + originalCss.length,
-            componentIds: ["action"],
-          },
-        ],
-        resources: [{ malformed: true }],
-      });
+      assert.equal(Object.hasOwn(view.usage!, "styles"), false);
+      assert.ok(Array.isArray(view.usage!.resources));
     }
   outputs.set(MANIFEST_NAME, JSON.stringify(manifest));
   return {

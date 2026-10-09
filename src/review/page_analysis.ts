@@ -17,6 +17,7 @@ import {
 } from "../components/ranges.js";
 import { documentWorkSync } from "../diagnostics/timings.js";
 
+import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
 import { setDocumentSubjectFilter } from "./css/document_subjects.js";
 import { inlineStyleSpan, type InlineStyleSpan } from "./css/inline_styles.js";
 import {
@@ -31,7 +32,6 @@ import {
   type PageReferenceRecord,
 } from "./page_reference_records.js";
 import { pageSubjectFilter } from "./page_subjects.js";
-import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
 
 export class PageAnalysis {
   readonly regions: readonly ReviewIgnoreRegion[];

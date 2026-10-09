@@ -43,6 +43,8 @@ test(`transient HTTP delivers scoped CSS assets from memory for GET and HEAD`, a
         instances: [],
         slots: [],
         ranges: [],
+        resources: [],
+        insertedStylesheets: [],
       },
       files: captureRenderBundle(
         route,

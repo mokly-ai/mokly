@@ -2,81 +2,130 @@ import assert from "node:assert/strict";
 import { mock } from "node:test";
 
 const cases = [];
-let selected;
-let urlReady;
-let statusReady;
-let reads;
-const done = new Error("both saved statuses checked");
-const status = {
-  async textContent() {
-    assert.fail("a hidden or stale status must not be saved with textContent");
-  },
-  async innerText() {
-    assert.ok(urlReady, "wait for the selected variant URL before the read");
-    assert.ok(statusReady, "wait for final status before the read");
-    reads++;
-    if (reads === 2) throw done;
-    return "Unmodified";
-  },
-};
+const operations = [];
+const done = new Error("all final status checks observed");
+const status = { kind: "status" };
+let ready;
+let statuses;
 const page = {
   async setViewportSize() {},
-  async goto() {},
-  getByLabel: () => ({ async selectOption() {} }),
-  getByRole: () => ({
-    getByRole: (_role, { name }) => ({
-      async click() {
-        selected = name.toLowerCase();
-        urlReady = false;
-        statusReady = false;
+  async goto() {
+    operations.push("navigate");
+    ready = false;
+  },
+  async waitForFunction() {
+    ready = true;
+  },
+  getByLabel: () => ({
+    async selectOption() {},
+    async check() {},
+    async uncheck() {},
+    async fill() {},
+  }),
+  getByRole: (_role, options) => ({
+    async click() {
+      if (options?.name === "Reset") operations.push("reset");
+    },
+  }),
+  locator: () => status,
+  frameLocator: () => ({
+    locator: () => ({
+      first() {
+        return this;
       },
     }),
   }),
-  locator(selector) {
-    assert.equal(selector, "[data-workspace-status]");
-    return status;
-  },
-  frameLocator: () => ({ locator: () => "frame" }),
 };
+const test = (name, run) => {
+  if (name.includes("design props")) cases.push({ name, run });
+};
+let setup;
+test.beforeAll = (run) => {
+  setup = run;
+};
+test.setTimeout = () => {};
+test.afterAll = () => {};
+mock.module("../../dist/server/serve.js", {
+  namedExports: {
+    serve() {
+      return { url: "http://probe.invalid", async close() {} };
+    },
+  },
+});
+mock.module("../helpers/example_baseline.js", {
+  namedExports: {
+    createCommittedExampleBaseline() {
+      return {};
+    },
+  },
+});
+mock.module("../browser/workspace_actions.js", {
+  namedExports: {
+    async chooseViewport() {
+      ready = true;
+    },
+    async chooseVariant() {
+      operations.push("variant");
+      ready = true;
+    },
+  },
+});
+mock.module("node:fs/promises", {
+  defaultExport: {
+    async mkdtemp() {
+      return "/tmp/probe";
+    },
+    async readFile() {
+      return "authored bytes";
+    },
+  },
+});
+mock.module("../helpers/watched_catalogue.js", {
+  namedExports: { async waitForInitialChanges() {} },
+});
 mock.module("@playwright/test", {
   namedExports: {
-    test(name, run) {
-      if (name.includes("design props")) cases.push({ name, run });
-    },
+    test,
     expect(target) {
       return {
-        async toHaveURL(pattern) {
-          assert.equal(target, page);
-          assert.match(
-            `/view/design/library/chrome/top-bar/${selected}/`,
-            pattern,
-          );
-          urlReady = true;
-        },
         async toHaveText(expected) {
-          if (target === "frame") return;
-          assert.equal(target, status);
-          assert.ok(urlReady, "settle navigation before status");
-          assert.ok(expected instanceof RegExp);
-          assert.match("Changed", expected);
-          assert.match("Unmodified", expected);
-          assert.doesNotMatch("", expected);
-          statusReady = true;
+          if (target !== status) return;
+          assert.equal(
+            ready,
+            true,
+            "wait for navigation before checking status",
+          );
+          assert.equal(expected, "Unmodified");
+          operations.push("status");
+          statuses++;
+          if (statuses === 3) throw done;
         },
+        async toBeVisible() {},
+        async toHaveCSS() {},
+        async toHaveCount() {},
       };
     },
   },
 });
 await import("../browser/design_library_runtime.spec.ts");
 assert.equal(cases.length, 2);
+await setup();
 for (const { name, run } of cases) {
-  reads = 0;
+  operations.length = 0;
+  statuses = 0;
   await assert.rejects(run({ page }), (error) => {
     assert.equal(error, done, name);
     return true;
   });
-  assert.equal(reads, 2, name);
+  assert.deepEqual(operations, [
+    "navigate",
+    "status",
+    "reset",
+    "status",
+    "variant",
+    "status",
+  ]);
 }
 process.stdout.write(
-  "Both viewport tests wait before both saved-status reads.\n",
+  "Both viewport tests await explicit final status after navigation, reset and variant selection.\n",
 );

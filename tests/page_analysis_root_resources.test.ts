@@ -5,7 +5,6 @@ import { test } from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
-import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
 import { prepareComponentProjection } from "../dist/review/component_projection_resources.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
@@ -29,10 +28,7 @@ for (const receiver of ["template", "select"] as const)
       extra:
         'const pane2 = defineComponent({ ...metadata, path: "pane2", title: "Pane2", description: "Nested receiver", propSchema: { kind: "object", properties: {} }, slots: ["children"], render: (props) => <section>{props.children}</section>, variants: [{ slug: "default", title: "Default", props: { children: <b>Saved</b> } }] });',
       exports: "...action.entries, ...pane.entries, ...pane2.entries,",
-    }).replace(
-      'path: "pane", title:',
-      'path: "pane", dependencies: ["mockups/image.svg", "mockups/pane/default/image.svg"], ownedDependencies: ["mockups/image.svg", "mockups/pane/default/image.svg"], title:',
-    );
+    });
     const fixture = await createFixture(source);
     t.after(() => removeFixture(fixture));
     await fs.writeFile(path.join(fixture.mockupsDir, "image.svg"), "image");
@@ -51,7 +47,16 @@ for (const receiver of ["template", "select"] as const)
       );
       assert.ok(entry);
       const view = generatedViews(entry)[0];
-      assert.ok(view);
+      assert.ok(view?.usage);
+      view.usage = {
+        ...view.usage,
+        resources: [
+          {
+            path: id === "pane" ? "pane/default/image.svg" : "image.svg",
+            componentIds: ["pane"],
+          },
+        ],
+      };
       assert.ok(view.usage?.slots.some((slot) => slot.owner.kind === "entry"));
       const reads: string[] = [];
       const materialReader = () =>
@@ -80,11 +85,6 @@ for (const receiver of ["template", "select"] as const)
         ),
         beforeReader,
         afterReader,
-        dependencies: new ComponentDependencyPolicy(
-          compilation.manifest,
-          compilation.manifest,
-          [],
-        ),
         changed,
         prefix: "mockups",
         resources: new ResourceComparison(

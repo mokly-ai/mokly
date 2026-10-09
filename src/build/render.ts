@@ -31,9 +31,9 @@ import type { Renderer } from "../renderer/types.js";
 
 import type { BuildDiagnostic } from "./build_warnings.js";
 import { GENERATED_MARKER } from "./generated_marker.js";
-import type { ResourceSeed } from "./resource_seeds.js";
 import { renderPage } from "./render_page.js";
 import { rendererWithoutCssOwners } from "./renderer_resources.js";
+import type { ResourceSeed } from "./resource_seeds.js";
 import { stylesheetHref, type StyleDelivery } from "./styles/links.js";
 import { isGeneratedRoute } from "./styles/routes.js";
 

@@ -102,7 +102,7 @@ export default [...action.entries,defineScreen({path:'home',title:'Home',descrip
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
     `import {renderToStaticMarkup} from 'react-dom/server';
-export default input => ({html:'<!doctype html><html><head></head><body>'+renderToStaticMarkup(input.node)+'</body></html>',styles:[]});`,
+export default input => ({html:'<!doctype html><html><head></head><body>'+renderToStaticMarkup(input.node)+'</body></html>'});`,
   );
   for (const file of ["action.css", "base.css"])
     await fs.writeFile(path.join(fixture.mockupsDir, file), "body{margin:0}");
@@ -126,8 +126,8 @@ export default input => ({html:'<!doctype html><html><head></head><body>'+render
     await fs.writeFile(
       renderer,
       (await fs.readFile(renderer, "utf8")).replace(
-        "styles:[]",
-        'styles:[{startOffset:0,endOffset:1,componentIds:["action"]}]',
+        "({html:",
+        '({styles:[{startOffset:0,endOffset:1,componentIds:["action"]}],html:',
       ),
     );
     git("add", "renderer.tsx");

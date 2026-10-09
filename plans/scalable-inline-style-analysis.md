@@ -13,6 +13,10 @@ The ownership contract, Changes membership, evidence and presentation stay as
 delivered, apart from the documented cases in Decisions 4, 5, 9 and 10. The contracts
 linked below own the precise algorithms and exceptions, not this overview.
 
+Superseded in Milestone 15 (2026-10-09): D1–D6 integrate #179's renderer resource
+handling, formats and CSS-file membership with inline inference. Milestones 16
+and 17 now deliver the separate inline mockup and UI; presentation is deferred.
+
 ## Base And Prerequisites
 
 This plan builds on the
@@ -2169,9 +2173,11 @@ for approval. D12 makes no change to PR #182 or any other PR.
       and root boundaries in Review-ignore regions.
 - [x] Integrate D6's inserted-link removal and membership into original-page
       recipes. Keep parse counts and add full-comparison differential tests.
-- [ ] Align live docs and READMEs, update false live statements in the #179
+- [x] Align live docs and READMEs, update false live statements in the #179
       plan, preserve historical records, and meet the protocol and source caps.
-- [ ] Keep main's expected values, finish the other backend work and run the
+      The unused-module ratchet and D11 wording guard wait for the choices in
+      `main-test-approvals.md` under the evidence directory.
+- [x] Keep main's expected values, finish the other backend work and run the
       affected tests. Record every needed main-test change, including D11, in
       `.context/scalable-inline-style-analysis/m15-merge/main-test-approvals.md`.
       Stop for the user's approval before changing expectations or pushing.
@@ -2198,8 +2204,24 @@ backend merge retains main's example tree and screens until that work starts.
 
 - [ ] Re-home the branch's excluded page-style design screen in #179's
       `matched-excluded/` folder as `inline-excluded` (D7 A).
-- [ ] Design one separate inline-style block in the Details panel with its own
-      lead sentence in the shared `entryWording` set (D8 A).
+- [ ] Design one separate inline-style block and its lead sentence in the
+      Details mockup (D8 A).
+- [ ] Restore the excluded-page-style assertions in both viewport cases of
+      "stylesheet evidence states keep selectors out of headings" from
+      `tests/design_stylesheet_screens.test.tsx` (`f0944e14`:35–39, 58–62),
+      retained in `tests/deferred/design_stylesheet_screens.mjs`.
+- [ ] Restore the excluded-page-style assertion in "stylesheet evidence states
+      are entered and left through the filter" from
+      `tests/design_stylesheet_screens.test.tsx` (`f0944e14`:141–145), retained
+      in `tests/deferred/design_stylesheet_screens.mjs`.
+- [ ] Restore the excluded-page-style destination in both viewport cases of
+      "comparison transitions respect the exact authored scenario" from
+      `tests/design_link_states.test.ts` (`f0944e14`:76), retained in
+      `tests/deferred/design_link_states.mjs`.
+- [ ] Recount and restore "every owning artboard records its shared chrome and
+      real component consumers" from `tests/design_library_usage.test.ts`
+      (`f0944e14`:16; 112 against main's 114), retained in
+      `tests/deferred/design_library_usage.mjs`.
 - [ ] Validate the mockups and their links, then commit and push.
 - [ ] After the push, use the implementation review prompt against `origin/main`,
       apply the review-fix rule, re-review once, and record open findings.
@@ -2212,6 +2234,27 @@ The UI agent implements the approved mockup with the same inline evidence in
 the live shell and exported views.
 
 - [ ] Implement the D8 inline-style block in the shell and in exported views.
+      Add its lead sentence to the shared `entryWording` set.
+- [ ] Restore the two deferred cases from `tests/deferred/inline_style_evidence.mjs`
+      to the unit suite: "inline selectors join the existing outcome groups"
+      and "excluded page styles yield only when no inline style is retained".
+      They came from `tests/client_style_evidence.test.ts`; restore them with
+      the Milestone 17 UI.
+- [ ] Restore "excluded page styles keep the screen unmodified without a
+      comparison stage" from `tests/shell_inline_styles.test.ts`, retained in
+      `tests/deferred/shell_inline_styles.ts`.
+- [ ] Restore "linked exclusions precede excluded page styles and the terminal
+      line" from `tests/client_inline_style_evidence.test.ts`, retained in
+      `tests/deferred/client_inline_style_evidence.ts`.
+- [ ] Restore "excluded page styles use the saved-view terminal copy" from
+      `tests/client_inline_style_evidence.test.ts`, retained in
+      `tests/deferred/client_inline_style_evidence.ts`.
+- [ ] Restore "renders excluded, matched and affected classification in Details"
+      for both inspector viewports from `tests/browser/inline_style_evidence.spec.ts`,
+      retained in `tests/deferred/inline_style_evidence_browser.ts`.
+- [ ] Restore "analysed reasons group into one list per retained outcome" from
+      `tests/client_style_evidence.test.ts` (source `f0944e14`:19), retained in
+      `tests/deferred/inline_outcome_grouping.mjs`.
 - [ ] Validate the affected UI, run its required checks and smoke tests, then
       commit and push.
 - [ ] After the push, use the implementation review prompt against `origin/main`,

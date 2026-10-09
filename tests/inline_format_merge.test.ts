@@ -20,7 +20,9 @@ test("manifest v10 has resource and inserted-link records without styles", async
   const entries = manifest.entries.filter((entry) => "componentViews" in entry);
   assert.ok(entries.length);
   for (const entry of entries)
-    for (const view of entry.componentViews ?? []) {
+    for (const view of ("componentViews" in entry
+      ? entry.componentViews
+      : []) ?? []) {
       assert.equal(Object.hasOwn(view, "styles"), false);
       assert.ok(Array.isArray(view.resources));
       assert.ok(Array.isArray(view.insertedStylesheets));

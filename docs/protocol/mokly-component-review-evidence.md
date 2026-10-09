@@ -12,10 +12,10 @@ normalized content change; inputs means caller-owned data changed; structure
 means caller-owned logical occurrence identity/order changed. Record every
 applicable reason, without deriving membership from raw fragment paths alone.
 
-A dependency reason names a `changedPaths` path. Independent reasons follow
-[component change attribution](./mokly-component-changes.md#dependencies-and-styles):
-component ownership, an exact screen declaration, or an exact declaration for
-an unowned path. Retained referenced resources may also supply reasons. A
+A dependency reason names a rendered-resource path in `changedPaths`.
+[Component change attribution](./mokly-component-changes.md#rendered-resources-and-styles)
+defines non-CSS record/inline owners and own-page CSS membership. Source paths
+and declarations alone add no evidence. A
 stylesheet reason may carry the
 [CSS change attribution](./mokly-css-attribution.md) `analysis` record;
 its `selectors` are sorted and duplicate-free, `analysis` appears only on
@@ -45,7 +45,8 @@ Entry reasons merge retained view evidence by path with selector unions and
 unresolved precedence. Ownership may suppress entry membership, not actual
 view evidence; one view's exclusion does not cancel another's retained reason.
 Components collect resource evidence at actual invocations even when variants
-exclude it. Globs and declarations cannot override in-scope CSS exclusion.
+exclude it. Source declarations supply no evidence. CSS exclusion depends on the retained
+rule proof.
 
 Each affected record groups one changed component and one canonical consumer.
 Its `changedComponentId` must name a component that appears in `changes` with
@@ -53,7 +54,7 @@ kind component, and evidence must be nonempty.
 Build its evidence from the union of baseline/current actual usage, deduplicating
 identical evidence. A consumer may also be directly changed. Self-impact is not
 listed. A component is listed as affected only through an actual usage path, not
-because it happens to share a directory or dependency declaration.
+because it happens to share a directory or source location.
 
 Every `via` is a nonempty caller-ownership chain from the consumer to the changed
 component; its last `componentId`, mapped through accepted pairs, equals `changedComponentId`. Each instance key
@@ -71,23 +72,8 @@ each evidence destination from its own side; stored evidence paths never change.
 Repeated physical placements do not duplicate logical evidence or screen counts;
 the inspector can resolve that logical instance to its current ranges.
 
-Result-level `sharedImpact` remains every changed path matching a configured
-`review.sharedImpact` glob. For each v6 screen or component record, entry
-`sharedImpact` is the sorted, duplicate-free union of:
-
-1. Every matched changed path that is not a stylesheet, regardless of owner.
-2. Every unowned changed path matched by a glob or contained by an explicit
-   `declaredDependencies` root on either side, except a stylesheet in public
-   analysis scope. Containment includes equality and descendants of the root.
-3. Every path in that entry's final `dependency` reasons, including retained
-   stylesheet and actual-invocation owner reasons.
-
-This set is identical to the pre-change entry `sharedImpact` for every entry.
-An out-of-scope stylesheet matched only by a glob belongs to an unowned path's
-evidence; when a component owns it, only a retained owner or exact screen
-reason adds it to that entry. In-scope stylesheets enter only through retained
-reasons. Entry `sharedImpact` never overrides `changes`. Entry dependencies
-remain the sorted union of both sides. `ignoredImpact` and view `ignoredIds`
-retain manual Review-ignore evidence; `affectedConsumers` records suppression.
+`ignoredImpact` and view `ignoredIds` retain manual Review-ignore evidence.
+`affectedConsumers` records suppression. Review v7 has no source-path dependency
+or shared-impact fields. Retained resource reasons remain the only path evidence.
 
 Validation and canonical output follow the [component review validation contract](./mokly-component-review-validation.md).

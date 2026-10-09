@@ -8,6 +8,7 @@ import { loadConfig } from "../dist/config/load.js";
 import { prepareComponentProjection } from "../dist/review/component_projection_resources.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
+import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
@@ -76,7 +77,12 @@ test("projected discovery applies root-specific ownership before reading", async
       "mockups/components/image.svg",
     ]);
     const context = {
-      componentAware: false,
+      componentAware: true,
+      links: catalogueLinkNormalizer(
+        compilation.manifest.entries,
+        compilation.manifest.entries,
+        [],
+      ),
       beforeReader,
       afterReader,
       changed,
@@ -90,6 +96,7 @@ test("projected discovery applies root-specific ownership before reading", async
     };
     const html = await beforeReader.text(view.path);
     const prepared = prepareComponentProjection(
+      context,
       view,
       view,
       html,

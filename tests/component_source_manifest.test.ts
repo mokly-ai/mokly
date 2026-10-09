@@ -9,7 +9,7 @@ import { parseManifest, serializeManifest } from "../dist/registry/manifest.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentViews } from "./helpers/component_views.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
-test("v9 source metadata round-trips deterministically and accepts its absence", async (t) => {
+test("v8 source metadata round-trips deterministically and accepts its absence", async (t) => {
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const { manifest } = await compileCatalogue(await loadConfig(fixture.root));

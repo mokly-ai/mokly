@@ -21,8 +21,8 @@ import type { InlineRunOccurrence } from "./css/inline_rule_runs.js";
 import { cssRuleData } from "./css/rule_identity.js";
 import { styleRouteRulesSafe } from "./css/style_route_rules.js";
 import type { PageAnalysisPair } from "./page_pair.js";
-import { insertedLinksFollowStyleWindow } from "./page_stylesheet_links.js";
 import { unchangedPageResources } from "./page_quick_check.js";
+import { insertedLinksFollowStyleWindow } from "./page_stylesheet_links.js";
 import {
   changedStyleWindows,
   rawTextWindowSafe,

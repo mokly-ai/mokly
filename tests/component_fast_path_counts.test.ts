@@ -50,7 +50,11 @@ test(`zero-change classification discovers each required side once`, async (t) =
       view.usage
         ? view.usage.instances.length > 0 ||
           view.usage.ranges.some((range) => range.target.kind === "root") ||
-          view.usage.styles.length > 0 ||
+          (
+            view.usage as unknown as {
+              styles: readonly { startOffset: number; endOffset: number }[];
+            }
+          ).styles.length > 0 ||
           view.usage.slots.some((slot) => slot.owner.kind === "entry")
         : false,
     ).length;

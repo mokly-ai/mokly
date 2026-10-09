@@ -24,6 +24,7 @@ import {
   normalizeBuildDiagnostics,
   type BuildDiagnostic,
 } from "./build_warnings.js";
+import { finalizeCompiledViews } from "./compile_components.js";
 import { rememberRuntime } from "./component_runtime.js";
 import { resolveDocumentLinks } from "./document_links.js";
 import {
@@ -32,7 +33,6 @@ import {
   type GeneratedFile,
 } from "./generated_file.js";
 import { validateHtmlLinks } from "./html_links.js";
-import { componentResourceSeeds, type ResourceSeed } from "./resource_seeds.js";
 import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
 import { validateLogicalFragments } from "./logical_records.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
@@ -42,9 +42,9 @@ import {
   type OutputSnapshot,
 } from "./output_snapshot.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
-import { finalizeCompiledViews } from "./compile_components.js";
 import { renderFragments } from "./render.js";
 import { renderCooperatively } from "./render_cooperative.js";
+import { componentResourceSeeds, type ResourceSeed } from "./resource_seeds.js";
 
 /** Complete in-memory static compilation result. */
 export interface Compilation {

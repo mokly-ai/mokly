@@ -159,7 +159,11 @@ export default (input) => { const css = '.action{border-radius:12px}'; const htm
   const screen = manifest.entries.find((entry) => entry.path === "home");
   assert.ok(screen?.kind === "screen");
   const html = textOutput(outputs, viewRoute(screen.path, "mobile", "light"))!;
-  const { startOffset, endOffset } = screen.componentViews![0]!.styles[0]!;
+  const { startOffset, endOffset } = (
+    screen.componentViews![0]! as unknown as {
+      styles: readonly { startOffset: number; endOffset: number }[];
+    }
+  ).styles[0]!;
   assert.equal(
     html.slice(startOffset, endOffset),
     ".action{border-radius:12px}",

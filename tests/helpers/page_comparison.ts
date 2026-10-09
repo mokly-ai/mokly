@@ -1,6 +1,5 @@
 import path from "node:path";
 
-import { ComponentDependencyPolicy } from "../../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../../dist/review/component_resources.js";
 import { compareComponentView } from "../../dist/review/component_view.js";
 import { catalogueLinkNormalizer } from "../../dist/review/moves/links.js";
@@ -39,11 +38,6 @@ export function pageContext(
         }),
     beforeReader,
     afterReader,
-    dependencies: new ComponentDependencyPolicy(
-      fixture.before,
-      fixture.after,
-      [],
-    ),
     changed,
     prefix,
     resources: new ResourceComparison(

@@ -1,8 +1,9 @@
+import type { DefaultTreeAdapterMap } from "parse5";
+
 import type {
   ComponentViewRecord,
   InsertedComponentStylesheet,
 } from "@mokly/viewer";
-import type { DefaultTreeAdapterMap } from "parse5";
 
 import { MoklyError } from "../errors.js";
 import { parseHtmlLinks } from "../html_links.js";

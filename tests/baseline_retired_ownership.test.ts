@@ -16,19 +16,12 @@ import { baselineFixture } from "./helpers/baseline_fixture.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
-test("rebuilt v9 cache accepts retired arrays without changing retained bytes", async (context) => {
+test("rebuilt v10 cache validates ownership without changing retained bytes", async (context) => {
   const catalogue = await createFixture(componentEntrySource());
   context.after(() => removeFixture(catalogue));
   const compilation = await compileCatalogue(await loadConfig(catalogue.root));
   const original = compilation.manifest;
   const historical = structuredClone(original);
-  for (const entry of historical.entries)
-    if ("componentViews" in entry)
-      for (const usage of entry.componentViews ?? [])
-        Object.assign(usage, {
-          styles: [null],
-          resources: [{ obsolete: true }],
-        });
   const raw = Buffer.from(JSON.stringify(historical));
   const fixture = baselineFixture();
   const run = fixture.runner.run;
@@ -59,7 +52,7 @@ test("rebuilt v9 cache accepts retired arrays without changing retained bytes", 
     return result;
   };
   const built = await fixture.builder.build(fixture.request);
-  assert.equal(built.marker.manifestVersion, 9);
+  assert.equal(built.marker.manifestVersion, 10);
   assert.equal((await fixture.builder.build(fixture.request)).cacheHit, true);
   const manifestPath = path.join(
     built.outputDir,
@@ -96,7 +89,11 @@ test("rebuilt v9 cache accepts retired arrays without changing retained bytes", 
         path.join(built.outputDir, "mockups"),
         fixture.request.commit,
       ),
-      corruption === "props" ? /string does not satisfy/ : /must be an array/,
+      corruption === "props"
+        ? /string does not satisfy/
+        : corruption === "styles"
+          ? /unknown field/
+          : /missing resources array/,
     );
     assert.equal(
       (await fixture.builder.build(fixture.request)).cacheHit,

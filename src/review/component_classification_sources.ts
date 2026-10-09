@@ -7,12 +7,12 @@ import type {
   ScreenReviewV7,
 } from "@mokly/viewer/data";
 
+import { runWithComparisonWork } from "../diagnostics/material_timings.js";
 import {
   timeAsync,
   timingCounts,
   timingDocumentWork,
 } from "../diagnostics/timings.js";
-import { runWithComparisonWork } from "../diagnostics/material_timings.js";
 import { relatedDocumentReferences } from "../documents/references.js";
 
 import { classificationComparisons } from "./component_classification_comparisons.js";

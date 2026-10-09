@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
-import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
 import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
@@ -53,11 +52,6 @@ test("parse failure selectors remain prepared for later evidence delivery", asyn
       ),
       beforeReader,
       afterReader,
-      dependencies: new ComponentDependencyPolicy(
-        compilation.manifest,
-        compilation.manifest,
-        [],
-      ),
       changed: new Set(),
       prefix: "mockups",
       resources,
@@ -108,11 +102,6 @@ test("all-excluded status remains prepared for later evidence delivery", async (
       ),
       beforeReader,
       afterReader,
-      dependencies: new ComponentDependencyPolicy(
-        compilation.manifest,
-        compilation.manifest,
-        [],
-      ),
       changed: new Set(),
       prefix: "mockups",
       resources: new ResourceComparison(
@@ -169,11 +158,6 @@ test("unchanged reference analysis prepares no future inline evidence", async (t
       ),
       beforeReader,
       afterReader,
-      dependencies: new ComponentDependencyPolicy(
-        compilation.manifest,
-        compilation.manifest,
-        [],
-      ),
       changed: new Set(),
       prefix: "mockups",
       resources: new ResourceComparison(

@@ -3,6 +3,7 @@ import type { GeneratedComponentView } from "@mokly/viewer/data";
 
 import { ComponentMaterialReader } from "../../dist/review/component_resources.js";
 import type { ComponentViewContext } from "../../dist/review/component_view_types.js";
+import { catalogueLinkNormalizer } from "../../dist/review/moves/links.js";
 import { ResourceComparison } from "../../dist/review/resource_comparison.js";
 
 export const formerMarkers = [
@@ -29,6 +30,8 @@ export function markerView(
   return {
     view,
     context: {
+      componentAware: true,
+      links: catalogueLinkNormalizer([], [], []),
       beforeReader,
       afterReader,
       changed: new Set(),
@@ -50,7 +53,7 @@ export function emptyUsage(): ComponentViewRecord {
     instances: [],
     slots: [],
     ranges: [],
-    styles: [],
+
     resources: [],
     insertedStylesheets: [],
   };

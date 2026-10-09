@@ -57,7 +57,10 @@ function findStyles(
     if (
       ignored.some((region) => region.start <= start && start < region.end) ||
       ranges.some(
-        (range) => range.contentStart <= start && start < range.contentEnd,
+        (range) =>
+          range.record.target.kind !== "root" &&
+          range.contentStart <= start &&
+          start < range.contentEnd,
       )
     )
       return;

@@ -23,7 +23,8 @@ classification. Input ownership and materiality remain defined by
 The classifier tries to avoid full comparison for unchanged views. For a view
 present on both sides, it first decides whether that view can differ.
 It uses [page analysis](./mokly-page-analysis.md), and projects ownership only
-when usage can edit text through instances, root ranges or entry-owned slots. Inline rule
+when usage can edit text through instances or entry-owned slots. Root ranges
+are validated by shared page analysis but do not themselves project text. Inline rule
 analysis and implementation diffing happen only after quick-check fall-through.
 
 The decision is part of materiality and must equal the complete comparison for
@@ -62,7 +63,7 @@ Apply these steps in order:
    field must match except `props` and `propsKey` on entry-owned instances.
    Both records must pass current v10 validation, including rejection of CSS owners.
    View axes, instance identity/ownership/order, instance-owned props, and every
-   slot and range record must match. Optional invocation
+   slot, range and resource record must match. Optional invocation
    `source` is excluded, as it is from every Changes projection.
 3. Strip package component markers from both sides and apply paired
    manual-ignore normalization. If the documents differ, take fall-through.
@@ -70,7 +71,7 @@ Apply these steps in order:
    [resource proof](#resource-and-one-sided-rules), preserving its reader and closure bounds on each side.
    Without ownership text edits, derive actual seeds directly from the analyses:
    do not prepare a projection merely because inline references may exist.
-4. When either usage record has instances, root ranges or entry-owned slots,
+4. When either usage record has instances or entry-owned slots,
    compute the complete comparison's ownership projection, including v10 range
    validation and root-specific ownership, but no inline analysis. Retain
    preparation on fall-through, so a side is parsed only once. Require equal

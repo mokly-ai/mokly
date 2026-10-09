@@ -2,8 +2,8 @@ import type { ComponentViewRecord } from "@mokly/viewer";
 import type { ArtifactView } from "@mokly/viewer/data";
 
 import type { BuildDiagnostic } from "./build_warnings.js";
-import type { ResourceSeed } from "./resource_seeds.js";
 import type { LogicalReferenceRecord } from "./logical_record_types.js";
+import type { ResourceSeed } from "./resource_seeds.js";
 
 export interface CompiledDocument {
   diagnostics: readonly BuildDiagnostic[];

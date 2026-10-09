@@ -106,6 +106,8 @@ export function previewUsage(): ComponentViewRecord {
     ranges: [],
     slots: [],
     viewport: "desktop",
+    resources: [],
+    insertedStylesheets: [],
   };
 }
 

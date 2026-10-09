@@ -89,6 +89,8 @@ function view(instances: readonly Instance[]): View {
     ranges: [],
     slots: [],
     viewport: "mobile",
+    resources: [],
+    insertedStylesheets: [],
   };
 }
 

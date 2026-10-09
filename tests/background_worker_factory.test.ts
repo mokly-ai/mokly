@@ -21,6 +21,7 @@ for (const mode of ["committed", "derived"] as const)
       const background = new BackgroundCompilation(
         runtime,
         accepted,
+        undefined,
         (url, options) => {
           captured = { url, options };
           return new Worker(

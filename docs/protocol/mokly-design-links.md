@@ -156,6 +156,11 @@ See [Screen Variants](./mokly-design-link-states.md#screen-variants) for the com
 ## Scheme, Comparison, And Tag States
 
 See [Scheme, Comparison, And Tag States](./mokly-design-link-states.md#scheme-comparison-and-tag-states) for the complete rules.
+The Unnamed state always returns to the canonical All screen:
+
+| Control/context              | Destination                                         |
+| ---------------------------- | --------------------------------------------------- |
+| Unnamed evidence: All filter | Canonical All Welcome, `design/browse/views/screen` |
 
 ## Local Runtime Controls
 

@@ -11,8 +11,8 @@ import {
 } from "./resource_document_analysis.js";
 import { normalizeResourceDocuments } from "./resource_documents.js";
 import { ResourceGraph } from "./resource_graph.js";
-import { collectStylesheetScope } from "./stylesheet_scope.js";
 import { prefetchProofReads } from "./resource_proof_reads.js";
+import { collectStylesheetScope } from "./stylesheet_scope.js";
 import {
   ViewResourceCache,
   type ViewResourceOptions,

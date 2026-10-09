@@ -129,7 +129,7 @@ interface CatalogueView {
   colorScheme: ColorScheme;
   usage: CatalogueUsage;
   comparison: ComparisonSelection;
-  resourceEvidence?: ResourceEvidence;
+  resourceEvidence?: ResourceEvidence & { inlineStyles?: InlineStyleEvidence };
 }
 interface CatalogueScreen extends CatalogueEntry {
   kind: "screen";

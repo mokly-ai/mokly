@@ -4,10 +4,10 @@ import {
 } from "@mokly/viewer/data";
 import type { DependencyReason } from "@mokly/viewer/data";
 
+import { compareComponentViews } from "./component_compare_views.js";
 import type { entryPairs } from "./component_metadata.js";
 import { entryViewPairs } from "./component_pairing.js";
 import type { componentVariantEntries } from "./component_variant_classification.js";
-import { compareComponentViews } from "./component_compare_views.js";
 import type {
   ComparedComponentView,
   ComponentViewContext,

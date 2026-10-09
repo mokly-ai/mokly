@@ -15,6 +15,8 @@ function emptyViews(): ComponentViewRecord[] {
     instances: [],
     slots: [],
     ranges: [],
+    resources: [],
+    insertedStylesheets: [],
   }));
 }
 
@@ -116,34 +118,42 @@ test("public view validators require exact, boolean-valued option objects", () =
   );
 });
 
-test("only explicit historical options retire arrays without changing current validation", () => {
+test("historical options preserve strict v10 fields without mutating invalid input", () => {
   const views = emptyViews();
   Object.assign(views[0]!, { styles: [null], resources: [42] });
   assert.throws(
     () => validateComponentViews(views, new Map(), "entry", { dark: false }),
     ComponentValidationError,
   );
-  validateComponentViews(views, new Map(), "entry", {
-    dark: false,
-    historical: true,
-  });
-  assert.deepEqual(views, emptyViews());
+  const retained = structuredClone(views);
+  assert.throws(
+    () =>
+      validateComponentViews(views, new Map(), "entry", {
+        dark: false,
+        historical: true,
+      }),
+    ComponentValidationError,
+  );
+  assert.deepEqual(views, retained);
 });
 
 for (const field of ["styles", "resources"])
-  test(`historical view validation rejects an unremovable ${field} key`, () => {
+  test(`historical view validation keeps immutable ${field} keys subject to v10 rules`, () => {
     const views = emptyViews();
     Object.defineProperty(views[0]!, field, {
       value: [],
       enumerable: true,
       configurable: false,
     });
-    assert.throws(
-      () =>
-        validateComponentViews(views, new Map(), "entry", {
-          dark: false,
-          historical: true,
-        }),
-      ComponentValidationError,
+    const validate = () =>
+      validateComponentViews(views, new Map(), "entry", {
+        dark: false,
+        historical: true,
+      });
+    if (field === "styles") assert.throws(validate, ComponentValidationError);
+    else assert.doesNotThrow(validate);
+    assert.equal(
+      Object.getOwnPropertyDescriptor(views[0]!, field)!.configurable,
+      false,
     );
   });

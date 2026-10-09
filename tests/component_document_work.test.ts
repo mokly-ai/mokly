@@ -8,7 +8,6 @@ import {
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
-import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
 import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
@@ -101,11 +100,6 @@ for (const full of [false, true])
       ),
       beforeReader,
       afterReader,
-      dependencies: new ComponentDependencyPolicy(
-        fixture.before.manifest,
-        fixture.after.manifest,
-        [],
-      ),
       changed,
       prefix: "mockups",
       resources: new ResourceComparison(

@@ -5,7 +5,6 @@ import {
   runWithTimings,
   type TimingEvent,
 } from "../../dist/diagnostics/timings.js";
-import { ComponentDependencyPolicy } from "../../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../../dist/review/component_resources.js";
 import { compareComponentView } from "../../dist/review/component_view.js";
 import { CssResourceAnalysis } from "../../dist/review/css/resource_analysis.js";
@@ -29,11 +28,6 @@ export async function assertComparisonPaths(
   const afterReader = new ComponentMaterialReader(
     memoryReader(fixture.afterFiles),
   );
-  const dependencies = new ComponentDependencyPolicy(
-    fixture.before,
-    fixture.after,
-    fixture.config.review.sharedImpact,
-  );
   const changed = new Set(fixture.changedPaths);
   const prefix = path.relative(
     fixture.config.repoRoot,
@@ -48,7 +42,6 @@ export async function assertComparisonPaths(
     ),
     beforeReader,
     afterReader,
-    dependencies,
     changed,
     prefix,
     resources: new ResourceComparison(

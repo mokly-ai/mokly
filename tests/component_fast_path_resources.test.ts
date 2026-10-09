@@ -18,7 +18,7 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
 
 for (const direction of ["added", "removed"] as const)
-  test(`derived ${direction} stylesheet imports agree across enabled and forced-complete modes`, async (t) => {
+  test(`derived ${direction} stylesheet imports agree across paths`, async (t) => {
     const fixture = await componentReviewFixture(t, (source) => source);
     const baseCss = direction === "added" ? "" : '@import "./nested.css";';
     const headCss = direction === "added" ? '@import "./nested.css";' : "";

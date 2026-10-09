@@ -11,6 +11,10 @@ are attributed to the registered components whose markup they can match,
 without any consumer code. The renderer contract returns a plain HTML string
 again, and the manifest no longer carries `styles` or `resources` tables.
 
+Superseded in Milestone 15 (2026-10-09): D1 C accepts a complete string or
+`{ html; resources? }`. Returned `styles` warns and is ignored. D2 A uses
+manifest v10 without `styles` and retains non-CSS `resources`.
+
 ## Base And Prerequisites
 
 This plan is based on `origin/main` at `3699c56`. The records it replaces were
@@ -65,12 +69,17 @@ three defects below explain why this plan replaced them.
    that returns anything other than a complete HTML document string fails the
    build with a typed diagnostic naming the entry and view. Pre-1.0 breaking
    changes are acceptable, and no consumer returns records.
+   Superseded in Milestone 15 (2026-10-09): D1 C retains structured HTML and
+   resource results; returned `styles` gives one warning and is ignored.
 3. **Explicit file ownership stays declarative.** `ownedDependencies` remains
    the way to say that a stylesheet, font or image belongs to a component. The
    `resources` records were redundant with it for every case the repository
    tests, so they are removed rather than re-derived. What this plan adds for
    files is narrower: a `url()` or `@import` reference inside an inferred-owned
    inline rule follows that rule's owner.
+   Superseded in Milestone 15 (2026-10-09): D4/D5 A unions non-CSS renderer
+   records with inferred non-CSS references. CSS files follow #179's own-page
+   rule membership; removed source declarations grant no ownership.
 4. **Rules that can match nothing are excluded.** A diffed head rule whose
    selectors match no element on either side cannot change the rendered
    result. It is set aside exactly like an excluded stylesheet rule, so a
@@ -109,6 +118,8 @@ three defects below explain why this plan replaced them.
 - Rule-level owner inference for linked stylesheet files. Their ownership
   keeps `ownedDependencies`; extending inference to them is a possible
   follow-up plan, not part of this one.
+  Superseded in Milestone 15 (2026-10-09): all CSS files use own-page rule
+  membership, including those reached through inline imports.
 - Evaluating media, container or supports conditions, specificity, cascade
   order, or inheritance beyond the custom-property keep rule.
 - Any change to catalogues without registered components. Their inline style

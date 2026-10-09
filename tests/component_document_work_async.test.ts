@@ -3,7 +3,6 @@ import { AsyncLocalStorage, createHook } from "node:async_hooks";
 import test from "node:test";
 
 import { compareComponentViews } from "../dist/review/component_compare_views.js";
-import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
 import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
@@ -31,11 +30,6 @@ test("disabled view instrumentation creates no promises beyond the delivered com
       ),
       beforeReader,
       afterReader,
-      dependencies: new ComponentDependencyPolicy(
-        fixture.before.manifest,
-        fixture.after.manifest,
-        [],
-      ),
       changed,
       prefix: "mockups",
       resources: new ResourceComparison(

@@ -3,15 +3,15 @@ import type { GeneratedComponentView, ViewReview } from "@mokly/viewer/data";
 import { MoklyError } from "../errors.js";
 
 import type { PreparedComponentComparison } from "./component_projection_resources.js";
-import { compareCompleteComponentView } from "./component_view_complete.js";
 import { compareStyleOnlyView } from "./component_style_route.js";
+import { compareCompleteComponentView } from "./component_view_complete.js";
 import { compareUnchangedComponentView } from "./component_view_fast_path.js";
 import { compareOneSidedComponentView } from "./component_view_material.js";
-import { PageAnalysisPair } from "./page_pair.js";
 import type {
   ComparedComponentView,
   ComponentViewContext,
 } from "./component_view_types.js";
+import { PageAnalysisPair } from "./page_pair.js";
 export type {
   ComparedComponentView,
   ComponentViewContext,

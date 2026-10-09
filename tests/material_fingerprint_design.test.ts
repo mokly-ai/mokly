@@ -9,6 +9,7 @@ import {
 } from "../dist/diagnostics/timings.js";
 import { classifyComponentsWithSources } from "../dist/review/component_classification_sources.js";
 
+import { assertClassificationEqual } from "./helpers/classification_equality.js";
 import {
   designLibraryFixture,
   snapshotReader,
@@ -41,7 +42,7 @@ test("design catalogue keeps fingerprints on all complete-path views", async (co
         write: (event) => events.push(event),
       },
     );
-    assert.deepEqual(result, await classify(false));
+    assertClassificationEqual(result, await classify(false));
     const counts = events.find(
       ({ stage, event }) =>
         stage === "review.material-work" && event === "counts",
@@ -50,9 +51,9 @@ test("design catalogue keeps fingerprints on all complete-path views", async (co
       ({ stage, event }) =>
         stage === "review.compare-screens" && event === "counts",
     )!.counts!;
-    assert.equal(paths.views, 460);
-    assert.equal(paths.completePath, 460);
-    assert.equal(counts.fingerprintedViews, 460);
+    assert.equal(paths.views, 464);
+    assert.equal(paths.completePath, 464);
+    assert.equal(counts.fingerprintedViews, 464);
     coverage.push({
       mode,
       views: paths.views,

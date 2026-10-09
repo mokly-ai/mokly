@@ -18,16 +18,18 @@ fingerprints and the [style-only route](./mokly-style-only-route.md) do not
 change the classifier for catalogues without registered components. Their
 shared loop retains its delivered matching and parsing. The separate
 `classifyChangedContent` page path, including pages in component catalogues,
-also retains ignore-normalized matching and its existing parse/cache policy;
-it does not share the view analyses or their CSS cache. Duplicate page/resource
+also retains ignore-normalized matching and separate page-tree caches. It
+shares one `CssResourceAnalysis` with the view pass, but no view page trees. Duplicate page/resource
 parses from that separate path are counted, not removed by extending scope.
-Baseline admission is manifest **v9 only**, under
+Baseline admission is manifest **v10 only**, under
 [baseline compatibility](./mokly-baseline-compatibility.md): all ownership and
 review markers use the current `mokly-` syntax. No retired `mokabook-` dialect
 normalization or historical-dialect route exists; those strings are ordinary
 text/comments, not ownership or ignore markers.
 
 Create one analysis lazily for each view side and discard it with the view.
+Catalogue-wide CSS proof retains derived ranges and component ids only, never
+parse5 elements or documents.
 It holds that side's original text and its one source-located default-adapter
 parse5 tree. It is not a catalogue-lifetime page cache. The quick check,
 projection, inline analysis, implementation comparison and linked-CSS matching

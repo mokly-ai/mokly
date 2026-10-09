@@ -89,8 +89,8 @@ test(
       committedReviewRepository(config),
     );
     const result = snapshot.componentChanges?.result;
-    assert.equal(result?.schemaVersion, 6);
-    if (result?.schemaVersion !== 6) return;
+    assert.equal(result?.schemaVersion, 7);
+    if (result?.schemaVersion !== 7) return;
     assert.deepEqual(
       result.changes.map((change) => ({
         kind: change.kind,

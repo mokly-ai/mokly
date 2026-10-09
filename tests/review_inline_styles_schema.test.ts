@@ -5,17 +5,18 @@ import { renderReviewArtifact } from "../dist/review/artifact.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 import type { ReviewResult } from "../packages/viewer/dist/review/types.js";
 
+import { fixtureCssAnalysis } from "./helpers/css_evidence.js";
 import {
   cssSchemaFiles,
   cssSchemaFixture,
 } from "./helpers/review_css_schema.js";
 
-function fixture(version: 5): ReviewResult {
-  return structuredClone(cssSchemaFixture(version));
+function fixture(_version: 7): ReviewResult {
+  return structuredClone(cssSchemaFixture());
 }
 
-test("schema-v5 artifact validation triggers for inline evidence alone", () => {
-  const result = fixture(5);
+test("schema-v7 artifact validation triggers for inline evidence alone", () => {
+  const result = fixture(7);
   for (const view of result.screens[0]!.views) {
     delete view.material;
     delete view.reasons;
@@ -39,7 +40,7 @@ function secondView(result: ReviewResult) {
   return result.screens[0]!.views[1]!;
 }
 
-for (const version of [5] as const) {
+for (const version of [7] as const) {
   for (const evidence of [
     { status: "matched", selectors: [".a", ".z"] },
     { status: "unresolved", selectors: [] },
@@ -131,7 +132,13 @@ for (const version of [5] as const) {
     const view = secondView(result);
     delete view.excludedResources;
     Object.assign(view, {
-      reasons: [{ kind: "dependency", path: "mockups/shared.css" }],
+      reasons: [
+        {
+          kind: "dependency",
+          path: "mockups/shared.css",
+          analysis: fixtureCssAnalysis("matched", [".auth"]),
+        },
+      ],
       inlineStyles: { status: "excluded" },
     });
     assert.throws(() => parseReviewResult(result), /excluded inline styles/);

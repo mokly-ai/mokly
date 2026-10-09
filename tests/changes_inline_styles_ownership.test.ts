@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV7 } from "../packages/viewer/dist/review/component_types.js";
 
 import { inlineChangesFixture } from "./helpers/inline_changes.js";
 
-function changedRoutes(result: ReviewResultV6): string[] {
+function changedRoutes(result: ReviewResultV7): string[] {
   return result.changes.map((entry) => (entry.after ?? entry.before)!.path);
 }
 
@@ -17,8 +17,8 @@ test("an actual-only component rule changes the component and affects its screen
   );
   const live = await fixture.live();
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   assert.deepEqual(changedRoutes(result), ["action"]);
   assert.deepEqual(live.changedEntries, ["action"]);
   assert.ok(
@@ -42,8 +42,8 @@ test("one rule shared by two components changes both and affects the screen", as
     "<style>.shared{color:blue}</style>",
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   assert.deepEqual(changedRoutes(result), ["action", "pane"]);
   assert.deepEqual(
     [
@@ -84,8 +84,8 @@ for (const [name, selector, evidence] of [
     );
     const live = await fixture.live();
     const { result } = await fixture.complete();
-    assert.equal(result.schemaVersion, 6);
-    if (result.schemaVersion !== 6) return;
+    assert.equal(result.schemaVersion, 7);
+    if (result.schemaVersion !== 7) return;
     assert.ok(changedRoutes(result).includes("home"));
     assert.ok(live.changedEntries?.includes("home"));
     const home = result.changes.find((entry) => entry.after?.path === "home");
@@ -107,8 +107,8 @@ test("a nested component inside a caller slot owns its implementation rule", asy
     "<style>.slot-child{color:blue}</style>",
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   assert.ok(changedRoutes(result).includes("action"));
   assert.ok(
     result.affectedConsumers.some(
@@ -127,8 +127,8 @@ test("the root component keeps its own matching style edit", async (t) => {
     "<style>.action{color:blue}</style>",
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   const action = result.changes.find((entry) => entry.after?.path === "action");
   assert.ok(action?.reasons.some((reason) => reason.kind === "material"));
   assert.ok(

@@ -21,19 +21,18 @@ function actualOnlyPublicAssetSource(): string {
   return componentEntrySource({
     actionRender:
       '(props) => <button>{props.label}{props.label === "Finish" ? <img src="../../asset.svg" /> : null}</button>',
-  }).replace(
-    'path: "action",',
-    'path: "action", dependencies: ["mockups/asset.svg"], ownedDependencies: ["mockups/asset.svg"],',
-  );
+  });
 }
 
 test("committed non-CSS actual-invocation evidence belongs to its declared owner", async (t) => {
   const fixture = await changedFixture(
     t,
     actualOnlyPublicAssetSource(),
-    undefined,
-    ({ mockupsDir }) =>
-      fs.writeFile(path.join(mockupsDir, "asset.svg"), "before-image"),
+    { extraConfig: 'renderer: "renderer.tsx",' },
+    async ({ root, mockupsDir }) => {
+      await fs.writeFile(path.join(mockupsDir, "asset.svg"), "before-image");
+      await fs.writeFile(path.join(root, "renderer.tsx"), resourceRenderer);
+    },
   );
   await fs.writeFile(path.join(fixture.mockupsDir, "asset.svg"), "after-image");
   await fixture.build();
@@ -51,8 +50,8 @@ test("committed non-CSS actual-invocation evidence belongs to its declared owner
     ),
   ]);
   assert.deepEqual(live.changedEntries, ["action"]);
-  assert.equal(artifact.result.schemaVersion, 6);
-  if (artifact.result.schemaVersion !== 6) return;
+  assert.equal(artifact.result.schemaVersion, 7);
+  if (artifact.result.schemaVersion !== 7) return;
   assert.deepEqual(artifact.result.changes, [
     {
       kind: "component",
@@ -76,7 +75,10 @@ test("committed non-CSS actual-invocation evidence belongs to its declared owner
 });
 
 test("derived non-CSS actual-invocation bytes become owner material", async (t) => {
-  const fixture = await createFixture(actualOnlyPublicAssetSource());
+  const fixture = await createFixture(actualOnlyPublicAssetSource(), {
+    extraConfig: 'renderer: "renderer.tsx",',
+  });
+  await fs.writeFile(path.join(fixture.root, "renderer.tsx"), resourceRenderer);
   t.after(() => removeFixture(fixture));
   await fs.writeFile(
     path.join(fixture.mockupsDir, "asset.svg"),
@@ -111,7 +113,7 @@ test("derived non-CSS actual-invocation bytes become owner material", async (t) 
   );
 });
 
-test("non-public implementation dependencies keep declarative ownership", async (t) => {
+test("non-public source-only edits supply no resource ownership", async (t) => {
   const source = componentEntrySource().replace(
     'path: "action",',
     'path: "action", dependencies: ["shared/action.ts"], ownedDependencies: ["shared/action.ts"],',
@@ -137,11 +139,14 @@ test("non-public implementation dependencies keep declarative ownership", async 
     "main",
     committedReviewRepository(fixture.config),
   );
-  assert.deepEqual(live.changedEntries, ["action"]);
+  assert.deepEqual(live.changedEntries, []);
   const result = live.componentChanges?.result;
-  assert.equal(result?.schemaVersion, 6);
-  if (result?.schemaVersion !== 6) return;
-  assert.deepEqual(result.changes[0]?.reasons, [
-    { kind: "dependency", path: "shared/action.ts" },
-  ]);
+  assert.equal(result?.schemaVersion, 7);
+  assert.deepEqual(result?.changes, []);
 });
+
+const resourceRenderer = `import {renderToStaticMarkup} from "react-dom/server";
+export default input => ({
+  html: '<html><body>' + renderToStaticMarkup(input.node) + '</body></html>',
+  resources: input.entry.path === "home" ? [{path: "asset.svg", componentIds: ["action"]}] : []
+});`;

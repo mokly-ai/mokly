@@ -144,8 +144,9 @@ defines final-link validation and private link provenance.
 and source spans. Placement uses only configured head links. Reuse keeps body
 links in place. Template content supplies no active link.
 `stylesheet_provenance.ts` records the inserted links' final full-link spans, while
-`comparison_stylesheets.ts` removes only proven inserted links from review
-material. `stylesheet_spans.ts` validates each span against an active full link
+`PageAnalysis.stylesheetEdits` supplies proven inserted-link removals to the
+production comparison recipe. `comparison_stylesheets.ts` remains as a text
+helper for existing direct tests until the user decides its removal. `stylesheet_spans.ts` validates each span against an active full link
 in the original final HTML. Review reads inserted resources before it removes
 links or ignored regions. Ignored author links and markup stay ignored.
 `build/renderer_resources.ts` discards CSS ownership assertions after public

@@ -7,7 +7,6 @@ import {
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
 import { compareComponentViews } from "../dist/review/component_compare_views.js";
-import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
@@ -58,11 +57,6 @@ test("each completed real view samples heap once; a rejecting view never samples
     afterReader,
     changed,
     prefix: "mockups",
-    dependencies: new ComponentDependencyPolicy(
-      fixture.before.manifest,
-      fixture.after.manifest,
-      [],
-    ),
     resources: new ResourceComparison(
       beforeReader,
       afterReader,

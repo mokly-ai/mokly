@@ -26,8 +26,8 @@ test("a caller prop edit under atomic CSS stays with the screen inputs", async (
     renderer: { before: atomicRenderer, after: atomicRenderer },
   });
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   const actionIds = await actionEntryIds(fixture.config);
   const home = result.changes.find((entry) => entry.after?.path === "home");
   assert.deepEqual(
@@ -60,8 +60,8 @@ test("a parent implementation changing child props owns the atomic rule", async 
     renderer: { before: atomicRenderer, after: atomicRenderer },
   });
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   const actionIds = await actionEntryIds(fixture.config);
   const routes = result.changes.map(
     (entry) => (entry.after ?? entry.before)!.path,

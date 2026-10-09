@@ -8,8 +8,9 @@ import { loadConfig } from "../../dist/config/load.js";
 import { classifyComponents } from "../../src/review/component_classification.ts";
 import { CssResourceAnalysis } from "../../src/review/css/resource_analysis.ts";
 import { PageAnalysis } from "../../src/review/page_analysis.ts";
-import { componentEntrySource } from "./component_fixture.ts";
+
 import { compilationFiles, memoryReader } from "./component_fast_path.ts";
+import { componentEntrySource } from "./component_fixture.ts";
 import { createFixture, removeFixture } from "./fixture.ts";
 
 assert.equal(typeof global.gc, "function");

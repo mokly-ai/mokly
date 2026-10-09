@@ -123,7 +123,7 @@ rules:
   heading. A screen depicted in Current mode, whether unchanged, excluded-only,
   or ignored-only, shows the plain preview with no heading.
 - Inline evidence follows the same compact Details layout; its exact merge
-  rules and copy belong to [CSS evidence presentation](./mokly-css-evidence-presentation.md#inline-evidence).
+  rules and copy belong to [CSS evidence presentation](./mokly-inline-style-evidence.md).
 - Selector text, status names, and analysis vocabulary never appear in a
   heading or in the catalogue tree; they appear only inside the secondary
   details list, and only where the detail has review value.

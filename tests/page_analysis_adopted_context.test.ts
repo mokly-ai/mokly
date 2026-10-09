@@ -140,7 +140,23 @@ for (const mode of ["committed", "derived"] as const)
                   const reason = {
                     kind: "dependency",
                     path: "mockups/sheet.css",
-                    analysis: { status: "matched", selectors: [item.selector] },
+                    analysis: {
+                      status: "matched",
+                      selectors: [item.selector],
+                      rules: [
+                        {
+                          ruleKey:
+                            item.selector === ".page"
+                              ? "cbec7f0c645cea34797ecb2571bf64bedfeaccdde6d3b1b0258420034d8aa47f"
+                              : "dbf3636b38765564369465bdaa1fb48dd2c7b108ac310fdbd5ace10b8428bfba",
+                          status: "matched",
+                          selectors: [item.selector],
+                          changedComponentPaths: [],
+                          pageSelectors: [item.selector],
+                        },
+                      ],
+                      pageEvidence: { selectors: [item.selector] },
+                    },
                   };
                   assert.deepEqual(reasons, changed ? [reason] : []);
                   assert.deepEqual(view, {

@@ -3,7 +3,6 @@ import type { ComponentInlineMaterial } from "../components/comparison_projectio
 import { materialRecipe } from "../components/material_recipe.js";
 
 import { withInlineReplacements } from "./css/inline_rendering.js";
-
 import type { PageAnalysisPair } from "./page_pair.js";
 
 export function pageMaterialRecipes(

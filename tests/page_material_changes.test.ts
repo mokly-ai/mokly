@@ -71,7 +71,7 @@ for (const change of [
   });
 }
 
-test("v9 page resource evidence uses the merged changed-path set", async (context) => {
+test("v8 page resource evidence uses the merged changed-path set", async (context) => {
   const fixture = await changedFixture(
     context,
     source,

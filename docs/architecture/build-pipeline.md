@@ -199,7 +199,13 @@ interface RenderInput {
   colorScheme: "light" | "dark";
 }
 
-type Renderer = (input: RenderInput) => string;
+interface RenderResult {
+  html: string;
+  resources?: readonly ComponentResourceOwnership[];
+  styles?: never;
+}
+
+type Renderer = (input: RenderInput) => string | RenderResult;
 ```
 
 `RenderInput` has no `variantId`: for a component render, `entry` is the

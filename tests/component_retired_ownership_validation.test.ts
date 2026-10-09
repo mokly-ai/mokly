@@ -18,7 +18,7 @@ import type { ManifestScreen } from "../packages/viewer/dist/registry/types.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
-test("historical v9 null view records fail with typed plain-object validation", async (context) => {
+test("historical v10 null view records fail with typed plain-object validation", async (context) => {
   const fixture = await createFixture(componentEntrySource());
   context.after(() => removeFixture(fixture));
   const original = (await compileCatalogue(await loadConfig(fixture.root)))
@@ -43,7 +43,7 @@ test("historical v9 null view records fail with typed plain-object validation", 
   }
 });
 
-test("historical v9 retirement keeps instance props and slot validation strict", async (context) => {
+test("historical v10 usage keeps instance props and slot validation strict", async (context) => {
   const fixture = await createFixture(componentEntrySource());
   context.after(() => removeFixture(fixture));
   const original = (await compileCatalogue(await loadConfig(fixture.root)))
@@ -54,7 +54,6 @@ test("historical v9 retirement keeps instance props and slot validation strict",
       (entry): entry is ManifestScreen => entry.kind === "screen",
     )!;
     const usage = screen.componentViews![0]!;
-    Object.assign(usage, { styles: [null], resources: [42] });
     if (mutation === "props") {
       const instance = usage.instances.find(
         (item) => item.componentId === "action",
@@ -85,20 +84,13 @@ test("historical v9 retirement keeps instance props and slot validation strict",
   }
 });
 
-test("v9 retirement accepts baseline arrays on screens and variant entries only", async (context) => {
+test("v10 historical usage accepts current arrays and rejects retired fields", async (context) => {
   const fixture = await createFixture(componentEntrySource());
   context.after(() => removeFixture(fixture));
   const original = (await compileCatalogue(await loadConfig(fixture.root)))
     .manifest;
   const baseline = structuredClone(original);
-  for (const entry of baseline.entries)
-    if ("componentViews" in entry)
-      for (const usage of entry.componentViews ?? [])
-        Object.assign(usage, { styles: [{ obsolete: true }], resources: [42] });
-  assert.throws(
-    () => parseManifest(structuredClone(baseline)),
-    /unknown field/,
-  );
+  assert.deepEqual(parseManifest(structuredClone(baseline)), original);
   const normalized = parseHistoricalManifest(baseline);
   assert.deepEqual(normalized, original);
   for (const field of ["styles", "resources"] as const) {
@@ -108,6 +100,9 @@ test("v9 retirement accepts baseline arrays on screens and variant entries only"
     )!;
     assert.ok("componentViews" in variant);
     Object.assign(variant.componentViews[0]!, { [field]: null });
-    assert.throws(() => parseHistoricalManifest(malformed), /must be an array/);
+    assert.throws(
+      () => parseHistoricalManifest(malformed),
+      field === "styles" ? /unknown field/ : /missing resources array/,
+    );
   }
 });

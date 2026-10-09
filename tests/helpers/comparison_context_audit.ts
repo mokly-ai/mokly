@@ -23,7 +23,6 @@ export function comparisonContextAudit(program: ts.Program, directory: string) {
           "beforeReader",
           "afterReader",
           "resources",
-          "dependencies",
         ];
         if (required.every((name) => type.getProperty(name))) {
           contexts++;

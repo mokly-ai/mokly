@@ -22,8 +22,8 @@ test("an image in an excluded inline rule creates no Changes row", async (t) => 
     fixture.complete(),
   ]);
   assert.deepEqual(live.changedEntries, []);
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   assert.deepEqual(result.changes, []);
   assert.ok(
     result.screens.every((screen) =>
@@ -53,14 +53,28 @@ test("a string-form inline import stays unresolved entry material", async (t) =>
     },
   });
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   const screen = result.changes.find((entry) => entry.after?.path === "home");
   assert.deepEqual(screen?.reasons, [
     {
       kind: "dependency",
       path: "mockups/theme.css",
-      analysis: { status: "matched", selectors: [".entry"] },
+      analysis: {
+        status: "matched",
+        selectors: [".entry"],
+        rules: [
+          {
+            ruleKey:
+              "44c6371fdb5a4387bc3c4cce5187d2125274d54911330930d1cf276ab9a1c971",
+            status: "matched",
+            selectors: [".entry"],
+            changedComponentPaths: [],
+            pageSelectors: [".entry"],
+          },
+        ],
+        pageEvidence: { selectors: [".entry"] },
+      },
     },
   ]);
   assert.ok(!result.changes.some((entry) => entry.kind === "component"));

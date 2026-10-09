@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
 
-import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV7 } from "../packages/viewer/dist/review/component_types.js";
 
 import {
   inlineChangesFixture,
   inlineComponentSource,
+  inlineRenderer,
 } from "./helpers/inline_changes.js";
 
 const ownedRule = '<style>.actual-only{background:url("../image.svg")}</style>';
@@ -27,18 +28,18 @@ async function resultFor(
   t: TestContext,
   styles: string,
   options: Parameters<typeof inlineChangesFixture>[3] = {},
-): Promise<ReviewResultV6> {
+): Promise<ReviewResultV7> {
   const fixture = await inlineChangesFixture(t, styles, styles, {
     files: imageFiles(),
     ...options,
   });
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 6);
-  assert.ok(result.schemaVersion === 6);
+  assert.equal(result.schemaVersion, 7);
+  assert.ok(result.schemaVersion === 7);
   return result;
 }
 
-function change(result: ReviewResultV6, route: string) {
+function change(result: ReviewResultV7, route: string) {
   return result.changes.find(
     (entry) => (entry.after ?? entry.before)?.path === route,
   );
@@ -52,8 +53,8 @@ test("an image reached only by an owned inline rule belongs to its component", a
     fixture.live(),
     fixture.complete(),
   ]);
-  assert.equal(artifact.result.schemaVersion, 6);
-  if (artifact.result.schemaVersion !== 6) return;
+  assert.equal(artifact.result.schemaVersion, 7);
+  if (artifact.result.schemaVersion !== 7) return;
   assert.deepEqual(live.changedEntries, ["action"]);
   assert.deepEqual(
     artifact.result.changes.map((entry) => entry.after?.path),
@@ -114,8 +115,8 @@ test("one referenced image can belong to two matched components", async (t) => {
     files: imageFiles(),
   });
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   const ownersAndVariants = [
     "action",
     "action/default",
@@ -135,11 +136,15 @@ test("one referenced image can belong to two matched components", async (t) => {
 });
 
 test("inferred and declarative owners are unioned for one resource", async (t) => {
-  const source = inlineComponentSource().replace(
-    'path: "pane",',
-    'path: "pane", dependencies: ["mockups/image.svg"], ownedDependencies: ["mockups/image.svg"],',
-  );
-  const result = await resultFor(t, ownedRule, { source });
+  const renderer =
+    inlineRenderer(ownedRule).replace(
+      "export default (input) =>",
+      "const render = (input) =>",
+    ) +
+    '\nexport default input => ({html: render(input), resources: input.entry.path === "home" ? [{path: "image.svg", componentIds: ["pane"]}] : []});';
+  const result = await resultFor(t, ownedRule, {
+    renderer: { before: renderer, after: renderer },
+  });
   assert.deepEqual(
     result.changes.map((entry) => entry.after?.path),
     ["action", "pane"],
@@ -170,8 +175,8 @@ test("transitive inline resources retain the rule owner's repository path", asyn
     },
   });
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   assert.deepEqual(change(result, "action")?.reasons, [
     { kind: "dependency", path: "mockups/deep.svg" },
   ]);

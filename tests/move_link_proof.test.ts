@@ -12,7 +12,6 @@ const page: ManifestEntry = {
   title: "Target",
   description: "A target",
   sourcePath: "specs/target.ts",
-  declaredDependencies: [],
   relatedDocs: [],
 };
 const screen: ManifestEntry = {

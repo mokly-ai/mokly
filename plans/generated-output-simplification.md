@@ -40,6 +40,10 @@ CSS bundles and copied CSS assets in this tree, under `styles/` and `assets/`.
 The public surface is the referenced asset closure: stylesheet
 rules and every local URL reachable from generated documents and their CSS.
 Renderers return HTML strings and contribute resources through document links.
+
+Superseded in Milestone 15 (2026-10-09): D1 C also accepts `{ html; resources? }`.
+D3 A retains checked renderer declarations as private closure seeds, including
+CSS declarations that warn and grant no stylesheet ownership.
 For the example:
 
 ```

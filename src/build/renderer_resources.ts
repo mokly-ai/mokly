@@ -10,8 +10,8 @@ import type { ResolvedConfig } from "../config/types.js";
 import type { Renderer } from "../renderer/types.js";
 
 import { type BuildDiagnostic } from "./build_warnings.js";
-import type { ResourceSeed } from "./resource_seeds.js";
 import type { PendingGeneratedFiles } from "./pending_generated.js";
+import type { ResourceSeed } from "./resource_seeds.js";
 import { isGeneratedRoute } from "./styles/routes.js";
 import {
   ignoredRendererStyles,

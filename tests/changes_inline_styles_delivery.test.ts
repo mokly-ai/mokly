@@ -40,8 +40,8 @@ test("inline ownership agrees across live, complete, selected and publication bo
   const snapshot = await cache.read(1);
   assert.ok(snapshot?.result);
   const artifact = await fixture.complete();
-  assert.equal(artifact.result.schemaVersion, 6);
-  if (artifact.result.schemaVersion !== 6) return;
+  assert.equal(artifact.result.schemaVersion, 7);
+  if (artifact.result.schemaVersion !== 7) return;
   assert.deepEqual(snapshot.result, artifact.result);
   assert.ok(
     artifact.result.screens

@@ -2,14 +2,15 @@
 
 ## Delivery Status
 
-Implemented across comparison, classification, result delivery and shell
-presentation. The delivered engine runs on complete paired views; fast-path
-views prove references conservatively without inline analysis. The renderer is
-string-only, current manifests contain no head-style or public-resource
-assertions, and historical readers discard the retired arrays. References
-inside inferred-owned rules follow their owners through the ordinary resource
-graph after fast-path fall-through. Component-aware results carry validated
-`inlineStyles` evidence and the shell presents each outcome. This document owns
+Implemented across comparison, classification and result delivery. Complete
+paired views infer inline ownership; fast paths prove resources conservatively.
+Renderers return complete strings or `{ html; resources? }`. A returned `styles`
+field warns and is ignored. Current v10 usage has no `styles` array, and retains
+non-CSS `resources`, roots and inserted links. Only non-CSS references follow
+inferred owners; CSS files use own-page membership. Review v7 and catalogue v6
+views retain `inlineStyles`. The separate inline panel remains scheduled in the
+[scalable plan's UI milestone](../../plans/scalable-inline-style-analysis.md#milestone-17-inline-style-evidence-ui).
+This document owns
 the analysis, attribution, comparison material and membership rules for
 style material that a renderer places outside component markup. The
 [CSS change attribution contract](./mokly-css-attribution.md) owns the
@@ -222,7 +223,7 @@ removed together with an eligible style contributes no emitted id.
 
 The [inline evidence contract](./mokly-inline-style-evidence.md)
 owns the optional `inlineStyles` shape, coupling to states and material, and
-delivery through live, complete, selected and published v6 results. The
+delivery through live, complete, selected and published v7 results. The
 [validation contract](./mokly-component-review-validation.md#inline-style-evidence-validation)
 owns strict paired-view validation and canonical selector order.
 
@@ -235,7 +236,8 @@ The [timing contract](./mokly-timings.md) owns the per-view
 
 - Evaluating media, container or supports conditions, specificity, cascade
   order or inheritance beyond the custom-property keep rule.
-- Owner inference for linked stylesheet files; their ownership stays declared
-  through `ownedDependencies`.
+- Owner inference for CSS files; their membership follows kept own-page rule
+  matches, including files reached through inline references.
 - Browser-verified refinement, pixel comparison or screenshots.
-- Any change to what a component's own page compares.
+- CSS-file ownership from inline references. Non-CSS assets alone follow
+  inferred inline owners. A saved root maps to entry ownership.

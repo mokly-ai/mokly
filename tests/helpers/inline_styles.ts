@@ -82,6 +82,8 @@ export function view(
     instances: options.instances ?? [],
     slots: options.slots ?? [],
     ranges: options.ranges ?? [],
+    resources: [],
+    insertedStylesheets: [],
   };
 }
 

@@ -134,6 +134,13 @@ for (const [name, change] of [
       ranges: [{ ...view.ranges[0]!, id: "r-1" }],
     }),
   ],
+  [
+    "resources",
+    (view: ComponentViewRecord) => ({
+      ...view,
+      resources: [{ ...view.resources[0]!, path: "other.css" }],
+    }),
+  ],
 ] as const)
   test(`usage topology rejects changed ${name}`, () => {
     const before = topologyView();
@@ -157,6 +164,8 @@ function componentView(propsKey: string): ComponentViewRecord {
     ],
     slots: [],
     ranges: [],
+    resources: [],
+    insertedStylesheets: [],
   };
 }
 
@@ -199,6 +208,8 @@ function topologyView(): ComponentViewRecord {
         target: { kind: "instance", instanceKey: "parent" },
       },
     ],
+    resources: [{ path: "pane.css", componentIds: ["pane"] }],
+    insertedStylesheets: [],
   };
 }
 

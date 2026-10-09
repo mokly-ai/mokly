@@ -1,12 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
-import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
-
-import { attribute, textContent } from "./helpers/html.js";
-import { requiredElement } from "./helpers/shell_assertions.js";
-import { manifest, routePage } from "./helpers/shell_fixture.js";
+import type { ReviewResultV7 } from "../../packages/viewer/dist/review/component_types.js";
+import { createCatalogue } from "../../packages/viewer/dist/shell/catalogue.js";
+import { attribute, textContent } from "../helpers/html.js";
+import { requiredElement } from "../helpers/shell_assertions.js";
+import { manifest, routePage } from "../helpers/shell_fixture.js";
 
 test("excluded page styles keep the screen unmodified without a comparison stage", () => {
   const catalogue = createCatalogue(manifest);
@@ -14,7 +13,7 @@ test("excluded page styles keep the screen unmodified without a comparison stage
     path: "example/screens/welcome",
     title: "Welcome",
   };
-  const views: ReviewResultV6["screens"][number]["views"] = (
+  const views: ReviewResultV7["screens"][number]["views"] = (
     ["mobile", "desktop"] as const
   ).map((viewport) => ({
     colorScheme: "light",
@@ -23,7 +22,7 @@ test("excluded page styles keep the screen unmodified without a comparison stage
     state: "unchanged",
     viewport,
   }));
-  const result: ReviewResultV6 = {
+  const result: ReviewResultV7 = {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
     baseRef: "origin/main",
@@ -31,19 +30,16 @@ test("excluded page styles keep the screen unmodified without a comparison stage
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 6,
+    schemaVersion: 7,
     screens: [
       {
         ...address,
         after: address,
         before: address,
-        dependencies: [],
-        sharedImpact: [],
         state: "unchanged",
         views,
       },
     ],
-    sharedImpact: [],
   };
   const html = routePage(catalogue, "example/screens/welcome", {
     changedEntries: [],

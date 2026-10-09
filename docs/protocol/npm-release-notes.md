@@ -151,13 +151,16 @@ CSS list. Ordinary package edits finalize private full-link spans; no transforme
 or transient token remains.
 
 Changes uses rendered output, reachable resources, reviewable metadata and
-component usage. All CSS delivery paths use the same changed-rule test: kept
+component usage. All CSS file delivery paths use the same changed-rule test: kept
 own-page matches change a component; outside matches and unresolved rules give
 the page a direct row. Source-only edits add no evidence. Details omit the
 source dependency list. The combined current formats use new versions:
 manifest v10 includes root ranges and `insertedStylesheets` with
 `componentPaths`; catalogue v6 carries view/page `resourceEvidence`; review v7
 carries `ruleKey`, `changedComponentPaths`, `pageSelectors` and `pageEvidence`.
+Inline rules retain inferred ownership, with `inlineStyles` on review and
+catalogue views. Returned renderer `styles` warns and is ignored; v10 usage
+has no `styles` array.
 Manifest dependency declarations, catalogue `details.dependencies`, review
 `sharedImpact` and entry dependency lists are absent. Earlier shapes are not
 read. Rebuild baselines and regenerate public exports. Former `mokabook-`

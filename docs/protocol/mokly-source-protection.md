@@ -204,20 +204,7 @@ Current-side resource reads always use the current validated policy.
 The [source protection acceptance contract](./mokly-source-protection-acceptance.md)
 lists the required boundary and lifecycle checks.
 
-Exercise the same fixtures through GET/HEAD `/static`, resource validation,
-current and historical Review reads, and both publication options. Verify that
-CSS, fonts, images, and public scripts still work. Test watcher reclassification
-after dependency changes and prove default publication validation uses no Git.
-Cover internal manifests, their symlink aliases, generated links/resources,
-ordinary public JSON, v10 internal reads and earlier-envelope rejection.
-Cover unreferenced files at root and nested paths, aliases in either direction,
-missing and protected closure references, and `mokly-generated/` escapes. Prove
-unreferenced README edits create no public content evidence, real imported
-inputs still rebuild, and referenced CSS and images remain public when no
-source-protection rule denies them.
-
-The approved [public-file policy](./mokly-public-closure.md) centralizes these
-checks once per compile. File extensions and build-folder names alone do not
-protect a referenced authored file. Actual source and protected-location rules
-still win. Renderer resource and other explicit closure seeds use the same validation, and Serve rechecks each
-listed file without following symbolic links at read time.
+The [shared policy](./mokly-public-closure.md) centralizes checks once per
+compile. Extensions and build-folder names alone do not protect referenced
+authored files. Actual source and protected-location rules win. Renderer
+seeds use this policy, and Serve rechecks listed files without following symlinks.

@@ -29,6 +29,7 @@ type BuildDiagnosticCode =
   | "removed-dependencies"
   | "removed-owned-dependencies"
   | "removed-shared-impact"
+  | "ignored-renderer-styles"
   | "duplicate-component-stylesheet"
   | "missing-configured-stylesheet-link"
   | "ignored-stylesheet-resource-owner";
@@ -83,6 +84,7 @@ order, the operating system, or the absolute checkout path.
 | `removed-shared-impact`              | Removed configuration field                                |
 | `duplicate-component-stylesheet`     | Repeated real-file declarations on a component             |
 | `missing-configured-stylesheet-link` | A missing configured placement anchor                      |
+| `ignored-renderer-styles`            | A returned renderer inline ownership field                 |
 | `ignored-stylesheet-resource-owner`  | A renderer's stylesheet ownership record                   |
 
 The tiers and message templates are defined in the
@@ -91,13 +93,10 @@ The other messages belong to [authoring](./mokly-authoring.md#removed-input-warn
 [folders](./mokly-folders.md#removed-input-warnings),
 [configuration](./mokly-configuration.md#removed-review-setting),
 [component stylesheets](./mokly-component-stylesheets.md#warning-messages), and
-[stylesheet ownership](./mokly-component-stylesheet-ownership.md#ignored-owner-warning).
+[stylesheet ownership](./mokly-component-stylesheet-ownership.md#ignored-owner-warning)
+and [renderer results](./mokly-rendering.md#ignored-style-records).
 Future producers add a row here and define their own messages in their own
 contract.
-
-Returned renderer `styles` produces one `ignored-renderer-styles` warning per
-rendered route. Mokly ignores the field without validating its contents. HTML
-and non-CSS resource records remain available.
 
 ## Producers And Transport
 

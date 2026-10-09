@@ -5,9 +5,6 @@ This contract expands the [package contract](./mokly-package.md) for the
 [configuration](./mokly-configuration.md). Public-resource eligibility follows
 [source protection](./mokly-source-protection.md) and the
 [referenced closure](./mokly-generated-output.md#closure-urls-and-publication).
-The string-only renderer result below is the implemented contract. The builder
-rejects structured results, and current component views contain only instance,
-slot and range records. Head styles and resources are attributed during comparison.
 
 ## Delivery Status
 
@@ -140,8 +137,8 @@ Only links that Mokly inserts receive recorded spans after the package
 finishes ordinary link edits. No transient token is written. No CSS resource
 owners are derived. Renderer stylesheet ownership is ignored with a warning;
 the validated resource declaration remains in the checked closure. CSS
-attribution still needs actual linked rule proof. Document `styles` and
-non-CSS owners retain their meaning.
+attribution still needs actual linked rule proof. Returned document `styles`
+warns and is ignored; non-CSS owners retain their meaning.
 Shell and device-frame CSS is package-owned and self-contained; product CSS is
 never copied into the npm package.
 
@@ -150,3 +147,10 @@ never copied into the npm package.
 The deterministic generated views, manifest v10 shape, CSS/assets and ownership
 rules are defined in the linked [Generated Rendering Contract](./mokly-rendering-generated.md).
 Exact identity-derived routes follow [Artifact Paths](./mokly-artifact-paths.md).
+
+## Ignored Style Records
+
+Returned renderer `styles` produces one `ignored-renderer-styles` warning per
+rendered route. Mokly ignores the field without validating its contents. HTML
+and non-CSS resource records remain available. Its message is:
+`Renderer styles ownership is ignored. Mokly infers inline style ownership from rendered markup.`

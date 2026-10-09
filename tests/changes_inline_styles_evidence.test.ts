@@ -33,8 +33,8 @@ test("excluded inline evidence is omitted from an ignored-only view", async (t) 
     { source, afterSource: source.replaceAll(">Before<", ">After<") },
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   const home = result.screens.find((screen) => screen.path === "home")!;
   assert.ok(
     home.views.every(
@@ -61,8 +61,8 @@ test("excluded inline evidence is omitted beside a resource reason", async (t) =
     },
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   assert.ok(
     result.screens
       .find((screen) => screen.path === "home")!
@@ -90,8 +90,8 @@ test("excluded inline evidence is omitted beside an input reason", async (t) => 
     },
   );
   const { result } = await fixture.complete();
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   const home = result.changes.find((entry) => entry.after?.path === "home");
   assert.deepEqual(home?.reasons, [{ kind: "inputs" }]);
   assert.ok(
@@ -162,8 +162,8 @@ test("views settled by the fast path emit no inline evidence", async (t) => {
       event.stage === "review.compare-screens" && event.event === "counts",
   )?.counts;
   assert.ok(Number(counts?.fastPath) > 0);
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   assert.ok(
     [
       ...result.screens.flatMap((screen) => screen.views),

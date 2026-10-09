@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Implemented in [review v6](./mokly-component-review.md) across live, complete,
+Implemented in [review v7](./mokly-component-review.md) across live, complete,
 selected and published results. [Inline ownership](./mokly-inline-styles.md)
 owns analysis; [validation](./mokly-component-review-validation.md#inline-style-evidence-validation)
 owns strict shapes and [presentation](./mokly-css-evidence-presentation.md) owns copy.
@@ -11,11 +11,12 @@ implements the following behavior. Decision 13 performance acceptance is
 deferred by the user decision of 2026-10-06.
 The [style-only route](./mokly-style-only-route.md#result) emits the same evidence
 as complete comparison.
-No evidence shape, ordering, state coupling or delivery schema changes.
+Catalogue v6 view `resourceEvidence` retains the same inline payload. Its
+separate Details block is pending the mockup and UI milestones in that plan.
 
 ## Evidence Shape And Emission
 
-`ViewReview` gains one optional field, allowed in result schema v6 and emitted only
+`ViewReview` gains one optional field, allowed in result schema v7 and emitted only
 when component usage enables inline analysis:
 
 ```ts
@@ -42,10 +43,11 @@ Reference-bearing rules that are not diffed contribute no evidence. Views
 settled by the unchanged decision, one-sided views and views without unowned
 inline style differences carry no field.
 
-The component-aware live classification snapshot's full schema-v6 result, the
+The component-aware live classification snapshot's full schema-v7 result, the
 complete comparison artifact, static publication and the selected live
 component-aware endpoint carry `inlineStyles` beside `reasons` and
 `excludedResources`, with the same omission and canonical ordering rules.
 The optional screen-only `screenEvidence` slice carries linked-resource facts
-only; catalogues without component usage never run inline ownership. Schema versions do not change; results without the field
-remain valid and mean the analysis did not run.
+only; catalogues without component usage never run inline ownership. Review v7 results without the field remain valid and mean the analysis did
+not run. Catalogue readers validate the payload without comparison-only state
+fields; only view evidence accepts inline styles.

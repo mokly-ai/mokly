@@ -1,7 +1,7 @@
 /** Shared ownership-projected resource policy for fast and complete comparisons. */
-
 import type { GeneratedComponentView } from "@mokly/viewer/data";
 
+import { comparisonStylesheetMaterial } from "../../../dist/components/comparison_stylesheets.js";
 import {
   validateComponentRanges,
   type RenderedRange,
@@ -12,6 +12,7 @@ import {
   type InlineMaterialReplacements,
 } from "../../../dist/review/css/inline_rendering.js";
 import { normalizeReviewPair } from "../../../dist/review/ignore.js";
+import { projectedResourceExclusion as recordedResourceExclusion } from "../../../src/review/component_resource_exclusion.js";
 
 import {
   projectComponentPair,
@@ -58,6 +59,14 @@ export function prepareComponentProjection(
   root?: string,
   options: ProjectionPreparationOptions = {},
 ): PreparedComponentComparison {
+  const originalBaseRanges = before.usage
+    ? validateComponentRanges(base, before.usage.ranges)
+    : undefined;
+  const originalHeadRanges = after.usage
+    ? validateComponentRanges(head, after.usage.ranges)
+    : undefined;
+  base = comparisonStylesheetMaterial(base, before.usage, root).html;
+  head = comparisonStylesheetMaterial(head, after.usage, root).html;
   const baseRanges = before.usage
     ? validateComponentRanges(base, before.usage.ranges)
     : undefined;
@@ -120,8 +129,8 @@ export function prepareComponentProjection(
     headRanges,
   );
   return {
-    ...(baseRanges ? { baseRanges } : {}),
-    ...(headRanges ? { headRanges } : {}),
+    ...(originalBaseRanges ? { baseRanges: originalBaseRanges } : {}),
+    ...(originalHeadRanges ? { headRanges: originalHeadRanges } : {}),
     projected,
     matching: { before: matching.base, after: matching.head },
     ownedComponentIds:
@@ -188,18 +197,11 @@ function inlineEvidence(analysis: InlineAttributionResult | undefined): {
 
 /** Build the exact projected-resource exclusion used by complete comparison. */
 function projectedResourceExclusion(
-  context: ComponentViewContext,
+  _context: ComponentViewContext,
   before: GeneratedComponentView,
   after: GeneratedComponentView,
   pairedComponentIds: ReadonlySet<string>,
   root: string | undefined,
 ): (path: string) => boolean {
-  const repoPath = (path: string) =>
-    context.prefix ? `${context.prefix}/${path}` : path;
-  return (path: string) =>
-    context.dependencies.suppressResource(
-      repoPath(path),
-      pairedComponentIds,
-      root,
-    );
+  return recordedResourceExclusion(before, after, pairedComponentIds, root);
 }

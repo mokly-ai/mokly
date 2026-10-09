@@ -7,8 +7,8 @@ import {
   SCREEN_TERMINAL,
   openComparison,
   openEvidence,
-} from "./css_evidence_page.js";
-import { inlineStyleEvidenceFixture } from "./inline_style_evidence_fixture.js";
+} from "../browser/css_evidence_page.js";
+import { inlineStyleEvidenceFixture } from "../browser/inline_style_evidence_fixture.js";
 
 const PAGE_EXCLUDED_LEAD =
   "Styles on this page changed, but none of the changed styles apply to this screen.";

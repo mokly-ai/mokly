@@ -40,7 +40,7 @@ test("every component-aware comparison context in tests supplies production link
 });
 
 test("context audit covers direct, shorthand, spread and explicit oracle shapes", () => {
-  const common = `const base = { beforeReader: {}, afterReader: {}, resources: {}, dependencies: {} };`;
+  const common = `const base = { beforeReader: {}, afterReader: {}, resources: {} };`;
   for (const expression of [
     `{ ...base, componentAware: true }`,
     `{ ...base, componentAware }`,
