@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { test } from "node:test";
 
-import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV7 } from "../packages/viewer/dist/review/component_types.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
@@ -15,6 +17,12 @@ test("Review fast and complete paths agree for matching shared CSS", async (t) =
 
 test("Review fast and complete paths agree for owned component CSS", async (t) => {
   const fixture = await cssAttributionFixture(t, true, {
+    prepare: async ({ mockupsDir }) => {
+      await fs.writeFile(
+        path.join(mockupsDir, "owned.css"),
+        ".owned-action {}",
+      );
+    },
     transformSource: (source) =>
       source
         .replace(
@@ -23,10 +31,10 @@ test("Review fast and complete paths agree for owned component CSS", async (t) =
         )
         .replace(
           'path: "action",',
-          'path: "action", dependencies: ["mockups/shared.css"], ownedDependencies: ["mockups/shared.css"],',
+          'path: "action", stylesheets: ["owned.css"],',
         ),
   });
-  await fixture.append(".owned-action { padding: 2px; }");
+  await fixture.append(".owned-action { padding: 2px; }", "owned.css");
   const result = await equivalentReview(fixture);
 
   assert.ok(
@@ -66,15 +74,15 @@ test("Review fast and complete paths agree for a Git asset-byte change", async (
 
 async function equivalentReview(
   fixture: Awaited<ReturnType<typeof cssAttributionFixture>>,
-): Promise<ReviewResultV6> {
+): Promise<ReviewResultV7> {
   const fast = await fixture.compare(true);
   const complete = await fixture.compare(false);
   assert.deepEqual(fast.result, complete.result);
-  assert.equal(fast.result.schemaVersion, 6);
+  assert.equal(fast.result.schemaVersion, 7);
   return fast.result;
 }
 
-function reasonPaths(result: ReviewResultV6) {
+function reasonPaths(result: ReviewResultV7) {
   return [
     ...new Set(
       result.changes.flatMap((entry) =>

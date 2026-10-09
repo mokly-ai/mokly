@@ -7,10 +7,13 @@ import {
 } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
+import type { LinkedComponentStylesheet } from "../components/render.js";
 import { isComponentVariantDefinition } from "../components/types.js";
 import type { PublicFilePolicy } from "../config/public_policy.js";
 import type { ResolvedConfig } from "../config/types.js";
 
+import type { BuildDiagnostic } from "./build_warnings.js";
+import type { ResourceSeed } from "./html_links.js";
 import type { LoadedGraph } from "./load_graph.js";
 import type { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
@@ -24,6 +27,9 @@ export async function renderCooperatively(
   checkpoint: () => Promise<void>,
   pending: PendingGeneratedFiles,
   policy: PublicFilePolicy,
+  onWarning?: (warning: BuildDiagnostic) => void,
+  stylesheetLinks?: Map<string, readonly LinkedComponentStylesheet[]>,
+  resourceSeeds?: ResourceSeed[],
 ): Promise<Map<string, string>> {
   const outputs = new Map<string, string>();
   const render = async (
@@ -39,6 +45,9 @@ export async function renderCooperatively(
       componentViews,
       selection,
       { routes: graph.stylesheetRoutes, pending, policy },
+      onWarning,
+      stylesheetLinks,
+      resourceSeeds,
     ))
       outputs.set(route, content);
   };

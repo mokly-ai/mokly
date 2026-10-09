@@ -2,7 +2,7 @@ import { defineScreen, defineComponent } from "../dist/index.js";
 const fields = {
   title: "Screen",
   description: "Screen",
-  dependencies: [],
+
   relatedDocs: [],
   mobile: "Screen",
   desktop: "Screen",
@@ -39,7 +39,6 @@ defineScreen({
 defineComponent({
   title: "Component",
   description: "Component",
-  dependencies: [],
   relatedDocs: [],
   propSchema: { kind: "object", properties: {} },
   render: () => null,

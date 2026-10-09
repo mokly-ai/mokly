@@ -30,9 +30,9 @@ export async function namedEntryFixture(
       '<svg xmlns="http://www.w3.org/2000/svg"><circle r="8"/></svg>';
   }
   sources["specs/removed.mockup.tsx"] =
-    `import {defineScreen} from '@mokly/mokly'; export default [${BUILD_NAMES.map((name) => `defineScreen({path:'retired/${name}',title:'Retired ${name}',description:'Earlier screen',dependencies:[],relatedDocs:[],mobile:<p>Retired mobile ${name}</p>,desktop:<p>Retired desktop ${name}</p>})`).join(",")}];`;
+    `import {defineScreen} from '@mokly/mokly'; export default [${BUILD_NAMES.map((name) => `defineScreen({path:'retired/${name}',title:'Retired ${name}',description:'Earlier screen',relatedDocs:[],mobile:<p>Retired mobile ${name}</p>,desktop:<p>Retired desktop ${name}</p>})`).join(",")}];`;
   sources["specs/pages.mockup.ts"] =
-    `import {definePage} from '@mokly/mokly'; export default [${BUILD_NAMES.map((name) => `definePage({path:'guides/${name}',title:'Guide ${name}',description:'Earlier guide',dependencies:[],relatedDocs:[],render:()=>'<html><body>Guide ${name}<img src="../../../public.svg" alt="Guide"></body></html>'})`).join(",")}];`;
+    `import {definePage} from '@mokly/mokly'; export default [${BUILD_NAMES.map((name) => `definePage({path:'guides/${name}',title:'Guide ${name}',description:'Earlier guide',relatedDocs:[],render:()=>'<html><body>Guide ${name}<img src="../../../public.svg" alt="Guide"></body></html>'})`).join(",")}];`;
   const fixture = await pathFixture(
     sources,
     JSON.stringify({
@@ -98,5 +98,5 @@ export async function namedEntryFixture(
 }
 
 function screen(name: string): string {
-  return `import {defineScreen} from '@mokly/mokly'; import './styles/${name}.css'; export default defineScreen({path:'${name}',title:'${name}',description:'A screen',dependencies:[],relatedDocs:[],mobile:<h1 className='entry'>Before mobile ${name}</h1>,desktop:<h1 className='entry'>Before desktop ${name}</h1>});`;
+  return `import {defineScreen} from '@mokly/mokly'; import './styles/${name}.css'; export default defineScreen({path:'${name}',title:'${name}',description:'A screen',relatedDocs:[],mobile:<h1 className='entry'>Before mobile ${name}</h1>,desktop:<h1 className='entry'>Before desktop ${name}</h1>});`;
 }

@@ -1,5 +1,7 @@
 # Implementation Review Prompt
 
+## Delivery Status
+
 Use this prompt for the final review item in every implementation plan. Run the
 review after the completed work has passed its checks, been committed, and been
 pushed. The reviewer must inspect the complete local diff against `origin/main`

@@ -85,7 +85,7 @@ export async function designLibraryFixture(t: {
     const descriptor = baselineCatalogue(
       commit,
       "examples/basic",
-      "generated-v9",
+      "generated-v10",
     );
     const files = new Map<string, GeneratedFile>([
       ...[...resources].map(

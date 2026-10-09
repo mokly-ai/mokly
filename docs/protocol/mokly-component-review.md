@@ -2,8 +2,11 @@
 
 ## Delivery Status
 
+CSS per-rule attribution and the revised v7 evidence are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
+of the [source-path removal plan](../../plans/remove-source-path-evidence.md). Comparison details are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
+
 The producer, source validator, artifact publisher, exporter, and browser
-decoder implement this path-keyed component-aware schema v6 for
+decoder implement this path-keyed component-aware schema v7 for
 [change attribution](./mokly-component-changes.md). `ReviewResult`,
 `ScreenReview`, `ViewReview`, and `ReviewState` refer to the base
 [Changes contract](./mokly-changes.md) and
@@ -15,148 +18,7 @@ screens, components, variants, and views by entry path and view axes, carries
 
 ## Normative Result
 
-```ts
-interface ReviewEntryAddress {
-  path: string;
-  title: string;
-}
-
-interface ReviewEntrySides {
-  before?: ReviewEntryAddress;
-  after?: ReviewEntryAddress;
-  previousPath?: string;
-}
-
-interface ScreenReviewV6 extends ScreenReview, ReviewEntrySides {}
-
-type ReviewVariantAddress = Pick<
-  ManifestComponentVariant,
-  "path" | "title" | "description" | "props" | "suppliedSlots"
->;
-
-interface ComponentVariantReview {
-  path: string;
-  previousPath?: string;
-  title: string;
-  before?: ReviewVariantAddress;
-  after?: ReviewVariantAddress;
-  state: ReviewState;
-  views: readonly ViewReview[];
-}
-
-interface ComponentReview
-  extends Omit<ScreenReview, "views">, ReviewEntrySides {
-  variants: readonly ComponentVariantReview[];
-}
-
-type EntryChangeReason =
-  | {
-      kind:
-        "added" | "removed" | "metadata" | "material" | "inputs" | "structure";
-    }
-  | {
-      kind: "dependency";
-      path: string;
-      analysis?: {
-        status: "matched" | "unresolved";
-        selectors: readonly string[];
-      };
-    }
-  | { kind: "screen"; screenPath: string };
-
-interface ChangedEntry extends ReviewEntrySides {
-  kind: "screen" | "component" | "use-case";
-  reasons: readonly EntryChangeReason[];
-}
-
-type ComponentUsageContext =
-  | {
-      kind: "screen";
-      entry: ReviewEntryAddress;
-      viewport: Viewport;
-      colorScheme: ColorScheme;
-    }
-  | {
-      kind: "component";
-      entry: ReviewEntryAddress;
-      variantPath: string;
-      viewport: Viewport;
-      colorScheme: ColorScheme;
-    };
-
-interface AffectedUsageEvidence {
-  side: "before" | "after";
-  context: ComponentUsageContext;
-  via: readonly {
-    componentId: string;
-    instanceKey: string;
-  }[];
-}
-
-interface AffectedConsumer {
-  changedComponentId: string;
-  consumer:
-    { kind: "screen"; path: string } | { kind: "component"; path: string };
-  evidence: readonly AffectedUsageEvidence[];
-}
-
-interface ReviewResultV6 {
-  baseRef: string;
-  baseCommit: string;
-  changedPaths: readonly string[];
-  sharedImpact: readonly string[];
-  ignoredImpact: readonly {
-    id: string;
-    viewport: Viewport;
-    colorScheme: ColorScheme;
-    count: number;
-  }[];
-  schemaVersion: 6;
-  screens: readonly ScreenReviewV6[];
-  components: readonly ComponentReview[];
-  changes: readonly ChangedEntry[];
-  affectedConsumers: readonly AffectedConsumer[];
-}
-```
-
-Every side-bearing record has at least one side, copied from the corresponding
-validated branch-point/current manifest. Top-level path/title conveniences
-match `after ?? before`. Screens, components, and variants of both kinds pair
-by entry path, then the [move contract](./mokly-moves.md) pairs the remaining
-removed and added entries of one kind; `previousPath` is the paired baseline
-entry's path, present exactly on such records, which carry both sides. A
-`ComponentVariantReview` and a `ReviewVariantAddress` name the variant entry's
-path, and a component usage context's `variantPath` is that same path.
-`componentId` and `changedComponentId` keep their names and hold the parent
-component's path, the only identity a component has. Title edits remain
-metadata changes; removed components/variants retain their former names.
-
-Each screen result contains the union of its available before/after views.
-Component variants contain their own view unions. A view is addressed by its
-`viewport` and `colorScheme`; the result stores no artifact path. A side's
-snapshot file is `snapshotViewPath(side, path, viewport, colorScheme)` under
-the generation directory, from the
-[artifact path contract](./mokly-artifact-paths.md), where the before side of
-a paired entry uses its `previousPath`. Added/removed views
-have the existing explicit missing-side states, which are the only record of a
-missing side. Aggregate states retain the current precedence: changed, added,
-removed, ignored-only, unchanged. A metadata/dependency-only entry can have
-unchanged rendered view states.
-
-View states describe the complete retained render after the existing manual-ignore
-rules, including changed component-owned resources. Component ownership controls
-direct Changes reasons separately; it never invents an `ignored-only` state for
-a component-only edit. An affected-only screen or parent component can therefore
-have changed view results without a Changes row. Caller input changes can have
-unchanged view results when the current renderer does not display that prop.
-
-All registered components appear in `components`, even if unchanged or unused.
-All current/base screens appear in `screens`, including affected-only screens.
-Neither array is the Changes filter. `changes` is its sole membership source;
-its length is the Changes count, with no duplicate entry records. A changed
-component variant is its own `ChangedEntry` of kind `component`, addressed by
-the variant entry path, exactly as a screen variant is its own screen row.
-Usages and ancestor folders do not add rows/counts.
+Every catalogue emits the [comparison v7 records](./mokly-component-comparison-records.md).
 
 ## Reasons And Secondary Evidence
 
@@ -169,9 +31,10 @@ means caller-owned logical occurrence identity/order changed. Record every
 applicable reason, without deriving membership from raw fragment paths alone.
 
 A dependency reason names a `changedPaths` path. Independent reasons follow
-[component change attribution](./mokly-component-changes.md#dependencies-and-styles):
-component ownership, an exact screen declaration, or an exact declaration for
-an unowned path. Retained referenced resources may also supply reasons. A
+[component change attribution](./mokly-component-changes.md#rendered-resources-and-styles):
+only retained rendered resources supply path evidence. Non-CSS file ownership
+comes from `resources`; `styles` owns document ranges. CSS uses own-page rule
+matches kept after nested filtering, never stylesheet owner records. A
 stylesheet reason may carry the
 [CSS change attribution](./mokly-css-attribution.md) `analysis` record;
 its `selectors` are sorted and duplicate-free, `analysis` appears only on
@@ -179,10 +42,15 @@ stylesheet paths in analysis scope, a view carries `material: true` exactly
 when its normalized documents differ, and a view's `excludedResources` paths must be in
 `changedPaths` and never coincide with that view's dependency reasons. A screen reason names a step's `screenPath`, is allowed only on a use case, and
 must reference a directly changed screen actually used on at least one side.
-Use cases also retain their own metadata/dependency reasons. One screen with
+Use cases also retain their own metadata reasons. One screen with
 only affected component evidence cannot produce a use-case screen reason.
 An affected-only consumer has no ChangedEntry unless it has another direct
 reason. Its full comparison remains available through the other result arrays.
+For a non-stylesheet resource, a retained view `dependency` reason is also a
+direct component reason for each rendered owner named by that view's
+`resources` record, even if no saved variant uses the resource. A consuming
+screen with no independent change remains affected-only; unowned resources
+retain ordinary view-level evidence.
 
 A view reported `unchanged` or `ignored-only` through the
 [unchanged view decision](./mokly-component-changes.md#unchanged-view-decision)
@@ -193,12 +61,13 @@ The linked contract defines eligibility, ownership projection, malformed
 markers, and one-sided range validation.
 
 Views omit empty `reasons` and `excludedResources` lists and sort both by path.
-Entry reasons merge retained view evidence by path, with a sorted selector
-union and unresolved precedence. Ownership may suppress a view resource reason
-from entry membership; one view's exclusion does not cancel another's reason.
-Components collect CSS kept at actual invocations when saved variants exclude
-it. The [CSS contract](./mokly-css-attribution.md) defines selector requirements;
-globs and declarations cannot override an excluded in-scope stylesheet.
+Entry reasons merge by path and rule key under the
+[CSS evidence schema](./mokly-css-attribution-membership.md). It adds per-rule
+changed component paths and page evidence in review result v7. A component-only rule can be absent from a consumer's entry reasons while still
+appearing in its view evidence. CSS at an actual invocation cannot change a
+component whose own pages keep no match for that rule. Non-CSS resource
+ownership keeps its current suppression policy. One view's exclusion never
+cancels another's retained evidence.
 
 Each affected record groups one changed component and one canonical consumer.
 Its `changedComponentId` must name a component that appears in `changes` with
@@ -206,7 +75,7 @@ kind component, and evidence must be nonempty.
 Build its evidence from the union of baseline/current actual usage, deduplicating
 identical evidence. A consumer may also be directly changed. Self-impact is not
 listed. A component is listed as affected only through an actual usage path, not
-because it happens to share a directory or dependency declaration.
+because it happens to share a directory.
 
 Every `via` is a nonempty caller-ownership chain from the consumer to the changed
 component; its last `componentId`, mapped through accepted pairs, equals `changedComponentId`. Each instance key
@@ -224,23 +93,19 @@ each evidence destination from its own side; stored evidence paths never change.
 Repeated physical placements do not duplicate logical evidence or screen counts;
 the inspector can resolve that logical instance to its current ranges.
 
-Result-level `sharedImpact` remains every changed path matching a configured
-`review.sharedImpact` glob. For each v6 screen or component record, entry
-`sharedImpact` is the sorted, duplicate-free union of:
+The v7 result has no `sharedImpact`; its entries omit `dependencies` and
+`sharedImpact` (both removed). The inherited `kind: "dependency"` reason names a referenced
+resource, not a manually declared repository path. Existing `ignoredImpact`
+and view `ignoredIds` retain manual
+Review-ignore evidence for screens; component variant views retain their own
+manual ids. Component suppression is described through `affectedConsumers`,
+not by pretending instance keys are legacy ignore ids.
 
-1. Every matched changed path that is not a stylesheet, regardless of owner.
-2. Every unowned changed path matched by a glob or contained by an explicit
-   `declaredDependencies` root on either side, except a stylesheet in public
-   analysis scope. Containment includes equality and descendants of the root.
-3. Every path in that entry's final `dependency` reasons, including retained
-   stylesheet and actual-invocation owner reasons.
+## Validation And Publication
 
-This set is identical to the pre-change entry `sharedImpact` for every entry.
-An out-of-scope stylesheet matched only by a glob belongs to an unowned path's
-evidence; when a component owns it, only a retained owner or exact screen
-reason adds it to that entry. In-scope stylesheets enter only through retained
-reasons. Entry `sharedImpact` never overrides `changes`. Entry dependencies
-remain the sorted union of both sides. `ignoredImpact` and view `ignoredIds`
-retain manual Review-ignore evidence; `affectedConsumers` records suppression.
-
-Validation and canonical output follow the [component review validation contract](./mokly-component-review-validation.md).
+The [validation contract](./mokly-component-review-validation.md) owns source
+coverage, affected-consumer proof, canonical ordering, snapshot confinement,
+and strict reader admission. Its rules apply to both background classification
+and captured comparisons. The [fast-path contract](./mokly-component-review-fast-path.md)
+requires the complete and unchanged-view decisions to produce equivalent records.
+Every catalogue writes version 7; older public comparisons must be regenerated.

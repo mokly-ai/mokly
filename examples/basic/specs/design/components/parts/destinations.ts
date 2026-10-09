@@ -5,6 +5,7 @@ import type { ScreenPageState } from "./screen_preview.js";
 
 /** Each component page selects its authored navigation state explicitly. */
 export const COMPONENT_PAGES = {
+  "style-changed": "design/components/states/shared-impact/style-changed",
   closed: "design/components/inspector/inspector-closed",
   default: "design/components/overview",
   disabled: "design/components/pages/variants",
@@ -25,6 +26,7 @@ export const COMPONENT_PAGES = {
 
 /** Screen inspection states remain separate from the existing Browse subjects. */
 export const INSPECTION_PAGES = {
+  "style-outside": "design/components/states/shared-impact/style-outside",
   closed: "design/components/inspector/screen-inspector-closed",
   details: "design/components/inspection/inspection-details",
   highlight: "design/components/inspection/inspection-highlight",

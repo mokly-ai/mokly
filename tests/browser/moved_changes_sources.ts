@@ -6,7 +6,7 @@
 function invoice(due: string, variants: string, moved = ""): string {
   return `import {defineScreen} from '@mokly/mokly';
 const shot = (body: string) => <main style={{font: "16px system-ui", padding: 24}}><h1>Invoice INV-1042</h1><p id="due">{body}</p></main>;
-export default defineScreen({title:'Invoice',description:'An invoice and its amount due',dependencies:[],relatedDocs:[],${moved}
+export default defineScreen({title:'Invoice',description:'An invoice and its amount due',relatedDocs:[],${moved}
   mobile: shot(${JSON.stringify(due)}), desktop: shot(${JSON.stringify(due)}),
   variants:[${variants}]});`;
 }
@@ -17,10 +17,10 @@ const OVERDUE = variant("overdue", "Overdue");
 const PAID = variant("paid", "Paid");
 
 const RECEIPT = `import {defineScreen} from '@mokly/mokly';
-export default defineScreen({title:'Receipt',description:'A receipt for a paid invoice',dependencies:[],relatedDocs:[],mobile:<main><h1>Receipt</h1></main>,desktop:<main><h1>Receipt</h1></main>});`;
+export default defineScreen({title:'Receipt',description:'A receipt for a paid invoice',relatedDocs:[],mobile:<main><h1>Receipt</h1></main>,desktop:<main><h1>Receipt</h1></main>});`;
 
 const HOME = `import {defineScreen} from '@mokly/mokly';
-export default defineScreen({title:'Home',description:'Home',dependencies:[],relatedDocs:[],mobile:<main><h1>Home</h1></main>,desktop:<main><h1>Home</h1></main>});`;
+export default defineScreen({title:'Home',description:'Home',relatedDocs:[],mobile:<main><h1>Home</h1></main>,desktop:<main><h1>Home</h1></main>});`;
 
 const TERMS = `---
 description: When an invoice is due.
@@ -31,7 +31,7 @@ Every invoice is due 30 days after it is issued.
 `;
 
 const ICON = `import {defineComponent} from '@mokly/mokly';
-export const icon = defineComponent({slug:'index',title:'Icon',description:'A small glyph',dependencies:[],relatedDocs:[],
+export const icon = defineComponent({slug:'index',title:'Icon',description:'A small glyph',relatedDocs:[],
   propSchema:{kind:'object',properties:{name:{schema:{kind:'string'}}}},
   slots:['children'],
   render:(props)=><i>{props.name}{props.children}</i>,
@@ -48,7 +48,7 @@ export const mockups = icon.entries;`;
 function action(moved: boolean): string {
   return `import {defineComponent} from '@mokly/mokly';
 import {icon} from '../icon/icon.mokly.js';
-const action = defineComponent({slug:'index',title:'Action',description:'A shared action',dependencies:[],relatedDocs:[],${moved ? "movedFrom:'components/action'," : ""}
+const action = defineComponent({slug:'index',title:'Action',description:'A shared action',relatedDocs:[],${moved ? "movedFrom:'components/action'," : ""}
   propSchema:{kind:'object',properties:{label:{schema:{kind:'string'}}}},
   slots:['children'],
   render:(props)=><button>{props.children}{props.label}</button>,

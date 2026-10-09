@@ -7,6 +7,7 @@ import { comparisonPane } from "../library/preview/comparison-pane.js";
 import { useDesignNavigation } from "./design_navigation.js";
 import type { ComparisonMode } from "./destinations.js";
 import type { ReviewState } from "./review.js";
+import { SCREEN_STYLE_COPY } from "./stylesheet_evidence.js";
 
 export function CompareToolbar({
   mode,
@@ -34,7 +35,7 @@ const STATE_LABELS: Record<ReviewState, string> = {
   added: "New screen",
   changed: "Screen changed",
   removed: "Screen removed",
-  "styles-changed": "Styles this screen uses changed",
+  "styles-changed": SCREEN_STYLE_COPY.stylesChanged,
 };
 
 /** The scrollable stage of a loaded comparison, headed by its outcome. */

@@ -84,7 +84,7 @@ directory inside `repoRoot`, config-relative, outside `.mokly-cache/`, Review
 output, and package-owned private roots, and not equal to `mockupsDir`.
 `files` is a non-empty list of safe relative POSIX globs matched against paths
 relative to `dir` with the same minimatch syntax and path rules as
-`review.sharedImpact`; it defaults to `**/*.mockup.{ts,tsx}` and `**/*.md`.
+`watch.rules[].paths`; it defaults to `**/*.mockup.{ts,tsx}` and `**/*.md`.
 `path` is a path under the [segment grammar](./mokly-paths.md#segment-grammar)
 and prefixes every path derived from the root. `transparent` lists directory
 names, each a valid segment, that derivation removes. Omitting `roots` means

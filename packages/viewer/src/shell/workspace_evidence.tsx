@@ -8,15 +8,10 @@ import type { EntryChangeReason } from "../review/component_types.js";
 import type { ReviewResult } from "../review/types.js";
 
 import { entryWording } from "./entry_wording.js";
+import { ComparisonHeading, StylesheetDetails } from "./evidence_details.js";
 import type { WorkspaceData } from "./workspace_data.js";
 import { workspaceComparisonEvidence } from "./workspace_evidence_data.js";
 import { propText } from "./workspace_props.js";
-import {
-  excludedStylesheets,
-  retainedPaths,
-  styleOutcomeLead,
-  styleOutcomes,
-} from "./workspace_style_evidence.js";
 
 /**
  * Comparison facts for the current entry and optional loaded comparison. A
@@ -36,11 +31,9 @@ export function WorkspaceEvidence({
   const evidence = workspaceComparisonEvidence(data, variantPath, loaded);
   const wording = entryWording(data.entry.kind);
   const hidden = data.status === undefined && !evidence.comparison;
-  const reasonPaths = retainedPaths(evidence.reasons);
-  const excluded = excludedStylesheets(evidence.resourceViews, reasonPaths);
-  const retained = [...new Set([...reasonPaths, ...evidence.sharedImpact])]
-    .filter((path) => !excluded.includes(path))
-    .sort();
+  const savedView = data.variants.find(
+    (item) => item.value.path === variantPath,
+  );
   const ignored = evidence.comparison
     ? [...new Set(evidence.views.flatMap((view) => view.ignoredIds))]
     : [];
@@ -56,8 +49,7 @@ export function WorkspaceEvidence({
     >
       {!hidden ? (
         <>
-          <h3>Comparison details</h3>
-          <p>Compared with the branch point on {data.base}.</p>
+          <ComparisonHeading base={data.base} />
           {previousPath ? (
             <p>
               The previous version is at{" "}
@@ -90,43 +82,22 @@ export function WorkspaceEvidence({
           {evidence.reasons.map((reason, index) => (
             <Reason key={`${reasonKey(reason)}/${index}`} reason={reason} />
           ))}
-          {retained.length ? (
-            <>
-              <p>{wording.filesLead}</p>
-              <PathList paths={retained} />
-            </>
-          ) : null}
-          {styleOutcomes(evidence.reasons).map((outcome) => (
-            <Fragment key={outcome.status}>
-              <p>{styleOutcomeLead(outcome, data.entry.kind)}</p>
-              {outcome.selectors.length ? (
-                <ul>
-                  {outcome.selectors.map((selector) => (
-                    <li key={selector}>
-                      <code className="mbk-code">{selector}</code>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </Fragment>
-          ))}
-          {excluded.length ? (
-            <>
-              <p>
-                {excluded.length === 1
-                  ? wording.excludedStylesheet
-                  : wording.excludedStylesheets}
-              </p>
-              <p>Examined and excluded:</p>
-              <PathList paths={excluded} />
-            </>
-          ) : null}
+          <StylesheetDetails
+            reasons={evidence.reasons}
+            resources={evidence.resourceViews}
+            subject={
+              data.entry.kind === "component"
+                ? { kind: "component", componentId: evidence.componentId }
+                : { kind: "screen" }
+            }
+          />
           {ignored.length ? (
             <p>Excluded content: {ignored.join(", ")}.</p>
           ) : null}
           {evidence.comparison &&
           data.comparison &&
           !data.change &&
+          data.relatedComponents.length > 0 &&
           evidence.views.some((view) => view.state === "changed") ? (
             <p>
               Shared component changes affect this preview. This page has no
@@ -145,7 +116,10 @@ export function WorkspaceEvidence({
               <pre>{propText(decodeProps(variant.after.props))}</pre>
             </>
           ) : null}
-          {data.status === "Unmodified" ? <p>{wording.noChanges}</p> : null}
+          {data.status === "Unmodified" &&
+          (savedView?.status ?? "Unmodified") === "Unmodified" ? (
+            <p>{wording.noChanges}</p>
+          ) : null}
         </>
       ) : null}
     </section>
@@ -168,16 +142,6 @@ function Reason({ reason }: { reason: EntryChangeReason }) {
         ? `A screen in this flow changed: ${reason.screenPath}`
         : labels[reason.kind]}
     </p>
-  );
-}
-
-function PathList({ paths }: { paths: readonly string[] }) {
-  return (
-    <ul>
-      {paths.map((path) => (
-        <li key={path}>{path}</li>
-      ))}
-    </ul>
   );
 }
 

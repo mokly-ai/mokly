@@ -15,17 +15,14 @@ const result: ReviewResult = {
   baseRef: "origin/main",
   changedPaths: [],
   ignoredImpact: [],
-  schemaVersion: 6 as const,
-  sharedImpact: ["styles.css"],
+  schemaVersion: 7 as const,
   screens: [
     {
       after: { path: "home", title: "Home" },
       before: { path: "home", title: "Home" },
-      dependencies: [],
       path: "home",
       title: "Home",
       state: "unchanged",
-      sharedImpact: ["styles.css"],
       views: [
         {
           colorScheme: "light",
@@ -44,11 +41,11 @@ const result: ReviewResult = {
 test("component summary titles are literal single-line Markdown", () => {
   const summary = summaryMarkdown({
     ...result,
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     screens: [],
     components: [],
     affectedConsumers: [],
-    sharedImpact: [],
+
     changes: [
       {
         kind: "component",
@@ -101,45 +98,45 @@ test("comparison artifacts contain data and snapshots without a separate UI", ()
 });
 
 test("empty comparisons still return a valid result", () => {
-  const empty = { ...result, screens: [], sharedImpact: [] };
+  const empty = { ...result, screens: [] };
   const files = renderReviewArtifact({ files: new Map(), result: empty });
   assert.deepEqual(JSON.parse(String(files.get("review.json"))), empty);
   assert.match(String(files.get("summary.md")), /Changes: 0/);
 });
 
-for (const [state, outputChanges, impactOnly] of [
-  ["unchanged", 0, 1],
-  ["ignored-only", 0, 1],
-  ["changed", 1, 0],
-  ["added", 1, 0],
-  ["removed", 1, 0],
-] satisfies [ReviewState, number, number][]) {
-  test(`summary separates ${state} output from impact evidence`, () => {
+for (const [state, outputChanges] of [
+  ["unchanged", 0],
+  ["ignored-only", 0],
+  ["changed", 1],
+  ["added", 1],
+  ["removed", 1],
+] satisfies [ReviewState, number][]) {
+  test(`summary counts ${state} output without source-path impact`, () => {
     const summary = summaryMarkdown({
       ...result,
       screens: result.screens.map((screen) => ({ ...screen, state })),
     });
     assert.match(summary, new RegExp(`output changes: ${outputChanges};`));
-    assert.match(summary, /impact evidence: 1;/);
-    assert.match(summary, new RegExp(`impact-only: ${impactOnly}\\.`));
+    assert.doesNotMatch(
+      summary,
+      /impact evidence|impact-only|Shared-impact paths/,
+    );
     assert.doesNotMatch(summary, /material:/);
-    assert.match(summary, /`styles.css`/);
+    assert.doesNotMatch(summary, /`styles.css`/);
   });
 }
 
-test("ignored-only output without dependencies is not impact evidence", () => {
+test("ignored-only output does not create impact counts", () => {
   const summary = summaryMarkdown({
     ...result,
-    sharedImpact: [],
     screens: result.screens.map((screen) => ({
       ...screen,
       state: "ignored-only",
-      sharedImpact: [],
     })),
   });
   assert.match(summary, /output changes: 0;/);
-  assert.match(summary, /ignored-only: 1;/);
-  assert.match(summary, /impact evidence: 0; impact-only: 0\./);
+  assert.match(summary, /ignored-only: 1\./);
+  assert.doesNotMatch(summary, /impact evidence|impact-only/);
 });
 
 test("summary counts a screen once when several viewport and scheme views change", () => {

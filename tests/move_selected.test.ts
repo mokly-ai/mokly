@@ -100,7 +100,7 @@ test("selected moved-screen capture and viewer addresses use the original before
 
 test("case-only selected capture retains exact before spelling without previousPath", async (t) => {
   const source =
-    "import {defineScreen} from '@mokly/mokly'; export default defineScreen({path:'Welcome',title:'Welcome',description:'Start',dependencies:[],relatedDocs:[],mobile:'Mobile',desktop:'Desktop'});";
+    "import {defineScreen} from '@mokly/mokly'; export default defineScreen({path:'Welcome',title:'Welcome',description:'Start',relatedDocs:[],mobile:'Mobile',desktop:'Desktop'});";
   const fixture = await componentReviewFixture(
     t,
     (text) => text.replace("path:'Welcome'", "path:'welcome'"),

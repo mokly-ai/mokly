@@ -157,8 +157,8 @@ for (const kind of ["screen", "component"] as const) {
     test(`${kind} index folders reject ${carrier} record titles with the exact diagnostic`, async (t) => {
       const source =
         kind === "screen"
-          ? `import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'Account screen',description:'Account',dependencies:[],relatedDocs:[],mobile:'Account',desktop:'Account'});`
-          : `import {defineComponent} from '@mokly/mokly'; export default defineComponent({title:'Account component',description:'Account',dependencies:[],relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> 'Account',variants:[{slug:'primary',title:'Primary',props:{}}]});`;
+          ? `import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'Account screen',description:'Account',relatedDocs:[],mobile:'Account',desktop:'Account'});`
+          : `import {defineComponent} from '@mokly/mokly'; export default defineComponent({title:'Account component',description:'Account',relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> 'Account',variants:[{slug:'primary',title:'Primary',props:{}}]});`;
       const filename =
         carrier === "directory"
           ? "specs/account/_folder.json"

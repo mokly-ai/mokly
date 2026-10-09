@@ -12,6 +12,7 @@ import {
   SOLE_CHANGES,
   type ChangeScenario,
 } from "./navigation_tree.js";
+import { isStyleScenario, STYLE_CHANGES } from "./style_navigation.js";
 
 /** Existing shell and navigation composed around the component design scenario. */
 export function ExplorerShell({
@@ -29,14 +30,16 @@ export function ExplorerShell({
   scenario?: ChangeScenario;
   viewport: ArtboardViewport;
 }) {
+  const style = isStyleScenario(scenario) ? STYLE_CHANGES[scenario] : undefined;
   const navProps = {
     activeDestination: design,
     changedCount:
-      scenario === "all"
+      style?.count ??
+      (scenario === "all"
         ? 0
         : scenario === "screen" || scenario === "removed"
           ? 2
-          : 1,
+          : 1),
     changedOnly: scenario !== "all",
     nodes: explorerNodes(scenario, active, design, activeKey),
     ...(activeKey === undefined ? {} : { activeKey }),
@@ -62,13 +65,15 @@ export function ExplorerShell({
           ) : (
             <MockLink
               to={
-                scenario === "added" || scenario === "checklist"
-                  ? SOLE_CHANGES[scenario].to
-                  : scenario === "removed"
-                    ? "design/components/states/removed"
-                    : scenario === "screen"
-                      ? "design/components/inspection/inspection-direct-change"
-                      : "design/components/pages/affected"
+                style
+                  ? style.to
+                  : scenario === "added" || scenario === "checklist"
+                    ? SOLE_CHANGES[scenario].to
+                    : scenario === "removed"
+                      ? "design/components/states/removed"
+                      : scenario === "screen"
+                        ? "design/components/inspection/inspection-direct-change"
+                        : "design/components/pages/affected"
               }
             >
               Changes{" "}

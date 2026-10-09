@@ -16,11 +16,11 @@ autoprefixer setup is below.
 
 With imported CSS delivery, import plain CSS from an entry or from a component
 used by it. Mokly bundles a stylesheet for each entry that reaches CSS and
-passes its fragment-relative URL to your renderer after any configured
-`stylesheets` links. Emit those links in your renderer's document head; they
-are not inserted into your HTML automatically. When a renderer imports its
-own theme stylesheet, its link comes before the entry's stylesheet. A file
-delivered through the renderer is removed from the entry's CSS bundle, even
+passes its fragment-relative URL to your renderer. Emit the supplied links in
+your renderer's document head; they are not inserted into your HTML
+automatically. For the complete list and its order, see the Mokly Rendering
+And Generated Output contract. A file delivered through the renderer is removed
+from the entry's CSS bundle, even
 when the entry reaches it through another CSS `@import`.
 An entry that re-exports a screen or component defined in a helper delivers
 that entry's CSS, not a bundle named after the helper. Independent entries

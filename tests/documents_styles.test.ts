@@ -14,7 +14,7 @@ for (const referenced of [true, false]) {
           '<svg xmlns="http://www.w3.org/2000/svg"/>',
         "generated/specs/screen.css": 'h1 { background: url("./image.svg"); }',
         "generated/specs/screen.mockup.tsx":
-          'import "./screen.css"; import {defineScreen} from "@mokly/mokly"; export default defineScreen({title:"Screen",description:"A styled screen",dependencies:[],relatedDocs:[],mobile:<h1>Mobile</h1>,desktop:<h1>Desktop</h1>});',
+          'import "./screen.css"; import {defineScreen} from "@mokly/mokly"; export default defineScreen({title:"Screen",description:"A styled screen",relatedDocs:[],mobile:<h1>Mobile</h1>,desktop:<h1>Desktop</h1>});',
       },
       '{mockupsDir:"generated",roots:[{dir:"generated/specs"}]}',
     );

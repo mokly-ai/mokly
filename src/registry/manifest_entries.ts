@@ -13,7 +13,6 @@ import {
 } from "./manifest_values.js";
 
 const COMMON_FIELDS = [
-  "declaredDependencies",
   "description",
   "path",
   "kind",
@@ -24,7 +23,7 @@ const COMMON_FIELDS = [
   "title",
 ] as const;
 
-/** Validate the public fields for one path-addressed v9 entry. */
+/** Validate the public fields for one path-addressed v10 entry. */
 export function validateManifestEntry(
   entry: Record<string, unknown>,
   components: boolean,
@@ -51,10 +50,10 @@ export function validateManifestEntry(
   );
   if (entry.rationale !== undefined && !nonEmptyString(entry.rationale))
     failure(`${String(entry.path)} has invalid rationale`);
-  for (const field of ["relatedDocs", "declaredDependencies"] as const)
+  for (const field of ["relatedDocs"] as const)
     if (!stringArray(entry[field]))
       failure(`${String(entry.path)} has invalid ${field}`);
-  for (const field of ["relatedDocs", "declaredDependencies"] as const)
+  for (const field of ["relatedDocs"] as const)
     for (const value of entry[field] as string[])
       validateRepoPath(value, `${String(entry.path)} ${field}`);
   if (entry.movedFrom !== undefined && !isEntryPath(entry.movedFrom))
@@ -67,13 +66,8 @@ export function validateManifestEntry(
     validateColorSchemes(entry.colorSchemes, String(entry.path));
     if (!stringArray(entry.resources))
       failure(`${String(entry.path)} has invalid resources`);
-    if (
-      (entry.relatedDocs as string[]).length ||
-      (entry.declaredDependencies as string[]).length
-    )
-      failure(
-        `${String(entry.path)} documents cannot declare dependencies or relatedDocs`,
-      );
+    if ((entry.relatedDocs as string[]).length)
+      failure(`${String(entry.path)} documents cannot declare relatedDocs`);
     if (
       JSON.stringify(entry.resources) !==
       JSON.stringify([...new Set(entry.resources)].sort())

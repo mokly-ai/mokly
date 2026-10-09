@@ -4,7 +4,7 @@ import test from "node:test";
 import { viewHref } from "../packages/viewer/dist/data.js";
 import type {
   ManifestScreen,
-  ManifestV9,
+  ManifestV10,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { changesActivation } from "../packages/viewer/dist/shell/changes_activation.js";
@@ -14,10 +14,6 @@ import { routeFromUrl } from "../packages/viewer/dist/shell/routes.js";
 import { defaultSelection } from "../packages/viewer/dist/viewer/selection.js";
 
 import { currentManifest } from "./helpers/current_manifest.js";
-
-type CurrentManifestScreen = ManifestScreen & {
-  declaredDependencies: readonly string[];
-};
 
 const parent = screen("welcome", "Welcome", "welcome/index.html");
 const empty = {
@@ -29,10 +25,10 @@ const failure = {
   tags: ["errors"],
   variantOf: parent.path,
 };
-const manifest: ManifestV9 = currentManifest({
+const manifest: ManifestV10 = currentManifest({
   entries: [parent, empty, failure],
   generatedBy: "mokly",
-  schemaVersion: 9,
+  schemaVersion: 10,
   folders: [],
   sourceFiles: [parent.sourcePath],
 });
@@ -202,14 +198,9 @@ function target(route: ShellRoute): ManifestScreen {
   return route.view.target.entry as ManifestScreen;
 }
 
-function screen(
-  id: string,
-  title: string,
-  _route: string,
-): CurrentManifestScreen {
+function screen(id: string, title: string, _route: string): ManifestScreen {
   return {
     colorSchemes: ["light"],
-    declaredDependencies: [],
     description: title,
     path: id,
     kind: "screen",

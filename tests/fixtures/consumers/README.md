@@ -59,9 +59,8 @@ imports `@mokly/mokly` with Node.
 
 An npm workspace with local `@firna/ui` and `react-native-web` packages. It uses
 a custom renderer, module-resolution aliases and conditions, a stylesheet for
-each screen, legacy components, a page entry, watch rules and shared-impact
-globs. The `themed` scenario checks the rendered theme, watch events, shared
-impact after a token edit and Export.
+each screen, legacy components, a page entry and watch rules. The `themed` scenario checks the rendered theme, watch events, rendered-resource
+changes after a token edit and Export.
 
 ### `components`
 

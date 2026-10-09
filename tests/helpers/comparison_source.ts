@@ -3,7 +3,7 @@ export function comparisonEntrySource(changed: boolean): string {
   const third = changed ? "added" : "removed";
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"] };
+const metadata = { relatedDocs: ["notes.md"] };
 export const mockups = [
   defineScreen({ ...metadata, path: "home", title: "Home", description: "Home screen", useCasePaths: [],
     mobile: <main><h1>${changed ? "Current" : "Previous"} home</h1><a id="snapshot-link" href="mock:details" target="_top">Details</a></main>,

@@ -5,9 +5,11 @@ import { pathToFileURL } from "node:url";
 
 import { build, type Plugin, type PluginBuild } from "esbuild";
 
+import type { BuildDiagnostic } from "../build/build_warnings.js";
 import { graphSourceFiles } from "../build/source_inventory.js";
 import { MoklyError, errorMessage } from "../errors.js";
 
+import { componentStylesheetsKey } from "./component_stylesheets.js";
 import { FileSystemPostcssConfigLoader } from "./postcss_loader.js";
 import type { ResolvedConfig } from "./types.js";
 import { resolveConfig } from "./validate.js";
@@ -21,13 +23,19 @@ const CONFIG_NAMES = [
 
 /** Reloadable consumer-configuration boundary used by watched Serve. */
 export interface ConfigLoader {
-  load(configPath: string): Promise<ResolvedConfig>;
+  load(
+    configPath: string,
+    onWarning?: (warning: BuildDiagnostic) => void,
+  ): Promise<ResolvedConfig>;
 }
 
 /** Filesystem-backed configuration loader. */
 export class FileSystemConfigLoader implements ConfigLoader {
-  load(configPath: string): Promise<ResolvedConfig> {
-    return loadConfig(path.dirname(configPath), configPath);
+  load(
+    configPath: string,
+    onWarning?: (warning: BuildDiagnostic) => void,
+  ): Promise<ResolvedConfig> {
+    return loadConfig(path.dirname(configPath), configPath, onWarning);
   }
 }
 
@@ -66,6 +74,7 @@ export function discoverConfig(cwd: string, explicitPath?: string): string {
 export async function loadConfig(
   cwd: string,
   explicitPath?: string,
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): Promise<ResolvedConfig> {
   const configPath = discoverConfig(cwd, explicitPath);
   const temporaryDir = await fs.promises.mkdtemp(
@@ -97,7 +106,7 @@ export async function loadConfig(
         `${configPath} must have a default export`,
       );
     }
-    const config = resolveConfig(loaded.default, configPath);
+    const config = resolveConfig(loaded.default, configPath, onWarning);
     config.configSourceFiles = graphSourceFiles(
       result.metafile,
       path.dirname(configPath),
@@ -136,7 +145,7 @@ function configApiPlugin(): Plugin {
       pluginBuild.onLoad(
         { filter: /.*/, namespace: "mokly-config-api" },
         () => ({
-          contents: "export const defineConfig = (value) => value;",
+          contents: `export const defineConfig = (value) => value; export const componentStylesheets = Symbol.for(${JSON.stringify(componentStylesheetsKey)});`,
           loader: "js",
         }),
       );

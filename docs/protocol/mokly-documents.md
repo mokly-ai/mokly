@@ -190,11 +190,9 @@ interface ManifestDocument extends ManifestEntryBase {
 ```
 
 `resources` is the sorted unique list of repository-relative resource files
-the document references; `declaredDependencies` is empty and `relatedDocs` is
-empty. The public read model emits `CatalogueDocument` with `kind:
+the document references; `relatedDocs` is empty. The public read model emits `CatalogueDocument` with `kind:
 "document"` and `colorSchemes` under the [catalogue contract](./mokly-catalogue.md).
-Details show the description, tags, and source path, and the Dependencies
-row lists the source with its resources. When another entry's
+Details show the description, tags, and source path. When another entry's
 `relatedDocs` repository path names a current document, projection emits
 `mock:<document path>` in `details.relatedDocs`. Other paths stay display labels;
 removed entries retain baseline repository labels. Public readers validate the

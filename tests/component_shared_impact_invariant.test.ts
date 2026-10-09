@@ -1,14 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { minimatch } from "minimatch";
-
-import type {
-  HistoricalManifestEntry,
-  Manifest,
-  ManifestEntry,
-} from "../packages/viewer/dist/registry/types.js";
-
 import {
   pathCatalogueSource,
   pathEvidenceFixture,
@@ -33,60 +25,49 @@ const changedPaths = [
   "src/one-side/added-component/child.ts",
 ];
 
-test("entry sharedImpact matches the documented old set across globs, declarations, ownership and CSS scope", async (t) => {
-  const { before, after, result } = await pathEvidenceFixture(t, {
+test("removed path inputs do not create evidence on current or removed records", async (context) => {
+  const { before, after, result } = await pathEvidenceFixture(context, {
     beforeSource: singleSideSource(mixedSource("src/shared/before"), "removed"),
     afterSource: singleSideSource(mixedSource("src/shared/after"), "added"),
     changedPaths,
     sharedGlobs: globs,
   });
-
-  const pairs = manifestPairs(before.manifest, after.manifest);
+  for (const entry of [...before.manifest.entries, ...after.manifest.entries])
+    for (const field of [
+      "dependencies",
+      "declaredDependencies",
+      "ownedDependencies",
+    ])
+      assert.equal(Object.hasOwn(entry, field), false, entry.path);
   for (const side of ["removed", "added"] as const)
     for (const kind of ["screen", "component"] as const) {
-      const pair = pairs.find(
-        (item) => (item.after ?? item.before)?.path === `${side}-${kind}`,
-      );
-      assert.ok(pair);
-      assert.equal(pair.before === undefined, side === "added");
-      assert.equal(pair.after === undefined, side === "removed");
-      const expected = documentedEntryImpact(
-        before.manifest,
-        after.manifest,
-        pair,
-      );
-      assert.ok(expected.includes("src/components/unowned.mokly.tsx"));
-      assert.ok(expected.includes(`src/one-side/${side}-${kind}/child.ts`));
-      const actual =
-        kind === "screen"
-          ? result.screens.find((entry) => entry.path === `${side}-${kind}`)
-          : result.components.find((entry) => entry.path === `${side}-${kind}`);
-      assert.ok(actual);
-      assert.deepEqual(
-        actual.sharedImpact,
-        expected,
-        pairKey((pair.after ?? pair.before)!),
-      );
+      const entries = kind === "screen" ? result.screens : result.components;
+      const entry = entries.find((item) => item.path === `${side}-${kind}`);
+      assert.ok(entry);
+      assert.equal(entry.before === undefined, side === "added");
+      assert.equal(entry.after === undefined, side === "removed");
     }
-  for (const [kind, actual] of [
-    ["screen", result.screens.map((entry) => entry.sharedImpact)],
-    ["component", result.components.map((entry) => entry.sharedImpact)],
-  ] as const) {
-    const expectedPairs = pairs.filter((pair) => {
-      const entry = (pair.after ?? pair.before)!;
-      return (
-        entry.kind === kind && (kind !== "component" || !("variantOf" in entry))
-      );
-    });
-    assert.equal(actual.length, expectedPairs.length);
-    expectedPairs.forEach((pair, index) =>
-      assert.deepEqual(
-        actual[index],
-        documentedEntryImpact(before.manifest, after.manifest, pair),
-        pairKey((pair.after ?? pair.before)!),
+  for (const entry of [...result.screens, ...result.components]) {
+    assert.equal(Object.hasOwn(entry, "sharedImpact"), false, entry.path);
+    assert.equal(Object.hasOwn(entry, "dependencies"), false, entry.path);
+    const views =
+      "views" in entry
+        ? entry.views
+        : entry.variants.flatMap((variant) => variant.views);
+    assert.ok(
+      views.every(
+        (view) =>
+          !(view.reasons ?? []).some((reason) =>
+            changedPaths.includes(reason.path),
+          ),
       ),
     );
   }
+  assert.ok(
+    result.changes.every((entry) =>
+      entry.reasons.every((reason) => reason.kind !== "dependency"),
+    ),
+  );
 });
 
 function mixedSource(directory: string): string {
@@ -135,87 +116,4 @@ export const mockups = [...oneSide.entries,`,
   mobile: <main>${side} content</main>, desktop: <main>${side} content</main>
 })\n];`,
     );
-}
-
-type ReviewableEntry = Exclude<
-  ManifestEntry | HistoricalManifestEntry,
-  { kind: "page" }
->;
-type EntryPair = {
-  before: ReviewableEntry | undefined;
-  after: ReviewableEntry | undefined;
-};
-
-function reviewableEntries(manifest: Manifest): ReviewableEntry[] {
-  return manifest.entries.flatMap((entry) =>
-    entry.kind === "page" ? [] : [entry as ReviewableEntry],
-  );
-}
-
-function pairKey(entry: ReviewableEntry): string {
-  return `${entry.kind}:${entry.path}`;
-}
-
-function manifestPairs(before: Manifest, after: Manifest): EntryPair[] {
-  const bases = new Map(
-    reviewableEntries(before).map((entry) => [pairKey(entry), entry]),
-  );
-  const heads = new Map(
-    reviewableEntries(after).map((entry) => [pairKey(entry), entry]),
-  );
-  return [...new Set([...bases.keys(), ...heads.keys()])]
-    .sort()
-    .map((key) => ({ before: bases.get(key), after: heads.get(key) }));
-}
-
-/** Independent oracle for the pre-change set, using only fixture inputs. */
-function documentedEntryImpact(
-  before: Manifest,
-  after: Manifest,
-  pair: EntryPair,
-): string[] {
-  return changedPaths
-    .filter((changed) => {
-      const owners = new Set(
-        [before, after].flatMap((manifest) =>
-          manifest.entries.flatMap((entry) =>
-            entry.kind === "component" &&
-            !("variantOf" in entry) &&
-            entry.ownedDependencies.some((root) => contains(root, changed))
-              ? [entry.path]
-              : [],
-          ),
-        ),
-      );
-      const matchedGlob = globs.some((glob) =>
-        minimatch(changed, glob, { dot: true }),
-      );
-      const stylesheet = /\.css$/i.test(changed);
-      if (matchedGlob && !stylesheet) return true;
-      // The fixture's public stylesheet analysis root is mockups/.
-      if (stylesheet && changed.startsWith("mockups/")) return false;
-      return [pair.before, pair.after].some(
-        (entry) => entry && oldIndependent(entry, changed, owners, matchedGlob),
-      );
-    })
-    .sort();
-}
-
-function oldIndependent(
-  entry: ReviewableEntry,
-  changed: string,
-  owners: ReadonlySet<string>,
-  matchedGlob: boolean,
-): boolean {
-  if (entry.kind === "component" && owners.has(entry.path)) return true;
-  const declared = entry.declaredDependencies ?? [];
-  if (entry.kind === "screen" && declared.includes(changed)) return true;
-  return (
-    owners.size === 0 &&
-    (matchedGlob || declared.some((root) => contains(root, changed)))
-  );
-}
-
-function contains(root: string, changed: string): boolean {
-  return changed === root || changed.startsWith(`${root}/`);
 }

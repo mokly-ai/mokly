@@ -2,21 +2,19 @@ import {
   isManifestComponentVariant,
   snapshotViewPath,
 } from "@mokly/viewer/data";
-import type {
-  Manifest,
-  ReviewArtifact,
-  ReviewArtifactContent,
-} from "@mokly/viewer/data";
+import type { Manifest, ReviewArtifactContent } from "@mokly/viewer/data";
 
 import type { Compilation } from "../build/compile.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync } from "../diagnostics/timings.js";
 
 import { addArtifactFile } from "./artifact_files.js";
+import type { StylesheetReviewArtifact } from "./artifact_stylesheets.js";
 import { type GitReviewAssetReader, type ReviewAssetReader } from "./assets.js";
 import { CompilationAssetReader } from "./compilation_assets.js";
 import { classifyComponents } from "./component_classification.js";
 import { baselineForCurrentIdentities } from "./component_metadata.js";
+import type { CssResourceAnalysis } from "./css/resource_analysis.js";
 import type { BaselineReader } from "./git.js";
 import type { MarkdownMoveSources } from "./moves/markdown_sources.js";
 import { prepareMoveClassification } from "./moves/prepare.js";
@@ -34,9 +32,10 @@ export async function compareComponentCatalogue(
   baseCommit: string,
   baseRef: string,
   useFastPath?: boolean,
+  cssAnalysis?: CssResourceAnalysis,
   markdown?: MarkdownMoveSources,
   sourceReader?: BaselineReader,
-): Promise<ReviewArtifact> {
+): Promise<StylesheetReviewArtifact> {
   const baseArtifacts = artifactViews(baseline);
   const headArtifacts = artifactViews(compilation.manifest);
   const basePaths = baseArtifacts.map(({ route }) => route);
@@ -73,6 +72,7 @@ export async function compareComponentCatalogue(
     changedPaths,
     baseCommit,
     baseRef,
+    ...(cssAnalysis ? { cssAnalysis } : {}),
     ...(markdown ? { markdown } : {}),
     ...(sourceReader ? { sourceReader } : {}),
     ...(useFastPath === undefined ? {} : { useFastPath }),
@@ -111,9 +111,20 @@ export async function compareComponentCatalogue(
     (route) => afterReader.read(route),
     undefined,
   );
+  const insertedStylesheets = new Map([
+    ...baseArtifacts.map(
+      (artifact) =>
+        [artifact.snapshot.before, artifact.insertedStylesheets] as const,
+    ),
+    ...headArtifacts.map(
+      (artifact) =>
+        [artifact.snapshot.after, artifact.insertedStylesheets] as const,
+    ),
+  ]);
   return {
     result,
     files,
+    insertedStylesheets,
     ...(prepared.pairing.moves.length || prepared.pairing.diagnostics.length
       ? { pairing: prepared.pairing }
       : {}),
@@ -129,6 +140,7 @@ function artifactViews(manifest: Manifest) {
       return [];
     return reviewViews(entry).map((view) => ({
       route: view.path,
+      insertedStylesheets: view.usage?.insertedStylesheets ?? [],
       snapshot: {
         after: snapshotViewPath(
           "after",

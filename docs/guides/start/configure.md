@@ -80,6 +80,10 @@ such as `app.css` inside `mockupsDir` but outside `mokly-generated/` so the cata
 Unreferenced files stay private. Entry
 modules, documents and the helpers they import are never served, even when a
 root reaches into a folder below `mockupsDir`.
+To place registered components' declared public CSS among configured links,
+add `componentStylesheets` from `@mokly/mokly` once to the rule's shared
+`stylesheets` list. Without it, component CSS follows the shared list and
+precedes light/dark CSS.
 
 ## Where the config is found
 

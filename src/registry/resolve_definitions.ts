@@ -13,6 +13,8 @@ import type {
   RegistryDefinition,
   ResolvedRegistryEntry,
 } from "../authoring/types.js";
+import { type BuildDiagnostic } from "../build/build_warnings.js";
+import { removedDependencies } from "../build/warnings.js";
 import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 
@@ -30,6 +32,7 @@ import {
 export function resolveDefinitions(
   values: readonly unknown[],
   config: ResolvedConfig,
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): {
   entries: ResolvedRegistryEntry[];
   folders: FolderRecord[];
@@ -176,6 +179,8 @@ export function resolveDefinitions(
     }
     const sourceRelativePath = definition.definedIn ?? "<unattributed>";
     if (definition.kind === "folder") {
+      if (Object.hasOwn(definition, "dependencies"))
+        onWarning?.(removedDependencies(definition.path, "folder"));
       const unknown = definition[UNKNOWN_FIELDS] ?? [];
       if (unknown.length) {
         diagnostics.push(
@@ -190,6 +195,7 @@ export function resolveDefinitions(
         kind: _kind,
         definedIn: _definedIn,
         __viaDefine: _brand,
+        dependencies: _dependencies,
         ...input
       } = definition;
       folders.push(

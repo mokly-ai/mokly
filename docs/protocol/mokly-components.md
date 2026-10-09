@@ -2,6 +2,14 @@
 
 ## Delivery Status
 
+Removal of baseline compatibility is implemented in
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
+Uniform CSS attribution and warnings for all stylesheet owner records are
+implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+
+The remaining contract is implemented.
+
 The public `defineComponent` API, saved variants, ownership attribution,
 explorer, inspection, and local controls are implemented. The
 [component explorer plan](../../plans/component-explorer.md) records delivery.
@@ -38,7 +46,7 @@ Register an adapter and its saved examples with the public API:
 const action = defineComponent({
   title: "Action",
   description: "The primary action for a task.",
-  dependencies: ["src/components/Action.tsx"],
+  stylesheets: ["components/action.css"],
   relatedDocs: [],
   propSchema: {
     kind: "object",
@@ -86,7 +94,7 @@ before output generation; helper branding alone is not validation.
 
 The input includes the common entry metadata, `propSchema`, `render`, and a
 nonempty ordered `variants` list. `tags`, `colorSchemes`, `controls`, `slots`,
-and `ownedDependencies` are optional. Path, dependency, tag, and
+and `stylesheets` are optional. Path, tag, and
 color-scheme validation applies; the parent's slug defaults to the module's
 file name, so the example above is `components/action` under a root with the
 prefix `components`, and its file names follow the
@@ -99,10 +107,13 @@ the final parent path is known; the diagnostic follows the
 parent's path plus its slug, such as `components/action/default`, and each
 variant flattens into its own `kind: "component"` entry carrying the derived
 `variantOf`, `props`, and `suppliedSlots` and inheriting the parent's
-`colorSchemes`, `dependencies`, `relatedDocs`, and `tags`, as the
+`colorSchemes`, `relatedDocs`, and `tags`, as the
 [variant contract](./mokly-variants.md) defines. The parent entry has no
 `variants` field and no views; its page shows its first variant entry, which
-is the default. There is no implicit merge between variants.
+is the default. There is no implicit merge between variants. Public component CSS is declared through `stylesheets` and linked under the [stylesheet contract](./mokly-component-stylesheets.md); it is absent from the renderer's `input.entry`.
+Repeating one real stylesheet links it once with a warning; renderer ownership
+for every stylesheet is ignored with a warning. CSS Changes follows
+[own-page rule matches](./mokly-css-attribution-rules.md), not file owners.
 
 The required [prop schema](./mokly-component-props.md) determines the adapter,
 wrapper, and variant data types. Its shared runtime validator checks typed and
@@ -131,7 +142,8 @@ inside its markup. Its rendered content and nested registered instances remain
 independently comparable. A component cannot absorb a screen's primary content
 by accepting it as a slot. Named data presets remain suitable for fixed icons
 or content examples. Changing a preset key is an input change; changing its
-consumer implementation belongs to its defining component/dependencies.
+consumer implementation is attributed through changed output or a linked
+owned resource, not its source path alone.
 
 ## Instances And Ownership
 
@@ -159,12 +171,12 @@ its first variant. Exact names follow the
 [artifact path contract](./mokly-artifact-paths.md). Output collision,
 source protection, resource validation, generated-tree inventory and transactional-write checks apply.
 
-Every current catalogue emits manifest schema v9, including typed component
+Every current catalogue emits manifest schema v10, including typed component
 parent and variant entries and per-view usage records for screens and component
 variants; no entry stores a route or view path. The
 [manifest schema](./mokly-component-manifest.md) defines every record,
 reference, ordering rule, and validation boundary. Baseline readers accept the
-same v9 contract; earlier output makes Changes unavailable as defined by
+same current v10 shape without conversion, with availability defined by
 [baseline compatibility](./mokly-baseline-compatibility.md).
 
 Inert, package-owned DOM markers bind generated ranges to their usage records.
@@ -174,7 +186,7 @@ wrappers. Parsed validation rejects forged, duplicate, overlapping, unmatched,
 or moved records and verifies ownership in final rendered documents.
 The existing flat `ReviewIgnore` marker language remains separate and strict.
 
-Comparison metadata, dependencies, and props contain no timestamps, absolute
+Comparison metadata and props contain no timestamps, absolute
 checkout paths, function bodies, or transient controls values. Only data props
 are serialized as values; slots serialize ownership references and rendered
 material, never React elements or executable definitions. Values shown in
@@ -190,6 +202,7 @@ Implementations must not silently register an unreachable component page.
 ## Related Contracts
 
 - [Component change attribution](./mokly-component-changes.md)
+- [Component stylesheet declaration and linking](./mokly-component-stylesheets.md)
 - [Runtime prop schema and codec](./mokly-component-props.md)
 - [Manifest schema](./mokly-component-manifest.md)
 - [Comparison schema](./mokly-component-review.md)

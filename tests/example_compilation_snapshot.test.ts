@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import type { Compilation } from "../dist/build/compile.js";
 import { MANIFEST_NAME, serializeManifest } from "../dist/registry/manifest.js";
@@ -26,9 +26,9 @@ function compilation(documentMarkdown = true): Compilation {
     entries: [],
     folders: [],
     generatedBy: "mokly",
-    schemaVersion: 9,
+    schemaVersion: 10,
     sourceFiles: [],
-  } as unknown as ManifestV9;
+  } as unknown as ManifestV10;
   return {
     diagnostics: [
       {

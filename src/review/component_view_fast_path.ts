@@ -4,18 +4,19 @@ import {
   componentUsageSignals,
   componentUsageTopologyEqual,
   stripComponentMarkers,
-  stripMarkers,
 } from "../components/comparison_material.js";
+import { comparisonStylesheetMaterial } from "../components/comparison_stylesheets.js";
 
 import {
   prepareComponentProjection,
   type PreparedComponentComparison,
 } from "./component_projection_resources.js";
 import { changedResourceBytes } from "./component_resource_changes.js";
+import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
 import type {
   ComparedComponentView,
   ComponentViewContext,
-} from "./component_view.js";
+} from "./component_view_types.js";
 import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
 
 export interface UnchangedComponentAttempt {
@@ -35,12 +36,19 @@ export async function compareUnchangedComponentView(
 ): Promise<UnchangedComponentAttempt> {
   if (before.path !== after.path) return {};
   const links = context.links?.(before.path, after.path);
-  const retained = normalizeReviewPair(base, head, after.path, links);
+  const baseMaterial = comparisonStylesheetMaterial(base, before.usage, root);
+  const headMaterial = comparisonStylesheetMaterial(head, after.usage, root);
+  const retained = normalizeReviewPair(
+    baseMaterial.html,
+    headMaterial.html,
+    after.path,
+    links,
+  );
   if (retained.base !== retained.head) return {};
   if (!componentUsageTopologyEqual(before.usage, after.usage)) return {};
 
-  const strippedBase = stripMarkers(base, before.usage);
-  const strippedHead = stripComponentMarkers(head);
+  const strippedBase = stripComponentMarkers(baseMaterial.html);
+  const strippedHead = stripComponentMarkers(headMaterial.html);
   const actual = normalizeReviewPair(
     strippedBase,
     strippedHead,
@@ -53,11 +61,12 @@ export async function compareUnchangedComponentView(
     (usage) =>
       usage &&
       (usage.instances.length > 0 ||
+        usage.ranges.some((range) => range.target.kind === "root") ||
         usage.styles.length > 0 ||
         usage.slots.some((slot) => slot.owner.kind === "entry")),
   );
   const prepared = hasOwnershipEdits
-    ? prepareComponentProjection(context, before, after, base, head, root)
+    ? prepareComponentProjection(before, after, base, head, root, links)
     : undefined;
   const projected = prepared?.projected;
   const excluded = prepared?.excluded;
@@ -65,13 +74,23 @@ export async function compareUnchangedComponentView(
     prepared ? { prepared } : {};
   if (projected && projected.before !== projected.after) return fallback();
 
+  const actualResource = normalizeReviewPair(
+    stripComponentMarkers(base),
+    stripComponentMarkers(head),
+    after.path,
+    links,
+  );
   const afterResources = await context.afterReader.resources(
     after.path,
-    actual.resourceHead ?? actual.head,
+    actualResource.resourceHead ?? actualResource.head,
+    undefined,
+    insertedStylesheetResources(head, after.usage, after.path),
   );
   const beforeResources = await context.beforeReader.resources(
     before.path,
-    actual.resourceBase ?? actual.base,
+    actualResource.resourceBase ?? actualResource.base,
+    undefined,
+    insertedStylesheetResources(base, before.usage, before.path),
   );
   const projectedAfterResources =
     projected && excluded

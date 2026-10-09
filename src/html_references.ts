@@ -1,22 +1,13 @@
 import path from "node:path";
 
-import { parse } from "parse5";
+import type { DefaultTreeAdapterMap } from "parse5";
 
 import { isSafeRepositoryPath } from "@mokly/viewer/data";
 
 import { extractCssReferences } from "./css_references.js";
+import { parseHtmlLinks } from "./html_links.js";
 
-interface HtmlAttribute {
-  name: string;
-  value: string;
-}
-
-interface HtmlNode {
-  attrs?: HtmlAttribute[];
-  childNodes?: HtmlNode[];
-  tagName?: string;
-  value?: string;
-}
+type HtmlNode = DefaultTreeAdapterMap["node"];
 
 /** URL and fragment data extracted from one complete HTML document. */
 export interface HtmlReferences {
@@ -54,25 +45,29 @@ export function extractHtmlReferences(
   const anchors = new Set<string>();
   const hrefs: string[] = [];
   const resources: string[] = [];
-  visit(parse(content) as unknown as HtmlNode, (node) => {
-    const attributes = new Map(
-      (node.attrs ?? []).map((attribute) => [attribute.name, attribute.value]),
-    );
+  const { document, links } = parseHtmlLinks(content);
+  const activeLinks = new Map(links.map((link) => [link.element, link]));
+  visit(document, (node) => {
+    const link = activeLinks.get(node as DefaultTreeAdapterMap["element"]);
+    const attributes =
+      link?.attributes ??
+      new Map(
+        ("attrs" in node ? node.attrs : []).map((attribute) => [
+          attribute.name,
+          attribute.value,
+        ]),
+      );
+    const tagName = "tagName" in node ? node.tagName : "";
     const id = attributes.get("id");
     if (id !== undefined) anchors.add(id);
     const href = attributes.get("href");
     const navigationHref = attributes.get("data-nav-href");
-    const sourceAttributes = SOURCE_ATTRIBUTES.get(node.tagName ?? "") ?? [];
+    const sourceAttributes = SOURCE_ATTRIBUTES.get(tagName) ?? [];
     if (href !== undefined && !sourceAttributes.includes("href")) {
       hrefs.push(href);
     }
     if (navigationHref !== undefined) hrefs.push(navigationHref);
-    const resourceHint =
-      node.tagName === "link" &&
-      /(?:^|\s)(?:preload|modulepreload|prefetch|preconnect|dns-prefetch)(?:\s|$)/i.test(
-        attributes.get("rel") ?? "",
-      ) &&
-      !/(?:^|\s)stylesheet(?:\s|$)/i.test(attributes.get("rel") ?? "");
+    const resourceHint = link?.resourceHint;
     for (const name of options.resourceHints === false && resourceHint
       ? []
       : sourceAttributes) {
@@ -83,9 +78,9 @@ export function extractHtmlReferences(
     if (sourceSet) resources.push(...extractSourceSetReferences(sourceSet));
     const inlineStyle = attributes.get("style");
     if (inlineStyle) resources.push(...extractCssReferences(inlineStyle));
-    if (node.tagName === "style") {
-      const style = (node.childNodes ?? [])
-        .map((child) => child.value ?? "")
+    if (tagName === "style" && "childNodes" in node) {
+      const style = node.childNodes
+        .map((child) => ("value" in child ? child.value : ""))
         .join("");
       resources.push(...extractCssReferences(style));
     }
@@ -176,5 +171,6 @@ export function resolveLocalReferencePath(
 
 function visit(node: HtmlNode, callback: (node: HtmlNode) => void): void {
   callback(node);
-  for (const child of node.childNodes ?? []) visit(child, callback);
+  if ("childNodes" in node)
+    for (const child of node.childNodes) visit(child, callback);
 }

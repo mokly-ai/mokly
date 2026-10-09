@@ -48,12 +48,15 @@ function variantDefinition(
   const address = variant.address ?? parent.address;
   const colorSchemes = variant.colorSchemes ?? parent.colorSchemes;
   const tags = variant.tags ?? parent.tags;
+  const removed: object = Object.hasOwn(variant, "dependencies")
+    ? { dependencies: (input as { dependencies?: unknown }).dependencies }
+    : {};
   const definition: AuthoredVariantDefinition = {
     ...unknownFields(variant, "screen-variant"),
     __viaDefine: true,
     ...(address !== undefined ? { address } : {}),
     ...(colorSchemes !== undefined ? { colorSchemes } : {}),
-    dependencies: variant.dependencies ?? parent.dependencies,
+    ...removed,
     description: variant.description,
     desktop: variant.desktop,
     slug: variant.slug,

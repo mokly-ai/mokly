@@ -5,7 +5,7 @@ import test, { type TestContext } from "node:test";
 
 import { compileCatalogue, type Compilation } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
-import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV7 } from "../packages/viewer/dist/review/component_types.js";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
 import { componentChangeCases } from "./helpers/component_change_cases.js";
@@ -192,11 +192,12 @@ async function stylesheetFixture(
   if (owned)
     source = source.replace(
       'path: "action",',
-      'path: "action", ownedDependencies: ["mockups/action.css"], dependencies: ["mockups/action.css"],',
+      'path: "action", stylesheets: ["action.css"],',
     );
   const fixture = await createFixture(source, {
-    extraConfig:
-      'colorSchemes: ["light", "dark"], stylesheets: [{ match: "**/*.html", stylesheets: ["action.css"] }],',
+    extraConfig: owned
+      ? 'colorSchemes: ["light", "dark"], stylesheets: [],'
+      : 'colorSchemes: ["light", "dark"], stylesheets: [{ match: "**/*.html", stylesheets: ["action.css"] }],',
   });
   t.after(() => removeFixture(fixture));
   await fs.writeFile(path.join(fixture.mockupsDir, "action.css"), "");
@@ -232,7 +233,7 @@ async function assetFiles(directory: string) {
   return files;
 }
 
-function allViews(result: ReviewResultV6) {
+function allViews(result: ReviewResultV7) {
   return [
     ...result.screens.flatMap((screen) => screen.views),
     ...result.components.flatMap((component) =>

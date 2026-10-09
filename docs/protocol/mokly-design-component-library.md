@@ -2,6 +2,10 @@
 
 ## Delivery Status
 
+CSS provenance without derived owners is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md).
+
+The remaining contract is implemented.
 Delivered inventory for [design component adoption](./mokly-design-components.md).
 Source paths below are relative to `examples/basic/specs/design/` and identify
 the original composition points, which now delegate to registered implementations
@@ -187,17 +191,18 @@ while slots and list data remain inspectable with their real supplied values.
 The core contract specifies exact component-owned file locations. Extract rules
 from the existing source sheet into that owner's sheet only when all affected
 elements belong to its implementation. Decorative icons and shared tokens can
-remain shared dependencies; existing cross-component `:has()` behavior stays in
+remain shared styles; existing cross-component `:has()` behavior stays in
 documented shared layout/state sheets unless genuinely isolated.
 Keep registered definitions/variant fixtures outside the exclusive `.view.tsx`
-implementation and its dependency declarations, so editing an example alone
-cannot be mistaken for a shared implementation change.
+implementation; registration/fixture changes are metadata or rendered-output
+changes, not path-based implementation evidence.
 
-Every library entry needs ordered stylesheet candidates covering all descendant
-components, slot examples and supported prop edits. The per-render collector
-specified in the core contract selects only the exclusive sheets actually used
-by that view; a union of every variant's emitted links would incorrectly attribute
-absent-child CSS changes to parents. Retain required mixed/global sheets; remove
+Every library component declares its own exclusive public CSS file in
+`stylesheets`. The [component stylesheet contract](./mokly-component-stylesheets.md)
+links only components actually rendered in a view, including nested components
+and transient prop edits; an absent child adds no link. CSS changes use
+[own-page rule matches](./mokly-css-attribution-rules.md), not declared owners. Retain required
+mixed/global sheets in configured rules; remove
 only migrated selectors from them, preserving their remaining behavior.
 Use a minimal host for standalones, with design tokens, original root classes,
 required semantic parents (such as a `dl` for prop rows), bounded panel dimensions

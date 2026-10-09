@@ -23,7 +23,7 @@ test("server validates before bind and supports safe no-watch routes on port zer
       manifest: {} as never,
     });
     fixture.beforeRemove(() => invalid.close());
-  }, /expected Mokly manifest schema version 9/);
+  }, /expected Mokly manifest schema version 10/);
   const compilation = await compileCatalogue(config);
   await writeCompilation(compilation, config);
   const server = await startCatalogueServer(config, {

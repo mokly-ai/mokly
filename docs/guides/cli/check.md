@@ -47,3 +47,6 @@ Build warnings appear on standard error and do not fail the check. Pass
 `--strict` when a pull request should fail on warnings as well. The failure
 says `1 build warning with --strict` for one warning and
 `<n> build warnings with --strict` otherwise.
+
+Warnings name a generated page, an entry, a component, a folder or the
+configuration file. Strict mode counts all warnings, including ignored inputs.

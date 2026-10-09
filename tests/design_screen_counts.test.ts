@@ -124,13 +124,13 @@ test("documented design-screen counts match the compiled catalogue", async () =>
       ],
     ],
     [
-      "docs/protocol/mokly-component-design.md",
+      "docs/protocol/mokly-component-design-inventory.md",
       /All ([a-z]+-[a-z]+) component screens opt into light documents/gu,
       [components.length],
     ],
     [
       "docs/protocol/mokly-component-design.md",
-      /only from the ([a-z]+-[a-z]+) component design routes/gu,
+      /mixed\/global sheets from the ([a-z]+-[a-z]+) component design routes/gu,
       [components.length],
     ],
     [

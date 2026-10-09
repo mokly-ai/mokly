@@ -73,7 +73,6 @@ test("production fingerprints require linear full comparisons for unique rendere
       kind: "page" as const,
       description: "Page",
       relatedDocs: [],
-      declaredDependencies: [],
     }));
   const before = make("old"),
     after = make("new");
@@ -109,7 +108,6 @@ test("different ignore contracts fall back to paired normalization before exclud
     kind: "page" as const,
     description: "Page",
     relatedDocs: [],
-    declaredDependencies: [],
   });
   const before = entry("old"),
     after = entry("new");

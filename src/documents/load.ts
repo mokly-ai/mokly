@@ -80,7 +80,6 @@ export function loadDocuments(
       kind: "document",
       title,
       description: metadata.description ?? "",
-      dependencies: [],
       relatedDocs: [],
       resources: [],
       sourcePath,

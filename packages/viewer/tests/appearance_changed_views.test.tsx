@@ -4,14 +4,13 @@ import { test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { currentManifest } from "../../../tests/helpers/current_manifest.js";
-import type { ManifestScreen, ManifestV9 } from "../src/registry/types.js";
+import type { ManifestScreen, ManifestV10 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import type { ShellInitialState } from "../src/shell/store_state.js";
 import { StandaloneShellDocument } from "../src/standalone/document.js";
 
 const screen = {
   colorSchemes: ["light", "dark"],
-  declaredDependencies: [],
   description: "Welcome screen",
   path: "welcome",
   kind: "screen",
@@ -21,10 +20,10 @@ const screen = {
   title: "Welcome",
   useCasePaths: [],
 } satisfies ManifestScreen;
-const manifest: ManifestV9 = currentManifest({
+const manifest: ManifestV10 = currentManifest({
   entries: [screen],
   generatedBy: "mokly",
-  schemaVersion: 9,
+  schemaVersion: 10,
   folders: [],
   sourceFiles: [screen.sourcePath],
 });

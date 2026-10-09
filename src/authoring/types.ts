@@ -15,7 +15,7 @@ import type {
 
 /** Metadata shared by every authored catalogue entry. */
 export interface EntryInput {
-  dependencies: readonly string[];
+  dependencies?: never;
   description: string;
   movedFrom?: string;
   path?: string;
@@ -31,7 +31,7 @@ export interface ScreenVariantInput extends Omit<
 > {
   address?: string;
   colorSchemes?: readonly ColorScheme[];
-  dependencies?: readonly string[];
+  dependencies?: never;
   desktop: ReactNode;
   mobile: ReactNode;
   relatedDocs?: readonly string[];
@@ -67,6 +67,7 @@ export interface UseCaseInput extends EntryInput {
 }
 /** Optional presentation of an existing folder. */
 export interface FolderInput {
+  dependencies?: never;
   path: string;
   title?: string;
   order?: readonly string[];

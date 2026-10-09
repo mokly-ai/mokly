@@ -1,10 +1,14 @@
 import { isEntryPath } from "@mokly/viewer/data";
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import {
   parseBaselineCatalogue,
   type BaselineCatalogue,
 } from "../baseline/catalogue.js";
+import {
+  isGenerationWarning,
+  type GenerationWarning,
+} from "../build/warning_generation.js";
 import type { BaselineSelection } from "../review/repository.js";
 
 import type { ComponentChangeSnapshot } from "./component_change_types.js";
@@ -54,7 +58,7 @@ export interface ChildUpdateMessage {
 
 export interface CatalogueCompleteMessage {
   type: "catalogue-complete";
-  manifest: ManifestV9;
+  manifest: ManifestV10;
   generation: string;
   version: number;
   /** The parent's current checked list; a reload's reused manifest can be older. */
@@ -65,6 +69,26 @@ export interface CatalogueCompleteMessage {
 export interface ChildDiagnosticMessage {
   readonly message: string;
   readonly type: "diagnostic";
+}
+
+export interface ChildWarningMessage extends GenerationWarning {
+  readonly type: "warning";
+}
+
+export function parseChildWarningMessage(
+  value: unknown,
+): ChildWarningMessage | undefined {
+  if (
+    !isGenerationWarning(value) ||
+    !("type" in value) ||
+    value.type !== "warning"
+  )
+    return;
+  return {
+    type: "warning",
+    generation: value.generation,
+    warning: value.warning,
+  };
 }
 
 /** Validate one bounded diagnostic from the supervised child. */
@@ -107,7 +131,7 @@ export function parseCatalogueCompleteMessage(
     (candidate.version ?? 0) <= 0 ||
     !candidate.manifest ||
     typeof candidate.manifest !== "object" ||
-    candidate.manifest.schemaVersion !== 9
+    candidate.manifest.schemaVersion !== 10
   )
     return;
   const { assetClosure, ...complete } = candidate as CatalogueCompleteMessage;

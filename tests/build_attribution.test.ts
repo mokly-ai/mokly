@@ -15,7 +15,7 @@ test("definitions retain the module that invokes their helper", async (context) 
   await fs.promises.writeFile(
     path.join(fixture.entriesDir, "shared.ts"),
     `import { defineScreen } from "@mokly/mokly";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"], useCasePaths: [] };
+const metadata = { relatedDocs: ["notes.md"], useCasePaths: [] };
 export function makeShared(path: string, route: string, title: string) {
   return defineScreen({ ...metadata, description: title, desktop: title, path, mobile: title, title });
 }
@@ -36,7 +36,7 @@ export const mockups = [makeShared("shared-first", "shared-first/index.html", "S
     `import { defineScreen } from "@mokly/mokly";
 import { late } from "./late.js";
 import { makeShared } from "./shared.js";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"], useCasePaths: [] };
+const metadata = { relatedDocs: ["notes.md"], useCasePaths: [] };
 export const mockups = [
   defineScreen({ ...metadata, description: "Second", desktop: "Second", path: "second", mobile: "Second", title: "Second" }),
   makeShared("shared-second", "shared-second/index.html", "Shared second"),
@@ -60,8 +60,7 @@ test("flattened screen variants retain their defining module", async (context) =
   const fixture = await createFixture(`
 import { defineScreen } from "@mokly/mokly";
 export const mockups = defineScreen({
-  dependencies: [],
-  description: "Parent",
+    description: "Parent",
   desktop: "Parent",
   path: "parent",
   mobile: "Parent",
@@ -106,7 +105,7 @@ test("dark fragment changes attribute their screen", async (context) => {
 
 function screenSource(id: string, route: string, title: string): string {
   return `import { defineScreen } from "@mokly/mokly";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"], useCasePaths: [] };
+const metadata = { relatedDocs: ["notes.md"], useCasePaths: [] };
 export const ${id} = defineScreen({ ...metadata, description: ${JSON.stringify(title)}, desktop: ${JSON.stringify(title)}, path: ${JSON.stringify(id)}, mobile: ${JSON.stringify(title)}, title: ${JSON.stringify(title)} });
 `;
 }

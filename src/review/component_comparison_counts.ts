@@ -1,6 +1,6 @@
 /** Timing counts for component-view comparison paths. */
 
-import type { ComparedComponentView } from "./component_view.js";
+import type { ComparedComponentView } from "./component_view_types.js";
 
 /** Accumulate stable fast- and complete-path totals for diagnostics. */
 export class ComponentComparisonCounts {

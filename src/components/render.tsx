@@ -1,30 +1,52 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import type { ReactNode } from "react";
 
 import type { ComponentViewRecord } from "@mokly/viewer";
 import { invalidData } from "@mokly/viewer/data";
 
 import { definitionPath } from "../authoring/identity.js";
+import type { BuildDiagnostic } from "../build/build_warnings.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { RenderInput, Renderer, RenderResult } from "../renderer/types.js";
 
+import { Boundary } from "./boundary.js";
 import { ComponentCollector } from "./collector.js";
 import { componentInputs } from "./inputs.js";
 import { serializeComponentSentinels } from "./ranges.js";
 import { ComponentContext } from "./render_context.js";
 import { rebaseStyleOwnership } from "./style_ownership.js";
+import { insertComponentStylesheets } from "./stylesheet_links.js";
+import { rendererStylesheetPaths } from "./stylesheet_reuse.js";
 import type {
   ComponentDefinition,
   ComponentVariantDefinition,
 } from "./types.js";
 
+export interface LinkedComponentStylesheet {
+  physical: string;
+  componentPaths: readonly string[];
+}
+
 export interface ComponentRenderOutput {
   html: string;
   view: ComponentViewRecord;
+  stylesheetLinks: readonly LinkedComponentStylesheet[];
+  diagnostics?: readonly BuildDiagnostic[];
 }
 export type ComponentGraphRenderer = (
   input: RenderInput,
   renderer: Renderer,
   definitions: readonly ComponentDefinition[],
+  placement: {
+    route: string;
+    diagnosticRoute?: string;
+    position: number;
+    configuredHrefs: readonly string[];
+    mockupsDir: string;
+    onWarning?: (warning: BuildDiagnostic) => void;
+  },
 ) => ComponentRenderOutput;
 
 /** This entrypoint is bundled with the consumer, sharing its one React context. */
@@ -32,6 +54,7 @@ export const renderWithComponents: ComponentGraphRenderer = (
   input,
   renderer,
   definitions,
+  placement,
 ) => {
   const collector = new ComponentCollector(
     new Map(definitions.map((entry) => [definitionPath(entry), entry])),
@@ -43,14 +66,19 @@ export const renderWithComponents: ComponentGraphRenderer = (
       value={{ collector, owner: { kind: "entry" }, placement: 0 }}
     >
       {input.entry.kind === "component" ? (
-        <ComponentRoot
-          definition={definitions.find(
-            (definition) =>
-              definitionPath(definition) === input.entry.variantOf,
-          )}
-          entry={input.entry}
-          input={input}
-        />
+        <Boundary
+          scope={{ collector, owner: { kind: "entry" }, placement: 0 }}
+          target={{ kind: "root" }}
+        >
+          <ComponentRoot
+            definition={definitions.find(
+              (definition) =>
+                definitionPath(definition) === input.entry.variantOf,
+            )}
+            entry={input.entry}
+            input={input}
+          />
+        </Boundary>
       ) : (
         input.node
       )}
@@ -72,6 +100,52 @@ export const renderWithComponents: ComponentGraphRenderer = (
     serializeReviewSentinels(rendered.html),
     collector.boundaries,
   );
+  const declarations = new Map<string, { file: string; paths: Set<string> }>();
+  const renderedDefinitions = [
+    ...(input.entry.kind === "component"
+      ? [
+          definitions.find(
+            (entry) => definitionPath(entry) === input.entry.variantOf,
+          )!,
+        ]
+      : []),
+    ...[...collector.instances.values()].map((instance) =>
+      collector.definitions.get(instance.componentId)!,
+    ),
+  ];
+  for (const definition of renderedDefinitions) {
+    for (const file of definition.stylesheets) {
+      const physical = fs.realpathSync(
+        path.resolve(placement.mockupsDir, file),
+      );
+      if (!declarations.has(physical))
+        declarations.set(physical, { file, paths: new Set() });
+      declarations.get(physical)!.paths.add(definitionPath(definition));
+    }
+  }
+  const physicalPaths = new Set(declarations.keys());
+  const warnings: BuildDiagnostic[] = [];
+  const rendererLinks = rendererStylesheetPaths(
+    serialized.html,
+    placement.route,
+    placement.mockupsDir,
+    physicalPaths,
+    placement.configuredHrefs,
+  );
+  const html = insertComponentStylesheets(
+    serialized.html,
+    placement.route,
+    placement.configuredHrefs,
+    placement.position,
+    [...declarations]
+      .filter(([physical]) => !rendererLinks.has(physical))
+      .map(([, declaration]) => declaration.file),
+    (warning) => {
+      warnings.push(warning);
+      placement.onWarning?.(warning);
+    },
+    placement.diagnosticRoute,
+  );
   const view: ComponentViewRecord = {
     viewport: input.viewport,
     colorScheme: input.colorScheme,
@@ -82,14 +156,22 @@ export const renderWithComponents: ComponentGraphRenderer = (
       a.key < b.key ? -1 : 1,
     ),
     ranges: serialized.ranges,
-    styles: rebaseStyleOwnership(
-      rendered.html,
-      serialized.html,
-      rendered.styles ?? [],
+    styles: rebaseStyleOwnership(rendered.html, html, rendered.styles ?? []),
+    resources: [...(rendered.resources ?? [])].sort((left, right) =>
+      left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
     ),
-    resources: rendered.resources ?? [],
   };
-  return { html: serialized.html, view };
+  return {
+    html,
+    view,
+    stylesheetLinks: [...declarations]
+      .filter(([physical]) => !rendererLinks.has(physical))
+      .map(([physical, { paths }]) => ({
+        physical,
+        componentPaths: [...paths].sort(),
+      })),
+    ...(warnings.length ? { diagnostics: warnings } : {}),
+  };
 };
 
 function ComponentRoot({

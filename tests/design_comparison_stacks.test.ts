@@ -35,9 +35,9 @@ const SIDE_BY_SIDE = [
   "design/changes/outcomes/changed",
   "design/changes/diff-controls/side-by-side-apart",
   "design/browse/appearance/workspaces/side-by-side",
-  "design/changes/impact/styles/matched",
-  "design/changes/impact/styles/unresolved",
-  "design/changes/impact/styles/unnamed",
+  "design/changes/impact/styles/matched-excluded/matched",
+  "design/changes/impact/styles/unresolved-unnamed/unresolved",
+  "design/changes/impact/styles/unresolved-unnamed/unnamed",
 ] as const;
 
 const CHROME: Record<Viewport, string> = {

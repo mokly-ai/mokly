@@ -1,0 +1,702 @@
+[
+  {
+    "file": "docs/dev/git.md",
+    "statement": "If no PR exists yet, save the justifications under `.context/<plan-name>/`, name that file in the active plan milestone, and copy them into the PR description when it opens.",
+    "reason": "#171 moved the mainline preservation procedure from AGENTS.md into this rule doc. It defines where merge justifications and plan history belong; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/git.md",
+    "statement": "In an active plan, completed milestones and checked TODOs are history; all other content is live.",
+    "reason": "#171 moved the mainline preservation procedure from AGENTS.md into this rule doc. It defines where merge justifications and plan history belong; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Rules for the implementation plan files under `plans/`.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "A plan records the work needed to align the implementation with the protocol docs, its milestones, and its TODOs.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Every milestone and its required TODOs must be completable on the branch before the PR merges or by the merge itself.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Never add a milestone or required TODO that depends on the PR already being merged.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- Put post-merge work, including additional tasks and smoke tests that require the merged or deployed change, in a `## Post-merge follow-up (non-blocking)` section outside the milestones.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Items in this section do not affect milestone or plan completion and must not prevent the plan from being marked completed when the PR merges.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- Keep smoke tests that can and should run before merge as required milestone TODOs under the normal testing rules.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- Each plan should break up the work into concrete units called Milestones.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "At the end of each milestone there should be a functioning product.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- The first milestone in every plan must update the relevant documentation and protocol/spec documents so they define the complete contract for the work that follows.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- When a plan requires mockup work, its second milestone must be the initial mockup milestone, immediately after the documentation and protocol/spec milestone.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Include all mockup work known during initial planning in that single milestone.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Additional mockup milestones may be added later when a genuine mockup gap is discovered during implementation; do not add speculative duplicate mockup milestones during initial planning.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- When a plan includes backend changes, mockup or design updates, and UI implementation, keep each area in its own milestone.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Mockup/design work and UI implementation must be separate milestones, with mockups completed before UI implementation begins.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Do not combine backend, mockup/design, or UI implementation tasks in the same milestone.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- Milestones that include UI or mockup work must include an explicit tag line immediately below the milestone heading: `Tags: ui` or `Tags: mockup`.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "A milestone tagged `ui` or `mockup` must not include backend work.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "If backend work is found to be missing while implementing a `ui` or `mockup` milestone, always create new milestones; never add the backend work to the current milestone, never add it to an existing milestone, and never move the blocked UI/mockup TODOs into an existing milestone.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "First create a new backend milestone immediately after the current milestone for the required backend work.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Then create a new tagged UI/mockup milestone immediately after that backend milestone and move the blocked UI/mockup TODOs there, preserving their incomplete status.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- Milestones should have a short summary of what it includes",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- All milestones have TODO checklists, lists of tasks that must be completed to achieve the milestone.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- Any time a new TODO is discovered during implementation, it should be added under the relevant milestone (just add the new TODO, and then continue with the active TODO)",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "Under the related milestone, add one line that names the file.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "A plan keeps only its summary, milestones, TODOs, contracts, decisions, user approvals, and short review summaries.",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/plans.md",
+    "statement": "- Mark a milestone as completed when all the tasks are completed, do not re-open existing milestones - create a new milestone if new tasks are needed that do not fit into an existing milestone",
+    "reason": "#171 moved the plan-file rules from AGENTS.md into this rule doc. It defines how plans, milestones and TODOs are written; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/dev/review.md",
+    "statement": "- Every implementation plan must end with the post-check commit-and-push step, followed by a review item that uses [`docs/implementation-review-prompt.md`](../implementation-review-prompt.md) to review the complete local diff against `origin/main`; run the review only after the push, then apply the review-fix rule below",
+    "reason": "#171 moved the review rules from AGENTS.md into this rule doc. It requires the review item at the end of each plan; it is a review-workflow instruction, not a delivery reference."
+  },
+  {
+    "file": "docs/guides/authoring/config.md",
+    "statement": "`review.sharedImpact` is removed: if the key is still present, Mokly warns and ignores it.",
+    "reason": "Consumer migration instruction: the obsolete config key is ignored with a warning."
+  },
+  {
+    "file": "docs/protocol/README.md",
+    "statement": "- [Catalogue upload v2](./mokly-upload.md) — public CLI, repository identity, upload manifest, output entry point and composite action boundary.",
+    "reason": "Current upload metadata and receiver validation use v2, independently from the catalogue and manifest formats."
+  },
+  {
+    "file": "docs/protocol/README.md",
+    "statement": "- [Catalogue upload validation v2](./mokly-upload-validation.md) — rejection categories, limits, and independent receiver validation.",
+    "reason": "Current upload metadata and receiver validation use v2, independently from the catalogue and manifest formats."
+  },
+  {
+    "file": "docs/protocol/ci-verification-hydration.md",
+    "statement": "Start V8 precise coverage with call counts and block detail before the navigation.",
+    "reason": "V8 names the JavaScript engine precise-coverage API; it is not a former manifest version."
+  },
+  {
+    "file": "docs/protocol/ci-workflow.md",
+    "statement": "The workflow pins `useblacksmith/checkout` v1, `useblacksmith/begin-testbox` v2, `actions/setup-node` v6.5.0 and `useblacksmith/run-testbox` v2 to reviewed commits.",
+    "reason": "Pinned GitHub Action major versions identify Testbox workflow dependencies, not catalogue formats."
+  },
+  {
+    "file": "docs/protocol/dependency-security.md",
+    "statement": "The evaluator reads `dependencies`, `optionalDependencies`, and `peerDependencies` from every lockfile package, including the root (`\"\"`) and workspace entries such as `packages/viewer`.",
+    "reason": "Current npm lockfile fields; these are package dependencies, not removed authoring inputs."
+  },
+  {
+    "file": "docs/protocol/documentation-policy.md",
+    "statement": "Former version names, removed field names and implementation plan or milestone references belong only in `Delivery Status` sections or on a short reviewed allow list.",
+    "reason": "Defines where delivery references and exact exceptions belong."
+  },
+  {
+    "file": "docs/protocol/documentation-policy.md",
+    "statement": "In an active plan, completed milestones and checked TODOs are history; all other content is live.",
+    "reason": "The #161 documentation policy must define which plan milestones are history; this is the exact history boundary, not a delivery reference."
+  },
+  {
+    "file": "docs/protocol/mokly-authoring.md",
+    "statement": "A present removed `dependencies` key emits `removed-dependencies` with an entry subject.",
+    "reason": "M30A approved subject and exact removed-input diagnostic contract; strict mode counts this producer."
+  },
+  {
+    "file": "docs/protocol/mokly-authoring.md",
+    "statement": "A present removed `ownedDependencies` key emits `removed-owned-dependencies` with a component subject.",
+    "reason": "M30A approved subject and exact removed-input diagnostic contract; strict mode counts this producer."
+  },
+  {
+    "file": "docs/protocol/mokly-authoring.md",
+    "statement": "All entry, folder and variant inputs reject removed `dependencies` values through `dependencies?: never`; component inputs also reject removed `ownedDependencies` values through `ownedDependencies?: never`.",
+    "reason": "Public removed-input type contract, including the never field in the example."
+  },
+  {
+    "file": "docs/protocol/mokly-authoring.md",
+    "statement": "```text dependencies has been removed; ignoring it. Delete the field. ownedDependencies has been removed; ignoring it. Delete the field. ```",
+    "reason": "M30A approved subject and exact removed-input diagnostic contract; strict mode counts this producer."
+  },
+  {
+    "file": "docs/protocol/mokly-authoring.md",
+    "statement": "```ts interface EntryInput { dependencies?: never; description: string; movedFrom?: string; path?: string; rationale?: string; relatedDocs: readonly string[]; slug?: string; tags?: readonly string[]; title: string; } ```",
+    "reason": "The current complete EntryInput example explicitly rejects removed dependencies with never; tags remains a supported field."
+  },
+  {
+    "file": "docs/protocol/mokly-baseline-addressing.md",
+    "statement": "Do not normalize v2–v9 document hrefs into v10 ones, rewrite paired HTML to accommodate an older layout, or use Git changed-path strings to locate a base resource.",
+    "reason": "Explicit rejection of earlier document layouts; no v2-v8 content or URL conversion is allowed."
+  },
+  {
+    "file": "docs/protocol/mokly-boundary-results.md",
+    "statement": "Preserve the exact v5 field list and canonical-path/comparison-path validators.",
+    "reason": "The current static-delivery descriptor has its own v5 field contract and path validators."
+  },
+  {
+    "file": "docs/protocol/mokly-build-warnings.md",
+    "statement": "```text [mokly/warning] entry \"home\": dependencies has been removed; ignoring it. Delete the field. ! entry \"home\": dependencies has been removed; ignoring it. Delete the field. ```",
+    "reason": "M30A approved subject and exact removed-input diagnostic contract; strict mode counts this producer."
+  },
+  {
+    "file": "docs/protocol/mokly-catalogue-delivery.md",
+    "statement": "Never emit `sourceFiles`, `declaredDependencies`, `ownedDependencies`, `movedFrom`, folder `exclude` globs, resolved dependency evidence, changed-path inventories, source graphs, Git commands, private manifest envelopes, content digests for source inputs, style offsets (`startOffset`/`endOffset`), style/resource ownership tables, absolute filesystem paths, credentials, or render-capability tokens.",
+    "reason": "Public privacy rules explicitly exclude removed private inputs."
+  },
+  {
+    "file": "docs/protocol/mokly-catalogue-delivery.md",
+    "statement": "The removed `details.dependencies` field is absent.",
+    "reason": "Public privacy contract: the removed details field never appears in the catalogue."
+  },
+  {
+    "file": "docs/protocol/mokly-catalogue-serialization.md",
+    "statement": "This file and the inspector asset are additive inventory entries: ownership v3 and upload v2 remain unchanged; the review result and delivery descriptor follow the [Changes](./mokly-changes.md) and [static delivery](./mokly-export-delivery.md) contracts.",
+    "reason": "Current ownership v3 and upload v2 independently govern added public inventory files."
+  },
+  {
+    "file": "docs/protocol/mokly-catalogue-serialization.md",
+    "statement": "`snapshotId` is lowercase SHA-256 of UTF-8 JSON, without LF, for `[\"mokly-historical-snapshot-v3\", catalogueIdentity, sourceKind, sourceIdentity, entryKind, entryPath]`.",
+    "reason": "Frozen snapshot hash namespace; its version is independent of the read model."
+  },
+  {
+    "file": "docs/protocol/mokly-catalogue.md",
+    "statement": "Delivery descriptors are v5.",
+    "reason": "The current static-delivery descriptor is version 5; this is the supported combined format inventory."
+  },
+  {
+    "file": "docs/protocol/mokly-catalogue.md",
+    "statement": "`identity.id` is lowercase SHA-256 of UTF-8 JSON, without LF, for `[\"mokly-catalogue-v1\", repoRelativeConfigPath]`, scoped to the source origin.",
+    "reason": "Frozen catalogue hash namespace; changing it changes published identities."
+  },
+  {
+    "file": "docs/protocol/mokly-catalogue.md",
+    "statement": "`mokly-catalogue-v1` is the permanent identity-hash namespace, not the read model `schemaVersion`; changing it would change published catalogue ids.",
+    "reason": "Frozen catalogue hash namespace; changing it changes published identities."
+  },
+  {
+    "file": "docs/protocol/mokly-comparison-inventory.md",
+    "statement": "Test a unique moved v10 catalogue plus stale root v7, multiple v10 candidates, and an actual pre-v10 rebuild with no v10 result.",
+    "reason": "Rejection coverage distinguishes valid current v9 candidates from stale v7 metadata and earlier rebuilt output."
+  },
+  {
+    "file": "docs/protocol/mokly-component-manifest.md",
+    "statement": "A current reader rejects any stored `id`, `navPath`, `route`, `fragments`, `darkFragments`, `viewports`, `dependencies`, `useCaseIds`, `screenId`, or component `variants` field as an unknown field.",
+    "reason": "Current manifest rejection rule must name the obsolete stored fields."
+  },
+  {
+    "file": "docs/protocol/mokly-component-review.md",
+    "statement": "The v7 result has no `sharedImpact`; its entries omit `dependencies` and `sharedImpact` (both removed).",
+    "reason": "The current v6 comparison privacy contract explicitly omits the removed source-path fields."
+  },
+  {
+    "file": "docs/protocol/mokly-component-usage-records.md",
+    "statement": "Their preimages are `[\"mokabook-instance-v1\", owner.kind, owner.kind === \"instance\" ? owner.instanceKey : null, slotKey ?? null, id]` and `[\"mokabook-slot-v1\", instanceKey, name]`.",
+    "reason": "Frozen instance and slot hash preimages retain their original namespace."
+  },
+  {
+    "file": "docs/protocol/mokly-configuration-discovery.md",
+    "statement": "A present removed `review.sharedImpact` key, even with `undefined`, emits `removed-shared-impact` with a configuration subject and exactly `review.sharedImpact has been removed; ignoring it. Delete the field.` It adds no watched paths or evidence.",
+    "reason": "The removed review setting warns and has no effect; the public never guard remains part of its removal contract."
+  },
+  {
+    "file": "docs/protocol/mokly-configuration-discovery.md",
+    "statement": "The public `sharedImpact?: never` rejects values, including spreads and objects with other review keys.",
+    "reason": "The removed review setting warns and has no effect; the public never guard remains part of its removal contract."
+  },
+  {
+    "file": "docs/protocol/mokly-configuration.md",
+    "statement": "```ts type ColorScheme = \"dark\" | \"light\"; type SharedStylesheet = string | typeof componentStylesheets; type ModuleLoader = | \"base64\" | \"binary\" | \"css\" | \"dataurl\" | \"empty\" | \"file\" | \"js\" | \"json\" | \"jsx\" | \"text\" | \"ts\" | \"tsx\"; interface RootConfig { dir: string; // config-relative directory inside repoRoot files?: readonly string[]; // [\"**/*.mockup.{ts,tsx}\", \"**/*.md\"] path?: string; // prefix for every derived path; none by default transparent?: readonly string[]; // directory names removed from paths } interface MoklyConfig { colorSchemes?: readonly ColorScheme[]; // [\"light\"] mockupsDir: string; roots?: readonly RootConfig[]; // [{ dir: \"specs\" }] repoRoot?: string; // config directory renderer?: string; postcss?: string; // config-relative PostCSS module moduleResolution?: { aliases?: Readonly<Record<string, string>>; conditions?: readonly string[]; loaders?: Readonly<Record<string, ModuleLoader>>; mainFields?: readonly string[]; packageRoots?: readonly string[]; resolveExtensions?: readonly string[]; }; stylesheets?: readonly { match: string; stylesheets: readonly SharedStylesheet[]; lightStylesheets?: readonly string[]; darkStylesheets?: readonly string[]; }[]; review?: { base?: string; // origin/main; merge base with HEAD baselineBuild?: readonly (readonly string[])[]; // used when baseline needs rebuilding outDir?: string; // .context/mokly-review sharedImpact?: never; }; watch?: { debounceMs?: number; // 75 rules?: readonly { action: \"ignore\" | \"rebuild\" | \"reload\" | \"restart\"; paths: readonly string[]; }[]; }; } ```",
+    "reason": "The complete current configuration example retains only the removed review-setting never guard; removed output modes and transformer fields are absent."
+  },
+  {
+    "file": "docs/protocol/mokly-css-attribution-rules.md",
+    "statement": "The key is lowercase SHA-256 of UTF-8 compact JSON without a final LF for `[\"mokly-css-change-v1\", beforeSide, afterSide]`.",
+    "reason": "Frozen rule hash namespace; it is not a former comparison format."
+  },
+  {
+    "file": "docs/protocol/mokly-derived-baselines.md",
+    "statement": "- Test v10 absent/complete/missing/mismatched/extra inventory at **each** base commit, tracking transitions and moved v10 roots; test v2–v9 incompatibility at the selected generated location and after a rebuild, plus once-per-base reporting and v10 recovery.",
+    "reason": "Earlier versions appear only as rejection fixtures; stale root-level metadata and invalid caches cannot select content readers."
+  },
+  {
+    "file": "docs/protocol/mokly-derived-baselines.md",
+    "statement": "Prove stale committed root-level v7 and invalid caches rebuild rather than deciding unavailability.",
+    "reason": "Earlier versions appear only as rejection fixtures; stale root-level metadata and invalid caches cannot select content readers."
+  },
+  {
+    "file": "docs/protocol/mokly-disclosure-persistence.md",
+    "statement": "Read and write only the current v4 disclosure key.",
+    "reason": "The current disclosure storage key is independently versioned as v4 and is never converted."
+  },
+  {
+    "file": "docs/protocol/mokly-disclosure-persistence.md",
+    "statement": "Store a JSON object at the `localStorage` key `mokly:nav-disclosure:v4`, mapping each current disclosure key to `true` (open) or `false` (closed).",
+    "reason": "Current disclosure storage key, versioned independently from manifests."
+  },
+  {
+    "file": "docs/protocol/mokly-export-browser.md",
+    "statement": "This prevents self-reference without changing delivery descriptor v5, ownership v3, upload v2 or review result v7.",
+    "reason": "Current delivery v5, ownership v3, upload v2 and review v6 have independent supported format numbers."
+  },
+  {
+    "file": "docs/protocol/mokly-export-public-files.md",
+    "statement": "Ownership v3 and upload v2 gate the viewer namespace; the review result is v7 and the delivery descriptor v5.",
+    "reason": "Current publication format gates distinguish ownership v3 and upload v2 from review v6 and delivery v5."
+  },
+  {
+    "file": "docs/protocol/mokly-export-safety.md",
+    "statement": "The internal namespace has a regular `.owner` containing `mokly-export-reservations-v1` plus a newline and remains after cleanup; never put authored files or export destinations inside it.",
+    "reason": "Current reservation ownership sentinel; it is not an earlier export schema."
+  },
+  {
+    "file": "docs/protocol/mokly-folders.md",
+    "statement": "A `defineFolder` with removed `dependencies` emits `removed-dependencies` with a folder subject and exactly `dependencies has been removed; ignoring it. Delete the field.` It never warns on descendants.",
+    "reason": "M30A approved subject and exact removed-input diagnostic contract; strict mode counts this producer."
+  },
+  {
+    "file": "docs/protocol/mokly-folders.md",
+    "statement": "The code carrier ignores removed `dependencies` with a path-scoped [warning](./mokly-build-warnings.md); directory JSON has no such exception.",
+    "reason": "Removed-input warning contract distinguishes code folders from strict JSON."
+  },
+  {
+    "file": "docs/protocol/mokly-format-versions.md",
+    "statement": "Cache marker v1, 0.14.0 marker v2 with manifest 9 or `generated-v9`, invalid/truncated markers and incomplete output are partial entries, removed under their own lock before rebuilding.",
+    "reason": "Earlier cache-marker v1 entries are partial and must rebuild; they never provide incompatibility evidence."
+  },
+  {
+    "file": "docs/protocol/mokly-format-versions.md",
+    "statement": "Do not export a v9 content reader or cast released v9 output into this shape.",
+    "reason": "Explicit rejection of earlier manifest, catalogue or review formats; no conversion or content reader is permitted."
+  },
+  {
+    "file": "docs/protocol/mokly-format-versions.md",
+    "statement": "One-shot Browse recovery retains its current shape and strict required fields; disclosure keys follow v4.",
+    "reason": "Current navigation disclosure storage is v4; it is independent from catalogue metadata and has no migration."
+  },
+  {
+    "file": "docs/protocol/mokly-format-versions.md",
+    "statement": "Public catalogue v5 and below are unsupported by the v6 reader; manifest v9 and below are earlier output, not current metadata.",
+    "reason": "Explicit rejection of earlier manifest, catalogue or review formats; no conversion or content reader is permitted."
+  },
+  {
+    "file": "docs/protocol/mokly-format-versions.md",
+    "statement": "Review v6 and below are unsupported comparison results.",
+    "reason": "Explicit rejection of earlier manifest, catalogue or review formats; no conversion or content reader is permitted."
+  },
+  {
+    "file": "docs/protocol/mokly-format-versions.md",
+    "statement": "The Cloud follow-up must adopt catalogue v6, review v7, delivery v5, bootstrap v2 and inspector v2 in addition to upload v2/ownership v3.",
+    "reason": "The Cloud receiver must adopt the exact supported catalogue, review, delivery, bootstrap and inspector protocol versions."
+  },
+  {
+    "file": "docs/protocol/mokly-format-versions.md",
+    "statement": "Validate marker v2 with manifest 10 and `generated-v10`, then compare settings, then validate v10 output.",
+    "reason": "The current baseline completion marker is independently versioned as v2 and validates combined-v10 output."
+  },
+  {
+    "file": "docs/protocol/mokly-format-versions.md",
+    "statement": "Verify metadata v3 previews and unchanged ownership/upload/Plan formats still round-trip without changing their fields or loosening their validators.",
+    "reason": "Removed-preview metadata v3 and ownership/upload/Plan protocols have independent current versions."
+  },
+  {
+    "file": "docs/protocol/mokly-format-versions.md",
+    "statement": "| Navigation disclosure storage | `mokly:nav-disclosure:v4` | Preserve incoming path-keyed folder/variant storage; no key migration. |",
+    "reason": "Current navigation disclosure storage is v4; it is independent from catalogue metadata and has no migration."
+  },
+  {
+    "file": "docs/protocol/mokly-generated-delivery.md",
+    "statement": "Current delivery uses catalogue v6, static delivery v5 and bootstrap v2.",
+    "reason": "Exact current catalogue v5 and delivery/bootstrap/ownership/upload format boundary; unsupported catalogue shapes remain rejected."
+  },
+  {
+    "file": "docs/protocol/mokly-generated-delivery.md",
+    "statement": "Only v6 is readable.",
+    "reason": "Exact current catalogue v5 and delivery/bootstrap/ownership/upload format boundary; unsupported catalogue shapes remain rejected."
+  },
+  {
+    "file": "docs/protocol/mokly-generated-delivery.md",
+    "statement": "Ownership v3 and upload v2 finalize the renamed paths under the [namespace version gates](./mokly-viewer-namespace.md#version-matrix).",
+    "reason": "Exact current catalogue v5 and delivery/bootstrap/ownership/upload format boundary; unsupported catalogue shapes remain rejected."
+  },
+  {
+    "file": "docs/protocol/mokly-generated-delivery.md",
+    "statement": "V5 records contain identity and view axes, not `route`, `documentPath` or `fragmentPath` fields.",
+    "reason": "Exact current catalogue v5 and delivery/bootstrap/ownership/upload format boundary; unsupported catalogue shapes remain rejected."
+  },
+  {
+    "file": "docs/protocol/mokly-generated-manifest.md",
+    "statement": "A committed root-level manifest, including stale v7, has no effect on selection.",
+    "reason": "Stale root-level v7 is a rejection/selection fixture, never a readable baseline or fallback manifest."
+  },
+  {
+    "file": "docs/protocol/mokly-generated-manifest.md",
+    "statement": "Tests cover committed stale root-level v7 with a successful v10 rebuild, earlier root-level output produced by the base's own rebuild, partial cache rebuilds and atomic marker publication.",
+    "reason": "Stale root-level v7 is a rejection/selection fixture, never a readable baseline or fallback manifest."
+  },
+  {
+    "file": "docs/protocol/mokly-instances.md",
+    "statement": "The historical `mokabook-instance-v1` domain string is frozen, including its spelling.",
+    "reason": "Frozen instance and receiving-slot hash namespaces, including the executable example."
+  },
+  {
+    "file": "docs/protocol/mokly-instances.md",
+    "statement": "The separate receiving-slot key is the same digest operation over `[\"mokabook-slot-v1\", instanceKey, name]`.",
+    "reason": "Frozen instance and receiving-slot hash namespaces, including the executable example."
+  },
+  {
+    "file": "docs/protocol/mokly-instances.md",
+    "statement": "```ts const preimage = [ \"mokabook-instance-v1\", owner.kind, owner.kind === \"instance\" ? owner.instanceKey : null, slotKey ?? null, id, ]; const key = createHash(\"sha256\").update(JSON.stringify(preimage)).digest(\"hex\"); ```",
+    "reason": "Frozen instance and receiving-slot hash namespaces, including the executable example."
+  },
+  {
+    "file": "docs/protocol/mokly-shell-bootstrap.md",
+    "statement": "The public canonical serializer and `docs/protocol/fixtures/catalogue-v6.json` cover that complete v6 contract, with one fixed generated-tree layout.",
+    "reason": "The shipped current catalogue-v6 fixture and canonical serializer define the one supported catalogue layout."
+  },
+  {
+    "file": "docs/protocol/mokly-shell-brand.md",
+    "statement": "- the front screen carries `M14 15h10` and `M14 20h7` as two-unit, round-capped strokes in `--chrome-surface`.",
+    "reason": "SVG move commands for the brand mark, not milestone references."
+  },
+  {
+    "file": "docs/protocol/mokly-unified-output.md",
+    "statement": "Test the exact unavailable outcome for every pre-v10 base instead of accepting a v7-to-v10 content comparison.",
+    "reason": "The v7-to-v10 case names forbidden earlier-content conversion; current readers retain only the unavailable result."
+  },
+  {
+    "file": "docs/protocol/mokly-upload-exchange.md",
+    "statement": "[The plan fixture](./fixtures/upload-plan-v1.json) has root fixture `schemaVersion: 1`, `endpoint`, marker digests and independent Plan/Complete `cases`.",
+    "reason": "Versioned current Upload Plan fixture, not an implementation plan."
+  },
+  {
+    "file": "docs/protocol/mokly-upload-validation.md",
+    "statement": "# Catalogue Upload Validation v2",
+    "reason": "Current upload validation and its binary limits use the independently versioned upload-v2 contract."
+  },
+  {
+    "file": "docs/protocol/mokly-upload-validation.md",
+    "statement": "CLI and receiver enforce these binary-unit v2 ceilings; receivers may impose lower quotas and return 413.",
+    "reason": "Current upload validation and its binary limits use the independently versioned upload-v2 contract."
+  },
+  {
+    "file": "docs/protocol/mokly-upload.md",
+    "statement": "# Catalogue Upload v2",
+    "reason": "Current upload metadata is v2, export ownership is v3 and the content-delta Plan exchange stays v1."
+  },
+  {
+    "file": "docs/protocol/mokly-upload.md",
+    "statement": "Status uses fixed Git argv without a shell, `--porcelain=v1 -z`, `--untracked-files=all`, and `--ignore-submodules=none`.",
+    "reason": "Git porcelain v1 is the stable status-output protocol required by clean-checkout Publish, not a former Mokly data format."
+  },
+  {
+    "file": "docs/protocol/mokly-upload.md",
+    "statement": "The `mokly-upload.json` envelope uses `schemaVersion: 2`; the ownership marker is [schema 3](./mokly-export-ownership.md), and the Plan response is independently versioned as v1.",
+    "reason": "Current upload metadata is v2, export ownership is v3 and the content-delta Plan exchange stays v1."
+  },
+  {
+    "file": "docs/protocol/mokly-variants.md",
+    "statement": "```ts interface ScreenVariantInput { address?: string; colorSchemes?: readonly ColorScheme[]; dependencies?: never; description: string; desktop: ReactNode; mobile: ReactNode; movedFrom?: string; rationale?: string; relatedDocs?: readonly string[]; slug: string; tags?: readonly string[]; title: string; useCasePaths?: readonly string[]; } interface ScreenInput extends EntryInput { // Existing fields unchanged. variants?: readonly ScreenVariantInput[] | undefined; } ```",
+    "reason": "Public variant input example explicitly forbids the removed field."
+  },
+  {
+    "file": "docs/protocol/mokly-viewer-namespace.md",
+    "statement": "A v5 catalogue reader cannot interpret a v6 model.",
+    "reason": "Exact namespace/version-gate statement for current independent protocols, or explicit older-version rejection coverage."
+  },
+  {
+    "file": "docs/protocol/mokly-viewer-namespace.md",
+    "statement": "An older conforming receiver rejects ownership v3 or upload v2 with HTTP 426 before validating paths or creating a publication.",
+    "reason": "Explicit older-receiver/catalogue/ownership rejection coverage; old versions are not admitted or converted."
+  },
+  {
+    "file": "docs/protocol/mokly-viewer-namespace.md",
+    "statement": "Bootstrap v2 requires its root version field and validates its scope; its external reference is exactly `/mokly-viewer/catalogue.json`.",
+    "reason": "Exact namespace/version-gate statement for current independent protocols, or explicit older-version rejection coverage."
+  },
+  {
+    "file": "docs/protocol/mokly-viewer-namespace.md",
+    "statement": "Catalogue v6, delivery v5 and bootstrap v2 identify the unified layout.",
+    "reason": "Exact namespace/version-gate statement for current independent protocols, or explicit older-version rejection coverage."
+  },
+  {
+    "file": "docs/protocol/mokly-viewer-namespace.md",
+    "statement": "Regression tests cover failure cases for an old receiver rejecting new current-only and Changes-enabled uploads, new readers rejecting old/unknown versions before path use, and a strict older catalogue reader rejecting v6.",
+    "reason": "Explicit older-receiver/catalogue/ownership rejection coverage; old versions are not admitted or converted."
+  },
+  {
+    "file": "docs/protocol/mokly-viewer-namespace.md",
+    "statement": "Static descriptor v5 keeps `canonicalPath`, `comparisonUrl`, `deploymentId`, and `schemaVersion`; only the pinned comparison namespace is valid.",
+    "reason": "Exact namespace/version-gate statement for current independent protocols, or explicit older-version rejection coverage."
+  },
+  {
+    "file": "docs/protocol/mokly-viewer-namespace.md",
+    "statement": "The ownership-v3 fixtures retain v2 digest coverage and explicit unsupported-v2 cases; preserve Plan v1 retry, keep-first, delta and cancellation tests.",
+    "reason": "Explicit older-receiver/catalogue/ownership rejection coverage; old versions are not admitted or converted."
+  },
+  {
+    "file": "docs/protocol/mokly-viewer-namespace.md",
+    "statement": "Update installed-package fixtures for catalogue v6, ownership v3 and upload v2.",
+    "reason": "Exact namespace/version-gate statement for current independent protocols, or explicit older-version rejection coverage."
+  },
+  {
+    "file": "docs/protocol/mokly-viewer-namespace.md",
+    "statement": "Upload v2 and ownership v3 require that namespace even for current-only artifacts.",
+    "reason": "Exact namespace/version-gate statement for current independent protocols, or explicit older-version rejection coverage."
+  },
+  {
+    "file": "docs/protocol/mokly-viewer-namespace.md",
+    "statement": "Upload v2 requires the strict field list, limits, metadata identity and null-without-comparisons rule.",
+    "reason": "Exact namespace/version-gate statement for current independent protocols, or explicit older-version rejection coverage."
+  },
+  {
+    "file": "docs/protocol/mokly-viewer-namespace.md",
+    "statement": "Use path-derived names and the current review-v7 content shape.",
+    "reason": "Exact namespace/version-gate statement for current independent protocols, or explicit older-version rejection coverage."
+  },
+  {
+    "file": "docs/protocol/npm-release-history.md",
+    "statement": "- Replace `ManifestV5` with `ManifestV7`, `ReviewResultV3` with `ReviewResultV4`, and `ScreenReviewV3` with `ScreenReviewV4`.",
+    "reason": "Preserved historical release guidance; the current release note supersedes these exact earlier migration statements."
+  },
+  {
+    "file": "docs/protocol/npm-release-history.md",
+    "statement": "Catalogue v3 has no public document or view path fields to validate; derive documents with `entryRoute` using `(kind, id)` and rendered views with `viewRoute` using `(kind, id, viewport, colorScheme)` when an artifact path is required.",
+    "reason": "Preserved historical release guidance; the current release note supersedes these exact earlier migration statements."
+  },
+  {
+    "file": "docs/protocol/npm-release-history.md",
+    "statement": "Consumers adopt manifest v7, catalogue v3, review v4, and delivery v3; `/id/` URLs no longer exist.",
+    "reason": "Preserved historical release guidance; the current release note supersedes these exact earlier migration statements."
+  },
+  {
+    "file": "docs/protocol/npm-release-history.md",
+    "statement": "Consumers must regenerate manifest v7 and adopt catalogue read model v3.",
+    "reason": "Preserved historical release guidance; the current release note supersedes these exact earlier migration statements."
+  },
+  {
+    "file": "docs/protocol/npm-release-history.md",
+    "statement": "Independent receivers must accept the v1 Plan archive, answer with the missing content digests and upload URLs, verify raw Blob PUTs by digest and size, and make Complete idempotent under the documented first-publication rule.",
+    "reason": "Preserved historical release guidance; the current release note supersedes these exact earlier migration statements."
+  },
+  {
+    "file": "docs/protocol/npm-release-history.md",
+    "statement": "The public `export-ownership-v1.json` compatibility fixture is removed; receiver conformance uses `export-ownership-v2.json`.",
+    "reason": "Preserved historical release guidance; the current release note supersedes these exact earlier migration statements."
+  },
+  {
+    "file": "docs/protocol/npm-release-notes.md",
+    "statement": "Consumers must adopt manifest v10, catalogue read model v6, review result v7, disclosure storage v4, and `/view/<path>/` URLs.",
+    "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
+  },
+  {
+    "file": "docs/protocol/npm-release-notes.md",
+    "statement": "Delete entry `dependencies`, removed component `ownedDependencies` and `review.sharedImpact`.",
+    "reason": "Consumer release migration: names removed inputs, rejected formats or current wire identifiers."
+  },
+  {
+    "file": "docs/protocol/npm-release-notes.md",
+    "statement": "Export directories require the current v3 ownership marker or must be empty.",
+    "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
+  },
+  {
+    "file": "docs/protocol/npm-release-notes-formats.md",
+    "statement": "Export ownership v3, upload v2 and Plan v1 retain their shapes.",
+    "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
+  },
+  {
+    "file": "docs/protocol/npm-release-notes.md",
+    "statement": "Former configuration fields fail as unknown fields, except the removed `review.sharedImpact` input, which warns and has no effect.",
+    "reason": "Consumer release migration: names removed inputs, rejected formats or current wire identifiers."
+  },
+  {
+    "file": "docs/protocol/npm-release-notes-formats.md",
+    "statement": "Live capability descriptors and the inspector wire use v2; the live index is `live-index-2`, catalogue change snapshots use v3 and baseline completion markers use v2 with `generated-v10`.",
+    "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
+  },
+  {
+    "file": "docs/protocol/npm-release-notes.md",
+    "statement": "Manifest dependency declarations, catalogue `details.dependencies`, review `sharedImpact` and entry dependency lists are absent.",
+    "reason": "Consumer release migration: names removed inputs, rejected formats or current wire identifiers."
+  },
+  {
+    "file": "docs/protocol/npm-release-notes-formats.md",
+    "statement": "Manifest v9 and below are earlier baseline output; catalogue v5 and review v6 and below are unsupported public payloads.",
+    "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
+  },
+  {
+    "file": "docs/protocol/npm-release-notes.md",
+    "statement": "Readers accept source manifest v10, public catalogue v6, delivery v5 and bootstrap v2 only.",
+    "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
+  },
+  {
+    "file": "docs/protocol/npm-release-notes.md",
+    "statement": "Replace `ManifestV7` (0.13.0) or released `ManifestV9` (0.14.0) with `ManifestV10`, `ReviewResultV4` or `ReviewResultV6` with `ReviewResultV7`, and `ScreenReviewV4` or `ScreenReviewV6` with `ScreenReviewV7`.",
+    "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
+  },
+  {
+    "file": "docs/protocol/npm-release-notes.md",
+    "statement": "The namespace change advances ownership to v3 and upload to v2 while retaining Plan v1 and content deltas.",
+    "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
+  },
+  {
+    "file": "docs/protocol/npm-release-notes-formats.md",
+    "statement": "The path/output integration uses manifest v10, catalogue v6, review v7, delivery v5 and bootstrap v2.",
+    "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
+  },
+  {
+    "file": "docs/protocol/npm-release-notes.md",
+    "statement": "`ManifestV10` replaces released `ManifestV9`; `Manifest` and `HistoricalManifest` now name v10.",
+    "reason": "Current consumer migration explicitly names removed types, rejected earlier formats and supported independent wire versions."
+  },
+  {
+    "file": "docs/protocol/remote-verification-testbox.md",
+    "statement": "| `useblacksmith/begin-testbox` | `233448af4bfdc6fca509a7f0974411ac6d8a8043` | `# v2` |",
+    "reason": "Pinned GitHub Action major versions belong to the current Testbox workflow, not catalogue metadata."
+  },
+  {
+    "file": "docs/protocol/remote-verification-testbox.md",
+    "statement": "| `useblacksmith/checkout` | `25227e61ff9dafe400e22fa487b673eac4e4409a` | `# v1` |",
+    "reason": "Pinned GitHub Action major versions belong to the current Testbox workflow, not catalogue metadata."
+  },
+  {
+    "file": "docs/protocol/remote-verification-testbox.md",
+    "statement": "| `useblacksmith/run-testbox` | `5ca05834db1d3813554d1dd109e5f2087a8d7cbc` | `# v2` |",
+    "reason": "Pinned GitHub Action major versions belong to the current Testbox workflow, not catalogue metadata."
+  },
+  {
+    "file": "packages/viewer/README.md",
+    "statement": "The read model is v6.",
+    "reason": "The complete public catalogue read model currently uses v6; older formats remain unsupported."
+  },
+  {
+    "file": "packages/viewer/README.md",
+    "statement": "| `mokly:nav-disclosure:v4` | Open catalogue groups |",
+    "reason": "Current independent UI persistence keys, not former catalogue formats."
+  },
+  {
+    "file": "packages/viewer/README.md",
+    "statement": "| `mokly:navigation-width:v1` | Navigation split width |",
+    "reason": "Current independent UI persistence keys, not former catalogue formats."
+  },
+  {
+    "file": "packages/viewer/src/shell/README.md",
+    "statement": "`disclosure_storage.ts` owns the v4 map codec and its storage key; early capture, hydration, the shell store, and watched-reload recovery share its validation.",
+    "reason": "Current independent disclosure codec and shared reader boundary."
+  },
+  {
+    "file": "src/config/README.md",
+    "statement": "The removed `review.sharedImpact` input is the explicit exception: it warns and has no effect.",
+    "reason": "Documents the removed config input exception to unknown-field rejection."
+  },
+  {
+    "file": "src/export/README.md",
+    "statement": "Every marker that is not a valid v3 marker proves no ownership, so events for those files are not suppressed and the files never gain replacement authority.",
+    "reason": "Only the current independently versioned export-ownership v3 marker grants replacement authority."
+  },
+  {
+    "file": "src/publish/README.md",
+    "statement": "Publishing uses the content-addressed Plan → Blobs → Complete exchange over a schema 3 ownership marker and upload v2 envelope.",
+    "reason": "The current publication exchange uses ownership v3 and upload v2 with independent schema numbers."
+  },
+  {
+    "file": "docs/protocol/mokly-format-versions.md",
+    "statement": "Verify the exact earlier-version line, successful current output and unavailable Changes with a pinned base whose own recipe writes main's released v9 manifest, including `declaredDependencies`.",
+    "reason": "Released v9 rejection coverage names the earlier shape that the baseline recipe must write."
+  },
+  {
+    "file": "docs/protocol/npm-release-notes.md",
+    "statement": "npm 0.14.0 output (manifest v9, catalogue v5 and review v6) is earlier output.",
+    "reason": "Consumer migration identifies the released earlier formats that require regenerated output."
+  }
+]

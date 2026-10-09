@@ -20,12 +20,12 @@ const reader: BaselineReader = {
   readFileBytes: async () => Buffer.from("baseline"),
 };
 
-test("historical v8 resources enforce their closure at the baseline root", async (t) => {
+test("historical v10 resources enforce their closure at the baseline root", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const manifest = {
-    schemaVersion: 9,
+    schemaVersion: 10,
     assetClosure: permittedNames,
     generatedFiles: [],
     blobHashAlgorithm: "sha1",

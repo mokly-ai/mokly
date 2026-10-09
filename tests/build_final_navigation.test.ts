@@ -54,7 +54,7 @@ export default input => {
 function fragmentSource(): string {
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: [], relatedDocs: [], useCasePaths: [] };
+const metadata = { relatedDocs: [], useCasePaths: [] };
 export const mockups = [
   defineScreen({ ...metadata, description: "Home", desktop: <main><a href="mock:details#section">Details</a></main>, path: "home", mobile: <main><a href="mock:details#section">Details</a></main>, title: "Home" }),
   defineScreen({ ...metadata, description: "Details", desktop: <main id="section">Details</main>, path: "details", mobile: <main id="section">Details</main>, title: "Details" })

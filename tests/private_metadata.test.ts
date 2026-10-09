@@ -7,9 +7,20 @@ import { compileCatalogue } from "../dist/build/compile.js";
 import { validateGeneratedOutputPaths } from "../dist/build/output_paths.js";
 import { writeCompilation } from "../dist/build/transaction.js";
 import { loadConfig } from "../dist/config/load.js";
-import { MANIFEST_NAME, readManifest } from "../dist/registry/manifest.js";
-import { FileSystemReviewAssetReader } from "../dist/review/assets.js";
-import { NodeGitCommandRunner } from "../dist/review/git.js";
+import {
+  MANIFEST_NAME,
+  parseManifest,
+  readManifest,
+} from "../dist/registry/manifest.js";
+import {
+  FileSystemReviewAssetReader,
+  GitReviewAssetReader,
+} from "../dist/review/assets.js";
+import { readBaseManifest } from "../dist/review/base_manifest.js";
+import {
+  CommittedRepository,
+  NodeGitCommandRunner,
+} from "../dist/review/git.js";
 import { startCatalogueServer } from "../dist/server/http.js";
 import { buildPreview } from "../scripts/preview/catalogue.mjs";
 
@@ -215,3 +226,51 @@ for (const includeChanges of [false, true]) {
     );
   });
 }
+
+test("a former manifest filename cannot supply canonical baseline output or enter an unrelated asset closure", async (context) => {
+  const fixture = await createFixture();
+  context.after(() => removeFixture(fixture));
+  const config = await loadConfig(fixture.root);
+  const compilation = await compileCatalogue(config);
+  const formerFilename = "mokabook-manifest.json";
+  const formerManifest = {
+    ...compilation.manifest,
+    schemaVersion: 2,
+    generatedBy: "mokabook",
+  };
+  assert.throws(
+    () => parseManifest(formerManifest),
+    /expected Mokly manifest schema version 10/,
+  );
+  await fs.promises.writeFile(
+    path.join(fixture.mockupsDir, formerFilename),
+    JSON.stringify(formerManifest),
+  );
+  const runner = new NodeGitCommandRunner(fixture.root);
+  await runner.run(["init", "-q"]);
+  await runner.run(["add", "."]);
+  await runner.run([
+    "-c",
+    "user.name=Test",
+    "-c",
+    "user.email=test@example.invalid",
+    "commit",
+    "-qm",
+    "test: former Mokabook metadata",
+  ]);
+  const git = new CommittedRepository(runner);
+  await assert.rejects(readBaseManifest(git.reader, "HEAD", config), {
+    code: "manifest-invalid",
+  });
+  const reader = new GitReviewAssetReader(
+    config,
+    git.reader,
+    "HEAD",
+    "mockups",
+    compilation.manifest,
+  );
+  await assert.rejects(
+    reader.read(formerFilename),
+    /outside historical asset closure/,
+  );
+});

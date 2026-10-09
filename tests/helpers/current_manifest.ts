@@ -34,7 +34,7 @@ export function currentManifest<
     generatedFiles: [...new Set([...paths, ...resources])]
       .sort()
       .map((path) => ({ path, blobHash: "0".repeat(40) })),
-    schemaVersion: 9 as const,
+    schemaVersion: 10 as const,
   };
 }
 

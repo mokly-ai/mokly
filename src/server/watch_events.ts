@@ -14,7 +14,7 @@ import { isInside, toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig, WatchAction } from "../config/types.js";
 
 import {
-  configuredStylesheetPaths,
+  watchedStylesheetPaths,
   isEntryGlobCandidate,
   isPackageOwnedIgnoredWatchPath,
   isRecoverablePublicResource,
@@ -252,7 +252,7 @@ export function classifyWatchPath(
     return "rebuild";
   if ([...resources].some((resource) => isInside(absolute, resource)))
     return "reload";
-  const stylesheetPaths = configuredStylesheetPaths(config);
+  const stylesheetPaths = watchedStylesheetPaths(config);
   if (
     stylesheetPaths.some(
       (value) =>

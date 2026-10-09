@@ -19,7 +19,7 @@ generation. Pages use the light `snapshotDocumentPath`; Markdown documents use
 each historical scheme. `content.ts` derives these paths, and selection loads
 only the requested document scheme, with a light fallback.
 Screen documents use `snapshotViewPath("before", ...)` only for views whose
-review state is `removed`; review v6 carries no stored before/after paths.
+review state is `removed`; review v7 carries no stored before/after paths.
 Before accepting either kind, the request recomputes the selected historical
 identity from the metadata's baseline commit. A generation-backed selection
 must resolve from the immutable generation named by request and final response.
@@ -92,10 +92,7 @@ reuses this pipeline for the Before and Current panes of a comparison:
 [`../shell/use_comparison_documents.ts`](../shell/use_comparison_documents.ts)
 creates a `before` and `after` loader for
 the accepted comparison's immutable generation and presents every selected pane
-document before the comparison is ready. The
-[comparison pane scroll alignment plan](../../../../plans/comparison-pane-scroll-alignment.md)
-delivered the shared loader and documented fetch set in Milestone 3 and the
-aligned panes in Milestone 4. Removed previews keep accepting
+document before the comparison is ready. Removed previews keep accepting
 `snapshots/before/` only.
 
 Related boundaries: [the Browse client](../client/README.md), the
@@ -103,3 +100,9 @@ Related boundaries: [the Browse client](../client/README.md), the
 [selected comparison contract](../../../../docs/protocol/mokly-selected-comparisons.md),
 the [comparison pane contract](../../../../docs/protocol/mokly-comparison-panes.md),
 and the [comparison scrolling contract](../../../../docs/protocol/mokly-comparison-scrolling.md).
+
+## Delivery Status
+
+The [comparison pane scroll alignment plan](../../../../plans/comparison-pane-scroll-alignment.md)
+delivered the shared loader and documented fetch set in Milestone 3 and the
+aligned panes in Milestone 4.

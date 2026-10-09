@@ -8,7 +8,7 @@ import type {
 import type {
   ManifestEntry,
   ManifestScreen,
-  ManifestV9,
+  ManifestV10,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { reconcileDisclosures } from "../packages/viewer/dist/shell/disclosure_storage.js";
@@ -201,7 +201,6 @@ function leaf(nodes: readonly NavNode[], label: string): NavLeafNode {
 function screen(id: string, title: string): ManifestScreen {
   return {
     colorSchemes: ["light"],
-    declaredDependencies: [],
     description: `${title} screen`,
     path: id,
     kind: "screen",
@@ -216,11 +215,9 @@ function component(id: string, title: string): ManifestComponent {
   return {
     colorSchemes: ["light"],
     controls: {},
-    declaredDependencies: [],
     description: `${title} component`,
     path: id,
     kind: "component",
-    ownedDependencies: [],
     propSchema: { kind: "object", properties: {} },
     relatedDocs: [],
     slots: [],
@@ -229,19 +226,16 @@ function component(id: string, title: string): ManifestComponent {
   };
 }
 
-function manifest(entries: readonly ManifestEntry[]): ManifestV9 {
+function manifest(entries: readonly ManifestEntry[]): ManifestV10 {
   return currentManifest({
     entries: entries.flatMap((entry) => [
-      {
-        ...entry,
-        declaredDependencies: entry.declaredDependencies ?? [],
-      },
+      entry,
       ...(entry.kind === "component" && !("variantOf" in entry)
         ? [componentVariant(entry)]
         : []),
     ]),
     generatedBy: "mokly",
-    schemaVersion: 9 as const,
+    schemaVersion: 10 as const,
     folders: [],
     sourceFiles: [
       ...new Set(entries.map(({ sourcePath }) => sourcePath)),
@@ -254,7 +248,6 @@ function componentVariant(parent: ManifestComponent): ManifestComponentVariant {
   return {
     colorSchemes: parent.colorSchemes,
     componentViews: [],
-    declaredDependencies: [],
     description: parent.description,
     path: id,
     kind: "component",

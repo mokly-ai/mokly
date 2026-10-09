@@ -34,7 +34,7 @@ export interface Catalogue {
   previousPaths: ReadonlyMap<string, string>;
 }
 
-/** Current and historical-v7 entries share identity and display metadata. */
+/** Current and baseline-v10 entries share identity and display metadata. */
 export type CatalogueManifestEntry = ManifestEntry | HistoricalManifestEntry;
 
 /** Resolve an entry identity, giving current content precedence over history. */

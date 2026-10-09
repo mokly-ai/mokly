@@ -1,0 +1,146 @@
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import path from "node:path";
+import test from "node:test";
+
+import { compileCatalogue } from "../dist/build/compile.js";
+import { loadConfig } from "../dist/config/load.js";
+import { compareReview } from "../dist/review/compare.js";
+
+import {
+  assertFastPathEquivalent,
+  compilationFiles,
+} from "./helpers/component_fast_path.js";
+import { componentEntrySource } from "./helpers/component_fixture.js";
+import { componentGit } from "./helpers/component_review_fixture.js";
+import { fixtureWithSheets } from "./helpers/component_stylesheet_fixture.js";
+import { removeFixture } from "./helpers/fixture.js";
+
+test("renderer-authored CSS links remain page material and symlinked aliases are refused", async (context) => {
+  const source = componentEntrySource({
+    body: '<action.Component label="Go" />',
+  }).replace('path: "action",', 'path: "action", stylesheets: ["action.css"],');
+  const fixture = await fixtureWithSheets(
+    source,
+    'renderer: "renderer.tsx", stylesheets: [],',
+  );
+  context.after(() => removeFixture(fixture));
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "alias.css"),
+    ".action{color:red}",
+  );
+  const rendererPath = path.join(fixture.root, "renderer.tsx");
+  const renderer = (
+    file: string,
+  ) => `import { renderToStaticMarkup } from "react-dom/server";
+export default (input) => '<html><head>' + (input.entry.path === "home" ? '<link rel="stylesheet" href="../../${file}">' : '') + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`;
+  await fs.writeFile(rendererPath, renderer("action.css"));
+  const config = await loadConfig(fixture.root);
+  const before = await compileCatalogue(config);
+  await fs.writeFile(rendererPath, renderer("alias.css"));
+  const after = await compileCatalogue(config);
+  const css = {
+    "action.css": ".action{color:red}",
+    "alias.css": ".action{color:red}",
+  };
+  const result = await assertFastPathEquivalent({
+    before: before.manifest,
+    after: after.manifest,
+    beforeFiles: compilationFiles(before, css),
+    afterFiles: compilationFiles(after, css),
+    changedPaths: [
+      "renderer.tsx",
+      "mockups/home/index.mobile.html",
+      "mockups/home/index.desktop.html",
+    ],
+    config,
+  });
+  assert.deepEqual(
+    result.changes.map((entry) => entry.after?.path),
+    ["home"],
+  );
+  const screen = after.manifest.entries.find((entry) => entry.path === "home");
+  assert.ok(screen?.kind === "screen");
+  const previous = before.manifest.entries.find(
+    (entry) => entry.path === "home",
+  );
+  assert.ok(previous?.kind === "screen");
+  assert.deepEqual(previous.componentViews![0]!.insertedStylesheets, []);
+  assert.deepEqual(
+    screen.componentViews![0]!.insertedStylesheets!.map(
+      ({ path, componentPaths }) => ({ path, componentPaths }),
+    ),
+    [{ path: "action.css", componentPaths: ["action"] }],
+  );
+  assert.equal(
+    screen.componentViews![0]!.insertedStylesheets!.some(
+      (span) => span.path === "alias.css",
+    ),
+    false,
+  );
+  await fs.unlink(path.join(fixture.mockupsDir, "alias.css"));
+  await fs.symlink("action.css", path.join(fixture.mockupsDir, "alias.css"));
+  await assert.rejects(compileCatalogue(config), {
+    code: "build-invalid",
+    message:
+      "[mokly/build-invalid] document links and resources are invalid:\n" +
+      "- alias.css: protected target alias.css: is a symlink or non-regular file\n" +
+      "- mokly-generated/home/index.desktop.html: protected target ../../alias.css: is a symlink or non-regular file\n" +
+      "- mokly-generated/home/index.mobile.html: protected target ../../alias.css: is a symlink or non-regular file",
+  });
+});
+
+test("ignored renderer ownership cannot turn an unrelated CSS edit into a component change", async (context) => {
+  const source = componentEntrySource({
+    actionRender:
+      '(props) => <button className="action">{props.label}</button>',
+    paneRender: "(props) => <section>{props.children}</section>",
+    body: '<pane.Component><p className="shared">Screen content</p></pane.Component>',
+  }).replace('path: "action",', 'path: "action", stylesheets: ["action.css"],');
+  const fixture = await fixtureWithSheets(
+    source,
+    'renderer: "renderer.tsx", stylesheets: [],',
+  );
+  context.after(() => removeFixture(fixture));
+  const currentCss = ".action{color:red}\n.shared{margin:1px}\n";
+  await fs.writeFile(path.join(fixture.mockupsDir, "action.css"), currentCss);
+  await fs.writeFile(
+    path.join(fixture.root, "renderer.tsx"),
+    `import { renderToStaticMarkup } from "react-dom/server";
+export default (input) => { const home = input.entry.path === "home"; const html = '<html><head>' + (home ? '<link rel="stylesheet" href="../../action.css">' : '') + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return home ? { html, resources: [{path: "action.css", componentIds: ["pane"]}] } : { html }; };`,
+  );
+  const config = await loadConfig(fixture.root);
+  const compilation = await compileCatalogue(config);
+  assert.ok(
+    compilation.diagnostics?.some(
+      (warning) =>
+        warning.code === "ignored-stylesheet-resource-owner" &&
+        warning.route === "home/index.mobile.html" &&
+        warning.message.includes("action.css"),
+    ),
+  );
+  const home = compilation.manifest.entries.find(
+    (entry) => entry.path === "home",
+  );
+  assert.ok(home?.kind === "screen");
+  assert.deepEqual(home.componentViews![0]!.resources, []);
+  const baseline = {
+    ...compilation,
+    outputs: new Map([
+      ...compilation.outputs,
+      ["action.css", ".action{color:red}\n.shared{margin:0}\n"],
+    ]),
+  };
+  const { result } = await compareReview(
+    compilation,
+    config,
+    componentGit(baseline, ["mockups/action.css"]),
+    "main",
+  );
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
+  assert.deepEqual(
+    result.changes.map((entry) => entry.after?.path),
+    ["home"],
+  );
+});

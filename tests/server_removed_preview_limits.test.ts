@@ -13,7 +13,6 @@ import { currentManifest } from "./helpers/current_manifest.js";
 
 const id = "removed-page";
 const page = {
-  declaredDependencies: [],
   description: "Removed page",
   path: id,
   kind: "page" as const,
@@ -28,7 +27,7 @@ const source: RemovedPagePreviewSource = {
   baseline: currentManifest({
     entries: [page],
     generatedBy: "mokly",
-    schemaVersion: 9,
+    schemaVersion: 10,
     folders: [],
     sourceFiles: [page.sourcePath],
   }),

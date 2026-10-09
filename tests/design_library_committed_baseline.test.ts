@@ -51,8 +51,8 @@ test("the committed catalogue uses one baseline view batch and agrees across Ser
   for (const file of resourceReads)
     assert.ok(availableResources.has(file), file);
   const { result } = await compareReview(after, fixture.config, git, "main");
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion === 6) {
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion === 7) {
     assert.deepEqual(result.changes, expected.changes);
     assert.deepEqual(result.affectedConsumers, expected.affectedConsumers);
   }

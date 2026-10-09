@@ -7,7 +7,6 @@ export const guides = defineFolder({
 });
 
 export default definePage({
-  dependencies: ["notes.md"],
   relatedDocs: ["notes.md"],
   title: "Getting started",
   description: "File-derived page identity with an exported folder record.",

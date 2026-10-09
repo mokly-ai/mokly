@@ -2,30 +2,35 @@
 
 This spec validates and emits the [component comparison result schema](./mokly-component-review.md).
 Canonical order enforcement and the shared affected-consumer key are
-implemented by both the producer and the strict reader, which accept the
-path-keyed v6 described here.
+implemented by both the producer and strict path-keyed review result v7 reader.
+
+## Delivery Status
+
+Rule-specific source proof and own-page CSS impact validation are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
 ## Validation And Canonical Output
 
 Use one result schema and reason policy in Browse's lightweight classification,
 comparison generation, publishing, and client decoding. Validate against both
 source manifests while generating/publishing so evidence cannot name an unknown
-entry, view, instance, or dependency. Require every component/screen ChangedEntry
+entry, view, instance, or rendered resource. Require every component/screen ChangedEntry
 to match its result record's side addresses. Use-case addresses and screen
 reasons must match the source manifests' use-case steps. Unknown fields in new
 structures, inconsistent sides, duplicate records/reasons, missing view evidence,
 and invalid values fail rather than being silently dropped.
 
-For each entry, the classifier records the dependency paths added by the
-[path rule](./mokly-component-changes.md#dependencies-and-styles) after
-excluding stylesheets in analysis scope, its own view comparisons, an exact
-screen declaration of a stylesheet its view retained, and owned CSS propagated
-from an actual invocation. Source validation accepts an entry `dependency`
-reason only when that entry's recorded sources contain its path. It never
-re-evaluates the path rule or treats the result's own records as sources.
-The classifier keys these sources exactly as it keys entry pairs: by kind and
-path for every entry, including variants of both kinds; a paired moved entry
-keys by its current path.
+For each entry, the classifier records retained resources from its actual
+view comparisons and non-CSS owned resource evidence at actual invocations.
+For CSS, freeze per-rule unfiltered and kept own-page matches and page selectors.
+Nested filtering uses the unfiltered sets; component reasons require kept
+matches on the named component or variant's own pages. The
+[ownership rule](./mokly-component-changes.md#rendered-resources-and-styles)
+excludes unrendered source paths and manually declared paths. Source validation
+accepts a `dependency` reason only when that entry's recorded sources contain
+its path and, for CSS, its eligible rule records. A retained path alone cannot
+justify a page or component reason. It uses the frozen classifier evidence, never the result's own rows
+or a fresh path match. Source keys use kind and path, including flattened variants; a moved entry
+uses its current path.
 
 Source validation receives the same accepted pairs as classification. It requires
 exact `previousPath` coverage, both original side addresses, and one Changes
@@ -37,11 +42,13 @@ Empty entry reasons are valid only for a paired move. Page and document moves
 remain catalogue evidence under the [move contract](./mokly-moves.md#result).
 
 Source validation also receives the implementation-impact set computed from
-the classifier's paired material, unchanged inputs and dependency policy. It
+the classifier's paired material, unchanged inputs and rendered-resource policy. It
 requires exact equality with the complete affected-consumer evidence derived
 from that set and both manifests. Neither a subset nor the set of every changed
 component is sufficient: saved-variant/control metadata edits can be direct
-changes without implementation impact. Every classification path performs this
+changes without implementation impact. Wrapper-only or unresolved CSS page
+reasons also have no component impact unless another rule proves a kept own-root
+match. Never build the CSS impact set from consumer invocation matches. Every classification path performs this
 validation before returning results, including lightweight Browse updates.
 
 The [selected live endpoint](./mokly-selected-comparisons.md) projects a validated
@@ -90,8 +97,8 @@ arrays remain explicit. Emit two-space JSON and a final LF, with no timestamp,
 absolute checkout path, or transient controls result. Serve no-store/nosniff
 headers and retain immutable snapshot generations and unmodified documents.
 
-Emit schema v6 for every result. Readers accept only v6; older and unknown
-versions fail. Shared fixture tests must
+Emit review result v7 for every catalogue. Readers accept only review result v7;
+older and unknown versions fail. Shared fixture tests must
 cover valid/invalid schemas, deterministic round trips, current and removed
 variants/consumers, metadata-only changes, zero Changes with affected screens,
 and identical served/published membership. This coverage is required.
@@ -103,3 +110,31 @@ and has no removed record; classify it by metadata and material content. Compone
 parents and variants share this pairing namespace, so changing between the two
 shapes produces one Changed record with both sides. Grouped component comparison
 records retain the views belonging to each component side.
+
+## Baselines
+
+Baseline and current documents come from validated manifest-v10 output and
+retain their original bytes. Style offsets and component ranges share each
+document's UTF-16 coordinate space. Only a canonical, valid v10 baseline reaches
+attribution, under the [baseline compatibility contract](./mokly-baseline-compatibility.md).
+
+Use the existing merge base with `origin/main` or the configured base; staged,
+unstaged, and untracked current edits still participate. Cross-kind path reuse
+and moves follow the [comparison pairing rule](./mokly-changes-serving.md#comparison-engine)
+and the [move contract](./mokly-moves.md); title edits remain metadata changes.
+
+New/removed components and variants retain explicit missing comparison sides.
+Union baseline/current usage so removing a component does not erase its former
+consumers. A component with no saved variant affected by an implementation edit
+can still be changed through a linked owned non-CSS resource or a proven
+implementation difference at a paired actual invocation with unchanged inputs.
+This exception never supplies a stylesheet-rule component reason.
+For that invocation, retain parent-owned child inputs and exclude caller-owned
+slots using the same ownership policy as saved variants. Metadata-only edits
+do not invent affected consumers. Do not
+invent a variant representing every possible prop combination.
+
+When either side lacks validated component metadata, compare its real content
+conservatively. Initial registration or one-sided ownership adoption must not
+hide a simultaneous edit or create synthetic empty components. Do not rebuild
+or check out the baseline during comparison.

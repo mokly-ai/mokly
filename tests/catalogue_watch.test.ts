@@ -208,7 +208,7 @@ test(
   roots: [{ dir: ".", files: ["**/*.mockup.{ts,tsx}"] }],
   mockupsDir: "mockups",
   repoRoot: ".",
-  review: { outDir: ".review", sharedImpact: ["notes.md"] },
+  review: { outDir: ".review" },
   watch: { debounceMs: 0 }
 };\n`,
     );
@@ -230,7 +230,6 @@ test(
       created,
       `import { defineScreen } from "@mokly/mokly";
 export const mockups = [defineScreen({
-  dependencies: [],
   description: "Newly discovered card",
   desktop: "Card",
   path: "new-card",

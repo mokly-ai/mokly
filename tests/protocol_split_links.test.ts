@@ -9,6 +9,7 @@ const pages = [
   "ci-suite-evidence.md",
   "ci-verification-repository.md",
   "ci-verification-security.md",
+  "mokly-catalogue-delivery.md",
   "mokly-changes-serving.md",
   "mokly-configuration-discovery.md",
   "mokly-configuration-imported-styles.md",

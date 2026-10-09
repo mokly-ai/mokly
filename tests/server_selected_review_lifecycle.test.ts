@@ -16,14 +16,14 @@ const source: SelectedReviewSource = {
   before: currentManifest({
     entries: [],
     generatedBy: "mokly",
-    schemaVersion: 9 as const,
+    schemaVersion: 10 as const,
     folders: [],
     sourceFiles: [],
   }),
   after: currentManifest({
     entries: [],
     generatedBy: "mokly",
-    schemaVersion: 9 as const,
+    schemaVersion: 10 as const,
     folders: [],
     sourceFiles: [],
   }),
@@ -39,9 +39,8 @@ const source: SelectedReviewSource = {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     screens: [],
-    sharedImpact: [],
   },
 };
 
@@ -61,9 +60,8 @@ function artifact(route: string): ReviewArtifact {
       baseRef: source.baseRef,
       changedPaths: [],
       ignoredImpact: [],
-      schemaVersion: 6 as const,
+      schemaVersion: 7 as const,
       screens: [],
-      sharedImpact: [],
       components: [],
       changes: [],
       affectedConsumers: [],

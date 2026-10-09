@@ -4,19 +4,15 @@ import { test } from "node:test";
 import { ComponentValidationError } from "@mokly/viewer/data";
 
 import { validateComponentRanges } from "../dist/components/ranges.js";
-import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
-import {
-  compareComponentView,
-  type ComponentViewContext,
-} from "../dist/review/component_view.js";
+import { compareComponentView } from "../dist/review/component_view.js";
+import type { ComponentViewContext } from "../dist/review/component_view_types.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
 import type { ComponentRangeRecord } from "../packages/viewer/dist/components/manifest_types.js";
 import {
   generatedViews,
   type GeneratedComponentView,
 } from "../packages/viewer/dist/components/views.js";
-import type { Manifest } from "../packages/viewer/dist/registry/types.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
@@ -25,7 +21,7 @@ const records: readonly ComponentRangeRecord[] = [
   { id: "r-0", target: { kind: "instance", instanceKey: "instance" } },
 ];
 
-test("baseline v8 ranges retain original offsets and validation", () => {
+test("normalized baseline ranges retain original offsets and validation", () => {
   const start = "<!--mokly-component:start:r-0-->";
   const end = "<!--mokly-component:end:r-0-->";
   const html = `<html><body>😀${start}<button>Action</button>${end}<style>.a{color:red}</style></body></html>`;
@@ -73,22 +69,14 @@ for (const side of ["added", "removed"] as const)
     const document = current!;
     const malformed = document.replace(/<!--mokly-component:end:r-0-->/, "");
 
-    await assert.rejects(
-      compareOneSided(fixture.after.manifest, view, side, malformed),
-      (error) => {
-        assert.ok(error instanceof ComponentValidationError);
-        assert.equal(error.path, "$document");
-        assert.match(error.detail, /component boundary|component boundaries/);
-        return true;
-      },
-    );
+    await assert.rejects(compareOneSided(view, side, malformed), (error) => {
+      assert.ok(error instanceof ComponentValidationError);
+      assert.equal(error.path, "$document");
+      assert.match(error.detail, /component boundary|component boundaries/);
+      return true;
+    });
 
-    const comparison = await compareOneSided(
-      fixture.after.manifest,
-      view,
-      side,
-      document,
-    );
+    const comparison = await compareOneSided(view, side, document);
     assert.equal(comparison.comparisonPath, "complete");
     assert.equal(comparison.view.state, side);
     assert.equal(comparison.view.material, true);
@@ -96,12 +84,11 @@ for (const side of ["added", "removed"] as const)
   });
 
 function compareOneSided(
-  manifest: Manifest,
   view: GeneratedComponentView,
   side: "added" | "removed",
   document: string,
 ) {
-  const context = viewContext(manifest, view.path, document);
+  const context = viewContext(view.path, document);
   return compareComponentView(
     context,
     side === "removed" ? view : undefined,
@@ -109,11 +96,7 @@ function compareOneSided(
   );
 }
 
-function viewContext(
-  manifest: Manifest,
-  route: string,
-  document: string,
-): ComponentViewContext {
+function viewContext(route: string, document: string): ComponentViewContext {
   const reader = () =>
     new ComponentMaterialReader({
       read: async (requested) =>
@@ -124,7 +107,6 @@ function viewContext(
   return {
     beforeReader,
     afterReader,
-    dependencies: new ComponentDependencyPolicy(manifest, manifest, []),
     changed: new Set(),
     prefix: "mockups",
     resources: new ResourceComparison(

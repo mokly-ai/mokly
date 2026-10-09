@@ -3,9 +3,29 @@ import path from "node:path";
 
 import { expect, test } from "@playwright/test";
 
+import { serve } from "../../dist/server/serve.js";
+import { createCommittedExampleBaseline } from "../helpers/example_baseline.js";
 import { repositoryRoot } from "../helpers/fixture.js";
+import { FULL_CATALOGUE_SETUP_TIMEOUT_MS } from "../helpers/fixture_timing.js";
+import { waitForInitialChanges } from "../helpers/watched_catalogue.js";
 
 import { chooseVariant, chooseViewport } from "./workspace_actions.js";
+
+let running: Awaited<ReturnType<typeof serve>>;
+let root: string;
+test.beforeAll(async () => {
+  test.setTimeout(FULL_CATALOGUE_SETUP_TIMEOUT_MS);
+  root = await fs.mkdtemp(
+    path.join(repositoryRoot, ".context/design-runtime-"),
+  );
+  const config = await createCommittedExampleBaseline(root, "design-library");
+  running = await serve(config, { base: "HEAD", port: 0, watch: false });
+  await waitForInitialChanges(running.url);
+});
+test.afterAll(async () => {
+  await running?.close();
+  if (root) await fs.rm(root, { recursive: true, force: true });
+});
 
 for (const viewport of ["desktop", "mobile"] as const) {
   test(`${viewport}: design props are temporary, support unset/reset, and load newly visible nested styles`, async ({
@@ -23,19 +43,16 @@ for (const viewport of ["desktop", "mobile"] as const) {
     const contents = () =>
       Promise.all(
         paths.map((file) =>
-          fs.readFile(
-            path.join(repositoryRoot, "examples/basic", file),
-            "utf8",
-          ),
+          fs.readFile(path.join(root, "examples/basic", file), "utf8"),
         ),
       );
     const before = await contents();
-    // Compare the Search variant with its own saved status before temporary edits.
-    await page.goto("/view/design/library/chrome/top-bar/search/");
+    await page.goto(
+      `${running.url}/view/design/library/chrome/top-bar/search/`,
+    );
     await chooseViewport(page, viewport);
     const status = page.locator("[data-workspace-status]");
-    await expect(status).toHaveText(/^(Changed|Unmodified)$/);
-    const savedStatus = await status.innerText();
+    await expect(status).toHaveText("Unmodified");
     await page.getByRole("tab", { name: "Props", exact: true }).click();
     if (viewport === "mobile")
       await page
@@ -55,10 +72,10 @@ for (const viewport of ["desktop", "mobile"] as const) {
     await expect(frame.locator(".mbk-search-value")).toHaveCount(0);
     await page.getByRole("button", { name: "Reset", exact: true }).click();
     await expect(frame.locator(".mbk-tag-picker")).toHaveCount(0);
-    await expect(status).toHaveText(savedStatus);
+    await expect(status).toHaveText("Unmodified");
     await chooseVariant(page, "Search");
     await expect(frame.locator(".mbk-search-value")).toHaveText("tag:forms");
-    await expect(status).toHaveText(savedStatus);
+    await expect(status).toHaveText("Unmodified");
     expect(await contents()).toEqual(before);
   });
 
@@ -70,7 +87,9 @@ for (const viewport of ["desktop", "mobile"] as const) {
         ? { width: 390, height: 844 }
         : { width: 1280, height: 900 },
     );
-    await page.goto("/view/design/browse/views/screen/tag-picker/");
+    await page.goto(
+      `${running.url}/view/design/browse/views/screen/tag-picker/`,
+    );
     await chooseViewport(page, viewport);
     await page.getByRole("tab", { name: "Components", exact: true }).click();
     if (viewport === "mobile")

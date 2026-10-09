@@ -24,7 +24,8 @@ A folder record describes exactly one folder, keyed by its path:
 | `hidden`  | `boolean`           | Hides the folder and descendants in All/search; Changes keeps them. |
 | `exclude` | `readonly string[]` | Directory files only: safe relative globs of files to skip.         |
 
-Every field except `path` is optional. Unknown fields are rejected. A record
+Every field except `path` is optional. Unknown fields are rejected. The code carrier ignores removed `dependencies`
+with a path-scoped [warning](./mokly-build-warnings.md); directory JSON has no such exception. A record
 whose folder has no entry below it is an error, because it is almost always a
 typo. A folder may have at most one record from either carrier. A record
 never changes a path: titles, order, and hidden state are presentation only,
@@ -229,3 +230,11 @@ behaviour, and the exact text of every diagnostic.
 - [Variant navigation](./mokly-variant-navigation.md)
 - [Public catalogue read model](./mokly-catalogue.md)
 - [Catalogue navigation](./mokly-navigation.md)
+
+## Removed Input Warnings
+
+A `defineFolder` with removed `dependencies` emits `removed-dependencies` with
+a folder subject and exactly
+`dependencies has been removed; ignoring it. Delete the field.`
+It never warns on descendants. Directory JSON and document front matter remain
+strict. Retired nested/root helpers have no runtime boundary.

@@ -1,5 +1,29 @@
 # Public Catalogue Read Model
 
+## Delivery Status
+
+Optional per-view/page `resourceEvidence` and root usage ranges are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md); screen and saved-view display is implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence), and the whole-document page display is implemented in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
+Read model v6 replaces released v5. `ResourceEvidence` follows the
+[CSS evidence schema](./mokly-css-attribution-membership.md).
+
+## Supported Formats
+
+| Catalogue                     | Generated manifest | Comparison result |
+| ----------------------------- | ------------------ | ----------------- |
+| Without registered components | 9                  | 6                 |
+| With registered components    | 9                  | 6                 |
+
+Current output uses manifest v10, review result v7, and public read model v6,
+with globally unique entry paths. The private catalogue-change snapshot is v3 and removed
+page preview metadata is v3. Delivery descriptors are v5. The manifest stores
+folder records, component variants, per-view usage, root output ranges and
+inserted-stylesheet provenance,
+with no derived file names on entries; the generated inventory lists exact paths. Markdown documents and their resource copies are
+implemented. Accepted move pairs carry `previousPath` in review records and
+the public read model; the manifest retains authored hints only.
+Current and baseline manifest readers accept only one version; earlier output
+follows [baseline compatibility](./mokly-baseline-compatibility.md).
+
 ## Location And Types
 
 Export writes `mokly-viewer/catalogue.json` at the artifact root. Serve exposes
@@ -27,7 +51,7 @@ type ChangeKind = "added" | "changed" | "removed" | "unmodified";
 type PublicPath = string;
 
 interface CatalogueReadModel {
-  schemaVersion: 5;
+  schemaVersion: 6;
   identity: { id: string; title: string };
   deploymentId: string;
   revision: { content: number; evidence: number };
@@ -83,7 +107,6 @@ interface CatalogueDetails {
   rationale?: string;
   relatedDocs: readonly string[];
   sourcePath: string;
-  dependencies: readonly string[];
 }
 interface CatalogueEntry {
   path: string;
@@ -106,6 +129,7 @@ interface CatalogueView {
   colorScheme: ColorScheme;
   usage: CatalogueUsage;
   comparison: ComparisonSelection;
+  resourceEvidence?: ResourceEvidence;
 }
 interface CatalogueScreen extends CatalogueEntry {
   kind: "screen";
@@ -117,6 +141,7 @@ interface CatalogueScreen extends CatalogueEntry {
 }
 interface CataloguePage extends CatalogueEntry {
   kind: "page";
+  resourceEvidence?: ResourceEvidence;
 }
 interface CatalogueDocument extends CatalogueEntry {
   kind: "document";
@@ -148,7 +173,8 @@ interface CatalogueComponentVariant extends CatalogueEntry {
 }
 ```
 
-No record carries a route or file name. A reader uses the
+No entry record carries a derived route or file name. Resource evidence names
+only rendered-resource paths. A reader uses the
 [artifact path contract](./mokly-artifact-paths.md): a current view is served
 at `static/mokly-generated/<view route>`, a current page or document at
 `static/mokly-generated/<document route>`, and the shell at `/view/<path>/`. Removed entries
@@ -174,70 +200,8 @@ the children each section shows.
 
 ## Projection And Privacy
 
-Construct an explicit allowlist projection from validated manifest v9, the
-validated folder records, and the accepted Changes/comparison snapshot. Do not
-spread a manifest, entry, or internal evidence object into public JSON.
-
-- Screens and component variants copy their effective `colorSchemes` and
-  emit one view per effective viewport and scheme, sorted mobile/light,
-  mobile/dark, desktop/light, desktop/dark; light-only fallback stays in the
-  viewer. Documents copy the catalogue's `colorSchemes` and have no views.
-  A current entry's comparison state is never `removed`; that state is valid
-  only inside `removedEntries`.
-- Pages and documents have no viewport or usage. Use cases keep ordered
-  standalone-screen steps by path; reused frames add no screen uses or
-  duplicate instance records.
-- Component parents retain schemas, read-only control descriptions, and
-  declared slot names. Current parents require at least one current variant;
-  both readers retain a removed parent even when all its variants moved,
-  without inventing variants. Current variants
-  require a current parent. Variants follow their parent in authored order;
-  the first current variant is the default. Ready usage copies only
-  instances/slots/ranges with validated props and supplied slot names.
-- Details retain authored display metadata already exposed by the inspector.
-  `details.dependencies` lists the entry's source path, declared paths, and
-  for a document its resources as repository-relative display labels only.
-  Source paths stay repository-relative and never serve source bytes. Matched
-  `relatedDocs` use validated `mock:<path>` references to current documents
-  under the [document contract](./mokly-documents.md).
-
-Never emit `sourceFiles`, `declaredDependencies`, `ownedDependencies`,
-`movedFrom`, folder `exclude` globs, resolved dependency evidence,
-changed-path inventories, source graphs, Git commands, private manifest
-envelopes, content digests for source inputs, style offsets
-(`startOffset`/`endOffset`), style/resource ownership tables, absolute
-filesystem paths, credentials, or render-capability tokens. No source bytes,
-HTML, runtime React values, or source maps belong in this JSON. This privacy
-rule applies recursively, including removed entries and extension fields.
-`snapshotId` is a one-way digest, never a public commit, manifest, or
-generation inventory. Reject private filesystem paths in path fields; display
-strings and props are data.
-
-Per-entry Changes comes from the existing entry attribution, not a count of
-visual comparisons. `included` is membership in Changes; affected consumers
-can have eligible comparisons while `included` is false, and a paired moved
-entry is included even when unmodified. Folder visibility aggregates
-descendants without extra counts. Unknown, preparing, pending and disabled
-states never imply unmodified or a zero count. The
-[removal rule](./mokly-catalogue-changes.md#removal-selection-and-precedence)
-owns selection and path reuse. A removed record carries `folderTitles`, the baseline titles of its
-folders from the top level down, as display text for breadcrumbs. Each newly
-projected removed record carries an opaque `snapshotId` when real immutable
-identity is available, distinguishing baseline generations and catalogues. A
-removed variant carries `variantOf` and requires `parentTitle`, its baseline
-parent's nonempty title. Complete and scoped readers reject missing, empty or
-non-string `parentTitle` on variants, and its presence on non-variants. Parent
-resolution follows the [branch-point lookup](./mokly-branch-point-lookup.md).
-The optional `preview` field is the additive descriptor defined by
-[removed previews](./mokly-removed-previews.md); readers tolerate its absence.
-Missing baseline usage is unavailable. Projection omits a removed view's usage
-when it names an unpublished component and marks it unavailable. Ready empty
-arrays require proven empty usage, never a failed or incomplete render.
-
-`comparisonUrl` is null or `mokly-viewer/diffs/generations/<generation>/review.json`,
-pinned to this content's evidence. Resolve snapshots against that JSON response
-URL. Null forbids fallback requests to `/mokly-viewer/diffs/review.json`.
-Comparison files load only on selection.
+The [projection contract](./mokly-catalogue-delivery.md#projection-and-privacy)
+owns the allowlist, evidence, source metadata and removed-entry rules.
 
 ## Serialization, Identity And Versions
 

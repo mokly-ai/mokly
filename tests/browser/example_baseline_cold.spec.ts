@@ -14,7 +14,7 @@ import {
 } from "../helpers/fixture_timing.js";
 import { serveStaticFiles } from "../helpers/static_server.js";
 
-test("a real cold example baseline installs and builds v9 before comparison", async ({
+test("a real cold example baseline installs and builds v10 before comparison", async ({
   page,
 }) => {
   test.setTimeout(FULL_CATALOGUE_SETUP_TIMEOUT_MS);
@@ -48,7 +48,7 @@ test("a real cold example baseline installs and builds v9 before comparison", as
         "utf8",
       ),
     );
-    expect(comparison.schemaVersion).toBe(6);
+    expect(comparison.schemaVersion).toBe(7);
     expect(comparison.baseCommit).toBe(prepared.commit);
     server = await serveStaticFiles(output);
     await page.goto(`${server.url}/view/example/screens/welcome/`);

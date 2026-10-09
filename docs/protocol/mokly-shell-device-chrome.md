@@ -98,6 +98,26 @@ of those two.
   the selected screen is displayed. Light-only comparisons name their fallback;
   dark styling remains contained within device screens.
 
+## Responsive Behavior
+
+The shell has one breakpoint at **56.25rem (900px)**:
+
+- At or above it, the navigation column is persistent and the layout is the
+  fixed two-column split above.
+- Below it, the navigation becomes a scrimmed overlay drawer (82% width, max
+  20rem) opened by the top-bar menu button throughout the catalogue. The
+  drawer opens under the 48px bar and the bar stacks above the scrim, so the
+  menu button that opened it, the brand and the query stay
+  at full strength while only the shell below the bar dims. The tag picker
+  stops anchoring to the narrow field and drops as a sheet spanning the shell,
+  flush under the bar's bottom border with only its lower corners rounded. The
+  phone frame scales via `aspect-ratio: 390 / 844` within available width, the
+  browser frame drops to 560px height, flow connector lines hide, the details
+  body stacks to one column inside its bottom sheet. The grouped view controls
+  stay together in the screen head band and wrap beneath the title when needed.
+
+`prefers-reduced-motion: reduce` disables shell transitions.
+
 ## Related Docs
 
 - [Shell design contract](./mokly-shell-design.md)

@@ -10,6 +10,7 @@ export const EXAMPLE_SOURCE_PATHS: readonly [
   "examples/imported-assets",
   "docs/protocol",
   "README.md",
+  "plans",
 ];
 
 /** List tracked and non-ignored untracked authored inputs in code-unit order. */

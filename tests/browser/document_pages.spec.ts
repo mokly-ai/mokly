@@ -38,6 +38,16 @@ for (const width of [390, 1280])
         scheme === "dark" ? /index\.dark\.html$/u : /index\.html$/u,
       );
       await expect(fallback).toHaveCount(0);
+      const image = page.frameLocator(".mbk-stage-embed iframe").locator("img");
+      await expect(image).toBeVisible();
+      await expect
+        .poll(() =>
+          image.evaluate(
+            (element: HTMLImageElement) =>
+              element.complete && element.naturalWidth > 0,
+          ),
+        )
+        .toBe(true);
     }
 
     await page.locator("[data-mokly-details] summary").click();
@@ -50,8 +60,6 @@ for (const width of [390, 1280])
     await expect(
       metaRow(page, "Tags").locator('[data-mokly-tag="guide"]'),
     ).toHaveCount(1);
-    await expect(metaRow(page, "Dependencies")).toContainText(
-      "examples/basic/specs/example/workspace.svg",
-    );
+    await expect(metaRow(page, "Dependencies")).toHaveCount(0);
     await expect(metaRow(page, "Schemes")).toHaveCount(0);
   });

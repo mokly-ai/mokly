@@ -16,6 +16,8 @@ import {
 } from "./head.js";
 import { homeSummary } from "./home_summary.js";
 import { useShellIdentifier } from "./identifier_context.js";
+import { PageEvidence } from "./page_evidence.js";
+import { pageComparisonEvidence } from "./page_evidence_data.js";
 import { removedPreviewData, RemovedPreviewStage } from "./previews.js";
 import { EmptyStage, TargetStage } from "./stages.js";
 import type { RouteTarget } from "./target.js";
@@ -67,6 +69,15 @@ function TargetView(props: {
   const preview = removed
     ? removedPreviewData(props.catalogue, props.context, target.entry)
     : undefined;
+  const page =
+    target.entry.kind === "page" && !removed
+      ? pageComparisonEvidence(
+          props.catalogue,
+          props.context,
+          target.entry.path,
+        )
+      : undefined;
+  const status = removed ? "Removed" : page?.status;
   const stage = preview ? (
     <RemovedPreviewStage data={preview} />
   ) : removed ? (
@@ -95,15 +106,19 @@ function TargetView(props: {
         heading={head.title}
         path={head.path}
         status={
-          removed ? (
-            <span className="mbk-entry-status" data-status="Removed">
-              Removed
+          status ? (
+            <span className="mbk-entry-status" data-status={status}>
+              {status}
             </span>
           ) : undefined
         }
       />
       {stage}
-      <DetailsPanel catalogue={props.catalogue} target={props.target} />
+      <DetailsPanel catalogue={props.catalogue} target={props.target}>
+        {page ? (
+          <PageEvidence base={props.context.base} evidence={page} />
+        ) : null}
+      </DetailsPanel>
     </>
   );
 }

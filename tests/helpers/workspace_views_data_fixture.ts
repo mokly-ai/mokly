@@ -2,8 +2,8 @@ import type {
   ManifestComponent,
   ManifestComponentVariant,
 } from "../../packages/viewer/dist/components/manifest_types.js";
-import type { ManifestV9 } from "../../packages/viewer/dist/registry/types.js";
-import type { ReviewResultV6 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ManifestV10 } from "../../packages/viewer/dist/registry/types.js";
+import type { ReviewResultV7 } from "../../packages/viewer/dist/review/component_types.js";
 import type { ViewReview } from "../../packages/viewer/dist/review/types.js";
 
 import { currentManifest } from "./current_manifest.js";
@@ -12,7 +12,7 @@ function variant(id: string, title: string): ManifestComponentVariant {
   return {
     colorSchemes: ["light", "dark"],
     componentViews: [],
-    declaredDependencies: [],
+
     description: `${title} badge`,
     path: id,
     kind: "component",
@@ -33,12 +33,10 @@ export const REMOVED_VARIANT = variant("badge/removed", "Removed");
 export const component: ManifestComponent = {
   colorSchemes: ["light", "dark"],
   controls: {},
-  declaredDependencies: [],
   description: "Badge component",
   path: "badge",
   kind: "component",
 
-  ownedDependencies: [],
   propSchema: { kind: "object", properties: {} },
   relatedDocs: [],
   slots: [],
@@ -46,22 +44,21 @@ export const component: ManifestComponent = {
   title: "Badge",
 };
 
-export const componentManifest: ManifestV9 = currentManifest({
+export const componentManifest: ManifestV10 = currentManifest({
   entries: [component, DEFAULT_VARIANT, SECOND_VARIANT],
   generatedBy: "mokly",
-  schemaVersion: 9,
+  schemaVersion: 10,
   folders: [],
   sourceFiles: [component.sourcePath],
 });
 
-export const componentBaseline: ManifestV9 = {
+export const componentBaseline: ManifestV10 = {
   ...componentManifest,
   entries: [component, DEFAULT_VARIANT, SECOND_VARIANT, REMOVED_VARIANT],
 };
 
 export const screen = {
   colorSchemes: ["light", "dark"],
-  declaredDependencies: [],
   description: "Landing screen",
   path: "welcome",
   kind: "screen",
@@ -72,16 +69,16 @@ export const screen = {
   useCasePaths: [],
 } as const;
 
-export const screenManifest: ManifestV9 = currentManifest({
+export const screenManifest: ManifestV10 = currentManifest({
   entries: [screen],
   generatedBy: "mokly",
-  schemaVersion: 9,
+  schemaVersion: 10,
   folders: [],
   sourceFiles: [screen.sourcePath],
 });
 
 /** A v3 comparison whose only material difference is in dark renders. */
-export function darkOnlyResult(state: "changed" | "unchanged"): ReviewResultV6 {
+export function darkOnlyResult(state: "changed" | "unchanged"): ReviewResultV7 {
   return {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
@@ -90,20 +87,17 @@ export function darkOnlyResult(state: "changed" | "unchanged"): ReviewResultV6 {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     screens: [
       {
         after: { path: screen.path, title: screen.title },
         before: { path: screen.path, title: screen.title },
-        dependencies: [],
         path: screen.path,
-        sharedImpact: [],
         state,
         title: screen.title,
         views: views("changed"),
       },
     ],
-    sharedImpact: [],
   };
 }
 
@@ -127,7 +121,7 @@ function views(
   ]);
 }
 
-export function componentVariantResult(): ReviewResultV6 {
+export function componentVariantResult(): ReviewResultV7 {
   return {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
@@ -138,9 +132,7 @@ export function componentVariantResult(): ReviewResultV6 {
       {
         after: { path: component.path, title: component.title },
         before: { path: component.path, title: component.title },
-        dependencies: [],
         path: component.path,
-        sharedImpact: [],
         state: "changed",
         title: component.title,
         variants: [
@@ -171,9 +163,8 @@ export function componentVariantResult(): ReviewResultV6 {
       },
     ],
     ignoredImpact: [],
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     screens: [],
-    sharedImpact: [],
   };
 }
 
