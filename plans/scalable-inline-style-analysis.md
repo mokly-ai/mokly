@@ -2165,7 +2165,7 @@ for approval. D12 makes no change to PR #182 or any other PR.
       closure seeds, non-CSS ownership and main's output validation.
 - [x] Integrate D2's v10/v6/v7 shapes and inline evidence fields. Check PR #182's
       release state before relying on unreleased format numbers.
-- [ ] Integrate D5's ownership rules by delivery path, including root ownership
+- [x] Integrate D5's ownership rules by delivery path, including root ownership
       and root boundaries in Review-ignore regions.
 - [ ] Integrate D6's inserted-link removal and membership into original-page
       recipes. Keep parse counts and add full-comparison differential tests.

@@ -216,3 +216,11 @@ missing files fail proof without replacing complete required-read diagnostics.
 ## Fingerprinted Materials
 
 See [Fingerprinted Materials](./mokly-fingerprinted-materials.md#fingerprinted-materials) for the complete rules.
+
+## Saved Component Roots
+
+A saved root maps to the entry in inline owner lookup. Its boundary comments may
+fall inside Review-ignore regions. Instance and caller-slot boundaries retain
+the existing exclusion rule. Styles within root output remain eligible entry
+styles; a root alone is not a nested component owner. Subject filtering still
+removes ignored elements from matches while keeping original selector context.

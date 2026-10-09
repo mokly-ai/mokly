@@ -61,12 +61,14 @@ export class PageAnalysis {
       ? validateComponentRanges(source, usage.ranges, this.document)
       : [];
     if (
-      this.ranges.some((range) =>
-        this.regions.some(({ start, end }) =>
-          [range.start, range.contentEnd].some(
-            (offset) => start <= offset && offset < end,
+      this.ranges.some(
+        (range) =>
+          range.record.target.kind !== "root" &&
+          this.regions.some(({ start, end }) =>
+            [range.start, range.contentEnd].some(
+              (offset) => start <= offset && offset < end,
+            ),
           ),
-        ),
       )
     )
       invalidData(
@@ -87,6 +89,7 @@ export class PageAnalysis {
             span &&
             !this.ranges.some(
               (range) =>
+                range.record.target.kind !== "root" &&
                 range.contentStart <= span.start &&
                 span.start < range.contentEnd,
             )

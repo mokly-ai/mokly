@@ -465,6 +465,8 @@ Key code:
   only settled views.
 - `page_analysis.ts`, `page_pair.ts`: lazy view-local source-located trees,
   validated UTF-16 ranges, flat ignore spans, styles and reference inventory.
+  Saved roots map to entry ownership and may cross paired-ignore boundaries;
+  they do not hide their own inline styles from entry analysis.
   Original validation stays eager; fingerprint inventories derive lazily. The
   pair caches normalization and keeps a stable projected exclusion policy.
 - `page_parser.ts`, `page_source_locations.ts`, `page_subjects.ts`: the one
