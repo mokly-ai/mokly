@@ -2130,6 +2130,8 @@ Evidence: `.context/scalable-inline-style-analysis/m14/`.
       re-review once, and record every open finding. Keep this TODO unticked
       until the review, its fix round, the re-review and all open findings are
       recorded here. The supervisor runs the review.
+      Review complete; report: `.context/scalable-inline-style-analysis/m14-review/report.md`.
+      Finding 1 (Low, docs): the fixture README overview still said that setup archives one package; fixed in this fix round; see the commit.
 
 ## Post-merge follow-up (non-blocking)
 
