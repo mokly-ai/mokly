@@ -1,6 +1,6 @@
 # Scalable Inline Style Analysis
 
-Status: Active. Milestone 14 is in progress; the plan closes when PR #158 merges. Review findings stay recorded for the user's decision. Performance acceptance is deferred to a later plan.
+Status: Active. All milestones are complete. Main's #179 (`34e4bb03`) conflicts with this branch, and its merge waits for the user's decisions; the plan closes when PR #158 merges. Review findings stay recorded for the user's decision. Performance acceptance is deferred to a later plan.
 
 Make inferred inline style ownership work, and work fast, on a full-size React
 Native Web catalogue. Mokly must stop retaining memory it does not need, bound
@@ -2123,7 +2123,7 @@ Evidence: `.context/scalable-inline-style-analysis/m14/`.
       real-server smoke tests through the updated toolchain.
 - [x] Commit with Conventional Commits and push. Fetch `origin/main` and
       report any new conflict from a dry run without merging again.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`. Keep the review read-only, then apply the
       [review-fix rule](../docs/dev/review.md): fix `Auto-fix: yes` findings,
@@ -2132,6 +2132,7 @@ Evidence: `.context/scalable-inline-style-analysis/m14/`.
       recorded here. The supervisor runs the review.
       Review complete; report: `.context/scalable-inline-style-analysis/m14-review/report.md`.
       Finding 1 (Low, docs): the fixture README overview still said that setup archives one package; fixed in this fix round; see the commit.
+      Re-review of the fix round (`fed21f83..b6b1075a`) complete; report: `.context/scalable-inline-style-analysis/m14-review/rereview.md`. No findings; finding 1 is fixed in `b6b1075a`.
 
 ## Post-merge follow-up (non-blocking)
 
