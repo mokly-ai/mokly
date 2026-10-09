@@ -378,7 +378,7 @@ under `.context/remote-verification-base-commit/`.
   - Finding 2 (Medium): synced renames and deletions break index-based checks. Recommend B: stage the synced tree in the suite wrapper after the fingerprint check.
   - Finding 3 (Medium): real-Git tests depend on global settings. Recommend B: isolate global and system Git config in test helpers.
 
-## Milestone 5: Git repository variables (review finding 1)
+## Milestone 5: Git repository variables (review finding 1) — completed
 
 Xtask removes inherited Git repository variables from its children. These
 variables select which repository, work tree and index Git uses. Git in each
@@ -422,7 +422,7 @@ Evidence: `.context/remote-verification-base-commit/finding1.md`.
 - [x] Commit with a Conventional Commits title of at most 50 characters that
       names finding 1. Keep it unpushed for the complete gate. After the gate
       passes, record the completed TODOs and push. Keep all evidence ignored.
-- [ ] After the push, a reviewer uses
+- [x] After the push, a reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and reports the
       findings. Keep the review read-only. The implementer then applies the
