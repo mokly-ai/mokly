@@ -3,8 +3,8 @@
 ## Delivery Status
 
 The task graph, strict environment, local cache, and GitHub Actions cache
-wiring are implemented. Hosted verification and admin removal remain open in
-the [plan](../../plans/turborepo-cloudflare-remote-cache.md). Tests, reports, and `npm run example:check` stay uncached; check
+wiring are implemented. The retired Worker, bucket, secrets, and environments
+were removed on 2026-10-09. Hosted verification remains open in the [plan](../../plans/turborepo-cloudflare-remote-cache.md). Tests, reports, and `npm run example:check` stay uncached; check
 revalidates referenced paths and Git state outside the build hash.
 
 ## Task Graph And Files

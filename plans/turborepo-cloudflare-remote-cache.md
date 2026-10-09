@@ -4,8 +4,9 @@ Status: Active. Created on 2026-10-06. Milestones 1 to 3 are complete. The
 2026-10-08 GitHub Actions cache decision supersedes the Worker work in
 Milestone 4. Milestone 5 is complete. Milestone 6 implementation, one-time
 proofs, and the complete local gate are complete; its hosted CI check stays
-open. Milestone 7 repository work is complete. Admin removal and the final
-plan commit remain open. [PR #170](https://github.com/mokly-ai/mokly/pull/170)
+open. Milestone 7 repository work is complete. On 2026-10-09 the supervisor
+removed the Worker, bucket, cache secrets, environments, and Keychain item;
+the user deletes the Cloudflare deploy token in the dashboard. [PR #170](https://github.com/mokly-ai/mokly/pull/170)
 closed on 2026-10-08. The user chooses whether to reopen PR #170 or open a new
 pull request. The supervisor owns hosted checks. The formal review ran at
 `a2637235`; finding 4 is fixed, and findings 1, 2, 3, and 5 need the user.
@@ -909,22 +910,23 @@ Remove the Cloudflare and GitHub resources that the Worker needed. Prepare the
 PR text and hand off the formal review. PR #170 is closed. The user chooses
 whether to reopen PR #170 or open a new pull request. The supervisor owns
 hosted checks and formal review in another worktree. The account steps need
-the Cloudflare account owner and a repository admin. They run from the admin's
-Mac with per-command approval after the new hosted CI run passes.
+the Cloudflare account owner and a repository admin. At the user's request,
+they ran from the admin's Mac with per-command approval on 2026-10-09, before
+hosted CI.
 
-- [ ] Admin: delete the objects in the `mokly-turbo-cache` R2 bucket, the
+- [x] Admin: delete the objects in the `mokly-turbo-cache` R2 bucket, the
       bucket and its lifecycle rules, and the Worker `mokly-turbo-cache` with
-      its secrets.
+      its secrets. Done on 2026-10-09; the 9 objects were all under `mokly-pr-170/`.
 - [ ] Admin: delete the Cloudflare API token
       `github-actions-mokly-turbo-cache-deploy`.
-- [ ] Admin: delete `TURBO_CACHE_TRUSTED_WRITE_TOKEN` from the environment
+- [x] Admin: delete `TURBO_CACHE_TRUSTED_WRITE_TOKEN` from the environment
       `turbo-cache-trusted`. Delete the repository secrets
       `TURBO_CACHE_PR_WRITE_TOKEN` and `TURBO_CACHE_SIGNATURE_KEY`. Delete
       `CLOUDFLARE_WORKERS_API_TOKEN` from `turbo-cache-deploy`, then delete both
       cache environments. Keep `CLOUDFLARE_ACCOUNT_ID` and
-      `CLOUDFLARE_PAGES_API_TOKEN` for preview deployment.
-- [ ] Admin: delete the Keychain item `mokly-turbo-cache-developer`, which holds
-      the developer read token and signature key.
+      `CLOUDFLARE_PAGES_API_TOKEN` for preview deployment. Done on 2026-10-09.
+- [x] Admin: delete the Keychain item `mokly-turbo-cache-developer`, which holds
+      the developer read token and signature key. Done on 2026-10-09.
 - [x] Write the Mac decommission runbook in
       `.context/turborepo-cloudflare-remote-cache/m7-decommission.md`. Check
       command syntax against installed Wrangler 4.113.0 help and source.
@@ -936,7 +938,7 @@ Mac with per-command approval after the new hosted CI run passes.
 - [ ] Supervisor: apply the prepared PR title and body after the user chooses
       whether to reopen PR #170 or open a new pull request. Then complete the
       hosted cache and preview checks.
-- [ ] Review the diff against `origin/main`, then `git add -A`, commit with
+- [x] Review the diff against `origin/main`, then `git add -A`, commit with
       Conventional Commits, and push.
 - [x] Review the complete local diff against `origin/main` with
       `docs/implementation-review-prompt.md` after the push. Report findings,
@@ -952,8 +954,8 @@ Mac with per-command approval after the new hosted CI run passes.
 
 Review and scope evidence: `.context/turborepo-cloudflare-remote-cache/m7-review.md` and `.context/turborepo-cloudflare-remote-cache/m7-blacksmith-scopes.md`.
 
-The final commit TODO stays open for the supervisor after admin work. The
-repository handoff has its own pushed commit. The supervisor owns formal review.
+The decommission record has its own pushed commit. The supervisor owns hosted checks.
+Decommission log: `.context/turborepo-cloudflare-remote-cache/m7-decommission-log.md`.
 Runbook syntax checks: `.context/turborepo-cloudflare-remote-cache/m7-runbook-validation.md`.
 Delivery and pending work: `.context/turborepo-cloudflare-remote-cache/m5-m7-delivery.md`.
 

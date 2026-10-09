@@ -52,7 +52,7 @@ follows [baseline compatibility](./mokly-baseline-compatibility.md).
   - [Testbox execution](./remote-verification-testbox.md) — workflow, commands, sync probe, suite wrapper, source-tree fingerprint, report download and aggregation.
 - [CI workflow graph](./ci-workflow.md)
 - [CI task cache](./ci-task-cache.md) — local task graph and GitHub Actions cache;
-  suites and previews restore only; hosted checks and admin removal remain open.
+  suites and previews restore only; hosted checks remain open.
 - [CI suite evidence](./ci-suite-evidence.md) — fixture cleanup, test concurrency, unit shard balance and scenario grouping, browser shard balance and acceptance measurement; the [example compilation snapshot](./ci-example-snapshot.md) defines the compiled example that unit test files share.
 - [CI test timing](./ci-test-timing.md) — deterministic assertions, duration reporting and lint guard.
 - [Repository verification ratchets](./verification-ratchets.md)
