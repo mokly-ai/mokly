@@ -95,6 +95,10 @@ The other messages belong to [authoring](./mokly-authoring.md#removed-input-warn
 Future producers add a row here and define their own messages in their own
 contract.
 
+Returned renderer `styles` produces one `ignored-renderer-styles` warning per
+rendered route. Mokly ignores the field without validating its contents. HTML
+and non-CSS resource records remain available.
+
 ## Producers And Transport
 
 The child-control adapter returns its adapted HTML together with the

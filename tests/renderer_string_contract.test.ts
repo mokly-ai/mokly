@@ -10,19 +10,21 @@ import { MoklyError } from "../dist/errors.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
-const objectRenderer =
-  'export default () => ({ html: "<html><body>Invalid</body></html>" });';
+const invalidRenderer = "export default () => ({ html: 7 });";
 
 for (const [name, source, entry] of [
   ["screen-only", undefined, "details"],
   ["component-aware", componentEntrySource(), "action/default"],
 ] as const)
-  test(`${name} renderers reject non-string results with view context`, async (t) => {
+  test(`${name} renderers reject results without HTML text with view context`, async (t) => {
     const fixture = await createFixture(source, {
       extraConfig: 'renderer: "renderer.tsx",',
     });
     t.after(() => removeFixture(fixture));
-    await fs.writeFile(path.join(fixture.root, "renderer.tsx"), objectRenderer);
+    await fs.writeFile(
+      path.join(fixture.root, "renderer.tsx"),
+      invalidRenderer,
+    );
     await assert.rejects(
       compileCatalogue(await loadConfig(fixture.root)),
       (error: unknown) => {
@@ -31,7 +33,7 @@ for (const [name, source, entry] of [
         assert.match(
           error.message,
           new RegExp(
-            `renderer must return a string for ${entry} \\(mobile, light\\)`,
+            `renderer must return a string or an object with html for ${entry} \\(mobile, light\\)`,
           ),
         );
         return true;

@@ -134,7 +134,9 @@ CSS Modules mutation checklist:
   its identity with `path`; the diagnostic names that module under the
   [imported-styles error contract](../../docs/protocol/mokly-imported-styles-errors.md).
 
-`renderer_resources.ts` validates each asserted public file before it ignores
+`renderer_resources.ts` accepts string and structured renderer results. It
+warns once per route for returned `styles` and discards that field. It
+validates each asserted public file before it ignores
 CSS owner records. Generated CSS uses its pending canonical route as its stable
 warning identity. Authored CSS uses its validated public-file identity.
 The shared public-file policy rejects symlink components before this filter.

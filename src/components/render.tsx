@@ -84,7 +84,8 @@ export const renderWithComponents: ComponentGraphRenderer = (
       )}
     </ComponentContext>
   );
-  const rendered = rendererDocument(renderer({ ...input, node }), input);
+  const result = renderer({ ...input, node });
+  const rendered = rendererDocument(result, input);
   if (!/<html[\s>]/i.test(rendered))
     invalidData(
       collector.label,
@@ -151,7 +152,12 @@ export const renderWithComponents: ComponentGraphRenderer = (
     ),
     ranges: serialized.ranges,
     styles: [],
-    resources: [],
+    resources:
+      typeof result === "string"
+        ? []
+        : [...(result.resources ?? [])].sort((left, right) =>
+            left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
+          ),
   };
   return {
     html,

@@ -156,7 +156,12 @@ export function renderFragments(
               stylesheetLinks?.set(route, output.stylesheetLinks);
               componentViews.set(route, output.view);
             } else {
-              rendered = rendererDocument(safeRenderer(input), input);
+              const result = safeRenderer(input);
+              rendered = rendererDocument(result, input);
+              if (typeof result !== "string" && result.resources?.length)
+                throw new Error(
+                  "component ownership requires registered components",
+                );
             }
           } catch (error) {
             if (error instanceof MoklyError) throw error;

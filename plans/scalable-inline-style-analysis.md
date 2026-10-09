@@ -2158,7 +2158,7 @@ before the push, stop and report; D2 then becomes B. D7 and D8 belong to the UI
 agent. D11 retains main's documentation guard and records its exact failures
 for approval. D12 makes no change to PR #182 or any other PR.
 
-- [ ] Audit and merge `origin/main` once with two parents. Resolve each path,
+- [x] Audit and merge `origin/main` once with two parents. Resolve each path,
       inspect every auto-merged path changed on both sides, review all remerge
       paths, audit deletions, and freeze the merge SHA before follow-up commits.
 - [ ] Integrate D1, D3, D4 and D10: graceful renderer results, checked CSS
