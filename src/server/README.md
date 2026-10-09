@@ -19,6 +19,10 @@ classification and build output are unchanged.
 
 ## Scope
 
+`screen_view_changes.ts` carries inline evidence with file reasons and
+exclusions into both Serve and export catalogue views. Inline-only views remain
+present in this screen-evidence projection.
+
 Watch uses explicit renderer resource seeds when supplied. Otherwise it recovers
 non-CSS seeds from accepted manifest usage. CSS declarations keep their checked
 private seeds even when the renderer supplies no document link.
