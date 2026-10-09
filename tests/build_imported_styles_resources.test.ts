@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -18,7 +17,6 @@ import {
   removeFixture,
   validEntrySource,
 } from "./helpers/fixture.js";
-import { textOutput } from "./helpers/generated_text.js";
 import { styleFixture } from "./helpers/imported_styles_fixture.js";
 
 test("multiple on-demand views parse CSS only once per generation", async (t) => {
@@ -158,7 +156,7 @@ test("on-demand Serve sends accepted stylesheet and asset bytes over stale disk"
   assert.equal((await head.arrayBuffer()).byteLength, 0);
 });
 
-test("component HTML resources accept pending stylesheets before they exist on disk", async (t) => {
+test("renderer CSS owners warn for pending stylesheets before they exist on disk", async (t) => {
   const fixture = await createFixture(componentEntrySource(), {
     extraConfig: 'renderer: "renderer.tsx",',
   });
@@ -171,13 +169,15 @@ test("component HTML resources accept pending stylesheets before they exist on d
   await fs.appendFile(fixture.entryPath, '\nimport "./card.css";');
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
-    `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => '<!doctype html><html><head>' + input.stylesheets.map(href => '<link rel="stylesheet" href="' + href + '">').join('') + '</head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
+    `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => ({ html: '<!doctype html><html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>', resources: [{ path: ${JSON.stringify(styleRoute)}, componentIds: ["action"] }] });`,
   );
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
   assert.ok(compiled.outputs.has(styleRoute.slice("mokly-generated/".length)));
-  const html = textOutput(compiled.outputs, "home/index.mobile.html")!;
-  assert.match(html, /styles\/entries\/fixture\.mockup\.tsx\.css/);
-  assert.ok(!fsSync.existsSync(path.join(fixture.mockupsDir, styleRoute)));
+  assert.deepEqual(
+    compiled.manifest.entries.find((entry) => entry.kind === "screen")
+      ?.componentViews?.[0]?.resources,
+    [],
+  );
 });
 
 test("component resources reject stale reserved disk files absent from pending output", async (t) => {
@@ -191,18 +191,11 @@ test("component resources reject stale reserved disk files absent from pending o
   await fs.writeFile(stale, ".stale{color:red}");
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
-    `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => '<!doctype html><html><head><link rel="stylesheet" href="' + '../'.repeat(input.entry.path.split('/').length) + '${missing.slice("mokly-generated/".length)}"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
+    `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => ({ html: '<!doctype html><html><head></head><body>' + renderToStaticMarkup(input.node) + '</body></html>', resources: [{ path: ${JSON.stringify(missing)}, componentIds: ["action"] }] });`,
   );
   await assert.rejects(
     compileCatalogue(await loadConfig(fixture.root)),
-    (error: Error) => {
-      assert.match(
-        error.message,
-        /missing target (?:\.\.\/)+styles\/stale\.css/,
-      );
-      assert.doesNotMatch(error.message, /escapes mockupsDir/);
-      return true;
-    },
+    /renderer resource is not a public file: mokly-generated\/styles\/stale\.css/,
   );
 });
 

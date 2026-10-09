@@ -37,7 +37,7 @@ screen with its own slug, title, and React nodes:
 interface ScreenVariantInput {
   address?: string;
   colorSchemes?: readonly ColorScheme[];
-  dependencies?: readonly string[];
+  dependencies?: never;
   description: string;
   desktop: ReactNode;
   mobile: ReactNode;
@@ -91,13 +91,13 @@ A variant's file names derive from its own path under the
 prefix and plays no other part.
 
 A screen variant inherits the parent's `address`, `colorSchemes`,
-`dependencies`, `relatedDocs`, and `tags` unless it declares its own value,
+`relatedDocs`, and `tags` unless it declares its own value,
 which replaces rather than merges the inherited list. `useCasePaths` defaults
 to an empty list and is never inherited because membership is reciprocal with
 the flow's steps; a flow that steps through the variant must be listed by that
 variant. `title`, `description`, `mobile`, and `desktop` are always the
 variant's own. A component variant inherits the parent's `colorSchemes`,
-`dependencies`, `relatedDocs`, and `tags`, and owns its `title` and `props`. An
+`relatedDocs` and `tags`, and owns its `title` and `props`. An
 authored nonempty `description` replaces the parent's; omission copies the
 parent description into the flattened entry. `slug` is one segment under the
 [segment grammar](./mokly-paths.md#segment-grammar); `overdue` under
@@ -132,10 +132,10 @@ For a component parent, preparation runs metadata validation first and runs
 `validateComponentDefinition` only when the metadata is valid. A parent that
 fails either check keeps those parent violations and does not have any child's
 props, controls, or slots validated against it. The parent remains present for
-the inherited `dependencies`, `relatedDocs`, `colorSchemes`, and `tags` checks
-above. Once both parent validations succeed, preparation validates each
-component variant's props, controls, and slots against that parent exactly
-once.
+the relationship rules and for the inherited `relatedDocs`,
+`colorSchemes`, and `tags` checks above. Once both parent validations succeed,
+preparation validates each component variant's props, controls, and slots
+against that parent exactly once.
 
 Every other rule of a valid parent's kind applies unchanged: path and tag
 grammar, color-scheme subsets, reciprocal use-case membership, dependency
@@ -151,7 +151,7 @@ resource validation, collision and generated-inventory
 checks, and transactional writes. A component parent has no views; its page
 shows its first variant entry.
 
-The manifest is schema v9. `variantOf` is present exactly on variant entries
+The manifest is schema v10. `variantOf` is present exactly on variant entries
 of either kind and holds the parent's path under the
 [manifest contract](./mokly-component-manifest.md). Validation requires the
 named parent to be a current entry of the same kind without `variantOf` and
@@ -183,7 +183,7 @@ rows, parent-kind icons, sibling navigation, comparison-mode retention,
 aggregate Changes behavior, removed-variant order and breadcrumbs, Dark
 availability, and public Viewer parity. The public model carries `variantOf`
 exactly on variants and places current variants in their parent's tree node;
-catalogue v5 readers validate those relationships.
+catalogue v6 readers validate those relationships.
 
 ## Verification
 

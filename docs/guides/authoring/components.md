@@ -17,7 +17,7 @@ import { defineComponent } from "@mokly/mokly";
 export const action = defineComponent({
   title: "Action",
   description: "A shared action.",
-  dependencies: [],
+  stylesheets: ["components/action.css"],
   relatedDocs: [],
   propSchema: {
     kind: "object",
@@ -53,8 +53,7 @@ import { Button } from "./button.js";
 export const button = defineComponent({
   title: "Button",
   description: "The product button.",
-  dependencies: ["packages/ui/src/button/button.tsx"],
-  ownedDependencies: ["packages/ui/src/button/button.tsx"],
+  stylesheets: ["components/button.css"],
   relatedDocs: [],
   propSchema: {
     kind: "object",
@@ -72,10 +71,11 @@ export { button } from "./button.mokly.js";
 
 The entry module is named `index.mockup.tsx`, so the component takes its
 directory's path: `components/button`, with the variant at
-`components/button/default`. Screens anywhere in the repository import
-`button` from the registration and render `button.Component`; an edit to
-`button.tsx` is then attributed to the component, with those screens listed as
-affected. A component's path derives like every other entry's, so the
+`components/button/default`. Screens anywhere in the repository import `button` from the registration and
+render `button.Component`. A source edit that changes rendered output is
+attributed through the actual render; a source-only edit that leaves output
+unchanged is not evidence. See the Changes guide for how stylesheet changes
+affect components and screens. A component's path derives like every other entry's, so the
 `components` prefix is a convention set by the root, not a rule, and a
 component and a screen can never share one path.
 
@@ -88,7 +88,7 @@ is grouped beneath the component in navigation, has its own page at
 target of a link. Every variant is built for both viewports and every
 configured scheme. A link to the component's path opens its first variant; a
 link to a variant's path opens that variant. A variant inherits the parent's
-color schemes, dependencies, related docs and tags, and copies the parent's
+color schemes, related docs and tags, and copies the parent's
 description unless it declares its own.
 
 ## Controls
@@ -120,18 +120,26 @@ export const propSchema = {
 
 ## Ownership
 
-`ownedDependencies` names material outside the component's own body that
-belongs exclusively to it, including stylesheets, fonts, images or source
-modules the rendered resource graph cannot identify. The renderer returns only
-the complete HTML document. When a styling library places component rules in
-eligible `<style>` elements outside the component markup, Mokly infers their
-owners during comparison by matching each changed rule against the rendered
-component ranges. A component-owned edit is attributed to that component and
-its consumers are listed as affected; a rule that can reach screen markup stays
-with the screen. Files referenced by an inferred-owned inline rule follow that
-rule's owner through the same relative and transitive resource discovery used
-for the rendered page. A file also reached by screen-owned material keeps its
-independent screen evidence.
+`stylesheets` names existing public CSS files relative to `mockupsDir`, in
+authored order. Mokly links them only where the component actually renders,
+including an empty render, and records the links it inserts. HTTP(S),
+missing or non-public CSS paths fail validation. Public paths must contain no
+symbolic links. A repeated valid file is linked once with a warning. Two components may share a file. Changed rules
+are checked against component output on the component's own saved pages.
+A component keeps only matches outside a different nested component that has
+its own-page matches for the same rule. Self-nesting does not remove matches.
+Imports follow the same rule. Screen-only styles inside a component invocation
+change the screen, not every use of that component. A renderer may return non-CSS resource ownership beside its HTML. A returned
+`styles` field is ignored with a warning. A resource owner record for a stylesheet
+is checked, ignored with a warning and kept as a closure seed. Put
+`componentStylesheets` in a configured rule's shared list to choose where
+declared CSS is linked.
+
+For eligible `<style>` elements outside component markup, Mokly infers ownership
+from paired rendered ranges. A rule that reaches page markup stays with the
+page. A component-owned rule affects that component and its consumers.
+Only non-CSS references follow those inferred owners; every CSS file uses the
+own-page rule membership above. See [inline ownership](../../protocol/mokly-inline-styles.md).
 
 ## Resolve a saved instance
 

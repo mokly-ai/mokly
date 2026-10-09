@@ -21,14 +21,13 @@ const COMMON_KEYS = [
   "rationale",
   "movedFrom",
   "relatedDocs",
-  "declaredDependencies",
   "sourcePath",
   "kind",
   "colorSchemes",
   "tags",
 ] as const;
 
-/** Validate one identity-only v7 component parent or flattened variant. */
+/** Validate one identity-only v10 component parent or flattened variant. */
 export function validateManifestComponent(
   value: Record<string, unknown>,
 ): void {
@@ -37,17 +36,12 @@ export function validateManifestComponent(
     return;
   }
   const at = `${String(value.path)} $component`;
-  exactKeys(
-    value,
-    [...COMMON_KEYS, "propSchema", "slots", "controls", "ownedDependencies"],
-    at,
-  );
+  exactKeys(value, [...COMMON_KEYS, "propSchema", "slots", "controls"], at);
   validatePropSchema(value.propSchema, at);
   if (value.propSchema.kind !== "object")
     invalidData(at, "component propSchema must be an object");
   const schema = value.propSchema;
   sortedStrings(value.slots, `${at}.slots`);
-  sortedStrings(value.ownedDependencies, `${at}.ownedDependencies`);
   for (const key of [...Object.keys(schema.properties), ...value.slots]) {
     if (
       [
@@ -64,9 +58,6 @@ export function validateManifestComponent(
     if (value.slots.includes(key) && Object.hasOwn(schema.properties, key))
       invalidData(at, "data and slots overlap");
   }
-  for (const dependency of value.ownedDependencies)
-    if (!(value.declaredDependencies as string[]).includes(dependency))
-      invalidData(at, "owned dependencies must be declared dependencies");
   validateControls(schema, value.controls, at);
   validateTags(value.tags, at);
   validateColorSchemes(value.colorSchemes, at);
@@ -86,7 +77,7 @@ function validateVariantEntry(value: Record<string, unknown>): void {
   decodeProps(value.props);
 }
 
-/** Validate a v7 variant's data against its already-validated parent. */
+/** Validate a v10 variant's data against its already-validated parent. */
 export function validateVariantAgainstParent(
   variant: Record<string, unknown>,
   parent: ManifestComponent,

@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import { isIncompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { ConfiguredGitCommandRunner } from "../config/git.js";
@@ -19,6 +19,7 @@ import {
 import type { ChangeEvidence } from "../review/change_evidence.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { classifyComponents } from "../review/component_classification.js";
+import { CssResourceAnalysis } from "../review/css/resource_analysis.js";
 import { EvidenceAssetReader } from "../review/evidence_assets.js";
 import type { GitCommandRunner } from "../review/git.js";
 import { CommittedRepository } from "../review/git.js";
@@ -44,7 +45,10 @@ import type {
   ComponentChangeSnapshot,
   ComponentChangeSource,
 } from "./component_change_types.js";
-import { screenViewChanges } from "./screen_view_changes.js";
+import {
+  screenViewChanges,
+  screenResultEvidence,
+} from "./screen_view_changes.js";
 
 /** Classify one generated catalogue against its repository branch point. */
 export class RepositoryCatalogueChangeClassifier implements CatalogueChangeClassifier {
@@ -52,7 +56,7 @@ export class RepositoryCatalogueChangeClassifier implements CatalogueChangeClass
 
   async read(
     config: ResolvedConfig,
-    manifest: ManifestV9,
+    manifest: ManifestV10,
     base: string,
     signal?: AbortSignal,
     accepted?: CatalogueClassificationInputs,
@@ -88,7 +92,7 @@ export class RepositoryComponentChanges implements ComponentChangeSource {
   private git: ReadOnlyReviewRepository;
   constructor(
     private readonly config: ResolvedConfig,
-    private readonly manifest: ManifestV9,
+    private readonly manifest: ManifestV10,
     private readonly base: string,
     private readonly signal?: AbortSignal,
     commands?: GitCommandRunner,
@@ -131,7 +135,7 @@ export class RepositoryComponentChanges implements ComponentChangeSource {
 /** Classify pages and ownership-aware component views against one pinned baseline. */
 export async function readCatalogueChanges(
   config: ResolvedConfig,
-  manifest: ManifestV9,
+  manifest: ManifestV10,
   base: string,
   git: ReadOnlyReviewRepository,
   commit: string,
@@ -175,6 +179,7 @@ export async function readCatalogueChanges(
         accepted?.deliveredStyleSources,
         accepted?.routes,
       ));
+    const cssAnalysis = new CssResourceAnalysis();
     const prepared = await prepareMoveClassification({
       before: baseline,
       after: manifest,
@@ -184,6 +189,7 @@ export async function readCatalogueChanges(
       changedPaths,
       beforeReader,
       afterReader: reader,
+      cssAnalysis,
       sourceReader: git.sourceReader ?? git.reader,
       markdown: await readMoveMarkdown(
         baseline,
@@ -194,6 +200,7 @@ export async function readCatalogueChanges(
         accepted?.documentMarkdown,
       ),
     });
+    const result = await classifyComponents(prepared);
     const content = await classifyChangedContent(
       manifest,
       baseline,
@@ -208,8 +215,9 @@ export async function readCatalogueChanges(
         beforeReader: prepared.beforeReader,
         ...(prepared.resources ? { resources: prepared.resources } : {}),
       },
+      cssAnalysis,
+      result,
     );
-    const result = await classifyComponents(prepared);
     const pageIds = new Set(
       manifest.entries.flatMap((entry) =>
         entry.kind === "page" || entry.kind === "document" ? [entry.path] : [],
@@ -238,8 +246,9 @@ export async function readCatalogueChanges(
           : {}),
       },
       result,
-      ...(!components
-        ? {
+      ...(components
+        ? screenResultEvidence(result)
+        : {
             screenViews: screenViewChanges(
               manifest,
               baseline,
@@ -247,19 +256,15 @@ export async function readCatalogueChanges(
               content.changedPaths,
               prepared.pairing.moves,
             ),
-          }
-        : {}),
-      ...(!components && content.screens.length
-        ? { screenEvidence: content.screens }
-        : {}),
+            screenEvidence: content.screens,
+          }),
+      ...(content.pages.length ? { pageEvidence: content.pages } : {}),
       changedEntries: [
         ...new Set([
           ...ids,
-          ...(components
-            ? result.changes
-                .filter((entry) => entry.reasons.length > 0)
-                .map((entry) => (entry.after ?? entry.before)!.path)
-            : []),
+          ...result.changes
+            .filter((entry) => entry.reasons.length > 0)
+            .map((entry) => (entry.after ?? entry.before)!.path),
         ]),
       ].sort(),
     };

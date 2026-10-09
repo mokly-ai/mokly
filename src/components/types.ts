@@ -22,6 +22,8 @@ export type ComponentProps<
 > = InferProp<S> & { readonly [K in Slots[number]]?: ReactNode };
 
 export interface ComponentVariant<P> {
+  dependencies?: never;
+  ownedDependencies?: never;
   slug: string;
   movedFrom?: string;
   title: string;
@@ -33,6 +35,7 @@ export interface ComponentInput<
   S extends ObjectPropSchema,
   Slots extends readonly string[],
 > extends EntryInput {
+  ownedDependencies?: never;
   propSchema: S;
   slots?: Slots;
   controls?: {
@@ -49,7 +52,7 @@ export interface ComponentInput<
   >[];
   colorSchemes?: readonly ColorScheme[];
   tags?: readonly string[];
-  ownedDependencies?: readonly string[];
+  stylesheets?: readonly string[];
 }
 
 /** Runtime definition retains the adapter and slots only inside the consumer graph. */
@@ -64,7 +67,7 @@ export interface ComponentDefinition extends EntryInput, DefinitionBrand {
   ) => ReactNode;
   colorSchemes?: readonly ColorScheme[];
   tags?: readonly string[];
-  ownedDependencies: readonly string[];
+  stylesheets: readonly string[];
 }
 
 /** One saved component state flattened into the catalogue beside its parent. */

@@ -1,7 +1,8 @@
-import { minimatch } from "minimatch";
-
-import type { ManifestComponent } from "@mokly/viewer";
-import { canonicalJson, isManifestComponentVariant } from "@mokly/viewer/data";
+import {
+  canonicalJson,
+  isManifestComponentVariant,
+  mergeCssAnalysis,
+} from "@mokly/viewer/data";
 import type {
   Manifest,
   ManifestEntry,
@@ -9,8 +10,6 @@ import type {
   EntryChangeReason,
   ReviewEntryAddress,
 } from "@mokly/viewer/data";
-
-import { dependencyContainsChangedPath } from "../registry/dependency_paths.js";
 
 import type { EntryMove } from "./moves/types.js";
 
@@ -92,20 +91,12 @@ export function metadata(
   entry: ReviewEntry,
   mapPath: (path: string) => string = (path) => path,
   mapDocument: (source: string) => string = (source) => source,
-  mapSource: (source: string) => string = (source) => source,
 ): string {
   const common = { ...entry } as Record<string, unknown>;
-  for (const field of [
-    "componentViews",
-    "declaredDependencies",
-    "sourcePath",
-    "movedFrom",
-  ])
+  for (const field of ["componentViews", "sourcePath", "movedFrom"])
     Reflect.deleteProperty(common, field);
   common.path = mapPath(entry.path).toLowerCase();
   common.relatedDocs = entry.relatedDocs.map(mapDocument);
-  if (entry.kind === "component" && !isManifestComponentVariant(entry))
-    common.ownedDependencies = entry.ownedDependencies.map(mapSource).sort();
   if (typeof common.variantOf === "string")
     common.variantOf = mapPath(common.variantOf).toLowerCase();
   if (entry.kind === "screen")
@@ -143,101 +134,6 @@ export function variantParentTitleChanged(
   );
 }
 
-/** Track owners, exact reasons, and unowned path evidence across both manifests. */
-export class ComponentDependencyPolicy {
-  private readonly components: readonly ManifestComponent[];
-  private readonly ownersByPath = new Map<string, ReadonlySet<string>>();
-  private readonly sharedByPath = new Map<string, boolean>();
-  constructor(
-    before: Manifest,
-    after: Manifest,
-    private readonly shared: readonly string[],
-  ) {
-    this.components = [...before.entries, ...after.entries].filter(
-      (entry): entry is ManifestComponent =>
-        entry.kind === "component" && !isManifestComponentVariant(entry),
-    );
-  }
-  owners(changed: string): ReadonlySet<string> {
-    let owners = this.ownersByPath.get(changed);
-    if (!owners) {
-      owners = new Set(
-        this.components.flatMap((entry) =>
-          entry.ownedDependencies.some((root) =>
-            dependencyContainsChangedPath(root, changed),
-          )
-            ? [entry.path]
-            : [],
-        ),
-      );
-      this.ownersByPath.set(changed, owners);
-    }
-    return owners;
-  }
-  independent(entry: ReviewEntry, changed: string): boolean {
-    const owners = this.owners(changed);
-    if (
-      owners.has(entry.path) &&
-      entry.kind === "component" &&
-      !isManifestComponentVariant(entry)
-    )
-      return true;
-    const declared = entry.declaredDependencies ?? [];
-    return (
-      declared.includes(changed) && (!owners.size || entry.kind === "screen")
-    );
-  }
-  sharedPaths(changed: readonly string[]): string[] {
-    return changed.filter((item) => this.sharedPath(item));
-  }
-  unownedEvidence(
-    before: ReviewEntry | undefined,
-    after: ReviewEntry | undefined,
-    changed: readonly string[],
-  ): string[] {
-    return changed.filter(
-      (item) =>
-        !this.owners(item).size &&
-        (this.sharedPath(item) ||
-          [before, after].some((entry) =>
-            entry?.declaredDependencies?.some((root) =>
-              dependencyContainsChangedPath(root, item),
-            ),
-          )),
-    );
-  }
-  reasons(
-    before: ReviewEntry | undefined,
-    after: ReviewEntry | undefined,
-    changed: readonly string[],
-  ): EntryChangeReason[] {
-    return changed
-      .filter((item) =>
-        [before, after].some((entry) => entry && this.independent(entry, item)),
-      )
-      .map((path) => ({ kind: "dependency", path }));
-  }
-  private sharedPath(changed: string): boolean {
-    let matches = this.sharedByPath.get(changed);
-    if (matches === undefined) {
-      matches = this.shared.some((glob) =>
-        minimatch(changed, glob, { dot: true }),
-      );
-      this.sharedByPath.set(changed, matches);
-    }
-    return matches;
-  }
-  suppressResource(
-    repoPath: string,
-    paired: ReadonlySet<string>,
-    root?: string,
-  ): boolean {
-    const owners = this.owners(repoPath);
-    return Boolean(
-      owners.size && [...owners].every((id) => id !== root && paired.has(id)),
-    );
-  }
-}
 export function uniqueReasons(
   reasons: readonly EntryChangeReason[],
 ): EntryChangeReason[] {
@@ -252,16 +148,7 @@ export function uniqueReasons(
       if (analyses.length) {
         merged.set(key, {
           ...reason,
-          analysis: {
-            status: analyses.some(
-              (analysis) => analysis.status === "unresolved",
-            )
-              ? "unresolved"
-              : "matched",
-            selectors: [
-              ...new Set(analyses.flatMap((analysis) => analysis.selectors)),
-            ].sort(),
-          },
+          analysis: mergeCssAnalysis(analyses),
         });
         continue;
       }

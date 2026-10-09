@@ -49,7 +49,7 @@ source-root equality or Review-root overlap rules.
 
 Build, requested-document compilation, resource Watch, Serve and both
 publication paths use one closure builder. Its inputs are the accepted
-generated documents, pending compiled CSS/assets, configured stylesheet seeds,
+generated documents, pending compiled CSS/assets, renderer-declared resource seeds,
 the public-file policy and an explicit full/on-demand traversal mode.
 Return the sorted unique authored closure and traversal evidence for watching:
 per-file references, logical locations and invalid recovery targets.
@@ -62,13 +62,28 @@ validation, and walk authored HTML and CSS transitively. Read each file and
 visit each edge set once per pass; handle cycles without recursive duplication.
 Binary resources retain their exact bytes and have no parsed child links.
 
-Renderers return only complete HTML strings and declare no `resources`.
-Renderer output reaches the closure through its
-document links. Each target passes the shared policy and existence checks before
-it enters the closure. A link cannot bypass source protection, authorize a
-symlink or make an unlisted file public. A symlinked or protected target fails
-with the link diagnostic and names the referring generated route. Link/seed
-traversal retains `build-invalid`. Link diagnostics are:
+A renderer resource declaration is a closure starting point even without an
+HTML link. Retain each valid CSS path and its transitive references after
+discarding only its ownership claim. Authored paths enter `assetClosure`;
+generated paths remain in the accepted generated inventory. Watch and Serve
+use the same checked result. Closure membership alone supplies no CSS Changes
+reason, component proof or inserted-link provenance.
+
+Every renderer resource seed passes the same policy and existence checks as a
+document link before it enters the closure. A declaration cannot bypass source
+protection, authorize a symlink or make an unlisted file public. A failure names
+the declaring/referring generated route. Link/seed traversal retains
+`build-invalid`. Authored renderer resources and stored component resources
+retain the existing component-resource validation path and policy cause:
+
+```text
+component resource is not a public file: <path> (<reason>)
+```
+
+`<path>` is the declared public path. `<reason>` is the shared policy denial,
+or `missing, non-regular, or outside mockupsDir` for an unavailable file.
+Validate before ignoring CSS ownership or recording a seed. Both boundaries
+use the same public-file policy. Link diagnostics are:
 
 ```text
 document links and resources are invalid:
@@ -127,7 +142,7 @@ binary bytes, manifest/cache privacy, ownership, collision checks and rollback.
 
 Write failing regressions before implementation. Use one fixture with a linked
 authored page, PDF, `data-nav-href`, preload, iframe, `srcset`, CSS dependencies
-and resources linked only by the renderer. Assert exact equality between
+and renderer-declared resources plus resources linked only by the renderer. Assert exact equality between
 compiler and Watch closures. Fetch the linked page and PDF through watched
 Serve before and after resource changes. In-process, adopt a new generation
 before its checked result:

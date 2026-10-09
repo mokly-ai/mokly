@@ -10,7 +10,7 @@ import { buildNavSections } from "../packages/viewer/dist/shell/nav_tree.js";
 import { pageSource, pathFixture } from "./helpers/path_fixture.js";
 
 const screen = `import {defineScreen} from '@mokly/mokly'; export default defineScreen({
- title:'Invoice', description:'Invoice', dependencies:[], relatedDocs:[], mobile:'Invoice', desktop:'Invoice',
+ title:'Invoice', description:'Invoice', relatedDocs:[], mobile:'Invoice', desktop:'Invoice',
  variants:[{slug:'overdue',title:'Overdue',description:'Overdue',mobile:'Overdue',desktop:'Overdue'}]
 });`;
 

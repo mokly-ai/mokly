@@ -2,6 +2,10 @@
 
 ## Delivery Status
 
+Removal of baseline compatibility is implemented in
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
+This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 Pages use file-derived paths and complete-document rendering. The
 [removed content previews plan](../../plans/removed-content-previews.md)
 implements page-only historical capture and delivery.
@@ -37,7 +41,7 @@ interface PageInput extends EntryInput {
 
 `PageDefinition` adds `kind: "page"` and the same private definition brand and
 module attribution as other definitions. Common metadata (`slug`, `path`,
-`movedFrom`, `title`, `description`, `dependencies`, `relatedDocs`, optional
+`movedFrom`, `title`, `description`, `relatedDocs`, optional
 `rationale`) follows `EntryInput`. The slug defaults to the module's file name
 under the [entry module contract](./mokly-entry-modules.md); the document is
 written at `<path>/index.html`. Page tags use the existing optional, unique
@@ -53,7 +57,6 @@ export default definePage({
   description: "The printable account statement.",
   render: source,
   relatedDocs: [],
-  dependencies: ["specs/documents/statement.source.tsx"],
 });
 ```
 
@@ -89,8 +92,7 @@ Pages are one light document regardless of the catalogue color-scheme setting.
 
 Registry imports, page callbacks, imported document modules, and screen rendering
 share the existing consumer bundle and React runtime.
-Imported sources participate in watched rebuilds. Declared dependencies retain
-their metadata and evidence role; an input edit alone does not add a page whose
+Imported sources participate in watched rebuilds; an input edit alone does not add a page whose
 document, rendered resources, and reviewable metadata remain unchanged.
 
 The complete output passes the shared child-control adapter, logical-link and
@@ -103,7 +105,7 @@ ownership; the validated manifest and pending output set bind each document.
 
 ## Manifest And Runtime Model
 
-New builds write schema v9 at `mokly-generated/mokly-manifest.json`:
+New builds write schema v10 at `mokly-generated/mokly-manifest.json`:
 
 ```ts
 interface ManifestPage extends ManifestEntryBase {
@@ -114,10 +116,10 @@ interface ManifestPage extends ManifestEntryBase {
 
 `ManifestEntry` includes pages, documents, screens, use cases and
 components, and its base `kind` union includes `page`. All existing common
-fields remain, including `path` and required `declaredDependencies`. No entry
+fields remain, including `path`. No entry
 carries a file name: readers derive `<path>/index.html` from the path. Pages
 have no views, viewport arrays, callbacks, or screen-only fields in the
-manifest. Preserve deterministic entry sorting, dependency normalization, and
+manifest. Preserve deterministic entry sorting, resource normalization, and
 serialization conventions.
 
 `sourceFiles` follows the [source-protection contract](./mokly-source-protection.md):
@@ -125,7 +127,7 @@ the complete config/consumer authoring graph, validated against current inputs.
 Reserved source basenames stay protected even when unimported. Serving, resource
 validation, Review, and publication share that policy.
 
-Current and baseline readers accept the same v9 shape under the
+Current and baseline readers accept the same v10 shape under the
 [compatibility contract](./mokly-baseline-compatibility.md). Catalogue lookup,
 hierarchy, navigation, breadcrumbs, details, search, route targets, and static
 publication consume one validated entry model. Page leaves use
@@ -138,8 +140,10 @@ named by the author through its slug.
 A page appears once at its path, using the existing page icon. The heading
 uses its title; breadcrumbs use the resolved titles of its folders; the path
 chip, the shared [search rule](./mokly-folders.md#titles), tag picker, details, and home counts include
-pages. Details show authored description, rationale, dependencies, and related
+pages. Details show authored description, rationale, and related
 docs.
+Once Changes is ready, the heading also shows the page status and Details
+add comparison details under the [evidence contract](./mokly-css-evidence-presentation.md#status-lines).
 
 Reuse the complete-document frame, responsive shell, expansion control,
 ownership authentication, and script-free sandbox. Do not add device chrome

@@ -15,7 +15,6 @@ const entry: ManifestDocument = {
   title: "Guide",
   description: "",
   sourcePath: "specs/guide.md",
-  declaredDependencies: [],
   relatedDocs: [],
   resources: ["specs/attachment.pdf"],
   colorSchemes: ["light", "dark"],

@@ -3,8 +3,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import type { ComponentViewRecord } from "@mokly/viewer";
+import { ComponentValidationError } from "@mokly/viewer/data";
+
 import { compileCatalogue } from "../dist/build/compile.js";
-import { stylesheetsFor } from "../dist/build/render.js";
+import { stylesheetPlacementFor } from "../dist/build/render.js";
+import { validateComponentResources } from "../dist/components/output_validation.js";
 import { loadConfig } from "../dist/config/load.js";
 import { MoklyError } from "../dist/errors.js";
 import { assembleExport } from "../dist/export/site.js";
@@ -44,18 +48,28 @@ for (const [name, cause] of [
       stylesheets: [{ match: "**", stylesheets: [name] }],
     };
     const route = "home/index.mobile.html";
+    const view: ComponentViewRecord = {
+      viewport: "mobile",
+      colorScheme: "light",
+      instances: [],
+      slots: [],
+      ranges: [],
+      styles: [],
+      resources: [{ path: name, componentIds: [] }],
+    };
     const check = (error: Error): boolean => {
       assert.match(error.message, cause);
       assert.ok(error.message.includes(name));
       return true;
     };
-    assert.throws(
-      () => stylesheetsFor(route, route, "light", config),
-      (error: Error) => {
+    for (const validate of [
+      () => stylesheetPlacementFor(route, route, "light", config),
+      () => validateComponentResources(new Map([[route, view]]), config),
+    ])
+      assert.throws(validate, (error: Error) => {
         assert.ok(error.message.includes(route));
         return check(error);
-      },
-    );
+      });
     let reads = 0;
     const countedBaseline = {
       ...baseline,
@@ -93,8 +107,7 @@ test("export comparison rejects protected source files in a snapshot", async (t)
             changedPaths: [],
             ignoredImpact: [],
             screens: [],
-            schemaVersion: 6 as const,
-            sharedImpact: [],
+            schemaVersion: 7 as const,
             components: [],
             changes: [],
             affectedConsumers: [],
@@ -123,17 +136,32 @@ test("unresolvable resource aliases retain typed errors and the referring route"
     stylesheets: [{ match: "**", stylesheets: ["alias.css"] }],
   };
   const route = "home/index.mobile.html";
-  assert.throws(
-    () => stylesheetsFor(route, route, "light", config),
-    (error: unknown) => {
-      assert.ok(error instanceof MoklyError);
-      assert.equal(error.code, "build-invalid");
+  const view: ComponentViewRecord = {
+    viewport: "mobile",
+    colorScheme: "light",
+    instances: [],
+    slots: [],
+    ranges: [],
+    styles: [],
+    resources: [{ path: "alias.css", componentIds: [] }],
+  };
+  for (const [validate, errorType] of [
+    [() => stylesheetPlacementFor(route, route, "light", config), MoklyError],
+    [
+      () => validateComponentResources(new Map([[route, view]]), config),
+      ComponentValidationError,
+    ],
+  ] as const)
+    assert.throws(validate, (error: unknown) => {
+      assert.ok(error instanceof errorType);
+      if (error instanceof MoklyError)
+        assert.equal(error.code, "build-invalid");
+      else assert.equal(error.path, route);
       assert.ok(error.message.includes(route));
       assert.match(
         error.message,
         /alias\.css.*could not resolve|could not resolve.*alias\.css/,
       );
       return true;
-    },
-  );
+    });
 });

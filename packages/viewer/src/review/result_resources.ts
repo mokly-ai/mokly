@@ -1,4 +1,5 @@
 import { isStylesheetPath } from "./css/stylesheet_path.js";
+import { validateCssAnalysis } from "./result_css.js";
 import {
   requireOrdered,
   reviewArray,
@@ -11,21 +12,22 @@ import {
 /** Validate dependency analysis at both the entry and view schema boundaries. */
 export function validateDependencyReason(
   value: unknown,
-  changedPaths: readonly string[],
+  changedPaths: readonly string[] | undefined,
+  aggregate = true,
 ): string {
   const reason = reviewObject(value, ["kind", "path"], ["analysis"]);
   const path = reviewPath(reason.path);
-  if (reason.kind !== "dependency" || !changedPaths.includes(path))
+  if (
+    reason.kind !== "dependency" ||
+    (changedPaths && !changedPaths.includes(path))
+  )
     reviewInvalid("dependency did not change");
+  if (isStylesheetPath(path) && reason.analysis === undefined)
+    reviewInvalid("stylesheet dependency requires analysis");
   if (reason.analysis !== undefined) {
     if (!isStylesheetPath(path))
       reviewInvalid("analysis requires a stylesheet");
-    const analysis = reviewObject(reason.analysis, ["status", "selectors"]);
-    if (analysis.status !== "matched" && analysis.status !== "unresolved")
-      reviewInvalid("invalid stylesheet analysis status");
-    const selectors = reviewStrings(analysis.selectors);
-    if (analysis.status === "matched" && !selectors.length)
-      reviewInvalid("matched analysis requires selectors");
+    validateCssAnalysis(reason.analysis, aggregate);
   }
   return path;
 }
@@ -33,8 +35,8 @@ export function validateDependencyReason(
 /** Exclusions are unique changed CSS paths and cannot also be kept on this view. */
 export function validateResourceEvidence(
   view: Record<string, unknown>,
-  changedPaths: readonly string[],
-  paired: boolean,
+  changedPaths: readonly string[] | undefined,
+  paired = true,
 ): void {
   if (
     view.material !== undefined &&
@@ -50,7 +52,7 @@ export function validateResourceEvidence(
     if (!reasons.length) reviewInvalid("empty optional resource reasons");
     kept.push(
       ...reasons.map((reason) =>
-        validateDependencyReason(reason, changedPaths),
+        validateDependencyReason(reason, changedPaths, false),
       ),
     );
     requireOrdered(kept, (path) => path);
@@ -64,7 +66,7 @@ export function validateResourceEvidence(
       if (
         !isStylesheetPath(path) ||
         resource.reason !== "no-matching-rule" ||
-        !changedPaths.includes(path) ||
+        (changedPaths && !changedPaths.includes(path)) ||
         kept.includes(path)
       )
         reviewInvalid("invalid stylesheet exclusion");

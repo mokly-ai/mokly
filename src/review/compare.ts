@@ -1,11 +1,10 @@
 import path from "node:path";
 
-import type { ReviewArtifact } from "@mokly/viewer/data";
-
 import type { Compilation } from "../build/compile.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 
+import type { StylesheetReviewArtifact } from "./artifact_stylesheets.js";
 import {
   FileSystemReviewAssetReader,
   GitReviewAssetReader,
@@ -16,6 +15,7 @@ import type { ChangeEvidence } from "./change_evidence.js";
 import { reviewChangedPaths } from "./changed_paths.js";
 import { CompilationAssetReader } from "./compilation_assets.js";
 import { compareComponentCatalogue } from "./component_compare.js";
+import type { CssResourceAnalysis } from "./css/resource_analysis.js";
 import { importedChangedPaths } from "./imported_changes.js";
 import { readMoveMarkdown } from "./moves/markdown_sources.js";
 import type { ReadOnlyReviewRepository } from "./repository.js";
@@ -29,6 +29,7 @@ export interface CompareReviewOptions {
   useMaterialFingerprints?: boolean;
   /** Reuse the exact merged evidence already constructed for export/publication. */
   changeEvidence?: ChangeEvidence;
+  cssAnalysis?: CssResourceAnalysis;
 }
 
 /** Compare checked head output to its Git branch point and retain pane artifacts. */
@@ -44,7 +45,7 @@ export async function compareReview(
   ),
   changedPathExclusions: readonly string[] = [],
   options: CompareReviewOptions = {},
-): Promise<ReviewArtifact> {
+): Promise<StylesheetReviewArtifact> {
   const baseCommit = await git.evidence.mergeBase(baseRef, "HEAD");
   const baseManifest = await readBaseManifest(git.reader, baseCommit, config);
   const authoredPaths = options.changeEvidence

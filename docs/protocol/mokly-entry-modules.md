@@ -40,7 +40,6 @@ import { InvoiceView } from "@app/account/billing/InvoiceView";
 export default defineScreen({
   title: "Invoice",
   description: "A paid invoice.",
-  dependencies: [],
   relatedDocs: [],
   mobile: <InvoiceView device="mobile" />,
   desktop: <InvoiceView device="desktop" />,
@@ -58,7 +57,7 @@ export default defineScreen({
 
 A definition's identity derives from the discovered entry module that exports
 it, never from a helper module that created it. Its defining module remains
-`sourcePath` for ownership and Changes evidence. The same definition object
+`sourcePath` for ownership and source protection. The same definition object
 exported more than once by one entry module is collected once, using its first
 export location. Exporting one definition object from two distinct entry modules
 fails with `duplicate-export`, naming both export locations.
@@ -103,7 +102,6 @@ import { Button } from "./button";
 export default defineComponent({
   title: "Button",
   description: "The primary control.",
-  dependencies: ["packages/ui/src/button/button.tsx"],
   relatedDocs: [],
   propSchema: {
     kind: "object",

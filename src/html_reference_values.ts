@@ -1,5 +1,6 @@
 /** Shared decoded reference tokens; source locations belong to their caller. */
 import { extractCssReferences } from "./css_references.js";
+import { linkRelTokens } from "./html_links.js";
 import type { HtmlReferenceOptions } from "./html_references.js";
 import { extractSourceSetReferences } from "./source_set_references.js";
 
@@ -55,12 +56,19 @@ export function htmlReferenceValues(
   const sources = SOURCE_ATTRIBUTES.get(node.tagName ?? "") ?? [];
   if (!sources.includes("href")) add("navigation", "href");
   add("navigation", "data-nav-href");
+  const rel = linkRelTokens(node.attrs ?? []);
   const resourceHint =
     node.tagName === "link" &&
-    /(?:^|\s)(?:preload|modulepreload|prefetch|preconnect|dns-prefetch)(?:\s|$)/i.test(
-      attributes.get("rel") ?? "",
-    ) &&
-    !/(?:^|\s)stylesheet(?:\s|$)/i.test(attributes.get("rel") ?? "");
+    !rel.includes("stylesheet") &&
+    rel.some((token) =>
+      [
+        "preload",
+        "modulepreload",
+        "prefetch",
+        "preconnect",
+        "dns-prefetch",
+      ].includes(token),
+    );
   if (options.resourceHints !== false || !resourceHint)
     for (const name of sources) add("source", name);
   for (const value of extractSourceSetReferences(

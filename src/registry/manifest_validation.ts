@@ -4,7 +4,7 @@ import {
   viewRoute,
   firstPathCaseCollision,
 } from "@mokly/viewer/data";
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import { incompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { validateManifestComponentUsage } from "../components/manifest_validation.js";
@@ -17,15 +17,15 @@ import { validateManifestInventory } from "./manifest_inventory.js";
 import { validateManifestRelationships } from "./manifest_relationships.js";
 import { record, stringArray, validateRepoPath } from "./manifest_values.js";
 
-/** Validate current or historical JSON against the one supported v9 schema. */
+/** Validate current or historical JSON against the one supported v10 schema. */
 export function validateManifest(
   value: unknown,
   historical = false,
   componentUsage = true,
-): ManifestV9 {
+): ManifestV10 {
   const metadata = validateMetadata(value, historical, componentUsage, true);
   validateManifestInventory(value as Record<string, unknown>, metadata);
-  return value as ManifestV9;
+  return value as ManifestV10;
 }
 
 function validateMetadata(
@@ -38,12 +38,12 @@ function validateMetadata(
     historical &&
     record(value) &&
     Number.isInteger(value.schemaVersion) &&
-    (value.schemaVersion as number) < 9
+    (value.schemaVersion as number) < 10
   )
     throw incompatibleEarlierBaseline();
   if (!record(value)) failure("manifest must contain an entries array");
-  if (value.schemaVersion !== 9 || value.generatedBy !== "mokly")
-    failure("expected Mokly manifest schema version 9; run mokly build");
+  if (value.schemaVersion !== 10 || value.generatedBy !== "mokly")
+    failure("expected Mokly manifest schema version 10; run mokly build");
   if (!Array.isArray(value.entries))
     failure("manifest must contain an entries array");
   if (
@@ -119,7 +119,7 @@ function validateMetadata(
   return value as unknown as ManifestMetadata;
 }
 
-/** Validate the same v9 metadata used by the live catalogue boundary. */
+/** Validate the same v10 metadata used by the live catalogue boundary. */
 export function validateManifestMetadata(value: unknown): ManifestMetadata {
   return validateMetadata(value, false, false, false);
 }

@@ -1,5 +1,3 @@
-import { useDesignStyle } from "../style_context.js";
-
 import type { ComparisonPaneProps } from "./comparison-pane.js";
 
 export function ComparisonPaneView({
@@ -9,7 +7,6 @@ export function ComparisonPaneView({
   state,
   message,
 }: ComparisonPaneProps) {
-  useDesignStyle("comparison-pane");
   return (
     <div className={`mbk-compare-side mbk-compare-side--${side}`}>
       <p className="mbk-compare-label">{label}</p>

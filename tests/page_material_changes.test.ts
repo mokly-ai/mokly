@@ -20,7 +20,7 @@ const source =
   validEntrySource() +
   `
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ path: "handbook", title: "Handbook", description: "A document", dependencies: ["notes.md"], relatedDocs: [], render: () => ${JSON.stringify(document)} }));
+mockups.push(definePage({ path: "handbook", title: "Handbook", description: "A document", relatedDocs: [], render: () => ${JSON.stringify(document)} }));
 `;
 
 for (const change of [

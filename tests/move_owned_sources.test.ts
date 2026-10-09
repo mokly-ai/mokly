@@ -15,11 +15,11 @@ import {
 } from "./helpers/move_delivery.js";
 import { pathFixture } from "./helpers/path_fixture.js";
 
-for (const edited of [false, true])
-  test(`owned implementation paths follow a component move, preserving real edits: edited=${edited}`, async (t) => {
+for (const change of ["none", "source", "rendered"])
+  test(`component moves keep source-only edits out of evidence: change=${change}`, async (t) => {
     const sources = {
       "specs/old/action.mockup.tsx":
-        "import {defineComponent} from '@mokly/mokly'; import {label} from './implementation.js'; export const action=defineComponent({title:'Action',description:'An action',dependencies:['specs/old/implementation.ts'],ownedDependencies:['specs/old/implementation.ts'],relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> <button>{label}</button>,variants:[{slug:'default',title:'Default',props:{}}]});",
+        "import {defineComponent} from '@mokly/mokly'; import {label} from './implementation.js'; export const action=defineComponent({title:'Action',description:'An action',relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> <button>{label}</button>,variants:[{slug:'default',title:'Default',props:{}}]});",
       "specs/old/implementation.ts": "export const label='Continue';\n",
     };
     const fixture = await pathFixture(sources, '{mockupsDir:"mockups",}');
@@ -38,11 +38,21 @@ for (const edited of [false, true])
         "specs/new/",
       ),
     );
-    if (edited)
+    if (change !== "none")
       await fixture.write(
         "specs/new/implementation.ts",
-        sources["specs/old/implementation.ts"] +
-          "export const newBehavior=true;\n",
+        change === "rendered"
+          ? "export const label='Submit';\n"
+          : sources["specs/old/implementation.ts"] +
+              "export const newBehavior=true;\n",
+      );
+    if (change === "rendered")
+      await fixture.write(
+        "specs/new/action.mockup.tsx",
+        sources["specs/old/action.mockup.tsx"].replace(
+          "title:'Action',",
+          "title:'Action',movedFrom:'old/action',",
+        ),
       );
     const config = await loadConfig(fixture.root),
       after = await compileCatalogue(config);
@@ -65,9 +75,13 @@ for (const edited of [false, true])
     assert.ok(!parent.reasons.some((reason) => reason.kind === "metadata"));
     assert.equal(
       parent.reasons.some((reason) => reason.kind === "dependency"),
-      edited,
+      false,
     );
-    if (!edited)
+    assert.equal(
+      parent.reasons.some((reason) => reason.kind === "material"),
+      change === "rendered",
+    );
+    if (change !== "rendered")
       assert.ok(
         artifact.result.changes.every((change) => change.reasons.length === 0),
       );

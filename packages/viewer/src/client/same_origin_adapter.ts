@@ -167,6 +167,8 @@ function localRecord(
         viewport:
           frame.dataset["workspaceFrame"] === "mobile" ? "mobile" : "desktop",
         colorScheme: "light",
+        styles: [],
+        resources: [],
       }
     : undefined;
 }

@@ -2,20 +2,14 @@ import type { ComponentViewRecord } from "@mokly/viewer";
 import type {
   ChangedEntry,
   ComponentReview,
-  EntryChangeReason,
   DependencyReason,
-  ViewReview,
 } from "@mokly/viewer/data";
-import { isStylesheetPath } from "@mokly/viewer/data";
+import { canonicalJson, isStylesheetPath } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 
 import type { InlineResourceOwners } from "./component_inline_resources.js";
-import {
-  uniqueReasons,
-  type ComponentDependencyPolicy,
-  type ReviewEntry,
-} from "./component_metadata.js";
+import { uniqueReasons } from "./component_metadata.js";
 
 /** Retained actual-invocation evidence can affect an owner without a saved variant. */
 export interface OwnedResourceReason {
@@ -25,25 +19,24 @@ export interface OwnedResourceReason {
 
 export function ownedResourceReasons(
   reasons: readonly DependencyReason[],
-  policy: ComponentDependencyPolicy,
+  prefix: string,
   inlineOwners: InlineResourceOwners,
   before?: ComponentViewRecord,
   after?: ComponentViewRecord,
   root?: string,
 ): OwnedResourceReason[] {
   const present = presentComponents(before, after, root);
-  return reasons.flatMap((reason) => {
-    const owners = resourceOwners(reason.path, policy, inlineOwners);
-    return [...owners]
+  return reasons.flatMap((reason) =>
+    [...resourceOwners(reason.path, prefix, inlineOwners, before, after)]
       .filter((componentId) => present.has(componentId))
-      .map((componentId) => ({ componentId, reason }));
-  });
+      .map((componentId) => ({ componentId, reason })),
+  );
 }
 
-/** Resolve derived byte-only resource changes to components without inventing Git evidence. */
+/** Resolve byte-only changes against the same explicit and inferred owners. */
 export function ownedResourceComponents(
   paths: readonly string[],
-  policy: ComponentDependencyPolicy,
+  prefix: string,
   inlineOwners: InlineResourceOwners,
   before?: ComponentViewRecord,
   after?: ComponentViewRecord,
@@ -52,47 +45,44 @@ export function ownedResourceComponents(
   const present = presentComponents(before, after, root);
   return new Set(
     paths.flatMap((path) =>
-      [...resourceOwners(path, policy, inlineOwners)].filter((id) =>
-        present.has(id),
+      [...resourceOwners(path, prefix, inlineOwners, before, after)].filter(
+        (id) => present.has(id),
       ),
     ),
   );
 }
 
-/** Exact caller declarations remain independent, but cannot bypass CSS exclusion. */
-export function exactScreenCssReasons(
-  before: ReviewEntry | undefined,
-  after: ReviewEntry | undefined,
-  views: readonly ViewReview[],
-): DependencyReason[] {
-  return views.flatMap((view) =>
-    (view.reasons ?? []).filter(
-      (reason) =>
-        reason.analysis &&
-        [before, after].some(
-          (entry) =>
-            entry?.kind === "screen" &&
-            entry.declaredDependencies?.includes(reason.path),
-        ),
+function presentComponents(
+  before?: ComponentViewRecord,
+  after?: ComponentViewRecord,
+  root?: string,
+): ReadonlySet<string> {
+  return new Set([
+    ...(root ? [root] : []),
+    ...[before, after].flatMap(
+      (usage) => usage?.instances.map((instance) => instance.componentId) ?? [],
     ),
-  );
+  ]);
 }
 
-/** Preserve glob and unowned-path evidence alongside retained dependency reasons. */
-export function resourceImpact(
-  shared: readonly string[],
-  unowned: readonly string[],
-  reasons: readonly EntryChangeReason[],
-): string[] {
-  return [
-    ...new Set([
-      ...shared.filter((path) => !isStylesheetPath(path)),
-      ...unowned,
-      ...reasons.flatMap((reason) =>
-        reason.kind === "dependency" ? [reason.path] : [],
-      ),
-    ]),
-  ].sort();
+function resourceOwners(
+  path: string,
+  prefix: string,
+  inlineOwners: InlineResourceOwners,
+  before?: ComponentViewRecord,
+  after?: ComponentViewRecord,
+): ReadonlySet<string> {
+  if (isStylesheetPath(path)) return new Set();
+  const publicPath = prefix ? path.slice(prefix.length + 1) : path;
+  return new Set([
+    ...(inlineOwners.get(path) ?? []),
+    ...[before, after].flatMap(
+      (usage) =>
+        usage?.resources.flatMap((resource) =>
+          resource.path === publicPath ? resource.componentIds : [],
+        ) ?? [],
+    ),
+  ]);
 }
 
 export function propagateOwnedResources(
@@ -120,29 +110,23 @@ export function propagateOwnedResources(
         ...(component.after ? { after: component.after } : {}),
         reasons: [reason],
       });
-    component.sharedImpact = [
-      ...new Set([...component.sharedImpact, reason.path]),
-    ].sort();
   }
 }
 
-function presentComponents(
-  before?: ComponentViewRecord,
-  after?: ComponentViewRecord,
-  root?: string,
-): ReadonlySet<string> {
-  return new Set([
-    ...(root ? [root] : []),
-    ...[before, after].flatMap((usage) =>
-      usage ? usage.instances.map((instance) => instance.componentId) : [],
-    ),
-  ]);
-}
-
-function resourceOwners(
-  path: string,
-  policy: ComponentDependencyPolicy,
-  inlineOwners: InlineResourceOwners,
-): ReadonlySet<string> {
-  return new Set([...policy.owners(path), ...(inlineOwners.get(path) ?? [])]);
+/** Root resource declarations affect material only for non-stylesheet ownership. */
+export function rootResourcesChanged(
+  before: ComponentViewRecord | undefined,
+  after: ComponentViewRecord | undefined,
+  root: string | undefined,
+): boolean {
+  if (!root) return false;
+  const paths = (usage: ComponentViewRecord | undefined) =>
+    usage?.resources
+      .filter(
+        (resource) =>
+          !isStylesheetPath(resource.path) &&
+          resource.componentIds.includes(root),
+      )
+      .map((resource) => resource.path) ?? [];
+  return canonicalJson(paths(before)) !== canonicalJson(paths(after));
 }

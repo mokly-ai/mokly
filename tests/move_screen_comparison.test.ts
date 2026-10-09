@@ -10,7 +10,7 @@ import { moveReviewFixture as componentReviewFixture } from "./helpers/move_revi
 const source = `import { defineScreen } from '@mokly/mokly';
 export default defineScreen({
   path: 'old/welcome', title: 'Welcome', description: 'Start here',
-  dependencies: [], relatedDocs: [], mobile: <h1>Welcome</h1>, desktop: <h1>Welcome</h1>,
+  relatedDocs: [], mobile: <h1>Welcome</h1>, desktop: <h1>Welcome</h1>,
   variants: [{slug:'returning',title:'Returning',description:'Continue your work',mobile:<h1>Continue</h1>,desktop:<h1>Continue</h1>}]
 });`;
 
@@ -81,7 +81,7 @@ test("a moved screen variant retains its parent's title as reviewable metadata",
   const before =
     source.replace("{ defineScreen }", "{ defineScreen, defineComponent }") +
     `
-    export const control = defineComponent({path:'control',title:'Control',description:'A control',dependencies:[],relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> 'Control',variants:[{slug:'default',title:'Default',props:{}}]});`;
+    export const control = defineComponent({path:'control',title:'Control',description:'A control',relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> 'Control',variants:[{slug:'default',title:'Default',props:{}}]});`;
   const fixture = await componentReviewFixture(
     t,
     (text) =>

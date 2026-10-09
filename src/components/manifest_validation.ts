@@ -5,10 +5,9 @@ import {
   validateComponentViews,
 } from "@mokly/viewer/data";
 
-import { validateDependencyDeclarations } from "./dependency_validation.js";
 import { validateVariantAgainstParent } from "./manifest_entry_validation.js";
 
-/** Validate every v9 per-view record against the complete component set. */
+/** Validate every v10 per-view record against the complete component set. */
 export function validateManifestComponentUsage(
   manifest: {
     entries: readonly Record<string, unknown>[];
@@ -43,7 +42,6 @@ export function validateManifestComponentUsage(
     ),
   );
   for (const entry of manifest.entries) {
-    validateDependencyDeclarations(entry as never);
     if (entry.kind === "screen") {
       if (components.size)
         validateComponentViews(
@@ -74,6 +72,7 @@ export function validateManifestComponentUsage(
       {
         dark: (entry.colorSchemes as string[]).includes("dark"),
         historical,
+        rootId: entry.variantOf,
       },
     );
   }

@@ -13,54 +13,33 @@ import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentGit } from "./helpers/component_review_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
-for (const exact of [false, true])
-  test(`owned dependency beats broad shared impact; exact screen dependency=${exact}`, async (t) => {
-    const source = componentEntrySource()
-      .replace('dependencies: ["notes.md"]', 'dependencies: ["shared"]')
-      .replace(
-        'path: "action",',
-        'path: "action", ownedDependencies: ["shared/button.ts"], dependencies: ["shared/button.ts"],',
-      )
-      .replace(
-        'path: "home",',
-        `path: "home", ${exact ? 'dependencies: ["shared/button.ts"],' : ""}`,
-      );
-    const fixture = await createFixture(source);
-    t.after(() => removeFixture(fixture));
-    await fs.mkdir(path.join(fixture.root, "shared"));
-    await fs.writeFile(
-      path.join(fixture.root, "shared/button.ts"),
-      "export const size = 1;",
-    );
-    await fs.writeFile(
-      fixture.configPath,
-      (await fs.readFile(fixture.configPath, "utf8")).replace(
-        '["notes.md"]',
-        '["shared/**"]',
-      ),
-    );
-    const config = await loadConfig(fixture.root);
-    const before = await compileCatalogue(config);
-    await writeCompilation(before, config);
-    const git = componentGit(before, ["shared/button.ts"]);
-    const { result } = await compareReview(before, config, git, "main");
-    assert.equal(result.schemaVersion, 6);
-    if (result.schemaVersion !== 6) return;
-    const expected = exact ? ["action", "home"] : ["action"];
-    assert.deepEqual(
-      result.changes.map((entry) => entry.after!.path),
-      expected,
-    );
-    assert.deepEqual(
-      await computeChangedPaths(config, "main", git),
-      [...expected].sort(),
-    );
-    assert.ok(
-      result.affectedConsumers.some((item) => item.consumer.kind === "screen"),
-    );
-  });
+test("unrendered source files do not affect component Changes", async (t) => {
+  const source = componentEntrySource();
+  const fixture = await createFixture(source);
+  t.after(() => removeFixture(fixture));
+  await fs.mkdir(path.join(fixture.root, "shared"));
+  await fs.writeFile(
+    path.join(fixture.root, "shared/button.ts"),
+    "export const size = 1;",
+  );
+  const config = await loadConfig(fixture.root);
+  const before = await compileCatalogue(config);
+  await writeCompilation(before, config);
+  const git = componentGit(before, ["shared/button.ts"]);
+  const { result } = await compareReview(before, config, git, "main");
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
+  const expected: string[] = [];
+  assert.deepEqual(
+    result.changes.map((entry) => entry.after!.path),
+    expected,
+  );
+  assert.deepEqual(await computeChangedPaths(config, "main", git), expected);
+  assert.deepEqual(result.affectedConsumers, []);
+  assert.equal(Object.hasOwn(result, "sharedImpact"), false);
+});
 
-for (const ownership of ["dependency", "migrated-renderer", "unowned"] as const)
+for (const ownership of ["renderer", "declared", "unowned"] as const)
   test(`external styles retain real snapshots with ${ownership} attribution`, async (t) => {
     const source = componentEntrySource()
       .replace(
@@ -69,25 +48,27 @@ for (const ownership of ["dependency", "migrated-renderer", "unowned"] as const)
       )
       .replace(
         'path: "action",',
-        ownership !== "unowned"
-          ? 'path: "action", ownedDependencies: ["mockups/action.css"], dependencies: ["mockups/action.css"],'
+        ownership === "declared"
+          ? 'path: "action", stylesheets: ["action.css"],'
           : 'path: "action",',
       );
     const fixture = await createFixture(source, {
       extraConfig:
-        ownership === "migrated-renderer"
+        ownership === "renderer"
           ? 'renderer: "renderer.tsx", stylesheets: [{ match: "**", stylesheets: ["action.css"] }],'
-          : 'stylesheets: [{ match: "**", stylesheets: ["action.css"] }],',
+          : ownership === "declared"
+            ? "stylesheets: [],"
+            : 'stylesheets: [{ match: "**", stylesheets: ["action.css"] }],',
     });
     t.after(() => removeFixture(fixture));
     await fs.writeFile(
       path.join(fixture.mockupsDir, "action.css"),
       ".action{color:red}",
     );
-    if (ownership === "migrated-renderer")
+    if (ownership === "renderer")
       await fs.writeFile(
         path.join(fixture.root, "renderer.tsx"),
-        `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => '<html><head><link rel="stylesheet" href="' + input.stylesheets[0] + '"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';`,
+        `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' + input.stylesheets[0] + '"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>', resources: [{ path: "action.css", componentIds: ["action"] }] });`,
       );
     const config = await loadConfig(fixture.root);
     const before = await compileCatalogue(config);
@@ -106,12 +87,9 @@ for (const ownership of ["dependency", "migrated-renderer", "unowned"] as const)
     await writeCompilation(after, config);
     const git = componentGit(baseline, ["mockups/action.css"]);
     const artifact = await compareReview(after, config, git, "main");
-    assert.equal(artifact.result.schemaVersion, 6);
-    if (artifact.result.schemaVersion !== 6) return;
-    const expected =
-      ownership === "unowned"
-        ? ["action/default", "action/disabled", "pane/default", "home"]
-        : ["action"];
+    assert.equal(artifact.result.schemaVersion, 7);
+    if (artifact.result.schemaVersion !== 7) return;
+    const expected = ["action", "action/default", "action/disabled"];
     assert.deepEqual(
       artifact.result.changes.map((entry) => entry.after!.path),
       expected,
@@ -133,17 +111,13 @@ for (const ownership of ["dependency", "migrated-renderer", "unowned"] as const)
   });
 
 for (const owned of [false, true])
-  test(`head styling infers ownership from matching markup; owned=${owned}`, async (t) => {
-    const source = componentEntrySource().replace(
-      "<button data-viewport=",
-      '<button className="action" data-viewport=',
-    );
-    const fixture = await createFixture(source, {
+  test(`head styling uses exact ownership; owned=${owned}`, async (t) => {
+    const fixture = await createFixture(componentEntrySource(), {
       extraConfig: 'renderer: "renderer.tsx",',
     });
     t.after(() => removeFixture(fixture));
     const renderer = (color: string) =>
-      `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => { const css = '${owned ? ".action" : ".action, body"}{color:${color}}'; return '<html><head><style>' + css + '</style></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; };`;
+      `import { renderToStaticMarkup } from "react-dom/server"; export default (input) => { const css = '.action{color:${color}}'; const html = '<html><head><style>.global{display:block}' + css + '</style></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return { html, ${owned ? 'styles: [{ startOffset: html.indexOf(css), endOffset: html.indexOf(css) + css.length, componentIds: ["action"] }]' : ""} }; };`;
     await fs.writeFile(
       path.join(fixture.root, "renderer.tsx"),
       renderer("red"),
@@ -158,8 +132,8 @@ for (const owned of [false, true])
     await writeCompilation(after, config);
     const git = componentGit(before, ["renderer.tsx"]);
     const { result } = await compareReview(after, config, git, "main");
-    assert.equal(result.schemaVersion, 6);
-    if (result.schemaVersion !== 6) return;
+    assert.equal(result.schemaVersion, 7);
+    if (result.schemaVersion !== 7) return;
     assert.deepEqual(
       result.changes.map((entry) => entry.after!.path),
       owned ? ["action"] : ["action", "pane", "home"],

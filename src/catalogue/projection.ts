@@ -37,12 +37,12 @@ export function projectCatalogue(
 ): CatalogueReadModel {
   const { catalogue } = input;
   if (
-    catalogue.manifest.schemaVersion !== 9 &&
+    catalogue.manifest.schemaVersion !== 10 &&
     catalogue.manifest.schemaVersion !== "live-index-2"
   )
     invalidData(
       "$catalogue",
-      "current projection requires manifest v9 or live metadata",
+      "current projection requires manifest v10 or live metadata",
     );
   const comparisonUrl = comparisonPath(input.comparisonUrl);
   const identity = catalogueIdentity(input.configPath);
@@ -76,17 +76,32 @@ export function projectCatalogue(
       relatedDocs: entry.relatedDocs.map((source) => {
         return relatedDoc(removed ? source : documentReference(source));
       }),
-      dependencies: entryDependencies(entry).map(repositoryPath),
       ...(entry.rationale !== undefined ? { rationale: entry.rationale } : {}),
     },
     changes: entryChanges(entry, input, removed),
   });
   const record = (entry: ManifestEntry, removed: boolean): CatalogueRecord => {
     const base = common(entry, removed);
+    const pageEvidence =
+      input.changesStatus === "ready"
+        ? input.evidence?.pageEvidence?.find((item) => item.path === entry.path)
+        : undefined;
     if (entry.kind === "page")
       return {
         ...base,
         kind: "page",
+        ...(pageEvidence
+          ? {
+              resourceEvidence: {
+                ...(pageEvidence.reasons
+                  ? { reasons: pageEvidence.reasons }
+                  : {}),
+                ...(pageEvidence.excludedResources
+                  ? { excludedResources: pageEvidence.excludedResources }
+                  : {}),
+              },
+            }
+          : {}),
       };
     if (entry.kind === "document")
       return {
@@ -132,7 +147,11 @@ export function projectCatalogue(
         views: projectViews(input, retainedComponents, entry, removed),
         comparison: comparisonSelection(
           input,
-          removed ? "removed" : review?.state,
+          removed
+            ? "removed"
+            : review?.state === "removed"
+              ? "changed"
+              : review?.state,
           true,
         ),
       };
@@ -174,7 +193,7 @@ export function projectCatalogue(
     if (!removedPaths.has(id))
       invalidData("$catalogue", "preview path is not a removed entry");
   return {
-    schemaVersion: 5,
+    schemaVersion: 6,
     identity,
     deploymentId: ZERO_DEPLOYMENT_ID,
     revision: {
@@ -255,14 +274,4 @@ function projectPreview(
   if (entry.kind !== "page" || preview.kind !== "page")
     invalidData("$catalogue", "page preview requires a removed page");
   return { preview: { kind: "page" } };
-}
-
-function entryDependencies(entry: ManifestEntry): string[] {
-  return [
-    ...new Set([
-      entry.sourcePath,
-      ...entry.declaredDependencies,
-      ...(entry.kind === "document" ? entry.resources : []),
-    ]),
-  ].sort();
 }

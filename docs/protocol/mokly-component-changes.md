@@ -2,18 +2,17 @@
 
 ## Delivery Status
 
+Main's source-path removal and file-level rule membership are implemented in the
+[source-path removal plan](../../plans/remove-source-path-evidence.md).
 The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md)
-implements [page analysis](./mokly-page-analysis.md) and the
-[equivalent style route](./mokly-style-only-route.md).
-The [fast-path contract](./mokly-component-review-fast-path.md) owns decision ordering.
-
-The classifier, Browse/watch cache, artifacts and static exporter share this
-policy; the [explorer plan](../../plans/component-explorer.md) records delivery.
-Path-keyed v6 results retain main move pairing. Unregistered catalogues retain ordinary behavior. Complete paired comparisons
-infer head-style ownership from documents/ranges; references follow owners,
-results carry validated inline evidence, and the shell presents it.
-
-Performance acceptance is deferred under the plan's Decision 13 (2026-10-06).
+integrates [original-page analysis](./mokly-page-analysis.md),
+[inline ownership](./mokly-inline-styles.md) and the
+[equivalent style route](./mokly-style-only-route.md) with that policy.
+The [fast-path contract](./mokly-component-review-fast-path.md) owns ordering.
+All classification paths share path-keyed v7 results. Inline evidence stays in
+the review and catalogue data; its separate mockup and UI work is scheduled in
+Milestones 16 and 17 of the scalable plan. Performance acceptance is deferred
+under that plan's Decision 13 (2026-10-06).
 
 ## Changes Membership
 
@@ -21,24 +20,38 @@ Changes counts each directly changed entry, including components/variants,
 once, not instances or affected consumers. Folder ancestor disclosure and
 screen-to-use-case propagation remain; affected-only screens do not flag use cases.
 
-| Edit                                                      | Direct Changes entries | Secondary impact                                              |
-| --------------------------------------------------------- | ---------------------- | ------------------------------------------------------------- |
-| Component implementation or owned styling                 | Component              | Its consuming screens/components                              |
-| Screen supplies different component data props            | Screen                 | None solely from this input edit                              |
-| Screen changes rendered slot content                      | Screen                 | None solely from this content edit                            |
-| Screen adds/removes/replaces/reorders an instance         | Screen                 | Usage links update                                            |
-| Screen changes surrounding content or layout              | Screen                 | Existing screen/use-case rules                                |
-| Parent component changes props passed to a child          | Parent component       | Parent's consuming screens                                    |
-| Child implementation changes with parent inputs unchanged | Child component        | Parent components and consuming screens                       |
-| Component and a consuming screen both change directly     | Component and screen   | Screen is also a consumer                                     |
-| Component variant props, title, or description change     | That variant entry     | Consumers only when their rendering/dependencies are affected |
-| Component controls schema or parent metadata changes      | Component              | Consumers only when their rendering/dependencies are affected |
-| Temporary controls edits                                  | None                   | None                                                          |
+| Edit                                                      | Direct Changes entries | Secondary impact                                                       |
+| --------------------------------------------------------- | ---------------------- | ---------------------------------------------------------------------- |
+| Component implementation or owned document style material | Component              | Its consuming screens/components                                       |
+| Screen supplies different component data props            | Screen                 | None solely from this input edit                                       |
+| Screen changes rendered slot content                      | Screen                 | None solely from this content edit                                     |
+| Screen adds/removes/replaces/reorders an instance         | Screen                 | Usage links update                                                     |
+| Screen changes surrounding content or layout              | Screen                 | Existing screen/use-case rules                                         |
+| Parent component changes props passed to a child          | Parent component       | Parent's consuming screens                                             |
+| Child implementation changes with parent inputs unchanged | Child component        | Parent components and consuming screens                                |
+| Component and a consuming screen both change directly     | Component and screen   | Screen is also a consumer                                              |
+| Component variant props, title, or description change     | That variant entry     | Consumers only when their rendering or rendered resources are affected |
+| Component controls schema or parent metadata changes      | Component              | Consumers only when their rendering or rendered resources are affected |
+| Temporary controls edits                                  | None                   | None                                                                   |
 
-A component implementation or owned-style edit lists each variant entry
+| CSS delivery path                    | Direct Changes entries                                                                     | Secondary impact                      |
+| ------------------------------------ | ------------------------------------------------------------------------------------------ | ------------------------------------- |
+| Configured stylesheet                | Components with kept own-page rule matches; pages with outside matches or unresolved rules | Consumers of those changed components |
+| Component `stylesheets` declaration  | The same rule; declaring the file grants no ownership                                      | The same affected-consumer rule       |
+| Import from a stylesheet             | The same rule, using the changed imported file                                             | The same affected-consumer rule       |
+| JavaScript import into generated CSS | The same rule, joining equal changed rules across entry bundles                            | The same affected-consumer rule       |
+
+The [CSS rule contract](./mokly-css-attribution-rules.md) defines containment,
+identity and examples. Component rows require own-page matches kept after the
+nested-component test. Inclusive nested output remains part of page-row
+containment. Consumer invocation matches alone never change that component.
+On a component page, a wrapper-only or unresolved page reason adds the saved
+variant entry, but gives it no Affected screens for that rule.
+
+A component implementation or owned document-style edit lists each variant entry
 whose views changed. The parent entry is listed only for its own reasons:
-schema, controls, slots, declared metadata, and declared-file or shared-file
-evidence attributed to the component itself. A parent whose only change is a
+schema, controls, slots, declared metadata, non-CSS resource ownership, and
+CSS rules with kept matches in its own output on its own saved pages. A parent whose only change is a
 changed variant carries the navigation aggregate mark defined by the
 [variant navigation contract](./mokly-variant-navigation.md#changes-rows) and is
 not a Changes row.
@@ -57,8 +70,12 @@ For any baseline source, pair generated views by route and authored assets by
 their side's catalogue-relative path, using the
 [baseline descriptor](./mokly-baseline-addressing.md#comparison-namespaces).
 Git changed-path evidence remains repository-relative; it does not translate
-historical roots. A resource-byte difference without a changed Git path is a
-material change. It does not invent a Git dependency reason or changed path.
+historical roots. A non-CSS resource-byte difference without a changed Git path
+is a material change. Preserve actual public-pipeline CSS rule evidence. Without
+Git evidence, CSS byte differences retain the material-reason and view-state
+fallback only when that stylesheet is linked on both actual sides. One-sided
+inserted-link membership and projection-only CSS cannot grant it. The fallback
+does not invent a Git dependency reason or changed path.
 No pixel counts or layout-safety claims are inferred. A changed component can
 alter surrounding layout without changing any screen-owned markup.
 
@@ -89,9 +106,9 @@ that affect its inputs. No-watch Serve and publication instead reuse their
 validated startup snapshot, including ownership evidence and unavailable-history
 state, for the lifetime of that capture.
 
-The comparison artifact is the schema v6 result with component/variant records
-and explicit affected-consumer evidence; readers accept only v6, and every
-record addresses its entry by path. Screen entries retain their actual view
+The comparison artifact is the review result v7 with component/variant records
+and explicit affected-consumer evidence. Readers accept only review result v7.
+Every record addresses its entry by path. Screen entries retain their actual view
 results, with affected-only evidence separate from direct Changes membership.
 All comparisons keep accepted before/after bytes and isolated assets.
 The [comparison schema](./mokly-component-review.md) defines the exact result,
@@ -112,6 +129,12 @@ the caller's comparison. This suppresses internal rendering changes while
 retaining input changes even when they currently render identical HTML.
 
 The component under review is never ignored against itself on its own page.
+Its own Mokly-inserted stylesheet links stay in its comparison material; a
+child-only inserted link does not. A screen's inserted component links never
+count as screen material. Renderer-authored links stay material even when
+Mokly reuses them for declared stylesheets. The
+[stylesheet provenance contract](./mokly-component-stylesheet-ownership.md#provenance-and-comparison-material)
+defines the private final-document spans that distinguish those cases.
 Nested registered components use the same boundary rules, so a child-only
 implementation edit does not create duplicate direct changes on every parent.
 Internal child props are owned by the parent component; props supplied by the
@@ -134,7 +157,8 @@ Existing manual `ReviewIgnore` regions retain their current id, material, and
 one-sided adoption semantics. Component markers are a separate ownership tree;
 do not weaken the flat parser by accepting arbitrary nested ignore regions.
 Manual ignore regions may sit within component-owned implementation, but may
-not enclose component boundaries or caller-owned slots and erase their signals.
+not enclose instance boundaries or caller-owned slots and erase their signals.
+The root-only CSS boundary preserves existing valid Review-ignore regions.
 Reject that ambiguous composition with a validation diagnostic. Existing
 catalogues without component boundaries remain byte-compatible.
 
@@ -144,104 +168,79 @@ The [component review fast-path contract](./mokly-component-review-fast-path.md)
 owns the ordered decision, usage exceptions, actual/projected resource proof,
 cache reuse, one-sided validation, and equivalence tests.
 
-## Dependencies And Styles
+## Rendered Resources And Styles
 
-Component registration declares implementation dependency paths. Ownership must
-be explicit: ordinary shared registry/source-module attribution is not proof
-that the entire file belongs exclusively to one component. A component may
-declare `ownedDependencies` for files or directory roots whose effects are
-confined to the named registered component(s). These paths follow normal
-repository confinement and validation and are included in its dependencies.
-Shared ownership by several registered components is allowed and affects each.
+Stylesheet changes follow one rule for configured, declared, transitively
+imported and JavaScript-bundled CSS. Match each changed rule against before and
+after documents after paired Review-ignore. A component changes only through
+a kept match in its root output on one of its own saved pages. X loses a match
+inside a different nested Y if this rule has any match on Y's own pages, before
+filtering Y's nested output. Self-nested X never takes a match from X. This test
+needs no ordering, even with mutual nesting. Only kept matches give X's saved
+variants component reasons; page rows use inclusive output containment.
+Match identical changed rules across files by their normalized
+before/after selectors and declarations, never by their source path or owner.
 
-A changed path gives an entry an independent `dependency` reason only when, on either side, the entry:
+A page has its own row when a match remains outside every component changed by
+that rule, or the rule is unresolved. Otherwise a consumer stays under Affected
+screens. A wrapper outside a component page's root counts as page material.
+Only rules with no matches and no unresolved outcome are excluded. Retain
+per-rule facts before merging evidence by path. See the
+[rule contract](./mokly-css-attribution-rules.md) and
+[evidence schema](./mokly-css-attribution-membership.md).
 
-1. is a component whose `ownedDependencies` file or directory root contains it;
-2. is a screen whose `declaredDependencies` names it exactly, owned or not; or
-3. names it exactly in `declaredDependencies`, and no component owns it.
+Mokly derives no CSS resource ownership records. Renderer `resources` records
+for any stylesheet are ignored with the
+[stylesheet-owner warning](./mokly-component-stylesheet-ownership.md#ignored-owner-warning), after
+public-path safety checks. Declarations still control links and
+`insertedStylesheets` provenance. Adding or removing a declaration changes
+material only if retained document content changes, or CSS/resource evidence
+changes. Reusing an identical configured link creates no owner-change reason.
+Starting or stopping a child remains a parent usage/structure change; an
+inserted child link creates no additional consumer document reason.
 
-A `review.sharedImpact` glob match, a file inside a declared dependency
-directory, or automatic source attribution alone adds no reason, Changes row,
-affected consumer, or use-case `screen` reason. Renderer, theme, and token
-edits still reach Changes when rendered documents or referenced resources change.
+Non-CSS resources retain file-level attribution. A retained non-CSS resource
+reason belongs to every rendered component named by that view's `resources`
+record, including an actual invocation with no matching saved variant. Its
+consumers stay affected-only unless they have an independent change. An
+unowned non-CSS resource reason stays with the consuming page. Source modules
+and unrendered files supply no ownership or evidence.
 
-For linked stylesheets, [CSS change attribution](./mokly-css-attribution.md)
-keeps a consuming view in Changes only when a changed rule could match that
-view's document or cannot be resolved, and otherwise records it as examined
-and excluded. Ownership and rule analysis compose; neither widens the other.
-Ownership is not inferred from a filename, one import, or the presence of a
-component marker somewhere in the document. Screen/component-owned
-dependency overlap must be validated and explained rather than silently dropped.
-The rule analysis is implemented in Browse/watch classification, complete and
-selected comparison evidence, and publication. Original view analyses supply
-matching trees under [page matching](./mokly-page-analysis.md#original-page-matching);
-ownership projections supply eligible resources. A public
-stylesheet glob or dependency declaration cannot restore an excluded stylesheet.
-Entry reasons combine retained view selectors by path, with unresolved evidence
-taking precedence, while excluded resources stay on their own views. Formatting
-alone therefore leaves every consumer out of Changes for that stylesheet.
-Retained resource evidence at an actual invocation keeps the union of declared
-`ownedDependencies` owners and inferred inline-rule owners in Changes when
-variant entries do not render that path. This applies to CSS and non-CSS public
-resources. A changed Git path supplies a component dependency reason;
-[resource propagation](./mokly-inline-style-resources.md#resolution-and-propagation)
-owns reference traversal, owner unions, independent entry reachability and
-derived byte-only material reasons without invented Git evidence.
-Their view exclusions stay intact and affected links retain invocation context.
-An exact screen declaration independently retains a stylesheet only when its
-actual view keeps it. Non-CSS path-only evidence follows the independent-reason
-rule above; non-public implementation dependencies keep declarative ownership.
+Eligible inline style rules use [inferred ownership](./mokly-inline-styles.md).
+Unresolved rules and rules that reach entry markup stay with that entry;
+unmatched rules are excluded, and owned rules follow paired equal-input
+components. On a component's saved page, its root maps to the entry.
+Returned renderer `styles` assertions are ignored with a warning.
 
-Component-generated head styles use a string-only renderer without ownership
-assertions. [Inline ownership](./mokly-inline-styles.md) infers each rule's owner
-from paired documents and validated ranges; unresolved or entry-reaching rules
-stay with the entry, owned rules follow paired equal-input components, and
-unmatched rules are excluded. Root rules on a variant remain entry material.
+CSS file delivery uses the own-page rule membership above, including a file
+reached from an inline `@import`. CSS files never receive resource owners.
+Non-CSS references use the union of renderer-record and inferred-inline owners.
+Evidence at an actual invocation can keep an owner changed even when no saved
+variant reaches that path. A changed Git path supplies a dependency reason;
+byte-only changes supply material without invented Git evidence. Independent
+entry reachability remains independent. See [resource propagation](./mokly-inline-style-resources.md#resolution-and-propagation).
 
-Owned asset edits must flag component pages even when HTML is byte-identical.
-Retain actual styles, fonts, and images in screenshots and snapshot trees. Never
-strip all styles, drop a shared-impact glob globally, or ignore the whole
-consumer document to make a component-only example pass.
+All classification paths use the same unfiltered and kept own-page CSS sets.
+Original view analyses supply matching trees under [page matching](./mokly-page-analysis.md#original-page-matching),
+while paired ignores and ownership recipes determine retained resource material.
+Keep CSS eligible through actual resource discovery regardless of ownership
+projection. Retain actual styles, fonts and images in snapshots; never strip
+styles or whole documents to suppress consumer rows.
 
 ## Baselines
 
-Baseline and current documents come from validated manifest-v9 output and
-retain their original bytes. Component ranges use each document's UTF-16
-coordinates. Historical readers discard retired ownership arrays before use.
-Earlier output follows [baseline compatibility](./mokly-baseline-compatibility.md).
-
-Use the existing merge base with `origin/main` or the configured base; staged,
-unstaged, and untracked current edits still participate. Cross-kind path reuse
-and moves follow the [comparison pairing rule](./mokly-changes-serving.md#comparison-engine)
-and the [move contract](./mokly-moves.md); title edits remain metadata changes.
-
-New/removed components and variants retain explicit missing comparison sides.
-Union baseline/current usage so removing a component does not erase its former
-consumers. A component with no saved variant affected by an implementation edit
-can still be changed through declared implementation dependencies or a proven
-implementation difference at a paired actual invocation with unchanged inputs.
-For that invocation, retain parent-owned child inputs and exclude caller-owned
-slots using the same ownership policy as saved variants. Metadata-only edits
-do not invent affected consumers. Do not
-invent a variant representing every possible prop combination.
-
-When either side lacks validated component metadata, compare its real content
-conservatively. Initial registration or one-sided ownership adoption must not
-hide a simultaneous edit or create synthetic empty components. Do not rebuild
-or check out the baseline during comparison.
+The [baseline validation contract](./mokly-component-review-validation.md#baselines)
+defines same-version admission, original snapshot bytes and source protection.
 
 ## Required Evidence
 
-Unit/integration/browser fixtures prove agreement among Changes rows/count,
-on-demand, watch and publication. Cover table cases, repeated/nested/empty instances,
-caller-owned slots, invalid markers, unchanged-render props, both viewports/themes,
-owned external styles and inline ownership: owned, shared, retained, unresolved,
-excluded, formatting-only, unpaired, caller-prop, nested-slot and root cases.
-Prove equal membership across live, complete, published and selected results,
-shared-impact overlap, independent screen edits, historical ownership retirement,
-compatible/incompatible baselines, removed consumers and concurrent watched updates;
-affected-screen comparisons must visibly retain component styling edits.
+Unit, integration and browser fixtures must agree on Changes, affected consumers,
+watch updates and published output. Cover repeated, nested and empty instances,
+caller slots, root boundaries and paired ignores, invalid markers, unchanged-render
+prop edits, both viewport/theme axes, linked file membership and inferred inline
+ownership. Include non-CSS record/inline owner unions, byte-only edits, independent
+screen edits, removed consumers and concurrent updates. Comparisons must retain
+component styling in affected screens.
 
-Dependency declaration provenance is attribution input. Changing declarations
-without a matching resource edit or registering an unrelated component in a
-previously component-free catalogue must not flag unchanged screens/components.
+Historical source-path declarations supply no attribution or display evidence.
+Registering an unrelated component must not add an unchanged entry to Changes.

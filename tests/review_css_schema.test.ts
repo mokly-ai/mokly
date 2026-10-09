@@ -4,6 +4,7 @@ import test from "node:test";
 import { renderReviewArtifact } from "../dist/review/artifact.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
+import { fixtureCssAnalysis } from "./helpers/css_evidence.js";
 import {
   cssSchemaFiles,
   cssSchemaFixture,
@@ -11,7 +12,7 @@ import {
 
 for (const version of [5] as const) {
   test(`v${version} validates material even without resource evidence`, () => {
-    const result = cssSchemaFixture(version);
+    const result = cssSchemaFixture();
     for (const view of result.screens[0]!.views) {
       delete view.reasons;
       delete view.excludedResources;
@@ -29,7 +30,7 @@ for (const version of [5] as const) {
     );
   });
   test(`v${version} artifact validation rejects unreachable exclusion evidence`, () => {
-    const result = cssSchemaFixture(version);
+    const result = cssSchemaFixture();
     Object.assign(result, {
       changedPaths: ["mockups/shared.css", "mockups/unreachable.css"],
     });
@@ -44,7 +45,7 @@ for (const version of [5] as const) {
     );
   });
   test(`v${version} CSS evidence round-trips through the artifact and shared client decoder`, () => {
-    const result = cssSchemaFixture(version);
+    const result = cssSchemaFixture();
     const files = renderReviewArtifact({ result, files: cssSchemaFiles() });
     const json = String(files.get("review.json"));
     const decoded = parseReviewResult(JSON.parse(json));
@@ -75,12 +76,12 @@ for (const version of [5] as const) {
     ],
   ] as const)
     test(`v${version} rejects ${name} on both dependency boundaries`, () => {
-      const value = cssSchemaFixture(version);
+      const value = cssSchemaFixture();
       Object.assign(value.screens[0]!.views[0]!.reasons![0]!, {
         analysis: patch,
       });
       assert.throws(() => parseReviewResult(value), /review/);
-      const entry = cssSchemaFixture(5);
+      const entry = cssSchemaFixture();
       Object.assign(entry.changes[0]!, {
         reasons: [
           { kind: "dependency", path: "mockups/shared.css", analysis: patch },
@@ -137,15 +138,15 @@ for (const version of [5] as const) {
     ],
   ] as const)
     test(`v${version} rejects ${name}`, () => {
-      const value = cssSchemaFixture(version);
+      const value = cssSchemaFixture();
       Object.assign(value.screens[0]!.views[1]!, patch);
       assert.throws(() => parseReviewResult(value), /review/);
     });
 
   test(`v${version} permits unresolved empty selectors only on CSS`, () => {
-    const value = cssSchemaFixture(version);
+    const value = cssSchemaFixture();
     Object.assign(value.screens[0]!.views[0]!.reasons![0]!, {
-      analysis: { status: "unresolved", selectors: [] },
+      analysis: fixtureCssAnalysis("unresolved", []),
     });
     assert.deepEqual(parseReviewResult(value), value);
     Object.assign(value, { changedPaths: ["image.svg"] });

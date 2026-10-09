@@ -42,8 +42,8 @@ test("static export keeps component Changes, affected screens, saved variants an
   const result = parseReviewResult(
     JSON.parse(files.get(exported.comparisonUrl.slice(1))!.toString()),
   );
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   assert.deepEqual(
     result.changes.map((item) => (item.after ?? item.before)!.path),
     ["action"],
@@ -102,7 +102,7 @@ test("static export retains removed saved variants and baseline component consum
   const result = parseReviewResult(
     JSON.parse(files.get(exported.comparisonUrl.slice(1))!.toString()),
   );
-  if (result.schemaVersion !== 6) assert.fail("Expected component result");
+  if (result.schemaVersion !== 7) assert.fail("Expected component result");
   const removed = result.components
     .find((item) => item.path === "action")!
     .variants.find((item) => item.path === "action/disabled")!;

@@ -1,4 +1,5 @@
 export { defineConfig } from "./config/define.js";
+export { componentStylesheets } from "./config/component_stylesheets.js";
 export type {
   ModuleLoader,
   ModuleResolutionConfig,
@@ -64,5 +65,7 @@ export type {
 export type {
   ComponentInstanceRecord,
   ComponentSourceLocation,
+  ComponentStyleOwnership,
+  ComponentResourceOwnership,
 } from "@mokly/viewer";
-export type { Renderer, RenderInput } from "./renderer/types.js";
+export type { Renderer, RenderInput, RenderResult } from "./renderer/types.js";

@@ -1,6 +1,8 @@
 # npm Release Notes
 
-## Unreleased Breaking-Change Coverage
+## Delivery Status
+
+### Unreleased Breaking-Change Coverage
 
 The squash-merge commit uses `!` and `BREAKING CHANGE:` footers for the
 contracts below. Release Please owns package versions and changelogs. The
@@ -16,8 +18,13 @@ The navigation, identity, baseline and viewer-host notes also cover the
 changes integrated from main's squash; its pre-squash commits are not ancestors
 of this branch and do not appear in the coverage command.
 
+- `fcae6390 feat!: complete source-path evidence removal` — combined below.
+- `e5407723 feat!: remove authoring dependencies` — combined below.
 - `43404882 feat!: derive entry identity from paths` — the path identity note
   below.
+- `b39d89a4 feat!: simplify generated output and delivery` — generated output,
+  removed options, current-only formats and the portable namespace below.
+- `acac1c73 feat(publish)!: require a clean checkout` — the Publish note below.
 
 ## Generated Output And Manifest API
 
@@ -28,12 +35,30 @@ write that tree. Plain Serve, export and publish compile in memory. Check uses
 Git-index tracking to choose its tracked or untracked validation boundary.
 Remove the old options; no default-output mode replaces them.
 
-`ManifestV9` replaces the incompatible pre-merge `ManifestV8` shapes. The `Manifest` and `HistoricalManifest`
-aliases now name v9. V9 requires `assetClosure`, `generatedFiles` and
-`blobHashAlgorithm` in addition to the identity-only entries and source
-inventory. Regenerate this data with Build; do not hand-convert old manifests.
-Only v9 is readable as baseline content. Earlier-version detection returns the
-existing unavailable outcome, which is never cached.
+`ManifestV10` replaces released `ManifestV9`; `Manifest` and `HistoricalManifest` now name v10.
+V10 still requires `assetClosure`, `generatedFiles` and `blobHashAlgorithm` in
+addition to the identity-only entries and source inventory.
+The combined shape requires root ranges and inserted-stylesheet provenance, and
+removes source dependency declarations.
+Only valid v10 baselines are read. npm 0.14.0 output (manifest v9, catalogue v5
+and review v6) is earlier output.
+Former manifest filenames no longer act as sentinels. Missing canonical output
+uses normal absence and rebuild selection.
+Rebuild committed `mokly-generated/` once with Build, commit it, and regenerate
+exports. Do not hand-convert manifests.
+An earlier base gives Changes unavailable with the existing message. Build,
+Serve, export and publish succeed. Earlier outcomes are never cached.
+
+## Breaking Publish Checkout Release Note
+
+`mokly publish` requires a clean checkout before export and before upload.
+Commit, stash or ignore uncommitted files. Git-ignored files, this run's `--out`
+directory, and Mokly caches and temporary files are excluded. Committed generated
+files must match the build; rebuild and commit them when stale. Derived output
+must be ignored by Git. Failures use `git-uncommitted` or `build-stale`.
+`--no-changes` still needs a committed HEAD but needs no comparison history.
+See the [upload contract](./mokly-upload.md). Local export and repository preview
+capture keep their existing checkout rules.
 
 ## Removed Public Options And Types
 
@@ -45,14 +70,14 @@ Render portable HTML and links directly in entries or the configured renderer.
 Supplying `compatibility`, including `undefined`, fails with
 `compatibility was removed; author portable links directly`.
 
-Catalogue v5 has one fixed layout. The branch-only `generatedPathPrefix`,
+Catalogue v6 has one fixed layout. The branch-only `generatedPathPrefix`,
 `GeneratedPathPrefix`, `FrameMount.generatedPathPrefix` and `FrameMount.route`
 never shipped and have no migration API. `currentDocumentPath(route)` and
 `currentDocumentRoute(pathname)` use `GENERATED_DIRECTORY` directly. The
-catalogue schema version is 5. No DOM prefix override is supported.
+catalogue schema version is 6. No DOM prefix override is supported.
 
 Export directories require the current v3 ownership marker or must be empty.
-There is no preview-marker migration. Baseline caches accept only complete v9
+There is no preview-marker migration. Baseline caches accept only complete v10
 output and rebuild invalid entries. Only the current generated notice is
 nonmaterial; its LF and CRLF forms remain accepted. Format version rejection,
 removed-key errors and the service's 426 handling remain unchanged.
@@ -72,7 +97,7 @@ CSS, assets and the private manifest share `<mockupsDir>/mokly-generated/`.
 Exported current resources live under `static/mokly-generated/`, with authored
 closure files beside that child under `static/`.
 
-Readers accept source manifest v9, public catalogue v5, delivery v5 and
+Readers accept source manifest v10, public catalogue v6, delivery v5 and
 bootstrap v2 only. The namespace change advances ownership to v3 and upload to
 v2 while retaining Plan v1 and content deltas. These supersede the intermediate
 format numbers in the earlier upgrade notes below. An older receiver returns
@@ -92,13 +117,14 @@ The path identity upgrade removes `id`, `navPath`, `entries`, and `entriesDir`.
 The removed nested authoring types include `NestedFolderInput` and `RootInput`.
 Each entry has one path derived from its discovered exporting file. It adds Markdown
 documents and move detection, renames Pages to Specs, and gives each entry a
-generated directory. Consumers must adopt manifest v9, catalogue read model
-v5, review result v6, disclosure storage v4, and `/view/<path>/` URLs.
+generated directory. Consumers must adopt manifest v10, catalogue read model
+v6, review result v7, disclosure storage v4, and `/view/<path>/` URLs.
 
 Earlier formats, URLs, ids, disclosure keys, and configuration are not read or
 translated. There is no compatibility reader, URL redirect, id mapping,
 storage-key conversion, configuration fallback, or migration tool. Former
-configuration fields fail as unknown fields. An earlier comparison base makes
+configuration fields fail as unknown fields, except the removed
+`review.sharedImpact` input, which warns and has no effect. An earlier comparison base makes
 Changes unavailable until it includes this version. Migration is manual;
 regenerate the catalogue after changing authoring and update saved entry links.
 
@@ -107,6 +133,35 @@ Generated HTML has one plain notice, which proves no ownership. The complete
 Preview builds do not adopt `.mokly-preview-artifact` output. Preserve authored
 files, delete an old export destination, and export again. Do not rename headers
 or markers to claim ownership. Current export ownership uses schema 3.
+
+This release also removes source-path evidence. Delete entry `dependencies`,
+removed component `ownedDependencies` and `review.sharedImpact`. Current authoring
+helpers warn once when these keys are present and ignore their values. Public
+input types use `?: never` for removed authoring fields; explicit `undefined`
+needs `exactOptionalPropertyTypes` for a type error. Strict commands count these
+warnings before any output write or upload.
+Declare separately authored component CSS with `stylesheets` and place it with
+`componentStylesheets` when
+needed. The shared public-file policy refuses symbolic links at every public path
+component, including declared CSS and renderer links. Remove public stylesheet
+aliases and use regular files. Only configured links anchor component CSS
+placement. Reused renderer links
+receive no inserted provenance. The renderer keeps its configured and generated
+CSS list. Ordinary package edits finalize private full-link spans; no transformer
+or transient token remains.
+
+Changes uses rendered output, reachable resources, reviewable metadata and
+component usage. All CSS delivery paths use the same changed-rule test: kept
+own-page matches change a component; outside matches and unresolved rules give
+the page a direct row. Source-only edits add no evidence. Details omit the
+source dependency list. The combined current formats use new versions:
+manifest v10 includes root ranges and `insertedStylesheets` with
+`componentPaths`; catalogue v6 carries view/page `resourceEvidence`; review v7
+carries `ruleKey`, `changedComponentPaths`, `pageSelectors` and `pageEvidence`.
+Manifest dependency declarations, catalogue `details.dependencies`, review
+`sharedImpact` and entry dependency lists are absent. Earlier shapes are not
+read. Rebuild baselines and regenerate public exports. Former `mokabook-`
+component and Review-ignore comments are ordinary content, with no translation.
 
 Migrate authoring as follows:
 
@@ -136,8 +191,9 @@ path instead of `(kind, id)`; `snapshotPagePath` becomes
 becomes `previewMetadataPath(path)`; `documentRoute` is new; and
 `unavailableViewHref` is removed because `viewHref` of an unknown path opens
 the missing view. `parseViewHref` returns a path rather than a kind and id.
-Replace `ManifestV7` with `ManifestV9`, `ReviewResultV4` with
-`ReviewResultV6`, and `ScreenReviewV4` with `ScreenReviewV6`. Replace
+Replace `ManifestV7` (0.13.0) or released `ManifestV9` (0.14.0) with `ManifestV10`,
+`ReviewResultV4` or `ReviewResultV6` with `ReviewResultV7`, and
+`ScreenReviewV4` or `ScreenReviewV6` with `ScreenReviewV7`. Replace
 `isEntryId` and `isCatalogueId` with `isPathSegment` and `isEntryPath`;
 `isWindowsDeviceName` is unchanged.
 
@@ -176,59 +232,5 @@ See [the historical note](./npm-release-history.md#historical-delta-publishing-r
 
 See [the historical note](./npm-release-history.md#historical-viewer-host-api-release-note).
 
-## Breaking Renderer Ownership Release Note
-
-Custom renderers return only the complete HTML string. Remove object-shaped
-`RenderResult` returns and its type from `@mokly/mokly` imports. The released
-`ComponentStyleOwnership` and `ComponentResourceOwnership` types were removed
-from `@mokly/viewer/data` as well as the root viewer and Mokly exports.
-Remove `styles` and `resources` from current usage records: Mokly
-infers inline-rule ownership and uses declared `ownedDependencies` for files.
-Historical v9 readers discard array-valued retired keys without weakening
-other validation; the current manifest is v9.
-
-Both `@mokly/viewer/data` validators remove positional booleans and obsolete
-component-root arguments. Use
-`validateComponentViews(value, components, at, { dark, historical? })` and
-`validateComponentViewRecord(view, components, at, { historicalUsage? })`.
-The fourth options object is required; pass `{}` for current single-view usage.
-`historical` defaults to false and is only for historical manifest retirement;
-`historicalUsage` defaults to false and is only for already-admitted historical
-catalogue usage, never for accepting retired manifest keys. The
-[usage validation contract](./mokly-component-usage-records.md#validation)
-defines strict option shapes and the typed rejection of old calls.
-
-Release notes and the close-out commit use a `BREAKING CHANGE:` footer naming
-the applicable upgrades above; the release PR owns versions and changelogs.
-
-## Boundary And Tooling Changes
-
-`parseStaticDelivery` returns `valid`, `unsupported-version` or `invalid` results
-and never throws. Callers read the descriptor from a valid result's `value`.
-Browser boundary readers throw `MoklyVersionError`; export keeps `export-invalid`.
-`ViewerError.code` includes `version`, with optional diagnostic `details` beside
-the existing product-facing `message`.
-
-The approved watch-writer change moves successful plain baseline notes and
-the earlier-version notice to stdout;
-errors and requested timing JSON retain stderr. Referenced authored files are
-not private solely because of an extension or build-folder name; source inputs,
-protected locations, hidden segments and symlinks remain private.
-
-## Combined Path And Output Formats
-
-The path/output integration uses manifest v9, catalogue v5, review v6, delivery
-v5 and bootstrap v2. Live capability descriptors and the inspector wire use v2;
-the live index is `live-index-2`, catalogue change snapshots use v3 and baseline
-completion markers use v2 with `generated-v9`. Export ownership v3, upload v2
-and Plan v1 retain their shapes. See the
-[complete format inventory](./mokly-format-versions.md).
-
-File-derived paths replace `id`/`navPath`, and `roots` replaces `entries` and
-`entriesDir`. Markdown documents, folders and moves use the incoming path
-contract. Every generated file now lives under `mokly-generated/`, including
-Markdown resource copies. Old manifest v8 or catalogue v4 payloads from either
-parent are unsupported. Rebuild with the matching package; no converter is
-provided. The preview command against an earlier main base still succeeds with
-Changes unavailable. Only the explicit writers take the output lock; immutable
-in-memory route snapshots replace disk capture and reject undeclared worker routes.
+See [format and tooling release notes](./npm-release-notes-formats.md) for
+boundary changes and the combined path and output formats.

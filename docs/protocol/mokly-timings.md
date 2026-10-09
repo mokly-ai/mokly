@@ -8,6 +8,8 @@ implements heap/document counts, segment counts, shared page parses,
 
 Performance acceptance is deferred under the plan's Decision 13 (2026-10-06).
 
+This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+
 ## Opt-in timings
 
 `--debug-timings` is a common boolean CLI option for `serve` (including the
@@ -64,7 +66,7 @@ Review phases use the same session, role and parent context as their caller:
   Pinned readers reuse the resolved commit without another Git span.
 - `review.changed-paths` covers output exclusions, tracked/untracked discovery,
   deduplication and sorting, including later input-freshness checks.
-- `review.base-manifest` covers canonical baseline reading, v9 validation, and
+- `review.base-manifest` covers canonical baseline reading, v10 validation, and
   incompatible-version detection.
 - `review.base-documents` covers each bulk baseline-document read, including
   live component prefetch and bounded live document-comparison batches. It does

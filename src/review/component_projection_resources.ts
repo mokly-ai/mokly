@@ -12,7 +12,8 @@ import {
 } from "../components/ranges.js";
 import { parseHtml } from "../diagnostics/html_parse.js";
 
-import type { ComponentViewContext } from "./component_view.js";
+import type { ComponentViewContext } from "./component_view_types.js";
+import { projectedResourceExclusion } from "./component_resource_exclusion.js";
 import type { CssDocument } from "./css/document.js";
 import {
   attributeInlineRules,
@@ -184,9 +185,19 @@ export function prepareComponentProjection(
     ...prepareInlineEvidence(analysis),
     excluded:
       pages?.resourceExclusion(() =>
-        projectedResourceExclusion(context, projected.pairedComponentIds, root),
+        projectedResourceExclusion(
+          before,
+          after,
+          projected.pairedComponentIds,
+          root,
+        ),
       ) ??
-      projectedResourceExclusion(context, projected.pairedComponentIds, root),
+      projectedResourceExclusion(
+        before,
+        after,
+        projected.pairedComponentIds,
+        root,
+      ),
   };
 }
 
@@ -222,20 +233,4 @@ export function prepareInlineEvidence(
         : {}),
     },
   };
-}
-
-/** Build the exact projected-resource exclusion used by complete comparison. */
-function projectedResourceExclusion(
-  context: ComponentViewContext,
-  pairedComponentIds: ReadonlySet<string>,
-  root: string | undefined,
-): (path: string) => boolean {
-  const repoPath = (path: string) =>
-    context.prefix ? `${context.prefix}/${path}` : path;
-  return (path: string) =>
-    context.dependencies.suppressResource(
-      repoPath(path),
-      pairedComponentIds,
-      root,
-    );
 }

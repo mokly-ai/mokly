@@ -66,6 +66,7 @@ export function createElementOwnerIndex(input: {
         const range = innermostRange(ranges, offset);
         if (!range) return { kind: "entry" };
         const target = range.record.target;
+        if (target.kind === "root") return { kind: "entry" };
         if (target.kind === "instance") {
           const instance = instances.get(target.instanceKey);
           return instance

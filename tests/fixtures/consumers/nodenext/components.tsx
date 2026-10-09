@@ -8,6 +8,7 @@ import {
   type ComponentSourceLocation,
   type DataPropSchema,
   type InstanceResolution,
+  type RenderResult,
 } from "@mokly/mokly";
 
 const schema = {
@@ -21,7 +22,6 @@ const component = defineComponent({
   path: "typed-component",
   title: "Typed component",
   description: "Packed declaration inference.",
-  dependencies: [],
   relatedDocs: [],
   propSchema: schema,
   slots: ["children"],
@@ -52,7 +52,7 @@ const props: ComponentProps<typeof schema, readonly ["children"]> = {
 };
 const data: DataPropSchema = schema;
 const control: ComponentControl = { kind: "number", step: 1 };
-const result: string = "<html><body>Typed</body></html>";
+const result: RenderResult = { html: "<html><body>Typed</body></html>" };
 void [valid, missing, wrong, props, data, control, result];
 
 const source: ComponentSourceLocation = {

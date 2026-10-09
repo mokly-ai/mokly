@@ -30,11 +30,28 @@ export interface ComponentSlotRecord {
   sourceSlotKey?: string;
 }
 export type ComponentRangeTarget =
-  { kind: "instance"; instanceKey: string } | { kind: "slot"; slotKey: string };
+  | { kind: "instance"; instanceKey: string }
+  | { kind: "slot"; slotKey: string }
+  | { kind: "root" };
 export interface ComponentRangeRecord {
   id: string;
   target: ComponentRangeTarget;
   parentId?: string;
+}
+export interface ComponentStyleOwnership {
+  startOffset: number;
+  endOffset: number;
+  componentIds: readonly string[];
+}
+export interface ComponentResourceOwnership {
+  path: string;
+  componentIds: readonly string[];
+}
+export interface InsertedComponentStylesheet {
+  startOffset: number;
+  endOffset: number;
+  path: string;
+  componentPaths: readonly string[];
 }
 export interface ComponentViewRecord {
   viewport: "mobile" | "desktop";
@@ -42,6 +59,10 @@ export interface ComponentViewRecord {
   instances: readonly ComponentInstanceRecord[];
   slots: readonly ComponentSlotRecord[];
   ranges: readonly ComponentRangeRecord[];
+  styles: readonly ComponentStyleOwnership[];
+  resources: readonly ComponentResourceOwnership[];
+  /** Required in persisted v10 usage; absent from public inspection and unfinished renders. */
+  insertedStylesheets?: readonly InsertedComponentStylesheet[];
 }
 
 /** Current identity-only component parent. */
@@ -52,7 +73,6 @@ export interface ManifestComponent extends Omit<ManifestEntryBase, "kind"> {
   propSchema: ObjectPropSchema;
   slots: readonly string[];
   controls: Readonly<Record<string, ComponentControl>>;
-  ownedDependencies: readonly string[];
 }
 
 /** Current identity-only flattened component variant. */
@@ -69,7 +89,7 @@ export interface ManifestComponentVariant extends Omit<
   componentViews: readonly ComponentViewRecord[];
 }
 
-/** Whether one current or historical-v7 component is a variant entry. */
+/** Whether one current or baseline-v10 component is a variant entry. */
 export function isManifestComponentVariant(
   entry: ManifestComponent | ManifestComponentVariant,
 ): entry is ManifestComponentVariant {

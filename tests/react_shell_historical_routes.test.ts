@@ -16,7 +16,7 @@ import { validEntrySource } from "./helpers/fixture.js";
 function pageSource(id = "handbook"): string {
   return `${validEntrySource()}
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ path: ${JSON.stringify(id)}, title: "Handbook", description: "Catalogue guidance", dependencies: [], relatedDocs: [], render: () => '<!doctype html><html><body><h1>Handbook</h1></body></html>' }));`;
+mockups.push(definePage({ path: ${JSON.stringify(id)}, title: "Handbook", description: "Catalogue guidance", relatedDocs: [], render: () => '<!doctype html><html><body><h1>Handbook</h1></body></html>' }));`;
 }
 
 test("hydrated Serve and export render a removed route", async (context) => {

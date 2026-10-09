@@ -83,26 +83,25 @@ its loading wait, its unavailable state with Retry, or the note naming the
 viewport that still opens, without comparison modes and with
 no live product destination; links inside a previous version do nothing.
 Unsupported dark-comparison modes remain non-link depictions.
-Shared-impact/ignored-only and empty Changes keep a Current preview
-without comparison modes; factual evidence lives in Details. Their existing
-entries and All escape remain available. A future interactive mode needs its
-own contract and owning screen first.
+Ignored-only and empty Changes keep a Current preview without comparison
+modes; factual evidence lives in Details. Their existing routes and All escape
+remain available. A future interactive mode needs its own contract and owning screen first.
 
-Five style-evidence states share previews, inspectors and filter controls:
+Excluded styles shows All with one changed Welcome: one changed sheet matches and another is excluded. The title and row show Changed; comparison controls start in Current. Changes opens Matched styles, whose All filter returns to Excluded. Its Details row opens Excluded styles only, the same branch in All with Details selected: Details links only the excluded sheet, so it shows Unmodified, has no comparison controls and its Details end with "No changes to this screen." Its Welcome row returns to Excluded; its Changes filter stays a depiction, because no design shows Details beside the Changes list. Ignored only and No changes pair a separate zero-change catalogue. Unresolved and Unnamed styles open from the tree. Document page styles, the canonical screen of the Stylesheet evidence page, shows the page designs' Getting started document in Changes beside Action and Action's three saved variants. The page designs show the same five changes and open it from their Changes filter. It has no comparison controls; its Action row opens `design/components/states/shared-impact/style-changed`, and its variant rows stay depictions.
 
-| Control/context                        | Destination                                                               |
-| -------------------------------------- | ------------------------------------------------------------------------- |
-| Shared impact: Changes filter          | Matched stylesheet evidence, `design/changes/impact/styles/matched`       |
-| Ignored only: Changes filter           | Unresolved stylesheet evidence, `design/changes/impact/styles/unresolved` |
-| Matched evidence: All filter           | Excluded stylesheet evidence, `design/changes/impact/styles/excluded`     |
-| Unresolved evidence: All filter        | Canonical All Welcome, `design/browse/views/screen`                       |
-| Excluded evidence: Changes filter      | Empty Changes, `design/changes/impact/empty`                              |
-| Unnamed evidence: All filter           | Canonical All Welcome, `design/browse/views/screen`                       |
-| Page-excluded evidence: Changes filter | Empty Changes, `design/changes/impact/empty`                              |
+| Control/context                   | Destination                                                                            |
+| --------------------------------- | -------------------------------------------------------------------------------------- |
+| Excluded evidence: Changes filter | Matched stylesheet evidence, `design/changes/impact/styles/matched-excluded/matched`   |
+| Excluded evidence: Details row    | Excluded styles only, `design/changes/impact/styles/matched-excluded/excluded-only`    |
+| Excluded only: Welcome row        | Excluded stylesheet evidence, `design/changes/impact/styles/matched-excluded/excluded` |
+| Ignored only: Changes filter      | Empty Changes, `design/changes/impact/empty`                                           |
+| Matched evidence: All filter      | Excluded stylesheet evidence, `design/changes/impact/styles/matched-excluded/excluded` |
+| Unresolved evidence: All filter   | Canonical All Welcome, `design/browse/views/screen`                                    |
+| Unnamed evidence: All filter      | Canonical All Welcome, `design/browse/views/screen`                                    |
+| Page designs: Changes filter      | Document page styles, `design/changes/impact/styles/page`                              |
+| Document page styles: All filter  | Document page, `design/browse/pages/view`                                              |
 
-Matched, unresolved and unnamed show only their retained screen in Changes,
-with Side by side selected and non-link comparison controls. Both excluded
-states show All with no Changes or comparison modes. None has tag transitions.
+Matched, Unresolved and Unnamed show only their changed screen in Changes. The linked Excluded and Matched states use one Details card with both the matched and excluded evidence, as the [shell contract](./mokly-css-evidence-shell.md) defines. Mode destinations without an owning mockup remain depictions, and these states add no tag transitions. The component explorer's stylesheet stories keep their own Changes lists under the [component design contract](./mokly-component-design.md#component-pages): Styles outside a changed component links Action, from its row and from Details, to `design/components/states/shared-impact/style-changed`, whose Affected screens open the existing Welcome and Details inspection screens; their unlinked variant rows stay depictions.
 
 Tag interactions are restricted to the canonical Welcome states:
 

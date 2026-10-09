@@ -38,6 +38,7 @@ export function validateStylesheetAliases(
       "darkStylesheets",
     ] as const) {
       for (const stylesheet of rule[field] ?? []) {
+        if (typeof stylesheet !== "string") continue;
         if (/^https?:\/\//.test(stylesheet)) continue;
         if (
           isReservedConfiguredPath(

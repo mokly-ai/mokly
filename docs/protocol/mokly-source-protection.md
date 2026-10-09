@@ -1,6 +1,10 @@
 # Catalogue Source Protection
 
-Build, Check, Serve, Review, export and publication share validated manifest-v9
+## Delivery Status
+
+Ignoring all CSS owner records after safety checks remains implemented.
+
+Build, Check, Serve, Review, export and publication share validated manifest-v10
 source inventories. Exact generated files and the checked authored closure are
 public under the [shared policy](./mokly-public-closure.md). Source, alias and
 metadata denials win. Preview replacement requires current export ownership.
@@ -109,6 +113,11 @@ referenced hidden path fails `build-invalid` with its referring resource.
 The same closure governs Serve, export, publication and Review. Never use a
 plain generated marker to grant asset access.
 
+Declaring a component stylesheet grants no source-protection exception. Validate
+its links, transitive imports and assets through the same closure. Ignore CSS
+owner records only after confinement and protected-source checks; neither
+declarations nor owner claims can decide CSS rule attribution.
+
 ## Complete Source Inventory
 
 The complete inventory includes imported CSS, nested `@import`s, local `url()`
@@ -123,7 +132,7 @@ as a source. Every file below `mokly-generated/` remains package-owned output,
 not an authored input, even without an HTML header. See
 [imported stylesheet delivery](./mokly-imported-styles.md).
 
-Manifest v9 `sourceFiles` is a sorted, unique array of repository-relative POSIX
+Manifest v10 `sourceFiles` is a sorted, unique array of repository-relative POSIX
 paths. Derive it from the union of file inputs resolved by both the config
 bundle and the consumer bundle, including inputs eliminated by tree shaking:
 
@@ -165,7 +174,7 @@ inside `repoRoot` or explicitly configure a common root containing it.
 ## Freshness And Lifecycle
 
 Build/check derive the inventory from the same resolved graphs used for that
-compilation. Before serving or publishing a current v9 catalogue, independently
+compilation. Before serving or publishing a current v10 catalogue, independently
 resolve the config and consumer input graphs and require the accepted in-memory
 inventory to match. This scan may bundle modules but must not run page render callbacks,
 rewrite generated output, or read Git history. A missing, malformed, or stale
@@ -181,10 +190,10 @@ the browser. A failed candidate keeps the last-good generation. Asset checks
 recheck realpath confinement and regular-file identity at read time; a
 retargeted symlink is not an accepted closure file.
 
-For baseline Review resources, use the accepted v9 inventory, entry sources,
+For baseline Review resources, use the accepted v10 inventory, entry sources,
 and reserved-name rules. Never execute baseline config with the current package;
 a [derived baseline](./mokly-derived-baselines.md) is built by its own commit's
-tooling and then read through the v9 boundary. The accepted baseline's closure is the only public authored set. Baseline
+tooling and then read through the v10 boundary. The accepted baseline's closure is the only public authored set. Baseline
 paths use the reader's validated file kinds, never current disk targets. Git and
 derived-baseline resource readers reject symlinks rather than
 following them.
@@ -192,21 +201,15 @@ Current-side resource reads always use the current validated policy.
 
 ## Acceptance
 
-Add tests before implementation for abandoned reserved files, removing their
-last import, config/renderer/helper imports that no root glob
-matches, entry modules co-located beside product components, tree-shaken
-inputs, local workspace packages, and arbitrary helper filenames.
-Test missing/stale inventories, logical and realpath aliases, symlink escapes,
-mixed source/asset roles, reserved output routes, and rejected protected links.
-Cover outside config, entry, renderer, page-helper, and raw-template
-imports, while proving installed dependencies outside the root still load.
+The [source protection acceptance contract](./mokly-source-protection-acceptance.md)
+lists the required boundary and lifecycle checks.
 
 Exercise the same fixtures through GET/HEAD `/static`, resource validation,
 current and historical Review reads, and both publication options. Verify that
 CSS, fonts, images, and public scripts still work. Test watcher reclassification
 after dependency changes and prove default publication validation uses no Git.
 Cover internal manifests, their symlink aliases, generated links/resources,
-ordinary public JSON, v9 internal reads and earlier-envelope rejection.
+ordinary public JSON, v10 internal reads and earlier-envelope rejection.
 Cover unreferenced files at root and nested paths, aliases in either direction,
 missing and protected closure references, and `mokly-generated/` escapes. Prove
 unreferenced README edits create no public content evidence, real imported
@@ -216,5 +219,5 @@ source-protection rule denies them.
 The approved [public-file policy](./mokly-public-closure.md) centralizes these
 checks once per compile. File extensions and build-folder names alone do not
 protect a referenced authored file. Actual source and protected-location rules
-still win. Explicit closure seeds use the same validation, and Serve rechecks each
+still win. Renderer resource and other explicit closure seeds use the same validation, and Serve rechecks each
 listed file without following symbolic links at read time.

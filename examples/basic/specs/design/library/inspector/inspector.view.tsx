@@ -6,7 +6,6 @@ import {
   CloseInspectorIcon,
   InspectorIcon,
 } from "../../components/parts/inspector_icons.js";
-import { useDesignStyle } from "../style_context.js";
 
 import type { InspectorProps } from "./inspector.js";
 
@@ -16,7 +15,6 @@ export function InspectorView({
   sheetSize,
   ...content
 }: InspectorProps) {
-  useDesignStyle("inspector");
   const group = useId();
   return (
     <section className="ce-inspector" aria-label="Inspector">

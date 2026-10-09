@@ -4,8 +4,10 @@ import path from "node:path";
 
 import type {
   HistoricalManifest,
-  ManifestV9,
+  ManifestV10,
   ScreenResourceEvidence,
+  PageResourceEvidence,
+  ReviewResultV7,
   ViewResourceEvidence,
 } from "@mokly/viewer/data";
 
@@ -22,6 +24,7 @@ import {
 } from "../review/assets.js";
 import { baselineResourceConfig } from "../review/base_manifest.js";
 import type { ChangeEvidence } from "../review/change_evidence.js";
+import { CssResourceAnalysis } from "../review/css/resource_analysis.js";
 import type { BaselineReader } from "../review/git.js";
 import {
   normalizeReviewPair,
@@ -41,11 +44,14 @@ import {
   type DocumentPair,
 } from "./changed_document_pairs.js";
 import { ChangedResourceGraph } from "./changed_resources.js";
+import { classifiedScreenCss } from "./classified_css.js";
+import { contentResourceEvidence } from "./content_resource_evidence.js";
 
 /** Material membership and per-view resource evidence from one traversal. */
 export interface ChangedContent {
   changedPaths: readonly string[];
   screens: readonly ScreenResourceEvidence[];
+  pages: readonly PageResourceEvidence[];
 }
 
 /** Reuse the comparison's accepted pairing and retained baseline reads. */
@@ -60,7 +66,7 @@ export interface ChangedContentComparison {
  * Exclude authoring paths lexically so retargeted public aliases still reach validation.
  */
 export async function changedContentPaths(
-  manifest: ManifestV9,
+  manifest: ManifestV10,
   baseline: HistoricalManifest,
   config: ResolvedConfig,
   git: BaselineReader,
@@ -87,9 +93,9 @@ export async function changedContentPaths(
   ).changedPaths;
 }
 
-/** Preserve resource evidence from the v2 membership pass without repeating analysis. */
+/** Preserve rendered-resource evidence from membership without repeating analysis. */
 export async function classifyChangedContent(
-  manifest: ManifestV9,
+  manifest: ManifestV10,
   baseline: HistoricalManifest,
   config: ResolvedConfig,
   git: BaselineReader,
@@ -100,6 +106,8 @@ export async function classifyChangedContent(
   ),
   documents: "all" | "pages" = "all",
   comparison?: ChangedContentComparison,
+  css: CssResourceAnalysis = new CssResourceAnalysis(),
+  classified?: ReviewResultV7,
 ): Promise<ChangedContent> {
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const repoPath = (route: string) => (prefix ? `${prefix}/${route}` : route);
@@ -196,12 +204,13 @@ export async function classifyChangedContent(
       await readBases(changedPairs.slice(offset, offset + 32));
   });
   const screens = new Map<string, ViewResourceEvidence[]>();
+  const pages: PageResourceEvidence[] = [];
   const resources = new ChangedResourceGraph(
     headReader,
     baseReader,
     publicChanges,
     normalizedDocuments,
-    undefined,
+    css,
     {
       before: documentResourceIndex(baseline.entries),
       after: documentResourceIndex(manifest.entries),
@@ -245,44 +254,26 @@ export async function classifyChangedContent(
           pair.base && before !== undefined
             ? { path: pair.base, html: before }
             : undefined,
+          classifiedScreenCss(classified, pair.view, prefix),
         );
         if (evidence.reasons?.length || evidence.resourceChanged)
           result.add(repoPath(pair.head));
-        if (
-          pair.view &&
-          (evidence.reasons?.length || evidence.excludedResources?.length)
-        ) {
-          const { id, viewport, colorScheme } = pair.view;
-          const views = screens.get(id) ?? [];
-          views.push({
-            viewport,
-            colorScheme,
-            ...(evidence.reasons
-              ? {
-                  reasons: evidence.reasons.map((reason) => ({
-                    ...reason,
-                    path: repoPath(reason.path),
-                  })),
-                }
-              : {}),
-            ...(evidence.excludedResources
-              ? {
-                  excludedResources: evidence.excludedResources.map(
-                    (resource) => ({
-                      ...resource,
-                      path: repoPath(resource.path),
-                    }),
-                  ),
-                }
-              : {}),
-          });
-          screens.set(id, views);
+        if (!evidence.reasons?.length && !evidence.excludedResources?.length)
+          continue;
+        const projected = contentResourceEvidence(evidence, repoPath);
+        if (pair.pagePath) pages.push({ path: pair.pagePath, ...projected });
+        if (pair.view) {
+          const { path, viewport, colorScheme } = pair.view;
+          const views = screens.get(path) ?? [];
+          views.push({ viewport, colorScheme, ...projected });
+          screens.set(path, views);
         }
       }
     }
   });
   return {
     changedPaths: [...result].sort(),
+    pages: pages.sort((a, b) => (a.path < b.path ? -1 : 1)),
     screens: [...screens.keys()]
       .sort()
       .map((path) => ({ path, views: screens.get(path)! })),

@@ -6,6 +6,12 @@ import { documentWorkSync, timeAsync } from "../diagnostics/timings.js";
 
 import { referenceRoutes, referencedRoutes } from "./asset_references.js";
 
+/** Decoded document references and validated public inserted-link paths are distinct inputs. */
+export interface ViewResourceOptions {
+  references?: readonly string[] | undefined;
+  insertedStylesheets?: readonly string[] | undefined;
+}
+
 type Exclusion = (route: string) => boolean;
 interface CachedResources {
   all?: Promise<ReadonlySet<string>>;
@@ -27,14 +33,9 @@ export class ViewResourceCache {
     route: string,
     html: string,
     excluded?: Exclusion,
-    references?: readonly string[],
+    options: ViewResourceOptions = {},
   ): Promise<ReadonlySet<string>> {
-    const { cached, discover } = this.discovery(
-      route,
-      html,
-      excluded,
-      references,
-    );
+    const { cached, discover } = this.discovery(route, html, excluded, options);
     const existing = excluded ? cached.filtered.get(excluded) : cached.all;
     if (existing) return existing;
     const resources = timeAsync("review.resource-graph", () =>
@@ -48,14 +49,9 @@ export class ViewResourceCache {
     route: string,
     html: string,
     excluded?: Exclusion,
-    references?: readonly string[],
+    options: ViewResourceOptions = {},
   ): Promise<ReadonlySet<string> | undefined> {
-    const { cached, discover } = this.discovery(
-      route,
-      html,
-      excluded,
-      references,
-    );
+    const { cached, discover } = this.discovery(route, html, excluded, options);
     const existing = excluded ? cached.filtered.get(excluded) : cached.all;
     if (existing) return existing;
     const resources = await timeAsync("review.resource-graph", () =>
@@ -78,22 +74,26 @@ export class ViewResourceCache {
     route: string,
     html: string,
     excluded: Exclusion | undefined,
-    references: readonly string[] | undefined,
+    options: ViewResourceOptions,
   ) {
     let documents = this.views.get(route);
     if (!documents) {
       documents = new Map();
       this.views.set(route, documents);
     }
+    const { references, insertedStylesheets = [] } = options;
     const seeds =
       references === undefined ? undefined : referenceRoutes(route, references);
-    const identity =
+    const materialIdentity =
       seeds === undefined
         ? documentWorkSync("hashMs", () => {
             timingMaterialWork()?.materialHash(html);
             return createHash("sha256").update(html).digest("base64url");
           })
         : JSON.stringify(seeds);
+    const identity = insertedStylesheets.length
+      ? JSON.stringify([materialIdentity, insertedStylesheets])
+      : materialIdentity;
     let cached = documents.get(identity);
     if (!cached) {
       cached = { filtered: new WeakMap() };
@@ -102,9 +102,10 @@ export class ViewResourceCache {
     return {
       cached,
       discover: () =>
-        (
-          seeds ?? referencedRoutes(route, html, { resourceHints: false })
-        ).filter((path) => !excluded?.(path)),
+        [
+          ...(seeds ?? referencedRoutes(route, html, { resourceHints: false })),
+          ...insertedStylesheets,
+        ].filter((path) => !excluded?.(path)),
     };
   }
 }

@@ -2,10 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { classifyComponents } from "../dist/review/component_classification.js";
-import {
-  ComponentDependencyPolicy,
-  metadata,
-} from "../dist/review/component_metadata.js";
+import { metadata } from "../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
 import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
@@ -22,42 +19,10 @@ import { textOutput } from "./helpers/generated_text.js";
 test("component metadata reflects authored paths without a hierarchy projection", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const manifest = fixture.after.manifest;
-  assert.equal(manifest.schemaVersion, 9);
+  assert.equal(manifest.schemaVersion, 10);
   const entry = manifest.entries.find((item) => item.kind === "screen");
   assert.ok(entry);
   assert.notEqual(metadata(entry), metadata({ ...entry, path: "other/home" }));
-});
-
-test("component dependency ownership is indexed once per changed path", async (t) => {
-  const fixture = await componentReviewFixture(t, (source) => source);
-  const sourceManifest = fixture.after.manifest;
-  assert.equal(sourceManifest.schemaVersion, 9);
-  let ownershipReads = 0;
-  const entries = sourceManifest.entries.map((entry) =>
-    entry.kind === "component"
-      ? new Proxy(entry, {
-          get(target, property, receiver) {
-            if (property === "ownedDependencies") ownershipReads += 1;
-            return Reflect.get(target, property, receiver);
-          },
-        })
-      : entry,
-  );
-  const manifest = { ...sourceManifest, entries };
-  const policy = new ComponentDependencyPolicy(manifest, manifest, []);
-  const screen = entries.find((entry) => entry.kind === "screen");
-  assert.ok(screen);
-  const changedPaths = Array.from(
-    { length: 24 },
-    (_, index) => `src/component-${index}.tsx`,
-  );
-
-  policy.reasons(screen, screen, changedPaths);
-  const firstPassReads = ownershipReads;
-  policy.reasons(screen, screen, changedPaths);
-
-  assert.ok(firstPassReads > 0);
-  assert.equal(ownershipReads, firstPassReads);
 });
 
 test("component views validate each retained document range index once", async (t) => {
@@ -91,11 +56,6 @@ test("component views validate each retained document range index once", async (
       ),
       beforeReader: reader,
       afterReader: reader,
-      dependencies: new ComponentDependencyPolicy(
-        fixture.after.manifest,
-        fixture.after.manifest,
-        [],
-      ),
       changed: new Set(),
       prefix: "mockups",
       resources: new ResourceComparison(reader, reader, new Set(), "mockups"),

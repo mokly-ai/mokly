@@ -15,6 +15,111 @@ const design = (entryPath: string, viewport: string): string =>
     ),
   ).href;
 
+test("stylesheet and empty Changes filters preserve their depicted catalogue", async ({
+  page,
+}) => {
+  await page.goto(
+    design("design/changes/impact/styles/matched-excluded/excluded", "desktop"),
+  );
+  await expect(page.locator(".mbk-nav-filter-count")).toHaveText("1");
+  await page.locator("a.mbk-nav-filter-opt").click();
+  await expect(page).toHaveURL(
+    /design\/changes\/impact\/styles\/matched-excluded\/matched\/index\.desktop\.html$/,
+  );
+  await expect(page.locator(".mbk-nav-filter-opt.active")).toHaveText(
+    "Changes1",
+  );
+  await page.locator("a.mbk-nav-filter-opt").click();
+  await expect(page).toHaveURL(
+    /design\/changes\/impact\/styles\/matched-excluded\/excluded\/index\.desktop\.html$/,
+  );
+
+  await page.goto(design("design/changes/impact/ignored-only", "desktop"));
+  await page.locator("a.mbk-nav-filter-opt").click();
+  await expect(page).toHaveURL(
+    /design\/changes\/impact\/empty\/index\.desktop\.html$/,
+  );
+  await expect(page.locator(".mbk-nav-filter-count")).toHaveText("0");
+  await page.locator("a.mbk-nav-filter-opt").click();
+  await expect(page).toHaveURL(
+    /design\/changes\/impact\/ignored-only\/index\.desktop\.html$/,
+  );
+});
+
+test("Excluded styles shows changed Welcome controls in both artboards", async ({
+  page,
+}) => {
+  for (const viewport of ["mobile", "desktop"] as const) {
+    await page.goto(
+      design(
+        "design/changes/impact/styles/matched-excluded/excluded",
+        viewport,
+      ),
+    );
+    await expect(page.locator('[data-change-status="changed"]')).toHaveText(
+      "Changed",
+    );
+    const controls = page.getByRole("group", { name: "Comparison mode" });
+    await expect(controls).toBeVisible();
+    await expect(controls.locator(".active")).toHaveText("Current");
+    await expect(controls).toContainText("Side by side");
+    await expect(controls).toContainText("Overlay");
+    await expect(controls).toContainText("Difference");
+    if (viewport === "desktop")
+      await expect(
+        page.locator(".mbk-nav-row.active .mbk-nav-changed-text"),
+      ).toHaveText("Changed");
+  }
+});
+
+test("Excluded styles opens Details as Excluded styles only, which returns through Welcome", async ({
+  page,
+}) => {
+  const row = (id: string) =>
+    page.locator(`a.mbk-nav-row[data-mokly-link="${id}"]`);
+  await page.goto(
+    design("design/changes/impact/styles/matched-excluded/excluded", "desktop"),
+  );
+  await row(
+    "design/changes/impact/styles/matched-excluded/excluded-only",
+  ).click();
+  await expect(page).toHaveURL(
+    /design\/changes\/impact\/styles\/matched-excluded\/excluded-only\/index\.desktop\.html$/,
+  );
+  for (const viewport of ["desktop", "mobile"] as const) {
+    if (viewport === "mobile")
+      await page.goto(
+        design(
+          "design/changes/impact/styles/matched-excluded/excluded-only",
+          viewport,
+        ),
+      );
+    await expect(page.locator(".mbk-screen-head h2")).toHaveText("Details");
+    await expect(page.locator('[data-change-status="unmodified"]')).toHaveText(
+      "Unmodified",
+    );
+    await expect(
+      page.getByRole("group", { name: "Comparison mode" }),
+    ).toHaveCount(0);
+    await expect(page.locator(".mbk-comparison-stage")).toHaveCount(0);
+    await expect(page.locator(".mbk-comparison-details")).toContainText(
+      /Examined and excluded:\s*generated\/excluded\.css\s*No changes to this screen\.$/,
+    );
+    if (viewport === "desktop") {
+      await expect(page.locator(".mbk-nav-filter-opt.active")).toHaveText(
+        "All",
+      );
+      await expect(page.locator("a.mbk-nav-filter-opt")).toHaveCount(0);
+      await row(
+        "design/changes/impact/styles/matched-excluded/excluded",
+      ).click();
+      await expect(page).toHaveURL(
+        /design\/changes\/impact\/styles\/matched-excluded\/excluded\/index\.desktop\.html$/,
+      );
+    }
+  }
+});
+
 test("flow designs keep comparisons on the owning screens", async ({
   page,
 }) => {
@@ -35,8 +140,8 @@ test("comparison designs use screen context instead of report chrome", async ({
     "outcomes/added",
     "outcomes/removed",
     "outcomes/difference",
-    "impact/shared-impact",
     "impact/ignored-only",
+    "impact/styles/matched-excluded/matched",
   ]) {
     for (const viewport of ["desktop", "mobile"]) {
       await page.goto(design(`design/changes/${route}`, viewport));
@@ -58,11 +163,25 @@ test("comparison designs use screen context instead of report chrome", async ({
         ).toBeVisible();
       }
       await expect(comparisonDetails).toBeVisible();
-      if (route.startsWith("impact/") && viewport === "desktop") {
+      if (route === "impact/styles/matched-excluded/matched") {
+        await expect(
+          page.getByText("Changed styles that apply to this screen:"),
+        ).toBeVisible();
+        await expect(page.getByText("generated/styles.css")).toBeVisible();
+      }
+      if (route === "impact/ignored-only" && viewport === "desktop") {
         await expect(page.locator(".mbk-nav-filter-opt.active")).toHaveText(
           "All",
         );
         await expect(page.locator(".mbk-nav-filter-count")).toHaveText("0");
+      }
+      if (
+        route === "impact/styles/matched-excluded/matched" &&
+        viewport === "desktop"
+      ) {
+        await expect(page.locator(".mbk-nav-filter-opt.active")).toHaveText(
+          "Changes1",
+        );
       }
       await expect(page.locator(".mbk-nav .mbk-nav-resize")).toHaveCount(
         viewport === "desktop" ? 1 : 0,

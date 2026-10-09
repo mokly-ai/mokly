@@ -6,7 +6,7 @@ import { readCatalogue } from "../src/catalogue/reader.js";
 import type { CatalogueReadModel } from "../src/catalogue/types.js";
 
 const fixture = new URL(
-  "../../../docs/protocol/fixtures/catalogue-v5.json",
+  "../../../docs/protocol/fixtures/catalogue-v6.json",
   import.meta.url,
 );
 

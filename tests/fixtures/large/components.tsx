@@ -5,7 +5,6 @@ import { defineComponent } from "@mokly/mokly";
 import { InlineActionStyle } from "./inline_styles.js";
 
 const metadata = {
-  dependencies: ["src/components.tsx"],
   relatedDocs: ["notes.md"],
 };
 const noop = () => {};

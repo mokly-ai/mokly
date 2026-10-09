@@ -80,7 +80,7 @@ test("source protection recognizes reserved files and aliases", async (context) 
 
 test("generated routes may have names formerly reserved by the public directory policy", async (context) => {
   const fixture = await createFixture(
-    `import { definePage } from "@mokly/mokly"; export const mockups = [definePage({ path: "internal-page", title: "Page", description: "Page", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body><p>Page</p></body></html>" })];`,
+    `import { definePage } from "@mokly/mokly"; export const mockups = [definePage({ path: "internal-page", title: "Page", description: "Page", relatedDocs: [], render: () => "<!doctype html><html><body><p>Page</p></body></html>" })];`,
   );
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);

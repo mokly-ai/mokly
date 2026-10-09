@@ -12,6 +12,8 @@ import { validateComponentRanges } from "../components/ranges.js";
 
 import type { InlineResourceOwners } from "./component_inline_resources.js";
 import type { PreparedInlineStyleEvidence } from "./component_projection_resources.js";
+import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
+import { componentCssDocuments } from "./css/containment.js";
 import { ownedResourceReasons } from "./component_resource_attribution.js";
 import type {
   ComponentViewContext,
@@ -68,11 +70,17 @@ export async function compareOneSidedComponentView(
     materialRecipe(analysis.source, { replacements: [], appendix: "" }),
     [],
   );
+  const insertedStylesheets = insertedStylesheetResources(
+    source,
+    selected.usage,
+    selected.path,
+  );
   const evidence = await context.resources.compare(
     before
       ? {
           path: before.path,
           html: material,
+          insertedStylesheets,
           ...(references ? { references } : {}),
         }
       : undefined,
@@ -80,6 +88,7 @@ export async function compareOneSidedComponentView(
       ? {
           path: after.path,
           html: material,
+          insertedStylesheets,
           ...(references ? { references } : {}),
         }
       : undefined,
@@ -90,6 +99,16 @@ export async function compareOneSidedComponentView(
           after: after ? analysis.matching([]) : undefined,
         }
       : undefined,
+    () => [
+      componentCssDocuments(
+        before ? source : undefined,
+        after ? source : undefined,
+        selected.path,
+        before?.usage,
+        after?.usage,
+        root,
+      ),
+    ],
   );
   return {
     comparisonPath: "complete",
@@ -98,7 +117,7 @@ export async function compareOneSidedComponentView(
     changedImplementations: new Set(),
     ownedResources: ownedResourceReasons(
       evidence.reasons ?? [],
-      context.dependencies,
+      context.prefix,
       EMPTY_INLINE_OWNERS,
       before?.usage,
       after?.usage,

@@ -3,19 +3,23 @@ import type {
   ChangedEntry,
   ComponentReview,
   EntryChangeReason,
-  ReviewResultV6,
-  ScreenReviewV6,
+  ReviewResultV7,
+  ScreenReviewV7,
 } from "@mokly/viewer/data";
 
+import {
+  timeAsync,
+  timingCounts,
+  timingDocumentWork,
+} from "../diagnostics/timings.js";
 import { runWithComparisonWork } from "../diagnostics/material_timings.js";
-import { timeAsync } from "../diagnostics/timings.js";
 import { relatedDocumentReferences } from "../documents/references.js";
 
+import { classificationComparisons } from "./component_classification_comparisons.js";
 import { classificationContext } from "./component_classification_context.js";
-import { entryDependencies } from "./component_classification_entries.js";
 import { finishComponentClassification } from "./component_classification_finish.js";
 import type { ComponentClassificationInput } from "./component_classification_input.js";
-import { compareComponentViews } from "./component_compare_views.js";
+import { ComponentComparisonCounts } from "./component_comparison_counts.js";
 import {
   address,
   baselineForCurrentIdentities,
@@ -24,31 +28,22 @@ import {
   variantParentTitleChanged,
   uniqueReasons,
 } from "./component_metadata.js";
-import { entryViewPairs } from "./component_pairing.js";
 import { ComponentReasonSources } from "./component_reason_sources.js";
-import {
-  exactScreenCssReasons,
-  resourceImpact,
-  type OwnedResourceReason,
-} from "./component_resource_attribution.js";
+import { type OwnedResourceReason } from "./component_resource_attribution.js";
 import type { DependencyReasonSources } from "./component_result_sources.js";
 import {
   classifyComponentVariants,
   componentVariantEntries,
 } from "./component_variant_classification.js";
-import {
-  analysisOwnsStylesheet,
-  assertViewAnalysisScope,
-} from "./css/paths.js";
+import { assertViewAnalysisScope } from "./css/paths.js";
 import { baselinePathMapper } from "./moves/identity.js";
 import { prepareMoveClassification } from "./moves/prepare.js";
-import { movedSourcePaths } from "./moves/source_moves.js";
 import { previousPathFields, type MovePairing } from "./moves/types.js";
 import { aggregateState } from "./screen_views.js";
 
 /** Internal classifier output for source validation and its regression fixtures. */
 export interface ComponentClassificationWithSources {
-  result: ReviewResultV6;
+  result: ReviewResultV7;
   implementationImpact: ReadonlySet<string>;
   sources: DependencyReasonSources;
   pairing: MovePairing;
@@ -72,32 +67,36 @@ export async function classifyComponentsWithSources(
     after.entries,
     pairing.moves,
   );
-  const sources = movedSourcePaths(input.before, after, pairing.moves);
-  const mapSource = (path: string) => sources.get(path) ?? path;
   const beforeVariantEntries = componentVariantEntries(before.entries);
   const beforeDocuments = relatedDocumentReferences(before.entries, mapBefore);
   const afterDocuments = relatedDocumentReferences(after.entries);
   const afterVariantEntries = componentVariantEntries(after.entries);
-  const componentAware = [...input.before.entries, ...after.entries].some(
-    (entry) => entry.kind === "component" && !isManifestComponentVariant(entry),
-  );
-  const { changedPaths, config } = input;
-  const { dependencies, context } = await classificationContext(
+  const { config } = input;
+  const { context } = await classificationContext(
     { ...input, pairing },
     before,
     after,
   );
-  const sharedImpact = dependencies.sharedPaths(changedPaths);
-  const screens: ScreenReviewV6[] = [];
+  const screens: ScreenReviewV7[] = [];
   const components: ComponentReview[] = [];
   const changes: ChangedEntry[] = [];
   const impacting = new Set<string>();
   const actualImplementations = new Set<string>();
   const ownedResources: OwnedResourceReason[] = [];
-  const reasonSources = new ComponentReasonSources();
+  const reasonSources = new ComponentReasonSources(
+    context.resources.css.attribution,
+  );
   const pairs = entryPairs(before, after, pairing.moves);
+  const comparisonCounts = new ComponentComparisonCounts();
   const compare = async () => {
-    for (const pair of pairs) {
+    const entries = await classificationComparisons(
+      context,
+      pairs,
+      beforeVariantEntries,
+      afterVariantEntries,
+      pairing.moves,
+    );
+    for (const { pair, pairedViews, compared, grouped } of entries) {
       const entry = (pair.after ?? pair.before)!;
       const componentParent = [pair.after, pair.before].find(
         (candidate) =>
@@ -116,47 +115,16 @@ export async function classifyComponentsWithSources(
       if (
         pair.before &&
         pair.after &&
-        (metadata(pair.before, mapBefore, beforeDocuments, mapSource) !==
+        (metadata(pair.before, mapBefore, beforeDocuments) !==
           metadata(pair.after, undefined, afterDocuments) ||
           variantParentTitleChanged(pair.before, pair.after, before, after))
       )
         reasons.push({ kind: "metadata" });
-      const policyReasons = componentAware
-        ? dependencies
-            .reasons(pair.before, pair.after, changedPaths)
-            .filter(
-              (reason) =>
-                reason.kind !== "dependency" ||
-                !analysisOwnsStylesheet(reason.path, config),
-            )
-        : [];
-      reasons.push(...policyReasons);
-      reasonSources.record(entry, policyReasons);
       const common = {
         ...address(entry),
         ...sides,
-        dependencies: [
-          ...new Set([
-            ...entryDependencies(pair.before),
-            ...entryDependencies(pair.after),
-          ]),
-        ].sort(),
-        sharedImpact: [] as string[],
       };
-      const grouped = entryViewPairs(
-        pair,
-        beforeVariantEntries,
-        afterVariantEntries,
-        pairing.moves,
-      );
-      const pairedViews = grouped.views;
-      const compared = await compareComponentViews(
-        context,
-        pairedViews,
-        entry.kind === "component" && !isManifestComponentVariant(entry)
-          ? entry.path
-          : undefined,
-      );
+      comparisonCounts.add(compared);
       assertViewAnalysisScope(
         compared.map((result) => result.view),
         config,
@@ -166,23 +134,6 @@ export async function classifyComponentsWithSources(
         reasons.push(...viewReasons);
         reasonSources.record(entry, viewReasons);
       }
-      const exactCssReasons = exactScreenCssReasons(
-        pair.before,
-        pair.after,
-        compared.map((result) => result.view),
-      );
-      if (entry.kind !== "component") {
-        reasons.push(...exactCssReasons);
-        reasonSources.record(entry, exactCssReasons);
-      }
-      const unownedEvidence = dependencies
-        .unownedEvidence(pair.before, pair.after, changedPaths)
-        .filter((path) => !analysisOwnsStylesheet(path, config));
-      common.sharedImpact = resourceImpact(
-        sharedImpact,
-        unownedEvidence,
-        reasons,
-      );
       ownedResources.push(
         ...compared.flatMap((result) => result.ownedResources),
       );
@@ -215,7 +166,6 @@ export async function classifyComponentsWithSources(
           mapBefore,
           beforeDocuments,
           afterDocuments,
-          dependencies,
           reasonSources,
           changes,
         });
@@ -249,9 +199,11 @@ export async function classifyComponentsWithSources(
           reasons: uniqueReasons(reasons),
         });
     }
+    if (!timingDocumentWork())
+      timingCounts("review.compare-screens", () => comparisonCounts.record());
   };
   await timeAsync("review.compare-screens", () =>
-    componentAware ? runWithComparisonWork(compare) : compare(),
+    context.componentAware ? runWithComparisonWork(compare) : compare(),
   );
   return finishComponentClassification({
     request: input,
@@ -266,6 +218,5 @@ export async function classifyComponentsWithSources(
     impacting,
     actualImplementations,
     reasonSources,
-    sharedImpact,
   });
 }

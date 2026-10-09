@@ -17,7 +17,6 @@ function document(path: string): ManifestDocument {
     title: path,
     description: "A guide",
     sourcePath: `specs/${path}.md`,
-    declaredDependencies: [],
     relatedDocs: [],
     colorSchemes: ["light", "dark"],
     resources: [],
@@ -65,7 +64,7 @@ test("identical document content requires the complete scheme set while similari
 
 test("identical component content requires evidence for every variant, not only schema and slugs", async (t) => {
   const source =
-    "import {defineComponent} from '@mokly/mokly'; export default defineComponent({path:'old/action',title:'Action',description:'An action',dependencies:[],relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> <button>Continue</button>,variants:[{slug:'primary',title:'Primary',props:{}}]});";
+    "import {defineComponent} from '@mokly/mokly'; export default defineComponent({path:'old/action',title:'Action',description:'An action',relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> <button>Continue</button>,variants:[{slug:'primary',title:'Primary',props:{}}]});";
   const fixture = await componentReviewFixture(
     t,
     (text) =>

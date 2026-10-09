@@ -6,9 +6,8 @@ import { toPosixPath } from "../config/paths.js";
 
 import { prefetchClassificationViews } from "./component_classification_entries.js";
 import type { ComponentClassificationInput } from "./component_classification_input.js";
-import { ComponentDependencyPolicy } from "./component_metadata.js";
 import { ComponentMaterialReader } from "./component_resources.js";
-import type { ComponentViewContext } from "./component_view.js";
+import type { ComponentViewContext } from "./component_view_types.js";
 import { CssResourceAnalysis } from "./css/resource_analysis.js";
 import { baselinePathMapper, mapUsagePaths } from "./moves/identity.js";
 import { catalogueLinkNormalizer } from "./moves/links.js";
@@ -20,17 +19,11 @@ export async function classificationContext(
   before: Manifest,
   after: Manifest,
 ): Promise<{
-  dependencies: ComponentDependencyPolicy;
   context: ComponentViewContext;
 }> {
   const { config, changedPaths } = input;
   const componentAware = [...input.before.entries, ...after.entries].some(
     (entry) => entry.kind === "component" && !("variantOf" in entry),
-  );
-  const dependencies = new ComponentDependencyPolicy(
-    before,
-    after,
-    config.review.sharedImpact,
   );
   const beforeReader = new ComponentMaterialReader(input.beforeReader);
   const afterReader = new ComponentMaterialReader(input.afterReader);
@@ -53,7 +46,6 @@ export async function classificationContext(
     beforeUsage: (usage) => mapUsagePaths(usage, mapBefore),
     beforeReader,
     afterReader,
-    dependencies,
     changed,
     prefix,
     resources: new ResourceComparison(
@@ -61,7 +53,12 @@ export async function classificationContext(
       afterReader,
       changed,
       prefix,
-      new CssResourceAnalysis(input.cssParser, undefined, input.cssCacheBytes),
+      input.cssAnalysis ??
+        new CssResourceAnalysis(
+          input.cssParser,
+          undefined,
+          input.cssCacheBytes,
+        ),
       input.resources,
       componentAware,
     ),
@@ -82,5 +79,5 @@ export async function classificationContext(
     after,
     input.beforeReader.readMany !== undefined,
   );
-  return { dependencies, context };
+  return { context };
 }

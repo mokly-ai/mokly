@@ -23,10 +23,11 @@ Resolve the effective base and HEAD once, then pin their merge-base commit for
 both entry impact and screen comparisons. Capture the current catalogue,
 generated documents, and resources consistently for that build; fail if inputs
 change during capture rather than mix revisions. Record the resolved comparison
-baseline with the exported review metadata. The tracked files of the checked-out
-commit produce the artifact. Dependencies and ignored build products come from
-the local environment. CLI publication requires the clean checkout defined by
-the [upload contract](./mokly-upload.md).
+baseline with the exported review metadata. Repository preview capture uses
+the validated current inputs. For CLI publication, the tracked files of the
+checked-out commit produce the artifact. Dependencies and ignored build products
+come from the local environment. CLI publication requires the clean checkout
+defined by the [upload contract](./mokly-upload.md).
 
 Package validated comparison data and isolated resources under the existing
 immutable generation path. Browser diff selection loads the packaged result;
@@ -37,7 +38,7 @@ exporter's typed removed-preview descriptor builder and adds each descriptor to
 the matching captured static shell. This artifact-only step does not advertise
 page paths from the development server used during capture.
 
-Missing history, an invalid v9 baseline, capture inconsistency, or comparison
+Missing history, an invalid v10 baseline, capture inconsistency, or comparison
 failure aborts publication and preserves previous output. Recognized earlier
 output instead completes with Changes unavailable under the
 [baseline compatibility contract](./mokly-baseline-compatibility.md). Preserve
@@ -64,7 +65,10 @@ catalogue with review omitted and the same catalogue with review included.
 
 Test default and explicit options through the script and internal boundary,
 including invalid arguments and configured/default/overridden bases. Prove
-default publication performs no Git/review calls and works without history.
+default repository preview capture performs no Git or review calls and works
+without comparison history. CLI `publish --no-changes` still checks checkout
+Git state and requires a committed HEAD, but performs no baseline or review
+work and requires no comparison history.
 Opt existing comparison tests and PR workflow fixtures in explicitly.
 
 Test archive inputs, removed-entry absence, excluded stale comparison assets,

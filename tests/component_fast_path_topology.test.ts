@@ -11,10 +11,9 @@ import {
 } from "../dist/diagnostics/timings.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
-import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV7 } from "../packages/viewer/dist/review/component_types.js";
 
 import {
-  assertComparisonModesEquivalent,
   assertFastPathEquivalent,
   compilationFiles,
   type FastPathFixture,
@@ -49,7 +48,7 @@ test("slot-bearing instance renames preserve projected material", async (t) => {
   assert.deepEqual(reasonKinds(result, "home"), ["material", "structure"]);
 });
 
-test("marker movement preserves consumer material across enabled and forced-complete modes", async (t) => {
+test("marker movement with identical stripped HTML preserves consumer material", async (t) => {
   const source = componentEntrySource({
     body: '<action.Component moklyInstance="footer" label="Finish" /><i></i>',
   });
@@ -67,7 +66,7 @@ test("marker movement preserves consumer material across enabled and forced-comp
         ),
     source,
   );
-  const result = await assertComparisonModesEquivalent(reviewFixture(fixture));
+  const result = await assertFastPathEquivalent(reviewFixture(fixture));
 
   assert.deepEqual(reasonKinds(result, "home"), ["material"]);
 });
@@ -110,14 +109,7 @@ test("invocation line shifts alone keep every view on the fast path", async (t) 
 
   assert.deepEqual(result.changes, []);
   assert.ok(views > 0);
-  assert.ok((counts?.heapPeakMiB ?? 0) > 0);
-  const { heapPeakMiB: _heap, ...paths } = counts!;
-  assert.deepEqual(paths, {
-    views,
-    fastPath: views,
-    completePath: 0,
-    stylePath: 0,
-  });
+  assert.deepEqual(counts, { views, fastPath: views, completePath: 0 });
 });
 
 function reviewFixture(
@@ -133,7 +125,7 @@ function reviewFixture(
   };
 }
 
-function reasonKinds(result: ReviewResultV6, id: string) {
+function reasonKinds(result: ReviewResultV7, id: string) {
   const change = result.changes.find(
     (entry) => (entry.after ?? entry.before)?.path === id,
   );

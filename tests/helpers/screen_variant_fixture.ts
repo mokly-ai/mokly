@@ -27,7 +27,7 @@ export function screenVariantEntrySource(
     : "";
   return `import React from "react";
 import { defineScreen${flowScreenId ? ", defineUseCase" : ""} } from "@mokly/mokly";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"] };
+const metadata = { relatedDocs: ["notes.md"] };
 export const mockups = [
   ${parent}
   defineScreen({ ...metadata, path: "details", title: "Details", description: "A detail screen", mobile: <main>Details</main>, desktop: <main>Details</main>, useCasePaths: [] }),

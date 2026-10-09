@@ -1,3 +1,5 @@
+import { isStylesheetPath } from "@mokly/viewer/data";
+
 import { parseHtml } from "../diagnostics/html_parse.js";
 import { documentResourceReferences } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
@@ -12,7 +14,10 @@ import {
 import { normalizeResourceDocuments } from "./resource_documents.js";
 import { ResourceGraph } from "./resource_graph.js";
 import { prefetchProofReads } from "./resource_proof_reads.js";
-import { ViewResourceCache } from "./view_resources.js";
+import {
+  ViewResourceCache,
+  type ViewResourceOptions,
+} from "./view_resources.js";
 
 type ResourceExclusion = (route: string) => boolean;
 
@@ -205,9 +210,9 @@ export class ComponentMaterialReader {
     route: string,
     html: string,
     excluded?: ResourceExclusion,
-    references?: readonly string[],
+    options?: ViewResourceOptions,
   ): Promise<ReadonlySet<string>> {
-    return this.viewResources.resources(route, html, excluded, references);
+    return this.viewResources.resources(route, html, excluded, options);
   }
 
   /** A missing base file anywhere in a proof closure means fall-through. */
@@ -215,13 +220,13 @@ export class ComponentMaterialReader {
     route: string,
     html: string,
     excluded?: ResourceExclusion,
-    references?: readonly string[],
+    options?: ViewResourceOptions,
   ): Promise<ReadonlySet<string> | undefined> {
     return this.viewResources.resourcesIfPresent(
       route,
       html,
       excluded,
-      references,
+      options,
     );
   }
 
@@ -231,6 +236,29 @@ export class ComponentMaterialReader {
       return routes.every((route) => files.get(route) !== undefined);
     }
     return prefetchProofReads(this.reader, this.files, routes);
+  }
+
+  /** CSS imports share a document; embedded HTML starts its own stylesheet scope. */
+  async stylesheets(
+    route: string,
+    html: string,
+    options: ViewResourceOptions = {},
+  ): Promise<ReadonlySet<string>> {
+    const found = new Set<string>();
+    const pending = [
+      ...(options.references === undefined
+        ? referencedRoutes(route, html, { resourceHints: false })
+        : referenceRoutes(route, options.references)),
+      ...(options.insertedStylesheets ?? []),
+    ].filter(isStylesheetPath);
+    while (pending.length) {
+      const stylesheet = pending.pop()!;
+      if (found.has(stylesheet)) continue;
+      found.add(stylesheet);
+      const references = await this.resourceReferences(stylesheet);
+      pending.push(...references.filter(isStylesheetPath));
+    }
+    return found;
   }
 
   private async prefetchResources(routes: readonly string[]): Promise<void> {

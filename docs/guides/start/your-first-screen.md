@@ -21,7 +21,6 @@ export default defineScreen({
   mobile: <main>Account</main>,
   desktop: <main>Account</main>,
   relatedDocs: ["docs/account.md"],
-  dependencies: ["src/account/home.tsx"],
 });
 ```
 

@@ -77,6 +77,16 @@
   width: 116px;
   padding: 0 10px;
 }
+/* Welcome's own link that reuses the action's style, beside the Action. */
+.ce-demo-footer:has(.ce-outside-action) {
+  display: flex;
+  gap: 10px;
+}
+.ce-demo-footer .ce-outside-action {
+  align-items: center;
+  display: inline-flex;
+  width: auto;
+}
 .ce-other-example {
   flex: 1;
   height: 100%;

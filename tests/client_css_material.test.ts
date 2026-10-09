@@ -46,7 +46,7 @@ function renderComparison(
 }
 
 test("a material change with matched stylesheet evidence reads Screen changed", () => {
-  const result = cssSchemaFixture(5);
+  const result = cssSchemaFixture();
   const view = result.screens[0]!.views[0]!;
   Object.assign(view, { material: true });
 
@@ -63,7 +63,7 @@ test("a material change with matched stylesheet evidence reads Screen changed", 
 });
 
 test("an effective Light comparison retains the requested Dark fallback label", () => {
-  const result = cssSchemaFixture(5);
+  const result = cssSchemaFixture();
   const markup = renderComparison(result, {
     colorScheme: "light",
     mode: "side",

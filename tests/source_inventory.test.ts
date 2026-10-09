@@ -169,7 +169,7 @@ test("a page route can share an authored filename without overwriting its source
   );
   await fs.promises.writeFile(
     fixture.entryPath,
-    'import { definePage } from "@mokly/mokly"; import html from "../mockups/document/index.html"; export const mockups = [definePage({ path: "document", title: "Page", description: "Page", dependencies: [], relatedDocs: [], render: () => html })];',
+    'import { definePage } from "@mokly/mokly"; import html from "../mockups/document/index.html"; export const mockups = [definePage({ path: "document", title: "Page", description: "Page", relatedDocs: [], render: () => html })];',
   );
   const next = await loadConfig(fixture.root);
   const generated = await compileCatalogue(next);

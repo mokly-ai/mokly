@@ -37,6 +37,14 @@ export function mapUsagePaths(
 ): ComponentViewRecord {
   return {
     ...view,
+    ...(view.insertedStylesheets === undefined
+      ? {}
+      : {
+          insertedStylesheets: view.insertedStylesheets.map((link) => ({
+            ...link,
+            componentPaths: link.componentPaths.map(mapPath).sort(),
+          })),
+        }),
     instances: view.instances.map((instance) => ({
       ...instance,
       componentId: mapPath(instance.componentId),

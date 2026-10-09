@@ -25,6 +25,7 @@ export type TransferredComponentRuntime = Pick<
   | "outputSnapshot"
   | "bundle"
   | "generation"
+  | "warningGeneration"
   | "outputs"
   | "stylesheetRoutes"
   | "styleOutputs"
@@ -61,6 +62,7 @@ export function componentRuntimeMessage(
       }),
       bundle: runtime.bundle,
       generation: runtime.generation,
+      warningGeneration: runtime.warningGeneration,
       outputs: runtime.outputs.map(
         ([route, content]) => [route, transferGeneratedFile(content)] as const,
       ),
@@ -171,7 +173,7 @@ function parseRuntimeStartupMessage(
     typeof config.generatedDir !== "string" ||
     !manifest ||
     !Array.isArray(manifest.entries) ||
-    (manifest.schemaVersion !== 9 &&
+    (manifest.schemaVersion !== 10 &&
       manifest.schemaVersion !== "live-index-2") ||
     !Array.isArray(manifest.sourceFiles)
   )
@@ -202,6 +204,8 @@ export function parseRuntimeMessage(
     !runtime ||
     !isOutputSnapshot(runtime.outputSnapshot) ||
     typeof runtime.generation !== "string" ||
+    typeof runtime.warningGeneration !== "string" ||
+    !/^[a-f0-9]{32}$/.test(runtime.warningGeneration) ||
     typeof runtime.bundle?.code !== "string" ||
     !Array.isArray(runtime.outputs) ||
     !Array.isArray(runtime.stylesheetRoutes) ||
@@ -236,6 +240,7 @@ export function parseRuntimeMessage(
       }),
       bundle: runtime.bundle,
       generation: runtime.generation,
+      warningGeneration: runtime.warningGeneration,
       outputs,
       stylesheetRoutes: runtime.stylesheetRoutes,
       styleOutputs,

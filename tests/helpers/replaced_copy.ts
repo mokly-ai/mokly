@@ -43,6 +43,12 @@ export const REPLACED_DESIGN_COPY: readonly ReplacedCopy[] = [
     contract: removedPreviews,
     instead: "the removed document's own previous version is shown",
   },
+  {
+    text: "Other changed styles keep Welcome in Changes.",
+    contract: "docs/protocol/mokly-css-evidence-shell.md",
+    instead:
+      "Excluded and Matched styles share the viewer's Details card, which adds no explanatory sentence",
+  },
 ];
 
 /** Compare rendered text without depending on generated line breaks. */

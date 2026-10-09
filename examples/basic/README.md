@@ -1,5 +1,23 @@
 # Basic Mokly Consumer
 
+## Delivery Status
+
+See the [implementation plans](../../plans/).
+
+Uniform CSS rule attribution in this guide is implemented in Milestone 19 of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md).
+
+The example declares component CSS with `stylesheets`, uses manifest v10 and
+classifies Changes from rendered output rather than source-path declarations.
+The [source-path removal plan](../../plans/remove-source-path-evidence.md)
+records the delivered migration. Its M27 implements the excluded-only screen
+mockup, the split stylesheet evidence gallery and the shared Excluded/Matched
+Details card. M31 is planned to check the viewer against those mobile and
+desktop depictions.
+The [plans directory](../../plans/) lists active and completed work.
+
+## Example Catalogue
+
 This is a synthetic external-consumer fixture. It contains two distinct mobile
 and desktop product-style screens built with `@firna/ui` controls, file-derived
 folders, one use case, path-addressed links, a Firna renderer adapter, local
@@ -23,8 +41,8 @@ Toolbar, with caller-owned slots. Action has Default, Disabled and Secondary
 variants plus text, boolean, number, optional hint and emphasis controls; Toolbar
 has an editable title and nested Action instances. Open Props in local Serve to
 edit them. Published exports provide the same saved examples read-only.
-`example-components.css` declares exact shared ownership, separate from global
-styles and the design mockups. Action and Toolbar are co-located with their
+`example-components.css` is declared by Action and Toolbar for linking.
+Changed rules use kept own-page matches, as global and design styles do. Action and Toolbar are co-located with their
 product-style implementations under `src/components/`: each directory holds
 the plain React component (`action.tsx`), its catalogue registration
 (`action.mokly.tsx`), and the entry module that exports it
@@ -43,15 +61,14 @@ The [large fixture](../../tests/fixtures/large/README.md)
 uses the same Firna/React Native Web rendering stack with configurable volume,
 without expanding this example or slowing ordinary development startup.
 
-Mokly's 112 design screens now use 16 registered shared components, including
+Mokly's 114 design screens now use 16 registered shared components, including
 the footer tabs panel and the appearance selector. Open **Components → Design → Shared components** for Chrome, Controls,
 Inspector and Preview galleries with 69 component variants, real mobile/desktop
 previews and editable local props. The outer Components and Usage tabs show actual
 recorded relationships; pictured example data inside an artboard stays separate.
 See the [library authoring guide](./specs/design/library/README.md),
 [adoption contract](../../docs/protocol/mokly-design-components.md),
-[library inventory](../../docs/protocol/mokly-design-component-library.md)
-and [implementation plans](../../plans/).
+[library inventory](../../docs/protocol/mokly-design-component-library.md).
 
 The example uses the recommended dedicated spec tree: discovered modules under
 `specs/example`, `specs/design/browse`, `specs/design/changes`,
@@ -154,9 +171,11 @@ render plain React DOM need none of this and can keep a plain
 The `Design` navigation group is the owning design catalogue for Mokly's
 Browse and Changes views. Its seventy-three Browse, page, publication, appearance and Changes
 screens cover navigation, Details, tags, color schemes, comparison outcomes,
-scrolling, linked and inline style evidence, the preparing and unavailable comparison states,
-and the previous-version states of removed documents and screens, including
-light-only current and removed documents under Dark. Thirty-nine
+scrolling, stylesheet evidence for screens and document pages, the preparing and
+unavailable comparison states, and the previous-version states of removed
+documents and screens, including light-only current and removed documents under Dark. A document page has no comparison controls, so its
+stylesheet evidence lives in Details; the page designs' Changes filter opens
+that state. Forty-one
 component explorer screens add component pages, saved variants, stacked
 comparisons, affected screens,
 repeated/nested inspection, highlighting, and empty or removed states. The shared icon inspector and complete controls
@@ -190,8 +209,13 @@ the mobile menu, and the Usage icon use centered SVGs. Known entries show
 Added, Changed, Removed, or Unmodified; removing a variant lists it as its own
 Removed entry beneath its surviving component, whose row carries an aggregate
 mark. The States → Additions gallery demonstrates a newly added Badge.
-States → Shared impact shows an Unmodified Action opened from All with changed
-shared files in Details and no comparison band.
+States → Stylesheet evidence shows three stories. In the first, a changed
+style applies only to Action, so Action is in Changes and Welcome and Details
+are only under Affected screens. In the second, the changed style also applies
+to a Welcome link outside Action, so Welcome has its own Changes row. In the
+third, an Unmodified Action opened from All shows excluded stylesheet evidence
+in Details and no comparison band. Details names each changed file once, with
+its sentences and styles under it.
 The Pages → Stacked comparisons gallery holds Action's Overlay and Difference in
 one bordered frame, reached from its comparison mode control, and a Checklist
 taller than that frame, drawn part-way down it.
@@ -216,7 +240,7 @@ galleries; `inspector` shows both closed-panel layouts.
 Each child gallery lists at most five owning screens; inspection also links
 two selected-instance screens in a nested gallery.
 
-Eighty-six design screens use `colorSchemes: ["light"]` and draw only the light
+Eighty-eight design screens use `colorSchemes: ["light"]` and draw only the light
 Mokly shell. Twenty-six screens instead inherit the catalogue's light/dark
 settings: fifteen Appearance screens, seven Changes designs, two product
 screens, and two retained Welcome appearance variants. `mokly build` writes a
@@ -229,31 +253,29 @@ keeps its fixed drawer. The component designs reuse the existing shell, frames, 
 and a shared icon inspector, with synthetic usage fixtures under
 `specs/design/components/parts`. The real examples use the public `defineComponent` API.
 
-Exclusive component styles live under `design-library/`. Each component
-owns only its view module and stylesheet. A per-render collector emits exclusive
-sheets only when the component actually renders, including transient prop edits.
-Registration/variant/control metadata stays outside implementation dependencies.
-A shared implementation edit appears on its component page and lists consuming
+Exclusive component styles live under `design-library/`. Each
+component declares its public CSS through `stylesheets`; Mokly links it only
+when that component actually renders, including transient prop edits. No
+per-render collector or source-path ownership assertion is needed. A changed
+rendered component resource appears on its component page and lists consuming
 screens as affected; independent screen inputs, slots or instance changes still
-appear in Changes. This is tested against fully registered baseline snapshots.
+appear in Changes. Unreferenced source paths do not add Changes or comparison
+evidence.
 
-The shared inspector/workspace sheets cover all 112 design screens and standalone
-library hosts. Other mixed component-design sheets remain scoped to the 39
+The shared inspector/workspace sheets cover all 114 design screens and standalone
+library hosts. Other mixed component-design sheets remain scoped to the 41
 component-design routes and hosts; the controls sheet additionally remains
-scoped to its eleven owning screen routes. `review.sharedImpact` is fallback
-impact evidence for files the rendered resource graph cannot see, such as source
-or token modules. A glob match or a changed file inside a declared dependency
-directory alone leaves the entry out of Changes; owned component paths and
-exact declared files keep their direct reasons. A renderer or token edit that
-changes a document or referenced resource still appears. The
-[component path rule](../../docs/protocol/mokly-component-changes.md#dependencies-and-styles)
+scoped to its eleven owning screen routes. Removed source-path declarations
+and globs provide no evidence. A renderer or token edit that changes a document
+or referenced resource still appears. The
+[component path rule](../../docs/protocol/mokly-component-changes.md#rendered-resources-and-styles)
 defines membership and the [result schema](../../docs/protocol/mokly-component-review.md#reasons-and-secondary-evidence)
-preserves every entry's shared-impact evidence. Linked stylesheets, including
+preserves every entry's rendered-resource evidence. Linked stylesheets, including
 imported sheets, are attributed by rule: a changed rule must potentially match
 a view or be unresolved to keep that dependency. A broad stylesheet glob cannot restore
 an excluded stylesheet or add an unreferenced public file to Changes. Actual
-rendered references, generated usage and component ownership determine the
-scope; regression tests cover each exclusive sheet and the mixed/global sheets.
+rendered references and own-page CSS matches determine stylesheet attribution;
+document styles and non-CSS resource owners keep their own policy; regression tests cover each exclusive sheet and the mixed/global sheets.
 
 The recorded tokens and responsive rules live in the
 [shell design contract](../../docs/protocol/mokly-shell-design.md); component
@@ -281,14 +303,19 @@ of standing empty.
 The Added outcome still shows its factual branch evidence in
 Details; evidence availability, comparison eligibility, and initial inspector
 disclosure are independent. The
-shared-impact and ignored-only examples open from All with zero Changes and one
-Current preview. Retained dependency and shared-impact evidence remains in
-Details; unchanged output and paired ignored-only edits do not fill the review list.
-The nested Stylesheet evidence group under Impact states adds the rule-aware
-stylesheet states: a changed stylesheet whose changed styles apply to the
-screen, one whose change can apply anywhere, one examined and excluded, and a
-page-style change that applies nowhere on the screen. Both excluded states keep
-the screen out of Changes. Their contract is
+ignored-only examples open from All with zero Changes and one Current preview.
+Rendered-resource evidence remains available in Details, while
+unchanged output and paired ignored-only edits do not fill the review list.
+The Stylesheet evidence page shows Document page styles as its canonical
+screen and links two child pages, each in its own directory under
+`specs/design/changes/impact/styles/`. Matched and excluded holds
+Matched styles, Excluded styles and Excluded styles only; Unresolved and
+unnamed holds Unresolved styles and Unnamed styles. Excluded and Matched show
+one changed Welcome from All and from Changes, with one shared Details card: a
+separate matched file keeps Welcome in Changes. Excluded styles only shows
+Details from All in that branch. Details links only the excluded file, so it
+has no Changes row or comparison, and its Details end with "No changes to this
+screen." Their contract is
 [CSS change attribution](../../docs/protocol/mokly-css-attribution.md).
 
 From the repository root:
@@ -297,8 +324,10 @@ From the repository root:
 npm run dev
 ```
 
-This builds the local CLI, compiles the catalogue in memory, and watches entries, the
-renderer, and configured stylesheets. Open the printed URL; the browser reloads
+This builds the local CLI once, starts watched Serve, renders previews on demand
+in memory and completes the catalogue in the background. It watches entries, the renderer,
+configured and component-declared stylesheets, and reachable resources.
+Open the printed URL; the browser reloads
 after watched edits. Forward Serve options with `npm run dev -- --port 0`.
 Imported consumer helpers, including this example's `theme.ts`, are tracked
 and trigger rebuilds automatically. Restart the command after changing
@@ -314,7 +343,7 @@ npm run example:check
 npm run preview:build
 ```
 
-This example uses `mockupsDir: "."`; its schema-v9 manifest and HTML under
+This example uses `mockupsDir: "."`; its schema-v10 manifest and HTML under
 `mokly-generated/` are ignored local artifacts, absent in a fresh clone.
 `example:build` replaces the entire disposable `mokly-generated/` tree as one
 transaction; unexpected files inside it are removed without touching authored CSS.

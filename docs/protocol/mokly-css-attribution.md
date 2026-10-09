@@ -2,18 +2,25 @@
 
 ## Delivery Status
 
-Rule analysis is implemented for screen-only and component catalogues, live
-Serve, watch and publication. Inspectors receive retained/excluded evidence
-before loading comparisons; screen-only delivery reuses classification without
-component classification or additional analysis. [Inline ownership](./mokly-inline-styles.md)
-shares this parser, diff, keep list, matcher and resource detector; its
-reference-bearing rules follow inferred owners with validated evidence.
-The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md)
-implements the bounded parser caches, stored rule data/forms and original trees.
-Shared forms apply to both CSS paths; page analysis is component-aware only.
-The no-component classifier and separate page path retain their delivered routing/matching.
+Parsing, diffing and conservative exclusion are implemented. Element sets and
+uniform rule membership are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md).
+Comparison details for screens and component saved views are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
 
-Performance acceptance is deferred under the plan's Decision 13 (2026-10-06).
+Rule parsing, diffing, document matching, and classification apply to
+screen-only and component catalogues, live Serve, watched updates, and
+publication. The inspector receives retained and excluded stylesheet evidence
+for both catalogue kinds, including before a comparison is loaded. Screen-only
+delivery reuses accepted classification without a second resource analysis.
+See [CSS Change Attribution](../../plans/css-change-attribution.md).
+
+Discovery of inserted links inside Review-ignore is implemented in
+[M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).
+The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md)
+retains bounded parser caches, segment reuse and original-page matching.
+[Inline ownership](./mokly-inline-styles.md) shares the parser, diff, keep list
+and matcher, but uses its own ownership rule. Only non-CSS references follow
+inline owners. Performance acceptance remains deferred under Decision 13.
 
 ## Purpose
 
@@ -47,8 +54,19 @@ difference without such a path is still material comparison evidence, not an
 invented Git reason or grounds for rule-based exclusion. The analysis examines
 the resource's branch-point and working-tree bytes, and both sides' view
 documents under [original-page matching](./mokly-page-analysis.md#original-page-matching)
-for component-aware classification; other catalogues retain delivered matching. It never widens the set of examined files; unreferenced public files and
-broad `review.sharedImpact` globs continue to add nothing on their own.
+for component-aware classification. Other catalogue paths retain their matching rules. It never widens the set of examined files; unreferenced public files and
+source paths add nothing on their own. Declared component CSS is eligible only
+when linked in a rendered document, under the
+[component stylesheet contract](./mokly-component-stylesheets.md) and its
+[ownership rules](./mokly-component-stylesheet-ownership.md).
+The comparison-only removal of Mokly-inserted links does not remove those
+links from the actual final document used to discover CSS and match changed
+rules. An unlinked declaration has no CSS evidence. No stylesheet ownership
+record controls resource eligibility or attribution.
+Use validated `insertedStylesheets` spans to recover those links even inside
+paired Review-ignore on both comparison paths and for CSS rule scope. The
+[shared link contract](./mokly-stylesheet-links.md) keeps authored ignored
+content ignored and template content inert.
 
 Non-stylesheet resources (fonts, images, embedded documents) keep file-level attribution.
 
@@ -56,16 +74,10 @@ Non-stylesheet resources (fonts, images, embedded documents) keep file-level att
 
 A stylesheet is in scope for rule analysis only when it is a public file
 inside `mockupsDir`; only such files can be reached from a view document. A
-stylesheet outside that scope, such as a source or token module matched by a
-`review.sharedImpact` glob or a declared dependency directory, is never
-analysed directly. It retains file-level `sharedImpact` evidence unless it is
-an input of a delivered generated stylesheet whose bytes changed, as defined
-below. Screen-only results retain file-level `sharedImpact` evidence;
-component results follow the
-[component result definition](./mokly-component-review.md#reasons-and-secondary-evidence).
-One shared predicate answers "is this stylesheet in analysis scope"
-for every classification path; only in-scope public stylesheets receive
-rule-level analysis.
+stylesheet outside that scope, such as a source or token module, is never
+analysed and creates no comparison evidence on its own. One shared predicate
+answers "is this stylesheet in analysis scope" for every classification path;
+only rendered public stylesheets can produce CSS analysis records.
 
 Generated linked stylesheets inside `mokly-generated/styles/` meet this
 public-file predicate. Rule-level analysis compares their emitted bytes and
@@ -74,7 +86,7 @@ selectors. Their original `.css` and `.module.css` files and plugin
 dependencies remain private `sourceFiles`: they trigger rebuilds but are not
 additional public CSS analyzed as if linked. One imported source can
 contribute to multiple root bundles; analyze each reachable generated route.
-Adding generated CSS links against a compatible v9 baseline without those
+Adding generated CSS links against a compatible v10 baseline without those
 links can change the linked views. Earlier-format baselines provide no comparison.
 
 Git does not report ignored generated routes. Compare the
@@ -89,15 +101,7 @@ and Changes; neither may accept the Git-only authored path list in its place.
 Export and Changes-enabled publication use the same evidence for
 comparison panes and catalogue membership as live Serve with either baseline reader.
 
-Retain each delivered root's CSS-pass input paths and asset paths separately
-from the broader manifest inventory. A changed private CSS input loses its
-file-level `sharedImpact` evidence only when an emitted stylesheet's bytes
-changed. A comment-only edit removed by esbuild therefore keeps conservative
-file-level evidence. An asset input loses that evidence only when its matching
-generated asset route changed. Document bytes (including CSS Modules class
-maps), changed rules and generated asset dependencies then provide the visual
-paths. Private CSS inputs and PostCSS candidates not delivered to a view
-retain file-level evidence. A changed generated asset keeps every view whose
+Retain each delivered root's CSS-pass and asset inputs separately from the wider private inventory. Those source paths never provide file-level evidence. A source edit that leaves rendered output and delivered bytes unchanged adds nothing. Document changes, including CSS Modules class maps, changed rules and referenced generated assets provide comparison material. A changed generated asset keeps every view whose
 resource closure references it, without decoding it. Each accepted build
 supplies a typed generation with route index, optional generated bytes and
 delivered-source paths; classification reuses it rather than
@@ -120,7 +124,8 @@ live classification snapshot or in static exports.
    produces no rule.
 2. **Matchability.** Test each diffed rule's selectors against the view's
    branch-point document and working-tree document. A match on either side
-   keeps the rule. Enclosing conditions are not evaluated: a rule inside
+   keeps the rule and retains all matched elements with their side, selector
+   and component containment. Enclosing conditions are not evaluated: a rule inside
    `@media` or `@container` is tested exactly like a rule outside it.
    Evaluating conditions needs a viewport and element sizes, which belongs to
    browser refinement.
@@ -143,6 +148,11 @@ live classification snapshot or in static exports.
    it does not contribute to Changes membership for that view.
    Any unresolved rule makes the reduced status `unresolved`, even if another
    rule matched. A failed stylesheet parse yields no partial selector evidence.
+4. **Attribute.** Join equal changed rules across stylesheets. Prove changed
+   components from kept own-page matches after nested filtering, then decide page rows. Retain page
+   evidence for outside matches and unresolved rules under the
+   [membership rule](./mokly-css-attribution-rules.md). Do not reduce away the
+   per-rule element sets before this step.
 
 ## Rule Diff Representation
 
@@ -220,21 +230,7 @@ Changed URLs in unevaluated condition preludes also count as changed references.
 
 ## Document Matching Interface
 
-`matchCssRules(diff: CssRuleDiffResult, documents: CssDocumentPair):
-CssRuleMatchResult` returns `status: "resolved"` with one `{ change, outcome }`
-per diffed rule, in added, removed, then changed list order. It preserves each
-list's ordinal ordering and original rule records. An unresolved diff passes
-through with its side-tagged parse failures. `CssDocumentPair.before` and
-`.after` are optional default-adapter parse5 documents. Component-aware calls
-use the page contract's original trees and ignored-subject predicate; the
-matcher performs no file reads or classification writes.
-
-`analyzeStylesheetChange(before: string, after: string, documents:
-CssDocumentPair, parser?: CssRuleParser): CssAnalysisOutcome` composes all three
-stages for one resource on one view. The default parser is
-`LightningCssRuleParser`; missing stylesheet sides use an empty string.
-The outcome is `{ kind: "kept", status: "matched" | "unresolved", selectors }`
-or `{ kind: "excluded" }`. No match means excluded, including a resolved empty
-diff. Callers remain responsible for reachability and `changedPaths` eligibility.
+The [matching interface](./mokly-css-document-matching.md) defines the pure
+per-rule matcher and the parser/matcher composition boundary.
 
 Membership and presentation continue in [CSS Attribution Membership](./mokly-css-attribution-membership.md).

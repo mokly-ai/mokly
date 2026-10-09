@@ -1,9 +1,16 @@
 # Changes and screen comparisons
 
+## Delivery Status
+
+Uniform CSS membership and evidence are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md); comparison details for screens and component saved views are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
+
+The remaining contract is implemented.
+
 The implemented [component attribution extension](./mokly-component-changes.md)
 keeps affected-only consumers out of Changes and links them from the component.
 Screen and Review-ignore behavior remains below. Pairing uses kind and path,
-then the move signals; review result v6 carries `previousPath` on paired moves.
+then the move signals; review result v7 carries `previousPath` on paired moves.
 Documents use the page material rules. The viewer presents paired entries under
 the [move contract](./mokly-moves.md).
 
@@ -29,14 +36,22 @@ baseline admission and pairing/order fixes run in Serve, export, and publish.
 
 ## Changes membership
 
-Changes is a review list of added, removed, and moved screens, pages, and
-documents, material document changes, reviewable entry metadata changes, and
-user flows that embed those screens.
-A new or edited flow is included independently. Source edits, source moves,
-dependency declaration edits, and shared-impact matches alone do not add
-otherwise unchanged entries. Dependency and shared-impact evidence remains in
-comparison details, accessible for every screen from All. Component-owned and
-exact declared paths follow [component attribution](./mokly-component-changes.md#dependencies-and-styles).
+Changes is a review list of added, removed and moved screens, pages and documents, material document changes,
+reviewable route metadata changes, and user flows that embed those screens.
+A new or edited flow is included independently. In every catalogue, including
+ones with registered components, a source edit or unreferenced
+public file alone neither adds an entry to Changes nor supplies comparison
+evidence. There are no declared-path or shared-glob reasons. Retained rendered
+resource/CSS evidence, Review-ignore normalization, metadata, ancestry, flow
+propagation and component usage attribution still apply. A changed component
+may list its unchanged consumers under Affected screens; those consumers do
+not become Changes rows solely because of component usage.
+Mokly-inserted links for a rendered child component's declared CSS are not
+consumer page material. A component page keeps its root component's inserted
+links; renderer-authored links remain page content even if a declaration reuses them.
+Rendered-resource and CSS evidence use final linked documents, not this
+comparison-only projection. See the
+[component attribution contract](./mokly-component-changes.md).
 
 Each variant of either kind is projected independently. Its metadata projection
 contains `variantOf` and its parent's title. Changing the parent title
@@ -58,19 +73,19 @@ The plain generated marker is excluded from document comparison, so a
 source move alone stays unchanged. Resource URLs compare by their resolved route;
 accepted source moves map generated styles/assets and copied document resources
 under the [move normalisation rule](./mokly-moves.md#normalisation). Equal mapped
-resource bytes do not add material, dependency or shared-impact reasons. CSS URL
+resource bytes do not add material or rendered-resource reasons. CSS URL
 spellings use that same map; real resource edits retain normal attribution.
 Inventoried owned sources relocated with their defining module compare by
 logical path and confined bytes; only byte-identical moves lose dependency
 reasons. Stored snapshots retain the original markers, paths and resource URLs.
 
-Changes to local resources referenced by a fragment also keep that screen in
-Changes. Follow CSS imports, CSS URLs, and embedded-document resources
+Changes to local resources referenced by a fragment supply resource evidence.
+Direct rows follow CSS rule attribution and non-CSS ownership below. Follow CSS imports, CSS URLs, and embedded-document resources
 transitively using the snapshot resource resolver and public-file confinement.
 Only references outside paired ignored regions participate; speculative
 preload/prefetch hints alone do not establish rendered impact. A linked resource
 edit is conservative evidence of a rendering change, not a pixel measurement.
-Unreferenced authored files never add entries through a broad shared-impact glob.
+Unreferenced public files never add entries or comparison reasons.
 Every reachable existing resource is validated, including images and fonts;
 finding a changed resource does not skip its CSS/HTML references or later graph
 edges. Added screens, newly available views, and existing material fragment
@@ -101,8 +116,10 @@ comparison produces the same retained evidence for every view.
 
 Linked stylesheet edits are narrowed by
 [CSS change attribution](./mokly-css-attribution.md): a changed stylesheet
-keeps a view in Changes only when a changed
-rule could match that view's document or the analysis cannot resolve the rule.
+keeps view evidence when a rule matches or is unresolved. Components change
+only through kept own-page matches after nested filtering. A page gets its own row for matches outside
+components changed by that rule, or for unresolved rules. All four CSS delivery
+paths follow [one rule](./mokly-css-attribution-rules.md).
 Stylesheets whose changed rules match nothing on a view are recorded as examined
 and excluded rather than as dependency evidence. Fonts, images, and embedded
 documents keep file-level attribution.
@@ -115,14 +132,14 @@ The shell receives this per-view resource evidence for screen-only catalogues
 as well as component catalogues, including in Current before snapshots exist.
 Live screen-only classification retains its analysis as `screenEvidence`, keyed
 by entry path; the workspace selects its `resourceEvidence` slice without a
-second analysis pass. Static exports select that slice from their packaged v6
+second analysis pass. Static exports select that slice from their packaged v7
 comparison. Details merge the loaded comparison's evidence
 with classification evidence, preserving retained stylesheet selectors,
-exclusions, shared-impact, and ignored-content details without duplicate cards.
+exclusions and ignored-content details without duplicate cards.
 See [CSS evidence presentation](./mokly-css-evidence-presentation.md).
 
 Classification reads baseline files without writing snapshots or a comparison;
-per-commit selection uses verified Git blobs or a completed rebuilt v9 cache. Baseline reads are batched, shared
+per-commit selection uses verified Git blobs or a completed rebuilt v10 cache. Baseline reads are batched, shared
 resource edges are cached, and cycles terminate. Apart from verified deletions,
 an unavailable or invalid input makes Changes unavailable while preserving the
 tabs and access through All in live Serve.
@@ -157,87 +174,5 @@ dropping views or weakening Git validation.
 
 ## Screen controls
 
-The status beside the title and the comparison band describe the view actually
-shown, not the entry-wide result or merely the requested axes. A Dark
-selection on a light-only screen therefore resolves to its Light view for
-status, control marks, and comparison presentation while retaining the Dark
-control state and the visible Light-only fallback label. With one viewport and
-one effective scheme selected, the view's review state maps `changed` to
-Changed, `added` to Added, `removed` to Removed, and `unchanged` or
-`ignored-only` to Unmodified. While Both is selected, the shown status is
-Changed when any shown view is Changed, else Added when any is Added, else
-Removed when any is Removed, else Unmodified. Comparison eligibility follows
-that shown status under the existing kind rule: Changed is eligible, and
-Removed is eligible only for a component variant. Thus an entry with
-changes can show Unmodified with no comparison band while the marks on the view
-controls and the `Changed views` row point to the views that changed.
-
-Per-view evidence is authoritative only when it names every effective view in
-the current selection. Unknown, pending, or partial per-view evidence preserves
-the selected entry's fallback status and comparison eligibility as two
-independent values. In particular, a Changed fallback status must not turn an
-explicitly ineligible public selection into an eligible comparison. Switching
-viewport or requested scheme recomputes the effective views, status, marks, and
-eligibility without a page load, as does a background evidence refresh;
-selecting a sibling variant is navigation to that entry.
-
-Server rendering, controlled selection, and comparison deep links use the same
-decision; a deep link is honored only after it confirms eligibility. Nonmatching
-evidence retains the existing fallback decision.
-
-Eligible views offer Current / Side by side / Overlay / Difference in an opaque
-band beneath the heading. Added and Unmodified views retain their current
-preview without that band; removed screens show their
-[previous version](./mokly-removed-previews.md) without it. Affected-only
-consumers can compare actual rendered differences while staying outside
-Changes. Current is selected initially, including after navigation and reload.
-Selecting Changes, opening a current screen, changing its viewport or color
-scheme in Current, and receiving a watched update do not generate comparison
-snapshots in development; opening a removed entry is the one selection that
-requests its historical preview. Publications with Changes prepare snapshots
-at build time, but never fetch or render them while browsing in Current. The first
-explicit diff selection requests the comparison in either delivery mode.
-Returning to Current cancels pending UI work and restores the current screen.
-Navigation must never let a late comparison response replace another screen.
-Shell-owned links carry comparison intent only when the destination view
-is eligible. The destination revalidates that eligibility before honoring a
-comparison query, so stale, manually edited, or historical URLs cannot bypass a
-current-only state or trigger a hidden comparison request.
-
-When a ready classification marks only some of a screen's views changed, the
-view controls say so rather than leaving the reviewer to find the difference.
-The theme control is marked when a changed view uses the other scheme, and the
-viewport control when a changed view uses the other viewport; selecting both
-viewports shows every viewport at once, so that control is never marked. The
-details inspector lists the same views as `Changed views`. When the current
-selection is not itself a changed entry, activating a changed row while the
-Changes filter is selected opens that destination's first changed view instead
-of the sticky selection, unless the URL names a viewport or scheme. Once a
-changed entry is selected, later row activations keep the sticky axes while an
-unmodified container row still redirects to its first visible changed variant
-or member under [variant navigation](./mokly-variant-navigation.md#changes-rows). A direct
-URL, an All-filter activation, Back, Forward, and a reload also keep the sticky
-selection.
-These marks and the `Changed views` row apply in exports with Changes as well as
-in Serve.
-
-Diffs render inside the existing main region with the catalogue, title, details,
-viewport, and scheme controls retained. Both viewports are supported. Snapshot
-frames follow the [pane](./mokly-comparison-panes.md) and
-[scrolling](./mokly-comparison-scrolling.md) contracts: script-disabled,
-device-sized documents with inert links and aligned regions. Overlay and
-Difference use one chrome; Side by side uses two. Missing panes stay explicit,
-dimensions match, and only Current offers expansion or pixel measurements.
-
-Loading, unavailable, and failed comparison states use plain product copy.
-Failure offers a retry. All and Changes share the same comparison eligibility.
-Removed screens remain discoverable in Changes without offering a comparison;
-they show their [previous version](./mokly-removed-previews.md) instead of a
-current preview. Dependency and ignored-region
-evidence stays secondary to the screen preview. Evidence availability is
-independent of comparison-mode eligibility and the inspector's initial
-disclosure; Added and Removed screens can retain factual Details without gaining
-comparison controls.
-
-Serving and comparison-engine behavior continues in
-[Changes Serving And Comparison](./mokly-changes-serving.md).
+Screen controls and change-view selection follow the
+[control contract](./mokly-changes-serving.md#screen-controls).

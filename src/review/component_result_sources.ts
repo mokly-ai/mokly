@@ -3,8 +3,14 @@ import {
   parseReviewResult,
   requireEqual,
   reviewInvalid,
+  canonicalJson,
 } from "@mokly/viewer/data";
-import type { Manifest, ReviewResultV6, ViewReview } from "@mokly/viewer/data";
+import type {
+  Manifest,
+  ReviewResultV7,
+  ViewReview,
+  DependencyReason,
+} from "@mokly/viewer/data";
 
 import { relatedDocumentReferences } from "../documents/references.js";
 
@@ -21,20 +27,22 @@ import {
 import { variantAddress } from "./component_pairing.js";
 import { componentVariantEntries } from "./component_variant_classification.js";
 import { groupedVariantPairs } from "./component_variant_pairs.js";
+import type { CssAttribution } from "./css/attribution.js";
 import { baselinePathMapper } from "./moves/identity.js";
-import { movedSourcePaths } from "./moves/source_moves.js";
 import { previousPathFields, type EntryMove } from "./moves/types.js";
 import { reviewViews } from "./views.js";
 
 /** Classifier evidence that can justify an entry's `dependency` reasons. */
 export interface DependencyReasonSources {
-  /** Paths contributed by filtered policy, views, exact screen CSS, or owned resources. */
+  /** Reachable paths with eligible page, kept-root or non-CSS owner reasons. */
   pathsByEntry: ReadonlyMap<string, ReadonlySet<string>>;
+  reasonsByEntry?: ReadonlyMap<string, readonly DependencyReason[]>;
+  cssProof?: CssAttribution | undefined;
 }
 
 /** Validate result coverage, addresses, dependency sources, and usage against both manifests. */
 export function validateComponentReviewSources(
-  result: ReviewResultV6,
+  result: ReviewResultV7,
   before: Manifest,
   after: Manifest,
   implementationImpact: ReadonlySet<string>,
@@ -42,10 +50,20 @@ export function validateComponentReviewSources(
   moves: readonly EntryMove[] = [],
 ): void {
   parseReviewResult(result);
+  for (const view of [
+    ...result.screens.flatMap((screen) => screen.views),
+    ...result.components.flatMap((component) =>
+      component.variants.flatMap((variant) => variant.views),
+    ),
+  ])
+    for (const reason of view.reasons ?? [])
+      if (reason.analysis) {
+        if (!sources.cssProof)
+          reviewInvalid("CSS source evidence requires frozen catalogue proof");
+        sources.cssProof.validate(reason.analysis);
+      }
   before = baselineForCurrentIdentities(before, after, moves);
   const mapBefore = baselinePathMapper(before.entries, after.entries, moves);
-  const sourcePaths = movedSourcePaths(before, after, moves);
-  const mapSource = (path: string) => sourcePaths.get(path) ?? path;
   const beforeVariants = componentVariantEntries(before.entries);
   const afterVariants = componentVariantEntries(after.entries);
   const pairs = entryPairs(before, after, moves);
@@ -101,7 +119,6 @@ export function validateComponentReviewSources(
       before,
       after,
       mapBefore,
-      mapSource,
     );
     if (!record) continue;
     if ("views" in record) {
@@ -157,14 +174,13 @@ export function validateComponentReviewSources(
 }
 
 function validateChange(
-  result: ReviewResultV6,
+  result: ReviewResultV7,
   beforeEntry: ReviewEntry | undefined,
   afterEntry: ReviewEntry | undefined,
   sources: DependencyReasonSources,
   before: Manifest,
   after: Manifest,
   mapBefore: (path: string) => string,
-  mapSource: (path: string) => string,
 ): void {
   const selected = afterEntry ?? beforeEntry;
   if (!selected) return;
@@ -190,6 +206,16 @@ function validateChange(
     },
   );
   for (const reason of change.reasons) {
+    if (reason.kind === "dependency" && reason.analysis) {
+      const eligible = sources.reasonsByEntry
+        ?.get(entryPairKey(selected))
+        ?.find((item) => item.path === reason.path);
+      if (!eligible || canonicalJson(reason) !== canonicalJson(eligible))
+        reviewInvalid("dependency reason has no eligible rule source evidence");
+      if (!sources.cssProof)
+        reviewInvalid("CSS source evidence requires frozen catalogue proof");
+      sources.cssProof.validate(reason.analysis);
+    }
     if (
       reason.kind === "dependency" &&
       !sources.pathsByEntry.get(entryPairKey(selected))?.has(reason.path)
@@ -203,7 +229,6 @@ function validateChange(
           beforeEntry,
           mapBefore,
           relatedDocumentReferences(before.entries, mapBefore),
-          mapSource,
         ) ===
           metadata(
             afterEntry,

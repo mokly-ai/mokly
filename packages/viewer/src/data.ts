@@ -105,6 +105,9 @@ export type { GeneratedComponentView } from "./components/views.js";
 export type {
   ComponentInstanceRecord,
   ComponentSourceLocation,
+  ComponentStyleOwnership,
+  ComponentResourceOwnership,
+  InsertedComponentStylesheet,
 } from "./components/manifest_types.js";
 export { isManifestComponentVariant } from "./components/manifest_types.js";
 export { instanceKey, slotKey } from "./components/keys.js";
@@ -130,7 +133,7 @@ export type {
 } from "./navigation/routes.js";
 export type {
   ReviewEntryAddress,
-  ScreenReviewV6,
+  ScreenReviewV7,
   ReviewVariantAddress,
   ComponentVariantReview,
   ComponentReview,
@@ -139,23 +142,29 @@ export type {
   ComponentUsageContext,
   AffectedUsageEvidence,
   AffectedConsumer,
-  ReviewResultV6,
+  ReviewResultV7,
 } from "./review/component_types.js";
 export { affectedConsumerOrderKey } from "./review/order.js";
 export type {
   ReviewArtifactContent,
   ReviewState,
   DependencyReason,
+  DependencyAnalysis,
+  CssRuleAttribution,
+  CssPageEvidence,
+  ResourceEvidence,
   ExcludedResource,
   InlineStyleEvidence,
   ViewReview,
   ViewResourceEvidence,
   ScreenResourceEvidence,
+  PageResourceEvidence,
   ScreenReview,
   ReviewArtifact,
   ReviewResult,
 } from "./review/types.js";
 export { parseReviewResult } from "./review/result_validation.js";
+export { cssAnalysis, mergeCssAnalysis } from "./review/css/evidence.js";
 export { parseRemovedPagePreview } from "./review/page_preview.js";
 export type {
   RemovedPagePreview,
@@ -180,7 +189,7 @@ export type {
   ManifestDocument,
   ManifestFolder,
   ManifestEntry,
-  ManifestV9,
+  ManifestV10,
   Manifest,
   HistoricalManifestEntry,
   HistoricalManifestScreen,

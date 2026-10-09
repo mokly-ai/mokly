@@ -5,7 +5,6 @@ import {
   runWithTimings,
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
-import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
 import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
@@ -174,11 +173,6 @@ test("fall-through views reuse actual discovery during byte comparison", async (
             ),
             beforeReader,
             afterReader,
-            dependencies: new ComponentDependencyPolicy(
-              fixture.before.manifest,
-              fixture.after.manifest,
-              [],
-            ),
             changed: new Set(["mockups/image.svg"]),
             prefix: "mockups",
             resources: new ResourceComparison(

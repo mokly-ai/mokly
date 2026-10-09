@@ -9,6 +9,8 @@ this contract fixes the tokens, dimensions, and responsive behavior that
 implementation and tests must preserve. Runtime behavior stays in
 [mokly-runtime.md](./mokly-runtime.md).
 
+## Delivery Status
+
 The shared [React shell](./mokly-viewer.md#shell-tree-and-state) preserves these
 tokens, dimensions and interactions in Serve, export and embedded hosts.
 The [component explorer designs](./mokly-component-design.md) own component
@@ -27,7 +29,7 @@ shared shell. Whole documents use a plain bordered pane and omit
 device/comparison controls. Removed pages are flat Changes rows; baseline
 breadcrumbs are text even after their parents are deleted. Ordinary
 publications omit the Changes filter and comparison band while preserving the
-same navigation, search, tags, and variants.
+same navigation, search, tags, and variants. `design/changes/impact/styles/page` depicts a changed page's stylesheet evidence in Details ([M20A](../../plans/remove-source-path-evidence.md#milestone-20a-depict-whole-document-page-evidence)); the shell implements it in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
 
 The comparison designs implement the [pane](./mokly-comparison-panes.md),
 [scrolling](./mokly-comparison-scrolling.md), and
@@ -117,23 +119,7 @@ by [shell device chrome and preview scheme](./mokly-shell-device-chrome.md).
 
 ## Responsive Behavior
 
-The shell has one breakpoint at **56.25rem (900px)**:
-
-- At or above it, the navigation column is persistent and the layout is the
-  fixed two-column split above.
-- Below it, the navigation becomes a scrimmed overlay drawer (82% width, max
-  20rem) opened by the top-bar menu button throughout the catalogue. The
-  drawer opens under the 48px bar and the bar stacks above the scrim, so the
-  menu button that opened it, the brand and the query stay
-  at full strength while only the shell below the bar dims. The tag picker
-  stops anchoring to the narrow field and drops as a sheet spanning the shell,
-  flush under the bar's bottom border with only its lower corners rounded. The
-  phone frame scales via `aspect-ratio: 390 / 844` within available width, the
-  browser frame drops to 560px height, flow connector lines hide, the details
-  body stacks to one column inside its bottom sheet. The grouped view controls
-  stay together in the screen head band and wrap beneath the title when needed.
-
-`prefers-reduced-motion: reduce` disables shell transitions.
+See [responsive shell behavior](./mokly-shell-device-chrome.md#responsive-behavior).
 
 ## In-place Comparisons
 

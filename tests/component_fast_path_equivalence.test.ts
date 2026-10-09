@@ -5,12 +5,11 @@ import test, { type TestContext } from "node:test";
 
 import { compileCatalogue, type Compilation } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
-import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV7 } from "../packages/viewer/dist/review/component_types.js";
 
 import { generateLargeFixture } from "./fixtures/large/generate.js";
 import { componentChangeCases } from "./helpers/component_change_cases.js";
 import {
-  assertComparisonModesEquivalent,
   assertFastPathEquivalent,
   compilationFiles,
   type FastPathFixture,
@@ -23,16 +22,10 @@ import {
   repositoryRoot,
 } from "./helpers/fixture.js";
 
-for (const [name, change, routes] of componentChangeCases) {
-  const settlesFast = ![
-    "component-only implementation",
-    "component and screen edits",
-  ].includes(name);
-  test(`${settlesFast ? "fast and complete paths" : "enabled and forced-complete modes"} agree for ${name}`, async (t) => {
+for (const [name, change, routes] of componentChangeCases)
+  test(`fast and complete paths agree for ${name}`, async (t) => {
     const fixture = await componentReviewFixture(t, change);
-    const result = await (
-      settlesFast ? assertFastPathEquivalent : assertComparisonModesEquivalent
-    )({
+    const result = await assertFastPathEquivalent({
       before: fixture.before.manifest,
       after: fixture.after.manifest,
       beforeFiles: compilationFiles(fixture.before),
@@ -51,7 +44,6 @@ for (const [name, change, routes] of componentChangeCases) {
         ),
       );
   });
-}
 
 test("fast and complete paths agree for ignored-only documents", async (t) => {
   const source = componentEntrySource({
@@ -85,9 +77,9 @@ test("fast and complete paths agree for ignored-only documents", async (t) => {
 });
 
 for (const owned of [false, true])
-  test(`enabled and forced-complete modes agree for changed reachable CSS; owned=${owned}`, async (t) => {
+  test(`fast and complete paths agree for changed reachable CSS; owned=${owned}`, async (t) => {
     const fixture = await stylesheetFixture(t, owned);
-    const result = await assertComparisonModesEquivalent(fixture);
+    const result = await assertFastPathEquivalent(fixture);
     assert.ok(
       allViews(result).some(
         (view) =>
@@ -137,7 +129,7 @@ test("derived byte-only image changes take the complete path", async (t) => {
     "image.svg": "head-image",
     "shared.css": 'button { background: url("image.svg"); }',
   };
-  const result = await assertComparisonModesEquivalent({
+  const result = await assertFastPathEquivalent({
     before: compilation.manifest,
     after: compilation.manifest,
     beforeFiles: compilationFiles(compilation, baseImages),
@@ -200,11 +192,12 @@ async function stylesheetFixture(
   if (owned)
     source = source.replace(
       'path: "action",',
-      'path: "action", ownedDependencies: ["mockups/action.css"], dependencies: ["mockups/action.css"],',
+      'path: "action", stylesheets: ["action.css"],',
     );
   const fixture = await createFixture(source, {
-    extraConfig:
-      'colorSchemes: ["light", "dark"], stylesheets: [{ match: "**/*.html", stylesheets: ["action.css"] }],',
+    extraConfig: owned
+      ? 'colorSchemes: ["light", "dark"], stylesheets: [],'
+      : 'colorSchemes: ["light", "dark"], stylesheets: [{ match: "**/*.html", stylesheets: ["action.css"] }],',
   });
   t.after(() => removeFixture(fixture));
   await fs.writeFile(path.join(fixture.mockupsDir, "action.css"), "");
@@ -240,7 +233,7 @@ async function assetFiles(directory: string) {
   return files;
 }
 
-function allViews(result: ReviewResultV6) {
+function allViews(result: ReviewResultV7) {
   return [
     ...result.screens.flatMap((screen) => screen.views),
     ...result.components.flatMap((component) =>

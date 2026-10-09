@@ -28,7 +28,6 @@ const REMOVED_HOME_VARIANT = {
   folderTitles: ["Fixture", "Nested"],
   parentTitle: "Home",
   entry: {
-    declaredDependencies: [],
     description: "Home after the workspace was deleted",
     colorSchemes: ["light" as const],
     path: "fixture/nested/home/gone",
@@ -110,7 +109,7 @@ export async function startNavigationFixture(): Promise<NavigationFixture> {
 function navigationSource(): string {
   return `import { defineScreen, defineUseCase, MockLink } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: [], relatedDocs: [] };
+const metadata = { relatedDocs: [] };
 function Home({ compact }) {
   const nestedGenerated = compact ? "../details/index.mobile.html" : "../details/index.desktop.html";
   return <main id="home">

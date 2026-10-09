@@ -8,6 +8,7 @@ import {
 } from "../components/comparison_material.js";
 import { materialRecipe } from "../components/material_recipe.js";
 import { mayContainCssReferences } from "../css_references.js";
+import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
 
 import {
   prepareComponentProjection,
@@ -17,7 +18,7 @@ import { changedResourceBytes } from "./component_resource_changes.js";
 import type {
   ComparedComponentView,
   ComponentViewContext,
-} from "./component_view.js";
+} from "./component_view_types.js";
 import {
   sameInlineOuterSources,
   type InlineStyleSpan,
@@ -47,6 +48,8 @@ export async function compareUnchangedComponentView(
   const links = context.links?.(before.path, after.path);
   if (
     pages &&
+    !before.usage?.insertedStylesheets?.length &&
+    !after.usage?.insertedStylesheets?.length &&
     (!pages.links || pages.links.equalSource === true) &&
     base === head &&
     componentUsageTopologyEqual(before.usage, after.usage)
@@ -54,6 +57,16 @@ export async function compareUnchangedComponentView(
     const comparison = await identicalPageQuickCheck(context, pages, view);
     return comparison ? { comparison } : {};
   }
+  const baseStylesheets = insertedStylesheetResources(
+    base,
+    before.usage,
+    before.path,
+  );
+  const headStylesheets = insertedStylesheetResources(
+    head,
+    after.usage,
+    after.path,
+  );
   const retained =
     pages?.normalization ?? normalizeReviewPair(base, head, after.path, links);
   if (retained.base !== retained.head) return {};
@@ -101,6 +114,7 @@ export async function compareUnchangedComponentView(
     (usage) =>
       usage &&
       (usage.instances.length > 0 ||
+        usage.ranges.some((range) => range.target.kind === "root") ||
         usage.slots.some((slot) => slot.owner.kind === "entry")),
   );
   const hasInlineReferences = [base, head].some(mayContainCssReferences);
@@ -142,13 +156,13 @@ export async function compareUnchangedComponentView(
     after.path,
     actual.resourceHead ?? actual.head,
     undefined,
-    actualAfter,
+    { references: actualAfter, insertedStylesheets: headStylesheets },
   );
   const beforeResources = await context.beforeReader.resourcesIfPresent(
     before.path,
     actual.resourceBase ?? actual.base,
     undefined,
-    actualBefore,
+    { references: actualBefore, insertedStylesheets: baseStylesheets },
   );
   if (!beforeResources) return fallback(prepared);
   const projectedAfterResources =
@@ -157,7 +171,10 @@ export async function compareUnchangedComponentView(
           after.path,
           projected.resourceAfter ?? projected.after,
           excluded,
-          prepared?.references?.after,
+          {
+            references: prepared?.references?.after,
+            insertedStylesheets: headStylesheets,
+          },
         )
       : new Set<string>();
   const projectedBeforeResources =
@@ -166,7 +183,10 @@ export async function compareUnchangedComponentView(
           before.path,
           projected.resourceBefore ?? projected.before,
           excluded,
-          prepared?.references?.before,
+          {
+            references: prepared?.references?.before,
+            insertedStylesheets: baseStylesheets,
+          },
         )
       : projectedAfterResources;
   if (!projectedBeforeResources) return fallback(prepared);

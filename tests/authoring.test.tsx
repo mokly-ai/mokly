@@ -81,7 +81,6 @@ test("review material keys reject cyclic or non-finite state", () => {
 test("definitions keep identity while shared helpers derive every document", () => {
   const screenDefinition = defineScreen(screenBase);
   const pageDefinition = definePage({
-    dependencies: [],
     description: "Account guide",
     path: "account-guide",
     relatedDocs: [],
@@ -90,7 +89,6 @@ test("definitions keep identity while shared helpers derive every document", () 
   });
   const useCaseDefinition = defineUseCase(useCaseBase);
   const componentDefinition = defineComponent({
-    dependencies: [],
     description: "Action",
     path: "action",
     propSchema: { kind: "object", properties: {} },

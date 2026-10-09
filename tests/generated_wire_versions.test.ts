@@ -24,7 +24,7 @@ test("the legacy v3 catalogue gate rejects v4 before any entry or path read", ()
 });
 
 for (const [boundary, supported, read] of [
-  ["catalogue", 5, readCatalogue],
+  ["catalogue", 6, readCatalogue],
   ["delivery", 5, parseStaticDelivery],
   ["bootstrap", 2, readLiveShellBootstrapState],
 ] as const) {

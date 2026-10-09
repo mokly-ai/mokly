@@ -21,7 +21,6 @@ export default defineUseCase({
     { screenPath: "./account-home" },
     { screenPath: "account/billing/invoice", title: "Open an invoice" },
   ],
-  dependencies: ["src/account"],
   relatedDocs: ["docs/account.md"],
 });
 ```
@@ -49,7 +48,7 @@ export default defineScreen({
   description: "The start of the account tour.",
   mobile: <main>Account</main>,
   desktop: <main>Account</main>,
-  dependencies: [],
+
   relatedDocs: [],
   useCasePaths: ["./account-tour"],
 });

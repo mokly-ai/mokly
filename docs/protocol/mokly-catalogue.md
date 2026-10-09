@@ -1,5 +1,29 @@
 # Public Catalogue Read Model
 
+## Delivery Status
+
+Optional per-view/page `resourceEvidence` and root usage ranges are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md); screen and saved-view display is implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence), and the whole-document page display is implemented in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
+Read model v6 replaces released v5. `ResourceEvidence` follows the
+[CSS evidence schema](./mokly-css-attribution-membership.md).
+
+## Supported Formats
+
+| Catalogue                     | Generated manifest | Comparison result |
+| ----------------------------- | ------------------ | ----------------- |
+| Without registered components | 9                  | 6                 |
+| With registered components    | 9                  | 6                 |
+
+Current output uses manifest v10, review result v7, and public read model v6,
+with globally unique entry paths. The private catalogue-change snapshot is v3 and removed
+page preview metadata is v3. Delivery descriptors are v5. The manifest stores
+folder records, component variants, per-view usage, root output ranges and
+inserted-stylesheet provenance,
+with no derived file names on entries; the generated inventory lists exact paths. Markdown documents and their resource copies are
+implemented. Accepted move pairs carry `previousPath` in review records and
+the public read model; the manifest retains authored hints only.
+Current and baseline manifest readers accept only one version; earlier output
+follows [baseline compatibility](./mokly-baseline-compatibility.md).
+
 ## Location And Types
 
 Export writes `mokly-viewer/catalogue.json` at the artifact root. Serve exposes
@@ -27,7 +51,7 @@ type ChangeKind = "added" | "changed" | "removed" | "unmodified";
 type PublicPath = string;
 
 interface CatalogueReadModel {
-  schemaVersion: 5;
+  schemaVersion: 6;
   identity: { id: string; title: string };
   deploymentId: string;
   revision: { content: number; evidence: number };
@@ -83,7 +107,6 @@ interface CatalogueDetails {
   rationale?: string;
   relatedDocs: readonly string[];
   sourcePath: string;
-  dependencies: readonly string[];
 }
 interface CatalogueEntry {
   path: string;
@@ -106,6 +129,7 @@ interface CatalogueView {
   colorScheme: ColorScheme;
   usage: CatalogueUsage;
   comparison: ComparisonSelection;
+  resourceEvidence?: ResourceEvidence;
 }
 interface CatalogueScreen extends CatalogueEntry {
   kind: "screen";
@@ -117,6 +141,7 @@ interface CatalogueScreen extends CatalogueEntry {
 }
 interface CataloguePage extends CatalogueEntry {
   kind: "page";
+  resourceEvidence?: ResourceEvidence;
 }
 interface CatalogueDocument extends CatalogueEntry {
   kind: "document";
@@ -148,7 +173,8 @@ interface CatalogueComponentVariant extends CatalogueEntry {
 }
 ```
 
-No record carries a route or file name. A reader uses the
+No entry record carries a derived route or file name. Resource evidence names
+only rendered-resource paths. A reader uses the
 [artifact path contract](./mokly-artifact-paths.md): a current view is served
 at `static/mokly-generated/<view route>`, a current page or document at
 `static/mokly-generated/<document route>`, and the shell at `/view/<path>/`. Removed entries
@@ -174,8 +200,9 @@ the children each section shows.
 
 ## Projection And Privacy
 
-The complete allowlist, privacy and evidence rules are in
-[Catalogue Projection And Privacy](./mokly-catalogue-projection.md).
+The [delivery contract](./mokly-catalogue-delivery.md#projection-and-privacy)
+owns the allowlist and delivery boundaries. Detailed inspection privacy and
+inline evidence projection follow [Catalogue Projection And Privacy](./mokly-catalogue-projection.md).
 
 ## Serialization, Identity And Versions
 

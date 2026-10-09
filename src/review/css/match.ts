@@ -7,12 +7,13 @@ import { documentWorkSync } from "../../diagnostics/timings.js";
 
 import { cssDocumentOptions } from "./document.js";
 import type { CssDocumentPair } from "./document.js";
-import { matchesDocument } from "./document_query.js";
+import { matchingElements } from "./document_query.js";
 import { CssSelectorError } from "./match_types.js";
 import type {
-  CssAnalysisOutcome,
   CssRuleDelta,
   CssRuleMatchResult,
+  CssElementMatch,
+  CssRuleMatch,
 } from "./match_types.js";
 import { changedCustomProperties, changedReferences } from "./material.js";
 import { resolveRuleSelectors } from "./nesting.js";
@@ -25,6 +26,7 @@ export type PreparedCssRule =
       status: "matchable";
       selectors: readonly string[];
       queries: Selector[][][];
+      entries: readonly { query: Selector[][]; selector: string }[];
     }
   | { status: "unresolved"; selectors: readonly string[] };
 
@@ -47,7 +49,7 @@ export function matchCssRules(
       status: "resolved",
       rules: changes.map((change) => ({
         change,
-        outcome: matchRule(change, documents),
+        ...matchRule(change, documents),
       })),
     };
   });
@@ -56,27 +58,33 @@ export function matchCssRules(
 function matchRule(
   change: CssRuleDelta,
   documents: CssDocumentPair,
-): CssAnalysisOutcome {
+): Pick<CssRuleMatch, "outcome" | "matches"> {
   const prepared = prepareCssRule(change);
   const { selectors } = prepared;
-  const kept = (status: "matched" | "unresolved"): CssAnalysisOutcome => ({
-    kind: "kept",
-    status,
-    selectors,
+  const kept = (
+    status: "matched" | "unresolved",
+    matches: readonly CssElementMatch[] = [],
+  ): Pick<CssRuleMatch, "outcome" | "matches"> => ({
+    outcome: { kind: "kept", status, selectors },
+    matches,
   });
   if (prepared.status === "unresolved") return kept("unresolved");
-  const available = [documents.before, documents.after].filter(
-    (document) => document !== undefined,
-  );
+  const matches: CssElementMatch[] = [];
   try {
-    for (const query of prepared.queries)
-      for (const document of available)
-        if (matchesDocument(query, document)) return kept("matched");
+    for (const { query, selector } of prepared.entries)
+      for (const side of ["before", "after"] as const) {
+        const document = documents[side];
+        if (document)
+          for (const element of matchingElements(query, document))
+            matches.push({ side, document, element, selector });
+      }
   } catch (error) {
     if (error instanceof CssSelectorError) return kept("unresolved");
     throw error;
   }
-  return { kind: "excluded" };
+  return matches.length
+    ? kept("matched", matches)
+    : { outcome: { kind: "excluded" }, matches: [] };
 }
 
 /** Apply the shared ordered keep list, with one switch for changed references. */
@@ -102,12 +110,12 @@ export function prepareCssRule(
     return unresolved();
   if (
     prepared.status === "parsed" &&
-    prepared.queries.some((query) => selectorFeatures(query).shadow)
+    prepared.queries.some(({ query }) => selectorFeatures(query).shadow)
   )
     return unresolved();
   if (
     prepared.status === "parsed" &&
-    prepared.queries.some((query) => selectorFeatures(query).global)
+    prepared.queries.some(({ query }) => selectorFeatures(query).global)
   )
     return unresolved();
   if (prepared.status === "unresolved") return unresolved();
@@ -118,22 +126,34 @@ export function prepareCssRule(
     changedReferences(change.before, change.after)
   )
     return unresolved();
-  return { status: "matchable", selectors, queries: prepared.queries };
+  return {
+    status: "matchable",
+    selectors,
+    queries: prepared.queries.map(({ query }) => query),
+    entries: prepared.queries,
+  };
 }
 
 function prepareSelectors(
   change: CssRuleDelta,
 ):
-  | { status: "parsed"; queries: Selector[][][] }
+  | { status: "parsed"; queries: { query: Selector[][]; selector: string }[] }
   | { status: "unresolved"; error: CssSelectorError } {
   try {
     const rules = [change.before, change.after].filter(
       (rule) => rule !== undefined,
     );
-    const queries = [...new Set(rules.flatMap(resolveRuleSelectors))].map(
-      (selector) => parse(selector),
+    const seen = new Set<string>();
+    const queries = rules.flatMap((rule) =>
+      resolveRuleSelectors(rule).flatMap((resolved, index) => {
+        const selector = rule.selectors[index]!;
+        const key = JSON.stringify([selector, resolved]);
+        if (seen.has(key)) return [];
+        seen.add(key);
+        return [{ query: parse(resolved), selector }];
+      }),
     );
-    for (const query of queries) {
+    for (const { query } of queries) {
       const features = selectorFeatures(query);
       if (!features.shadow)
         compile(staticSelectors(query, true, false), cssDocumentOptions());

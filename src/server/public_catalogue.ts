@@ -3,7 +3,7 @@ import path from "node:path";
 import type { ComponentViewRecord } from "@mokly/viewer";
 import { counter, generatedViews } from "@mokly/viewer/data";
 
-import type { CompiledDocument } from "../build/document_compiler.js";
+import type { CompiledDocument } from "../build/document_types.js";
 import { projectCatalogue } from "../catalogue/projection.js";
 import type { CatalogueProjectionInput } from "../catalogue/projection_input.js";
 import {
@@ -82,6 +82,8 @@ export class LivePublicCatalogue implements PublicCatalogueSource {
         instances: [],
         slots: [],
         ranges: [],
+        styles: [],
+        resources: [],
       },
     );
     this.publish(input, content);

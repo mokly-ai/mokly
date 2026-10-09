@@ -1,6 +1,6 @@
 # Scalable Inline Style Analysis
 
-Status: Active. All milestones are complete. Main's #179 (`34e4bb03`) conflicts with this branch, and its merge waits for the user's decisions; the plan closes when PR #158 merges. Review findings stay recorded for the user's decision. Performance acceptance is deferred to a later plan.
+Status: Active. Milestone 15 is in progress; the plan closes when PR #158 merges. Main test changes wait for the user's approval. Review findings stay recorded for the user's decision. Performance acceptance is deferred to a later plan.
 
 Make inferred inline style ownership work, and work fast, on a full-size React
 Native Web catalogue. Mokly must stop retaining memory it does not need, bound
@@ -2133,6 +2133,89 @@ Evidence: `.context/scalable-inline-style-analysis/m14/`.
       Review complete; report: `.context/scalable-inline-style-analysis/m14-review/report.md`.
       Finding 1 (Low, docs): the fixture README overview still said that setup archives one package; fixed in this fix round; see the commit.
       Re-review of the fix round (`fed21f83..b6b1075a`) complete; report: `.context/scalable-inline-style-analysis/m14-review/rereview.md`. No findings; finding 1 is fixed in `b6b1075a`.
+
+## Milestone 15: Source-Path Evidence Mainline Integration (2026-10-09)
+
+Integrate #179's rule membership, non-CSS resource records and current formats
+with inferred inline ownership and the shared original-page analysis. Preserve
+main's test expectations until the user approves each required change. Keep
+main's example tree and evidence UI for the separate mockup and UI milestones.
+
+User request (2026-10-09): merge `origin/main` (#179), resolve conflicts, commit and push. The supervisor applied the recommended option of each decision D0–D12 in `.context/scalable-inline-style-analysis/main179-analysis.md`; the user did not choose them one by one. Main test changes wait for the user's approval.
+
+Evidence: `.context/scalable-inline-style-analysis/m15-merge/`.
+
+Supervisor decisions under the user's merge request: D1 C keeps string results
+and `{ html; resources? }`, warns once for returned `styles`, and ignores that
+field. D3 A keeps CSS resource checking, warnings and closure seeds; this closes
+branch decision 8. D4 A keeps non-CSS records and adds non-CSS inline owners.
+D5 A separates linked-CSS rule membership from inline ownership and includes
+root ranges. D6 A keeps one-parse recipes and original-coordinate link removal.
+D10 B restores main's `output_validation.ts` unchanged.
+
+D2 A uses unreleased manifest v10, catalogue v6 and review v7. If PR #182 merges
+before the push, stop and report; D2 then becomes B. D7 and D8 belong to the UI
+agent. D11 retains main's documentation guard and records its exact failures
+for approval. D12 makes no change to PR #182 or any other PR.
+
+- [ ] Audit and merge `origin/main` once with two parents. Resolve each path,
+      inspect every auto-merged path changed on both sides, review all remerge
+      paths, audit deletions, and freeze the merge SHA before follow-up commits.
+- [ ] Integrate D1, D3, D4 and D10: graceful renderer results, checked CSS
+      closure seeds, non-CSS ownership and main's output validation.
+- [ ] Integrate D2's v10/v6/v7 shapes and inline evidence fields. Check PR #182's
+      release state before relying on unreleased format numbers.
+- [ ] Integrate D5's ownership rules by delivery path, including root ownership
+      and root boundaries in Review-ignore regions.
+- [ ] Integrate D6's inserted-link removal and membership into original-page
+      recipes. Keep parse counts and add full-comparison differential tests.
+- [ ] Align live docs and READMEs, update false live statements in the #179
+      plan, preserve historical records, and meet the protocol and source caps.
+- [ ] Keep main's expected values, finish the other backend work and run the
+      affected tests. Record every needed main-test change, including D11, in
+      `.context/scalable-inline-style-analysis/m15-merge/main-test-approvals.md`.
+      Stop for the user's approval before changing expectations or pushing.
+- [ ] After approval, apply only approved test changes, run the complete
+      pinned-Chromium gate and the four real-server smoke tests, and record
+      unrelated flaky tests under the review rule.
+- [ ] Record every merge and test decision in the PR justifications, audit
+      deletions, commit and push. Fetch main and report a new dry run if it moved;
+      do not merge again. Stop if PR #182 has merged before the push.
+- [ ] After the push, use
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      against `origin/main`. Keep the review read-only, then apply the
+      [review-fix rule](../docs/dev/review.md): fix `Auto-fix: yes` findings,
+      re-review once, and record every open finding. Keep this TODO unticked
+      until the review, its fix round, the re-review and all open findings are
+      recorded here. The supervisor runs the review.
+
+## Milestone 16: Inline Style Evidence Mockup
+
+Tags: mockup
+
+The UI agent designs inline evidence beside #179's per-file evidence. This
+backend merge retains main's example tree and screens until that work starts.
+
+- [ ] Re-home the branch's excluded page-style design screen in #179's
+      `matched-excluded/` folder as `inline-excluded` (D7 A).
+- [ ] Design one separate inline-style block in the Details panel with its own
+      lead sentence in the shared `entryWording` set (D8 A).
+- [ ] Validate the mockups and their links, then commit and push.
+- [ ] After the push, use the implementation review prompt against `origin/main`,
+      apply the review-fix rule, re-review once, and record open findings.
+
+## Milestone 17: Inline Style Evidence UI
+
+Tags: ui
+
+The UI agent implements the approved mockup with the same inline evidence in
+the live shell and exported views.
+
+- [ ] Implement the D8 inline-style block in the shell and in exported views.
+- [ ] Validate the affected UI, run its required checks and smoke tests, then
+      commit and push.
+- [ ] After the push, use the implementation review prompt against `origin/main`,
+      apply the review-fix rule, re-review once, and record open findings.
 
 ## Post-merge follow-up (non-blocking)
 

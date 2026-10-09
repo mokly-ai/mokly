@@ -8,9 +8,8 @@ import { loadConfig } from "../dist/config/load.js";
 import { validateComponentReviewSources } from "../dist/review/component_result_sources.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 
-import { assertComparisonPaths } from "./helpers/component_comparison_paths.js";
 import {
-  assertComparisonModesEquivalent,
+  assertFastPathEquivalent,
   classifyFixtureWithSources,
   compilationFiles,
 } from "./helpers/component_fast_path.js";
@@ -42,7 +41,7 @@ test("source validation rejects a reason injected onto an affected-only screen",
       reasons: [{ kind: "dependency", path: changed }],
     },
   ];
-  assert.doesNotThrow(() => parseReviewResult(tampered));
+  assert.throws(() => parseReviewResult(tampered), /analysis/);
   assert.throws(
     () =>
       validateComponentReviewSources(
@@ -52,7 +51,7 @@ test("source validation rejects a reason injected onto an affected-only screen",
         classified.implementationImpact,
         classified.sources,
       ),
-    /dependency reason has no source evidence/,
+    /dependency reason has no source evidence|analysis/,
   );
 });
 
@@ -85,7 +84,7 @@ for (const kind of ["component", "screen"] as const)
         reasons: [{ kind: "dependency", path: "mockups/action.css" }],
       },
     ];
-    assert.doesNotThrow(() => parseReviewResult(tampered));
+    assert.throws(() => parseReviewResult(tampered), /analysis/);
     assert.throws(
       () =>
         validateComponentReviewSources(
@@ -95,11 +94,11 @@ for (const kind of ["component", "screen"] as const)
           classified.implementationImpact,
           classified.sources,
         ),
-      /dependency reason has no source evidence/,
+      /dependency reason has no source evidence|analysis/,
     );
   });
 
-test("an owned stylesheet retained by an exact-declaring screen remains valid", async (t) => {
+test("a configured and declared stylesheet retains its component and matching saved-variant Changes rows", async (t) => {
   const fixture = await stylesheetValidationFixture(t, "both", true);
   const { before, after, result, classified } = fixture;
   const screen = result.screens.find((entry) => entry.path === "home")!;
@@ -108,17 +107,18 @@ test("an owned stylesheet retained by an exact-declaring screen remains valid", 
       view.reasons?.some((reason) => reason.path === "mockups/action.css"),
     ),
   );
+  assert.deepEqual(
+    result.changes.map((entry) => entry.after?.path),
+    ["action", "action/default", "action/disabled"],
+  );
   assert.ok(
-    result.changes.some(
-      (entry) =>
-        entry.kind === "screen" &&
-        entry.after?.path === "home" &&
-        entry.reasons.some(
-          (reason) =>
-            reason.kind === "dependency" &&
-            reason.path === "mockups/action.css",
-        ),
+    result.changes[0]!.reasons.some(
+      (reason) =>
+        reason.kind === "dependency" && reason.path === "mockups/action.css",
     ),
+  );
+  assert.ok(
+    result.affectedConsumers.some(({ consumer }) => consumer.path === "home"),
   );
   assert.doesNotThrow(() =>
     validateComponentReviewSources(
@@ -143,16 +143,14 @@ async function stylesheetValidationFixture(
   if (declaration !== "screen")
     source = source.replace(
       'path: "action",',
-      'path: "action", dependencies: ["mockups/action.css"], ownedDependencies: ["mockups/action.css"],',
-    );
-  if (declaration !== "component")
-    source = source.replace(
-      'path: "home",',
-      'path: "home", dependencies: ["mockups/action.css"],',
+      'path: "action", stylesheets: ["action.css"],',
     );
   const fixture = await createFixture(source, {
     extraConfig:
-      'colorSchemes: ["light", "dark"], stylesheets: [{ match: "**/*.html", stylesheets: ["action.css"] }],',
+      'colorSchemes: ["light", "dark"],' +
+      (declaration === "component"
+        ? ""
+        : 'stylesheets: [{ match: "**/*.html", stylesheets: ["action.css"] }],'),
   });
   t.after(() => removeFixture(fixture));
   await fs.writeFile(path.join(fixture.mockupsDir, "action.css"), "");
@@ -172,8 +170,7 @@ async function stylesheetValidationFixture(
     changedPaths: ["mockups/action.css"],
     config,
   };
-  await assertComparisonPaths(caseInput, "complete");
-  const result = await assertComparisonModesEquivalent(caseInput);
+  const result = await assertFastPathEquivalent(caseInput);
   const classified = await classifyFixtureWithSources(caseInput);
   assert.deepEqual(classified.result, result);
   return { before, after, result, classified };

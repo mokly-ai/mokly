@@ -63,13 +63,13 @@ export async function unchangedPageResources(
     head.route,
     head.source,
     undefined,
-    seeds,
+    { references: seeds },
   );
   const beforeResources = await context.beforeReader.resourcesIfPresent(
     head.route,
     head.source,
     undefined,
-    seeds,
+    { references: seeds },
   );
   if (!beforeResources) return false;
   const path = (route: string) =>

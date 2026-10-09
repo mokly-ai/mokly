@@ -3,6 +3,8 @@ import type {
   ViewReview,
 } from "../../packages/viewer/dist/review/types.js";
 
+import { fixtureCssAnalysis } from "./css_evidence.js";
+
 /** Snapshot closure for both valid schema fixtures. */
 export function cssSchemaFiles(): Map<string, string> {
   return new Map(
@@ -23,8 +25,8 @@ export function cssSchemaFiles(): Map<string, string> {
   );
 }
 
-/** Shared server/browser schema fixture uses the path-based v5 result. */
-export function cssSchemaFixture(_version: 5 = 5): ReviewResult {
+/** Shared server/browser schema fixture uses the path-addressed v7 result. */
+export function cssSchemaFixture(): ReviewResult {
   const address = { path: "auth", title: "Sign in" };
   const views: ViewReview[] = [
     {
@@ -37,7 +39,7 @@ export function cssSchemaFixture(_version: 5 = 5): ReviewResult {
         {
           kind: "dependency",
           path: "mockups/shared.css",
-          analysis: { status: "matched", selectors: [".auth", ".button"] },
+          analysis: fixtureCssAnalysis("matched", [".auth", ".button"]),
         },
       ],
     },
@@ -56,18 +58,15 @@ export function cssSchemaFixture(_version: 5 = 5): ReviewResult {
     baseRef: "main",
     changedPaths: ["mockups/shared.css"],
     ignoredImpact: [],
-    sharedImpact: ["mockups/shared.css"],
   };
   const screen = {
     ...address,
-    dependencies: [],
-    sharedImpact: ["mockups/shared.css"],
     state: "changed" as const,
     views,
   };
   return {
     ...common,
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     screens: [{ ...screen, before: address, after: address }],
     components: [],
     affectedConsumers: [],

@@ -33,11 +33,13 @@ export async function discoverInlineResourceOwners(
             ? ""
             : `<style>${renderInlineRules(group.rules)}</style>`,
           undefined,
-          storedReferences
-            ? documentWorkSync("referenceMs", () =>
-                group.rules.flatMap(cssRuleReferences),
-              )
-            : undefined,
+          {
+            references: storedReferences
+              ? documentWorkSync("referenceMs", () =>
+                  group.rules.flatMap(cssRuleReferences),
+                )
+              : undefined,
+          },
         ),
       })),
     ),

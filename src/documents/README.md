@@ -38,8 +38,8 @@ is checked only by export capture; it does not reject Build or Serve.
 
 The graph retains documents and asset bytes for demand rendering and worker
 replay. Build applies the same generated-tree, final-link, resource
-and transactional checks as pages. Manifest v9 records source resources; public
-catalogue v5 exposes documents without source bytes. Changes compares rendered
+and transactional checks as pages. Manifest v10 records source resources; public
+catalogue v6 exposes documents without source bytes. Changes compares rendered
 documents in each scheme, resources and reviewable metadata. Removed previews
 capture historical schemes and resources through the existing baseline reader.
 `moved_resources.ts` proves equal bytes at corresponding resource references

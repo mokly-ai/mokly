@@ -24,7 +24,6 @@ import { source } from "./statement.source.js";
 export default definePage({
   title: "Account statement",
   description: "The printable account statement.",
-  dependencies: ["specs/documents/statement.source.tsx"],
   relatedDocs: [],
   tags: ["documents"],
   render: source,

@@ -118,12 +118,12 @@ test("readers validate known fields while additive schema, control and usage fie
 
 test("public fixture rejects incomplete view axes and private nested extension paths", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v6.json", "utf8"),
   );
   fixture.screens[0].views.pop();
   assert.throws(() => readCatalogue(fixture));
   const extended = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v6.json", "utf8"),
   );
   extended.extension = { absolutePath: "/private/file.tsx" };
   assert.throws(() => readCatalogue(extended));
@@ -131,7 +131,7 @@ test("public fixture rejects incomplete view axes and private nested extension p
 
 test("reader retains variant relationships and entry-node children", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v6.json", "utf8"),
   );
   const parent = fixture.screens.find(
     ({ path }: { path: string }) => path === "product/browse/home",
@@ -157,7 +157,7 @@ test("reader retains variant relationships and entry-node children", async () =>
 
 test("reader accepts empty sections but rejects empty folders", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v6.json", "utf8"),
   );
   fixture.components = [];
   fixture.tree = fixture.tree.filter(
@@ -175,7 +175,7 @@ test("reader accepts empty sections but rejects empty folders", async () => {
 
 test("a current component variant cannot claim a removed comparison", async () => {
   const value = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v6.json", "utf8"),
   );
   value.changesStatus = "ready";
   const variant = value.components.find(
@@ -213,7 +213,7 @@ function findFixtureNode(
 
 test("case-folded folder paths remain unique when one entry is hidden from the tree", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v6.json", "utf8"),
   );
   fixture.pages.push({ ...fixture.pages[0], path: "Product/hidden" });
   assert.throws(() => readCatalogue(fixture), /differ only by letter case/);

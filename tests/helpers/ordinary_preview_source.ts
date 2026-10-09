@@ -16,7 +16,7 @@ export const mockups = [...new Set([
   ...Object.values(CONTROLS_PAGES), ...Object.values(INSPECTION_PAGES),
 ])].filter((path) => !existing.has(path)).map((path) => definePage({
   path, slug: "index", title: path, description: "Navigation-only fixture destination",
-  dependencies: [], relatedDocs: [],
+  relatedDocs: [],
   render: () => "<!doctype html><html><body><main>" + path + "</main></body></html>",
 }));
 `;

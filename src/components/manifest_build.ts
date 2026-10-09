@@ -34,7 +34,6 @@ export function componentManifestEntry(
     propSchema: entry.propSchema,
     controls: entry.controls,
     slots: entry.slots,
-    ownedDependencies: entry.ownedDependencies,
   };
 }
 

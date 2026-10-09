@@ -11,6 +11,16 @@ route-evidence loading and failed Usage states are implemented by the
 
 Performance acceptance is deferred under the plan's Decision 13 (2026-10-06).
 
+CSS owner removal, root output boundaries and uniform rule evidence are
+implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+
+On-demand startup, rendering and evidence completion are implemented. The
+route-evidence loading and failed Usage states are implemented by the
+[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
+
+Generation-tagged background and preview-process warnings are implemented in
+[M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
+
 ## Startup and completeness
 
 Serve loads one consumer graph and validates its catalogue metadata, routes,
@@ -23,12 +33,13 @@ creates a new checked set under the [route-set contract](./mokly-generation-rout
 It does not render every document, write output, classify Git changes or transfer
 generated HTML as a prerequisite for Browse. This applies with and without watch.
 
-The live catalogue index is a distinct internal format, not a schema-v9 manifest.
-It describes available views, not completed rendering or usage evidence. A v9
+The live catalogue index is a distinct internal format, not a schema-v10 manifest.
+It describes available views, not completed rendering or usage evidence. A v10
 manifest still requires every view's validated records. Build, Check and Export
 remain exhaustive and produce the same portable artifacts regardless of
 Git tracking; only explicit Build and `serve --build` write them to disk, and
-neither reads head tracking. Only Check consults the current Git index.
+neither reads head tracking. Check consults the current Git index. CLI publish
+separately checks the checkout under the [upload contract](./mokly-upload.md).
 
 The scale target is command start to searchable navigation and a real selected
 preview visible in under five seconds, cold and warm on the default large fixture.
@@ -70,8 +81,16 @@ before replacements start. Exhaustive background work uses one worker with a
 
 The single-document compiler reuses exhaustive Build's validation primitives: rendering,
 stylesheet selection, logical links, component ranges,
-props, ignore markers, output confinement, and resource
-validation. Navigation without anchors needs the destination's registered entry,
+props, non-CSS resource records, ignore markers, output confinement, and resource
+validation. It records final spans only for links that Mokly inserted and
+forwards render warnings to the Serve parent with
+the generation captured from the document or transient Props render inputs.
+The child warning message includes that generation. A render still using older
+inputs cannot print warnings after a newer watched attempt starts, even while
+it continues serving after a failed candidate. The
+[warning contract](./mokly-build-warnings.md#watched-serve-generations) defines
+the message, generation fence and deduplication scope.
+Navigation without anchors needs the destination's registered entry,
 not its rendered HTML. Anchors require the actual destination document; logical
 anchors require every applicable destination view. Embedded local resources and
 CSS imports are validated transitively. Protected sources and manifests remain
@@ -157,6 +176,13 @@ The parent sends a compact runtime with no rendered outputs. An existing
 compilation supplies its manifest and one output map. After compilation, the
 worker retains the output needed for comparison without a duplicate runtime
 copy. Pinned baseline selection and descriptors travel with classification.
+
+Background warnings carry the producing generation through the worker and
+parent. Stream branch producers once into the shared diagnostic sink; completion
+combines `compilation.diagnostics` without replay before Catalogue ready. A watched rebuild or reconfiguration starts a fresh warning generation
+before candidate work, regardless of whether that candidate succeeds. Late
+warnings from superseded work are discarded. Unwatched Serve keeps its
+lifetime warning scope, and one-shot commands keep their existing scopes.
 
 Full generated output stays in memory unless the parent is running
 `serve --build`; only after a complete successful compilation and ready

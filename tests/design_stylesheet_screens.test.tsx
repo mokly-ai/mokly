@@ -13,36 +13,31 @@ import {
 
 const stylesheetEvidence = [
   [
-    "design/changes/impact/styles/matched",
-    "design/changes/impact/styles/matched/index.html",
+    "design/changes/impact/styles/matched-excluded/matched",
+    "design/changes/impact/styles/matched-excluded/matched/index.html",
     "Changed styles that apply to this screen",
   ],
   [
-    "design/changes/impact/styles/unresolved",
-    "design/changes/impact/styles/unresolved/index.html",
+    "design/changes/impact/styles/unresolved-unnamed/unresolved",
+    "design/changes/impact/styles/unresolved-unnamed/unresolved/index.html",
     "This change can apply anywhere on the screen, so the screen stays in Changes:",
   ],
   [
-    "design/changes/impact/styles/unnamed",
-    "design/changes/impact/styles/unnamed/index.html",
+    "design/changes/impact/styles/unresolved-unnamed/unnamed",
+    "design/changes/impact/styles/unresolved-unnamed/unnamed/index.html",
     "This change can apply anywhere on the screen, so the screen stays in Changes.",
   ],
   [
-    "design/changes/impact/styles/excluded",
-    "design/changes/impact/styles/excluded/index.html",
+    "design/changes/impact/styles/matched-excluded/excluded",
+    "design/changes/impact/styles/matched-excluded/excluded/index.html",
     "This stylesheet changed, but none of the changed styles apply to this screen",
-  ],
-  [
-    "design/changes/impact/styles/page-excluded",
-    "design/changes/impact/styles/page-excluded/index.html",
-    "Styles on this page changed, but none of the changed styles apply to this screen.",
   ],
 ] as const;
 
 const comparedStyleScreens = [
-  "design/changes/impact/styles/matched",
-  "design/changes/impact/styles/unresolved",
-  "design/changes/impact/styles/unnamed",
+  "design/changes/impact/styles/matched-excluded/matched",
+  "design/changes/impact/styles/unresolved-unnamed/unresolved",
+  "design/changes/impact/styles/unresolved-unnamed/unnamed",
 ] as const;
 
 for (const viewport of ["mobile", "desktop"] as const) {
@@ -55,11 +50,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       assert.ok(evidence, id);
       const text = textContent(evidence);
       assert.ok(text.includes(copy), `${id}: ${text}`);
-      if (id === "design/changes/impact/styles/page-excluded") {
-        assert.doesNotMatch(text, /generated\/styles\.css/, id);
-        assert.doesNotMatch(text, /Examined and excluded/, id);
-        assert.doesNotMatch(text, /Shared component changes affect/, id);
-      } else assert.match(text, /generated\/styles\.css/, id);
+      assert.match(text, /generated\/styles\.css/, id);
       const compared = comparedStyleScreens.includes(
         id as (typeof comparedStyleScreens)[number],
       );
@@ -87,13 +78,14 @@ for (const viewport of ["mobile", "desktop"] as const) {
         compared ? ["Before", "Current", "Before", "Current"] : [],
         id,
       );
-      assert.equal(
-        byClass(document, "mbk-cmp-toolbar").length,
-        compared ? 1 : 0,
-        id,
-      );
-      if (!compared)
-        assert.ok(text.trimEnd().endsWith("No changes to this screen."), id);
+      assert.equal(byClass(document, "mbk-cmp-toolbar").length, 1, id);
+      if (!compared) {
+        assert.doesNotMatch(text, /No changes to this screen/);
+        assert.equal(
+          byClass(document, "ce-change-status").map(textContent).join(""),
+          "Changed",
+        );
+      }
       for (const heading of elements(document, (node) =>
         ["h1", "h2", "h3"].includes(node.tagName),
       ))
@@ -109,39 +101,34 @@ for (const viewport of ["mobile", "desktop"] as const) {
 test("stylesheet evidence states are entered and left through the filter", async () => {
   for (const [source, filter, target] of [
     [
-      "design/changes/impact/shared-impact",
-      "Changes0",
-      "design/changes/impact/styles/matched",
+      "design/changes/impact/styles/matched-excluded/excluded",
+      "Changes1",
+      "design/changes/impact/styles/matched-excluded/matched",
     ],
     [
       "design/changes/impact/ignored-only",
       "Changes0",
-      "design/changes/impact/styles/unresolved",
+      "design/changes/impact/empty",
     ],
     [
-      "design/changes/impact/styles/matched",
+      "design/changes/impact/styles/matched-excluded/matched",
       "All",
-      "design/changes/impact/styles/excluded",
+      "design/changes/impact/styles/matched-excluded/excluded",
     ],
     [
-      "design/changes/impact/styles/unresolved",
+      "design/changes/impact/styles/unresolved-unnamed/unresolved",
       "All",
       "design/browse/views/screen",
     ],
     [
-      "design/changes/impact/styles/unnamed",
+      "design/changes/impact/styles/unresolved-unnamed/unnamed",
       "All",
       "design/browse/views/screen",
     ],
     [
-      "design/changes/impact/styles/excluded",
-      "Changes0",
-      "design/changes/impact/empty",
-    ],
-    [
-      "design/changes/impact/styles/page-excluded",
-      "Changes0",
-      "design/changes/impact/empty",
+      "design/changes/impact/styles/matched-excluded/excluded",
+      "Changes1",
+      "design/changes/impact/styles/matched-excluded/matched",
     ],
   ] as const) {
     const { document } = await designDocument(source, "desktop");

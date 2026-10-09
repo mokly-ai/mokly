@@ -29,6 +29,7 @@ export interface HtmlValidationContext {
   onDemand: boolean;
   policy?: PublicFilePolicy;
   watch?: boolean;
+  resourceSeedsForRoute?: (route: string) => readonly ResourceSeed[];
 }
 
 interface ReferenceResult {
@@ -133,6 +134,15 @@ export function buildPublicClosure(
       continue;
     }
     parsed.set(route, resource);
+    const generated = generatedRelative(route);
+    if (generated !== undefined && /\.html?$/i.test(route))
+      for (const seed of context?.resourceSeedsForRoute?.(generated) ?? []) {
+        origins.set(seed.path, seed.sourceRoute);
+        if (!queued.has(seed.path)) {
+          queued.add(seed.path);
+          queue.push(seed.path);
+        }
+      }
     if (authored) closure.add(route);
     const edges: string[] = [];
     for (const reference of resource.references) {

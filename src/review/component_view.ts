@@ -1,4 +1,3 @@
-import type { ComponentViewRecord } from "@mokly/viewer";
 import type {
   GeneratedComponentView,
   EntryChangeReason,
@@ -9,54 +8,34 @@ import { changedComponentImplementations } from "../components/comparison_projec
 import { MoklyError } from "../errors.js";
 
 import { discoverInlineResourceOwners } from "./component_inline_resources.js";
-import type { ComponentDependencyPolicy } from "./component_metadata.js";
 import {
   prepareComponentProjection,
   type PreparedComponentComparison,
-  type PreparedInlineStyleEvidence,
 } from "./component_projection_resources.js";
 import {
   ownedResourceComponents,
   ownedResourceReasons,
-  type OwnedResourceReason,
+  rootResourcesChanged,
 } from "./component_resource_attribution.js";
-import { changedResourceBytes } from "./component_resource_changes.js";
-import type { ComponentMaterialReader } from "./component_resources.js";
+import { componentResourceByteChanges } from "./component_view_resources.js";
+import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
+import { componentCssDocuments } from "./css/containment.js";
 import { compareStyleOnlyView } from "./component_style_route.js";
 import { compareUnchangedComponentView } from "./component_view_fast_path.js";
 import {
   deliveredInlineStyles,
   compareOneSidedComponentView,
 } from "./component_view_material.js";
-import type { ReviewLinkNormalization } from "./ignore.js";
-import type { MoveResources } from "./moves/resources.js";
 import { PageAnalysisPair } from "./page_pair.js";
-import type { ResourceComparison } from "./resource_comparison.js";
 
-export interface ComparedComponentView {
-  comparisonPath: "fast" | "style" | "complete";
-  view: ViewReview;
-  reasons: readonly EntryChangeReason[];
-  changedImplementations: ReadonlySet<string>;
-  ownedResources: readonly OwnedResourceReason[];
-  inlineEvidence?: PreparedInlineStyleEvidence;
-}
-export interface ComponentViewContext {
-  componentAware: boolean;
-  resourceIdentity?: MoveResources;
-  beforeReader: ComponentMaterialReader;
-  afterReader: ComponentMaterialReader;
-  dependencies: ComponentDependencyPolicy;
-  changed: ReadonlySet<string>;
-  prefix: string;
-  resources: ResourceComparison;
-  useFastPath?: boolean;
-  useStylePath?: boolean;
-  /** Test-only: retain delivered text materials instead of fingerprints. */
-  useMaterialFingerprints?: boolean;
-  links?: (beforeRoute: string, afterRoute: string) => ReviewLinkNormalization;
-  beforeUsage?: (usage: ComponentViewRecord) => ComponentViewRecord;
-}
+import type {
+  ComparedComponentView,
+  ComponentViewContext,
+} from "./component_view_types.js";
+export type {
+  ComparedComponentView,
+  ComponentViewContext,
+} from "./component_view_types.js";
 
 /** Compare material and declared inputs without altering the retained view documents. */
 export async function compareComponentView(
@@ -141,8 +120,34 @@ export async function compareComponentView(
     inlineEvidence,
     references,
   } = prepared;
+  const baseStylesheets = insertedStylesheetResources(
+    base,
+    before?.usage,
+    before!.path,
+  );
+  const headStylesheets = insertedStylesheetResources(
+    head,
+    after?.usage,
+    after!.path,
+  );
+  const cssDocuments = () => [
+    componentCssDocuments(
+      base,
+      head,
+      selected.path,
+      before?.usage,
+      after?.usage,
+      root,
+    ),
+  ];
+  const rootOwnershipChanged = rootResourcesChanged(
+    before?.usage,
+    after?.usage,
+    root,
+  );
   const reasons: EntryChangeReason[] = [];
   if (projected.before !== projected.after) reasons.push({ kind: "material" });
+  if (rootOwnershipChanged) reasons.push({ kind: "material" });
   if (projected.inputs) reasons.push({ kind: "inputs" });
   if (projected.structure) reasons.push({ kind: "structure" });
   const actual = projected.actual;
@@ -156,30 +161,36 @@ export async function compareComponentView(
     {
       path: before!.path,
       html: resourceBefore,
+      insertedStylesheets: baseStylesheets,
       ...(references ? { references: references.before } : {}),
     },
     {
       path: after!.path,
       html: resourceAfter,
+      insertedStylesheets: headStylesheets,
       ...(references ? { references: references.after } : {}),
     },
     excluded,
     matching,
+    cssDocuments,
   );
   reasons.push(...(evidence.reasons ?? []));
   const actualEvidence = await context.resources.compare(
     {
       path: before!.path,
       html: actualBefore,
+      insertedStylesheets: baseStylesheets,
       ...(references ? { references: references.actualBefore } : {}),
     },
     {
       path: after!.path,
       html: actualAfter,
+      insertedStylesheets: headStylesheets,
       ...(references ? { references: references.actualAfter } : {}),
     },
     undefined,
     matching,
+    cssDocuments,
   );
   const inlineOwners = await discoverInlineResourceOwners(
     inlineAnalysis,
@@ -188,41 +199,38 @@ export async function compareComponentView(
     context.prefix,
     context.componentAware,
   );
-  const byteChanges = await changedResourceBytes(
-    await context.beforeReader.resources(
-      before!.path,
-      resourceBefore,
-      excluded,
-      references?.before,
-    ),
-    await context.afterReader.resources(
-      after!.path,
-      resourceAfter,
-      excluded,
-      references?.after,
-    ),
-    context.beforeReader,
-    context.afterReader,
-    context.resourceIdentity,
+  const byteChanges = await componentResourceByteChanges(
+    context,
+    {
+      path: before!.path,
+      html: resourceBefore,
+      insertedStylesheets: baseStylesheets,
+      ...(references ? { references: references.before } : {}),
+    },
+    {
+      path: after!.path,
+      html: resourceAfter,
+      insertedStylesheets: headStylesheets,
+      ...(references ? { references: references.after } : {}),
+    },
+    excluded,
   );
   if ([...byteChanges].some((route) => !context.changed.has(repoPath(route))))
     reasons.push({ kind: "material" });
-  const actualByteChanges = await changedResourceBytes(
-    await context.beforeReader.resources(
-      before!.path,
-      actualBefore,
-      undefined,
-      references?.actualBefore,
-    ),
-    await context.afterReader.resources(
-      after!.path,
-      actualAfter,
-      undefined,
-      references?.actualAfter,
-    ),
-    context.beforeReader,
-    context.afterReader,
-    context.resourceIdentity,
+  const actualByteChanges = await componentResourceByteChanges(
+    context,
+    {
+      path: before!.path,
+      html: actualBefore,
+      insertedStylesheets: baseStylesheets,
+      ...(references ? { references: references.actualBefore } : {}),
+    },
+    {
+      path: after!.path,
+      html: actualAfter,
+      insertedStylesheets: headStylesheets,
+      ...(references ? { references: references.actualAfter } : {}),
+    },
   );
   const actualResourceChange =
     Boolean(actualEvidence.reasons?.length) ||
@@ -233,7 +241,7 @@ export async function compareComponentView(
     [...actualByteChanges]
       .map(repoPath)
       .filter((path) => !context.changed.has(path)),
-    context.dependencies,
+    context.prefix,
     inlineOwners,
     before?.usage,
     after?.usage,
@@ -245,7 +253,9 @@ export async function compareComponentView(
     ignoredIds: actual.ignoredIds,
     ...(actual.base !== actual.head ? { material: true as const } : {}),
     state:
-      actual.base !== actual.head || actualResourceChange
+      actual.base !== actual.head ||
+      actualResourceChange ||
+      rootOwnershipChanged
         ? "changed"
         : projected.rawEqual
           ? "unchanged"
@@ -255,7 +265,7 @@ export async function compareComponentView(
     comparisonPath: "complete",
     ownedResources: ownedResourceReasons(
       actualEvidence.reasons ?? [],
-      context.dependencies,
+      context.prefix,
       inlineOwners,
       before?.usage,
       after?.usage,

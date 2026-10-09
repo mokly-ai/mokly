@@ -2,10 +2,9 @@
 
 ## Delivery Status
 
-Implemented in the 73 Browse/Changes design screens and two example screens with
-`MockLink`/`MockLink asChild`. Those 73 Browse/Changes designs retain canonical
-links; [components](./mokly-component-design.md) and
-[removed previews](./mokly-removed-previews.md) extend the contract. Links use complete paths under the [path contract](./mokly-paths.md).
+Implemented in the 73 Browse/Changes design screens and two example screens with `MockLink`/`MockLink asChild`.
+Those 73 Browse/Changes designs retain canonical links; [components](./mokly-component-design.md) and [removed previews](./mokly-removed-previews.md) extend the contract. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records delivery; [M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state) adds the excluded-only state, splits the stylesheet gallery into child pages and gives the paired Excluded and Matched designs one Details card.
+Links use complete paths under the [path contract](./mokly-paths.md).
 
 ## Scope And Ownership
 
@@ -114,7 +113,7 @@ navigation, while the variants remain under Welcome. No unrelated entry moves.
 | Welcome All / Changes filter                    | `design/browse/views/screen` / `design/changes/diff-controls/current`                                                                                                                                                                    |
 | Details All / Changes filter                    | `design/browse/views/details-screen` / `design/changes/outcomes/added`                                                                                                                                                                   |
 | Removed screen All filter                       | `design/browse/views/home`, because the depicted product screen has no current entry                                                                                                                                                     |
-| Empty Changes All filter                        | `design/browse/views/screen`                                                                                                                                                                                                             |
+| Empty Changes All filter                        | `design/changes/impact/ignored-only`                                                                                                                                                                                                     |
 | Removed consumer return, component explorer     | `design/components/states/removed`, from the desktop Action row and the narrow Changes shortcut, never from the stage                                                                                                                    |
 
 Folder rows and folder-only crumbs are not link targets: a folder row only

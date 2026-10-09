@@ -37,6 +37,7 @@ if (!binary || !marker) throw new Error("missing esbuild cancellation settings")
 
 process.on("SIGINT", () => undefined);
 const child = spawn(binary, process.argv.slice(2), {
+  env: { ...process.env, ESBUILD_BINARY_PATH: undefined },
   stdio: ["pipe", "pipe", "inherit"],
 });
 child.stdout.pipe(process.stdout);

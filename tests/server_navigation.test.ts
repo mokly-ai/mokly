@@ -250,7 +250,7 @@ function nodeRequest(
 function navigationSource(): string {
   return `import { defineScreen, defineUseCase } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: [], relatedDocs: [] };
+const metadata = { relatedDocs: [] };
 export const mockups = [
   defineScreen({ ...metadata, description: "Home", desktop: <main><a data-mokly-target="spoof" href="mock:details#section">Details</a></main>, path: "home", mobile: <main><a data-mokly-target="spoof" href="mock:details#section">Details</a></main>, title: "Home", useCasePaths: ["tour"] }),
   defineScreen({ ...metadata, description: "Details", desktop: <main id="section">Details</main>, path: "details", mobile: <main id="section">Details</main>, title: "Details", useCasePaths: ["tour"] }),

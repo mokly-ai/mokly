@@ -24,7 +24,6 @@ const REMOVED_DOCUMENT = {
   folderTitles: ["Guide"],
   entry: {
     colorSchemes: ["light" as const],
-    declaredDependencies: [],
     description: "The terms before this branch.",
     kind: "document" as const,
     path: "guide/old-terms",
@@ -38,7 +37,7 @@ const REMOVED_DOCUMENT = {
 /** Profile is its folder's own page, listing a variant and two members. */
 const SOURCE = `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: [], relatedDocs: [] };
+const metadata = { relatedDocs: [] };
 const shot = (id: string) => ({ ...metadata, mobile: <main id={id}>{id}</main>, desktop: <main id={id}>{id}</main> });
 export const profile = defineScreen({ ...shot("profile"), path: "account/profile", slug: "index", title: "Profile", description: "Profile", relatedDocs: ["entries/guide/terms.md"], variants: [{ ...shot("unverified"), slug: "unverified", title: "Unverified email", description: "Unverified email" }] });
 export const security = defineScreen({ ...shot("security"), path: "account/profile/security", title: "Security", description: "Security" });

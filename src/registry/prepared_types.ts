@@ -1,4 +1,5 @@
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
+import type { BuildDiagnostic } from "../build/build_warnings.js";
 
 import type { FolderRecord } from "./folder_records.js";
 
@@ -16,4 +17,5 @@ export interface PreparedRegistry {
   references: ReadonlyMap<string, string>;
   entries: readonly ResolvedRegistryEntry[];
   byPath: ReadonlyMap<string, ResolvedRegistryEntry>;
+  diagnostics: readonly BuildDiagnostic[];
 }

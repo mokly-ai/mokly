@@ -54,6 +54,8 @@ npx mokly export --config docs/mokly.config.ts --out ../site --base main
   No new config section is introduced.
 - Success exits zero after installation and prints the output directory plus
   the instruction to deploy its contents as the site's document root.
+- Ignored, unnecessary inputs issue deduplicated build warnings on stderr;
+  they do not alter the successful output or exit code.
 - Failure exits non-zero with an actionable existing error category or the
   new typed `export-invalid` category. Normal author errors do not print stacks.
 
@@ -87,16 +89,16 @@ Changes attribution and screen comparisons use that commit, the same current
 manifest/generated documents, and the same changed-path exclusions. Apply the
 shared Changes calculation to captured public bytes: normalize paired ignored
 regions, compare reviewable metadata, and follow rendered local resources.
-Ignored-only edits, source moves, and dependency/shared-impact evidence alone
-do not add entries, except the owned and exact declared paths of [component attribution](./mokly-component-changes.md#dependencies-and-styles).
-Retain that evidence in comparisons, and do not derive the navigation filter by counting materially changed comparison screens.
+Ignored-only edits, source moves, and unreferenced source/public files alone
+do not add entries or comparison evidence. Do not derive the
+navigation filter by counting materially changed comparison screens.
 
-Comparisons use [review result v6](./mokly-changes-serving.md#comparison-engine) for
-every catalogue. It retains all existing states, shared/dependency impact,
+Comparisons use [review result v7](./mokly-changes-serving.md#comparison-engine) for
+every catalogue. It retains all existing states, rendered-resource evidence,
 ignored regions, both viewports and all effective color schemes; see the
 [supported format matrix](./protocol-status.md#supported-formats). Removed screens,
 pages, documents, components and variants retain their baseline context; current
-and removed records never share a path within a kind. Pages and documents have
+and removed records never share a path. Pages and documents have
 no visual comparisons. A path absent from one side follows the added/removed
 rules unless the [move contract](./mokly-moves.md) pairs it. A declared but
 missing baseline document, invalid manifest, or unavailable resource fails; none
@@ -106,8 +108,8 @@ error; export does not weaken registry validation to create an empty site.
 Comparisons use private temporary storage, independent of `review.outDir` and
 any running development server. Exclude the final export directory, its
 temporary stage/backup/lock paths, and their resolved aliases from entry and
-comparison change attribution before broad dependencies/shared-impact globs
-are evaluated. Exporting twice must not make the export affect its own Changes.
+rendered-resource comparison and change attribution. Exporting twice must not
+make the export affect its own Changes.
 Watch also ignores owned export artifacts and export transaction paths before
 broad rules, without ignoring unrelated authored files with similar names.
 

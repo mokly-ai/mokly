@@ -71,16 +71,20 @@ for (const mode of ["required", "optional", "batched"] as const)
         : {}),
     });
     const expected = new Set(["x.css", "nested.css", "y.svg"]);
-    const proven = await reader.resourcesIfPresent("view.html", "", undefined, [
-      "x.css",
-    ]);
+    const proven = await reader.resourcesIfPresent("view.html", "", undefined, {
+      references: ["x.css"],
+    });
     assert.deepEqual(proven, expected);
     assert.strictEqual(
-      await reader.resources("view.html", "", undefined, ["x.css"]),
+      await reader.resources("view.html", "", undefined, {
+        references: ["x.css"],
+      }),
       proven,
     );
     assert.deepEqual(
-      await reader.resourcesIfPresent("second.html", "", undefined, ["x.css"]),
+      await reader.resourcesIfPresent("second.html", "", undefined, {
+        references: ["x.css"],
+      }),
       expected,
     );
     assert.deepEqual(reads.sort(), [...files.keys()].sort());
@@ -105,11 +109,13 @@ for (const optional of [false, true])
         : {}),
     });
     assert.equal(
-      await reader.resourcesIfPresent("view.html", "", undefined, ["x.css"]),
+      await reader.resourcesIfPresent("view.html", "", undefined, {
+        references: ["x.css"],
+      }),
       undefined,
     );
     await assert.rejects(
-      reader.resources("view.html", "", undefined, ["x.css"]),
+      reader.resources("view.html", "", undefined, { references: ["x.css"] }),
       (error) => error === failure,
     );
   });
@@ -122,7 +128,9 @@ test("required-only batch readers keep their bulk-read capability during proof",
       new Map(routes.map((route) => [route, Buffer.from("")])),
   });
   assert.deepEqual(
-    await reader.resourcesIfPresent("view.html", "", undefined, ["x.css"]),
+    await reader.resourcesIfPresent("view.html", "", undefined, {
+      references: ["x.css"],
+    }),
     new Set(["x.css"]),
   );
 });
@@ -136,9 +144,9 @@ test("a failed single-file proof does not cache its rejection", async () => {
     },
   });
   assert.equal(
-    await reader.resourcesIfPresent("view.html", "", undefined, [
-      "missing.svg",
-    ]),
+    await reader.resourcesIfPresent("view.html", "", undefined, {
+      references: ["missing.svg"],
+    }),
     undefined,
   );
   await assert.rejects(reader.read("missing.svg"), { message: "missing file" });

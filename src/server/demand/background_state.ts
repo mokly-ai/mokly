@@ -1,7 +1,9 @@
 /** Retain only the worker's classification inputs after complete parent delivery. */
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import type { BaselineCatalogue } from "../../baseline/catalogue.js";
+import type { BuildDiagnostic } from "../../build/build_warnings.js";
+import type { GenerationWarning } from "../../build/warning_generation.js";
 import type { Compilation } from "../../build/compile.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import type { GeneratedFile } from "../../build/generated_file.js";
@@ -14,6 +16,7 @@ import type { CatalogueClassificationInputs } from "../component_change_types.js
 import type { backgroundInputs } from "./background_inputs.js";
 
 export type BackgroundWorkerMessage =
+  | ({ type: "warning" } & GenerationWarning)
   | { type: "compiled"; compilation: Compilation }
   | { type: "failed"; error: string }
   | { type: "classified"; snapshot?: CatalogueChangeClassification };
@@ -22,11 +25,12 @@ interface BackgroundFunctions {
   compile(
     runtime: ComponentRuntime,
     checkpoint: () => Promise<void>,
+    onWarning?: (warning: BuildDiagnostic) => void,
   ): Promise<Compilation>;
   post(message: BackgroundWorkerMessage): void;
   classify(
     config: ResolvedConfig,
-    manifest: ManifestV9,
+    manifest: ManifestV10,
     base: string,
     accepted: CatalogueClassificationInputs,
   ): Promise<CatalogueChangeClassification>;
@@ -34,7 +38,7 @@ interface BackgroundFunctions {
 
 export class BackgroundWorkerState {
   private readonly runtime: ComponentRuntime;
-  private manifest: ManifestV9 | undefined;
+  private manifest: ManifestV10 | undefined;
   private outputs: ReadonlyMap<string, GeneratedFile> | undefined;
 
   constructor(
@@ -58,6 +62,12 @@ export class BackgroundWorkerState {
       const compilation = await this.functions.compile(
         this.runtime,
         this.checkpoint,
+        (warning) =>
+          this.functions.post({
+            type: "warning",
+            generation: this.runtime.warningGeneration,
+            warning,
+          }),
       );
       this.manifest = compilation.manifest;
       this.functions.post({ type: "compiled", compilation });

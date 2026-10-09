@@ -20,12 +20,20 @@ const screen = [
   "useCasePaths",
 ];
 const allowed = {
-  folder: ["path", "title", "order", "hidden"],
+  folder: ["path", "title", "order", "hidden", "dependencies"],
   screen: [...screen, "variants"],
   "screen-variant": [...screen.filter((field) => field !== "path"), "variants"],
   page: [...common, "render"],
   "use-case": [...common, "steps"],
-  "component-variant": ["slug", "movedFrom", "title", "description", "props"],
+  "component-variant": [
+    "slug",
+    "movedFrom",
+    "title",
+    "description",
+    "props",
+    "dependencies",
+    "ownedDependencies",
+  ],
   component: [
     ...common,
     "propSchema",
@@ -35,6 +43,7 @@ const allowed = {
     "variants",
     "colorSchemes",
     "ownedDependencies",
+    "stylesheets",
   ],
 };
 

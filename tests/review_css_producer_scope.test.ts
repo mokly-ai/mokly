@@ -4,13 +4,16 @@ import test from "node:test";
 import { MoklyError } from "../dist/errors.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
 import { assertViewAnalysisScope } from "../dist/review/css/paths.js";
-import type { ResourceEvidence } from "../dist/review/css/resource_analysis.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
-import type { ViewReview } from "../packages/viewer/dist/review/types.js";
+import type {
+  ResourceEvidence,
+  ViewReview,
+} from "../packages/viewer/dist/data.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
+import { fixtureCssAnalysis } from "./helpers/css_evidence.js";
 
-test("v4 asserts analysed reason scope at the producer boundary", async (t) => {
+test("v7 asserts analysed reason scope at the producer boundary", async (t) => {
   const fixture = await componentReviewFixture(t, (source) => source);
   const config = {
     ...fixture.config,
@@ -34,7 +37,7 @@ test("v4 asserts analysed reason scope at the producer boundary", async (t) => {
     ["mockups/private.css", true, false],
     ["mockups/image.svg", true, false],
     ["mockups/shared.css", true, true],
-    ["src/styles/tokens.css", false, true],
+    ["src/styles/tokens.css", false, false],
   ] as const)
     await t.test(`${resource}, analysis ${analysed}`, async (context) => {
       const evidence: ResourceEvidence = {
@@ -44,10 +47,7 @@ test("v4 asserts analysed reason scope at the producer boundary", async (t) => {
             path: resource,
             ...(analysed
               ? {
-                  analysis: {
-                    status: "matched" as const,
-                    selectors: [".auth"],
-                  },
+                  analysis: fixtureCssAnalysis("matched" as const, [".auth"]),
                 }
               : {}),
           },

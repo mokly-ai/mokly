@@ -88,7 +88,9 @@ export async function assertPageMaterialEquivalence(fixture: FastPathFixture) {
             `${after.path}: ${side}/${actual} seeds`,
           );
           assert.deepEqual(
-            await reader.resources(route, html, excluded, references),
+            await reader.resources(route, html, excluded, {
+              references: references,
+            }),
             await oldReader.resources(route, html, oldExcluded),
             `${after.path}: ${side}/${actual} closure`,
           );

@@ -1,4 +1,4 @@
-/** Ordered candidates; each render emits only the component sheets it requests. */
+/** Public stylesheets assigned to registered design-library components. */
 export const libraryStyleFiles = {
   "top-bar": "design-library/chrome/top-bar.css",
   "catalogue-navigation": "design-library/chrome/catalogue-navigation.css",
@@ -19,11 +19,3 @@ export const libraryStyleFiles = {
 } as const;
 
 export type LibraryStyle = keyof typeof libraryStyleFiles;
-export const libraryStyleCandidates = Object.values(libraryStyleFiles);
-
-export function withLibraryStyles(
-  base: readonly string[],
-  layout: readonly string[] = [],
-): string[] {
-  return [...base, ...libraryStyleCandidates, ...layout];
-}

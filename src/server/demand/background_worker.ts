@@ -2,7 +2,7 @@
 import { setImmediate, setTimeout } from "node:timers/promises";
 import { parentPort, workerData, type MessagePort } from "node:worker_threads";
 
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import type { BaselineCatalogue } from "../../baseline/catalogue.js";
 import { compileRuntime } from "../../build/compile_runtime.js";
@@ -19,7 +19,7 @@ const inputs = workerData as {
   runtime: ComponentRuntime;
   pause: SharedArrayBuffer;
   debug: boolean;
-  existingManifest?: ManifestV9;
+  existingManifest?: ManifestV10;
   existingOutputs?: ReadonlyMap<string, GeneratedFile>;
   gitPort: MessagePort;
 };

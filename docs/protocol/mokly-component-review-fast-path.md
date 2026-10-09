@@ -2,12 +2,17 @@
 
 ## Delivery Status
 
-The fast path and its strict-v9 baseline boundary are implemented under the
-[scalable analysis plan](../../plans/scalable-inline-style-analysis.md).
-The analysis-backed quick check runs no inline work; an equivalent style-only
-attempt precedes complete fall-through. Ownership-only projection and stable
-discovery follow the rules below. Performance acceptance is deferred under
-Decision 13 by the user decision of 2026-10-06.
+Removal of baseline compatibility is implemented in
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
+Uniform CSS eligibility, root-boundary handling and catalogue-wide rule proof
+are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+
+The fast path and its strict-v10 baseline boundary are implemented.
+The fast path is implemented over the strict path-keyed manifest-v10 baseline boundary.
+The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md)
+keeps the analysis-backed quick check, fingerprints and equivalent style route.
+Performance acceptance is deferred under Decision 13 (2026-10-06).
 
 This contract owns the unchanged-view decision used by component-aware Changes
 classification. Input ownership and materiality remain defined by
@@ -18,7 +23,7 @@ classification. Input ownership and materiality remain defined by
 The classifier tries to avoid full comparison for unchanged views. For a view
 present on both sides, it first decides whether that view can differ.
 It uses [page analysis](./mokly-page-analysis.md), and projects ownership only
-when usage can edit text through instances or entry-owned slots. Inline rule
+when usage can edit text through instances, root ranges or entry-owned slots. Inline rule
 analysis and implementation diffing happen only after quick-check fall-through.
 
 The decision is part of materiality and must equal the complete comparison for
@@ -42,7 +47,7 @@ Apply these steps in order:
    matcher below: serialization can decode escapes and join comments/whitespace.
    Also check after removing escaped newlines everywhere. These source-only
    checks run no inline analysis; failed proofs retain preparation.
-1. Retain v9 component markers on both sides and apply paired manual-ignore
+1. Retain v10 component markers on both sides and apply paired manual-ignore
    normalization. If documents differ outside paired ignored regions, take the
    fall-through. Marker-stripped equality is insufficient because marker
    positions participate in ownership projection. For non-identical sources,
@@ -55,6 +60,7 @@ Apply these steps in order:
 2. Compare usage records canonically. Neither side having usage is eligible;
    exactly one side having it takes fall-through. When both exist, every
    field must match except `props` and `propsKey` on entry-owned instances.
+   Both records must pass current v10 validation, including rejection of CSS owners.
    View axes, instance identity/ownership/order, instance-owned props, and every
    slot and range record must match. Optional invocation
    `source` is excluded, as it is from every Changes projection.
@@ -64,8 +70,8 @@ Apply these steps in order:
    [resource proof](#resource-and-one-sided-rules), preserving its reader and closure bounds on each side.
    Without ownership text edits, derive actual seeds directly from the analyses:
    do not prepare a projection merely because inline references may exist.
-4. When either usage record has instances or entry-owned slots,
-   compute the complete comparison's ownership projection, including v9 range
+4. When either usage record has instances, root ranges or entry-owned slots,
+   compute the complete comparison's ownership projection, including v10 range
    validation and root-specific ownership, but no inline analysis. Retain
    preparation on fall-through, so a side is parsed only once. Require equal
    projected material and use provenance-derived resources plus conservative
@@ -75,6 +81,10 @@ Apply these steps in order:
    for the same side, route, reference identity and exclusion policy.
 5. If an actual or projected resource is a changed Git path, take the complete
    fall-through; ownership, exclusion, and rule analysis are decided there.
+   CSS cannot be skipped through a resource owner record. Validate inserted-link
+   provenance on original trees, and include its CSS paths in actual discovery
+   even inside paired ignores. Compare provenance paths and declarers without
+   treating offset shifts as topology changes.
 6. Compare baseline/current closure membership and bytes
    independently for actual and projected material. Any difference takes the
    fall-through; equal unions do not replace equal per-comparison sets.
@@ -122,6 +132,13 @@ This source scan performs no CSS analysis. Ordinary utility escapes and `<`
 without this separator/marker pattern remain eligible. Complete results and
 validation remain authoritative.
 
+Before finalizing any CSS-bearing view, collect own-page matches from the
+complete catalogue. Retain unfiltered sets for the nested-component test and
+kept matches for component membership. The fast path may avoid local analysis only with the
+same changed-resource proof as the complete path. It cannot finalize a consumer
+before the rule-to-component set is complete. Selected comparisons reuse those
+facts; cache reuse must invalidate when another own page changes them.
+
 ## Resource And One-Sided Rules
 
 For both Git-blob and rebuilt baselines, traverse both readers independently
@@ -155,7 +172,7 @@ complete material HTML as a map key. The page contract defines copy exposure
 and parser-context differences; do not reparse a projected page to compensate.
 
 Added and removed views do not use the paired decision. Before normalizing the
-one-sided v9 document, validate every recorded component range. A malformed
+one-sided v10 document, validate every recorded component range. A malformed
 ownership tree fails with `$document` validation instead of becoming an
 ordinary addition or removal.
 

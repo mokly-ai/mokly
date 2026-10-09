@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import type { ReviewAssetReader } from "../src/review/assets.js";
-import { ComponentDependencyPolicy } from "../src/review/component_metadata.js";
 import { ComponentMaterialReader } from "../src/review/component_resources.js";
 import { compareComponentView } from "../src/review/component_view.js";
 import { catalogueLinkNormalizer } from "../src/review/moves/links.js";
@@ -14,8 +13,8 @@ import { currentManifest } from "./helpers/current_manifest.js";
 
 const html =
   '<html><head><link rel="stylesheet" href="../style.css"></head><body><a href="../target/index.html" data-mokly-link="target">Target</a></body></html>';
-const manifest: ManifestV9 = currentManifest({
-  schemaVersion: 9,
+const manifest: ManifestV10 = currentManifest({
+  schemaVersion: 10,
   generatedBy: "mokly",
   folders: [],
   sourceFiles: ["specs/target.ts"],
@@ -26,7 +25,6 @@ const manifest: ManifestV9 = currentManifest({
       title: "Target",
       description: "Target page",
       sourcePath: "specs/target.ts",
-      declaredDependencies: [],
       relatedDocs: [],
     },
   ],
@@ -66,7 +64,6 @@ for (const useFastPath of [false, true])
         changed,
         prefix: "mockups",
         useFastPath,
-        dependencies: new ComponentDependencyPolicy(manifest, manifest, []),
         resources: new ResourceComparison(
           beforeReader,
           afterReader,

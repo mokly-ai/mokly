@@ -8,7 +8,6 @@ import { classifyComponents } from "../dist/review/component_classification.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
-import { assertParserRecoveryDifference } from "./helpers/page_visibility.js";
 
 const hiddenResourceCases = [
   {
@@ -92,24 +91,25 @@ for (const resourceCase of hiddenResourceCases)
           baseCommit: "a".repeat(40),
           baseRef: "main",
           useFastPath,
-          useStylePath: false,
         });
       const [optimized, complete] = await Promise.all([
         classify(true),
         classify(false),
       ]);
       assert.deepEqual(optimized, complete);
-      assert.deepEqual(
-        optimized.changes,
-        [],
-        "M6 exposed select-discarded resource tokens by reparsing; M7 keeps original visibility",
-      );
-      await assertParserRecoveryDifference(
-        compilation,
-        config,
-        { ...resourceCase.files, [resourceCase.changed]: resourceCase.before },
-        { ...resourceCase.files, [resourceCase.changed]: resourceCase.after },
-        evidenceKind === "git" ? [`mockups/${resourceCase.changed}`] : [],
+      if (resourceCase.name === "stylesheet import closure") {
+        assert.deepEqual(optimized.changes, []);
+        return;
+      }
+      assert.ok(
+        optimized.changes.some((change) =>
+          change.reasons.some((reason) =>
+            evidenceKind === "git"
+              ? reason.kind === "dependency" &&
+                reason.path === `mockups/${resourceCase.changed}`
+              : reason.kind === "material",
+          ),
+        ),
       );
     });
 
@@ -158,22 +158,7 @@ for (const direction of ["added", "removed"] as const)
       classify(false),
     ]);
     assert.deepEqual(optimized, complete);
-    assert.deepEqual(
-      optimized.changes,
-      [],
-      "M7 cannot invent the discarded select link, unlike the M6 material parse",
-    );
-    const sheets = (hasImport: boolean) => ({
-      "main.css": hasImport ? '@import "./nested.css";' : "",
-      ...(hasImport ? { "nested.css": "body { color: purple; }" } : {}),
-    });
-    await assertParserRecoveryDifference(
-      compilation,
-      config,
-      sheets(direction === "removed"),
-      sheets(direction === "added"),
-      [],
-    );
+    assert.deepEqual(optimized.changes, []);
   });
 
 for (const context of ["select", "template"] as const)
@@ -209,23 +194,23 @@ for (const context of ["select", "template"] as const)
           baseCommit: "a".repeat(40),
           baseRef: "main",
           useFastPath,
-          useStylePath: false,
         });
       const [optimized, complete] = await Promise.all([
         classify(true),
         classify(false),
       ]);
       assert.deepEqual(optimized, complete);
-      assert.deepEqual(
-        optimized.changes,
-        [],
-        "M6 reparsing exposed a parser-discarded/inert sibling after implementation removal; M7 preserves the original visibility",
-      );
-      await assertParserRecoveryDifference(
-        compilation,
-        config,
-        { "image.svg": "base image" },
-        { "image.svg": "head image" },
-        evidenceKind === "git" ? ["mockups/image.svg"] : [],
+      assert.ok(
+        optimized.changes.some(
+          (change) =>
+            change.kind === "screen" &&
+            change.after?.path === "home" &&
+            change.reasons.some((reason) =>
+              evidenceKind === "git"
+                ? reason.kind === "dependency" &&
+                  reason.path === "mockups/image.svg"
+                : reason.kind === "material",
+            ),
+        ),
       );
     });

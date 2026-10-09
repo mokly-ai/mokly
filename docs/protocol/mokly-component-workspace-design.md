@@ -2,6 +2,8 @@
 
 ## Delivery Status
 
+This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+
 The [component explorer plan](../../plans/component-explorer.md) delivered these
 component, controls, and consuming-screen artboards in the package-owned layout.
 Owning mobile/desktop screens remain review entry points, aligned with
@@ -90,7 +92,7 @@ tab, including the existing explicit empty and unavailable states.
 
 Across the complete design catalogue, comparison controls require an explicit
 change state; the shared header defaults to omitting them. Their band always has
-an opaque background. Browse/tag-picker, shared-impact-only, ignored-only, and
+an opaque background. Browse/tag-picker, ignored-only, and
 empty designs retain Current without comparison controls.
 
 All is a catalogue filter, not evidence that the selected example changed.
@@ -145,9 +147,12 @@ inside this panel alongside description and secondary source metadata. Do not
 add a comparison disclosure below the canvas or a separate explanatory banner
 above it. The panel remains available on a Removed screen's stage even though
 that screen has no comparison modes. Ordinary Unmodified mockups omit the
-comparison section; a shared-impact-only component keeps its file list in Details.
-The `design/components/states/shared-impact/shared-impact` artboard in States → Shared impact depicts
-that Unmodified component with its Details open and no comparison band.
+comparison section unless there is retained or excluded rendered-resource evidence.
+The `design/components/states/shared-impact/shared-impact` artboard in States → Stylesheet evidence depicts
+Unmodified Action with excluded stylesheet evidence in Details and no comparison band.
+Its `design/components/states/shared-impact/style-changed` and `design/components/states/shared-impact/style-outside`
+siblings depict a changed Action and a screen styled outside it; each changed
+file lists its outcomes under that file.
 
 Use structured evidence: entry/variant state, a generic output-change reason,
 the component-level changed-file list and style outcomes, selected-variant

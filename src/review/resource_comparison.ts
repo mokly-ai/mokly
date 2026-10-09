@@ -1,14 +1,16 @@
+import type { ResourceEvidence } from "@mokly/viewer/data";
 import { isStylesheetPath } from "@mokly/viewer/data";
 
 import { parseHtml } from "../diagnostics/html_parse.js";
 
 import type { ComponentMaterialReader } from "./component_resources.js";
-import type { CssDocument, CssDocumentPair } from "./css/document.js";
+import type { CssDocument } from "./css/document.js";
 import {
   CssResourceAnalysis,
   type ChangedResource,
-  type ResourceEvidence,
+  type ResourceMatchingPair,
 } from "./css/resource_analysis.js";
+import { documentStylesheetScope } from "./css/resource_scope.js";
 import {
   decideReferencedResource,
   type ResourceDecision,
@@ -20,6 +22,7 @@ export interface ResourceDocument {
   path: string;
   html: string;
   references?: readonly string[];
+  insertedStylesheets?: readonly string[];
 }
 
 /** Shared resource discovery and rule attribution for both result versions. */
@@ -53,22 +56,19 @@ export class ResourceComparison {
       before: before?.html,
       after: after?.html,
     },
+    cssDocuments?: () => readonly ResourceMatchingPair[],
   ): Promise<ResourceEvidence> {
     const bases = before
-      ? await this.before.resources(
-          before.path,
-          before.html,
-          excluded,
-          before.references,
-        )
+      ? await this.before.resources(before.path, before.html, excluded, {
+          references: before.references,
+          insertedStylesheets: before.insertedStylesheets,
+        })
       : new Set<string>();
     const heads = after
-      ? await this.after.resources(
-          after.path,
-          after.html,
-          excluded,
-          after.references,
-        )
+      ? await this.after.resources(after.path, after.html, excluded, {
+          references: after.references,
+          insertedStylesheets: after.insertedStylesheets,
+        })
       : new Set<string>();
     const resources: ChangedResource[] = [];
     const equal = this.identities?.equivalent(bases, heads);
@@ -93,28 +93,38 @@ export class ResourceComparison {
         isStylesheetPath(route) &&
         this.changed.has(this.path(route)),
     );
-    const documents: CssDocumentPair[] = changedCss.length
+    const documents: ResourceMatchingPair[] = changedCss.length
       ? [
-          {
-            ...(matching.before === undefined
-              ? {}
-              : {
-                  before:
-                    typeof matching.before === "string"
-                      ? parseHtml("stylesheetMatching", matching.before)
-                      : matching.before,
-                }),
-            ...(matching.after === undefined
-              ? {}
-              : {
-                  after:
-                    typeof matching.after === "string"
-                      ? parseHtml("stylesheetMatching", matching.after)
-                      : matching.after,
-                }),
-          },
+          ...(cssDocuments?.() ?? [
+            {
+              ...(matching.before === undefined
+                ? {}
+                : {
+                    before:
+                      typeof matching.before === "string"
+                        ? parseHtml("stylesheetMatching", matching.before, {
+                            sourceCodeLocationInfo: true,
+                          })
+                        : matching.before,
+                  }),
+              ...(matching.after === undefined
+                ? {}
+                : {
+                    after:
+                      typeof matching.after === "string"
+                        ? parseHtml("stylesheetMatching", matching.after, {
+                            sourceCodeLocationInfo: true,
+                          })
+                        : matching.after,
+                  }),
+            },
+          ]),
         ]
       : [];
+    if (changedCss.length) {
+      const scoped = await this.stylesheetScope(before, after);
+      for (const pair of documents) pair.paths = scoped;
+    }
     for (const route of discovered) {
       if (excluded?.(route)) continue;
       const path = this.path(route);
@@ -147,10 +157,31 @@ export class ResourceComparison {
           ...(headDocument === undefined
             ? {}
             : { after: await this.after.resourceDocument(route) }),
+          paths: await this.stylesheetScope(
+            baseDocument === undefined
+              ? undefined
+              : { path: route, html: baseDocument },
+            headDocument === undefined
+              ? undefined
+              : { path: route, html: headDocument },
+          ),
         });
       }
     }
     return this.css.analyze(resources, documents);
+  }
+
+  private async stylesheetScope(
+    before?: ResourceDocument,
+    after?: ResourceDocument,
+  ): Promise<ReadonlySet<string>> {
+    return documentStylesheetScope(
+      [
+        ...(before ? [{ reader: this.before, ...before }] : []),
+        ...(after ? [{ reader: this.after, ...after }] : []),
+      ],
+      (route) => this.path(route),
+    );
   }
 
   private path(route: string): string {

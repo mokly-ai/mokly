@@ -1,12 +1,14 @@
 # Export Ownership v3
 
-## Delivery Status And Boundary
+## Delivery Status
 
 Schema 3 is implemented by the exporter and every local ownership reader.
 [Delta Publishing](../../plans/delta-publishing.md) records the completed
 exporter, CLI and receiver-side compatibility work. Receivers built against
 this document accept only schema 3. Schemas 1 and 2 are unsupported. Version 3
 retains v2 digests and limits while gating the new `mokly-viewer/` paths.
+
+## Boundary
 
 Every complete [export](./mokly-export.md) contains a regular root file named
 `.mokly-export-artifact`. This public inventory is independent of the source

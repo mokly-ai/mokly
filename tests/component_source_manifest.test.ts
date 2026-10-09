@@ -13,7 +13,7 @@ test("v9 source metadata round-trips deterministically and accepts its absence",
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const { manifest } = await compileCatalogue(await loadConfig(fixture.root));
-  assert.equal(manifest.schemaVersion, 9);
+  assert.equal(manifest.schemaVersion, 10);
   const original = structuredClone(manifest);
   for (const view of componentViews(original))
     for (const instance of view.instances)
@@ -57,7 +57,6 @@ test("authored data schemas, slots and forged manifest components reserve __mokl
     path: "action",
     title: "Action",
     description: "Action",
-    dependencies: [],
     relatedDocs: [],
     propSchema: { kind: "object" as const, properties: {} },
     render: () => null,

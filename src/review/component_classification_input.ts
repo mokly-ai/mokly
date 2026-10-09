@@ -3,6 +3,7 @@ import type { Manifest } from "@mokly/viewer/data";
 import type { ResolvedConfig } from "../config/types.js";
 
 import type { ReviewAssetReader } from "./assets.js";
+import type { CssResourceAnalysis } from "./css/resource_analysis.js";
 import type { CssRuleParser } from "./css/types.js";
 import type { BaselineReader } from "./git.js";
 import type { MarkdownMoveSources } from "./moves/markdown_sources.js";
@@ -21,6 +22,7 @@ export interface ComponentClassificationInput {
   cssParser?: CssRuleParser;
   /** Test-only: vary each independent CSS cache bound without changing classification. */
   cssCacheBytes?: number;
+  cssAnalysis?: CssResourceAnalysis;
   /** Test-only: disable the unchanged-view decision so both paths can be compared. */
   useFastPath?: boolean;
   /** Test-only: disable the style-only route without changing validation. */

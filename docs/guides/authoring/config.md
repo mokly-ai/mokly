@@ -11,7 +11,7 @@ order: 1
 `mockupsDir` is required; everything else has a default.
 
 ```ts
-import { defineConfig } from "@mokly/mokly";
+import { componentStylesheets, defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
   colorSchemes: ["light", "dark"],
@@ -23,13 +23,12 @@ export default defineConfig({
   review: {
     base: "origin/main",
     outDir: ".context/mokly-review",
-    sharedImpact: ["packages/ui/src/**", "src/tokens/**"],
   },
 });
 ```
 
 Folder paths are relative to the config file and stay inside `repoRoot`.
-Repository globs such as `review.sharedImpact` are relative to `repoRoot`;
+Repository globs such as `watch.rules[].paths` are relative to `repoRoot`;
 the `files` globs of a root are relative to that root.
 
 ## Fields
@@ -44,7 +43,7 @@ the `files` globs of a root are relative to that root.
 | `stylesheets`      | Ordered route-to-stylesheet rules                                               |
 | `postcss`          | Your config-relative PostCSS module for imported CSS                            |
 | `moduleResolution` | Aliases, conditions, fields, extensions and loaders for your sources            |
-| `review`           | The Git base, the artifact directory and shared-impact globs                    |
+| `review`           | The Git base, artifact directory and baseline build recipe                      |
 | `watch`            | Extra inputs the watched server reacts to                                       |
 
 Every configured root defines its own file selection and path derivation.
@@ -90,15 +89,24 @@ file as its source, wherever the entry module that exports it lives.
 
 ## Stylesheets
 
-Rules are evaluated in declaration order. A rule matches an entry's route,
-`<path>/index.html`, with a POSIX glob and lists stylesheets relative to
-`mockupsDir`, or absolute HTTP(S) URLs. A rule may append `lightStylesheets`
-or `darkStylesheets` after its shared list for the matching output.
-Imported CSS delivery appends the
-configured renderer stylesheet and then the entry stylesheet after those
-links, even if no rule matches. Complete page callbacks receive no automatic
-links. `<mockupsDir>/mokly-generated/` holds all generated documents, the private manifest, compiled CSS and copied
-assets; keep authored public stylesheets elsewhere.
+Rules are evaluated in declaration order. A rule matches an entry's derived
+route, such as `account/account-home/index.html`, with a POSIX glob and lists
+stylesheets relative to `mockupsDir`, or absolute HTTP(S)
+URLs. A rule may append `lightStylesheets` or `darkStylesheets` after its
+shared list for the matching output.
+Use the `componentStylesheets` symbol once in the shared list to place the
+public CSS declared by actually rendered components there; otherwise it goes
+after shared CSS and before the matching scheme list. It is not a URL and
+cannot appear in a scheme-specific list. Component declarations accept only
+existing public `mockupsDir`-relative CSS, not HTTP(S) links. If a file is both
+configured and component-declared, Mokly keeps the configured link without
+adding another. Declarations control loading. Changed rules determine which
+components and pages appear in Changes.
+
+For the complete renderer stylesheet list and its order, see the Mokly
+Rendering And Generated Output contract. Complete page callbacks receive no
+automatic links. `<mockupsDir>/mokly-generated/` holds generated documents, the private manifest,
+compiled CSS and copied assets. Keep authored public stylesheets elsewhere.
 In authored public or imported CSS, write local `image-set()` sources as
 `url()` values (`image-set(url("./photo.png") 1x)`) so Mokly validates the
 reference. Imported CSS also copies the asset into `mokly-generated/`;
@@ -126,13 +134,12 @@ export default defineConfig({
 
 `review.base` names the Git ref whose merge base with `HEAD` is the branch
 point a comparison reads; it defaults to `origin/main`. `review.outDir` is the
-config-relative artifact directory. `review.sharedImpact` lists globs for
-files a screen might use but its rendered files cannot reveal, such as renderer
-and token modules. A renderer or token file matched only by a glob appears in
-Details without adding the screen to Changes. A changed preview or resource
-still appears there, as can a registered component's own file or a dependency
-named by its exact path.
-`review.baselineBuild` runs when a pinned historical v9 inventory is missing or incomplete: an ordered list of argv
+config-relative artifact directory. `review.sharedImpact` is removed: if the
+key is still present, Mokly warns and ignores it. Source
+files without a changed render or referenced public resource no longer create
+Changes or comparison evidence.
+`review.baselineBuild` runs when a pinned historical v10 inventory is missing
+or incomplete: an ordered list of argv
 arrays run without a shell to rebuild the historical catalogue. It defaults to
 `npm ci` followed by `npx --no-install mokly build --config` and the config
 path, independent of head Git tracking.
@@ -184,10 +191,9 @@ one React runtime even when the executable came from an npx cache.
 
 ## Public files
 
-Only authored regular files referenced by a rendered document or a stylesheet
-rule are public. Renderers return HTML strings and link their resources from
-those documents; nested HTML and CSS URLs are followed transitively. Keep these
-files under `mockupsDir` and outside
+Only authored regular files referenced by a rendered document, a stylesheet
+rule or a renderer resource record are public. Nested HTML and CSS URLs are
+followed transitively. Keep these files under `mockupsDir` and outside
 `mokly-generated/`; source files, symlinks and unreferenced files stay private.
 Stylesheet hrefs are relative to each generated document inside `mokly-generated/`.
 
@@ -201,7 +207,7 @@ Stylesheet hrefs are relative to each generated document inside `mokly-generated
 | `ReviewConfig`                            | The `review` object                               |
 | `WatchConfig`, `WatchRule`, `WatchAction` | The `watch` object and its rules                  |
 | `ModuleResolutionConfig`, `ModuleLoader`  | The `moduleResolution` object and its loaders     |
-| `Renderer`, `RenderInput`                 | Your renderer and its context                     |
+| `Renderer`, `RenderInput`, `RenderResult` | Your renderer, its context and its result         |
 
 A referenced authored file can be public regardless of its extension or a
 folder name such as `dist`. Keep it outside actual source, package, cache and

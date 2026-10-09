@@ -16,8 +16,7 @@ import {
   type TestFixture,
 } from "./helpers/fixture.js";
 
-const metadata =
-  'const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"] };';
+const metadata = 'const metadata = { relatedDocs: ["notes.md"] };';
 
 async function write(
   fixture: TestFixture,
@@ -75,7 +74,6 @@ test("a component defined in a helper beside its implementation is attributed to
     (entry) => entry.path === "button",
   );
   assert.equal(button?.sourcePath, "src/components/button/button.mokly.tsx");
-  assert.deepEqual(button?.declaredDependencies, ["notes.md"]);
   const demo = compilation.manifest.entries.find(
     (entry) => entry.path === "button-demo",
   );
@@ -130,7 +128,7 @@ test("a definition created by an installed package is rejected as unattributed",
     fixture,
     "node_modules/@acme/mokups/index.js",
     `import { defineScreen } from "@mokly/mokly";
-export const packaged = defineScreen({ dependencies: [], relatedDocs: [], useCasePaths: [], path: "packaged", title: "Packaged", description: "Defined by a package", mobile: "Packaged", desktop: "Packaged" });
+export const packaged = defineScreen({ relatedDocs: [], useCasePaths: [], path: "packaged", title: "Packaged", description: "Defined by a package", mobile: "Packaged", desktop: "Packaged" });
 `,
   );
   await fs.promises.appendFile(
@@ -209,7 +207,7 @@ test("runtime startup rejects missing or invalid resolved roots", async () => {
     manifest: currentManifest({
       entries: [],
       folders: [],
-      schemaVersion: 9,
+      schemaVersion: 10,
       sourceFiles: [],
     }),
   };

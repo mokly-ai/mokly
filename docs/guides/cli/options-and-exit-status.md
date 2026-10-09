@@ -105,6 +105,9 @@ Cancelling publish keeps `upload-failed` but prints
 exhausted request prints
 `The catalogue upload did not complete. Check the endpoint and connection, then retry.`
 
+Warnings name a generated page, an entry, a component, a folder or the
+configuration file. Strict mode counts all warnings, including ignored inputs.
+
 `git-uncommitted` says `The checkout has uncommitted changes.` Its hint says
 `Commit, stash or ignore these files, then publish again.` `build-stale` says
 `The committed generated files are out of date.` Its hint says

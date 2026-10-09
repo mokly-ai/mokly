@@ -12,9 +12,20 @@ import {
   type ComponentDesignDestination,
 } from "./destinations.js";
 import type { CatalogueIdentity } from "./metadata.js";
+import {
+  isStyleScenario,
+  styleScenarioRows,
+  type StyleScenario,
+} from "./style_navigation.js";
 
 export type ChangeScenario =
-  "all" | "component" | "screen" | "removed" | "added" | "checklist";
+  | "all"
+  | "component"
+  | "screen"
+  | "removed"
+  | "added"
+  | "checklist"
+  | StyleScenario;
 
 /** Scenarios whose Changes hold one component outside Action's story. */
 export const SOLE_CHANGES = {
@@ -57,7 +68,10 @@ export function explorerNodes(
           },
         ]
       : []),
-    ...exampleMembers(scenario, active, design, activeKey).map((row) => ({
+    ...(isStyleScenario(scenario)
+      ? styleScenarioRows(scenario)
+      : exampleMembers(scenario, active, design, activeKey)
+    ).map((row) => ({
       ...row,
       depth: row.depth + 1,
     })),
@@ -66,7 +80,7 @@ export function explorerNodes(
 
 /** Example's Screens and Components folders for one scenario, from depth 0. */
 function exampleMembers(
-  scenario: ChangeScenario,
+  scenario: Exclude<ChangeScenario, StyleScenario>,
   active: CatalogueIdentity,
   design: ComponentDesignDestination,
   activeKey?: string,

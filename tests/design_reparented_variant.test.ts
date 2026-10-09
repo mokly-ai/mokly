@@ -40,7 +40,6 @@ import { publicShellContext } from "./helpers/public_shell.js";
 
 const common = {
   colorSchemes: ["light"] as const,
-  declaredDependencies: [],
   description: "Fixture",
 
   relatedDocs: [],

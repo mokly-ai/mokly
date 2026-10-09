@@ -17,7 +17,7 @@ with exactly these fields:
 | `schemaVersion`         | `1`.                                                                                                                  |
 | `key`                   | The freshness key, as 64 lowercase hexadecimal characters.                                                            |
 | `diagnostics`           | The compilation's normalized build diagnostics as `{ code, route, message }` records.                                 |
-| `manifest`              | The compilation's manifest v9 object.                                                                                 |
+| `manifest`              | The compilation's manifest v10 object.                                                                                |
 | `outputs`               | `[route, file]` pairs in compilation order. Text stays a string; binary output is `{ "kind": "bytes", "base64": … }`. |
 | `deliveredStyleSources` | The compilation's repository-relative delivered style inputs.                                                         |
 | `documentMarkdown`      | `[sourcePath, markdown]` pairs; omitted when the compilation has none.                                                |
@@ -29,7 +29,7 @@ field.
 
 Decoding requires the manifest object to serialize exactly to the snapshot's
 `mokly-manifest.json` output. The compile writes that output only after its
-strict manifest v9 validation, so decoding does not repeat the validation, which
+strict manifest v10 validation, so decoding does not repeat the validation, which
 costs seconds per test process. Diagnostics pass the build-warning validator.
 Decoding rejects another schema version, a malformed key, unknown fields,
 duplicate routes or document paths, and invalid binary transfer values. A
@@ -48,11 +48,11 @@ symbolic link, or `missing` when the path is absent or is not a regular file.
 The inputs are:
 
 - every file that `git ls-files --cached --others --exclude-standard` lists
-  under `examples/basic`, `examples/imported-assets`, `docs/protocol` and
-  `README.md`, so a tracked file deleted from the working tree hashes as
-  `missing`. The example's stylesheets import assets from
-  `examples/imported-assets`, and `copyExampleSources` copies the same four
-  paths;
+  under `examples/basic`, `examples/imported-assets`, `docs/protocol`,
+  `README.md` and `plans`, so a tracked file deleted from the working tree
+  hashes as `missing`. The example's stylesheets import assets from
+  `examples/imported-assets`, its Markdown links into `plans/`, and
+  `copyExampleSources` copies the same five paths;
 - every regular file under `dist/` and `packages/viewer/dist/`, or the
   directory itself as `missing`;
 - `package-lock.json` and `tsconfig.json`.

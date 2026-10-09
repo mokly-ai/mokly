@@ -2,18 +2,18 @@
 
 ## Delivery Status
 
-Current and baseline readers accept only v9. The
+Current and baseline readers accept only v10. The
 [baseline compatibility contract](./mokly-baseline-compatibility.md) defines the
 earlier-version outcome and exact product copy. Implementation and verification
 are tracked by [Generated Output Simplification](../../plans/generated-output-simplification.md).
 
-## Current Manifest V9
+## Current Manifest v10
 
 Emit this envelope for every newly compiled catalogue:
 
 ```ts
-interface ManifestV9 {
-  schemaVersion: 9;
+interface ManifestV10 {
+  schemaVersion: 10;
   generatedBy: "mokly";
   entries: readonly ManifestEntry[];
   folders: readonly ManifestFolder[];
@@ -25,9 +25,11 @@ interface ManifestV9 {
 ```
 
 `ManifestEntry` uses the path-based [entry and folder schema](./mokly-component-manifest.md).
-Preserve `declaredDependencies`, Markdown resource paths, effective schemes,
-screen/component variants with `variantOf`, and all usage, prop, control and
-relationship checks. Component parents have no views. Keep authored variants
+Preserve Markdown resource paths, effective schemes,
+screen/component variants with `variantOf`, component stylesheet declarations,
+and all usage, prop, control and relationship checks. Usage requires root output
+ranges on component saved views and an `insertedStylesheets` array on every
+record. CSS resource owners and manually declared source dependencies are absent. Component parents have no views. Keep authored variants
 immediately after their parent and kind/path order elsewhere. Store no route,
 view file name, derived dependency union or nested component `variants` array.
 The shared helpers derive file names under
@@ -53,14 +55,18 @@ kinds, file/directory and case-folded collisions, and hash format. Before
 emission, require the compiled set to equal the inventory plus the manifest.
 Source/closure paths and inventory entries use code-unit order. Keep canonical
 object-key ordering, required empties, optional omissions, two-space indentation
-and final LF. Current and baseline v9 use the same full validator; unknown
-fields remain invalid.
+and final LF. Current and baseline v10 use the same full validator; unknown
+fields remain invalid. A v10 record without required combined proof is invalid,
+including output made with a v10 writer that omits roots or provenance. There is
+no converter or missing-field fallback.
 
 ## Historical Readers And Layouts
 
-The only content layout is v9 at
+The only content layout is v10 at
 `<catalogueRoot>/mokly-generated/mokly-manifest.json`. Mokly recognizes only
-the canonical `mokly-manifest.json` name. It has no other-name sentinels,
+the canonical `mokly-manifest.json` name. Former manifest filenames are ordinary
+files, never sentinels or fallback inputs. They do not affect absence or rebuild
+selection, and baseline admission never reads their contents. It has no
 old entry readers, layout conversion or old cache readers.
 
 ## Selection, Cache And Resource Addressing
@@ -73,11 +79,11 @@ inside this subtree. A committed root-level manifest, including stale v7,
 has no effect on selection.
 
 If the selected manifest is absent, rebuild with that commit's own recipe.
-A regular manifest below v9 in the current generated location retains the
+A regular manifest below v10 in the current generated location retains the
 typed earlier-version outcome. Invalid JSON, non-object data, missing or
 non-integer versions, newer versions and nonregular selected files remain
-invalid; do not treat I/O errors as absence. Validate v9 fully before its
-inventory. Complete matching v9 blobs select the Git reader. Missing,
+invalid; do not treat I/O errors as absence. Validate v10 fully before its
+inventory. Complete matching v10 blobs select the Git reader. Missing,
 nonregular, mismatched or extra inventory files select a rebuild.
 
 Keep these inventory diagnostics, with sorted generated-relative paths and
@@ -96,16 +102,16 @@ Do not inject today's Mokly package into historical source.
 After the commands succeed, discover output under
 [baseline addressing](./mokly-baseline-addressing.md). Prefer the canonical
 manifest in the generated child. Only after a rebuild, a canonical manifest
-below v9 at `<catalogueRoot>/mokly-manifest.json` proves the earlier-version
+below v10 at `<catalogueRoot>/mokly-manifest.json` proves the earlier-version
 outcome. Do not harvest it or cache the outcome. This check prevents an old
 build from being mistaken for current output without restoring a flat reader.
-A v9 manifest at the flat location is invalid.
+A v10 manifest at the flat location is invalid.
 
-A cache entry is reusable only when it is complete, valid v9 output for the
+A cache entry is reusable only when it is complete, valid v10 output for the
 requested commit, catalogue and recipe. Empty, truncated, earlier-format,
 unreadable or incomplete entries are partial. The builder removes only those
 partial entries under its lock and rebuilds. It never uses them as
-incompatibility evidence. A valid v9 marker with different requested catalogue
+incompatibility evidence. A valid v10 marker with different requested catalogue
 or build settings fails intact before output validation.
 [Storage](./mokly-baseline-storage.md#cache-layout) defines validation,
 safe cleanup and atomic marker publication.
@@ -136,20 +142,20 @@ safe diagnostics in Serve and failure for explicit comparison captures.
 
 ## Reader And Verification Boundary
 
-Keep per-commit blob/rebuild selection, exact v9 inventory verification,
+Keep per-commit blob/rebuild selection, exact v10 inventory verification,
 bounded moved-root discovery, descriptors, locks, cleanup and source privacy.
-Both comparison sides use v9. Pair by kind/path and view axes, then resolve
+Both comparison sides use v10. Pair by kind/path and view axes, then resolve
 generated and authored resources under each side's own historical root.
 Resource membership and exact bytes are compared on every path; no mode flag
 can disable byte comparison.
 
-Tests cover committed stale root-level v7 with a successful v9 rebuild,
+Tests cover committed stale root-level v7 with a successful v10 rebuild,
 earlier root-level output produced by the base's own rebuild, partial cache
 rebuilds and atomic marker publication. Preserve invalid/newer manifest
 rejections, confinement, inventory validation and the command outcomes above.
 
 The approved [path/output integration](./mokly-path-output-integration.md)
 defines the current path-derived layout. Its
-[format inventory](./mokly-format-versions.md) defines manifest v9, catalogue v5,
-review v6 and all other boundaries. Only v9 baseline content is readable after
+[format inventory](./mokly-format-versions.md) defines manifest v10, catalogue v6,
+review v7 and all other boundaries. Only v10 baseline content is readable after
 that integration; the earlier-version product outcome remains unchanged.

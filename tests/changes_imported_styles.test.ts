@@ -38,11 +38,7 @@ for (const storage of ["blobs", "rebuild"] as const) {
       );
       assert.equal(live.changedEntries?.includes("home"), true);
       assert.equal(live.changedEntries?.includes("details"), false);
-      assert.ok(
-        !artifact.result.sharedImpact.includes(
-          `entries/${path.basename(fixture.cssPath)}`,
-        ),
-      );
+      assert.equal(Object.hasOwn(artifact.result, "sharedImpact"), false);
     });
   }
   test(`${storage} changed generated font affects every view linking its stylesheet`, async (context) => {
@@ -74,7 +70,7 @@ for (const storage of ["blobs", "rebuild"] as const) {
         ?.state,
       "unchanged",
     );
-    assert.ok(!artifact.result.sharedImpact.includes("entries/font.woff2"));
+    assert.equal(Object.hasOwn(artifact.result, "sharedImpact"), false);
     const live = await computeCatalogueChanges(
       fixture.config,
       "HEAD",

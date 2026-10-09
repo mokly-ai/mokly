@@ -42,8 +42,8 @@ separate [suite evidence contract](./ci-suite-evidence.md).
 
 ## Testbox Key And Secret Boundary
 
-The [remote verification contract](./remote-verification.md) is an approved
-target under the [plan](../../plans/blacksmith-remote-verification.md).
+The [remote verification contract](./remote-verification.md) defines this
+execution and secret boundary.
 The workflow secret boundary and executor key handling are implemented.
 Explicit and automatic modes use the same key handling.
 

@@ -16,11 +16,14 @@ it.
 - The entry's description; for a component, also the shown entry's path.
 - Moved from, with the previous path when Changes paired a moved entry.
 - The tags it carries, as chips you can search from.
-- The dependencies it declares, the related documents it names and the source
-  file it comes from.
+- The source file and related documents it names.
 - Its components, and for a component page the screens that use it.
 - The changed paths behind its status, including comparison evidence for an
   unchanged screen opened from All.
+- The branch point that Changes compares with, when the catalogue knows its
+  name. The sentence stays while the next screen's details load. A catalogue
+  embedded in another product has no name, so its details leave that sentence
+  out and keep the rest.
 
 Catalogue-wide usage is explicitly unavailable until the background check has
 finished; it is never shown as zero consumers.
@@ -28,18 +31,36 @@ finished; it is never shown as zero consumers.
 ## Stylesheet evidence
 
 When a stylesheet you link has changed, the inspector names the changed styles
-that can apply to this screen, or says the change can apply anywhere on it.
+that apply to this screen outside the components changed by those styles,
+or says the change can apply anywhere on it.
 A stylesheet whose changed styles reach nothing on the screen is listed as
 examined and excluded instead, and never produces a Changes row. Selector text
 stays inside that secondary list, and a screen kept only by a stylesheet edit
 reads "Styles this screen uses changed" above its comparison.
 
-Screen-only catalogues show this evidence before you open a comparison.
-Opening one keeps those details and adds the evidence it retained. The file
-list combines changed files the screen uses with broader files that may affect
-it. A listed file can leave the screen unchanged and out of Changes. Files
-owned by a registered component or named by an exact dependency can still
-add their entry.
+The inspector shows this evidence before you open a comparison, for screens
+and component pages alike. Opening one keeps those details and adds the
+evidence it retained. Each stylesheet is listed once, with its own sentences
+and selector lists beneath it. For outside matches, the text says “These
+changed styles also apply outside the changed components on this screen:”. If
+no component changed through those rules, it says “Changed styles that apply
+to this screen:”. A rule inside an unchanged component invocation can appear
+in that list. Uncertain changes have a separate explanation beside it.
+
+A component-only style change can leave a screen under Affected screens with
+no Changes row of its own. That screen keeps the changed styles it uses. On the
+component's own page the details say “Changed styles that apply to this
+component:”. A component page with only a wrapper change has its own
+saved-view row, says “Changed styles that apply to this saved view:”, and that
+rule gives it no Affected screens. The details name the stylesheet actually
+loaded, including a generated stylesheet when CSS comes from JavaScript.
+Private source files do not supply comparison evidence.
+
+A document page has no comparison to open, so its own Details carry the same
+evidence once Changes is ready, with “page” in each sentence, for example
+“Changed styles that apply to this page:”. Its status sits beside its title. An
+unchanged document that links an examined stylesheet ends with “No changes to
+this page.”
 
 ## Component props
 

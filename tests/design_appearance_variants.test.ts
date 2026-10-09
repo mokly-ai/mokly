@@ -22,15 +22,15 @@ const dualSchemeComponents = [...DUAL_SCHEME_SAMPLES].map(
   (slug) => `design/library/chrome/${slug}`,
 );
 const previewScreens = [
-  "design-appearance-overview",
-  "design-appearance-auto",
-  "design-appearance-props",
-  "design-appearance-instance",
-  "design-appearance-loading",
-  "design-appearance-unavailable",
-  "design-appearance-side-by-side",
-  "design-appearance-difference",
-  "design-appearance-flow",
+  "design/browse/appearance/overview",
+  "design/browse/appearance/states/auto",
+  "design/browse/appearance/workspaces/props",
+  "design/browse/appearance/workspaces/instance",
+  "design/browse/appearance/status/loading",
+  "design/browse/appearance/status/unavailable",
+  "design/browse/appearance/workspaces/side-by-side",
+  "design/browse/appearance/workspaces/difference",
+  "design/browse/appearance/status/flow",
 ];
 
 function appearanceOf(html: string): string | undefined {

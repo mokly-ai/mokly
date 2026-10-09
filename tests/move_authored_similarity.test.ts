@@ -25,7 +25,6 @@ test("page similarity ignores matching generated head and raw markup formatting"
     sourcePath: `${path}.ts`,
     title: path,
     description: "Page",
-    declaredDependencies: [],
     relatedDocs: [],
   });
   const before = page("old"),

@@ -28,7 +28,9 @@ export function ScreenPage({
     ? "removed"
     : state === "direct-change"
       ? "screen"
-      : "all";
+      : state === "style-outside"
+        ? "styles-outside"
+        : "all";
   const comparison = screenComparison(state);
   const identity = screenIdentity(state);
   const { title, path } = SCREENS[identity];

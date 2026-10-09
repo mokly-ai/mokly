@@ -20,15 +20,19 @@ import { renderToStaticMarkup } from "react-dom/server";
 export default function render(input) {
   const css = '.action{border-radius:12px}';
   const html = '<!doctype html><html><head><style>' + css + '</style></head><body>' + renderToStaticMarkup(input.node) + '</body></html>';
-  return html;
+  return { html, styles: [{ startOffset: html.indexOf(css), endOffset: html.indexOf(css) + css.length, componentIds: ["action"] }], resources: [{ path: "action.css", componentIds: ["action"] }] };
 }`;
 
-test("component render keeps head styles without manifest ownership records", async (t) => {
+test("component style ownership rebases through the generated notice while preserving rendered CSS", async (t) => {
   const fixture = await createFixture(componentEntrySource(), {
     extraConfig: 'renderer: "renderer.tsx",',
   });
   t.after(() => removeFixture(fixture));
   await fs.writeFile(path.join(fixture.root, "renderer.tsx"), renderer);
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "action.css"),
+    ".action{color:green}",
+  );
   const config = await loadConfig(fixture.root);
   const result = await compileCatalogue(config);
   const screen = result.manifest.entries.find(
@@ -37,27 +41,18 @@ test("component render keeps head styles without manifest ownership records", as
   const view = screen.componentViews![0]!;
   const mobileView = viewRoute(screen.path, "mobile", "light");
   const html = textOutput(result.outputs, mobileView)!;
-  assert.match(html, /\.action\{border-radius:12px\}/);
-  assert.deepEqual(Object.keys(view).sort(), [
-    "colorScheme",
-    "instances",
-    "ranges",
-    "slots",
-    "viewport",
-  ]);
+  assert.equal(
+    html.slice(view.styles[0]!.startOffset, view.styles[0]!.endOffset),
+    ".action{border-radius:12px}",
+  );
+  assert.deepEqual(view.resources, []);
   await writeCompilation(result, config);
   checkCompilation(await compileCatalogue(config), config);
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
-    renderer.replace(
-      "return html;",
-      'return { html, styles: [{ startOffset: 0, endOffset: 10, componentIds: ["unknown"] }] };',
-    ),
+    renderer.replace('componentIds: ["action"]', 'componentIds: ["unknown"]'),
   );
-  await assert.rejects(
-    compileCatalogue(config),
-    /renderer must return a string/,
-  );
+  await assert.rejects(compileCatalogue(config), /owners must render/);
   assert.equal(
     await fs.readFile(path.join(config.generatedDir, mobileView), "utf8"),
     html,

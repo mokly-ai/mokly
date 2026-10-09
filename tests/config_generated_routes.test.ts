@@ -56,7 +56,7 @@ test("the generated folder name remains valid below an ordinary first segment", 
   );
 });
 
-test("v9 map keys are relative to the unified generated tree", async (context) => {
+test("v10 map keys are relative to the unified generated tree", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   await fs.writeFile(

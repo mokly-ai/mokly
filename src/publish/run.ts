@@ -33,6 +33,7 @@ export interface PublishOptions extends UploadOptions {
   repository?: string;
   uploadConcurrency?: number;
   diagnostic?: (message: string) => void;
+  onWarning?: (warning: BuildDiagnostic) => void;
   incompatibleBaseline?: (commit: string) => void;
 }
 
@@ -98,6 +99,7 @@ export async function publishCatalogue(
         ? { onBuildDiagnostics: options.onBuildDiagnostics }
         : {}),
       ...(options.diagnostic ? { diagnostic: options.diagnostic } : {}),
+      ...(options.onWarning ? { onWarning: options.onWarning } : {}),
       ...(options.incompatibleBaseline
         ? { incompatibleBaseline: options.incompatibleBaseline }
         : {}),

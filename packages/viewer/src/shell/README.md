@@ -1,5 +1,16 @@
 # Shared Browse shell
 
+## Delivery Status
+
+The [React Browse shell plan](../../../../plans/react-browse-shell.md) records
+how Serve, export and the public viewer converged on this tree.
+Retaining the known branch name in the exported navigation fallback is
+implemented in [M31](../../../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
+The [presentation contract](../../../../docs/protocol/mokly-css-evidence-presentation.md#details-copy)
+keeps the sentence during loading; a nameless embedded catalogue still omits it.
+
+## Scope
+
 `metadata.ts` carries accepted move evidence privately. `comparison_selection.ts`
 uses each side's original path for snapshot URLs, including moved variants.
 `catalogue.ts` keeps each paired current entry's branch-point path in
@@ -47,9 +58,7 @@ navigation and inspector. `document.tsx` supplies the standalone document
 envelope used through `@mokly/viewer/server`, and the same tree is hydrated in
 the browser by Serve, export and React hosts, with host-owned slots as ordinary
 children. The [viewer contract](../../../../docs/protocol/mokly-viewer.md#shell-tree-and-state)
-defines the tree and its state model; the
-[React Browse shell plan](../../../../plans/react-browse-shell.md) records how
-Serve, export and the public viewer converged on this tree.
+defines the tree and its state model.
 
 `nav.tsx` renders the catalogue column, `nav_rows.tsx` its folder groups as
 native `<details>` that only browse, and `nav_leaf_rows.tsx` its leaves: links
@@ -145,6 +154,9 @@ entry's fallback status and eligibility.
 the top-bar Appearance indicator and workspace. `workspace.tsx` consumes that
 shared resolution on every viewport, scheme, component variant, or evidence
 change and passes the effective scheme to controls and comparison presentation.
+Numeric review version failures retain `MoklyVersionError` through the request
+and comparison controller. The failure surface shows the shared compatible-viewer
+message and separate version details; Current remains available.
 `use_comparison.ts` is the single owner of comparison mode: component sibling
 navigation keeps that owner mounted, and the workspace reads its mode directly
 so Props and highlighting remain read-only until Current is selected.
@@ -213,9 +225,31 @@ server bytes during hydration. `comparison_views.tsx` renders React-owned frame
 chrome around the snapshots from validated comparison metadata. The CLI
 supplies its private live capabilities through typed server context.
 
-`workspace_evidence_data.ts` selects an entry's catalogue or loaded comparison
-record for Details; `workspace_evidence.tsx` combines its shared-impact paths
-with retained dependency paths while keeping stylesheet exclusions separate.
+`workspace_evidence_data.ts` merges an entry's own reasons, the selected
+screen's or saved view's projected and live view evidence, and a loaded
+comparison by path and rule key, so Current and a loaded comparison show the
+same facts once. `workspace_stylesheet_evidence.ts` turns that evidence into
+one item per changed file, with the contract's outcome sentences in order: own
+component rules, page selectors, unresolved rules, or else the full matched
+styles. `workspace_stylesheet_list.tsx` renders each file once with its
+sentences and selector lists nested in its item, like the approved card.
+`evidence_details.tsx` holds the shared comparison heading and the files and
+exclusions block, so `workspace_evidence.tsx` and a page's Details render the
+same markup; `workspace_evidence.tsx` keeps ignored content and the status
+lines separate. The heading names the branch point only when its name is
+known; an empty or blank name leaves the heading alone. An embedded catalogue
+has no name, because `viewerContext` supplies an empty one, so its Details
+keep the rest of the evidence without that sentence. `workspace_data.ts`
+passes the shell's known name to `publicWorkspace`. A workspace that a served
+or exported shell builds from public data, before its private or inert
+workspace arrives, therefore keeps the sentence while that data loads.
+A workspace built from the published catalogue projects the
+selected views' catalogue `resourceEvidence` through
+`../viewer/public_workspace_views.ts`. A whole-document page has no workspace:
+`page_evidence_data.ts` reads its status and one evidence record from the
+published page record, or from live `pageEvidence` for a private catalogue,
+and `page_evidence.tsx` renders them in the page's `details.tsx` panel with the
+page wording. `views.tsx` shows that status beside the page title.
 
 A live entry-scoped fallback never derives cross-entry Usage from `omitted`
 views: `use_workspace_data.ts` exposes loading until matching private evidence
@@ -257,13 +291,7 @@ for rendering without a store; mounted shells supply every current key.
 Versioned historical selection adopts new evidence and becomes unavailable if
 that exact snapshot disappears. A removed record without an explicit identity
 can be adopted only while its complete metadata remains unchanged; otherwise
-the document reload boundary preserves coherent preview bytes.
-`workspace_evidence.tsx` renders linked and inline styles in the same Details
-panel. `workspace_style_evidence.ts` unions retained inline selectors into
-outcome groups and recognizes page-style exclusion only when no selected view
-retains inline evidence. Linked exclusions precede page exclusions and the
-entry-kind terminal no-changes line. A shared-component note requires a real
-affected-component relationship, never inline exclusion alone.
+the existing document reload boundary preserves coherent preview bytes.
 Static export uses `src/standalone/static_workspace_evidence.ts` to read inert
 workspace JSON from a destination shell in the mounted deployment, validating
 the response route, compact catalogue reference, and delivery identities against

@@ -7,6 +7,10 @@ import {
 
 import type { Compilation } from "../../build/compile.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
+import {
+  isGenerationWarning,
+  type GenerationWarning,
+} from "../../build/warning_generation.js";
 import { timingArguments } from "../../diagnostics/timings.js";
 import type { PreparedReviewRepository } from "../../review/prepare.js";
 import type { CatalogueChangeClassification } from "../classification_result.js";
@@ -31,6 +35,7 @@ export class BackgroundCompilation {
   constructor(
     runtime: ComponentRuntime,
     existing?: Compilation,
+    private readonly onWarning?: (event: GenerationWarning) => void,
     createWorker: (url: URL, options: WorkerOptions) => Worker = (
       url,
       options,
@@ -68,9 +73,13 @@ export class BackgroundCompilation {
           compilation: Compilation;
           snapshot?: CatalogueChangeClassification;
           error?: string;
+          generation?: unknown;
+          warning?: unknown;
         }) => {
           if (this.closed) return;
           if (message.type === "compiled") resolve(message.compilation);
+          if (message.type === "warning" && isGenerationWarning(message))
+            this.onWarning?.(message);
           if (message.type === "classified") {
             this.classification?.resolve(message.snapshot);
             this.classification = undefined;

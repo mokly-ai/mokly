@@ -1,7 +1,7 @@
 import type { ColorScheme, Viewport } from "../data/axes.js";
 import type { ManifestEntry } from "../registry/types.js";
 
-import type { ReviewResultV6 } from "./component_types.js";
+import type { ReviewResultV7 } from "./component_types.js";
 
 /** Text or binary bytes retained in one static Review artifact. */
 export type ReviewArtifactContent = string | Uint8Array;
@@ -11,9 +11,24 @@ export type ReviewState =
   "added" | "changed" | "ignored-only" | "removed" | "unchanged";
 
 /** Potential impact from the changed rules of one reachable stylesheet. */
+export interface CssRuleAttribution {
+  ruleKey?: string;
+  status: "matched" | "unresolved";
+  selectors: readonly string[];
+  changedComponentPaths: readonly string[];
+  pageSelectors: readonly string[];
+}
+
+export interface CssPageEvidence {
+  selectors: readonly string[];
+  unresolved?: true;
+}
+
 export interface DependencyAnalysis {
   status: "matched" | "unresolved";
   selectors: readonly string[];
+  rules: readonly CssRuleAttribution[];
+  pageEvidence?: CssPageEvidence;
 }
 
 /** A changed resource retained as dependency evidence. */
@@ -35,13 +50,16 @@ export type InlineStyleEvidence =
   | { status: "excluded" };
 
 /** One view comparison, addressed only by its axes. */
-export interface ViewReview {
+export interface ResourceEvidence {
+  reasons?: readonly DependencyReason[];
+  excludedResources?: readonly ExcludedResource[];
+}
+
+export interface ViewReview extends ResourceEvidence {
   colorScheme: ColorScheme;
   ignoredIds: readonly string[];
   /** Present exactly when the view's actual comparison material differs. */
   material?: true;
-  reasons?: readonly DependencyReason[];
-  excludedResources?: readonly ExcludedResource[];
   inlineStyles?: InlineStyleEvidence;
   state: ReviewState;
   viewport: Viewport;
@@ -59,11 +77,14 @@ export interface ScreenResourceEvidence {
   views: readonly ViewResourceEvidence[];
 }
 
+/** Single-document evidence, outside visual comparison records. */
+export interface PageResourceEvidence extends ResourceEvidence {
+  path: string;
+}
+
 /** One stable screen identity comparison. */
 export interface ScreenReview {
-  dependencies: readonly string[];
   path: string;
-  sharedImpact: readonly string[];
   state: ReviewState;
   title: string;
   views: readonly ViewReview[];
@@ -85,4 +106,4 @@ export interface ReviewArtifact {
 }
 
 /** The only accepted comparison payload. */
-export type ReviewResult = ReviewResultV6;
+export type ReviewResult = ReviewResultV7;

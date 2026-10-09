@@ -30,6 +30,14 @@ export function selectDocument(
   );
 }
 
+/** Keep all allowed matches for catalogue-wide CSS membership. */
+export function matchingElements(
+  query: Selector[][],
+  document: CssDocument,
+): CssElement[] {
+  return selectDocument(query, document);
+}
+
 function queryDocument<T>(
   query: Selector[][],
   document: CssDocument,

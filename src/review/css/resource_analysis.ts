@@ -1,16 +1,25 @@
-/** Cache parsing and contain per-resource failures during evidence reduction. */
-import type { DependencyReason, ExcludedResource } from "@mokly/viewer/data";
+/** Cache parser results and retain rule proof until catalogue attribution completes. */
 import { isStylesheetPath } from "@mokly/viewer/data";
+import type {
+  DependencyReason,
+  ExcludedResource,
+  ResourceEvidence,
+} from "@mokly/viewer/data";
 
 import { documentWorkSync } from "../../diagnostics/timings.js";
 
 import { analyzeStylesheetChange } from "./analyze.js";
 import { ByteBoundedLru } from "./byte_lru.js";
 import { diffCssRules } from "./diff.js";
-import type { CssDocumentPair } from "./document.js";
-import { matchCssRules } from "./match.js";
-import type { CssAnalysisOutcome } from "./match_types.js";
 import { detachParseResult } from "./parse_cache.js";
+import {
+  CssAttribution,
+  outputMatch,
+  type CollectedCssRule,
+} from "./attribution.js";
+import type { CssMatchingPair } from "./containment.js";
+import { CssRuleIdentities } from "./identity.js";
+import { matchCssRules } from "./match.js";
 import { LightningCssRuleParser } from "./rules.js";
 import { CssSegmentAnalysis } from "./segment_analysis.js";
 import {
@@ -19,23 +28,23 @@ import {
   type CssRuleParseResult,
 } from "./types.js";
 
-/** Resource identities and immutable source-side bytes, supplied after confinement. */
+/** Resource bytes are supplied only after confinement and changed-path checks. */
 export interface ChangedResource {
   path: string;
   before?: string;
   after?: string;
 }
 
-/** Optional view evidence is absent when empty, including on historical results. */
-export interface ResourceEvidence {
-  reasons?: readonly DependencyReason[];
-  excludedResources?: readonly ExcludedResource[];
+export interface ResourceMatchingPair extends CssMatchingPair {
+  /** The stylesheets that apply in this document; omitted for standalone callers. */
+  paths?: ReadonlySet<string>;
 }
 
-/** One parser cache per classification, shared across paths, views and source sides. */
 export class CssResourceAnalysis {
   private readonly parsed: ByteBoundedLru<CssRuleParseResult>;
   readonly parser: CssRuleParser;
+  private readonly identities = new CssRuleIdentities();
+  readonly attribution = new CssAttribution();
 
   constructor(
     parser: CssRuleParser = new LightningCssRuleParser(),
@@ -75,10 +84,9 @@ export class CssResourceAnalysis {
     return result;
   }
 
-  /** Narrow only the supplied changed, reachable resources; never discover files here. */
   analyze(
     resources: readonly ChangedResource[],
-    documents: readonly CssDocumentPair[],
+    documents: readonly ResourceMatchingPair[],
   ): ResourceEvidence {
     const reasons: DependencyReason[] = [];
     const excludedResources: ExcludedResource[] = [];
@@ -89,39 +97,23 @@ export class CssResourceAnalysis {
         reasons.push({ kind: "dependency", path: resource.path });
         continue;
       }
-      let outcomes: CssAnalysisOutcome[];
+      let rules: CollectedCssRule[];
       try {
-        outcomes = (documents.length ? documents : [{}]).map((pair) =>
-          analyzeStylesheetChange(
-            resource.before ?? "",
-            resource.after ?? "",
-            pair,
-            this.parser,
-            this.matcher,
-          ),
-        );
+        rules = this.rules(resource, documents);
       } catch {
-        outcomes = [
+        rules = [
           {
-            kind: "kept",
             status: "unresolved",
             selectors: this.changedSelectors(resource),
+            matches: [],
           },
         ];
       }
-      const kept = outcomes.filter((outcome) => outcome.kind === "kept");
-      if (kept.length)
+      if (rules.length)
         reasons.push({
           kind: "dependency",
           path: resource.path,
-          analysis: {
-            status: kept.some((outcome) => outcome.status === "unresolved")
-              ? "unresolved"
-              : "matched",
-            selectors: [
-              ...new Set(kept.flatMap((outcome) => outcome.selectors)),
-            ].sort(),
-          },
+          analysis: this.attribution.record(rules),
         });
       else
         excludedResources.push({
@@ -135,6 +127,40 @@ export class CssResourceAnalysis {
     };
   }
 
+  private rules(
+    resource: ChangedResource,
+    documents: readonly ResourceMatchingPair[],
+  ): CollectedCssRule[] {
+    const result: CollectedCssRule[] = [];
+    for (const pair of documents.length ? documents : [{}]) {
+      if (pair.paths && !pair.paths.has(resource.path)) continue;
+      const analysed = analyzeStylesheetChange(
+        resource.before ?? "",
+        resource.after ?? "",
+        pair,
+        this.parser,
+        this.matcher,
+      );
+      if (analysed.kind === "excluded") continue;
+      if (!analysed.rules.length)
+        return [
+          { status: "unresolved", selectors: analysed.selectors, matches: [] },
+        ];
+      for (const { change, outcome, matches } of analysed.rules) {
+        if (outcome.kind === "excluded") continue;
+        result.push({
+          ruleKey: this.identities.key(change),
+          status: outcome.status,
+          selectors: outcome.selectors,
+          matches:
+            outcome.status === "matched"
+              ? matches.map((match) => outputMatch(match, pair))
+              : [],
+        });
+      }
+    }
+    return result;
+  }
   /** Recover serialized changed selectors without allowing a second failure to escape. */
   private changedSelectors(resource: ChangedResource): readonly string[] {
     try {

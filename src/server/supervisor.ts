@@ -1,15 +1,17 @@
 /** Restart supervision retains ownership until each child's cleanup completes. */
 
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import type { BaselineCatalogue } from "../baseline/catalogue.js";
 import type { ComponentRuntime } from "../build/component_runtime.js";
+import type { GenerationWarning } from "../build/warning_generation.js";
 import { bindTimings, timeSync } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
 import type { BaselineSelection } from "../review/repository.js";
 
 import { ManagedChild, type ChildShutdownTimings } from "./child_lifecycle.js";
 import { NodeChildFactory, type ChildFactory } from "./child_process.js";
+import { forwardChildReport } from "./child_reports.js";
 import type { ComponentChangeSnapshot } from "./component_change_types.js";
 import { componentRuntimeMessage } from "./controls/runtime_ipc.js";
 import {
@@ -18,7 +20,6 @@ import {
 } from "./demand/observation.js";
 import {
   childUpdateMessage,
-  parseChildDiagnosticMessage,
   type ChangesStatus,
   type CatalogueUpdateKind,
 } from "./update_messages.js";
@@ -27,7 +28,7 @@ import {
 export interface ProcessSupervisor {
   /** Deliver a checked result and keep its list for this config's next child. */
   completeCatalogue?(
-    manifest: ManifestV9,
+    manifest: ManifestV10,
     generation: string,
     assetClosure: readonly string[],
   ): void;
@@ -35,6 +36,7 @@ export interface ProcessSupervisor {
   discardCheckedClosure?(): void;
   onForeground?(callback: (active: boolean) => void): void;
   onDiagnostic?(callback: (message: string) => void): void;
+  onWarning?(callback: (event: GenerationWarning) => void): void;
   onPreviewResources?(
     callback: (observation: PreviewObservation) => void,
   ): void;
@@ -93,6 +95,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   #checkedClosure: readonly string[] | undefined;
   #foreground: ((active: boolean) => void) | undefined;
   #diagnostic: ((message: string) => void) | undefined;
+  #warning: ((event: GenerationWarning) => void) | undefined;
   #previewResources: ((observation: PreviewObservation) => void) | undefined;
 
   constructor(
@@ -133,9 +136,8 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
     this.#child = child;
     child.onMessage(
       bindTimings((message: unknown) => {
-        const diagnostic = parseChildDiagnosticMessage(message);
-        if (diagnostic && this.#child === child)
-          this.#diagnostic?.(diagnostic.message);
+        if (this.#child === child)
+          forwardChildReport(message, this.#diagnostic, this.#warning);
         if (
           message &&
           typeof message === "object" &&
@@ -244,7 +246,7 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   }
 
   completeCatalogue(
-    manifest: ManifestV9,
+    manifest: ManifestV10,
     generation: string,
     assetClosure: readonly string[],
   ): void {
@@ -267,6 +269,9 @@ export class ReadyProcessSupervisor implements ProcessSupervisor {
   }
   onDiagnostic(callback: (message: string) => void): void {
     this.#diagnostic = callback;
+  }
+  onWarning(callback: (event: GenerationWarning) => void): void {
+    this.#warning = callback;
   }
   onPreviewResources(
     callback: (observation: PreviewObservation) => void,

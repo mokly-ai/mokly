@@ -10,7 +10,6 @@ import {
   reviewIgnoreId,
   reviewInvalid,
   reviewObject,
-  reviewPath,
   reviewPreviousPath,
   reviewSides,
   reviewState,
@@ -22,7 +21,7 @@ import {
   validateResourceEvidence,
 } from "./result_resources.js";
 
-const screenKeys = ["dependencies", "path", "sharedImpact", "state", "title"];
+const screenKeys = ["path", "state", "title"];
 export function validateReviewScreen(
   value: unknown,
   component = false,
@@ -35,8 +34,6 @@ export function validateReviewScreen(
   );
   reviewEntryPath(record.path);
   reviewString(record.title);
-  reviewStrings(record.dependencies, reviewPath);
-  reviewStrings(record.sharedImpact, reviewPath);
   reviewState(record.state);
   reviewSides(record);
   requireEqual(record.after ?? record.before, {

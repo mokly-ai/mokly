@@ -21,7 +21,7 @@ test("manifest emits variantOf only for screen variants", () => {
     variant?.kind === "screen" ? variant.variantOf : undefined,
     "welcome",
   );
-  assert.equal(parseManifest(manifest).schemaVersion, 9);
+  assert.equal(parseManifest(manifest).schemaVersion, 10);
 });
 
 test("manifest and hierarchy keep authored sibling variant order", () => {
@@ -79,7 +79,6 @@ for (const kind of ["screen", "component"] as const)
 
     const wrongKind = structuredClone(original);
     wrongKind.entries.push({
-      declaredDependencies: [],
       description: "Page",
       kind: "page",
       path: "page-parent",
@@ -134,7 +133,6 @@ test("component v8 parents require at least one variant", () => {
 test("current non-screen manifest entries reject variant fields", () => {
   const manifest = mutableManifest(variantManifest());
   const page: MutableEntry = {
-    declaredDependencies: [],
     description: "Page",
     kind: "page",
     path: "page",
@@ -158,7 +156,6 @@ function variantManifest() {
 
 function componentVariantManifest() {
   const definitions = defineComponent({
-    dependencies: [],
     description: "Action",
     path: "action",
 
@@ -208,7 +205,6 @@ function resolvedScreen(id: string, variantOf?: string): ResolvedRegistryEntry {
         path: id,
         title: id,
         description: `${id} screen`,
-        dependencies: [],
         relatedDocs: [],
         desktop: id,
         mobile: id,

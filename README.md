@@ -110,13 +110,13 @@ export default defineScreen({
   description: "The account landing screen.",
   mobile: <main>Account on mobile</main>,
   desktop: <main>Account on desktop</main>,
-  dependencies: [],
   relatedDocs: [],
 });
 ```
 
-Replace the example `<main>` nodes with your product components, then list their
-source files or directories in `dependencies`. An entry file ends in
+Replace the example `<main>` nodes with your product components. Rendered
+resources and output determine Changes. Components declare public CSS with
+`stylesheets`. An entry file ends in
 `.mockup.ts` or `.mockup.tsx` and exports its definitions from any export,
 default or named. Mokly derives everything else from the file's place: this
 screen is `account/account-home`, it lives at `/view/account/account-home/`,
@@ -138,12 +138,12 @@ For this configuration, `build` writes only under `specs/generated/mokly-generat
 assets stay under `specs/generated/` and are served and exported in place. To
 commit generated output instead, commit every generated file. `check`
 compares compiled output only when the generated tree is indexed; a partial
-index fails with both remedies. A committed baseline's v9 inventory must
+index fails with both remedies. A committed baseline's v10 inventory must
 match its Git blobs; otherwise the baseline is rebuilt.
 Build and Serve do not inspect head tracking: a new route builds successfully,
 and `check` then lists it under `untracked:` until staged. Only `check` rejects
 an indexed `.mokly-cache/` path.
-Current output uses manifest v9. The manifest records the referenced asset closure and Git blob-hash
+Current output uses manifest v10. The manifest records the referenced asset closure and Git blob-hash
 inventory. Earlier baseline formats make Changes unavailable under
 [baseline compatibility](./docs/protocol/mokly-baseline-compatibility.md).
 
@@ -204,6 +204,10 @@ Publish requires a clean Git checkout. It ignores Git-ignored files, its own
 output directory, and Mokly caches and temporary files. Committed generated
 files must match the build; derived generated output must be ignored by Git.
 
+Ignored-input warnings use the same channel as link-control warnings. They
+name the affected page or authored input. `--strict` counts every warning
+before Build, Check, export or publish can write or upload output.
+
 Detailed command references:
 
 - [`serve`](./docs/guides/cli/serve.md)
@@ -234,12 +238,29 @@ stylesheets, fonts, and full-document markup. Mokly resolves React from the
 consumer repository and bundles all authoring inputs into one build-time graph,
 so component trees use one React runtime.
 Use `stylesheets` for separately authored public CSS. [Imported CSS delivery](./docs/protocol/mokly-imported-styles.md)
-compiles CSS Modules, per-root stylesheets and assets; fragment renderers
-receive ordered links for the renderer and exporting entry CSS after any
-configured links. Pages link their own CSS explicitly. An optional consumer
-PostCSS module processes imported CSS; see the Styles guide for plugin setup.
+compiles CSS Modules, per-root stylesheets and assets. Fragment renderers
+receive links under the [renderer stylesheet contract](./docs/protocol/mokly-rendering.md#renderer-stylesheets),
+which owns the complete list and its order. Pages link their own CSS explicitly.
+An optional consumer PostCSS module processes imported CSS; see the Styles guide
+for plugin setup.
 The basic consumer example imports a CSS Module, a PNG-backed stylesheet, and
 preflight-free Tailwind v4 utilities to exercise this delivery end to end.
+
+## Delivery Status
+
+The [implementation plans](./plans/) lists active and completed work.
+
+Removal of baseline compatibility below is implemented in
+[M23B](./plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
+Uniform CSS attribution is implemented in Milestone 19 of the
+[source-path removal plan](./plans/remove-source-path-evidence.md); comparison
+details for screens and saved views are implemented in Milestone 20, and for
+whole-document pages in Milestone 20B. Configured, declared and imported stylesheets
+use the same [CSS rule contract](./docs/protocol/mokly-css-attribution-rules.md).
+Components change through own-page matches kept after nested filtering. Outside matches
+and unresolved rules give a page its own row. Stylesheet owner records have no
+role in that decision.
 
 ## Review and share
 
@@ -305,7 +326,6 @@ appearance with any preview scheme. See the
 - [Variants](./docs/protocol/mokly-variants.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
-- [Implementation plans](./plans/)
 - [Agent and contributor rules](./AGENTS.md) with the detailed rule docs under [`docs/dev`](./docs/dev/)
 - [Changelog](./CHANGELOG.md)
 
@@ -318,8 +338,7 @@ one [unified layout](./docs/protocol/mokly-unified-output.md) for generated page
 imported styles and assets. The portable
 [viewer namespace](./docs/protocol/mokly-viewer-namespace.md) is `mokly-viewer/`.
 Older receivers reject the new upload format. Mokly Cloud needs the documented
-receiver and viewer update before publication. Progress remains in the
-[implementation plans](./plans/).
+receiver and viewer update before publication.
 
 ## Develop Mokly
 
@@ -386,6 +405,10 @@ suite, dependency checks, and Rust checks. See the
 functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
+
+Large ordinary-preview browser fixtures build in an owned Node child, then
+serve that real artifact in the worker. This keeps Playwright's diagnostic
+stack capture out of the build while retaining the same catalogue and checks.
 
 ESLint requires shared directory constants, locale-independent source ordering,
 and unique imports. Tests probe every covered source folder through the real
@@ -508,10 +531,10 @@ for the review rules and temporary Braces exception.
 - [`src/build/mock_link_routes.ts`](./src/build/mock_link_routes.ts) —
   identity-derived logical-link targets and portable artifact URLs.
 - [`src/components/manifest_entry_validation.ts`](./src/components/manifest_entry_validation.ts)
-  — manifest-v9 component-entry validation.
+  — manifest-v10 component-entry validation.
 - [`src/registry/changed_paths.ts`](./src/registry/changed_paths.ts) and
   [`manifest_validation.ts`](./src/registry/manifest_validation.ts) —
-  identity-keyed change membership and the strict baseline-v9 boundary.
+  identity-keyed change membership and the strict baseline-v10 boundary.
 - [`src/baseline/compatibility.ts`](./src/baseline/compatibility.ts) and
   [`src/server/classification_result.ts`](./src/server/classification_result.ts)
   — the typed earlier-baseline outcome from admission through Serve.

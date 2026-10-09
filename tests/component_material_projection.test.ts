@@ -5,7 +5,6 @@ import { test } from "node:test";
 
 import { compileCatalogue } from "../dist/build/compile.js";
 import { loadConfig } from "../dist/config/load.js";
-import { ComponentDependencyPolicy } from "../dist/review/component_metadata.js";
 import { prepareComponentProjection } from "../dist/review/component_projection_resources.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
@@ -27,10 +26,7 @@ test("projected discovery applies root-specific ownership before reading", async
     extra:
       'const pane2 = defineComponent({ ...metadata, path: "pane2", title: "Pane2", description: "Nested receiver", propSchema: { kind: "object", properties: {} }, slots: ["children"], render: (props) => <section>{props.children}</section>, variants: [{ slug: "default",  title: "Default", props: { children: <b>Saved</b> } }] });',
     exports: "...action.entries, ...pane.entries, ...pane2.entries,",
-  }).replace(
-    'path: "pane", title:',
-    'path: "pane", dependencies: ["mockups/image.svg", "mockups/components/image.svg"], ownedDependencies: ["mockups/image.svg", "mockups/components/image.svg"], title:',
-  );
+  });
   const fixture = await createFixture(source);
   t.after(() => removeFixture(fixture));
   await fs.writeFile(path.join(fixture.mockupsDir, "image.svg"), "image");
@@ -46,8 +42,20 @@ test("projected discovery applies root-specific ownership before reading", async
       (item) => item.path === (id === "pane" ? "pane/default" : id),
     );
     assert.ok(entry);
-    const view = generatedViews(entry)[0];
-    assert.ok(view);
+    const generated = generatedViews(entry)[0];
+    assert.ok(generated?.usage);
+    const view = {
+      ...generated,
+      usage: {
+        ...generated.usage,
+        resources: [
+          {
+            path: id === "pane" ? "components/image.svg" : "image.svg",
+            componentIds: ["pane"],
+          },
+        ],
+      },
+    };
     assert.ok(view.usage?.slots.some((slot) => slot.owner.kind === "entry"));
     const reads: string[] = [];
     const materialReader = () =>
@@ -71,11 +79,6 @@ test("projected discovery applies root-specific ownership before reading", async
       componentAware: false,
       beforeReader,
       afterReader,
-      dependencies: new ComponentDependencyPolicy(
-        compilation.manifest,
-        compilation.manifest,
-        [],
-      ),
       changed,
       prefix: "mockups",
       resources: new ResourceComparison(
@@ -87,7 +90,6 @@ test("projected discovery applies root-specific ownership before reading", async
     };
     const html = await beforeReader.text(view.path);
     const prepared = prepareComponentProjection(
-      context,
       view,
       view,
       html,

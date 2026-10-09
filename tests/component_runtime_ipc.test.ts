@@ -24,7 +24,7 @@ function startup(generatedDir: unknown): object {
     manifest: currentManifest({
       entries: [],
       folders: [],
-      schemaVersion: 9,
+      schemaVersion: 10,
       sourceFiles: [],
     }),
   };
