@@ -326,7 +326,7 @@ receiver and viewer update before publication. Progress remains in the
 For repository development, use the tested Node.js version in
 [`.nvmrc`](./.nvmrc), npm 11.21.0 (the `packageManager` version in
 `package.json`), the Rust toolchain in
-[`rust-toolchain.toml`](./rust-toolchain.toml) (Rust 1.95.0 with rustfmt and
+[`rust-toolchain.toml`](./rust-toolchain.toml) (Rust 1.99.0 with rustfmt and
 Clippy), and Chromium for the browser suite. With nvm, run `nvm install` in
 the repository before the npm commands below to install and use that Node.js
 version. A global npm install applies only to the active Node.js version.
