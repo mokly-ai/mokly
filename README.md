@@ -433,9 +433,12 @@ A failed GitHub cancellation checks the run state. An ended run gets an
 information line. Logs stay under `.context/`.
 Availability checks name all missing programs with install hints.
 Every xtask child removes `BLACKSMITH_ORG_TOKEN` from its environment.
-It also removes the shared Git repository variable list, so hooks, rebase
-commands and aliases cannot redirect its working directory. Request-specific
-temporary indexes still apply. Git network and prompt settings stay.
+It also removes the shared Git repository variable list. These variables select
+which repository, work tree and index Git uses. Git in each child then finds
+its repository from the child's own working directory. Request-specific
+temporary indexes still apply. Settings carried by `GIT_CONFIG_PARAMETERS` or
+`GIT_CONFIG_COUNT`, including `git -c` settings, are removed with the list.
+Other variables, such as `GIT_ASKPASS` and `GIT_SSH_COMMAND`, stay.
 The source check names any unsupported nested repository or worktree path.
 Ignore or remove that path before retrying. The repository ignores agent
 worktrees under `.claude/worktrees/`.

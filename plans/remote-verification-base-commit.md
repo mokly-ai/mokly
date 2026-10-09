@@ -380,9 +380,11 @@ under `.context/remote-verification-base-commit/`.
 
 ## Milestone 5: Git repository variables (review finding 1)
 
-Xtask children use their requested directory without inherited Git repository
-variables. Linked-worktree snapshot commands preserve the checkout and its
-index when a hook, rebase command or alias starts xtask.
+Xtask removes inherited Git repository variables from its children. These
+variables select which repository, work tree and index Git uses. Git in each
+child then finds its repository from the child's own working directory.
+Linked-worktree snapshot commands preserve the checkout and its index when a
+hook, rebase command or alias starts xtask.
 
 Evidence: `.context/remote-verification-base-commit/finding1.md`.
 
@@ -420,13 +422,17 @@ Evidence: `.context/remote-verification-base-commit/finding1.md`.
 - [x] Commit with a Conventional Commits title of at most 50 characters that
       names finding 1. Keep it unpushed for the complete gate. After the gate
       passes, record the completed TODOs and push. Keep all evidence ignored.
-- [ ] After the push, the user reviews the complete local diff against
-      `origin/main` with
+- [ ] After the push, a reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)
-      and reports findings. Keep the review read-only. The implementer then
-      applies the [review-fix rule](../docs/dev/review.md): fix the
-      `Auto-fix: yes` findings, run checks, commit and push, re-review once,
-      fix new `Auto-fix: yes` findings once more, then stop and report the rest.
+      to review the complete local diff against `origin/main` and reports the
+      findings. Keep the review read-only. The implementer then applies the
+      review-fix rule in [the review rules](../docs/dev/review.md): fix the
+      `Auto-fix: yes` findings, run the checks, commit and push, re-review
+      once, fix any new `Auto-fix: yes` findings once more, then stop and
+      report the rest. Add each open finding as one line under this TODO.
+
+  - Finding 5 (Low): default status rewrites raw index bytes with `core.untrackedCache=true` or `feature.manyFiles=true`; `commit.gpgsign=true` also fails (finding 3). Recommend A: add `--untracked-files=all` to the snapshot capture status call.
+  - Finding 7 (Low): `isolated_environment` can pass when the child filter matches no test. Recommend A: require `running 1 test` in child output.
 
 ## Post-merge follow-up (non-blocking)
 

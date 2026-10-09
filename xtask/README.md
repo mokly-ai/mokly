@@ -147,7 +147,9 @@ Every xtask child removes the shared secret environment list, which currently
 contains only `BLACKSMITH_ORG_TOKEN`, and the shared Git repository variable
 list. This keeps hooks, `git rebase -x` and aliases from redirecting children to
 the caller's repository. Remote requests set their temporary index afterwards.
-Git network and prompt settings stay. Key login still uses standard input.
+Settings carried by `GIT_CONFIG_PARAMETERS` or `GIT_CONFIG_COUNT`, including
+`git -c` settings, are removed with the list. Other variables, such as
+`GIT_ASKPASS` and `GIT_SSH_COMMAND`, stay. Key login still uses standard input.
 Availability checks name all missing programs in one diagnostic, in the order
 `blacksmith`, `rsync`, `ssh`, with their install hints.
 Warmup uses the Testbox workflow from `main`.

@@ -53,21 +53,6 @@ Login saves the key in `~/.blacksmith/credentials`.
 It replaces any saved login for the same organization.
 The key must never appear in arguments, logs, remote commands or reports.
 
-### Child Environment
-
-`SECRET_VARIABLES` defines secret variables for xtask children. It currently
-contains only `BLACKSMITH_ORG_TOKEN`.
-`GIT_REPOSITORY_VARIABLES` holds the 15 repository-local names from
-`git rev-parse --local-env-vars` in Git 2.50.1. Git can export these variables
-to hooks, `git rebase -x` commands and `!` aliases in linked worktrees.
-Inherited repository selection can redirect snapshot commands to the checkout's
-index or make test Git commands alter its config.
-Every local runner and remote process request removes both lists from its
-child environment. This includes helpers such as `kill` and Rust test Git
-requests. Children then use their requested working directory.
-Remote requests set `GIT_INDEX_FILE` only for the three snapshot tree-build
-requests, after removing the inherited list. Other variables stay, including
-network and prompt settings such as `GIT_ASKPASS` and `GIT_SSH_COMMAND`.
 Key login uses standard input, never a child environment variable.
 Explicit remote mode can use the current CLI login when the variable is unset
 or empty. Automatic mode selects local execution in that case.
@@ -84,3 +69,23 @@ Testbox sessions in `/etc/environment`. Do not forward the caller's environment.
 GitHub Actions always uses local execution for the complete gate.
 An explicit remote request there fails. This boundary also applies to release
 publishing, even if an org key is present.
+
+### Child Environment
+
+`SECRET_VARIABLES` defines secret variables for xtask children. It currently
+contains only `BLACKSMITH_ORG_TOKEN`.
+`GIT_REPOSITORY_VARIABLES` holds the 15 repository-local names from
+`git rev-parse --local-env-vars` in Git 2.50.1. Git can export these variables
+to hooks, `git rebase -x` commands and `!` aliases in linked worktrees.
+These variables select which repository, work tree and index Git uses.
+Inherited repository selection can redirect snapshot commands to the checkout's
+index or make test Git commands alter its config.
+Every local runner and remote process request removes both lists from its
+child environment. This includes helpers such as `kill` and Rust test Git
+requests. Git in each child then finds its repository from the child's own
+working directory.
+Remote requests set `GIT_INDEX_FILE` only for the three snapshot tree-build
+requests, after removing the inherited list. Settings carried by
+`GIT_CONFIG_PARAMETERS` or `GIT_CONFIG_COUNT`, including `git -c` settings,
+are removed with the list. Other variables, such as `GIT_ASKPASS` and
+`GIT_SSH_COMMAND`, stay.
