@@ -413,11 +413,11 @@ Evidence: `.context/remote-verification-base-commit/finding1.md`.
       and unchanged state afterwards. Never use this checkout or its hooks.
 - [x] Run xtask tests, Rust fmt, Clippy, both length lints, the repository
       suite, Markdown and protocol tests, and `npm run format:check`.
-- [ ] Run the complete default automatic gate from the unpushed fix commit.
+- [x] Run the complete default automatic gate from the unpushed fix commit.
       Require the pushed branch tip as base, ahead 1, 11/11 commands, 9/9
       reports, a passed aggregate, an unchanged tree and cleanup=0. Save
       `finding1-gate.log`. Require no box, snapshot or extra worktree remains.
-- [ ] Commit with a Conventional Commits title of at most 50 characters that
+- [x] Commit with a Conventional Commits title of at most 50 characters that
       names finding 1. Keep it unpushed for the complete gate. After the gate
       passes, record the completed TODOs and push. Keep all evidence ignored.
 - [ ] After the push, the user reviews the complete local diff against
