@@ -33,7 +33,7 @@ struct Checkout {
 
 /// Capture status before reading the index, after Git's normal refresh.
 fn checkout(repository: &Repository, workspace: &Path, git_directory: &Path) -> Checkout {
-    let status = repository.at(workspace, &["status", "--porcelain=v1"]);
+    let status = repository.at(workspace, &["status", "--porcelain=v1", "--untracked-files=all"]);
     Checkout {
         head: repository.at(workspace, &["rev-parse", "HEAD"]),
         index: fs::read(git_directory.join("index")).unwrap(),

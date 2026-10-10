@@ -463,7 +463,7 @@ Evidence: `.context/remote-verification-base-commit/milestone6.md`.
 - [x] Fix finding 7 in the first commit with Decisions 11 and 12 and this
       skeleton. Record a wrong caller name passing before the guard and failing
       afterwards. Restore the caller and require `running 1 test`.
-- [ ] Fix finding 5 in its own commit. Record both snapshot regressions with
+- [x] Fix finding 5 in its own commit. Record both snapshot regressions with
       global untracked cache failing before the status flag and passing after
       it. Disable repository variable removal briefly and require both to fail.
       Restore production bytes and keep the raw index comparisons.
