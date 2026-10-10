@@ -2162,6 +2162,10 @@ before the push, stop and report; D2 then becomes B. D7 and D8 belong to the UI
 agent. D11 retains main's documentation guard and records its exact failures
 for approval. D12 makes no change to PR #182 or any other PR.
 
+User decision (2026-10-10): AP8 option A. Delete #179's `src/review/css/normalized_ranges.ts` and `src/components/comparison_stylesheets.ts`, which have no production caller after D6. Port their main tests to `PageAnalysis.stylesheetEdits` with unchanged expected values. AP1–AP7 and AP9 wait for the user.
+
+Supervisor decision (2026-10-10), after the user questioned compatibility code: add no compatibility for v10 `styles` fields from unreleased main. npm `latest` 0.14.0 writes v9, so no released version writes them. The PR #158 preview, whose baseline current main builds, fails with `…styles: unknown field` until the merge. It is not a required check. Condition: release PR #182 waits for #158 (D12).
+
 - [x] Audit and merge `origin/main` once with two parents. Resolve each path,
       inspect every auto-merged path changed on both sides, review all remerge
       paths, audit deletions, and freeze the merge SHA before follow-up commits.
@@ -2181,6 +2185,9 @@ for approval. D12 makes no change to PR #182 or any other PR.
       affected tests. Record every needed main-test change, including D11, in
       `.context/scalable-inline-style-analysis/m15-merge/main-test-approvals.md`.
       Stop for the user's approval before changing expectations or pushing.
+- [x] Discovered: apply AP8's approved cleanup, preserve test expectations,
+      and verify the repository suite and targeted tests. Evidence remains in
+      `.context/scalable-inline-style-analysis/m15-merge/ap8/`.
 - [ ] After approval, apply only approved test changes, run the complete
       pinned-Chromium gate and the four real-server smoke tests, and record
       unrelated flaky tests under the review rule.

@@ -167,6 +167,12 @@ milestone.
     record identifies those links after link rewriting and through Review-ignore;
     renderer-authored links remain page content. Resource and CSS evidence
     remains based on the actual linked files.
+    User decision (2026-10-10): AP8 option A removes the unused
+    `src/components/comparison_stylesheets.ts` (`comparisonStylesheetMaterial`)
+    and `src/review/css/normalized_ranges.ts` (`normalizedOutputRanges`).
+    Production and direct tests use `PageAnalysis.stylesheetEdits` for link
+    removal. CSS membership uses original ranges; no normalized-range rebasing
+    remains. Historical milestone records below retain their original wording.
   - Serve reloads declared stylesheets like configured ones. Exports and
     publication handle them as public resources.
   - This replaces the documented rule "Separate stylesheet loading from review

@@ -1,17 +1,18 @@
 /** Shared ownership-projected resource policy for fast and complete comparisons. */
 import type { GeneratedComponentView } from "@mokly/viewer/data";
 
-import { comparisonStylesheetMaterial } from "../../../dist/components/comparison_stylesheets.js";
 import {
   validateComponentRanges,
   type RenderedRange,
 } from "../../../dist/components/ranges.js";
 import { parseHtml } from "../../../dist/diagnostics/html_parse.js";
 import {
+  applyInlineMaterial,
   inlineMaterialReplacements,
   type InlineMaterialReplacements,
 } from "../../../dist/review/css/inline_rendering.js";
 import { normalizeReviewPair } from "../../../dist/review/ignore.js";
+import { PageAnalysis } from "../../../dist/review/page_analysis.js";
 import { projectedResourceExclusion as recordedResourceExclusion } from "../../../src/review/component_resource_exclusion.js";
 
 import {
@@ -59,14 +60,18 @@ export function prepareComponentProjection(
   root?: string,
   options: ProjectionPreparationOptions = {},
 ): PreparedComponentComparison {
-  const originalBaseRanges = before.usage
-    ? validateComponentRanges(base, before.usage.ranges)
-    : undefined;
-  const originalHeadRanges = after.usage
-    ? validateComponentRanges(head, after.usage.ranges)
-    : undefined;
-  base = comparisonStylesheetMaterial(base, before.usage, root).html;
-  head = comparisonStylesheetMaterial(head, after.usage, root).html;
+  const basePage = new PageAnalysis(base, before.path, before.usage);
+  const headPage = new PageAnalysis(head, after.path, after.usage);
+  const originalBaseRanges = before.usage ? basePage.ranges : undefined;
+  const originalHeadRanges = after.usage ? headPage.ranges : undefined;
+  base = applyInlineMaterial(base, {
+    replacements: basePage.stylesheetEdits(root),
+    appendix: "",
+  });
+  head = applyInlineMaterial(head, {
+    replacements: headPage.stylesheetEdits(root),
+    appendix: "",
+  });
   const baseRanges = before.usage
     ? validateComponentRanges(base, before.usage.ranges)
     : undefined;

@@ -1,9 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { comparisonStylesheetMaterial } from "../dist/components/comparison_stylesheets.js";
 import { parseHtmlLinks } from "../dist/html_links.js";
-import { viewRoute } from "../packages/viewer/dist/data.js";
+import { applyInlineMaterial } from "../dist/review/css/inline_rendering.js";
+import { PageAnalysis } from "../dist/review/page_analysis.js";
+import {
+  generatedResourcePath,
+  viewRoute,
+} from "../packages/viewer/dist/data.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { compareStylesheetSources } from "./helpers/component_stylesheet_comparison.js";
@@ -39,7 +43,17 @@ for (const shared of [false, true])
       child.componentPaths,
       shared ? ["action", "pane"] : ["action"],
     );
-    const material = comparisonStylesheetMaterial(html, view, "pane");
+    const page = new PageAnalysis(
+      html,
+      generatedResourcePath(viewRoute(variant.path, "mobile", "light")),
+      view,
+    );
+    const material = {
+      html: applyInlineMaterial(html, {
+        replacements: page.stylesheetEdits("pane"),
+        appendix: "",
+      }),
+    };
     assert.deepEqual(
       parseHtmlLinks(material.html).links.map((link) =>
         link.attributes.get("href"),
