@@ -264,6 +264,10 @@ environments, process-group cleanup, fresh log files, PATH permissions
 and interrupt state order. They also cover the SSH close request, socket path
 and cleanup details. They use readiness signals and expected-state waits.
 They do not assert elapsed time.
+Fixture Git setup and inspection use
+[`git_test_runner.rs`](./src/remote/_tests_/git_test_runner.rs) with an empty
+global config file and system config disabled. Code under test still uses
+`SystemProcess` with its real config. Captured requests record only that code.
 
 ### Key Code
 

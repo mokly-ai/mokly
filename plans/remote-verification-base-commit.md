@@ -467,7 +467,7 @@ Evidence: `.context/remote-verification-base-commit/milestone6.md`.
       global untracked cache failing before the status flag and passing after
       it. Disable repository variable removal briefly and require both to fail.
       Restore production bytes and keep the raw index comparisons.
-- [ ] Fix finding 3 in its own commit. Audit every fixture Git call. Use one
+- [x] Fix finding 3 in its own commit. Audit every fixture Git call. Use one
       test-only runner with an empty global config file, no system config and
       shared variable removal. Keep SystemProcess for code under test and its
       request recording. Record the before and after global and system matrix.

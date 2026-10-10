@@ -8,9 +8,10 @@ use std::thread;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::remote::adapter_support::TestDirectory;
-use crate::remote::contracts::{ClockSleepMock, Git, InterruptRequestedMock, Output};
-use crate::remote::error::{Operation, Result};
+use crate::remote::contracts::{ClockSleepMock, InterruptRequestedMock, Output};
+use crate::remote::error::Result;
 use crate::remote::git_identity::CommitSha;
+use crate::remote::git_test_runner::IsolatedGit;
 use crate::remote::process::{Process, Request, SystemProcess};
 use crate::remote::scripts::SystemScripts;
 
@@ -52,6 +53,8 @@ impl Process for RecordingProcess {
 pub(crate) struct Repository {
     /// Own the containing temporary directory until every child has ended.
     directory: TestDirectory,
+    /// Isolated setup and inspection, never recorded as code-under-test requests.
+    fixture_git: IsolatedGit,
     /// Actual checkout root.
     pub(crate) root: PathBuf,
     /// Git and script boundary under test.
@@ -64,6 +67,7 @@ impl Repository {
     /// Create a repository with one root commit and a local bare origin.
     pub(crate) fn new() -> Self {
         let directory = TestDirectory::new();
+        let fixture_git = IsolatedGit::new(directory.path());
         let root = directory.path().join("repo with space");
         let process = Arc::new(RecordingProcess {
             inner: Arc::new(SystemProcess {
@@ -89,6 +93,7 @@ impl Repository {
         };
         let repository = Self {
             directory,
+            fixture_git,
             root,
             scripts,
             process,
@@ -124,24 +129,9 @@ impl Repository {
         repository
     }
 
-    /// Execute actual Git with separate arguments and retain a successful output.
+    /// Inspect or prepare the fixture with isolated config and no request recording.
     pub(crate) fn at(&self, cwd: &Path, args: &[&str]) -> String {
-        let output = self
-            .process
-            .execute(&Request {
-                program: "git".into(),
-                args: args.iter().map(|value| (*value).into()).collect(),
-                cwd: cwd.to_owned(),
-                operation: Operation::Git,
-                input: None,
-                log: None,
-                cancellable: false,
-                blacksmith: false,
-                git_index: None,
-            })
-            .unwrap();
-        assert!(output.success(), "{args:?}: {}", output.combined());
-        output.stdout
+        self.fixture_git.run(cwd, args)
     }
 
     /// Run Git in the checkout.
@@ -159,7 +149,7 @@ impl Repository {
 
     /// Read the real validated checkout HEAD.
     pub(crate) fn head(&self) -> CommitSha {
-        self.scripts.head().unwrap()
+        CommitSha::read(&self.git(&["rev-parse", "HEAD"])).unwrap()
     }
 
     /// Push a local branch or refspec to the local bare origin.
