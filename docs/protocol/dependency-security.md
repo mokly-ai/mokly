@@ -187,8 +187,9 @@ The current maintenance choices are:
   Mokly's esbuild 0.28.2, but Wrangler 4.117.0 and later depend on Miniflare 5
   alpha releases instead of the Miniflare 4 line (rechecked on 2026-10-10).
   The Miniflare 4 line ended with Miniflare 4.20260730.0 on 2026-07-30, and the
-  npm `latest` tag of Miniflare is a 5.x alpha release, so the pinned Workerd
-  gets no more updates. Start the move when Miniflare 5 ships a release without
+  npm `latest` tag of Miniflare is a 5.x alpha release. Workerd on the
+  Miniflare 4 line therefore stops at 1.20260730.1 (Wrangler 4.116.0) and gets
+  no later updates. Start the move when Miniflare 5 ships a release without
   a prerelease suffix, or by 2026-11-10, whichever comes first. Move Wrangler
   only in a reviewed change that deploys a preview with the new version and
   reviews the overrides below against its Miniflare dependencies.
