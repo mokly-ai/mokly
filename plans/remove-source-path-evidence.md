@@ -2850,7 +2850,7 @@ rules split into `docs/dev`), #172 (Serve keeps the checked closure on reload),
       `Auto-fix: yes` findings, re-review once, and report the rest. Add each
       open finding as one line under this TODO. The review is complete. It has
       no `Auto-fix: yes` finding, so no fix round follows.
-  - [ ] M34 finding 1 (Medium, test): main #138's example snapshot codec rejects two valid forms of this branch's compilation: `resourceSeeds` (encode fails) and warnings with a `subject` (decode fails, so tests compile again). Recommend A: extend the existing codec and its field table and round-trip tests.
+  - [x] M34 finding 1 (Medium, test): main #138's example snapshot codec rejects two valid forms of this branch's compilation: `resourceSeeds` (encode fails) and warnings with a `subject` (decode fails, so tests compile again). Recommend A: extend the existing codec and its field table and round-trip tests. Fixed on branch `calummoore/feat-auto-dependencies-and-shared-impact-v1` (option A).
 
 Evidence: `.context/remove-source-path-evidence/milestone-34.md`.
 

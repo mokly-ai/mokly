@@ -489,6 +489,7 @@ not fresh, it then compiles the example once more in memory and saves the
 result to `.context/verification/example-compilation.json`; when the snapshot
 is still fresh, it skips that compile. Test files that read the
 compiled example load this snapshot instead of compiling the example again. The
+snapshot keeps resource seeds and both route and subject warnings. The
 snapshot stores a key of the example sources, the built package and the
 lockfile, and a test file uses it only while that key still matches. When you
 run one file by hand, for example
