@@ -23,8 +23,8 @@ whose files equal the checkout. The CLI syncs that snapshot. The checkout's
 
 This change covers xtask, the remote verification contract and the xtask
 README. It has no product UI or mockup work. It does not change the Testbox
-workflow, the suite wrapper, the suite reports, the report schema, the
-aggregate script or the Blacksmith CLI.
+workflow, the suite reports, the report schema, the aggregate script or the
+Blacksmith CLI. The suite wrapper changes only to stage the synced box tree.
 
 Contract owners:
 
@@ -115,7 +115,8 @@ of the [Blacksmith remote verification plan](./blacksmith-remote-verification.md
    base commit on every box. The final fingerprint check still reads the
    checkout, so changes made during the run still fail the check.
 5. **Evidence identity.** Suite reports and the aggregate name the base
-   commit, because the wrapper and the strict runners stay unchanged. Xtask
+   commit, because box HEAD stays at the base and the strict runners stay
+   unchanged. Xtask
    prints `information: run=<run> ref=<ref> HEAD=<head> base=<base> ahead=<n>`
    before warmup and adds `base=<base>` to the summary line. It also writes
    `identity.json` with the run, `HEAD`, base, ahead count and fingerprint to
@@ -166,6 +167,24 @@ of the [Blacksmith remote verification plan](./blacksmith-remote-verification.md
     test Git helpers follow the same rule. Remove the list before applying a
     request's temporary index. Retain secret removal. Preserve other variables,
     including Git network and prompt settings. Do not change findings 2 or 3.
+11. **Box index.** On 2026-10-10 the user chose option B for finding 2.
+    The CLI copies files, not the index. After its sync, box HEAD and index
+    name the base. Deleted paths stay cached, and renamed paths appear as a
+    deletion plus an untracked file. After fingerprint validation, the suite
+    wrapper runs `git add -A` through its cleaned command boundary before
+    history, installs or cargo. A failed or signalled staging command fails
+    preparation. Index readers and rename detection then see the synced tree
+    as a committed checkout. HEAD, reports, fingerprint and aggregate commit
+    remain the base. A deletion on disk that is not staged can fail a local
+    check and pass on a box, which checks the tree recorded by `git add -A`.
+12. **Test Git and re-exec.** On 2026-10-10 the user chose finding 3 option B,
+    finding 5 option A and finding 7 option A. One test-only Git runner uses
+    an empty global config file in its temporary directory, disables system
+    config, and removes the shared Git repository and secret variables for
+    every fixture setup and inspection command. Code under test stays on
+    SystemProcess with real global config behavior. Recorded requests include
+    only code under test. Snapshot captures use `--untracked-files=all` and
+    keep raw index byte comparisons. Re-exec helpers require `running 1 test`.
 
 ### Contingency
 
@@ -179,7 +198,7 @@ the user's approval.
 ### Out Of Scope
 
 - Changing the agent rule order or the hosted CI triggers (options A and B).
-- Changes to the Testbox workflow, the suite wrapper, the report schema, the
+- Changes to the Testbox workflow, the report schema, the
   aggregate script or the Blacksmith CLI.
 - Remote execution for a selected `--suite`.
 - A base commit that GitHub no longer has, for example after a force push from
@@ -433,6 +452,62 @@ Evidence: `.context/remote-verification-base-commit/finding1.md`.
 
   - Finding 5 (Low): default status rewrites raw index bytes with `core.untrackedCache=true` or `feature.manyFiles=true`; `commit.gpgsign=true` also fails (finding 3). Recommend A: add `--untracked-files=all` to the snapshot capture status call.
   - Finding 7 (Low): `isolated_environment` can pass when the child filter matches no test. Recommend A: require `running 1 test` in child output.
+
+## Milestone 6: Box index staging and test isolation (review findings 2, 3, 5 and 7)
+
+The box index records the synced tree before suites run. Fixture Git commands
+use isolated config. Snapshot and re-exec regressions retain their assertions.
+
+Evidence: `.context/remote-verification-base-commit/milestone6.md`.
+
+- [x] Fix finding 7 in the first commit with Decisions 11 and 12 and this
+      skeleton. Record a wrong caller name passing before the guard and failing
+      afterwards. Restore the caller and require `running 1 test`.
+- [ ] Fix finding 5 in its own commit. Record both snapshot regressions with
+      global untracked cache failing before the status flag and passing after
+      it. Disable repository variable removal briefly and require both to fail.
+      Restore production bytes and keep the raw index comparisons.
+- [ ] Fix finding 3 in its own commit. Audit every fixture Git call. Use one
+      test-only runner with an empty global config file, no system config and
+      shared variable removal. Keep SystemProcess for code under test and its
+      request recording. Record the before and after global and system matrix.
+- [ ] Fix finding 2 in its own commit. Add wrapper staging after fingerprint
+      validation with the existing failure boundary. Add injected order and
+      failure tests and a real-Git rename, deletion and fingerprint regression.
+      Audit repository index readers. Define the box index contract and update
+      wrapper docs without removing rules or exceeding file caps.
+- [ ] Run xtask tests, Rust fmt, Clippy, both length lints, the repository
+      suite, Markdown and protocol tests, wrapper tests and Prettier. Push
+      exactly the four finding commits after all checks pass.
+- [ ] Merge origin/main locally under the preservation audit. Resolve only
+      the approved index conflict. Preserve the verification index entry,
+      remove our split-list entry and keep main's test logic. Inspect every
+      auto-merged path and save `merge-2-audit.md`. Stop for another conflict.
+- [ ] Run the repository suite and Markdown and protocol tests on the merge
+      tree. Keep the merge unpushed.
+- [ ] Create one unpushed smoke commit. Delete the unlinked completed plan.
+      Rename a capped protocol page that no code or test reads by path, its cap
+      key and every inbound Markdown link. Require both local checks to pass.
+- [ ] Build the contract snapshot at the gate base. Link ignored node_modules.
+      Require real Markdown links and protocol caps to fail before staging and
+      pass after `git add -A`. Remove the snapshot under the cleanup contract.
+- [ ] Run the complete automatic gate with the merge and smoke commit
+      unpushed. Require origin/main as base, the Git ahead count, 11/11 commands,
+      9/9 reports, a passed aggregate, unchanged tree and cleanup=0. Save
+      `finding2-gate.log`. Stop if snapshot failure selects local mode.
+- [ ] Discard only the unpushed smoke commit. Require the tree to equal the
+      merge commit and push the merge. Preserve all pushed commits.
+- [ ] Record final delivery status and completed TODOs after the gate. Require
+      no owned box, snapshot or extra worktree and unchanged checkout config.
+      Run the Markdown checks. Commit with Conventional Commits and push.
+- [ ] After the push, a reviewer uses
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main` and reports the
+      findings. Keep the review read-only. The implementer then applies the
+      review-fix rule in [the review rules](../docs/dev/review.md): fix the
+      `Auto-fix: yes` findings, run the checks, commit and push, re-review
+      once, fix any new `Auto-fix: yes` findings once more, then stop and
+      report the rest. Add each open finding as one line under this TODO.
 
 ## Post-merge follow-up (non-blocking)
 

@@ -16,6 +16,7 @@ use crate::remote::process::Process;
 
 use super::process_adapter_support::{process, request};
 
+/// Re-execute one named test and require the child to run its assertions.
 fn isolated_environment(test_name: &str, variables: &[(&str, &str)]) -> bool {
     const CHILD_MARKER: &str = "MOKLY_XTASK_ADAPTER_ENV_CHILD";
     if env::var(CHILD_MARKER).as_deref() == Ok(test_name) {
@@ -32,6 +33,11 @@ fn isolated_environment(test_name: &str, variables: &[(&str, &str)]) -> bool {
         .unwrap();
     assert!(
         output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+    assert!(
+        String::from_utf8_lossy(&output.stdout).contains("running 1 test"),
         "{}",
         String::from_utf8_lossy(&output.stdout)
     );
