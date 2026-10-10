@@ -197,7 +197,7 @@ test("logical destinations include use cases and reject non-routed ids", async (
 function fragmentSource(mobileAnchor: string, desktopAnchor: string): string {
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: [], relatedDocs: [], useCasePaths: [] };
+const metadata = { relatedDocs: [], useCasePaths: [] };
 export const mockups = [
   defineScreen({ ...metadata, description: "Home", desktop: <main><a href="mock:details#section">Details</a></main>, path: "home", mobile: <main><a href="mock:details#section">Details</a></main>, title: "Home" }),
   defineScreen({ ...metadata, description: "Details", desktop: <main id=${JSON.stringify(desktopAnchor)}>Details</main>, path: "details", mobile: <main id=${JSON.stringify(mobileAnchor)}>Details</main>, title: "Details" })
@@ -208,7 +208,7 @@ export const mockups = [
 function useCaseFragmentSource(): string {
   return `import { defineScreen, defineUseCase } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: [], relatedDocs: [] };
+const metadata = { relatedDocs: [] };
 export const mockups = [
   defineScreen({ ...metadata, description: "Home", desktop: <main><a href="mock:tour#section">Tour</a></main>, path: "home", mobile: <main><a href="mock:tour#section">Tour</a></main>, title: "Home", useCasePaths: [] }),
   defineScreen({ ...metadata, colorSchemes: ["light"], description: "Details", desktop: <main id="section">Details</main>, path: "details", mobile: <main id="section">Details</main>, title: "Details", useCasePaths: ["tour"] }),

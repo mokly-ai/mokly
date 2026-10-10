@@ -43,8 +43,8 @@ for (const storage of ["blobs", "rebuild"] as const)
       await fs.writeFile(
         fixture.configPath,
         (await fs.readFile(fixture.configPath, "utf8")).replace(
-          'sharedImpact: ["notes.md"]',
-          'sharedImpact: ["notes.md"], baselineBuild: [["node", "baseline.mjs"]]',
+          'review: { outDir: ".review" }',
+          'review: { outDir: ".review", baselineBuild: [["node", "baseline.mjs"]] }',
         ),
       );
       const config = await loadConfig(fixture.root);

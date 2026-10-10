@@ -7,14 +7,14 @@ import {
   generatedViews,
   isManifestComponentVariant,
 } from "../packages/viewer/dist/data.js";
-import type { ManifestV9 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV10 } from "../packages/viewer/dist/registry/types.js";
 
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const generated = path.join(repositoryRoot, "examples/basic/mokly-generated");
 const manifest = JSON.parse(
   await fs.readFile(path.join(generated, "mokly-manifest.json"), "utf8"),
-) as ManifestV9;
+) as ManifestV10;
 
 function component(id: string) {
   const entry = manifest.entries.find((entry) => entry.path === id);
@@ -79,7 +79,7 @@ test("view options have one icon presentation and no view-controls scheme contro
 
 test("every owning design and shared sample omits legacy footer and view markup", async () => {
   for (const entry of manifest.entries) {
-    if (!entry.path.startsWith("design-")) continue;
+    if (!entry.path.startsWith("design/")) continue;
     if (
       entry.kind === "screen" ||
       (entry.kind === "component" && isManifestComponentVariant(entry))

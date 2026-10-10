@@ -10,17 +10,19 @@ export const EXAMPLE_SNAPSHOT_PATH =
   ".context/verification/example-compilation.json";
 
 /** Snapshot format version; every key includes it. */
-export const EXAMPLE_SNAPSHOT_SCHEMA_VERSION = 1;
+export const EXAMPLE_SNAPSHOT_SCHEMA_VERSION = 2;
 
 /**
  * Authored inputs of the example compile. The key lists them through Git, and
- * the test helper `copyExampleSources` copies them.
+ * the test helper `copyExampleSources` copies them. Markdown in the example,
+ * the protocol docs and the README links into `plans/`.
  */
 export const EXAMPLE_SOURCE_PATHS = Object.freeze([
   "examples/basic",
   "examples/imported-assets",
   "docs/protocol",
   "README.md",
+  "plans",
 ]);
 
 const BUILT_DIRECTORIES = ["dist", "packages/viewer/dist"];

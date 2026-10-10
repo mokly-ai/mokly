@@ -1,5 +1,10 @@
 # Rebuilt historical baselines
 
+## Delivery Status
+
+Removal of baseline compatibility below is implemented in
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
 This internal module reproduces generated output using the merge-base commit's
 own code and dependencies. Rebuilding executes trusted mainline code. It is not
 a sandbox and must run outside HTTP requests. Public consumers configure the CLI;
@@ -70,7 +75,7 @@ other commits rebuild. After validating cache ancestors, the builder publishes
 It then extracts to `source`, runs commands,
 discovers the historical catalogue root, validates its manifest and output tree,
 moves only `mokly-generated/` and copies the manifest's authored asset closure to
-their repository-relative paths under `output/`. Only v9 content is adopted;
+their repository-relative paths under `output/`. Only v10 content is adopted;
 readers append repository-relative paths beneath `output/`, using the pinned
 historical root. It deletes the remaining extraction and writes
 `complete.json` through an atomic rename, which commits the result.
@@ -87,9 +92,9 @@ Rebuild discovery prefers the requested root, then searches the bounded
 extraction for exactly one valid manifest; details and reader path mapping
 are in [baseline addressing](../../docs/protocol/mokly-baseline-addressing.md).
 `inputs.json` records the requested current repository-relative catalogue
-path; version-2 completion markers record v9, `generated-v9`, the discovered root
-and the commands. Only a complete valid v9 cache with matching inputs and
-recipe is reusable. A valid v9 marker with different settings fails intact
+path; version-2 completion markers record v10, `generated-v10`, the discovered root
+and the commands. Only a complete valid v10 cache with matching inputs and
+recipe is reusable. A valid v10 marker with different settings fails intact
 before validating its output. Every invalid, missing, truncated or earlier-format entry
 is partial and is removed under its lock before rebuilding. Cleanup also removes
 unlocked entries with missing or invalid markers/inputs rather than ranking
@@ -98,7 +103,7 @@ The marker is written to `complete-<uuid>.tmp` and atomically renamed to
 `complete.json` after adoption and source removal. The rename commits the result.
 Committed selection probes only the generated subtree. A stale root-level
 manifest cannot decide availability. After rebuilding, root-level output below
-v9 still returns the typed unavailable outcome without caching it.
+v10 still returns the typed unavailable outcome without caching it.
 `compatibility.ts` retains the exact product line and command behavior.
 
 Lock publication uses a fully written temporary file and an exclusive hard link.
@@ -148,7 +153,7 @@ reads only a completed output tree. Its `BaselineReader` API retains
 repository-relative paths and the pinned commit; it appends the path beneath its cache output. It rejects symlinks at every ancestor and non-regular files. Bulk
 reads use the Git reader's 4,096-object / 48 MiB batch limits, with at most 32
 filesystem reads in flight. The review asset reader additionally applies the
-accepted v9 baseline's source inventory and reserved-name policy. Earlier output
+accepted v10 baseline's source inventory and reserved-name policy. Earlier output
 follows the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
 
@@ -173,11 +178,11 @@ kill-child-on-parent-exit relationship. It must still belong to Mokly's enclosin
 job; otherwise the fixture would exit automatically before testing cancellation.
 
 The approved [cache and moved-root rules](../../docs/protocol/mokly-comparison-inventory.md#cache-acquisition-and-discovery)
-cover retention racing lock acquisition and one v9 catalogue beside stale older
+cover retention racing lock acquisition and one v10 catalogue beside stale older
 files. No earlier-format content reader or cached incompatibility is added.
 
 The approved [path/output integration](../../docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
 Markdown documents and moves inside one generated tree. It introduces manifest
-v9, catalogue v5 and review v6, with explicit versions for the other boundaries.
+v10, catalogue v6 and review v7, with explicit versions for the other boundaries.
 Accepted workers use immutable in-memory route sets; only writing commands
 acquire the output lock. The integration plan records verification and scope.

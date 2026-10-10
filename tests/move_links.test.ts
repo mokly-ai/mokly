@@ -43,8 +43,8 @@ test("Markdown movedFrom hints use the same build diagnostic", async (t) => {
 
 test("later controlled renders use accepted pairs from their own generation", async (t) => {
   const source = `import {definePage,defineComponent} from '@mokly/mokly';
-    export const target = definePage({path:'old',title:'Target',description:'A target',dependencies:[],relatedDocs:[],render:()=>'<html><body>Target</body></html>'});
-    export const linker = defineComponent({path:'linker',title:'Linker',description:'A link',dependencies:[],relatedDocs:[],propSchema:{kind:'object',properties:{target:{schema:{kind:'string'}}}},controls:{target:{kind:'text',label:'Destination',maxLength:100}},render:(props)=><a href={'mock:'+props.target}>Target</a>,variants:[{slug:'saved',title:'Saved',props:{target:'old'}}]});`;
+    export const target = definePage({path:'old',title:'Target',description:'A target',relatedDocs:[],render:()=>'<html><body>Target</body></html>'});
+    export const linker = defineComponent({path:'linker',title:'Linker',description:'A link',relatedDocs:[],propSchema:{kind:'object',properties:{target:{schema:{kind:'string'}}}},controls:{target:{kind:'text',label:'Destination',maxLength:100}},render:(props)=><a href={'mock:'+props.target}>Target</a>,variants:[{slug:'saved',title:'Saved',props:{target:'old'}}]});`;
   const fixture = await componentReviewFixture(
     t,
     (text) => text.replaceAll("'old'", "'current'"),

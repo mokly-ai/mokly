@@ -92,7 +92,7 @@ export function comparisonAlignmentSource(changed: boolean): string {
     `defineScreen({ ...metadata, path: "${id}", title: "${title}", description: "${title} screen", useCasePaths: [], mobile: ${body}, desktop: ${body} })`;
   return `import { defineComponent, defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"] };
+const metadata = { relatedDocs: ["notes.md"] };
 const rows = Array.from({ length: 20 }, (_, index) => index);
 const checklist = defineComponent({ ...metadata,
   path: "checklist", title: "Checklist", description: "A list taller than its frame",

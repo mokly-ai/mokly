@@ -98,7 +98,7 @@ export async function buildExampleBaseline(
       (event) => event.type === "complete" && event.cacheHit === false,
     ),
   );
-  assert.equal(prepared.marker?.manifestVersion, 9);
+  assert.equal(prepared.marker?.manifestVersion, 10);
   await prepared.assertUnchanged();
   return { ...owned, config, commit };
 }
@@ -137,7 +137,7 @@ export async function validateWarmExample(
   );
   assert.equal(
     marker?.manifestVersion,
-    9,
+    10,
     "A complete warm example baseline is required; no fixture fallback is allowed",
   );
   const manifest = parseHistoricalManifest(
@@ -152,7 +152,7 @@ export async function validateWarmExample(
       ),
     ),
   );
-  assert.equal(manifest.schemaVersion, 9);
+  assert.equal(manifest.schemaVersion, 10);
 }
 
 export async function exampleCommit(root: string): Promise<string> {

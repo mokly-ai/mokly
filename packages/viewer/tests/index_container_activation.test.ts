@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { currentManifest } from "../../../tests/helpers/current_manifest.js";
-import type { ManifestEntry, ManifestV9 } from "../src/registry/types.js";
+import type { ManifestEntry, ManifestV10 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { changesActivation } from "../src/shell/changes_activation.js";
 import type { ShellContext } from "../src/shell/context.js";
@@ -13,7 +13,6 @@ import type { ViewerSelection } from "../src/viewer/types.js";
 const screen = (path: string, title: string, variantOf?: string) =>
   ({
     colorSchemes: ["light"],
-    declaredDependencies: [],
     description: title,
     kind: "screen",
     path,
@@ -33,11 +32,11 @@ const entries = [
   screen("account/profile/notifications", "Notifications"),
   screen("account/profile/devices/phone", "Phone"),
 ];
-const manifest: ManifestV9 = currentManifest({
+const manifest: ManifestV10 = currentManifest({
   entries,
   folders: [],
   generatedBy: "mokly",
-  schemaVersion: 9,
+  schemaVersion: 10,
   sourceFiles: [],
 });
 const catalogue = createCatalogue(manifest);

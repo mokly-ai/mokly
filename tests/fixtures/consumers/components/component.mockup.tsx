@@ -2,7 +2,7 @@ import React, { type ReactNode } from "react";
 
 import { defineComponent, defineScreen } from "@mokly/mokly";
 
-const metadata = { dependencies: [], relatedDocs: [] };
+const metadata = { relatedDocs: [] };
 function Body({ children }: { children: ReactNode }) {
   return <section data-component-preview>{children}</section>;
 }

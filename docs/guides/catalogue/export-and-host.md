@@ -18,7 +18,7 @@ beside the config, not beside your working directory; an absolute path must
 stay inside the repository root.
 
 `--base` overrides the configured base ref for that run. The branch point must
-be present in the checkout. Mokly reads a complete verified v9 inventory from
+be present in the checkout. Mokly reads a complete verified v10 inventory from
 that commit or runs the commit's own baseline recipe when output is absent or
 incomplete. Check out full history in CI. Export never fetches history for you.
 A base built by an earlier Mokly version makes Changes unavailable; export

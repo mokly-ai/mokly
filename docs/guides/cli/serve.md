@@ -69,3 +69,9 @@ While the local controls are active, every request must address
 port is supported; a request that arrives with another host is refused for the
 whole catalogue. Rendering requests additionally require the exact matching
 origin and the render token.
+
+Warnings name the page or authored input that needs attention. Serve reports
+each warning once for its current build attempt before Catalogue ready. A
+failed attempt reports its collected warnings before its error. Late warnings
+from older attempts stay silent. New warnings from temporary component edits
+use the current attempt and never repeat an already reported warning.

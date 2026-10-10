@@ -106,11 +106,14 @@ function ComparedVersion({
  * both versions in one bordered frame whose viewport they share.
  */
 export function ComponentComparison({
+  change = "Appearance changed",
   mode = "side-by-side",
   removed = false,
   subject = "action",
   viewport,
 }: {
+  /** The recorded change the caption names after the compared variant. */
+  change?: string;
   mode?: Exclude<ComparisonMode, "current">;
   removed?: boolean;
   subject?: ComparedComponent;
@@ -119,9 +122,7 @@ export function ComponentComparison({
   return (
     <div className="ce-component-comparison">
       <p className="ce-caption">
-        {removed
-          ? "Compact variant removed"
-          : "Default variant · Appearance changed"}
+        {removed ? "Compact variant removed" : `Default variant · ${change}`}
       </p>
       {mode === "side-by-side" ? (
         <CompareGrid>

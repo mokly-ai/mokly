@@ -4,7 +4,7 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { currentManifest } from "../../../tests/helpers/current_manifest.js";
-import type { ManifestEntry, ManifestV9 } from "../src/registry/types.js";
+import type { ManifestEntry, ManifestV10 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { branchPoints } from "../src/shell/catalogue_branch_point.js";
 import type { ShellContext } from "../src/shell/context.js";
@@ -21,7 +21,6 @@ const entry = (
 ): ManifestEntry =>
   ({
     colorSchemes: ["light"],
-    declaredDependencies: [],
     description: title,
     kind,
     path,
@@ -34,7 +33,7 @@ const entry = (
   }) as unknown as ManifestEntry;
 
 /** Billing moved under Account; its Paid variant was deleted on the way. */
-const manifest: ManifestV9 = currentManifest({
+const manifest: ManifestV10 = currentManifest({
   entries: [
     entry("screen", "account/billing/invoice", "Invoice"),
     entry(
@@ -49,7 +48,7 @@ const manifest: ManifestV9 = currentManifest({
   ],
   folders: [],
   generatedBy: "mokly",
-  schemaVersion: 9,
+  schemaVersion: 10,
   sourceFiles: [],
 });
 const paid = entry("screen", "billing/invoice/paid", "Paid", "billing/invoice");

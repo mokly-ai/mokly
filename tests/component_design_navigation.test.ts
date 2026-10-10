@@ -31,7 +31,7 @@ for (const viewport of ["mobile", "desktop"] as const) {
       ...Object.values(CONTROLS_PAGES),
       ...Object.values(INSPECTION_PAGES),
     ];
-    assert.equal(new Set(destinations).size, 39);
+    assert.equal(new Set(destinations).size, 41);
     const family = new Map<string, keyof typeof MODE_LABELS>(
       Object.entries(actionModes).map(([mode, id]) => [
         id,
@@ -57,6 +57,8 @@ for (const viewport of ["mobile", "desktop"] as const) {
         CONTROLS_PAGES.comparison,
         INSPECTION_PAGES["direct-change"],
         INSPECTION_PAGES["removed-consumer"],
+        COMPONENT_PAGES["style-changed"],
+        INSPECTION_PAGES["style-outside"],
       ]).has(id);
       const comparable =
         changed &&

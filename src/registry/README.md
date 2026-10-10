@@ -29,7 +29,7 @@ the same identities. `changes.ts` suppresses paired removals in every producer.
 It captures each removed variant's baseline `parentTitle` before path reuse
 can discard the former parent. Non-variants carry no parent title.
 
-`manifest.ts` emits schema v9 with paths, authored move hints, folder records and
+`manifest.ts` emits schema v10 with paths, authored move hints, folder records and
 source inventory. `manifest_validation.ts` is the shared strict current/baseline
 reader. It validates document resources, derives artifact names, and rejects unknown
 fields. An earlier comparison base produces the established unavailable outcome.
@@ -43,4 +43,4 @@ node --import tsx --test tests/manifest*.test.ts tests/variant_validation.test.t
 See [paths](../../docs/protocol/mokly-paths.md),
 [folders](../../docs/protocol/mokly-folders.md),
 [variants](../../docs/protocol/mokly-variants.md), and
-[manifest v9](../../docs/protocol/mokly-component-manifest.md).
+[manifest v10](../../docs/protocol/mokly-component-manifest.md).

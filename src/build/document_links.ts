@@ -25,6 +25,7 @@ export function resolveDocumentLinks(
     entries.map((entry) => [entry.path, entry]),
   ),
   moves: readonly EntryMove[] = [],
+  onWarning?: (diagnostic: BuildDiagnostic) => void,
 ): ResolvedDocumentLinks {
   const records: LogicalReferenceRecord[] = [];
   const diagnostics: BuildDiagnostic[] = [];
@@ -35,6 +36,7 @@ export function resolveDocumentLinks(
     };
     const adapted = adaptLinkControls(original, route);
     diagnostics.push(...adapted.diagnostics);
+    adapted.diagnostics.forEach((diagnostic) => onWarning?.(diagnostic));
     const linked = rewriteMockLinks(
       adapted.html,
       route,

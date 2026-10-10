@@ -6,7 +6,7 @@ the catalogue, or snapshots other entries; exhaustive commands remain unchanged.
 
 ## Delivery Status
 
-Implemented with entries selected by path and review result v6. Removed pages
+Implemented with entries selected by path and review result v7. Removed pages
 and Markdown documents use the shared selected-preview boundary.
 
 ## Requests and evidence
@@ -52,7 +52,7 @@ different bytes fails instead of combining old evidence with new output. Missing
 or pending evidence produces the existing retryable comparison failure state;
 it never falls back to an exhaustive foreground build.
 
-Project the complete [review result v6](./mokly-changes-serving.md#comparison-engine)
+Project the complete [review result v7](./mokly-changes-serving.md#comparison-engine)
 onto the selected entry: a screen, or a component variant entry addressed by
 its path. Keep its entry sides, `previousPath`, view states, ignored regions
 and direct change reasons. Recompute the selected screen ignored-impact
@@ -60,13 +60,13 @@ aggregate. Catalogue-wide
 affected-consumer evidence remains in the shell inspector; the selected
 response omits those cross-entry records. Screen-only catalogues apply the same
 policy as complete comparisons to the requested screen only. The response
-passes the v6 result validator. Missing entries fail without inventing
+passes the v7 result validator. Missing entries fail without inventing
 comparison records.
 
 ## Capture and lifetime
 
 Capture every available view of the selection and only its transitive resource
-closure. Copy accepted v9 before/after documents byte-for-byte to paths from
+closure. Copy accepted v10 before/after documents byte-for-byte to paths from
 `snapshotViewPath` in the
 [artifact path contract](./mokly-artifact-paths.md); the before side of a paired
 moved entry is the paired baseline entry's views, named by `previousPath`.

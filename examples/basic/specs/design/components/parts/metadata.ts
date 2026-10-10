@@ -6,7 +6,6 @@ interface ComponentMetadata {
   title: string;
   description: string;
   source: string;
-  dependencies: readonly string[];
 }
 
 /** Explicit consumer metadata for synthetic design fixtures. */
@@ -16,35 +15,30 @@ export const COMPONENTS = {
     title: "Action",
     description: "A clear next step, shared across screens.",
     source: "components/Action.tsx",
-    dependencies: ["components/Action.tsx"],
   },
   toolbar: {
     id: "toolbar",
     title: "Toolbar",
     description: "A shared prompt with a single next action.",
     source: "components/Toolbar.tsx",
-    dependencies: ["components/Toolbar.tsx"],
   },
   "help-hint": {
     id: "help-hint",
     title: "Help hint",
     description: "Contextual help that appears when a reader needs it.",
     source: "components/HelpHint.tsx",
-    dependencies: ["components/HelpHint.tsx"],
   },
   badge: {
     id: "badge",
     title: "Badge",
     description: "A short label that draws attention to something new.",
     source: "components/Badge.tsx",
-    dependencies: ["components/Badge.tsx"],
   },
   checklist: {
     id: "checklist",
     title: "Checklist",
     description: "The steps to finish before starting, in order.",
     source: "components/Checklist.tsx",
-    dependencies: ["components/Checklist.tsx"],
   },
 } as const satisfies Record<string, ComponentMetadata>;
 
@@ -134,6 +128,7 @@ export const COMPONENT_ENTRY_BY_STATE = {
   "usage-loading": COMPONENT_ENTRIES.action,
   "usage-failed": COMPONENT_ENTRIES.action,
   "shared-impact": COMPONENT_ENTRIES.action,
+  "style-changed": COMPONENT_ENTRIES.action,
   closed: COMPONENT_ENTRIES.action,
 } as const satisfies Record<ComponentPageState, ComponentEntryMetadata>;
 

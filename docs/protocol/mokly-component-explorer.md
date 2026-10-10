@@ -101,7 +101,7 @@ children and excluding themselves; leaves omit that tab. Screens retain the
 Components tab, including empty and unavailable states.
 Clicking an icon opens its panel or switches the open panel; clicking the active
 icon or Close collapses it. With no panel open, no icon is selected. Details contains
-source/docs/tags/dependencies and any comparison evidence. Comparison details
+source/docs/tags and any rendered-resource comparison evidence. Comparison details
 use validated reasons, paired prop values, and related changed components; they
 never infer visual explanations from pixels or add a banner above the canvas.
 Props contains the supplied values, and Usage

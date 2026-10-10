@@ -132,12 +132,11 @@ test("search matches a folder's resolved title and shows every row below it", ()
   );
 });
 
-type Screen = ManifestScreen & { declaredDependencies: readonly string[] };
+type Screen = ManifestScreen;
 
 function screen(path: string, title: string, variantOf?: string): Screen {
   return {
     colorSchemes: ["light"],
-    declaredDependencies: [],
     description: title,
     kind: "screen",
     path,
@@ -159,7 +158,7 @@ test("Changes activation searches a removed variant as its row does", () => {
       entries: [parent, current],
       folders: [record("start", { title: "Launchpad" })],
       generatedBy: "mokly",
-      schemaVersion: 9,
+      schemaVersion: 10,
       sourceFiles: [],
     }),
     [
@@ -198,7 +197,7 @@ test("a route reveal keeps a search that the destination's folder title matches"
     JSON.parse(
       fs.readFileSync(
         new URL(
-          "../../../docs/protocol/fixtures/catalogue-v5.json",
+          "../../../docs/protocol/fixtures/catalogue-v6.json",
           import.meta.url,
         ),
         "utf8",

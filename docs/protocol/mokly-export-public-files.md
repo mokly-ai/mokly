@@ -70,9 +70,9 @@ public-safe inventory is distinct from private comparison metadata.
 
 [`mokly-viewer/catalogue.json`](./mokly-catalogue.md) is implemented in the same
 collision-checked ownership/upload inventories, alongside the implemented
-`mokly-viewer/client/inspector.js`. The read model v5 is a public allowlist
-projection of manifest v9; `mokly-manifest.json` remains excluded. Ownership v3
-and upload v2 gate the viewer namespace; the review result is v6 and the
+`mokly-viewer/client/inspector.js`. The read model v6 is a public allowlist
+projection of manifest v10; `mokly-manifest.json` remains excluded. Ownership v3
+and upload v2 gate the viewer namespace; the review result is v7 and the
 delivery descriptor v5. Deployment identity includes the catalogue under the
 [delivery hashing rule](./mokly-export-browser.md#deployment-identity) and
 includes the inspector and its inert maps.
@@ -129,8 +129,8 @@ Cloudflare preview regression coverage and the existing build/check/serve gate.
 
 ## Registered Components
 
-Component catalogues carry manifest-v9 component variant entries and review
-result v6 evidence, including removed variants and actual affected consumers.
+Component catalogues carry manifest-v10 component variant entries and review
+result v7 evidence, including removed variants and actual affected consumers.
 The same inspector renders in served and exported shells. Export supplies no
 local render capability or token; controls are read-only and make no render
 requests. The existing resource validation, deployment identity, adapter

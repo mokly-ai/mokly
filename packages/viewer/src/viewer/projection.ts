@@ -26,7 +26,6 @@ function metadata(entry: CatalogueEntry) {
     title: entry.title,
     tags: entry.tags,
     ...entry.details,
-    declaredDependencies: entry.details.dependencies,
   };
 }
 
@@ -87,7 +86,6 @@ export function displayEntry(entry: ShellCatalogueRoutedEntry): ManifestEntry {
         propSchema: entry.propSchema,
         slots: entry.slots,
         controls: entry.controls,
-        ownedDependencies: [],
       };
   }
 }
@@ -105,10 +103,7 @@ export function viewerCatalogue(model: ShellCatalogueReadModel) {
     generatedBy: "mokly" as const,
     folders: [],
     sourceFiles: [],
-    entries: current.map((entry) => ({
-      ...displayEntry(entry),
-      declaredDependencies: entry.details.dependencies,
-    })),
+    entries: current.map((entry) => displayEntry(entry)),
   };
   const catalogue = createCatalogue(
     manifest,

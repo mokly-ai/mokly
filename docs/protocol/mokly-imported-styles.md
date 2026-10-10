@@ -1,16 +1,19 @@
 # Imported Stylesheet Delivery
 
-## Delivery
+## Delivery Status
 
 CSS/asset compilation, fragment stylesheet links, optional consumer PostCSS,
 Serve/watch, export, publication, and Changes ship together. The
 [implementation plan](../../plans/imported-css-delivery.md) records the rollout
 and reviews.
+
+## Delivery
+
 Custom renderers must emit the supplied stylesheet links; pages link CSS
 themselves. This contract extends
 [configuration](./mokly-configuration.md),
 [rendering](./mokly-rendering.md), and [source protection](./mokly-source-protection.md)
-without changing manifest v9. [Exact diagnostics](./mokly-imported-styles-errors.md)
+without changing manifest v10. [Exact diagnostics](./mokly-imported-styles-errors.md)
 are normative.
 
 ## Routes And Ownership
@@ -18,7 +21,7 @@ are normative.
 `<mockupsDir>/mokly-generated/` is wholly Mokly-owned. Its output map uses
 `styles/<repository-relative root module path>.css` and
 `assets/<repository-relative asset path>`, relative to that generated root.
-Pages, screen/component views and the private v9 manifest share the same tree.
+Pages, screen/component views and the private v10 manifest share the same tree.
 Preserve the module extension before `.css`: `src/home.mockup.tsx` becomes
 `styles/src/home.mockup.tsx.css`. Identical asset routes from multiple roots
 must carry identical bytes; disagreeing bytes fail Build. Sources stay private.
@@ -31,8 +34,10 @@ must be a real directory and descendants must be real directories or regular
 files. Reject the first sorted repo-relative symlink, FIFO, socket or device
 without following it. A successful Build replaces the whole tree and removes
 stale files and empty directories. Plain Serve, export, publication and
-untracked Check do not inspect old output. No Git-ignore committability check
-remains; [tracking rules](./mokly-generated-output.md#tracked-state-and-commands)
+untracked Check do not inspect old output. CLI Publish separately checks the
+checkout and committed generation or requires ignored derived output under the
+[upload contract](./mokly-upload.md). The
+[tracking rules](./mokly-generated-output.md#tracked-state-and-commands)
 apply equally to generated CSS, assets, HTML and the manifest.
 
 Reject root directories and `roots[].files` static prefixes, renderer,

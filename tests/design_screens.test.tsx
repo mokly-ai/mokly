@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import { entryRoute } from "../packages/viewer/dist/data.js";
 
+import { additions, convertedVariants } from "./design_screens_fixture.js";
 import {
   attribute,
   byClass,
@@ -10,38 +11,6 @@ import {
   designDocument,
   textContent,
 } from "./helpers/design_catalogue.js";
-
-const additions = [
-  [
-    "design/browse/views/details-screen",
-    "design/browse/views/details-screen/index.html",
-  ],
-  [
-    "design/browse/views/screen/tag-picker",
-    "design/browse/views/screen/tag-picker/index.html",
-  ],
-  [
-    "design/browse/views/screen/tag-forms",
-    "design/browse/views/screen/tag-forms/index.html",
-  ],
-  [
-    "design/browse/views/screen/tag-onboarding",
-    "design/browse/views/screen/tag-onboarding/index.html",
-  ],
-  [
-    "design/browse/views/screen/tag-onboarding-picker",
-    "design/browse/views/screen/tag-onboarding-picker/index.html",
-  ],
-] as const;
-
-const convertedVariants = [
-  ["design/browse/views/screen/dark-scheme", "dark-scheme"],
-  ["design/browse/views/screen/light-only", "light-only"],
-  ["design/browse/views/screen/tag-picker", "picker"],
-  ["design/browse/views/screen/tag-forms", "forms"],
-  ["design/browse/views/screen/tag-onboarding", "onboarding"],
-  ["design/browse/views/screen/tag-onboarding-picker", "onboarding-picker"],
-] as const;
 
 test("the Welcome conversion keeps the approved screens as variants, not folder members", async () => {
   const { manifest } = await designCatalogue;
@@ -170,4 +139,36 @@ test("inspector metadata belongs to its depicted subject", async () => {
   const removed = textContent(removedBody);
   assert.doesNotMatch(removed, /welcome\/index\.html|Example tour|onboarding/);
   assert.match(removed, /Farewell/);
+});
+
+test("review impact omits the path-only state and retains the rendered evidence states", async () => {
+  const { manifest, outputs } = await designCatalogue;
+  const impact = manifest.entries.filter((entry) =>
+    entry.path.startsWith("design/changes/impact/"),
+  );
+  assert.deepEqual(impact.map((entry) => entry.path).sort(), [
+    "design/changes/impact/empty",
+    "design/changes/impact/ignored-only",
+    "design/changes/impact/styles/matched-excluded/excluded",
+    "design/changes/impact/styles/matched-excluded/excluded-only",
+    "design/changes/impact/styles/matched-excluded/matched",
+    "design/changes/impact/styles/page",
+    "design/changes/impact/styles/unresolved-unnamed/unnamed",
+    "design/changes/impact/styles/unresolved-unnamed/unresolved",
+  ]);
+  assert.equal(
+    manifest.entries.some(
+      (entry) => entry.path === "design/changes/impact/shared-impact",
+    ),
+    false,
+  );
+  for (const [route, html] of outputs) {
+    if (!route.startsWith("design/changes/")) continue;
+    assert.ok(typeof html === "string");
+    assert.doesNotMatch(
+      html,
+      /design-review-shared-impact|shared impact/i,
+      route,
+    );
+  }
 });

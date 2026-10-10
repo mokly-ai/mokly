@@ -2,10 +2,16 @@
 
 ## Delivery Status
 
+The explicit root output target is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md).
+
 Implemented as recorded in the
 [viewer library plan](../../plans/mokly-viewer-library.md), including resolution
 and source capture. Key and boundary formats are unchanged; this document
 approves no new UI or visible local behavior.
+
+The rule for comments with the former spelling is implemented in
+[M23](../../plans/remove-source-path-evidence.md#milestone-23-remove-the-historical-marker-rename).
 
 ## Identity And Scope
 
@@ -128,7 +134,7 @@ errors, not a fourth resolution state.
 
 ## Optional Invocation Source
 
-Manifest v9 includes this optional instance field:
+Manifest v10 includes this optional instance field:
 
 ```ts
 interface ComponentSourceLocation {
@@ -167,7 +173,7 @@ The name is reserved from authored data props and slots. Capture it in the
 collector only; do not emit DOM attributes, source maps, or debug markup.
 Programmatic `createElement` calls and transformed modules without invocation
 information may omit `source`. Replayed slots retain the original invocation
-location; manifest-v9 readers accept records with or without the optional field.
+location; manifest-v10 readers accept records with or without the optional field.
 
 `source` is excluded from instance/slot keys, `propsKey`, direct-input comparison,
 and every Changes projection. Line shifts and source moves alone are not material.
@@ -198,7 +204,9 @@ and serializes it as:
 ```
 
 `r-n` is allocated in DOM start-marker order, starting at zero. Range records
-map it to an instance key or slot key; the comment does not contain that key.
+map it to an instance key, slot key or `{ kind: "root" }`; the comment does
+not contain that target. A component saved page has one root output pair under
+the [usage contract](./mokly-component-usage-records.md#root-output-boundary).
 `parentId` is the nearest enclosing registered range, including a slot range.
 
 Every instance in a rendered view's manifest has at least one instance-targeted
@@ -211,11 +219,20 @@ can have a slot record without a range.
 
 Reject unknown, forged, missing, duplicate, crossing, reordered, or mismatched
 markers and incorrect range parentage. No template sentinel survives final
-serialization. Review-ignore regions cannot enclose component or caller-slot
-boundaries. Generated documents must preserve validated pairs; adapters
+serialization. Review-ignore regions cannot enclose instance or caller-slot
+boundaries. The root-only pair preserves existing ignore admission under the
+[root output contract](./mokly-component-usage-records.md#root-output-boundary). Generated documents must preserve validated pairs; adapters
 inspect current views using these comments without adding layout wrappers.
-Accepted baseline and current v9 documents use the same marker spelling and
+Accepted baseline and current v10 documents use the same marker spelling and
 validation; historical marker translation is not supported.
+
+On both baseline and current sides, a comment with the former `mokabook-`
+spelling is ordinary page content. Mokly never reads it as a marker or removes
+it as one. The comment alone is not a validation error. It creates no component
+range, Review-ignore region or material marker. If baseline records require
+ranges that its document cannot prove, follow
+[Invalid Or Missing Data](./mokly-baseline-compatibility.md#invalid-or-missing-data).
+The frozen instance and slot key domain strings are unchanged.
 
 ## Acceptance
 

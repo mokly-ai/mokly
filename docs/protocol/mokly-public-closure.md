@@ -62,13 +62,28 @@ validation, and walk authored HTML and CSS transitively. Read each file and
 visit each edge set once per pass; handle cycles without recursive duplication.
 Binary resources retain their exact bytes and have no parsed child links.
 
+A renderer resource declaration is a closure starting point even without an
+HTML link. Retain each valid CSS path and its transitive references after
+discarding only its ownership claim. Authored paths enter `assetClosure`;
+generated paths remain in the accepted generated inventory. Watch and Serve
+use the same checked result. Closure membership alone supplies no CSS Changes
+reason, component proof or inserted-link provenance.
+
 Every renderer resource seed passes the same policy and existence checks as a
 document link before it enters the closure. A declaration cannot bypass source
 protection, authorize a symlink or make an unlisted file public. A failure names
 the declaring/referring generated route. Link/seed traversal retains
-`build-invalid`; declared component-resource validation retains its existing
-component-validation error and `component resource is not a public file`
-detail. Both use the same policy. Link diagnostics are:
+`build-invalid`. Authored renderer resources and stored component resources
+retain the existing component-resource validation path and policy cause:
+
+```text
+component resource is not a public file: <path> (<reason>)
+```
+
+`<path>` is the declared public path. `<reason>` is the shared policy denial,
+or `missing, non-regular, or outside mockupsDir` for an unavailable file.
+Validate before ignoring CSS ownership or recording a seed. Both boundaries
+use the same public-file policy. Link diagnostics are:
 
 ```text
 document links and resources are invalid:

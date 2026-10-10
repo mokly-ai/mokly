@@ -109,7 +109,7 @@ export default defineConfig({
   roots: [{ dir: "../../entries" }],
   mockupsDir: "../../mockups",
   repoRoot: "../..",
-  review: { outDir: ".review", sharedImpact: [] }
+  review: { outDir: ".review" }
 });
 `,
   );
@@ -178,7 +178,7 @@ export function removedDeliverySource(
   const prefix = version === "baseline" ? "Previous" : "Branch edit";
   return `import React from "react";
 import { definePage, defineScreen } from "@mokly/mokly";
-const metadata = { description: "Fixture", dependencies: [], relatedDocs: [] };
+const metadata = { description: "Fixture", relatedDocs: [] };
 export const mockups = [
   defineScreen({ ...metadata, path: "current", title: "Current", mobile: <main>Current mobile</main>, desktop: <main>Current desktop</main>, useCasePaths: [] }),
   ${

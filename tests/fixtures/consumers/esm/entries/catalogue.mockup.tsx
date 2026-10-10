@@ -9,7 +9,6 @@ import {
 } from "@mokly/mokly";
 
 const metadata = {
-  dependencies: ["notes.md"],
   relatedDocs: ["notes.md"],
 };
 

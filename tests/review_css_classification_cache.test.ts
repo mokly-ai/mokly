@@ -18,6 +18,7 @@ import {
 } from "../dist/review/git.js";
 
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
+import { fixtureCssAnalysis } from "./helpers/css_evidence.js";
 
 test("component classification reads base CSS in batches and parses shared source once per side", async (t) => {
   const fixture = await cssAttributionFixture(t, true);
@@ -43,7 +44,7 @@ test("component classification reads base CSS in batches and parses shared sourc
     evidence,
     reader: new ObservedGit(
       runner,
-      baselineCatalogue(commit, "mockups", "generated-v9"),
+      baselineCatalogue(commit, "mockups", "generated-v10"),
     ),
   };
   const compilation = await compileCatalogue(fixture.config);
@@ -113,7 +114,7 @@ test("the run-scoped parser cache contains injected parse failures without retry
           {
             kind: "dependency",
             path: "shared.css",
-            analysis: { status: "unresolved", selectors: [] },
+            analysis: fixtureCssAnalysis("unresolved", []),
           },
         ],
       },

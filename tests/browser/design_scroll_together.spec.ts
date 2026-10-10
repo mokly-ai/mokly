@@ -21,7 +21,7 @@ const DIFF_MODES = [
   ["design/changes/diff-controls/side-by-side-apart", false, true],
   ["design/changes/outcomes/changed", true, true],
   ["design/changes/outcomes/difference", true, true],
-  ["design/changes/impact/styles/matched", true, false],
+  ["design/changes/impact/styles/matched-excluded/matched", true, false],
   ["design/browse/appearance/workspaces/side-by-side", true, true],
   ["design/browse/appearance/workspaces/difference", true, true],
   ["design/components/pages/comparison", true, false],

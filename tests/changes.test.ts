@@ -33,12 +33,8 @@ test("shared inputs require rendered impact to include screens in Changes", asyn
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const { manifest } = await compileCatalogue(config);
-  const withShared = {
-    ...config,
-    review: { ...config.review, sharedImpact: ["theme/**"] },
-  };
   assert.deepEqual(
-    changedManifestPaths(manifest, manifest, withShared, ["theme/colors.css"]),
+    changedManifestPaths(manifest, manifest, config, ["theme/colors.css"]),
     [],
   );
 });

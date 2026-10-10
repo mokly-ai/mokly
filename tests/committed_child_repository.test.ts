@@ -45,7 +45,7 @@ test("committed child rejects a nested repoRoot on the unselected comparison rou
         "evidence",
         commit,
         "blobs",
-        baselineCatalogue(commit, "mockups", "generated-v9"),
+        baselineCatalogue(commit, "mockups", "generated-v10"),
       ),
       undefined,
     );

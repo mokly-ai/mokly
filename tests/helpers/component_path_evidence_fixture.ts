@@ -5,7 +5,7 @@ import { compileCatalogue } from "../../dist/build/compile.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
 import { compareReview } from "../../dist/review/compare.js";
-import type { ReviewResultV6 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV7 } from "../../packages/viewer/dist/review/component_types.js";
 
 import { componentEntrySource } from "./component_fixture.js";
 import { componentGit } from "./component_review_fixture.js";
@@ -28,7 +28,7 @@ export function pathCatalogueSource(
       "defineComponent, defineScreen, defineUseCase,",
     )
     .replace(
-      'const metadata = { dependencies: ["notes.md"], relatedDocs: [] };',
+      "const metadata = { relatedDocs: [] };",
       `const metadata = { dependencies: ${JSON.stringify(dependencies)}, relatedDocs: [] };`,
     )
     .replace('path: "home",', 'path: "home", useCasePaths: ["journey"],')
@@ -69,8 +69,8 @@ export async function pathEvidenceFixture(
   await fs.writeFile(
     fixture.configPath,
     configSource.replace(
-      'sharedImpact: ["notes.md"]',
-      `sharedImpact: ${JSON.stringify(options.sharedGlobs)}`,
+      "review: {",
+      `review: { sharedImpact: ${JSON.stringify(options.sharedGlobs)},`,
     ),
   );
   const config = await loadConfig(fixture.root);
@@ -85,7 +85,7 @@ export async function pathEvidenceFixture(
     componentGit(before, options.changedPaths),
     "main",
   );
-  if (artifact.result.schemaVersion !== 6)
+  if (artifact.result.schemaVersion !== 7)
     throw new Error("Fixture requires a component review result");
-  return { before, after, config, result: artifact.result as ReviewResultV6 };
+  return { before, after, config, result: artifact.result as ReviewResultV7 };
 }

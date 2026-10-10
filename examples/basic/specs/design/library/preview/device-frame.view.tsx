@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
 import { CopyIcon, ExpandIcon } from "../../parts/icons.js";
-import { useDesignStyle } from "../style_context.js";
 
 import type { DeviceFrameProps } from "./device-frame.js";
 
@@ -156,7 +155,6 @@ function BrowserFrame({
 }
 
 export function DeviceFrameView(props: DeviceFrameProps) {
-  useDesignStyle("device-frame");
   return props.device === "phone" ? (
     <PhoneFrame {...props} />
   ) : (

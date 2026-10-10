@@ -1,5 +1,9 @@
 # CLI Terminal Output
 
+## Delivery Status
+
+This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+
 ## Scope
 
 This contract defines the user-visible terminal behavior of the `mokly` CLI.
@@ -113,10 +117,11 @@ watched catalogue then reports existing lifecycle boundaries:
 
 Catalogue counts come from accepted manifest entries. Zero-valued kinds are
 omitted. A baseline cache hit says `Baseline ready · reused <short-sha>`; a
-complete committed v9 output omits rebuild progress. Unavailable Changes says
+complete committed v10 output omits rebuild progress. Unavailable Changes says
 `! Changes unavailable` and preserves All browsing. Serve reports each
 generation's build warnings immediately before `Catalogue ready`; on-demand
-previews never repeat them. Counted nouns use singular only for one, including
+previews never repeat them. Typed non-page subjects and current-attempt
+child-only warnings follow the same warning contract. Counted nouns use singular only for one, including
 `1 changed screen` and `2 changed screens`.
 
 Watched actions use one durable line after the action settles:

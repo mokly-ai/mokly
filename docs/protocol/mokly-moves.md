@@ -101,7 +101,7 @@ the same generated kind. Accept only unique aliases present in the retained
 sets, and scope HTML rewriting to the paired current view's references.
 Compare the mapped bytes as well; CSS compares bytes after resolving its URLs
 through the same resource map. Equal moved resources suppress current generated
-dependency and shared-impact evidence. A different image or stylesheet remains
+rendered-resource evidence. A different image or stylesheet remains
 resource evidence under the ordinary attribution rules. A per-view byte proof
 requires both corresponding references, so an unrelated equal file cannot hide
 an edit. These aliases affect comparison only, never Serve or snapshot routes.
@@ -171,7 +171,7 @@ paired baseline entry's documents as the before side. The
 [branch-point lookup](./mokly-branch-point-lookup.md) owns shell reference,
 counterpart and parent resolution, including supplied-input pairing.
 
-Review v6 continues to contain screen, component and use-case records only.
+Review v7 continues to contain screen, component and use-case records only.
 Each moved record carries `previousPath`; a pure move has an explicit empty
 `ChangedEntry.reasons` list. Page/document membership and prior paths belong to
 the catalogue snapshot and read model, not synthetic visual review records.
@@ -187,8 +187,11 @@ bounded diagnostic presentation under [terminal output](./mokly-terminal-output.
 They are not fields of `review.json` or public catalogue JSON. Plain builds publish no inferred or authored `previousPath`.
 
 Complete and selected capture retain each side's actual spelling and source
-documents. A moved component variant groups beneath its current parent; a
-removed variant stays with its baseline parent. A removed parent can therefore
+documents. Group each compared view with the same side of its variant pair:
+current views use the current variant path; baseline-only views use the
+baseline variant path. Retain the union of viewports and schemes when a move
+adds or removes views. A moved component variant groups beneath its current
+parent; a removed variant stays with its baseline parent. A removed parent can therefore
 have an empty historical variant group after all its variants pair elsewhere.
 The complete and scoped catalogue readers accept that removed parent with zero
 variants and retain its removal row; they must not restore the moved variants

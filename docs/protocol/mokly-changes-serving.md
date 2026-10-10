@@ -2,6 +2,14 @@
 
 Continuation of [Changes And Screen Comparisons](./mokly-changes.md).
 
+## Delivery Status
+
+Removal of baseline compatibility is implemented in
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
+The expanded v7 per-rule and page evidence is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md); its comparison details for screens and component saved views are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
+
 ## Generation and serving
 
 The [comparison serving contract](./mokly-comparison-serving.md) owns generation
@@ -18,7 +26,7 @@ and [shell](./mokly-shell-design.md) contracts own each state.
 Live background classification, complete comparison generation, and publishing
 with `--include-changes` compare the workspace with a configured base ref, defaulting
 to `origin/main`. It resolves the merge base shared by `HEAD` and that ref, then
-reads the `mockupsDir` tree at that branch point without checking it out. [Per-commit selection](./mokly-derived-baselines.md) uses verified v9 Git blobs
+reads the `mockupsDir` tree at that branch point without checking it out. [Per-commit selection](./mokly-derived-baselines.md) uses verified v10 Git blobs
 or a cached rebuild produced with that commit's own code. The baseline is
 never rendered with the current tree's code. Commits reachable only from the
 configured base do not enter the comparison. Head generated artifacts come from
@@ -45,13 +53,9 @@ is emitted. Views pair by viewport and color scheme within each paired entry.
 Each side's view set is its entry's effective `colorSchemes`: a dark view
 present only in head is `added`, and one present only in base is `removed`.
 Mobile and desktop still classify separately from their own documents. The
-compatibility gate runs before pairing, so both sides use manifest v9.
-Configured
-shared-impact globs and manifest dependencies
-identify changes that can affect many screens. A dependency is a repository file
-or directory root: its own change or any descendant change is recorded as
-evidence; Changes membership follows the rule linked above.
-The configured comparison directory, including its symlink-resolved in-repository target, is excluded before changed-path and shared-impact evidence
+compatibility gate runs before pairing, so both sides use manifest v10.
+Source paths and retired declarations do not add reasons.
+The configured comparison directory, including its symlink-resolved in-repository target, is excluded before changed-path evidence
 is calculated.
 
 Complete comparison output contains `review.json`, `summary.md`, an ownership marker,
@@ -60,10 +64,8 @@ The summary's `output changes` count includes only screens classified as added,
 removed, or changed, counting each screen once across all viewports and color
 schemes. Changed views include retained rendering-resource evidence as well as
 material document changes. Ignored-only screens remain a separate diagnostic count.
-`impact evidence` independently counts screens with shared-impact or dependency
-evidence, including screens with output changes; `impact-only` is the subset
-without output changes and can overlap ignored-only. Neither evidence nor
-ignored-only edits inflate output changes. These counts aggregate fragment
+Neither unreferenced source edits nor ignored-only edits inflate output changes.
+These counts aggregate fragment
 comparisons per screen; the catalogue Changes total also considers reviewable
 metadata and flows. Complete JSON retains every screen and its
 evidence. Selected live responses contain only the requested entry and retain
@@ -92,11 +94,10 @@ memory.
 
 ```ts
 interface ReviewResult {
-  schemaVersion: 6;
+  schemaVersion: 7;
   baseRef: string;
   baseCommit: string; // merge base shared by HEAD and baseRef
-  changedPaths: readonly string[]; // changed repository files
-  sharedImpact: readonly string[];
+  changedPaths: readonly string[];
   ignoredImpact: readonly {
     id: string; // Review-ignore region id
     viewport: "mobile" | "desktop";
@@ -108,8 +109,6 @@ interface ReviewResult {
     previousPath?: string;
     title: string;
     state: "added" | "removed" | "changed" | "ignored-only" | "unchanged";
-    dependencies: readonly string[];
-    sharedImpact: readonly string[];
     views: readonly {
       viewport: "mobile" | "desktop";
       colorScheme: "light" | "dark";
@@ -119,10 +118,7 @@ interface ReviewResult {
       reasons?: readonly {
         kind: "dependency";
         path: string;
-        analysis?: {
-          status: "matched" | "unresolved";
-          selectors: readonly string[];
-        };
+        analysis?: DependencyAnalysis;
       }[];
       excludedResources?: readonly {
         path: string;
@@ -144,18 +140,20 @@ entry; a side the view's state lacks (`added` has no `before`, `removed` has
 no `after`) has no document. Component catalogues add component, variant,
 use-case, and affected-consumer records addressed by entry path, defined by
 the [component comparison schema](./mokly-component-review.md). Readers accept
-only version 6.
+only version 7.
 
-Every catalogue emits the complete `ReviewResultV6` shape defined by the
+Every catalogue emits the complete `ReviewResultV7` shape defined by the
 [component comparison schema](./mokly-component-review.md), which extends the
 screen fields above with `components`, `changes`, and `affectedConsumers`; a
-catalogue without registered components emits those arrays empty rather than
-a second screen-only shape.
+catalogue without registered components emits empty `components` and
+`affectedConsumers` arrays. Its `changes` still records directly changed
+screens and use cases; there is no second screen-only shape.
 
 Optional view `material`, `reasons`, and `excludedResources` implement
 [CSS change attribution](./mokly-css-attribution.md). `material` is present
 exactly when the view's normalized documents differ. Empty optional lists are
-omitted; results without them mean the analysis did not run. Retained resource
+omitted. `DependencyAnalysis` uses the [per-rule evidence schema](./mokly-css-attribution-membership.md);
+missing view evidence means no retained or excluded resources for that view. Retained resource
 reasons make paired views changed, and summary counts follow these states.
 
 The [review validation contract](./mokly-component-review-validation.md)
@@ -182,3 +180,7 @@ Ignoring changes classification only. Stored fragments and compare panes keep
 the real content. Ignored-only changes aggregate by id, viewport, and color
 scheme instead of adding every consumer screen. Primary screen content must
 never be ignored.
+
+## Screen controls
+
+Screen controls follow [the controls contract](./mokly-changes-controls.md).

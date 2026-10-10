@@ -18,7 +18,7 @@ import { publicShellContext } from "./helpers/public_shell.js";
 function source(parent: "app" | "book" = "book", title = "Handbook") {
   const entryPath = parent === "app" ? "app/handbook" : "app/book/handbook";
   return `import { definePage } from "@mokly/mokly";
-const meta = { dependencies: [], relatedDocs: [], description: "Example" };
+const meta = { relatedDocs: [], description: "Example" };
 export const mockups = [
  definePage({...meta, path: "${entryPath}", title: ${JSON.stringify(title)}, tags: ["documents"], render: () => "<!doctype html><html><body>Handbook</body></html>"}),
  ${parent === "app" ? 'definePage({...meta, path: "app/book/second", title: "Second", render: () => "<html><body>Second</body></html>"}),' : ""}

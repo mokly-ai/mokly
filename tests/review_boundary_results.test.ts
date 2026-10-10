@@ -40,7 +40,7 @@ test("an unrelated mokly-generated source folder remains discoverable", async (t
   await fs.mkdir(path.join(fixture.entriesDir, "mokly-generated"));
   await fs.writeFile(
     path.join(fixture.entriesDir, "mokly-generated/extra.mockup.tsx"),
-    'import { definePage } from "@mokly/mokly"; export const mockups = [definePage({ path: "extra", title: "Extra", description: "Extra", dependencies: [], relatedDocs: [], render: () => "<html><body>Extra</body></html>" })];',
+    'import { definePage } from "@mokly/mokly"; export const mockups = [definePage({ path: "extra", title: "Extra", description: "Extra", relatedDocs: [], render: () => "<html><body>Extra</body></html>" })];',
   );
   const config = await loadConfig(fixture.root);
   assert.ok(

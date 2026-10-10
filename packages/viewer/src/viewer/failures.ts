@@ -1,3 +1,8 @@
+import {
+  MoklyVersionError,
+  VERSION_ERROR_MESSAGE,
+} from "../catalogue/version_error.js";
+
 import { ObsoleteInspection } from "./inspection_work.js";
 import type { ViewerError, ViewerEvents } from "./types.js";
 
@@ -11,8 +16,10 @@ export function viewerFailures(
     if (error instanceof ObsoleteInspection) return error;
     const previous = reported.get(error);
     if (previous) return previous;
-    const message =
-      code === "selection"
+    const versionError = error instanceof MoklyVersionError ? error : undefined;
+    const message = versionError
+      ? VERSION_ERROR_MESSAGE
+      : code === "selection"
         ? "The requested catalogue selection is unavailable."
         : code === "comparison"
           ? "The comparison could not be loaded. Try again."
@@ -22,7 +29,12 @@ export function viewerFailures(
     const failure = new Error(message);
     reported.set(error, failure);
     reported.set(failure, failure);
-    if (active()) events().onError?.({ code, message });
+    if (active())
+      events().onError?.({
+        code: versionError ? "version" : code,
+        message,
+        ...(versionError ? { details: versionError.message } : {}),
+      });
     return failure;
   };
 }

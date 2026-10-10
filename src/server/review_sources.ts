@@ -19,7 +19,7 @@ export function selectedReviewSource(
   manifest: CatalogueMetadata,
   changes: ComponentChangeSnapshot | undefined,
 ): SelectedReviewSource | undefined {
-  if (manifest.schemaVersion !== 9 || !changes?.comparison || !changes.result)
+  if (manifest.schemaVersion !== 10 || !changes?.comparison || !changes.result)
     return;
   return {
     ...changes.comparison,

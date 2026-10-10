@@ -6,6 +6,7 @@ import {
   FileSystemGeneratedOutputStore,
   type GeneratedOutputStore,
 } from "../build/output_store.js";
+import { BuildWarningSink } from "../build/warning_sink.js";
 import { FileSystemConfigLoader, type ConfigLoader } from "../config/load.js";
 import type { ResolvedConfig } from "../config/types.js";
 
@@ -59,6 +60,7 @@ export interface ServeDependencies {
   outputStore: GeneratedOutputStore;
   processSupervisorFactory: ProcessSupervisorFactory;
   reporter?: ServeReporter;
+  warnings?: BuildWarningSink;
   serverFactory: CatalogueServerFactory;
   watcherFactory: ConsumerWatcherFactory;
 }
@@ -82,11 +84,20 @@ export async function serve(
 ): Promise<RunningServe> {
   const dependencies = { ...DEFAULT_DEPENDENCIES, ...provided };
   const reporter = dependencies.reporter ?? DEFAULT_DEPENDENCIES.reporter!;
+  const warnings =
+    dependencies.warnings ??
+    new BuildWarningSink((warning) => reporter.buildWarnings([warning]));
+  config.diagnostics?.forEach((warning) => warnings.add(warning));
   if (!options.watch) {
     const generationStartedAt = Date.now();
     let changesStartedAt = generationStartedAt;
     let baselineStartedAt = generationStartedAt;
-    const runtime = await prepareLiveRuntime(config);
+    const runtime = await prepareLiveRuntime(
+      config,
+      undefined,
+      undefined,
+      (warning) => warnings.add(warning),
+    );
     config = runtime.config;
     const base = options.base ?? config.review.base;
     const repository = new ServedReviewRepository(config);
@@ -99,6 +110,8 @@ export async function serve(
           reporter,
           compilation,
           changesStartedAt - generationStartedAt,
+          warnings,
+          warnings.generation,
         );
         server.completeCatalogue?.(compilation.manifest, accepted.generation);
         server.publishUpdate({ kind: "evidence" });
@@ -116,6 +129,7 @@ export async function serve(
         });
       },
       {
+        onWarning: (event) => warnings.add(event.warning),
         baselinePrepared: (prepared) => {
           repository.accept(
             prepared?.commit ?? null,
@@ -142,7 +156,10 @@ export async function serve(
               Date.now() - baselineStartedAt,
             );
         },
-        diagnostic: (error) => reporter.runtimeDiagnostic(error),
+        diagnostic: (error) => {
+          warnings.flush();
+          reporter.runtimeDiagnostic(error);
+        },
         incompatibleBaseline: (commit) => reporter.incompatibleBaseline(commit),
         writeOutput: options.build ?? false,
         outputWritten: (compilation, duration) =>
@@ -165,6 +182,7 @@ export async function serve(
       port: options.port,
       review: configuredServedReview(config, base, repository),
       onDiagnostic: (error) => reporter.runtimeDiagnostic(error),
+      onBuildWarning: (event) => warnings.add(event.warning),
     });
     background.start(runtime, base);
     return {
@@ -176,5 +194,5 @@ export async function serve(
       },
     };
   }
-  return serveWatched(config, options, dependencies);
+  return serveWatched(config, options, { ...dependencies, warnings });
 }

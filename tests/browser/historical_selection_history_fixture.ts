@@ -34,7 +34,7 @@ function historySource(current: boolean): string {
   const suffix = current ? "" : "-old";
   return `import React from "react";
 import { definePage, defineScreen } from "@mokly/mokly";
-const metadata = { description: "History fixture", dependencies: [], relatedDocs: [] };
+const metadata = { description: "History fixture", relatedDocs: [] };
 export const mockups = [
   defineScreen({ ...metadata, path: "history-screen${suffix}", title: "${version} screen", useCasePaths: [],
     mobile: <main><h1>${version} mobile screen</h1></main>,

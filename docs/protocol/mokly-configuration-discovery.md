@@ -52,3 +52,32 @@ with `config-invalid` and the documented migration diagnostic. Public files
 are the validated referenced
 [asset closure](./mokly-generated-output.md#closure-urls-and-publication).
 Runtime source protection remains mandatory.
+
+## Removed Review Setting
+
+A present removed `review.sharedImpact` key, even with `undefined`, emits
+`removed-shared-impact` with a configuration subject and exactly
+`review.sharedImpact has been removed; ignoring it. Delete the field.`
+It adds no watched paths or evidence. [Build Warnings](./mokly-build-warnings.md) owns strict rejection. The public `sharedImpact?: never` rejects values,
+including spreads and objects with other review keys. Rejecting explicit
+`undefined` requires `exactOptionalPropertyTypes`; otherwise runtime warns.
+Source modules without rendered output or references do not create evidence.
+Linked stylesheets, including transitive imports, are attributed by rule under
+[CSS change attribution](./mokly-css-attribution.md). A changed stylesheet keeps
+a view's dependency evidence only when a changed rule could match its before or
+after document, or analysis is unresolved. Otherwise it is examined and excluded.
+Unreferenced public files cannot add entries to Changes; linked files retain
+the uniform CSS rule membership policy in
+[Changes](./mokly-changes.md) and [component attribution](./mokly-component-changes.md).
+
+## Module Resolution
+
+`moduleResolution` has no defaults beyond esbuild's platform behavior. Package
+roots must be in-repository directories containing `package.json`; their
+`node_modules` directories supplement consumer lookup. Aliases accept bare
+package specifiers only. Conditions, package fields, and extensions are ordered,
+deduplicated lists, while loader keys are extensions and values are supported
+JavaScript-safe esbuild loader names. The `css` loader is rejected for every
+extension because it would emit an undelivered sibling stylesheet. React and
+React DOM still resolve through Mokly's
+consumer-peer plugin so these options cannot introduce a second React runtime.

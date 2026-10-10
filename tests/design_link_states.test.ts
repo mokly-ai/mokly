@@ -66,13 +66,11 @@ for (const viewport of ["mobile", "desktop"] as const) {
     }
     for (const source of [
       "design/browse/views/screen",
-      "design/changes/impact/shared-impact",
       "design/changes/impact/ignored-only",
       "design/changes/impact/empty",
       "design/browse/views/details-screen",
       "design/changes/outcomes/added",
       "design/changes/outcomes/removed",
-      "design/changes/impact/styles/excluded",
     ]) {
       const { document } = await designDocument(source, viewport);
       assert.equal(byClass(document, "mbk-cmp-toolbar").length, 0, source);
@@ -94,9 +92,15 @@ for (const viewport of ["mobile", "desktop"] as const) {
       );
     }
     for (const [source, active] of [
-      ["design/changes/impact/styles/matched", "Side by side"],
-      ["design/changes/impact/styles/unresolved", "Side by side"],
-      ["design/changes/impact/styles/unnamed", "Side by side"],
+      ["design/changes/impact/styles/matched-excluded/matched", "Side by side"],
+      [
+        "design/changes/impact/styles/unresolved-unnamed/unresolved",
+        "Side by side",
+      ],
+      [
+        "design/changes/impact/styles/unresolved-unnamed/unnamed",
+        "Side by side",
+      ],
       ["design/components/pages/stacked/overlay-tall", "Overlay"],
     ] as const) {
       const { document } = await designDocument(source, viewport);
@@ -193,7 +197,7 @@ test("Changes leaves and All escapes retain their subject", async () => {
     ],
     ["design/changes/outcomes/added", "design/browse/views/details-screen"],
     ["design/changes/outcomes/removed", "design/browse/views/home"],
-    ["design/changes/impact/empty", "design/browse/views/screen"],
+    ["design/changes/impact/empty", "design/changes/impact/ignored-only"],
   ] as const) {
     const { document } = await designDocument(source, "desktop");
     assert.deepEqual(destinations(byClass(document, "mbk-nav-filter-opt")), [

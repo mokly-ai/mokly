@@ -9,6 +9,7 @@ const pages = [
   "ci-suite-evidence.md",
   "ci-verification-repository.md",
   "ci-verification-security.md",
+  "mokly-catalogue-delivery.md",
   "mokly-changes-serving.md",
   "mokly-configuration-discovery.md",
   "mokly-configuration-imported-styles.md",
@@ -22,7 +23,6 @@ const pages = [
   "mokly-rendering-generated.md",
   "mokly-watch-runtime.md",
   "npm-release-management.md",
-  "remote-verification-base.md",
 ] as const;
 
 test("every split protocol page is indexed and its relative links resolve", async () => {

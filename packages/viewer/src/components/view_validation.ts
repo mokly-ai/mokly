@@ -1,5 +1,6 @@
 import { reviewMaterialKey } from "../data/material_key.js";
 import { isKebabCase, isEntryPath } from "../navigation/logical.js";
+import { isStylesheetPath } from "../review/css/stylesheet_path.js";
 
 import { decodeProps, encodeProps } from "./codec.js";
 import { canonicalJson, exactKeys, invalidData } from "./data.js";
@@ -43,12 +44,20 @@ export function validateComponentViews(
         "ranges",
         "styles",
         "resources",
+        "insertedStylesheets",
       ],
       at,
     );
     if (`${String(view.viewport)}/${String(view.colorScheme)}` !== axes[i])
       invalidData(at, "view axes must be unique and ordered");
-    for (const field of ["instances", "slots", "ranges", "styles", "resources"])
+    for (const field of [
+      "instances",
+      "slots",
+      "ranges",
+      "styles",
+      "resources",
+      "insertedStylesheets",
+    ])
       if (!Array.isArray(view[field]))
         invalidData(at, `missing ${field} array`);
     validateComponentViewRecord(
@@ -150,6 +159,12 @@ export function validateComponentViewRecord(
   const slots = new Map(view.slots.map((item) => [item.key, item]));
   validateOrders(view.instances, at);
   validateViewReferences(view, components, instances, slots, at, historical);
+  const roots = view.ranges.filter((range) => range.target.kind === "root");
+  if (roots.length > (rootId ? 1 : 0) || (rootId && roots.length !== 1))
+    invalidData(
+      at,
+      "saved component views require exactly one root range; screens have none",
+    );
   const rendered = new Set([
     ...view.instances.map((instance) => instance.componentId),
     ...(rootId ? [rootId] : []),
@@ -170,12 +185,38 @@ export function validateComponentViewRecord(
   for (const resource of view.resources) {
     exactKeys(resource, ["path", "componentIds"], at);
     validateResourcePath(resource.path, at);
+    if (isStylesheetPath(resource.path))
+      invalidData(at, "stylesheet resources cannot have owners");
     validateOwners(resource.componentIds, rendered, at);
   }
   sortedStrings(
     view.resources.map((resource) => resource.path),
     `${at}.resources`,
   );
+  if (view.insertedStylesheets !== undefined) {
+    if (!Array.isArray(view.insertedStylesheets))
+      invalidData(at, "insertedStylesheets must be an array");
+    let previousEnd = 0;
+    for (const link of view.insertedStylesheets) {
+      exactKeys(
+        link,
+        ["startOffset", "endOffset", "path", "componentPaths"],
+        at,
+      );
+      if (
+        typeof link.startOffset !== "number" ||
+        typeof link.endOffset !== "number" ||
+        !Number.isSafeInteger(link.startOffset) ||
+        !Number.isSafeInteger(link.endOffset) ||
+        link.startOffset < previousEnd ||
+        link.endOffset <= link.startOffset
+      )
+        invalidData(at, "invalid or overlapping inserted stylesheet span");
+      validateResourcePath(link.path, at);
+      validateOwners(link.componentPaths, rendered, at);
+      previousEnd = link.endOffset;
+    }
+  }
 }
 
 function validateOwner(

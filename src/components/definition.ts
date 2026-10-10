@@ -109,16 +109,29 @@ export function validateComponentDefinition(
   }
   const controls = value.controls ?? {};
   validateControls(value.propSchema, controls, at);
-  const owned = value.ownedDependencies ?? [];
-  if (
-    !Array.isArray(owned) ||
-    !owned.every(
-      (dependency) =>
-        typeof dependency === "string" &&
-        value.dependencies?.includes(dependency),
+  const stylesheets: unknown = value.stylesheets ?? [];
+  if (!Array.isArray(stylesheets))
+    invalidData(at, "stylesheets must be an array");
+  const declared = stylesheets as unknown[];
+  for (const stylesheet of declared) {
+    if (
+      typeof stylesheet !== "string" ||
+      !stylesheet ||
+      stylesheet.startsWith("/") ||
+      stylesheet.includes("\\") ||
+      stylesheet.includes("?") ||
+      stylesheet.includes("#") ||
+      /^[A-Za-z][\w+.-]*:/.test(stylesheet) ||
+      stylesheet
+        .split("/")
+        .some((segment) => !segment || segment === "." || segment === "..") ||
+      !/\.css$/i.test(stylesheet)
     )
-  )
-    invalidData(at, "ownedDependencies must be a subset of dependencies");
+      invalidData(
+        at,
+        `stylesheets must contain mockupsDir-relative public CSS paths: ${String(stylesheet)}`,
+      );
+  }
   const definition: ComponentDefinition = branded({
     ...value,
     __viaDefine: true,
@@ -126,7 +139,7 @@ export function validateComponentDefinition(
     propSchema: structuredClone(value.propSchema),
     controls: structuredClone(controls),
     slots: [...slots].sort(),
-    ownedDependencies: [...new Set(owned)].sort(),
+    stylesheets: [...(declared as string[])],
   });
   return definition;
 }
@@ -176,10 +189,14 @@ function componentVariantDefinition(
     values.data,
     `${at} / ${variant.slug}`,
   );
+  const retired: Record<string, unknown> = {};
+  for (const field of ["dependencies", "ownedDependencies"] as const)
+    if (Object.hasOwn(variant, field))
+      retired[field] = Reflect.get(variant, field);
   const definition: ComponentVariantDefinition = branded({
+    ...retired,
     __viaDefine: true,
     ...(parent.colorSchemes ? { colorSchemes: [...parent.colorSchemes] } : {}),
-    dependencies: [...parent.dependencies],
     description: variant.description ?? parent.description,
     slug: variant.slug,
     kind: "component",

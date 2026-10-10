@@ -50,7 +50,7 @@ test("export builds a complete consumer catalogue with an isolated comparison", 
   const review = JSON.parse(
     files.get(result.comparisonUrl.slice(1))!.toString(),
   ) as ReviewResult;
-  assert.equal(review.schemaVersion, 6);
+  assert.equal(review.schemaVersion, 7);
   assert.equal(review.baseRef, "origin/main");
   assert.ok(
     ![...files.keys()].some((name) =>

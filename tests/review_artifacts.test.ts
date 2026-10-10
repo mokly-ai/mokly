@@ -53,9 +53,9 @@ test("Review compares Git base without checkout and writes deterministic artifac
     result.screens.find((screen) => screen.path === "home")?.state,
     "changed",
   );
-  assert.deepEqual(result.sharedImpact, ["notes.md"]);
+  assert.equal(Object.hasOwn(result, "sharedImpact"), false);
   assert.ok(
-    result.screens.every((screen) => screen.sharedImpact.includes("notes.md")),
+    result.screens.every((screen) => !Object.hasOwn(screen, "sharedImpact")),
   );
   const reviewJson = JSON.parse(
     await fs.promises.readFile(
@@ -63,7 +63,7 @@ test("Review compares Git base without checkout and writes deterministic artifac
       "utf8",
     ),
   ) as { baseCommit: string; schemaVersion: number };
-  assert.equal(reviewJson.schemaVersion, 6);
+  assert.equal(reviewJson.schemaVersion, 7);
   assert.match(reviewJson.baseCommit, /^[a-f0-9]{40}$/);
   assert.equal(
     fs.existsSync(path.join(config.review.outDir, "index.html")),
@@ -103,9 +103,7 @@ test("Review reports descendants of directory dependencies", async (context) => 
   );
 
   assert.ok(
-    result.screens.every((screen) =>
-      screen.sharedImpact.includes("src/components/Button.tsx"),
-    ),
+    result.screens.every((screen) => !Object.hasOwn(screen, "sharedImpact")),
   );
 });
 

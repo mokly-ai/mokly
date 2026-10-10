@@ -23,7 +23,7 @@ import {
   removeFixture,
 } from "./helpers/fixture.js";
 
-test("canonical and display catalogue producers retain their current dependency fields", async (t) => {
+test("canonical and display catalogue producers retain source metadata without removed fields", async (t) => {
   const fixture = await createFixture();
   t.after(() => removeFixture(fixture));
   await fs.writeFile(
@@ -59,9 +59,9 @@ test("canonical and display catalogue producers retain their current dependency 
     async () => {},
   );
   for (const [label, manifest] of [
-    ["v9 build", compilation.manifest],
+    ["v10 build", compilation.manifest],
     [
-      "v9 JSON",
+      "v10 JSON",
       parseManifest(JSON.parse(serializeManifest(compilation.manifest))),
     ],
     ["live index", live.manifest],
@@ -92,16 +92,22 @@ test("canonical and display catalogue producers retain their current dependency 
     const display = viewerCatalogue(model);
     assert.equal(display.manifest.schemaVersion, "live-index-2");
     for (const entry of display.manifest.entries) {
-      assert.equal(
-        Object.hasOwn(entry, "dependencies"),
-        true,
-        label + ": display " + entry.path,
-      );
-      assert.deepEqual(
-        (entry as { dependencies?: unknown }).dependencies,
-        published.find((record) => record.path === entry.path)?.details
-          .dependencies,
-      );
+      for (const field of [
+        "dependencies",
+        "declaredDependencies",
+        "ownedDependencies",
+      ])
+        assert.equal(
+          Object.hasOwn(entry, field),
+          false,
+          label + ": display " + entry.path,
+        );
+      const details = published.find(
+        (record) => record.path === entry.path,
+      )?.details;
+      assert.ok(details, label + ": " + entry.path);
+      assert.equal(entry.sourcePath, details.sourcePath);
+      assert.equal(Object.hasOwn(details, "dependencies"), false);
     }
     const displayed = readCatalogue(
       JSON.parse(
@@ -122,31 +128,32 @@ test("canonical and display catalogue producers retain their current dependency 
         ...displayed.pages,
         ...displayed.useCases,
         ...displayed.components,
-      ].map((entry) => [entry.path, entry.details.dependencies]),
-      published.map((entry) => [entry.path, entry.details.dependencies]),
+      ].map((entry) => [entry.path, entry.details.sourcePath]),
+      published.map((entry) => [entry.path, entry.details.sourcePath]),
     );
     for (const entry of manifest.entries) {
-      assert.equal(
-        Object.hasOwn(entry, "dependencies"),
-        false,
-        label + ": " + entry.path,
-      );
-      assert.ok(
-        Array.isArray(entry.declaredDependencies),
-        label + ": " + entry.path,
-      );
-      assert.deepEqual(
-        published.find((record) => record.path === entry.path)?.details
-          .dependencies,
-        [...new Set([entry.sourcePath, ...entry.declaredDependencies])].sort(),
-        label + ": " + entry.path,
-      );
+      for (const field of [
+        "dependencies",
+        "declaredDependencies",
+        "ownedDependencies",
+      ])
+        assert.equal(
+          Object.hasOwn(entry, field),
+          false,
+          label + ": " + entry.path,
+        );
+      const details = published.find(
+        (record) => record.path === entry.path,
+      )?.details;
+      assert.ok(details, label + ": " + entry.path);
+      assert.equal(details.sourcePath, entry.sourcePath);
+      assert.equal(Object.hasOwn(details, "dependencies"), false);
     }
     t.diagnostic(
       label +
         ": " +
         manifest.entries.length +
-        " canonical entries omit dependencies; current display entries include it",
+        " canonical and display entries retain source metadata and omit removed fields",
     );
   }
 });

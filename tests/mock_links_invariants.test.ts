@@ -7,7 +7,6 @@ import { rewriteMockLinks } from "../dist/build/mock_links.js";
 
 test("logical links reject a use case without a screen first step", () => {
   const useCase = defineUseCase({
-    dependencies: [],
     description: "No first step",
     path: "empty-flow",
     relatedDocs: [],

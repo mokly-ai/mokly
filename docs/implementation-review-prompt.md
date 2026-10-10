@@ -1,5 +1,7 @@
 # Implementation Review Prompt
 
+## Delivery Status
+
 Use this prompt for the final review item in every implementation plan. Run the
 review after the completed work has passed its checks, been committed, and been
 pushed. The reviewer must inspect the complete local diff against `origin/main`
@@ -21,6 +23,8 @@ attention to app independence, generated-output safety, server and watcher
 lifecycle, comparison behavior, and protocol alignment. Do not treat
 speculative or purely theoretical concerns as findings. Do not modify files or
 automatically fix findings.
+
+Check the current-documentation rule in [`docs/protocol/documentation-policy.md`](./protocol/documentation-policy.md).
 
 Start by collecting compact summaries so large diffs fit in context:
 

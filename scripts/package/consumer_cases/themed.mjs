@@ -61,7 +61,7 @@ export async function smokeThemedConsumer(context) {
       "utf8",
     ),
   );
-  assert.equal(pageManifest.schemaVersion, 9);
+  assert.equal(pageManifest.schemaVersion, 10);
   assert.ok(
     pageManifest.entries.some(
       (entry) => entry.path === "themed-notice" && entry.kind === "page",
@@ -86,8 +86,24 @@ export async function smokeThemedConsumer(context) {
     assert.equal(response.status, 200);
     review = await response.json();
   });
-  assert.deepEqual(review.sharedImpact, ["shared/tokens.ts"]);
-  assert.ok(review.screens.every((screen) => screen.sharedImpact.length === 1));
+  assert.equal(review.schemaVersion, 7);
+  assert.equal(Object.hasOwn(review, "sharedImpact"), false);
+  assert.deepEqual(
+    review.changes.map(({ before, after }) => (after ?? before).path).sort(),
+    ["themed-dashboard", "themed-tour"],
+  );
+  assert.equal(
+    review.screens.find(({ path }) => path === "themed-dashboard").state,
+    "changed",
+  );
+  const campaign = review.screens.find(
+    ({ path }) => path === "themed-campaign",
+  );
+  assert.equal(campaign.state, "unchanged");
+  assert.equal(campaign.reasons, undefined);
+  assert.ok(
+    review.screens.every((screen) => !Object.hasOwn(screen, "sharedImpact")),
+  );
   await runBin(root, ["export", "--out", "published"]);
   await inspectConsumerExport(root, "published", "HEAD", [
     "view/themed-notice/index.html",

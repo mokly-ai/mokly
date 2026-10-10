@@ -26,7 +26,7 @@ export async function derivedFixture(
 export default defineConfig({
   roots: [{ dir: "entries" }], mockupsDir: "mockups",
   ${extraConfig}
-  review: { outDir: ".review", sharedImpact: ["**"], baselineBuild: [["node", "baseline.mjs"]] }
+  review: { outDir: ".review", baselineBuild: [["node", "baseline.mjs"]] }
 });\n`,
   );
   for (const [route, content] of Object.entries(publicFiles)) {

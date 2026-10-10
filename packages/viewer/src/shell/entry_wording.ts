@@ -1,9 +1,9 @@
-/** Shared copy for screen and component workspace surfaces. */
+/** Shared copy for screen, component and whole-document page Details. */
 
 /** Entry kinds whose comparison copy differs. */
-export type EntryKind = "screen" | "component";
+export type EntryKind = "screen" | "component" | "page";
 
-/** Product wording selected for one workspace entry kind. */
+/** Product wording selected for one Details entry kind. */
 export interface EntryWording {
   readonly excludedStylesheet: string;
   readonly excludedStylesheets: string;
@@ -12,6 +12,13 @@ export interface EntryWording {
   readonly matchedStylesWithSelectors: string;
   readonly matchedStylesWithoutSelectors: string;
   readonly noChanges: string;
+  /** Proven page matches from rules that changed no component. */
+  readonly pageStyles: string;
+  /** Proven page matches from rules that also changed a component. */
+  readonly pageOutsideStyles: string;
+  /** A rule that gives the page its own row because it can reach anything. */
+  readonly pageUnresolvedWithSelectors: string;
+  readonly pageUnresolvedWithoutSelectors: string;
   readonly unresolvedStylesWithSelectors: string;
   readonly unresolvedStylesWithoutSelectors: string;
 }
@@ -27,6 +34,13 @@ const WORDING: Record<EntryKind, EntryWording> = {
     matchedStylesWithSelectors: "Changed styles that apply to this screen:",
     matchedStylesWithoutSelectors: "Changed styles that apply to this screen.",
     noChanges: "No changes to this screen.",
+    pageStyles: "Changed styles that apply to this screen:",
+    pageOutsideStyles:
+      "These changed styles also apply outside the changed components on this screen:",
+    pageUnresolvedWithSelectors:
+      "This change can apply anywhere on the screen, so the screen stays in Changes:",
+    pageUnresolvedWithoutSelectors:
+      "This change can apply anywhere on the screen, so the screen stays in Changes.",
     unresolvedStylesWithSelectors:
       "This change can apply anywhere on the screen, so the screen stays in Changes:",
     unresolvedStylesWithoutSelectors:
@@ -44,14 +58,43 @@ const WORDING: Record<EntryKind, EntryWording> = {
     matchedStylesWithoutSelectors:
       "Changed styles that apply to this component.",
     noChanges: "No changes to this saved view.",
+    pageStyles: "Changed styles that apply to this saved view:",
+    pageOutsideStyles:
+      "These changed styles also apply outside the changed components in this saved view:",
+    pageUnresolvedWithSelectors:
+      "This change can apply anywhere on the saved view, so the saved view stays in Changes:",
+    pageUnresolvedWithoutSelectors:
+      "This change can apply anywhere on the saved view, so the saved view stays in Changes.",
     unresolvedStylesWithSelectors:
       "This change can apply anywhere on the component, so the component stays in Changes:",
     unresolvedStylesWithoutSelectors:
       "This change can apply anywhere on the component, so the component stays in Changes.",
   },
+  page: {
+    excludedStylesheet:
+      "This stylesheet changed, but none of the changed styles apply to this page.",
+    excludedStylesheets:
+      "These stylesheets changed, but none of the changed styles apply to this page.",
+    filesLead: "Changes to these files may affect this page:",
+    label: (copy) => copy.replace(/screen/g, "page").replace(/Screen/g, "Page"),
+    matchedStylesWithSelectors: "Changed styles that apply to this page:",
+    matchedStylesWithoutSelectors: "Changed styles that apply to this page.",
+    noChanges: "No changes to this page.",
+    pageStyles: "Changed styles that apply to this page:",
+    pageOutsideStyles:
+      "These changed styles also apply outside the changed components on this page:",
+    pageUnresolvedWithSelectors:
+      "This change can apply anywhere on the page, so the page stays in Changes:",
+    pageUnresolvedWithoutSelectors:
+      "This change can apply anywhere on the page, so the page stays in Changes.",
+    unresolvedStylesWithSelectors:
+      "This change can apply anywhere on the page, so the page stays in Changes:",
+    unresolvedStylesWithoutSelectors:
+      "This change can apply anywhere on the page, so the page stays in Changes.",
+  },
 };
 
-/** Resolve the vocabulary used consistently across one workspace. */
+/** Resolve the vocabulary used consistently across one entry's Details. */
 export function entryWording(kind: EntryKind): EntryWording {
   return WORDING[kind];
 }

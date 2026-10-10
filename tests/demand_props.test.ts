@@ -24,7 +24,7 @@ test("Props renders only its view and freezes resources without copying linked p
     `
     import { definePage } from "@mokly/mokly";
     mockups.push(definePage({ path: "broken", title: "Broken", description: "Broken page",
-      dependencies: [], relatedDocs: [],
+      relatedDocs: [],
       render: () => { throw new Error("unrelated page must not render"); } }));
   `;
   const fixture = await createFixture(source);

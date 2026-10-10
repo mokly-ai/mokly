@@ -66,7 +66,7 @@ test("document-only roots emit manifest, tree, resources and both schemes", asyn
     ]).hasDarkFragments,
     true,
   );
-  assert.equal(manifest.schemaVersion, 9);
+  assert.equal(manifest.schemaVersion, 10);
   assert.deepEqual(
     manifest.entries.map((e) => [e.path, e.kind]),
     [
@@ -76,7 +76,7 @@ test("document-only roots emit manifest, tree, resources and both schemes", asyn
   );
   const overview = manifest.entries[0]!;
   assert.equal(overview.description, "");
-  assert.deepEqual(overview.declaredDependencies, []);
+  assert.equal(Object.hasOwn(overview, "declaredDependencies"), false);
   assert.deepEqual(overview.relatedDocs, []);
   assert.ok(overview.kind === "document");
   assert.deepEqual(overview.resources, ["specs/example/logo.svg"]);
@@ -99,7 +99,7 @@ test("document-only roots emit manifest, tree, resources and both schemes", asyn
     comparisonUrl: null,
     revision: { content: 0, evidence: 0 },
   });
-  assert.equal(model.schemaVersion, 5);
+  assert.equal(model.schemaVersion, 6);
   assert.equal(model.documents.length, 2);
   assert.deepEqual(readCatalogue(model), model);
   assert.deepEqual(model.tree[0], {
@@ -172,7 +172,7 @@ test("documents and imported screen CSS retain independent rendering and link de
   const fixture = await pathFixture({
     "specs/guide.md": "# Guide\n\n[Screen](mock:screen#target)",
     "specs/screen.mockup.tsx":
-      'import "./screen.css"; import {defineScreen} from "@mokly/mokly"; export default defineScreen({ title:"Screen",description:"A styled screen",dependencies:[],relatedDocs:[],mobile:<h1 id="target">Mobile</h1>,desktop:<h1 id="target">Desktop</h1> });',
+      'import "./screen.css"; import {defineScreen} from "@mokly/mokly"; export default defineScreen({ title:"Screen",description:"A styled screen",relatedDocs:[],mobile:<h1 id="target">Mobile</h1>,desktop:<h1 id="target">Desktop</h1> });',
     "specs/screen.css": "h1 { color: green; }",
   });
   t.after(fixture.remove);

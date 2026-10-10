@@ -1,7 +1,24 @@
 # Catalogue compilation
 
+## Delivery Status
+
+Removal of baseline compatibility below is implemented in
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
+Root output boundaries, independent stylesheet provenance and warnings for all
+CSS resource-owner records below are implemented in Milestone 19 of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md).
+
+Configured-only placement and shared link discovery are implemented in M28.
+Generation-scoped Serve warnings and removal of the unread
+`ComponentRuntime.warnings` field and its writers are implemented in M29.
+The [warning contract](../../docs/protocol/mokly-build-warnings.md#watched-serve-generations)
+defines producer tagging, child messages and completion without replay.
+
+## Scope
+
 Build and Check load consumer definitions, validate their paths and relationships,
-render the selected views, and produce deterministic HTML and manifest v9. Serve,
+render the selected views, and produce deterministic HTML and manifest v10. Serve,
 export, publication and local component controls share the same graph and validators.
 Final Markdown documents also pass `documents/safety.ts` after logical links and
 final HTML composition. This independent parse5 allowlist rejects unsafe body
@@ -93,10 +110,9 @@ CSS Modules mutation checklist:
   reported files inside denied-name directories remain private and watchable;
   directory scans still prune those trees. Physical paths reported by PostCSS or
   esbuild map back to a symlinked configured root before inventory and guards.
-  Fragment render input now lists the
-  matching authored stylesheet rule, then generated renderer CSS, then the
-  exporting entry's CSS, relative to the fragment route. Pages still render
-  without automatic links. `consumer_entry.ts` records the exporting entry
+  Fragment render input follows the complete list and order in the
+  [renderer stylesheet contract](../../docs/protocol/mokly-rendering.md#renderer-stylesheets).
+  Pages still render without automatic links. `consumer_entry.ts` records the exporting entry
   independently of the helper that defined a screen or component; it never
   changes authored-source attribution or the manifest.
   `pending_generated.ts` holds HTML text, CSS text and opaque asset bytes before
@@ -117,6 +133,20 @@ CSS Modules mutation checklist:
   Imported CSS requires a portable module path even when an entry overrides
   its identity with `path`; the diagnostic names that module under the
   [imported-styles error contract](../../docs/protocol/mokly-imported-styles-errors.md).
+
+`renderer_resources.ts` validates each asserted public file before it ignores
+CSS owner records. Generated CSS uses its pending canonical route as its stable
+warning identity. Authored CSS uses its validated public-file identity.
+The shared public-file policy rejects symlink components before this filter.
+This filter runs before the empty-component-registry check. Saved roots have
+an explicit output boundary. Temporary rendered declarations feed final link
+provenance directly; usage `resources` contains only non-CSS ownership. CSS
+records retain their public paths in the private `ResourceSeed` channel, even
+without links. Full compilation, requested views, nested generated targets and
+Props capture carry those seeds into the shared closure. Watch and Serve retain
+the resulting authored CSS and transitive files. No CSS owner or inserted-link
+span is fabricated. Private authored declarations keep the existing component
+resource error with the shared policy cause, before any ignored-owner warning.
 
 ## Consumer Graph
 
@@ -218,6 +248,23 @@ last segment of the component's resolved path, including for index components.
 
 ## Documents and links
 
+`consumer_entry.ts` attributes definitions to their owning modules and exposes
+the public authoring API, including `resolveInstance`. Every repository-owned
+importer of `@mokly/mokly` receives the attributed facade; installed packages
+under `node_modules` and Mokly's own runtime receive the plain API. Registry
+checks run outside the consumer bundle, so CLI-read authoring markers use
+`Symbol.for` in `src/authoring/markers.ts` instead of private `Symbol()` or class
+identity; both variant forbidden-field metadata and branded definition identities
+must survive the boundary. `MoklyError` carries a `Symbol.for` brand and
+`isMoklyError` checks that brand, a known code, and the unprefixed detail. The
+facade adds the source module; `load_graph.ts` reconstructs branded errors as
+CLI `MoklyError`s without double prefixes. Unrelated evaluation failures remain
+bundling errors. `src/registry/manifest_validation.ts` validates current and
+baseline data against one strict v10 shape. Only the canonical generated
+manifest decides selection. Earlier output at that location, or root-level
+earlier output produced by the base's own recipe, uses the unavailable outcome
+without conversion or caching.
+
 Every entry owns `<path>/index.html` as its logical route. Pages and documents
 write that file; documents also write `index.dark.html` when dark is enabled;
 screens and component variants write `index.<viewport>[.dark].html` beside it.
@@ -237,14 +284,51 @@ case-folded and file-directory collisions. `transaction.ts` holds the writer
 lock for complete generated-tree replacement and rollback. Only Build,
 `build --watch` and `serve --build` write; all other consumers use memory.
 
+Registry preparation validates component-declared public CSS, deduplicates
+same-real-file declarations, and reuses configured links for declared CSS.
+`render.ts` keeps configured hrefs and the shared-list marker position outside
+`RenderInput`, while
+`components/render.tsx` inserts links beside the
+renderer-emitted configured links and records inserted-link provenance. Config
+bundles use the same namespaced `Symbol.for` marker as consumer bundles.
+The renderer-facing component entry omits `stylesheets`; the internal
+registration still supplies declarations for linking and provenance.
+The [renderer stylesheet contract](../../docs/protocol/mokly-rendering.md#renderer-stylesheets)
+owns the complete `RenderInput.stylesheets` list and its order. Watched Serve
+attaches its inventory watcher before evaluation, then validates registration
+and extends the watch set with declared CSS before index preparation.
+Component stylesheet links use the nearest present configured link, or the end
+of head content when none exists, after generated imported CSS and other head
+content. The renderer still receives its complete stylesheet list. Build and
+on-demand Serve use this same placement input.
+Mokly records private final-document full-link spans after ordinary link edits
+for comparison projection. The linking pass emits no transient token.
+`stylesheet_provenance.ts` keeps final inserted-link spans and declaring paths
+without deriving resource owners. Ignored renderer records for any stylesheet
+produce the same `BuildDiagnostic` records as configuration, registry and
+link-control validation. `Compilation.diagnostics` and requested-document
+`diagnostics` retain the normalized list. `build_warnings.ts` owns validation,
+sorting, formatting and strict failures; `warnings.ts` owns ignored-input
+producers. Non-page warnings name a typed subject instead of a route.
+`warning_sink.ts` collects one invocation or watched attempt, deduplicates
+streamed and completed records, and discards older envelopes. Serve flushes
+before `Catalogue ready` or failure. Runtimes retain their attempt identity.
+Strict commands count every producer before any output write.
+
 ## Build Warnings
 
-`build_warnings.ts` owns the validated code, route, and single-line message
+`build_warnings.ts` owns the validated code, route or subject, and single-line message
 record plus deterministic sorting and de-duplication. The child-control adapter
 and direct document-link resolver return diagnostics beside their output;
 `compile.ts` puts the normalized list on `Compilation`, while
 `document_compiler.ts` retains the requested document's list without reporting
-it. Diagnostics never enter generated files, the manifest, HTTP bytes, or
+it. During exhaustive compilation, each adapter also forwards its diagnostics
+through the compilation callback before logical-link rewriting and later
+resource validation. Later failures therefore retain all warnings already found.
+Component stylesheet placement forwards warnings when it creates them, before
+document-style range validation. Its completion does not replay those records.
+Successful results stay sorted, and the sink reports each warning once.
+Diagnostics never enter generated files, the manifest, HTTP bytes, or
 timing records. Authored C0/C1 controls become visible `\uXXXX` escapes before
 normalization, and reporters defensively apply the same encoder.
 `link_control_tiers.ts` owns the explicit ancestor and
@@ -273,6 +357,10 @@ only after successful complete compilations.
   exhaustive and requested-view compilation with shared validation.
 - `link_control_tiers.ts`, `link_control_nodes.ts`, `link_controls.ts`: tiered
   placement validation and source-byte-preserving styled-control adaptation.
+- `document_types.ts`: requested-document types. `document_components.ts`
+  finalizes and validates transformed view metadata.
+- `../config/stylesheet_rules.ts`: configured stylesheet validation and the
+  component marker position.
 - `load_graph.ts`, `consumer_entry.ts`, `consumer_resolution.ts`: one consumer
   graph, discovered through `config/entry_discovery.ts`, and its module resolution.
 - `source_inventory.ts`, `output_paths.ts`, `output_snapshot.ts`: source protection and
@@ -318,7 +406,7 @@ carry those seeds through the existing preview observation.
 
 The approved [path/output integration](../../docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
 Markdown documents and moves inside one generated tree. It introduces manifest
-v9, catalogue v5 and review v6, with explicit versions for the other boundaries.
+v10, catalogue v6 and review v7, with explicit versions for the other boundaries.
 Accepted workers use immutable in-memory route sets; only writing commands
 acquire the output lock. The integration plan records verification and scope.
 

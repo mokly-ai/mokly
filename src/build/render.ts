@@ -13,7 +13,10 @@ import {
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { componentInputs } from "../components/inputs.js";
-import type { ComponentGraphRenderer } from "../components/render.js";
+import type {
+  ComponentGraphRenderer,
+  LinkedComponentStylesheet,
+} from "../components/render.js";
 import { rebaseStyleOwnership } from "../components/style_ownership.js";
 import {
   isComponentVariantDefinition,
@@ -26,8 +29,11 @@ import { MoklyError, errorMessage } from "../errors.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { Renderer } from "../renderer/types.js";
 
+import type { BuildDiagnostic } from "./build_warnings.js";
 import { GENERATED_MARKER } from "./generated_marker.js";
+import type { ResourceSeed } from "./html_links.js";
 import { renderPage } from "./render_page.js";
+import { rendererWithoutCssOwners } from "./renderer_resources.js";
 import { stylesheetHref, type StyleDelivery } from "./styles/links.js";
 import { isGeneratedRoute } from "./styles/routes.js";
 
@@ -45,6 +51,9 @@ export function renderFragments(
     colorScheme: ColorScheme;
   },
   styles?: StyleDelivery,
+  onWarning?: (warning: BuildDiagnostic) => void,
+  stylesheetLinks?: Map<string, readonly LinkedComponentStylesheet[]>,
+  resourceSeeds?: ResourceSeed[],
 ): Map<string, string> {
   const outputs = new Map<string, string>();
   const components = entries.filter(
@@ -99,7 +108,7 @@ export function renderFragments(
           )
             continue;
           const route = viewRoute(entry.path, viewport, colorScheme);
-          const stylesheets = stylesheetsFor(
+          const placement = stylesheetPlacementFor(
             entryRoute(entry.path),
             route,
             colorScheme,
@@ -107,7 +116,16 @@ export function renderFragments(
             entry.entryRoot,
             styles,
           );
+          const stylesheets = placement.hrefs;
           let rendered: string;
+          const safeRenderer = rendererWithoutCssOwners(
+            renderer,
+            route,
+            config,
+            styles?.pending,
+            onWarning,
+            (seed) => resourceSeeds?.push(seed),
+          );
           try {
             const componentProps =
               entry.kind === "component"
@@ -126,8 +144,16 @@ export function renderFragments(
               ...(componentProps ? { componentProps } : {}),
             };
             if (components.length) {
-              const output = graphRenderer(input, renderer, components);
+              const output = graphRenderer(input, safeRenderer, components, {
+                route: `${GENERATED_DIRECTORY}/${route}`,
+                diagnosticRoute: route,
+                position: placement.position,
+                configuredHrefs: placement.configuredHrefs,
+                mockupsDir: config.mockupsDir,
+                ...(onWarning ? { onWarning } : {}),
+              });
               rendered = output.html;
+              stylesheetLinks?.set(route, output.stylesheetLinks);
               componentViews.set(route, {
                 ...output.view,
                 styles: rebaseStyleOwnership(
@@ -137,7 +163,7 @@ export function renderFragments(
                 ),
               });
             } else {
-              const result = renderer(input);
+              const result = safeRenderer(input);
               rendered = typeof result === "string" ? result : result.html;
               if (
                 typeof result !== "string" &&
@@ -188,14 +214,21 @@ function addOutput(
   outputs.set(route, content.endsWith("\n") ? content : `${content}\n`);
 }
 
-export function stylesheetsFor(
+export interface StylesheetPlacement {
+  hrefs: string[];
+  configuredHrefs: string[];
+  position: number;
+}
+
+/** Configured links exclude the marker, while its position stays route-local. */
+export function stylesheetPlacementFor(
   catalogueRoute: string,
   viewPath: string,
   colorScheme: ColorScheme,
   config: ResolvedConfig,
   entryRoot?: string,
   styles?: StyleDelivery,
-): string[] {
+): StylesheetPlacement {
   const rule = config.stylesheets.find((candidate) =>
     minimatch(catalogueRoute, candidate.match),
   );
@@ -222,9 +255,14 @@ export function stylesheetsFor(
     }
     return stylesheetHref(`${GENERATED_DIRECTORY}/${viewPath}`, stylesheet);
   });
+  const configuredHrefs = [...local];
   for (const root of [config.renderer, entryRoot]) {
     const route = root && styles?.routes.get(root);
     if (route) local.push(stylesheetHref(viewPath, route));
   }
-  return local;
+  return {
+    hrefs: local,
+    configuredHrefs,
+    position: rule?.componentPosition ?? rule?.stylesheets.length ?? 0,
+  };
 }

@@ -17,7 +17,7 @@ import {
 import type { RegistryViolation } from "./prepared_types.js";
 import { variantEntryViolations } from "./variant_validation.js";
 
-/** Validate metadata, routes, source attribution, and declared paths. */
+/** Validate metadata, routes, and source attribution. */
 export function validateEntry(
   entry: ResolvedRegistryEntry,
   config: ResolvedConfig,
@@ -64,7 +64,6 @@ export function validateEntry(
     );
   }
   validatePaths(entry, "relatedDocs", entry.relatedDocs, config, violations);
-  validatePaths(entry, "dependencies", entry.dependencies, config, violations);
   if (entry.rationale !== undefined && !nonEmpty(entry.rationale)) {
     violations.push(
       problem(

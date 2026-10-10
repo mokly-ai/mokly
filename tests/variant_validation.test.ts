@@ -84,7 +84,7 @@ for (const kind of ["screen", "component"] as const) {
       path: "account/invoice",
       title: "Invoice",
       description: "Invoice",
-      dependencies: [],
+
       relatedDocs: [],
     };
     const authored =
@@ -129,7 +129,6 @@ test("component parents require at least one variant", () => {
 });
 
 for (const [field, value] of [
-  ["dependencies", ["README.md"]],
   ["relatedDocs", ["README.md"]],
   ["colorSchemes", ["light"]],
   ["tags", ["forms"]],
@@ -149,6 +148,34 @@ for (const [field, value] of [
       new RegExp(`must inherit ${field}`),
     );
   });
+
+test("removed component and variant dependencies warn without inheritance or validation", () => {
+  const [parent, child] = variantDefinitions("component");
+  assert.ok(parent && child);
+  const removed = { dependencies: ["README.md"] } as Record<string, unknown>;
+  const prepared = prepareRegistry(
+    collectModuleExports(
+      {
+        default: [
+          Object.assign(parent, removed),
+          Object.assign(child, removed),
+        ],
+      },
+      sourceRelativePath,
+    ),
+    config,
+  );
+  assert.deepEqual(
+    prepared.diagnostics.map(({ code, subject }) => [code, [subject?.path]]),
+    [
+      ["removed-dependencies", [parent.path]],
+      ["removed-dependencies", [child.path]],
+    ],
+  );
+  assert.ok(
+    prepared.entries.every((entry) => !Object.hasOwn(entry, "dependencies")),
+  );
+});
 
 test("non-screen entries reject variant fields even when undefined", () => {
   for (const kind of ["page", "use-case", "component"] as const) {

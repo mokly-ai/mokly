@@ -1,5 +1,19 @@
 # Package And Consumer Boundary
 
+## Delivery Status
+
+Removal of baseline compatibility below is implemented in
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
+CSS rule attribution and ignored stylesheet owner records are planned for
+[M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
+Other behavior below remains implemented.
+
+Public catalogue v6 and source-path-free comparison were planned by
+[remove-source-path-evidence](../../plans/remove-source-path-evidence.md),
+implemented in Milestones 7 and 4. Current packages emit manifest v10,
+catalogue v6 and comparison v7 without source-path evidence.
+
 ## Rule
 
 Mokly owns the mechanics shared by any React mockup catalogue. A consumer
@@ -26,7 +40,8 @@ workspace layouts. At build time, React imports are resolved from the consumer's
 config file and every React-bearing source is bundled in one graph.
 
 The renderer is synchronous and returns a complete HTML document, either as a
-string or as `RenderResult` with optional validated style/resource ownership. This is the
+string or as `RenderResult` with optional validated document-style/non-CSS
+resource ownership. Stylesheet owner records are ignored with a warning. This is the
 only place an app should install theme providers, collect React Native Web's
 `AppRegistry` styles, inject product fonts, or establish other render context.
 Those actions depend on app-owned packages and policy, so moving them into the
@@ -66,7 +81,7 @@ never imports the CLI, Node built-ins, Git or consumer application code. Its `./
 is explicitly Node-only SSR and is excluded from the browser entry graph.
 
 The public boundary consists of [scoped instances](../protocol/mokly-instances.md),
-the [catalogue v5 projection](../protocol/mokly-catalogue.md), the
+the [catalogue v6 projection](../protocol/mokly-catalogue.md), the
 [React/SSR viewer API](../protocol/mokly-viewer.md) and
 [FrameAdapter](../protocol/mokly-frame-adapter.md). Hosts consume packages and
 documented public artifacts, without private manifest access, deep imports or
@@ -101,7 +116,7 @@ Mokly renders while its source remains protected and watched. A page callback
 may reuse an existing render helper; consumer policy owns source allowlists and
 document-stage rules. The configured renderer supplies screen and component
 views before link validation; pages keep their own complete-document callbacks.
-Current and comparison-base manifests both require v9 under the
+Current and comparison-base manifests both require v10 under the
 [baseline compatibility contract](../protocol/mokly-baseline-compatibility.md).
 [Paths and roots](../protocol/mokly-paths.md) determine identity for every kind.
 [Move detection](../protocol/mokly-moves.md) pairs entries across accepted builds.
@@ -116,8 +131,8 @@ authored closure files remain watched. A child closes
 on either an orderly message/signal or loss of its parent IPC channel, and
 supervisor shutdown waits for confirmed exit while escalating from IPC to
 SIGTERM and SIGKILL. On-demand comparisons read the base
-tree through bounded Git object batches, matches directory dependencies
-recursively, rejects non-portable base resource URLs, and never checks the base
+tree through bounded Git object batches, follows linked public resources
+transitively, rejects non-portable base resource URLs, and never checks the base
 out over the worktree. No separate comparison report pages or comparison
 navigation payload are generated. The approved public catalogue is the additive
 browsing projection described above.

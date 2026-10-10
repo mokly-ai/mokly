@@ -69,6 +69,15 @@
   color: var(--mbk-sage-deep);
   font-weight: 600;
 }
+/* A saved variant that owns no artboard in its story: shown, not linked. */
+.ce-variants > .ce-variant-option {
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--chrome-ink-2);
+  font-size: inherit;
+  margin-right: 0;
+  padding: 5px 10px;
+}
 /* One height sizes every depicted component viewport, so a Side by side canvas
    and the stacked frame of Overlay and Difference always match. */
 .ce-canvas {

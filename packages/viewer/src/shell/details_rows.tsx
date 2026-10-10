@@ -102,19 +102,6 @@ function relatedDocument(
   return undefined;
 }
 
-/** Source or dependency paths rendered as monospace chips. */
-export function PathChips(props: { values: readonly string[] }) {
-  return (
-    <span className="mbk-chips">
-      {props.values.map((value) => (
-        <code className="mbk-code" key={value}>
-          {value}
-        </code>
-      ))}
-    </span>
-  );
-}
-
 /**
  * The tags an entry declares. Each chip is a control: the Browse client enters
  * `tag:<tag>` in the search field for it, so an unenhanced page still reads the

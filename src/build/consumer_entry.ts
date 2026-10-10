@@ -131,6 +131,7 @@ function attributedApiContents(
     `export const defineScreen = (input) => attribute(api.defineScreen(input), source);`,
     `export const defineUseCase = (input) => attribute(api.defineUseCase(input), source);`,
     `export const defineConfig = api.defineConfig;`,
+    `export const componentStylesheets = api.componentStylesheets;`,
     `export const MockLink = api.MockLink;`,
     `export const mockLink = api.mockLink;`,
     `export const ReviewIgnore = api.ReviewIgnore;`,

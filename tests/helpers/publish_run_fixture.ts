@@ -51,13 +51,12 @@ export function dependencies(duplicate = false) {
         [
           comparisonPath,
           JSON.stringify({
-            schemaVersion: 6 as const,
+            schemaVersion: 7 as const,
             baseRef: "origin/main",
             baseCommit: base,
             changedPaths: [],
             ignoredImpact: [],
             screens: [],
-            sharedImpact: [],
             components: [],
             changes: [],
             affectedConsumers: [],

@@ -16,7 +16,6 @@ export function pairedEntryChanges(
   mapBefore: (path: string) => string = (path) => path,
   beforeDocuments: (source: string) => string = (source) => source,
   afterDocuments: (source: string) => string = (source) => source,
-  mapSource: (source: string) => string = (source) => source,
 ): ChangedEntry[] {
   const reasonsByKey = new Map<string, EntryChangeReason[]>();
   for (const change of changes) {
@@ -37,7 +36,7 @@ export function pairedEntryChanges(
     if (!before) retained.push({ kind: "added" });
     else if (!after) retained.push({ kind: "removed" });
     else if (
-      metadata(before, mapBefore, beforeDocuments, mapSource) !==
+      metadata(before, mapBefore, beforeDocuments) !==
       metadata(after, undefined, afterDocuments)
     )
       retained.push({ kind: "metadata" });

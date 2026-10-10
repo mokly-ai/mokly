@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
+import type { TestContext } from "node:test";
 
 import { readCatalogue, type CatalogueReadModel } from "@mokly/viewer";
 import { parseReviewResult, viewHref } from "@mokly/viewer/data";
@@ -19,6 +20,8 @@ import { compareReview } from "../../dist/review/compare.js";
 import { CommittedRepository } from "../../dist/review/git.js";
 import { computeCatalogueChanges } from "../../dist/server/changed.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
+import { PlainServeReporter } from "../../dist/server/reporter.js";
+import { serve } from "../../dist/server/serve.js";
 import { readShellCatalogue } from "../../packages/viewer/src/catalogue/reader.js";
 
 /** Record the real authoring files and accepted bytes before a fixture moves. */
@@ -134,4 +137,129 @@ function identities(model: CatalogueReadModel) {
     previousPath,
     changes,
   }));
+}
+
+/** Keep one-sided views available through the real background and export paths. */
+export async function assertSchemeMoveDelivery(
+  t: TestContext,
+  fixture: { config: ResolvedConfig; before: Compilation; after: Compilation },
+  scenario: {
+    kind: "screen" | "component";
+    destination: string;
+    moved: boolean;
+    change: "added" | "removed" | "unchanged";
+  },
+): Promise<void> {
+  const suffix = scenario.kind === "component" ? "/default" : "";
+  const current = scenario.destination + suffix;
+  const baseline = "old/home" + suffix;
+  const check = (model: CatalogueReadModel) => {
+    assert.equal(model.changesStatus, "ready");
+    const entry = (
+      scenario.kind === "screen" ? model.screens : model.components
+    ).find((entry) => entry.path === current)!;
+    assert.ok("views" in entry);
+    if (entry.kind === "component")
+      assert.deepEqual(entry.comparison, {
+        status: "ready",
+        kind:
+          scenario.change === "removed"
+            ? "changed"
+            : scenario.change === "added"
+              ? "added"
+              : "unmodified",
+        eligible: scenario.change === "removed",
+      });
+    assert.deepEqual(
+      entry.views.map(({ viewport, colorScheme }) => [viewport, colorScheme]),
+      ["mobile", "desktop"].flatMap((viewport) =>
+        (scenario.change === "removed" ? ["light"] : ["light", "dark"]).map(
+          (scheme) => [viewport, scheme],
+        ),
+      ),
+    );
+    for (const view of entry.views)
+      assert.deepEqual(view.comparison, {
+        status: "ready",
+        kind:
+          view.colorScheme === "dark" && scenario.change === "added"
+            ? "added"
+            : "unmodified",
+        eligible: false,
+      });
+    assert.equal(entry.previousPath, scenario.moved ? baseline : undefined);
+    assert.deepEqual(entry.changes, {
+      status: "ready",
+      included: true,
+      kind: scenario.change === "unchanged" ? "unmodified" : "changed",
+    });
+  };
+  await t.test("Serve", async () => {
+    let finish!: (status: string) => void;
+    const settled = new Promise<string>((resolve) => {
+      finish = resolve;
+    });
+    const messages: string[] = [];
+    const reporter = new PlainServeReporter((line) => messages.push(line));
+    reporter.changesReady = () => finish("ready");
+    reporter.changesUnavailable = () => finish("unavailable");
+    const running = await serve(
+      fixture.config,
+      { base: "main", port: 0, watch: false },
+      { reporter },
+    );
+    try {
+      assert.equal(await settled, "ready", messages.join(""));
+      check(
+        readCatalogue(
+          await (
+            await fetch(`${running.url}/mokly-viewer/catalogue.json`)
+          ).json(),
+        ),
+      );
+      assert.equal(
+        (await fetch(`${running.url}/view/${current}/`)).status,
+        200,
+      );
+      assert.equal(
+        (
+          await fetch(
+            `${running.url}/static/mokly-generated/${current}/index.mobile.html`,
+          )
+        ).status,
+        200,
+      );
+    } finally {
+      await running.close();
+    }
+  });
+  await t.test("export", async () => {
+    await exportCatalogue(fixture.config, { outDir: "site", base: "main" });
+    const outDir = path.join(fixture.config.repoRoot, "site");
+    const model = readCatalogue(
+      JSON.parse(
+        await fs.readFile(
+          path.join(outDir, "mokly-viewer/catalogue.json"),
+          "utf8",
+        ),
+      ),
+    );
+    check(model);
+    assert.ok(model.comparisonUrl);
+    const snapshots = path.join(
+      outDir,
+      path.dirname(model.comparisonUrl),
+      "snapshots",
+    );
+    for (const side of ["before", "after"] as const)
+      for (const viewport of ["mobile", "desktop"])
+        for (const scheme of ["light", "dark"]) {
+          const route = `${side === "before" ? baseline : current}/index.${viewport}${scheme === "dark" ? ".dark" : ""}.html`;
+          const expected = fixture[side].outputs.get(route);
+          const file = path.join(snapshots, side, "mokly-generated", route);
+          if (expected === undefined)
+            await assert.rejects(fs.readFile(file), { code: "ENOENT" });
+          else assert.equal(await fs.readFile(file, "utf8"), expected, route);
+        }
+  });
 }

@@ -1,5 +1,22 @@
 # React To Static HTML Build Pipeline
 
+## Delivery Status
+
+The [path identity plan](../../plans/path-identity.md) records the delivered work.
+
+Removal of baseline compatibility below is implemented in
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
+CSS rule attribution and ignored stylesheet owner records are planned for
+[M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
+Other behavior below remains implemented.
+
+Component CSS linking, manifest v10 and source-path-free classification were
+planned by [remove-source-path-evidence](../../plans/remove-source-path-evidence.md)
+and implemented in Milestones 3, 6 and 4 respectively. The pipeline below
+describes current behavior. Milestone 11 implemented the renderer-entry
+refinement below.
+
 ## Overview
 
 ```text
@@ -27,7 +44,7 @@ adapt explicit child controls -> resolve mock:<path> links
 validate markers/links/resources
         |
         v
-mobile/desktop light and optional dark HTML for every screen, screen variant, and component variant entry, whole documents + schema-v9 manifest + CSS and binary asset outputs in memory
+mobile/desktop light and optional dark HTML for every screen, screen variant, and component variant entry, whole documents + schema-v10 manifest + CSS and binary asset outputs in memory
         |
         +---- check (tracked): compare entire mokly-generated/ tree, write nothing
         |
@@ -36,7 +53,7 @@ mobile/desktop light and optional dark HTML for every screen, screen variant, an
         `---- build: stage and replace mokly-generated/ tree, roll back on failure
 ```
 
-Path identity, roots, manifest v9, review result v6, Markdown rendering and move
+Path identity, roots, manifest v10, review result v7, Markdown rendering and move
 pairing and viewer presentation are implemented. The
 [path/output contract](../protocol/mokly-path-output-integration.md) owns their combined layout.
 
@@ -99,7 +116,7 @@ other authored CSS. A second esbuild pass produces one CSS file per
 configured renderer/entry root and path-mirrored local assets. The union of
 both passes and plugin dependencies is used even by inventory-only freshness
 checks. Generated text and binary bytes share the same ownership, check,
-transaction and export boundaries without changing manifest v9.
+transaction and export boundaries without changing manifest v10.
 Imported CSS does not add a separate
 manifest schema. Routes and navigation both derive from each entry path.
 
@@ -189,15 +206,16 @@ type Renderer = (input: RenderInput) => string | RenderResult;
 variant entry itself and `componentProps` carries its validated props.
 
 The returned string, or `RenderResult.html`, must be a complete HTML document.
-The optional structured result supplies exact component style/resource ownership;
+The optional structured result supplies document-style and non-CSS resource ownership;
+stylesheet resource-owner records are ignored with a warning;
 see the [component manifest](../protocol/mokly-component-manifest.md).
 Each component variant entry renders in every configured context through the
 same consumer graph. Wrappers record actual invocations, data, caller-owned
 slots, and layout-neutral ranges. The variant's root render is not its own
-instance. All catalogues emit manifest v9 with the complete source inventory.
+instance. All catalogues emit manifest v10 with the complete source inventory.
 Registered components add variant entries and complete per-view
 invocation/ownership records; explicit page callbacks still emit exactly one
-complete document. Current and Git-baseline readers require v9; earlier output
+complete document. Current and Git-baseline readers require v10; earlier output
 makes Changes unavailable under
 [baseline compatibility](../protocol/mokly-baseline-compatibility.md).
 
@@ -259,14 +277,13 @@ inside its extraction and read the validated cached output. Head and baseline
 compilation use their respective source and package versions; see the
 [per-commit baseline contract](../protocol/mokly-derived-baselines.md).
 
-Declared dependency paths may be files or directories. The manifest preserves
-that declaration, and downstream Browse/Review impact matching treats a
-directory as a root containing every changed descendant rather than requiring
-an exact Git path match.
+Current entries have no source-path declarations. Browse and Review attribute
+only rendered output, linked public resources, reviewable metadata, ancestry
+and component usage; a changed directory alone is not evidence.
 
 Link/resource validation targets only the candidate generated tree and its
 referenced authored closure, never files left by an earlier build. The closure
-and generated-file inventory are recorded in manifest v9; see
+and generated-file inventory are recorded in manifest v10; see
 [generated output](../protocol/mokly-generated-output.md).
 
 Watched Serve and Browse use the accepted compiled route and validated
@@ -326,4 +343,4 @@ Shared catalogue validation uses synchronous browser-safe SHA-256, checked again
 Node digests; source inventory excludes the resolved viewer runtime even when
 npm installs it as a workspace symlink. Browser
 packaging fails if a client imports Node-only code. Comparison JSON is decoded
-with the same strict review-result v6 validator used by its producer.
+with the same strict review-result v7 validator used by its producer.

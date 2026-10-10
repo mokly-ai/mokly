@@ -3,7 +3,7 @@
 Continuation of [Mokly Rendering And Generated Output](./mokly-rendering.md).
 The [artifact path contract](./mokly-artifact-paths.md) owns exact routes,
 and the [component manifest contract](./mokly-component-manifest.md) owns
-component-specific v9 records.
+component-specific v10 records.
 
 ## Generated Contract
 
@@ -36,16 +36,16 @@ marker. It does not establish ownership. The whole generated tree is disposable;
 authored closure assets stay outside it. The [unified output contract](./mokly-unified-output.md)
 defines the inventory, reserved styles/assets routes and reference policy.
 
-All catalogues emit [manifest v9](./mokly-component-manifest.md), including
+All catalogues emit [manifest v10](./mokly-component-manifest.md), including
 pages, documents, folder records, source inventory, component variant entries and per-view
-invocation/ownership records. Current and baseline readers accept only v9;
+invocation/ownership records. Current and baseline readers accept only v10;
 earlier output follows [baseline compatibility](./mokly-baseline-compatibility.md).
 Version 9 stores no route, view path, or other value derivable from path, kind, and
 configuration. The common shape is:
 
 ```ts
-interface ManifestV9 {
-  schemaVersion: 9;
+interface ManifestV10 {
+  schemaVersion: 10;
   generatedBy: "mokly";
   entries: readonly ManifestEntry[];
   folders: readonly ManifestFolder[];
@@ -64,7 +64,6 @@ interface ManifestEntryBase {
   movedFrom?: string;
   relatedDocs: readonly string[];
   sourcePath: string;
-  declaredDependencies: readonly string[];
   tags?: readonly string[];
 }
 ```
@@ -75,7 +74,7 @@ shape are defined by the [manifest contract](./mokly-component-manifest.md).
 
 Entries sort by kind name in UTF-16 order (`component`, `document`, `page`,
 `screen`, `use-case`) and then path, with a parent's variants directly after it
-in authored order; source inputs, dependencies, and generated files sort
+in authored order; source inputs and generated files sort
 lexically. Optional properties are omitted, not emitted as `null`. `path` is
 required on every entry; its derivation follows the
 [path contract](./mokly-paths.md#derivation), and folder titles and order
@@ -89,12 +88,7 @@ collision validation as light views.
 sorted, and is written only for an entry that declares a non-empty one; an
 absent or empty declaration is omitted, so an untagged catalogue serializes
 exactly as it did before the field existed.
-`sourcePath`, related docs, and declared dependencies use repo-relative POSIX
-paths. An entry's complete dependency set is the union of `sourcePath`,
-`declaredDependencies`, and a document's `resources`; readers derive it, and
-the manifest does not store it.
-Declared dependencies retain the file-or-directory-root matching semantics of
-the authoring API.
+`sourcePath` and related docs use repository-relative POSIX paths. Source paths protect authored files and identify their origins; they never add comparison evidence. The manifest omits removed authoring path declarations.
 
 ## Concurrent Writers
 
@@ -148,14 +142,14 @@ Imported CSS adds deterministic routes under `mokly-generated/`:
 
 Every regular file in the reserved tree is owned output. Whole-tree replacement
 removes files absent from the next accepted compilation. Authored CSS
-sources remain private. Manifest v9 inventories these files by exact Git blob hashes; entry routes
+sources remain private. Manifest v10 inventories these files by exact Git blob hashes; entry routes
 still derive from path and kind.
 
 Resolve generated stylesheet links from the complete view path so screens,
-component variants and pages reach their public CSS and assets. Configured
-stylesheet links precede generated renderer and entry links; the built-in
-renderer adds none. Complete page callbacks receive no injected links and
-must link their generated entry stylesheet explicitly. Documents, stylesheets
-and assets share the binary-safe whole-tree transaction and index-based Check rules.
+component variants and pages reach their public CSS and assets. The
+[renderer stylesheet contract](./mokly-rendering.md#renderer-stylesheets)
+owns the complete `RenderInput.stylesheets` list, its order and how pages link
+CSS. Documents, stylesheets and assets share the binary-safe whole-tree
+transaction and index-based Check rules.
 The [imported stylesheet contract](./mokly-imported-styles.md) defines their
 bundle, source-inventory and error boundaries.

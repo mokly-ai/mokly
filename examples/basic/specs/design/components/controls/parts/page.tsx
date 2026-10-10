@@ -97,6 +97,7 @@ export function ControlsPage({
                     comparison={
                       state === "comparison" ? actionComparison : undefined
                     }
+                    subject="component"
                   />
                 </>
               ),

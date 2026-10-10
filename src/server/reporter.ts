@@ -1,4 +1,4 @@
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import { EARLIER_BASELINE_MESSAGE } from "../baseline/compatibility.js";
 import {
@@ -6,6 +6,7 @@ import {
   type BuildDiagnostic,
 } from "../build/build_warnings.js";
 import type { Compilation } from "../build/compile.js";
+import type { BuildWarningSink } from "../build/warning_sink.js";
 import { errorMessage } from "../errors.js";
 
 import type { RuntimeWatchAction } from "./watch_events.js";
@@ -33,7 +34,7 @@ export interface ServeReporter {
   baselinePreparing(base: string): void;
   baselineReady(commit: string, cacheHit: boolean, durationMs: number): void;
   buildWarnings(diagnostics: readonly BuildDiagnostic[]): void;
-  catalogueReady(manifest: ManifestV9, durationMs: number): void;
+  catalogueReady(manifest: ManifestV10, durationMs: number): void;
   changesReady(changed: number, durationMs: number): void;
   changesUnavailable(durationMs: number): void;
   gitReferenceRefresh(base: string): void;
@@ -50,8 +51,12 @@ export function reportCatalogueReady(
   reporter: ServeReporter,
   compilation: Compilation,
   durationMs: number,
+  warnings?: BuildWarningSink,
+  generation = warnings?.generation,
 ): void {
-  reporter.buildWarnings(compilation.diagnostics);
+  if (warnings && generation !== warnings.generation) return;
+  if (warnings) warnings.complete(compilation.diagnostics);
+  else reporter.buildWarnings(compilation.diagnostics);
   reporter.catalogueReady(compilation.manifest, durationMs);
 }
 
@@ -73,7 +78,7 @@ export class PlainServeReporter implements ServeReporter {
     for (const diagnostic of diagnostics)
       this.write(`[mokly/warning] ${formatBuildDiagnostic(diagnostic)}\n`);
   }
-  catalogueReady(_manifest: ManifestV9, _durationMs: number): void {}
+  catalogueReady(_manifest: ManifestV10, _durationMs: number): void {}
   changesReady(_changed: number, _durationMs: number): void {}
   changesUnavailable(_durationMs: number): void {}
   gitReferenceRefresh(_base: string): void {}

@@ -1,7 +1,8 @@
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { GeneratedFile } from "../build/generated_file.js";
+import type { GenerationWarning } from "../build/warning_generation.js";
 
 import type { CatalogueSnapshot } from "./catalogue_snapshot.js";
 import type {
@@ -19,6 +20,7 @@ export interface ServerOptions {
   liveChanges?: boolean;
   onForeground?: (active: boolean) => void;
   onDiagnostic?: (error: unknown) => void;
+  onBuildWarning?: (event: GenerationWarning) => void;
   onPreviewResources?: (observation: PreviewObservation) => void;
   base: string;
   /** Reuse a validated startup or publication generation without rereading metadata. */
@@ -45,7 +47,7 @@ export interface ServerOptions {
 export interface RunningServer {
   /** Adopt a complete catalogue and serve a supplied list over its manifest closure. */
   completeCatalogue?(
-    manifest: ManifestV9,
+    manifest: ManifestV10,
     generation: string,
     assetClosure?: readonly string[],
   ): boolean;

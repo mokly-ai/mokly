@@ -20,7 +20,7 @@ import { MemoryBaselineFileSystem } from "./baseline_memory.js";
 
 export const baselineCommit = "a".repeat(40);
 export const baselineManifest = {
-  schemaVersion: 9 as const,
+  schemaVersion: 10 as const,
   folders: [],
   generatedBy: "mokly",
   entries: [
@@ -30,7 +30,6 @@ export const baselineManifest = {
       title: "Page",
       description: "Baseline page",
       relatedDocs: [],
-      declaredDependencies: [],
       sourcePath: "catalogue.txt",
     },
   ],

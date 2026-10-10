@@ -8,21 +8,14 @@ import { analysisOwnsStylesheet } from "../dist/review/css/paths.js";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
 
 for (const components of [false, true])
-  test(`v${components ? 3 : 2} keeps source token stylesheets in shared impact`, async (t) => {
+  test(`v7 (components=${components}) excludes unrendered source token stylesheets from evidence`, async (t) => {
     const tokenPath = "src/styles/tokens.css";
     const fixture = await cssAttributionFixture(t, components, {
-      prepare: async ({ root, configPath }) => {
+      prepare: async ({ root }) => {
         await fs.mkdir(path.join(root, "src/styles"), { recursive: true });
         await fs.writeFile(
           path.join(root, tokenPath),
           ":root { --tone: red; }",
-        );
-        await fs.writeFile(
-          configPath,
-          (await fs.readFile(configPath, "utf8")).replace(
-            'sharedImpact: ["mockups/**"]',
-            'sharedImpact: ["src/styles/**"]',
-          ),
         );
       },
     });
@@ -46,10 +39,10 @@ for (const components of [false, true])
       }),
       false,
     );
-    assert.equal(result.schemaVersion, 6);
-    assert.deepEqual(result.sharedImpact, [tokenPath]);
+    assert.equal(result.schemaVersion, 7);
+    assert.equal(Object.hasOwn(result, "sharedImpact"), false);
     for (const screen of result.screens) {
-      assert.deepEqual(screen.sharedImpact, [tokenPath]);
+      assert.equal(Object.hasOwn(screen, "sharedImpact"), false);
       assert.ok(
         screen.views.every((view) => !view.reasons && !view.excludedResources),
       );

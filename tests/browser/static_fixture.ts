@@ -22,7 +22,7 @@ function historicalEntrySource(
   renamedId: string,
 ): string {
   const page = (id: string, title: string) =>
-    `definePage({ dependencies: [], description: ${JSON.stringify(`${title} guidance`)}, path: ${JSON.stringify(id)}, relatedDocs: [], render: () => ${JSON.stringify(`<!doctype html><html><body><h1>${title}</h1></body></html>`)}, title: ${JSON.stringify(title)} })`;
+    `definePage({ description: ${JSON.stringify(`${title} guidance`)}, path: ${JSON.stringify(id)}, relatedDocs: [], render: () => ${JSON.stringify(`<!doctype html><html><body><h1>${title}</h1></body></html>`)}, title: ${JSON.stringify(title)} })`;
   return `import { definePage } from "@mokly/mokly";
 export const mockups = [
   ${includeRemoved ? `${page("removed", "Removed")},` : ""}

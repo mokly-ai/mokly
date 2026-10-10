@@ -30,7 +30,6 @@ export async function removedPagePreviewFixture(t: TestContext) {
   t.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const page: HistoricalManifestPage = {
-    declaredDependencies: [],
     description: "Historical guide",
     path: "guide",
     kind: "page",
@@ -65,7 +64,7 @@ export async function removedPagePreviewFixture(t: TestContext) {
   const metadata = currentManifest({
     entries: [page],
     generatedBy: "mokly",
-    schemaVersion: 9,
+    schemaVersion: 10,
     sourceFiles: ["entries/guide.mockup.tsx"],
   });
   const baseline: HistoricalManifest = {

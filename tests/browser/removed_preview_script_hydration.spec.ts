@@ -18,12 +18,12 @@ import {
 const CONFIG =
   '{mockupsDir:"mockups",roots:[{dir:"specs"}],colorSchemes:["light"]}';
 const HOME = `import {defineScreen} from '@mokly/mokly';
-export default defineScreen({title:'Home',description:'Home',dependencies:[],relatedDocs:[],mobile:<main><h1>Home</h1></main>,desktop:<main><h1>Home</h1></main>});`;
+export default defineScreen({title:'Home',description:'Home',relatedDocs:[],mobile:<main><h1>Home</h1></main>,desktop:<main><h1>Home</h1></main>});`;
 
 /** A screen whose render carries an inline script that marks its document. */
 const WIDGET = `import {defineScreen} from '@mokly/mokly';
 const view = <main><h1>Widget</h1><script dangerouslySetInnerHTML={{__html: "document.documentElement.dataset.previewScript = 'ran';"}} /></main>;
-export default defineScreen({title:'Widget',description:'A widget with a script',dependencies:[],relatedDocs:[],mobile:view,desktop:view});`;
+export default defineScreen({title:'Widget',description:'A widget with a script',relatedDocs:[],mobile:view,desktop:view});`;
 
 /** The branch deletes Widget, so its previous version still carries the script. */
 function scriptedRemoval() {

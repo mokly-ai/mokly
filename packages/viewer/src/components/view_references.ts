@@ -93,6 +93,10 @@ export function validateViewReferences(
         !slots.has(range.target.slotKey)
       )
         invalidData(at, "unknown range slot");
+    } else if (range.target.kind === "root") {
+      exactKeys(range.target, ["kind"], at);
+      if (range.parentId !== undefined)
+        invalidData(at, "root range cannot have a parent");
     } else invalidData(at, "invalid range target");
     seen.add(range.id);
   }

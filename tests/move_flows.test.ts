@@ -6,7 +6,7 @@ import { compareReview } from "../dist/review/compare.js";
 import { moveReviewFixture as componentReviewFixture } from "./helpers/move_review_fixture.js";
 
 const source = `import {defineScreen,defineUseCase} from '@mokly/mokly';
-  const common={description:'A journey',dependencies:[],relatedDocs:[]};
+  const common={description:'A journey',relatedDocs:[]};
   export const screen=defineScreen({...common,path:'old/screen',title:'Screen',useCasePaths:['old/flow'],mobile:<h1>Screen</h1>,desktop:<h1>Screen</h1>});
   export const flow=defineUseCase({...common,path:'old/flow',title:'Flow',steps:[{screenPath:'old/screen',title:'Start',description:'Open the screen'}]});`;
 

@@ -3,7 +3,10 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { normalizeBuildDiagnostics } from "../../dist/build/build_warnings.js";
+import {
+  isBuildDiagnostic,
+  normalizeBuildDiagnostics,
+} from "../../dist/build/build_warnings.js";
 import { compileCatalogue } from "../../dist/build/compile.js";
 import {
   receiveGeneratedFile,
@@ -28,6 +31,7 @@ const COMPILATION_FIELDS = new Set([
   "outputs",
   "deliveredStyleSources",
   "documentMarkdown",
+  "resourceSeeds",
 ]);
 const FIELDS = new Set(["schemaVersion", "key", ...COMPILATION_FIELDS]);
 
@@ -55,13 +59,16 @@ export function encodeCompilation(compilation, key) {
     ...(compilation.documentMarkdown
       ? { documentMarkdown: [...compilation.documentMarkdown] }
       : {}),
+    ...(compilation.resourceSeeds === undefined
+      ? {}
+      : { resourceSeeds: resourceSeeds(compilation.resourceSeeds) }),
   };
 }
 
 /**
  * Validate a parsed snapshot and rebuild the compilation it encodes. The
  * manifest must serialize to the compiled manifest output, which the compile
- * wrote only after its strict schema-v8 validation; repeating that validation
+ * wrote only after its strict schema-v10 validation; repeating that validation
  * here would cost seconds in every test process.
  */
 export function decodeCompilation(value) {
@@ -105,6 +112,8 @@ export function decodeCompilation(value) {
           ? markdown
           : invalid(`documentMarkdown ${file} must be a string`),
     );
+  if (value.resourceSeeds !== undefined)
+    compilation.resourceSeeds = resourceSeeds(value.resourceSeeds);
   return compilation;
 }
 
@@ -185,17 +194,26 @@ function plainBytes(content) {
 }
 
 function buildDiagnostics(value) {
+  if (!Array.isArray(value) || value.some((item) => !isBuildDiagnostic(item)))
+    invalid("diagnostics must hold valid build diagnostic records");
+  return normalizeBuildDiagnostics(value);
+}
+
+function resourceSeeds(value) {
   if (
     !Array.isArray(value) ||
     value.some(
-      (diagnostic) =>
-        !diagnostic ||
-        typeof diagnostic !== "object" ||
-        Object.keys(diagnostic).sort().join() !== "code,message,route",
+      (seed) =>
+        !seed ||
+        typeof seed !== "object" ||
+        Array.isArray(seed) ||
+        Object.keys(seed).sort().join() !== "path,sourceRoute" ||
+        typeof seed.path !== "string" ||
+        typeof seed.sourceRoute !== "string",
     )
   )
-    invalid("diagnostics must hold code, route, and message records");
-  return normalizeBuildDiagnostics(value);
+    invalid("resourceSeeds must hold path and sourceRoute string records");
+  return value.map(({ path, sourceRoute }) => ({ path, sourceRoute }));
 }
 
 function strings(value, field) {
