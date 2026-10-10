@@ -556,7 +556,8 @@ for the review rules and temporary Braces exception.
 - [`scripts/verification/source-tree.mjs`](./scripts/verification/source-tree.mjs)
   computes the source fingerprint, including uncommitted changes.
 - [`scripts/verification/testbox-suite.mjs`](./scripts/verification/testbox-suite.mjs)
-  checks that fingerprint and prepares one suite through injected commands.
+  checks the fingerprint, stages the synced tree and prepares one suite through
+  injected commands.
 - [`xtask/src/remote`](./xtask/src/remote) runs the complete Testbox gate and
   owns report downloads, logs and interrupt cleanup.
 - [`examples/basic`](./examples/basic/README.md) — reference consumer and design

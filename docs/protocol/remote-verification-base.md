@@ -4,15 +4,13 @@ Continuation of [Remote Verification](./remote-verification.md).
 
 ## Delivery Status
 
-Base lookup, snapshot sync, cleanup and identity evidence are implemented under
-the [base commit sync plan](../../plans/remote-verification-base-commit.md).
-Linked-worktree sync has passed a real Testbox spike. Automatic and explicit
-remote checks accept unpushed checkout commits when a pushed base is available.
-The executor command uses the same implemented base selection.
-The complete automatic gate passed after a local, unpushed merge of `main`.
-It selected the main tip as the base. All 11 commands and nine reports passed.
-The aggregate passed. The checkout stayed unchanged. Cleanup stopped every
-box and removed the snapshot and temporary index.
+Base lookup, snapshot sync, cleanup, identity and executor selection are
+implemented under the [base sync plan](../../plans/remote-verification-base-commit.md).
+The linked-worktree spike and automatic gate after an unpushed main merge passed.
+Automatic and explicit remote checks accept unpushed commits with a pushed base.
+The gate used main as base; all 11 commands, nine reports and aggregation passed.
+The checkout stayed unchanged. Cleanup stopped every box and removed both
+the snapshot and temporary index.
 
 ## Base Commit
 
@@ -112,8 +110,7 @@ All snapshot build Git requests use `cancellable: false`.
 A killed worktree-add process can leave a locked admin entry that prune cannot
 remove. Check the interrupt flag immediately after construction finishes.
 An interrupt removes the snapshot and prevents warmup and local fallback.
-If the process request needs an environment field, keep it typed.
-Retain the shared secret environment removal and input redaction.
+Keep process environment overrides typed. Retain secret removal and input redaction.
 Apply the [child environment rule](./ci-verification-security.md#child-environment):
 remove Git repository variables before applying the temporary index override.
 
@@ -142,11 +139,23 @@ Keep local aggregation, logs and reports under the checkout root too.
 Each probe must return the checkout fingerprint and the selected base SHA.
 The [Testbox probe](./remote-verification-testbox.md#readiness-and-sync-probe)
 defines the command, readiness bound, parsing and all-box barrier.
-Keep the suite wrapper, strict report runners and aggregate schema unchanged.
+The wrapper changes only to stage the synced tree under the
+[box index rule](#box-index). Keep strict report runners and aggregate schema unchanged.
 Suite reports therefore name the box `HEAD`, which is the base.
 Run the aggregate with that same base and exactly nine downloaded reports.
 The final fingerprint check reads the checkout, so it detects local edits
 made during remote execution.
+
+## Box Index
+
+The CLI copies files, not the index. After sync, box HEAD and index equal the base.
+A deleted file stays cached. A renamed file is a deletion plus an untracked
+path, so rename detection cannot pair them. After its fingerprint check, the
+wrapper stages the synced tree with `git add -A`. Index readers such as
+`git ls-files --cached` and rename detection against the merge base then see
+the changes of a committed checkout. HEAD, reports, fingerprint and aggregate
+commit remain the base. A box checks the tree that `git add -A` records.
+A deletion on disk that is not staged can fail a local run and pass on a box.
 
 ## Identity Output And File
 

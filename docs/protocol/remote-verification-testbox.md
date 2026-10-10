@@ -4,15 +4,12 @@ Continuation of [Remote Verification](./remote-verification.md).
 
 ## Delivery Status
 
-The [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
-approves this target. Explicit remote execution, the fingerprint, suite wrapper
-and workflow are implemented. The wrapper selects `--executor local`.
-Workflow validation, both box suite smokes and complete explicit and automatic
-checks pass. Main's dependency fixes are merged. Automatic selection and
-`cargo xtask executor` are implemented.
-Workflow verification executes the Testbox scripts instead of matching their text.
-The [base sync plan](../../plans/remote-verification-base-commit.md) approves
-the implemented snapshot and base identity below. Xtask accepts unpushed `HEAD`.
+The [Blacksmith plan](../../plans/blacksmith-remote-verification.md) defines the
+implemented workflow, fingerprint, wrapper, automatic selection and executor command.
+The wrapper uses `--executor local`. Workflow validation executes its scripts;
+both box suite smokes and complete explicit and automatic checks pass.
+Main's dependency fixes are merged. The [base sync plan](../../plans/remote-verification-base-commit.md)
+defines implemented snapshot and base identity. Xtask accepts unpushed `HEAD`.
 
 ## Workflow
 
@@ -141,23 +138,25 @@ fallback at this boundary.
 `scripts/verification/testbox-suite.mjs` performs these steps on each box:
 
 1. Compute the fingerprint. Fail immediately if it differs from `--expect`.
-2. Check whether the repository is shallow. If it is, run
+2. Run `git add -A` under the [box index rule](./remote-verification-base.md#box-index).
+   Failed or signalled staging fails before history, installs, cargo or stamp writes.
+3. Check whether the repository is shallow. If it is, run
    `git fetch --unshallow --tags origin`. A failed fetch fails the wrapper.
    The CLI sync uses `git fetch --no-tags --depth 50` and makes the clone
    shallow on every `testbox run`, even after full-history checkout.
    Restore history and release tags in every suite command before its checks.
-3. Compare the current `package-lock.json` SHA-256 with the workflow stamp at
+4. Compare the current `package-lock.json` SHA-256 with the workflow stamp at
    `$HOME/.mokly-testbox/package-lock.sha256`.
    A missing stamp counts as a mismatch. On a mismatch, run `npm ci`, then
    `npx playwright install chromium`. Fail if either command fails.
    Write the new digest stamp only after both commands succeed.
    An equal digest requires neither command.
-4. Set `MOKLY_VERIFICATION_REPORT` to
+5. Set `MOKLY_VERIFICATION_REPORT` to
    `.context/verification-reports/remote/<command>.json`.
    Run `cargo xtask check --executor local --suite <suite>`.
    Add `--shard INDEX/4` for a unit or browser shard.
    Explicit local mode prevents recursive remote execution.
-5. Return the suite's exit code. A wrapper preparation failure returns nonzero.
+6. Return the suite's exit code. A wrapper preparation failure returns nonzero.
 
 Stream child standard output and standard error. Forward SIGINT and SIGTERM
 to the running child through the verification process owner.

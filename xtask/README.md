@@ -164,6 +164,8 @@ working files and a pushed base as `HEAD`. That base can equal checkout
 checkout and box comparison bases equal.
 Probes and suites sync from the snapshot. Management and report downloads
 keep the workspace root. Before warmup, both fingerprints must match.
+The suite wrapper stages the synced box files after its fingerprint check,
+so index readers see the same tree as a committed checkout.
 The final fingerprint still reads the checkout. Its `HEAD`, index and files
 stay unchanged by snapshot construction. Existing snapshot or temporary-index
 paths fail preparation. Cleanup removes only this run's owned paths.

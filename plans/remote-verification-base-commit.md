@@ -471,7 +471,7 @@ Evidence: `.context/remote-verification-base-commit/milestone6.md`.
       test-only runner with an empty global config file, no system config and
       shared variable removal. Keep SystemProcess for code under test and its
       request recording. Record the before and after global and system matrix.
-- [ ] Fix finding 2 in its own commit. Add wrapper staging after fingerprint
+- [x] Fix finding 2 in its own commit. Add wrapper staging after fingerprint
       validation with the existing failure boundary. Add injected order and
       failure tests and a real-Git rename, deletion and fingerprint regression.
       Audit repository index readers. Define the box index contract and update
