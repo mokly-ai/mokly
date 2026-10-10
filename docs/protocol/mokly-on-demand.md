@@ -2,6 +2,15 @@
 
 ## Delivery Status
 
+On-demand rendering and background classification are implemented. Under the
+[scalable analysis plan](../../plans/scalable-inline-style-analysis.md),
+the worker keeps one accepted output map for in-memory head comparison.
+On-demand startup and evidence completion are implemented. The
+route-evidence loading and failed Usage states are implemented by the
+[route-scoped bootstrap plan](../../plans/route-scoped-shell-bootstrap.md).
+
+Performance acceptance is deferred under the plan's Decision 13 (2026-10-06).
+
 CSS owner removal, root output boundaries and uniform rule evidence are
 implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
 
@@ -72,7 +81,7 @@ before replacements start. Exhaustive background work uses one worker with a
 
 The single-document compiler reuses exhaustive Build's validation primitives: rendering,
 stylesheet selection, logical links, component ranges,
-props, style/resource metadata, ignore markers, output confinement, and resource
+props, non-CSS resource records, ignore markers, output confinement, and resource
 validation. It records final spans only for links that Mokly inserted and
 forwards render warnings to the Serve parent with
 the generation captured from the document or transient Props render inputs.
@@ -162,6 +171,11 @@ with checkpoints between documents and major validation phases. Forward-anchor
 validation cannot render a destination ahead of that order. Stateful style registries
 can include different unused CSS in on-demand previews; the exhaustive background
 artifacts retain Build's bytes and do not create artificial Changes.
+
+The parent sends a compact runtime with no rendered outputs. An existing
+compilation supplies its manifest and one output map. After compilation, the
+worker retains the output needed for comparison without a duplicate runtime
+copy. Pinned baseline selection and descriptors travel with classification.
 
 Background warnings carry the producing generation through the worker and
 parent. Stream branch producers once into the shared diagnostic sink; completion

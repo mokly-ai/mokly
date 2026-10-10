@@ -2,12 +2,14 @@
 
 import path from "node:path";
 
-import { parse } from "parse5";
-
 import type { ResourceEvidence } from "@mokly/viewer/data";
 import { isStylesheetPath } from "@mokly/viewer/data";
 
-import { timeAsync } from "../diagnostics/timings.js";
+import { parseHtml } from "../diagnostics/html_parse.js";
+import {
+  documentResourceReferences,
+  timeAsync,
+} from "../diagnostics/timings.js";
 import { equivalentDocumentResources } from "../documents/moved_resources.js";
 import {
   linkedDocumentResources,
@@ -174,8 +176,10 @@ export class ChangedResourceGraph {
     const pairs: ResourceMatchingPair[] = cssPaths.length
       ? [
           {
-            ...(before ? { before: parse(before.html) } : {}),
-            after: parse(document),
+            ...(before
+              ? { before: parseHtml("legacyStylesheetMatching", before.html) }
+              : {}),
+            after: parseHtml("legacyStylesheetMatching", document),
             paths: await this.stylesheetScope(before, {
               path: source,
               html: document,
@@ -194,8 +198,12 @@ export class ChangedResourceGraph {
           ? await this.#head.resourceText(route)
           : undefined;
       pairs.push({
-        ...(base === undefined ? {} : { before: parse(base) }),
-        ...(head === undefined ? {} : { after: parse(head) }),
+        ...(base === undefined
+          ? {}
+          : { before: parseHtml("legacyResourceMatching", base) }),
+        ...(head === undefined
+          ? {}
+          : { after: parseHtml("legacyResourceMatching", head) }),
         paths: await this.stylesheetScope(
           base === undefined ? undefined : { path: route, html: base },
           head === undefined ? undefined : { path: route, html: head },
@@ -283,9 +291,9 @@ export class ChangedResourceGraph {
     html: string,
     side: "before" | "after",
   ): readonly string[] {
-    return [
+    return documentResourceReferences(() => [
       ...referencedRoutes(route, html, { resourceHints: false }),
       ...linkedDocumentResources(route, html, this.documentResources[side]),
-    ];
+    ]);
   }
 }

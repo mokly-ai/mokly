@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Implemented in the path-addressed design catalogue. The designs depict the approved path-identity shell: the Specs
+Implemented in the path-addressed design catalogue and shell: the Specs
 section, browse-only folder rows, `Overview` rows, a folder's own screen
 listing the folder's members, path chips, Markdown documents, and `Moved`
 Changes rows, which the shell renders.

@@ -1,3 +1,4 @@
+import { documentWorkSync } from "./diagnostics/timings.js";
 import {
   decodeCssIdentifier,
   tokenizeCss,
@@ -6,7 +7,9 @@ import {
 
 /** Extract `url()` and string-form `@import` references from CSS. */
 export function extractCssReferences(content: string): string[] {
-  return cssReferences(content).map(({ value }) => value);
+  return documentWorkSync("referenceMs", () =>
+    cssReferences(content).map(({ value }) => value),
+  );
 }
 
 /** Rewrite only parsed CSS URL tokens, preserving every other source byte. */
@@ -31,8 +34,13 @@ interface CssReference {
   value: string;
 }
 
+/** Sound prefilter shared by raw discovery and skipped inline preparation. */
+export function mayContainCssReferences(content: string): boolean {
+  return /url\(|image-set\(|@import|\\/i.test(content);
+}
+
 function cssReferences(content: string): CssReference[] {
-  if (!/url\(|image-set\(|@import|\\/i.test(content)) return [];
+  if (!mayContainCssReferences(content)) return [];
   const tokens = tokenizeCss(content, { allowIncomplete: true });
   const references: CssReference[] = [...imageSetStringReferences(tokens)];
   for (let index = 0; index < tokens.length; index++) {

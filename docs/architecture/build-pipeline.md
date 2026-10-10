@@ -199,6 +199,12 @@ interface RenderInput {
   colorScheme: "light" | "dark";
 }
 
+interface RenderResult {
+  html: string;
+  resources?: readonly ComponentResourceOwnership[];
+  styles?: never;
+}
+
 type Renderer = (input: RenderInput) => string | RenderResult;
 ```
 
@@ -206,16 +212,19 @@ type Renderer = (input: RenderInput) => string | RenderResult;
 variant entry itself and `componentProps` carries its validated props.
 
 The returned string, or `RenderResult.html`, must be a complete HTML document.
-The optional structured result supplies document-style and non-CSS resource ownership;
-stylesheet resource-owner records are ignored with a warning;
-see the [component manifest](../protocol/mokly-component-manifest.md).
+The optional structured result supplies non-CSS resource ownership. A returned
+`styles` field is ignored with a warning; head-style ownership is inferred at
+comparison time under [inline style ownership](../protocol/mokly-inline-styles.md).
+CSS resource-owner records are checked, ignored with a warning, and retained
+as private closure seeds; see the [component manifest](../protocol/mokly-component-manifest.md).
 Each component variant entry renders in every configured context through the
 same consumer graph. Wrappers record actual invocations, data, caller-owned
 slots, and layout-neutral ranges. The variant's root render is not its own
 instance. All catalogues emit manifest v10 with the complete source inventory.
 Registered components add variant entries and complete per-view
-invocation/ownership records; explicit page callbacks still emit exactly one
-complete document. Current and Git-baseline readers require v10; earlier output
+instance, slot, root-range, non-CSS resource and inserted-link records; explicit
+page callbacks still emit exactly one complete document. Current and Git-baseline
+readers require v10; earlier output
 makes Changes unavailable under
 [baseline compatibility](../protocol/mokly-baseline-compatibility.md).
 

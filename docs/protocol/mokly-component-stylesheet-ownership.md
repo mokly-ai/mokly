@@ -27,16 +27,15 @@ span, public path and declaring `componentPaths` in the private v10 view's
 inserted-link span. No reserved token, transient attribute or wrapper is used.
 
 Offsets refer to the final HTML, including the current plain generated notice.
-Validate each span against those exact bytes. Rebase component ranges and
-document-style offsets through ordinary package edits. Each persisted v10 usage
+Validate each span against those exact bytes. Keep component boundaries in the final document after ordinary package edits. Each persisted v10 usage
 record contains `insertedStylesheets`, including an empty array when no link was
 inserted. Missing provenance is invalid; never infer it or replace a missing
 array with an empty one.
 
 For page comparison material, remove recorded full-link spans from both
 documents **before** component projection and paired or single Review-ignore
-normalization. Rebase a comparison-only copy of range/style offsets through
-that removal; never change the stored final-document offsets. Do this on the
+normalization. Compose removal edits in original coordinates with ownership
+and inline-style edits; never rebase the matching ranges or stored offsets. Do this on the
 complete path and before the unchanged-view fast decision's equality checks.
 On a component page, retain a recorded link when its declaring paths include that
 page's root component path, even if a child also declares it; remove child-only
@@ -45,7 +44,9 @@ declared. Public output and snapshots keep the final documents.
 Resource discovery uses the final documents before comparison-only link removal.
 It finds Mokly-inserted links from validated `insertedStylesheets` spans, even
 inside paired Review-ignore regions. Include those links and their transitive
-resources in the CSS rule scope on both the complete and fast comparison paths.
+resources in actual CSS evidence on both the complete and fast comparison paths.
+Do not add all inserted paths to projected discovery or projected byte checks.
+A nested declaration alone cannot create consumer material in bytes mode.
 The author's own ignored links, styles and markup stay ignored under the usual
 paired Review-ignore rule. Do not restore the surrounding ignored region or
 use its elements as selector matches. A reused authored link gets no inserted-link exception. Provenance supplies resource
@@ -68,7 +69,7 @@ The audit of existing uses requires these changes:
 | `render.tsx` derives resource records during link insertion/reuse.                            | Keep link order, deduplication and declarer data in the linking pass; write no CSS resource records.                                   |
 | `stylesheet_provenance.ts` finalizes inserted links from the linking pass.                    | Resolve final active links against issued linking data. Preserve spans, validated public paths, final-link checks and offset rebasing. |
 | Manifest serialization and resource validation carry the records.                             | Current v10 writes only non-stylesheet resource owners. Validate public CSS through declarations and the resource graph.               |
-| `component_projection_resources.ts` suppresses owned CSS in consumers.                        | Never suppress a stylesheet through resource ownership. Match rules against actual normalized documents.                               |
+| `component_projection_resources.ts` suppresses owned CSS in consumers.                        | Never suppress a stylesheet through resource ownership. Match rules against original documents with ignored subjects excluded.         |
 | `component_view.ts` treats root resource-owner changes as material.                           | Retain that check only for non-CSS owners. An added/removed declaration with no link, byte or other rendered change gives no reason.   |
 | `component_resource_attribution.ts` promotes invocation CSS to component reasons.             | Keep invocation attribution only for non-CSS resources. CSS requires own-page rule matches.                                            |
 | Fast-path usage equality, source validation and affected-consumer assembly use those records. | Require valid v10 records without CSS owners, validate frozen per-rule proof and preserve complete/fast equivalence.                   |
@@ -103,13 +104,14 @@ Emit the single `ignored-stylesheet-resource-owner` warning for each route/file
 identity under [Build Warnings](#ignored-owner-warning). This
 replaces `ignored-declared-resource-owner`, with no duplicate old-code warning.
 It applies even if no declaring or asserted component renders. This follows
-[graceful handling](./README.md#graceful-handling): the unnecessary ownership
+[graceful handling](./protocol-status.md#graceful-handling): the unnecessary ownership
 input can be discarded while keeping safe output.
 
 Renderer `resources` for non-stylesheets retain their existing ownership,
 public-root validation, conflicting-owner checks and actual-invocation rules.
-Renderer `styles` records retain ownership of exact document material ranges,
-including style-element text. They are not stylesheet-file ownership.
+Returned renderer `styles` is ignored with one warning. Inline rules infer
+owners from original markup; a saved root maps to its entry. Only non-CSS
+references follow inline owners. CSS files always use rule membership.
 
 ## Changes
 
@@ -131,4 +133,5 @@ route/render. Generated CSS uses
 its canonical public route, whether pending or written. Safety checks precede
 this warning, including unlinked CSS and pages without registered components.
 Across renders, equal records use the [warning channel](./mokly-build-warnings.md).
-Non-CSS owners and document `styles` retain their behavior.
+Non-CSS owners retain their behavior. Returned `styles` has its separate
+ignored-renderer warning and supplies no ownership record.

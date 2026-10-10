@@ -129,7 +129,7 @@ interface CatalogueView {
   colorScheme: ColorScheme;
   usage: CatalogueUsage;
   comparison: ComparisonSelection;
-  resourceEvidence?: ResourceEvidence;
+  resourceEvidence?: ResourceEvidence & { inlineStyles?: InlineStyleEvidence };
 }
 interface CatalogueScreen extends CatalogueEntry {
   kind: "screen";
@@ -200,8 +200,9 @@ the children each section shows.
 
 ## Projection And Privacy
 
-The [projection contract](./mokly-catalogue-delivery.md#projection-and-privacy)
-owns the allowlist, evidence, source metadata and removed-entry rules.
+The [delivery contract](./mokly-catalogue-delivery.md#projection-and-privacy)
+owns the allowlist and delivery boundaries. Detailed inspection privacy and
+inline evidence projection follow [Catalogue Projection And Privacy](./mokly-catalogue-projection.md).
 
 ## Serialization, Identity And Versions
 

@@ -20,6 +20,7 @@ import { classifyResourceUrl } from "../resource_url.js";
 
 import { PendingGeneratedFiles } from "./pending_generated.js";
 import { loadPublicResource } from "./public_resource.js";
+import { resourceSeedOrigins, type ResourceSeed } from "./resource_seeds.js";
 
 /** Generation-scoped resource parsing, shared by complete and demand compilation. */
 export interface HtmlValidationContext {
@@ -42,10 +43,6 @@ export interface PublicClosureSnapshot {
   references: ReadonlyMap<string, readonly string[]>;
   locations: ReadonlyMap<string, readonly string[]>;
   invalid: ReadonlySet<string>;
-}
-export interface ResourceSeed {
-  path: string;
-  sourceRoute: string;
 }
 
 /** Validate generated resources and return only their referenced authored closure. */
@@ -85,12 +82,9 @@ export function buildPublicClosure(
     const resource = pendingFiles.resource(route);
     if (resource) parsed.set(generatedRoute(route), resource);
   }
-  const origins = new Map(
-    resourceSeeds.map((seed) =>
-      typeof seed === "string"
-        ? [seed, outputs.keys().next().value ?? seed]
-        : [seed.path, seed.sourceRoute],
-    ),
+  const origins = resourceSeedOrigins(
+    resourceSeeds,
+    outputs.keys().next().value,
   );
   const queue = [
     ...new Set([...outputs.keys(), ...pendingFiles.stylesheetRoutes()]),

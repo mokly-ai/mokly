@@ -4,9 +4,10 @@ import { setTimeout } from "node:timers/promises";
 import { timingCollector } from "./timings.mjs";
 
 /** Stream diagnostics live while retaining the small CLI log for readiness checks. */
-export function start(args, cwd) {
+export function start(args, cwd, environment = {}) {
   const child = spawn(process.execPath, args, {
     cwd,
+    env: { ...process.env, ...environment },
     stdio: ["ignore", "pipe", "pipe"],
   });
   let stdout = "";

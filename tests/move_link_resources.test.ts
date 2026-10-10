@@ -58,6 +58,7 @@ for (const useFastPath of [false, true])
     };
     const compared = await compareComponentView(
       {
+        componentAware: true,
         beforeReader,
         afterReader,
         changed,

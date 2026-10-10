@@ -44,6 +44,11 @@ export interface ExcludedResource {
   reason: "no-matching-rule";
 }
 
+/** Attribution evidence for changed rules from eligible page style elements. */
+export type InlineStyleEvidence =
+  | { status: "matched" | "unresolved"; selectors: readonly string[] }
+  | { status: "excluded" };
+
 /** One view comparison, addressed only by its axes. */
 export interface ResourceEvidence {
   reasons?: readonly DependencyReason[];
@@ -53,8 +58,9 @@ export interface ResourceEvidence {
 export interface ViewReview extends ResourceEvidence {
   colorScheme: ColorScheme;
   ignoredIds: readonly string[];
-  /** Present exactly when the paired ignore-normalized documents differ. */
+  /** Present exactly when the view's actual comparison material differs. */
   material?: true;
+  inlineStyles?: InlineStyleEvidence;
   state: ReviewState;
   viewport: Viewport;
 }
@@ -62,7 +68,7 @@ export interface ViewReview extends ResourceEvidence {
 /** Classification evidence available without generating comparison snapshots. */
 export type ViewResourceEvidence = Pick<
   ViewReview,
-  "viewport" | "colorScheme" | "reasons" | "excludedResources"
+  "viewport" | "colorScheme" | "reasons" | "excludedResources" | "inlineStyles"
 >;
 
 /** Screen-only resource evidence retained by live classification. */

@@ -135,13 +135,6 @@ for (const [name, change] of [
     }),
   ],
   [
-    "styles",
-    (view: ComponentViewRecord) => ({
-      ...view,
-      styles: [{ ...view.styles[0]!, endOffset: 11 }],
-    }),
-  ],
-  [
     "resources",
     (view: ComponentViewRecord) => ({
       ...view,
@@ -171,8 +164,8 @@ function componentView(propsKey: string): ComponentViewRecord {
     ],
     slots: [],
     ranges: [],
-    styles: [],
     resources: [],
+    insertedStylesheets: [],
   };
 }
 
@@ -215,8 +208,8 @@ function topologyView(): ComponentViewRecord {
         target: { kind: "instance", instanceKey: "parent" },
       },
     ],
-    styles: [{ startOffset: 0, endOffset: 10, componentIds: ["pane"] }],
     resources: [{ path: "pane.css", componentIds: ["pane"] }],
+    insertedStylesheets: [],
   };
 }
 

@@ -16,20 +16,21 @@ See [CSS Change Attribution](../../plans/css-change-attribution.md).
 
 Discovery of inserted links inside Review-ignore is implemented in
 [M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).
+The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md)
+retains bounded parser caches, segment reuse and original-page matching.
+[Inline ownership](./mokly-inline-styles.md) shares the parser, diff, keep list
+and matcher, but uses its own ownership rule. Only non-CSS references follow
+inline owners. Performance acceptance remains deferred under Decision 13.
 
 ## Purpose
 
-A linked stylesheet edit is conservative evidence that a screen may render
-differently. Without further analysis, every screen that loads the stylesheet
-is kept in Changes, even when the edit adds rules that no element on that
-screen can match. This contract narrows that evidence to the views whose
-documents a changed rule could apply to, while never claiming a screen is
-unchanged when a rule could apply.
+A linked stylesheet edit conservatively suggests different rendering. Without
+rule analysis, every loading screen is kept in Changes, even for rules no
+element can match. Analysis narrows evidence to views a changed rule could
+affect, never excluding a view where the rule could apply.
 
-The analysis is a sound exclusion, not a visual proof. It can prove that no
-changed rule matches a document. It cannot prove that a matching rule has a
-visible effect, and it does not try to. Browser-verified refinement is a
-separate future contract.
+This proves non-matching exclusion, not a matching rule's visible effect.
+Browser-verified refinement remains a separate future contract.
 
 ## Inputs
 
@@ -52,8 +53,8 @@ and may name either side's path; it never translates roots. A resource-byte
 difference without such a path is still material comparison evidence, not an
 invented Git reason or grounds for rule-based exclusion. The analysis examines
 the resource's branch-point and working-tree bytes, and both sides' view
-documents after the same paired ignore normalization the comparison engine
-uses. It never widens the set of examined files; unreferenced public files and
+documents under [original-page matching](./mokly-page-analysis.md#original-page-matching)
+for component-aware classification. Other catalogue paths retain their matching rules. It never widens the set of examined files; unreferenced public files and
 source paths add nothing on their own. Declared component CSS is eligible only
 when linked in a rendered document, under the
 [component stylesheet contract](./mokly-component-stylesheets.md) and its
@@ -67,8 +68,7 @@ paired Review-ignore on both comparison paths and for CSS rule scope. The
 [shared link contract](./mokly-stylesheet-links.md) keeps authored ignored
 content ignored and template content inert.
 
-Resources that are not stylesheets, including fonts, images, and embedded
-documents, keep their existing file-level attribution unchanged.
+Non-stylesheet resources (fonts, images, embedded documents) keep file-level attribution.
 
 ### Analysis scope
 
@@ -180,13 +180,13 @@ layer statements, empty grouping rules, and opaque unsupported at-rules. Opaque
 bodies remain one record, so their inner selectors cannot grant an exclusion.
 
 `diffCssRules(before: string, after: string, parser: CssRuleParser)` returns a
-`CssRuleDiffResult`. Rule identity consists of conditions, selectors, and
-declarations; selector-less identity additionally includes `atRule` and `prelude`
-so differently named animations, imports, or rule kinds cannot cancel each other.
-Ordinals are excluded from identity. Treat rule lists as multisets: cancel exact
-matches first, consuming duplicate occurrences in source order, then pair remaining
-rules with the same conditions/selectors (and at-rule name/prelude) in source order
-as changed declarations. Excess occurrences are added or removed.
+`CssRuleDiffResult`. The [stored rule data](./mokly-css-parse-reuse.md#stored-rule-data)
+own address/identity, including statement-or-block `block` form and excluding
+ordinals. Thus `@layer a;` against `@layer a{}` is an unresolved removed/added
+change on linked and inline paths. Treat lists as multisets: cancel earliest
+exact identities per address, then pair survivors in source order as changed
+declarations; excess occurrences are added/removed. Linked CSS does not use
+inline segment cancellation or its duplicate-displacement exception.
 
 A resolved diff has three lists: `added` sorts by after ordinal, `removed` by
 before ordinal, and `changed: { before, after }[]` by after ordinal. Both changed
@@ -199,9 +199,9 @@ This boundary does not attempt browser error recovery for incomplete source.
 
 ## Kept Constructs
 
-Every case the analysis cannot resolve keeps the rule and marks the reason
-`unresolved`. The list is closed; an implementation must not add silent
-exclusions beyond it.
+Unresolved cases keep the rule; this closed list permits no other silent
+exclusions. [Inline attribution](./mokly-inline-styles.md#attribution) disables
+only the changed-reference keep rule; linked stylesheets retain it.
 
 - A selector the matcher cannot parse.
 - Shadow-scoped selectors: `:host`, `:host()`, `:host-context()`, `::part()`,

@@ -112,7 +112,7 @@ test("move normalization maps inserted stylesheet declarers and preserves their 
       instances: [],
       slots: [],
       ranges: [],
-      styles: [],
+
       resources: [],
       insertedStylesheets: [span],
     },

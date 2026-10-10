@@ -2,10 +2,7 @@ import type { ComponentViewRecord } from "@mokly/viewer";
 import type { ManifestV10, ArtifactView } from "@mokly/viewer/data";
 
 import { validateComponentResources } from "../components/output_validation.js";
-import { validateComponentRanges } from "../components/ranges.js";
 import type { LinkedComponentStylesheet } from "../components/render.js";
-import { rebaseStyleOwnership } from "../components/style_ownership.js";
-import { finalizeComponentStylesheets } from "../components/stylesheet_provenance.js";
 import { PublicFilePolicy } from "../config/public_policy.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
@@ -27,6 +24,7 @@ import {
   normalizeBuildDiagnostics,
   type BuildDiagnostic,
 } from "./build_warnings.js";
+import { finalizeCompiledViews } from "./compile_components.js";
 import { rememberRuntime } from "./component_runtime.js";
 import { resolveDocumentLinks } from "./document_links.js";
 import {
@@ -34,7 +32,7 @@ import {
   generatedBytes,
   type GeneratedFile,
 } from "./generated_file.js";
-import { validateHtmlLinks, type ResourceSeed } from "./html_links.js";
+import { validateHtmlLinks } from "./html_links.js";
 import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
 import { validateLogicalFragments } from "./logical_records.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
@@ -46,7 +44,7 @@ import {
 import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
 import { renderCooperatively } from "./render_cooperative.js";
-import { componentResourceSeeds } from "./resource_seeds.js";
+import { componentResourceSeeds, type ResourceSeed } from "./resource_seeds.js";
 
 /** Complete in-memory static compilation result. */
 export interface Compilation {
@@ -164,7 +162,6 @@ async function compileMeasured(
         ),
       );
   pending.addHtmlMap(outputs);
-  const beforeLinks = new Map(outputs);
   await accepted?.checkpoint();
   const resolvedLinks = timeSync("html.links", () =>
     resolveDocumentLinks(
@@ -179,22 +176,12 @@ async function compileMeasured(
   );
   pending.addHtmlMap(outputs);
   timeSync("components.validate-metadata", () => {
-    for (const [route, view] of componentViews) {
-      const original = beforeLinks.get(route)!;
-      const finalized = finalizeComponentStylesheets(
-        outputs.get(route)!,
-        view,
-        route,
-        config.mockupsDir,
-        stylesheetLinks.get(route) ?? [],
-      );
-      outputs.set(route, finalized.html);
-      validateComponentRanges(finalized.html, view.ranges);
-      componentViews.set(route, {
-        ...finalized.view,
-        styles: rebaseStyleOwnership(original, finalized.html, view.styles),
-      });
-    }
+    finalizeCompiledViews(
+      outputs,
+      componentViews,
+      stylesheetLinks,
+      config.mockupsDir,
+    );
   });
   pending.addHtmlMap(outputs);
   timeSync("html.logical-links", () =>
@@ -232,7 +219,12 @@ async function compileMeasured(
     validateHtmlLinks(
       outputs,
       config,
-      { pending, parsed: new Map(), onDemand: false, policy },
+      {
+        pending,
+        parsed: new Map(),
+        onDemand: false,
+        policy,
+      },
       resourceSeeds,
     ),
   );

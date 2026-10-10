@@ -1,9 +1,13 @@
 import { stripGeneratedFirstLine } from "../build/generated_marker.js";
+import { timingMaterialWork } from "../diagnostics/material_timings.js";
+import { documentWorkSync } from "../diagnostics/timings.js";
 
 const ID = "[a-z0-9]+(?:-[a-z0-9]+)*";
 const KEY = "[a-f0-9]{64}";
 const MARKER_SCAN = /<!--mokly-review-ignore:[\s\S]*?-->/g;
-const MARKER = new RegExp(`^<!--mokly-review-ignore:(start|end):(${ID})-->$`);
+export const REVIEW_IGNORE_MARKER = new RegExp(
+  `^mokly-review-ignore:(start|end):(${ID})$`,
+);
 const MATERIAL_SCAN = /<!--mokly-review-material:[\s\S]*?-->/g;
 const MATERIAL = new RegExp(`^<!--mokly-review-material:(${ID}):(${KEY})-->$`);
 
@@ -16,6 +20,8 @@ interface RegionSegment {
   content: string;
   id: string;
   kind: "region";
+  start: number;
+  end: number;
 }
 
 type Segment = RegionSegment | TextSegment;
@@ -31,6 +37,7 @@ export interface NormalizedReviewPair {
   base: string;
   head: string;
   ignoredIds: readonly string[];
+  pairedIgnoreIds: readonly string[];
   /** Paired ignore material with real URLs retained for resource and CSS analysis. */
   resourceBase?: string;
   resourceHead?: string;
@@ -38,6 +45,8 @@ export interface NormalizedReviewPair {
 
 /** Generation-local logical-link rewriting shared by move and material comparison. */
 export interface ReviewLinkNormalization {
+  /** True only when equal original text has equal link material on both sides. */
+  equalSource?: boolean;
   before(html: string): string;
   after(html: string): string;
 }
@@ -49,48 +58,53 @@ export function normalizeReviewPair(
   route: string,
   links?: ReviewLinkNormalization,
 ): NormalizedReviewPair {
-  const base = parseDocument(baseHtml, route);
-  const head = parseDocument(headHtml, route);
-  const paired = new Set(
-    [...base.regions.keys()].filter((id) => head.regions.has(id)),
-  );
-  const materialIds = new Set([
-    ...base.materials.keys(),
-    ...head.materials.keys(),
-  ]);
-  const oneSidedMaterial = new Set(
-    [...materialIds].filter(
-      (id) => base.materials.has(id) !== head.materials.has(id),
-    ),
-  );
-  for (const id of oneSidedMaterial) paired.delete(id);
-  const baseOnly = [...base.regions.keys()]
-    .filter((id) => !head.regions.has(id))
-    .sort();
-  const headOnly = [...head.regions.keys()]
-    .filter((id) => !base.regions.has(id))
-    .sort();
-  let normalizedBase = render(base, paired, oneSidedMaterial);
-  let normalizedHead = render(head, paired, oneSidedMaterial);
-  if (baseOnly.length > 0 && headOnly.length > 0) {
-    normalizedBase += contractToken(baseOnly);
-    normalizedHead += contractToken(headOnly);
-  }
-  const ignoredIds = [...paired]
-    .filter((id) => {
-      const left = base.regions.get(id)!.content;
-      const right = head.regions.get(id)!.content;
-      return (links?.before(left) ?? left) !== (links?.after(right) ?? right);
-    })
-    .sort();
-  return {
-    base: links?.before(normalizedBase) ?? normalizedBase,
-    head: links?.after(normalizedHead) ?? normalizedHead,
-    ignoredIds,
-    ...(links
-      ? { resourceBase: normalizedBase, resourceHead: normalizedHead }
-      : {}),
-  };
+  return documentWorkSync("normalizationMs", () => {
+    timingMaterialWork()?.normalization(baseHtml);
+    timingMaterialWork()?.normalization(headHtml);
+    const base = parseReviewDocument(baseHtml, route);
+    const head = parseReviewDocument(headHtml, route);
+    const paired = new Set(
+      [...base.regions.keys()].filter((id) => head.regions.has(id)),
+    );
+    const materialIds = new Set([
+      ...base.materials.keys(),
+      ...head.materials.keys(),
+    ]);
+    const oneSidedMaterial = new Set(
+      [...materialIds].filter(
+        (id) => base.materials.has(id) !== head.materials.has(id),
+      ),
+    );
+    for (const id of oneSidedMaterial) paired.delete(id);
+    const baseOnly = [...base.regions.keys()]
+      .filter((id) => !head.regions.has(id))
+      .sort();
+    const headOnly = [...head.regions.keys()]
+      .filter((id) => !base.regions.has(id))
+      .sort();
+    let normalizedBase = render(base, paired, oneSidedMaterial);
+    let normalizedHead = render(head, paired, oneSidedMaterial);
+    if (baseOnly.length > 0 && headOnly.length > 0) {
+      normalizedBase += contractToken(baseOnly);
+      normalizedHead += contractToken(headOnly);
+    }
+    const ignoredIds = [...paired]
+      .filter((id) => {
+        const left = base.regions.get(id)!.content;
+        const right = head.regions.get(id)!.content;
+        return (links?.before(left) ?? left) !== (links?.after(right) ?? right);
+      })
+      .sort();
+    return {
+      base: links?.before(normalizedBase) ?? normalizedBase,
+      head: links?.after(normalizedHead) ?? normalizedHead,
+      ...(links
+        ? { resourceBase: normalizedBase, resourceHead: normalizedHead }
+        : {}),
+      ignoredIds,
+      pairedIgnoreIds: [...paired].sort(),
+    };
+  });
 }
 
 /** Validate and strip markers while retaining real child content. */
@@ -99,27 +113,20 @@ export function normalizeSingleDocument(
   route: string,
   links?: (html: string) => string,
 ): string {
-  const normalized = render(parseDocument(html, route), new Set());
-  return links ? links(normalized) : normalized;
+  return documentWorkSync("normalizationMs", () => {
+    timingMaterialWork()?.normalization(html);
+    const normalized = render(parseReviewDocument(html, route), new Set());
+    return links ? links(normalized) : normalized;
+  });
 }
 
-/** Independent material is comparable only when both ignore contracts match. */
-export function reviewFingerprintMaterial(
-  html: string,
+/** Eager flat validation; callers can reuse its material keys without deriving inventories. */
+export function parseReviewDocument(
+  content: string,
   route: string,
-  links?: (html: string) => string,
-): { material: string; ignores: string } {
-  const parsed = parseDocument(html, route);
-  const regions = [...parsed.regions.keys()].sort();
-  const material = render(parsed, new Set(regions));
-  return {
-    material: links ? links(material) : material,
-    ignores: JSON.stringify([regions, [...parsed.materials.keys()].sort()]),
-  };
-}
-
-function parseDocument(content: string, route: string): ParsedDocument {
-  content = stripGeneratedFirstLine(content);
+): ParsedDocument {
+  const offset = content.length - stripGeneratedFirstLine(content).length;
+  content = content.slice(offset);
   const materials = parseMaterials(content, route);
   const matches = [...content.matchAll(MARKER_SCAN)];
   if (content.replace(MARKER_SCAN, "").includes("<!--mokly-review-ignore:")) {
@@ -130,7 +137,7 @@ function parseDocument(content: string, route: string): ParsedDocument {
   let cursor = 0;
   let open: { contentStart: number; id: string } | undefined;
   for (const match of matches) {
-    const exact = match[0].match(MARKER);
+    const exact = match[0].slice(4, -3).match(REVIEW_IGNORE_MARKER);
     if (!exact || match.index === undefined)
       throw ignoreError(route, `invalid marker ${match[0]}`);
     const boundary = exact[1];
@@ -157,6 +164,8 @@ function parseDocument(content: string, route: string): ParsedDocument {
         content: content.slice(open.contentStart, match.index),
         id,
         kind: "region",
+        start: offset + open.contentStart,
+        end: offset + match.index,
       };
       regions.set(id, region);
       segments.push(region);
@@ -179,6 +188,41 @@ function parseDocument(content: string, route: string): ParsedDocument {
     }
   }
   return { materials, regions, segments };
+}
+
+export interface ReviewIgnoreRegion {
+  id: string;
+  content: string;
+  start: number;
+  end: number;
+}
+
+export function reviewIgnoreRegions(
+  source: string,
+  route: string,
+): readonly ReviewIgnoreRegion[] {
+  return [...parseReviewDocument(source, route).regions.values()];
+}
+
+/** Derive signal spans only when a consumer needs them, after original validation. */
+export function reviewMaterialSignals(
+  source: string,
+): readonly { id: string; start: number; end: number }[] {
+  return [...source.matchAll(MATERIAL_SCAN)].map((match) => ({
+    id: match[0].match(MATERIAL)![1]!,
+    start: match.index,
+    end: match.index + match[0].length,
+  }));
+}
+
+/** Source spans of material signals, after the caller validates the marker syntax. */
+export function reviewMaterialSpans(
+  source: string,
+): readonly { start: number; end: number }[] {
+  return [...source.matchAll(MATERIAL_SCAN)].map((match) => ({
+    start: match.index,
+    end: match.index + match[0].length,
+  }));
 }
 
 function parseMaterials(
@@ -229,4 +273,19 @@ function contractToken(ids: readonly string[]): string {
 
 function ignoreError(route: string, detail: string): Error {
   return new Error(`[mokly/review-ignore] ${route}: ${detail}`);
+}
+
+/** Independent material is comparable only when both ignore contracts match. */
+export function reviewFingerprintMaterial(
+  html: string,
+  route: string,
+  links?: (html: string) => string,
+): { material: string; ignores: string } {
+  const parsed = parseReviewDocument(html, route);
+  const regions = [...parsed.regions.keys()].sort();
+  const material = render(parsed, new Set(regions));
+  return {
+    material: links ? links(material) : material,
+    ignores: JSON.stringify([regions, [...parsed.materials.keys()].sort()]),
+  };
 }

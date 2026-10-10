@@ -39,8 +39,8 @@ const preview: ComponentRenderSuccess = {
     instances: [],
     ranges: [],
     slots: [],
-    styles: [],
     resources: [],
+    insertedStylesheets: [],
   },
 };
 

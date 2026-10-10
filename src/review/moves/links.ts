@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import { parse, type DefaultTreeAdapterMap } from "parse5";
+import type { DefaultTreeAdapterMap } from "parse5";
 
 import {
   documentRoute,
@@ -13,6 +13,7 @@ import {
   type ManifestEntry,
 } from "@mokly/viewer/data";
 
+import { parseHtml } from "../../diagnostics/html_parse.js";
 import type { ReviewLinkNormalization } from "../ignore.js";
 
 import { baselinePathMapper } from "./identity.js";
@@ -36,12 +37,31 @@ export function catalogueLinkNormalizer(
   const mapAfter = (value: string) => current.get(value.toLowerCase()) ?? value;
   const baseRoutes = routeIndex(before);
   const headRoutes = routeIndex(after);
+  const equalSource =
+    sameCatalogueRoutes(before, after, baseRoutes, headRoutes) &&
+    (resources?.equalSourceIdentities() ?? true);
   const base = cachedRewrite(baseRoutes, mapBefore, "before", resources);
   const head = cachedRewrite(headRoutes, mapAfter, "after", resources);
   return (beforeRoute, afterRoute) => ({
+    equalSource: equalSource && beforeRoute === afterRoute,
     before: (html) => base(beforeRoute, html, afterRoute),
     after: (html) => head(afterRoute, html, beforeRoute),
   });
+}
+
+function sameCatalogueRoutes(
+  before: readonly ManifestEntry[],
+  after: readonly ManifestEntry[],
+  base: ReadonlyMap<string, string>,
+  head: ReadonlyMap<string, string>,
+): boolean {
+  if (before.length !== after.length || base.size !== head.size) return false;
+  const kinds = new Map(after.map((entry) => [entry.path, entry.kind]));
+  if (before.some((entry) => kinds.get(entry.path) !== entry.kind))
+    return false;
+  for (const [route, entry] of base)
+    if (head.get(route) !== entry) return false;
+  return true;
 }
 
 function cachedRewrite(
@@ -133,7 +153,7 @@ function rewrite(
     if ("childNodes" in node) for (const child of node.childNodes) visit(child);
     if ("content" in node) visit(node.content);
   };
-  visit(parse(html, { sourceCodeLocationInfo: true }));
+  visit(parseHtml("linkNormalization", html, { sourceCodeLocationInfo: true }));
   for (const patch of patches.sort((a, b) => b.start - a.start))
     html = html.slice(0, patch.start) + patch.value + html.slice(patch.end);
   return html;

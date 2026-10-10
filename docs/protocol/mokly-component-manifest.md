@@ -20,8 +20,11 @@ These are the normative interfaces for the generated `mokly-manifest.json`.
 [usage-record contract](./mokly-component-usage-records.md).
 
 The optional instance `source` follows the [usage-record contract](./mokly-component-usage-records.md). Readers accept instances with or without it.
-Version 9 carries paths and authored data only: no entry stores a route, view
+Version 10 carries paths and authored data only: no entry stores a route, view
 path, or other value derivable from its path, kind, and configuration.
+
+The [usage-record rules](./mokly-component-usage-records.md) define non-CSS
+`resources`, root ranges and inserted links. Inline style ownership is inferred.
 
 ## Entries, Folders, And Variants
 
@@ -155,7 +158,7 @@ entry owner and is not listed as its own used instance.
 
 The [component usage-record contract](./mokly-component-usage-records.md) owns
 the complete types, key preimages, ownership graphs, ordering, range placement,
-style/resource ownership, and validation. The
+resource ownership, inline inference, and validation. The
 [instance identity contract](./mokly-instances.md) owns reference scope,
 stability, source capture, and rendered sentinels.
 

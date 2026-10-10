@@ -8,6 +8,7 @@ import { loadConfig } from "../dist/config/load.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import {
+  assertComparisonModesEquivalent,
   assertFastPathEquivalent,
   compilationFiles,
 } from "./helpers/component_fast_path.js";
@@ -21,7 +22,7 @@ for (const direction of ["added", "removed"] as const)
     const fixture = await componentReviewFixture(t, (source) => source);
     const baseCss = direction === "added" ? "" : '@import "./nested.css";';
     const headCss = direction === "added" ? '@import "./nested.css";' : "";
-    const result = await assertFastPathEquivalent({
+    const result = await assertComparisonModesEquivalent({
       before: fixture.before.manifest,
       after: fixture.after.manifest,
       beforeFiles: withRootStylesheet(fixture.before, {
@@ -73,7 +74,11 @@ for (const evidenceKind of ["bytes", "git"] as const)
         ]),
       ),
     };
-    const result = await assertFastPathEquivalent({
+    const result = await (
+      evidenceKind === "bytes"
+        ? assertFastPathEquivalent
+        : assertComparisonModesEquivalent
+    )({
       before: fixture.before.manifest,
       after: fixture.after.manifest,
       beforeFiles: compilationFiles(fixture.before, beforeResources),

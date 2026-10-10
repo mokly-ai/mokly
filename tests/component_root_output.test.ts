@@ -100,7 +100,10 @@ test("current root validation requires one unparented root only on saved compone
     resources: [],
   };
   assert.throws(
-    () => validateComponentViewRecord(empty, new Map(), "saved", "action"),
+    () =>
+      validateComponentViewRecord(empty, new Map(), "saved", {
+        rootId: "action",
+      }),
     /root/,
   );
   const root = { id: "r-0", target: { kind: "root" as const } };
@@ -109,7 +112,7 @@ test("current root validation requires one unparented root only on saved compone
       { ...empty, ranges: [root] },
       new Map(),
       "saved",
-      "action",
+      { rootId: "action" },
     ),
   );
   assert.throws(
@@ -118,6 +121,7 @@ test("current root validation requires one unparented root only on saved compone
         { ...empty, ranges: [root] },
         new Map(),
         "screen",
+        {},
       ),
     /root/,
   );
@@ -127,19 +131,16 @@ test("current root validation requires one unparented root only on saved compone
         { ...empty, ranges: [root, { ...root, id: "r-1" }] },
         new Map(),
         "saved",
-        "action",
+        { rootId: "action" },
       ),
     /root/,
   );
   assert.throws(
     () =>
-      validateComponentViewRecord(
-        empty,
-        new Map(),
-        "historical",
-        "action",
-        true,
-      ),
+      validateComponentViewRecord(empty, new Map(), "historical", {
+        rootId: "action",
+        historicalUsage: true,
+      }),
     /root/,
   );
 });

@@ -42,7 +42,18 @@ test("component style ownership rebases through the generated notice while prese
   const mobileView = viewRoute(screen.path, "mobile", "light");
   const html = textOutput(result.outputs, mobileView)!;
   assert.equal(
-    html.slice(view.styles[0]!.startOffset, view.styles[0]!.endOffset),
+    html.slice(
+      (
+        view as typeof view & {
+          styles: readonly { startOffset: number; endOffset: number }[];
+        }
+      ).styles[0]!.startOffset,
+      (
+        view as typeof view & {
+          styles: readonly { startOffset: number; endOffset: number }[];
+        }
+      ).styles[0]!.endOffset,
+    ),
     ".action{border-radius:12px}",
   );
   assert.deepEqual(view.resources, []);

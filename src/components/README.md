@@ -144,8 +144,9 @@ defines final-link validation and private link provenance.
 and source spans. Placement uses only configured head links. Reuse keeps body
 links in place. Template content supplies no active link.
 `stylesheet_provenance.ts` records the inserted links' final full-link spans, while
-`comparison_stylesheets.ts` removes only proven inserted links from review
-material. `stylesheet_spans.ts` validates each span against an active full link
+`PageAnalysis.stylesheetEdits` supplies proven inserted-link removals to the
+production comparison recipe. `comparison_stylesheets.ts` remains as a text
+helper for existing direct tests until the user decides its removal. `stylesheet_spans.ts` validates each span against an active full link
 in the original final HTML. Review reads inserted resources before it removes
 links or ignored regions. Ignored author links and markup stay ignored.
 `build/renderer_resources.ts` discards CSS ownership assertions after public
@@ -163,15 +164,22 @@ ranges that its document cannot prove follow the
 [invalid-baseline contract](../../docs/protocol/mokly-baseline-compatibility.md#invalid-or-missing-data).
 Historical marker translation is not supported. The frozen instance and slot
 key domain strings are unchanged.
-Compatible v10 baselines preserve each document’s UTF-16 coordinates when
-applying recorded style ownership.
+Compatible v10 baselines preserve each document’s UTF-16 coordinates.
+Renderers return complete strings or objects with `html` and optional
+`resources`. Returned `styles` warns and is ignored. Inline rules infer owners
+from original ranges; entry-reaching and unresolved rules stay with the entry,
+and unmatched rules are excluded. Only non-CSS references follow those owners.
+Every CSS file follows own-page rule membership, regardless of delivery path.
 
-Comparison projection can expose caller-owned slot material that HTML parsing
-discarded from contexts such as `template` or `select`. Removing component
-implementation text can likewise expose a sibling hidden by its unclosed HTML. The review shortcut
-therefore proves both actual and ownership-projected resource closures for
-views with instances, styles, or entry-owned slots, using the same root-specific ownership and
-resource exclusion policy as the complete comparison.
+Component-aware comparison shares one original page tree per used view side.
+Materials remain strings, with eligible unowned styles represented by the
+[fingerprint contract](../../docs/protocol/mokly-page-analysis.md#fingerprinted-materials).
+Resource discovery follows source
+provenance: caller copies can expose recorded inert-template references, never
+parser-discarded `select` tokens or newly exposed malformed-HTML siblings.
+The identical-text shortcut uses head analysis and conservative caller-copy
+seeds without projection or inline analysis. Non-identical attempts retain
+ownership-projected proof; failed proofs reuse analyses and resource discovery.
 
 ## Development
 
@@ -205,6 +213,10 @@ node --import tsx --test tests/component_*.test.ts
   excluding source metadata.
 - [`comparison_projection.ts`](./comparison_projection.ts): caller versus
   implementation material.
+- [`material_recipe.ts`](./material_recipe.ts): source/copy/producer provenance
+  for the same plain-string materials, consumed by shared page analysis.
+  Projected caller wrappers/canonical appendices remain verbatim; rendered
+  source and caller copies strip component markers before appending them.
 - [`../server/controls`](../server/controls): supervised local rendering and
   transient storage.
 - Viewer [`workspace.tsx`](../../packages/viewer/src/shell/workspace.tsx),

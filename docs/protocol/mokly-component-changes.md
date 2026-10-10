@@ -2,24 +2,23 @@
 
 ## Delivery Status
 
-Removal of baseline compatibility is implemented in
-[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
-
-Document and non-CSS attribution are implemented. Uniform CSS classification
-is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
-Its comparison details are implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence).
-The classifier, Browse/watch cache, comparison artifacts, and static exporter
-share this attribution policy and its path-keyed result and changed-entry set. The
-[component explorer plan](../../plans/component-explorer.md) records delivery.
-Unregistered catalogues retain their ordinary behavior.
+Main's source-path removal and file-level rule membership are implemented in the
+[source-path removal plan](../../plans/remove-source-path-evidence.md).
+The [scalable analysis plan](../../plans/scalable-inline-style-analysis.md)
+integrates [original-page analysis](./mokly-page-analysis.md),
+[inline ownership](./mokly-inline-styles.md) and the
+[equivalent style route](./mokly-style-only-route.md) with that policy.
+The [fast-path contract](./mokly-component-review-fast-path.md) owns ordering.
+All classification paths share path-keyed v7 results. Inline evidence stays in
+the review and catalogue data; its separate mockup and UI work is scheduled in
+Milestones 16 and 17 of the scalable plan. Performance acceptance is deferred
+under that plan's Decision 13 (2026-10-06).
 
 ## Changes Membership
 
-Changes counts directly changed entries, including components and component
-variant entries, once per entry. Instances and affected consumers do not
-increase that count.
-Existing folder ancestor disclosure and screen-to-use-case propagation
-remain; an affected-only screen does not make its use cases changed.
+Changes counts each directly changed entry, including components/variants,
+once, not instances or affected consumers. Folder ancestor disclosure and
+screen-to-use-case propagation remain; affected-only screens do not flag use cases.
 
 | Edit                                                      | Direct Changes entries | Secondary impact                                                       |
 | --------------------------------------------------------- | ---------------------- | ---------------------------------------------------------------------- |
@@ -207,33 +206,41 @@ consumers stay affected-only unless they have an independent change. An
 unowned non-CSS resource reason stays with the consuming page. Source modules
 and unrendered files supply no ownership or evidence.
 
-Renderer `styles` records still identify exact document material ranges, such
-as component-generated text in a head style element. These records do not own
-stylesheet files. Validate offsets against the final rendered output.
-Only proven owned document material is excluded from a consumer projection;
-mixed or unclaimed head material stays material.
+Eligible inline style rules use [inferred ownership](./mokly-inline-styles.md).
+Unresolved rules and rules that reach entry markup stay with that entry;
+unmatched rules are excluded, and owned rules follow paired equal-input
+components. On a component's saved page, its root maps to the entry.
+Returned renderer `styles` assertions are ignored with a warning.
 
-All classification paths use the same unfiltered and kept own-page CSS sets, including
-the fast decision, Browse, selected comparisons and publication. Keep CSS
-eligible through actual normalized resource discovery regardless of ownership
-projection. Retain actual styles, fonts and images in screenshots and snapshot
-trees; never strip styles or whole documents to suppress consumer rows.
+CSS file delivery uses the own-page rule membership above, including a file
+reached from an inline `@import`. CSS files never receive resource owners.
+Non-CSS references use the union of renderer-record and inferred-inline owners.
+Evidence at an actual invocation can keep an owner changed even when no saved
+variant reaches that path. A changed Git path supplies a dependency reason;
+byte-only changes supply material without invented Git evidence. Independent
+entry reachability remains independent. See [resource propagation](./mokly-inline-style-resources.md#resolution-and-propagation).
+
+All classification paths use the same unfiltered and kept own-page CSS sets.
+Original view analyses supply matching trees under [page matching](./mokly-page-analysis.md#original-page-matching),
+while paired ignores and ownership recipes determine retained resource material.
+Keep CSS eligible through actual resource discovery regardless of ownership
+projection. Retain actual styles, fonts and images in snapshots; never strip
+styles or whole documents to suppress consumer rows.
 
 ## Baselines
 
 The [baseline validation contract](./mokly-component-review-validation.md#baselines)
-defines same-version admission, snapshot bytes and source protection.
+defines same-version admission, original snapshot bytes and source protection.
 
 ## Required Evidence
 
-Unit/integration and browser fixtures must establish agreement between Changes
-rows/count, on-demand results, watch updates, and published output. Cover all
-rows in the table, repeated/nested/empty instances, caller-owned slots, invalid
-markers, unchanged-render prop edits, both viewports/themes, owned external and
-head styles, shared rendered-resource ownership, independent screen edits, compatible and
-incompatible baselines, removed consumers, and concurrent watched updates. Component styling
-must remain visibly changed in an affected screen's comparison.
+Unit, integration and browser fixtures must agree on Changes, affected consumers,
+watch updates and published output. Cover repeated, nested and empty instances,
+caller slots, root boundaries and paired ignores, invalid markers, unchanged-render
+prop edits, both viewport/theme axes, linked file membership and inferred inline
+ownership. Include non-CSS record/inline owner unions, byte-only edits, independent
+screen edits, removed consumers and concurrent updates. Comparisons must retain
+component styling in affected screens.
 
-Historical dependency declaration provenance is ignored in attribution and
-display. Registering an unrelated component in a previously component-free
-catalogue must not add an otherwise unchanged screen or component to Changes.
+Historical source-path declarations supply no attribution or display evidence.
+Registering an unrelated component must not add an unchanged entry to Changes.

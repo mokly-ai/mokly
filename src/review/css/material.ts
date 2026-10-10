@@ -1,4 +1,5 @@
-/** Detect changes to custom properties and URL references in rule material. */
+/** Detect changes to custom properties and resource references in rule material. */
+import { cssRuleData } from "./rule_identity.js";
 import { CssSource, decodeCssIdentifier } from "./source.js";
 import type { CssRule } from "./types.js";
 
@@ -16,8 +17,14 @@ export function changedCustomProperties(
 /** Keep added/removed/edited URL tokens, not an unchanged URL in a changed declaration block. */
 export function changedReferences(before?: CssRule, after?: CssRule): boolean {
   return (
-    JSON.stringify(references(before)) !== JSON.stringify(references(after))
+    JSON.stringify(cssRuleReferences(before)) !==
+    JSON.stringify(cssRuleReferences(after))
   );
+}
+
+/** Find every resource reference that canonical rendering of one rule emits. */
+export function cssRuleReferences(rule?: CssRule): readonly string[] {
+  return rule ? cssRuleData(rule).references : [];
 }
 
 function customProperties(rule?: CssRule): readonly string[] {
@@ -44,44 +51,4 @@ function customProperties(rule?: CssRule): readonly string[] {
   }
   retain(rule.declarations.length);
   return declarations;
-}
-
-function references(rule?: CssRule): readonly string[] {
-  if (!rule) return [];
-  return [
-    ...rule.conditions
-      .filter((condition) => condition.kind !== "nesting-parent")
-      .map((condition) => condition.prelude),
-    rule.declarations,
-  ].flatMap(urls);
-}
-
-function urls(text: string): readonly string[] {
-  const source = new CssSource(text);
-  const references: string[] = [];
-  for (let index = 0; index < source.tokens.length; index += 1) {
-    const token = source.tokens[index]!;
-    if (
-      token.word &&
-      decodeCssIdentifier(token.value).toLowerCase() === "url" &&
-      source.tokens[index + 1]?.value === "(" &&
-      source.tokens[index + 1]?.start === token.end
-    ) {
-      const end = source.closing(index + 1);
-      const value = source.tokens[index + 2]?.value ?? "";
-      references.push(decodeCssIdentifier(value.slice(1, -1)));
-      index = end;
-    } else if (!token.word && token.value.endsWith(")")) {
-      const opening = token.value.indexOf("(");
-      if (
-        opening >= 0 &&
-        decodeCssIdentifier(token.value.slice(0, opening)).toLowerCase() ===
-          "url"
-      )
-        references.push(
-          decodeCssIdentifier(token.value.slice(opening + 1, -1)),
-        );
-    }
-  }
-  return references;
 }

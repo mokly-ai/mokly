@@ -3,6 +3,10 @@ import type { Location2 } from "lightningcss";
 
 import { CssRuleParseError } from "./types.js";
 
+export function normalizeCssSource(text: string): string {
+  return text.replace(/^\uFEFF/, "").replace(/\r\n?|\f/g, "\n");
+}
+
 /** Source tokens are used only for boundaries and trivia, never CSS validation. */
 export interface CssSourceToken {
   value: string;

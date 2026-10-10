@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 
 import type { Compilation } from "../../dist/build/compile.js";
 import type { ResolvedConfig } from "../../dist/config/types.js";
+import {
+  runWithTimings,
+  type TimingEvent,
+} from "../../dist/diagnostics/timings.js";
 import { classifyComponents } from "../../dist/review/component_classification.js";
 import type { ComponentClassificationInput } from "../../dist/review/component_classification_input.js";
 import { classifyComponentsWithSources } from "../../dist/review/component_classification_sources.js";
@@ -48,6 +52,20 @@ export function classifyFixtureWithSources(fixture: FastPathFixture) {
 export async function assertFastPathEquivalent(
   fixture: FastPathFixture,
 ): Promise<ReviewResultV7> {
+  return comparisonModes(fixture, true);
+}
+
+/** Compare enabled and forced-complete modes without claiming a view settled early. */
+export async function assertComparisonModesEquivalent(
+  fixture: FastPathFixture,
+): Promise<ReviewResultV7> {
+  return comparisonModes(fixture, false);
+}
+
+async function comparisonModes(
+  fixture: FastPathFixture,
+  requireFastPath: boolean,
+): Promise<ReviewResultV7> {
   const input = {
     before: fixture.before,
     after: fixture.after,
@@ -65,13 +83,24 @@ export async function assertFastPathEquivalent(
       beforeReader: memoryReader(fixture.beforeFiles),
       afterReader: memoryReader(fixture.afterFiles),
       useFastPath,
+      useStylePath: false,
     });
-  const [fast, complete] = await Promise.all([classify(true), classify(false)]);
+  const events: TimingEvent[] = [];
+  const fast = await runWithTimings(true, "test", () => classify(true), {
+    write: (event) => events.push(event),
+  });
+  const complete = await classify(false);
+  const counts = events.find(
+    (event) =>
+      event.stage === "review.compare-screens" && event.event === "counts",
+  )?.counts;
+  if (requireFastPath)
+    assert.ok(Number(counts?.fastPath) > 0, "fast path settled no views");
   assert.deepEqual(fast, complete);
   return fast;
 }
 
-function memoryReader(files: ReadonlyMap<string, FixtureFile>) {
+export function memoryReader(files: ReadonlyMap<string, FixtureFile>) {
   const find = (route: string): Uint8Array | undefined => {
     const value = files.get(route);
     return typeof value === "string" ? Buffer.from(value) : value;

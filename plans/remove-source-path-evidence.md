@@ -104,11 +104,14 @@ milestone.
 - One Changes rule for all catalogues. A source path never adds an entry to
   Changes and never appears as comparison evidence. Rendered-resource evidence,
   Review-ignore, metadata, ancestry, flow propagation, document-style ownership
-  and non-CSS resource attribution stay unchanged. CSS follows the binding
+  and non-CSS resource attribution retain their contracts. The 2026-10-09
+  integration infers inline owners and unions non-CSS references with renderer
+  records; returned renderer `styles` warns and is ignored. CSS files follow the binding
   2026-10-03 rule for configured, declared, CSS-imported and JavaScript-bundled
   stylesheets:
-  - Match every changed rule against both available documents after paired
-    Review-ignore. Keep matched elements and their side-specific output ranges.
+  - Match every changed rule against both original documents, with subjects in
+    paired Review-ignore regions excluded. Keep original side-specific output
+    ranges; ignored nodes remain structural selector context.
   - First collect every component's unfiltered own-page matches for the rule,
     in any variant, viewport, scheme or before/after side. X changes only if it
     keeps a match in its root output on an own page. A different nested Y takes
@@ -157,8 +160,8 @@ milestone.
     Reuse a configured link without duplicating it. Renderer `resources`
     records for every stylesheet are ignored after safety checks, with one
     `ignored-stylesheet-resource-owner` warning per route/file identity. This
-    replaces the declared-only warning. Non-CSS `resources` and document
-    `styles` retain their current meaning.
+    replaces the declared-only warning. Non-CSS `resources` retain ownership. Returned document `styles` is ignored
+    with a warning under the 2026-10-09 integration decision.
   - Page comparison omits Mokly-inserted declared-stylesheet links except a
     component page's root-owned links. A private final-document provenance
     record identifies those links after link rewriting and through Review-ignore;
@@ -168,14 +171,14 @@ milestone.
     publication handle them as public resources.
   - This replaces the documented rule "Separate stylesheet loading from review
     dependency declaration" and the example's per-render style collector.
-    Renderer `styles` records remain for document material; `resources` records
+    Inline document styles use inferred ownership; renderer `resources` records
     remain only for files that are not stylesheets.
 - Removed inputs are ignored with a warning: `dependencies` on an entry,
   nested marker, root path metadata or variant, `ownedDependencies` on a
   component or saved component variant, and
   `review.sharedImpact` in configuration. They add no evidence or ownership;
   TypeScript input types still reject the authoring fields.
-- [Graceful handling](../docs/protocol/README.md#graceful-handling) governs
+- [Graceful handling](../docs/protocol/protocol-status.md#graceful-handling) governs
   redundant or conflicting inputs when output stays correct and safe. Build,
   Check, export, publish and Serve collect and deduplicate structured warnings
   across configuration, registry and render stages, including Serve children.
@@ -200,9 +203,10 @@ milestone.
   readers reject catalogue v1 to v5 and comparison v6 and earlier; regenerate
   older exports. The process-local live index adopts the v10 entry shape.
   The current versions retain this branch's CSS fields: v10 has an explicit root
-  output range and no CSS resource owners; v7 has rule identity,
+  output range, no `styles` array and no CSS resource owners; v7 adds
+  `inlineStyles` to views alongside rule identity,
   changed component paths and page evidence; v6 carries the same public evidence
-  on views and whole-document pages. Every accepted component saved view has its
+  on views and whole-document pages, with inline evidence on views only. Every accepted component saved view has its
   root range. Every persisted usage record has an `insertedStylesheets` array,
   including an empty array. V10 records with CSS owners, missing roots or missing
   provenance are invalid. Keep main's

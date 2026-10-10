@@ -9,48 +9,39 @@ import { compileRuntime } from "../../build/compile_runtime.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
 import type { GeneratedFile } from "../../build/generated_file.js";
 import { runWithTimings, timeAsync } from "../../diagnostics/timings.js";
-import { errorMessage } from "../../errors.js";
 import type { BaselineSelection } from "../../review/repository.js";
 import { RepositoryCatalogueChangeClassifier } from "../component_changes.js";
 
+import { BackgroundWorkerState } from "./background_state.js";
 import { WorkerGitCommandRunner } from "./git_worker.js";
 
-const { runtime, pause, debug, existingManifest, existingOutputs, gitPort } =
-  workerData as {
-    runtime: ComponentRuntime;
-    pause: SharedArrayBuffer;
-    debug: boolean;
-    existingManifest?: ManifestV10;
-    existingOutputs?: ReadonlyMap<string, GeneratedFile>;
-    gitPort: MessagePort;
-  };
+const inputs = workerData as {
+  runtime: ComponentRuntime;
+  pause: SharedArrayBuffer;
+  debug: boolean;
+  existingManifest?: ManifestV10;
+  existingOutputs?: ReadonlyMap<string, GeneratedFile>;
+  gitPort: MessagePort;
+};
+const { pause, debug, existingManifest, gitPort } = inputs;
 const classifier = new RepositoryCatalogueChangeClassifier(
   new WorkerGitCommandRunner(gitPort),
 );
-const state = new Int32Array(pause);
-let manifest: ManifestV10 | undefined = existingManifest;
-let outputs = existingOutputs;
+const pauseState = new Int32Array(pause);
 const checkpoint = async () => {
   await setImmediate();
-  while (Atomics.load(state, 0)) await setTimeout(20);
+  while (Atomics.load(pauseState, 0)) await setTimeout(20);
 };
+const state = new BackgroundWorkerState(inputs, checkpoint, {
+  compile: compileRuntime,
+  post: (message) => parentPort?.postMessage(message),
+  classify: (config, manifest, base, accepted) =>
+    timeAsync("changes.classify", () =>
+      classifier.read(config, manifest, base, undefined, accepted),
+    ),
+});
 if (!existingManifest)
-  void runWithTimings(debug, "background", async () => {
-    try {
-      const compilation = await compileRuntime(runtime, checkpoint, (warning) =>
-        parentPort?.postMessage({
-          type: "warning",
-          generation: runtime.warningGeneration,
-          warning,
-        }),
-      );
-      manifest = compilation.manifest;
-      outputs = compilation.outputs;
-      parentPort?.postMessage({ type: "compiled", compilation });
-    } catch (error) {
-      parentPort?.postMessage({ type: "failed", error: errorMessage(error) });
-    }
-  });
+  void runWithTimings(debug, "background", () => state.start());
 parentPort?.on(
   "message",
   (message: {
@@ -60,34 +51,7 @@ parentPort?.on(
     selection?: BaselineSelection;
     descriptor?: BaselineCatalogue;
   }) => {
-    if (message.type !== "classify" || !manifest) return;
-    void runWithTimings(debug, "background", async () => {
-      if (!message.commit || !message.selection) {
-        parentPort?.postMessage({ type: "classified" });
-        return;
-      }
-      const commit = message.commit;
-      const selection = message.selection;
-      await checkpoint();
-      const classification = await timeAsync("changes.classify", () =>
-        classifier.read(runtime.config, manifest!, message.base, undefined, {
-          commit,
-          selection,
-          ...(message.descriptor ? { descriptor: message.descriptor } : {}),
-          generation: {
-            routes: runtime.styleOutputs.map(([route]) => route),
-            ...(outputs ? { outputs } : {}),
-            deliveredStyleSources: runtime.deliveredStyleSources,
-            documentMarkdown: new Map(
-              (runtime.bundle.documents ?? []).map((entry) => [
-                entry.sourceRelativePath,
-                entry.markdown,
-              ]),
-            ),
-          },
-        }),
-      );
-      parentPort?.postMessage({ type: "classified", snapshot: classification });
-    });
+    if (message.type !== "classify" || !state.ready) return;
+    void runWithTimings(debug, "background", () => state.classify(message));
   },
 );

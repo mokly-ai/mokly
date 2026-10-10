@@ -16,8 +16,19 @@ interface CssRuleMaterial {
 /** A style rule, or a complete selector-less at-rule retained conservatively. */
 export type CssRule = CssRuleMaterial &
   (
-    | { selectors: readonly string[]; atRule?: never; prelude?: never }
-    | { selectors: readonly []; atRule: string; prelude: string }
+    | {
+        selectors: readonly string[];
+        atRule?: never;
+        prelude?: never;
+        block?: never;
+      }
+    | {
+        selectors: readonly [];
+        atRule: string;
+        prelude: string;
+        /** Distinguishes statement at-rules from braced blocks. */
+        block: boolean;
+      }
   );
 
 /** A parsing or serialization failure; the original error remains its cause. */
@@ -38,7 +49,21 @@ export type CssRuleParseResult =
 /** The sole parsing boundary; callers may inject already-parsed test fixtures. */
 export interface CssRuleParser {
   parse(stylesheet: string): CssRuleParseResult;
+  parseInlineRuns?(stylesheet: string): CssInlineParseResult;
+  parseSegments?(
+    segments: readonly string[],
+  ): readonly CssSegmentRun[] | undefined;
 }
+
+/** Verified local rules; the identity run is independent of segment formatting. */
+export interface CssSegmentRun {
+  rules: readonly CssRule[];
+  identityRunKey: string;
+  referenceOrdinals: readonly number[];
+}
+
+export type CssInlineParseResult =
+  { status: "segmented"; runs: readonly CssSegmentRun[] } | CssRuleParseResult;
 
 /** The same rule address with different declaration material. */
 export interface CssRuleChange {

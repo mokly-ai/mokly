@@ -128,7 +128,9 @@ function readViewWithUsage<Usage extends ShellCatalogueUsage>(
     comparison: readComparison(input.comparison),
     ...(input.resourceEvidence === undefined
       ? {}
-      : { resourceEvidence: readResourceEvidence(input.resourceEvidence) }),
+      : {
+          resourceEvidence: readResourceEvidence(input.resourceEvidence, true),
+        }),
   };
 }
 function common(input: Record<string, unknown>): CatalogueEntry {

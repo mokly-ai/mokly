@@ -20,6 +20,7 @@ import { textOutput } from "./helpers/generated_text.js";
 test("large fixture validates dimensions and defaults to high-scale routes", () => {
   assert.deepEqual(largeSize({}), {
     areas: 30,
+    inlineStyles: false,
     screens: 40,
     rows: 12,
     stylesheets: 4,

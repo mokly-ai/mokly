@@ -126,7 +126,7 @@ registration schema and control constraints, including uneditable props.
 The server resolves the request against the current validated registry,
 merges overrides into that variant's props, validates types/constraints, then
 calls the same consumer render adapter, theme, stylesheet selection, marker,
-link, resource, and manifest-bound route validation as Build. Server-supplied context and
+link, resource, component-range and manifest-bound route validation as Build. Server-supplied context and
 uneditable props cannot be overridden. Optional values use an explicit unset
 operation; the tagged null value remains an actual value, not an unset sentinel.
 

@@ -11,6 +11,13 @@ all typed package entry points and the non-code export inventory. Any report
 change relative to `origin/main` requires a release-note change in that diff.
 The existing released-export-name check remains independent.
 
+- `f439de0c feat!: infer inline style ownership` — the renderer ownership
+  note below.
+
+The navigation, identity, baseline and viewer-host notes also cover the
+changes integrated from main's squash; its pre-squash commits are not ancestors
+of this branch and do not appear in the coverage command.
+
 - `fcae6390 feat!: complete source-path evidence removal` — combined below.
 - `e5407723 feat!: remove authoring dependencies` — combined below.
 - `43404882 feat!: derive entry identity from paths` — the path identity note
@@ -144,13 +151,16 @@ CSS list. Ordinary package edits finalize private full-link spans; no transforme
 or transient token remains.
 
 Changes uses rendered output, reachable resources, reviewable metadata and
-component usage. All CSS delivery paths use the same changed-rule test: kept
+component usage. All CSS file delivery paths use the same changed-rule test: kept
 own-page matches change a component; outside matches and unresolved rules give
 the page a direct row. Source-only edits add no evidence. Details omit the
 source dependency list. The combined current formats use new versions:
 manifest v10 includes root ranges and `insertedStylesheets` with
 `componentPaths`; catalogue v6 carries view/page `resourceEvidence`; review v7
 carries `ruleKey`, `changedComponentPaths`, `pageSelectors` and `pageEvidence`.
+Inline rules retain inferred ownership, with `inlineStyles` on review and
+catalogue views. Returned renderer `styles` warns and is ignored; v10 usage
+has no `styles` array.
 Manifest dependency declarations, catalogue `details.dependencies`, review
 `sharedImpact` and entry dependency lists are absent. Earlier shapes are not
 read. Rebuild baselines and regenerate public exports. Former `mokabook-`

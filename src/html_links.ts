@@ -14,22 +14,29 @@ export interface HtmlLink {
 }
 
 /** HTML rel tokens use ASCII whitespace and ASCII case folding. */
-function linkRelTokens(element: Element): readonly string[] {
-  return (element.attrs.find(({ name }) => name === "rel")?.value ?? "")
+export function linkRelTokens(
+  attributes: readonly { name: string; value: string }[],
+): readonly string[] {
+  return (attributes.find(({ name }) => name === "rel")?.value ?? "")
     .replace(/[A-Z]/g, (letter) => letter.toLowerCase())
     .split(/[\t\n\f\r ]+/);
 }
 
 /** Find active links once, without treating template or noscript text as resources. */
-export function parseHtmlLinks(html: string): {
+export function parseHtmlLinks(
+  html: string,
+  existing?: DefaultTreeAdapterMap["document"],
+): {
   document: DefaultTreeAdapterMap["document"];
   head?: Element;
   links: readonly HtmlLink[];
 } {
-  const document = parse(html, {
-    sourceCodeLocationInfo: true,
-    scriptingEnabled: true,
-  });
+  const document =
+    existing ??
+    parse(html, {
+      sourceCodeLocationInfo: true,
+      scriptingEnabled: true,
+    });
   const links: HtmlLink[] = [];
   let head: Element | undefined;
   function visit(node: Node, scope: "head" | "body"): void {
@@ -39,7 +46,7 @@ export function parseHtmlLinks(html: string): {
         scope = "head";
       } else if (node.tagName === "body") scope = "body";
       if (node.tagName === "link" && node.sourceCodeLocation) {
-        const rel = linkRelTokens(node);
+        const rel = linkRelTokens(node.attrs);
         const stylesheet = rel.includes("stylesheet");
         links.push({
           element: node,

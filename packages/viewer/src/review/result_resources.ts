@@ -6,6 +6,7 @@ import {
   reviewInvalid,
   reviewObject,
   reviewPath,
+  reviewStrings,
 } from "./result_helpers.js";
 
 /** Validate dependency analysis at both the entry and view schema boundaries. */
@@ -35,6 +36,7 @@ export function validateDependencyReason(
 export function validateResourceEvidence(
   view: Record<string, unknown>,
   changedPaths: readonly string[] | undefined,
+  paired = true,
 ): void {
   if (
     view.material !== undefined &&
@@ -72,4 +74,43 @@ export function validateResourceEvidence(
     });
     requireOrdered(paths, (path) => path);
   }
+  if (view.inlineStyles !== undefined) validateInlineStyles(view, paired);
+}
+
+function validateInlineStyles(
+  view: Record<string, unknown>,
+  paired: boolean,
+): void {
+  const shape = validateInlineStyleEvidence(view.inlineStyles);
+  if (!paired || view.state === "added" || view.state === "removed")
+    reviewInvalid("inline style evidence requires a paired view");
+  if (shape.status === "matched" || shape.status === "unresolved") {
+    if (view.state !== "changed" || view.material !== true)
+      reviewInvalid("retained inline styles require changed material");
+    return;
+  }
+
+  if (
+    view.state !== "unchanged" ||
+    view.material !== undefined ||
+    view.reasons !== undefined
+  )
+    reviewInvalid("excluded inline styles require an unchanged view");
+}
+
+/** The evidence payload also crosses the state-free public catalogue boundary. */
+export function validateInlineStyleEvidence(
+  value: unknown,
+): Record<string, unknown> {
+  const shape = reviewObject(value, ["status"], ["selectors"]);
+  if (shape.status === "matched" || shape.status === "unresolved") {
+    const evidence = reviewObject(value, ["status", "selectors"]);
+    const selectors = reviewStrings(evidence.selectors);
+    if (shape.status === "matched" && selectors.length === 0)
+      reviewInvalid("matched inline styles require selectors");
+    return shape;
+  }
+  if (shape.status !== "excluded")
+    reviewInvalid("invalid inline style evidence status");
+  return reviewObject(value, ["status"]);
 }

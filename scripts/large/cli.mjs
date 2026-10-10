@@ -1,16 +1,18 @@
 import path from "node:path";
 
 import { start, stop } from "./process.mjs";
+import { selectScenarios } from "./scenarios.mjs";
 import { prepareFixture, preparedFixture } from "./setup.mjs";
 
 const repository = path.resolve(import.meta.dirname, "../..");
 async function main() {
   const args = process.argv.slice(2);
   const mode = args.shift();
-  if (!["generate", "serve", "benchmark"].includes(mode))
-    throw new Error("Use generate, serve or benchmark");
+  if (!["generate", "serve", "benchmark", "details"].includes(mode))
+    throw new Error("Use generate, serve, benchmark or details");
   const size = {
     areas: 30,
+    inlineStyles: false,
     screens: 40,
     rows: 12,
     stylesheets: 4,
@@ -19,10 +21,23 @@ async function main() {
   let debug = mode === "benchmark";
   let config;
   let trackedOutput = false;
+  const scenarioNames = [];
   while (args.length) {
     const flag = args.shift();
-    if (flag === "--debug-timings") debug = true;
+    if (flag === "--scenario") {
+      const value = args.shift();
+      if (
+        !["benchmark", "details"].includes(mode) ||
+        !value ||
+        value.startsWith("--")
+      )
+        throw new Error(
+          "--scenario <name> is a benchmark-only filter (including details)",
+        );
+      scenarioNames.push(value);
+    } else if (flag === "--debug-timings") debug = true;
     else if (flag === "--tracked-output") trackedOutput = true;
+    else if (flag === "--inline-styles") size.inlineStyles = true;
     else if (flag === "--config") {
       const value = args.shift();
       if (!value || value.startsWith("--"))
@@ -49,12 +64,20 @@ async function main() {
     throw new Error("screens must be at least two per area");
   if (mode === "generate")
     return prepareFixture(repository, size, debug, trackedOutput);
-  const fixture = config
-    ? { configPath: config, root: path.dirname(config), size }
-    : await preparedFixture(repository, size, trackedOutput);
+  const scenarios = selectScenarios(scenarioNames);
+  const fixture = await preparedFixture(
+    repository,
+    size,
+    trackedOutput,
+    config,
+  );
   if (mode === "benchmark") {
     const { benchmark } = await import("./benchmark.mjs");
-    return benchmark(repository, fixture);
+    return benchmark(repository, fixture, scenarios);
+  }
+  if (mode === "details") {
+    const { materialDetails } = await import("./details.mjs");
+    return materialDetails(repository, fixture, scenarios);
   }
   const running = start(
     [

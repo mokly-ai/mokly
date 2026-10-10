@@ -22,7 +22,8 @@ export type CssAnalysisOutcome =
 export type CssRuleDelta =
   | { kind: "added"; before?: never; after: CssRule }
   | { kind: "removed"; before: CssRule; after?: never }
-  | { kind: "changed"; before: CssRule; after: CssRule };
+  | { kind: "changed"; before: CssRule; after: CssRule }
+  | { kind: "unchanged"; before: CssRule; after: CssRule };
 
 /** A document decision retaining the exact diff material it explains. */
 export interface CssRuleMatch {

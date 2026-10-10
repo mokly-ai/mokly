@@ -90,6 +90,7 @@ for (const components of [false, true]) {
       assertReviewTimings(events, "export", "export", [
         ...reviewStages,
         "review.css-analysis",
+        ...(components ? ["review.inline-style-analysis"] : []),
       ]);
       assert.doesNotMatch(
         timed.stderr,
@@ -185,7 +186,11 @@ for (const [components, watch] of [
         backgroundEvents,
         "background",
         "changes.classify",
-        [...reviewStages, "review.css-analysis"].filter(
+        [
+          ...reviewStages,
+          "review.css-analysis",
+          ...(components ? ["review.inline-style-analysis"] : []),
+        ].filter(
           (stage) =>
             stage !== "review.write-artifact" && stage !== "review.base-commit",
         ),

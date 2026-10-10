@@ -12,7 +12,7 @@ decoder implement this path-keyed component-aware schema v7 for
 [Changes contract](./mokly-changes.md) and
 [named result interfaces](../../packages/viewer/src/review/types.ts).
 Manifest/usage types come from the
-[component manifest](./mokly-component-manifest.md). Version 6 addresses
+[component manifest](./mokly-component-manifest.md). Version 7 addresses
 screens, components, variants, and views by entry path and view axes, carries
 `previousPath` for paired moves, and stores no artifact path.
 
@@ -33,13 +33,15 @@ applicable reason, without deriving membership from raw fragment paths alone.
 A dependency reason names a `changedPaths` path. Independent reasons follow
 [component change attribution](./mokly-component-changes.md#rendered-resources-and-styles):
 only retained rendered resources supply path evidence. Non-CSS file ownership
-comes from `resources`; `styles` owns document ranges. CSS uses own-page rule
+comes from renderer `resources` and inferred inline references. Inline document
+material uses inferred owners, and returned renderer `styles` is ignored. CSS uses own-page rule
 matches kept after nested filtering, never stylesheet owner records. A
 stylesheet reason may carry the
 [CSS change attribution](./mokly-css-attribution.md) `analysis` record;
 its `selectors` are sorted and duplicate-free, `analysis` appears only on
 stylesheet paths in analysis scope, a view carries `material: true` exactly
-when its normalized documents differ, and a view's `excludedResources` paths must be in
+when its actual materials differ after normalization, inserted-link removal
+and inline canonicalization, and a view's `excludedResources` paths must be in
 `changedPaths` and never coincide with that view's dependency reasons. A screen reason names a step's `screenPath`, is allowed only on a use case, and
 must reference a directly changed screen actually used on at least one side.
 Use cases also retain their own metadata reasons. One screen with
@@ -100,6 +102,15 @@ and view `ignoredIds` retain manual
 Review-ignore evidence for screens; component variant views retain their own
 manual ids. Component suppression is described through `affectedConsumers`,
 not by pretending instance keys are legacy ignore ids.
+
+## Inline Style Evidence
+
+The [inline evidence contract](./mokly-inline-style-evidence.md) owns the typed
+`inlineStyles` payload, emission conditions and paired-view validation. Complete,
+live, selected and published v7 results retain it. Catalogue v6 carries it in
+view `resourceEvidence`, including through the Serve/export screen-evidence
+projection. It has no synthetic stylesheet path. Supplemental inline reason
+rules are in [review evidence](./mokly-component-review-evidence.md).
 
 ## Validation And Publication
 

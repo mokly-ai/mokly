@@ -546,6 +546,8 @@ for the review rules and temporary Braces exception.
   request dispatch against the server's current accepted snapshot.
 - [`src/review`](./src/review/README.md) — Git baselines, comparison, and change
   attribution.
+- [`src/review/component_style_route.ts`](./src/review/component_style_route.ts)
+  — conservative single-style comparisons that reuse the head page analysis.
 - [`src/review/component_variant_classification.ts`](./src/review/component_variant_classification.ts)
   and
   [`component_classification_sources.ts`](./src/review/component_classification_sources.ts)

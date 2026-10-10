@@ -27,7 +27,11 @@ for (const direction of ["added", "removed"] as const) {
       .variants.find((entry) => entry.path === "action/disabled")!;
 
     assert.equal(variant.state, direction);
-    assert.ok(variant.views.every((view) => view.state === direction));
+    assert.ok(
+      variant.views.every(
+        (view) => view.state === direction && !view.inlineStyles,
+      ),
+    );
   });
 
   test(`fast and complete paths agree for ${direction} screens`, async (t) => {
@@ -42,7 +46,11 @@ for (const direction of ["added", "removed"] as const) {
     const screen = result.screens.find((entry) => entry.path === "home")!;
 
     assert.equal(screen.state, direction);
-    assert.ok(screen.views.every((view) => view.state === direction));
+    assert.ok(
+      screen.views.every(
+        (view) => view.state === direction && !view.inlineStyles,
+      ),
+    );
   });
 }
 

@@ -9,7 +9,7 @@ import type {
   ObjectPropSchema,
 } from "../components/prop_types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
-import type { ResourceEvidence } from "../review/types.js";
+import type { ResourceEvidence, InlineStyleEvidence } from "../review/types.js";
 
 export type ChangesStatus =
   "preparing" | "pending" | "ready" | "unavailable" | "disabled";
@@ -98,7 +98,7 @@ export type CatalogueUsage =
     }
   | { status: "pending" | "unavailable" };
 export interface CatalogueView {
-  resourceEvidence?: ResourceEvidence;
+  resourceEvidence?: ResourceEvidence & { inlineStyles?: InlineStyleEvidence };
   viewport: Viewport;
   colorScheme: ColorScheme;
   usage: CatalogueUsage;

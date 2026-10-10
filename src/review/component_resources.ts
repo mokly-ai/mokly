@@ -1,21 +1,24 @@
-import { createHash } from "node:crypto";
-
-import { isStylesheetPath } from "@mokly/viewer/data";
-
-import { timeAsync } from "../diagnostics/timings.js";
+import { parseHtml } from "../diagnostics/html_parse.js";
+import { documentResourceReferences } from "../diagnostics/timings.js";
 import { MoklyError } from "../errors.js";
 
-import { referencedRoutes } from "./asset_references.js";
+import { referencedRoutes, referenceRoutes } from "./asset_references.js";
 import type { ReviewAssetReader } from "./assets.js";
+import type { CssDocument } from "./css/document.js";
+import {
+  analyzeResourceDocument,
+  type ResourceDocumentAnalysis,
+} from "./resource_document_analysis.js";
 import { normalizeResourceDocuments } from "./resource_documents.js";
 import { ResourceGraph } from "./resource_graph.js";
+import { prefetchProofReads } from "./resource_proof_reads.js";
+import { collectStylesheetScope } from "./stylesheet_scope.js";
+import {
+  ViewResourceCache,
+  type ViewResourceOptions,
+} from "./view_resources.js";
 
 type ResourceExclusion = (route: string) => boolean;
-
-interface CachedViewResources {
-  all?: Promise<ReadonlySet<string>>;
-  filtered: WeakMap<ResourceExclusion, Promise<ReadonlySet<string>>>;
-}
 
 /** One immutable read cache per source side; it never copies or writes snapshots. */
 export class ComponentMaterialReader {
@@ -26,14 +29,20 @@ export class ComponentMaterialReader {
     Promise<Uint8Array | undefined>
   >();
   private readonly graph: ResourceGraph;
+  private componentAware = false;
+  private readonly documents = new Map<
+    string,
+    Promise<ResourceDocumentAnalysis>
+  >();
   private counterpart?: ComponentMaterialReader;
   private missingResource?: (route: string) => boolean;
   private side: "before" | "after" = "after";
   private readonly normalized = new Map<string, Promise<string>>();
-  private readonly viewResources = new Map<
-    string,
-    Map<string, CachedViewResources>
-  >();
+  private readonly viewResources = new ViewResourceCache(
+    (seeds) => this.graph.collect(seeds),
+    (seeds) =>
+      this.graph.collect(seeds, (routes) => this.prefetchProof(routes)),
+  );
   constructor(private readonly reader: ReviewAssetReader) {
     this.canReadOptionally = Boolean(
       reader.readIfExists || reader.readManyIfExists,
@@ -46,6 +55,33 @@ export class ComponentMaterialReader {
   /** Permit a missing current resource only while comparison verifies its baseline side. */
   allowMissingResources(predicate: (route: string) => boolean): void {
     this.missingResource = predicate;
+  }
+  useOriginalDocuments(): void {
+    this.componentAware = true;
+  }
+
+  async resourceDocument(route: string): Promise<CssDocument> {
+    return this.componentAware
+      ? (await this.documentAnalysis(route, "resourceMatching")).document
+      : parseHtml("resourceMatching", await this.resourceText(route));
+  }
+
+  private documentAnalysis(
+    route: string,
+    step: "resourceReference" | "resourceMatching",
+  ): Promise<ResourceDocumentAnalysis> {
+    let result = this.documents.get(route);
+    if (!result) {
+      result = (async () =>
+        analyzeResourceDocument(
+          await this.text(route),
+          (await this.counterpart?.optionalTexts([route]))?.get(route),
+          route,
+          step,
+        ))();
+      this.documents.set(route, result);
+    }
+    return result;
   }
   /** Bind immutable source sides before traversing embedded-document resources. */
   pairWith(
@@ -83,18 +119,11 @@ export class ComponentMaterialReader {
     if (!this.reader.readMany) return;
     for (const route of routes) {
       const optional = this.optional.get(route);
-      if (optional && !this.files.has(route))
-        this.files.set(
-          route,
-          optional.then((content) => {
-            if (content === undefined)
-              throw new MoklyError(
-                "review-invalid",
-                `referenced resource is missing: ${route}`,
-              );
-            return content;
-          }),
-        );
+      if (optional && !this.files.has(route)) {
+        const content = await optional;
+        if (content !== undefined)
+          this.files.set(route, Promise.resolve(content));
+      }
     }
     const missing = [...new Set(routes)].filter(
       (route) => !this.files.has(route),
@@ -125,14 +154,7 @@ export class ComponentMaterialReader {
     if (!result) {
       const optional = this.optional.get(route);
       result = optional
-        ? optional.then((content) => {
-            if (content === undefined)
-              throw new MoklyError(
-                "review-invalid",
-                `referenced resource is missing: ${route}`,
-              );
-            return content;
-          })
+        ? optional.then((content) => content ?? this.reader.read(route))
         : this.reader.read(route);
       this.files.set(route, result);
     }
@@ -187,59 +209,52 @@ export class ComponentMaterialReader {
     route: string,
     html: string,
     excluded?: ResourceExclusion,
-    insertedStylesheets: readonly string[] = [],
+    options?: ViewResourceOptions,
   ): Promise<ReadonlySet<string>> {
-    let documents = this.viewResources.get(route);
-    if (!documents) {
-      documents = new Map();
-      this.viewResources.set(route, documents);
+    return this.viewResources.resources(route, html, excluded, options);
+  }
+
+  /** A missing base file anywhere in a proof closure means fall-through. */
+  resourcesIfPresent(
+    route: string,
+    html: string,
+    excluded?: ResourceExclusion,
+    options?: ViewResourceOptions,
+  ): Promise<ReadonlySet<string> | undefined> {
+    return this.viewResources.resourcesIfPresent(
+      route,
+      html,
+      excluded,
+      options,
+    );
+  }
+
+  private async prefetchProof(routes: readonly string[]): Promise<boolean> {
+    if (this.canReadOptionally) {
+      const files = await this.optionalTexts(routes);
+      return routes.every((route) => files.get(route) !== undefined);
     }
-    const digest = createHash("sha256")
-      .update(html)
-      .update(JSON.stringify(insertedStylesheets))
-      .digest("base64url");
-    let cached = documents.get(digest);
-    if (!cached) {
-      cached = { filtered: new WeakMap() };
-      documents.set(digest, cached);
-    }
-    const existing = excluded ? cached.filtered.get(excluded) : cached.all;
-    if (existing) return existing;
-    const resources = timeAsync("review.resource-graph", () => {
-      const seeds = [
-        ...referencedRoutes(route, html, {
-          resourceHints: false,
-        }),
-        ...insertedStylesheets,
-      ].filter((path) => !excluded?.(path));
-      return this.graph.collect(seeds);
-    });
-    if (excluded) cached.filtered.set(excluded, resources);
-    else cached.all = resources;
-    return resources;
+    return prefetchProofReads(this.reader, this.files, routes);
   }
 
   /** CSS imports share a document; embedded HTML starts its own stylesheet scope. */
   async stylesheets(
     route: string,
     html: string,
-    insertedStylesheets: readonly string[] = [],
+    options: ViewResourceOptions = {},
   ): Promise<ReadonlySet<string>> {
-    const found = new Set<string>();
-    const pending = [
-      ...referencedRoutes(route, html, {
-        resourceHints: false,
-      }),
-      ...insertedStylesheets,
-    ].filter(isStylesheetPath);
-    while (pending.length) {
-      const stylesheet = pending.pop()!;
-      if (found.has(stylesheet)) continue;
-      found.add(stylesheet);
-      const references = await this.resourceReferences(stylesheet);
-      pending.push(...references.filter(isStylesheetPath));
-    }
-    return found;
+    const references =
+      options.references !== undefined
+        ? referenceRoutes(route, options.references)
+        : this.componentAware &&
+            /\.html?$/i.test(route) &&
+            html === (await this.resourceText(route))
+          ? await this.graph.references(route)
+          : referencedRoutes(route, html, { resourceHints: false });
+    return collectStylesheetScope(
+      [...references, ...(options.insertedStylesheets ?? [])],
+      (path) => this.graph.references(path),
+    );
   }
 
   private async prefetchResources(routes: readonly string[]): Promise<void> {
@@ -254,9 +269,19 @@ export class ComponentMaterialReader {
       (await this.optionalTexts([route])).get(route) === undefined
     )
       return [];
-    return referencedRoutes(route, await this.resourceText(route), {
-      resourceHints: false,
-    });
+    const text = await this.resourceText(route);
+    if (
+      this.componentAware &&
+      /\.html?$/i.test(route) &&
+      text === (await this.text(route))
+    )
+      return referenceRoutes(
+        route,
+        (await this.documentAnalysis(route, "resourceReference")).references,
+      );
+    return documentResourceReferences(() =>
+      referencedRoutes(route, text, { resourceHints: false }),
+    );
   }
 
   private mayBeMissing(route: string): boolean {

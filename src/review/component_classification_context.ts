@@ -22,6 +22,9 @@ export async function classificationContext(
   context: ComponentViewContext;
 }> {
   const { config, changedPaths } = input;
+  const componentAware = [...input.before.entries, ...after.entries].some(
+    (entry) => entry.kind === "component" && !("variantOf" in entry),
+  );
   const beforeReader = new ComponentMaterialReader(input.beforeReader);
   const afterReader = new ComponentMaterialReader(input.afterReader);
   const changed = new Set(changedPaths);
@@ -33,6 +36,7 @@ export async function classificationContext(
     moves,
   );
   const context: ComponentViewContext = {
+    componentAware,
     links: catalogueLinkNormalizer(
       input.before.entries,
       after.entries,
@@ -49,9 +53,21 @@ export async function classificationContext(
       afterReader,
       changed,
       prefix,
-      input.cssAnalysis ?? new CssResourceAnalysis(input.cssParser),
+      input.cssAnalysis ??
+        new CssResourceAnalysis(
+          input.cssParser,
+          undefined,
+          input.cssCacheBytes,
+        ),
       input.resources,
+      componentAware,
     ),
+    ...(input.useStylePath === undefined
+      ? {}
+      : { useStylePath: input.useStylePath }),
+    ...(input.useMaterialFingerprints === undefined
+      ? {}
+      : { useMaterialFingerprints: input.useMaterialFingerprints }),
     ...(input.resources ? { resourceIdentity: input.resources } : {}),
     ...(input.useFastPath === undefined
       ? {}

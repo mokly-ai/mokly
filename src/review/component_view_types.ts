@@ -5,6 +5,7 @@ import type {
   DependencyReason,
 } from "@mokly/viewer/data";
 
+import type { PreparedInlineStyleEvidence } from "./component_projection_resources.js";
 import type { OwnedResourceReason } from "./component_resource_attribution.js";
 import type { ComponentMaterialReader } from "./component_resources.js";
 import type { ReviewLinkNormalization } from "./ignore.js";
@@ -12,14 +13,16 @@ import type { MoveResources } from "./moves/resources.js";
 import type { ResourceComparison } from "./resource_comparison.js";
 
 export interface ComparedComponentView {
-  comparisonPath: "fast" | "complete";
+  comparisonPath: "fast" | "style" | "complete";
   view: ViewReview;
   reasons: readonly EntryChangeReason[];
   changedImplementations: ReadonlySet<string>;
   ownedResources: readonly OwnedResourceReason[];
   componentCssReasons?: readonly DependencyReason[];
+  inlineEvidence?: PreparedInlineStyleEvidence;
 }
 export interface ComponentViewContext {
+  componentAware: boolean;
   resourceIdentity?: MoveResources;
   beforeReader: ComponentMaterialReader;
   afterReader: ComponentMaterialReader;
@@ -27,6 +30,8 @@ export interface ComponentViewContext {
   prefix: string;
   resources: ResourceComparison;
   useFastPath?: boolean;
+  useStylePath?: boolean;
+  useMaterialFingerprints?: boolean;
   links?: (beforeRoute: string, afterRoute: string) => ReviewLinkNormalization;
   beforeUsage?: (usage: ComponentViewRecord) => ComponentViewRecord;
 }

@@ -10,10 +10,13 @@ import type { ResolvedConfig } from "../config/types.js";
 import type { Renderer } from "../renderer/types.js";
 
 import { type BuildDiagnostic } from "./build_warnings.js";
-import type { ResourceSeed } from "./html_links.js";
 import type { PendingGeneratedFiles } from "./pending_generated.js";
+import type { ResourceSeed } from "./resource_seeds.js";
 import { isGeneratedRoute } from "./styles/routes.js";
-import { ignoredStylesheetResourceOwner } from "./warnings.js";
+import {
+  ignoredRendererStyles,
+  ignoredStylesheetResourceOwner,
+} from "./warnings.js";
 
 /** Discard stylesheet assertions only after validating their public file identity. */
 export function rendererWithoutCssOwners(
@@ -25,8 +28,14 @@ export function rendererWithoutCssOwners(
   onStylesheetResource?: (seed: ResourceSeed) => void,
 ): Renderer {
   return (input) => {
-    const result = renderer(input);
-    if (typeof result === "string" || !result.resources) return result;
+    let result = renderer(input);
+    if (!result || typeof result !== "object") return result;
+    if (Object.hasOwn(result, "styles")) {
+      onWarning?.(ignoredRendererStyles(route));
+      const { styles: _ignored, ...retained } = result;
+      result = retained;
+    }
+    if (!result.resources) return result;
     const policy = new PublicFilePolicy(config);
     const warned = new Set<string>();
     const resources = result.resources.filter((resource) => {
