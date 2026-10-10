@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.15.0](https://github.com/mokly-ai/mokly/compare/v0.14.0...v0.15.0) (2026-10-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* Entry `dependencies`, component `ownedDependencies` and `review.sharedImpact` have no effect. Mokly warns and ignores them, and a `--strict` command fails on these warnings. Delete them, and declare component CSS with the component's `stylesheets` field.
+* Generated output uses manifest v10, catalogue read model v6 and review result v7. Rebuild and commit `mokly-generated/` output that 0.14.0 or earlier wrote, and regenerate exports. A comparison base that 0.14.0 or earlier built shows Changes as unavailable until the base includes this version. Hosts that embed the viewer need `@mokly/viewer` 0.6.0 to read catalogues from this release.
+* Rename `ManifestV9`, `ReviewResultV6` and `ScreenReviewV6` to `ManifestV10`, `ReviewResultV7` and `ScreenReviewV7`. `MoklyVersionError.boundary` can now be `"review"`.
+
+### Features
+
+* classify each changed CSS rule by the elements that it matches ([#179](https://github.com/mokly-ai/mokly/issues/179)) ([34e4bb0](https://github.com/mokly-ai/mokly/commit/34e4bb0324c5e22e98f21120a800e2a165481d34))
+* declare component CSS with the `stylesheets` field ([#179](https://github.com/mokly-ai/mokly/issues/179)) ([34e4bb0](https://github.com/mokly-ai/mokly/commit/34e4bb0324c5e22e98f21120a800e2a165481d34))
+* move generated output to manifest v10, catalogue read model v6 and review result v7 ([#179](https://github.com/mokly-ai/mokly/issues/179)) ([34e4bb0](https://github.com/mokly-ai/mokly/commit/34e4bb0324c5e22e98f21120a800e2a165481d34))
+* remove source-path evidence inputs ([#179](https://github.com/mokly-ai/mokly/issues/179)) ([34e4bb0](https://github.com/mokly-ai/mokly/commit/34e4bb0324c5e22e98f21120a800e2a165481d34))
+* rename the versioned manifest and review types ([#179](https://github.com/mokly-ai/mokly/issues/179)) ([34e4bb0](https://github.com/mokly-ai/mokly/commit/34e4bb0324c5e22e98f21120a800e2a165481d34))
+
+
+### Bug Fixes
+
+* ignore foreign links, keep snapshot forms, remove wording tests ([#191](https://github.com/mokly-ai/mokly/issues/191)) ([c66daeb](https://github.com/mokly-ai/mokly/commit/c66daeb58d3b3e822dfd0482a587a8f3a8e58218))
+* **release:** repair release evidence and manual complete retries ([#183](https://github.com/mokly-ai/mokly/issues/183)) ([a0e1219](https://github.com/mokly-ai/mokly/commit/a0e1219c0541618e882f563f8f73b13bb00e7fa3))
+* **server:** keep authored files readable across reloads and restarts ([#185](https://github.com/mokly-ai/mokly/issues/185)) ([a90badb](https://github.com/mokly-ai/mokly/commit/a90badb6a79c05a20fb938e894232e0b5b946b30))
+* **xtask:** warn on stuck boxes after suites ([#181](https://github.com/mokly-ai/mokly/issues/181)) ([1086732](https://github.com/mokly-ai/mokly/commit/1086732a634f0fa42837f45dd290745d114f9701))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @mokly/viewer bumped from 0.5.0 to 0.6.0
+
 ## [0.14.0](https://github.com/mokly-ai/mokly/compare/v0.13.0...v0.14.0) (2026-10-08)
 
 

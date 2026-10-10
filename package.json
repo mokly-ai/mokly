@@ -1,6 +1,6 @@
 {
   "name": "@mokly/mokly",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "App-independent static mockup catalogues, development browsing, and on-demand visual comparisons.",
   "type": "module",
   "license": "MIT",
@@ -72,7 +72,7 @@
     "typecheck:script-declarations": "tsc --project tsconfig.scripts-declarations.json --noEmit"
   },
   "dependencies": {
-    "@mokly/viewer": "0.5.0",
+    "@mokly/viewer": "0.6.0",
     "chokidar": "^5.0.0",
     "css-select": "^7.0.0",
     "css-what": "^8.0.0",
