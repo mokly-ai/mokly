@@ -8,9 +8,9 @@ Base lookup, snapshot sync, cleanup, identity and executor selection are
 implemented under the [base sync plan](../../plans/remote-verification-base-commit.md).
 The linked-worktree spike and automatic gate after an unpushed main merge passed.
 Automatic and explicit remote checks accept unpushed commits with a pushed base.
-The gate used main as base; all 11 commands, nine reports and aggregation passed.
-The checkout stayed unchanged. Cleanup stopped every box and removed both
-the snapshot and temporary index.
+The staging smoke deleted a plan and renamed a capped page. With main as base,
+all 11 commands, nine reports and aggregation passed. The checkout stayed unchanged.
+Cleanup stopped every box and removed the snapshot and temporary index.
 
 ## Base Commit
 

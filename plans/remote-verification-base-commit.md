@@ -476,28 +476,31 @@ Evidence: `.context/remote-verification-base-commit/milestone6.md`.
       failure tests and a real-Git rename, deletion and fingerprint regression.
       Audit repository index readers. Define the box index contract and update
       wrapper docs without removing rules or exceeding file caps.
-- [ ] Run xtask tests, Rust fmt, Clippy, both length lints, the repository
+- [x] Run xtask tests, Rust fmt, Clippy, both length lints, the repository
       suite, Markdown and protocol tests, wrapper tests and Prettier. Push
       exactly the four finding commits after all checks pass.
-- [ ] Merge origin/main locally under the preservation audit. Resolve only
+- [x] Merge origin/main locally under the preservation audit. Resolve only
       the approved index conflict. Preserve the verification index entry,
       remove our split-list entry and keep main's test logic. Inspect every
       auto-merged path and save `merge-2-audit.md`. Stop for another conflict.
-- [ ] Run the repository suite and Markdown and protocol tests on the merge
+- [x] Run the repository suite and Markdown and protocol tests on the merge
       tree. Keep the merge unpushed.
-- [ ] Create one unpushed smoke commit. Delete the unlinked completed plan.
+- [x] Create one unpushed smoke commit. Delete the unlinked plan.
       Rename a capped protocol page that no code or test reads by path, its cap
       key and every inbound Markdown link. Require both local checks to pass.
-- [ ] Build the contract snapshot at the gate base. Link ignored node_modules.
-      Require real Markdown links and protocol caps to fail before staging and
-      pass after `git add -A`. Remove the snapshot under the cleanup contract.
-- [ ] Run the complete automatic gate with the merge and smoke commit
+- [x] Build the contract snapshot at the gate base. Try parent dependency
+      lookup. Use ignored dependency files if preparation requires them.
+      Run real preparation before both Markdown checks. Require the old renamed
+      path's `ENOENT` before staging and a pass after `git add -A`. Retain the
+      real protocol-cap failure and pass evidence. Require no extra source path.
+      Remove the snapshot under the cleanup contract.
+- [x] Run the complete automatic gate with the merge and smoke commit
       unpushed. Require origin/main as base, the Git ahead count, 11/11 commands,
       9/9 reports, a passed aggregate, unchanged tree and cleanup=0. Save
       `finding2-gate.log`. Stop if snapshot failure selects local mode.
-- [ ] Discard only the unpushed smoke commit. Require the tree to equal the
+- [x] Discard only the unpushed smoke commit. Require the tree to equal the
       merge commit and push the merge. Preserve all pushed commits.
-- [ ] Record final delivery status and completed TODOs after the gate. Require
+- [x] Record final delivery status and completed TODOs after the gate. Require
       no owned box, snapshot or extra worktree and unchanged checkout config.
       Run the Markdown checks. Commit with Conventional Commits and push.
 - [ ] After the push, a reviewer uses
