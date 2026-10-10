@@ -183,7 +183,11 @@ The current maintenance choices are:
   a new explicit risk review, not an automatic extension.
 - `wrangler` 4.113.0 stays exactly pinned with its existing Miniflare/Workerd
   versions. It requires `esbuild` 0.28.1 exactly, so the lockfile nests that
-  copy under Wrangler until a Wrangler update accepts Mokly's esbuild release.
+  copy under Wrangler. Wrangler 4.149.0 is the first release that accepts
+  Mokly's esbuild 0.28.2, but Wrangler 4.117.0 and later depend on Miniflare 5
+  alpha releases instead of the Miniflare 4 line (rechecked on 2026-10-10).
+  Move Wrangler only in a reviewed change that deploys a preview with the new
+  version and reviews the overrides below against its Miniflare dependencies.
   The `miniflare`-scoped overrides select `undici` 7.29.1 and `sharp` 0.35.5,
   whose bundled native image libraries include the librsvg fix for
   [GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w).
