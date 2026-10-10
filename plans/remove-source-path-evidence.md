@@ -2851,6 +2851,7 @@ rules split into `docs/dev`), #172 (Serve keeps the checked closure on reload),
       open finding as one line under this TODO. The review is complete. It has
       no `Auto-fix: yes` finding, so no fix round follows.
   - [x] M34 finding 1 (Medium, test): main #138's example snapshot codec rejects two valid forms of this branch's compilation: `resourceSeeds` (encode fails) and warnings with a `subject` (decode fails, so tests compile again). Recommend A: extend the existing codec and its field table and round-trip tests. Fixed on branch `calummoore/feat-auto-dependencies-and-shared-impact-v1` (option A).
+  - [ ] Follow-up review finding 1 (Low, test): the schema-2 snapshot reader validates warnings with `isBuildDiagnostic`, which rejects a warning longer than 65,536 characters that compilation accepts, so such a snapshot reads as invalid and every test process compiles again. Recommend A: validate snapshot warnings with the compilation normalizer.
 
 Evidence: `.context/remove-source-path-evidence/milestone-34.md`.
 
