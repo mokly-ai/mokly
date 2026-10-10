@@ -5,21 +5,18 @@ Continuation of [README](./README.md).
 ## Current Documentation Rule
 
 Former version names, removed field names and implementation plan or milestone
-references belong only in `Delivery Status` sections or on a short reviewed
-allow list. A status section ends at the next heading of equal or higher level.
+references belong only in `Delivery Status` sections, except for the content
+listed below. A status section ends at the next heading of equal or higher level.
 Guides have no status notes; keep their delivery notes in the owning protocol.
 There is no plans index. Link to the `plans/` directory. Each plan starts with
 a `Status: Active` or `Status: Completed` paragraph directly below its title.
 
-The guard scans Markdown in `docs/**`, the root README, module/package/example
-READMEs, `xtask/README.md` and authored `notes.md` files. Plans are outside this
-current-doc guard. Plan history and link handling follow the separate rules
-below. `docs/reviews/**` and `CHANGELOG.md` stay unchanged. The guard fails closed and
-reads complete statements across line breaks, including fenced examples. A
-word such as "removed", "older" or "never" is not a general exemption.
+This rule applies to Markdown in `docs/**`, the root README,
+module/package/example READMEs, `xtask/README.md` and authored `notes.md` files.
+Plan history and link handling follow the separate rules below.
+`docs/reviews/**` and `CHANGELOG.md` stay unchanged.
 
-Each allow-list entry names an exact file, bounded statement or section, and
-reason. It may hold only:
+Reviewers may accept these names and references in the following content:
 
 - Removed-input type/warning contracts, exact diagnostics, rejection/privacy
   rules and consumer migration instructions that must name the removed input.
@@ -31,14 +28,9 @@ reason. It may hold only:
   to manage delivery references. Upload Plan operations and SVG path commands
   are domain terms, not implementation references.
 
-No whole-directory exemption or broad keyword allowance is permitted. Match
-each reviewed exception exactly and fail when it no longer matches its source.
-
-The executable guard is `tests/current_docs_contract.test.ts`. Its reviewed
-exceptions live in `tests/fixtures/current-docs-allowlist.json`. Each exception
-matches one complete statement or fenced example after whitespace normalization.
-An added sentence requires its own review. Missing or changed exceptions fail.
-The regression fixture retains verbatim reviewed lines with their source revision.
+Reviews check this rule. No test checks documentation wording, as required by
+[`AGENTS.md`](../../AGENTS.md). Tests compare documentation with code
+structurally, including parsed values, names, options, tables, links and counts.
 
 ## Plan History And Local Links
 
@@ -57,8 +49,9 @@ rewrite those decisions. Record every plan link repair in the commit description
 
 ## Delivery Status
 
-The fail-closed guard and mutation checks are implemented in
-[M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types).
+Reviews enforce the current-documentation rule. The documentation-wording
+tests were removed under the option A decision in
+[M35](../../plans/remove-source-path-evidence.md#milestone-35-integrate-main-175-and-181).
 
 ## Delivery Status
 
@@ -79,7 +72,7 @@ The excluded-only mockup and shared Details card are implemented in
 Link placement and discovery are implemented in [M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).
 Warning generations, startup cleanup and unused-code removal are implemented in
 [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
-Stronger regression tests, recorded mutation runs, the docs guard and type checks are
+Stronger regression tests, recorded mutation runs and type checks are
 implemented in [M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types).
 Exported navigation and viewer alignment are implemented in
 [M31](../../plans/remove-source-path-evidence.md#milestone-31-keep-the-branch-name-in-exported-navigation).
