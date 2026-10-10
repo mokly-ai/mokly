@@ -162,7 +162,7 @@ renderer already authored. For files not already linked by the renderer, Mokly
 locates the configured links and inserts component links next to them.
 
 Only configured hrefs are placement anchors. A qualifying `<link>` is in the
-logical head, has the ASCII-case-insensitive, whitespace-delimited `stylesheet`
+HTML namespace and logical head, has the ASCII-case-insensitive, whitespace-delimited `stylesheet`
 token in `rel`, and matches a resolved configured href. Generated renderer and entry stylesheet
 links are not anchors, although `RenderInput.stylesheets` contains them.
 `alternate stylesheet` qualifies. Use the
@@ -180,6 +180,8 @@ the head is empty. Omitted optional tags never fail placement.
 
 Missing, repeated or reordered configured links do not fail insertion; a
 missing href gets a [warning](#warning-messages).
+SVG and MathML namespace links do not qualify. HTML links at integration
+points such as SVG `foreignObject` retain the shared finder's normal scope.
 Keep every renderer-authored link unchanged, even duplicates. Preserve other
 head content, rebase UTF-16 style offsets, and validate final output normally.
 See the [graceful-handling rule](./README.md#graceful-handling).

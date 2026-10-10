@@ -67,8 +67,8 @@ export function extractHtmlReferences(
       hrefs.push(href);
     }
     if (navigationHref !== undefined) hrefs.push(navigationHref);
-    const resourceHint = link?.resourceHint;
-    for (const name of options.resourceHints === false && resourceHint
+    for (const name of (tagName === "link" && !link) ||
+    (options.resourceHints === false && link?.resourceHint)
       ? []
       : sourceAttributes) {
       const value = attributes.get(name);

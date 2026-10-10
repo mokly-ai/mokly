@@ -2485,7 +2485,7 @@ Evidence: `.context/remove-source-path-evidence/milestone-31.md`.
       as one line under this TODO. Keep reports and evidence under `.context/`.
       Both reviews are complete. The final fix stays local as instructed;
       no third review follows it.
-  - [ ] M32 finding 2 (Medium): foreign-namespace links can suppress required CSS. Recommend B: use one namespace-aware rule, after the user decides the provenance boundary.
+  - [x] M32 finding 2 (Medium): foreign-namespace links can suppress required CSS. Recommend B: use one namespace-aware rule, after the user decides the provenance boundary. Fixed on branch `calummoore/feat-auto-dependencies-and-shared-impact-v1` (option B).
   - [ ] M32 finding 4 (Low): control characters in config filenames can make ignored-field warnings fail. Recommend B: retain the path as data and encode controls for display.
   - [x] M32 finding 5 (Low): the watch contract restores the retired `entries` input. Recommend B: correct the text and extend the existing docs guard with the exact obsolete claim. Resolved: the Milestone 33 merge of main #156 rewrote the watch contracts, and no watch contract names `entries` now.
   - [ ] Earlier timing item: `tests/browser/css_evidence_page.ts` uses a 1-second inner visibility wait within a 15-second retry. Keep it pending; recommend explicit events or an approved I/O allowance change.
