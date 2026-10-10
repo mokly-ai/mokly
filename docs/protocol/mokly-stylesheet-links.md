@@ -10,13 +10,18 @@ Review-ignore exception are implemented in
 
 Placement, renderer-link reuse, final-link provenance and resource discovery
 use one shared HTML link finder. Parse HTML with source locations and scripting
-enabled. Return actual link elements in document order, with their decoded
+enabled. Return only `link` elements in the HTML namespace
+(`http://www.w3.org/1999/xhtml`), in document order, with their decoded
 attributes, logical head/body location and original UTF-16 spans. Do not use
 separate regular-expression or head-only scans for the same link decision.
 Comments and text that resemble tags are not elements. With scripting enabled,
 `noscript` text does not supply links. Content inside `<template>` is inert:
 it supplies no placement anchor, reused link, inserted-link span or resource
 starting point. Do not descend into its content when finding active links.
+SVG and MathML namespace links supply no placement anchor, reused link,
+inserted-link span or resource. HTML content at an integration point, such as
+SVG `foreignObject`, stays active. Decide from each element's parsed namespace,
+not from its ancestors' tag names.
 
 A stylesheet link has an ASCII-case-insensitive `stylesheet` token in its
 ASCII-whitespace-delimited `rel` value. Other tokens, such as `alternate`, do
@@ -42,7 +47,9 @@ rules. The [renderer contract](./mokly-rendering.md#renderer-stylesheets) owns
 the complete input list. These lists serve different purposes.
 
 For reuse, a declared file linked in the body prevents another Mokly link in
-the head. A link only inside a template does not prevent insertion. When
+the head. A link only inside a template or in a foreign namespace does not
+prevent insertion. A configured foreign link uses the existing missing-anchor
+warning and placement fallback. When
 several authored links name one real file, keep all of them and insert none.
 Prefer the first valid present href in configured order; otherwise use the
 first valid document occurrence. Reuse gives no provenance
@@ -53,7 +60,8 @@ span and does not exempt the author's link from Review-ignore.
 The [provenance contract](./mokly-component-stylesheet-ownership.md#provenance-and-comparison-material)
 owns real-file matching, final full-link spans, offset rebasing and the
 root-component exception. No transient token is used. Match issued insertions
-against active final links. Inert template content supplies no span or resource
+against active final links. Inert template content and foreign-namespace links
+supply no span or resource
 starting point. A reused active renderer link remains authored content.
 
 ## Review Resource And Rule Scope

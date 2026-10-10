@@ -1,11 +1,13 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestones 1 to 37 are implemented, verified and pushed; the
-branch contains main `a90badb6`. Milestone 37 moved the combined formats to
-manifest v10, catalogue read model v6 and review result v7; its review and one
-re-review are complete, and both review findings are fixed. The open review
-findings of Milestones 32 to 34 and one Milestone 35 decision wait for the
-user.
+Status: Completed. [PR #179](https://github.com/mokly-ai/mokly/pull/179) merged on
+2026-10-09. Open review findings stay under the Milestone 32, 33 and 34 review
+TODOs. On 2026-10-10 the user chose fixes for three of them, and branch
+`calummoore/feat-auto-dependencies-and-shared-impact-v1` owns those fixes: the
+documentation-wording tests are removed (Milestone 35 decision, option A), one
+namespace-aware rule finds stylesheet links (M32 finding 2, option B), and the
+example snapshot stores every compilation form (M34 finding 1, option A). A
+commit override on PR #179 corrects the 0.15.0 release notes.
 
 ## Status And Outcome
 
@@ -2483,9 +2485,9 @@ Evidence: `.context/remove-source-path-evidence/milestone-31.md`.
       as one line under this TODO. Keep reports and evidence under `.context/`.
       Both reviews are complete. The final fix stays local as instructed;
       no third review follows it.
-  - [ ] M32 finding 2 (Medium): foreign-namespace links can suppress required CSS. Recommend B: use one namespace-aware rule, after the user decides the provenance boundary.
+  - [x] M32 finding 2 (Medium): foreign-namespace links can suppress required CSS. Recommend B: use one namespace-aware rule, after the user decides the provenance boundary. Fixed on branch `calummoore/feat-auto-dependencies-and-shared-impact-v1` (option B).
   - [ ] M32 finding 4 (Low): control characters in config filenames can make ignored-field warnings fail. Recommend B: retain the path as data and encode controls for display.
-  - [ ] M32 finding 5 (Low): the watch contract restores the retired `entries` input. Recommend B: correct the text and extend the existing docs guard with the exact obsolete claim.
+  - [x] M32 finding 5 (Low): the watch contract restores the retired `entries` input. Recommend B: correct the text and extend the existing docs guard with the exact obsolete claim. Resolved: the Milestone 33 merge of main #156 rewrote the watch contracts, and no watch contract names `entries` now.
   - [ ] Earlier timing item: `tests/browser/css_evidence_page.ts` uses a 1-second inner visibility wait within a 15-second retry. Keep it pending; recommend explicit events or an approved I/O allowance change.
   - [ ] Earlier timing item: `tests/current_baseline_commands.test.ts` uses 200 polls with 25 ms pauses for unavailable Changes. Keep it pending; recommend explicit events or an approved I/O allowance change.
   - [ ] Earlier timing item: `tests/current_baseline_invalid.test.ts` uses 200 polls with 25 ms pauses for invalid baselines. Keep it pending; recommend explicit events or an approved I/O allowance change.
@@ -2848,7 +2850,8 @@ rules split into `docs/dev`), #172 (Serve keeps the checked closure on reload),
       `Auto-fix: yes` findings, re-review once, and report the rest. Add each
       open finding as one line under this TODO. The review is complete. It has
       no `Auto-fix: yes` finding, so no fix round follows.
-  - [ ] M34 finding 1 (Medium, test): main #138's example snapshot codec rejects two valid forms of this branch's compilation: `resourceSeeds` (encode fails) and warnings with a `subject` (decode fails, so tests compile again). Recommend A: extend the existing codec and its field table and round-trip tests.
+  - [x] M34 finding 1 (Medium, test): main #138's example snapshot codec rejects two valid forms of this branch's compilation: `resourceSeeds` (encode fails) and warnings with a `subject` (decode fails, so tests compile again). Recommend A: extend the existing codec and its field table and round-trip tests. Fixed on branch `calummoore/feat-auto-dependencies-and-shared-impact-v1` (option A).
+  - [ ] Follow-up review finding 1 (Low, test): the schema-2 snapshot reader validates warnings with `isBuildDiagnostic`, which rejects a warning longer than 65,536 characters that compilation accepts, so such a snapshot reads as invalid and every test process compiles again. Recommend A: validate snapshot warnings with the compilation normalizer.
 
 Evidence: `.context/remove-source-path-evidence/milestone-34.md`.
 
@@ -2867,11 +2870,12 @@ Testbox boxes after suites).
       into `xtask/protocol-document-caps.json`. Review the remerge diff.
 - [x] Run the line-level loss check. Only the five caps that the branch lowers
       or removes are absent.
-- [ ] Decide whether the branch keeps its documentation-wording tests
+- [x] Decide whether the branch keeps its documentation-wording tests
       (`tests/current_docs_contract.test.ts` with its helper and fixtures, and
       `tests/mainline_preservation_docs.test.ts`) under #175's new rule. They
       stay unchanged until the user decides. Recommend: remove them and keep
-      the written documentation rule.
+      the written documentation rule. On 2026-10-10 the user chose option A:
+      remove both tests and keep the written rule.
 - [x] Decide the format versions after main's #127 sets 0.14.0, which ships
       main's manifest v9, catalogue v5 and review v6. Recommend: bump them to
       manifest v10, catalogue v6 and review v7. The user chose this option on

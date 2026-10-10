@@ -142,7 +142,9 @@ The [ownership and comparison contract](../../docs/protocol/mokly-component-styl
 defines final-link validation and private link provenance.
 `../html_links.ts` finds active head and body links with decoded attributes
 and source spans. Placement uses only configured head links. Reuse keeps body
-links in place. Template content supplies no active link.
+links in place. Only HTML-namespace links qualify. Template content and foreign
+SVG or MathML links supply no active link. HTML links inside SVG `foreignObject`
+stay active.
 `stylesheet_provenance.ts` records the inserted links' final full-link spans, while
 `comparison_stylesheets.ts` removes only proven inserted links from review
 material. `stylesheet_spans.ts` validates each span against an active full link

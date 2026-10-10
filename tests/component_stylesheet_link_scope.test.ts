@@ -17,12 +17,23 @@ import { createFixture, removeFixture } from "./helpers/fixture.js";
 
 const link =
   '<link rel="alternate StyleSheet" href="../../action.css?v=1&amp;x=2#theme">';
-for (const location of ["head", "body", "template", "noscript"] as const)
+for (const location of [
+  "head",
+  "body",
+  "template",
+  "noscript",
+  "svg",
+  "math",
+  "foreignObject",
+] as const)
   test(`declared stylesheet reuse follows active ${location} links`, async (t) => {
     const authored =
-      location === "template" || location === "noscript"
-        ? `<${location}>${link}</${location}>`
-        : link;
+      location === "foreignObject"
+        ? `<svg><foreignObject>${link}</foreignObject></svg>`
+        : ["template", "noscript", "svg", "math"].includes(location)
+          ? `<${location}>${link}</${location}>`
+          : link;
+    const inBody = ["body", "svg", "math", "foreignObject"].includes(location);
     const fixture = await createFixture(linkSource, {
       extraConfig: 'renderer: "renderer.tsx", stylesheets: [],',
     });
@@ -30,8 +41,8 @@ for (const location of ["head", "body", "template", "noscript"] as const)
     await prepareLinkFixture(
       fixture,
       linkRenderer(
-        location === "body" ? "''" : relativeAuthored(authored),
-        location === "body" ? relativeAuthored(authored) : "''",
+        inBody ? "''" : relativeAuthored(authored),
+        inBody ? relativeAuthored(authored) : "''",
       ),
     );
     const result = await compileCatalogue(await loadConfig(fixture.root));
@@ -40,7 +51,7 @@ for (const location of ["head", "body", "template", "noscript"] as const)
       (entry) => entry.path === "checkout",
     )!;
     assert.ok(screen.kind === "screen");
-    const active = location === "head" || location === "body";
+    const active = ["head", "body", "foreignObject"].includes(location);
     assert.equal(
       (html.match(/href="\.\.\/\.\.\/action.css/g) ?? []).length,
       active ? 1 : 2,
