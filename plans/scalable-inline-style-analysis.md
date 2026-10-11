@@ -2239,7 +2239,7 @@ Supervisor decision (2026-10-10), after the user questioned compatibility code: 
 - [x] After approval, apply only approved test changes, run the complete
       pinned-Chromium gate and the four real-server smoke tests, and record
       unrelated flaky tests under the review rule.
-- [ ] Record every merge and test decision in the PR justifications, audit
+- [x] Record every merge and test decision in the PR justifications, audit
       deletions, commit and push. Fetch main and report a new dry run if it moved;
       do not merge again. Stop if PR #182 has merged before the push.
 - [ ] After the push, use
