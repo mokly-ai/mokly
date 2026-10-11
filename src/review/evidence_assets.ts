@@ -89,9 +89,7 @@ export class SelectedAssetReader implements ReviewAssetReader {
   ): Promise<ReadonlyMap<string, Uint8Array | undefined>> {
     this.signal.throwIfAborted();
     const missing = [...new Set(routes)].filter(
-      (route) =>
-        !this.files.has(route) ||
-        (!optional && this.files.get(route) === undefined),
+      (route) => !this.files.has(route),
     );
     const batch = optional
       ? this.reader.readManyIfExists

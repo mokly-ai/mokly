@@ -32,7 +32,14 @@ export async function decideReferencedResource(
   if (candidate.kind === "absent") throw missingResource(route);
   const after = candidate.kind === "present" ? candidate.bytes : undefined;
   if (after === undefined) {
-    const before = await beforeReader.readIfExists(route);
+    const baseline = beforeReader.readForDeletion
+      ? await beforeReader.readForDeletion(route)
+      : undefined;
+    const before = baseline
+      ? baseline.kind === "present"
+        ? baseline.bytes
+        : undefined
+      : await beforeReader.readIfExists(route);
     if (before === undefined) throw missingResource(route);
     return { before, byteChanged: true, kind: "verified-deletion" };
   }

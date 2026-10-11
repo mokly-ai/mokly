@@ -95,6 +95,8 @@ by its compilation producer; this boundary does not add a second admission gate.
 head reads and snapshot capture stay strict. `located_deletion.ts` retains the
 head's physical identity and the existing screen-level missing-reference context.
 The same proof flows through component material readers and live resource graphs.
+Its base read applies historical source protection before optional absence and
+never relaxes missing or invalid listed baseline files.
 `equal_documents.ts` reuses accepted matching-hash HTML for component-free live
 result construction only with an admitted immutable Git baseline. Unprepared
 readers and mutable rebuilt caches retain ordinary validation. It does not wrap

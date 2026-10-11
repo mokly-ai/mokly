@@ -29,7 +29,9 @@ exception for a listed authored file missing at head. Ordinary head reads stay
 strict. Only the deletion check in live, full or selected comparison analysis
 can request an explicit missing result. It must prove a regular base file before
 marking consumers changed; an absent base retains the existing `review-invalid`
-failure. Nonregular, symlinked, protected, unreadable or invalid data still fails.
+failure. The proof checks baseline source protection before optional absence;
+an authoring input cannot prove a public deletion. Nonregular, symlinked,
+protected, unreadable or invalid data still fails.
 Base reads, required snapshot capture, export and publication stay strict.
 The exception never authorizes missing generated output or an unlisted required
 reference. A verified result cannot make later ordinary reads return absence.

@@ -160,6 +160,15 @@ export class GitReviewAssetReader implements ReviewAssetReader {
     return (await this.readManyIfExists([route])).get(route);
   }
 
+  /** Deletion proof must reject historical authoring inputs before optional absence. */
+  async readForDeletion(route: string): Promise<DeletionAssetRead> {
+    this.assertRoute(route);
+    const bytes = await this.readIfExists(route);
+    return bytes === undefined
+      ? { kind: "absent" }
+      : { kind: "present", bytes };
+  }
+
   async read(route: string): Promise<Uint8Array> {
     const files = await this.readMany([route]);
     const content = files.get(route);

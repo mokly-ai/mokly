@@ -17,6 +17,9 @@ export async function decideLocatedResource(
     route,
     {
       readIfExists: (file) => before.readIfExists?.(file) ?? before.read(file),
+      ...(before.readForDeletion
+        ? { readForDeletion: before.readForDeletion.bind(before) }
+        : {}),
     },
     {
       readIfExists: async (file) => {
