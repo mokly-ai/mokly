@@ -575,6 +575,8 @@ Evidence: `.context/remote-verification-base-commit/finding8.md`.
       once, fix any new `Auto-fix: yes` findings once more, then stop and
       report the rest. Add each open finding as one line under this TODO.
 
+  - Finding 11 (Low): the new tracked-path parse has no test for TAB or non-UTF-8 path bytes or merge-conflict stages; three mutations survive. Recommend A: add two real-Git tests to `tests/verification_source_tree_types.test.ts`.
+
 ## Post-merge follow-up (non-blocking)
 
 - [ ] During the first week after the merge, record under
