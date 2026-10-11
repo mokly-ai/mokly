@@ -552,19 +552,19 @@ Evidence: `.context/remote-verification-base-commit/finding8.md`.
       and Testbox tests, and Prettier. Require every check to pass.
 - [x] Commit the fix with a title naming finding 8 and at most 50 characters.
       Keep it unpushed for the complete gate.
-- [ ] Run the complete default automatic gate from the unpushed fix. Require
+- [x] Run the complete default automatic gate from the unpushed fix. Require
       base 82190aa, ahead 1, 11/11 commands, 9/9 reports, passed aggregation,
       unchanged tree and cleanup=0. Save finding8-gate.log. Then push.
-- [ ] Run the one-box type-change spike from a scratch clone at the pushed
+- [x] Run the one-box type-change spike from a scratch clone at the pushed
       tip. Probe a contract snapshot with both type changes. Require the
       checkout fingerprint and base, then stage on the box and require the
       fingerprint again. Close SSH, cancel the GitHub run, stop the box and
       remove owned scratch resources. Save finding8-spike.md. Stop if CLI sync
       does not reproduce a type change; do not change the design.
-- [ ] Record completed TODOs and the spike result in Testbox Delivery Status.
+- [x] Record completed TODOs and the spike result in Testbox Delivery Status.
       Run Markdown checks. Require no owned box, snapshot or extra worktree
       and unchanged checkout config.
-- [ ] After the checks and spike pass, commit the close-out with Conventional
+- [x] After the checks and spike pass, commit the close-out with Conventional
       Commits and push. Keep all evidence ignored.
 - [ ] After the push, a reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)
