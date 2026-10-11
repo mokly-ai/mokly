@@ -11,7 +11,6 @@ import { timeAsync } from "../diagnostics/timings.js";
 import { addArtifactFile } from "./artifact_files.js";
 import type { StylesheetReviewArtifact } from "./artifact_stylesheets.js";
 import { type GitReviewAssetReader, type ReviewAssetReader } from "./assets.js";
-import { CompilationAssetReader } from "./compilation_assets.js";
 import { classifyComponents } from "./component_classification.js";
 import { baselineForCurrentIdentities } from "./component_metadata.js";
 import type { CssResourceAnalysis } from "./css/resource_analysis.js";
@@ -59,10 +58,7 @@ export async function compareComponentCatalogue(
       );
     },
   };
-  const afterReader = new CompilationAssetReader(
-    compilation.outputs,
-    headReader,
-  );
+  const afterReader = headReader;
   const prepared = await prepareMoveClassification({
     before: baseline,
     after: compilation.manifest,

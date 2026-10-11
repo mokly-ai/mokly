@@ -25,7 +25,7 @@ import {
   type ResourceMatchingPair,
 } from "../review/css/resource_analysis.js";
 import { documentStylesheetScope } from "../review/css/resource_scope.js";
-import { decideReferencedResource } from "../review/deleted_resource.js";
+import { decideLocatedResource } from "../review/located_deletion.js";
 import type { MoveResources } from "../review/moves/resources.js";
 import { ResourceGraph } from "../review/resource_graph.js";
 
@@ -69,6 +69,9 @@ export class ChangedResourceGraph {
         this.#rawContents.has(route)
           ? Buffer.from(this.#rawContents.get(route)!)
           : reader.readIfExists(route),
+      ...(reader.readForDeletion
+        ? { readForDeletion: reader.readForDeletion.bind(reader) }
+        : {}),
     });
     this.#base.pairWith(this.#head, "before");
     this.#head.pairWith(this.#base, "after");
@@ -150,16 +153,17 @@ export class ChangedResourceGraph {
     const baseCss = await this.#base.optionalTexts(cssPaths);
     const changes: ChangedResource[] = [];
     for (const route of analyzed) {
-      const after = isStylesheetPath(route)
-        ? (this.#contents.get(route) ??
-          (await this.reader
-            .readIfExists(route)
-            .then((bytes) =>
-              bytes === undefined
-                ? undefined
-                : Buffer.from(bytes).toString("utf8"),
-            )))
-        : undefined;
+      const after =
+        isStylesheetPath(route) && !this.#verifiedDeletions.has(route)
+          ? (this.#contents.get(route) ??
+            (await this.reader
+              .readIfExists(route)
+              .then((bytes) =>
+                bytes === undefined
+                  ? undefined
+                  : Buffer.from(bytes).toString("utf8"),
+              )))
+          : undefined;
       changes.push({
         path:
           this.changed.has(route) || this.#byteChanges.has(route)
@@ -250,16 +254,10 @@ export class ChangedResourceGraph {
   private async references(route: string): Promise<readonly string[]> {
     let content = this.documents.get(route);
     if (content === undefined) {
-      const asset = await this.reader.readLocated(route);
-      this.#physicalRoutes.set(route, asset.location.physicalRelativePath);
-      const decision = await decideReferencedResource(
+      const { decision, location } = await decideLocatedResource(
         route,
-        {
-          readIfExists: (candidate) =>
-            this.baseline.readIfExists?.(candidate) ??
-            this.baseline.read(candidate),
-        },
-        { readIfExists: async () => asset.content },
+        this.baseline,
+        this.reader,
       );
       if (decision.kind === "verified-deletion") {
         this.#verifiedDeletions.add(route);
@@ -267,6 +265,7 @@ export class ChangedResourceGraph {
         return [];
       }
       const bytes = decision.after;
+      this.#physicalRoutes.set(route, location!.physicalRelativePath);
       const extension = path.posix.extname(route).toLowerCase();
       if (decision.byteChanged) this.#byteChanges.add(route);
       if (![".css", ".html", ".htm"].includes(extension)) return [];

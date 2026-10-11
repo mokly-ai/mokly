@@ -5,7 +5,7 @@ Status: Active. This plan owns the remaining review fixes from
 in [PR #156](https://github.com/mokly-ai/mokly/pull/156) on 2026-10-07. Milestones
 2–6 retain the former Milestones 24–28. Findings 17, 52 and 67–86 and the known
 status notes remain pending decisions, outside milestone scope. Milestones 1–2 are
-complete; Milestones 3–6 await their separate instructions.
+complete; Milestone 3 is in progress. Milestones 4–6 await their separate instructions.
 
 ## Summary
 
@@ -265,7 +265,18 @@ Merge justifications: `.context/generated-output-review-fixes/m3-main-justificat
 
 Merge gate evidence: `.context/generated-output-review-fixes/m3-main-gate.md`.
 
-- [ ] Commit the six independent TODOs and merge one captured latest main under
+Reader implementation evidence: `.context/generated-output-review-fixes/m3-readers.md`.
+
+Smoke evidence: `.context/generated-output-review-fixes/m3-smoke.md`.
+
+Final gate evidence: `.context/generated-output-review-fixes/m3-final-gate.md`.
+
+The #179 re-check confirms that public source-path reasons are removed, but
+`importedChangedPaths` still consumes private Git paths and filters only the
+head generated root. Decision 55 A still applies to that private input; it adds
+no public dependency or shared-path reason.
+
+- [x] Commit the six independent TODOs and merge one captured latest main under
       the user's 2026-10-11 approval. Audit incoming paths and preserve every
       feature, test, title and assertion, except the approved 62 A display-to-CLI
       round trip. Keep incoming deletions and current formats. Check two parents,
@@ -332,6 +343,8 @@ Merge gate evidence: `.context/generated-output-review-fixes/m3-main-gate.md`.
       branch; public dependency lists were removed by #179.
 - [ ] Smoke live Changes after adding and removing an embedded generated page.
       Record ready status, expected membership and current/pinned bytes.
+      During watched Serve, delete a referenced stylesheet and check the Build
+      error, retained catalogue and changed consumer; restore it and check recovery.
 - [ ] Complete the [full gate from the completed plan](./generated-output-simplification.md#milestone-20-one-public-file-policy):
       `git add -A`; commit with Conventional Commits and push; then run
       `cargo xtask check`. On Blacksmith it covers all seven gate commands.

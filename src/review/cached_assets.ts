@@ -63,6 +63,9 @@ export function cachedReviewAssets(
   return {
     read,
     readMany,
+    ...(reader.readForDeletion
+      ? { readForDeletion: reader.readForDeletion.bind(reader) }
+      : {}),
     ...(reader.readIfExists || reader.readManyIfExists
       ? {
           readIfExists: async (route: string) =>

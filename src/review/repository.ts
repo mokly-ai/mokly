@@ -34,6 +34,16 @@ export interface ReadOnlyReviewRepository {
 /** Only the parent preparation boundary chooses which historical reader to open. */
 export type BaselineSelection = "blobs" | "rebuild";
 
+const admittedBlobs = new WeakMap<BaselineReader, string>();
+
+/** Only immutable Git inventories admitted by parent preparation permit byte reuse. */
+export function isPreparedBlobReader(
+  reader: BaselineReader,
+  commit: string,
+): boolean {
+  return admittedBlobs.get(reader) === commit;
+}
+
 export function comparisonNotPrepared(): MoklyError {
   return new MoklyError("review-invalid", "The comparison is not prepared");
 }
@@ -83,15 +93,18 @@ export function baselineReaderForCommit(
     "generated-v10",
   ),
 ): BaselineReader {
-  return selection === "rebuild"
-    ? new RebuiltBaselineReader(
-        filesystem,
-        config.repoRoot,
-        cacheLayout(config.repoRoot, commit).output,
-        commit,
-        toPosixPath(path.relative(config.repoRoot, config.mockupsDir)),
-        signal,
-        descriptor,
-      )
-    : new CommittedBaselineReader(runner, descriptor);
+  const reader =
+    selection === "rebuild"
+      ? new RebuiltBaselineReader(
+          filesystem,
+          config.repoRoot,
+          cacheLayout(config.repoRoot, commit).output,
+          commit,
+          toPosixPath(path.relative(config.repoRoot, config.mockupsDir)),
+          signal,
+          descriptor,
+        )
+      : new CommittedBaselineReader(runner, descriptor);
+  if (selection === "blobs") admittedBlobs.set(reader, commit);
+  return reader;
 }

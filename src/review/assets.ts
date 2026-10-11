@@ -8,7 +8,6 @@ import { joinCataloguePath } from "../baseline/catalogue.js";
 import { isValidGeneratedRoute } from "../build/styles/routes.js";
 import type { FileLocation } from "../config/file_locations.js";
 import {
-  isInternalCatalogueFile,
   privateStaticPathReason,
   publicPathLocation,
 } from "../config/public_files.js";
@@ -16,7 +15,14 @@ import type { ResolvedConfig } from "../config/types.js";
 import { isDocumentResource } from "../documents/resource_paths.js";
 import { MoklyError, errorMessage } from "../errors.js";
 
+import {
+  AssetInventory,
+  assertInventoryPath,
+  MissingInventoryAsset,
+  inventoryBytes,
+} from "./asset_inventory.js";
 import { assetError, assertPublicStaticRoute } from "./asset_paths.js";
+import type { DeletionAssetRead } from "./deletion_read.js";
 import type { BaselineReader, GitFile } from "./git.js";
 
 /** Filesystem boundary for current-worktree Review assets. */
@@ -24,6 +30,7 @@ export interface ReviewAssetReader {
   read(route: string): Promise<Uint8Array>;
   /** Distinguish a new resource from a rejected historical path when supported. */
   readIfExists?(route: string): Promise<Uint8Array | undefined>;
+  readForDeletion?(route: string): Promise<DeletionAssetRead>;
   /** Optional bounded bulk read; every requested route must be present or reject. */
   readMany?(
     routes: readonly string[],
@@ -114,19 +121,21 @@ export class GitReviewAssetReader implements ReviewAssetReader {
         GENERATED_DIRECTORY,
       ),
     };
-    this.publicRoutes = manifest
-      ? new Set([
-          ...manifest.generatedFiles.map(
-            (item) => `${GENERATED_DIRECTORY}/${item.path}`,
-          ),
-          ...manifest.assetClosure,
-        ])
+    this.inventory = manifest
+      ? new AssetInventory(this.config, manifest)
       : undefined;
   }
 
   private readonly config: ResolvedConfig;
-  private readonly publicRoutes: ReadonlySet<string> | undefined;
+  private readonly inventory: AssetInventory | undefined;
   private readonly loaded = new Map<string, Promise<Uint8Array | undefined>>();
+
+  get generatedRoot(): string {
+    return (
+      this.git.catalogue?.generatedRoot ??
+      joinCataloguePath(this.mockupsPrefix, GENERATED_DIRECTORY)
+    );
+  }
 
   private repoPath(route: string): string {
     return joinCataloguePath(
@@ -136,18 +145,10 @@ export class GitReviewAssetReader implements ReviewAssetReader {
   }
 
   private assertRoute(route: string): void {
-    if (!isSafeRepositoryPath(route)) throw assetError(route, "unsafe path");
-    if (
-      isInternalCatalogueFile(
-        path.resolve(this.config.mockupsDir, route),
-        this.config,
-        false,
-      )
-    )
-      throw assetError(route, "targets internal catalogue metadata");
+    assertInventoryPath(route, this.config);
     if (route.startsWith(`${GENERATED_DIRECTORY}/`)) {
       if (
-        !this.publicRoutes?.has(route) &&
+        !this.inventory?.has(route) &&
         !isValidGeneratedRoute(route.slice(GENERATED_DIRECTORY.length + 1)) &&
         !isDocumentResource(route)
       )
@@ -172,7 +173,7 @@ export class GitReviewAssetReader implements ReviewAssetReader {
   ): Promise<ReadonlyMap<string, Uint8Array>> {
     for (const route of routes) {
       this.assertRoute(route);
-      if (this.publicRoutes && !this.publicRoutes.has(route))
+      if (this.inventory && !this.inventory.has(route))
         throw assetError(route, "outside historical asset closure");
     }
     const loaded = await this.readManyIfExists(routes);
@@ -213,11 +214,11 @@ export class GitReviewAssetReader implements ReviewAssetReader {
   ): Promise<ReadonlyMap<string, Uint8Array | undefined>> {
     const files = new Map<string, Uint8Array | undefined>();
     const requested = [...new Set(routes)].sort().flatMap((route) => {
-      this.assertRoute(route);
-      if (this.publicRoutes && !this.publicRoutes.has(route)) {
+      if (this.inventory && !this.inventory.has(route)) {
         files.set(route, undefined);
         return [];
       }
+      this.assertRoute(route);
       return [{ repoPath: this.repoPath(route), route }];
     });
     if (requested.length === 0) return files;
@@ -234,7 +235,17 @@ export class GitReviewAssetReader implements ReviewAssetReader {
             `not a regular Git file (${file?.kind ?? "missing"})`,
           );
         }
-        files.set(route, file.kind === "regular" ? file.bytes : undefined);
+        if (file.kind === "missing" && this.inventory)
+          throw new MissingInventoryAsset(
+            route,
+            "not a regular Git file (missing)",
+          );
+        files.set(
+          route,
+          file.kind === "regular"
+            ? inventoryBytes(route, file.bytes)
+            : undefined,
+        );
       }
       return files;
     } catch (error) {

@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-Cache acquisition, discovery and post-render offset mapping are implemented.
-Per-side readers remain an approved target in
+Per-side readers, cache acquisition, discovery and post-render offset mapping
+are implemented under
 [Generated Output Review Fixes](../../plans/generated-output-review-fixes.md).
 The [v10 baseline contract](./mokly-baseline-addressing.md) owns historical roots.
 
@@ -24,6 +24,16 @@ if unlisted. Required references on a side still require a valid target there.
 Optional counterpart reads return absence only for a file not listed on that
 side. Never turn corrupt listed data into a deletion.
 
+The [verified-deletion rule](./mokly-changes.md#changes-membership) is the one
+exception for a listed authored file missing at head. Ordinary head reads stay
+strict. Only the deletion check in live, full or selected comparison analysis
+can request an explicit missing result. It must prove a regular base file before
+marking consumers changed; an absent base retains the existing `review-invalid`
+failure. Nonregular, symlinked, protected, unreadable or invalid data still fails.
+Base reads, required snapshot capture, export and publication stay strict.
+The exception never authorizes missing generated output or an unlisted required
+reference. A verified result cannot make later ordinary reads return absence.
+
 Pair added, removed and renamed documents/resources using each side's own
 inventory and root. Embedded generated pages follow the same rule as screens,
 stylesheets, copied assets and authored closure files. Preserve binary bytes,
@@ -35,6 +45,13 @@ for classification. Do not bulk-read all baseline generated HTML to classify
 a small change. Remove both the head's and base's generated roots from Git
 changed-path evidence; those bytes are already compared by the inventory
 readers. Do not remove authored source changes during a catalogue-root move.
+For component-free live result construction with an admitted immutable Git
+baseline, accepted head HTML with the same verified Git blob hash can supply
+an unchanged base document without a second byte read. Unprepared readers and
+mutable rebuilt caches retain ordinary base validation.
+The targeted content pass still reads changed bodies and CSS consumers through
+the base reader. Resource reads and snapshot capture retain their own strict
+inventory checks; component-aware prefetch remains unchanged.
 
 ## Cache Acquisition And Discovery
 

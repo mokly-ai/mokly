@@ -19,6 +19,7 @@ import type { ChangeEvidence } from "../review/change_evidence.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { classifyComponents } from "../review/component_classification.js";
 import { CssResourceAnalysis } from "../review/css/resource_analysis.js";
+import { equalBaseDocuments } from "../review/equal_documents.js";
 import { EvidenceAssetReader } from "../review/evidence_assets.js";
 import type { GitCommandRunner } from "../review/git.js";
 import { CommittedRepository } from "../review/git.js";
@@ -29,6 +30,7 @@ import { prepareMoveClassification } from "../review/moves/prepare.js";
 import {
   baselineReaderForCommit,
   comparisonNotPrepared,
+  isPreparedBlobReader,
 } from "../review/repository.js";
 import type { ReadOnlyReviewRepository } from "../review/repository.js";
 
@@ -198,7 +200,18 @@ export async function readCatalogueChanges(
       accepted?.documentMarkdown,
     ),
   });
-  const result = await classifyComponents(prepared);
+  const result = await classifyComponents(
+    components || !isPreparedBlobReader(git.reader, commit)
+      ? prepared
+      : {
+          ...prepared,
+          beforeReader: equalBaseDocuments(
+            prepared.beforeReader,
+            baseline,
+            outputs,
+          ),
+        },
+  );
   const content = await classifyChangedContent(
     manifest,
     baseline,

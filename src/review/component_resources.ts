@@ -7,6 +7,8 @@ import { MoklyError } from "../errors.js";
 
 import { referencedRoutes } from "./asset_references.js";
 import type { ReviewAssetReader } from "./assets.js";
+import { verifiedOptionalResource } from "./deleted_resource.js";
+import type { DeletionAssetRead } from "./deletion_read.js";
 import { normalizeResourceDocuments } from "./resource_documents.js";
 import { ResourceGraph } from "./resource_graph.js";
 
@@ -149,13 +151,32 @@ export class ComponentMaterialReader {
     await this.optionalTexts([route]);
     return this.optional.get(route)!;
   }
+  async readForDeletion(route: string): Promise<DeletionAssetRead> {
+    if (this.reader.readForDeletion) return this.reader.readForDeletion(route);
+    const bytes = await this.readIfExists(route);
+    return bytes === undefined
+      ? { kind: "missing" }
+      : { kind: "present", bytes };
+  }
   /** Read eligible CSS or embedded-document counterparts, allowing additions/removals. */
   async optionalTexts(
     routes: readonly string[],
   ): Promise<ReadonlyMap<string, string | undefined>> {
-    const missing = [...new Set(routes)].filter(
+    let missing = [...new Set(routes)].filter(
       (route) => !this.files.has(route) && !this.optional.has(route),
     );
+    if (
+      this.side === "after" &&
+      this.counterpart &&
+      this.reader.readForDeletion
+    ) {
+      for (const route of missing.filter((route) => this.mayBeMissing(route)))
+        this.optional.set(
+          route,
+          verifiedOptionalResource(route, this.counterpart, this),
+        );
+      missing = missing.filter((route) => !this.optional.has(route));
+    }
     const loaded = missing.length
       ? this.reader.readManyIfExists?.(missing)
       : undefined;

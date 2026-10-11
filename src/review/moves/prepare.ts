@@ -1,6 +1,7 @@
 import path from "node:path";
 
 import { toPosixPath } from "../../config/paths.js";
+import { hasRegisteredComponents } from "../../registry/manifest_capabilities.js";
 import { cachedReviewAssets } from "../cached_assets.js";
 import type { ComponentClassificationInput } from "../component_classification_input.js";
 import { reviewViews } from "../views.js";
@@ -17,18 +18,22 @@ export async function prepareMoveClassification(
   if (input.pairing) return { ...input, pairing: input.pairing };
   const beforeReader = cachedReviewAssets(input.beforeReader);
   const afterReader = cachedReviewAssets(input.afterReader);
-  await Promise.all([
-    beforeReader.readMany!(
-      input.before.entries.flatMap((entry) =>
-        reviewViews(entry).map((view) => view.path),
+  if (
+    hasRegisteredComponents(input.before) ||
+    hasRegisteredComponents(input.after)
+  )
+    await Promise.all([
+      beforeReader.readMany!(
+        input.before.entries.flatMap((entry) =>
+          reviewViews(entry).map((view) => view.path),
+        ),
       ),
-    ),
-    afterReader.readMany!(
-      input.after.entries.flatMap((entry) =>
-        reviewViews(entry).map((view) => view.path),
+      afterReader.readMany!(
+        input.after.entries.flatMap((entry) =>
+          reviewViews(entry).map((view) => view.path),
+        ),
       ),
-    ),
-  ]);
+    ]);
   const resourceEvidence = await readMoveResources(
     input.before.entries,
     input.after.entries,

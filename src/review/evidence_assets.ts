@@ -3,7 +3,9 @@ import { createHash } from "node:crypto";
 
 import { MoklyError } from "../errors.js";
 
+import { MissingInventoryAsset } from "./asset_inventory.js";
 import { type LocatedReviewAsset, type ReviewAssetReader } from "./assets.js";
+import type { DeletionAssetRead } from "./deletion_read.js";
 import { CompiledReviewAssetReader } from "./head_assets.js";
 
 export class EvidenceAssetReader extends CompiledReviewAssetReader {
@@ -11,13 +13,19 @@ export class EvidenceAssetReader extends CompiledReviewAssetReader {
 
   override async readLocated(route: string): Promise<LocatedReviewAsset> {
     const asset = await super.readLocated(route);
-    if (asset.content !== undefined) {
-      const digest = assetDigest(asset.content);
-      if (this.digests[route] && this.digests[route] !== digest)
-        throw changedAsset(route);
-      this.digests[route] = digest;
-    }
+    if (asset.content !== undefined) this.record(route, asset.content);
     return asset;
+  }
+  override async readForDeletion(route: string): Promise<DeletionAssetRead> {
+    const result = await super.readForDeletion(route);
+    if (result.kind === "present") this.record(route, result.bytes);
+    return result;
+  }
+  private record(route: string, bytes: Uint8Array): void {
+    const digest = assetDigest(bytes);
+    if (this.digests[route] && this.digests[route] !== digest)
+      throw changedAsset(route);
+    this.digests[route] = digest;
   }
 }
 
@@ -38,7 +46,7 @@ export class SelectedAssetReader implements ReviewAssetReader {
   async readMany(
     routes: readonly string[],
   ): Promise<ReadonlyMap<string, Uint8Array>> {
-    const loaded = await this.readManyIfExists(routes);
+    const loaded = await this.load(routes, false);
     const files = new Map<string, Uint8Array>();
     for (const route of routes) {
       const content = loaded.get(route);
@@ -56,20 +64,47 @@ export class SelectedAssetReader implements ReviewAssetReader {
   async readManyIfExists(
     routes: readonly string[],
   ): Promise<ReadonlyMap<string, Uint8Array | undefined>> {
+    return this.load(routes, true);
+  }
+
+  private async load(
+    routes: readonly string[],
+    optional: boolean,
+  ): Promise<ReadonlyMap<string, Uint8Array | undefined>> {
+    try {
+      return await this.capture(routes, optional);
+    } catch (error) {
+      if (error instanceof MissingInventoryAsset)
+        throw new MoklyError(
+          "review-invalid",
+          `Snapshot file is missing: ${error.route}`,
+        );
+      throw error;
+    }
+  }
+
+  private async capture(
+    routes: readonly string[],
+    optional: boolean,
+  ): Promise<ReadonlyMap<string, Uint8Array | undefined>> {
     this.signal.throwIfAborted();
     const missing = [...new Set(routes)].filter(
-      (route) => !this.files.has(route),
+      (route) =>
+        !this.files.has(route) ||
+        (!optional && this.files.get(route) === undefined),
     );
-    const loaded = missing.length
+    const batch = optional
       ? this.reader.readManyIfExists
-        ? await this.reader.readManyIfExists(missing)
-        : undefined
-      : undefined;
+      : this.reader.readMany;
+    const loaded =
+      missing.length && batch
+        ? await batch.call(this.reader, missing)
+        : undefined;
     for (const route of missing) {
       this.signal.throwIfAborted();
       const content = loaded
         ? loaded.get(route)
-        : this.reader.readIfExists
+        : optional && this.reader.readIfExists
           ? await this.reader.readIfExists(route)
           : await this.reader.read(route);
       if (loaded && !loaded.has(route))

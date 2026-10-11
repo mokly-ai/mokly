@@ -24,8 +24,12 @@ export async function importedChangedPaths(
 ): Promise<ChangeEvidence> {
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const reserved = `${prefix ? `${prefix}/` : ""}${GENERATED_DIRECTORY}/`;
+  const generatedRoots = [reserved.slice(0, -1), baseline.generatedRoot];
   const authoredInputs = authored.filter(
-    (route) => !route.startsWith(reserved),
+    (route) =>
+      !generatedRoots.some(
+        (root) => route === root || route.startsWith(`${root}/`),
+      ),
   );
   const graph =
     outputs === undefined && acceptedRoutes === undefined

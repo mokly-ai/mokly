@@ -86,6 +86,22 @@ through the current filesystem.
 view's checked snapshot closure. Neither reader executes historical code.
 `snapshot_resources.ts` copies transitive resources at catalogue-relative paths.
 Both sides use the v10 layout.
+`asset_inventory.ts` owns side membership before transport reads. Base membership
+comes from the historical manifest; head membership comes from accepted output
+keys and its checked authored closure. Safe unlisted counterparts are absent;
+listed missing or malformed data fails. The head manifest is already validated
+by its compilation producer; this boundary does not add a second admission gate.
+`deleted_resource.ts` alone proves the missing-authored-file exception. Ordinary
+head reads and snapshot capture stay strict. `located_deletion.ts` retains the
+head's physical identity and the existing screen-level missing-reference context.
+The same proof flows through component material readers and live resource graphs.
+`equal_documents.ts` reuses accepted matching-hash HTML for component-free live
+result construction only with an admitted immutable Git baseline. Unprepared
+readers and mutable rebuilt caches retain ordinary validation. It does not wrap
+snapshot capture or replace the targeted content and resource reads.
+Root filtering in `imported_changes.ts`
+excludes both generated trees from private Git evidence without restoring public
+source-path reasons removed by the source-path contract.
 `page_preview.ts` captures a page or every scheme of a document from an accepted removed-entry
 snapshot. Its caller supplies the pinned `BaselineReader`; the provider verifies
 the entry against that snapshot's baseline manifest, then reuses

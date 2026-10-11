@@ -5,17 +5,13 @@ import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import type { StylesheetReviewArtifact } from "./artifact_stylesheets.js";
-import {
-  FileSystemReviewAssetReader,
-  GitReviewAssetReader,
-  type ReviewAssetReader,
-} from "./assets.js";
+import { GitReviewAssetReader, type ReviewAssetReader } from "./assets.js";
 import { baselineResourceConfig, readBaseManifest } from "./base_manifest.js";
 import type { ChangeEvidence } from "./change_evidence.js";
 import { reviewChangedPaths } from "./changed_paths.js";
-import { CompilationAssetReader } from "./compilation_assets.js";
 import { compareComponentCatalogue } from "./component_compare.js";
 import type { CssResourceAnalysis } from "./css/resource_analysis.js";
+import { CompiledReviewAssetReader } from "./head_assets.js";
 import { importedChangedPaths } from "./imported_changes.js";
 import { readMoveMarkdown } from "./moves/markdown_sources.js";
 import type { ReadOnlyReviewRepository } from "./repository.js";
@@ -35,13 +31,16 @@ export async function compareReview(
   git: ReadOnlyReviewRepository,
   baseRef: string,
   outDir = config.review.outDir,
-  assetReader: ReviewAssetReader = new CompilationAssetReader(
-    compilation.outputs,
-    new FileSystemReviewAssetReader(config),
-  ),
+  assetReader?: ReviewAssetReader,
   changedPathExclusions: readonly string[] = [],
   options: CompareReviewOptions = {},
 ): Promise<StylesheetReviewArtifact> {
+  const headAssetReader = new CompiledReviewAssetReader(
+    config,
+    compilation.outputs,
+    compilation.manifest,
+    assetReader,
+  );
   const baseCommit = await git.evidence.mergeBase(baseRef, "HEAD");
   const baseManifest = await readBaseManifest(git.reader, baseCommit, config);
   const authoredPaths = options.changeEvidence
@@ -68,7 +67,7 @@ export async function compareReview(
     (await importedChangedPaths(
       config,
       baseAssetReader,
-      assetReader,
+      headAssetReader,
       authoredPaths!,
       compilation.outputs,
       compilation.deliveredStyleSources,
@@ -78,7 +77,7 @@ export async function compareReview(
     baseManifest,
     config,
     baseAssetReader,
-    assetReader,
+    headAssetReader,
     changedPaths,
     baseCommit,
     baseRef,
