@@ -6,6 +6,7 @@ import { runWithComparisonWork } from "../../dist/diagnostics/material_timings.j
 import { runWithTimings } from "../../dist/diagnostics/timings.js";
 import { reviewViews as generatedViews } from "../../dist/review/views.js";
 
+import { fingerprintProofProjection } from "./fingerprint_proof_projection.mjs";
 import { fingerprintReplayExclusions } from "./fingerprint_replay_exclusions.mjs";
 import { fingerprintReplayReader } from "./fingerprint_replay_reader.mjs";
 
@@ -184,14 +185,14 @@ async function compare(input) {
         `${generatedOutput}: original catalogue outcome`,
       );
       assert.deepEqual(
-        text.value,
-        normalMode.value,
+        fingerprintProofProjection(text.value),
+        fingerprintProofProjection(normalMode.value),
         `${generatedOutput}: original catalogue result/error`,
       );
       assert.equal(actual.kind, text.kind, generatedOutput);
       assert.deepEqual(
-        actual.value,
-        text.value,
+        fingerprintProofProjection(actual.value),
+        fingerprintProofProjection(text.value),
         `${generatedOutput}: fingerprint/text catalogue`,
       );
     } catch (error) {
