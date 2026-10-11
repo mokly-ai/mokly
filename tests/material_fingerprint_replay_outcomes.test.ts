@@ -4,6 +4,27 @@ import test from "node:test";
 import { promisify } from "node:util";
 
 const execute = promisify(execFile);
+
+test("catalogue replay collects fresh CSS proof for each production classification", async () => {
+  const env = { ...process.env };
+  delete env.NODE_TEST_CONTEXT;
+  const { stdout } = await execute(
+    process.execPath,
+    [
+      "--experimental-test-module-mocks",
+      "--import",
+      "tsx",
+      "--import",
+      "./tests/helpers/fingerprint_catalogue_probe.mjs",
+      "--test",
+      "--test-name-pattern=external styles retain real snapshots",
+      "tests/component_asset_changes.test.ts",
+    ],
+    { env, maxBuffer: 8 * 1024 ** 2 },
+  );
+  assert.match(stdout, /"failures":0/);
+});
+
 test("catalogue replay rejects equal replay errors after an original success", async () => {
   const env = { ...process.env };
   delete env.NODE_TEST_CONTEXT;

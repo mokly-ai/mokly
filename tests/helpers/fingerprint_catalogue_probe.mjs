@@ -117,6 +117,8 @@ async function compare(input) {
     const rest = { ...input };
     delete rest.cssParser;
     delete rest.cssCacheBytes;
+    // Each classification collects and freezes its own proof, as production does.
+    delete rest.cssAnalysis;
     const candidate = {
       ...rest,
       beforeReader,
