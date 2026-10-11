@@ -149,12 +149,12 @@ made during remote execution.
 ## Box Index
 
 The CLI copies files, not the index. After sync, box HEAD and index equal the base.
-A deleted file stays cached. A renamed file is a deletion plus an untracked
-path, so rename detection cannot pair them. After its fingerprint check, the
-wrapper stages the synced tree with `git add -A`. Index readers such as
-`git ls-files --cached` and rename detection against the merge base then see
-the changes of a committed checkout. HEAD, reports, fingerprint and aggregate
-commit remain the base. A box checks the tree that `git add -A` records.
+Deleted files stay cached. Renames show a deletion plus an untracked path.
+Rename detection cannot pair them. After its fingerprint check, the wrapper
+stages the synced tree with `git add -A`. Index readers (`git ls-files --cached`
+and rename detection against the merge base) see a committed checkout's changes.
+HEAD stays at the base, and reports and the aggregate still name it. Staging
+does not change the fingerprint. A box checks the tree that `git add -A` records.
 A deletion on disk that is not staged can fail a local run and pass on a box.
 
 ## Identity Output And File

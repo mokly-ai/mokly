@@ -174,9 +174,10 @@ of the [Blacksmith remote verification plan](./blacksmith-remote-verification.md
     wrapper runs `git add -A` through its cleaned command boundary before
     history, installs or cargo. A failed or signalled staging command fails
     preparation. Index readers and rename detection then see the synced tree
-    as a committed checkout. HEAD, reports, fingerprint and aggregate commit
-    remain the base. A deletion on disk that is not staged can fail a local
-    check and pass on a box, which checks the tree recorded by `git add -A`.
+    as a committed checkout. HEAD stays at the base, and reports and the aggregate
+    still name it. Staging does not change the fingerprint. A deletion on disk
+    that is not staged can fail a local check and pass on a box, which checks
+    the tree recorded by `git add -A`.
 12. **Test Git and re-exec.** On 2026-10-10 the user chose finding 3 option B,
     finding 5 option A and finding 7 option A. One test-only Git runner uses
     an empty global config file in its temporary directory, disables system
@@ -511,6 +512,9 @@ Evidence: `.context/remote-verification-base-commit/milestone6.md`.
       `Auto-fix: yes` findings, run the checks, commit and push, re-review
       once, fix any new `Auto-fix: yes` findings once more, then stop and
       report the rest. Add each open finding as one line under this TODO.
+
+  - Finding 8 (Low): file/directory type changes since the base break the snapshot fingerprint (`unsupported file type` or `ENOTDIR`), so remote preparation fails and `auto` falls back to local. Recommend A: skip cached paths that are now directories, treat `ENOTDIR` like `ENOENT`, keep untracked-directory rejection and add type-change tests.
+  - Finding 9 (Low): the real-Git staging regression has no ignore rules. Recommend A: add a `.gitignore` and one ignored file to the fixture base, and assert the exact `git ls-files --cached` list.
 
 ## Post-merge follow-up (non-blocking)
 
