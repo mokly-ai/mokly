@@ -47,7 +47,9 @@ The component-aware live classification snapshot's full schema-v7 result, the
 complete comparison artifact, static publication and the selected live
 component-aware endpoint carry `inlineStyles` beside `reasons` and
 `excludedResources`, with the same omission and canonical ordering rules.
-The optional screen-only `screenEvidence` slice carries linked-resource facts
-only; catalogues without component usage never run inline ownership. Review v7 results without the field remain valid and mean the analysis did
-not run. Catalogue readers validate the payload without comparison-only state
+Catalogues without components never produce inline evidence. In component
+catalogues, the optional `screenEvidence` slice from the v7 result also carries
+each view's `inlineStyles` beside linked-resource facts. Review v7 results
+without the field remain valid and mean the analysis did not run. Catalogue
+readers validate the payload without comparison-only state
 fields; only view evidence accepts inline styles.

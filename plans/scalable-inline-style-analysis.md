@@ -2178,7 +2178,11 @@ context. Inline owners include non-CSS renderer records. Manifest v10 has no
 `PageAnalysis.stylesheetEdits` owns link removal; normalized-range rebasing is
 removed.
 
+Superseded by the user decision (2026-10-11): AP1–AP6 and AP9 are approved and applied in `a57a6d6c`.
+
 User decision (2026-10-10): AP8 option A. Delete #179's `src/review/css/normalized_ranges.ts` and `src/components/comparison_stylesheets.ts`, which have no production caller after D6. Port their main tests to `PageAnalysis.stylesheetEdits` with unchanged expected values. AP1–AP7 and AP9 wait for the user.
+
+Superseded by the user decision (2026-10-11): AP1–AP6 and AP9 are approved and applied in `a57a6d6c`.
 
 Superseded by main #191 (2026-10-11): AP7 needs no action.
 
@@ -2250,6 +2254,15 @@ Supervisor decision (2026-10-10), after the user questioned compatibility code: 
       until the review, its fix round, the re-review and all open findings are
       recorded here. The supervisor runs the review.
       Unrelated flaky test: `tests/browser/viewer_inspection_ownership.spec.ts`, "postMessage obsolete highlight success preserves frame replacement pick"; CI reported "page.evaluate: Execution context was destroyed, most likely because of a navigation." at `:78:22`; the same job passed on rerun (job `114435652866`); suspected source: navigation racing `page.evaluate` after `page.goto` and `startInspection`.
+      Review complete; report: `.context/scalable-inline-style-analysis/m15-review/report.md`.
+      Findings 6 and 8 (Low, docs): fixed in this fix round; see the commit.
+      Finding 1 (Low, test): the replay WeakMap projection compares no record, because final result analyses are never WeakMap keys; pending the user's decision.
+      Finding 2 (Low, performance): the Class B sort in `CssAttribution.freeze` affects no production output, and it costs about 4.4 s and 300 MiB at 200,000 records; pending the user's decision.
+      Finding 3 (Low, test): AP1 lacks the approved inserted-span check, AP3 lacks the approved page-parse pin, and the rendering test's `owner.svg` port is not on the approval list; pending the user's decision.
+      Finding 4 (Low, test): AP6 B and AP9 conflict in `component_fast_path_resources`, which leaves a dead helper choice; pending the user's decision.
+      Finding 5 (Low, test): the Class A regression test passes when it runs zero catalogues; pending the user's decision.
+      Finding 7 (Low, docs): open finding Inferred M6-3 now recommends undoing a fix from `0d23ed0d`; pending the user's decision.
+      Finding 9 (Low, process): `a57a6d6c` ticked later TODOs early, and it gives the projection decision to the user instead of the supervisor; pending the user's decision.
 
 ## Milestone 16: Inline Style Evidence Mockup
 
