@@ -578,7 +578,8 @@ for the review rules and temporary Braces exception.
   [`html_paths.mjs`](./scripts/preview/html_paths.mjs) — preview publication's
   baseline-availability and provider-path adapters.
 - [`scripts/verification/source-tree.mjs`](./scripts/verification/source-tree.mjs)
-  computes the source fingerprint, including uncommitted changes.
+  computes the source fingerprint, including uncommitted changes and file or
+  directory type changes.
 - [`scripts/verification/testbox-suite.mjs`](./scripts/verification/testbox-suite.mjs)
   checks the fingerprint, stages the synced tree and prepares one suite through
   injected commands.

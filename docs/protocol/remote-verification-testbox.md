@@ -172,18 +172,19 @@ Do not send the local org token or saved CLI credentials to the box.
 `scripts/verification/source-tree.mjs` uses the same algorithm locally and on
 every box. Run it from the repository root.
 
-1. Read Git index entries with `git ls-files --stage -z`.
-   Fail on any submodule entry with mode `160000`.
-2. List paths with `git ls-files -z --cached --others --exclude-standard`.
-   Keep repository-relative path bytes. Remove duplicate paths.
-   Sort paths by unsigned byte order, not locale order.
-3. Inspect each path without following symbolic links.
-   Skip paths that do not exist. Other read errors fail the command.
-   Reject directories and other unsupported file types.
-   Name the repository-relative path in that error. Tell the caller to ignore
-   or remove a nested repository or worktree. Ignore `.claude/worktrees/` in
-   the repository's `.gitignore`. Other non-ignored nested repositories still
-   fail the fingerprint; do not silently omit them.
+1. Read index entries with `git ls-files --stage -z`. Reject mode `160000`.
+2. Take index path bytes from those entries. Read untracked path bytes with
+   `git ls-files -z --others --exclude-standard`. Dedupe and sort by unsigned
+   byte order. Preserve repository-relative bytes.
+3. Cache leading-component checks per directory. Skip a path if a leading
+   component is a symbolic link or is not a directory. Then use `lstat`.
+   Skip `ENOENT` and `ENOTDIR` for either listing. Other read errors fail.
+   Reject any directory with a `.git` file or directory. Skip other index
+   directories; their files come from untracked or later index paths.
+   Reject untracked directories and other unsupported types. Name the relative
+   path and tell the caller to ignore or remove a nested repository or worktree.
+   Ignore `.claude/worktrees/` in `.gitignore`; other non-ignored nested
+   repositories still fail. Never silently omit them.
 4. For a regular file, read its working-tree bytes. Use mode `100755` if any
    executable permission bit is set. Otherwise use `100644`.
    For a symbolic link, use mode `120000`. Hash its link-target bytes.

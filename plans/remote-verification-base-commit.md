@@ -187,6 +187,21 @@ of the [Blacksmith remote verification plan](./blacksmith-remote-verification.md
     only code under test. Snapshot captures use `--untracked-files=all` and
     keep raw index byte comparisons. Re-exec helpers require `running 1 test`.
 
+13. **Fingerprint type changes.** On 2026-10-11 the user approved finding 8
+    with recommended option A. Read index path bytes from `git ls-files --stage -z`
+    and untracked paths separately. Preserve dedupe, unsigned byte order and
+    record framing. Cache leading-component checks per directory. Skip paths
+    below a symbolic link or non-directory. Treat `ENOENT` and `ENOTDIR` as
+    missing paths in either listing. Skip cached directories without `.git`;
+    reject cached directories with `.git`, including a nested repository that
+    replaces a tracked file without an untracked listing. Reject untracked
+    directories and all other unsupported types. Keep submodule rejection,
+    error texts and CLI arguments unchanged. In
+    `tests/verification_source_tree.test.ts`: Changed main's test fixture from
+    an empty directory to a nested repository; the plain-directory case now
+    counts as a deletion under the approved finding 8 rule. Keep its rejection
+    assertion. Add the plain-directory case to the new type-change tests.
+
 ### Contingency
 
 The Milestone 1 spike must show that the CLI syncs a linked worktree and
@@ -515,6 +530,50 @@ Evidence: `.context/remote-verification-base-commit/milestone6.md`.
 
   - Finding 8 (Low): file/directory type changes since the base break the snapshot fingerprint (`unsupported file type` or `ENOTDIR`), so remote preparation fails and `auto` falls back to local. Recommend A: skip cached paths that are now directories, treat `ENOTDIR` like `ENOENT`, keep untracked-directory rejection and add type-change tests.
   - Finding 9 (Low): the real-Git staging regression has no ignore rules. Recommend A: add a `.gitignore` and one ignored file to the fixture base, and assert the exact `git ls-files --cached` list.
+
+## Milestone 7: Fingerprint type changes (review finding 8)
+
+The fingerprint follows Git's working-tree view across type changes and
+still rejects nested repositories and worktrees.
+
+Evidence: `.context/remote-verification-base-commit/finding8.md`.
+
+- [x] Add the type-change tests first. Record failures for file-to-directory,
+      directory-to-file, leading directory symlink and empty plain directory.
+      Keep nested-repository rejection and exact ordinary fingerprints passing.
+      Implement the split listings and cached component checks. Update the
+      fingerprint protocol within its cap. Record the approved main test
+      fixture change in Decision 13, evidence and the commit message.
+- [x] Build contract snapshots in scratch repositories for the three type
+      changes. Run old and new scripts in the checkout, snapshot and staged
+      snapshot. Require three equal new values and record the old failures.
+- [x] Run xtask tests, Rust fmt, Clippy, both length lints, the repository
+      suite, Markdown and protocol tests, all source-tree, fingerprint-argument
+      and Testbox tests, and Prettier. Require every check to pass.
+- [x] Commit the fix with a title naming finding 8 and at most 50 characters.
+      Keep it unpushed for the complete gate.
+- [ ] Run the complete default automatic gate from the unpushed fix. Require
+      base 82190aa, ahead 1, 11/11 commands, 9/9 reports, passed aggregation,
+      unchanged tree and cleanup=0. Save finding8-gate.log. Then push.
+- [ ] Run the one-box type-change spike from a scratch clone at the pushed
+      tip. Probe a contract snapshot with both type changes. Require the
+      checkout fingerprint and base, then stage on the box and require the
+      fingerprint again. Close SSH, cancel the GitHub run, stop the box and
+      remove owned scratch resources. Save finding8-spike.md. Stop if CLI sync
+      does not reproduce a type change; do not change the design.
+- [ ] Record completed TODOs and the spike result in Testbox Delivery Status.
+      Run Markdown checks. Require no owned box, snapshot or extra worktree
+      and unchanged checkout config.
+- [ ] After the checks and spike pass, commit the close-out with Conventional
+      Commits and push. Keep all evidence ignored.
+- [ ] After the push, a reviewer uses
+      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      to review the complete local diff against `origin/main` and reports the
+      findings. Keep the review read-only. The implementer then applies the
+      review-fix rule in [the review rules](../docs/dev/review.md): fix the
+      `Auto-fix: yes` findings, run the checks, commit and push, re-review
+      once, fix any new `Auto-fix: yes` findings once more, then stop and
+      report the rest. Add each open finding as one line under this TODO.
 
 ## Post-merge follow-up (non-blocking)
 

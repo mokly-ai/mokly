@@ -63,26 +63,28 @@ export async function readSourceTree(cwd) {
     throw new Error(
       "source-tree fingerprint does not support submodule entries",
     );
+  const tracked = index.map((entry) => entry.subarray(entry.indexOf(9) + 1));
+  const cached = new Set(tracked.map((name) => name.toString("hex")));
+  const untracked = await gitOutput(cwd, [
+    "ls-files",
+    "-z",
+    "--others",
+    "--exclude-standard",
+  ]);
   const names = sourcePaths(
-    await gitOutput(cwd, [
-      "ls-files",
-      "-z",
-      "--cached",
-      "--others",
-      "--exclude-standard",
+    Buffer.concat([
+      ...tracked.map((name) => Buffer.concat([name, Buffer.from([0])])),
+      untracked,
     ]),
   );
   const root = Buffer.from(`${path.resolve(cwd)}${path.sep}`);
   const records = [];
+  const directories = new Map();
   for (const name of names) {
+    if (!(await leadingDirectories(root, name, directories))) continue;
     const file = Buffer.concat([root, name]);
-    let metadata;
-    try {
-      metadata = await fs.lstat(file);
-    } catch (error) {
-      if (error.code === "ENOENT") continue;
-      throw error;
-    }
+    const metadata = await sourceMetadata(file);
+    if (!metadata) continue;
     let mode;
     let contents;
     if (metadata.isSymbolicLink()) {
@@ -92,6 +94,10 @@ export async function readSourceTree(cwd) {
       mode = metadata.mode & 0o111 ? "100755" : "100644";
       contents = await fs.readFile(file);
     } else {
+      if (metadata.isDirectory() && cached.has(name.toString("hex"))) {
+        const gitEntry = Buffer.concat([file, Buffer.from(`${path.sep}.git`)]);
+        if (!(await sourceMetadata(gitEntry))) continue;
+      }
       throw new Error(
         `source-tree fingerprint found an unsupported file type at ${JSON.stringify(name.toString("utf8"))}; ignore or remove a nested repository or worktree`,
       );
@@ -103,6 +109,37 @@ export async function readSourceTree(cwd) {
     });
   }
   return fingerprintRecords(records);
+}
+
+/** Skip Git-deleted paths below symbolic links, files or missing components. */
+async function leadingDirectories(root, name, cache) {
+  for (
+    let slash = name.indexOf(47);
+    slash >= 0;
+    slash = name.indexOf(47, slash + 1)
+  ) {
+    if (slash === name.length - 1) break;
+    const directory = name.subarray(0, slash);
+    const key = directory.toString("hex");
+    let allowed = cache.get(key);
+    if (allowed === undefined) {
+      const metadata = await sourceMetadata(Buffer.concat([root, directory]));
+      allowed = metadata?.isDirectory() === true && !metadata.isSymbolicLink();
+      cache.set(key, allowed);
+    }
+    if (!allowed) return false;
+  }
+  return true;
+}
+
+/** Missing paths and descendants blocked by a file count as deletions. */
+async function sourceMetadata(file) {
+  try {
+    return await fs.lstat(file);
+  } catch (error) {
+    if (error.code === "ENOENT" || error.code === "ENOTDIR") return undefined;
+    throw error;
+  }
 }
 
 /** Validate every CLI argument before reading Git or files. */
