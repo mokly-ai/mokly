@@ -20,8 +20,10 @@ Retaining the export's known branch name during navigation is implemented in
 The excluded-only screen mockup and the shared Excluded/Matched Details card
 are implemented in [M27](../../plans/remove-source-path-evidence.md#milestone-27-depict-the-excluded-only-stylesheet-state).
 The per-file shell projection is implemented. Evidence is keyed by kind and
-path. Inline evidence remains in data; Milestones 16 and 17 of the scalable
-plan deliver its separate mockup and UI.
+path. Inline evidence remains in data; the scalable plan's
+[M16 mockup](../../plans/scalable-inline-style-analysis.md#milestone-16-inline-style-evidence-mockup)
+and [M17 UI](../../plans/scalable-inline-style-analysis.md#milestone-17-inline-style-evidence-ui)
+will deliver its separate presentation.
 
 This contract owns how the shell derives and presents the rule-aware evidence
 defined by [CSS Change Attribution](./mokly-css-attribution.md). The compact

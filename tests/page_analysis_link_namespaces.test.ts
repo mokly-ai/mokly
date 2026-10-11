@@ -39,7 +39,7 @@ for (const [name, open, close, active] of [
       true,
       "test",
       () =>
-        runWithDocumentWork(() => {
+        runWithDocumentWork(async () => {
           const page = new PageAnalysis(source, route);
           const expected = active ? [href] : [];
           assert.deepEqual(

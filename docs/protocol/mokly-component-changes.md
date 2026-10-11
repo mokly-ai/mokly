@@ -11,7 +11,9 @@ integrates [original-page analysis](./mokly-page-analysis.md),
 The [fast-path contract](./mokly-component-review-fast-path.md) owns ordering.
 All classification paths share path-keyed v7 results. Inline evidence stays in
 the review and catalogue data; its separate mockup and UI work is scheduled in
-Milestones 16 and 17 of the scalable plan. Performance acceptance is deferred
+[M16](../../plans/scalable-inline-style-analysis.md#milestone-16-inline-style-evidence-mockup)
+and [M17](../../plans/scalable-inline-style-analysis.md#milestone-17-inline-style-evidence-ui)
+of the scalable plan. Performance acceptance is deferred
 under that plan's Decision 13 (2026-10-06).
 
 ## Changes Membership

@@ -2174,6 +2174,8 @@ removed.
 
 User decision (2026-10-10): AP8 option A. Delete #179's `src/review/css/normalized_ranges.ts` and `src/components/comparison_stylesheets.ts`, which have no production caller after D6. Port their main tests to `PageAnalysis.stylesheetEdits` with unchanged expected values. AP1–AP7 and AP9 wait for the user.
 
+Superseded by main #191 (2026-10-11): AP7 needs no action.
+
 Supervisor decision (2026-10-10), after the user questioned compatibility code: add no compatibility for v10 `styles` fields from unreleased main. npm `latest` 0.14.0 writes v9, so no released version writes them. The PR #158 preview, whose baseline current main builds, fails with `…styles: unknown field` until the merge. It is not a required check. Condition: release PR #182 waits for #158 (D12).
 
 - [x] Audit and merge `origin/main` once with two parents. Resolve each path,
@@ -2192,6 +2194,17 @@ Supervisor decision (2026-10-10), after the user questioned compatibility code: 
       The unused-module ratchet and D11 wording guard wait for the choices in
       `main-test-approvals.md` under the evidence directory.
 - [x] Discovered: merge main #191 (`c66daeb5`). Port the HTML-namespace link rule into the one-parse reference and link paths, accept main's removal of the documentation-wording tests (AP7 is no longer needed), keep main's snapshot codec, and restore main's completed #179 plan text. Evidence: `.context/scalable-inline-style-analysis/m15-merge/second/`.
+- [x] Discovered: restore authoring-guide coverage for the retained ownership
+      types and use a public Styles guide destination. Keep main's guide checks
+      unchanged. Evidence remains under the second-merge directory.
+- [x] Discovered: keep general protocol rules on main's owning pages, retain
+      only inline supplements in the branch split pages, and link the planned
+      M16/M17 work. Keep main's protocol checks unchanged. Evidence remains
+      under the second-merge directory.
+- [x] Discovered: address the #191 supervisor check with one shared link
+      rule, namespace coverage in the delivered oracle, current contract text
+      and the AP7 superseded note. Keep every main expected value. Evidence
+      remains under the second-merge directory.
 - [x] Keep main's expected values, finish the other backend work and run the
       affected tests. Record every needed main-test change, including D11, in
       `.context/scalable-inline-style-analysis/m15-merge/main-test-approvals.md`.

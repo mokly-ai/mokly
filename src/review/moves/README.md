@@ -17,7 +17,8 @@ contribute to document similarity.
 
 `links.ts` and `resource_links.ts` canonicalise comparison material only. Real
 URLs remain available to resource traversal, CSS matching and snapshot capture.
-Only HTML-namespace link hrefs enter resource normalization. SVG and MathML
+The shared `classifyHtmlLink` rule admits only HTML-namespace link hrefs
+to resource normalization. SVG and MathML
 link hrefs keep their authored text; HTML links in integration points remain active.
 Both normalizers count their HTML parses through `diagnostics/html_parse.ts`
 under `linkNormalization`. These comparison trees preserve mainline URL equality;

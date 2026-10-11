@@ -183,7 +183,7 @@ missing href gets a [warning](#warning-messages).
 SVG and MathML namespace links do not qualify. HTML links at integration
 points such as SVG `foreignObject` retain the shared finder's normal scope.
 Keep every renderer-authored link unchanged, even duplicates. Preserve other
-head content, rebase UTF-16 style offsets, and validate final output normally.
+head content and validate final output normally.
 See the [graceful-handling rule](./protocol-status.md#graceful-handling).
 
 ## Ownership And Comparison

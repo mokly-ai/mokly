@@ -23,6 +23,14 @@ const inputs = [
   '<audio src="a"></audio><embed src="b"><iframe src="c"></iframe><input src="d"><script src="e"></script><source src="f"><track src="g"><object data="h"></object><video poster="i" src="j"></video>',
   '<image href="one.svg" xlink:href="two.svg"></image><use href="three.svg" xlink:href="four.svg"></use><svg><image xlink:href="five.svg"/><use href="six.svg"/></svg>',
   '<link rel="preload" href="hint.css"><link rel="stylesheet preload" href="sheet.css"><link rel="modulepreload" href="module.js"><a style="background:url(&quot;bg.svg&quot;)"></a>',
+  ...[
+    ["<svg>", "</svg>"],
+    ["<math>", "</math>"],
+    ["<svg><foreignObject>", "</foreignObject></svg>"],
+  ].map(
+    ([open, close]) =>
+      `${open}<link rel="stylesheet" href="sheet.css"><link rel="icon" href="icon.svg"><link rel="preload" href="hint.css">${close}`,
+  ),
   '<style>@import "theme.css"; a{background:u\\72l(one.svg);content:"url(fake.svg)"}</style>',
   '<template><img src="inert.svg"><template><img src="nested.svg"></template></template><img src="visible.svg">',
   '<select><img src="discarded.svg"><style>.a{background:url(style.svg)}</style></select><p><img src="visible.svg">',

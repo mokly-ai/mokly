@@ -1,8 +1,9 @@
-import { html, type DefaultTreeAdapterMap } from "parse5";
+import type { DefaultTreeAdapterMap } from "parse5";
 
 import { rewriteCssReferences } from "../../css_references.js";
 import { parseHtml } from "../../diagnostics/html_parse.js";
 import { isMoklyError } from "../../errors.js";
+import { classifyHtmlLink } from "../../html_links.js";
 import { SOURCE_ATTRIBUTES } from "../../html_reference_values.js";
 import { rewriteSourceSetReferences } from "../../source_set_references.js";
 import { resolveResourceReference } from "../asset_references.js";
@@ -37,7 +38,7 @@ export function normalizeResourceLinks(
         let value = attr.value;
         if (
           (SOURCE_ATTRIBUTES.get(node.tagName) ?? []).includes(name) &&
-          (node.tagName !== "link" || node.namespaceURI === html.NS.HTML)
+          (node.tagName !== "link" || classifyHtmlLink(node))
         )
           value = url(value);
         else if (name === "style") value = css(value);

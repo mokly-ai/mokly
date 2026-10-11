@@ -139,7 +139,8 @@ For eligible `<style>` elements outside component markup, Mokly infers ownership
 from paired rendered ranges. A rule that reaches page markup stays with the
 page. A component-owned rule affects that component and its consumers.
 Only non-CSS references follow those inferred owners; every CSS file uses the
-own-page rule membership above. See [inline ownership](../../protocol/mokly-inline-styles.md).
+own-page rule membership above. For style delivery, see the
+[Styles guide](/docs/authoring/styles/).
 
 ## Resolve a saved instance
 
@@ -165,14 +166,16 @@ catalogue, inspect rendered markup or classify a visual change.
 
 ## Exported types
 
-| Type                                                                                              | Use                                     |
-| ------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| `ComponentInput`, `ComponentDefinition`, `ComponentVariantDefinition`, `ComponentEntryDefinition` | What `defineComponent` takes and stores |
-| `RegisteredComponent`                                                                             | The returned `Component` and `entries`  |
-| `ComponentProps`, `ComponentRenderContext`                                                        | What `render` receives                  |
-| `ComponentVariant`                                                                                | One variant declaration                 |
-| `ComponentControl`, `ComponentControlLabel`, `ControlFor`                                         | The editable controls                   |
-| `ObjectPropSchema`, `DataPropSchema`, `DataPropField`                                             | The schema of a component's data        |
-| `InferProp`, `ComponentPropsData`, `PropValue`, `PropPrimitive`                                   | The values a schema allows              |
-| `ComponentInstanceRecord`, `ComponentSourceLocation`                                              | Saved instance identity and source      |
-| `InstanceResolution`                                                                              | The result of `resolveInstance`         |
+| Type                                                                                              | Use                                                  |
+| ------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `ComponentInput`, `ComponentDefinition`, `ComponentVariantDefinition`, `ComponentEntryDefinition` | What `defineComponent` takes and stores              |
+| `RegisteredComponent`                                                                             | The returned `Component` and `entries`               |
+| `ComponentProps`, `ComponentRenderContext`                                                        | What `render` receives                               |
+| `ComponentVariant`                                                                                | One variant declaration                              |
+| `ComponentControl`, `ComponentControlLabel`, `ControlFor`                                         | The editable controls                                |
+| `ObjectPropSchema`, `DataPropSchema`, `DataPropField`                                             | The schema of a component's data                     |
+| `InferProp`, `ComponentPropsData`, `PropValue`, `PropPrimitive`                                   | The values a schema allows                           |
+| `ComponentResourceOwnership`                                                                      | Non-CSS resource owners a renderer may report        |
+| `ComponentStyleOwnership`                                                                         | Style-range type; renderer style records are ignored |
+| `ComponentInstanceRecord`, `ComponentSourceLocation`                                              | Saved instance identity and source                   |
+| `InstanceResolution`                                                                              | The result of `resolveInstance`                      |

@@ -14,12 +14,37 @@ export interface HtmlLink {
 }
 
 /** HTML rel tokens use ASCII whitespace and ASCII case folding. */
-export function linkRelTokens(
+function linkRelTokens(
   attributes: readonly { name: string; value: string }[],
 ): readonly string[] {
   return (attributes.find(({ name }) => name === "rel")?.value ?? "")
     .replace(/[A-Z]/g, (letter) => letter.toLowerCase())
     .split(/[\t\n\f\r ]+/);
+}
+
+/** Classify HTML-namespace links with the same rel rules in every traversal. */
+export function classifyHtmlLink(node: {
+  tagName?: string;
+  namespaceURI?: string;
+  attrs?: readonly { name: string; value: string }[];
+}): Pick<HtmlLink, "stylesheet" | "resourceHint"> | undefined {
+  if (node.tagName !== "link" || node.namespaceURI !== html.NS.HTML) return;
+  const rel = linkRelTokens(node.attrs ?? []);
+  const stylesheet = rel.includes("stylesheet");
+  return {
+    stylesheet,
+    resourceHint:
+      !stylesheet &&
+      rel.some((token) =>
+        [
+          "preload",
+          "modulepreload",
+          "prefetch",
+          "preconnect",
+          "dns-prefetch",
+        ].includes(token),
+      ),
+  };
 }
 
 /** Find active HTML links, excluding foreign elements, template and noscript text. */
@@ -45,13 +70,8 @@ export function parseHtmlLinks(
         head = node;
         scope = "head";
       } else if (node.tagName === "body") scope = "body";
-      if (
-        node.tagName === "link" &&
-        node.namespaceURI === html.NS.HTML &&
-        node.sourceCodeLocation
-      ) {
-        const rel = linkRelTokens(node.attrs);
-        const stylesheet = rel.includes("stylesheet");
+      const kind = classifyHtmlLink(node);
+      if (kind && node.sourceCodeLocation) {
         links.push({
           element: node,
           attributes: new Map(
@@ -59,18 +79,7 @@ export function parseHtmlLinks(
           ),
           location: node.sourceCodeLocation,
           scope,
-          stylesheet,
-          resourceHint:
-            !stylesheet &&
-            rel.some((token) =>
-              [
-                "preload",
-                "modulepreload",
-                "prefetch",
-                "preconnect",
-                "dns-prefetch",
-              ].includes(token),
-            ),
+          ...kind,
         });
       }
     }

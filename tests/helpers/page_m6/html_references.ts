@@ -1,3 +1,5 @@
+import { html } from "parse5";
+
 import { extractCssReferences } from "../../../dist/css_references.js";
 import { parseHtml } from "../../../dist/diagnostics/html_parse.js";
 import { documentWorkSync } from "../../../dist/diagnostics/timings.js";
@@ -11,6 +13,7 @@ interface HtmlNode {
   attrs?: HtmlAttribute[];
   childNodes?: HtmlNode[];
   tagName?: string;
+  namespaceURI?: string;
   value?: string;
 }
 
@@ -78,7 +81,9 @@ function extractReferences(
         attributes.get("rel") ?? "",
       ) &&
       !/(?:^|\s)stylesheet(?:\s|$)/i.test(attributes.get("rel") ?? "");
-    for (const name of options.resourceHints === false && resourceHint
+    for (const name of (node.tagName === "link" &&
+      node.namespaceURI !== html.NS.HTML) ||
+    (options.resourceHints === false && resourceHint)
       ? []
       : sourceAttributes) {
       const value = attributes.get(name);

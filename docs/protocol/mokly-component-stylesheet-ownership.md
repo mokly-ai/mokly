@@ -66,16 +66,16 @@ material.
 
 The audit of existing uses requires these changes:
 
-| Existing use                                                                                  | Required behavior                                                                                                                      |
-| --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `render.tsx` derives resource records during link insertion/reuse.                            | Keep link order, deduplication and declarer data in the linking pass; write no CSS resource records.                                   |
-| `stylesheet_provenance.ts` finalizes inserted links from the linking pass.                    | Resolve final active links against issued linking data. Preserve spans, validated public paths, final-link checks and offset rebasing. |
-| Manifest serialization and resource validation carry the records.                             | Current v10 writes only non-stylesheet resource owners. Validate public CSS through declarations and the resource graph.               |
-| `component_projection_resources.ts` suppresses owned CSS in consumers.                        | Never suppress a stylesheet through resource ownership. Match rules against original documents with ignored subjects excluded.         |
-| `component_view.ts` treats root resource-owner changes as material.                           | Retain that check only for non-CSS owners. An added/removed declaration with no link, byte or other rendered change gives no reason.   |
-| `component_resource_attribution.ts` promotes invocation CSS to component reasons.             | Keep invocation attribution only for non-CSS resources. CSS requires own-page rule matches.                                            |
-| Fast-path usage equality, source validation and affected-consumer assembly use those records. | Require valid v10 records without CSS owners, validate frozen per-rule proof and preserve complete/fast equivalence.                   |
-| Public catalogue/inspection projection strips resource ownership.                             | Keep it private; expose rule evidence instead. No export, watch or publication file list depends on derived owners.                    |
+| Existing use                                                                                  | Required behavior                                                                                                                    |
+| --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `render.tsx` derives resource records during link insertion/reuse.                            | Keep link order, deduplication and declarer data in the linking pass; write no CSS resource records.                                 |
+| `stylesheet_provenance.ts` finalizes inserted links from the linking pass.                    | Resolve final active links against issued linking data. Preserve spans, validated public paths, final-link checks.                   |
+| Manifest serialization and resource validation carry the records.                             | Current v10 writes only non-stylesheet resource owners. Validate public CSS through declarations and the resource graph.             |
+| `component_projection_resources.ts` suppresses owned CSS in consumers.                        | Never suppress a stylesheet through resource ownership. Match rules against original documents with ignored subjects excluded.       |
+| `component_view.ts` treats root resource-owner changes as material.                           | Retain that check only for non-CSS owners. An added/removed declaration with no link, byte or other rendered change gives no reason. |
+| `component_resource_attribution.ts` promotes invocation CSS to component reasons.             | Keep invocation attribution only for non-CSS resources. CSS requires own-page rule matches.                                          |
+| Fast-path usage equality, source validation and affected-consumer assembly use those records. | Require valid v10 records without CSS owners, validate frozen per-rule proof and preserve complete/fast equivalence.                 |
+| Public catalogue/inspection projection strips resource ownership.                             | Keep it private; expose rule evidence instead. No export, watch or publication file list depends on derived owners.                  |
 
 Current and baseline v10 usage records reject CSS resource entries. A current record that retains them is invalid data. Readers never
 drop those records or reconstruct them from declarations. The renderer filter

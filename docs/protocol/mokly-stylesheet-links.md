@@ -8,9 +8,10 @@ Review-ignore exception are implemented in
 
 ## Shared Finder
 
-Placement, renderer-link reuse, final-link provenance and resource discovery
-use one shared HTML link finder. Parse HTML with source locations and scripting
-enabled. Return only `link` elements in the HTML namespace
+Placement, renderer-link reuse, final-link provenance, resource discovery
+and move normalization use the shared `classifyHtmlLink` rule for HTML
+namespaces and rel tokens. The link finder parses HTML with source locations
+and scripting enabled. Return only `link` elements in the HTML namespace
 (`http://www.w3.org/1999/xhtml`), in document order, with their decoded
 attributes, logical head/body location and original UTF-16 spans. Do not use
 separate regular-expression or head-only scans for the same link decision.

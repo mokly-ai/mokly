@@ -23,7 +23,7 @@ Cover everything `extractHtmlReferences` reads:
   source attribute; `data-nav-href` on any element.
 - Resource attributes: `src` on audio, embed, iframe, img, input, script,
   source and track; `href`/`xlink:href` on any element named `image` or `use`,
-  regardless of namespace; link `href`; object `data`; video `poster` and `src`.
+  regardless of namespace; `href` on HTML-namespace `link` elements; SVG and MathML `link` elements supply no record; object `data`; video `poster` and `src`.
 - `srcset` on any element, one raw URL per candidate, using the delivered
   comma/descriptor tokenizer, including trailing-comma removal.
 - `style` attributes, one record per tokenized CSS reference.

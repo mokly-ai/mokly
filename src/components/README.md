@@ -140,7 +140,8 @@ rendered links determine which inserted spans remain.
 See [component stylesheets](../../docs/protocol/mokly-component-stylesheets.md).
 The [ownership and comparison contract](../../docs/protocol/mokly-component-stylesheet-ownership.md)
 defines final-link validation and private link provenance.
-`../html_links.ts` finds active head and body links with decoded attributes
+`../html_links.ts` shares `classifyHtmlLink` across link and reference traversals,
+and finds active head and body links with decoded attributes
 and source spans. Placement uses only configured head links. Reuse keeps body
 links in place. Only HTML-namespace links qualify. Template content and foreign
 SVG or MathML links supply no active link. HTML links inside SVG `foreignObject`
