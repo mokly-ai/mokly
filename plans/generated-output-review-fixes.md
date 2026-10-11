@@ -3,9 +3,9 @@
 Status: Active. This plan owns the remaining review fixes from
 [Generated Output Simplification](./generated-output-simplification.md), merged
 in [PR #156](https://github.com/mokly-ai/mokly/pull/156) on 2026-10-07. Milestones
-2–6 retain the former Milestones 24–28. Findings 17, 52 and 67–86 and the known
-status notes remain pending decisions, outside milestone scope. Milestones 1–3 are
-complete; Milestone 4 is in progress. Milestones 5–6 await their separate instructions.
+2–6 retain the former Milestones 24–28. Findings 17, 52 and 67–86 remain pending
+decisions, outside milestone scope. Known status notes are recorded below. Milestones 1–4 are
+complete; Milestones 5–6 await their separate instructions.
 
 ## Summary
 
@@ -104,8 +104,8 @@ older completion claims. Preserve their pending status until the user decides.
 - 85 — Low: Test titles retain earlier format versions.
 - 86 — Low: Cache marker v2 accepts unknown fields.
 - Known 54 A — Partial: document base reads are restored; image and unused-CSS lazy-read parity remains open.
-- Known 10 — Changed: main normalizes `.html` and highlights work through redirects; the shared helper and regression remain in [Milestone 4](#milestone-4-viewer-frame-urls-was-milestone-26).
-- Known 25 — Still open: frame paths are decoded twice.
+- Known 10 — Implemented under 10 B: the shared delivered-URL helper and redirect regression are complete in [Milestone 4](#milestone-4-viewer-frame-urls-was-milestone-26).
+- Known 25 — Implemented under 25 B: frame paths decode once before the existing route validation in [Milestone 4](#milestone-4-viewer-frame-urls-was-milestone-26).
 - Known 57 — Unchanged: hydration global setup still rebuilds the shared example.
 - Known 63 — Still open: ESLint names the deleted `src/build/discovery.ts`.
 - Known 65 — Unchanged: the planned test corrections remain.
@@ -357,7 +357,7 @@ no public dependency or shared-path reason.
 
 Tags: ui
 
-Implements 10 B and 25 B in the viewer. No backend work or visible design change.
+Completed. Implements 10 B and 25 B in the viewer. No backend work or visible design change.
 
 Test-first evidence: `.context/generated-output-review-fixes/m4-test-first.md`.
 
@@ -367,24 +367,24 @@ Smoke evidence: `.context/generated-output-review-fixes/m4-smoke.md`.
 
 Gate evidence: `.context/generated-output-review-fixes/m4-gate.md`.
 
-- [ ] Extend the existing `client/same_origin_identity.ts` delivered-resource
+- [x] Extend the existing `client/same_origin_identity.ts` delivered-resource
       helper and use it for `same_origin_load.ts`, `same_origin_access.ts`,
       `same_origin_adapter.ts` readiness/inspection and `component_geometry.ts`.
       Keep #131's exact, extensionless and index-directory URL forms, exact
       origin/query matching, weak document provenance and mount-generation
       rejection. No later duplicate check may reject an accepted form.
-- [ ] Decode paths exactly once between `client/frame_mount.ts`,
+- [x] Decode paths exactly once between `client/frame_mount.ts`,
       `catalogue/delivery_paths.ts` and adapter setup. Test single/double
       encoding, invalid escapes, separators, dot segments, query/origin
       mismatches, positioning fragments and private transient previews.
       Cross-origin tests assert only observable origin/nonce/source and assigned
       route checks; no final cross-origin pathname access is assumed.
-- [ ] Add a static-host redirect fixture to `tests/helpers/static_server.ts`
+- [x] Add a static-host redirect fixture to `tests/helpers/static_server.ts`
       or its browser fixture and test `x.html` → `x` with real highlight and
       pick, plus preserved page `index.html` normalization. Extend existing
       same-origin adapter, frame adapter/security and clipping cases. Smoke
       the styled screen under that host and stop the browser and server.
-- [ ] Complete the [full gate from the completed plan](./generated-output-simplification.md#milestone-20-one-public-file-policy):
+- [x] Complete the [full gate from the completed plan](./generated-output-simplification.md#milestone-20-one-public-file-policy):
       `git add -A`; commit with Conventional Commits and push; then run
       `cargo xtask check`. On Blacksmith it covers all seven gate commands.
       If it falls back to local, run the seven commands locally as listed under
