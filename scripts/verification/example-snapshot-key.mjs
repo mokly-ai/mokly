@@ -10,7 +10,7 @@ export const EXAMPLE_SNAPSHOT_PATH =
   ".context/verification/example-compilation.json";
 
 /** Snapshot format version; every key includes it. */
-export const EXAMPLE_SNAPSHOT_SCHEMA_VERSION = 1;
+export const EXAMPLE_SNAPSHOT_SCHEMA_VERSION = 2;
 
 /**
  * Authored inputs of the example compile. The key lists them through Git, and

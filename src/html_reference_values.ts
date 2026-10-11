@@ -1,4 +1,6 @@
 /** Shared decoded reference tokens; source locations belong to their caller. */
+import { html } from "parse5";
+
 import { extractCssReferences } from "./css_references.js";
 import { linkRelTokens } from "./html_links.js";
 import type { HtmlReferenceOptions } from "./html_references.js";
@@ -9,6 +11,7 @@ export interface ReferenceNode {
   attrs?: readonly { name: string; value: string }[];
   childNodes?: readonly ReferenceNode[];
   tagName?: string;
+  namespaceURI?: string;
   value?: string;
 }
 
@@ -69,7 +72,10 @@ export function htmlReferenceValues(
         "dns-prefetch",
       ].includes(token),
     );
-  if (options.resourceHints !== false || !resourceHint)
+  if (
+    (node.tagName !== "link" || node.namespaceURI === html.NS.HTML) &&
+    (options.resourceHints !== false || !resourceHint)
+  )
     for (const name of sources) add("source", name);
   for (const value of extractSourceSetReferences(
     attributes.get("srcset") ?? "",

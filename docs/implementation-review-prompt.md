@@ -24,6 +24,8 @@ lifecycle, comparison behavior, and protocol alignment. Do not treat
 speculative or purely theoretical concerns as findings. Do not modify files or
 automatically fix findings.
 
+Check the current-documentation rule in [`docs/protocol/documentation-policy.md`](./protocol/documentation-policy.md).
+
 Start by collecting compact summaries so large diffs fit in context:
 
 ```bash

@@ -4,10 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import type { ManifestV10 } from "@mokly/viewer/data";
-
 import type { Compilation } from "../dist/build/compile.js";
-import { MANIFEST_NAME, serializeManifest } from "../dist/registry/manifest.js";
+import { MANIFEST_NAME } from "../dist/registry/manifest.js";
 import {
   decodeCompilation,
   encodeCompilation,
@@ -17,38 +15,10 @@ import {
 } from "../scripts/verification/example-snapshot.mjs";
 
 import { assertSameCompilation } from "./helpers/compilation_equality.js";
+import { snapshotCompilation } from "./helpers/snapshot_compilation.js";
 
 const KEY = "a".repeat(64);
 const OTHER_KEY = "b".repeat(64);
-
-function compilation(documentMarkdown = true): Compilation {
-  const manifest = {
-    entries: [],
-    folders: [],
-    generatedBy: "mokly",
-    schemaVersion: 10,
-    sourceFiles: [],
-  } as unknown as ManifestV10;
-  return {
-    diagnostics: [
-      {
-        code: "link-control-ancestor",
-        message: "A link control sits inside another interactive element.",
-        route: "home/index.html",
-      },
-    ],
-    manifest,
-    outputs: new Map<string, string | Uint8Array>([
-      [MANIFEST_NAME, serializeManifest(manifest)],
-      ["styles.css", "body { color: red; }\n"],
-      ["mokly-generated/logo.png", Uint8Array.from([0, 1, 2, 128, 255])],
-    ]),
-    deliveredStyleSources: ["examples/basic/styles.css"],
-    ...(documentMarkdown
-      ? { documentMarkdown: new Map([["docs/guide.md", "# Guide\n"]]) }
-      : {}),
-  };
-}
 
 function roundTrip(value: unknown): Compilation {
   return decodeCompilation(JSON.parse(JSON.stringify(value)));
@@ -62,7 +32,7 @@ async function directory(t: test.TestContext): Promise<string> {
 
 test("a compilation survives the snapshot round trip exactly", () => {
   for (const withDocuments of [true, false]) {
-    const expected = compilation(withDocuments);
+    const expected = snapshotCompilation(withDocuments);
     const actual = roundTrip(encodeCompilation(expected, KEY));
     assertSameCompilation(actual, expected);
     assert.equal("documentMarkdown" in actual, withDocuments);
@@ -75,7 +45,7 @@ test("a compilation survives the snapshot round trip exactly", () => {
 });
 
 test("encoding rejects a compilation field that the snapshot does not store", async (t) => {
-  const extended = { ...compilation(), assets: [] } as Compilation;
+  const extended = { ...snapshotCompilation(), assets: [] } as Compilation;
   assert.throws(
     () => encodeCompilation(extended, KEY),
     /cannot store compilation field assets/u,
@@ -93,7 +63,7 @@ test("encoding rejects a compilation field that the snapshot does not store", as
 });
 
 test("the equality assertion compares compilation field sets", () => {
-  const expected = compilation();
+  const expected = snapshotCompilation();
   const extended = { ...expected, assets: [] } as Compilation;
   for (const [actual, wanted] of [
     [extended, expected],
@@ -107,11 +77,12 @@ test("the equality assertion compares compilation field sets", () => {
 
 test("decoding rejects malformed snapshots", () => {
   const valid = () =>
-    JSON.parse(JSON.stringify(encodeCompilation(compilation(), KEY)));
+    JSON.parse(JSON.stringify(encodeCompilation(snapshotCompilation(), KEY)));
   const cases: ReadonlyArray<
     readonly [string, (snapshot: Record<string, unknown>) => void, RegExp]
   > = [
-    ["another schema", (s) => (s.schemaVersion = 2), /schema version/u],
+    ["an older schema", (s) => (s.schemaVersion = 1), /schema version/u],
+    ["another schema", (s) => (s.schemaVersion = 3), /schema version/u],
     ["a missing key", (s) => delete s.key, /key/u],
     ["a short key", (s) => (s.key = "abc"), /key/u],
     ["an uppercase key", (s) => (s.key = "A".repeat(64)), /key/u],
@@ -193,8 +164,14 @@ test("decoding rejects malformed snapshots", () => {
 test("writing replaces the snapshot atomically and leaves no temporary file", async (t) => {
   const root = await directory(t);
   const file = path.join(root, "nested/example-compilation.json");
-  await writeExampleSnapshot(file, encodeCompilation(compilation(), KEY));
-  await writeExampleSnapshot(file, encodeCompilation(compilation(), OTHER_KEY));
+  await writeExampleSnapshot(
+    file,
+    encodeCompilation(snapshotCompilation(), KEY),
+  );
+  await writeExampleSnapshot(
+    file,
+    encodeCompilation(snapshotCompilation(), OTHER_KEY),
+  );
   assert.deepEqual(await fs.readdir(path.dirname(file)), [
     "example-compilation.json",
   ]);
@@ -204,7 +181,10 @@ test("writing replaces the snapshot atomically and leaves no temporary file", as
   const blocked = path.join(root, "blocked.json");
   await fs.mkdir(path.join(blocked, "occupied"), { recursive: true });
   await assert.rejects(
-    writeExampleSnapshot(blocked, encodeCompilation(compilation(), KEY)),
+    writeExampleSnapshot(
+      blocked,
+      encodeCompilation(snapshotCompilation(), KEY),
+    ),
   );
   assert.deepEqual((await fs.readdir(root)).sort(), ["blocked.json", "nested"]);
 });
@@ -221,17 +201,23 @@ test("reading reports missing, invalid, stale and fresh snapshots", async (t) =>
   assert.equal(keyReads, 0);
   await fs.writeFile(file, "{ not json");
   assert.equal((await readSnapshotFile(file, key)).status, "invalid");
-  await writeExampleSnapshot(file, encodeCompilation(compilation(), OTHER_KEY));
+  await writeExampleSnapshot(
+    file,
+    encodeCompilation(snapshotCompilation(), OTHER_KEY),
+  );
   assert.deepEqual(await readSnapshotFile(file, key), { status: "stale" });
-  const broken = encodeCompilation(compilation(), KEY);
+  const broken = encodeCompilation(snapshotCompilation(), KEY);
   await writeExampleSnapshot(file, { ...broken, outputs: [["a", 1]] } as never);
   assert.equal((await readSnapshotFile(file, key)).status, "invalid");
-  await writeExampleSnapshot(file, encodeCompilation(compilation(), KEY));
+  await writeExampleSnapshot(
+    file,
+    encodeCompilation(snapshotCompilation(), KEY),
+  );
   const fresh = await readSnapshotFile(file, key);
   assert.equal(fresh.status, "fresh");
   assertSameCompilation(
     (fresh as { compilation: Compilation }).compilation,
-    compilation(),
+    snapshotCompilation(),
   );
 });
 
@@ -246,7 +232,7 @@ test("the producer compiles only when the snapshot is not fresh", async (t) => {
       key: async () => key,
       compile: async () => {
         compiles += 1;
-        return compilation();
+        return snapshotCompilation();
       },
     });
   const written = await produce();
@@ -275,7 +261,7 @@ test("the producer refuses to write when an input changes during the compile", a
     produceExampleSnapshot({
       file,
       key: async () => keys.shift()!,
-      compile: async () => compilation(),
+      compile: async () => snapshotCompilation(),
     }),
     /changed during the compile/u,
   );

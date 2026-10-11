@@ -1,11 +1,13 @@
 # Remove Source-Path Evidence
 
-Status: Active. Milestones 1 to 37 are implemented, verified and pushed; the
-branch contains main `a90badb6`. Milestone 37 moved the combined formats to
-manifest v10, catalogue read model v6 and review result v7; its review and one
-re-review are complete, and both review findings are fixed. The open review
-findings of Milestones 32 to 34 and one Milestone 35 decision wait for the
-user.
+Status: Completed. [PR #179](https://github.com/mokly-ai/mokly/pull/179) merged on
+2026-10-09. Open review findings stay under the Milestone 32, 33 and 34 review
+TODOs. On 2026-10-10 the user chose fixes for three of them, and branch
+`calummoore/feat-auto-dependencies-and-shared-impact-v1` owns those fixes: the
+documentation-wording tests are removed (Milestone 35 decision, option A), one
+namespace-aware rule finds stylesheet links (M32 finding 2, option B), and the
+example snapshot stores every compilation form (M34 finding 1, option A). A
+commit override on PR #179 corrects the 0.15.0 release notes.
 
 ## Status And Outcome
 
@@ -104,14 +106,11 @@ milestone.
 - One Changes rule for all catalogues. A source path never adds an entry to
   Changes and never appears as comparison evidence. Rendered-resource evidence,
   Review-ignore, metadata, ancestry, flow propagation, document-style ownership
-  and non-CSS resource attribution retain their contracts. The 2026-10-09
-  integration infers inline owners and unions non-CSS references with renderer
-  records; returned renderer `styles` warns and is ignored. CSS files follow the binding
+  and non-CSS resource attribution stay unchanged. CSS follows the binding
   2026-10-03 rule for configured, declared, CSS-imported and JavaScript-bundled
   stylesheets:
-  - Match every changed rule against both original documents, with subjects in
-    paired Review-ignore regions excluded. Keep original side-specific output
-    ranges; ignored nodes remain structural selector context.
+  - Match every changed rule against both available documents after paired
+    Review-ignore. Keep matched elements and their side-specific output ranges.
   - First collect every component's unfiltered own-page matches for the rule,
     in any variant, viewport, scheme or before/after side. X changes only if it
     keeps a match in its root output on an own page. A different nested Y takes
@@ -160,31 +159,25 @@ milestone.
     Reuse a configured link without duplicating it. Renderer `resources`
     records for every stylesheet are ignored after safety checks, with one
     `ignored-stylesheet-resource-owner` warning per route/file identity. This
-    replaces the declared-only warning. Non-CSS `resources` retain ownership. Returned document `styles` is ignored
-    with a warning under the 2026-10-09 integration decision.
+    replaces the declared-only warning. Non-CSS `resources` and document
+    `styles` retain their current meaning.
   - Page comparison omits Mokly-inserted declared-stylesheet links except a
     component page's root-owned links. A private final-document provenance
     record identifies those links after link rewriting and through Review-ignore;
     renderer-authored links remain page content. Resource and CSS evidence
     remains based on the actual linked files.
-    User decision (2026-10-10): AP8 option A removes the unused
-    `src/components/comparison_stylesheets.ts` (`comparisonStylesheetMaterial`)
-    and `src/review/css/normalized_ranges.ts` (`normalizedOutputRanges`).
-    Production and direct tests use `PageAnalysis.stylesheetEdits` for link
-    removal. CSS membership uses original ranges; no normalized-range rebasing
-    remains. Historical milestone records below retain their original wording.
   - Serve reloads declared stylesheets like configured ones. Exports and
     publication handle them as public resources.
   - This replaces the documented rule "Separate stylesheet loading from review
     dependency declaration" and the example's per-render style collector.
-    Inline document styles use inferred ownership; renderer `resources` records
+    Renderer `styles` records remain for document material; `resources` records
     remain only for files that are not stylesheets.
 - Removed inputs are ignored with a warning: `dependencies` on an entry,
   nested marker, root path metadata or variant, `ownedDependencies` on a
   component or saved component variant, and
   `review.sharedImpact` in configuration. They add no evidence or ownership;
   TypeScript input types still reject the authoring fields.
-- [Graceful handling](../docs/protocol/protocol-status.md#graceful-handling) governs
+- [Graceful handling](../docs/protocol/README.md#graceful-handling) governs
   redundant or conflicting inputs when output stays correct and safe. Build,
   Check, export, publish and Serve collect and deduplicate structured warnings
   across configuration, registry and render stages, including Serve children.
@@ -209,10 +202,9 @@ milestone.
   readers reject catalogue v1 to v5 and comparison v6 and earlier; regenerate
   older exports. The process-local live index adopts the v10 entry shape.
   The current versions retain this branch's CSS fields: v10 has an explicit root
-  output range, no `styles` array and no CSS resource owners; v7 adds
-  `inlineStyles` to views alongside rule identity,
+  output range and no CSS resource owners; v7 has rule identity,
   changed component paths and page evidence; v6 carries the same public evidence
-  on views and whole-document pages, with inline evidence on views only. Every accepted component saved view has its
+  on views and whole-document pages. Every accepted component saved view has its
   root range. Every persisted usage record has an `insertedStylesheets` array,
   including an empty array. V10 records with CSS owners, missing roots or missing
   provenance are invalid. Keep main's
@@ -2493,9 +2485,9 @@ Evidence: `.context/remove-source-path-evidence/milestone-31.md`.
       as one line under this TODO. Keep reports and evidence under `.context/`.
       Both reviews are complete. The final fix stays local as instructed;
       no third review follows it.
-  - [ ] M32 finding 2 (Medium): foreign-namespace links can suppress required CSS. Recommend B: use one namespace-aware rule, after the user decides the provenance boundary.
+  - [x] M32 finding 2 (Medium): foreign-namespace links can suppress required CSS. Recommend B: use one namespace-aware rule, after the user decides the provenance boundary. Fixed on branch `calummoore/feat-auto-dependencies-and-shared-impact-v1` (option B).
   - [ ] M32 finding 4 (Low): control characters in config filenames can make ignored-field warnings fail. Recommend B: retain the path as data and encode controls for display.
-  - [ ] M32 finding 5 (Low): the watch contract restores the retired `entries` input. Recommend B: correct the text and extend the existing docs guard with the exact obsolete claim.
+  - [x] M32 finding 5 (Low): the watch contract restores the retired `entries` input. Recommend B: correct the text and extend the existing docs guard with the exact obsolete claim. Resolved: the Milestone 33 merge of main #156 rewrote the watch contracts, and no watch contract names `entries` now.
   - [ ] Earlier timing item: `tests/browser/css_evidence_page.ts` uses a 1-second inner visibility wait within a 15-second retry. Keep it pending; recommend explicit events or an approved I/O allowance change.
   - [ ] Earlier timing item: `tests/current_baseline_commands.test.ts` uses 200 polls with 25 ms pauses for unavailable Changes. Keep it pending; recommend explicit events or an approved I/O allowance change.
   - [ ] Earlier timing item: `tests/current_baseline_invalid.test.ts` uses 200 polls with 25 ms pauses for invalid baselines. Keep it pending; recommend explicit events or an approved I/O allowance change.
@@ -2858,7 +2850,8 @@ rules split into `docs/dev`), #172 (Serve keeps the checked closure on reload),
       `Auto-fix: yes` findings, re-review once, and report the rest. Add each
       open finding as one line under this TODO. The review is complete. It has
       no `Auto-fix: yes` finding, so no fix round follows.
-  - [ ] M34 finding 1 (Medium, test): main #138's example snapshot codec rejects two valid forms of this branch's compilation: `resourceSeeds` (encode fails) and warnings with a `subject` (decode fails, so tests compile again). Recommend A: extend the existing codec and its field table and round-trip tests.
+  - [x] M34 finding 1 (Medium, test): main #138's example snapshot codec rejects two valid forms of this branch's compilation: `resourceSeeds` (encode fails) and warnings with a `subject` (decode fails, so tests compile again). Recommend A: extend the existing codec and its field table and round-trip tests. Fixed on branch `calummoore/feat-auto-dependencies-and-shared-impact-v1` (option A).
+  - [ ] Follow-up review finding 1 (Low, test): the schema-2 snapshot reader validates warnings with `isBuildDiagnostic`, which rejects a warning longer than 65,536 characters that compilation accepts, so such a snapshot reads as invalid and every test process compiles again. Recommend A: validate snapshot warnings with the compilation normalizer.
 
 Evidence: `.context/remove-source-path-evidence/milestone-34.md`.
 
@@ -2877,11 +2870,12 @@ Testbox boxes after suites).
       into `xtask/protocol-document-caps.json`. Review the remerge diff.
 - [x] Run the line-level loss check. Only the five caps that the branch lowers
       or removes are absent.
-- [ ] Decide whether the branch keeps its documentation-wording tests
+- [x] Decide whether the branch keeps its documentation-wording tests
       (`tests/current_docs_contract.test.ts` with its helper and fixtures, and
       `tests/mainline_preservation_docs.test.ts`) under #175's new rule. They
       stay unchanged until the user decides. Recommend: remove them and keep
-      the written documentation rule.
+      the written documentation rule. On 2026-10-10 the user chose option A:
+      remove both tests and keep the written rule.
 - [x] Decide the format versions after main's #127 sets 0.14.0, which ships
       main's manifest v9, catalogue v5 and review v6. Recommend: bump them to
       manifest v10, catalogue v6 and review v7. The user chose this option on

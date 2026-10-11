@@ -2162,6 +2162,16 @@ before the push, stop and report; D2 then becomes B. D7 and D8 belong to the UI
 agent. D11 retains main's documentation guard and records its exact failures
 for approval. D12 makes no change to PR #182 or any other PR.
 
+Superseded by main #191 (2026-10-11): main removes the documentation-wording
+guard; AP7 is resolved with no action. AP8 is done. AP1–AP6 and AP9 wait for
+the user. Restore main's completed #179 plan byte for byte. This milestone
+retains D1–D6 and AP8: component-aware CSS matches original trees, excludes
+subjects in paired Review-ignore regions and keeps ignored nodes as selector
+context. Inline owners include non-CSS renderer records. Manifest v10 has no
+`styles` array; review v7 and catalogue v6 carry `inlineStyles` on views only.
+`PageAnalysis.stylesheetEdits` owns link removal; normalized-range rebasing is
+removed.
+
 User decision (2026-10-10): AP8 option A. Delete #179's `src/review/css/normalized_ranges.ts` and `src/components/comparison_stylesheets.ts`, which have no production caller after D6. Port their main tests to `PageAnalysis.stylesheetEdits` with unchanged expected values. AP1–AP7 and AP9 wait for the user.
 
 Supervisor decision (2026-10-10), after the user questioned compatibility code: add no compatibility for v10 `styles` fields from unreleased main. npm `latest` 0.14.0 writes v9, so no released version writes them. The PR #158 preview, whose baseline current main builds, fails with `…styles: unknown field` until the merge. It is not a required check. Condition: release PR #182 waits for #158 (D12).
@@ -2181,6 +2191,7 @@ Supervisor decision (2026-10-10), after the user questioned compatibility code: 
       plan, preserve historical records, and meet the protocol and source caps.
       The unused-module ratchet and D11 wording guard wait for the choices in
       `main-test-approvals.md` under the evidence directory.
+- [ ] Discovered: merge main #191 (`c66daeb5`). Port the HTML-namespace link rule into the one-parse reference and link paths, accept main's removal of the documentation-wording tests (AP7 is no longer needed), keep main's snapshot codec, and restore main's completed #179 plan text. Evidence: `.context/scalable-inline-style-analysis/m15-merge/second/`.
 - [x] Keep main's expected values, finish the other backend work and run the
       affected tests. Record every needed main-test change, including D11, in
       `.context/scalable-inline-style-analysis/m15-merge/main-test-approvals.md`.

@@ -21,6 +21,8 @@ including renderer links reused for declarations. The linking pass retains
 each inserted link's public path, real file and rendered declaring component
 paths until ordinary package link edits finish. Use the
 [shared active link finder](./mokly-stylesheet-links.md) on that final document.
+Only HTML-namespace links qualify. SVG and MathML namespace links supply no
+span; HTML content at integration points such as SVG `foreignObject` stays active.
 Match each insertion to its real file and record the active full-link UTF-16
 span, public path and declaring `componentPaths` in the private v10 view's
 `insertedStylesheets` array. A reused renderer or configured link receives no

@@ -4,6 +4,10 @@ See [Protocol scope and formats](./protocol-status.md) for delivery status,
 supported versions and document rules. The [contract guide](./protocol-contract-index.md)
 groups the contracts by responsibility. This index links every protocol page.
 
+## Graceful Handling
+
+See the [graceful-handling contract](./protocol-status.md#graceful-handling).
+
 ## Contracts
 
 - [CI Example Compilation Snapshot](./ci-example-snapshot.md)

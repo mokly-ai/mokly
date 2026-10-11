@@ -1,4 +1,4 @@
-import { parse, type DefaultTreeAdapterMap } from "parse5";
+import { html, parse, type DefaultTreeAdapterMap } from "parse5";
 
 type Node = DefaultTreeAdapterMap["node"];
 type Element = DefaultTreeAdapterMap["element"];
@@ -22,9 +22,9 @@ export function linkRelTokens(
     .split(/[\t\n\f\r ]+/);
 }
 
-/** Find active links once, without treating template or noscript text as resources. */
+/** Find active HTML links, excluding foreign elements, template and noscript text. */
 export function parseHtmlLinks(
-  html: string,
+  content: string,
   existing?: DefaultTreeAdapterMap["document"],
 ): {
   document: DefaultTreeAdapterMap["document"];
@@ -33,7 +33,7 @@ export function parseHtmlLinks(
 } {
   const document =
     existing ??
-    parse(html, {
+    parse(content, {
       sourceCodeLocationInfo: true,
       scriptingEnabled: true,
     });
@@ -45,7 +45,11 @@ export function parseHtmlLinks(
         head = node;
         scope = "head";
       } else if (node.tagName === "body") scope = "body";
-      if (node.tagName === "link" && node.sourceCodeLocation) {
+      if (
+        node.tagName === "link" &&
+        node.namespaceURI === html.NS.HTML &&
+        node.sourceCodeLocation
+      ) {
         const rel = linkRelTokens(node.attrs);
         const stylesheet = rel.includes("stylesheet");
         links.push({
