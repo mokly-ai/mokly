@@ -14,6 +14,7 @@ import { serve } from "../dist/server/serve.js";
 
 import { createExportFixture } from "./helpers/export_fixture.js";
 import { validEntrySource } from "./helpers/fixture.js";
+import { assertRebuiltEarlierNotice } from "./helpers/rebuilt_baseline_notice.js";
 
 const EARLIER_BASELINE_LINE =
   "Changes are unavailable because the comparison base was built with an earlier version of Mokly. Changes will return once the base includes this version.";
@@ -248,3 +249,11 @@ async function waitFor<T>(read: () => Promise<T | undefined>): Promise<T> {
   }
   throw new Error("Serve did not settle");
 }
+
+test(
+  "snapshot Serve retains earlier rebuild notices and never caches incompatible output",
+  { timeout: 60_000 },
+  async (t) => {
+    await assertRebuiltEarlierNotice(t, false);
+  },
+);

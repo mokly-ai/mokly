@@ -4,6 +4,7 @@ import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { validateDocumentHtml } from "../documents/safety.js";
 import type { EntryMove } from "../review/moves/types.js";
+import { TextOffsetMap } from "../text_patches.js";
 
 import type { BuildDiagnostic } from "./build_warnings.js";
 import { adaptLinkControls } from "./link_controls.js";
@@ -13,6 +14,7 @@ import { rewriteMockLinks } from "./mock_links.js";
 interface ResolvedDocumentLinks {
   readonly diagnostics: readonly BuildDiagnostic[];
   readonly records: readonly LogicalReferenceRecord[];
+  readonly edits: ReadonlyMap<string, TextOffsetMap>;
 }
 
 /** Adapt explicit controls and resolve links against this accepted registry. */
@@ -28,6 +30,7 @@ export function resolveDocumentLinks(
 ): ResolvedDocumentLinks {
   const records: LogicalReferenceRecord[] = [];
   const diagnostics: BuildDiagnostic[] = [];
+  const edits = new Map<string, TextOffsetMap>();
   for (const [route, original] of outputs) {
     const { colorScheme, viewport } = fragmentViews.get(route) ?? {
       colorScheme: "light",
@@ -35,6 +38,8 @@ export function resolveDocumentLinks(
     };
     const adapted = adaptLinkControls(original, route);
     diagnostics.push(...adapted.diagnostics);
+    const offsets = new TextOffsetMap(original);
+    if (adapted.patches) offsets.apply(adapted.patches);
     const linked = rewriteMockLinks(
       adapted.html,
       route,
@@ -48,7 +53,9 @@ export function resolveDocumentLinks(
     if (entry?.kind === "document")
       validateDocumentHtml(linked.content, entry.location);
     records.push(...linked.records);
+    offsets.apply(linked.patches);
+    edits.set(route, offsets);
     outputs.set(route, linked.content);
   }
-  return { diagnostics, records };
+  return { diagnostics, records, edits };
 }

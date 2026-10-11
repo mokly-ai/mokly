@@ -25,6 +25,7 @@ import { documentTemplate } from "../documents/template.js";
 import { MoklyError, errorMessage } from "../errors.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { Renderer } from "../renderer/types.js";
+import { TextOffsetMap } from "../text_patches.js";
 
 import { GENERATED_MARKER } from "./generated_marker.js";
 import { renderPage } from "./render_page.js";
@@ -128,13 +129,11 @@ export function renderFragments(
             if (components.length) {
               const output = graphRenderer(input, renderer, components);
               rendered = output.html;
+              const edits = new TextOffsetMap(rendered);
+              edits.apply([{ start: 0, end: 0, text: GENERATED_MARKER }]);
               componentViews.set(route, {
                 ...output.view,
-                styles: rebaseStyleOwnership(
-                  rendered,
-                  GENERATED_MARKER + rendered,
-                  output.view.styles,
-                ),
+                styles: rebaseStyleOwnership(edits, output.view.styles),
               });
             } else {
               const result = renderer(input);

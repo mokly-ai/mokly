@@ -8,6 +8,7 @@ import { exportCatalogue } from "../dist/export/run.js";
 import { prepareReviewRepository } from "../dist/review/prepare.js";
 
 import { derivedFixture } from "./helpers/derived_fixture.js";
+import { assertRebuiltEarlierNotice } from "./helpers/rebuilt_baseline_notice.js";
 
 test("the base's own root-level v7 rebuild stops preparation and exports current content", async (context) => {
   const fixture = await derivedFixture(context);
@@ -60,3 +61,37 @@ await fs.writeFile("mockups/mokly-manifest.json", JSON.stringify({ schemaVersion
     { code: "ENOENT" },
   );
 });
+
+test("a base recipe can leave root-level v7 beside one moved v9 catalogue", async (t) => {
+  const fixture = await derivedFixture(t);
+  const recipe = path.join(fixture.root, "baseline.mjs");
+  await fs.appendFile(
+    recipe,
+    `
+await fs.rename("mockups", "historical");
+await fs.mkdir("mockups");
+await fs.writeFile("mockups/mokly-manifest.json", JSON.stringify({ schemaVersion: 7 }));
+`,
+  );
+  await fixture.git("add", "baseline.mjs");
+  await fixture.git("commit", "-qm", "test: current output and stale envelope");
+  const prepared = await prepareReviewRepository(fixture.config, "HEAD");
+  assert.equal(prepared.selection, "rebuild");
+  assert.equal(prepared.descriptor.catalogueRoot, "historical");
+  assert.equal(prepared.marker?.manifestVersion, 9);
+  assert.equal(
+    await prepared.reader.readFile(
+      prepared.commit,
+      "historical/mokly-generated/home/index.mobile.html",
+    ),
+    fixture.baseline.outputs.get("home/index.mobile.html"),
+  );
+});
+
+test(
+  "watched Serve retains earlier rebuild notices and never caches incompatible output",
+  { timeout: 60_000 },
+  async (t) => {
+    await assertRebuiltEarlierNotice(t, true);
+  },
+);

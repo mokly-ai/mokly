@@ -74,3 +74,84 @@ test("an invalid v9 manifest is not rediscovered as a legacy child", async (cont
     /candidates: \(none\)/,
   );
 });
+
+for (const stale of ["mockups", "retired", "mockups and retired"]) {
+  test(`a unique moved v9 catalogue wins over stale envelopes at ${stale}`, async (t) => {
+    const fixture = await createFixture();
+    t.after(() => removeFixture(fixture));
+    for (const root of stale.split(" and ")) {
+      await fs.mkdir(path.join(fixture.root, root), { recursive: true });
+      await fs.writeFile(
+        path.join(fixture.root, root, "mokly-manifest.json"),
+        JSON.stringify({ schemaVersion: 7 }),
+      );
+    }
+    const target = path.join(fixture.root, "current/mokly-generated");
+    await fs.mkdir(target, { recursive: true });
+    await fs.writeFile(
+      path.join(target, "mokly-manifest.json"),
+      historicalManifest,
+    );
+    const request = {
+      repoRoot: fixture.root,
+      commit: "a".repeat(40),
+      mockupsPath: "mockups",
+      commands: [],
+    };
+    const discover = () =>
+      discoverHistoricalCatalogue(
+        new NodeBaselineFileSystem(),
+        fixture.root,
+        request,
+      );
+    assert.equal((await discover()).descriptor.catalogueRoot, "current");
+    await fs.mkdir(path.join(fixture.root, "second/mokly-generated"), {
+      recursive: true,
+    });
+    await fs.writeFile(
+      path.join(fixture.root, "second/mokly-generated/mokly-manifest.json"),
+      historicalManifest,
+    );
+    await assert.rejects(
+      discover(),
+      /candidates: current \(generated-v9\), second \(generated-v9\)/,
+    );
+    await fs.rm(path.join(fixture.root, "current"), { recursive: true });
+    await fs.rm(path.join(fixture.root, "second"), { recursive: true });
+    await assert.rejects(
+      discover(),
+      stale.includes(" and ")
+        ? /candidates: mockups \(incompatible-earlier\), retired \(incompatible-earlier\)/
+        : { code: "baseline-incompatible-earlier" },
+    );
+  });
+}
+
+for (const value of ["{}", '{"schemaVersion":10}', "{broken"]) {
+  test(`a requested malformed or newer manifest still rejects: ${value}`, async (t) => {
+    const fixture = await createFixture();
+    t.after(() => removeFixture(fixture));
+    await fs.writeFile(
+      path.join(fixture.mockupsDir, "mokly-manifest.json"),
+      value,
+    );
+    const current = path.join(fixture.root, "moved/mokly-generated");
+    await fs.mkdir(current, { recursive: true });
+    await fs.writeFile(
+      path.join(current, "mokly-manifest.json"),
+      historicalManifest,
+    );
+    await assert.rejects(
+      discoverHistoricalCatalogue(new NodeBaselineFileSystem(), fixture.root, {
+        repoRoot: fixture.root,
+        commit: "a".repeat(40),
+        mockupsPath: "mockups",
+        commands: [],
+      }),
+      (error: Error & { code?: string }) => {
+        assert.notEqual(error.code, "baseline-incompatible-earlier");
+        return true;
+      },
+    );
+  });
+}

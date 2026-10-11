@@ -4,8 +4,9 @@ import type { ComponentViewRecord } from "@mokly/viewer";
 import { invalidData } from "@mokly/viewer/data";
 
 import { definitionPath } from "../authoring/identity.js";
-import { serializeReviewSentinels } from "../renderer/sentinels.js";
+import { rewriteReviewSentinels } from "../renderer/sentinels.js";
 import type { RenderInput, Renderer, RenderResult } from "../renderer/types.js";
+import { TextOffsetMap } from "../text_patches.js";
 
 import { ComponentCollector } from "./collector.js";
 import { componentInputs } from "./inputs.js";
@@ -68,10 +69,14 @@ export const renderWithComponents: ComponentGraphRenderer = (
       collector.label,
       "renderer must return a complete HTML document",
     );
+  const edits = new TextOffsetMap(rendered.html);
+  const reviewed = rewriteReviewSentinels(rendered.html);
+  edits.apply(reviewed.patches);
   const serialized = serializeComponentSentinels(
-    serializeReviewSentinels(rendered.html),
+    reviewed.html,
     collector.boundaries,
   );
+  edits.apply(serialized.patches);
   const view: ComponentViewRecord = {
     viewport: input.viewport,
     colorScheme: input.colorScheme,
@@ -82,11 +87,7 @@ export const renderWithComponents: ComponentGraphRenderer = (
       a.key < b.key ? -1 : 1,
     ),
     ranges: serialized.ranges,
-    styles: rebaseStyleOwnership(
-      rendered.html,
-      serialized.html,
-      rendered.styles ?? [],
-    ),
+    styles: rebaseStyleOwnership(edits, rendered.styles ?? []),
     resources: rendered.resources ?? [],
   };
   return { html: serialized.html, view };

@@ -3,6 +3,8 @@ import { parse, type DefaultTreeAdapterMap } from "parse5";
 import type { ComponentStyleOwnership } from "@mokly/viewer";
 import { invalidData } from "@mokly/viewer/data";
 
+import type { TextOffsetMap } from "../text_patches.js";
+
 type Node = DefaultTreeAdapterMap["node"];
 interface StyleText {
   start: number;
@@ -10,15 +12,14 @@ interface StyleText {
   text: string;
 }
 
-/** Ownership survives source headers/link edits only if its style text is preserved. */
+/** Authenticate style text and map its exact range through the reported edits. */
 export function rebaseStyleOwnership(
-  before: string,
-  after: string,
+  edits: TextOffsetMap,
   ownership: readonly ComponentStyleOwnership[],
 ): ComponentStyleOwnership[] {
   if (!ownership.length) return [];
-  const original = styleTexts(before);
-  const updated = styleTexts(after);
+  const original = styleTexts(edits.source);
+  const updated = styleTexts(edits.html);
   let previousEnd = -1;
   return ownership.map((record) => {
     if (
@@ -31,23 +32,31 @@ export function rebaseStyleOwnership(
         "$styles",
         "invalid, overlapping or unordered style ownership",
       );
-    const index = original.findIndex(
+    const source = original.find(
       (style) =>
         style.start <= record.startOffset && style.end >= record.endOffset,
     );
-    const source = original[index];
-    const target = updated[index];
-    if (!source || !target || source.text !== target.text)
+    if (!source)
+      invalidData(
+        "$styles",
+        "ownership must name preserved text inside a style element",
+      );
+    const mappedStyle = edits.range(source.start, source.end);
+    const target = updated.find(
+      (style) =>
+        style.start === mappedStyle.start && style.end === mappedStyle.end,
+    );
+    if (!target || source.text !== target.text)
       invalidData(
         "$styles",
         "ownership must name preserved text inside a style element",
       );
     previousEnd = record.endOffset;
-    const adjustment = target.start - source.start;
+    const mapped = edits.range(record.startOffset, record.endOffset);
     return {
       ...record,
-      startOffset: record.startOffset + adjustment,
-      endOffset: record.endOffset + adjustment,
+      startOffset: mapped.start,
+      endOffset: mapped.end,
     };
   });
 }

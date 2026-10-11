@@ -241,6 +241,38 @@ Gate evidence: `.context/generated-output-review-fixes/m2-gate.md`.
 
 Implements 39 B, 54 A, 55 A, 59 A, 60 A, 48 A, 58 A and 62 A.
 
+User decisions on 2026-10-11:
+
+- Verified deletion: option A. Keep ordinary head reads strict. Only the
+  verified-deletion check can obtain an explicit missing result for a listed
+  authored file, then require a regular base file before marking it changed.
+  Keep base reads, snapshot capture, export and publication strict. Preserve
+  all other invalid-resource failures and required-reference checks.
+- Merge main first: commit the six independent TODOs, merge the captured latest
+  main under the preservation rules, then implement the remaining three TODOs
+  with option A. Stop if integration would remove or weaken incoming work or
+  if an existing TODO needs a different contract.
+
+Test-first evidence: `.context/generated-output-review-fixes/m3-test-first.md`.
+
+Decision evidence: `.context/generated-output-review-fixes/m3-inventory-contract-conflict.md`.
+
+Independent work evidence: `.context/generated-output-review-fixes/m3-independent-work.md`.
+
+Merge evidence: `.context/generated-output-review-fixes/m3-main-preservation.md`.
+
+Merge justifications: `.context/generated-output-review-fixes/m3-main-justifications.md`.
+
+Merge gate evidence: `.context/generated-output-review-fixes/m3-main-gate.md`.
+
+- [ ] Commit the six independent TODOs and merge one captured latest main under
+      the user's 2026-10-11 approval. Audit incoming paths and preserve every
+      feature, test, title and assertion, except the approved 62 A display-to-CLI
+      round trip. Keep incoming deletions and current formats. Check two parents,
+      review every remerge path, and audit deletions and test titles. Push, run
+      the complete Blacksmith gate, fix only merge-caused failures and rerun as
+      needed. Tick this merge TODO before the remaining comparison work.
+
 - [ ] Add failing absent-versus-invalid tests before one inventory reader per
       side in `review/assets.ts`, `head_assets.ts` and their full/selected/live
       callers. Base uses its v9 manifest and pinned historical descriptor;

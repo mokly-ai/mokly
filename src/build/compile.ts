@@ -154,7 +154,6 @@ async function compileMeasured(
           ),
         );
   pending.addHtmlMap(outputs);
-  const beforeLinks = new Map(outputs);
   await checkpoint();
   const resolvedLinks = timeSync("html.links", () =>
     resolveDocumentLinks(outputs, registry.entries, config, fragmentViews),
@@ -167,8 +166,7 @@ async function compileMeasured(
       componentViews.set(route, {
         ...view,
         styles: rebaseStyleOwnership(
-          beforeLinks.get(route)!,
-          final,
+          resolvedLinks.edits.get(route)!,
           view.styles,
         ),
       });

@@ -3,6 +3,8 @@ import { parse, type DefaultTreeAdapterMap } from "parse5";
 import type { ComponentRangeRecord, ComponentRangeTarget } from "@mokly/viewer";
 import { canonicalJson, invalidData } from "@mokly/viewer/data";
 
+import { TextOffsetMap, type TextPatch } from "../text_patches.js";
+
 type Node = DefaultTreeAdapterMap["node"];
 export interface RenderedRange {
   record: ComponentRangeRecord;
@@ -17,8 +19,12 @@ const prefix = "mokly-component:";
 export function serializeComponentSentinels(
   html: string,
   boundaries: ReadonlyMap<string, ComponentRangeTarget>,
-): { html: string; ranges: ComponentRangeRecord[] } {
-  const changes: { start: number; end: number; text: string }[] = [];
+): {
+  html: string;
+  ranges: ComponentRangeRecord[];
+  patches: readonly TextPatch[];
+} {
+  const changes: TextPatch[] = [];
   const stack: { token: string; record: ComponentRangeRecord }[] = [];
   const seen = new Set<string>();
   const ranges: ComponentRangeRecord[] = [];
@@ -81,10 +87,9 @@ export function serializeComponentSentinels(
   });
   if (stack.length || seen.size !== boundaries.size)
     invalidData("$render", "missing component sentinel");
-  for (const change of changes.sort((a, b) => b.start - a.start))
-    html = html.slice(0, change.start) + change.text + html.slice(change.end);
+  html = new TextOffsetMap(html).apply(changes);
   validateComponentRanges(html, ranges);
-  return { html, ranges };
+  return { html, ranges, patches: changes };
 }
 
 /** Validate DOM boundaries in the original document's UTF-16 coordinate space. */

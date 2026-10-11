@@ -228,6 +228,6 @@ the whole entry is retired: removing them independently would allow a delayed
 reclaimer to unlink a successor's lock. Unrecognized temporaries without a PID are
 also retained until entry retirement because their owner cannot be checked.
 
-The pending [cache acquisition rule](./mokly-comparison-inventory.md#cache-acquisition-and-discovery)
+The [cache acquisition rule](./mokly-comparison-inventory.md#cache-acquisition-and-discovery)
 recreates an entry directory removed by retention and retries only ENOENT, at
 most three attempts. Existing lock deadlines, cancellation and ownership stay.

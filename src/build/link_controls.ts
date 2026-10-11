@@ -37,6 +37,7 @@ interface Boundary {
 export interface AdaptedLinkControls {
   readonly diagnostics: readonly BuildDiagnostic[];
   readonly html: string;
+  readonly patches?: readonly ControlPatch[];
 }
 
 /** Transform only marked controls, leaving documents without markers untouched. */
@@ -187,7 +188,7 @@ export function adaptLinkControls(
     });
   const result = applyControlPatches(html, patches);
   assertNoChildLinkMarkers(result, route);
-  return { diagnostics, html: result };
+  return { diagnostics, html: result, patches };
 }
 
 function validateAncestors(

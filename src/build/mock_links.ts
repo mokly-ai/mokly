@@ -11,6 +11,7 @@ import {
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { MoklyError } from "../errors.js";
 import type { EntryMove } from "../review/moves/types.js";
+import { TextOffsetMap, type TextPatch } from "../text_patches.js";
 
 import { parseAuthoredLink, resolveAuthoredLink } from "./authored_links.js";
 import {
@@ -49,6 +50,7 @@ interface Replacement extends HtmlSourceLocation {
 export interface RewrittenLogicalLinks {
   content: string;
   records: readonly LogicalReferenceRecord[];
+  patches: readonly TextPatch[];
 }
 
 /** Rewrite complete logical href values while preserving all other HTML bytes. */
@@ -166,9 +168,15 @@ export function rewriteMockLinks(
       "contains base href with an activatable logical link",
     );
   }
+  const patches = replacements.map(({ startOffset, endOffset, value }) => ({
+    start: startOffset,
+    end: endOffset,
+    text: value,
+  }));
   return {
-    content: applyReplacements(html, replacements),
+    content: new TextOffsetMap(html).apply(patches),
     records,
+    patches,
   };
 }
 
@@ -255,16 +263,6 @@ function attributeValueRange(source: string): HtmlSourceLocation | undefined {
     endOffset += 1;
   }
   return endOffset === startOffset ? undefined : { endOffset, startOffset };
-}
-
-function applyReplacements(html: string, replacements: Replacement[]): string {
-  return replacements
-    .sort((left, right) => right.startOffset - left.startOffset)
-    .reduce(
-      (content, replacement) =>
-        `${content.slice(0, replacement.startOffset)}${replacement.value}${content.slice(replacement.endOffset)}`,
-      html,
-    );
 }
 
 function invalid(route: string, message: string): MoklyError {

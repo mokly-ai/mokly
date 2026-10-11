@@ -31,11 +31,8 @@ export async function discoverHistoricalCatalogue(
     request.commit,
     request.signal,
   );
-  if (preferred) {
-    if ("incompatible" in preferred) throw incompatibleEarlierBaseline();
-    return preferred;
-  }
-  const candidates: CatalogueProbe[] = [];
+  if (preferred && !("incompatible" in preferred)) return preferred;
+  const candidates: CatalogueProbe[] = preferred ? [preferred] : [];
   const pending = [extraction];
   let visited = 1;
   while (pending.length) {
@@ -74,8 +71,13 @@ export async function discoverHistoricalCatalogue(
         pending.push(path.join(directory, name));
     }
   }
-  if (candidates.length !== 1) {
-    const names = candidates
+  const current = candidates.filter(
+    (candidate): candidate is HistoricalCatalogue =>
+      !("incompatible" in candidate),
+  );
+  const eligible = current.length ? current : candidates;
+  if (eligible.length !== 1) {
+    const names = eligible
       .map((candidate) =>
         "incompatible" in candidate
           ? `${candidate.root} (incompatible-earlier)`
@@ -87,7 +89,7 @@ export async function discoverHistoricalCatalogue(
       `No unique historical catalogue after baseline build; candidates: ${names.join(", ") || "(none)"}.`,
     );
   }
-  const selected = candidates[0]!;
+  const selected = eligible[0]!;
   if ("incompatible" in selected) throw incompatibleEarlierBaseline();
   return selected;
 }

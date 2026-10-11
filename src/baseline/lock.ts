@@ -3,6 +3,7 @@ import {
   LOCK_TIMEOUT_MS,
   type CacheLayout,
 } from "./cache_layout.js";
+import { ensureBaselineDirectory } from "./confinement.js";
 import { assertBaselineActive, BaselineError } from "./errors.js";
 import type {
   BaselineClock,
@@ -43,9 +44,22 @@ export async function acquireBaselineLock(
   timeoutMs = LOCK_TIMEOUT_MS,
 ): Promise<BaselineLock> {
   const startedAt = clock.now();
+  let missingAttempts = 0;
   while (true) {
     assertBaselineActive(signal);
-    const lock = await tryBaselineLock(fs, runner, clock, layout);
+    let lock: BaselineLock | undefined;
+    try {
+      await ensureBaselineDirectory(fs, layout.root, layout.entry, signal);
+      assertBaselineActive(signal);
+      lock = await tryBaselineLock(fs, runner, clock, layout);
+    } catch (error) {
+      if (
+        (error as NodeJS.ErrnoException).code !== "ENOENT" ||
+        ++missingAttempts >= 3
+      )
+        throw error;
+      continue;
+    }
     if (lock) return lock;
     const stat = await fs.stat(layout.lock);
     if (stat) {

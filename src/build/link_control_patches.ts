@@ -1,16 +1,14 @@
 /** Source-preserving HTML patches and static focus styling for child links. */
 
+import { TextOffsetMap, type TextPatch } from "../text_patches.js";
+
 import {
   CONTROL_MARKER,
   controlError,
   type ControlElement,
 } from "./link_control_nodes.js";
 
-export interface ControlPatch {
-  end: number;
-  start: number;
-  text: string;
-}
+export type ControlPatch = TextPatch;
 
 export const CONTROL_STYLES =
   `<style ${CONTROL_MARKER}-styles="">` +
@@ -40,14 +38,7 @@ export function applyControlPatches(
   html: string,
   patches: readonly ControlPatch[],
 ): string {
-  let output = html;
-  for (const patch of [...patches].sort(
-    (left, right) => right.start - left.start,
-  )) {
-    output =
-      output.slice(0, patch.start) + patch.text + output.slice(patch.end);
-  }
-  return output;
+  return new TextOffsetMap(html).apply(patches);
 }
 
 /** Replace only the control's tags; preserve all applicable original attributes. */

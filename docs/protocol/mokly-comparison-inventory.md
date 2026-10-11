@@ -2,7 +2,8 @@
 
 ## Delivery Status
 
-This is the approved target in
+Cache acquisition, discovery and post-render offset mapping are implemented.
+Per-side readers remain an approved target in
 [Generated Output Review Fixes](../../plans/generated-output-review-fixes.md).
 The [v9 baseline contract](./mokly-baseline-addressing.md) owns historical roots.
 

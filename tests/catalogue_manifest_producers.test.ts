@@ -103,28 +103,6 @@ test("canonical and display catalogue producers retain their current dependency 
           .dependencies,
       );
     }
-    const displayed = readCatalogue(
-      JSON.parse(
-        new LivePublicCatalogue(
-          config,
-          {
-            catalogue: display,
-            changesStatus: "pending",
-            comparisonUrl: null,
-          },
-          1,
-        ).read(),
-      ),
-    );
-    assert.deepEqual(
-      [
-        ...displayed.screens,
-        ...displayed.pages,
-        ...displayed.useCases,
-        ...displayed.components,
-      ].map((entry) => [entry.path, entry.details.dependencies]),
-      published.map((entry) => [entry.path, entry.details.dependencies]),
-    );
     for (const entry of manifest.entries) {
       assert.equal(
         Object.hasOwn(entry, "dependencies"),

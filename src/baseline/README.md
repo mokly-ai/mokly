@@ -83,8 +83,10 @@ maintenance failures and continues with other eligible entries. The maintenance
 reporter receives each entry and original error without adding failure events
 to a successful build. Its `report(failure)` method must not
 throw; the stderr implementation tolerates a closed diagnostic stream.
-Rebuild discovery prefers the requested root, then searches the bounded
-extraction for exactly one valid manifest; details and reader path mapping
+Rebuild discovery prefers a valid v9 requested root, then searches the bounded
+extraction for exactly one v9 catalogue. Stale earlier envelopes do not compete
+with a current candidate; with no v9 output, the existing earlier/ambiguity
+outcomes stay. Details and reader path mapping
 are in [baseline addressing](../../docs/protocol/mokly-baseline-addressing.md).
 `inputs.json` records the requested current repository-relative catalogue
 path; version-2 completion markers record v9, `generated-v9`, the discovered root
@@ -116,6 +118,12 @@ All builder calls acquire the lock before reuse. They sweep discarded output
 and regular `complete-<uuid>.tmp` files, plus dead-owner temporary lock files,
 including on cache hits. Tombstones and unrecognized temporaries without owner
 identity remain until entry retirement.
+
+`acquireBaselineLock` recreates the entry through the confined directory helper
+before publication. If retention removes it in between, only ENOENT retries,
+at most three failed publication attempts. Cancellation is checked each time.
+It does not recreate missing cache ancestors or change contention deadlines;
+`tryBaselineLock` keeps cleanup's nonwaiting ownership boundary.
 
 `archive.ts` uses the tar parser without its filesystem extractor, validates all
 paths and symlink chains before writing, and rejects hard links, device files,
@@ -172,7 +180,7 @@ The Windows fixture detaches its descendant from Node's automatic
 kill-child-on-parent-exit relationship. It must still belong to Mokly's enclosing
 job; otherwise the fixture would exit automatically before testing cancellation.
 
-The approved [cache and moved-root rules](../../docs/protocol/mokly-comparison-inventory.md#cache-acquisition-and-discovery)
+The [cache and moved-root rules](../../docs/protocol/mokly-comparison-inventory.md#cache-acquisition-and-discovery)
 cover retention racing lock acquisition and one v9 catalogue beside stale older
 files. No earlier-format content reader or cached incompatibility is added.
 

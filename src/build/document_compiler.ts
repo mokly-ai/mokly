@@ -245,7 +245,6 @@ export class DocumentCompiler {
         ...(this.links.policy ? { policy: this.links.policy } : {}),
       },
     );
-    const original = outputs.get(route)!;
     const resolvedLinks = resolveDocumentLinks(
       outputs,
       this.entries,
@@ -261,7 +260,10 @@ export class DocumentCompiler {
     const view = captured
       ? {
           ...captured,
-          styles: rebaseStyleOwnership(original, html, captured.styles),
+          styles: rebaseStyleOwnership(
+            resolvedLinks.edits.get(route)!,
+            captured.styles,
+          ),
         }
       : undefined;
     if (view) {

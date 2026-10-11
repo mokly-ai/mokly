@@ -102,6 +102,13 @@ and adopting an unrelated component alone do not invent a visible screen change.
 Compatible v9 baselines preserve each document's UTF-16 coordinates when
 applying recorded style ownership.
 
+`style_ownership.ts` authenticates each source range inside its style element,
+then maps it through the exact UTF-16 patches in `text_patches.ts`. Review and
+component sentinel conversion, generated-prefix insertion, child-link adaptation
+and logical-link rewriting report their edits. The final range must still name
+the same preserved CSS. Equal CSS text in another style, including a new package
+head style, cannot acquire the component's ownership.
+
 Comparison projection can expose caller-owned slot material that HTML parsing
 discarded from contexts such as `template` or `select`. Removing component
 implementation text can likewise expose a sibling hidden by its unclosed HTML. The review shortcut

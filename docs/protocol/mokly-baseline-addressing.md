@@ -39,9 +39,9 @@ After the base's own commands finish successfully and before adopting output:
 1. Inspect `mokly-generated/mokly-manifest.json` at the requested root, then
    root-level `mokly-manifest.json` solely for the version check. The first
    existing file is authoritative. A valid v9 generated child selects that root.
-   Earlier output immediately returns `baseline-incompatible-earlier`.
+   An earlier envelope remains a candidate while discovery searches for v9.
    Malformed/nonregular/newer output or v9 at the flat location fails
-   `baseline-output-invalid`. Only an absent requested catalogue starts a search.
+   `baseline-output-invalid`. An absent or earlier requested catalogue starts a search.
 2. Walk the extraction in UTF-16 code-unit order. Exclude `.git`, `.mokly-cache`
    and `node_modules` at every depth. Never follow symlinks. Keep confined
    `lstat`, bounded manifest reads and the 65,536-entry traversal limit.
@@ -50,19 +50,19 @@ After the base's own commands finish successfully and before adopting output:
    earlier envelopes as candidates. A malformed/newer preferred file makes that
    directory ineligible; do not try another manifest in it. Do not count a
    generated child again as a flat catalogue when its manifest belongs to its parent.
-4. Require exactly one candidate across both classifications. Zero or several
+4. Count valid v9 candidates separately. One v9 candidate wins over any earlier
+   envelopes. If no v9 candidate exists, count the earlier envelopes. Zero or several
    fail with `No unique historical catalogue after baseline build; candidates: <list>.`
    Use `(none)` for zero; otherwise sort `<root> (generated-v9)` or
    `<root> (incompatible-earlier)` by root/classification and join with comma-space.
-   Current discovery therefore still treats a v9 match plus an earlier match as
-   ambiguous. The pending precedence change below is not implemented yet.
+   The diagnostic lists the eligible classification only.
 5. A sole earlier candidate returns the typed earlier-baseline outcome without
    harvesting content or creating a descriptor. A sole v9 candidate selects its
    historical root and must pass complete generated-file and byte-hash verification.
    Missing/stale rebuilt output fails `baseline-output-invalid`; a no-op recipe
    cannot repair a bad inventory.
 
-A moved v9 root therefore remains usable: when the requested root is empty,
+A moved v9 root therefore remains usable: when the requested root is empty or earlier,
 the bounded search can find the one v9 generated child elsewhere. A rebuilt
 old flat catalogue may be recognized only to report incompatibility, never as
 an alternative content layout. Malformed data never becomes the graceful
@@ -111,7 +111,7 @@ CSS attribution and export/publication capture consume this same v9 descriptor.
 Snapshot publication retains its generation-local URLs; these are not a second
 baseline storage layout. Earlier output supplies no snapshot or removed entry.
 
-The pending [comparison inventory rules](./mokly-comparison-inventory.md)
+The [comparison inventory rules](./mokly-comparison-inventory.md)
 refine moved-root selection: one valid v9 candidate wins over stale earlier
 candidates. Multiple v9 candidates remain an error. With no v9 result, retain
 the existing earlier-envelope/ambiguity outcomes and never cache incompatibility.
