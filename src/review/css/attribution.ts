@@ -60,6 +60,12 @@ export class CssAttribution {
   }
 
   freeze(): void {
+    const keys = new Map(this.all.map((rule) => [rule, canonicalJson(rule)]));
+    this.all.sort((left, right) => {
+      const a = keys.get(left)!;
+      const b = keys.get(right)!;
+      return a < b ? -1 : a > b ? 1 : 0;
+    });
     this.changed.clear();
     for (const rule of this.all) {
       if (!rule.ruleKey) continue;

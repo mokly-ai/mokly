@@ -134,3 +134,6 @@ CSS evidence.
 `attribution.ts` freezes derived component ids, selector text and numeric range
 records. It retains no parse5 nodes or documents, so completed view trees can
 be collected while CSS membership proof remains available.
+Freezing orders the collected records by their complete canonical content.
+Concurrent view completion cannot change frozen proof order. This retains
+every record, duplicate and original-page coordinate; it changes no membership.
