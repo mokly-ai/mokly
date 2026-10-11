@@ -36,7 +36,10 @@ for (const baseline of earlierBaselines) {
         fixture.config,
         { base: "origin/main", port: 0, watch },
         {
-          reporter: new PlainServeReporter((line) => messages.push(line)),
+          reporter: new PlainServeReporter(
+            (line) => messages.push(line),
+            (line) => messages.push(line),
+          ),
         },
       );
       fixture.beforeRemove(() => running.close());

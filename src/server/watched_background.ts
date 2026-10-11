@@ -33,6 +33,7 @@ interface WatchedBackgroundOptions {
 export class WatchedBackground {
   private readonly generation: BackgroundGeneration;
   private activeCompilation: Compilation | undefined;
+  private compiledManifest: Compilation["manifest"] | undefined;
   private generationStartedAt = Date.now();
   private changesStartedAt = this.generationStartedAt;
   private baselineStartedAt = this.generationStartedAt;
@@ -42,7 +43,7 @@ export class WatchedBackground {
     this.generation = new BackgroundGeneration(
       options.outputStore,
       options.classifier,
-      (compilation, accepted) => {
+      (compilation, accepted, compiledManifest) => {
         this.changesStartedAt = Date.now();
         if (this.reportCatalogue)
           reportCatalogueReady(
@@ -53,8 +54,10 @@ export class WatchedBackground {
             accepted.warningGeneration,
           );
         this.activeCompilation = compilation;
+        if (this.reportCatalogue || !this.compiledManifest)
+          this.compiledManifest = compiledManifest;
         options.running.completeCatalogue?.(
-          compilation.manifest,
+          this.compiledManifest,
           accepted.generation,
           [...options.resources.closure],
         );
@@ -140,6 +143,7 @@ export class WatchedBackground {
 
   clearCompilation(): void {
     this.activeCompilation = undefined;
+    this.compiledManifest = undefined;
   }
 
   foreground(active: boolean): void {

@@ -84,6 +84,7 @@ export class BackgroundGeneration {
     private readonly completed: (
       compilation: Compilation,
       runtime: ComponentRuntime,
+      compiledManifest: Compilation["manifest"],
     ) => void,
     private readonly classified: (
       snapshot: ComponentChangeSnapshot | undefined,
@@ -125,6 +126,7 @@ export class BackgroundGeneration {
       let prepared: PreparedResourceWatch | undefined;
       try {
         let compilation = await worker.compilation;
+        const compiledManifest = compilation.manifest;
         if (!current()) return;
         prepared = await this.options.resources?.prepare(
           runtime.config,
@@ -169,7 +171,7 @@ export class BackgroundGeneration {
         }
         if (!current()) return;
         prepared?.adopt();
-        this.completed(compilation, runtime);
+        this.completed(compilation, runtime, compiledManifest);
         const baseline =
           this.classifier instanceof RepositoryCatalogueChangeClassifier
             ? await this.baseline.prepare(

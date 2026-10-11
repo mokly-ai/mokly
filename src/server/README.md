@@ -330,7 +330,10 @@ initial edits and retains old watches through candidate replacement.
 `resource_compilation.ts` refreshes accepted manifest closure membership without
 mutating the prior compilation. An authored stylesheet reload can write the
 refreshed manifest in `serve --build`; evidence-only work and plain Serve never
-write. Workers retain the same checked route set.
+write. Workers retain the same checked route set. The parent keeps the original
+full-compilation manifest for completion metadata and sends the current checked
+closure separately. The refreshed compilation supplies comparisons and writes;
+a resource reload does not replace the child message's source manifest.
 
 `watch_resources.ts` uses Build's closure builder. Invalid recovery edges can
 keep a confined path observable but cannot grant HTTP access. The resource
