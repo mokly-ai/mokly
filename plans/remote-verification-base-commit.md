@@ -531,7 +531,7 @@ Evidence: `.context/remote-verification-base-commit/milestone6.md`.
   - Finding 8 (Low): file/directory type changes since the base break the snapshot fingerprint (`unsupported file type` or `ENOTDIR`), so remote preparation fails and `auto` falls back to local. Recommend A: skip cached paths that are now directories, treat `ENOTDIR` like `ENOENT`, keep untracked-directory rejection and add type-change tests.
   - Finding 9 (Low): the real-Git staging regression has no ignore rules. Recommend A: add a `.gitignore` and one ignored file to the fixture base, and assert the exact `git ls-files --cached` list.
 
-## Milestone 7: Fingerprint type changes (review finding 8)
+## Milestone 7: Fingerprint type changes (review finding 8) — completed
 
 The fingerprint follows Git's working-tree view across type changes and
 still rejects nested repositories and worktrees.
@@ -566,7 +566,7 @@ Evidence: `.context/remote-verification-base-commit/finding8.md`.
       and unchanged checkout config.
 - [x] After the checks and spike pass, commit the close-out with Conventional
       Commits and push. Keep all evidence ignored.
-- [ ] After the push, a reviewer uses
+- [x] After the push, a reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and reports the
       findings. Keep the review read-only. The implementer then applies the
