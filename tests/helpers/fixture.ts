@@ -44,7 +44,7 @@ export default defineConfig({
   roots: [{ dir: "entries" }],
   mockupsDir: "mockups",
   repoRoot: ".",
-${options?.extraConfig ? `  ${options.extraConfig}\n` : ""}  review: { outDir: ".review", sharedImpact: ["notes.md"] }
+${options?.extraConfig ? `  ${options.extraConfig}\n` : ""}  review: { outDir: ".review" }
 });
 `,
   );
@@ -107,7 +107,7 @@ export async function registerFixturePage(
     .join("/");
   await fs.promises.appendFile(
     fixture.entryPath,
-    `\nimport { definePage as definePage_${suffix} } from "@mokly/mokly";\nimport { ${exportName} as render_${suffix} } from ${JSON.stringify(imported.startsWith(".") ? imported : `./${imported}`)};\nmockups.push(definePage_${suffix}({ path: ${JSON.stringify(id)}, title: ${JSON.stringify(id)}, description: "Complete fixture document", dependencies: [], relatedDocs: [], render: render_${suffix} }));\n`,
+    `\nimport { definePage as definePage_${suffix} } from "@mokly/mokly";\nimport { ${exportName} as render_${suffix} } from ${JSON.stringify(imported.startsWith(".") ? imported : `./${imported}`)};\nmockups.push(definePage_${suffix}({ path: ${JSON.stringify(id)}, title: ${JSON.stringify(id)}, description: "Complete fixture document", relatedDocs: [], render: render_${suffix} }));\n`,
   );
 }
 
@@ -169,7 +169,7 @@ function fixtureEntrySource(
   const firstTitle = options.firstTitle ?? "Home";
   return `import { defineScreen, defineUseCase${folders.length ? ", defineFolder" : ""} } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"] };
+const metadata = { relatedDocs: ["notes.md"] };
 export const mockups = [
   defineScreen({ ...metadata, description: "Home screen", desktop: <main id="home">${body}</main>, path: "${addresses.home}", mobile: <main id="home-mobile">${body}</main>, title: ${JSON.stringify(firstTitle)}, useCasePaths: ["${addresses.tour}"] }),
   defineScreen({ ...metadata, description: "Detail screen", desktop: <main id="details">Detail</main>, path: "${addresses.details}", mobile: <main id="details-mobile">Detail</main>, title: "Details", useCasePaths: ["${addresses.tour}"] }),

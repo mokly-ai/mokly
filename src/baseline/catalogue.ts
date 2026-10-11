@@ -7,7 +7,7 @@ import { BaselineError } from "./errors.js";
 /** Pinned location and addressing layout for one historical catalogue. */
 export interface BaselineCatalogue {
   readonly commit: string;
-  readonly layout: "generated-v9";
+  readonly layout: "generated-v10";
   readonly catalogueRoot: string;
   readonly generatedRoot: string;
 }
@@ -15,7 +15,7 @@ export interface BaselineCatalogue {
 export function baselineCatalogue(
   commit: string,
   catalogueRoot: string,
-  layout: BaselineCatalogue["layout"] = "generated-v9",
+  layout: BaselineCatalogue["layout"] = "generated-v10",
 ): BaselineCatalogue {
   if (catalogueRoot !== "." && !isSafeRepositoryPath(catalogueRoot))
     throw new BaselineError(
@@ -43,7 +43,7 @@ export function parseBaselineCatalogue(
   const record = value as Partial<BaselineCatalogue>;
   if (
     record.commit !== commit ||
-    record.layout !== "generated-v9" ||
+    record.layout !== "generated-v10" ||
     typeof record.catalogueRoot !== "string" ||
     typeof record.generatedRoot !== "string"
   )

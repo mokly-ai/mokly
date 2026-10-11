@@ -104,8 +104,6 @@ export const SHELL_WORKSPACE_CSS = `
 .mbk-control-actions p { margin: 0 auto 0 0; color: var(--chrome-muted); }
 @media (max-width: 56.25rem) {
   .mbk-workspace .mbk-screen-head { gap: 8px; padding: 12px; }
-  .mbk-workspace .mbk-title-row { gap: 6px; flex-wrap: wrap; }
-  .mbk-workspace .mbk-title-row h2 { font-size: 17px; }
   .mbk-selection-bar { padding: 8px 12px; }
   .mbk-workspace-panes { padding-bottom: 46px; }
   .mbk-inspector { position: absolute; left: 8px; right: 8px; bottom: 0; border: 1px solid var(--chrome-border); border-bottom: 0; border-radius: 14px 14px 0 0; padding-bottom: env(safe-area-inset-bottom); box-shadow: var(--chrome-shadow-sheet); }

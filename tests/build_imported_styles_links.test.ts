@@ -137,7 +137,7 @@ test("each exporting entry links its own CSS while a page receives no automatic 
   await fs.writeFile(
     path.join(fixture.entriesDir, "second.mockup.tsx"),
     `import "./second.css"; import React from "react"; import { defineScreen, definePage } from "@mokly/mokly";
-    export const mockups = [defineScreen({ path: "second", title: "Second", description: "Second screen", dependencies: [], relatedDocs: [], mobile: <p>Second</p>, desktop: <p>Second</p>, useCasePaths: [] }), definePage({ path: "paper", title: "Paper", description: "A page", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><head></head><body>Paper</body></html>" })];`,
+    export const mockups = [defineScreen({ path: "second", title: "Second", description: "Second screen", relatedDocs: [], mobile: <p>Second</p>, desktop: <p>Second</p>, useCasePaths: [] }), definePage({ path: "paper", title: "Paper", description: "A page", relatedDocs: [], render: () => "<!doctype html><html><head></head><body>Paper</body></html>" })];`,
   );
   const compiled = await compileCatalogue(await loadConfig(fixture.root));
   assert.deepEqual(

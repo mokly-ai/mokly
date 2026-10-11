@@ -2,14 +2,19 @@
 
 ## Delivery Status
 
-The active [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
+The [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
 defines this approved target. Explicit remote execution, the scripts and the
 Testbox workflow are implemented. Automatic remote selection and
 `cargo xtask executor` are implemented. The complete automatic smoke check passes.
 The approved idle timeout is 30 minutes. Per-box cleanup and diagnostics are
 implemented. The complete explicit remote smoke check passes.
 The [Testbox execution contract](./remote-verification-testbox.md) defines the
-workflow, commands, probe, suite wrapper and source-tree fingerprint.
+workflow, commands, probe, suite wrapper, source-tree fingerprint, report
+download and aggregation.
+The [cleanup contract](./remote-verification-cleanup.md) is fully implemented.
+It closes the shared SSH connection, cancels a known run once before stop and
+keeps one bounded diagnostic line for cleanup command failures.
+The complete default remote smoke check passes with prompt shutdown.
 
 ## Executor Selection
 
@@ -45,7 +50,8 @@ git for-each-ref --contains HEAD --format=%(refname) refs/remotes/origin/
 
 Detect `blacksmith`, `rsync` and `ssh` by searching `PATH` for an executable
 file. Do not run those programs to detect them. Run `blacksmith --version`
-only after finding the CLI. Name each missing program in the diagnostic.
+only after finding the CLI. Look up all three programs in that order.
+Name every missing program in one diagnostic, with its install hint.
 For a missing CLI, print:
 
 ```bash
@@ -123,13 +129,20 @@ Run all local and CLI operations from the workspace root.
    all probes pass.
 5. When a command ends, download its report if it produces one.
    Collect available failure reports as well as success reports.
-   Clean up that box at once. Do not wait for another command.
+   Clean up that box at once under the
+   [per-box order](./remote-verification-cleanup.md#per-box-order): close the
+   shared SSH connection, cancel the known GitHub run, then apply status and
+   stop rules. Do not wait for another command.
 6. After all commands end, clean up boxes that are not yet stopped.
 7. Run the local report aggregate with local `HEAD` and `node-22.14.0`.
 8. Compute the local fingerprint again. Fail if the source tree changed.
 
 A successful check requires all 11 commands to exit 0. It also requires all
 nine downloads, a valid aggregate and an unchanged local source tree.
+After the first suite command starts, a box that is neither stopped nor proven
+completed after all cleanup attempts does not fail the check. The
+[cleanup contract](./remote-verification-cleanup.md#cleanup-and-interrupts)
+defines its warning. A stop that succeeds on a retry does not fail the check.
 Preparation, discovery, missing reports and invalid reports cannot produce
 success. Never substitute local suite results after remote execution starts.
 
@@ -141,68 +154,8 @@ blacksmith testbox warmup blacksmith-testbox.yml --ref main --idle-timeout 30
 
 ## Report Download And Aggregation
 
-The suite wrapper writes each report on its box to
-`.context/verification-reports/remote/<command>.json`.
-Only unit shards 1 through 4, browser shards 1 through 4 and hydration produce
-the nine required reports. Repository and package outcomes use command exits.
-
-Allocate a new local report directory for each run:
-`.context/verification-reports/remote/<run>/`.
-The `<run>` value is UTC time in `YYYYMMDDTHHMMSSZ` format, a hyphen and the
-xtask process ID in decimal. For example, `20261006T134131Z-1234`.
-Compute it once at run start. Report and log directories use the same value.
-Download each report there under its command name. Do not use reports from
-another run. A missing or failed download fails remote verification.
-Download each report as its command ends, before stopping that box.
-
-Use the CLI download command for each required report:
-
-```bash
-blacksmith testbox download --id <box-id> .context/verification-reports/remote/<command>.json .context/verification-reports/remote/<run>/<command>.json
-```
-
-Run the existing aggregate after box cleanup:
-
-```bash
-node scripts/verification/aggregate.mjs --reports .context/verification-reports/remote/<run> --commit <local-head> --runtimes node-22.14.0
-```
-
-The [existing evidence rules](./ci-verification.md#inventory-and-report-evidence)
-still apply. Keep the report schema unchanged. The aggregate must accept
-exactly nine reports for the expected commit and runtime profile.
-It must prove complete shard coverage and the browser/hydration partition.
-The box `HEAD` must equal local `HEAD`, so the commit checks stay valid.
-The fingerprint covers uncommitted source changes without changing report
-identity. The final local fingerprint check rejects changes made during the run.
-
-## Cleanup And Interrupts
-
-Stop every warmed box on success, failure, Ctrl-C and SIGTERM.
-Track boxes as warmup requests complete. Cleanup must also cover boxes created
-during an interrupted or failed warmup. Stop launching suite commands after
-an interrupt. Attempt cleanup for all boxes even if one cleanup call fails.
-Report cleanup failures. An interrupted check cannot pass or start local fallback.
-Track successful stops and already-completed boxes. Final cleanup processes
-only the remaining boxes. A failed stop stays eligible for final cleanup.
-One cleanup guard tracks every warmed box that is not yet stopped or proven
-completed. When a panic unwinds the runner, the guard stops those remaining
-boxes with the normal cleanup rules. The guard never panics itself.
-The guard does no cleanup on a normal return.
-
-Before stopping each box, run `blacksmith testbox status --id <box-id>`.
-Split table lines on ASCII whitespace. Find the header whose first column is
-`ID`. Read the column named `STATUS`. Require exactly one row whose first
-column is the box ID. If that row's status is exactly `completed`, skip both
-stop and cancellation. Count no cleanup failure for that box.
-Missing, ambiguous or incomplete table data does not prove completion.
-A failed status read still requires a stop attempt.
-Read its GitHub run ID from the first `/actions/runs/<digits>` match.
-If there is no match, print a warning and skip cancellation for that box.
-Then run `blacksmith testbox stop --id <box-id>`.
-Use `gh run cancel <github-run-id>` when an ID and `gh` are available.
-The 30-minute idle timeout and 30-minute workflow
-timeout limit cost if the local process is killed before cleanup.
-Do not reuse boxes between checks.
+Use the [Testbox report contract](./remote-verification-testbox.md#report-download-and-aggregation)
+for the nine downloads, fresh run directories and local aggregate.
 
 ## Output And Logs
 
@@ -219,7 +172,18 @@ On aggregate or fingerprint read failure, print a warning first.
 Then print that command's captured stdout and stderr with the executor prefix.
 Describe command termination as `exit <code>` or `a signal`.
 Use `[xtask/check]` for the outer error wrapper.
+One function formats every warning line that embeds an error.
+An embedded error keeps the `[xtask/<module>]` prefix of its defining module.
+Errors defined in `xtask/src/remote/error.rs` use `[xtask/remote]`.
+Reporter lines keep `[xtask/executor]`. No output line repeats a prefix.
 Apply the key secrecy rule to diagnostics and captured output.
+Cleanup warnings follow the
+[command error-text rule](./remote-verification-cleanup.md#command-error-text).
+They keep one redacted diagnostic line of at most 200 characters in the typed
+error. A failed close warns once and does not fail the check by itself.
+A missing control directory or socket prints
+`information: no shared SSH connection for <box-id>` once.
+A socket that disappears during a failed close prints no close output.
 
 ## Out Of Scope
 
@@ -235,5 +199,6 @@ Apply the key secrecy rule to diagnostics and captured output.
 
 - [Protocol index](./README.md)
 - [Testbox execution](./remote-verification-testbox.md)
+- [Cleanup and interrupts](./remote-verification-cleanup.md)
 - [CI workflow graph](./ci-workflow.md)
 - [CI and npm release](./npm-release.md)

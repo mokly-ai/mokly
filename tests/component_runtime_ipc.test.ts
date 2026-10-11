@@ -24,7 +24,7 @@ function startup(generatedDir: unknown): object {
     manifest: currentManifest({
       entries: [],
       folders: [],
-      schemaVersion: 9,
+      schemaVersion: 10,
       sourceFiles: [],
     }),
   };
@@ -49,3 +49,20 @@ for (const [label, value] of [
     assert.equal(config.generatedDir, "/repo/mockups/mokly-generated");
   });
 }
+
+test("runtime startup keeps a safe checked list and ignores an unsafe one", async () => {
+  const listed = receiveComponentRuntimeStartup();
+  process.emit("message", {
+    ...startup("/repo/mockups/mokly-generated"),
+    assetClosure: ["guide.html", "spec.pdf"],
+  });
+  assert.deepEqual((await listed).assetClosure, ["guide.html", "spec.pdf"]);
+  for (const assetClosure of [["../secret.pdf"], [7], "spec.pdf"]) {
+    const ignored = receiveComponentRuntimeStartup();
+    process.emit("message", {
+      ...startup("/repo/mockups/mokly-generated"),
+      assetClosure,
+    });
+    assert.equal(Object.hasOwn(await ignored, "assetClosure"), false);
+  }
+});

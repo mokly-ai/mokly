@@ -1,7 +1,7 @@
 # Mokly Build And Browse Runtime
 
 [Whole-document pages](./mokly-pages.md) share the same path-derived folder
-hierarchy as screens and flows. Current and baseline output use manifest v9
+hierarchy as screens and flows. Current and baseline output use manifest v10
 under the [compatibility contract](./mokly-baseline-compatibility.md).
 
 ## Source Of Truth
@@ -23,21 +23,10 @@ Canonical outer navigation from links inside fragment frames, request-visible
 fragment transport, manifest-bound preview adaptation, and active-tree
 disclosure are implemented. Their delivery history is recorded in the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
-Path identity, manifest v9, Markdown documents, and move detection are
+Path identity, manifest v10, Markdown documents, and move detection are
 implemented.
 
-Browse is a first-party host of [`@mokly/viewer`](./mokly-viewer.md). The
-public catalogue, optional frame transport, and package extraction are
-implemented as recorded in the
-[viewer library plan](../../plans/mokly-viewer-library.md). The
-[React Browse shell plan](../../plans/react-browse-shell.md) delivers one React
-tree shared by standalone Serve, static export and embedded hosts. Standalone
-documents render the complete shell on the server and hydrate it in the browser;
-embedded hosts mount the same components with host-owned selection and slots.
-Consumer frames and viewer-owned [comparison panes](./mokly-comparison-panes.md) remain static, script-disabled HTML.
-Selecting a removed page or screen captures and renders its pinned previous
-version in that shared tree through the lifecycle implemented by the
-[removed content previews plan](../../plans/removed-content-previews.md).
+This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 
 ## Component Workspaces
 
@@ -66,7 +55,7 @@ Changes. Screen-owned prop and slot changes still count as screen changes.
 4. Render screen views, whole-document pages, and Markdown documents in
    deterministic order.
 5. Resolve path links and validate document links and anchors.
-6. Build the version 9 manifest, asset closure, generated-file inventory and
+6. Build the version 10 manifest, asset closure, generated-file inventory and
    resolved source inventory; validate closure and hrefs from `mokly-generated/`.
 7. Stage the entire `mokly-generated/` tree before changing the last-good output.
 8. Replace that tree transactionally; restore it on failure.
@@ -99,7 +88,7 @@ fails for:
   or moved link targets, missing use-case screens, or reciprocal memberships;
 - unresolved `mock:` links, raw document links, local HTML/CSS resources, or
   anchors;
-- missing stylesheets and declared dependencies;
+- missing configured or component-declared public stylesheets;
 - invalid `colorSchemes` config, per-screen `colorSchemes` declarations, or
   color-scheme subsets unsupported by the catalogue config;
 - missing `lightStylesheets` / `darkStylesheets` files, or a stylesheet path one
@@ -125,7 +114,7 @@ static delivery metadata, and lazy immutable comparisons are defined by
 No server or watcher is started for export; served behavior below is unchanged.
 
 Serve validates its distinct live catalogue index and independently resolves both
-source graphs before binding. Full-manifest consumers still require validated v9
+source graphs before binding. Full-manifest consumers still require validated v10
 output and a current source inventory. These scans never render pages or rewrite
 output. The [on-demand contract](./mokly-on-demand.md) defines completeness,
 worker isolation and generation-local caches. Browse exposes:
@@ -172,10 +161,10 @@ backslash separators introduced by decoding one original URL segment before
 any filesystem resolution.
 
 Browse projects one [catalogue tree](./mokly-catalogue.md#tree) from validated
-manifest v9 paths and folder records and splits it into the Components and
+manifest v10 paths and folder records and splits it into the Components and
 Specs sections. The serve-mode `live-index-2` retains that literal
-`schemaVersion` but carries the v9 entry shape and folder records (with
-unrendered usage metadata omitted), validated through the v9 metadata schema.
+`schemaVersion` but carries the v10 entry shape and folder records (with
+unrendered usage metadata omitted), validated through the v10 metadata schema.
 
 ## Browse Shell
 
@@ -225,14 +214,14 @@ All remains available throughout; a completed empty result shows zero. See the
 [on-demand lifecycle](./mokly-on-demand.md).
 Route attribution compares each current manifest entry with its base entry and
 matches material fragment changes and changes to rendered local resources.
-Component membership follows [component attribution](./mokly-component-changes.md#dependencies-and-styles).
+Component membership follows [component attribution](./mokly-component-changes.md#rendered-resources-and-styles).
 Screen-only catalogues follow [Changes membership](./mokly-changes.md#changes-membership).
 Entry comparison projects reviewable metadata; a title or description
 difference marks the entry changed under the
 [Changes rule](./mokly-changes.md#changes-membership), while a changed path is
 a move the [move contract](./mokly-moves.md) pairs with its baseline entry.
 The projection excludes source locations and dependency declarations; changes
-to those implementation details remain secondary comparison evidence. Fragment
+to those implementation details never supply comparison evidence. Fragment
 comparison applies the same paired ignore rules and material keys as screen
 comparisons. Ignored-only edits stay out of Changes. Referenced CSS, images,
 fonts, and transitive local resources remain eligible even when HTML bytes are
@@ -248,7 +237,7 @@ device frames. A use case renders ordered steps that reference those same
 fragments and link back to their standalone screens. A page or Markdown document embeds its complete generated document without viewport or comparison
 controls. The details inspector may show description, rationale,
 source and fragment paths including dark renders, the schemes a screen renders
-in, the tags the entry declares, related docs, dependencies, use cases, and
+in, the tags the entry declares, related docs, use cases, and
 comparison context.
 Default Browse fragments and document pages are sandboxed without script permission
 so they cannot alter the same-origin Browse shell. Package-owned same-origin
@@ -425,7 +414,7 @@ There is no Review section or standalone comparison CLI command.
 
 Unit, integration, packed-consumer, and browser checks cover build/check,
 route safety, navigation, history/focus, color schemes, watch recovery, shutdown,
-and on-demand comparison with shared impact and ignored-region classification.
+and on-demand comparison with rendered-resource and ignored-region classification.
 
 ## Related Docs
 

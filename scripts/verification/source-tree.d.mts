@@ -25,6 +25,9 @@ export function fingerprintRecords(
 /** Read the tracked and non-ignored working tree from its repository root. */
 export function readSourceTree(cwd: string): Promise<string>;
 
+/** Require an exact fingerprint without adding a caller's usage line. */
+export function validateFingerprint(value: unknown): string;
+
 /** Validate every CLI argument before reading Git or files. */
 export function parseSourceTreeArguments(
   args: readonly string[],

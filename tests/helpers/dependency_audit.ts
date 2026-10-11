@@ -48,3 +48,10 @@ function assertAdvisory(value: unknown): asserts value is AuditAdvisory {
   if (!value)
     throw new Error("fixture must contain the captured braces advisory");
 }
+
+/** Render issue messages without discarding their structured kinds. */
+export function issueMessages(result: {
+  issues: readonly { message: string }[];
+}): string {
+  return result.issues.map((issue) => issue.message).join("\n");
+}

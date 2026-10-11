@@ -13,7 +13,7 @@ import {
   verificationIdentity,
   writeReport,
 } from "./evidence.mjs";
-import { discoverBrowserTests } from "./playwright.mjs";
+import { discoverBrowserTests, summarizeObservedFiles } from "./playwright.mjs";
 import { requirePrepared } from "./prepared.mjs";
 import { runInherited } from "./process.mjs";
 import { validateCompletedReport } from "./report-validation.mjs";
@@ -73,7 +73,7 @@ try {
   raw = { observedTests: [] };
 }
 const observedTests = raw.observedTests ?? [];
-const observedFiles = summarizeFiles(observedTests);
+const observedFiles = summarizeObservedFiles(observedTests);
 const skipped = observedTests.filter(
   (test) => test.status === "skipped",
 ).length;
@@ -137,23 +137,6 @@ function browserArguments(args) {
     project: suite === "hydration" ? "hydration" : "chromium",
     shard,
   };
-}
-
-function summarizeFiles(tests) {
-  const files = new Map();
-  for (const test of tests) {
-    const entry = files.get(test.file) ?? {
-      file: test.file,
-      durationMs: 0,
-      tests: 0,
-    };
-    entry.durationMs += test.durationMs;
-    entry.tests += 1;
-    files.set(test.file, entry);
-  }
-  return [...files.values()].sort((left, right) =>
-    left.file.localeCompare(right.file),
-  );
 }
 
 function requireSameIds(expected, actual, label) {

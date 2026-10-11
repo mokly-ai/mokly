@@ -14,6 +14,7 @@ export const comparisonPath = `mokly-viewer/diffs/generations/${"c".repeat(64)}/
 
 export const config = {
   configPath: "/repo/tools/mokly.config.ts",
+  generatedDir: "/repo/tools/mockups/mokly-generated",
 } as ResolvedConfig;
 
 export const options = {
@@ -30,11 +31,15 @@ export function dependencies(duplicate = false) {
   const boundaries: PublishDependencies = {
     git: {
       run: async (args) =>
-        args[0] === "symbolic-ref"
-          ? "feature"
-          : args.includes("--show-toplevel")
-            ? "/repo"
-            : head,
+        args[0] === "status" ||
+        args[0] === "ls-files" ||
+        args[0] === "check-ignore"
+          ? ""
+          : args[0] === "symbolic-ref"
+            ? "feature"
+            : args.includes("--show-toplevel")
+              ? "/repo"
+              : head,
     },
     now: () => new Date("2026-09-26T12:00:00.000Z"),
     random: () => 0,
@@ -46,13 +51,12 @@ export function dependencies(duplicate = false) {
         [
           comparisonPath,
           JSON.stringify({
-            schemaVersion: 6 as const,
+            schemaVersion: 7 as const,
             baseRef: "origin/main",
             baseCommit: base,
             changedPaths: [],
             ignoredImpact: [],
             screens: [],
-            sharedImpact: [],
             components: [],
             changes: [],
             affectedConsumers: [],

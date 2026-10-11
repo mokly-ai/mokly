@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import type { ManifestV9 } from "../../packages/viewer/dist/registry/types.js";
+import type { ManifestV10 } from "../../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../../packages/viewer/dist/shell/catalogue.js";
 import {
   buildNavSections,
@@ -15,10 +15,9 @@ export function screen(
   id: string,
   title: string,
   variantOf?: string,
-): ManifestV9["entries"][number] {
+): ManifestV10["entries"][number] {
   return {
     colorSchemes: ["light"],
-    declaredDependencies: [],
     description: title,
     path: id,
     kind: "screen",
@@ -35,9 +34,8 @@ export function page(
   id: string,
   title: string,
   _route: string,
-): ManifestV9["entries"][number] {
+): ManifestV10["entries"][number] {
   return {
-    declaredDependencies: [],
     description: title,
     path: id,
     kind: "page",
@@ -49,11 +47,11 @@ export function page(
 }
 
 /** The catalogue, hierarchy, Specs rows, and sections built from entries. */
-export function tree(entries: ManifestV9["entries"]) {
-  const manifest: ManifestV9 = currentManifest({
+export function tree(entries: ManifestV10["entries"]) {
+  const manifest: ManifestV10 = currentManifest({
     entries,
     generatedBy: "mokly",
-    schemaVersion: 9 as const,
+    schemaVersion: 10 as const,
     folders: [],
     sourceFiles: [
       ...new Set(entries.map(({ sourcePath }) => sourcePath)),

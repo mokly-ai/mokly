@@ -13,7 +13,6 @@ function page(path: string): ManifestEntry {
     title: path,
     description: "Page",
     sourcePath: `specs/${path}.ts`,
-    declaredDependencies: [],
     relatedDocs: [],
   };
 }

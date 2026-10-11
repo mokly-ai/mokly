@@ -1,14 +1,14 @@
-import {
-  isEntryPath,
-  isSafeRepositoryPath,
-  GENERATED_DIRECTORY,
-} from "@mokly/viewer/data";
-import type { ManifestV9 } from "@mokly/viewer/data";
+import { isEntryPath } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import {
   parseBaselineCatalogue,
   type BaselineCatalogue,
 } from "../baseline/catalogue.js";
+import {
+  isGenerationWarning,
+  type GenerationWarning,
+} from "../build/warning_generation.js";
 import type { BaselineSelection } from "../review/repository.js";
 
 import type { ComponentChangeSnapshot } from "./component_change_types.js";
@@ -16,6 +16,7 @@ import type {
   RuntimeMessage,
   RuntimeStartupMessage,
 } from "./controls/runtime_ipc.js";
+import { isAuthoredClosure } from "./served_closure.js";
 /** Typed watched-server updates crossing the parent/child IPC boundary. */
 
 /**
@@ -29,7 +30,6 @@ export type CatalogueUpdateKind = "content" | "evidence";
 
 /** Mutable running-server state published before clients refresh. */
 export interface CatalogueUpdate {
-  assetClosure?: readonly string[];
   /** Defaults to content, requiring clients to refresh their rendered documents. */
   kind?: CatalogueUpdateKind;
   /** Omit to retain status unless the update replaces change evidence. */
@@ -44,7 +44,6 @@ export interface CatalogueUpdate {
 
 /** Parent-to-child update command with an explicit changed-id snapshot. */
 export interface ChildUpdateMessage {
-  assetClosure?: readonly string[];
   /** Omit to retain the reader; null revokes it while the parent prepares. */
   baselineCommit?: string | null;
   baselineSelection?: BaselineSelection;
@@ -59,15 +58,37 @@ export interface ChildUpdateMessage {
 
 export interface CatalogueCompleteMessage {
   type: "catalogue-complete";
-  manifest: ManifestV9;
+  manifest: ManifestV10;
   generation: string;
   version: number;
+  /** The parent's current checked list; a reload's reused manifest can be older. */
+  assetClosure?: readonly string[];
 }
 
 /** Child-to-parent runtime diagnostic kept separate from command envelopes. */
 export interface ChildDiagnosticMessage {
   readonly message: string;
   readonly type: "diagnostic";
+}
+
+export interface ChildWarningMessage extends GenerationWarning {
+  readonly type: "warning";
+}
+
+export function parseChildWarningMessage(
+  value: unknown,
+): ChildWarningMessage | undefined {
+  if (
+    !isGenerationWarning(value) ||
+    !("type" in value) ||
+    value.type !== "warning"
+  )
+    return;
+  return {
+    type: "warning",
+    generation: value.generation,
+    warning: value.warning,
+  };
 }
 
 /** Validate one bounded diagnostic from the supervised child. */
@@ -88,7 +109,10 @@ export function parseChildDiagnosticMessage(
   return { type: "diagnostic", message: value.message };
 }
 
-/** Validate the envelope here; the active server validates matching manifest contents. */
+/**
+ * Validate the envelope here; the active server validates matching manifest
+ * contents. An unsafe list is dropped, so the manifest's closure applies.
+ */
 export function parseCatalogueCompleteMessage(
   value: unknown,
 ): CatalogueCompleteMessage | undefined {
@@ -107,10 +131,13 @@ export function parseCatalogueCompleteMessage(
     (candidate.version ?? 0) <= 0 ||
     !candidate.manifest ||
     typeof candidate.manifest !== "object" ||
-    candidate.manifest.schemaVersion !== 9
+    candidate.manifest.schemaVersion !== 10
   )
     return;
-  return candidate as CatalogueCompleteMessage;
+  const { assetClosure, ...complete } = candidate as CatalogueCompleteMessage;
+  return isAuthoredClosure(assetClosure)
+    ? { ...complete, assetClosure }
+    : complete;
 }
 
 /** Commands accepted by the watched server child. */
@@ -131,13 +158,11 @@ export function childUpdateMessage(
   baselineCommit?: string | null,
   baselineSelection?: BaselineSelection,
   baselineDescriptor?: BaselineCatalogue,
-  assetClosure?: readonly string[],
 ): ChildUpdateMessage {
   return {
     ...(baselineCommit !== undefined ? { baselineCommit } : {}),
     ...(baselineSelection ? { baselineSelection } : {}),
     ...(baselineDescriptor ? { baselineDescriptor } : {}),
-    ...(assetClosure ? { assetClosure: [...assetClosure] } : {}),
     ...(kind ? { kind } : {}),
     ...(changesStatus ? { changesStatus } : {}),
     changedEntries: changedEntries ? [...changedEntries] : null,
@@ -162,7 +187,6 @@ export function parseChildUpdateMessage(
     baselineCommit?: unknown;
     baselineSelection?: unknown;
     baselineDescriptor?: unknown;
-    assetClosure?: unknown;
     kind?: unknown;
     changesStatus?: unknown;
     changedEntries?: unknown;
@@ -185,14 +209,6 @@ export function parseChildUpdateMessage(
     (typeof candidate.baselineCommit !== "string" &&
       (candidate.baselineSelection !== undefined ||
         candidate.baselineDescriptor !== undefined)) ||
-    (candidate.assetClosure !== undefined &&
-      (!Array.isArray(candidate.assetClosure) ||
-        !candidate.assetClosure.every(
-          (route: unknown) =>
-            typeof route === "string" &&
-            isSafeRepositoryPath(route) &&
-            !route.startsWith(`${GENERATED_DIRECTORY}/`),
-        ))) ||
     !Number.isSafeInteger(candidate.version) ||
     (candidate.version as number) <= 0 ||
     !isChangedPaths(candidate.changedEntries) ||
@@ -219,9 +235,6 @@ export function parseChildUpdateMessage(
             candidate.baselineCommit,
           )!,
         }
-      : {}),
-    ...(candidate.assetClosure !== undefined
-      ? { assetClosure: candidate.assetClosure as string[] }
       : {}),
     ...(candidate.kind ? { kind: candidate.kind } : {}),
     ...(candidate.changesStatus

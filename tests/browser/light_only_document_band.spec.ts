@@ -13,7 +13,7 @@ const config = (schemes: string) =>
   `{mockupsDir:"mockups",roots:[{dir:"specs"}],colorSchemes:${schemes}}`;
 const screen = (title: string) =>
   `import {defineScreen} from '@mokly/mokly';
-export default defineScreen({title:'${title}',description:'${title}',dependencies:[],relatedDocs:[],mobile:<main><h1>${title}</h1></main>,desktop:<main><h1>${title}</h1></main>});`;
+export default defineScreen({title:'${title}',description:'${title}',relatedDocs:[],mobile:<main><h1>${title}</h1></main>,desktop:<main><h1>${title}</h1></main>});`;
 const TERMS = `---
 description: When an invoice is due.
 ---

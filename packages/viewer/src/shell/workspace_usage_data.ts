@@ -1,5 +1,5 @@
 import { generatedViews, orderedInstances } from "../components/views.js";
-import type { ReviewResultV6 } from "../review/component_types.js";
+import type { ReviewResultV7 } from "../review/component_types.js";
 
 import type { Catalogue } from "./catalogue.js";
 import { branchPoints } from "./catalogue_branch_point.js";
@@ -31,7 +31,7 @@ export interface UsageLink {
  */
 export function affectedUsageLinks(
   catalogue: Catalogue,
-  result: ReviewResultV6 | undefined,
+  result: ReviewResultV7 | undefined,
   componentId: string | undefined,
 ): UsageLink[] {
   const lookup = branchPoints(catalogue);

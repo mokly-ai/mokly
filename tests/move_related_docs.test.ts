@@ -17,7 +17,7 @@ import { pathFixture } from "./helpers/path_fixture.js";
 for (const components of [false, true])
   test(`relatedDocs follows a paired document without changing its owner: components=${components}`, async (t) => {
     const source = `import {definePage,defineScreen,defineComponent} from '@mokly/mokly';
-      const common={title:'Reference',description:'Read the guide',dependencies:[],relatedDocs:['specs/old.md']};
+      const common={title:'Reference',description:'Read the guide',relatedDocs:['specs/old.md']};
       export const page=definePage({...common,slug:'page',render:()=>'<html><body>Reference</body></html>'});
       export const screen=defineScreen({...common,slug:'screen',mobile:<h1>Reference</h1>,desktop:<h1>Reference</h1>});
       ${components ? "export const control=defineComponent({...common,slug:'control',propSchema:{kind:'object',properties:{}},render:()=> 'Control',variants:[{slug:'default',title:'Default',props:{}}]});" : ""}`;

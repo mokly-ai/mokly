@@ -27,6 +27,7 @@ export function resolveDocumentLinks(
     entries.map((entry) => [entry.path, entry]),
   ),
   moves: readonly EntryMove[] = [],
+  onWarning?: (diagnostic: BuildDiagnostic) => void,
 ): ResolvedDocumentLinks {
   const records: LogicalReferenceRecord[] = [];
   const diagnostics: BuildDiagnostic[] = [];
@@ -40,6 +41,7 @@ export function resolveDocumentLinks(
     diagnostics.push(...adapted.diagnostics);
     const offsets = new TextOffsetMap(original);
     if (adapted.patches) offsets.apply(adapted.patches);
+    adapted.diagnostics.forEach((diagnostic) => onWarning?.(diagnostic));
     const linked = rewriteMockLinks(
       adapted.html,
       route,

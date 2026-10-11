@@ -18,7 +18,7 @@ for (const warning of [false, true]) {
         ? `
       import { definePage, MockLink } from "@mokly/mokly";
       import { renderToStaticMarkup } from "react-dom/server";
-      mockups.push(definePage({ path: "warning", title: "Warning", description: "Warning page", dependencies: [], relatedDocs: [],
+      mockups.push(definePage({ path: "warning", title: "Warning", description: "Warning page", relatedDocs: [],
         render: () => '<!doctype html><html><head><title>Warning</title></head><body>' + renderToStaticMarkup(<button><MockLink asChild to="details"><span>Go</span></MockLink></button>) + '</body></html>'
       }));`
         : "");

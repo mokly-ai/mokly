@@ -5,6 +5,18 @@ section: "ci"
 order: 1
 ---
 
+## Keep the checkout clean
+
+Publish requires a clean checkout before export and again before upload.
+Git-ignored files, this run's output directory, and Mokly's own caches and
+temporary files never count. Committed generated files count and must match the
+build. Derived generated output must be ignored by Git.
+
+A build step that changes tracked files or leaves files that Git does not ignore
+stops the publish. Commit generated changes before the job runs. Add build
+products to `.gitignore`. Use `npm ci` to install from the committed lockfile
+without changing it.
+
 ## What the action does
 
 The public composite action installs an exact published `@mokly/mokly`
@@ -16,7 +28,7 @@ interface, so it works with any service that implements the upload contract.
 
 It is maintained in the Mokly repository at
 `.github/actions/publish`. Pin it to a reviewed commit, and set `version` to
-an exact published release such as 0.13.0; a range or a tag is refused.
+an exact published release such as 0.14.0; a range or a tag is refused.
 <!-- x-release-please-end -->
 
 ## A workflow

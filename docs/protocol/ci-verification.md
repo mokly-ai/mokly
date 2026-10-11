@@ -7,14 +7,19 @@ ratchet are implemented. [Hosted measurements](https://github.com/mokly-ai/mokly
 record timing and coverage. `cargo xtask check` is the complete gate.
 A validated hosted aggregate is reusable evidence for its exact tree.
 Public argument forwarding, cancellation and title validation are implemented.
-Remote execution and automatic selection are implemented.
+Remote execution and automatic selection are implemented. Dependency audit
+modes and scheduled update pull requests are implemented under the
+[audit contracts](./dependency-audit-update-pr.md).
 
 ## Verification Boundary
 
 `cargo xtask check` is the complete repository and release gate.
 The local executor runs every gate sequentially in one checkout.
-It starts with the live workspace dependency audit. The complete gate can
-instead run on Testboxes under the implemented
+It starts with the live baseline workspace audit. It fails on new issues and
+reports inherited ones as notices. `--dependency-audit strict` selects strict
+mode for the complete gate or repository suite;
+[baseline auditing](./dependency-audit-baseline.md) owns the CLI and CI mode
+rules. The complete gate can instead run on Testboxes under the implemented
 [remote verification contract](./remote-verification.md).
 Only active reviewed path exceptions cover findings.
 [Dependency security](./dependency-security.md) defines their UTC expiry and
@@ -27,6 +32,7 @@ The CLI is:
 
 ```bash
 cargo xtask check
+cargo xtask check --dependency-audit strict
 cargo xtask check --suite repository
 cargo xtask check --suite package
 cargo xtask check --suite unit --shard 1/4
@@ -46,9 +52,9 @@ hydration suite fail before any subprocess starts.
 
 | Gate             | Commands and owned behavior                                                                                                                                                                                                                                                                                                                                                            |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Repository       | Live dependency audit first; Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                                                                                                          |
+| Repository       | Live audit first: baseline for ordinary PRs, pushes, and local checks; strict for release and dependency update PRs. Prettier; ESLint; JavaScript/TypeScript length, protocol-cap, unused-internal-export, and public-package-export ratchets; Rust formatting, Clippy, tests, and file-length audit.                                                                                  |
 | Package          | One ordinary package/example preparation; TypeScript declaration and no-emit checks; derived example check; both package manifests, script-free dry-run allowlists, licenses, browser graph, CLI shebang, inspector budget and exact version relationship; one real viewer/CLI archive pair; every clean consumer smoke using that pair. Real `prepack` builds remain part of packing. |
-| Unit/integration | One ordinary package/example preparation followed by every discovered Node test file, with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. A shard runs its whole-file partition.                                                                                                                                                               |
+| Unit/integration | One ordinary package/example preparation and one example compilation snapshot, followed by every discovered Node test file, with at most the [shared file concurrency](./ci-suite-evidence.md#test-concurrency) active. A shard runs its whole-file partition.                                                                                                                         |
 | Browser          | One ordinary package/example preparation followed by every non-hydration Playwright spec, with `fullyParallel: false`, the [shared worker count](./ci-suite-evidence.md#test-concurrency), existing timeouts and zero retries. A shard runs its whole-file partition.                                                                                                                  |
 | Hydration        | One ordinary package/example preparation followed by every Playwright spec whose filename contains `hydration`, using the same browser settings without sharding and with the [hydration worker default](./ci-suite-evidence.md#test-concurrency). Its route-inventory spec runs its independent route tests in parallel mode.                                                         |
 | Native platforms | On macOS and Windows, build once and run export transaction, destination-race, writer-lock and cache-ignore tests, CSS parser/diff tests, and baseline/process-tree tests.                                                                                                                                                                                                             |
@@ -67,7 +73,7 @@ shrink-only baselines, and recursive `docs/protocol/**` scan excluding
 The repository prerequisite also runs the workspace-root source/protocol
 length audit. It covers changed repository TypeScript/JavaScript and protocol
 Markdown plus non-ignored untracked files. Protocol pages over 250 lines use
-only the exact reviewed caps in `tests/protocol_doc_sizes.test.ts`; `cargo xtask
+only the exact reviewed caps in `xtask/protocol-document-caps.json`; `cargo xtask
 source-file-length-lint --all` audits every scoped file. This remains in
 addition to the repository ratchets.
 The full scope and failure semantics are in
@@ -77,24 +83,24 @@ ESLint derives global ignores from `.gitignore` before adding its broader
 ESLint-only ignores. Ignored build, cache, report, and tool scratch paths,
 including Wrangler scratch, cannot make a later complete gate fail.
 
-The public `npm test` and `npm run test:browser` commands prepare package and
-example output; the latter runs both Playwright projects and every spec.
-Filtering or selecting a project is partial verification. `npm test` and
-`test:prepared` share recursive discovery of `.test.ts` and `.test.tsx` files
-under `tests/` and `packages/viewer/tests/`, with the same file concurrency. The
-developer runner fails on failures, cancellations, and unreported files; it
-tolerates skipped and todo tests (including intentional Windows skips) and
-prints their count. The prepared runner and every `cargo xtask check` suite
-reject skips and todos. Node unit tests stay outside Playwright's
-`tests/browser/` directory. Playwright matches only `**/*.spec.ts`; `chromium`
-ignores filenames containing `hydration`, while `hydration` matches only them.
+The [developer test commands](./developer-test-commands.md) define public unit
+and browser entrypoints, selection, preparation, and the developer skip policy.
+Strict unit discovery recursively includes `.test.ts` and `.test.tsx` files
+under `tests/` and `packages/viewer/tests/`, with the
+[shared file concurrency](./ci-suite-evidence.md#test-concurrency).
+The prepared runners and every `cargo xtask check` suite reject skips and todos.
+Node unit tests stay outside Playwright's `tests/browser/` directory.
+Playwright matches only `**/*.spec.ts`; `chromium` ignores filenames containing
+`hydration`, while `hydration` matches only them.
 
 Public `package:check` and `package:smoke` preserve caller arguments, including
 `--artifacts DIR`, across nested npm. Prepared test commands skip preparation,
 reject arguments other than the optional shard, and fail when required output is
 missing; prepared package commands may instead receive the gate's archive pair.
 Xtask prepares output per suite and calls only prepared consumers; output is
-reused only within that suite.
+reused only within that suite. `npm test` and the xtask unit suite run
+`npm run prepare:unit`; a complete unit run requires the example compilation
+[snapshot](./ci-example-snapshot.md) it writes.
 
 Builds under test are not removed. Package dry-run allowlist inspection retains
 `--ignore-scripts`, while real packing keeps lifecycle builds. Historical
@@ -130,9 +136,9 @@ and ends with a non-whitespace character, and contains no newline. Examples
 include `fix: preserve upload counts`, `chore(main): release 0.13.0` and
 `feat(publish)!: upload catalogue content deltas`.
 
-This type list is fixed. Its unit test checks that it covers the Conventional
-Commit examples in `AGENTS.md`; it does not derive policy from Git history or
-remote-tracking references.
+This type list is fixed. The unit test asserts the list directly; it does not
+derive policy from Git history, remote-tracking references, or the commit
+examples in `docs/dev/git.md`.
 
 An invalid title exits unsuccessfully and prints exactly:
 
@@ -151,7 +157,7 @@ The hosted job graph, checkout ownership, runtime profiles, runner policy,
 30-minute timeouts, and stable `Required CI` status follow the separate
 [CI workflow graph contract](./ci-workflow.md).
 The suites below own the report evidence that status validates.
-Inventory and evidence rules remain here because local selected suites and
+Inventory and evidence rules remain here because local xtask suites and
 hosted jobs share them.
 
 ## Inventory And Report Evidence
@@ -170,31 +176,37 @@ owns the generated resource audit. Browser error assertions accept only Chrome's
 report that a viewer-owned sandboxed frame (`/static/`, a temporary render, or
 `about:srcdoc`) blocked a script, as `tests/browser/console_notices.ts` defines.
 
-Each runner records the commit SHA, runtime, suite, optional shard, complete
-discovered file inventory, assigned file inventory, observed executed files,
-per-file timing, process outcome, and skipped/cancelled evidence. Browser and
-hydration reports also record the all-project spec inventory and every test by
-stable project, relative file, line, column and title path; the Playwright
-reporter records each observed test's result, duration, and serialized errors.
+Each suite report records the commit SHA, runtime, suite, optional shard,
+complete discovered file inventory, assigned file inventory, observed executed
+files, per-file timing, process outcome, and skipped/cancelled evidence. Browser
+and hydration reports also record the all-project spec inventory and every test
+by stable project, spec file, defining file, line, column and title path; the
+Playwright reporter records each observed test's result, duration, and
+serialized errors. A test's spec file is the `*.spec.ts` file that Playwright
+loaded. Its defining file, line and column locate the `test()` call, which can
+be in a helper module that the spec imports. Every Playwright file inventory,
+assignment, observed file and per-file timing names spec files, so a shared
+helper never joins an inventory or spans shards.
 Unit reports retain the Node reporter's failure names and diagnostics. Once
 execution starts, the wrapper writes a report after the test process exits on
 success or failure, then validates it. A discovery or preparation failure before
 execution may leave no report; the shard job and aggregate still fail. Reporter
 callback failures or missing output can therefore never turn into success.
 
-For an unsharded run, the observed file set must equal independent discovery
-exactly. For sharded CI, the aggregate requires all four reports for each
-runtime and sharded suite, proves assignments are non-empty and pairwise
-disjoint, and compares their union and observed execution against a separately
-discovered complete suite inventory. Browser evidence also requires the observed
-test IDs across the four shards to equal independent unsharded discovery exactly
-once. Each runtime requires one unsharded hydration report; every browser-like
-report must carry the same all-project inventory, and the browser and hydration
-file inventories must be disjoint and exhaust it. A missing file or test,
-duplicate assignment or observed test, unexpected file or test, skipped or
-cancelled test, non-zero exit, signal exit, or absent/invalid report fails
-verification. Per-file and per-test durations are retained so imbalance can be
-measured without changing whole-file partitioning.
+For an unsharded report for a complete suite, the observed file set must equal
+independent discovery exactly. For sharded CI, the aggregate requires all four
+reports for each runtime and sharded suite, proves assignments are non-empty and
+pairwise disjoint, and compares their union and observed execution against a
+separately discovered complete suite inventory. Browser evidence also requires
+the observed test IDs across the four shards to equal independent unsharded
+discovery exactly once. Each runtime requires one unsharded hydration report;
+every browser-like report must carry the same all-project inventory, and the
+browser and hydration file inventories must be disjoint and exhaust it. A
+missing file or test, duplicate assignment or observed test, unexpected file or
+test, skipped or cancelled test, browser shard above the
+[share limit](./ci-suite-evidence.md#browser-shard-balance), non-zero exit,
+signal exit, or absent/invalid report fails verification. Per-file and per-test durations are retained so
+imbalance can be measured without changing whole-file partitioning.
 
 Report artifacts have stable, unique suite, runtime and shard names and use
 replacement uploads. A failed-job rerun can therefore replace its own report

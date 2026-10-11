@@ -6,7 +6,7 @@ import { readCatalogueChanges } from "../../dist/server/component_changes.js";
 import type { ServedReview } from "../../dist/server/configured_review.js";
 import { startCatalogueServer } from "../../dist/server/http.js";
 import type { RunningServer } from "../../dist/server/http_types.js";
-import type { ReviewResultV6 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV7 } from "../../packages/viewer/dist/review/component_types.js";
 import { componentReviewFixture } from "../helpers/component_review_fixture.js";
 
 const cleanup: (() => Promise<void>)[] = [];
@@ -28,17 +28,16 @@ test.beforeAll(async () => {
   );
   const outDir = path.join(fixture.root, ".review");
   const result = {
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     baseCommit: "a".repeat(40),
     baseRef: "origin/main",
     changedPaths: [],
     ignoredImpact: [],
     screens: [],
-    sharedImpact: [],
     components: [],
     changes: [],
     affectedConsumers: [],
-  } satisfies ReviewResultV6;
+  } satisfies ReviewResultV7;
   const review: ServedReview = {
     base: "origin/main",
     async generate(): Promise<void> {

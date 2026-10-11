@@ -38,7 +38,7 @@ export const config: ResolvedConfig = {
   mockupsDir: path.join(repositoryRoot, "mockups"),
   moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
   repoRoot: repositoryRoot,
-  review: { base: "main", outDir: ".review", sharedImpact: [] },
+  review: { base: "main", outDir: ".review" },
   sourceFiles: [sourceRelativePath],
   stylesheets: [],
   watch: { debounceMs: 100, rules: [] },
@@ -49,7 +49,6 @@ export function screenDefinitions(
 ): ResolvedRegistryEntry[] {
   const definitions = defineScreen({
     slug: "welcome",
-    dependencies: [],
     description: "Welcome",
     desktop: "Desktop",
     path: "welcome",
@@ -67,7 +66,6 @@ export function variantDefinitions(
 ): ResolvedRegistryEntry[] {
   if (kind === "screen") return screenDefinitions([variant("empty")]);
   return defineComponent({
-    dependencies: [],
     description: "Action",
     path: "action",
 
@@ -101,7 +99,6 @@ export function flowWithVariant(
 ): RegistryDefinition[] {
   const screens = defineScreen({
     slug: "welcome",
-    dependencies: [],
     description: "Welcome",
     desktop: "Desktop",
     path: "welcome",
@@ -119,7 +116,6 @@ export function flowWithVariant(
     ],
   });
   const tour = defineUseCase({
-    dependencies: [],
     description: "Tour",
     path: "tour",
     relatedDocs: [],
@@ -172,7 +168,6 @@ export function invalidNonScreen(
 ): ResolvedRegistryEntry {
   const common = {
     __viaDefine: true as const,
-    dependencies: [],
     description: `${kind} entry`,
     path: `${kind}-entry`,
     kind,

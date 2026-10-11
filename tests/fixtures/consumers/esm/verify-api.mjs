@@ -7,6 +7,7 @@ const expected = [
   "MockLink",
   "ReviewIgnore",
   "ReviewIgnoreScope",
+  "componentStylesheets",
   "defineComponent",
   "defineConfig",
   "defineFolder",

@@ -2,6 +2,7 @@ import {
   isHttpsUrl,
   validateAuditExceptions,
 } from "./dependency-audit-exceptions.mjs";
+import { auditEvaluation, auditIssue } from "./dependency-audit-issues.mjs";
 import {
   exceptionPathErrors,
   isInstallLocation,
@@ -129,7 +130,11 @@ export function evaluateDependencyAudit(report, lockfile, exceptions, now) {
   const inspected = inspectReport(report);
   const reportIssues = inspected.errors;
   const lockfileIssues = lockfileErrors(lockfile);
-  const errors = [...reviewed.errors, ...reportIssues, ...lockfileIssues];
+  const issues = [
+    ...reviewed.issues,
+    ...reportIssues.map((message) => auditIssue("report", message)),
+    ...lockfileIssues.map((message) => auditIssue("input", message)),
+  ];
   const notices = [];
   for (const { name, advisory, nodes } of inspected.findings) {
     if (advisory.severity === "info") continue;
@@ -147,24 +152,42 @@ export function evaluateDependencyAudit(report, lockfile, exceptions, now) {
           ? exceptionPathErrors(record.exception, nodes, lockfile.packages)
           : ["the lockfile is invalid, so the path cannot be verified"];
       if (pathIssues.length) {
-        const issue = `Invalid ${record.label}: ${pathIssues.join("; ")}. Review the changed path or remove the exception and update dependencies.`;
-        if (!record.errors.includes(issue)) record.errors.push(issue);
+        const message = `Invalid ${record.label}: ${pathIssues.join("; ")}. Review the changed path or remove the exception and update dependencies.`;
+        if (!record.issues.some((issue) => issue.message === message))
+          record.issues.push(
+            auditIssue(lockfileIssues.length ? "input" : "exception", message),
+          );
       }
-      if (record.errors.length === 0) {
+      if (record.issues.length === 0) {
         covered = true;
         if (!record.used) notices.push(acceptedNotice(record));
         record.used = true;
       }
     }
-    if (!covered) errors.push(uncoveredNotice(name, advisory, nodes));
+    if (!covered) {
+      const identifier = advisoryId(advisory.url);
+      issues.push({
+        kind: "finding",
+        message: uncoveredNotice(name, advisory, nodes),
+        package: name,
+        advisoryUrl: advisory.url,
+        ...(identifier ? { advisoryId: identifier } : {}),
+        severity: advisory.severity,
+        title: advisory.title,
+        installLocations: [...nodes],
+      });
+    }
   }
   if (reportIssues.length === 0) {
     for (const record of reviewed.records)
       if (!record.matched)
-        record.errors.push(
-          `Stale ${record.label}: no current finding matches this record. Remove the exception; do not keep an unused risk acceptance.`,
+        record.issues.push(
+          auditIssue(
+            "exception",
+            `Stale ${record.label}: no current finding matches this record. Remove the exception; do not keep an unused risk acceptance.`,
+          ),
         );
   }
-  for (const record of reviewed.records) errors.push(...record.errors);
-  return { ok: errors.length === 0, errors, notices };
+  for (const record of reviewed.records) issues.push(...record.issues);
+  return auditEvaluation(issues, notices);
 }

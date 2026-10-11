@@ -1,9 +1,12 @@
 # CI Suite Evidence
 
 This document supplements the [CI verification contract](./ci-verification.md)
-with fixture ownership, test concurrency, failure cleanup, browser shard
-balance, and acceptance measurement rules for the unit, browser, and hydration
-suites. Test timing follows [CI Test Timing](./ci-test-timing.md).
+with fixture ownership, test concurrency, failure cleanup, unit shard balance
+and scenario grouping, browser shard balance, and acceptance measurement rules
+for the unit, browser, and hydration suites. Test timing follows
+[CI Test Timing](./ci-test-timing.md).
+The [example compilation snapshot](./ci-example-snapshot.md) contract defines
+the compiled example that unit test files share.
 
 ## Fixture Lifetime And Cleanup
 
@@ -52,6 +55,13 @@ exports, and ordinary publication fixtures use that budget independently of the
 default one-minute browser test timeout. Assertion deadlines and retries
 remain unchanged, worker counts follow [Test Concurrency](#test-concurrency),
 and server readiness retains its own bound.
+
+The ordinary preview's real catalogue build runs in an owned Node child,
+outside Playwright's expanded diagnostic stack capture. The child uses the same
+configuration and export engine, and the worker validates and serves its output.
+Its build deadline reserves cleanup time inside the existing setup budget.
+Cold preview navigation waits for the requested document responses before
+checking scheme URLs with the normal assertion deadline.
 
 Wrangler Pages fixtures pass port zero and adopt the exact readiness URL
 Wrangler reports; they do not release a probe socket before server startup.
@@ -122,10 +132,50 @@ removal shares one teardown, and a dependent cleanup failure retains the
 workspace for diagnosis. Tests that create a runtime after obtaining a shared
 fixture register that cleanup through the fixture's `beforeRemove` lifecycle;
 they must not add a later test-runner teardown hook that can race workspace
-removal. Source-level verification enforces this ownership rule for shared
-fixture helpers. Failed browser and hydration jobs retain only the uploaded
+removal. The ESLint rule `mokly/no-late-fixture-teardown` enforces this
+ownership rule in every JavaScript and TypeScript module under `tests/`. Within
+the module scope and within each function, it reports a member call named
+`after`, such as `t.after(...)`, that starts at or after the first
+`changedFixture`, `componentReviewFixture` or `designLibraryFixture` call in
+the same scope. A call inside a nested function belongs only to that
+function's scope. Failed browser and hydration jobs retain only the uploaded
 diagnostic artifacts selected by the workflow. Jobs must not delete, overwrite
 or reuse another job's writable output.
+
+A fixture shared across a test file registers its teardown synchronously when
+the file loads and starts setup on first use. Teardown waits for setup to settle,
+then runs owned cleanups in reverse registration order, even if setup failed.
+It attempts every cleanup before reporting a cleanup failure. A run that selects
+none of the file's tests starts no setup and leaves no owned output. Module-scope
+code must not start fixture setup eagerly. `tests/helpers/file_fixture.ts`
+provides this boundary; the ESLint rule `mokly/no-eager-fixture-setup` rejects
+a `designLibraryFixture` call that is not inside a function, in any JavaScript
+or TypeScript module under `tests/`.
+
+## Unit Shard Balance
+
+Node's `--test-shard` assigns whole files by sorted index modulo the shard count
+(four in CI). `nodeShardFiles` in `scripts/verification/evidence.mjs` mirrors
+that split for the evidence reports. Each hosted shard runs two files at once,
+the limit that [Test Concurrency](#test-concurrency) derives for its 2-vCPU
+runner. Use per-file `durationMs` in the unit reports to measure balance; test
+counts do not represent compilation and classification costs. Record shard wall
+time separately from summed file time.
+
+A scenario suite classifies once per scenario, then projects that result for
+its assertions. Do not classify once per assertion or subtest when those checks
+describe the same scenario. An edit that makes a component impacting rebuilds
+alone. Edits to the same source file that target different entries rebuild
+separately. Other edits may share a rebuild only when each keeps a distinct
+detection signal: its own path, or reason kinds disjoint from every other member
+at the same path. The build asserts the exact union of paths and reason kinds
+and no affected consumers. An extra change on another member's path with a subset
+of that member's reason kinds is not visible. Grouping is a reviewed trade-off,
+not an exact per-edit proof. Retain exact isolation checks for single edits and
+for attribution outside a grouped build's expected union.
+
+File additions change later sorted indices, so confirm the resulting shard
+layout with actual CI reports before claiming a balance improvement.
 
 ## Browser Shard Balance
 
@@ -138,21 +188,27 @@ spec therefore stays whole and no spec uses parallel mode except the unsharded
 hydration route-inventory spec that [Test Concurrency](#test-concurrency)
 defines.
 
-[`tests/browser_shard_balance.test.ts`](../../tests/browser_shard_balance.test.ts)
-first lists the all-project Playwright inventory, then the complete `chromium`
-inventory and each `chromium` shard in the CI browser job's matrix. It fails
-when any shard holds more than 125% of an even share of the browser tests, and
-it runs the aggregate's `validateShardReports` over reports whose
-`playwrightFiles` carry the all-project inventory while `fullFiles` and
-`fullTests` carry the `chromium` inventory. A spec split across shards therefore
-fails before CI does.
+The aggregate also bounds balance. After the browser test assignments prove
+disjoint and complete, `validateShardReports` in
+`scripts/verification/report-validation.mjs` applies the bound in
+`scripts/verification/shard-balance.mjs`. The limit is the `fullTests`
+inventory divided by the shard count, times `BROWSER_SHARD_SHARE_LIMIT` (1.25),
+rounded up. The group fails at the first shard whose `assignedTests` count
+exceeds that limit, with this message:
 
-The test performs each listing one at a time. Playwright writes compiled test
-modules to a shared on-disk cache without an atomic rename, so concurrent
-listings on an empty cache can load a module that another listing is still
-writing. The bound applies to test counts, because that is what Playwright
-balances; shard durations remain a measurement from the shard reports. When the
-bound fails, split a large non-hydration spec into smaller spec files.
+```text
+browser shard <index>/<total> holds <count> of <inventory> tests, above the limit of <limit>; split a large spec into smaller spec files
+```
+
+The bound uses test counts because that is what Playwright balances; shard
+durations remain a measurement from the shard reports. It runs wherever shard
+reports are validated: `Required CI`, the remote Testbox gate, and release
+evidence validation, where a shard above the limit makes the evidence invalid
+and stops the publish. The local sequential gate runs unsharded and does not
+apply it. The bound does not apply
+to unit shards. No test lists the Playwright inventory to check balance;
+[`tests/verification_shard_balance.test.ts`](../../tests/verification_shard_balance.test.ts)
+checks the bound with synthetic shard reports.
 
 ## Acceptance Measurement
 

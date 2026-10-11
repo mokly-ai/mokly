@@ -16,31 +16,6 @@ export const exchange = [
 ]
   .join("\n")
   .replace(/\s+/gu, " ");
-export const recovery = read("docs/protocol/mokly-export-recovery.md").replace(
-  /\s+/gu,
-  " ",
-);
-export const terminal = [
-  read("docs/protocol/mokly-terminal-output.md"),
-  read("docs/protocol/mokly-terminal-errors.md"),
-]
-  .join("\n")
-  .replace(/\s+/gu, " ");
-export const verification = [
-  read("docs/protocol/ci-verification.md"),
-  read("docs/protocol/ci-suite-evidence.md"),
-  read("docs/protocol/ci-test-repository-inputs.md"),
-]
-  .join("\n")
-  .replace(/\s+/gu, " ");
-export const workflow = read("docs/protocol/ci-workflow.md").replace(
-  /\s+/gu,
-  " ",
-);
-export const release = read("docs/protocol/npm-release.md").replace(
-  /\s+/gu,
-  " ",
-);
 export const sources = new Map(
   GUIDES.filter((page) => page.frontmatter.section === "ci").map((page) => [
     page.id,

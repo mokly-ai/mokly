@@ -30,7 +30,7 @@ records them in the protocol docs so no later milestone needs the brief.
   to remove it. This follows the "no backward compatibility" instruction;
   confirm if replacement of old v1 directories should be tolerated instead.
 - **CHANGELOG.** `CHANGELOG.md` is release-PR owned by release-please
-  ([release contract](../docs/protocol/npm-release.md#release-management)), so
+  ([release contract](https://github.com/mokly-ai/mokly/blob/0c8245f/docs/protocol/npm-release.md#release-management)), so
   the entry is produced from the implementation commit's `feat(publish)!:`
   title and `BREAKING CHANGE:` footer, not by hand-editing the file. With
   `bump-minor-pre-major`, that commit yields the next minor (`0.13.0`).

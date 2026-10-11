@@ -20,7 +20,7 @@ test("workspace badges, comparison eligibility and usage use recorded evidence",
     fixture.git,
     "main",
   );
-  if (result.schemaVersion !== 6) assert.fail("Expected component result");
+  if (result.schemaVersion !== 7) assert.fail("Expected component result");
   const catalogue = createCatalogue(
     fixture.after.manifest,
     removedManifestEntries(fixture.after.manifest, fixture.before.manifest),
@@ -96,7 +96,7 @@ test("unrelated screens retain distinct Added and Removed evidence in a componen
     fixture.git,
     "main",
   );
-  if (result.schemaVersion !== 6) assert.fail("Expected component result");
+  if (result.schemaVersion !== 7) assert.fail("Expected component result");
   const catalogue = catalogueAtBaseline(
     fixture.after.manifest,
     fixture.before.manifest,
@@ -141,7 +141,7 @@ test("a removed component variant retains its previous comparison", async (t) =>
     fixture.git,
     "main",
   );
-  if (result.schemaVersion !== 6) assert.fail("Expected component result");
+  if (result.schemaVersion !== 7) assert.fail("Expected component result");
   const catalogue = createCatalogue(
     fixture.after.manifest,
     removedManifestEntries(fixture.after.manifest, fixture.before.manifest),

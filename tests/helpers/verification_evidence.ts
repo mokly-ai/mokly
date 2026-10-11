@@ -1,6 +1,7 @@
 export interface BrowserTestFixture {
   id: string;
   project: string;
+  specFile: string;
   file: string;
   line: number;
   column: number;
@@ -74,6 +75,7 @@ export function browserTest(
   return {
     id,
     project,
+    specFile: file,
     file,
     line: 1,
     column: 1,

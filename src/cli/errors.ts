@@ -1,4 +1,5 @@
 import { errorMessage, MoklyError, type MoklyErrorCode } from "../errors.js";
+import { CHECKOUT_ERROR_COPY } from "../publish/checkout_errors.js";
 
 /** Human-facing CLI failure while retaining the typed secondary code. */
 export interface CliErrorPresentation {
@@ -14,6 +15,7 @@ interface ErrorCopy {
 }
 
 const ERROR_COPY: Readonly<Record<MoklyErrorCode, ErrorCopy>> = {
+  ...CHECKOUT_ERROR_COPY,
   "baseline-incompatible-earlier": {
     headline: "Changes are unavailable for this comparison base.",
     hint: "Retry once the base includes this Mokly version.",
@@ -126,7 +128,14 @@ export function cliErrorPresentation(error: unknown): CliErrorPresentation {
       headline: "The catalogue upload did not complete.",
       hint: "Check the endpoint and connection, then retry.",
     };
-  const detail = stripErrorPrefix(error);
+  let detail = stripErrorPrefix(error);
+  if (error.code === "git-uncommitted" || error.code === "build-stale") {
+    const copy = CHECKOUT_ERROR_COPY[error.code];
+    detail = detail
+      .split("\n")
+      .filter((line) => line !== copy.headline && line !== copy.hint)
+      .join("\n");
+  }
   if (error.code === "cli-invalid") {
     const command = /^unknown command: (.+)$/.exec(detail)?.[1];
     if (command) {

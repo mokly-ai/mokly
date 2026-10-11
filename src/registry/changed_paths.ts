@@ -6,7 +6,7 @@ import {
   type HistoricalManifest,
   type HistoricalManifestEntry,
   type ManifestEntry,
-  type ManifestV9,
+  type ManifestV10,
   analyzeHierarchy,
   entryRoute,
   documentRoute,
@@ -25,7 +25,7 @@ import { moveIdentity, type EntryMove } from "../review/moves/types.js";
 
 /** Match each entry, including every variant, against changed material and metadata. */
 export function changedManifestPaths(
-  manifest: ManifestV9,
+  manifest: ManifestV10,
   baseManifest: HistoricalManifest,
   config: ResolvedConfig,
   changedPaths: readonly string[],

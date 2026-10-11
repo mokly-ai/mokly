@@ -1,8 +1,8 @@
-import type { ReviewResultV6 } from "./component_types.js";
+import type { ReviewResultV7 } from "./component_types.js";
 import { reviewInvalid } from "./result_helpers.js";
 
 /** One historical identity cannot be paired twice or also advertised as removed. */
-export function validateResultMoves(result: ReviewResultV6): void {
+export function validateResultMoves(result: ReviewResultV7): void {
   const entries = [
     ...result.screens,
     ...result.components,

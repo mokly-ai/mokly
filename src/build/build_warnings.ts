@@ -10,23 +10,53 @@ import { MoklyError } from "../errors.js";
 
 /** Stable codes available to build-warning producers. */
 export type BuildDiagnosticCode =
-  "link-control-ancestor" | "link-control-descendant";
+  | "link-control-ancestor"
+  | "link-control-descendant"
+  | "removed-dependencies"
+  | "removed-owned-dependencies"
+  | "removed-shared-impact"
+  | "duplicate-component-stylesheet"
+  | "missing-configured-stylesheet-link"
+  | "ignored-stylesheet-resource-owner";
 
-/** One route-scoped warning that never enters generated catalogue bytes. */
-export interface BuildDiagnostic {
-  readonly code: BuildDiagnosticCode;
-  readonly route: string;
-  readonly message: string;
+/** A warning about an authored input rather than one generated page. */
+export interface BuildDiagnosticSubject {
+  readonly kind: "entry" | "component" | "folder" | "configuration";
+  readonly path: string;
 }
+
+/** One diagnostic, excluded from generated catalogue bytes. */
+export type BuildDiagnostic = {
+  readonly code: BuildDiagnosticCode;
+  readonly message: string;
+} & (
+  | { readonly route: string; readonly subject?: never }
+  | { readonly subject: BuildDiagnosticSubject; readonly route?: never }
+);
 
 const CODES: readonly BuildDiagnosticCode[] = [
   "link-control-ancestor",
   "link-control-descendant",
+  "removed-dependencies",
+  "removed-owned-dependencies",
+  "removed-shared-impact",
+  "duplicate-component-stylesheet",
+  "missing-configured-stylesheet-link",
+  "ignored-stylesheet-resource-owner",
 ];
 const KEBAB_CASE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 
 /** Validate a diagnostic at the compilation boundary. */
 function validateBuildDiagnostic(diagnostic: BuildDiagnostic): void {
+  if (
+    Object.keys(diagnostic).some(
+      (key) => !["code", "route", "subject", "message"].includes(key),
+    )
+  )
+    throw new MoklyError(
+      "build-invalid",
+      "build diagnostic contains an unsupported field",
+    );
   if (
     typeof diagnostic.code !== "string" ||
     !KEBAB_CASE.test(diagnostic.code) ||
@@ -36,7 +66,26 @@ function validateBuildDiagnostic(diagnostic: BuildDiagnostic): void {
       "build-invalid",
       "build diagnostic code must be a supported kebab-case identifier",
     );
-  if (
+  if (diagnostic.subject !== undefined) {
+    const subject = diagnostic.subject;
+    if (
+      diagnostic.route !== undefined ||
+      !subject ||
+      typeof subject !== "object" ||
+      Object.keys(subject).some((key) => !["kind", "path"].includes(key)) ||
+      !["entry", "component", "folder", "configuration"].includes(
+        subject.kind,
+      ) ||
+      typeof subject.path !== "string" ||
+      (!(subject.kind === "folder" && subject.path === "") &&
+        !isSafeRepositoryPath(subject.path)) ||
+      hasTerminalControlCharacters(subject.path)
+    )
+      throw new MoklyError(
+        "build-invalid",
+        "build diagnostic subject must have a supported kind and a safe relative POSIX path",
+      );
+  } else if (
     typeof diagnostic.route !== "string" ||
     !isSafeRepositoryPath(diagnostic.route) ||
     hasTerminalControlCharacters(diagnostic.route)
@@ -58,9 +107,17 @@ function validateBuildDiagnostic(diagnostic: BuildDiagnostic): void {
     );
 }
 
+/** Link controls report through exhaustive compilation, not ordinary preview requests. */
+export function isLinkControlDiagnostic(diagnostic: BuildDiagnostic): boolean {
+  return (
+    diagnostic.code === "link-control-ancestor" ||
+    diagnostic.code === "link-control-descendant"
+  );
+}
+
 /** Format one diagnostic defensively for a terminal reporter. */
 export function formatBuildDiagnostic(diagnostic: BuildDiagnostic): string {
-  return `${escapeTerminalControlCharacters(diagnostic.route)}: ${escapeTerminalControlCharacters(diagnostic.message)}`;
+  return `${escapeTerminalControlCharacters(diagnosticLocation(diagnostic))}: ${escapeTerminalControlCharacters(diagnostic.message)}`;
 }
 
 /** Validate, sort, and de-duplicate diagnostics independently of render order. */
@@ -94,12 +151,30 @@ function compareDiagnostics(
   right: BuildDiagnostic,
 ): number {
   return (
-    compareText(left.route, right.route) ||
+    compareText(diagnosticLocation(left), diagnosticLocation(right)) ||
     compareText(left.message, right.message) ||
-    compareText(left.code, right.code)
+    compareText(left.code, right.code) ||
+    compareText(left.subject?.kind ?? "", right.subject?.kind ?? "")
   );
 }
 
 function compareText(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;
+}
+
+function diagnosticLocation(diagnostic: BuildDiagnostic): string {
+  return diagnostic.subject
+    ? `${diagnostic.subject.kind} ${JSON.stringify(diagnostic.subject.path)}`
+    : diagnostic.route;
+}
+
+/** Validate untrusted worker and child data using the compilation contract. */
+export function isBuildDiagnostic(value: unknown): value is BuildDiagnostic {
+  if (!value || typeof value !== "object") return false;
+  try {
+    validateBuildDiagnostic(value as BuildDiagnostic);
+    return JSON.stringify(value).length <= 65_536;
+  } catch {
+    return false;
+  }
 }

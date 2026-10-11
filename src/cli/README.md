@@ -65,6 +65,17 @@ last-good output and follow the existing watch error/recovery path.
 Rich presentation never changes `MoklyError`, generated output, HTTP responses,
 or timing JSON. The supervised Serve child stays plain and forwards diagnostics
 to the parent so only one reporter owns the terminal.
+`run.ts` also owns one structured warning sink per invocation. It flushes
+sorted, deduplicated diagnostics before one-shot summaries and Catalogue ready,
+redacts credentials, and starts each watched attempt's warning scope before
+config or consumer preparation. A failed attempt keeps old previews without
+restoring their warning scope. The supervised child forwards render warnings
+with the attempt captured from its rendering inputs. A full-manifest child
+captures its own config-warning generation before loading config. A child that
+receives retained config does not replay the parent's config warnings. Only
+the parent reports IPC warnings to the terminal. Main's `buildWarnings` reporter
+formats both routes and typed subjects. Strict commands count every producer
+and fail before writes or upload; Serve refuses `--strict`.
 
 ## Quick Start
 
@@ -95,6 +106,8 @@ ordinary test runners pipe stdout and intentionally select plain mode.
 - `reporter/` contains mode selection, terminal helpers, plain/rich output, and
   interactive controls.
 - `errors.ts` maps every typed Mokly error to rich headline and hint copy.
+- Publish's `git-uncommitted` and `build-stale` errors retain headline, bounded
+  path detail, and recovery hint in both plain and rich output.
 - `bin.ts` is the minimal executable that runs the compatibility bootstrap.
 - `export.ts` and `publish.ts` own signal-aware one-shot command lifecycles.
 

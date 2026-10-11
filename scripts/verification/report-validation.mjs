@@ -1,3 +1,5 @@
+import { validateBrowserShardBalance } from "./shard-balance.mjs";
+
 export function validateCompletedReport(report, options = {}) {
   if (report?.schemaVersion !== 1) throw new Error("invalid report schema");
   if (!["unit", "browser", "hydration"].includes(report.suite))
@@ -123,6 +125,11 @@ export function validateShardReports(reports, expected) {
       first.fullTests.map((entry) => entry.id),
       "observed browser tests",
     );
+    validateBrowserShardBalance(
+      ordered,
+      first.fullTests.length,
+      expected.total,
+    );
   }
 }
 
@@ -216,7 +223,7 @@ function validateTestEntries(entries, label, allowEmpty) {
     allowEmpty,
   );
   for (const entry of entries)
-    for (const field of ["project", "file", "title"])
+    for (const field of ["project", "specFile", "file", "title"])
       if (typeof entry[field] !== "string" || entry[field].length === 0)
         throw new Error(`${label} has an invalid ${field}`);
 }

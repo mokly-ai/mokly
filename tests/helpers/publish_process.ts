@@ -7,12 +7,13 @@ import { repositoryRoot } from "./fixture.js";
 const execute = promisify(execFile);
 const cli = path.join(repositoryRoot, "dist/cli/bin.js");
 
-/** Spawn the built publish CLI in deterministic plain-output mode. */
+/** Spawn the built publish CLI in the selected deterministic output mode. */
 export function runPublishedCli(
   cwd: string,
   endpoint: string,
   token: string,
   options: readonly string[] = [],
+  output: "plain" | "rich" = "plain",
 ) {
   return execute(
     process.execPath,
@@ -31,7 +32,12 @@ export function runPublishedCli(
     ],
     {
       cwd,
-      env: { ...process.env, MOKLY_OUTPUT: "plain", MOKLY_DIAGNOSTIC: "" },
+      env: {
+        ...process.env,
+        MOKLY_OUTPUT: output,
+        MOKLY_DIAGNOSTIC: "",
+        NO_COLOR: "1",
+      },
       maxBuffer: 16 * 1024 * 1024,
     },
   );

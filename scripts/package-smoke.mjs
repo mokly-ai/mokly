@@ -40,7 +40,6 @@ try {
     viewerArchivePath: pair.viewer.archivePath,
     fixturesRoot,
     packageVersion: pair.cli.report.version,
-    repositoryRoot,
     viewerVersion: pair.viewer.report.version,
     versions: {
       esbuild: packageJson.dependencies.esbuild,

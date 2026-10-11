@@ -39,7 +39,7 @@ test("a second origin can fetch catalogue and fragment with exact-origin headers
         html: await fragment.text(),
       };
     }, source.url);
-    expect(result.version).toBe(5);
+    expect(result.version).toBe(6);
     expect(result.status).toBe(200);
     expect(result.html).toContain("<html");
     expect(source.requestHeaders).toHaveLength(2);

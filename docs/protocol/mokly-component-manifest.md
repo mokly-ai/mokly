@@ -2,7 +2,12 @@
 
 ## Delivery Status
 
-Builds emit manifest v9 with paths, folder records, and rendered Markdown
+Removal of baseline compatibility is implemented in
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
+Root output ranges and removal of CSS resource owners are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md). The combined manifest v10 retains these proof fields.
+
+Builds emit manifest v10 with paths, folder records, and rendered Markdown
 documents. Copied document resources also remain private watched source inputs.
 
 These are the normative interfaces for the generated `mokly-manifest.json`.
@@ -14,14 +19,15 @@ These are the normative interfaces for the generated `mokly-manifest.json`.
 `source` field is defined by the
 [usage-record contract](./mokly-component-usage-records.md).
 
+The optional instance `source` follows the [usage-record contract](./mokly-component-usage-records.md). Readers accept instances with or without it.
 Version 9 carries paths and authored data only: no entry stores a route, view
 path, or other value derivable from its path, kind, and configuration.
 
 ## Entries, Folders, And Variants
 
 ```ts
-interface ManifestV9 {
-  schemaVersion: 9;
+interface ManifestV10 {
+  schemaVersion: 10;
   generatedBy: "mokly";
   entries: readonly ManifestEntry[];
   folders: readonly ManifestFolder[];
@@ -48,7 +54,6 @@ interface ManifestEntryBase {
   movedFrom?: string;
   relatedDocs: readonly string[];
   sourcePath: string;
-  declaredDependencies: readonly string[];
   tags?: readonly string[];
 }
 
@@ -86,7 +91,6 @@ interface ManifestComponent extends ManifestEntryBase {
   propSchema: ObjectPropSchema;
   slots: readonly string[];
   controls: Readonly<Record<string, ComponentControl>>;
-  ownedDependencies: readonly string[];
 }
 
 interface ManifestComponentVariant extends ManifestEntryBase {
@@ -126,12 +130,13 @@ title rule. The sorted `sourceFiles` inventory includes every folder record's
 `sourcePath`. Directory-only fields are rejected for code carriers, identified
 by a source path whose final segment is not `_folder.json`.
 
-Every entry requires `declaredDependencies`, the sorted unique paths
-explicitly authored in its definition; a document's list is empty and its
-`resources` holds the repository-relative files it references. The entry's
-complete dependency set is the union of `sourcePath`, `declaredDependencies`,
-and `resources`; readers derive it, and the manifest does not store it.
-`ownedDependencies` is a subset of the declared list. `colorSchemes` is the
+Source locations provide attribution and protection, never comparison evidence.
+Documents retain referenced repository-relative files in `resources`.
+Ownership comes from document `styles` and non-CSS `resources` records.
+Declared stylesheet provenance remains in `insertedStylesheets`; no CSS
+resource owners are derived. Current and accepted baseline manifests require
+the complete `sourceFiles` inventory; readers never infer it.
+`colorSchemes` is the
 effective, sorted, light-first set: a component variant inherits its parent's
 set, a document uses the catalogue set, and a screen variant may replace its
 parent's set under the variant contract. Variant props contain only validated
@@ -172,7 +177,7 @@ The manifest stores no override flag, so readers validate the parent relationshi
 and path uniqueness without reconstructing derivation. `useCasePaths` and
 `screenPath` reciprocate.
 A `folders[].path` is below at least one entry path or is the top level, and
-folder paths are unique. Dependency roots, source paths, tags, resource
+folder paths are unique. Source paths, tags, resource
 confinement, and global output collisions retain their existing rules.
 
 Entries sort by kind name in UTF-16 order (`component`, `document`, `page`,
@@ -184,16 +189,15 @@ the details `Variants` row, and the public tree's entry-node `children`
 present. During pre-validation ordering, a variant without one uniquely valid
 parent stays in ordinary kind-then-path position so relationship validation
 can reject it deterministically; invalid entries are never emitted. Folders
-sort by path. Use-case steps and tags retain authored order. Dependency,
-resource, owned-path, supplied-slot, and declared-slot arrays sort uniquely.
+sort by path. Use-case steps and tags retain authored order. Resource, supplied-slot, and declared-slot arrays sort uniquely.
 JSON object keys sort lexically; arrays follow their stated order. Omit absent
 optional fields; emit required empty arrays and objects. Serialize with
 two-space indentation and a final LF.
 
-Emit v9 for every catalogue, including one without components or documents.
+Emit v10 for every catalogue, including one without components or documents.
 Its sorted private `sourceFiles` inventory, explicit page and document
 entries, folder records, component records, and usage proof are required.
-Current and baseline readers accept only v9; the
+Current and baseline readers accept only v10; the
 [baseline compatibility contract](./mokly-baseline-compatibility.md) owns the
 clean unavailable outcome for earlier output. Contract fixtures, schema round
 trips, deterministic output, and ownership and path regressions cover these

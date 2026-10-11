@@ -9,6 +9,7 @@ import type {
   ObjectPropSchema,
 } from "../components/prop_types.js";
 import type { ColorScheme, Viewport } from "../data/axes.js";
+import type { ResourceEvidence } from "../review/types.js";
 
 export type ChangesStatus =
   "preparing" | "pending" | "ready" | "unavailable" | "disabled";
@@ -17,9 +18,9 @@ export type PublicPath = string;
 export type RemovedEntryPreview =
   { kind: "screen" } | { kind: "page" } | { kind: "document" };
 
-/** Public v5 contract, independent of private build and comparison inventories. */
+/** Public v6 contract, independent of private build and comparison inventories. */
 export interface CatalogueReadModel {
-  schemaVersion: 5;
+  schemaVersion: 6;
   identity: { id: string; title: string };
   deploymentId: string;
   revision: { content: number; evidence: number };
@@ -79,7 +80,6 @@ export interface CatalogueDetails {
   rationale?: string;
   relatedDocs: readonly string[];
   sourcePath: string;
-  dependencies: readonly string[];
 }
 export interface CatalogueEntry {
   path: string;
@@ -98,6 +98,7 @@ export type CatalogueUsage =
     }
   | { status: "pending" | "unavailable" };
 export interface CatalogueView {
+  resourceEvidence?: ResourceEvidence;
   viewport: Viewport;
   colorScheme: ColorScheme;
   usage: CatalogueUsage;
@@ -114,6 +115,7 @@ export interface CatalogueScreen extends CatalogueEntry {
 }
 export interface CataloguePage extends CatalogueEntry {
   kind: "page";
+  resourceEvidence?: ResourceEvidence;
 }
 export interface CatalogueUseCase extends CatalogueEntry {
   kind: "use-case";

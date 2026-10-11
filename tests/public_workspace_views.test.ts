@@ -3,8 +3,8 @@ import test from "node:test";
 
 import { projectCatalogue } from "../dist/catalogue/projection.js";
 import { removedManifestEntries } from "../dist/registry/changes.js";
-import type { ManifestV9 } from "../packages/viewer/dist/registry/types.js";
-import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
+import type { ManifestV10 } from "../packages/viewer/dist/registry/types.js";
+import type { ReviewResultV7 } from "../packages/viewer/dist/review/component_types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { workspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
@@ -67,7 +67,6 @@ test("public workspace keeps each saved variant's changed views", () => {
 test("public workspace derives a screen's ready per-view states", () => {
   const screen = {
     colorSchemes: ["light"] as const,
-    declaredDependencies: [],
     description: "Welcome screen",
     path: "welcome",
     kind: "screen" as const,
@@ -77,14 +76,14 @@ test("public workspace derives a screen's ready per-view states", () => {
     title: "Welcome",
     useCasePaths: [],
   };
-  const manifest: ManifestV9 = currentManifest({
+  const manifest: ManifestV10 = currentManifest({
     entries: [screen],
     folders: [],
     generatedBy: "mokly",
-    schemaVersion: 9,
+    schemaVersion: 10,
     sourceFiles: [screen.sourcePath],
   });
-  const result: ReviewResultV6 = {
+  const result: ReviewResultV7 = {
     affectedConsumers: [],
     baseCommit: "a".repeat(40),
     baseRef: "main",
@@ -92,14 +91,12 @@ test("public workspace derives a screen's ready per-view states", () => {
     changes: [],
     components: [],
     ignoredImpact: [],
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     screens: [
       {
         after: { path: screen.path, title: screen.title },
         before: { path: screen.path, title: screen.title },
-        dependencies: [],
         path: screen.path,
-        sharedImpact: [],
         state: "changed",
         title: screen.title,
         views: [
@@ -118,7 +115,6 @@ test("public workspace derives a screen's ready per-view states", () => {
         ],
       },
     ],
-    sharedImpact: [],
   };
   const model = projectCatalogue({
     catalogue: createCatalogue(manifest),

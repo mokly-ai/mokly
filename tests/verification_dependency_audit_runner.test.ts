@@ -1,21 +1,20 @@
 import assert from "node:assert/strict";
+import { Buffer } from "node:buffer";
 import test from "node:test";
 
-import {
-  npmAuditCommand,
-  runDependencyAudit,
-} from "../scripts/verification/dependency-audit.mjs";
-import type { AuditCommandResult } from "../scripts/verification/dependency-audit.mjs";
+import { npmAuditCommand } from "../scripts/verification/dependency-audit-command.mjs";
+import type { AuditCommandResult } from "../scripts/verification/dependency-audit-command.mjs";
+import { runDependencyAudit } from "../scripts/verification/dependency-audit.mjs";
 
 import { auditFixture } from "./helpers/dependency_audit.js";
 
 function harness() {
   const { report, lockfile, exception, today } = auditFixture();
   const files = new Map([
-    ["package-lock.json", JSON.stringify(lockfile)],
+    ["package-lock.json", Buffer.from(JSON.stringify(lockfile))],
     [
       "scripts/verification/dependency-audit-exceptions.json",
-      JSON.stringify([exception]),
+      Buffer.from(JSON.stringify([exception])),
     ],
   ]);
   const output: { notices: string[]; errors: string[] } = {
@@ -65,10 +64,13 @@ test("runner uses injected IO, clock, logger, and all audit categories", async (
         "audit",
         "--json",
         "--audit-level=low",
+        "--package-lock-only",
         "--include=prod",
         "--include=dev",
         "--include=optional",
         "--include=peer",
+        "--prefix",
+        ".",
       ],
       cwd: "/repo",
       shell: false,
@@ -147,7 +149,7 @@ test("exit code must agree with the report before exceptions apply", async () =>
   });
   result.exitCode = 1;
   dependencies.readFile = async (file) =>
-    file === "package-lock.json" ? '{"packages": {"": {}}}' : "[]";
+    Buffer.from(file === "package-lock.json" ? '{"packages": {"": {}}}' : "[]");
   assert.equal((await runDependencyAudit(dependencies)).ok, false);
 });
 
@@ -159,7 +161,10 @@ test("runner accepts clean reports and large JSON output", async () => {
     vulnerabilities: {},
     padding: "x".repeat(10 * 1024 * 1024),
   });
-  files.set("scripts/verification/dependency-audit-exceptions.json", "[]");
+  files.set(
+    "scripts/verification/dependency-audit-exceptions.json",
+    Buffer.from("[]"),
+  );
   assert.equal((await runDependencyAudit(dependencies)).ok, true);
 });
 
@@ -171,7 +176,7 @@ test("file read and parse failures identify the file and required action", async
     for (const action of ["missing", "malformed"]) {
       const { dependencies, files, output } = harness();
       if (action === "missing") files.delete(file);
-      else files.set(file, "not-json");
+      else files.set(file, Buffer.from("not-json"));
       assert.equal((await runDependencyAudit(dependencies)).ok, false);
       assert.ok(output.errors.join("\n").includes(file));
       assert.match(output.errors.join("\n"), /Fix|Restore|Retry/u);

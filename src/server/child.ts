@@ -1,3 +1,4 @@
+import type { BuildDiagnostic } from "../build/build_warnings.js";
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { bindTimings, timeSync } from "../diagnostics/timings.js";
@@ -24,6 +25,8 @@ export async function runServerChild(
   strictPort: boolean,
   retainedRuntime: boolean,
   manifest?: ComponentRuntime["manifest"],
+  assetClosure?: readonly string[],
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): Promise<void> {
   const initial =
     retainedRuntime && manifest?.schemaVersion === "live-index-2"
@@ -40,9 +43,14 @@ export async function runServerChild(
       if (process.send) process.send({ type: "diagnostic", message });
       else process.stderr.write(`${message}\n`);
     },
+    onBuildWarning: (event) => {
+      if (process.send) process.send({ type: "warning", ...event });
+      else onWarning?.(event.warning);
+    },
     onPreviewResources: (observation) =>
       process.send?.({ type: "preview-resources", ...observation }),
     ...(manifest ? { manifest } : {}),
+    ...(assetClosure ? { assetClosure } : {}),
     ...(initial && manifest
       ? { componentRuntime: { ...initial.runtime, config, manifest } }
       : {}),
@@ -92,7 +100,11 @@ function waitForChildShutdown(
       const complete = parseCatalogueCompleteMessage(message);
       if (
         complete &&
-        server.completeCatalogue?.(complete.manifest, complete.generation)
+        server.completeCatalogue?.(
+          complete.manifest,
+          complete.generation,
+          complete.assetClosure,
+        )
       ) {
         repository.accept(undefined, complete.version);
         server.publishUpdate({ kind: "evidence", version: complete.version });
@@ -126,7 +138,6 @@ function waitForChildShutdown(
             (update.changedEntries === null ? "pending" : "ready"),
           changedEntries: update.changedEntries,
           componentChanges: update.componentChanges,
-          ...(update.assetClosure ? { assetClosure: update.assetClosure } : {}),
           version: update.version,
         });
       }

@@ -4,6 +4,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
+import { Marked, type Token } from "marked";
+
 import { repositoryRoot } from "./helpers/fixture.js";
 
 const listed = execFileSync(
@@ -16,8 +18,12 @@ const listed = execFileSync(
 const markdown = listed.filter(
   (file) =>
     file.endsWith(".md") &&
-    (file.startsWith("docs/") || path.basename(file) === "README.md"),
+    (file === "AGENTS.md" ||
+      file.startsWith("docs/") ||
+      file.startsWith("plans/") ||
+      path.basename(file) === "README.md"),
 );
+const parser = new Marked({ gfm: true });
 const contents = new Map<string, string>();
 
 async function read(file: string): Promise<string> {
@@ -30,32 +36,12 @@ async function read(file: string): Promise<string> {
 }
 
 function links(text: string): string[] {
-  const result: string[] = [];
-  const lines = text.split("\n");
-  let fenced = false;
-  for (const line of lines) {
-    if (/^\s*(```|~~~)/.test(line)) {
-      fenced = !fenced;
-      continue;
-    }
-    if (fenced) continue;
-    for (
-      let start = line.indexOf("](");
-      start !== -1;
-      start = line.indexOf("](", start + 2)
-    ) {
-      let depth = 1;
-      let end = start + 2;
-      for (; end < line.length && depth; end++) {
-        if (line[end] === "(" && line[end - 1] !== "\\") depth++;
-        if (line[end] === ")" && line[end - 1] !== "\\") depth--;
-      }
-      if (!depth) result.push(line.slice(start + 2, end - 1).split(/\s+"/)[0]!);
-    }
-    const definition = /^\s*\[[^\]]+\]:\s*<?([^>\s]+)>?/.exec(line);
-    if (definition) result.push(definition[1]!);
-  }
-  return result;
+  const tokens = parser.lexer(text);
+  const result = new Set(Object.values(tokens.links).map((link) => link.href));
+  parser.walkTokens(tokens, (token: Token) => {
+    if (token.type === "link" || token.type === "image") result.add(token.href);
+  });
+  return [...result];
 }
 
 function anchors(text: string): Set<string> {
@@ -85,9 +71,21 @@ function anchors(text: string): Set<string> {
   return found;
 }
 
-test("local documentation links resolve and anchors match GitHub headings", async () => {
+test("a Markdown parser decides which text is a link", () => {
+  assert.deepEqual(links("`[a](a.md)` ``[b](`b`)`` [c](c.md)"), ["c.md"]);
+  assert.deepEqual(links("an unclosed ` [d](d.md)"), ["d.md"]);
+  assert.deepEqual(links("`a span that\nwraps [e](e.md)` [f](f.md)"), ["f.md"]);
+  assert.deepEqual(links("`a wrapped\nspan` [g](g.md) `h`"), ["g.md"]);
+  assert.deepEqual(links("\\` [i](i.md) \\`"), ["i.md"]);
+  assert.deepEqual(links("```\n[j](j.md)\n```"), []);
+  assert.deepEqual(links('![k](k.png) [l](l.md "Title")'), ["k.png", "l.md"]);
+  assert.deepEqual(links("[m][ref]\n\n[ref]: m.md"), ["m.md"]);
+});
+
+test("local documentation and plan links resolve and anchors match GitHub headings", async () => {
   const failures: string[] = [];
   let protocolLinks = 0;
+  let planLinks = 0;
   for (const source of markdown) {
     for (const destination of links(await read(source))) {
       if (/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(destination)) continue;
@@ -110,6 +108,7 @@ test("local documentation links resolve and anchors match GitHub headings", asyn
         target = path.posix.join(target, "README.md");
       }
       if (target.startsWith("docs/protocol/")) protocolLinks++;
+      if (source.startsWith("plans/")) planLinks++;
       const exists = await fs
         .stat(path.join(repositoryRoot, target))
         .catch(() => undefined);
@@ -129,5 +128,6 @@ test("local documentation links resolve and anchors match GitHub headings", asyn
     protocolLinks > 100,
     `only ${protocolLinks} protocol links checked`,
   );
+  assert.ok(planLinks > 100, `only ${planLinks} plan links checked`);
   assert.deepEqual(failures, []);
 });

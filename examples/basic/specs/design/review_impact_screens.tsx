@@ -8,38 +8,12 @@ import { NavDrawer, NavTree } from "./parts/nav.js";
 import {
   EmptyReviewNav,
   IgnoredImpactCard,
-  SharedImpactCard,
   WelcomeShot,
 } from "./parts/review.js";
 import { WelcomeHead } from "./parts/screen_heads.js";
 import { Shell } from "./parts/shell.js";
 
 type ReviewViewport = "desktop" | "mobile";
-
-function SharedImpactSummary({ viewport }: { viewport: ReviewViewport }) {
-  return (
-    <Shell
-      design={DESTINATIONS.shared}
-      viewport={viewport}
-      nav={<NavTree activeLabel="Welcome" changedCount={0} />}
-    >
-      <WelcomeHead active={viewport} />
-      <PreviewWorkspace
-        viewport={viewport}
-        inspector={
-          <DetailsPanel
-            subject="welcome"
-            comparisonEvidence={<SharedImpactCard />}
-            open
-          />
-        }
-        render={(previewViewport) => (
-          <WelcomeShot viewport={previewViewport} comparison={false} />
-        )}
-      />
-    </Shell>
-  );
-}
 
 function IgnoredOnlyCompare({ viewport }: { viewport: ReviewViewport }) {
   return (
@@ -90,18 +64,8 @@ function EmptyChanges({ viewport }: { viewport: ReviewViewport }) {
   );
 }
 
-/** Design screens for secondary comparison evidence and an empty Changes filter. */
+/** Design screens for ignored comparison evidence and an empty Changes filter. */
 export const reviewImpactScreens = [
-  defineScreen({
-    ...changesDesignMetadata,
-    colorSchemes: ["light"],
-    description:
-      "An unchanged screen opened from All retains secondary evidence from changed shared inputs.",
-    desktop: <SharedImpactSummary viewport="desktop" />,
-    slug: "shared-impact",
-    mobile: <SharedImpactSummary viewport="mobile" />,
-    title: "Shared impact",
-  }),
   defineScreen({
     ...changesDesignMetadata,
     colorSchemes: ["light"],

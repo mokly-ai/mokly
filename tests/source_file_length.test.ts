@@ -177,11 +177,11 @@ test("changed protocol pages follow exact reviewed caps", async (context) => {
   git("config", "user.name", "Mokly Test");
   git("config", "user.email", "mokly@example.invalid");
   await fs.mkdir(path.join(root, "docs/protocol"), { recursive: true });
-  await fs.mkdir(path.join(root, "tests"));
+  await fs.mkdir(path.join(root, "xtask"));
   const document = path.join(root, "docs/protocol/long.md");
-  const caps = path.join(root, "tests/protocol_doc_sizes.test.ts");
+  const caps = path.join(root, "xtask/protocol-document-caps.json");
   await fs.writeFile(document, "line\n".repeat(260));
-  await fs.writeFile(caps, 'const oversizedCaps = { "long.md": 260 };\n');
+  await fs.writeFile(caps, '{ "long.md": 260 }\n');
   git("add", ".");
   git("commit", "-qm", "baseline cap");
   git("update-ref", "refs/remotes/origin/main", "HEAD");
@@ -192,7 +192,7 @@ test("changed protocol pages follow exact reviewed caps", async (context) => {
     "a lowered exact cap permits a shorter capped page",
     async () => {
       await fs.writeFile(document, "line\n".repeat(255));
-      await fs.writeFile(caps, 'const oversizedCaps = { "long.md": 255 };\n');
+      await fs.writeFile(caps, '{ "long.md": 255 }\n');
       assert.equal(check().status, 0);
     },
   );
@@ -211,5 +211,14 @@ test("changed protocol pages follow exact reviewed caps", async (context) => {
     const result = check();
     assert.equal(result.status, 1);
     assert.match(result.stderr, /uncapped\.md: 251 lines \(limit 250\)/u);
+  });
+  await context.test("an invalid cap table stops the audit", async () => {
+    await fs.writeFile(caps, '{ "long.md": 250 }\n');
+    const result = check();
+    assert.notEqual(result.status, 0);
+    assert.match(
+      result.stderr,
+      /xtask\/protocol-document-caps\.json has an invalid cap for long\.md/u,
+    );
   });
 });

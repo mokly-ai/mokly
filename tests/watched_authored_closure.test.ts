@@ -3,9 +3,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-import { FileSystemGeneratedOutputStore } from "../dist/build/output_store.js";
+import { compileCatalogue } from "../dist/build/compile.js";
+import { prepareLiveRuntime } from "../dist/build/live_runtime.js";
 import { loadConfig } from "../dist/config/load.js";
+import { startCatalogueServer } from "../dist/server/http.js";
 import { serve } from "../dist/server/serve.js";
+import type { WatchEvent } from "../dist/server/watch_events.js";
 
 import {
   createFixture,
@@ -17,7 +20,6 @@ import {
   waitForInitialChanges,
   waitForUpdate,
 } from "./helpers/watched_catalogue.js";
-import { waitFor } from "./server_fixture.js";
 
 test(
   "watched Serve keeps authored page and PDF links after background and resource updates",
@@ -89,69 +91,130 @@ test(
   },
 );
 
-for (const build of [false, true]) {
-  test(
-    `watched Serve refreshes its authored closure after CSS additions and removals (build=${build})`,
-    { timeout: 60_000 },
-    async (t) => {
-      const fixture = await createFixture(undefined, {
-        extraConfig:
-          'stylesheets: [{ match: "**", stylesheets: ["theme.css"] }], watch: { debounceMs: 0 },',
-      });
-      t.after(() => removeFixture(fixture));
-      const stylesheet = path.join(fixture.mockupsDir, "theme.css");
-      await fs.writeFile(stylesheet, 'main{background:url("a.svg")}');
-      await fs.writeFile(path.join(fixture.mockupsDir, "a.svg"), "<svg/>");
-      await fs.writeFile(
-        path.join(fixture.mockupsDir, "b.svg"),
-        '<svg width="42"/>',
-      );
-      const outputStore = new FileSystemGeneratedOutputStore();
-      const completed = new Set<string>();
-      const write = outputStore.write.bind(outputStore);
-      t.mock.method(
-        outputStore,
-        "write",
-        async (...args: Parameters<typeof write>) => {
-          await write(...args);
-          completed.add(JSON.stringify(args[0].manifest.assetClosure));
+test(
+  "a restarted watched child serves the checked PDF before its background pass completes",
+  { timeout: 60_000 },
+  async (t) => {
+    const body = '<a href="../../spec.pdf">PDF</a>';
+    const fixture = await createFixture(validEntrySource({ body }), {
+      extraConfig: "watch: { debounceMs: 0 },",
+    });
+    t.after(() => removeFixture(fixture));
+    await fs.writeFile(
+      path.join(fixture.mockupsDir, "spec.pdf"),
+      "%PDF-1.4\nchecked",
+    );
+    let writes = 0;
+    let startedRestartWrite: () => void = () => {};
+    const restartWrite = new Promise<void>((resolve) => {
+      startedRestartWrite = resolve;
+    });
+    let release: () => void = () => {};
+    const released = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let changed: ((event: WatchEvent) => void) | undefined;
+    const running = await serve(
+      await loadConfig(fixture.root),
+      { build: true, port: 0, watch: true },
+      {
+        outputStore: {
+          check() {},
+          async write() {
+            if (++writes !== 2) return;
+            startedRestartWrite();
+            await released;
+          },
         },
-      );
-      const running = await serve(
-        await loadConfig(fixture.root),
-        { watch: true, build, port: 0 },
-        { outputStore },
-      );
-      fixture.beforeRemove(() => running.close());
-      await waitForInitialChanges(running.url);
-      const manifest = path.join(fixture.generatedDir, "mokly-manifest.json");
-      const checkClosure = async (expected: string[]) => {
-        if (build) {
-          await waitFor(async () => completed.has(JSON.stringify(expected)));
-          assert.deepEqual(
-            JSON.parse(await fs.readFile(manifest, "utf8")).assetClosure,
-            expected,
-          );
-        } else
-          await assert.rejects(fs.stat(fixture.generatedDir), {
-            code: "ENOENT",
-          });
-      };
-      await checkClosure(["a.svg", "theme.css"]);
-      for (const target of ["b.svg", undefined]) {
-        const before = version(await (await fetch(running.url)).text());
-        await fs.writeFile(
-          stylesheet,
-          target ? `main{background:url("${target}")}` : "main{color:green}",
-        );
-        await waitForUpdate(running.url, before);
-        await waitFor(
-          async () =>
-            (await fetch(running.url + "/static/b.svg")).status ===
-            (target ? 200 : 404),
-        );
-        await checkClosure(target ? [target, "theme.css"] : ["theme.css"]);
-      }
-    },
+        watcherFactory: {
+          create: () => ({
+            async ready() {},
+            async close() {},
+            onError() {},
+            onChange(callback) {
+              changed ??= callback;
+            },
+          }),
+        },
+      },
+    );
+    fixture.beforeRemove(() => {
+      release();
+      return running.close();
+    });
+    await waitForInitialChanges(running.url);
+    const pdf = running.url + "/static/spec.pdf";
+    assert.equal(await (await fetch(pdf)).text(), "%PDF-1.4\nchecked");
+    await fs.writeFile(
+      fixture.entryPath,
+      validEntrySource({ body, firstTitle: "Renamed home" }),
+    );
+    assert.ok(changed, "watched Serve registered a source watcher");
+    changed({ path: fixture.entryPath, kind: "change" });
+    await restartWrite;
+    assert.equal(await (await fetch(pdf)).text(), "%PDF-1.4\nchecked");
+  },
+);
+
+/** Start the child server in-process on a live index whose page links a PDF. */
+async function childWithLinkedPdf(t: test.TestContext) {
+  const fixture = await createFixture(
+    validEntrySource({ body: '<a href="../../spec.pdf">PDF</a>' }),
   );
+  t.after(() => removeFixture(fixture));
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "spec.pdf"),
+    "%PDF-1.4\nfirst",
+  );
+  const config = await loadConfig(fixture.root);
+  const runtime = await prepareLiveRuntime(config);
+  const server = await startCatalogueServer(config, {
+    base: "main",
+    componentRuntime: runtime,
+    manifest: runtime.manifest,
+    port: 0,
+  });
+  fixture.beforeRemove(() => server.close());
+  return {
+    config,
+    fixture,
+    pdf: `${server.url}/static/spec.pdf`,
+    runtime,
+    server,
+  };
 }
+
+test("the in-process child keeps its checked authored closure when a reload adopts a new generation", async (t) => {
+  const { config, fixture, pdf, runtime, server } = await childWithLinkedPdf(t);
+  const complete = await compileCatalogue(config);
+  assert.equal(
+    server.completeCatalogue!(complete.manifest, runtime.generation),
+    true,
+  );
+  assert.equal(await (await fetch(pdf)).text(), "%PDF-1.4\nfirst");
+  await fs.writeFile(
+    path.join(fixture.mockupsDir, "spec.pdf"),
+    "%PDF-1.4\nsecond",
+  );
+  server.replaceComponentRuntime({ ...runtime, generation: "b".repeat(32) });
+  server.publishUpdate({ version: 2 });
+  assert.equal(await (await fetch(pdf)).text(), "%PDF-1.4\nsecond");
+  assert.equal(
+    server.completeCatalogue!(complete.manifest, "b".repeat(32), []),
+    true,
+  );
+  assert.equal((await fetch(pdf)).status, 404);
+});
+
+test("the in-process child drops on-demand closure additions with their generation", async (t) => {
+  const { pdf, runtime, server } = await childWithLinkedPdf(t);
+  assert.equal((await fetch(pdf)).status, 404);
+  assert.equal(
+    (await fetch(`${server.url}/static/mokly-generated/home/index.mobile.html`))
+      .status,
+    200,
+  );
+  assert.equal(await (await fetch(pdf)).text(), "%PDF-1.4\nfirst");
+  server.replaceComponentRuntime({ ...runtime, generation: "b".repeat(32) });
+  assert.equal((await fetch(pdf)).status, 404);
+});

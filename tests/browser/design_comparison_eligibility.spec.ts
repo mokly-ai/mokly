@@ -7,7 +7,7 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { viewRoute } from "../../packages/viewer/dist/data.js";
 import type {
   ManifestScreen,
-  ManifestV9,
+  ManifestV10,
 } from "../../packages/viewer/dist/registry/types.js";
 import { paletteColor } from "../helpers/design_palette.js";
 import { repositoryRoot } from "../helpers/fixture.js";
@@ -15,7 +15,7 @@ import { repositoryRoot } from "../helpers/fixture.js";
 const directory = path.join(repositoryRoot, "examples/basic/mokly-generated");
 const manifest = JSON.parse(
   fs.readFileSync(path.join(directory, "mokly-manifest.json"), "utf8"),
-) as ManifestV9;
+) as ManifestV10;
 const changedDesigns = new Set([
   "design/browse/variants/variant-changes",
   "design/browse/index-entries/member-changes",
@@ -27,12 +27,13 @@ const changedDesigns = new Set([
   "design/changes/diff-controls/side-by-side-apart",
   "design/changes/outcomes/changed",
   "design/changes/outcomes/difference",
-  "design/changes/impact/styles/matched",
-  "design/changes/impact/styles/unresolved",
-  "design/changes/impact/styles/unnamed",
+  "design/changes/impact/styles/matched-excluded/matched",
+  "design/changes/impact/styles/unresolved-unnamed/unresolved",
+  "design/changes/impact/styles/unresolved-unnamed/unnamed",
   "design/browse/publication/changes",
   "design/browse/appearance/workspaces/side-by-side",
   "design/browse/appearance/workspaces/difference",
+  "design/changes/impact/styles/matched-excluded/excluded",
 ]);
 
 async function assertFragmentEligibility(

@@ -3,6 +3,8 @@ import path from "node:path";
 
 import { GENERATED_DIRECTORY } from "@mokly/viewer/data";
 
+import { type BuildDiagnostic } from "../build/build_warnings.js";
+import { removedSharedImpact } from "../build/warnings.js";
 import { MoklyError } from "../errors.js";
 
 import { isBaselineCachePath } from "./cache_paths.js";
@@ -15,12 +17,7 @@ import {
   validateReviewOut,
   validateSourceRoots,
 } from "./path_validation.js";
-import {
-  isInside,
-  projectRealPath,
-  resolveInside,
-  validateRelativeRoute,
-} from "./paths.js";
+import { isInside, projectRealPath, resolveInside } from "./paths.js";
 import { validatePostcssPath } from "./postcss.js";
 import {
   isReservedConfiguredPath,
@@ -31,10 +28,9 @@ import {
   requireString,
   validateColorSchemes,
   validateDebounce,
-  validateStringArray,
-  validateStylesheets,
   validateWatchRules,
 } from "./rules.js";
+import { validateStylesheets } from "./stylesheet_rules.js";
 import type { MoklyConfig, ResolvedConfig } from "./types.js";
 
 const REMOVED_CONFIG_KEYS = [
@@ -53,6 +49,7 @@ const REMOVED_CONFIG_KEYS = [
 export function resolveConfig(
   value: unknown,
   configPath: string,
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): ResolvedConfig {
   if (!isRecord(value)) {
     throw new MoklyError(
@@ -87,6 +84,16 @@ export function resolveConfig(
         "config-invalid",
         `unknown configuration field: ${key}`,
       );
+  const removedReviewField =
+    isRecord(value.review) && Object.hasOwn(value.review, "sharedImpact")
+      ? removedSharedImpact(
+          configPath,
+          typeof value.repoRoot === "string"
+            ? path.resolve(path.dirname(configPath), value.repoRoot)
+            : undefined,
+        )
+      : undefined;
+  if (removedReviewField) onWarning?.(removedReviewField);
   const input = value as unknown as MoklyConfig;
   requireString(input.mockupsDir, "mockupsDir");
   if (input.repoRoot !== undefined) requireString(input.repoRoot, "repoRoot");
@@ -171,6 +178,7 @@ export function resolveConfig(
     repoRoot,
   });
   const resolved: ResolvedConfig = {
+    ...(removedReviewField ? { diagnostics: [removedReviewField] } : {}),
     generatedDir,
     colorSchemes,
     configPath,
@@ -184,10 +192,6 @@ export function resolveConfig(
       ...(baselineBuild ? { baselineBuild } : {}),
       base: input.review?.base ?? "origin/main",
       outDir: reviewOut,
-      sharedImpact: validateStringArray(
-        input.review?.sharedImpact ?? [],
-        "review.sharedImpact",
-      ).map((glob) => validateRelativeRoute(glob, "review.sharedImpact")),
     },
     stylesheets,
     watch: {

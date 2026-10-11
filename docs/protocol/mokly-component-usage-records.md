@@ -2,11 +2,20 @@
 
 ## Delivery Status
 
-Implemented for manifest v9, including strict admission of baseline usage
+Removal of baseline compatibility is implemented in
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
+Implemented for manifest v10. Root output ranges, non-CSS-only resource records and independent
+stylesheet provenance are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the
+[source-path removal plan](../../plans/remove-source-path-evidence.md), within v10.
+
+The rule for comments with the former spelling is implemented in
+[M23](../../plans/remove-source-path-evidence.md#milestone-23-remove-the-historical-marker-rename).
+Implemented for manifest v10, including strict admission of baseline usage
 records. `componentId` names a component parent by its path.
 
 This contract owns the per-view component instance, slot, range, style, and
-resource records stored by [manifest v9](./mokly-component-manifest.md).
+resource records stored by [manifest v10](./mokly-component-manifest.md).
 Stable instance-key behavior is defined separately by
 [Component Instance Identity](./mokly-instances.md).
 
@@ -43,7 +52,9 @@ interface ComponentSlotRecord {
 }
 
 type ComponentRangeTarget =
-  { kind: "instance"; instanceKey: string } | { kind: "slot"; slotKey: string };
+  | { kind: "instance"; instanceKey: string }
+  | { kind: "slot"; slotKey: string }
+  | { kind: "root" };
 
 interface ComponentRangeRecord {
   id: string;
@@ -70,6 +81,14 @@ interface ComponentViewRecord {
   ranges: readonly ComponentRangeRecord[];
   styles: readonly ComponentStyleOwnership[];
   resources: readonly ComponentResourceOwnership[];
+  insertedStylesheets: readonly InsertedComponentStylesheet[];
+}
+
+interface InsertedComponentStylesheet {
+  startOffset: number;
+  endOffset: number;
+  path: string;
+  componentPaths: readonly string[];
 }
 ```
 
@@ -105,11 +124,53 @@ registered range. Multi-root or text output has one enclosing range. A null
 component has an empty range. Repeated placements use separate range ids
 without creating extra logical instance keys.
 
+On both baseline and current sides, a comment with the former `mokabook-`
+spelling is ordinary page content. Mokly never reads it as a marker or removes
+it as one. The comment alone is not a validation error. It creates no component
+range, Review-ignore region or material marker. Required baseline ranges that
+its document cannot prove follow
+[Invalid Or Missing Data](./mokly-baseline-compatibility.md#invalid-or-missing-data).
+Historical marker translation is not supported. The frozen instance and slot
+key domain strings above are unchanged.
+
 Range ids, physical parents, style offsets, and placement counts are inspection
 coordinates, not input identity. Moving or duplicating unchanged slot material
 does not by itself mark a caller changed. Logical id, order, props, and owner
 changes remain material under the
 [component attribution contract](./mokly-component-changes.md).
+
+## Root Output Boundary
+
+Every accepted component saved-view document has exactly one range whose target is
+`{ kind: "root" }`. It uses the existing layout-neutral component start/end
+comment grammar and `r-N` allocation. It has no `parentId`; its component id is
+the variant entry's `variantOf`. The paired markers wrap only the root render
+result, including empty or multiple-root output, before the renderer wraps
+`input.node`. Nested ranges name it as their nearest physical parent where
+applicable. Renderer wrappers and head content remain outside it.
+
+The root is not an instance, slot, prop owner or Used by occurrence. Preserve
+existing instance keys, caller ownership and inspection behavior. Strip its
+markers as package markers for document comparison, so the new marker pair
+alone is not material. Keep it when validating containment for CSS. Rebase
+coordinates through package link edits, provenance projection and Review-ignore using
+the same validated range policy as other boundaries; never infer its output
+from a body element or a common selector.
+
+The root pair is containment proof only. It does not change which manual
+Review-ignore regions are allowed. A previously valid region around root output
+with no instance or caller-slot boundaries stays valid. Normalized-away elements
+supply no CSS matches, including when that region removes all root output.
+
+Screens have no root range. Current and baseline component views require one; duplicates,
+unpaired markers or a root on a screen fail normal component-range validation.
+Missing required root bounds are invalid data. They do not become page evidence
+or trigger a guessed root around the document. An absent view on one side of an
+added or removed entry is still valid and supplies no document or matches.
+
+Catalogue v6 usage ranges carry this target. Readers and inspection
+accept it as a boundary without presenting it as a nested component or adding
+an instance count. Public evidence carries no range offsets or DOM elements.
 
 ## Style And Resource Ownership
 
@@ -121,8 +182,20 @@ overlap and sort by start offset.
 Resource paths are exact mockups-root-relative public files and sort lexically,
 one record per path. Every owner list is nonempty, sorted, duplicate-free, and
 names components that actually render in the view, including the component root
-when applicable. Ownership is an explicit renderer or author assertion, never
-CSS-selector inference.
+when applicable. These records own only non-stylesheet files. Renderer CSS
+records are ignored with a warning; Mokly derives no CSS resource records.
+Current and baseline v10 records reject CSS owners. Renderer `styles`
+remain exact document ranges. CSS rule membership uses element containment,
+not these assertions.
+
+`insertedStylesheets` records final-document full-link UTF-16 spans, decoded
+public paths and rendered declaring paths. It is private provenance, not file
+ownership. Each persisted v10 usage record must contain this array, even when
+empty. A missing array is invalid data; readers never guess provenance or
+normalize its absence to an empty array. Public inspection still omits this
+private field. It needs no corresponding `resources` record. The
+[stylesheet provenance contract](./mokly-component-stylesheet-ownership.md)
+defines final-link validation and the root-link comparison exception.
 
 ## Validation
 

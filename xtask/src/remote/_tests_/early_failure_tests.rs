@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use unimock::{MockFn, Unimock, matching};
 
+use crate::check::request::DependencyAudit;
 use crate::executor::Executor;
 use crate::remote::availability::{DefaultSelector, Selector};
 use crate::remote::contracts::*;
@@ -110,7 +111,7 @@ fn head_fingerprint_and_log_failures_stop_before_warmup() {
         .select(Executor::Remote)
         .unwrap();
         assert!(matches!(
-            runner.run(),
+            runner.run(DependencyAudit::Baseline),
             Err(Failure::Unavailable(Error::Io { .. }))
         ));
     }

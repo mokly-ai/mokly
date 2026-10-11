@@ -147,5 +147,12 @@ export async function smokeEsmConsumer(context) {
   await inspectMarkdownDocuments(root, "published", true);
   await smokeViewer(root);
   await smokeRegisteredComponents(context, root);
+  await fs.promises.appendFile(path.join(root, ".gitignore"), "published/\n");
+  await runCommand("git", ["add", "."], { cwd: root });
+  await runCommand(
+    "git",
+    ["commit", "-qm", "test: commit publication inputs"],
+    { cwd: root },
+  );
   await smokeConsumerPublish(context, root);
 }

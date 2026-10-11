@@ -12,121 +12,114 @@ import { parseReviewResult } from "../packages/viewer/dist/review/result_validat
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
+import { resourceReasonSummaries } from "./helpers/css_evidence.js";
 
-for (const ownership of ["dependency", "renderer"] as const)
-  for (const exact of [false, true])
-    for (const matches of [false, true])
-      test(`actual invocation CSS ownership=${ownership}, exact screen=${exact}, matches=${matches}`, async (t) => {
-        const source = componentEntrySource({
-          actionRender:
-            '(props) => <button className={props.label === "Finish" ? "actual-only" : "saved"}>{props.label}</button>',
-        })
-          .replace(
-            'path: "action",',
-            ownership === "dependency"
-              ? 'path: "action", dependencies: ["mockups/action.css"], ownedDependencies: ["mockups/action.css"],'
-              : 'path: "action",',
-          )
-          .replace(
-            'path: "home",',
-            exact
-              ? 'path: "home", dependencies: ["mockups/action.css"],'
-              : 'path: "home",',
+for (const ownership of ["renderer", "declared"] as const)
+  for (const matches of [false, true])
+    test(`consumer-only CSS ignores ownership=${ownership}, matches=${matches}`, async (t) => {
+      const source = componentEntrySource({
+        actionRender:
+          '(props) => <button className={props.label === "Finish" ? "actual-only" : "saved"}>{props.label}</button>',
+      }).replace(
+        'path: "action",',
+        ownership === "declared"
+          ? 'path: "action", stylesheets: ["action.css"],'
+          : 'path: "action",',
+      );
+      const fixture = await changedFixture(
+        t,
+        source,
+        {
+          extraConfig: `colorSchemes: ["light", "dark"], stylesheets: ${ownership === "declared" ? "[]" : '[{ match: "**", stylesheets: ["action.css"] }]'}, ${ownership === "renderer" ? 'renderer: "renderer.tsx",' : ""}`,
+        },
+        async ({ root, mockupsDir }) => {
+          await fs.writeFile(
+            path.join(mockupsDir, "action.css"),
+            ".actual-only { color: red; }",
           );
-        const fixture = await changedFixture(
-          t,
-          source,
-          {
-            extraConfig: `colorSchemes: ["light", "dark"], stylesheets: [{ match: "**", stylesheets: ["action.css"] }], ${ownership === "renderer" ? 'renderer: "renderer.tsx",' : ""}`,
-          },
-          async ({ root, mockupsDir }) => {
+          if (ownership === "renderer")
             await fs.writeFile(
-              path.join(mockupsDir, "action.css"),
-              ".actual-only { color: red; }",
-            );
-            if (ownership === "renderer")
-              await fs.writeFile(
-                path.join(root, "renderer.tsx"),
-                `import { renderToStaticMarkup } from "react-dom/server";
+              path.join(root, "renderer.tsx"),
+              `import { renderToStaticMarkup } from "react-dom/server";
 export default (input) => ({ html: '<html><head><link rel="stylesheet" href="' + input.stylesheets[0] + '"></head><body>' + renderToStaticMarkup(input.node) + '</body></html>', resources: [{ path: "action.css", componentIds: ["action"] }] });`,
-              );
-          },
+            );
+        },
+      );
+      await fs.appendFile(
+        path.join(fixture.mockupsDir, "action.css"),
+        matches
+          ? ".actual-only { color: blue; }"
+          : ".not-present { color: blue; }",
+      );
+      const live = await computeCatalogueChanges(
+        fixture.config,
+        "main",
+        committedReviewRepository(fixture.config),
+      );
+      const expected = matches ? ["home"] : [];
+      assert.deepEqual(live.changedEntries, expected);
+      const artifact = await compareReview(
+        await compileCatalogue(fixture.config),
+        fixture.config,
+        committedReviewRepository(fixture.config),
+        "main",
+      );
+      const { result } = artifact;
+      assert.equal(result.schemaVersion, 7);
+      if (result.schemaVersion !== 7) return;
+      assert.deepEqual(live.componentChanges?.result, result);
+      const reason = {
+        kind: "dependency",
+        path: "mockups/action.css",
+        analysis: { status: "matched", selectors: [".actual-only"] },
+      };
+      for (const change of result.changes)
+        assert.deepEqual(
+          resourceReasonSummaries(
+            change.reasons.filter((reason) => reason.kind === "dependency"),
+          ),
+          [reason],
         );
-        await fs.appendFile(
-          path.join(fixture.mockupsDir, "action.css"),
+      const home = result.screens.find((entry) => entry.path === "home")!;
+      assert.equal(home.views.length, 4);
+      for (const view of home.views) {
+        assert.equal(view.state, matches ? "changed" : "unchanged");
+        assert.deepEqual(
+          resourceReasonSummaries(view.reasons),
+          matches ? [reason] : undefined,
+        );
+        assert.deepEqual(
+          view.excludedResources,
           matches
-            ? ".actual-only { color: blue; }"
-            : ".not-present { color: blue; }",
+            ? undefined
+            : [{ path: "mockups/action.css", reason: "no-matching-rule" }],
         );
-        const live = await computeCatalogueChanges(
-          fixture.config,
-          "main",
-          committedReviewRepository(fixture.config),
-        );
-        const expected = matches ? ["action", ...(exact ? ["home"] : [])] : [];
-        assert.deepEqual(live.changedEntries, expected);
-        const artifact = await compareReview(
-          await compileCatalogue(fixture.config),
-          fixture.config,
-          committedReviewRepository(fixture.config),
-          "main",
-        );
-        const { result } = artifact;
-        assert.equal(result.schemaVersion, 6);
-        if (result.schemaVersion !== 6) return;
-        assert.deepEqual(live.componentChanges?.result, result);
-        const reason = {
-          kind: "dependency",
-          path: "mockups/action.css",
-          analysis: { status: "matched", selectors: [".actual-only"] },
-        };
-        for (const change of result.changes)
-          assert.deepEqual(change.reasons, [reason]);
-        const home = result.screens.find((entry) => entry.path === "home")!;
-        assert.equal(home.views.length, 4);
-        for (const view of home.views) {
-          assert.equal(view.state, matches ? "changed" : "unchanged");
-          assert.deepEqual(view.reasons, matches ? [reason] : undefined);
-          assert.deepEqual(
-            view.excludedResources,
-            matches
-              ? undefined
-              : [{ path: "mockups/action.css", reason: "no-matching-rule" }],
-          );
-        }
-        for (const component of result.components) {
-          assert.deepEqual(
-            component.sharedImpact,
-            matches && component.path === "action"
-              ? ["mockups/action.css"]
-              : [],
-          );
-          for (const variant of component.variants) {
-            assert.equal(variant.views.length, 4);
-            for (const view of variant.views) {
-              assert.equal(view.state, "unchanged");
-              assert.deepEqual(view.excludedResources, [
-                { path: "mockups/action.css", reason: "no-matching-rule" },
-              ]);
-              assert.equal(view.reasons, undefined);
-            }
+      }
+      for (const component of result.components) {
+        assert.equal(Object.hasOwn(component, "sharedImpact"), false);
+        for (const variant of component.variants) {
+          assert.equal(variant.views.length, 4);
+          for (const view of variant.views) {
+            assert.equal(view.state, "unchanged");
+            assert.deepEqual(view.excludedResources, [
+              { path: "mockups/action.css", reason: "no-matching-rule" },
+            ]);
+            assert.equal(view.reasons, undefined);
           }
         }
-        assert.equal(Boolean(result.affectedConsumers.length), matches);
-        const files = renderReviewArtifact(artifact);
-        assert.deepEqual(
-          parseReviewResult(JSON.parse(String(files.get("review.json")))),
-          result,
-        );
-      });
+      }
+      assert.deepEqual(result.affectedConsumers, []);
+      const files = renderReviewArtifact(artifact);
+      assert.deepEqual(
+        parseReviewResult(JSON.parse(String(files.get("review.json")))),
+        result,
+      );
+    });
 
-test("non-CSS declared public dependencies retain their existing file-level policy", async (t) => {
+test("unreferenced public assets do not create file-level evidence", async (t) => {
   const fixture = await changedFixture(
     t,
-    componentEntrySource().replace(
-      'path: "action",',
-      'path: "action", dependencies: ["mockups/asset.svg"], ownedDependencies: ["mockups/asset.svg"],',
-    ),
+    componentEntrySource(),
     undefined,
     ({ mockupsDir }) =>
       fs.writeFile(path.join(mockupsDir, "asset.svg"), "<svg></svg>"),
@@ -137,11 +130,10 @@ test("non-CSS declared public dependencies retain their existing file-level poli
     "main",
     committedReviewRepository(fixture.config),
   );
-  assert.deepEqual(live.changedEntries, ["action"]);
+  assert.deepEqual(live.changedEntries, []);
   const result = live.componentChanges?.result;
-  assert.equal(result?.schemaVersion, 6);
-  if (result?.schemaVersion !== 6) return;
-  assert.deepEqual(result.changes[0]?.reasons, [
-    { kind: "dependency", path: "mockups/asset.svg" },
-  ]);
+  assert.equal(result?.schemaVersion, 7);
+  if (result?.schemaVersion !== 7) return;
+  assert.deepEqual(result.changes, []);
+  assert.equal(Object.hasOwn(result, "sharedImpact"), false);
 });

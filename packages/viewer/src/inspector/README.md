@@ -51,8 +51,7 @@ containing blocks while retaining inner-scroll clipping and ancestor visibility.
 The overlay host resets consumer presentation with inline important styles;
 the shadow SVG resets inherited styles before drawing its mask and outlines.
 The 9 KiB budget accommodates these correctness fixes after safe pooling and
-minification; the completed component explorer plan records the measured size
-and alternatives.
+minification.
 
 ```bash
 npm run build
@@ -64,3 +63,8 @@ npx playwright test tests/browser/frame_adapter.spec.ts tests/browser/frame_adap
 See the [normative frame protocol](../../../../docs/protocol/mokly-frame-adapter.md),
 [published inspector contract](../../../../docs/protocol/mokly-published-inspector.md),
 [client adapters](../client/README.md), and [publication boundary](../../../../src/browse/README.md).
+
+## Delivery Status
+
+The completed [component explorer plan](../../../../plans/component-explorer.md)
+records the measured inspector size and alternatives.

@@ -9,11 +9,13 @@ export type MoklyErrorCode =
   | BaselineErrorCode
   | "baseline-incompatible-earlier"
   | "build-invalid"
+  | "build-stale"
   | "cli-invalid"
   | "config-invalid"
   | "config-missing"
   | "export-invalid"
   | "git-failed"
+  | "git-uncommitted"
   | "manifest-invalid"
   | "review-invalid"
   | "server-failed"
@@ -44,11 +46,13 @@ const knownCodes: Record<MoklyErrorCode, true> = {
   "baseline-interrupted": true,
   "baseline-lock-timeout": true,
   "build-invalid": true,
+  "build-stale": true,
   "cli-invalid": true,
   "config-invalid": true,
   "config-missing": true,
   "export-invalid": true,
   "git-failed": true,
+  "git-uncommitted": true,
   "manifest-invalid": true,
   "review-invalid": true,
   "server-failed": true,

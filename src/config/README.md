@@ -4,6 +4,10 @@ This internal boundary resolves `MoklyConfig` from a config file. Filesystem pat
 are config-relative; source paths retained in manifests are repository-relative.
 Unknown configuration fields fail with `config-invalid`. Root path prefixes
 cannot start with `mokly-generated`, compared case-insensitively.
+The removed `review.sharedImpact` input is the explicit exception: it warns
+and has no effect. `ReviewConfig` rejects its values with `?: never`, including
+in assigned or spread objects. Explicit `undefined` also fails when
+`exactOptionalPropertyTypes` is enabled.
 
 `roots.ts` validates source directories, safe file globs, path prefixes and
 transparent directory names. Omission selects `[{ dir: "specs" }]` with
@@ -48,6 +52,7 @@ so newly created or invalid source files cannot become public during a rebuild.
 Historical resource reads retain their validated snapshot inventory.
 
 `postcss.ts` and `postcss_loader.ts` load the optional consumer PostCSS module;
+the loader normalizes plugins through `../build/styles/postcss_calls.ts`;
 `reserved_paths.ts` keeps root directories, file-glob prefixes and authored styles
 outside `mokly-generated/`, including aliases. Broad roots skip that output tree.
 

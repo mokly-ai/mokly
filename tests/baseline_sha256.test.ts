@@ -34,8 +34,8 @@ for (const state of ["complete", "missing", "stale", "extra"] as const) {
     await fs.writeFile(
       fixture.configPath,
       (await fs.readFile(fixture.configPath, "utf8")).replace(
-        'sharedImpact: ["notes.md"]',
-        'sharedImpact: ["notes.md"], baselineBuild: [["node", "baseline.mjs"]]',
+        "review: {",
+        'review: { baselineBuild: [["node", "baseline.mjs"]],',
       ),
     );
     const config = await loadConfig(fixture.root);

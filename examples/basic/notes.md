@@ -31,12 +31,6 @@ in each entry's description and rationale, never inside the rendered screens:
 - Desktop Current and comparison views share one visible navigation split grip.
   The static mockups record its resting state; pointer, keyboard, bounds, and
   persistence behavior are specified in the runtime protocol.
-- The completed [in-frame catalogue navigation work](../../plans/in-frame-catalogue-link-navigation.md)
-  reused the approved active-row, disclosure, and frame visuals, adding runtime
-  behavior and inert generated metadata without new design screens. The
-  [design mockup adoption](../../docs/protocol/mokly-design-links.md#canonical-destination-inventory)
-  adds normal light Details and four tag states; that contract owns their
-  destinations. The original inspector and forms-open routes stay available.
 - The two established scheme examples and four tag-state artboards remain
   variants of the canonical Welcome design. Each has its own file-derived screen
   path and stays grouped below Welcome in navigation.
@@ -52,9 +46,9 @@ workspace` and `Save failed`. Only `Empty workspace` has a design destination;
   shared catalogue-navigation samples reuse, so the saved samples and the
   in-screen trees stay aligned. The example Welcome screen now authors the
   `Empty workspace` state as `example/screens/welcome/empty`; `Save failed` remains a
-  design-only comparison scenario until its Changes milestone lands.
+  design-only comparison scenario.
 - A variant's inspector shows the metadata it inherits from its parent, because
-  a variant inherits the parent's address, schemes, dependencies, tags, and
+  a variant inherits the parent's address, schemes, tags, and
   related docs. It supplies its own title, description, render, and any
   reciprocal flow membership; omitted `useCasePaths` defaults to an empty list.
   The removed variant has its own recorded details, like every removed screen.
@@ -174,3 +168,12 @@ following presentation differences are intentional:
   percentages or invented diff metrics appear. Classification and impact facts
   come from the comparison engine in the runtime and from synthetic fixture data
   in these design references.
+
+## Delivery Status
+
+- The completed [in-frame catalogue navigation work](../../plans/in-frame-catalogue-link-navigation.md)
+  reused the approved active-row, disclosure, and frame visuals, adding runtime
+  behavior and inert generated metadata without new design screens. The
+  [design mockup adoption](../../docs/protocol/mokly-design-links.md#canonical-destination-inventory)
+  adds normal light Details and four tag states; that contract owns their
+  destinations. The original inspector and forms-open routes stay available.

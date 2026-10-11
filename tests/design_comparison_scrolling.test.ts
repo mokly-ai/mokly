@@ -151,13 +151,14 @@ const DIFF_MODE_DESIGNS = [
   "design/components/states/removed",
   "design/changes/outcomes/changed",
   "design/changes/outcomes/difference",
-  "design/changes/impact/styles/matched",
-  "design/changes/impact/styles/unnamed",
-  "design/changes/impact/styles/unresolved",
+  "design/changes/impact/styles/matched-excluded/matched",
+  "design/changes/impact/styles/unresolved-unnamed/unnamed",
+  "design/changes/impact/styles/unresolved-unnamed/unresolved",
   "design/library/controls/comparison-toolbar/difference",
   "design/library/controls/comparison-toolbar/overlay",
   "design/library/controls/comparison-toolbar/side-by-side",
   "design/library/controls/comparison-toolbar/side-by-side-apart",
+  "design/components/states/shared-impact/style-changed",
 ];
 
 /** The designs that depict Scroll together switched off. */

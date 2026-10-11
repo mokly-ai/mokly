@@ -1,14 +1,10 @@
-import { defineConfig } from "@mokly/mokly";
+import { componentStylesheets, defineConfig } from "@mokly/mokly";
 
 import {
   designBaseStyles,
   componentLayoutStyles,
   workspaceLayoutStyles,
 } from "./specs/design/components/parts/styles.js";
-import {
-  libraryStyleCandidates,
-  withLibraryStyles,
-} from "./specs/design/library/style_files.js";
 
 export default defineConfig({
   colorSchemes: ["light", "dark"],
@@ -43,91 +39,94 @@ export default defineConfig({
       ["npm", "run", "example:build"],
     ],
     outDir: ".context/basic-review",
-    sharedImpact: [
-      "examples/basic/src/components/**",
-      "examples/basic/design-review.css",
-      "examples/basic/design-stage.css",
-      "examples/basic/design.css",
-      "examples/basic/renderer.tsx",
-      "examples/basic/styles.css",
-    ],
   },
   stylesheets: [
     {
       match: "design/library/**/index*.html",
-      stylesheets: withLibraryStyles(designBaseStyles, [
+      stylesheets: [
+        ...designBaseStyles,
+        componentStylesheets,
         ...componentLayoutStyles,
         "design-component-controls.css",
         "design-library.css",
-      ]),
+      ],
     },
     {
       match: "design/components/controls/**/index*.html",
-      stylesheets: withLibraryStyles(designBaseStyles, [
+      stylesheets: [
+        ...designBaseStyles,
+        componentStylesheets,
         ...componentLayoutStyles,
         "design-component-controls.css",
-      ]),
+      ],
     },
     {
       match: "design/components/**/index*.html",
-      stylesheets: withLibraryStyles(designBaseStyles, componentLayoutStyles),
+      stylesheets: [
+        ...designBaseStyles,
+        componentStylesheets,
+        ...componentLayoutStyles,
+      ],
     },
     {
       match:
         "design/browse/appearance/states/light-only-{current,document}/index*.html",
-      stylesheets: withLibraryStyles(
-        [
-          "design.css",
-          "design-stage.css",
-          "design-documents.css",
-          "design-review.css",
-        ],
-        workspaceLayoutStyles,
-      ),
+      stylesheets: [
+        "design.css",
+        "design-stage.css",
+        "design-documents.css",
+        "design-review.css",
+        componentStylesheets,
+        ...workspaceLayoutStyles,
+      ],
     },
     {
       match: "design/browse/appearance/**/index*.html",
-      stylesheets: withLibraryStyles(
-        ["design.css", "design-stage.css", "design-review.css"],
-        workspaceLayoutStyles,
-      ),
+      stylesheets: [
+        "design.css",
+        "design-stage.css",
+        "design-review.css",
+        componentStylesheets,
+        ...workspaceLayoutStyles,
+      ],
     },
     {
       match: "design/changes/diff-controls/**/index*.html",
-      stylesheets: withLibraryStyles(
-        [
-          "design.css",
-          "design-stage.css",
-          "design-documents.css",
-          "design-review.css",
-          "design-review-scroll.css",
-        ],
-        workspaceLayoutStyles,
-      ),
+      stylesheets: [
+        "design.css",
+        "design-stage.css",
+        "design-documents.css",
+        "design-review.css",
+        "design-review-scroll.css",
+        componentStylesheets,
+        ...workspaceLayoutStyles,
+      ],
     },
     {
       match: "design/changes/**/index*.html",
-      stylesheets: withLibraryStyles(
-        [
-          "design.css",
-          "design-stage.css",
-          "design-documents.css",
-          "design-review.css",
-          "design-review-scroll.css",
-        ],
-        workspaceLayoutStyles,
-      ),
+      stylesheets: [
+        "design.css",
+        "design-stage.css",
+        "design-documents.css",
+        "design-review.css",
+        "design-review-scroll.css",
+        componentStylesheets,
+        ...workspaceLayoutStyles,
+      ],
     },
     {
       match: "design/**/index*.html",
-      stylesheets: withLibraryStyles(
-        ["design.css", "design-stage.css", "design-documents.css"],
-        workspaceLayoutStyles,
-      ),
+      stylesheets: [
+        "design.css",
+        "design-stage.css",
+        "design-documents.css",
+        componentStylesheets,
+        ...workspaceLayoutStyles,
+      ],
     },
     {
       match: "**/*.html",
-      stylesheets: ["styles.css", "example-components.css"],
+      stylesheets: ["styles.css"],
     },
   ],
   watch: {
@@ -135,7 +134,6 @@ export default defineConfig({
       {
         action: "reload",
         paths: [
-          ...libraryStyleCandidates.map((file) => "examples/basic/" + file),
           "examples/basic/design-library.css",
           "examples/basic/design-components.css",
           "examples/basic/design-component-inspection.css",

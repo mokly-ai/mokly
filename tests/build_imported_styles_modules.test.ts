@@ -112,7 +112,7 @@ test("adding an unrelated same-basename CSS Module does not rename existing clas
   );
   await fs.writeFile(
     path.join(fixture.entriesDir, "new.mockup.ts"),
-    'import "./other/card.module.css"; import { definePage } from "@mokly/mokly"; export default definePage({ title: "Supplement", description: "Additional stylesheet root", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Supplement</body></html>" });',
+    'import "./other/card.module.css"; import { definePage } from "@mokly/mokly"; export default definePage({ title: "Supplement", description: "Additional stylesheet root", relatedDocs: [], render: () => "<!doctype html><html><body>Supplement</body></html>" });',
   );
   const after = (await compileFixture(fixture)).outputs.get(
     "home/index.mobile.html",

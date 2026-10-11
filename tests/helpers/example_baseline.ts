@@ -22,7 +22,7 @@ export async function createExampleBaseline(root: string) {
   return config;
 }
 
-/** Build a focused v9 committed baseline with current code for browser fixtures. */
+/** Build a focused v10 committed baseline with current code for browser fixtures. */
 export async function createCommittedExampleBaseline(
   root: string,
   profile: "design-library" | "ordinary-preview" | "static-example",

@@ -6,9 +6,31 @@ import importPlugin from "eslint-plugin-import-x";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
+import noArtifactPathLiterals from "./scripts/eslint/no-artifact-path-literals.mjs";
 import noDirectoryLiterals from "./scripts/eslint/no-directory-literals.mjs";
+import noEagerFixtureSetup from "./scripts/eslint/no-eager-fixture-setup.mjs";
+import noLateFixtureTeardown from "./scripts/eslint/no-late-fixture-teardown.mjs";
 
 const gitignorePath = path.join(import.meta.dirname, ".gitignore");
+const sourceFiles = ["src/**/*.ts", "src/**/*.tsx"];
+const postcssCallsModule = "src/build/styles/postcss_calls.ts";
+const postcssCallsMessage = `Parse and process CSS only through ${postcssCallsModule}. Its calls always pass map: false, so PostCSS never loads a source map.`;
+const postcssModuleSource = String.raw`/^postcss(?:$|\x2F)/`;
+const postcssLoadRestrictions = [
+  {
+    selector: `ImportExpression[source.value=${postcssModuleSource}]`,
+    message: postcssCallsMessage,
+  },
+  {
+    selector: `CallExpression[arguments.0.value=${postcssModuleSource}]`,
+    message: postcssCallsMessage,
+  },
+];
+const sourcePathRestriction = {
+  selector: "CallExpression[callee.property.name='localeCompare']",
+  message:
+    "Sort source paths with compareCodeUnits to avoid locale-dependent inventories and diagnostics.",
+};
 
 export default tseslint.config(
   includeIgnoreFile(gitignorePath, "Repository .gitignore patterns"),
@@ -31,7 +53,14 @@ export default tseslint.config(
   {
     plugins: {
       import: importPlugin,
-      mokly: { rules: { "no-directory-literals": noDirectoryLiterals } },
+      mokly: {
+        rules: {
+          "no-artifact-path-literals": noArtifactPathLiterals,
+          "no-directory-literals": noDirectoryLiterals,
+          "no-eager-fixture-setup": noEagerFixtureSetup,
+          "no-late-fixture-teardown": noLateFixtureTeardown,
+        },
+      },
     },
     settings: {
       "import-x/internal-regex": "^@mokly/(?:mokly|viewer)(?:/|$)",
@@ -88,6 +117,51 @@ export default tseslint.config(
     },
   },
   {
+    files: ["tests/**/*.{js,mjs,cjs,ts,tsx,mts,cts}"],
+    rules: {
+      "mokly/no-eager-fixture-setup": "error",
+      "mokly/no-late-fixture-teardown": "error",
+    },
+  },
+  {
+    files: sourceFiles,
+    rules: {
+      "no-restricted-syntax": ["error", ...postcssLoadRestrictions],
+    },
+  },
+  {
+    files: sourceFiles,
+    ignores: [postcssCallsModule],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "postcss",
+              importNames: [
+                "default",
+                "fromJSON",
+                "Input",
+                "parse",
+                "Processor",
+              ],
+              allowTypeImports: true,
+              message: postcssCallsMessage,
+            },
+          ],
+          patterns: [
+            {
+              regex: "^postcss/",
+              allowTypeImports: true,
+              message: postcssCallsMessage,
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: [
       "src/**/*.{ts,tsx}",
       "packages/viewer/src/**/*.{ts,tsx}",
@@ -96,6 +170,18 @@ export default tseslint.config(
     ignores: ["packages/viewer/src/catalogue/delivery_paths.ts"],
     rules: {
       "mokly/no-directory-literals": "error",
+    },
+  },
+  {
+    files: [
+      "src/**/*.{ts,tsx}",
+      "packages/viewer/src/**/*.{ts,tsx}",
+      "scripts/**/*.{mjs,mts,ts}",
+      "examples/**/*.{ts,tsx,mjs}",
+    ],
+    ignores: ["packages/viewer/src/navigation/routes.ts", "**/tests/**"],
+    rules: {
+      "mokly/no-artifact-path-literals": "error",
     },
   },
   {
@@ -109,11 +195,8 @@ export default tseslint.config(
     rules: {
       "no-restricted-syntax": [
         "error",
-        {
-          selector: "CallExpression[callee.property.name='localeCompare']",
-          message:
-            "Sort source paths with compareCodeUnits to avoid locale-dependent inventories and diagnostics.",
-        },
+        sourcePathRestriction,
+        ...postcssLoadRestrictions,
       ],
     },
   },

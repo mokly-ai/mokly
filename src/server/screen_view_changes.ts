@@ -2,8 +2,11 @@ import path from "node:path";
 
 import { GENERATED_DIRECTORY, generatedViews } from "@mokly/viewer/data";
 import type {
+  ReviewResultV7,
+  ScreenResourceEvidence,
   HistoricalManifest,
-  ManifestV9,
+  ManifestEntry,
+  ManifestV10,
   ViewReview,
 } from "@mokly/viewer/data";
 
@@ -18,7 +21,7 @@ export interface ScreenViewChanges {
 
 /** Retain the completed material pass's per-view decisions without generating comparisons. */
 export function screenViewChanges(
-  current: ManifestV9,
+  current: ManifestV10,
   baseline: HistoricalManifest,
   config: ResolvedConfig,
   materialPaths: readonly string[],
@@ -26,13 +29,15 @@ export function screenViewChanges(
 ): ScreenViewChanges[] {
   const changed = new Set(materialPaths);
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
+  const beforeEntries: readonly ManifestEntry[] = baseline.entries;
+  const afterEntries: readonly ManifestEntry[] = current.entries;
   const moved = new Map(
     moves
       .filter((move) => move.kind === "screen")
       .map((move) => [move.previousPath.toLowerCase(), move.path]),
   );
   const before = new Map(
-    baseline.entries
+    beforeEntries
       .filter((entry) => entry.kind === "screen")
       .map((entry) => [
         (moved.get(entry.path.toLowerCase()) ?? entry.path).toLowerCase(),
@@ -40,7 +45,7 @@ export function screenViewChanges(
       ]),
   );
   const after = new Map(
-    current.entries
+    afterEntries
       .filter((entry) => entry.kind === "screen")
       .map((entry) => [entry.path.toLowerCase(), entry]),
   );
@@ -81,4 +86,36 @@ export function screenViewChanges(
     );
     return { path: (current ?? previous)!.path, views };
   });
+}
+
+/** Project complete visual evidence without changing membership or view readiness. */
+export function screenResultEvidence(result: ReviewResultV7): {
+  screenViews: ScreenViewChanges[];
+  screenEvidence: ScreenResourceEvidence[];
+} {
+  return {
+    screenViews: result.screens.map(({ path, views }) => ({
+      path,
+      views: views.map(({ viewport, colorScheme, state }) => ({
+        viewport,
+        colorScheme,
+        state,
+      })),
+    })),
+    screenEvidence: result.screens
+      .map(({ path, views }) => ({
+        path,
+        views: views
+          .filter(
+            (view) => view.reasons?.length || view.excludedResources?.length,
+          )
+          .map(({ viewport, colorScheme, reasons, excludedResources }) => ({
+            viewport,
+            colorScheme,
+            ...(reasons ? { reasons } : {}),
+            ...(excludedResources ? { excludedResources } : {}),
+          })),
+      }))
+      .filter((entry) => entry.views.length),
+  };
 }

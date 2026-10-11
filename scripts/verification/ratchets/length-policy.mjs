@@ -8,8 +8,45 @@ const SOURCE_LIMIT = 300;
 export const PROTOCOL_LIMIT = 250;
 const PROTOCOL_PREFIX = "docs/protocol/";
 
-/** Read the reviewed exact caps from the protocol size test. */
-export function parseProtocolCaps(source, label) {
+/** Read and validate the reviewed exact caps in the JSON cap table. */
+export function parseProtocolCapTable(source, label) {
+  const text = source.toString("utf8");
+  let table;
+  try {
+    table = JSON.parse(text);
+  } catch (error) {
+    throw new Error(`${label} is not valid JSON: ${error.message}`, {
+      cause: error,
+    });
+  }
+  if (table === null || typeof table !== "object" || Array.isArray(table))
+    throw new Error(`${label} must contain one JSON object`);
+  const caps = {};
+  let previous;
+  for (const name of topLevelKeys(text)) {
+    if (!isProtocolDocumentName(name))
+      throw new Error(
+        `${label} has a key that is not a Markdown path relative to docs/protocol: ${name}`,
+      );
+    if (Object.hasOwn(caps, name))
+      throw new Error(`${label} repeats the cap for ${name}`);
+    if (previous !== undefined && name < previous)
+      throw new Error(
+        `${label} keys are not sorted: ${name} follows ${previous}`,
+      );
+    const value = table[name];
+    if (!Number.isSafeInteger(value) || value <= PROTOCOL_LIMIT)
+      throw new Error(
+        `${label} has an invalid cap for ${name}; use a safe integer above ${PROTOCOL_LIMIT}`,
+      );
+    caps[name] = value;
+    previous = name;
+  }
+  return caps;
+}
+
+/** Read the legacy `oversizedCaps` table from the former protocol size test. */
+export function parseLegacyProtocolCaps(source, label) {
   const file = ts.createSourceFile(
     label,
     source.toString("utf8"),
@@ -59,6 +96,47 @@ export function lengthFinding(file, source, caps = {}) {
   const lines = countPhysicalLines(source);
   const limit = allowedLines(file, caps);
   return lines > limit ? `${file}: ${lines} lines (limit ${limit})` : undefined;
+}
+
+/**
+ * List the member names of a parsed top-level JSON object in source order.
+ * `JSON.parse` keeps only the last of repeated names, so the table reads them
+ * from the text: a string at depth one followed by a colon is a member name.
+ */
+function topLevelKeys(text) {
+  const keys = [];
+  const colon = /\s*:/uy;
+  let depth = 0;
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    if (character === "{" || character === "[") depth += 1;
+    else if (character === "}" || character === "]") depth -= 1;
+    else if (character === '"') {
+      const end = closingQuote(text, index);
+      colon.lastIndex = end + 1;
+      if (depth === 1 && colon.test(text))
+        keys.push(JSON.parse(text.slice(index, end + 1)));
+      index = end;
+    }
+  }
+  return keys;
+}
+
+/** Index of the quote that closes the valid JSON string starting at `start`. */
+function closingQuote(text, start) {
+  let index = start + 1;
+  while (text[index] !== '"') index += text[index] === "\\" ? 2 : 1;
+  return index;
+}
+
+/** Whether a key names a Markdown document by a clean path below docs/protocol. */
+function isProtocolDocumentName(name) {
+  return (
+    name.endsWith(".md") &&
+    name
+      .split("/")
+      .every((segment) => segment !== "" && segment !== "." && segment !== "..")
+  );
 }
 
 function unwrapExpression(expression) {

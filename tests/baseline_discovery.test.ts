@@ -12,7 +12,7 @@ const historicalManifest = JSON.stringify({
   entries: [],
   folders: [],
   generatedBy: "mokly",
-  schemaVersion: 9,
+  schemaVersion: 10,
   assetClosure: [],
   blobHashAlgorithm: "sha1",
   generatedFiles: [],
@@ -52,13 +52,13 @@ test("historical discovery prefers the requested root and otherwise requires one
   await manifest("other/output");
   await assert.rejects(
     discover(),
-    /candidates: old\/generated \(generated-v9\), other\/output \(generated-v9\)/,
+    /candidates: old\/generated \(generated-v10\), other\/output \(generated-v10\)/,
   );
   await manifest("mockups");
   assert.equal((await discover()).descriptor.catalogueRoot, "mockups");
 });
 
-test("an invalid v9 manifest is not rediscovered as a legacy child", async (context) => {
+test("an invalid v10 manifest is not rediscovered as a legacy child", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const directory = path.join(fixture.root, "old/mokly-generated");
@@ -76,7 +76,7 @@ test("an invalid v9 manifest is not rediscovered as a legacy child", async (cont
 });
 
 for (const stale of ["mockups", "retired", "mockups and retired"]) {
-  test(`a unique moved v9 catalogue wins over stale envelopes at ${stale}`, async (t) => {
+  test(`a unique moved v10 catalogue wins over stale envelopes at ${stale}`, async (t) => {
     const fixture = await createFixture();
     t.after(() => removeFixture(fixture));
     for (const root of stale.split(" and ")) {
@@ -114,7 +114,7 @@ for (const stale of ["mockups", "retired", "mockups and retired"]) {
     );
     await assert.rejects(
       discover(),
-      /candidates: current \(generated-v9\), second \(generated-v9\)/,
+      /candidates: current \(generated-v10\), second \(generated-v10\)/,
     );
     await fs.rm(path.join(fixture.root, "current"), { recursive: true });
     await fs.rm(path.join(fixture.root, "second"), { recursive: true });
@@ -127,7 +127,7 @@ for (const stale of ["mockups", "retired", "mockups and retired"]) {
   });
 }
 
-for (const value of ["{}", '{"schemaVersion":10}', "{broken"]) {
+for (const value of ["{}", '{"schemaVersion":11}', "{broken"]) {
   test(`a requested malformed or newer manifest still rejects: ${value}`, async (t) => {
     const fixture = await createFixture();
     t.after(() => removeFixture(fixture));

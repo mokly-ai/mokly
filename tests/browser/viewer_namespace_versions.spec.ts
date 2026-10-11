@@ -1,3 +1,5 @@
+import fs from "node:fs/promises";
+
 import { expect, test } from "@playwright/test";
 
 import { startStaticFixture } from "./static_fixture.js";
@@ -63,3 +65,32 @@ for (const boundary of ["catalogue", "delivery", "bootstrap"] as const) {
     ).toHaveAttribute("href", /\/view\/details\//u);
   });
 }
+
+test("released review v6 uses the standalone version message", async ({
+  page,
+}) => {
+  const current = await startStaticFixture({ comparisons: true });
+  try {
+    const released = JSON.parse(
+      await fs.readFile(
+        new URL("../fixtures/released-review-v6.json", import.meta.url),
+        "utf8",
+      ),
+    );
+    await page.route("**/mokly-viewer/diffs/**/review.json", (route) =>
+      route.fulfill({ json: released }),
+    );
+    await page.goto(`${current.url}/view/home/`);
+    await page.getByRole("button", { name: "Overlay", exact: true }).click();
+    await expect(page.getByRole("alert")).toContainText(message);
+    await page.locator("[data-comparison-failure] summary").click();
+    await expect(page.locator("[data-comparison-failure]")).toContainText(
+      "Unsupported Mokly review version 6; this viewer supports version 7.",
+    );
+    await expect(page.locator("[data-diff-stage] iframe")).toHaveCount(0);
+    await page.getByRole("button", { name: "Current", exact: true }).click();
+    await expect(page.locator("[data-current-screen]")).toBeVisible();
+  } finally {
+    await current.close();
+  }
+});

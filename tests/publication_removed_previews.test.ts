@@ -11,7 +11,6 @@ import {
 import { advertisePublicationPreview } from "../dist/publication/shell_previews.js";
 
 const page: ManifestPage = {
-  declaredDependencies: [],
   description: "Removed page",
   path: "removed-page",
   kind: "page",
@@ -26,9 +25,8 @@ const result: ReviewResult = {
   baseRef: "main",
   changedPaths: [],
   ignoredImpact: [],
-  schemaVersion: 6 as const,
+  schemaVersion: 7 as const,
   screens: [],
-  sharedImpact: [],
   components: [],
   changes: [],
   affectedConsumers: [],

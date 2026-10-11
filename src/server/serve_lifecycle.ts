@@ -1,20 +1,23 @@
 /** Shutdown and child-restart helpers for watched Serve orchestration. */
 import { fileURLToPath } from "node:url";
 
+import type { ComponentRuntime } from "../build/component_runtime.js";
+import type { GenerationWarning } from "../build/warning_generation.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { timingArguments } from "../diagnostics/timings.js";
+import { timeAsync, timingArguments } from "../diagnostics/timings.js";
 
+import type { ResourceWatcher } from "./resource_watcher.js";
 import type { ServeOptions } from "./serve.js";
 import type {
   ProcessSupervisor,
   ProcessSupervisorFactory,
 } from "./supervisor.js";
-import type { WatchActionQueue } from "./watch_events.js";
+import type { NotificationGate, WatchActionQueue } from "./watch_events.js";
 import type { WatchedBackground } from "./watched_background.js";
 import type { ConsumerWatcher } from "./watcher.js";
 
 /** Keep CLI child configuration, including diagnostic opt-in, stable across restarts. */
-export function createWatchedSupervisor(
+function createWatchedSupervisor(
   config: ResolvedConfig,
   options: ServeOptions,
   factory: ProcessSupervisorFactory,
@@ -30,6 +33,36 @@ export function createWatchedSupervisor(
     ],
     options.port,
   );
+}
+
+/** Attach warning and failure observers before child readiness, cleaning up on failure. */
+export async function startWatchedSupervisor(
+  config: ResolvedConfig,
+  options: ServeOptions,
+  factory: ProcessSupervisorFactory,
+  runtime: ComponentRuntime,
+  failures: NotificationGate<Error>,
+  onWarning: (event: GenerationWarning) => void,
+  watcher: Pick<ConsumerWatcher, "close">,
+  resources: ResourceWatcher,
+): Promise<{ running: ProcessSupervisor; port: number }> {
+  let running: ProcessSupervisor | undefined;
+  try {
+    running = createWatchedSupervisor(config, options, factory);
+    running.onUnexpectedExit((error) => failures.notify(error));
+    running.onWarning?.(onWarning);
+    running.replaceComponentRuntime(runtime, "stage");
+    const supervisor = running;
+    const port = await timeAsync("child.ready", () => supervisor.start());
+    return { running, port };
+  } catch (error) {
+    await Promise.allSettled([
+      watcher.close(),
+      resources.close(),
+      running?.close(),
+    ]);
+    throw error;
+  }
 }
 
 /** Stop waiting for a candidate watcher as soon as watched shutdown begins. */

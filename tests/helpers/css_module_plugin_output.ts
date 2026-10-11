@@ -1,7 +1,9 @@
-import postcss from "postcss";
-
 import { modulePlugins } from "../../dist/build/styles/module_plugins.js";
 import { prepareModuleScopes } from "../../dist/build/styles/module_scope.js";
+import {
+  parseCss,
+  processRootSync,
+} from "../../dist/build/styles/postcss_calls.js";
 
 /** Run the four CSS Modules plugin calls without using Mokly's scopeModule. */
 export function pluginModuleOutput(
@@ -12,16 +14,18 @@ export function pluginModuleOutput(
   readonly css: string;
   readonly exports: Readonly<Record<string, string>>;
 } {
-  const root = postcss.parse(css, { from: relative });
+  const root = parseCss(css, relative);
   const restore = prepareModuleScopes(root, relative);
   const plugins = modulePlugins();
-  const result = postcss([
-    plugins.localByDefault({ mode: "local" }),
-    plugins.extractImports(),
-    plugins.scope({ generateScopedName: (name) => `${prefix}${name}` }),
-  ])
-    .process(root, { from: relative, map: false })
-    .sync();
+  const result = processRootSync(
+    [
+      plugins.localByDefault({ mode: "local" }),
+      plugins.extractImports(),
+      plugins.scope({ generateScopedName: (name) => `${prefix}${name}` }),
+    ],
+    root,
+    relative,
+  );
   const { icssExports } = plugins.extractICSS(result.root);
   restore();
   return {

@@ -30,25 +30,23 @@ export const validationConfig: ResolvedConfig = {
   mockupsDir: path.join(repositoryRoot, "mockups"),
   moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
   repoRoot: repositoryRoot,
-  review: { base: "main", outDir: ".review", sharedImpact: [] },
+  review: { base: "main", outDir: ".review" },
   sourceFiles: [sourceRelativePath],
   stylesheets: [],
   watch: { debounceMs: 100, rules: [] },
 };
 
 export const screenBase = {
-  slug: "tagged-screen",
-  dependencies: [],
   description: "Tagged screen",
   desktop: "Desktop",
   path: "tagged-screen",
+  slug: "tagged-screen",
   mobile: "Mobile",
   relatedDocs: [],
   title: "Tagged screen",
 } satisfies ScreenInput;
 
 export const useCaseBase: UseCaseInput = {
-  dependencies: [],
   description: "Tagged journey",
   path: "tagged-journey",
   relatedDocs: [],

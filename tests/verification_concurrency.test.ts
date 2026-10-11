@@ -109,13 +109,24 @@ test("Playwright and both runners use the shared defaults", async () => {
       path.join(repositoryRoot, "scripts/verification", file),
       "utf8",
     );
-  const [unitRunner, browserRunner] = await Promise.all([
-    runner("unit-runner.mjs"),
-    runner("run-browser.mjs"),
-  ]);
-  assert.match(unitRunner, /const concurrency = unitTestConcurrency\(\);/u);
-  assert.match(unitRunner, /`--test-concurrency=\$\{concurrency\}`/u);
-  assert.doesNotMatch(unitRunner, /--test-concurrency=\d/u);
+  const [unitRunner, unitExecution, selectedRunner, browserRunner] =
+    await Promise.all([
+      runner("unit-runner.mjs"),
+      runner("unit-execution.mjs"),
+      runner("unit-selected-run.mjs"),
+      runner("run-browser.mjs"),
+    ]);
+  for (const source of [unitRunner, selectedRunner]) {
+    assert.match(source, /const concurrency = unitTestConcurrency\(\);/u);
+    assert.equal(source.match(/unitTestConcurrency\(\)/gu)?.length, 1);
+    assert.match(source, /executeUnitTests\([\s\S]*?concurrency,/u);
+    assert.doesNotMatch(source, /--test-concurrency=\d/u);
+  }
+  assert.match(
+    unitExecution,
+    /`--test-concurrency=\$\{options\.concurrency\}`/u,
+  );
+  assert.doesNotMatch(unitExecution, /--test-concurrency=\d/u);
   assert.match(
     browserRunner,
     /const environment = playwrightSuiteEnvironment\(suite\);/u,

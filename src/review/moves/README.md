@@ -23,7 +23,7 @@ moves and corresponding generated references in paired views. Surviving
 consumers retain their own resource routes. `source_moves.ts` maps inventoried
 owned sources and suppresses dependency paths only after a confined byte proof.
 `source_files.ts` shares private current/historical reads with Markdown evidence.
-Equal mapped bytes suppress current generated dependency/shared-impact
+Equal mapped bytes suppress current generated rendered-resource
 reasons; changed resources retain normal attribution. The shared CSS tokenizer
 in `src/css_references.ts` resolves URL tokens without rewriting other CSS.
 `identity.ts` maps catalogue references without confusing a reused path's kind.

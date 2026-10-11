@@ -65,19 +65,25 @@ test("demand links reject an unknown generated route even when a local file exis
   );
 });
 
-test("live index checks dependency declarations before accepting unrendered entries", async (t) => {
+test("live index rejects removed manifest fields before accepting unrendered entries", async (t) => {
   const fixture = await createFixture(componentEntrySource());
   t.after(() => removeFixture(fixture));
   const runtime = await prepareLiveRuntime(await loadConfig(fixture.root));
-  const corrupt = structuredClone(runtime.manifest);
-  const entry = corrupt.entries.find(
-    (value) => value.kind === "component" && !("variantOf" in value),
-  )!;
-  Object.assign(entry, {
-    declaredDependencies: [],
-    ownedDependencies: ["notes.md"],
-  });
-  assert.throws(() => parseCatalogueIndex(corrupt), /dependencies/);
+  for (const field of [
+    "dependencies",
+    "declaredDependencies",
+    "ownedDependencies",
+  ] as const) {
+    const corrupt = structuredClone(runtime.manifest);
+    const entry = corrupt.entries.find((value) =>
+      field === "ownedDependencies"
+        ? value.kind === "component"
+        : value.kind === "screen",
+    );
+    assert.ok(entry);
+    Object.assign(entry, { [field]: [] });
+    assert.throws(() => parseCatalogueIndex(corrupt), new RegExp(field));
+  }
 });
 
 test("background validation preserves exhaustive render order across forward anchor links", async (t) => {

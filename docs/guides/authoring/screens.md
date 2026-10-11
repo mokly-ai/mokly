@@ -19,7 +19,6 @@ export default defineScreen({
   description: "One paid invoice.",
   mobile: <main id="summary">Invoice</main>,
   desktop: <main id="summary">Invoice</main>,
-  dependencies: ["src/account/billing/invoice.tsx"],
   relatedDocs: ["docs/billing.md"],
 });
 ```
@@ -28,7 +27,6 @@ export default defineScreen({
 | ---------------------- | ---------------------------------------------------------- |
 | `title`, `description` | What the catalogue shows                                   |
 | `mobile`, `desktop`    | The React node each viewport renders                       |
-| `dependencies`         | Repository paths this screen is made from                  |
 | `relatedDocs`          | Documents a reader should open beside it                   |
 | `slug`                 | The last segment of the path; defaults to the file name    |
 | `path`                 | A complete path that replaces the derived one              |
@@ -72,7 +70,7 @@ export const billing = defineScreen({
   description: "Billing overview.",
   mobile: <main>Billing</main>,
   desktop: <main>Billing</main>,
-  dependencies: [],
+
   relatedDocs: [],
 });
 
@@ -82,7 +80,7 @@ export const history = defineScreen({
   description: "Payments made on this account.",
   mobile: <main>Payment history</main>,
   desktop: <main>Payment history</main>,
-  dependencies: [],
+
   relatedDocs: [],
 });
 ```
@@ -129,7 +127,6 @@ export default defineScreen({
   description: "One paid invoice.",
   mobile: <main id="summary">Invoice</main>,
   desktop: <main id="summary">Invoice</main>,
-  dependencies: ["src/account/billing/invoice.tsx"],
   relatedDocs: ["docs/billing.md"],
   variants: [
     {
@@ -145,7 +142,7 @@ export default defineScreen({
 
 A variant's path is the parent's path plus its `slug`, so this one is
 `account/billing/invoice/overdue` and a link to that path opens it like any
-screen. It inherits the parent's address, tags, color schemes, dependencies
+screen. It inherits the parent's address, tags, color schemes
 and related docs unless it sets its own, and a list it sets replaces the
 inherited one. Its `useCasePaths` defaults to an empty list and never
 inherits; list a flow only when one of that flow's steps names the variant. A

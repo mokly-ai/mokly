@@ -4,6 +4,7 @@ use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use crate::child_environment::SECRET_VARIABLES;
 use crate::error::{Error, Result};
 
 /// One deterministic subprocess invocation.
@@ -64,11 +65,7 @@ pub(crate) struct SystemCommandRunner;
 impl CommandRunner for SystemCommandRunner {
     fn run(&self, spec: &CommandSpec) -> Result<()> {
         eprintln!("$ {}", spec.display());
-        let mut command = Command::new(&spec.program);
-        command.args(spec.args.iter().map(OsStr::new));
-        if let Some(directory) = spec.working_directory() {
-            command.current_dir(directory);
-        }
+        let mut command = build_command(spec);
         let status = match command.status() {
             Ok(status) => status,
             Err(source) => {
@@ -91,6 +88,19 @@ impl CommandRunner for SystemCommandRunner {
     }
 }
 
+/// Configure a subprocess without starting it or reading ambient state.
+fn build_command(spec: &CommandSpec) -> Command {
+    let mut command = Command::new(&spec.program);
+    command.args(spec.args.iter().map(OsStr::new));
+    if let Some(directory) = spec.working_directory() {
+        command.current_dir(directory);
+    }
+    for name in SECRET_VARIABLES {
+        command.env_remove(name);
+    }
+    command
+}
+
 fn shell_quote(value: &str) -> String {
     if value
         .chars()
@@ -105,3 +115,7 @@ fn shell_quote(value: &str) -> String {
 #[cfg(test)]
 #[path = "_tests_/command_tests.rs"]
 mod command_tests;
+
+#[cfg(test)]
+#[path = "_tests_/command_environment_tests.rs"]
+mod command_environment_tests;

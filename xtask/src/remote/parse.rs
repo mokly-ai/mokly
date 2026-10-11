@@ -1,6 +1,16 @@
 //! Pure parsing of remote identities and cleanup references.
 
+use crate::remote::contracts::GithubRunState;
 use crate::remote::error::{Error, Result};
+
+/// Interpret the CLI's selected status without a JSON dependency.
+pub(super) fn github_run_state(output: &str) -> Result<GithubRunState> {
+    match output.trim() {
+        "" => Err(Error::EmptyGithubState),
+        "completed" => Ok(GithubRunState::Completed),
+        _ => Ok(GithubRunState::Other),
+    }
+}
 
 /// Extract canonical whole-line box identifiers, including recoverable extras.
 pub(super) fn warmup_ids(output: &str) -> Vec<String> {

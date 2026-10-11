@@ -14,7 +14,7 @@ for (const includeChanges of [false, true]) {
     const source = `${validEntrySource()}
 import { definePage } from "@mokly/mokly";
 for (const directory of ["target", "node_modules"])
-  mockups.push(definePage({ path: directory.replaceAll("_", "-"), title: directory, description: "A public document", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Handbook</body></html>" }));`;
+  mockups.push(definePage({ path: directory.replaceAll("_", "-"), title: directory, description: "A public document", relatedDocs: [], render: () => "<!doctype html><html><body>Handbook</body></html>" }));`;
     const fixture = await changedFixture(context, source);
     const output = path.join(fixture.root, ".context/published");
     const options = includeChanges

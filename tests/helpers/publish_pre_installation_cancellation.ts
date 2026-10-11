@@ -7,6 +7,7 @@ import type { TestContext } from "node:test";
 import { pathToFileURL } from "node:url";
 
 import { exportCatalogue } from "../../dist/export/run.js";
+import { NodeGitCommandRunner } from "../../dist/review/git.js";
 
 import { derivedFixture } from "./derived_fixture.js";
 import { esbuildCancellationEnvironment } from "./esbuild_cancellation.js";
@@ -46,6 +47,19 @@ export async function cancellationScenario(
   });
   const previous = await directoryFiles(fixture.output);
   const phaseConfiguration = await configurePhase(context, fixture, phase);
+  if (["comparison", "configuration", "input-recheck"].includes(phase)) {
+    const git = new NodeGitCommandRunner(fixture.root);
+    await git.run([
+      "add",
+      "--",
+      phase === "comparison" ? ".test-bin" : "mokly.config.ts",
+    ]);
+    await git.run([
+      "commit",
+      "-qm",
+      "test: commit publication cancellation hook",
+    ]);
+  }
   const receiver = await startFakeReceiver(context, { token });
   const result = await spawnPublish(fixture.root, receiver.endpoint, {
     ...phaseConfiguration.environment,

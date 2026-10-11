@@ -9,7 +9,7 @@ import {
 
 const TOKEN = "src/tokens/theme.ts";
 
-test("a glob-only source path is evidence for screens and components without changing their flow", async (t) => {
+test("a removed glob adds no source evidence to screens, components or flows", async (t) => {
   const { result } = await pathEvidenceFixture(t, {
     beforeSource: pathCatalogueSource(),
     changedPaths: [TOKEN],
@@ -19,11 +19,11 @@ test("a glob-only source path is evidence for screens and components without cha
   assert.deepEqual(result.changes, []);
   assert.deepEqual(result.affectedConsumers, []);
   for (const entry of [...result.screens, ...result.components])
-    assert.deepEqual(entry.sharedImpact, [TOKEN]);
+    assert.equal(Object.hasOwn(entry, "sharedImpact"), false);
 });
 
 for (const side of ["before", "after"] as const)
-  test(`a changed descendant of a ${side}-side declared directory stays evidence only`, async (t) => {
+  test(`a changed descendant of a ${side}-side declared directory adds no evidence`, async (t) => {
     const withDirectory = pathCatalogueSource(["src/shared"]);
     const withoutDirectory = pathCatalogueSource();
     const changed = "src/shared/registration.tsx";
@@ -37,10 +37,10 @@ for (const side of ["before", "after"] as const)
     assert.deepEqual(result.changes, []);
     assert.deepEqual(result.affectedConsumers, []);
     for (const entry of [...result.screens, ...result.components])
-      assert.deepEqual(entry.sharedImpact, [changed]);
+      assert.equal(Object.hasOwn(entry, "sharedImpact"), false);
   });
 
-test("exact unowned component and screen declarations keep only their own reasons", async (t) => {
+test("exact removed component and screen declarations add no reasons", async (t) => {
   const actionPath = "src/shared/action.ts";
   const homePath = "src/shared/home.ts";
   const source = withEntryPaths(
@@ -54,25 +54,18 @@ test("exact unowned component and screen declarations keep only their own reason
     sharedGlobs: ["src/tokens/**"],
   });
 
-  assert.deepEqual(changedEntries(result), ["action", "home", "journey"]);
-  assert.deepEqual(dependencyPaths(result, "action"), [actionPath]);
-  assert.deepEqual(dependencyPaths(result, "home"), [homePath]);
+  assert.deepEqual(changedEntries(result), []);
+  assert.deepEqual(dependencyPaths(result, "action"), []);
+  assert.deepEqual(dependencyPaths(result, "home"), []);
   assert.deepEqual(dependencyPaths(result, "journey"), []);
-  assert.ok(
-    result.affectedConsumers.some(
-      (item) =>
-        item.changedComponentId === "action" &&
-        item.consumer.kind === "screen" &&
-        item.consumer.path === "home",
-    ),
-  );
+  assert.deepEqual(result.affectedConsumers, []);
 });
 
 for (const [name, ownerRoot, changed] of [
   ["file", "notes.md", "notes.md"],
   ["directory", "src/components/action", "src/components/action/impl.ts"],
 ] as const)
-  test(`a component-owned ${name} changes its owner and affects, rather than changes, consumers`, async (t) => {
+  test(`a component-owned ${name} adds no Changes or affected consumers`, async (t) => {
     const source = withEntryPaths(
       pathCatalogueSource(),
       "action",
@@ -85,23 +78,19 @@ for (const [name, ownerRoot, changed] of [
       sharedGlobs: ["src/tokens/**"],
     });
 
-    assert.deepEqual(changedEntries(result), ["action"]);
-    assert.deepEqual(dependencyPaths(result, "action"), [changed]);
-    assert.deepEqual(
-      result.screens.find((entry) => entry.path === "home")?.sharedImpact,
-      [TOKEN],
-    );
-    assert.ok(
-      result.affectedConsumers.some(
-        (item) =>
-          item.changedComponentId === "action" &&
-          item.consumer.kind === "screen" &&
-          item.consumer.path === "home",
+    assert.deepEqual(changedEntries(result), []);
+    assert.deepEqual(dependencyPaths(result, "action"), []);
+    assert.equal(
+      Object.hasOwn(
+        result.screens.find((entry) => entry.path === "home")!,
+        "sharedImpact",
       ),
+      false,
     );
+    assert.deepEqual(result.affectedConsumers, []);
   });
 
-test("an exact screen declaration stays independent even when a component owns the file", async (t) => {
+test("an exact removed screen declaration grants no independent evidence", async (t) => {
   const source = withEntryPaths(
     withEntryPaths(pathCatalogueSource(), "action", ["notes.md"], ["notes.md"]),
     "home",
@@ -113,8 +102,8 @@ test("an exact screen declaration stays independent even when a component owns t
     sharedGlobs: ["src/tokens/**"],
   });
 
-  assert.deepEqual(changedEntries(result), ["action", "home", "journey"]);
-  assert.deepEqual(dependencyPaths(result, "home"), ["notes.md"]);
+  assert.deepEqual(changedEntries(result), []);
+  assert.deepEqual(dependencyPaths(result, "home"), []);
 });
 
 test("an unowned registration module under a broad component glob lists nothing", async (t) => {
@@ -128,7 +117,7 @@ test("an unowned registration module under a broad component glob lists nothing"
   assert.deepEqual(result.changes, []);
   assert.deepEqual(result.affectedConsumers, []);
   for (const entry of [...result.screens, ...result.components])
-    assert.deepEqual(entry.sharedImpact, [changed]);
+    assert.equal(Object.hasOwn(entry, "sharedImpact"), false);
 });
 
 function changedEntries(

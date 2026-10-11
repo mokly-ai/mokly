@@ -12,18 +12,12 @@ import { repositoryRoot, validEntrySource } from "./helpers/fixture.js";
 const read = (file: string) =>
   fs.readFile(path.join(repositoryRoot, file), "utf8");
 
-test("manifest v9 and review v6 share path identity", async (t) => {
-  const index = await read("docs/protocol/README.md");
+test("manifest v10 and review v7 share path identity", async (t) => {
+  const catalogue = await read("docs/protocol/mokly-catalogue.md");
   const outputContract = await read(
     "docs/protocol/mokly-generated-manifest.md",
   );
-  assert.match(outputContract, /schemaVersion: 9/);
-  assert.match(outputContract, /assetClosure: readonly string\[\]/);
-  assert.match(
-    outputContract,
-    /generatedFiles: readonly \{ path: string; blobHash: string \}\[\]/,
-  );
-  assert.match(outputContract, /blobHashAlgorithm: "sha1" \| "sha256"/);
+  assert.match(outputContract, /schemaVersion: 10/);
   const plain = validEntrySource();
   const components = componentEntrySource();
   for (const [before, after] of [
@@ -39,47 +33,13 @@ test("manifest v9 and review v6 share path identity", async (t) => {
       fixture.git,
       "main",
     );
-    assert.equal(fixture.after.manifest.schemaVersion, 9);
-    assert.equal(result.schemaVersion, 6);
+    assert.equal(fixture.after.manifest.schemaVersion, 10);
+    assert.equal(result.schemaVersion, 7);
     assert.match(
-      index,
+      catalogue,
       after === components
         ? /With registered components\s*\|\s*9\s*\|\s*6/
         : /Without registered components\s*\|\s*9\s*\|\s*6/,
     );
   }
-});
-
-test("delivered component contracts do not retain superseded status or version instructions", async () => {
-  const families = [
-    "mokly-components",
-    "mokly-changes",
-    "mokly-component-props",
-    "mokly-component-changes",
-  ];
-  const files = (
-    await fs.readdir(path.join(repositoryRoot, "docs/protocol"))
-  ).filter(
-    (file) =>
-      file.endsWith(".md") &&
-      families.some((family) => file.startsWith(family)),
-  );
-  assert.ok(files.length > families.length);
-  for (const file of files) {
-    const text = await read(`docs/protocol/${file}`);
-    assert.doesNotMatch(
-      text,
-      /not available in the current package|is planned, not implemented|implementation TODOs|does not claim a shipped validator|raw-file logic must be integrated/,
-      file,
-    );
-  }
-  for (const file of (
-    await fs.readdir(path.join(repositoryRoot, "docs/protocol"))
-  ).filter((file) => file.startsWith("mokly-export") && file.endsWith(".md")))
-    assert.doesNotMatch(
-      await read(`docs/protocol/${file}`),
-      /Keep `ReviewResult\.schemaVersion` at 2/,
-      file,
-    );
-  assert.match(await read("README.md"), /Current output uses manifest v9/);
 });

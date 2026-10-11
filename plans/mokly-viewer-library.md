@@ -335,7 +335,7 @@ before the review below. Milestone 4 has not started.
    this restores snapshot expiry but leaves an accumulating alias map.
 
 3. **P3 — Runtime delivery status still says the catalogue is unimplemented.**
-   [mokly-runtime.md:31](../docs/protocol/mokly-runtime.md#L31) groups the public
+   [mokly-runtime.md:31](https://github.com/mokly-ai/mokly/blob/50a063c/docs/protocol/mokly-runtime.md?plain=1#L31) groups the public
    catalogue with the future viewer/frame work as not implemented, and the route
    paragraph near line 121 still describes it as an approved target. This
    contradicts the implemented endpoint and the updated catalogue/export docs,
@@ -481,7 +481,7 @@ Milestone 3 notes and findings remain byte-unchanged.
 ### Milestone 4 post-push review
 
 1. **P2 — Viewport-fixed components lose their visible element bounds.**
-   [geometry.ts:45](../src/inspector/geometry.ts#L45) skips the measured element
+   [geometry.ts:45](https://github.com/mokly-ai/mokly/blob/695a856/src/inspector/geometry.ts#L45) skips the measured element
    before recording its fixed positioning. An ordinary overflow ancestor then
    clips a viewport-fixed element even though that ancestor does not clip its
    actual paint. A Chromium probe against the published minified inspector used
@@ -500,7 +500,7 @@ Milestone 3 notes and findings remain byte-unchanged.
    does not establish which ancestors legitimately clip a fixed descendant.
 
 2. **P2 — Consumer CSS can paint over highlighted component pixels.**
-   [overlay.ts:15](../src/inspector/overlay.ts#L15) sets positioning and pointer
+   [overlay.ts:15](https://github.com/mokly-ai/mokly/blob/695a856/src/inspector/overlay.ts#L15) sets positioning and pointer
    styles on an ordinary `div`, leaving its other computed styles consumer-owned.
    The shadow root isolates the SVG shapes, but not this host. A Chromium probe
    with `div { background: rgb(255, 0, 0) }` gave the host a red 390-by-300
@@ -763,7 +763,7 @@ was pushed before the review below; its remote tracking ref matches the commit.
 ### Milestone 5 post-push review
 
 1. **P2 — Changing viewport leaves pick mode active without its visuals.**
-   [frames.ts:68](../packages/viewer/src/viewer/frames.ts#L68) replaces frame
+   [frames.ts:68](https://github.com/mokly-ai/mokly/blob/0a6e07f/packages/viewer/src/viewer/frames.ts#L68) replaces frame
    sessions when the visible viewport/view changes, but `clear` does not end or
    reset the active `Picking` state. A browser probe started picking on Mobile,
    changed selection to Desktop, and observed the highlight-layer count drop
@@ -781,9 +781,9 @@ was pushed before the review below; its remote tracking ref matches the commit.
    event contract.
 
 2. **P2 — A flow fragment is applied to every step.**
-   [frames.ts:75](../packages/viewer/src/viewer/frames.ts#L75) assigns the global
+   [frames.ts:75](https://github.com/mokly-ai/mokly/blob/0a6e07f/packages/viewer/src/viewer/frames.ts#L75) assigns the global
    route fragment to every mounted frame, overriding the first-step-only rule
-   already used by [public_stage.tsx:128](../packages/viewer/src/viewer/public_stage.tsx#L128)
+   already used by [public_stage.tsx:128](https://github.com/mokly-ai/mokly/blob/0a6e07f/packages/viewer/src/viewer/public_stage.tsx#L128)
    and the navigation contract. A browser probe navigated a two-step use case
    to `?fragment=example-anchor`; both frame document URLs acquired
    `#example-anchor`. Doing nothing can scroll later steps to an unrelated
@@ -797,9 +797,9 @@ was pushed before the review below; its remote tracking ref matches the commit.
    this fixes the immediate behavior but leaves the duplicate policy.
 
 3. **P2 — Imperative highlighting loses the requested frame scope for labels.**
-   [frames.ts:176](../packages/viewer/src/viewer/frames.ts#L176) stores only the
+   [frames.ts:176](https://github.com/mokly-ai/mokly/blob/0a6e07f/packages/viewer/src/viewer/frames.ts#L176) stores only the
    instance key after highlighting the requested session; keys intentionally
-   remain stable across viewports. [frame_labels.ts:53](../packages/viewer/src/viewer/frame_labels.ts#L53)
+   remain stable across viewports. [frame_labels.ts:53](https://github.com/mokly-ai/mokly/blob/0a6e07f/packages/viewer/src/viewer/frame_labels.ts#L53)
    then queries every session with that key. With Both visible, a browser probe
    highlighted the Mobile `action` instance and observed one Mobile mask but two
    `Action · action` label buttons, one on each viewport. Those buttons dispatch
@@ -929,10 +929,10 @@ no release tag was created; tag tests use isolated temporary repositories.
    metadata unless a separate version matrix is added.
 
 2. **P2 — A throwing pick-end callback interrupts viewer teardown.**
-   [frames.ts:283](../packages/viewer/src/viewer/frames.ts#L283) emits the host's
+   [frames.ts:283](https://github.com/mokly-ai/mokly/blob/fcfb09c/packages/viewer/src/viewer/frames.ts#L283) emits the host's
    source-change callback before marking the frame manager disposed or clearing
    its sessions. If `onPickEnd` throws during source replacement,
-   [runtime.tsx:246](../packages/viewer/src/viewer/runtime.tsx#L246) also exits before
+   [runtime.tsx:246](https://github.com/mokly-ai/mokly/blob/fcfb09c/packages/viewer/src/viewer/runtime.tsx#L246) also exits before
    disposing its workspace, comparison, resize, slot and scoped event resources.
    Isolated Chromium probes using both same-origin and postMessage adapters
    observed one mounted session, zero aborts/unsubscribes/disposals, no remaining
@@ -1175,9 +1175,9 @@ byte-identical. No new mockup or schema version was introduced.
 
 1. **P2 — A scoped highlight still depends on unrelated unavailable views.**
    The public `highlightInstance` handle addresses one viewport/scheme/variant/
-   step. However, [frame_labels.ts:55](../packages/viewer/src/viewer/frame_labels.ts#L55)
+   step. However, [frame_labels.ts:55](https://github.com/mokly-ai/mokly/blob/80d151b/packages/viewer/src/viewer/frame_labels.ts#L55)
    queries every session's instance boundaries before filtering by that scope;
-   [frame_highlights.ts:56](../packages/viewer/src/viewer/frame_highlights.ts#L56)
+   [frame_highlights.ts:56](https://github.com/mokly-ai/mokly/blob/80d151b/packages/viewer/src/viewer/frame_highlights.ts#L56)
    supplies all sessions. With Both visible, ready Mobile usage and pending
    Desktop usage, a valid Mobile highlight rejects with a frame error and renders
    no host labels. Both real adapters reproduced the rejection; the same-origin
@@ -1193,9 +1193,9 @@ byte-identical. No new mockup or schema version was introduced.
    is narrower but retains unnecessary waits and can conceal real target errors.
 
 2. **P2 — A late geometry failure from an old frame cancels replacement picking.**
-   [frames.ts:113](../packages/viewer/src/viewer/frames.ts#L113) sends every label
+   [frames.ts:113](https://github.com/mokly-ai/mokly/blob/80d151b/packages/viewer/src/viewer/frames.ts#L113) sends every label
    refresh rejection to `fail`, which ends the currently active pick.
-   [frame_highlights.ts:52](../packages/viewer/src/viewer/frame_highlights.ts#L52)
+   [frame_highlights.ts:52](https://github.com/mokly-ai/mokly/blob/80d151b/packages/viewer/src/viewer/frame_highlights.ts#L52)
    fences successful rendering by request revision but does not fence error
    effects. Controlled probes wrapped both real adapters to hold an old Mobile
    geometry measurement, replaced it with Desktop, started a fresh pick, then
@@ -1361,7 +1361,7 @@ that commit. No implementation or test files changed during the review.
    ([post_message_adapter.ts:88](../packages/viewer/src/client/post_message_adapter.ts#L88))
    and rejects returned sibling keys against its unavailable usage. Both paths
    reach the viewer's unscoped error event handler
-   ([frames.ts:109](../packages/viewer/src/viewer/frames.ts#L109)). Four read-only
+   ([frames.ts:109](https://github.com/mokly-ai/mokly/blob/6a98685/packages/viewer/src/viewer/frames.ts#L109)). Four read-only
    Chromium probes highlighted Mobile successfully with zero errors, then hovered
    the actual Desktop button. Each produced one `onError` while the valid Mobile
    label remained. Doing nothing lets ordinary pointer movement repeatedly show
@@ -1496,11 +1496,11 @@ test files changed during review.
 1. **P2 — Ready evidence refresh can leave picking active without its masks
    (M9-1).** The new same-document update path calls `updateUsage` for replaced
    usage objects, including equivalent ready evidence
-   ([frame_session.ts:104](../packages/viewer/src/viewer/frame_session.ts#L104)).
+   ([frame_session.ts:104](https://github.com/mokly-ai/mokly/blob/a43a643/packages/viewer/src/viewer/frame_session.ts#L104)).
    Both built-in adapters clear their inspection presentation during that call
    ([same_origin_adapter.ts:85](../packages/viewer/src/client/same_origin_adapter.ts#L85),
    [post_message_adapter.ts:109](../packages/viewer/src/client/post_message_adapter.ts#L109)),
-   while [frames.ts:72](../packages/viewer/src/viewer/frames.ts#L72) retains the
+   while [frames.ts:72](https://github.com/mokly-ai/mokly/blob/a43a643/packages/viewer/src/viewer/frames.ts#L72) retains the
    existing pick and host-label owners. Two Chromium probes, one per adapter,
    promoted the sibling to ready, started picking with Both visible, then supplied
    cloned ready usage through `ViewerFrames.update`. Both changed from two masks
@@ -1719,7 +1719,7 @@ Implementation commit `d0eb791924de7345575c4506257782a2d26983ea`,
 ### Milestone 11 post-push review
 
 1. **P2 — Geometry during an asynchronous boundary snapshot can be lost.**
-   [`frame_highlights.ts:109`](../packages/viewer/src/viewer/frame_highlights.ts#L109)
+   [`frame_highlights.ts:109`](https://github.com/mokly-ai/mokly/blob/7a1c62a/packages/viewer/src/viewer/frame_highlights.ts#L109)
    returns the current presentation promise whenever a geometry event arrives
    during activation, but it does not remember that another measurement is
    needed. The public `FrameAdapter` contract permits a custom adapter's

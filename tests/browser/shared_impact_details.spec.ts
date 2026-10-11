@@ -8,14 +8,14 @@ import { compileCatalogue } from "../../dist/build/compile.js";
 import { writeCompilation } from "../../dist/build/transaction.js";
 import { loadConfig } from "../../dist/config/load.js";
 import { serve } from "../../dist/server/serve.js";
-import type { ReviewResultV6 } from "../../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV7 } from "../../packages/viewer/dist/review/component_types.js";
 import { componentEntrySource } from "../helpers/component_fixture.js";
 import { startEvidenceFixture } from "../helpers/evidence_fixture.js";
 import { createFixture, removeFixture } from "../helpers/fixture.js";
 
 import { FILES_LEAD, openEvidence } from "./css_evidence_page.js";
 
-test("a registered catalogue shows shared-impact-only files in a screen's Details from All", async ({
+test("changed source paths alone add no screen evidence in All", async ({
   page,
 }) => {
   const fixture = await startEvidenceFixture(pathOnlyEntrySource());
@@ -28,7 +28,7 @@ test("a registered catalogue shows shared-impact-only files in a screen's Detail
       kind: "evidence",
       componentChanges: {
         baseline: compilation.manifest,
-        result: sharedImpactOnlyResult(),
+        result: sourceOnlyResult(),
       },
       changedEntries: [],
       changesStatus: "ready",
@@ -40,14 +40,16 @@ test("a registered catalogue shows shared-impact-only files in a screen's Detail
       "true",
     );
     const evidence = await openEvidence(page);
-    await expect(evidence.getByText(FILES_LEAD, { exact: true })).toBeVisible();
-    await expect(evidence.getByRole("listitem")).toHaveText(["notes.md"]);
+    await expect(evidence.getByText(FILES_LEAD, { exact: true })).toHaveCount(
+      0,
+    );
+    await expect(evidence.getByRole("listitem")).toHaveCount(0);
   } finally {
     await fixture.close();
   }
 });
 
-test("a real changed shared-impact file appears in screen and component Details from All", async ({
+test("a real unreferenced source edit adds no screen or component evidence in All", async ({
   page,
 }) => {
   test.setTimeout(90_000);
@@ -72,10 +74,15 @@ test("a real changed shared-impact file appears in screen and component Details 
       "true",
     );
     const evidence = await openEvidence(page);
-    await expect(evidence.getByText(FILES_LEAD, { exact: true })).toBeVisible({
-      timeout: 30_000,
-    });
-    await expect(evidence.getByRole("listitem")).toHaveText(["notes.md"]);
+    await expect(page.locator("[data-changes-status]")).toHaveAttribute(
+      "data-changes-status",
+      "ready",
+      { timeout: 30_000 },
+    );
+    await expect(evidence.getByText(FILES_LEAD, { exact: true })).toHaveCount(
+      0,
+    );
+    await expect(evidence.getByRole("listitem")).toHaveCount(0);
     await page.goto(`${running.url}/view/action/`);
     await expect(page.locator('[data-filter="all"]')).toHaveAttribute(
       "aria-pressed",
@@ -87,10 +94,8 @@ test("a real changed shared-impact file appears in screen and component Details 
         "Changes to these files may affect this component:",
         { exact: true },
       ),
-    ).toBeVisible({ timeout: 30_000 });
-    await expect(componentEvidence.getByRole("listitem")).toHaveText([
-      "notes.md",
-    ]);
+    ).toHaveCount(0);
+    await expect(componentEvidence.getByRole("listitem")).toHaveCount(0);
     await expect(componentEvidence).toContainText(
       "No changes to this saved view.",
     );
@@ -104,28 +109,24 @@ test("a real changed shared-impact file appears in screen and component Details 
 });
 
 function pathOnlyEntrySource(): string {
-  return componentEntrySource().replaceAll(
-    'dependencies: ["notes.md"]',
-    "dependencies: []",
-  );
+  return componentEntrySource();
 }
 
-function sharedImpactOnlyResult(): ReviewResultV6 {
+function sourceOnlyResult(): ReviewResultV7 {
   const address = { path: "home", title: "Home" };
   return {
-    schemaVersion: 6 as const,
+    schemaVersion: 7,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: ["notes.md"],
-    sharedImpact: ["notes.md"],
+
     ignoredImpact: [],
     screens: [
       {
         ...address,
         before: address,
         after: address,
-        dependencies: [],
-        sharedImpact: ["notes.md"],
+
         state: "unchanged",
         views: (["mobile", "desktop"] as const).flatMap((viewport) =>
           (["light", "dark"] as const).map((colorScheme) => ({

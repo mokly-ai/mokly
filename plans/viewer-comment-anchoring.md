@@ -24,12 +24,12 @@ missing presentation and navigation primitives only.
 - No host-usable geometry exists. Boxes arrive only inside hover/click events,
   relative to the frame and unmapped to the stage. The in-frame `geometry`
   notification is consumed at
-  [`frames.ts:115`](../packages/viewer/src/viewer/frames.ts#L115) to refresh the
+  [`frames.ts:115`](https://github.com/mokly-ai/mokly/blob/9296ee3/packages/viewer/src/viewer/frames.ts#L115) to refresh the
   package-owned label buttons, and the frame-to-viewer mapping lives privately in
-  [`frame_labels.ts`](../packages/viewer/src/viewer/frame_labels.ts) and
+  [`frame_labels.ts`](https://github.com/mokly-ai/mokly/blob/9296ee3/packages/viewer/src/viewer/frame_labels.ts) and
   [`same_origin_highlight.ts`](../packages/viewer/src/client/same_origin_highlight.ts).
   `stageOverlay` is one box over the whole stage
-  ([`slot_layout.ts`](../packages/viewer/src/viewer/slot_layout.ts)), so a host
+  ([`slot_layout.ts`](https://github.com/mokly-ai/mokly/blob/9296ee3/packages/viewer/src/viewer/slot_layout.ts)), so a host
   cannot place a marker on an instance, keep it there while the preview scrolls,
   or know when the anchor is off screen.
 - Neither label layer refreshes on outer stage scrolling or frame expansion:
@@ -39,13 +39,13 @@ missing presentation and navigation primitives only.
   geometry notifications raised during an asynchronous boundary list.
 - Highlights address one instance. `HighlightRequest` accepts a single
   `InstanceRef` or the workspace key
-  ([`highlight_request.ts`](../packages/viewer/src/viewer/highlight_request.ts)),
+  ([`highlight_request.ts`](https://github.com/mokly-ai/mokly/blob/9296ee3/packages/viewer/src/viewer/highlight_request.ts)),
   so "show every commented instance" is impossible without repeated calls that
   replace each other.
 - Saved variants are not selectable. `ViewerSelection` has no `variantId`;
   `ViewerRouting` keeps the variant as a private route detail sourced from the
   workspace select, which pushes URL state directly
-  ([`workspace.ts`](../packages/viewer/src/client/workspace.ts#L267)), so a
+  ([`workspace.ts`](https://github.com/mokly-ai/mokly/blob/9296ee3/packages/viewer/src/client/workspace.ts#L267)), so a
   controlled host can neither propose nor restore a variant, and
   `highlightInstance`/`scrollToInstance` reject refs on a non-default variant.
 - Instance-only anchoring: clicks outside any instance emit nothing

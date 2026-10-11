@@ -2,6 +2,16 @@
 
 ## Delivery Status
 
+Removal of baseline compatibility is implemented in
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
+Uniform CSS page membership and catalogue evidence are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
+of the [source-path removal plan](../../plans/remove-source-path-evidence.md); the screen and saved-view details display is implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence), and the whole-document page display is implemented in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
+
+Implemented with [pages](./mokly-pages.md), variants, and publication. Catalogue
+impact/removal metadata is independent of the visual
+[comparison result](./mokly-changes.md); [removed previews](./mokly-removed-previews.md)
+owns baseline documents and delivery descriptors.
 Catalogue impact/removal metadata uses kind and path, with baseline folder
 titles for removed entries. Documents use page-style material and removal rules. Move pairing and its viewer
 presentation are implemented. This snapshot is
@@ -12,7 +22,7 @@ independent of the visual [comparison result](./mokly-changes.md);
 
 One package-internal catalogue-change module owns this typed snapshot and its
 pure selection rules. The Git-backed loader supplies validated current and
-baseline v9 manifests plus one resolved branch-point commit. Server, watcher,
+baseline v10 manifests plus one resolved branch-point commit. Server, watcher,
 preview capture, and publication consume the same
 snapshot for a catalogue generation:
 
@@ -49,7 +59,7 @@ optional calculation omits the entire Changes result, including removed
 entries; invalid current manifests or stale source inventories still prevent
 listening. On-demand comparisons use the accepted generation and pinned base.
 
-The entry types are validated manifest-v9 DTOs, including their common metadata
+The entry types are validated manifest-v10 DTOs, including their common metadata
 and tags. A removed record carries no route: its URL and artifact names derive
 from its path. `folderTitles` holds the baseline titles of its folders from the
 top level down, resolved from the baseline manifest's folder records and index
@@ -69,25 +79,25 @@ baseline entry; such an entry compares with that baseline entry and carries
 path-keyed metadata, material generated-output, and rendered-resource rules,
 extended with a page's single document and a document's documents per scheme
 and resources; folder titles are presentation and never attribution. Apply the
-same paired ignore normalization to page and document documents. For pages,
-documents, and catalogues without registered components, source paths,
-dependency declarations and shared-impact matches alone do not add otherwise
-unchanged entries. Component catalogues use the
-[path evidence rule](./mokly-component-changes.md#dependencies-and-styles)
-for screens, components and flows, unioned with material/metadata page and
-document Changes. Screen impact
+same paired ignore normalization to page and document documents. For every catalogue, source paths, unreferenced files and removed path declarations
+neither add otherwise unchanged entries nor appear as comparison evidence.
+Screens, components and flows use [component attribution](./mokly-component-changes.md),
+combined with page/document material, metadata and resource Changes. Every CSS
+delivery path uses kept own-page component matches and outside/unresolved page
+reasons under the [CSS rule contract](./mokly-css-attribution-rules.md). Screen impact
 continues to propagate to use cases through their screen steps. Current display
 metadata comes from the matching current catalogue; removed display metadata
 comes from `removedEntries`. No removed-use-case support is introduced here.
 
-Visual comparisons use [review result v6](./mokly-changes-serving.md#comparison-engine)
+Visual comparisons use [review result v7](./mokly-changes-serving.md#comparison-engine)
 for every catalogue. Pages and documents add no comparison records. Neither
 catalogue change detection nor page or document removal requires snapshot
 generation. The publisher must not discover removed pages or documents by reading
 `ReviewResult.screens`; that array remains the source of screen comparisons.
 The shared catalogue snapshot drives its removed-entry pages, shell metadata,
 and filter/search rows before HTML capture. It requires no additional public
-endpoint or comparison JSON schema change.
+endpoint. CSS page evidence is carried by catalogue v6 `resourceEvidence`;
+[comparison v7 evidence](./mokly-css-attribution-membership.md) carries the combined shape.
 
 ## Removal Selection And Precedence
 
@@ -145,7 +155,7 @@ the tag picker use current entries.
 
 The removed page or document view shows the baseline document from the same
 snapshot, under the [removed previews](./mokly-removed-previews.md) contract.
-Its details show the baseline title, path, description, tags, dependencies,
+Its details show the baseline title, path, description, tags,
 related docs, and folder titles. Historical titles are informational text,
 not folder nodes or links that pretend the old hierarchy still exists.
 Changing a surviving folder's title does not rewrite the baseline titles.

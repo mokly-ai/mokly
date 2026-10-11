@@ -17,7 +17,7 @@ import { createExportFixture } from "./helpers/export_fixture.js";
 function source(reuse = false): string {
   return `import React from "react";
 import { defineComponent, definePage, defineScreen } from "@mokly/mokly";
-const metadata = { dependencies: [], relatedDocs: [], description: "Fixture" };
+const metadata = { relatedDocs: [], description: "Fixture" };
 const action = defineComponent({ ...metadata, path: "action", title: "Action",
   propSchema: { kind: "object", properties: {} },
   render: () => <button>Continue</button>,

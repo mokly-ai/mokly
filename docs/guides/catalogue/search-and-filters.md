@@ -8,7 +8,7 @@ order: 2
 ## Search the tree
 
 Type in the search field to narrow the navigation tree. The
-[navigation reference](/docs/reference/navigation/) links to the shared search
+navigation reference links to the shared search
 matching rule. A folder hidden by its folder record stays out of the results.
 
 ## Search by tag

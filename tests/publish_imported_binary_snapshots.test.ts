@@ -43,8 +43,8 @@ for (const storage of ["blobs", "rebuild"] as const)
       await fs.writeFile(
         fixture.configPath,
         (await fs.readFile(fixture.configPath, "utf8")).replace(
-          'sharedImpact: ["notes.md"]',
-          'sharedImpact: ["notes.md"], baselineBuild: [["node", "baseline.mjs"]]',
+          'review: { outDir: ".review" }',
+          'review: { outDir: ".review", baselineBuild: [["node", "baseline.mjs"]] }',
         ),
       );
       const config = await loadConfig(fixture.root);
@@ -85,6 +85,9 @@ for (const [route, encoded] of JSON.parse(await fs.readFile("baseline.json", "ut
       const config = await loadConfig(fixture.root);
       await writeCompilation(await compileCatalogue(config), config);
     }
+
+    await fixture.git("add", ".");
+    await fixture.git("commit", "-qm", "test: publish changed scoped asset");
 
     await runPublishedCli(fixture.root, receiver.endpoint, token);
     const ownership = receiver.plans.at(-1)!.ownership.files;

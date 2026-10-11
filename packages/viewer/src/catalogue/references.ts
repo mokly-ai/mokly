@@ -93,6 +93,16 @@ export function validateCatalogueReferences(model: ValidatedCatalogue): void {
   );
   const documentPaths = new Set(model.documents.map((entry) => entry.path));
   for (const entry of all) {
+    const evidence =
+      entry.kind === "page"
+        ? [entry.resourceEvidence]
+        : "views" in entry
+          ? entry.views.map((view) => view.resourceEvidence)
+          : [];
+    require(model.changesStatus === "ready" ||
+      evidence.every(
+        (item) => item === undefined,
+      ), "resource evidence requires ready Changes");
     if ("variantOf" in entry && entry.variantOf !== undefined)
       require(entry.path.split("/").slice(0, -1).join("/") ===
         entry.variantOf, "variant path must be parent path plus one segment");

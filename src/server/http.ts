@@ -17,7 +17,7 @@ import { loadServeBrowserAssets } from "./client_modules.js";
 import { ComponentChangeCache } from "./component_change_cache.js";
 import { ComponentRenderService } from "./controls/service.js";
 import { ForegroundActivity } from "./demand/activity.js";
-import { DocumentService } from "./demand/service.js";
+import { liveDocumentService } from "./demand/service.js";
 import { acceptedGeneratedStatic } from "./generated_static.js";
 import { catalogueRequestHandler } from "./http_request_handler.js";
 import { closeCatalogueHttp } from "./http_shutdown.js";
@@ -33,6 +33,7 @@ import {
   removedPagePreviewSource,
   selectedReviewSource,
 } from "./review_sources.js";
+import { ServedClosure } from "./served_closure.js";
 import type { ChangesStatus } from "./update_messages.js";
 
 /** Start Browse only after manifest validation succeeds. */
@@ -45,47 +46,51 @@ export async function startCatalogueServer(
   const changes = validated.changes;
   let catalogue = validated.catalogue;
   let manifest = catalogue.manifest;
-  let assetClosure: ReadonlySet<string> = new Set(
-    "assetClosure" in manifest ? manifest.assetClosure : [],
+  const assetClosure = new ServedClosure(
+    options.assetClosure ??
+      ("assetClosure" in manifest ? manifest.assetClosure : []),
   );
   let acceptedGenerated: ReadonlyMap<string, GeneratedFile> =
     options.generatedOutputs ??
     snapshot.outputs ??
     acceptedGeneratedStatic(options.componentRuntime);
   const movedLinks = new RenderMoveTargets();
+  const renderService = (runtime: ComponentRuntime) =>
+    new ComponentRenderService(
+      runtime,
+      movedLinks.read,
+      options.onBuildWarning,
+    );
   let controls = options.componentRuntime
-    ? new ComponentRenderService(options.componentRuntime, movedLinks.read)
+    ? renderService(options.componentRuntime)
     : undefined;
   const activity = new ForegroundActivity(options.onForeground ?? (() => {}));
   const createDocuments = (runtime: ComponentRuntime) =>
-    runtime.manifest.schemaVersion === "live-index-2"
-      ? new DocumentService(runtime, activity.channel(), {
-          moveTargets: movedLinks.read,
-          onDocument: (document) => {
-            if (document.assetClosure)
-              assetClosure = new Set([
-                ...assetClosure,
-                ...document.assetClosure,
-              ]);
-            if (runtime.generation === controls?.capability().generation)
-              publicCatalogue.acceptDocument(
-                document,
-                publicInput(),
-                contentVersion,
-              );
-            options.onPreviewResources?.({
-              generation: runtime.generation,
-              ...(document.resourceSeeds
-                ? { resourceSeeds: document.resourceSeeds }
-                : {}),
-              documents: [
-                [document.route, document.html],
-                ...(document.watchDocuments ?? []),
-              ],
-            });
-          },
-        })
-      : undefined;
+    liveDocumentService(
+      runtime,
+      activity.channel(),
+      (document) => {
+        if (document.assetClosure) assetClosure.visit(document.assetClosure);
+        if (runtime.generation === controls?.capability().generation)
+          publicCatalogue.acceptDocument(
+            document,
+            publicInput(),
+            contentVersion,
+          );
+        options.onPreviewResources?.({
+          generation: runtime.generation,
+          ...(document.resourceSeeds
+            ? { resourceSeeds: document.resourceSeeds }
+            : {}),
+          documents: [
+            [document.route, document.html],
+            ...(document.watchDocuments ?? []),
+          ],
+        });
+      },
+      movedLinks.read,
+      options.onBuildWarning,
+    );
   let documents = options.componentRuntime
     ? createDocuments(options.componentRuntime)
     : undefined;
@@ -111,7 +116,7 @@ export async function startCatalogueServer(
     : undefined;
   let componentChanges =
     options.componentChanges ??
-    snapshot.componentChanges ??
+    validated.componentChanges ??
     (options.review && options.componentChangeSource
       ? await new ComponentChangeCache(options.componentChangeSource).read(
           options.updateVersion ?? 1,
@@ -172,7 +177,7 @@ export async function startCatalogueServer(
       activeCatalogue: () => activeCatalogue,
       assets: { clientModules, fontAssets, navigationModules },
       acceptedGenerated: () => acceptedGenerated,
-      assetClosure: () => assetClosure,
+      assetClosure: () => assetClosure.current,
       changedEntries: () => changedEntries,
       changesStatus: () => changesStatus,
       componentChanges: () => componentChanges,
@@ -199,7 +204,7 @@ export async function startCatalogueServer(
     );
   }
   return {
-    completeCatalogue(complete, generation): boolean {
+    completeCatalogue(complete, generation, checked): boolean {
       if (controls?.capability().generation !== generation) return false;
       parseManifest(complete);
       const nextCatalogue = createCatalogue(complete);
@@ -211,7 +216,7 @@ export async function startCatalogueServer(
         contentVersion,
       );
       manifest = complete;
-      assetClosure = new Set(complete.assetClosure);
+      assetClosure.accept(checked ?? complete.assetClosure);
       catalogue = nextCatalogue;
       activeCatalogue = nextActive;
       return true;
@@ -228,8 +233,10 @@ export async function startCatalogueServer(
       movedLinks.clear();
       acceptedGenerated = acceptedGeneratedStatic(runtime);
       publicCatalogue.clearUsage();
-      assetClosure = new Set(
-        "assetClosure" in runtime.manifest ? runtime.manifest.assetClosure : [],
+      assetClosure.advance(
+        "assetClosure" in runtime.manifest
+          ? runtime.manifest.assetClosure
+          : undefined,
       );
       void documents?.close();
       documents = createDocuments(runtime);
@@ -239,10 +246,9 @@ export async function startCatalogueServer(
         activeCatalogue = catalogue;
       }
       if (controls) controls.replace(runtime);
-      else controls = new ComponentRenderService(runtime, movedLinks.read);
+      else controls = renderService(runtime);
     },
     publishUpdate(update = {}): void {
-      if (update.assetClosure) assetClosure = new Set(update.assetClosure);
       const next = advanceCatalogueState(
         {
           catalogue,

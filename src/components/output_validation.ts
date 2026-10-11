@@ -27,7 +27,17 @@ export function validateComponentResources(
       )
         invalidData(
           route,
-          `component resource is not a public file: ${resource.path} (${decision.kind === "private" ? decision.reason : "missing, non-regular, or outside mockupsDir"})`,
+          componentResourceFailure(
+            resource.path,
+            decision.kind === "private"
+              ? decision.reason
+              : "missing, non-regular, or outside mockupsDir",
+          ),
         );
     }
+}
+
+/** Preserve one public-file diagnostic for stored owners and renderer references. */
+export function componentResourceFailure(path: string, reason: string): string {
+  return `component resource is not a public file: ${path} (${reason})`;
 }

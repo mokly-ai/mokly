@@ -1,7 +1,23 @@
 /** Bound one esbuild invocation to the caller's compilation lifetime. */
+import { setImmediate } from "node:timers/promises";
+
 import { build, context, type BuildOptions, type BuildResult } from "esbuild";
 
 type MemoryBuild = BuildOptions & { metafile: true; write: false };
+
+/** Yield cancelled compilation between stages while preserving worker checkpoints. */
+export function compilationCheckpoint(
+  signal?: AbortSignal,
+  accepted?: () => Promise<void>,
+): () => Promise<void> {
+  return async () => {
+    signal?.throwIfAborted();
+    if (signal) await setImmediate();
+    signal?.throwIfAborted();
+    await accepted?.();
+    signal?.throwIfAborted();
+  };
+}
 
 export async function buildWithSignal(
   options: MemoryBuild,

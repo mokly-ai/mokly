@@ -14,6 +14,8 @@ import {
   sourcePaths,
 } from "../scripts/verification/source-tree.mjs";
 
+import { repositoryRoot } from "./helpers/fixture.js";
+
 const execute = promisify(execFile);
 
 async function repository(context: TestContext) {
@@ -183,4 +185,29 @@ test("an unpushed commit and the same uncommitted change have the same fingerpri
     await git("rev-parse", "origin/main"),
   );
   assert.equal(await readSourceTree(root), uncommitted);
+});
+
+test("a nested worktree error names its relative path and the recovery hint", async (context) => {
+  const { root, git } = await repository(context);
+  await git("worktree", "add", "--detach", "nested/worker", "HEAD");
+  await assert.rejects(readSourceTree(root), {
+    message:
+      'source-tree fingerprint found an unsupported file type at "nested/worker/"; ignore or remove a nested repository or worktree',
+  });
+});
+
+test("the repository ignore rule excludes Claude worktrees from the fingerprint", async (context) => {
+  const { root, git } = await repository(context);
+  await fs.copyFile(
+    path.join(repositoryRoot, ".gitignore"),
+    path.join(root, ".gitignore"),
+  );
+  await git("add", ".gitignore");
+  const baseline = await readSourceTree(root);
+  await git("worktree", "add", "--detach", ".claude/worktrees/worker", "HEAD");
+  assert.equal(await readSourceTree(root), baseline);
+  assert.equal(
+    await git("check-ignore", ".claude/worktrees/worker/"),
+    ".claude/worktrees/worker/",
+  );
 });

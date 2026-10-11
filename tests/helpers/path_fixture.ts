@@ -37,5 +37,5 @@ export function pageSource(
   fields = "",
   html = "<html><body>Page</body></html>",
 ): string {
-  return `import {definePage} from '@mokly/mokly'; export default definePage({title:'Page', description:'A complete page', dependencies:[], relatedDocs:[], ${fields} render:()=>${JSON.stringify(html)}});`;
+  return `import {definePage} from '@mokly/mokly'; export default definePage({title:'Page', description:'A complete page',  relatedDocs:[], ${fields} render:()=>${JSON.stringify(html)}});`;
 }

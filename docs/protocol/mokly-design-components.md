@@ -2,10 +2,15 @@
 
 ## Delivery Status
 
+Uniform CSS attribution in the acceptance table is implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match)
+of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+
 The basic consumer records shared instances without changing existing design
 screens. Registered entries live under Components → Design → Shared components,
 beside Example Action and Toolbar. The generated manifest owns all counts;
 the library and its consuming screens use paths.
+
+The remaining contract is implemented.
 
 This contract and the [library inventory](./mokly-design-component-library.md)
 define delivery; [shell design](./mokly-shell-design.md) and
@@ -160,50 +165,38 @@ turning the whole artboard into a second running application.
 
 Mixed files such as `design.css`, `design-stage.css`, `design-review.css` and
 `design-component-*.css` retain shared, layout and global rules after extraction.
-Never declare one of these whole files owned by a single component. Separate
-exclusive component selectors into the inventory's owned sheets; keep global
-tokens, resets, cross-component selectors and screen layout conservatively
-attributed until an actual exclusive owner exists.
+Keep component selectors in the inventory's component sheets. Keep shared
+tokens, resets, cross-component selectors and screen layout in configured
+sheets. All these files use the same kept own-page match rule; none has an owner
+record that decides attribution.
 
-Use exact `ownedDependencies` for a component's exclusive implementation modules
-and stylesheet, with matching entries in its `dependencies`. Shared fixtures,
-navigation tables, icons and mixed helpers are not exclusively owned. Screens
-and ancestor folder definitions must not explicitly depend on an extracted exclusive
-component file: the classifier intentionally treats an exact declared screen
-dependency as independent evidence. Keep their genuine layout/global dependencies.
+Declare each component's public CSS in its `stylesheets` array for linking.
+Different components can share one file. Retain their declaring paths only as
+inserted-link provenance. Shared fixtures, navigation tables, icons and mixed helpers
+do not establish path-based ownership or evidence. Only rendered resources,
+CSS analysis, reviewable metadata and usage determine Changes.
 
-Registration, variant fixtures and controls metadata must not live in an owned
-render module or be declared implementation-impact dependencies. Their imports
-are already observed by the build graph, and their values are compared as entry
-metadata. Declaring their files as implementation dependencies would incorrectly
-create affected consumers for a variant-only edit. Keep render transformations in the view module; registration only forwards
+Registration, variant fixtures and controls metadata are compared as entry
+metadata, not exclusive implementation files. Their imports remain observed by
+the build graph. Keep render transformations in the view module; registration only forwards
 validated props and the actual viewport to that renderer. Test real source
 edits to saved variants and control labels as well as implementation source edits.
 
-Separate stylesheet loading from review dependency declaration. A typed consumer
-style map describes ordered candidate sheets for each design screen and library
-entry, covering its variants and supported control states, descendants and slots.
-All design rules share the ordered exclusive candidate pool in
-`library/style_files.ts`; route rules select their required mixed sheets. The
-pool authorizes descendant and transient rendering without emitting unused CSS.
-Order the configured blocks as shared base styles, exclusive component candidates,
-then context/layout overrides. Equal-specificity mobile component rules must not
-override the workspace’s bounded scrolling.
-Feed it into existing first-matching `config.stylesheets` rules, with specific
-library rules before the broad design fallback. The example renderer uses a
-fresh per-render React style collector: rendered library implementations request
-their exclusive sheets, and the renderer emits only those requested candidates,
-in configured order, alongside the required shared/global sheets. There is no
-module-global collector or inspection of private Mokly markers. Reject an
-unconfigured request rather than emitting an invented URL; preserve the supplied
-validated relative hrefs. This also applies to transient prop renders.
+Each registered component declares its exclusive public sheet through
+`libraryMetadata`. Route rules select only required mixed/global stylesheets;
+place `componentStylesheets` between shared base CSS and context/layout
+overrides. Mokly inserts actual rendered component links in first-render,
+authored-file order; there is no per-render React style collector, candidate
+pool, `useDesignStyle` call, or renderer-side link synthesis. The renderer emits
+`input.stylesheets` directly. This applies equally to transient prop renders;
+see [component stylesheets](./mokly-component-stylesheets.md).
 
 An unused child's stylesheet must not be linked merely because another saved
 variant uses that child: an absent component cannot justify suppressing that
 resource in the current view. Test a closed Top bar picker and an empty Tag picker
 alongside their populated variants so nested CSS edits do not become parent or
 screen changes through unused stylesheet links. No shared global sheet is filtered
-out as a substitute for proving exclusive ownership.
+out as a substitute for matching changed rules to component output.
 Observe new public CSS through the existing watch configuration/resource graph;
 do not copy the same rules into standalone stories and screen stylesheets.
 
@@ -212,24 +205,9 @@ including `:has()` viewport/theme state, inspector sizing, popovers and focus
 rings. Cross-component state remains explicit or a documented shared context;
 class proximity is not proof of exclusive ownership.
 
-Acceptance after a registered baseline exists:
-
-| Edit                                                           | Direct Changes                                                                                              | Secondary evidence                        |
-| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| Top bar implementation or its exclusive CSS                    | Top bar                                                                                                     | Consuming design screens                  |
-| Nested Tag chip implementation                                 | Tag chip                                                                                                    | Picker/Top bar and their screen consumers |
-| A screen changes query, title, target, status or a field value | That screen                                                                                                 | Actual usage updates                      |
-| A screen changes supplied slot content or instance order       | That screen                                                                                                 | Actual usage updates                      |
-| A variant entry's props change                                 | That variant entry                                                                                          | No automatic consumer change              |
-| Global tokens or screen layout change                          | Rendered screens when output changes; see [path rule](./mokly-component-changes.md#dependencies-and-styles) | Shared-file evidence                      |
-| Temporary local prop edit or Reset                             | None                                                                                                        | Preview only                              |
-
-The initial registration migration may create legitimate one-time structural
-changes against an unregistered baseline. Do not add blanket Review ignores to
-hide them. Prove steady-state attribution with two fully registered snapshots.
-Style-attribution tests cover the current model: retain meaningful
-global/layout assertions and use the shared component-aware classifier for
-owned styles, not the old raw changed-path helper.
+Acceptance after a registered baseline exists is defined by
+[design component attribution](./mokly-design-component-attribution.md),
+including each CSS delivery path and the unchanged input/slot rules.
 
 ## Verification And Completion
 

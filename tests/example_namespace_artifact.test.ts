@@ -28,8 +28,8 @@ test("the example export and reconstructed publication use portable path segment
     entry,
     `import { definePage, defineScreen } from "@mokly/mokly";
 export const entries = [
-  definePage({ path: "example/archived", title: "Archived", description: "Archived guide", dependencies: [], relatedDocs: [], render: () => "<html><body>Archived guide</body></html>" }),
-  defineScreen({ path: "example/archived-screen", title: "Archived screen", description: "Previous screen", dependencies: [], relatedDocs: [], mobile: "Previous mobile", desktop: "Previous desktop" }),
+  definePage({ path: "example/archived", title: "Archived", description: "Archived guide", relatedDocs: [], render: () => "<html><body>Archived guide</body></html>" }),
+  defineScreen({ path: "example/archived-screen", title: "Archived screen", description: "Previous screen", relatedDocs: [], mobile: "Previous mobile", desktop: "Previous desktop" }),
 ];`,
   );
   await writeCompilation(await compileCatalogue(config), config);
@@ -46,12 +46,24 @@ export const entries = [
     "test: record archived namespace fixture",
   ]);
   await fs.rm(entry);
+  await writeCompilation(await compileCatalogue(config), config);
+  await git.run(["add", "-A"]);
+  await git.run(["add", "-f", "examples/basic/mokly-generated"]);
+  await git.run([
+    "-c",
+    "core.hooksPath=/dev/null",
+    "-c",
+    "commit.gpgsign=false",
+    "commit",
+    "-qm",
+    "test: commit removed namespace entries",
+  ]);
   const receiver = await startFakeReceiver(t);
   await publishCatalogue(
     config,
     {
       out: path.join(root, "site"),
-      base: "HEAD",
+      base: "HEAD^",
       endpoint: receiver.endpoint,
       token: "fixture-token",
       repository: "github.com/sample/catalogue",

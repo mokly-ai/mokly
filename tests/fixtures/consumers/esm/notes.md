@@ -1,3 +1,10 @@
 # Packed ESM fixture
 
-This file is both related documentation and Review shared-impact evidence.
+This file is related documentation only. Edits to it do not add Changes or
+comparison evidence unless they change rendered output or another reviewable
+input.
+
+## Delivery Status
+
+The [source-path removal plan](../../../../plans/remove-source-path-evidence.md)
+records that migration.

@@ -1,4 +1,6 @@
 /** Shared source and authored-resource watch ownership for Build and Serve. */
+import type { BuildDiagnostic } from "../build/build_warnings.js";
+import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { bindTimings, timeAsync } from "../diagnostics/timings.js";
 
@@ -12,6 +14,10 @@ import {
 } from "./watch_events.js";
 import { hydrateWatchInventory } from "./watch_inventory.js";
 import { watchTargets } from "./watch_paths.js";
+import {
+  prepareInitialWatchedSource,
+  prepareWatchedSource,
+} from "./watch_preparation.js";
 import {
   createSourceWatcher,
   type ConsumerWatcher,
@@ -125,12 +131,59 @@ export class WatchSetup {
       await watcher.close();
       throw error;
     }
+    return this.retain(next, watcher, gate, targets);
+  }
+
+  /** Retain main's warning-aware runtime preparation under the shared owner. */
+  async prepareRuntime(
+    config: ResolvedConfig,
+    onWarning: (warning: BuildDiagnostic) => void,
+    generation: string,
+    initial = false,
+  ): Promise<
+    { runtime: ComponentRuntime; source: PreparedSourceWatch } | undefined
+  > {
+    if (this.closed) return;
+    const gate = new NotificationGate<WatchEvent>(this.report);
+    const prepare = initial
+      ? prepareInitialWatchedSource
+      : prepareWatchedSource;
+    const prepared = await prepare(
+      config,
+      this.factory,
+      gate,
+      this.report,
+      this.shutdown,
+      () => this.closed,
+      onWarning,
+      generation,
+      this.controller.signal,
+    );
+    if (!prepared) return;
+    return {
+      runtime: prepared.runtime,
+      source: this.retain(
+        prepared.runtime.config,
+        prepared.watcher,
+        gate,
+        JSON.stringify(watchTargets(prepared.runtime.config)),
+      ),
+    };
+  }
+
+  private retain(
+    next: ResolvedConfig,
+    watcher: ConsumerWatcher,
+    gate: NotificationGate<WatchEvent>,
+    targets: string,
+  ): PreparedSourceWatch {
     let adopted = false;
     let disposed = false;
     let previous: ConsumerWatcher | undefined;
     return {
       config: next,
-      ...forward,
+      notify: (event) => gate.notify(event),
+      forwardTo: (target) => gate.open((event) => target.notify(event)),
       adopt: (accepted = next) => {
         if (this.closed || adopted || disposed) return;
         previous = this.watcher;

@@ -80,7 +80,7 @@ export function baselineReaderForCommit(
   descriptor: BaselineCatalogue = baselineCatalogue(
     commit,
     toPosixPath(path.relative(config.repoRoot, config.mockupsDir)) || ".",
-    "generated-v9",
+    "generated-v10",
   ),
 ): BaselineReader {
   return selection === "rebuild"

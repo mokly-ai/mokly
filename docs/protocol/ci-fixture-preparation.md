@@ -19,7 +19,7 @@ commit. Static-example keeps the unchanged-HEAD comparison assertions.
 Playwright global setup retains Serve readiness. It does not build an example
 baseline or publish a shared repository/cache descriptor. Ordinary export
 fixtures do not copy a warmed cache or pay for a separate baseline recipe when
-their committed v9 output already supplies a complete verified inventory.
+their committed v10 output already supplies a complete verified inventory.
 They use the normal Git-blob baseline selection and retain every existing UI,
 source-isolation, exact export and comparison assertion.
 
@@ -33,7 +33,7 @@ never commit generated catalogue output in the Mokly working branch.
 
 Keep exactly one browser test whose operation is a real cold example-baseline
 rebuild: `tests/browser/example_baseline_cold.spec.ts`. It owns an independent
-empty cache, executes the actual install/build commands and verifies the v9
+empty cache, executes the actual install/build commands and verifies the v10
 manifest, generated inventory, authored closure and resulting comparison. It
 cannot use a copied cache or a committed-output shortcut for that operation.
 

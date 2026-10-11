@@ -49,7 +49,10 @@ test("Serve reports an earlier v7 baseline once and keeps All available", async 
 });
 
 for (const baseline of [
-  ...[2, 3, 4, 5, 6, 7, 8].map((version) => ({ name: `v${version}`, version })),
+  ...[2, 3, 4, 5, 6, 7, 8, 9].map((version) => ({
+    name: `v${version}`,
+    version,
+  })),
 ]) {
   test(`export treats an earlier ${baseline.name} baseline as unavailable`, async (t) => {
     const fixture = await createExportFixture();
@@ -87,6 +90,8 @@ test("publish uploads current-only output for an earlier baseline", async (t) =>
   const fixture = await createExportFixture();
   t.after(() => fixture.close());
   await installBaseline(fixture, { version: 7 });
+  await fixture.git("add", "mockups/mokly-generated");
+  await fixture.git("commit", "-qm", "test: publish current generated output");
   const messages: string[] = [];
   const requests: Array<{ method: string | undefined; url: string }> = [];
   await publishCatalogue(
@@ -95,7 +100,7 @@ test("publish uploads current-only output for an earlier baseline", async (t) =>
       endpoint: "https://uploads.example.test/plan",
       token: "fixture-token",
       repository: "github.com/example/catalogue",
-      base: "HEAD",
+      base: "HEAD^",
       out: "published",
     },
     "0.0.0-test",
@@ -155,10 +160,10 @@ test("publish uploads current-only output for an earlier baseline", async (t) =>
   assert.equal(manifest.baseSha, null);
 });
 
-test("a v10 baseline stays invalid and never uses earlier-version copy", async (t) => {
+test("a v11 baseline stays invalid and never uses earlier-version copy", async (t) => {
   const fixture = await createExportFixture();
   t.after(() => fixture.close());
-  await installBaseline(fixture, { version: 10 });
+  await installBaseline(fixture, { version: 11 });
   const messages: string[] = [];
   await assert.rejects(
     exportCatalogue(fixture.config, {
@@ -176,10 +181,10 @@ test("a v10 baseline stays invalid and never uses earlier-version copy", async (
   assert.deepEqual(messages, []);
 });
 
-test("Serve reports v10 through its ordinary safe diagnostic", async (t) => {
+test("Serve reports v11 through its ordinary safe diagnostic", async (t) => {
   const fixture = await createExportFixture();
   t.after(() => fixture.close());
-  await installBaseline(fixture, { version: 10 });
+  await installBaseline(fixture, { version: 11 });
   const output: string[] = [];
   const running = await serve(
     fixture.config,
@@ -203,7 +208,7 @@ test("Serve reports v10 through its ordinary safe diagnostic", async (t) => {
   );
 });
 
-test("a controlled v9 baseline still produces Changes", async (t) => {
+test("a controlled v10 baseline still produces Changes", async (t) => {
   const fixture = await createExportFixture();
   t.after(() => fixture.close());
   await fs.writeFile(

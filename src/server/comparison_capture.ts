@@ -1,7 +1,7 @@
 import {
   generatedResourcePath,
   generatedViews,
-  type ManifestV9,
+  type ManifestV10,
 } from "@mokly/viewer/data";
 
 import {
@@ -12,7 +12,7 @@ import type { EvidenceAssetReader } from "../review/evidence_assets.js";
 
 /** Retain exact current view bytes before publishing the comparison generation. */
 export async function retainHeadViewDigests(
-  manifest: ManifestV9,
+  manifest: ManifestV10,
   reader: EvidenceAssetReader,
 ): Promise<void> {
   for (const entry of manifest.entries)

@@ -9,6 +9,7 @@ import {
 import { createCatalogue } from "@mokly/viewer/server";
 
 import { adaptBrowseDocument } from "../../browse/document_adapter.js";
+import type { BuildDiagnostic } from "../../build/build_warnings.js";
 import {
   generatedBytes,
   type GeneratedFile,
@@ -33,6 +34,7 @@ export interface TransientRender {
   props: ComponentWireProps;
   view: ComponentViewRecord;
   files: ReadonlyMap<string, RenderFile>;
+  diagnostics?: readonly BuildDiagnostic[];
 }
 export function captureRenderBundle(
   route: string,
@@ -40,12 +42,13 @@ export function captureRenderBundle(
   manifest: CatalogueMetadata,
   config: ResolvedConfig,
   readGenerated?: (route: string) => GeneratedFile | undefined,
+  resourceSeeds: readonly string[] = [],
 ): ReadonlyMap<string, RenderFile> {
   const catalogue = createCatalogue(manifest);
   const generatedRoutes = new Set(generatedDocumentRoutes(manifest.entries));
   const files = new Map<string, RenderFile>();
   const policy = new PublicFilePolicy(config);
-  const pending = [generatedResourcePath(route)];
+  const pending = [generatedResourcePath(route), ...resourceSeeds];
   let size = 0;
   while (pending.length) {
     const current = pending.shift()!;

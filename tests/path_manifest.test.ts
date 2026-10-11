@@ -43,7 +43,7 @@ test("manifest v8 retains both folder sources and validates carrier fields", asy
 
 test("reserved document metadata permits an empty description but no stored routes", () => {
   const manifest = currentManifest({
-    schemaVersion: 9,
+    schemaVersion: 10,
     generatedBy: "mokly",
     folders: [],
     sourceFiles: ["specs/guide.md"],
@@ -54,7 +54,6 @@ test("reserved document metadata permits an empty description but no stored rout
         title: "Guide",
         description: "",
         sourcePath: "specs/guide.md",
-        declaredDependencies: [],
         relatedDocs: [],
         resources: [],
         colorSchemes: ["light"] as const,
@@ -94,11 +93,10 @@ test("manifest paths reject different spellings of the same folder", () => {
     title: "Page",
     description: "Page",
     sourcePath: "specs/page.mockup.ts",
-    declaredDependencies: [],
     relatedDocs: [],
   };
   const manifest = {
-    schemaVersion: 9,
+    schemaVersion: 10,
     generatedBy: "mokly",
     folders: [],
     sourceFiles: [entry.sourcePath],
@@ -114,13 +112,12 @@ test("persisted variants cannot become folder indexes", () => {
     title: "Screen",
     description: "Screen",
     sourcePath: "specs/screen.mockup.ts",
-    declaredDependencies: [],
     relatedDocs: [],
     colorSchemes: ["light"],
     useCasePaths: [],
   };
   const manifest = {
-    schemaVersion: 9,
+    schemaVersion: 10,
     generatedBy: "mokly",
     folders: [],
     sourceFiles: [entry.sourcePath],

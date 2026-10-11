@@ -94,7 +94,7 @@ const designLibraryFixtureSource = `import React from "react";
 import { defineScreen } from "@mokly/mokly";
 import { topBar } from "../specs/design/library/chrome/top-bar.js";
 
-const metadata = { dependencies: [], relatedDocs: [] };
+const metadata = { relatedDocs: [] };
 const destinations = [
   ["design/browse/views/home", "Home"],
   ["design/browse/views/screen", "Welcome"],

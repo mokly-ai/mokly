@@ -5,6 +5,12 @@ import { viewHref } from "../src/navigation/routes.js";
 import { frameNavigationHref } from "../src/shell/frame_event_router.js";
 import { routeFromUrl, routeHref } from "../src/shell/routes.js";
 import { canonicalRouteUrl } from "../src/shell/store_browser_urls.js";
+import {
+  announceNavigation,
+  hostRoute,
+} from "../src/shell/store_host_routes.js";
+import { defaultSelection } from "../src/viewer/selection.js";
+import type { ScreenNavigateEvent } from "../src/viewer/types.js";
 
 import { catalogue, model } from "./shell_state_fixture.js";
 
@@ -139,4 +145,37 @@ test("shell routes parse explicit view axes independently", () => {
   );
   assert.equal(repeated.viewport, "mobile");
   assert.equal(repeated.colorScheme, undefined);
+});
+
+test("live host routing carries exact history and announces its entry", () => {
+  const historical = model.removedEntries[0]!;
+  assert.ok(historical.snapshotId);
+  const selection = {
+    ...defaultSelection,
+    screenPath: historical.entry.path,
+    snapshotId: historical.snapshotId,
+  };
+  const route = hostRoute(catalogue, selection, "hero");
+  assert.equal(route.snapshot, historical.snapshotId);
+  assert.equal(route.fragment, "hero");
+  const navigations: unknown[] = [];
+  announceNavigation(
+    {
+      model,
+      events: () => ({
+        onScreenNavigate: (event: ScreenNavigateEvent) =>
+          navigations.push(event),
+      }),
+    } as never,
+    selection,
+    route.fragment,
+    undefined,
+  );
+  assert.deepEqual(navigations, [
+    {
+      screenPath: historical.entry.path,
+      snapshotId: historical.snapshotId,
+      fragment: "hero",
+    },
+  ]);
 });

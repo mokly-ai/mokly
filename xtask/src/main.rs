@@ -4,6 +4,7 @@
 
 mod application;
 mod check;
+mod child_environment;
 mod cli;
 mod command;
 mod error;

@@ -2,10 +2,16 @@ import { ComponentValidationError, resolveLinkPath } from "@mokly/viewer/data";
 
 import { existingDefinitionReference } from "../authoring/identity.js";
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
+import { type BuildDiagnostic } from "../build/build_warnings.js";
+import {
+  removedDependencies,
+  removedOwnedDependencies,
+} from "../build/warnings.js";
 import {
   validateComponentDefinition,
   validateComponentVariantDefinition,
 } from "../components/definition.js";
+import { validateDeclaredStylesheets } from "../components/stylesheet_validation.js";
 import type {
   ComponentDefinition,
   ComponentVariantDefinition,
@@ -33,11 +39,17 @@ export function prepareRegistry(
   values: readonly unknown[],
   config: ResolvedConfig,
   documents: readonly ResolvedDocument[] = [],
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): PreparedRegistry {
   const violations: RegistryViolation[] = [];
   const entries: ResolvedRegistryEntry[] = [];
+  const warnings: BuildDiagnostic[] = [];
+  const warn = (warning: BuildDiagnostic) => {
+    warnings.push(warning);
+    onWarning?.(warning);
+  };
   const validComponentParents = new Set<ResolvedRegistryEntry>();
-  const resolved = resolveDefinitions(values, config);
+  const resolved = resolveDefinitions(values, config, warn);
   for (const diagnostic of resolved.diagnostics)
     violations.push({ ...diagnostic, sourceRelativePath: "" });
   for (const entry of [...resolved.entries, ...documents]) {
@@ -59,6 +71,12 @@ export function prepareRegistry(
             }
           : step,
       );
+    if (Object.hasOwn(entry, "dependencies"))
+      warn(removedDependencies(entry.path));
+    if (entry.kind === "component" && Object.hasOwn(entry, "ownedDependencies"))
+      warn(removedOwnedDependencies(entry.path));
+    Reflect.deleteProperty(entry, "dependencies");
+    Reflect.deleteProperty(entry, "ownedDependencies");
     const metadataViolations = validateEntry(entry, config);
     violations.push(...metadataViolations);
     if (entry.kind === "component" && !("variantOf" in entry)) {
@@ -108,6 +126,7 @@ export function prepareRegistry(
     });
   }
   if (violations.length > 0) throw invalidRegistry(violations);
+  validateDeclaredStylesheets(orderedEntries, config, warn);
   return {
     folders: resolved.folders,
     references: new Map(
@@ -121,6 +140,7 @@ export function prepareRegistry(
     ),
     byPath: new Map(orderedEntries.map((entry) => [entry.path, entry])),
     entries: orderedEntries,
+    diagnostics: warnings,
   };
 }
 
@@ -139,12 +159,7 @@ function validateComponentVariants(
     const parent = candidates.length === 1 ? candidates[0] : undefined;
     if (!parent || parent.kind !== "component" || "variantOf" in parent)
       continue;
-    for (const field of [
-      "dependencies",
-      "relatedDocs",
-      "colorSchemes",
-      "tags",
-    ] as const) {
+    for (const field of ["relatedDocs", "colorSchemes", "tags"] as const) {
       if (JSON.stringify(entry[field]) !== JSON.stringify(parent[field])) {
         violations.push(
           problem(

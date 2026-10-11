@@ -1,5 +1,3 @@
-import { useDesignStyle } from "../style_context.js";
-
 import type { PropFieldProps } from "./prop-field.js";
 
 export function PropFieldView({
@@ -10,7 +8,6 @@ export function PropFieldView({
   optional,
   control,
 }: PropFieldProps) {
-  useDesignStyle("prop-field");
   return (
     <div
       className={

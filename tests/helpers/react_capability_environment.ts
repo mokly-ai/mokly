@@ -13,7 +13,7 @@ import type { ReactCapabilityEnvironment } from "../../dist/client/react_capabil
 
 export const catalogue = readCatalogue(
   JSON.parse(
-    fs.readFileSync("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
+    fs.readFileSync("docs/protocol/fixtures/catalogue-v6.json", "utf8"),
   ),
 );
 

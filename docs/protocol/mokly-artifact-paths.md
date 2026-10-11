@@ -107,6 +107,18 @@ generation validation call these functions. They do not join or slice a
 `snapshots/` or `previews/` literal themselves. The review result and the
 public read model carry paths and axes rather than any of these file names.
 
+The ESLint rule `mokly/no-artifact-path-literals` enforces the literal ban. It
+reports a string literal whose value contains `snapshots/`, or contains
+`pages/` followed later by `.json`. It tests a template literal as one string,
+its raw text with each substitution replaced by `${}`, and reports it at most
+once. Regular-expression literals and comments are outside the rule. It
+applies to `.ts` and `.tsx` modules under `src/` and `packages/viewer/src/`, to
+`.mjs`, `.mts` and `.ts` modules under `scripts/`, and to `.ts`, `.tsx` and
+`.mjs` modules under `examples/`. The builder module
+`packages/viewer/src/navigation/routes.ts` and every `tests` directory are
+exempt. The rule lives in `scripts/eslint/` and runs with `npm run lint` in the
+repository suite.
+
 ## Shell Documents And Browser Paths
 
 An export writes one shell document per current or removed entry at

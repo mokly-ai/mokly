@@ -2,7 +2,11 @@ import { canonicalJson } from "../components/data.js";
 import { isKebabCase, isEntryPath } from "../navigation/logical.js";
 
 export function reviewInvalid(message: string): never {
-  throw new Error(`[mokly/review] ${message}`);
+  throw new Error(
+    message.startsWith("[mokly/review] ")
+      ? message
+      : `[mokly/review] ${message}`,
+  );
 }
 export function reviewObject(
   value: unknown,

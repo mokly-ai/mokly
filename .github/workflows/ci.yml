@@ -62,13 +62,23 @@ jobs:
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
-        run: |
-          rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy
-          rustup default 1.95.0
+        run: rustup toolchain install
       - name: Install dependencies
         run: npm ci
       - name: Run repository verification
-        run: cargo xtask check --suite repository
+        env:
+          DEPENDENCY_AUDIT: >-
+            ${{
+              github.event_name == 'pull_request' &&
+              github.event.pull_request.head.repo.full_name == github.repository &&
+              (
+                startsWith(github.event.pull_request.head.ref, 'dependency-audit/') ||
+                contains(github.event.pull_request.labels.*.name, 'dependency-audit') ||
+                startsWith(github.event.pull_request.head.ref, 'release-please--') ||
+                contains(join(github.event.pull_request.labels.*.name, ','), 'autorelease:')
+              ) && 'strict' || 'baseline'
+            }}
+        run: cargo xtask check --suite repository --dependency-audit "$DEPENDENCY_AUDIT"
 
   package:
     name: Package (Node ${{ matrix.node }})
@@ -94,9 +104,7 @@ jobs:
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
-        run: |
-          rustup toolchain install 1.95.0 --profile minimal
-          rustup default 1.95.0
+        run: rustup toolchain install
       - name: Install dependencies
         run: npm ci
       - name: Run package verification
@@ -130,9 +138,7 @@ jobs:
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
-        run: |
-          rustup toolchain install 1.95.0 --profile minimal
-          rustup default 1.95.0
+        run: rustup toolchain install
       - name: Install dependencies
         run: npm ci
       - name: Run unit shard
@@ -176,9 +182,7 @@ jobs:
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
-        run: |
-          rustup toolchain install 1.95.0 --profile minimal
-          rustup default 1.95.0
+        run: rustup toolchain install
       - name: Install dependencies
         run: npm ci
       - name: Install Chromium
@@ -230,9 +234,7 @@ jobs:
       - name: Set up npm
         run: npm install --global npm@11.21.0
       - name: Set up Rust
-        run: |
-          rustup toolchain install 1.95.0 --profile minimal
-          rustup default 1.95.0
+        run: rustup toolchain install
       - name: Install dependencies
         run: npm ci
       - name: Install Chromium

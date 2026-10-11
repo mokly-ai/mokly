@@ -1,11 +1,8 @@
-import { setImmediate } from "node:timers/promises";
-
 import type { ComponentViewRecord } from "@mokly/viewer";
-import type { ManifestV9, ArtifactView } from "@mokly/viewer/data";
+import type { ManifestV10, ArtifactView } from "@mokly/viewer/data";
 
 import { validateComponentResources } from "../components/output_validation.js";
-import { validateComponentRanges } from "../components/ranges.js";
-import { rebaseStyleOwnership } from "../components/style_ownership.js";
+import type { LinkedComponentStylesheet } from "../components/render.js";
 import { PublicFilePolicy } from "../config/public_policy.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { timeAsync, timeSync, timingCounts } from "../diagnostics/timings.js";
@@ -27,6 +24,8 @@ import {
   normalizeBuildDiagnostics,
   type BuildDiagnostic,
 } from "./build_warnings.js";
+import { compilationCheckpoint } from "./cancellable_bundle.js";
+import { finalizeCompiledStylesheets } from "./compiled_stylesheets.js";
 import { rememberRuntime } from "./component_runtime.js";
 import { resolveDocumentLinks } from "./document_links.js";
 import {
@@ -34,7 +33,7 @@ import {
   generatedBytes,
   type GeneratedFile,
 } from "./generated_file.js";
-import { validateHtmlLinks } from "./html_links.js";
+import { validateHtmlLinks, type ResourceSeed } from "./html_links.js";
 import { loadConsumerGraph, type LoadedGraph } from "./load_graph.js";
 import { validateLogicalFragments } from "./logical_records.js";
 import { validateGeneratedOutputPaths } from "./output_paths.js";
@@ -51,12 +50,14 @@ import { componentResourceSeeds } from "./resource_seeds.js";
 /** Complete in-memory static compilation result. */
 export interface Compilation {
   diagnostics: readonly BuildDiagnostic[];
-  manifest: ManifestV9;
+  manifest: ManifestV10;
   outputs: ReadonlyMap<string, GeneratedFile>;
   /** Repository-relative inputs of delivered CSS and asset routes. */
   deliveredStyleSources: readonly string[];
   /** Accepted authored Markdown bodies, keyed by repository source path. */
   documentMarkdown?: ReadonlyMap<string, string>;
+  /** Private closure references without component ownership or comparison meaning. */
+  resourceSeeds?: readonly ResourceSeed[];
 }
 
 /** Compile all expected bytes without mutating consumer output. */
@@ -68,8 +69,11 @@ export async function compileCatalogue(
     outputSnapshot: OutputSnapshot;
   },
   signal?: AbortSignal,
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): Promise<Compilation> {
-  return timeAsync("compile", () => compileMeasured(config, accepted, signal));
+  return timeAsync("compile", () =>
+    compileMeasured(config, accepted, signal, onWarning),
+  );
 }
 
 async function compileMeasured(
@@ -80,15 +84,19 @@ async function compileMeasured(
     outputSnapshot: OutputSnapshot;
   },
   signal?: AbortSignal,
+  onWarning?: (warning: BuildDiagnostic) => void,
 ): Promise<Compilation> {
-  signal?.throwIfAborted();
-  const checkpoint = async () => {
-    signal?.throwIfAborted();
-    if (signal) await setImmediate();
-    signal?.throwIfAborted();
-    await accepted?.checkpoint();
-    signal?.throwIfAborted();
+  const warnings: BuildDiagnostic[] = [];
+  const recordWarning = (warning: BuildDiagnostic) => {
+    warnings.push(warning);
+    onWarning?.(warning);
   };
+  config.diagnostics?.forEach(recordWarning);
+  signal?.throwIfAborted();
+  const checkpoint = compilationCheckpoint(
+    signal,
+    accepted && (() => accepted.checkpoint()),
+  );
   const graph =
     accepted?.graph ??
     (await loadConsumerGraph(config, true, undefined, signal));
@@ -101,7 +109,7 @@ async function compileMeasured(
     postcssWatchDirectories: graph.postcssWatchDirectories ?? [],
   };
   const registry = timeSync("registry.prepare", () =>
-    prepareRegistry(graph.definitions, config, graph.documents),
+    prepareRegistry(graph.definitions, config, graph.documents, recordWarning),
   );
   validateGeneratedOutputPaths(
     [
@@ -125,6 +133,11 @@ async function compileMeasured(
   }));
   const fragmentViews = new Map<string, ArtifactView>();
   const componentViews = new Map<string, ComponentViewRecord>();
+  const rendererResourceSeeds: ResourceSeed[] = [];
+  const stylesheetLinks = new Map<
+    string,
+    readonly LinkedComponentStylesheet[]
+  >();
   const pending = new PendingGeneratedFiles(graph.styleOutputs);
   const policy = new PublicFilePolicy(config);
   const outputs =
@@ -139,6 +152,9 @@ async function compileMeasured(
             checkpoint,
             pending,
             policy,
+            recordWarning,
+            stylesheetLinks,
+            rendererResourceSeeds,
           ),
         )
       : timeSync("render", () =>
@@ -151,27 +167,35 @@ async function compileMeasured(
             componentViews,
             undefined,
             { routes: graph.stylesheetRoutes, pending, policy },
+            recordWarning,
+            stylesheetLinks,
+            rendererResourceSeeds,
           ),
         );
   pending.addHtmlMap(outputs);
   await checkpoint();
   const resolvedLinks = timeSync("html.links", () =>
-    resolveDocumentLinks(outputs, registry.entries, config, fragmentViews),
+    resolveDocumentLinks(
+      outputs,
+      registry.entries,
+      config,
+      fragmentViews,
+      undefined,
+      [],
+      recordWarning,
+    ),
   );
   pending.addHtmlMap(outputs);
-  timeSync("components.validate-metadata", () => {
-    for (const [route, view] of componentViews) {
-      const final = outputs.get(route)!;
-      validateComponentRanges(final, view.ranges);
-      componentViews.set(route, {
-        ...view,
-        styles: rebaseStyleOwnership(
-          resolvedLinks.edits.get(route)!,
-          view.styles,
-        ),
-      });
-    }
-  });
+  timeSync("components.validate-metadata", () =>
+    finalizeCompiledStylesheets(
+      outputs,
+      componentViews,
+      config,
+      stylesheetLinks,
+      resolvedLinks.edits,
+    ),
+  );
+  pending.addHtmlMap(outputs);
   timeSync("html.logical-links", () =>
     validateLogicalFragments(
       outputs,
@@ -199,7 +223,10 @@ async function compileMeasured(
     validateComponentResources(componentViews, config, pending, policy),
   );
   await checkpoint();
-  const resourceSeeds = componentResourceSeeds(componentViews);
+  const resourceSeeds = [
+    ...componentResourceSeeds(componentViews),
+    ...rendererResourceSeeds,
+  ];
   const assetClosure = timeSync("html.links-and-resources", () =>
     validateHtmlLinks(
       outputs,
@@ -214,7 +241,7 @@ async function compileMeasured(
   const blobHashAlgorithm = new RepositoryObjectFormatReader().format(
     config.repoRoot,
   );
-  const manifest: ManifestV9 = {
+  const manifest: ManifestV10 = {
     ...draftManifest,
     assetClosure,
     blobHashAlgorithm,
@@ -224,7 +251,7 @@ async function compileMeasured(
         path,
         blobHash: gitBlobHash(generatedBytes(content), blobHashAlgorithm),
       })),
-    schemaVersion: 9,
+    schemaVersion: 10,
   };
   timeSync("manifest.validate", () => parseManifest(manifest));
   timeSync("manifest.serialize", () =>
@@ -238,9 +265,10 @@ async function compileMeasured(
     validateGeneratedOutputPaths(compilationOutputs.keys(), config),
   );
   const compilation: Compilation = {
-    diagnostics: normalizeBuildDiagnostics(resolvedLinks.diagnostics),
+    diagnostics: normalizeBuildDiagnostics(warnings),
     manifest,
     outputs: compilationOutputs,
+    ...(resourceSeeds.length ? { resourceSeeds } : {}),
     deliveredStyleSources: graph.deliveredStyleSources,
     documentMarkdown: new Map(
       (graph.documents ?? []).map((entry) => [

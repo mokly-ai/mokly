@@ -22,7 +22,7 @@ import { pathFixture } from "./helpers/path_fixture.js";
 
 function component(title: string, variants: string): string {
   return `import {defineComponent} from '@mokly/mokly';
-export default defineComponent({title:'${title}',description:'A control',dependencies:[],relatedDocs:[],propSchema:{kind:'object',properties:{label:{schema:{kind:'string'}}}},render:(props)=><button>{props.label}</button>,variants:[${variants}]});`;
+export default defineComponent({title:'${title}',description:'A control',relatedDocs:[],propSchema:{kind:'object',properties:{label:{schema:{kind:'string'}}}},render:(props)=><button>{props.label}</button>,variants:[${variants}]});`;
 }
 const primary = "{slug:'primary',title:'Primary',props:{label:'Continue'}}";
 const initial = "{slug:'default',title:'Default',props:{label:'Save'}}";

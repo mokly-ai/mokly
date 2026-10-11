@@ -1,6 +1,9 @@
 import type { ColorScheme } from "@mokly/viewer";
 
+import type { BuildDiagnostic } from "../build/build_warnings.js";
 import type { FolderRecord } from "../registry/folder_records.js";
+
+import type { componentStylesheets } from "./component_stylesheets.js";
 
 /** Filesystem changes understood by the watched development runtime. */
 export type WatchAction = "ignore" | "rebuild" | "reload" | "restart";
@@ -10,11 +13,20 @@ export interface StylesheetRule {
   /** POSIX glob matched against a screen route. */
   match: string;
   /** Paths relative to `mockupsDir`, or absolute HTTP(S) URLs. */
-  stylesheets: readonly string[];
+  stylesheets: readonly (string | typeof componentStylesheets)[];
   /** Additional stylesheets appended for light fragments. */
   lightStylesheets?: readonly string[];
   /** Additional stylesheets appended for dark fragments. */
   darkStylesheets?: readonly string[];
+}
+
+/** Cloneable configured links and their validated insertion position. */
+export interface ResolvedStylesheetRule extends Omit<
+  StylesheetRule,
+  "stylesheets"
+> {
+  stylesheets: readonly string[];
+  componentPosition?: number;
 }
 
 /** One additional consumer watch input. */
@@ -34,14 +46,14 @@ export interface WatchConfig {
 
 /** Git comparison and artifact configuration. */
 export interface ReviewConfig {
+  /** Removed input; untyped authoring values warn and have no effect. */
+  sharedImpact?: never;
   /** Shell-free commands run using trusted historical code for missing baselines. */
   baselineBuild?: readonly (readonly string[])[];
   /** Git ref whose merge base with HEAD is the comparison branch point. */
   base?: string;
   /** Config-relative artifact directory. */
   outDir?: string;
-  /** Repository-relative POSIX globs whose changes can affect many screens. */
-  sharedImpact?: readonly string[];
 }
 
 /** Esbuild loaders allowed for consumer-authored module extensions. */
@@ -101,8 +113,12 @@ export interface MoklyConfig {
 
 /** Absolute, validated configuration consumed by runtime engines. */
 export interface ResolvedConfig {
+  /** Configuration warnings retained across command and Serve boundaries. */
+  diagnostics?: readonly BuildDiagnostic[];
   colorSchemes: readonly ColorScheme[];
   configPath: string;
+  /** Public component CSS validated from the current loaded registry. */
+  componentStylesheetPaths?: readonly string[];
   /** Complete authoring inventory retained across compile and serving boundaries. */
   sourceFiles?: readonly string[];
   /** Inputs to the separately bundled configuration graph. */
@@ -132,9 +148,9 @@ export interface ResolvedConfig {
     readonly glob: string;
   }[];
   repoRoot: string;
-  review: Required<Omit<ReviewConfig, "baselineBuild">> &
+  review: Required<Pick<ReviewConfig, "base" | "outDir">> &
     Pick<ReviewConfig, "baselineBuild">;
-  stylesheets: readonly StylesheetRule[];
+  stylesheets: readonly ResolvedStylesheetRule[];
   watch: Required<Pick<WatchConfig, "debounceMs">> & {
     rules: readonly WatchRule[];
   };

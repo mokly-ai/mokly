@@ -2,16 +2,11 @@ import { defineComponent, MockLink } from "@mokly/mokly";
 
 import { Action } from "./action.js";
 
-const dependency = "examples/basic/example-components.css";
-const implementation = "examples/basic/src/components/action/action.tsx";
-
 export const action = defineComponent({
   slug: "index",
   title: "Action",
   description: "A shared action with an optional destination and hint.",
-
-  dependencies: [dependency, implementation],
-  ownedDependencies: [dependency, implementation],
+  stylesheets: ["example-components.css"],
   relatedDocs: ["examples/basic/README.md"],
   tags: ["forms"],
   propSchema: {

@@ -45,7 +45,7 @@ test("Review artifact paths are collision-free for distinct valid routes", async
     currentManifest({
       entries: [],
       generatedBy: "mokly",
-      schemaVersion: 9,
+      schemaVersion: 10,
       sourceFiles: [],
     }),
   );
@@ -121,14 +121,12 @@ test("Comparison artifacts retain snapshots without standalone UI", () => {
       baseRef: "HEAD",
       changedPaths: [],
       ignoredImpact: [],
-      schemaVersion: 6 as const,
+      schemaVersion: 7 as const,
       screens: [
         {
           after: { path: "home", title: "Home" },
           before: { path: "home", title: "Home" },
-          dependencies: [],
           path: "home",
-          sharedImpact: [],
           state: "changed",
           title: "Home",
           views: [
@@ -141,7 +139,6 @@ test("Comparison artifacts retain snapshots without standalone UI", () => {
           ],
         },
       ],
-      sharedImpact: [],
       components: [],
       changes: [],
       affectedConsumers: [],
@@ -165,7 +162,7 @@ test("Review retains marker-bearing pane bytes as portable output", async (conte
     currentManifest({
       entries: [],
       generatedBy: "mokly",
-      schemaVersion: 9,
+      schemaVersion: 10,
       sourceFiles: [],
     }),
   );
@@ -205,7 +202,7 @@ test("Review retains marker-bearing pane bytes as portable output", async (conte
 function collidingRouteSource(): string {
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"], useCasePaths: [] };
+const metadata = { relatedDocs: ["notes.md"], useCasePaths: [] };
 export const mockups = [
   defineScreen({ ...metadata, description: "Dot route", desktop: <main>Dot</main>, path: "dot-route", mobile: <main>Dot</main>, title: "Dot" }),
   defineScreen({ ...metadata, description: "Hyphen route", desktop: <main>Hyphen</main>, path: "hyphen-route", mobile: <main>Hyphen</main>, title: "Hyphen" })

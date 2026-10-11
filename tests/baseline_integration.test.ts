@@ -220,9 +220,9 @@ if (mode === "wait") {
   fs.mkdirSync(root, { recursive: true });
   const sourcePath = "entries/page.mockup.tsx";
   fs.writeFileSync(root + "/mokly-manifest.json", JSON.stringify({
-    schemaVersion: 9, folders: [], generatedBy: "mokly", sourceFiles: ["catalogue.json", sourcePath, "mokly.config.ts"],
+    schemaVersion: 10, folders: [], generatedBy: "mokly", sourceFiles: ["catalogue.json", sourcePath, "mokly.config.ts"],
     assetClosure: [], blobHashAlgorithm: "sha1", generatedFiles: [{ path: "page/index.html", blobHash: require("node:crypto").createHash("sha1").update("blob " + Buffer.byteLength("<!doctype html><html><body>Historical page</body></html>") + "\\0").update("<!doctype html><html><body>Historical page</body></html>").digest("hex") }],
-    entries: [{ path: "page", kind: "page", title: "Historical page", description: "A tiny consumer catalogue", sourcePath, relatedDocs: [], declaredDependencies: [] }]
+    entries: [{ path: "page", kind: "page", title: "Historical page", description: "A tiny consumer catalogue", sourcePath, relatedDocs: [], }]
   }));
   fs.mkdirSync(root + "/page", { recursive: true });
   fs.writeFileSync(root + "/page/index.html", "<!doctype html><html><body>Historical page</body></html>");

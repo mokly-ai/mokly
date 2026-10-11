@@ -1,10 +1,11 @@
 //! Trait-backed availability selection with ordered automatic fallback.
 
 use crate::executor::{Decision, Executor, LocalReason};
-use crate::remote::contracts::Dependencies;
+use crate::remote::contracts::{Dependencies, RequiredProgram};
 
 use crate::remote::error::{Error, Result};
 use crate::remote::policy::{Check, ordered_checks};
+use crate::remote::reporting::warning;
 /// Availability selection without box warmup or suite execution.
 #[cfg_attr(test, unimock::unimock(api = [SelectorSelectMock]))]
 pub(crate) trait Selector: Send + Sync {
@@ -28,12 +29,10 @@ impl Selector for DefaultSelector {
             match self.check(check, mode, &mut key) {
                 Ok(Some(reason)) => return Ok(Decision::Local(reason)),
                 Ok(None) => {}
-                Err(Error::Interrupted) => return Err(Error::Interrupted),
+                Err(error @ Error::Interrupted { .. }) => return Err(error),
                 Err(error) if mode == Executor::Remote => return Err(error),
                 Err(error) => {
-                    self.dependencies
-                        .reporter
-                        .executor(&format!("warning: {error}"));
+                    self.dependencies.reporter.executor(&warning("", &error));
                     return Ok(Decision::Local(check.local_reason()));
                 }
             }
@@ -70,14 +69,27 @@ impl DefaultSelector {
                     return Ok(Some(LocalReason::NoKey));
                 }
             }
-            Check::Program(program) => {
-                if !dependencies.programs.find(program)? {
-                    let hint = if program == "blacksmith" {
-                        "install with curl -fsSL https://get.blacksmith.sh | sh"
-                    } else {
-                        "install rsync and ssh with the operating system package manager"
-                    };
-                    return Err(Error::MissingProgram { program, hint });
+            Check::Programs => {
+                let mut missing = Vec::new();
+                let mut lookup_error = None;
+                for program in [
+                    RequiredProgram::Blacksmith,
+                    RequiredProgram::Rsync,
+                    RequiredProgram::Ssh,
+                ] {
+                    match dependencies.programs.find(program.name()) {
+                        Ok(true) => {}
+                        Ok(false) => missing.push(program),
+                        Err(error) => {
+                            lookup_error.get_or_insert(error);
+                        }
+                    }
+                }
+                if let Some(error) = lookup_error {
+                    return Err(error);
+                }
+                if !missing.is_empty() {
+                    return Err(Error::MissingPrograms { programs: missing });
                 }
             }
             Check::Version => dependencies
@@ -102,7 +114,7 @@ impl DefaultSelector {
             }
             Check::Interrupt => {
                 if dependencies.interrupt.requested() {
-                    return Err(Error::Interrupted);
+                    return Err(Error::Interrupted { cleanup: 0 });
                 }
             }
         }
@@ -113,3 +125,7 @@ impl DefaultSelector {
 #[cfg(test)]
 #[path = "_tests_/availability_tests.rs"]
 mod availability_tests;
+
+#[cfg(test)]
+#[path = "_tests_/missing_programs_tests.rs"]
+mod missing_programs_tests;

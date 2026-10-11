@@ -70,3 +70,7 @@ fn io<T>(result: std::io::Result<T>) -> Result<T> {
         }),
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/logs_adapter_tests.rs"]
+mod logs_adapter_tests;

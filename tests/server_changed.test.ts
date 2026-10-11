@@ -84,9 +84,7 @@ test("changed screens propagate to use cases authored separately", async (contex
     throw new Error("fixture entries missing");
   }
   home.sourcePath = "entries/home.mockup.tsx";
-  home.declaredDependencies = [];
   tour.sourcePath = "entries/tour.mockup.tsx";
-  tour.declaredDependencies = [];
 
   assert.deepEqual(
     changedManifestPaths(manifest, manifest, config, [
@@ -165,14 +163,13 @@ test("branch comparisons exclude commits made only on the base branch", async (c
   );
 });
 
-test("directory dependency edits alone leave unchanged routes out of Changes", async (context) => {
+test("unrendered source edits alone leave unchanged routes out of Changes", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
   const manifest = structuredClone((await compileCatalogue(config)).manifest);
   const home = manifest.entries.find((entry) => entry.path === "home");
   if (!home) throw new Error("fixture home entry missing");
-  home.declaredDependencies = ["src/components"];
 
   assert.deepEqual(
     changedManifestPaths(manifest, manifest, config, [
@@ -215,7 +212,7 @@ test("changed-route detection degrades to undefined when Git fails", async (cont
   );
   const succeeding: ReadOnlyReviewRepository = {
     ...failing,
-    descriptor: baselineCatalogue("a".repeat(40), "mockups", "generated-v9"),
+    descriptor: baselineCatalogue("a".repeat(40), "mockups", "generated-v10"),
     evidence: {
       ...failing.evidence,
       changedPaths: () => Promise.resolve(["notes.md"]),

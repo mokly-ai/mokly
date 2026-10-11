@@ -3,6 +3,10 @@
 import { useMemo } from "react";
 import type { ReactNode } from "react";
 
+import {
+  VERSION_ERROR_MESSAGE,
+  type MoklyVersionError,
+} from "../catalogue/version_error.js";
 import type { ViewRouteKind } from "../navigation/routes.js";
 
 import {
@@ -83,7 +87,11 @@ export function ControlledDiffScreen({
         hidden={current}
       >
         {failure ? (
-          <ComparisonFailure details={failure} retry={comparison.retry} />
+          <ComparisonFailure
+            details={failure}
+            retry={comparison.retry}
+            versionError={comparison.versionError}
+          />
         ) : comparison.presentation && documents.status === "ready" ? (
           <ComparisonViews
             entryId={entryId}
@@ -104,14 +112,18 @@ export function ControlledDiffScreen({
 function ComparisonFailure({
   details,
   retry,
+  versionError,
 }: {
   details: string;
   retry(): void;
+  versionError?: MoklyVersionError | undefined;
 }) {
   return (
     <>
-      <p>
-        The comparison could not be loaded.{" "}
+      <p role={versionError ? "alert" : undefined}>
+        {versionError
+          ? VERSION_ERROR_MESSAGE
+          : "The comparison could not be loaded."}{" "}
         <button data-diff-refresh="" onClick={retry} type="button">
           Try again
         </button>

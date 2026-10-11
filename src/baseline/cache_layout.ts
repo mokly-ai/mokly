@@ -17,9 +17,9 @@ export interface CompletionMarker {
   readonly commit: string;
   readonly finishedAt: string;
   readonly commands: readonly (readonly string[])[];
-  readonly manifestVersion: 9;
+  readonly manifestVersion: 10;
   readonly historicalCatalogueRoot: string;
-  readonly layout: "generated-v9";
+  readonly layout: "generated-v10";
 }
 
 export interface CacheLayout {
@@ -95,8 +95,8 @@ export function parseCompletionMarker(
     typeof marker.finishedAt !== "string" ||
     !Number.isFinite(Date.parse(marker.finishedAt)) ||
     !validCommands(marker.commands) ||
-    marker.manifestVersion !== 9 ||
-    marker.layout !== "generated-v9" ||
+    marker.manifestVersion !== 10 ||
+    marker.layout !== "generated-v10" ||
     typeof marker.historicalCatalogueRoot !== "string" ||
     (marker.historicalCatalogueRoot !== "." &&
       !isSafeRepositoryPath(marker.historicalCatalogueRoot))

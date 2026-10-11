@@ -10,7 +10,7 @@ const input = {
   path: "action",
   title: "Action",
   description: "A shared action",
-  dependencies: ["src/action.tsx"],
+
   relatedDocs: ["docs/action.md"],
   tags: ["forms"],
   colorSchemes: ["light", "dark"],
@@ -48,13 +48,9 @@ test("component flattening retains the parent reference, inherited metadata and 
   assert.equal(first[VARIANT_PARENT], parent);
   assert.equal(first.slug, "primary");
   assert.equal(first.path, undefined);
-  for (const field of [
-    "dependencies",
-    "relatedDocs",
-    "tags",
-    "colorSchemes",
-  ] as const)
+  for (const field of ["relatedDocs", "tags", "colorSchemes"] as const)
     assert.deepEqual(first[field], parent[field]);
+  assert.equal(Object.hasOwn(first, "dependencies"), false);
   assert.deepEqual(first.suppliedSlots, ["children"]);
   assert.equal(first.description, parent.description);
   assert.equal(second.description, "The unavailable state");
@@ -89,13 +85,31 @@ for (const field of [
   "variants",
   "unexpected",
 ]) {
-  test(`component variant ${field} is rejected with the final parent path`, async (t) => {
+  test(`component variant ${field} ${field === "dependencies" ? "warns" : "is rejected"} with the final parent path`, async (t) => {
     const fixture = await pathFixture({
       "specs/library/action.mockup.ts": componentSource(
         `{slug:'primary',title:'Primary',props:{},${field}:undefined}`,
       ),
     });
     t.after(fixture.remove);
+    if (field === "dependencies") {
+      const built = await fixture.compile();
+      assert.deepEqual(
+        built.diagnostics?.map(({ code, subject }) => ({ code, subject })),
+        [
+          {
+            code: "removed-dependencies",
+            subject: { kind: "entry", path: "library/action/primary" },
+          },
+        ],
+      );
+      assert.ok(
+        built.manifest.entries.every(
+          (entry) => !Object.hasOwn(entry, "dependencies"),
+        ),
+      );
+      return;
+    }
     await assert.rejects(
       fixture.compile(),
       new RegExp(
@@ -106,5 +120,5 @@ for (const field of [
 }
 
 function componentSource(variant: string): string {
-  return `import {defineComponent} from '@mokly/mokly'; export default defineComponent({title:'Action',description:'An action',dependencies:[],relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> 'Action',variants:[${variant}]});`;
+  return `import {defineComponent} from '@mokly/mokly'; export default defineComponent({title:'Action',description:'An action',relatedDocs:[],propSchema:{kind:'object',properties:{}},render:()=> 'Action',variants:[${variant}]});`;
 }

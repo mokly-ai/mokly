@@ -244,7 +244,7 @@ test("dark fragments link within dark and fall back to light-only", async (conte
 function routeSource(route: string): string {
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: ["notes.md"], relatedDocs: ["notes.md"], useCasePaths: [] };
+const metadata = { relatedDocs: ["notes.md"], useCasePaths: [] };
 export const mockups = [
   defineScreen({ ...metadata, description: "Home", desktop: <a href="mock:unsafe-target">Target</a>, path: "home", mobile: <a href="mock:unsafe-target">Target</a>, route: "home/index.html", title: "Home" }),
   defineScreen({ ...metadata, description: "Ordinary target", desktop: <main>Ordinary</main>, path: "ordinary-target", mobile: <main>Ordinary</main>, route: "details/index.html", title: "Ordinary" }),
@@ -259,7 +259,7 @@ function removedLinkSource(includeTarget: boolean): string {
     : "";
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: [], relatedDocs: [] };
+const metadata = { relatedDocs: [] };
 export const mockups = [
   defineScreen({ ...metadata, description: "Home", desktop: <a href="../details/index.desktop.html">Details</a>, path: "home", mobile: <a href="../details/index.mobile.html">Details</a>, title: "Home" }),
   ${target}
@@ -270,7 +270,7 @@ export const mockups = [
 function darkLinkSource(): string {
   return `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: [], relatedDocs: [], useCasePaths: [] };
+const metadata = { relatedDocs: [], useCasePaths: [] };
 export const mockups = [
   defineScreen({ ...metadata, description: "A", desktop: <main><a href="mock:b">B</a><a href="mock:c">C</a></main>, path: "a", mobile: <main><a href="mock:b">B</a><a href="mock:c">C</a></main>, title: "A" }),
   defineScreen({ ...metadata, description: "B", desktop: <main>B</main>, path: "b", mobile: <main>B</main>, title: "B" }),

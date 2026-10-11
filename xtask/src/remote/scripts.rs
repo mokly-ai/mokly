@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use crate::remote::clients::success;
+use crate::remote::clients::outcome::success;
 use crate::remote::contracts::{Aggregate, Fingerprint, Git, Output};
 use crate::remote::error::{Error, Operation, Result};
 use crate::remote::parse::fingerprint_value;

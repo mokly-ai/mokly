@@ -3,7 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { GitWorkspace } from "./ratchets/git.mjs";
-import { lengthFinding, parseProtocolCaps } from "./ratchets/length-policy.mjs";
+import {
+  lengthFinding,
+  parseProtocolCapTable,
+} from "./ratchets/length-policy.mjs";
 
 const all = process.argv.includes("--all");
 if (process.argv.slice(2).some((argument) => argument !== "--all")) {
@@ -16,12 +19,11 @@ if (process.argv.slice(2).some((argument) => argument !== "--all")) {
   }).trim();
   const code = /\.(?:ts|tsx|js|jsx|mjs|cjs|mts|cts)$/u;
   const protocol = /^docs\/protocol\/.*\.md$/u;
-  const capFile = "tests/protocol_doc_sizes.test.ts";
+  const capFile = "xtask/protocol-document-caps.json";
   const capPath = path.join(root, capFile);
   const caps = fs.existsSync(capPath)
-    ? parseProtocolCaps(fs.readFileSync(capPath), capFile)
+    ? parseProtocolCapTable(fs.readFileSync(capPath), capFile)
     : {};
-  if (!caps) throw new Error(`${capFile} has no oversizedCaps table`);
   const files = all ? trackedAndUntracked(root) : changedFiles(root);
   const violations = [...new Set(files)]
     .filter((file) => code.test(file) || protocol.test(file))

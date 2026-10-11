@@ -20,7 +20,7 @@ import { documentText } from "./helpers/html.js";
 
 const page = `
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ path: "guide", title: "Guide", description: "Guide", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Guide</body></html>" }));
+mockups.push(definePage({ path: "guide", title: "Guide", description: "Guide", relatedDocs: [], render: () => "<!doctype html><html><body>Guide</body></html>" }));
 `;
 
 test("no-watch startup retains removed metadata from its single Changes calculation", async (context) => {

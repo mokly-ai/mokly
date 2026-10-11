@@ -1,4 +1,4 @@
-//! CLI parsing regressions for suite and shard selection.
+//! CLI parsing and validation for suite, shard, and dependency audit selection.
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -6,7 +6,9 @@ use std::sync::Arc;
 use clap::Parser;
 use unimock::{MockFn, Unimock, matching};
 
-use crate::check::{CheckRunnerRunMock, CheckRunnerSourceFileLengthMock, VerificationSuite};
+use crate::check::request::{CheckRequest, DependencyAudit, VerificationSuite};
+use crate::check::runner::{CheckRunnerRunMock, CheckRunnerSourceFileLengthMock};
+use crate::error::Error;
 use crate::executor::{Decision, Executor, LocalReason};
 use crate::remote::availability::SelectorSelectMock;
 use crate::remote::contracts::{EnvironmentGetMock, ReporterExecutorMock};
@@ -22,6 +24,7 @@ fn parses_every_suite_and_a_valid_shard() {
         let Command::Check {
             suite: parsed,
             shard,
+            dependency_audit,
             ..
         } = cli.command
         else {
@@ -29,6 +32,7 @@ fn parses_every_suite_and_a_valid_shard() {
         };
         assert_eq!(parsed.map(VerificationSuite::as_str), Some(suite));
         assert!(shard.is_none());
+        assert!(dependency_audit.is_none());
     }
 
     let cli = Cli::try_parse_from(["xtask", "check", "--suite", "browser", "--shard", "3/4"])
@@ -85,7 +89,11 @@ fn application_dispatches_source_length_and_complete_check() {
         CheckRunnerSourceFileLengthMock
             .next_call(matching!((all) if *all))
             .returns(Ok(())),
-        CheckRunnerRunMock.next_call(matching!((request) if request == &crate::check::CheckRequest::new(None, None).unwrap())).returns(Ok(())),
+        CheckRunnerRunMock
+            .next_call(
+                matching!((request) if request == &CheckRequest::new(None, None, None).unwrap()),
+            )
+            .returns(Ok(())),
     )));
     let app = Application {
         selector: Arc::new(Unimock::new(
@@ -114,8 +122,127 @@ fn application_dispatches_source_length_and_complete_check() {
     app.run(Command::Check {
         suite: None,
         shard: None,
+        dependency_audit: None,
         executor: None,
     })
     .unwrap();
     app.run(Command::RustFileLengthLint { all: false }).unwrap();
+}
+
+#[test]
+fn parses_dependency_audit_values_and_keeps_omission_optional() {
+    for (value, expected) in [
+        ("baseline", DependencyAudit::Baseline),
+        ("strict", DependencyAudit::Strict),
+    ] {
+        let cli = Cli::try_parse_from(["xtask", "check", "--dependency-audit", value])
+            .expect("known audit mode parses");
+        assert!(matches!(
+            cli.command,
+            Command::Check { dependency_audit: Some(mode), .. } if mode == expected
+        ));
+    }
+    let cli = Cli::try_parse_from(["xtask", "check"]).expect("default check parses");
+    assert!(matches!(
+        cli.command,
+        Command::Check {
+            dependency_audit: None,
+            ..
+        }
+    ));
+    for args in [
+        vec!["xtask", "check", "--dependency-audit"],
+        vec!["xtask", "check", "--dependency-audit", "unknown"],
+    ] {
+        assert!(Cli::try_parse_from(args).is_err());
+    }
+}
+
+#[test]
+fn application_dispatches_both_dependency_audit_modes() {
+    for suite in [None, Some(VerificationSuite::Repository)] {
+        for mode in [DependencyAudit::Baseline, DependencyAudit::Strict] {
+            let expected = CheckRequest::new(suite, None, Some(mode)).unwrap();
+            let app = local_application(
+                Arc::new(Unimock::new(
+                    CheckRunnerRunMock
+                        .next_call(&|matching| {
+                            matching.func(move |request, _| request == &expected);
+                        })
+                        .returns(Ok(())),
+                )),
+                suite.is_none(),
+            );
+            app.run(Command::Check {
+                suite,
+                shard: None,
+                dependency_audit: Some(mode),
+                executor: None,
+            })
+            .expect("valid mode is forwarded");
+        }
+    }
+}
+
+#[test]
+fn application_rejects_explicit_audit_modes_before_running_checks() {
+    let unused = || Arc::new(Unimock::new(()));
+    let app = Application {
+        selector: unused(),
+        check_runner: unused(),
+        remote_runner: unused(),
+        rust_file_length_auditor: unused(),
+        environment: unused(),
+        reporter: unused(),
+        interrupt: unused(),
+        workspace: PathBuf::from("/workspace"),
+    };
+    for suite in [
+        VerificationSuite::Package,
+        VerificationSuite::Unit,
+        VerificationSuite::Browser,
+        VerificationSuite::Hydration,
+    ] {
+        for mode in ["baseline", "strict"] {
+            let cli = Cli::try_parse_from([
+                "xtask",
+                "check",
+                "--suite",
+                suite.as_str(),
+                "--dependency-audit",
+                mode,
+            ])
+            .expect("mode and suite parse before validation");
+            assert!(matches!(
+                app.run(cli.command),
+                Err(Error::UnsupportedDependencyAudit { suite: rejected }) if rejected == suite
+            ));
+        }
+    }
+}
+
+/// Build an application whose automatic executor always selects the local gate.
+fn local_application(check_runner: Arc<Unimock>, complete: bool) -> Application {
+    Application {
+        selector: Arc::new(if complete {
+            Unimock::new(
+                SelectorSelectMock
+                    .next_call(matching!(Executor::Auto))
+                    .answers(&|_, _| Ok(Decision::Local(LocalReason::NoKey))),
+            )
+        } else {
+            Unimock::new(())
+        }),
+        remote_runner: Arc::new(Unimock::new(())),
+        interrupt: Arc::new(Unimock::new(())),
+        environment: Arc::new(Unimock::new(
+            EnvironmentGetMock.each_call(matching!(_)).returns(None),
+        )),
+        reporter: Arc::new(Unimock::new(
+            ReporterExecutorMock.each_call(matching!(_)).returns(()),
+        )),
+        check_runner,
+        rust_file_length_auditor: Arc::new(Unimock::new(())),
+        workspace: PathBuf::from("/workspace"),
+    }
 }

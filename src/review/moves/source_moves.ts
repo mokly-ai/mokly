@@ -10,7 +10,7 @@ import { currentSourceBytes, historicalSourceBytes } from "./source_files.js";
 import { moveIdentity, type EntryMove } from "./types.js";
 
 /** Confined source aliases derive from accepted module moves, never a guessed file rename. */
-export function movedSourcePaths(
+function movedSourcePaths(
   before: Manifest,
   after: Manifest,
   moves: readonly EntryMove[],

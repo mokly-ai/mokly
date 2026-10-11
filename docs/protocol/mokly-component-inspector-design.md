@@ -2,6 +2,8 @@
 
 ## Delivery Status
 
+This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+
 The [component explorer plan](../../plans/component-explorer.md) delivered this
 replacement for the crowded Details disclosure. Runtime and mockups share the
 layout; non-component artboards retain the shell. Removed
@@ -70,7 +72,7 @@ semantics.
 
 Use stable fixture identities for catalogue selection. Display labels never
 identify the current destination or synthesize a filename. Component fixtures
-explicitly declare display name, id, source path, description, and dependencies;
+explicitly declare display name, id, source path, and description;
 render the same metadata in Details and source references.
 
 ## Owning Closed States

@@ -8,12 +8,14 @@ use std::sync::Arc;
 use clap::{Parser, Subcommand};
 
 use crate::application::{Application, Xtask};
-use crate::check::{DefaultCheckRunner, Shard, VerificationSuite};
+use crate::check::request::{DependencyAudit, Shard, VerificationSuite};
+use crate::check::runner::DefaultCheckRunner;
 use crate::command::{CommandRunner, SystemCommandRunner};
 use crate::error::{Error, Result};
 use crate::executor::Executor;
 use crate::remote::availability::{DefaultSelector, Selector};
-use crate::remote::clients::{SystemBlacksmith, SystemGithub};
+use crate::remote::clients::blacksmith::SystemBlacksmith;
+use crate::remote::clients::github::SystemGithub;
 use crate::remote::contracts::{
     Aggregate, Blacksmith, Clock, Dependencies, Environment, Fingerprint, Git, Github, Interrupt,
     Logs, Programs, Reporter,
@@ -48,6 +50,9 @@ pub(crate) enum Command {
         /// Run one one-based whole-file shard of a unit or browser suite.
         #[arg(long, value_name = "INDEX/TOTAL")]
         shard: Option<Shard>,
+        /// Select the workspace audit policy for complete or repository checks.
+        #[arg(long, value_enum)]
+        dependency_audit: Option<DependencyAudit>,
         /// Select auto, local or explicit remote execution.
         #[arg(long, value_enum)]
         executor: Option<Executor>,
@@ -140,6 +145,7 @@ fn remote_dependencies(workspace: PathBuf) -> Dependencies {
     let blacksmith: Arc<dyn Blacksmith + Send + Sync> = Arc::new(SystemBlacksmith {
         process: Arc::clone(&process),
         workspace: workspace.clone(),
+        home: environment.get("HOME").map(PathBuf::from),
     });
     let github: Arc<dyn Github + Send + Sync> = Arc::new(SystemGithub {
         process,

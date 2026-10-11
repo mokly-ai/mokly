@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 
 import { parseShardArgument } from "./evidence.mjs";
 import { runCaptured, runInherited } from "./process.mjs";
-import { parseSourceTreeArguments, readSourceTree } from "./source-tree.mjs";
+import { readSourceTree, validateFingerprint } from "./source-tree.mjs";
 
 const SUITES = new Set([
   "repository",
@@ -15,8 +15,9 @@ const SUITES = new Set([
   "browser",
   "hydration",
 ]);
+const AUDIT_MODES = new Set(["baseline", "strict"]);
 const USAGE =
-  "usage: testbox-suite.mjs --expect <fingerprint> --suite <suite> [--shard INDEX/TOTAL]";
+  "usage: testbox-suite.mjs --expect <fingerprint> --suite <suite> [--shard INDEX/TOTAL] [--dependency-audit baseline|strict]";
 
 /** Validate the suite request and derive its stable command name. */
 export function parseTestboxArguments(args) {
@@ -25,7 +26,9 @@ export function parseTestboxArguments(args) {
     const flag = args[index];
     const value = args[index + 1];
     if (
-      !["--expect", "--suite", "--shard"].includes(flag) ||
+      !["--expect", "--suite", "--shard", "--dependency-audit"].includes(
+        flag,
+      ) ||
       values.has(flag) ||
       !value ||
       value.startsWith("--")
@@ -33,10 +36,12 @@ export function parseTestboxArguments(args) {
       throw new Error(USAGE);
     values.set(flag, value);
   }
-  const { expected } = parseSourceTreeArguments([
-    "--expect",
-    values.get("--expect"),
-  ]);
+  let expected;
+  try {
+    expected = validateFingerprint(values.get("--expect"));
+  } catch (error) {
+    throw new Error(`${error.message}; ${USAGE}`, { cause: error });
+  }
   const suite = values.get("--suite");
   if (!SUITES.has(suite)) throw new Error(`invalid suite; ${USAGE}`);
   const shard = parseShardArgument(
@@ -44,10 +49,18 @@ export function parseTestboxArguments(args) {
   );
   if (shard && suite !== "unit" && suite !== "browser")
     throw new Error("shard is valid only for unit or browser suites");
+  const dependencyAudit = values.get("--dependency-audit");
+  if (dependencyAudit !== undefined && !AUDIT_MODES.has(dependencyAudit))
+    throw new Error(`invalid dependency audit mode; ${USAGE}`);
+  if (dependencyAudit !== undefined && suite !== "repository")
+    throw new Error(
+      "dependency audit mode is valid only for the repository suite",
+    );
   return {
     expected,
     suite,
     ...(shard ? { shard } : {}),
+    ...(dependencyAudit ? { dependencyAudit } : {}),
     commandName: shard ? `${suite}-${shard.index}-of-${shard.total}` : suite,
   };
 }
@@ -128,6 +141,8 @@ export async function runTestboxSuite(args, dependencies) {
   ];
   if (request.shard)
     suiteArgs.push("--shard", `${request.shard.index}/${request.shard.total}`);
+  if (request.dependencyAudit)
+    suiteArgs.push("--dependency-audit", request.dependencyAudit);
   const outcome = await runCommand({
     file: "cargo",
     args: suiteArgs,

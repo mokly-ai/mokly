@@ -32,8 +32,12 @@ theme adapter, product styles/assets, generated HTML, and any temporary
 consumer-only compatibility rules. After the first public package release, a
 separate consumer workspace can replace copied framework code with the npm
 dependency and delete only the superseded generic code. Juno migration is a
-future change, but a Juno-shaped fixture must prove that the package boundary is
-application-independent.
+future change. The packed `esm`, `nodenext`, and `themed` consumer fixtures and
+the package-file allowlist prove that the package boundary is
+application-independent. With user approval,
+[PR #143](https://github.com/mokly-ai/mokly/pull/143) removed the earlier
+Juno-shaped fixture on 2026-10-06. Unit tests cover its only unique case, a
+config file in a subdirectory.
 
 The target contracts are:
 
@@ -891,7 +895,7 @@ separate consumer workspace after a supported package is released.
       its required post-push `cargo xtask review` and report findings without
       automatically fixing them.
 - [ ] Do not modify Juno in this milestone; add only a concise future migration
-      handoff if its fixture exposed consumer work.
+      handoff if this milestone exposes Juno migration work.
 
 At this milestone the consumer contains no duplicate generic Mokabook framework,
 uses the public package, and retains all real screen/spec content.
@@ -924,8 +928,8 @@ evidence required for an honest closeout.
   tests.
 - `npx mokabook` serves a configured consumer catalogue; a local install
   supports `npx mokabook` and all explicit subcommands.
-- Neutral and Juno-shaped fixtures prove app independence; a real consumer
-  cutover proves production-scale parity.
+- Neutral (`esm`, `nodenext`) and `themed` packed-consumer fixtures prove app
+  independence; a real consumer cutover proves production-scale parity.
 - CI blocks broken code/generated output, Review provides non-blocking visual
   evidence, and release-please plus npm OIDC publishes reviewed tags.
 - The consumer no longer owns a generic framework fork and no actual consumer

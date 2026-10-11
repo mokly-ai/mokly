@@ -1,5 +1,5 @@
 /** Optional changed-route detection powering the Browse changed/all filter. */
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../build/compile.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -43,7 +43,7 @@ export async function computeCatalogueChanges(
   config: ResolvedConfig,
   base: string,
   git: ReadOnlyReviewRepository,
-  manifest?: ManifestV9,
+  manifest?: ManifestV10,
   acceptedEvidence?: ChangeEvidence,
   accepted?: AcceptedGeneration,
 ): Promise<ResolvedCatalogueChanges> {

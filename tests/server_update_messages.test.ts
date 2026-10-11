@@ -137,7 +137,7 @@ test("baseline handoffs preserve pinned commits and explicit revocation", () => 
       commit === null ? undefined : "blobs",
       commit === null
         ? undefined
-        : baselineCatalogue(commit, "mockups", "generated-v9"),
+        : baselineCatalogue(commit, "mockups", "generated-v10"),
     );
     assert.equal(message.baselineCommit, commit);
     assert.deepEqual(parseChildUpdateMessage(message), message);
@@ -166,7 +166,7 @@ test("catalogue completion accepts manifest v8 and rejects the preceding v7 enve
     generation: "a".repeat(32),
     version: 1,
     manifest: {
-      schemaVersion: 9,
+      schemaVersion: 10,
       generatedBy: "mokly",
       entries: [],
       folders: [],
@@ -180,5 +180,41 @@ test("catalogue completion accepts manifest v8 and rejects the preceding v7 enve
       manifest: { ...message.manifest, schemaVersion: 7 },
     }),
     undefined,
+  );
+});
+
+test("catalogue completion keeps a safe authored list and ignores an unsafe one", () => {
+  const message = {
+    type: "catalogue-complete",
+    generation: "a".repeat(32),
+    version: 2,
+    manifest: {
+      schemaVersion: 10,
+      generatedBy: "mokly",
+      entries: [],
+      folders: [],
+      sourceFiles: [],
+    },
+  };
+  const listed = { ...message, assetClosure: ["guide.html", "docs/spec.pdf"] };
+  assert.deepEqual(parseCatalogueCompleteMessage(listed), listed);
+  for (const assetClosure of [
+    ["../secret.pdf"],
+    ["mokly-generated/home/index.mobile.html"],
+    [42],
+    "spec.pdf",
+  ])
+    assert.deepEqual(
+      parseCatalogueCompleteMessage({ ...message, assetClosure }),
+      message,
+    );
+});
+
+test("watch updates carry no checked list", () => {
+  const message = childUpdateMessage(2, undefined);
+  assert.equal(Object.hasOwn(message, "assetClosure"), false);
+  assert.deepEqual(
+    parseChildUpdateMessage({ ...message, assetClosure: ["spec.pdf"] }),
+    message,
   );
 });

@@ -149,7 +149,7 @@ removed authoring fields, unified variants, identity-only wire formats,
 id-keyed removal, the new schema versions, and the URL surface before any
 code changes.
 
-- [x] [`mokly-nav-paths.md`](../docs/protocol/mokly-nav-paths.md): remove
+- [x] [`mokly-nav-paths.md`](https://github.com/mokly-ai/mokly/blob/b4314fe/docs/protocol/mokly-nav-paths.md): remove
       root `path`, folder `segment`, and leaf `slug` route derivation; state
       that nothing but the id moves a route; variants of both kinds copy
       the parent path; keep label, conflict, order, and key rules unchanged.

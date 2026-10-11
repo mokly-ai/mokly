@@ -49,7 +49,7 @@ test("filesystem manifest loading never accepts v2 under the canonical filename"
     JSON.stringify(legacy),
   );
 
-  assert.throws(() => readManifest(config), /schema version 9/);
+  assert.throws(() => readManifest(config), /schema version 10/);
 });
 
 test("manifest loading rejects stored routes", async (context) => {
@@ -99,7 +99,6 @@ test("light-only manifests remain deterministic without variant metadata", () =>
     currentManifest({
       entries: [
         {
-          declaredDependencies: [],
           colorSchemes: ["light"],
           description: "A screen",
           path: "a",
@@ -113,7 +112,7 @@ test("light-only manifests remain deterministic without variant metadata", () =>
       ],
       generatedBy: "mokly",
       sourceFiles: ["entries/a.mockup.tsx"],
-      schemaVersion: 9 as const,
+      schemaVersion: 10 as const,
       folders: [],
     }),
   );
@@ -213,7 +212,6 @@ function resolvedUseCase(
 ): ResolvedRegistryEntry {
   return resolvedEntry(
     defineUseCase({
-      dependencies: [],
       description: "A journey",
       path: id,
 
@@ -233,7 +231,6 @@ function resolvedScreen(
   return resolvedEntry(
     defineScreen({
       slug: id,
-      dependencies: [],
       description: "A screen",
       desktop: null,
       path: id,

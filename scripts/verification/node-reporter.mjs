@@ -1,19 +1,33 @@
 import fs from "node:fs";
+import path from "node:path";
 
 export default async function* verificationReporter(source) {
   const output = process.env.MOKLY_NODE_EVENT_REPORT;
   if (!output) throw new Error("MOKLY_NODE_EVENT_REPORT is required");
   const summaries = [];
   const failures = [];
+  const fileResults = [];
   let reporterComplete = false;
   try {
     for await (const event of source) {
+      if (
+        ["test:pass", "test:fail"].includes(event.type) &&
+        event.data?.nesting === 0 &&
+        typeof event.data.file === "string" &&
+        path.resolve(event.data.name) === path.resolve(event.data.file)
+      )
+        fileResults.push({
+          file: event.data.file,
+          status: event.type === "test:pass" ? "passed" : "failed",
+          durationMs: event.data.details?.duration_ms ?? 0,
+        });
       if (event.type === "test:summary" && event.data?.file)
         summaries.push(event.data);
       if (event.type === "test:fail")
         failures.push({
           name: event.data.name,
           diagnostic: failureDiagnostic(event.data.details?.error),
+          failureType: event.data.details?.error?.failureType,
         });
       const line = outputLine(event);
       if (line) yield line;
@@ -22,7 +36,7 @@ export default async function* verificationReporter(source) {
   } finally {
     fs.writeFileSync(
       output,
-      `${JSON.stringify({ reporterComplete, summaries, failures }, null, 2)}\n`,
+      `${JSON.stringify({ reporterComplete, summaries, failures, fileResults }, null, 2)}\n`,
     );
   }
 }

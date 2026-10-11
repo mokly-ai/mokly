@@ -12,7 +12,7 @@ import { documentText } from "./helpers/html.js";
 function pageSource(title = "Handbook"): string {
   return `${validEntrySource()}
 import { definePage } from "@mokly/mokly";
-mockups.push(definePage({ path: "library/handbook", title: ${JSON.stringify(title)}, description: "Catalogue guidance", dependencies: [], relatedDocs: [], render: () => '<!doctype html><html><body><h1 id="start">Handbook</h1><a href="mock:home">Home</a></body></html>' }));`;
+mockups.push(definePage({ path: "library/handbook", title: ${JSON.stringify(title)}, description: "Catalogue guidance", relatedDocs: [], render: () => '<!doctype html><html><body><h1 id="start">Handbook</h1><a href="mock:home">Home</a></body></html>' }));`;
 }
 
 test("consumer export builds unified pages and preserves a removed page's baseline context", async (context) => {

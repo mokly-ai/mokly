@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { TestContext } from "node:test";
 
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import type { Compilation } from "../../dist/build/compile.js";
 import { watchBuild } from "../../dist/cli/build_watch.js";
@@ -64,7 +64,7 @@ export async function startWatchMatrix(
 ) {
   const factory = new ResourceWatcherFactory();
   const writes: Compilation[] = [];
-  const accepted: ManifestV9[] = [];
+  const accepted: ManifestV10[] = [];
   const diagnostics: unknown[] = [];
   const store = {
     check() {},
@@ -141,10 +141,10 @@ export async function startWatchMatrix(
 }
 
 class MatrixSupervisor extends FakeSupervisor {
-  constructor(private readonly accepted: ManifestV9[]) {
+  constructor(private readonly accepted: ManifestV10[]) {
     super();
   }
-  completeCatalogue(manifest: ManifestV9): void {
+  completeCatalogue(manifest: ManifestV10): void {
     this.accepted.push(manifest);
   }
 }

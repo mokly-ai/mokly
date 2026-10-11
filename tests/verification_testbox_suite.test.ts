@@ -76,6 +76,27 @@ test("the 11 commands derive exact cargo arguments, report names and streamed ou
   }
 });
 
+const REPOSITORY = ["--expect", TESTBOX_FINGERPRINT, "--suite", "repository"];
+
+test("the repository command forwards each dependency audit mode to cargo", async () => {
+  for (const mode of ["baseline", "strict"]) {
+    const harness = testboxHarness();
+    const args = [...REPOSITORY, "--dependency-audit", mode];
+    assert.equal(parseTestboxArguments(args).commandName, "repository");
+    assert.equal(await runTestboxSuite(args, harness.dependencies), 0);
+    assert.deepEqual(harness.commands.at(-1)?.args, [
+      "xtask",
+      "check",
+      "--executor",
+      "local",
+      "--suite",
+      "repository",
+      "--dependency-audit",
+      mode,
+    ]);
+  }
+});
+
 test("arguments fail before any read or subprocess", async () => {
   for (const args of [
     [],
@@ -107,6 +128,31 @@ test("arguments fail before any read or subprocess", async () => {
     ],
     ["--expect", TESTBOX_FINGERPRINT, "--suite", "package", "--shard", "1/4"],
     ["--expect", TESTBOX_FINGERPRINT, "--suite", "hydration", "--shard", "1/4"],
+    [...REPOSITORY, "--dependency-audit"],
+    [...REPOSITORY, "--dependency-audit", "lenient"],
+    [
+      ...REPOSITORY,
+      "--dependency-audit",
+      "strict",
+      "--dependency-audit",
+      "strict",
+    ],
+    [
+      "--expect",
+      TESTBOX_FINGERPRINT,
+      "--suite",
+      "unit",
+      "--dependency-audit",
+      "strict",
+    ],
+    [
+      "--expect",
+      TESTBOX_FINGERPRINT,
+      "--suite",
+      "package",
+      "--dependency-audit",
+      "baseline",
+    ],
   ]) {
     const harness = testboxHarness();
     await assert.rejects(

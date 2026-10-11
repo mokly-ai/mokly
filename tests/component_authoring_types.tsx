@@ -6,7 +6,6 @@ import type { RenderInput } from "../dist/renderer/types.js";
 const metadata = {
   title: "Test",
   description: "Typed component",
-  dependencies: [],
   relatedDocs: [],
 };
 const definition = defineComponent({

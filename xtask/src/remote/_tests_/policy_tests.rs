@@ -9,9 +9,7 @@ fn explicit_remote_conditions_follow_the_contract_order() {
         ordered_checks(Executor::Remote),
         [
             Check::GithubActions,
-            Check::Program("blacksmith"),
-            Check::Program("rsync"),
-            Check::Program("ssh"),
+            Check::Programs,
             Check::Version,
             Check::Login,
             Check::Access,
@@ -26,6 +24,6 @@ fn auto_checks_the_key_before_programs() {
     let checks = ordered_checks(Executor::Auto);
     assert_eq!(checks[0], Check::GithubActions);
     assert_eq!(checks[1], Check::Key);
-    assert_eq!(checks[2], Check::Program("blacksmith"));
+    assert_eq!(checks[2], Check::Programs);
     assert!(ordered_checks(Executor::Local).is_empty());
 }

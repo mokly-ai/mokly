@@ -5,12 +5,12 @@
 Cache acquisition, discovery and post-render offset mapping are implemented.
 Per-side readers remain an approved target in
 [Generated Output Review Fixes](../../plans/generated-output-review-fixes.md).
-The [v9 baseline contract](./mokly-baseline-addressing.md) owns historical roots.
+The [v10 baseline contract](./mokly-baseline-addressing.md) owns historical roots.
 
 ## Per-Side Readers
 
 Construct one inventory reader for each comparison side. The base reader uses
-the accepted v9 `generatedFiles`, `assetClosure` and historical descriptor.
+the accepted v10 `generatedFiles`, `assetClosure` and historical descriptor.
 The head reader uses the accepted in-memory output and checked authored closure.
 All full/selected comparisons, live Changes, component fast paths, resource
 counterpart reads and removed-preview capture use these same side decisions.
@@ -51,11 +51,11 @@ Entry retries, partial cleanup and debris removal must retain the cache ignore
 file and persistent writer-lock directories. Do not restore ancestor-directory
 retries or replace fail-intact settings mismatches with rebuilds.
 
-After rebuilding, prefer a valid v9 catalogue at the requested root. During a
-bounded moved-root search, count valid v9 candidates separately from recognized
-earlier envelopes. Exactly one v9 candidate wins even when stale pre-v9 files
-remain elsewhere, including at the requested root. Multiple v9 candidates keep
-the exact ambiguity failure. With no v9 candidate, exactly one earlier candidate
+After rebuilding, prefer a valid v10 catalogue at the requested root. During a
+bounded moved-root search, count valid v10 candidates separately from recognized
+earlier envelopes. Exactly one v10 candidate wins even when stale pre-v10 files
+remain elsewhere, including at the requested root. Multiple v10 candidates keep
+the exact ambiguity failure. With no v10 candidate, exactly one earlier candidate
 keeps `baseline-incompatible-earlier`; zero or several candidates retain the
 existing ambiguity error. Malformed/newer data is never an earlier result.
 Do not read earlier entries, normalize old layouts or cache incompatibility.
@@ -81,11 +81,12 @@ the same mapping for all component views.
 Preserve the [build warning contract](./mokly-build-warnings.md): patch reporting
 retains diagnostics, sanitization, ordering and link-control placement tiers.
 
-Public catalogue dependency labels always derive from the sorted unique union
-of `sourcePath`, `declaredDependencies`, and each Markdown document's `resources`.
-The projector never reads an entry's stored `dependencies`; display projection is a reader-side shell representation,
-not a current CLI catalogue producer. Do not retain a producer round-trip test
-that fabricates that unsupported path.
+Public details contain no source dependency list. `sourcePath` stays
+repository-relative display metadata and never supplies comparison evidence.
+Markdown resource inventories remain private validation inputs. Ready public
+view/page `resourceEvidence` comes only from accepted rendered-resource and
+CSS-rule proof. Display projection is a reader-side shell representation,
+not a current CLI catalogue producer.
 
 ## Acceptance
 
@@ -97,8 +98,8 @@ head/base generated Git changes and unchanged authored paths.
 
 Use deterministic filesystem interleaving for the cache-directory removal race,
 then test success, exhausted retries, other failures and cancellation. Test a
-unique moved v9 catalogue plus stale root v7, multiple v9 candidates, and an
-actual pre-v9 rebuild with no v9 result.
+unique moved v10 catalogue plus stale root v7, multiple v10 candidates, and an
+actual pre-v10 rebuild with no v10 result.
 
 Cover every recognized debris name, including `complete-<uuid>.tmp`. Keep live
 owners, tombstones, unrecognized files and the cache ignore file. Preserve

@@ -1,7 +1,8 @@
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import type { GeneratedFile } from "../build/generated_file.js";
+import type { GenerationWarning } from "../build/warning_generation.js";
 
 import type { CatalogueSnapshot } from "./catalogue_snapshot.js";
 import type {
@@ -19,6 +20,7 @@ export interface ServerOptions {
   liveChanges?: boolean;
   onForeground?: (active: boolean) => void;
   onDiagnostic?: (error: unknown) => void;
+  onBuildWarning?: (event: GenerationWarning) => void;
   onPreviewResources?: (observation: PreviewObservation) => void;
   base: string;
   /** Reuse a validated startup or publication generation without rereading metadata. */
@@ -30,6 +32,8 @@ export interface ServerOptions {
   componentChangeSource?: ComponentChangeSource;
   /** Parent-validated manifest supplied to a watched server child. */
   manifest?: ComponentRuntime["manifest"];
+  /** Last checked closure a restarted watched child serves until its first result. */
+  assetClosure?: readonly string[];
   /** Immutable compiled documents supplied by a static capture. */
   generatedOutputs?: ReadonlyMap<string, GeneratedFile>;
   port: number;
@@ -41,7 +45,12 @@ export interface ServerOptions {
 
 /** Running server lifecycle and update-stream boundary. */
 export interface RunningServer {
-  completeCatalogue?(manifest: ManifestV9, generation: string): boolean;
+  /** Adopt a complete catalogue and serve a supplied list over its manifest closure. */
+  completeCatalogue?(
+    manifest: ManifestV10,
+    generation: string,
+    assetClosure?: readonly string[],
+  ): boolean;
   close(): Promise<void>;
   publishUpdate(update?: CatalogueUpdate): void;
   replaceComponentRuntime(runtime: ComponentRuntime): void;

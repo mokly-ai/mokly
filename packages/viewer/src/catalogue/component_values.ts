@@ -186,7 +186,12 @@ export function readSlot(value: unknown): ComponentSlotRecord {
 export function readRange(value: unknown): ComponentRangeRecord {
   const input = object(value),
     target = object(input.target);
-  const kind = choice(target.kind, ["instance", "slot"] as const);
+  const kind = choice(target.kind, ["instance", "slot", "root"] as const);
+  if (
+    kind === "root" &&
+    (Object.hasOwn(target, "instanceKey") || Object.hasOwn(target, "slotKey"))
+  )
+    invalidData("$catalogue", "root range has no instance or slot");
   if (Object.hasOwn(target, kind === "instance" ? "slotKey" : "instanceKey"))
     invalidData("$catalogue", "range must name exactly one target");
   const result: ComponentRangeRecord = {
@@ -194,7 +199,9 @@ export function readRange(value: unknown): ComponentRangeRecord {
     target:
       kind === "instance"
         ? { kind: "instance", instanceKey: hash(target.instanceKey) }
-        : { kind: "slot", slotKey: hash(target.slotKey) },
+        : kind === "slot"
+          ? { kind: "slot", slotKey: hash(target.slotKey) }
+          : { kind: "root" },
   };
   if (input.parentId !== undefined) result.parentId = string(input.parentId);
   return result;

@@ -2,7 +2,7 @@ import type {
   ChangedEntry,
   ComponentReview,
   Manifest,
-  ScreenReviewV6,
+  ScreenReviewV7,
 } from "@mokly/viewer/data";
 
 import { relatedDocumentReferences } from "../documents/references.js";
@@ -17,12 +17,11 @@ import type { ComponentClassificationWithSources } from "./component_classificat
 import { lexical, type entryPairs } from "./component_metadata.js";
 import type { ComponentReasonSources } from "./component_reason_sources.js";
 import {
-  propagateOwnedCss,
-  type OwnedCssReason,
+  propagateOwnedResources,
+  type OwnedResourceReason,
 } from "./component_resource_attribution.js";
 import { pairedEntryChanges } from "./entry_changes.js";
 import { baselinePathMapper } from "./moves/identity.js";
-import { movedSourcePaths } from "./moves/source_moves.js";
 import type { MovePairing } from "./moves/types.js";
 import { aggregateIgnored } from "./screen_views.js";
 
@@ -33,14 +32,13 @@ export function finishComponentClassification(input: {
   after: Manifest;
   pairs: ReturnType<typeof entryPairs>;
   pairing: MovePairing;
-  screens: ScreenReviewV6[];
+  screens: ScreenReviewV7[];
   components: ComponentReview[];
   changes: ChangedEntry[];
-  ownedResources: OwnedCssReason[];
+  ownedResources: OwnedResourceReason[];
   impacting: Set<string>;
   actualImplementations: Set<string>;
   reasonSources: ComponentReasonSources;
-  sharedImpact: string[];
 }): ComponentClassificationWithSources {
   const {
     request,
@@ -55,10 +53,9 @@ export function finishComponentClassification(input: {
     impacting,
     actualImplementations,
     reasonSources,
-    sharedImpact,
   } = input;
-  propagateOwnedCss(ownedResources, impacting, components, changes);
-  reasonSources.recordOwnedCss(
+  propagateOwnedResources(ownedResources, impacting, components, changes);
+  reasonSources.recordOwnedResources(
     ownedResources,
     pairs.map((pair) => (pair.after ?? pair.before)!),
   );
@@ -77,7 +74,6 @@ export function finishComponentClassification(input: {
   );
   screens.sort((a, b) => lexical(a.path, b.path));
   components.sort((a, b) => lexical(a.path, b.path));
-  const sources = movedSourcePaths(before, after, pairing.moves);
   changes.splice(
     0,
     changes.length,
@@ -90,7 +86,6 @@ export function finishComponentClassification(input: {
         baselinePathMapper(before.entries, after.entries, pairing.moves),
       ),
       relatedDocumentReferences(after.entries),
-      (path) => sources.get(path) ?? path,
     ),
   );
   changes.sort(
@@ -100,11 +95,10 @@ export function finishComponentClassification(input: {
   );
   return {
     result: {
-      schemaVersion: 6,
+      schemaVersion: 7,
       baseCommit: request.baseCommit,
       baseRef: request.baseRef,
       changedPaths: [...request.changedPaths].sort(),
-      sharedImpact,
       screens,
       components,
       changes,

@@ -4,11 +4,15 @@ import type { VerificationShard } from "./evidence.mjs";
 export type TestboxSuite =
   "repository" | "package" | "unit" | "browser" | "hydration";
 
+/** Workspace audit policy forwarded to the repository suite. */
+export type TestboxDependencyAudit = "baseline" | "strict";
+
 /** One request validated before any runtime work starts. */
 export interface TestboxArguments {
   expected: string;
   suite: TestboxSuite;
   shard?: VerificationShard;
+  dependencyAudit?: TestboxDependencyAudit;
   commandName: string;
 }
 

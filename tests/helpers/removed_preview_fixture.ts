@@ -95,7 +95,7 @@ function removedPreviewSource(current: boolean): string {
     )} }),`;
   return `import React from "react";
 import { definePage, defineScreen } from "@mokly/mokly";
-const metadata = { description: "Fixture", dependencies: [], relatedDocs: [] };
+const metadata = { description: "Fixture", relatedDocs: [] };
 export const mockups = [
   defineScreen({ ...metadata, path: "current", title: "Current", colorSchemes: ["light"], mobile: <main>Current mobile</main>, desktop: <main>Current desktop</main>, useCasePaths: [] }),
   ${removed}

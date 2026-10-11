@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Implemented in read model v5. The viewer derives the Specs and Components
+Implemented in read model v6. The viewer derives the Specs and Components
 sections from this tree and orders each section by the rows it shows.
 
 ## Shape

@@ -3,41 +3,17 @@ import { defineScreen } from "@mokly/mokly";
 import { ExampleDocument } from "../document.js";
 
 import { designMetadata } from "./metadata.js";
-import { useDesignNavigation } from "./parts/design_navigation.js";
 import { DESTINATIONS } from "./parts/destinations.js";
-import { DetailsPanel } from "./parts/details.js";
+import {
+  HandbookStage,
+  PAGE_NODES,
+  PAGE_STYLE_COUNT,
+  PageDetails,
+} from "./parts/document_page.js";
 import { ENTRY_PATHS, EXAMPLE_CRUMB } from "./parts/entry_paths.js";
-import { MetaRow } from "./parts/metadata_row.js";
 import { NavDrawer, NavTree } from "./parts/nav.js";
 import { REMOVED_DOCUMENTS, RemovedPageScreen } from "./parts/removed_page.js";
 import { ScreenHead, Shell, type ArtboardViewport } from "./parts/shell.js";
-import { DocumentPane, Stage } from "./parts/stage.js";
-
-function PageDetails({ open = false }: { open?: boolean }) {
-  const navigation = useDesignNavigation();
-  return (
-    <DetailsPanel open={open} destination={navigation.inspector}>
-      <div className="mbk-details-body">
-        <div>
-          <p className="mbk-details-desc">
-            A handbook to accompany the example screens.
-          </p>
-        </div>
-        <div className="mbk-meta">
-          <MetaRow name="source" label="Source">
-            <code className="mbk-code">specs/catalogue.tsx</code>
-          </MetaRow>
-          <MetaRow name="tags" label="Tags">
-            documents
-          </MetaRow>
-          <MetaRow name="related-docs" label="Related docs">
-            Example notes
-          </MetaRow>
-        </div>
-      </div>
-    </DetailsPanel>
-  );
-}
 
 function PageView({
   viewport,
@@ -48,7 +24,13 @@ function PageView({
   details?: boolean;
   drawer?: boolean;
 }) {
-  const nav = <NavTree activeDestination={DESTINATIONS.page} />;
+  const nav = (
+    <NavTree
+      activeLabel="Getting started"
+      changedCount={PAGE_STYLE_COUNT}
+      nodes={PAGE_NODES}
+    />
+  );
   return (
     <Shell
       design={
@@ -62,7 +44,11 @@ function PageView({
       nav={nav}
       aside={
         viewport === "mobile" && drawer ? (
-          <NavDrawer activeDestination={DESTINATIONS.page} />
+          <NavDrawer
+            activeLabel="Getting started"
+            changedCount={PAGE_STYLE_COUNT}
+            nodes={PAGE_NODES}
+          />
         ) : null
       }
     >
@@ -72,11 +58,7 @@ function PageView({
         path={ENTRY_PATHS.gettingStarted}
         title="Getting started"
       />
-      <Stage>
-        <DocumentPane>
-          <ExampleDocument welcomeId={DESTINATIONS.welcome} />
-        </DocumentPane>
-      </Stage>
+      <HandbookStage />
       <PageDetails open={details} />
     </Shell>
   );

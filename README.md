@@ -110,13 +110,13 @@ export default defineScreen({
   description: "The account landing screen.",
   mobile: <main>Account on mobile</main>,
   desktop: <main>Account on desktop</main>,
-  dependencies: [],
   relatedDocs: [],
 });
 ```
 
-Replace the example `<main>` nodes with your product components, then list their
-source files or directories in `dependencies`. An entry file ends in
+Replace the example `<main>` nodes with your product components. Rendered
+resources and output determine Changes. Components declare public CSS with
+`stylesheets`. An entry file ends in
 `.mockup.ts` or `.mockup.tsx` and exports its definitions from any export,
 default or named. Mokly derives everything else from the file's place: this
 screen is `account/account-home`, it lives at `/view/account/account-home/`,
@@ -138,12 +138,12 @@ For this configuration, `build` writes only under `specs/generated/mokly-generat
 assets stay under `specs/generated/` and are served and exported in place. To
 commit generated output instead, commit every generated file. `check`
 compares compiled output only when the generated tree is indexed; a partial
-index fails with both remedies. A committed baseline's v9 inventory must
+index fails with both remedies. A committed baseline's v10 inventory must
 match its Git blobs; otherwise the baseline is rebuilt.
 Build and Serve do not inspect head tracking: a new route builds successfully,
 and `check` then lists it under `untracked:` until staged. Only `check` rejects
 an indexed `.mokly-cache/` path.
-Current output uses manifest v9. The manifest records the referenced asset closure and Git blob-hash
+Current output uses manifest v10. The manifest records the referenced asset closure and Git blob-hash
 inventory. Earlier baseline formats make Changes unavailable under
 [baseline compatibility](./docs/protocol/mokly-baseline-compatibility.md).
 
@@ -200,6 +200,13 @@ The CLI uses stable plain output in CI and a richer interactive display in a
 terminal. During watched Serve, press `h` to see shortcuts for opening,
 rebuilding, clearing, and quitting. Build warnings print on standard error
 without changing the exit status; `--strict` turns them into a failed command.
+Publish requires a clean Git checkout. It ignores Git-ignored files, its own
+output directory, and Mokly caches and temporary files. Committed generated
+files must match the build; derived generated output must be ignored by Git.
+
+Ignored-input warnings use the same channel as link-control warnings. They
+name the affected page or authored input. `--strict` counts every warning
+before Build, Check, export or publish can write or upload output.
 
 Detailed command references:
 
@@ -231,12 +238,29 @@ stylesheets, fonts, and full-document markup. Mokly resolves React from the
 consumer repository and bundles all authoring inputs into one build-time graph,
 so component trees use one React runtime.
 Use `stylesheets` for separately authored public CSS. [Imported CSS delivery](./docs/protocol/mokly-imported-styles.md)
-compiles CSS Modules, per-root stylesheets and assets; fragment renderers
-receive ordered links for the renderer and exporting entry CSS after any
-configured links. Pages link their own CSS explicitly. An optional consumer
-PostCSS module processes imported CSS; see the Styles guide for plugin setup.
+compiles CSS Modules, per-root stylesheets and assets. Fragment renderers
+receive links under the [renderer stylesheet contract](./docs/protocol/mokly-rendering.md#renderer-stylesheets),
+which owns the complete list and its order. Pages link their own CSS explicitly.
+An optional consumer PostCSS module processes imported CSS; see the Styles guide
+for plugin setup.
 The basic consumer example imports a CSS Module, a PNG-backed stylesheet, and
 preflight-free Tailwind v4 utilities to exercise this delivery end to end.
+
+## Delivery Status
+
+The [implementation plans](./plans/) lists active and completed work.
+
+Removal of baseline compatibility below is implemented in
+[M23B](./plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
+Uniform CSS attribution is implemented in Milestone 19 of the
+[source-path removal plan](./plans/remove-source-path-evidence.md); comparison
+details for screens and saved views are implemented in Milestone 20, and for
+whole-document pages in Milestone 20B. Configured, declared and imported stylesheets
+use the same [CSS rule contract](./docs/protocol/mokly-css-attribution-rules.md).
+Components change through own-page matches kept after nested filtering. Outside matches
+and unresolved rules give a page its own row. Stylesheet owner records have no
+role in that decision.
 
 ## Review and share
 
@@ -302,7 +326,7 @@ appearance with any preview scheme. See the
 - [Variants](./docs/protocol/mokly-variants.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
-- [Implementation plans](./plans/)
+- [Agent and contributor rules](./AGENTS.md) with the detailed rule docs under [`docs/dev`](./docs/dev/)
 - [Changelog](./CHANGELOG.md)
 
 The guides are user-facing and ship with the npm package. The protocol documents
@@ -314,20 +338,25 @@ one [unified layout](./docs/protocol/mokly-unified-output.md) for generated page
 imported styles and assets. The portable
 [viewer namespace](./docs/protocol/mokly-viewer-namespace.md) is `mokly-viewer/`.
 Older receivers reject the new upload format. Mokly Cloud needs the documented
-receiver and viewer update before publication. Progress remains in the
-[implementation plans](./plans/).
+receiver and viewer update before publication.
 
 ## Develop Mokly
 
 For repository development, use the tested Node.js version in
 [`.nvmrc`](./.nvmrc), npm 11.21.0 (the `packageManager` version in
-`package.json`), Rust 1.95, and Chromium for the browser suite. With nvm, run
-`nvm install` in the repository to install and use that Node.js version. Use
-the pinned npm version for dependency changes.
+`package.json`), the Rust toolchain in
+[`rust-toolchain.toml`](./rust-toolchain.toml) (Rust 1.95.0 with rustfmt and
+Clippy), and Chromium for the browser suite. With nvm, run `nvm install` in
+the repository before the npm commands below to install and use that Node.js
+version. A global npm install applies only to the active Node.js version.
+rustup reads the toolchain file and installs the pinned Rust the first time
+`cargo` runs in the repository. Use the pinned npm version for dependency
+changes.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git
 cd mokly
+npm install --global npm@11.21.0
 npm ci
 npm run build
 npm run example:build
@@ -338,6 +367,30 @@ npm run dev
 [`examples/basic`](./examples/basic/README.md) and watches its entries,
 renderer, and stylesheets. Changes to Mokly's own `src/` files require
 restarting the command so the CLI is rebuilt.
+
+Run tests that cover the change while you develop:
+
+```bash
+npm test -- tests/ci_workflow_policies.test.ts
+npm run test:unit -- tests/ci_workflow_policies.test.ts --test-name-pattern="pins uses"
+npm run test:browser -- tests/browser/pages.spec.ts -g "retain metadata"
+```
+
+Put every test argument after `--`. npm consumes flags before that separator.
+The developer runner rejects consumed name-pattern and shard flags.
+
+`npm test`, `npm run test:unit`, and `npm run test:browser` always prepare
+package and example output, so they test the current `src/`. The raw commands
+`node --import tsx --test <file>` and `npx playwright test <spec>` use the last
+build; run `npm run prepare:verification` after a `src/` change before using
+them. Browser tests reject `.only`; select by path and `-g`. These selected runs
+are partial verification. See [developer test commands](./docs/protocol/developer-test-commands.md)
+for the argument and report rules.
+Selected unit runs print the number of tests that ran. They print a warning
+for each named file that reports zero tests; skipped and todo tests count
+as reported tests. A pattern-only run warns once if no file reports a test.
+Argument errors and selected-run failures print a short
+report without a stack trace. Internal faults keep the full error report.
 
 Run the complete repository gate before submitting a change:
 
@@ -352,6 +405,10 @@ suite, dependency checks, and Rust checks. See the
 functional suites on the minimum Node 22.14 runtime for ordinary changes and
 adds Node 24 to the complete matrix before a Release Please pull request can
 merge.
+
+Large ordinary-preview browser fixtures build in an owned Node child, then
+serve that real artifact in the worker. This keeps Playwright's diagnostic
+stack capture out of the build while retaining the same catalogue and checks.
 
 ESLint requires shared directory constants, locale-independent source ordering,
 and unique imports. Tests probe every covered source folder through the real
@@ -378,8 +435,25 @@ Login saves the key in `~/.blacksmith/credentials`.
 It replaces any saved login for the same organization.
 Warmup uses a 30-minute idle timeout. Readiness still uses `10m`.
 Each ended command downloads its report and cleans up its box at once.
-The gate requires nine reports. It skips stop and cancellation for a status
-table row that proves the box is completed. Logs stay under `.context/`.
+The gate requires nine reports. Cleanup closes the shared SSH connection first.
+When `gh` is available, it cancels a known GitHub run right after the close.
+An ID first found in status is cancelled before stop. A completed status skips
+stop and any cancellation not tried yet. The
+[cleanup contract](./docs/protocol/remote-verification-cleanup.md)
+defines this order. A failed stop gets retries after
+5 seconds and 10 more seconds. A recovered stop does not fail the gate.
+Final cleanup counts each box once if it is neither stopped nor proven completed.
+After the suites start, a nonzero count does not fail the gate. Before the
+first suite, it blocks local fallback. Interrupts report the same count.
+Warnings name each remaining box's manual stop command and its idle timeout.
+Cleanup records run IDs from warmup and probe output for the first cancellation.
+A failed GitHub cancellation checks the run state. An ended run gets an
+information line. Logs stay under `.context/`.
+Availability checks name all missing programs with install hints.
+Every xtask child removes `BLACKSMITH_ORG_TOKEN` from its environment.
+The source check names any unsupported nested repository or worktree path.
+Ignore or remove that path before retrying. The repository ignores agent
+worktrees under `.claude/worktrees/`.
 `--executor local` skips remote checks. The default `auto` selects remote mode
 when an org key and all availability checks pass. It otherwise runs locally.
 Run `cargo xtask executor` to print `<executor>: <reason>` without warming boxes.
@@ -408,13 +482,45 @@ Pull request titles use Conventional Commits and at most 72 Unicode code points.
 The separate title check runs when a PR opens, changes, or receives a push; see
 the [title contract](./docs/protocol/ci-verification.md#pull-request-title-contract).
 
-`npm run dependencies:check` audits every workspace dependency category against
-the live registry. It fails on Low-or-higher advisories unless an active reviewed
-exception covers the exact dev-only path. Exceptions expire on an inclusive UTC
-date and cannot extend more than 31 days from the current date. The packed ESM
-consumer's production audit stays strict and has no exceptions. See
-[dependency security](./docs/protocol/dependency-security.md) for the data file,
-review rules, and the temporary Braces exception.
+`npm test` and `npm run test:unit` run `npm run prepare:unit` and then the
+Node unit tests.
+`prepare:unit` builds the package and the example. When the saved snapshot is
+not fresh, it then compiles the example once more in memory and saves the
+result to `.context/verification/example-compilation.json`; when the snapshot
+is still fresh, it skips that compile. Test files that read the
+compiled example load this snapshot instead of compiling the example again. The
+snapshot keeps resource seeds and both route and subject warnings. The
+snapshot stores a key of the example sources, the built package and the
+lockfile, and a test file uses it only while that key still matches. When you
+run one file by hand, for example
+`node --import tsx --test tests/design_screens.test.tsx`, the file uses a fresh
+snapshot or compiles the full example itself, which is much slower.
+Run `npm run prepare:unit` again after you change the example or rebuild the
+package. The
+[snapshot contract](./docs/protocol/ci-example-snapshot.md)
+gives the details.
+
+`npm run dependencies:check` runs the strict live audit of every workspace
+dependency category from the lockfile. It fails on uncovered Low-or-higher
+advisories and invalid exception records. Use
+`npm run dependencies:check -- --baseline` to report issues already present at
+the comparison commit as notices and fail on new issues. The
+[baseline audit contract](./docs/protocol/dependency-audit-baseline.md) defines
+byte comparison and inheritance. Baseline mode is the default for
+`cargo xtask check`, ordinary pull requests, and pushes. Select strict local
+verification with `cargo xtask check --dependency-audit strict`.
+Either mode can write a JSON summary with `--report <file>`.
+
+Release Please and dependency update pull requests, release publishing, and
+the daily `main` audit stay strict. The scheduled workflow creates or refreshes
+the [dependency update pull request](./docs/protocol/dependency-audit-update-pr.md)
+for findings and exception issues. It preserves human commits and closes the
+update pull request when `main` passes. It needs no installed dependencies for
+the audit or script load; only the failure path installs and updates packages.
+Reviewed exceptions keep their exact dev-only path, inclusive UTC end date,
+and maximum 31-day window. The packed ESM consumer's production audit stays
+strict with no exceptions. See [dependency security](./docs/protocol/dependency-security.md)
+for the review rules and temporary Braces exception.
 
 ### Key code
 
@@ -426,10 +532,10 @@ review rules, and the temporary Braces exception.
 - [`src/build/mock_link_routes.ts`](./src/build/mock_link_routes.ts) —
   identity-derived logical-link targets and portable artifact URLs.
 - [`src/components/manifest_entry_validation.ts`](./src/components/manifest_entry_validation.ts)
-  — manifest-v9 component-entry validation.
+  — manifest-v10 component-entry validation.
 - [`src/registry/changed_paths.ts`](./src/registry/changed_paths.ts) and
   [`manifest_validation.ts`](./src/registry/manifest_validation.ts) —
-  identity-keyed change membership and the strict baseline-v9 boundary.
+  identity-keyed change membership and the strict baseline-v10 boundary.
 - [`src/baseline/compatibility.ts`](./src/baseline/compatibility.ts) and
   [`src/server/classification_result.ts`](./src/server/classification_result.ts)
   — the typed earlier-baseline outcome from admission through Serve.

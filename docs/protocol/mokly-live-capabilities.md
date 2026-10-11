@@ -1,6 +1,6 @@
 # Live Viewer Capabilities
 
-## Status
+## Delivery Status
 
 Implemented for the hydrated React shell served during local Serve. Static
 export and application-owned `MoklyViewer` hosts do not receive these

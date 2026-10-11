@@ -3,6 +3,7 @@
 use std::collections::BTreeSet;
 use std::panic::{AssertUnwindSafe, catch_unwind};
 
+use crate::check::request::DependencyAudit;
 use crate::remote::runner::{DefaultRemoteRunner, RemoteRunner};
 
 use super::harness_tests::{Case, harness};
@@ -13,7 +14,7 @@ fn suite_panic_and_cleanup_reporter_panics_still_stop_every_warmed_box() {
     let runner = DefaultRemoteRunner {
         dependencies: fixture.dependencies,
     };
-    assert!(catch_unwind(AssertUnwindSafe(|| runner.run())).is_err());
+    assert!(catch_unwind(AssertUnwindSafe(|| runner.run(DependencyAudit::Baseline))).is_err());
     let events = fixture.events.lock().unwrap();
     let warmed: BTreeSet<_> = events
         .iter()

@@ -6,10 +6,19 @@ behavior, including imported CSS and optional PostCSS.
 
 ## Delivery Status
 
+Uniform CSS membership, independent of configured or declared delivery, is
+implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md).
+
+The removed `review.sharedImpact` field's type guard below is implemented in
+[M28A](../../plans/remove-source-path-evidence.md#milestone-28a-integrate-main-131-and-133).
+The generic configuration and spread-input type cases are verified in
+[M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types).
+The other configuration behavior is implemented.
+
 Roots and their defaults, globs, prefixes and transparent directories are
 implemented. Matched Markdown files become document entries. Their sources and
 resource inputs remain protected and watched. A catalogue may contain only
-documents. Every setting below is implemented.
+documents. Other settings below are implemented.
 The reserved CSS output directory, CSS delivery and `postcss` key are
 implemented. See [imported stylesheet delivery](./mokly-imported-styles.md)
 and [diagnostics](./mokly-imported-styles-errors.md) for exact errors.
@@ -37,7 +46,6 @@ the following contract:
   loaders for app-owned module resolution;
 - default Git base ref used to find the `HEAD` branch point, and internal comparison
   directory;
-- shared-impact globs for comparisons;
 - additional authored inputs and static assets for watched Serve;
 
 The resolved config has one repository root, one mockups root, one sorted
@@ -55,10 +63,11 @@ setting and path; imported authoring sources fail with their path. See
 Before reading Git, `repoRoot` must resolve through symlinks to the same path
 as `git rev-parse --show-toplevel` run from that directory. A nested root fails
 with `config-invalid`, naming both paths. This validation belongs to config's
-Git boundary, not unconditional config loading: Build, Check, Serve, and
-publication without comparisons work without Git. Only Check inspects the
-current index (never `.gitignore`), treating no Git as untracked; Build and
-Serve never decide their behavior from head tracking.
+Git boundary, not unconditional config loading. Build, Check, Serve and
+repository preview without comparisons work without Git. Check reads the index,
+never `.gitignore`, and treats no Git as untracked. CLI publish requires a clean
+checkout under the [upload contract](./mokly-upload.md). Build and Serve never
+decide their behavior from head tracking.
 Serve's parent, classifier and
 HTTP child, comparison export and preview all validate before their first Git
 read. All remains usable when history is unavailable; an explicit comparison
@@ -74,6 +83,8 @@ The normative configuration shape is:
 
 ```ts
 type ColorScheme = "dark" | "light";
+
+type SharedStylesheet = string | typeof componentStylesheets;
 
 type ModuleLoader =
   | "base64"
@@ -113,7 +124,7 @@ interface MoklyConfig {
   };
   stylesheets?: readonly {
     match: string;
-    stylesheets: readonly string[];
+    stylesheets: readonly SharedStylesheet[];
     lightStylesheets?: readonly string[];
     darkStylesheets?: readonly string[];
   }[];
@@ -121,7 +132,7 @@ interface MoklyConfig {
     base?: string; // origin/main; merge base with HEAD
     baselineBuild?: readonly (readonly string[])[]; // used when baseline needs rebuilding
     outDir?: string; // .context/mokly-review
-    sharedImpact?: readonly string[];
+    sharedImpact?: never;
   };
   watch?: {
     debounceMs?: number; // 75
@@ -136,7 +147,7 @@ interface MoklyConfig {
 Filesystem fields (`repoRoot`, `roots[].dir`, `mockupsDir`, `renderer`,
 module-resolution package
 roots, and Review `outDir`) are config-relative. `roots[].files` globs are
-relative to their root; `review.sharedImpact` and `watch.rules[].paths` are
+relative to their root; `watch.rules[].paths` is
 repository-relative; see [roots](#roots). Stylesheet file paths are
 relative to `mockupsDir`; HTTP(S) stylesheet URLs are allowed.
 `colorSchemes` is a non-empty, duplicate-free subset of `"light" | "dark"`
@@ -144,22 +155,29 @@ that must include `"light"`; it defaults to `["light"]` and normalizes to
 light-first order. Shared `stylesheets` apply to every generated view, with a
 matching `lightStylesheets` or `darkStylesheets` list appended in declaration
 order.
+The shared list may contain the exported `componentStylesheets` symbol once;
+scheme-specific lists cannot contain it. It places validated component-declared
+CSS links in rendered screen/component documents at that point; by default
+they follow shared and precede scheme-specific links. Pages are unchanged.
+See [component stylesheets](./mokly-component-stylesheets.md) for the complete
+validation and placement contract.
 `review.baselineBuild` is valid in every repository; its argv contract and
 per-commit selection follow [baseline selection](./mokly-derived-baselines.md).
 The removed keys fail `config-invalid` with their exact guidance:
 `generatedOutput was removed; use Git tracking for check and run mokly build to write output`
 and `publicExclude was removed; remove it; only referenced authored assets are public`.
-Only Check, after compilation, uses index paths under `<mockupsDir>/mokly-generated/` to classify
+Check, after compilation, uses index paths under `<mockupsDir>/mokly-generated/` to classify
 tracked, untracked or mixed output; mixed output fails `build-invalid` with
 both remedies as specified in [generated output](./mokly-generated-output.md).
 Tracked Check compares the entire tree with disk; untracked Check ignores
-local output. Build writes transactionally. Serve and export await preparation
+local output. Publish separately validates committed or ignored generated output.
+Build writes transactionally. Serve and export await preparation
 before classification; Serve publishes `preparing` when a rebuild is needed,
 then `pending` while classification runs. Cache hits skip `preparing`.
-`watch.rules[].paths` and Review `sharedImpact` are repository-relative POSIX
-globs, while stylesheet `match` matches catalogue routes. `repoRoot` defaults to the config directory. Duplicate stylesheet
+`watch.rules[].paths` are repository-relative POSIX globs, while stylesheet
+`match` matches catalogue routes. `repoRoot` defaults to the config directory. Duplicate stylesheet
 matches and watch paths are invalid. Additional watch rules cannot override
-configured source/module rebuilds, reloads for configured stylesheets and
+configured source/module rebuilds, reloads for configured and component-declared stylesheets and
 referenced resources, or package-owned ignores for dependency, build, test,
 Review, `mokly-generated/`, and transaction paths. Referenced authored HTML under `mockupsDir` is a checked
 closure asset and can be served and exported. It is not a catalogue entry
@@ -194,25 +212,13 @@ to configured comparison output and the transactional writer boundary. The
 required `--out` has the additional source/runtime/ownership confinement rules
 in the [export contract](./mokly-export.md).
 
-`review.sharedImpact` is fallback impact evidence for files the rendered resource
-graph cannot see, such as renderer, component-source, or token modules. Linked
-stylesheets, including transitive imports, are attributed by rule under
-[CSS change attribution](./mokly-css-attribution.md). A changed stylesheet keeps
-a view's dependency evidence only when a changed rule could match its before or
-after document, or analysis is unresolved. Otherwise it is examined and excluded.
-Shared-impact globs cannot override this exclusion or add unreferenced public
-files to Changes, and a glob match alone never adds an entry; see
-[component attribution](./mokly-component-changes.md#dependencies-and-styles).
+### Removed Review Setting
 
-`moduleResolution` has no defaults beyond esbuild's platform behavior. Package
-roots must be in-repository directories containing `package.json`; their
-`node_modules` directories supplement consumer lookup. Aliases accept bare
-package specifiers only. Conditions, package fields, and extensions are ordered,
-deduplicated lists, while loader keys are extensions and values are supported
-JavaScript-safe esbuild loader names. The `css` loader is rejected for every
-extension because it would emit an undelivered sibling stylesheet. React and
-React DOM still resolve through Mokly's
-consumer-peer plugin so these options cannot introduce a second React runtime.
+The [removed setting contract](./mokly-configuration-discovery.md#removed-review-setting)
+owns runtime warnings, no-effect handling and the TypeScript guard.
+
+The [module resolution contract](./mokly-configuration-discovery.md#module-resolution)
+owns package roots, aliases, ordered lists, loaders and consumer React identity.
 
 Export rejects a consumer package root equal to `mockupsDir` after realpath
 resolution, with `export-invalid`; config loading adds no equality rejection.

@@ -44,20 +44,18 @@ function comparison(
     baseRef: "origin/main",
     changedPaths: [],
     ignoredImpact: [],
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     screens: [
       {
         after: address,
         before: address,
-        dependencies: [],
         path: "home",
-        sharedImpact: [],
         state: "changed",
         title: "Home",
         views,
       },
     ],
-    sharedImpact: [],
+
     components: [],
     changes: [
       {

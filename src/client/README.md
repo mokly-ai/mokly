@@ -1,12 +1,19 @@
 # Standalone viewer host
 
+## Delivery Status
+
+The [React Browse shell plan](../../plans/react-browse-shell.md) records delivery
+of the typed live capability boundary.
+
+## Scope
+
 These modules compose `@mokly/viewer/runtime` for local Serve and exported
 catalogues. Serve and export render the viewer's shell tree on the server and
 hydrate it with the package's bundled React; these CLI modules supply Serve's
 private capabilities to that tree. Reusable navigation, inspection and frame
-adapters live in [the viewer package](../../packages/viewer/README.md). The
-[React Browse shell plan](../../plans/react-browse-shell.md) defines the typed
-[live capability boundary](../../docs/protocol/mokly-live-capabilities.md).
+adapters live in [the viewer package](../../packages/viewer/README.md).
+The [live capability contract](../../docs/protocol/mokly-live-capabilities.md)
+defines the typed boundary.
 
 `react_host.ts` validates the private descriptor before hydrating.
 `react_capabilities.ts` composes route evidence, update and on-demand rendering

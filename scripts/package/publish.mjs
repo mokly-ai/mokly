@@ -164,7 +164,7 @@ export async function smokeConsumerPublish(context, root) {
           "uploaded",
           "--repository",
           "github.com/sample/catalogue",
-          ...(noChanges ? ["--no-changes"] : ["--base", "HEAD"]),
+          ...(noChanges ? ["--no-changes"] : ["--base", "HEAD^"]),
         ],
         { cwd: root, env },
       );

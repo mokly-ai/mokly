@@ -167,6 +167,9 @@ from different package versions.
   itself the documented public interface.
 - Root tests validate structure, links, versions, copy, the CLI surface,
   configuration fields, public authoring exports, and the upload/CI contract.
+- Root tests compare guide content with code and data structurally: parsed
+  options, exports, fields, fences, tables, links and version literals. They
+  never match prose sentences or source text with regular expressions.
 
 ## Related Docs
 

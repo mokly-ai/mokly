@@ -1,5 +1,9 @@
 # Startup Diagnostics And Scale Fixtures
 
+## Delivery Status
+
+This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+
 ## Opt-in timings
 
 `--debug-timings` is a common boolean CLI option for `serve` (including the
@@ -58,7 +62,7 @@ Review phases use the same session, role and parent context as their caller:
   Pinned readers reuse the resolved commit without another Git span.
 - `review.changed-paths` covers output exclusions, tracked/untracked discovery,
   deduplication and sorting, including later input-freshness checks.
-- `review.base-manifest` covers canonical baseline reading, v9 validation, and
+- `review.base-manifest` covers canonical baseline reading, v10 validation, and
   incompatible-version detection.
 - `review.base-documents` covers each bulk baseline-document read, including
   live component prefetch and bounded live document-comparison batches. It does
@@ -149,7 +153,7 @@ or timings. It must provide a Git baseline so Changes performs real comparison.
 Additional shared stylesheets have configurable count and per-area screen share
 (defaults: four and 0.5, rounded up). After the baseline commit, setup adds an
 unrelated rule to the first sheet. Background Changes therefore exercises actual
-stylesheet dependency evidence; rule attribution excludes the unrelated rule
+rendered stylesheet evidence; rule attribution excludes the unrelated rule
 from every linked screen, so the benchmark expects zero Changes, including
 flows. The fixture guide documents
 zero-count/share cases and the separate complete-export measurement.

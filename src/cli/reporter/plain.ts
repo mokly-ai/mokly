@@ -1,4 +1,4 @@
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import { EARLIER_BASELINE_MESSAGE } from "../../baseline/compatibility.js";
 import { BaselineNoticeState } from "../../baseline/notice_state.js";
@@ -52,7 +52,7 @@ export class PlainReporter implements CliReporter {
       );
   }
 
-  catalogueReady(_manifest: ManifestV9, _durationMs: number): void {}
+  catalogueReady(_manifest: ManifestV10, _durationMs: number): void {}
 
   outputWritten(summary: GeneratedOutputSummary, durationMs: number): void {
     this.summary(summary.plain, summary.rich, durationMs);

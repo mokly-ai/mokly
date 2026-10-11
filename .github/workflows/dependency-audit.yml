@@ -1,0 +1,51 @@
+name: Dependency Audit
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Check out main
+        uses: useblacksmith/checkout@25227e61ff9dafe400e22fa487b673eac4e4409a # v1
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.DEPENDENCY_AUDIT_TOKEN || github.token }}
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Set up npm
+        run: npm install --global npm@11.21.0
+      - name: Audit main dependencies
+        id: audit
+        shell: bash
+        continue-on-error: true
+        run: |
+          mkdir -p .context
+          npm run dependencies:check -- --report .context/dependency-audit.json 2>&1 | tee .context/dependency-audit.log
+      - name: Maintain dependency update pull request
+        env:
+          AUDIT_OUTCOME: ${{ steps.audit.outcome }}
+          GITHUB_TOKEN: ${{ secrets.DEPENDENCY_AUDIT_TOKEN || github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: node scripts/verification/dependency-audit-pr.mjs --outcome "$AUDIT_OUTCOME" --log .context/dependency-audit.log --report .context/dependency-audit.json

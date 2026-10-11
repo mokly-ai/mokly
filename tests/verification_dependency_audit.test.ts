@@ -3,7 +3,11 @@ import test from "node:test";
 
 import { evaluateDependencyAudit } from "../scripts/verification/dependency-audit-evaluation.mjs";
 
-import { auditFixture, bracesAdvisory } from "./helpers/dependency_audit.js";
+import {
+  auditFixture,
+  bracesAdvisory,
+  issueMessages,
+} from "./helpers/dependency_audit.js";
 
 test("clean audit passes without exceptions", () => {
   const { lockfile, today } = auditFixture();
@@ -14,7 +18,7 @@ test("clean audit passes without exceptions", () => {
       [],
       today,
     ),
-    { ok: true, errors: [], notices: [] },
+    { ok: true, issues: [], notices: [] },
   );
 });
 
@@ -22,7 +26,7 @@ test("captured audit covers one advisory and twelve effects with Metro cycles", 
   const { report, lockfile, exception, today } = auditFixture();
   assert.equal(Object.keys(report.vulnerabilities).length, 13);
   const result = evaluateDependencyAudit(report, lockfile, [exception], today);
-  assert.equal(result.ok, true, result.errors.join("\n"));
+  assert.equal(result.ok, true, issueMessages(result));
   assert.equal(result.notices.length, 1);
   for (const value of [
     exception.advisory,
@@ -58,9 +62,9 @@ for (const date of ["2026-11-04T00:00:00Z", "2026-10-02T23:59:59.999Z"]) {
       new Date(date),
     );
     assert.equal(result.ok, false);
-    assert.match(result.errors.join("\n"), /expired|31 days/u);
+    assert.match(issueMessages(result), /expired|31 days/u);
     assert.ok(
-      result.errors.some((error) => error.includes(exception.advisory)),
+      result.issues.some((issue) => issue.message.includes(exception.advisory)),
     );
   });
 }
@@ -76,10 +80,10 @@ test("stale exceptions fail even after the advisory disappears", () => {
     );
     assert.equal(result.ok, false);
     assert.match(
-      result.errors.join("\n"),
+      issueMessages(result),
       current === today ? /stale/iu : /expired/iu,
     );
-    assert.match(result.errors.join("\n"), /Remove|remove/u);
+    assert.match(issueMessages(result), /Remove|remove/u);
   }
 });
 
@@ -116,7 +120,7 @@ for (const severity of ["low", "moderate", "high", "critical"] as const) {
       advisory.url,
       "node_modules/other",
     ])
-      assert.ok(result.errors.join("\n").includes(value), value);
+      assert.ok(issueMessages(result).includes(value), value);
   });
 }
 
@@ -128,7 +132,7 @@ test("another braces advisory is not covered", () => {
   });
   const result = evaluateDependencyAudit(report, lockfile, [exception], today);
   assert.equal(result.ok, false);
-  assert.match(result.errors.join("\n"), /GHSA-aaaa-bbbb-cccc/u);
+  assert.match(issueMessages(result), /GHSA-aaaa-bbbb-cccc/u);
 });
 
 test("second braces installation fails", () => {
@@ -161,7 +165,7 @@ for (const owner of ["", "packages/viewer", "node_modules/other"]) {
           today,
         );
         assert.equal(result.ok, false);
-        assert.match(result.errors.join("\n"), /path|dependent/u);
+        assert.match(issueMessages(result), /path|dependent/u);
       });
     }
   }

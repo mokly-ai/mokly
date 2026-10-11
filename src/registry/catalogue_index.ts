@@ -2,11 +2,10 @@
 import type { ColorScheme } from "@mokly/viewer";
 import {
   isManifestComponentVariant,
-  type ManifestV9,
+  type ManifestV10,
 } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
-import { validateDependencyDeclarations } from "../components/dependency_validation.js";
 import { MoklyError } from "../errors.js";
 
 import type { FolderRecord } from "./folder_records.js";
@@ -17,11 +16,11 @@ export interface CatalogueIndex {
   schemaVersion: "live-index-2";
   generatedBy: "mokly";
   sourceFiles: readonly string[];
-  entries: ManifestV9["entries"];
-  folders: ManifestV9["folders"];
+  entries: ManifestV10["entries"];
+  folders: ManifestV10["folders"];
 }
 
-export type CatalogueMetadata = ManifestV9 | CatalogueIndex;
+export type CatalogueMetadata = ManifestV10 | CatalogueIndex;
 
 export function createCatalogueIndex(
   entries: readonly ResolvedRegistryEntry[],
@@ -46,10 +45,9 @@ export function parseCatalogueIndex(value: unknown): CatalogueIndex {
     throw new MoklyError("manifest-invalid", "expected a live catalogue index");
   const metadata = validateManifestMetadata({
     ...value,
-    schemaVersion: 9,
+    schemaVersion: 10,
   });
   for (const entry of metadata.entries) {
-    validateDependencyDeclarations(entry);
     if (
       (entry.kind === "screen" && entry.componentViews !== undefined) ||
       (entry.kind === "component" &&

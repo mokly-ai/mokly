@@ -4,7 +4,6 @@ import { randomBytes } from "node:crypto";
 import type { ComponentRuntime } from "../build/component_runtime.js";
 import { prepareLiveRuntime } from "../build/live_runtime.js";
 import type { ResolvedConfig } from "../config/types.js";
-import { timeAsync } from "../diagnostics/timings.js";
 
 import { RepositoryCatalogueChangeClassifier } from "./component_changes.js";
 import {
@@ -16,7 +15,7 @@ import { PlainServeReporter } from "./reporter.js";
 import type { RunningServe, ServeDependencies, ServeOptions } from "./serve.js";
 import {
   closeWatched,
-  createWatchedSupervisor,
+  startWatchedSupervisor,
   restartWatchedGeneration,
 } from "./serve_lifecycle.js";
 import type { ProcessSupervisor } from "./supervisor.js";
@@ -27,9 +26,10 @@ import {
   WatchDebouncer,
   type WatchEvent,
 } from "./watch_events.js";
-import { watchTargets } from "./watch_paths.js";
+import { sourceTargetsChanged } from "./watch_preparation.js";
 import { reportedWatchProcessor } from "./watch_reporting.js";
 import { WatchSetup } from "./watch_setup.js";
+import { scopedWatchWarnings } from "./watch_warning_scopes.js";
 import { WatchedBackground } from "./watched_background.js";
 
 /** Serve accepted generations while watching typed source and resource changes. */
@@ -45,6 +45,7 @@ export async function serveWatched(
     processSupervisorFactory,
   } = dependencies;
   const reporter = dependencies.reporter ?? new PlainServeReporter();
+  const warnings = dependencies.warnings!;
   const classifier =
     dependencies.changeClassifier ?? new RepositoryCatalogueChangeClassifier();
   let closed = false;
@@ -55,35 +56,38 @@ export async function serveWatched(
   const report = (error: unknown) => reporter.runtimeDiagnostic(error);
   const failures = new NotificationGate<Error>(report);
   const watches = new WatchSetup(config, watcherFactory, shutdown, report);
-  let activeConfig = config;
   const resources = watches.resources;
   let runtime: ComponentRuntime;
-  let signature: string;
-  let supervisor: ProcessSupervisor | undefined;
+  let running: ProcessSupervisor;
   let port: number;
   try {
-    const initial = (await watches.prepare(config))!;
-    initial.adopt();
-    await initial.close();
-    runtime = await prepareLiveRuntime(watches.config);
-    activeConfig = runtime.config;
-    const inputs = (await watches.prepare(activeConfig, false))!;
-    inputs.adopt(activeConfig);
-    await inputs.close();
-    signature = JSON.stringify(runtime.manifest);
-    supervisor = createWatchedSupervisor(
-      activeConfig,
+    const prepared = (await watches.prepareRuntime(
+      config,
+      warnings.forGeneration(),
+      warnings.generation,
+      true,
+    ))!;
+    runtime = prepared.runtime;
+    prepared.source.adopt(runtime.config);
+    await prepared.source.close();
+    const started = await startWatchedSupervisor(
+      runtime.config,
       options,
       processSupervisorFactory,
+      runtime,
+      failures,
+      (event) => warnings.addGeneration(event),
+      watches,
+      resources,
     );
-    supervisor.onUnexpectedExit((error) => failures.notify(error));
-    supervisor.replaceComponentRuntime(runtime, "stage");
-    port = await timeAsync("child.ready", () => supervisor!.start());
+    running = started.running;
+    port = started.port;
   } catch (error) {
-    await Promise.allSettled([watches.close(), supervisor?.close()]);
+    await watches.close();
     throw error;
   }
-  const running = supervisor;
+  let activeConfig = runtime.config;
+  let signature = JSON.stringify(runtime.manifest);
   running.onDiagnostic?.((message) => reporter.runtimeDiagnostic(message));
   const previews = new PreviewResources(
     watcherFactory,
@@ -103,6 +107,7 @@ export async function serveWatched(
     outputStore,
     report,
     reporter,
+    warnings,
     resources,
     running,
     runtime: () => runtime,
@@ -121,16 +126,19 @@ export async function serveWatched(
   const restart = () =>
     restartWatchedGeneration(running, background, () => closed);
 
-  const reconfigure = async (candidate?: ResolvedConfig): Promise<void> => {
+  const reconfigure = async (
+    generation: string,
+    candidate?: ResolvedConfig,
+  ): Promise<void> => {
+    const warn = warnings.forGeneration(generation);
     const nextConfig =
-      candidate ?? (await configLoader.load(activeConfig.configPath));
-    let replacement = await watches.prepare(nextConfig, true, true);
-    if (!replacement) return;
+      candidate ?? (await configLoader.load(activeConfig.configPath, warn));
+    const prepared = await watches.prepareRuntime(nextConfig, warn, generation);
+    if (!prepared) return;
+    const replacement = prepared.source;
+    const next = prepared.runtime;
     try {
       if (closed) return;
-      const next = await prepareLiveRuntime(replacement.config);
-      replacement = await watches.refine(next.config, replacement);
-      if (!replacement || closed) return;
       await background.invalidate(next.config);
       if (closed) return;
       activeConfig = next.config;
@@ -142,6 +150,7 @@ export async function serveWatched(
       );
       signature = JSON.stringify(next.manifest);
       running.replaceComponentRuntime(next, "stage");
+      if (!candidate) running.discardCheckedClosure?.();
       replacement.adopt(activeConfig);
       try {
         await replacement.close();
@@ -155,7 +164,8 @@ export async function serveWatched(
 
   const performAction = async (action: RuntimeWatchAction): Promise<void> => {
     if (closed) return;
-    if (action === "reconfigure") return reconfigure();
+    const generation = warnings.generation;
+    if (action === "reconfigure") return reconfigure(generation);
     if (action === "evidence") {
       if (background.compilation) {
         await background.invalidate();
@@ -172,12 +182,15 @@ export async function serveWatched(
       return;
     }
     if (action === "rebuild") {
-      const next = await prepareLiveRuntime(activeConfig);
-      if (
-        JSON.stringify(watchTargets(next.config)) !==
-        JSON.stringify(watchTargets(activeConfig))
-      )
-        return reconfigure(next.config);
+      const next = await prepareLiveRuntime(
+        activeConfig,
+        undefined,
+        undefined,
+        warnings.forGeneration(generation),
+        generation,
+      );
+      if (sourceTargetsChanged(activeConfig, next.config))
+        return reconfigure(generation, next.config);
       if (closed) return;
       await background.invalidate();
       if (closed) return;
@@ -215,7 +228,7 @@ export async function serveWatched(
   };
   const queue = new WatchActionQueue(
     reportedWatchProcessor(
-      performAction,
+      scopedWatchWarnings(performAction, warnings),
       reporter,
       () => activeConfig.repoRoot,
     ),

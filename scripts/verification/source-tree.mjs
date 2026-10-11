@@ -10,6 +10,15 @@ const FINGERPRINT_PATTERN = /^sha256:[0-9a-f]{64}$/;
 const USAGE =
   "usage: source-tree.mjs [--expect sha256:<digest>] [--print-head]";
 
+/** Require an exact fingerprint without adding a caller's usage line. */
+export function validateFingerprint(value) {
+  if (typeof value !== "string" || !FINGERPRINT_PATTERN.test(value))
+    throw new Error(
+      "expected fingerprint must match sha256:<64 lowercase hex digits>",
+    );
+  return value;
+}
+
 /** Decode NUL-delimited Git paths without changing their bytes. */
 export function sourcePaths(listing) {
   const bytes = Buffer.from(listing);
@@ -83,7 +92,9 @@ export async function readSourceTree(cwd) {
       mode = metadata.mode & 0o111 ? "100755" : "100644";
       contents = await fs.readFile(file);
     } else {
-      throw new Error("source-tree fingerprint found an unsupported file type");
+      throw new Error(
+        `source-tree fingerprint found an unsupported file type at ${JSON.stringify(name.toString("utf8"))}; ignore or remove a nested repository or worktree`,
+      );
     }
     records.push({
       mode,
@@ -103,10 +114,11 @@ export function parseSourceTreeArguments(args) {
       printHead = true;
     } else if (args[index] === "--expect" && expected === undefined) {
       expected = args[++index];
-      if (typeof expected !== "string" || !FINGERPRINT_PATTERN.test(expected))
-        throw new Error(
-          `expected fingerprint must match sha256:<64 lowercase hex digits>; ${USAGE}`,
-        );
+      try {
+        expected = validateFingerprint(expected);
+      } catch (error) {
+        throw new Error(`${error.message}; ${USAGE}`, { cause: error });
+      }
     } else {
       throw new Error(USAGE);
     }

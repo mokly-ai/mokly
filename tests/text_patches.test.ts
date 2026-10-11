@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { rebaseStyleOwnership } from "../dist/components/style_ownership.js";
+import { insertComponentStylesheets } from "../dist/components/stylesheet_links.js";
 import { rewriteReviewSentinels } from "../dist/renderer/sentinels.js";
 import { TextOffsetMap } from "../dist/text_patches.js";
 
@@ -118,4 +119,29 @@ test("review sentinel rewrites expose exact patches before owned CSS", () => {
     map.html,
     /<!--mokly-review-ignore:start:stamp-->x<!--mokly-review-ignore:end:stamp-->/,
   );
+});
+
+test("declared stylesheet insertion shares the preserved UTF-16 offset map", () => {
+  const map = new TextOffsetMap(source);
+  const html = insertComponentStylesheets(
+    source,
+    "mokly-generated/home/index.mobile.html",
+    [],
+    0,
+    ["action.css"],
+    undefined,
+    "home/index.mobile.html",
+    map,
+  );
+  assert.equal(
+    html,
+    source.replace(
+      "</head>",
+      '<link rel="stylesheet" href="../../action.css"></head>',
+    ),
+  );
+  assert.equal(map.html, html);
+  const [mapped] = rebaseStyleOwnership(map, [owned]);
+  assert.equal(mapped!.startOffset, html.indexOf(css));
+  assert.equal(html.slice(mapped!.startOffset, mapped!.endOffset), css);
 });

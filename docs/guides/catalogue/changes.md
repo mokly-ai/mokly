@@ -18,19 +18,62 @@ changes. Staged, unstaged and untracked edits in your working tree do.
 
 ## What does not count as a change
 
-A source edit that leaves a screen's output and reviewable metadata identical
-usually leaves it out of Changes. A file matched only by `review.sharedImpact`
-or inside a declared dependency folder can appear in Details without adding
-the screen to Changes. The entry's source file alone does not add it either;
-it appears in Details when it also matches one of those file groups. A
-registered component's own file or a dependency named by its exact path can
-still add its entry. A source move that leaves the entry's path fixed adds no
-output change; an entry whose path changes appears as Moved. Giving a folder
-a new title changes no entry.
-Regions marked with Review-ignore are classified as ignored, and a stylesheet
-edit marks a screen only when a changed rule could apply to it or cannot be
-resolved; rules that reach nothing on the screen are recorded as examined and
-excluded. Evidence remains available in Details even when no Changes row exists.
+A source edit that leaves a screen's output, rendered-resource references and
+reviewable metadata identical does not add the screen or comparison evidence,
+with or without registered components. A source move that keeps the entry path fixed adds no output change. A changed
+entry path appears as Moved. A folder title change changes no entry.
+Review-ignore can omit changes inside a marked region. Changed styles that
+reach nothing on a view are examined and excluded. Evidence remains available
+in Details even when no Changes row exists.
+
+## How stylesheet changes are listed
+
+The same rule applies to configured stylesheets, component declarations,
+imports from another stylesheet and CSS imported by JavaScript. Mokly checks
+the elements that each changed rule matches before or after the change.
+
+Mokly first finds each component's matches on its own saved pages, across
+variants, viewports and color schemes. A component then keeps only matches
+outside a different nested component that has its own-page matches for the
+same rule. The nested component need not be changed itself. These tests use
+all own-page matches before any are removed, so their order does not matter.
+A nested use of the same component never takes a match from itself. Recursive
+and mutually nested components use this same test.
+
+A component changes only if it keeps a match. Only matches that it keeps on a
+saved variant's own page give that variant a component reason. A page reason
+can still give a saved view its own row. A match at an invocation on a consumer
+screen alone never changes the invoked component.
+
+A screen gets its own Changes row when a rule matches outside components
+changed by that rule. This page test includes all nested output inside each
+changed component's occurrence. It also gets a row when Mokly cannot resolve the rule,
+such as a global style or a custom property change. Otherwise the screen is
+under the changed components' Affected screens. Those links show usage, not
+proof that every use looks different.
+
+For example, a configured button rule can change the button component and
+leave a screen affected-only. A component's declared stylesheet can instead
+change a screen heading and give that screen its own row. A rule imported by
+that file follows the same test. Equal changed rules copied into generated
+stylesheets are checked together across component and screen pages.
+
+If screen-only CSS styles the inside of a button, that screen changes. The
+button stays unchanged when the rule does not match its own saved pages.
+On a component page, a changed renderer wrapper gives the saved view its own
+row. That page change alone adds no Affected screens.
+
+For example, `.action` changes Action and leaves Toolbar, which contains it,
+under Action's Affected screens. If `.toolbar .action` matches only Toolbar's
+own pages, Toolbar changes and Action stays unchanged. With Icon inside Action
+inside Toolbar, `.icon` changes Icon only when it matches Icon's own pages
+and the other own-page matches are inside Icon.
+
+A component can also lose a match to a nested component that is not changed.
+For example, Y's own-page matches are all inside a changed Z. On X's saved page,
+a match inside Y but outside Z is still taken from X by Y's own-page matches.
+If X keeps no other match, X is not changed as a component. Its saved view gets
+a page row because the match is outside Z. The change stays visible there.
 
 ## Moved entries
 
@@ -65,7 +108,7 @@ export default defineScreen({
   description: "The account landing screen.",
   mobile: <main>Account</main>,
   desktop: <main>Account</main>,
-  dependencies: [],
+
   relatedDocs: [],
   movedFrom: "account/overview",
 });

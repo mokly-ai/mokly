@@ -2,8 +2,7 @@ import path from "node:path";
 
 import { test as base } from "@playwright/test";
 
-import { buildPreview } from "../../scripts/preview/catalogue.mjs";
-import { createCommittedExampleBaseline } from "../helpers/example_baseline.js";
+import { runCaptured } from "../../scripts/verification/process.mjs";
 import { repositoryRoot } from "../helpers/fixture.js";
 import {
   FULL_CATALOGUE_SETUP_TIMEOUT_MS,
@@ -32,12 +31,23 @@ export const test = base.extend<
         artifactRelative: ".context/site",
         build: (output) =>
           timeFixturePhase("ordinary-preview", "export", false, async () => {
-            const fixtureRoot = path.dirname(path.dirname(output));
-            const config = await createCommittedExampleBaseline(
-              fixtureRoot,
-              "ordinary-preview",
+            const result = await runCaptured(
+              process.execPath,
+              [
+                "--import",
+                "tsx",
+                path.join(import.meta.dirname, "ordinary_preview_build.ts"),
+                output,
+              ],
+              {
+                cwd: repositoryRoot,
+                timeout: FULL_CATALOGUE_SETUP_TIMEOUT_MS - 30_000,
+              },
             );
-            await buildPreview(config, output);
+            if (result.exitCode !== 0 || result.signal || result.interrupted)
+              throw new Error(
+                `Ordinary preview build failed: ${result.stderr || result.stdout}`,
+              );
           }),
         contextRoot: previewFixtureContextRoot(
           path.join(repositoryRoot, ".context"),
