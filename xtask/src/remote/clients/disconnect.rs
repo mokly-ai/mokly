@@ -61,6 +61,7 @@ impl SystemBlacksmith {
                 input: None,
                 log: None,
                 cancellable: false,
+                git_index: None,
                 blacksmith: false,
             })
             .and_then(|output| cleanup_success(&output, Operation::Ssh));

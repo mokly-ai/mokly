@@ -419,7 +419,8 @@ export fixtures use isolated, validated copies; dedicated tests retain cold
 baseline and preview builds. See [fixture preparation](./docs/protocol/ci-fixture-preparation.md).
 
 The [remote verification contract](./docs/protocol/remote-verification.md)
-defines the Testbox gate. Push your branch before an explicit remote check:
+defines the Testbox gate. A remote check needs a pushed ancestor in the local
+origin refs. Checkout `HEAD` can include unpushed commits:
 
 ```bash
 cargo xtask check --executor remote
@@ -427,7 +428,11 @@ cargo xtask check --executor remote
 
 Warmup uses the Testbox workflow from `main`.
 Set `MOKLY_TESTBOX_REF=<pushed branch>` only to test a changed Testbox workflow
-before it merges. This variable does not change the source commit under test.
+before it merges. This variable changes neither the source fingerprint nor
+the selected base commit.
+Remote runs sync from a separate snapshot. The
+[base sync contract](./docs/protocol/remote-verification-base.md) defines
+checkout preservation, run identity and snapshot cleanup.
 
 Install `blacksmith`, `rsync` and `ssh`. Set `BLACKSMITH_ORG_TOKEN` for org-key
 login, or use the current CLI login. The remote gate runs 11 commands in parallel.
@@ -451,6 +456,12 @@ A failed GitHub cancellation checks the run state. An ended run gets an
 information line. Logs stay under `.context/`.
 Availability checks name all missing programs with install hints.
 Every xtask child removes `BLACKSMITH_ORG_TOKEN` from its environment.
+It also removes the shared Git repository variable list. These variables select
+which repository, work tree and index Git uses. Git in each child then finds
+its repository from the child's own working directory. Request-specific
+temporary indexes still apply. Settings carried by `GIT_CONFIG_PARAMETERS` or
+`GIT_CONFIG_COUNT`, including `git -c` settings, are removed with the list.
+Other variables, such as `GIT_ASKPASS` and `GIT_SSH_COMMAND`, stay.
 The source check names any unsupported nested repository or worktree path.
 Ignore or remove that path before retrying. The repository ignores agent
 worktrees under `.claude/worktrees/`.
@@ -567,9 +578,11 @@ for the review rules and temporary Braces exception.
   [`html_paths.mjs`](./scripts/preview/html_paths.mjs) — preview publication's
   baseline-availability and provider-path adapters.
 - [`scripts/verification/source-tree.mjs`](./scripts/verification/source-tree.mjs)
-  computes the source fingerprint, including uncommitted changes.
+  computes the source fingerprint, including uncommitted changes and file or
+  directory type changes.
 - [`scripts/verification/testbox-suite.mjs`](./scripts/verification/testbox-suite.mjs)
-  checks that fingerprint and prepares one suite through injected commands.
+  checks the fingerprint, stages the synced tree and prepares one suite through
+  injected commands.
 - [`xtask/src/remote`](./xtask/src/remote) runs the complete Testbox gate and
   owns report downloads, logs and interrupt cleanup.
 - [`examples/basic`](./examples/basic/README.md) — reference consumer and design

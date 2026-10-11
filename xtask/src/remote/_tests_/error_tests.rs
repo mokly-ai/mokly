@@ -29,7 +29,7 @@ fn executor_selection_errors_keep_the_remote_module_prefix() {
         Error::MissingPrograms {
             programs: vec![RequiredProgram::Ssh],
         },
-        Error::UnpublishedHead,
+        Error::NoBase,
         Error::Captured {
             source: Box::new(Error::Worker),
             output: Default::default(),

@@ -4,14 +4,12 @@ Continuation of [Remote Verification](./remote-verification.md).
 
 ## Delivery Status
 
-The [Blacksmith remote verification plan](../../plans/blacksmith-remote-verification.md)
-approves this target. Explicit remote execution, the fingerprint, suite wrapper
-and workflow are implemented. The wrapper selects `--executor local`.
-Workflow validation and both box suite smoke checks pass.
-Main's dependency fixes are merged. The complete explicit remote check passes.
-Automatic remote selection and `cargo xtask executor` are implemented.
-The complete automatic smoke check passes.
-Workflow verification executes the Testbox scripts instead of matching their text.
+The [Blacksmith plan](../../plans/blacksmith-remote-verification.md) defines the implemented workflow,
+fingerprint, wrapper, automatic selection and executor command. The wrapper uses `--executor local`.
+Workflow validation executes its scripts. Both box suite smokes and complete explicit and automatic checks pass.
+Main's dependency fixes are merged. The [base sync plan](../../plans/remote-verification-base-commit.md) defines implemented snapshot and base identity.
+Xtask accepts unpushed `HEAD`. The type-change fix passes the complete gate.
+A one-box spike syncs a file-to-directory and a directory-to-file change; its probe and staged fingerprints pass.
 
 ## Workflow
 
@@ -114,24 +112,23 @@ Its error contains no usage text. Each script adds its own usage line.
 
 ## Readiness And Sync Probe
 
-`blacksmith testbox run` syncs the local checkout before its command starts.
-It fetches local `HEAD` from GitHub and copies uncommitted, non-ignored files.
-It does not copy Git-ignored files. The synced tree's `rust-toolchain.toml`
-selects the toolchain for the suite commands. A synced tree without that file
-uses the box's default toolchain, so merge `main` into the branch before
-remote verification. The probe command is:
+Run `blacksmith testbox run` from the
+[snapshot worktree](./remote-verification-base.md#snapshot-worktree).
+The CLI fetches its `HEAD`, the base commit, then copies uncommitted,
+non-ignored files. The synced `rust-toolchain.toml` selects the suite toolchain.
+Without it, the box uses its default toolchain. Merge `main` into the branch
+before remote verification. Run this probe from the snapshot directory:
 
 ```bash
 blacksmith testbox run --id <box-id> --wait-timeout 10m "node scripts/verification/source-tree.mjs --expect <fingerprint> --print-head"
 ```
 
 The probe uses `--wait-timeout 10m`. Xtask does not retry it.
-The CLI prints status lines around the command output. Xtask reads the
-fingerprint from the one line that matches `^sha256:[0-9a-f]{64}$`.
-It reads `HEAD` from the one line that matches `^[0-9a-f]{40}$`.
+Read whole lines that match `^sha256:[0-9a-f]{64}$` for the fingerprint or
+`^[0-9a-f]{40}$` for `HEAD`. Ignore other CLI status lines.
 Zero or several matches for either value fail the probe.
-Any nonzero exit, a missing or different fingerprint line, or a missing or
-different `HEAD` line fails the probe phase.
+A nonzero exit, missing or different fingerprint, missing `HEAD`, or `HEAD`
+that differs from the base fails the probe phase.
 Require successful probes on every box before any suite command starts.
 The [executor contract](./remote-verification.md#executor-selection) defines
 fallback at this boundary.
@@ -141,23 +138,25 @@ fallback at this boundary.
 `scripts/verification/testbox-suite.mjs` performs these steps on each box:
 
 1. Compute the fingerprint. Fail immediately if it differs from `--expect`.
-2. Check whether the repository is shallow. If it is, run
+2. Run `git add -A` under the [box index rule](./remote-verification-base.md#box-index).
+   Failed or signalled staging fails before history, installs, cargo or stamp writes.
+3. Check whether the repository is shallow. If it is, run
    `git fetch --unshallow --tags origin`. A failed fetch fails the wrapper.
    The CLI sync uses `git fetch --no-tags --depth 50` and makes the clone
    shallow on every `testbox run`, even after full-history checkout.
    Restore history and release tags in every suite command before its checks.
-3. Compare the current `package-lock.json` SHA-256 with the workflow stamp at
+4. Compare the current `package-lock.json` SHA-256 with the workflow stamp at
    `$HOME/.mokly-testbox/package-lock.sha256`.
    A missing stamp counts as a mismatch. On a mismatch, run `npm ci`, then
    `npx playwright install chromium`. Fail if either command fails.
    Write the new digest stamp only after both commands succeed.
    An equal digest requires neither command.
-4. Set `MOKLY_VERIFICATION_REPORT` to
+5. Set `MOKLY_VERIFICATION_REPORT` to
    `.context/verification-reports/remote/<command>.json`.
    Run `cargo xtask check --executor local --suite <suite>`.
    Add `--shard INDEX/4` for a unit or browser shard.
    Explicit local mode prevents recursive remote execution.
-5. Return the suite's exit code. A wrapper preparation failure returns nonzero.
+6. Return the suite's exit code. A wrapper preparation failure returns nonzero.
 
 Stream child standard output and standard error. Forward SIGINT and SIGTERM
 to the running child through the verification process owner.
@@ -173,18 +172,19 @@ Do not send the local org token or saved CLI credentials to the box.
 `scripts/verification/source-tree.mjs` uses the same algorithm locally and on
 every box. Run it from the repository root.
 
-1. Read Git index entries with `git ls-files --stage -z`.
-   Fail on any submodule entry with mode `160000`.
-2. List paths with `git ls-files -z --cached --others --exclude-standard`.
-   Keep repository-relative path bytes. Remove duplicate paths.
-   Sort paths by unsigned byte order, not locale order.
-3. Inspect each path without following symbolic links.
-   Skip paths that do not exist. Other read errors fail the command.
-   Reject directories and other unsupported file types.
-   Name the repository-relative path in that error. Tell the caller to ignore
-   or remove a nested repository or worktree. Ignore `.claude/worktrees/` in
-   the repository's `.gitignore`. Other non-ignored nested repositories still
-   fail the fingerprint; do not silently omit them.
+1. Read index entries with `git ls-files --stage -z`. Reject mode `160000`.
+2. Take index path bytes from those entries. Read untracked path bytes with
+   `git ls-files -z --others --exclude-standard`. Dedupe and sort by unsigned
+   byte order. Preserve repository-relative bytes.
+3. Cache leading-component checks per directory. Skip a path if a leading
+   component is a symbolic link or is not a directory. Then use `lstat`.
+   Skip `ENOENT` and `ENOTDIR` for either listing. Other read errors fail.
+   Reject any directory with a `.git` file or directory. Skip other index
+   directories; their files come from untracked or later index paths.
+   Reject untracked directories and other unsupported types. Name the relative
+   path and tell the caller to ignore or remove a nested repository or worktree.
+   Ignore `.claude/worktrees/` in `.gitignore`; other non-ignored nested
+   repositories still fail. Never silently omit them.
 4. For a regular file, read its working-tree bytes. Use mode `100755` if any
    executable permission bit is set. Otherwise use `100644`.
    For a symbolic link, use mode `120000`. Hash its link-target bytes.
@@ -231,16 +231,16 @@ blacksmith testbox download --id <box-id> .context/verification-reports/remote/<
 Run the existing aggregate after box cleanup:
 
 ```bash
-node scripts/verification/aggregate.mjs --reports .context/verification-reports/remote/<run> --commit <local-head> --runtimes node-22.14.0
+node scripts/verification/aggregate.mjs --reports .context/verification-reports/remote/<run> --commit <base> --runtimes node-22.14.0
 ```
 
 The [existing evidence rules](./ci-verification.md#inventory-and-report-evidence)
 still apply. Keep the report schema unchanged. The aggregate must accept
 exactly nine reports for the expected commit and runtime profile.
 It must prove complete shard coverage and the browser/hydration partition.
-The box `HEAD` must equal local `HEAD`, so the commit checks stay valid.
-The fingerprint covers uncommitted source changes without changing report
-identity. The final local fingerprint check rejects changes made during the run.
+The box `HEAD` and reports name the base; the
+[identity contract](./remote-verification-base.md#identity-output-and-file) records
+checkout `HEAD`. Fingerprints cover source changes and reject edits during the run.
 
 ## Related Docs
 

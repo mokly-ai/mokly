@@ -17,21 +17,8 @@ fn git_and_script_contracts_use_the_exact_arguments_and_runtime_profile() {
             .each_call(matching!(_))
             .answers(&|_, request| {
                 let output = if request.program == "git" {
-                    if request.args == ["rev-parse", "HEAD"] {
-                        "b".repeat(40)
-                    } else {
-                        assert_eq!(
-                            request.args,
-                            [
-                                "for-each-ref",
-                                "--contains",
-                                "HEAD",
-                                "--format=%(refname)",
-                                "refs/remotes/origin/"
-                            ]
-                        );
-                        "refs/remotes/origin/main\n".into()
-                    }
+                    assert_eq!(request.args, ["rev-parse", "HEAD"]);
+                    "b".repeat(40)
                 } else if request.args[0] == "scripts/verification/source-tree.mjs" {
                     format!("sha256:{}\n", "a".repeat(64))
                 } else {
@@ -60,10 +47,9 @@ fn git_and_script_contracts_use_the_exact_arguments_and_runtime_profile() {
         process,
         workspace: PathBuf::from("/workspace"),
     };
-    assert_eq!(scripts.head().unwrap(), "b".repeat(40));
-    assert!(scripts.published().unwrap());
+    assert_eq!(scripts.head().unwrap().as_str(), "b".repeat(40));
     assert_eq!(
-        scripts.read().unwrap(),
+        scripts.read(&PathBuf::from("/workspace")).unwrap(),
         format!("sha256:{}", "a".repeat(64))
     );
     scripts
@@ -88,7 +74,7 @@ fn failed_script_streams_follow_the_warning_line() {
             workspace: PathBuf::from("/workspace"),
         };
         let error = if fingerprint {
-            scripts.read().unwrap_err()
+            scripts.read(&PathBuf::from("/workspace")).unwrap_err()
         } else {
             scripts
                 .validate(&PathBuf::from("/reports"), &"b".repeat(40))
@@ -109,6 +95,7 @@ fn failed_script_streams_follow_the_warning_line() {
                 environment: unused.clone(),
                 programs: unused.clone(),
                 clock: unused.clone(),
+                snapshot: Arc::new(Unimock::new(())),
                 git: unused.clone(),
                 blacksmith: unused.clone(),
                 github: unused.clone(),

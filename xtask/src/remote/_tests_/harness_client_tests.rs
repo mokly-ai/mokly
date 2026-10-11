@@ -78,8 +78,14 @@ pub(super) fn client(
             ))
         }));
     let run = BlacksmithRunMock
-        .each_call(matching!(_, _, _))
-        .answers_arc(Arc::new(move |_, id, command, log| {
+        .each_call(matching!(_, _, _, _))
+        .answers_arc(Arc::new(move |_, cwd, id, command, log| {
+            assert_eq!(
+                cwd,
+                std::path::Path::new(
+                    "/workspace/.context/verification-snapshots/20261006T120000Z-42"
+                )
+            );
             if log.is_none() {
                 probes.fetch_add(1, Ordering::SeqCst);
                 run_events.lock().unwrap().push(format!("probe:{id}"));
