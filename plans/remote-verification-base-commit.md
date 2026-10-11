@@ -454,7 +454,7 @@ Evidence: `.context/remote-verification-base-commit/finding1.md`.
   - Finding 5 (Low): default status rewrites raw index bytes with `core.untrackedCache=true` or `feature.manyFiles=true`; `commit.gpgsign=true` also fails (finding 3). Recommend A: add `--untracked-files=all` to the snapshot capture status call.
   - Finding 7 (Low): `isolated_environment` can pass when the child filter matches no test. Recommend A: require `running 1 test` in child output.
 
-## Milestone 6: Box index staging and test isolation (review findings 2, 3, 5 and 7)
+## Milestone 6: Box index staging and test isolation (review findings 2, 3, 5 and 7) — completed
 
 The box index records the synced tree before suites run. Fixture Git commands
 use isolated config. Snapshot and re-exec regressions retain their assertions.
@@ -504,7 +504,7 @@ Evidence: `.context/remote-verification-base-commit/milestone6.md`.
 - [x] Record final delivery status and completed TODOs after the gate. Require
       no owned box, snapshot or extra worktree and unchanged checkout config.
       Run the Markdown checks. Commit with Conventional Commits and push.
-- [ ] After the push, a reviewer uses
+- [x] After the push, a reviewer uses
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and reports the
       findings. Keep the review read-only. The implementer then applies the
