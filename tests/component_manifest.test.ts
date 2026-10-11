@@ -162,7 +162,7 @@ test("manifest v10 rejects broken identities, ownership references and props bef
         }),
     ],
     [
-      "unknown style owner",
+      "removed styles field",
       (_v, screen) =>
         Object.assign(screen.componentViews[0]!, {
           styles: [
@@ -193,7 +193,11 @@ test("manifest v10 rejects broken identities, ownership references and props bef
         entry.kind === "component" && "variantOf" in entry,
     )!;
     edit(value, screen, component, variant);
-    assert.throws(() => parseManifest(value), Error, name);
+    assert.throws(
+      () => parseManifest(value),
+      name === "removed styles field" ? /\.styles: unknown field/ : Error,
+      name,
+    );
   }
 });
 

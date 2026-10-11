@@ -42,26 +42,28 @@ test("component style ownership rebases through the generated notice while prese
   const mobileView = viewRoute(screen.path, "mobile", "light");
   const html = textOutput(result.outputs, mobileView)!;
   assert.equal(
-    html.slice(
-      (
-        view as typeof view & {
-          styles: readonly { startOffset: number; endOffset: number }[];
-        }
-      ).styles[0]!.startOffset,
-      (
-        view as typeof view & {
-          styles: readonly { startOffset: number; endOffset: number }[];
-        }
-      ).styles[0]!.endOffset,
-    ),
+    /<style>([^<]*)<\/style>/u.exec(html)?.[1],
     ".action{border-radius:12px}",
+  );
+  assert.equal("styles" in view, false);
+  assert.equal(
+    result.diagnostics.filter(
+      (warning) =>
+        warning.code === "ignored-renderer-styles" &&
+        warning.route === mobileView,
+    ).length,
+    1,
   );
   assert.deepEqual(view.resources, []);
   await writeCompilation(result, config);
   checkCompilation(await compileCatalogue(config), config);
+  await fs.writeFile(path.join(fixture.mockupsDir, "owner.svg"), "<svg/>");
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
-    renderer.replace('componentIds: ["action"]', 'componentIds: ["unknown"]'),
+    renderer.replace(
+      'path: "action.css", componentIds: ["action"]',
+      'path: "owner.svg", componentIds: ["unknown"]',
+    ),
   );
   await assert.rejects(compileCatalogue(config), /owners must render/);
   assert.equal(

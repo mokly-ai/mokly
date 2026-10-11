@@ -10,10 +10,8 @@ import {
   type TimingEvent,
 } from "../dist/diagnostics/timings.js";
 
-import {
-  assertFastPathEquivalent,
-  compilationFiles,
-} from "./helpers/component_fast_path.js";
+import { compilationFiles } from "./helpers/component_fast_path.js";
+import { assertStrictFastPathEquivalent } from "./helpers/component_fast_path_strict.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import {
@@ -122,7 +120,7 @@ test("excluded evidence is omitted for a derived byte-only material change", asy
     scopedRenderer("<style>.unused{color:blue}</style>"),
   );
   const after = await compileCatalogue(config);
-  const result = await assertFastPathEquivalent({
+  const result = await assertStrictFastPathEquivalent({
     before: before.manifest,
     after: after.manifest,
     beforeFiles: compilationFiles(before, { "image.svg": "before-image" }),

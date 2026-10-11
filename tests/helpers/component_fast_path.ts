@@ -51,20 +51,21 @@ export function classifyFixtureWithSources(fixture: FastPathFixture) {
 
 export async function assertFastPathEquivalent(
   fixture: FastPathFixture,
+  observeFastPath?: (counts: TimingEvent["counts"]) => void,
 ): Promise<ReviewResultV7> {
-  return comparisonModes(fixture, true);
+  return comparisonModes(fixture, observeFastPath);
 }
 
 /** Compare enabled and forced-complete modes without claiming a view settled early. */
 export async function assertComparisonModesEquivalent(
   fixture: FastPathFixture,
 ): Promise<ReviewResultV7> {
-  return comparisonModes(fixture, false);
+  return comparisonModes(fixture);
 }
 
 async function comparisonModes(
   fixture: FastPathFixture,
-  requireFastPath: boolean,
+  observeFastPath?: (counts: TimingEvent["counts"]) => void,
 ): Promise<ReviewResultV7> {
   const input = {
     before: fixture.before,
@@ -94,8 +95,7 @@ async function comparisonModes(
     (event) =>
       event.stage === "review.compare-screens" && event.event === "counts",
   )?.counts;
-  if (requireFastPath)
-    assert.ok(Number(counts?.fastPath) > 0, "fast path settled no views");
+  observeFastPath?.(counts);
   assert.deepEqual(fast, complete);
   return fast;
 }

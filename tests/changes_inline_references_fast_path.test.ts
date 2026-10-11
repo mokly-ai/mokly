@@ -16,10 +16,10 @@ import { generatedViews } from "../packages/viewer/dist/components/views.js";
 import { assertComparisonPaths } from "./helpers/component_comparison_paths.js";
 import {
   assertComparisonModesEquivalent,
-  assertFastPathEquivalent,
   compilationFiles,
   memoryReader,
 } from "./helpers/component_fast_path.js";
+import { assertStrictFastPathEquivalent } from "./helpers/component_fast_path_strict.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import {
   inlineComponentSource,
@@ -77,7 +77,7 @@ for (const mode of ["committed", "derived"] as const)
         config: fixture.config,
       };
       await assertComparisonPaths(input, "fast");
-      const result = await assertFastPathEquivalent(input);
+      const result = await assertStrictFastPathEquivalent(input);
       assert.deepEqual(result.changes, []);
     });
 

@@ -115,16 +115,7 @@ test("projected discovery applies root-specific ownership before reading", async
       id === "pane" ? "pane" : undefined,
     );
     const imageReads = reads.filter((route) => route.endsWith("image.svg"));
-    if (id === "home") assert.deepEqual(imageReads, []);
-    else {
-      assert.ok(imageReads.length > 0);
-      assert.ok(
-        comparison.reasons.some(
-          (reason) =>
-            reason.kind === "dependency" &&
-            reason.path === "mockups/components/image.svg",
-        ),
-      );
-    }
+    assert.deepEqual(imageReads, []);
+    assert.deepEqual(comparison.reasons, []);
   }
 });

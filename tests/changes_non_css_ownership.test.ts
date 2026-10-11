@@ -10,10 +10,8 @@ import { computeCatalogueChanges } from "../dist/server/changed.js";
 
 import { changedFixture } from "./helpers/changed_fixture.js";
 import { committedReviewRepository } from "./helpers/committed_repository.js";
-import {
-  assertFastPathEquivalent,
-  compilationFiles,
-} from "./helpers/component_fast_path.js";
+import { compilationFiles } from "./helpers/component_fast_path.js";
+import { assertStrictFastPathEquivalent } from "./helpers/component_fast_path_strict.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 
@@ -86,7 +84,7 @@ test("derived non-CSS actual-invocation bytes become owner material", async (t) 
   );
   const config = await loadConfig(fixture.root);
   const compilation = await compileCatalogue(config);
-  const result = await assertFastPathEquivalent({
+  const result = await assertStrictFastPathEquivalent({
     before: compilation.manifest,
     after: compilation.manifest,
     beforeFiles: compilationFiles(compilation, {

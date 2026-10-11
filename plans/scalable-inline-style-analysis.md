@@ -1,6 +1,6 @@
 # Scalable Inline Style Analysis
 
-Status: Active. Milestone 15 is in progress; the plan closes when PR #158 merges. Main test changes wait for the user's approval. Review findings stay recorded for the user's decision. Performance acceptance is deferred to a later plan.
+Status: Active. Milestone 15 is in progress; the plan closes when PR #158 merges. Review findings stay recorded for the user's decision. Performance acceptance is deferred to a later plan.
 
 Make inferred inline style ownership work, and work fast, on a full-size React
 Native Web catalogue. Mokly must stop retaining memory it does not need, bound
@@ -2149,6 +2149,12 @@ User request (2026-10-09): merge `origin/main` (#179), resolve conflicts, commit
 
 Evidence: `.context/scalable-inline-style-analysis/m15-merge/`.
 
+User decision (2026-10-11): fix the main tests as recommended. AP1–AP5 and AP9 are approved as listed in `main-test-approvals.md`; AP6 uses option B; AP7 is resolved by main #191; AP8 is done.
+
+Supervisor decision (2026-10-11): fix the M15 replay integration by comparing an ordered projection of `sources.cssProof.records` for each result reason with an analysis. Preserve every other field and assertion. Prove equal, different and missing records before changing the probe. Production code, runner flags, concurrency and exclusions stay unchanged; any pin change requires exact attribution and a separate commit.
+
+Supervisor decision (2026-10-11): find and fix the nine remaining replay divergences with failing tests first. Audit every classification entry and the original-page range contract. Fix production only for a proven production defect; otherwise replay the production proof lifecycle and reader capabilities. Keep runner flags, concurrency, exclusions and assertions; any pin change needs full attribution and a separate commit.
+
 Supervisor decisions under the user's merge request: D1 C keeps string results
 and `{ html; resources? }`, warns once for returned `styles`, and ignores that
 field. D3 A keeps CSS resource checking, warnings and closure seeds; this closes
@@ -2212,7 +2218,25 @@ Supervisor decision (2026-10-10), after the user questioned compatibility code: 
 - [x] Discovered: apply AP8's approved cleanup, preserve test expectations,
       and verify the repository suite and targeted tests. Evidence remains in
       `.context/scalable-inline-style-analysis/m15-merge/ap8/`.
-- [ ] After approval, apply only approved test changes, run the complete
+- [x] Apply AP1–AP6 exactly as approved, retain AP9, and verify the affected
+      cases.
+- [x] Discovered: resolve the replay's comparison of private per-run
+      `CssAttribution.records` WeakMaps after the user's decision. Pins and
+      exclusions stay unchanged. Evidence:
+      `.context/scalable-inline-style-analysis/m15-merge/approvals/replay-blocker.md`.
+      Projection evidence: `.context/scalable-inline-style-analysis/m15-merge/replay-fix/`.
+- [x] Discovered: resolve the replay's remaining frozen CSS-proof errors and
+      design-library source-range differences after the supervisor decision.
+      Keep pins, exclusions and every comparison unchanged. Evidence:
+      `.context/scalable-inline-style-analysis/m15-merge/replay-fix/remaining-blockers.md`.
+      Class A uses a fresh replay analysis; Class B freezes all proof records
+      in deterministic order without changing original-page coordinates.
+      Evidence: `.context/scalable-inline-style-analysis/m15-merge/replay-divergences/`.
+- [x] Discovered: account for all replay-pin changes from the accepted #179
+      corpus and example tree, then update only the three counts in a separate
+      commit. Exclusions stay unchanged. Evidence:
+      `.context/scalable-inline-style-analysis/m15-merge/replay-divergences/pin-attribution.md`.
+- [x] After approval, apply only approved test changes, run the complete
       pinned-Chromium gate and the four real-server smoke tests, and record
       unrelated flaky tests under the review rule.
 - [ ] Record every merge and test decision in the PR justifications, audit
@@ -2225,6 +2249,7 @@ Supervisor decision (2026-10-10), after the user questioned compatibility code: 
       re-review once, and record every open finding. Keep this TODO unticked
       until the review, its fix round, the re-review and all open findings are
       recorded here. The supervisor runs the review.
+      Unrelated flaky test: `tests/browser/viewer_inspection_ownership.spec.ts`, "postMessage obsolete highlight success preserves frame replacement pick"; CI reported "page.evaluate: Execution context was destroyed, most likely because of a navigation." at `:78:22`; the same job passed on rerun (job `114435652866`); suspected source: navigation racing `page.evaluate` after `page.goto` and `startInspection`.
 
 ## Milestone 16: Inline Style Evidence Mockup
 
