@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-Git-state checks, static-delivery parsing and export refusals are implemented.
-Frame-identity changes remain an approved target in
+Git-state checks, static-delivery parsing, export refusals and frame identity
+are implemented under
 [Generated Output Review Fixes](../../plans/generated-output-review-fixes.md).
 Format gates detect unsupported data; they do not convert it.
 
@@ -102,7 +102,7 @@ existing typed error code. Test that every refusal preserves all files.
 
 ## Delivered Frame Identity
 
-Status: Approved target.
+Status: Implemented.
 
 One browser-safe helper compares an assigned URL with a delivered same-origin
 document URL. It requires exact origin and query, decodes each URL path once,
@@ -118,6 +118,9 @@ inspection, geometry and highlighting. No later exact-string check may reject
 the supported extensionless form. Keep weak document provenance, generation
 ownership and the exclusion of an untrusted starting document. The shared
 current-frame path decoder likewise decodes once before route validation.
+Mount validation gives the decoded pathname to a route validator that does not
+decode again. Later inspection retains the complete assigned URL, including its
+query, instead of reconstructing identity from a pathname alone.
 
 The cross-origin adapter can validate the assigned route, origins, nonce and
 authenticated message source. It cannot read a cross-origin frame's final path

@@ -5,7 +5,7 @@ Status: Active. This plan owns the remaining review fixes from
 in [PR #156](https://github.com/mokly-ai/mokly/pull/156) on 2026-10-07. Milestones
 2–6 retain the former Milestones 24–28. Findings 17, 52 and 67–86 and the known
 status notes remain pending decisions, outside milestone scope. Milestones 1–3 are
-complete; Milestones 4–6 await their separate instructions.
+complete; Milestone 4 is in progress. Milestones 5–6 await their separate instructions.
 
 ## Summary
 
@@ -357,7 +357,15 @@ no public dependency or shared-path reason.
 
 Tags: ui
 
-Implements 10 B and 25 B in the viewer. No backend work.
+Implements 10 B and 25 B in the viewer. No backend work or visible design change.
+
+Test-first evidence: `.context/generated-output-review-fixes/m4-test-first.md`.
+
+Implementation evidence: `.context/generated-output-review-fixes/m4-implementation.md`.
+
+Smoke evidence: `.context/generated-output-review-fixes/m4-smoke.md`.
+
+Gate evidence: `.context/generated-output-review-fixes/m4-gate.md`.
 
 - [ ] Extend the existing `client/same_origin_identity.ts` delivered-resource
       helper and use it for `same_origin_load.ts`, `same_origin_access.ts`,

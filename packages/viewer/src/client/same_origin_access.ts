@@ -1,4 +1,23 @@
+import {
+  currentDocumentPath,
+  VIEWER_DIRECTORY,
+} from "../catalogue/delivery_paths.js";
+
 import { sameFrameResource } from "./same_origin_identity.js";
+
+/** Preserve the complete assigned URL when present; route-only callers have no query. */
+export function localResourceUrl(
+  frame: HTMLIFrameElement,
+  path: string | URL,
+): URL {
+  if (typeof path !== "string") return path;
+  return new URL(
+    path.startsWith(`/${VIEWER_DIRECTORY}/components/renders/`)
+      ? path
+      : `/${currentDocumentPath(path)}`,
+    frame.ownerDocument.baseURI,
+  );
+}
 
 /** Private local transport. Cross-origin mounts never enter this module. */
 export interface LocalFrameAccess {

@@ -1,5 +1,7 @@
 /** Authentication and identity transfer for immediate same-origin documents. */
 
+import { decodedDeliveryPath } from "../catalogue/delivery_paths.js";
+
 const authenticatedDocument: unique symbol = Symbol("authenticated-document");
 const authenticatedDocuments = new WeakSet<Document>();
 const mountedResources = new WeakMap<HTMLIFrameElement, string>();
@@ -79,15 +81,22 @@ function transferAuthenticatedDocument(
 
 /** Compare a loaded document URL with the assigned resource, excluding its hash. */
 export function sameFrameResource(documentUrl: string, expected: URL): boolean {
-  const actual = new URL(documentUrl);
-  return (
-    actual.origin === expected.origin &&
-    !actual.username &&
-    !actual.password &&
-    normalizedHtmlPath(actual.pathname) ===
-      normalizedHtmlPath(expected.pathname) &&
-    actual.search === expected.search
-  );
+  try {
+    const actual = new URL(documentUrl);
+    const actualPath = decodedDeliveryPath(actual.pathname);
+    const expectedPath = decodedDeliveryPath(expected.pathname);
+    return (
+      actual.origin === expected.origin &&
+      !actual.username &&
+      !actual.password &&
+      actualPath !== undefined &&
+      expectedPath !== undefined &&
+      normalizedHtmlPath(actualPath) === normalizedHtmlPath(expectedPath) &&
+      actual.search === expected.search
+    );
+  } catch {
+    return false;
+  }
 }
 
 /** Check whether the frame's assigned `src` still names the expected resource. */

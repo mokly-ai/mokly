@@ -59,8 +59,12 @@ mask, labels, selection and observer lifecycle.
 `same_origin_identity.ts` is the single document-authentication boundary for
 same-origin mounts. Its shared pathname normalization accepts a page’s
 `index.html` and its directory with or without a trailing slash; viewport
-files also accept the host’s extensionless form. Origins and queries still
-match exactly. It records authenticated `Document` objects without
+files also accept the host's extensionless form. Origins and queries still
+match exactly. `decodedDeliveryPath` decodes each URL path once; mount validation
+passes that result to `decodedCurrentDocumentRoute` without decoding it again.
+Readiness and geometry use the same URL comparison as mount authentication.
+The highlight owner retains the complete assigned URL, including its query,
+for normal frames and private previews. It records authenticated `Document` objects without
 retaining them, transfers mount-time navigation ownership only when the exact
 current object was previously authenticated for that frame, and separately
 checks every watcher or `load` candidate against the assigned resource through

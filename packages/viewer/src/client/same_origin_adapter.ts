@@ -1,8 +1,4 @@
-import {
-  VIEWER_DIRECTORY,
-  currentDocumentPath,
-  currentDocumentRoute,
-} from "../catalogue/delivery_paths.js";
+import { VIEWER_DIRECTORY } from "../catalogue/delivery_paths.js";
 import type { CatalogueUsage } from "../catalogue/types.js";
 import type { ComponentViewRecord } from "../components/manifest_types.js";
 import { inspection } from "../inspector/inspection.js";
@@ -12,18 +8,18 @@ import type { FrameAdapter } from "./frame_adapter.js";
 import { FrameError } from "./frame_error.js";
 import { frameUrl, temporaryFrameUrl } from "./frame_mount.js";
 import { frameEvents, frameUsage } from "./frame_usage.js";
-import { localFrameAccess } from "./same_origin_access.js";
+import { localFrameAccess, localResourceUrl } from "./same_origin_access.js";
 import {
   installLocalHighlight,
   type HighlightFrame,
 } from "./same_origin_highlight.js";
-import { normalizedHtmlPath } from "./same_origin_identity.js";
+import { sameFrameResource } from "./same_origin_identity.js";
 import { mountLocalDocument } from "./same_origin_mount.js";
 
 /** Current-document capability used by the synchronous, SSR-enhanced local shell. */
 export function localInspection(
   frame: HTMLIFrameElement,
-  path: string,
+  path: string | URL,
   usage: ComponentViewRecord,
 ) {
   const authenticated = authenticateRanges(frame, path, usage);
@@ -58,15 +54,17 @@ export function localFramePath(frame: HTMLIFrameElement): string | undefined {
 }
 export function localFrameReady(
   frame: HTMLIFrameElement,
-  path: string,
+  path: string | URL,
 ): boolean {
-  const pathname = localFramePath(frame);
-  return (
-    localFrameAccess(frame).document()?.readyState === "complete" &&
-    pathname !== undefined &&
-    normalizedHtmlPath(decodeURIComponent(pathname)) ===
-      normalizedHtmlPath(`/${currentDocumentPath(path)}`)
-  );
+  try {
+    const doc = localFrameAccess(frame).document();
+    return (
+      doc?.readyState === "complete" &&
+      sameFrameResource(doc.URL, localResourceUrl(frame, path))
+    );
+  } catch {
+    return false;
+  }
 }
 
 /** Script-disabled local mounts retain the parent-owned highlight presentation. */
@@ -85,8 +83,6 @@ function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
       const win = frame.ownerDocument.defaultView;
       if (!win) throw new FrameError("unavailable");
       const url = resolveUrl(frame, view, win.location.origin);
-      const pathname = decodeURIComponent(url.pathname);
-      const inspectionPath = currentDocumentRoute(pathname) ?? pathname;
       let usage = frameUsage(view.usage);
       view.signal?.throwIfAborted();
       const mounting = mountLocalDocument(
@@ -123,7 +119,7 @@ function localAdapter(resolveUrl: typeof frameUrl): FrameAdapter {
                 [
                   {
                     frame,
-                    path: inspectionPath,
+                    path: url,
                     usage: record,
                   },
                 ],

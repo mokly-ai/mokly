@@ -1,6 +1,7 @@
 import {
   VIEWER_DIRECTORY,
-  currentDocumentRoute,
+  decodedCurrentDocumentRoute,
+  decodedDeliveryPath,
 } from "../catalogue/delivery_paths.js";
 import { origin } from "../inspector/values.js";
 
@@ -27,7 +28,7 @@ export function frameUrl(
   expectedOrigin: string,
 ): URL {
   return validatedFrameUrl(frame, view, expectedOrigin, (pathname) => {
-    const route = currentDocumentRoute(pathname);
+    const route = decodedCurrentDocumentRoute(pathname);
     return route !== undefined;
   });
 }
@@ -60,9 +61,10 @@ function validatedFrameUrl(
     frame.hasAttribute("srcdoc")
   )
     throw new FrameError("origin");
-  let pathname: string, fragment: string;
+  const pathname = decodedDeliveryPath(url.pathname);
+  if (pathname === undefined) throw new FrameError("origin");
+  let fragment: string;
   try {
-    pathname = decodeURIComponent(url.pathname);
     fragment = decodeURIComponent(url.hash.slice(1));
   } catch {
     throw new FrameError("origin");

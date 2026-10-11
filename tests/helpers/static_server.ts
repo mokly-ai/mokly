@@ -2,10 +2,14 @@ import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
 
-/** Exact files plus directory indexes: no extension guessing or provider rules. */
+/** Exact files and indexes, with opt-in HTML redirects for static-provider tests. */
 export async function serveStaticFiles(
   root: string,
-  options: { allowedOrigin?: string; csp?: string } = {},
+  options: {
+    allowedOrigin?: string;
+    csp?: string;
+    redirectHtml?: boolean;
+  } = {},
 ) {
   const allowedOrigins = new Set<string>();
   if (options.allowedOrigin)
@@ -13,7 +17,8 @@ export async function serveStaticFiles(
   const requests: string[] = [];
   const requestHeaders: http.IncomingHttpHeaders[] = [];
   const server = http.createServer((request, response) => {
-    const pathname = new URL(request.url ?? "/", "http://localhost").pathname;
+    const url = new URL(request.url ?? "/", "http://localhost");
+    const pathname = url.pathname;
     requests.push(pathname);
     requestHeaders.push(request.headers);
     response.setHeader("X-Content-Type-Options", "nosniff");
@@ -35,6 +40,26 @@ export async function serveStaticFiles(
       let filename = path.resolve(root, relative);
       if (filename !== root && !filename.startsWith(`${root}${path.sep}`))
         throw new Error("outside root");
+      if (options.redirectHtml && filename.endsWith(".html")) {
+        if (!(await fs.promises.stat(filename)).isFile())
+          throw new Error("not a file");
+        const target =
+          path.posix.basename(relative) === "index.html"
+            ? relative.slice(0, -"index.html".length)
+            : relative.slice(0, -".html".length);
+        response.writeHead(308, {
+          Location: `/${target.split("/").map(encodeURIComponent).join("/")}${url.search}`,
+        });
+        response.end();
+        return;
+      }
+      if (options.redirectHtml) {
+        try {
+          await fs.promises.stat(filename);
+        } catch {
+          filename += ".html";
+        }
+      }
       if ((await fs.promises.stat(filename)).isDirectory())
         filename = path.join(filename, "index.html");
       const types: Record<string, string> = {

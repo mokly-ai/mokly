@@ -13,7 +13,7 @@ import { createOverlay } from "./component_overlay.js";
 
 export interface HighlightFrame {
   frame: HTMLIFrameElement;
-  path: string;
+  path: string | URL;
   usage: ComponentViewRecord;
 }
 export function installLocalHighlight(

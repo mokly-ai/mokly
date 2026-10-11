@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import type * as LocalAdapter from "../../packages/viewer/dist/client/same_origin_adapter.js";
 import type { ComponentViewRecord } from "../../packages/viewer/dist/components/manifest_types.js";
+import { serveStaticFiles } from "../helpers/static_server.js";
 
 import {
   crossOriginFixture,
@@ -10,16 +11,25 @@ import {
 } from "./frame_adapter_fixture.js";
 
 let fixture: Awaited<ReturnType<typeof crossOriginFixture>>;
+let redirected: Awaited<ReturnType<typeof serveStaticFiles>>;
 test.beforeAll(async () => {
   fixture = await crossOriginFixture({
     body: '<div id="outer" style={{width:80,height:40,overflow:"hidden"}}><div id="inner" style={{width:60,height:30,overflow:"auto"}}><action.Component label="" /></div></div>',
     actionRender:
       '() => <button id="target" style={{position:"fixed",left:200,top:150,width:160,height:40}} />',
   });
+  redirected = await serveStaticFiles(fixture.root, { redirectHtml: true });
 });
-test.afterAll(async () => fixture?.close());
+test.afterAll(async () => {
+  await redirected?.close();
+  await fixture?.close();
+});
 
-for (const transport of ["same-origin", "postMessage"] as const) {
+for (const transport of [
+  "same-origin",
+  "postMessage",
+  "same-origin redirect",
+] as const) {
   for (const layout of [
     "viewport-fixed",
     "fixed-text",
@@ -31,7 +41,11 @@ for (const transport of ["same-origin", "postMessage"] as const) {
     }) => {
       if (transport === "postMessage") await mountCrossFrame(page, fixture);
       else {
-        await page.goto(fixture.host.url);
+        await page.goto(
+          transport === "same-origin redirect"
+            ? redirected.url
+            : fixture.host.url,
+        );
         await page.evaluate(async (json) => {
           const usage = JSON.parse(json) as ComponentViewRecord;
           const { sameOriginAdapter } = (await import(
@@ -55,9 +69,7 @@ for (const transport of ["same-origin", "postMessage"] as const) {
       const child = page
         .frames()
         .find((frame) =>
-          frame
-            .url()
-            .includes("/static/mokly-generated/home/index.mobile.html"),
+          frame.url().includes("/static/mokly-generated/home/index.mobile"),
         )!;
       const expected = await child.evaluate((layout) => {
         const outer = document.querySelector<HTMLElement>("#outer")!;
@@ -103,7 +115,7 @@ for (const transport of ["same-origin", "postMessage"] as const) {
           .ranges.flatMap((range) => range.boxes);
       }, key);
       expect(boxes).toEqual([expected]);
-      if (transport === "same-origin") {
+      if (transport !== "postMessage") {
         const local = await page.evaluate(
           async ({ usageJson, key }) => {
             const { localInspection } = (await import(

@@ -57,7 +57,10 @@ for (const suffix of ["/index.html", "/", ""]) {
     fixture.attributes.set("src", pathname);
     Object.assign(fixture.frame, {
       dataset: { fragmentLight: expected.href },
-      contentDocument: { readyState: "complete" },
+      contentDocument: {
+        readyState: "complete",
+        URL: `https://app.test${pathname}`,
+      },
       contentWindow: { location: { pathname } },
     });
     assert.equal(

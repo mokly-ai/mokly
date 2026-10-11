@@ -181,10 +181,10 @@ diagnostics are not extracted from consumer text.
 `sameOriginAdapter` confines `contentDocument` access to
 [`same_origin_access.ts`](../../packages/viewer/src/client/same_origin_access.ts)
 and the adapter-owned mount. Geometry, pointer inspection and presentation stay
-in their dedicated local modules. A loaded document must retain the exact
-origin, query and decoded resource path. A provider may canonicalize a final
-`.html` suffix to the otherwise identical extensionless path; no other path
-redirect is accepted. The URL fragment is client-only positioning rather than
+in their dedicated local modules. Mount, readiness and inspection share the
+[delivered identity rule](./mokly-boundary-results.md#delivered-frame-identity):
+exact origin and query, one path decode, literal remaining percent text, and only
+the supported extensionless and index-directory forms. The fragment is positioning rather than
 resource identity, so the adapter authenticates the document first and then
 applies a missing or changed validated fragment. An authenticated document
 reload renews every document-scoped listener and observer without replacing the

@@ -1,9 +1,5 @@
 /** Read-only DOM range authentication and clipped geometry in immediate frames. */
 
-import {
-  VIEWER_DIRECTORY,
-  currentDocumentPath,
-} from "../catalogue/delivery_paths.js";
 import type { ComponentViewRecord } from "../components/manifest_types.js";
 import { clipNode } from "../inspector/clipping.js";
 
@@ -13,8 +9,8 @@ import {
   authenticateDocumentRanges,
   type AuthenticatedRanges,
 } from "./document_ranges.js";
-import { localFrameAccess } from "./same_origin_access.js";
-import { normalizedHtmlPath } from "./same_origin_identity.js";
+import { localFrameAccess, localResourceUrl } from "./same_origin_access.js";
+import { sameFrameResource } from "./same_origin_identity.js";
 
 export interface ComponentBounds {
   key: string;
@@ -25,7 +21,7 @@ export interface ComponentBounds {
 }
 export function authenticateRanges(
   frame: HTMLIFrameElement,
-  path: string,
+  path: string | URL,
   usage: ComponentViewRecord,
 ): AuthenticatedRanges | undefined {
   try {
@@ -40,11 +36,7 @@ export function authenticateRanges(
       location.origin !== parent.defaultView?.location.origin
     )
       return;
-    const actual = normalizedHtmlPath(decodeURIComponent(location.pathname));
-    const expected = path.startsWith(`/${VIEWER_DIRECTORY}/components/renders/`)
-      ? path
-      : `/${currentDocumentPath(path)}`;
-    if (actual !== normalizedHtmlPath(expected)) return;
+    if (!sameFrameResource(doc.URL, localResourceUrl(frame, path))) return;
     return authenticateDocumentRanges(
       doc,
       usage.ranges.map((range) => ({

@@ -11,15 +11,41 @@ export function currentDocumentPath(route: string): string {
   return `static/${GENERATED_DIRECTORY}/${route}`;
 }
 
-/** Reject paths outside current generated documents before handing a route to the shell. */
-export function currentDocumentRoute(pathname: string): string | undefined {
+/** Decode one URL path layer without turning escaped separators into hierarchy. */
+export function decodedDeliveryPath(pathname: string): string | undefined {
   if (/%2f|%5c/i.test(pathname)) return;
-  let decoded: string;
   try {
-    decoded = decodeURIComponent(pathname);
+    const decoded = decodeURIComponent(pathname);
+    if (
+      decoded
+        .split("/")
+        .some(
+          (part) =>
+            part === "." ||
+            part === ".." ||
+            /[\\?#]/.test(part) ||
+            [...part].some((character) => character.charCodeAt(0) < 32),
+        )
+    )
+      return;
+    return decoded;
   } catch {
     return;
   }
+}
+
+/** Reject paths outside current generated documents before handing a route to the shell. */
+export function currentDocumentRoute(pathname: string): string | undefined {
+  const decoded = decodedDeliveryPath(pathname);
+  return decoded === undefined
+    ? undefined
+    : decodedCurrentDocumentRoute(decoded);
+}
+
+/** Validate an already-decoded path without reinterpreting remaining percent text. */
+export function decodedCurrentDocumentRoute(
+  decoded: string,
+): string | undefined {
   const root = `/${currentDocumentPath("")}`;
   if (!decoded.startsWith(root)) return;
   const route = decoded.slice(root.length);
