@@ -22,6 +22,9 @@ SVG and MathML namespace links supply no placement anchor, reused link,
 inserted-link span or resource. HTML content at an integration point, such as
 SVG `foreignObject`, stays active. Decide from each element's parsed namespace,
 not from its ancestors' tag names.
+Component-aware reference collection applies this namespace rule to its shared
+original-page tree without another parse. Move normalization keeps foreign
+link hrefs unchanged and normalizes active HTML link resources.
 
 A stylesheet link has an ASCII-case-insensitive `stylesheet` token in its
 ASCII-whitespace-delimited `rel` value. Other tokens, such as `alternate`, do

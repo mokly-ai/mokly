@@ -2191,7 +2191,7 @@ Supervisor decision (2026-10-10), after the user questioned compatibility code: 
       plan, preserve historical records, and meet the protocol and source caps.
       The unused-module ratchet and D11 wording guard wait for the choices in
       `main-test-approvals.md` under the evidence directory.
-- [ ] Discovered: merge main #191 (`c66daeb5`). Port the HTML-namespace link rule into the one-parse reference and link paths, accept main's removal of the documentation-wording tests (AP7 is no longer needed), keep main's snapshot codec, and restore main's completed #179 plan text. Evidence: `.context/scalable-inline-style-analysis/m15-merge/second/`.
+- [x] Discovered: merge main #191 (`c66daeb5`). Port the HTML-namespace link rule into the one-parse reference and link paths, accept main's removal of the documentation-wording tests (AP7 is no longer needed), keep main's snapshot codec, and restore main's completed #179 plan text. Evidence: `.context/scalable-inline-style-analysis/m15-merge/second/`.
 - [x] Keep main's expected values, finish the other backend work and run the
       affected tests. Record every needed main-test change, including D11, in
       `.context/scalable-inline-style-analysis/m15-merge/main-test-approvals.md`.
