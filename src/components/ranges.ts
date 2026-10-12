@@ -1,7 +1,10 @@
-import { parse, type DefaultTreeAdapterMap } from "parse5";
+import type { DefaultTreeAdapterMap } from "parse5";
 
 import type { ComponentRangeRecord, ComponentRangeTarget } from "@mokly/viewer";
 import { canonicalJson, invalidData } from "@mokly/viewer/data";
+
+import { parseHtml } from "../diagnostics/html_parse.js";
+import { documentWorkSync } from "../diagnostics/timings.js";
 
 type Node = DefaultTreeAdapterMap["node"];
 export interface RenderedRange {
@@ -22,7 +25,7 @@ export function serializeComponentSentinels(
   const stack: { token: string; record: ComponentRangeRecord }[] = [];
   const seen = new Set<string>();
   const ranges: ComponentRangeRecord[] = [];
-  visit(parse(html, { sourceCodeLocationInfo: true }), (node) => {
+  visit(parseHtml("range", html, { sourceCodeLocationInfo: true }), (node) => {
     if (
       node.nodeName === "#comment" &&
       "data" in node &&
@@ -91,6 +94,17 @@ export function serializeComponentSentinels(
 export function validateComponentRanges(
   html: string,
   records: readonly ComponentRangeRecord[],
+  document?: DefaultTreeAdapterMap["document"],
+): RenderedRange[] {
+  return documentWorkSync("rangeMs", () =>
+    validateRanges(html, records, document),
+  );
+}
+
+function validateRanges(
+  html: string,
+  records: readonly ComponentRangeRecord[],
+  document?: DefaultTreeAdapterMap["document"],
 ): RenderedRange[] {
   const expected = new Map(records.map((record) => [record.id, record]));
   const result: RenderedRange[] = [];
@@ -101,51 +115,59 @@ export function validateComponentRanges(
   }[] = [];
   let starts = 0;
   let ignored = false;
-  visit(parse(html, { sourceCodeLocationInfo: true }), (node) => {
-    if (
-      "attrs" in node &&
-      node.attrs.some((attribute) =>
-        attribute.name.startsWith("data-mokly-component-"),
-      )
-    )
-      invalidData("$document", "reserved component attributes remain");
-    if (node.nodeName !== "#comment" || !("data" in node)) return;
-    const data = node.data;
-    if (data.startsWith("mokly-review-ignore:start:")) ignored = true;
-    if (data.startsWith("mokly-review-ignore:end:")) ignored = false;
-    if (!data.startsWith(prefix)) return;
-    const match = /^mokly-component:(start|end):(r-[0-9]+)$/.exec(data);
-    const location = node.sourceCodeLocation;
-    const record = expected.get(match?.[2] ?? "");
-    if (!match || !record || !location)
-      invalidData("$document", "unknown or malformed component boundary");
-    if (ignored && record.target.kind !== "root")
-      invalidData(
-        "$document",
-        "ReviewIgnore cannot enclose component or caller-slot boundaries",
-      );
-    if (match[1] === "start") {
+  visit(
+    document ?? parseHtml("range", html, { sourceCodeLocationInfo: true }),
+    (node) => {
       if (
-        record.id !== `r-${starts++}` ||
-        record.parentId !== stack.at(-1)?.record.id
+        "attrs" in node &&
+        node.attrs.some((attribute) =>
+          attribute.name.startsWith("data-mokly-component-"),
+        )
       )
-        invalidData("$document", "moved or duplicate component boundary");
-      stack.push({
-        record,
-        start: location.startOffset,
-        contentStart: location.endOffset,
-      });
-    } else {
-      const opened = stack.pop();
-      if (!opened || canonicalJson(opened.record) !== canonicalJson(record))
-        invalidData("$document", "overlapping or unmatched component boundary");
-      result.push({
-        ...opened,
-        contentEnd: location.startOffset,
-        end: location.endOffset,
-      });
-    }
-  });
+        invalidData("$document", "reserved component attributes remain");
+      if (node.nodeName !== "#comment" || !("data" in node)) return;
+      const data = node.data;
+      if (!document && data.startsWith("mokly-review-ignore:start:"))
+        ignored = true;
+      if (!document && data.startsWith("mokly-review-ignore:end:"))
+        ignored = false;
+      if (!data.startsWith(prefix)) return;
+      const match = /^mokly-component:(start|end):(r-[0-9]+)$/.exec(data);
+      const location = node.sourceCodeLocation;
+      const record = expected.get(match?.[2] ?? "");
+      if (!match || !record || !location)
+        invalidData("$document", "unknown or malformed component boundary");
+      if (ignored && record.target.kind !== "root")
+        invalidData(
+          "$document",
+          "ReviewIgnore cannot enclose component or caller-slot boundaries",
+        );
+      if (match[1] === "start") {
+        if (
+          record.id !== `r-${starts++}` ||
+          record.parentId !== stack.at(-1)?.record.id
+        )
+          invalidData("$document", "moved or duplicate component boundary");
+        stack.push({
+          record,
+          start: location.startOffset,
+          contentStart: location.endOffset,
+        });
+      } else {
+        const opened = stack.pop();
+        if (!opened || canonicalJson(opened.record) !== canonicalJson(record))
+          invalidData(
+            "$document",
+            "overlapping or unmatched component boundary",
+          );
+        result.push({
+          ...opened,
+          contentEnd: location.startOffset,
+          end: location.endOffset,
+        });
+      }
+    },
+  );
   if (
     stack.length ||
     starts !== records.length ||

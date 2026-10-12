@@ -75,7 +75,7 @@ size and every other path-grammar violation is malformed (400/422).
 
 Require entries for `index.html`, `404.html` and `mokly-upload.json`. Archived
 manifest/review bytes match their entries; review path and base metadata match
-the manifest and [comparison format](./README.md#supported-formats).
+the manifest and [comparison format](./protocol-status.md#supported-formats).
 Current-only uploads contain no comparison files.
 
 Answer `missing` from every verified blob stored for the same project,

@@ -114,9 +114,13 @@ function validateReviewViews(
     const view = reviewObject(
       item,
       ["viewport", "colorScheme", "ignoredIds", "state"],
-      ["material", "reasons", "excludedResources"],
+      ["material", "reasons", "excludedResources", "inlineStyles"],
     );
-    validateResourceEvidence(view, changedPaths);
+    validateResourceEvidence(
+      view,
+      changedPaths,
+      Boolean(sides?.before && sides.after),
+    );
     if (
       !["mobile", "desktop"].includes(String(view.viewport)) ||
       !["light", "dark"].includes(String(view.colorScheme))

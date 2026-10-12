@@ -59,7 +59,6 @@ export interface ComponentViewRecord {
   instances: readonly ComponentInstanceRecord[];
   slots: readonly ComponentSlotRecord[];
   ranges: readonly ComponentRangeRecord[];
-  styles: readonly ComponentStyleOwnership[];
   resources: readonly ComponentResourceOwnership[];
   /** Required in persisted v10 usage; absent from public inspection and unfinished renders. */
   insertedStylesheets?: readonly InsertedComponentStylesheet[];

@@ -96,7 +96,7 @@ navigation filter by counting materially changed comparison screens.
 Comparisons use [review result v7](./mokly-changes-serving.md#comparison-engine) for
 every catalogue. It retains all existing states, rendered-resource evidence,
 ignored regions, both viewports and all effective color schemes; see the
-[supported format matrix](./README.md#supported-formats). Removed screens,
+[supported format matrix](./protocol-status.md#supported-formats). Removed screens,
 pages, documents, components and variants retain their baseline context; current
 and removed records never share a path. Pages and documents have
 no visual comparisons. A path absent from one side follows the added/removed

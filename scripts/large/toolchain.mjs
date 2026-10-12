@@ -1,4 +1,4 @@
-/** Archive the package under test and pin the consumer's own install inputs. */
+/** Archive both workspace packages and pin the consumer's own install inputs. */
 import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -9,22 +9,30 @@ const execute = promisify(execFile);
 export async function prepareDerivedToolchain(repository, root, run = execute) {
   const tooling = path.join(root, "tooling");
   await fs.mkdir(tooling);
-  const packed = await run(
-    "npm",
-    ["pack", "--ignore-scripts", "--json", "--pack-destination", tooling],
-    { cwd: repository, maxBuffer: 8 * 1024 * 1024 },
-  );
-  const [{ filename }] = JSON.parse(packed.stdout);
-  await fs.rename(
-    path.join(tooling, filename),
-    path.join(tooling, "mokly.tgz"),
-  );
+  for (const [cwd, name] of [
+    [repository, "mokly"],
+    [path.join(repository, "packages/viewer"), "viewer"],
+  ]) {
+    const packed = await run(
+      "npm",
+      ["pack", "--ignore-scripts", "--json", "--pack-destination", tooling],
+      { cwd, maxBuffer: 8 * 1024 * 1024 },
+    );
+    const [{ filename }] = JSON.parse(packed.stdout);
+    await fs.rename(
+      path.join(tooling, filename),
+      path.join(tooling, `${name}.tgz`),
+    );
+  }
   const lock = JSON.parse(
     await fs.readFile(path.join(repository, "package-lock.json"), "utf8"),
   );
   const firna = lock.packages["node_modules/@firna/ui"];
   const names = ["@firna/ui", ...Object.keys(firna.peerDependencies)];
-  const dependencies = { "@mokly/mokly": "file:tooling/mokly.tgz" };
+  const dependencies = {
+    "@mokly/mokly": "file:tooling/mokly.tgz",
+    "@mokly/viewer": "file:tooling/viewer.tgz",
+  };
   for (const name of names) {
     const version = lock.packages[`node_modules/${name}`]?.version;
     if (!version)

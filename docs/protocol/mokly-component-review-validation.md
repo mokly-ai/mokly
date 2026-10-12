@@ -42,7 +42,9 @@ Empty entry reasons are valid only for a paired move. Page and document moves
 remain catalogue evidence under the [move contract](./mokly-moves.md#result).
 
 Source validation also receives the implementation-impact set computed from
-the classifier's paired material, unchanged inputs and rendered-resource policy. It
+the classifier's paired material, unchanged inputs and rendered-resource policy,
+including inferred inline-rule owners and owners of derived byte-only non-CSS
+resource changes. It
 requires exact equality with the complete affected-consumer evidence derived
 from that set and both manifests. Neither a subset nor the set of every changed
 component is sufficient: saved-variant/control metadata edits can be direct
@@ -102,6 +104,20 @@ older and unknown versions fail. Shared fixture tests must
 cover valid/invalid schemas, deterministic round trips, current and removed
 variants/consumers, metadata-only changes, zero Changes with affected screens,
 and identical served/published membership. This coverage is required.
+
+## Inline Style Evidence Validation
+
+- `status` is one of `matched`, `unresolved` or `excluded`; `selectors` is
+  present exactly for `matched` and `unresolved`, sorted and duplicate-free,
+  and non-empty for `matched`.
+- A view carrying `inlineStyles` with status `matched` or `unresolved` has
+  state `changed` and `material`; a view carrying status `excluded` has state
+  `unchanged`, no `material` and no reason of its own.
+- The field never appears on one-sided views. Unknown keys and inconsistent
+  shapes fail rather than being dropped.
+- Browse's lightweight classification, complete comparison generation,
+  publishing and the selected live endpoint use one implementation and produce
+  identical membership and evidence.
 
 ## Path Identity
 

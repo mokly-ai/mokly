@@ -1,9 +1,10 @@
-import { parse } from "parse5";
-
 import type { ResourceEvidence } from "@mokly/viewer/data";
 import { isStylesheetPath } from "@mokly/viewer/data";
 
+import { parseHtml } from "../diagnostics/html_parse.js";
+
 import type { ComponentMaterialReader } from "./component_resources.js";
+import type { CssDocument } from "./css/document.js";
 import {
   CssResourceAnalysis,
   type ChangedResource,
@@ -20,6 +21,7 @@ import type { MoveResources } from "./moves/resources.js";
 export interface ResourceDocument {
   path: string;
   html: string;
+  references?: readonly string[];
   insertedStylesheets?: readonly string[];
 }
 
@@ -32,37 +34,41 @@ export class ResourceComparison {
     readonly prefix: string,
     readonly css: CssResourceAnalysis = new CssResourceAnalysis(),
     readonly identities?: MoveResources,
+    readonly componentAware = false,
   ) {
     before.pairWith(after, "before");
     after.pairWith(before, "after");
     after.allowMissingResources(() => true);
+    if (componentAware) {
+      before.useOriginalDocuments();
+      after.useOriginalDocuments();
+    }
   }
 
   async compare(
     before: ResourceDocument | undefined,
     after: ResourceDocument | undefined,
     excluded?: (path: string) => boolean,
-    matching: { before?: string | undefined; after?: string | undefined } = {
+    matching: {
+      before?: string | CssDocument | undefined;
+      after?: string | CssDocument | undefined;
+    } = {
       before: before?.html,
       after: after?.html,
     },
     cssDocuments?: () => readonly ResourceMatchingPair[],
   ): Promise<ResourceEvidence> {
     const bases = before
-      ? await this.before.resources(
-          before.path,
-          before.html,
-          excluded,
-          before.insertedStylesheets,
-        )
+      ? await this.before.resources(before.path, before.html, excluded, {
+          references: before.references,
+          insertedStylesheets: before.insertedStylesheets,
+        })
       : new Set<string>();
     const heads = after
-      ? await this.after.resources(
-          after.path,
-          after.html,
-          excluded,
-          after.insertedStylesheets,
-        )
+      ? await this.after.resources(after.path, after.html, excluded, {
+          references: after.references,
+          insertedStylesheets: after.insertedStylesheets,
+        })
       : new Set<string>();
     const resources: ChangedResource[] = [];
     const equal = this.identities?.equivalent(bases, heads);
@@ -94,16 +100,22 @@ export class ResourceComparison {
               ...(matching.before === undefined
                 ? {}
                 : {
-                    before: parse(matching.before, {
-                      sourceCodeLocationInfo: true,
-                    }),
+                    before:
+                      typeof matching.before === "string"
+                        ? parseHtml("stylesheetMatching", matching.before, {
+                            sourceCodeLocationInfo: true,
+                          })
+                        : matching.before,
                   }),
               ...(matching.after === undefined
                 ? {}
                 : {
-                    after: parse(matching.after, {
-                      sourceCodeLocationInfo: true,
-                    }),
+                    after:
+                      typeof matching.after === "string"
+                        ? parseHtml("stylesheetMatching", matching.after, {
+                            sourceCodeLocationInfo: true,
+                          })
+                        : matching.after,
                   }),
             },
           ]),
@@ -141,8 +153,10 @@ export class ResourceComparison {
         documents.push({
           ...(baseDocument === undefined
             ? {}
-            : { before: parse(baseDocument) }),
-          ...(headDocument === undefined ? {} : { after: parse(headDocument) }),
+            : { before: await this.before.resourceDocument(route) }),
+          ...(headDocument === undefined
+            ? {}
+            : { after: await this.after.resourceDocument(route) }),
           paths: await this.stylesheetScope(
             baseDocument === undefined
               ? undefined

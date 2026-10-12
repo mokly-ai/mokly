@@ -8,6 +8,7 @@ import { loadConfig } from "../dist/config/load.js";
 import { prepareComponentProjection } from "../dist/review/component_projection_resources.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
+import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
 import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
@@ -76,6 +77,12 @@ test("projected discovery applies root-specific ownership before reading", async
       "mockups/components/image.svg",
     ]);
     const context = {
+      componentAware: true,
+      links: catalogueLinkNormalizer(
+        compilation.manifest.entries,
+        compilation.manifest.entries,
+        [],
+      ),
       beforeReader,
       afterReader,
       changed,
@@ -89,6 +96,7 @@ test("projected discovery applies root-specific ownership before reading", async
     };
     const html = await beforeReader.text(view.path);
     const prepared = prepareComponentProjection(
+      context,
       view,
       view,
       html,
@@ -107,16 +115,7 @@ test("projected discovery applies root-specific ownership before reading", async
       id === "pane" ? "pane" : undefined,
     );
     const imageReads = reads.filter((route) => route.endsWith("image.svg"));
-    if (id === "home") assert.deepEqual(imageReads, []);
-    else {
-      assert.ok(imageReads.length > 0);
-      assert.ok(
-        comparison.reasons.some(
-          (reason) =>
-            reason.kind === "dependency" &&
-            reason.path === "mockups/components/image.svg",
-        ),
-      );
-    }
+    assert.deepEqual(imageReads, []);
+    assert.deepEqual(comparison.reasons, []);
   }
 });

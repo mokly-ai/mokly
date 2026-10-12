@@ -220,13 +220,14 @@ function validateViews(
           instances: view.usage.instances,
           slots: view.usage.slots,
           ranges: view.usage.ranges,
-          styles: [],
           resources: [],
         },
         components,
         entry.path,
-        entry.kind === "component" ? entry.variantOf : undefined,
-        historical,
+        {
+          historicalUsage: historical,
+          ...(entry.kind === "component" ? { rootId: entry.variantOf } : {}),
+        },
       );
   }
 }

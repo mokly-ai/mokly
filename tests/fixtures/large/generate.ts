@@ -4,6 +4,7 @@ import path from "node:path";
 
 export interface LargeSize {
   areas: number;
+  inlineStyles: boolean;
   screens: number;
   rows: number;
   stylesheets: number;
@@ -13,6 +14,7 @@ export interface LargeSize {
 export function largeSize(input: Partial<LargeSize>): LargeSize {
   const size = {
     areas: 30,
+    inlineStyles: false,
     screens: 40,
     rows: 12,
     stylesheets: 4,
@@ -55,16 +57,26 @@ export async function generateLargeFixture(
   await fs.mkdir(assets, { recursive: true });
   for (const file of ["components.tsx", "screens.tsx", "area.tsx"])
     await fs.copyFile(path.join(templates, file), path.join(sources, file));
+  await fs.copyFile(
+    path.join(
+      templates,
+      size.inlineStyles ? "inline_styles.tsx" : "inline_styles_none.tsx",
+    ),
+    path.join(sources, "inline_styles.tsx"),
+  );
   const renderer = await fs.readFile(
-    path.join(templates, "renderer.tsx"),
+    path.join(
+      templates,
+      size.inlineStyles ? "renderer_inline.tsx" : "renderer.tsx",
+    ),
     "utf8",
   );
   await fs.writeFile(
     path.join(root, "renderer.tsx"),
-    renderer.replace('"../../../examples/basic/theme.js"', '"./theme.js"'),
+    renderer.replace('"./inline_styles.js"', '"./src/inline_styles.js"'),
   );
   await fs.copyFile(
-    path.resolve(templates, "../../../examples/basic/theme.ts"),
+    path.join(templates, "theme.ts"),
     path.join(root, "theme.ts"),
   );
   for (const file of ["catalogue.css", "tokens.css", "mark.svg"])
@@ -103,7 +115,7 @@ export async function generateLargeFixture(
   );
   await fs.writeFile(
     path.join(root, ".gitignore"),
-    ".review/\n.mokly-cache/\nnode_modules/\n" +
+    ".review/\n.mokly-cache/\nnode_modules/\n.mokly-large-fixture.json\n" +
       (!trackedOutput ? "mockups/mokly-generated/\n" : ""),
   );
   await fs.writeFile(

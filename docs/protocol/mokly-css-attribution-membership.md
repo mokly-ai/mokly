@@ -111,7 +111,7 @@ arrays used in identity. Unresolved rules may have no selectors.
 changed by this identity across the whole catalogue after the nested-component
 test. Unfiltered own-page matches decide whether Y takes a match from X; only
 kept matches decide which ids enter this array. It is independent of this
-path, view and delivery method. A local unresolved occurrence can carry ids
+path and view within CSS-file delivery. A local unresolved occurrence can carry ids
 proved by kept matches of resolved copies on other own pages, but still gives
 this page an unresolved reason. Unkeyed failures have no changed ids. Never include variant
 ids, an owner claim or a component inferred only from a consumer invocation.
@@ -132,8 +132,11 @@ evidence, not an excluded resource.
 
 ## Projection And Merging
 
-View evidence describes the full normalized render, including affected-only
-consumers. Direct page entry reasons retain only rules with page evidence.
+View evidence describes the full retained render, including affected-only
+consumers. Component-aware matching uses the [original page tree](./mokly-page-analysis.md#original-page-matching)
+and its ignored-subject predicate. Material projection changes resource
+eligibility, not selector context. Embedded reader documents keep this rule on
+their own original trees; normalized tokens are not fed back into marker parsing. Direct page entry reasons retain only rules with page evidence.
 A saved variant's component reasons retain only rules with matches that its
 component keeps on that variant's own page. A variant can still have a separate
 page reason without a kept match or a changed parent. A changed component
@@ -148,8 +151,8 @@ page rule and a component rule from the same file can coexist without turning
 all its selectors into page evidence.
 
 `material` is present exactly when the paired ignore-normalized document
-material differs, including added and removed views. Keep the existing
-inserted-link comparison exclusion. It is absent otherwise and never `false`.
+material differs after paired ignores and inline canonicalization, including
+added and removed views. Keep the inserted-link comparison exclusion. It is absent otherwise and never `false`.
 It describes documents, not CSS membership or component ownership records.
 Retain actual final bytes in snapshots and keep private document coordinates
 out of public evidence.
@@ -170,6 +173,16 @@ evidence. Selection never reruns CSS analysis. Selected comparisons retain the
 catalogue-wide changed-component sets computed before selection; they must not
 recompute a smaller set from the selected page alone. The shared browser reader
 can validate id syntax; the complete producer also verifies unfiltered and kept own-page proof.
+
+Inline style content has separate [inferred evidence](./mokly-inline-style-evidence.md).
+It supplies no CSS-file rule record or synthetic resource path. Catalogue v6
+view resource evidence also carries this inline evidence.
+
+Baseline CSS uses the bounded Git batch reader and optional counterparts for
+added or removed files. Head bytes come from compilation or the confined public
+reader. Each side caches resource bytes by path. The [whole-input LRU](./mokly-css-parse-reuse.md#cache-lifetime-and-accounting)
+shares detached parse results across paths and sides; eviction changes only
+work, and parser injection remains supported.
 
 ## Validation
 

@@ -26,7 +26,7 @@ similarity in order. Review v7 emits `previousPath` on paired records; pure
 moves retain empty reasons and do not inflate material output counts.
 
 Unrendered source edits do not change catalogue membership or evidence.
-Rendered `styles` and non-CSS `resources` records retain ownership attribution.
+Inferred inline rules and non-CSS `resources` records retain ownership attribution.
 Stylesheet changes use kept own-page matches and outside/unresolved page evidence;
 no CSS owner record routes them. Renderer CSS declarations still supply the
 checked delivery closure and watch inputs, including unlinked files. Private
@@ -51,9 +51,8 @@ Each side resolves inserted links against its own document route. A moved
 entry keeps the baseline route for its baseline spans and resource paths.
 CSS imports and referenced assets follow the usual graph.
 `artifact_stylesheets.ts` carries the same private spans from complete and
-selected captures to publication validation. It adds no public output field. Matching still uses
-the normalized document, so ignored author markup, links and inline styles stay
-ignored. Renderer links reused for declarations remain page content.
+selected captures to publication validation. It adds no public output field. Component-aware matching uses original trees and ignore spans; ignored author
+markup, links and inline styles stay ignored. Renderer links reused for declarations remain page content.
 `component_view_types.ts` owns the shared comparison context and result types.
 `component_projection_resources.ts` prepares paired comparison material and
 normalizes one-sided resources without computing unused page material,
@@ -266,13 +265,21 @@ const outcome = analyzeStylesheetChange(
 // A kept outcome also retains each rule delta and all matched elements.
 ```
 
-Pass the already-normalized before/after parse5 documents; either side may be
+Pass the prepared before/after parse5 documents; either side may be
 absent for added/removed views. An absent stylesheet is passed as an empty string.
 `matchCssRules(diff, documents)` retains a decision for each diffed rule;
 `analyzeStylesheetChange` composes the parser, diff, and match, returning one
 `CssAnalysisOutcome`. The optional fourth argument injects a `CssRuleParser`.
 The optional fifth argument injects `matchCssRules` for boundary tests;
-`CssResourceAnalysis` accepts the same matcher as its second constructor argument.
+`CssResourceAnalysis` accepts that matcher as its second constructor argument;
+its optional third byte bound applies independently to both caches for tests.
+Whole-input and verified inline-segment caches use the
+[parse-reuse accounting contract](../../docs/protocol/mokly-css-parse-reuse.md#cache-lifetime-and-accounting).
+`css/byte_lru.ts` owns eviction and detached UTF-16 keys, including on hits;
+`css/parse_cache.ts` copies/freeze-protects rules, and `css/cache_error.ts` copies
+safe, stackless failure data. [The CSS module guide](./css/README.md) covers
+detached strings, byte accounting and production-path GC. Committed/derived
+tests compare zero/default bounds on rich CSS and the design library.
 Selectors are the kept rules' original serialized selectors, sorted and unique;
 an unresolved rule takes precedence over matched rules in the reduction.
 
@@ -308,8 +315,8 @@ references before incomplete syntax; strict rule parsing still reports it unreso
 
 `ResourceComparison.compare(before?, after?, excluded?, matching?)` reads and
 validates resource closures before passing changed resources to
-`CssResourceAnalysis.analyze(resources, documents)`. CSS uses actual normalized
-resource reachability and markup, without owner-based exclusions. Non-CSS
+`CssResourceAnalysis.analyze(resources, documents)`. CSS uses actual resource reachability and original
+markup for component-aware comparisons, without owner-based exclusions. Non-CSS
 resource ownership retains its separate projection policy. Embedded
 documents also supply matching trees. Base resource reads are batched by graph
 depth; optional counterpart CSS reads distinguish missing files from invalid
@@ -338,10 +345,11 @@ byte changes without inventing dependency paths. Unexpected parser or matcher
 failures keep only the failing resource unresolved, retain recoverable changed
 selectors and allow classification to continue.
 
-Review v7 retains `material: true` exactly when the actual paired,
-ignore-normalized documents differ, including added and removed views. Ownership
-projections do not define this flag. A material change keeps the ordinary screen
-heading even when stylesheet evidence is also present. Complete and selected results retain
+Review v7 retains `material: true` exactly when actual comparison material
+differs, including added/removed views. Component-aware paired views remove
+unowned style elements and append canonical retained rules before stripping
+markers and normalizing ignores. Component-aware linked selectors match original trees; other paths retain normalized matching. Ownership projections do not define the flag; material
+changes keep the ordinary heading even with stylesheet evidence. Results retain
 optional view `reasons` (with stylesheet `analysis`) and `excludedResources`.
 Entry reasons merge by path and rule identity. They union page selectors
 separately from all selectors, with unresolved evidence taking precedence. The shared browser/server decoder rejects
@@ -365,16 +373,39 @@ still run diffing and matching. Compare its interval union with the enclosing
 background `changes.classify` duration in the same session; do not sum parent
 and child spans. See the [timing contract](../../docs/protocol/mokly-timings.md).
 
+The pure inline-style engine discovers eligible unowned HTML CSS elements in
+original coordinates, parses each element independently, attributes diffed
+rules through original component ranges and renders canonical actual and
+projected material. Complete paired component-aware comparisons call it with
+the classification-scoped cached parser, including zero-instance usage records.
+Fast-path views use conservative source references without inline analysis;
+fall-through performs full attribution. Rules grouped by each inferred owner set traverse
+the ordinary cached resource graph, preserving relative and transitive paths;
+unchanged owned or excluded reference rules are removed symmetrically without
+creating inline evidence. Diffed retained/excluded rules emit validated
+`inlineStyles` evidence on complete schema-v7 views; the full live result,
+artifacts, publication and selected component-aware responses retain it.
+The screen-only resource slice has no inline analysis to copy. One-sided and
+missing-usage comparisons keep their existing behavior. Each call emits
+`review.inline-style-analysis`; it logs no document or CSS.
+
 `component_classification_comparisons.ts` collects all view comparisons before
 `css/attribution.ts` freezes own-page proof. It keeps unfiltered matches for
 nested filtering and kept matches for component reasons. `css/identity.ts`
-checks both the SHA-256 key and its normalized tuple. `css/normalized_ranges.ts`
-rebases root proof through paired ignore, including a removed root marker.
+checks both the SHA-256 key and its normalized tuple. Original root ranges retain proof through paired ignores, including an ignored
+root marker.
 `css/resource_scope.ts` keeps each embedded document's stylesheet scope separate.
 Live screen-only content checks reuse the completed CSS evidence and keep their
 existing non-CSS public-file policy. Selected results never repeat rule analysis.
 
 ## Development
+
+Opt-in [classification diagnostics](../diagnostics/README.md) count HTML parses
+by step, exclusive document work and the classifying isolate's sampled heap.
+Disabled timings create no counter state and sample no heap. These counters
+include the server's preceding page pass without changing either matching policy.
+Material counters require the separate `MOKLY_MATERIAL_WORK=1` detail opt-in and
+emit `review.material-work`; core-only timing adds no material byte passes.
 
 ```bash
 node --import tsx --test tests/review_css_*.test.ts
@@ -401,30 +432,94 @@ Key code:
   `component_reason_sources.ts`, and `component_result_sources.ts`:
   source-complete v7 assembly, entry-view preparation, and validation.
 - `component_classification.ts`, `component_view.ts`: component ownership policy.
-  `compareComponentView` has two paths: an unchanged decision that settles a
+  `compareComponentView` first tries an unchanged decision that settles a
   paired view only when marker-retaining documents, routes, and usage topology
-  agree, followed by independent resource discovery for both sides,
-  and the complete comparison
-  (projection, range validation, CSS analysis, implementation diffing) for
-  views that can differ. Entry-owned props may differ on the fast path and
+  agree, followed by independent resource discovery and byte comparison
+  for both sides. A proven single-style edit then
+  uses `component_style_route.ts`; remaining views use the complete comparison
+  (projection, range validation, CSS analysis, implementation diffing).
+  Entry-owned props may differ on the fast path and
   invocation source metadata is ignored; every nested input or
   ownership-topology difference falls through. One-sided views
-  validate the same current-spelling ranges on either side before normalization. Both paths
-  produce identical records for valid builder output. Identical handcrafted
-  malformed component markers are outside that equivalence guarantee because
-  views without ownership text edits do not repeat range validation. Views with
-  instances, styles, or entry-owned slots validate ranges while preparing their resource projection. The
-  internal `useFastPath` classification input and trailing `compareReview`
-  options object exist only for differential tests and default to enabled. The decision rule lives in the
-  [component change attribution contract](../../docs/protocol/mokly-component-changes.md#unchanged-view-decision).
-  Views with instances, styles, or entry-owned slots additionally run the same ownership projection
-  and excluded-resource discovery as the complete comparison. This proves
-  resources that HTML parsing may discard in contexts such as `template` or
-  `select`, including siblings exposed when component implementation text is
-  removed. Views without ownership text edits use actual-document evidence
-  alone.
-- `component_resource_attribution.ts`: non-CSS invocation ownership; its CSS
-  promotion is removed under the planned rule contract.
+  validate current or historical ranges before normalization. All paths
+  produce identical records for valid builder output. Component-aware usage
+  ranges are validated through the shared original analysis, including empty
+  usage; optimization switches do not weaken document validation. The
+  internal `useFastPath`, `useStylePath` and `useMaterialFingerprints`
+  classification/`compareReview` options exist only for differential tests;
+  none is config/CLI input. Disable the first two for complete comparison and
+  the third for delivered M8 text materials. The decision rule lives in the
+  [component change attribution contract](../../docs/protocol/mokly-component-review-fast-path.md).
+  Identical source/path/topology shares head analysis and conservative original/
+  caller-copy seeds, with no projection, inline analysis or hashing. The
+  proofs compare both closures and their bytes independently.
+  Non-identical attempts project only for ownership text edits. A root alone
+  needs validation but no projection. Fall-through reuses
+  trees/discovery and rebuilds any unattributed material for full attribution.
+- `component_style_route.ts`, `style_windows.ts`: the numbered
+  [style-only proof](../../docs/protocol/mokly-style-only-route.md), with one
+  head tree, UTF-16 windows and no base parse, projection or implementation
+  comparison. Reconstructed base style spans retain document-wide ordinals;
+  shared inline preparation survives fallback. Both retained multisets are
+  composed normally. With link normalization, SVG/MathML open at EOF or closed
+  only inside paired ignore regions takes the full path. `stylePath` counts
+  only settled views.
+- `page_analysis.ts`, `page_pair.ts`: lazy view-local source-located trees,
+  validated UTF-16 ranges, flat ignore spans, styles and reference inventory.
+  Saved roots map to entry ownership and may cross paired-ignore boundaries;
+  they do not hide their own inline styles from entry analysis.
+  Original validation stays eager; fingerprint inventories derive lazily. The
+  pair caches normalization and keeps a stable projected exclusion policy.
+- `page_parser.ts`, `page_source_locations.ts`, `page_subjects.ts`: the one
+  default-tree parse captures adopted attribute/clone provenance from parse5's
+  own tokens. Its `onEof` callback records SVG/MathML left on the open-element
+  stack. Empty parser-created elements use their creating token's offset
+  for ignore status; located descendants retain the all-ignored rule. No regex
+  recovery or second tokenizer/tree runs. The corpus checks producer spellings,
+  all source-less offsets and shared-token clone originals; a separate test pins
+  clone object identity. Construction validates provenance once during the shared
+  style/reference traversal, outside the matcher catch boundary. Entrypoint-count
+  tests still prove one parse; these assertions guard the internal Parser hook.
+- `page_stylesheet_links.ts`: original-coordinate removal, identical-source
+  provenance validation and style-window offset proofs. Link paths and declarers
+  define topology; their offsets do not.
+- `component_view_complete.ts`: full evidence assembly over the shared analyses.
+- `stylesheet_scope.ts`: follows CSS edges already cached by the resource graph.
+- `page_projection.ts`, `page_reference_records.ts`: delivered string materials
+  whose references come from kept/copy/producer recipes, without reparsing them
+  for resource discovery.
+  Copies expose recorded template references, not parser-discarded tokens.
+- `page_inline_material.ts`: complete-path SHA-256/base64url comments replace
+  canonical rule appendices or equal reference-free styles in place. Reserved
+  authored prefixes, skipped source references/copies/rewrites and M8 marker guards keep text;
+  parse failures stay verbatim. Producer references survive the representation
+  change, and the route keeps its canonical comparison without fingerprint work.
+  With link normalization, SVG/MathML open at EOF or closed only inside
+  paired ignore regions keeps text on both sides, using existing original-tree
+  locations.
+- `inline_link_material.ts`: keeps text when path/move normalization changes a
+  skipped style source without an identical-normalizer proof, or changes an
+  actual/projected appendix equality outcome. Link-normalization parses use
+  the counted `linkNormalization` step; CSS matching and reference discovery
+  still use originals.
+- `page_fingerprint_guard.ts`, `material_normalization_recipe.ts` and
+  `fingerprint_seams.ts`: inspect delivered recipe joins, including marker/ignore
+  normalization and caller copies. Windows read at most 12 UTF-16 units on each
+  side; `fingerprint_source_proofs.ts` shares exact-source indexes and eligible
+  occurrence proofs within one view. Created/completed markers keep text. Admission
+  and rendering share `page_material_recipes.ts`; shortcuts build no fingerprint data.
+  Skipped complete views reuse matching source-safety proofs only after quick fallback.
+- `skipped_style_occurrences.ts` checks every exact skipped-source occurrence
+  against eligible starts. `style_seam_offsets.ts` also rejects potential copies
+  assembled by rewrites, aligning indexed prefixes with the same source's ending
+  at its exact material position. Interleaved whole styles keep fingerprints;
+  window checks still cover split prefixes/endings without reading sheet interiors.
+  Both proofs are context independent; non-replaced copies keep the whole view on
+  text. Inserted pieces are closed complete markers/tags and need no marker index.
+- `component_resource_attribution.ts`: actual-invocation declared/inferred
+  resource ownership and entry evidence without invented variant entries.
+- `component_inline_resources.ts`: inferred owner-set traversal, including
+  transitive rule references.
 - `assets.ts`, `component_resources.ts`, `resource_graph.ts`: confined reads and
   traversal shared by resource evidence and snapshots.
 - `css/types.ts`: rule records, the parser interface, and result/error contracts.
@@ -435,6 +530,12 @@ Key code:
   ordered keep policy, per-rule decisions, and contained selector errors.
 - `css/document.ts`, `css/document_query.ts`: default parse5 adapter and queries
   that retain HTML/SVG/MathML name semantics.
+- `css/inline_*.ts`, `css/element_owners.ts`: inline span discovery,
+  attribution, ownership and canonical-material rendering used by complete
+  component-aware comparisons. Identity-run cancellation expands only changed
+  runs and matched reference copies; composition sorts stored rules without
+  rebasing cancelled runs. Whole-element fallbacks retain full-list diffing,
+  and exact occurrence selections fix duplicate-copy reference attribution.
 - `css/nesting.ts`, `css/pseudos.ts`: parent substitution and static match bounds.
 - `css/material.ts`: changed custom-property and URL-reference detection.
 - `css/paths.ts`: shared public stylesheet analysis scope.
@@ -444,13 +545,48 @@ Key code:
   and the classification-scoped parser cache.
 - `../../packages/viewer/src/review/result_resources.ts`: browser-safe
   validation of retained/excluded evidence shared with readers.
-- `resource_documents.ts`: one paired normalization for embedded-document
-  discovery and matching; normalized ignore tokens are never parsed a second time.
+- `resource_documents.ts`, `resource_document_analysis.ts`: paired embedded
+  resource normalization and original reader trees for component-aware matching;
+  `view_resources.ts` caches resolved seed closures without retaining page HTML.
 - `artifact_resources.ts`: validation of evidence against retained snapshot resources.
 
 See the [Changes contract](../../docs/protocol/mokly-changes.md),
 [component attribution contract](../../docs/protocol/mokly-component-changes.md),
 and [component result schema](../../docs/protocol/mokly-component-review.md).
+The [shared-page checkpoint](../../docs/dev/shared-page-analysis-checkpoint.md)
+records the captured oracle, exact parse bounds and intentional changed outcomes.
+Its [same-host measurements](../../docs/dev/shared-page-analysis-measurements.md)
+retain the M6 controls, original-source payload bounds and exclusive work.
+The [style-route checkpoint](../../docs/dev/style-only-route-checkpoint.md)
+records per-view oracles, parse interception and the conservative seed proof.
+`style_source_safety.ts` owns the route's paired-ignore/span checks and the
+quick checks' review-prefix test over eligible unowned style outer sources.
+Quick checks reject region markers (paired or one-sided) and material signals
+there, even on identical pages. They also use `css/escape_decoding.ts` to reject
+potential reserved markers in eligible content without CSS analysis: decoded
+`<`, separator/comment/`!`/`-` runs and ASCII-case-insensitive `mokly-`, also after
+removing escaped newlines everywhere. Ordinary utility escapes and other `<`
+text remain eligible.
+Non-identical checks require equal ordered
+eligible style sources; ignored markup can alter parser context and eligibility.
+Original spans validate/pair regions; canonical actual materials own emitted
+ignore ids and state. Dropped eligible-style reference records still require
+fall-through, without parsing CSS.
+
+`ComponentMaterialReader.resourcesIfPresent` uses the normal graph with an
+availability proof at each unvisited frontier. Derived optimizations use it
+for base closures; missing files at any depth take fall-through. Successful
+reads and complete closures are reused. A failed proof never caches a partial
+closure as complete. Required reads and prefetch bypass cached optional absence
+and retain the underlying reader's diagnostics. Required-only injected readers
+probe underlying single/bulk reads through `resource_proof_reads.ts`, storing
+only successful bytes and deferring failures without caching their rejections.
+Tests require closure object reuse and one read per file on the optional/bulk path.
+The move preparation cache in `cached_assets.ts` follows the same rule across
+pairing, classification and capture. Optional absence does not satisfy a required
+read, and a failed batch cannot poison a later read of an existing file.
+The route also requires equal raw references in the edited element, including
+selector arguments, and guards reserved prefixes in original/composed CSS.
 
 `GitReviewAssetReader` retains one immutable byte cache per baseline reader.
 Imported CSS change detection and resource classification share those bytes,

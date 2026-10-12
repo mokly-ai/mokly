@@ -16,6 +16,8 @@ A comparison base is compatible only when its output contains the canonical
 historical boundary applies the same v10 shape, relationship, path, and source
 inventory validation as the current manifest reader. It reads baseline bytes
 but never executes baseline source through the current Mokly package.
+Current and baseline usage records have the same v10 fields; no retired
+ownership-array exception changes this shape.
 
 The boundary does not translate earlier schemas. Every accepted entry and
 artifact already has the path-derived layout in the

@@ -267,6 +267,9 @@ identity; stale or unknown snapshots render unavailable. Readers reject a
 catalogue in which a current and a removed record share a path. Live evidence
 may update an explicit snapshot in place and makes a replaced identity
 unavailable.
+A historical usage record keeps its original values when current prop schemas or
+slot names change. Wire data, identity and ranges remain validated against the
+historical schema.
 
 Shell links may name `viewport` and `scheme` independently. Exactly one valid
 value for an axis applies in the same selection proposal; invalid or repeated
@@ -406,6 +409,15 @@ The complete naming contract is
 and `isKebabCase` retains the separate grammar for tags and Review-ignore ids.
 `firstPathCaseCollision` checks entry and folder-prefix spelling across a path set.
 `isWindowsDeviceName` exposes the device-name check applied to path segments.
+
+Tooling that validates component usage calls
+`validateComponentViews(value, components, at, { dark, rootId?, historical? })` or
+`validateComponentViewRecord(view, components, at, { rootId?, historicalUsage? })`.
+Both require an options object; use `{}` for a current single-view record.
+Legacy boolean/root-id arguments fail with `ComponentValidationError`, rather
+than enabling historical validation. The
+[usage validation contract](../../docs/protocol/mokly-component-usage-records.md#validation)
+defines the separate historical modes.
 
 ## Server Rendering
 

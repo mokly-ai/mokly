@@ -44,30 +44,28 @@ test(`zero-change classification discovers each required side once`, async (t) =
     (count, entry) => count + generatedViews(entry).length,
     0,
   );
-  const projectedViews = fixture.after.manifest.entries
-    .flatMap((entry) => generatedViews(entry))
-    .filter((view) =>
-      view.usage
-        ? view.usage.instances.length > 0 ||
-          view.usage.ranges.some((range) => range.target.kind === "root") ||
-          view.usage.styles.length > 0 ||
-          view.usage.slots.some((slot) => slot.owner.kind === "entry")
-        : false,
-    ).length;
+  const document = events.find(
+    ({ stage, event }) =>
+      stage === "review.document-work" && event === "counts",
+  )!.counts!;
+  assert.equal(document.htmlParses, views);
   const counts = events.find(
     (event) =>
       event.stage === "review.compare-screens" && event.event === "counts",
   );
-  assert.deepEqual(counts?.counts, {
+  const { heapPeakMiB, ...pathCounts } = counts!.counts!;
+  assert.ok(heapPeakMiB! > 0);
+  assert.deepEqual(pathCounts, {
     views,
     fastPath: views,
     completePath: 0,
+    stylePath: 0,
   });
   assert.equal(
     events.filter(
       (event) =>
         event.stage === "review.resource-graph" && event.event === "start",
     ).length,
-    (views + projectedViews) * 2,
+    views * 2,
   );
 });

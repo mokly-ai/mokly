@@ -1,13 +1,10 @@
-import { parse } from "parse5";
-
 import type { ComponentViewRecord } from "@mokly/viewer";
 import { invalidData } from "@mokly/viewer/data";
 
-import { validateComponentRanges } from "../../components/ranges.js";
-import { normalizeReviewPair, normalizeSingleDocument } from "../ignore.js";
+import { normalizeReviewPair } from "../ignore.js";
+import { PageAnalysis } from "../page_analysis.js";
 
 import type { CssDocument, CssDocumentPair } from "./document.js";
-import { normalizedOutputRanges } from "./normalized_ranges.js";
 
 export interface CssOutputRange {
   rangeId: string;
@@ -21,7 +18,7 @@ export interface CssMatchingPair extends CssDocumentPair {
   ranges?: ReadonlyMap<CssDocument, readonly CssOutputRange[]>;
 }
 
-/** Validate original boundaries, then rebase proof through paired normalization. */
+/** Reuse original trees and ranges; paired ignores filter subjects, not context. */
 export function componentCssDocuments(
   before: string | undefined,
   after: string | undefined,
@@ -29,58 +26,64 @@ export function componentCssDocuments(
   beforeUsage?: ComponentViewRecord,
   afterUsage?: ComponentViewRecord,
   root?: string,
+  analyses?: {
+    before?: PageAnalysis | undefined;
+    after?: PageAnalysis | undefined;
+    paired?: readonly string[];
+  },
 ): CssMatchingPair {
-  const beforeRanges =
-    before && beforeUsage
-      ? validateComponentRanges(before, beforeUsage.ranges)
-      : [];
-  const afterRanges =
-    after && afterUsage
-      ? validateComponentRanges(after, afterUsage.ranges)
-      : [];
-  for (const [html, ranges] of [
-    [before, beforeRanges],
-    [after, afterRanges],
-  ] as const)
+  const paired =
+    analyses?.paired ??
+    (before !== undefined && after !== undefined
+      ? normalizeReviewPair(before, after, route).pairedIgnoreIds
+      : []);
+  const ranges = new Map<CssDocument, readonly CssOutputRange[]>();
+  const document = (
+    source: string | undefined,
+    usage?: ComponentViewRecord,
+    existing?: PageAnalysis,
+  ) => {
+    if (source === undefined) return;
+    const page = existing ?? new PageAnalysis(source, route, usage);
     if (
       root &&
-      html !== undefined &&
-      ranges.filter((range) => range.record.target.kind === "root").length !== 1
+      page.ranges.filter((range) => range.record.target.kind === "root")
+        .length !== 1
     )
       invalidData(
         route,
         "component saved views require exactly one root output range",
       );
-  const normalized =
-    before !== undefined && after !== undefined
-      ? normalizeReviewPair(before, after, route)
-      : {
-          base:
-            before === undefined
-              ? undefined
-              : normalizeSingleDocument(before, route),
-          head:
-            after === undefined
-              ? undefined
-              : normalizeSingleDocument(after, route),
-        };
-  const ranges = new Map<CssDocument, readonly CssOutputRange[]>();
-  const document = (
-    html: string | undefined,
-    original: string | undefined,
-    originalRanges: typeof beforeRanges,
-    usage?: ComponentViewRecord,
-  ) => {
-    if (html === undefined) return undefined;
-    const tree = parse(html, { sourceCodeLocationInfo: true });
+    const tree = page.matching(paired);
     ranges.set(
       tree,
-      normalizedOutputRanges(tree, original ?? "", originalRanges, usage, root),
+      page.ranges.flatMap((range) => {
+        const target = range.record.target;
+        const componentId =
+          target.kind === "root"
+            ? root
+            : target.kind === "instance"
+              ? usage?.instances.find(
+                  (instance) => instance.key === target.instanceKey,
+                )?.componentId
+              : undefined;
+        return componentId
+          ? [
+              {
+                rangeId: range.record.id,
+                componentId,
+                root: target.kind === "root",
+                start: range.contentStart,
+                end: range.contentEnd,
+              },
+            ]
+          : [];
+      }),
     );
     return tree;
   };
-  const base = document(normalized.base, before, beforeRanges, beforeUsage);
-  const head = document(normalized.head, after, afterRanges, afterUsage);
+  const base = document(before, beforeUsage, analyses?.before);
+  const head = document(after, afterUsage, analyses?.after);
   return {
     ...(base ? { before: base } : {}),
     ...(head ? { after: head } : {}),

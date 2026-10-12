@@ -1,33 +1,21 @@
-import type {
-  GeneratedComponentView,
-  EntryChangeReason,
-  ViewReview,
-} from "@mokly/viewer/data";
-import { isStylesheetPath } from "@mokly/viewer/data";
+import type { GeneratedComponentView, ViewReview } from "@mokly/viewer/data";
 
-import { stripMarkers } from "../components/comparison_material.js";
-import { changedComponentImplementations } from "../components/comparison_projection.js";
 import { MoklyError } from "../errors.js";
 
-import {
-  prepareComponentProjection,
-  componentPageMaterial,
-  normalizeOneSidedView,
-  type PreparedComponentComparison,
-} from "./component_projection_resources.js";
-import {
-  ownedResourceReasons,
-  rootResourcesChanged,
-} from "./component_resource_attribution.js";
-import { changedResourceBytes } from "./component_resource_changes.js";
-import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
+import type { PreparedComponentComparison } from "./component_projection_resources.js";
+import { compareStyleOnlyView } from "./component_style_route.js";
+import { compareCompleteComponentView } from "./component_view_complete.js";
 import { compareUnchangedComponentView } from "./component_view_fast_path.js";
+import { compareOneSidedComponentView } from "./component_view_material.js";
 import type {
   ComparedComponentView,
   ComponentViewContext,
 } from "./component_view_types.js";
-import { componentCssDocuments } from "./css/containment.js";
-import { normalizeReviewPair } from "./ignore.js";
+import { PageAnalysisPair } from "./page_pair.js";
+export type {
+  ComparedComponentView,
+  ComponentViewContext,
+} from "./component_view_types.js";
 
 /** Compare material and declared inputs without altering the retained view documents. */
 export async function compareComponentView(
@@ -48,66 +36,32 @@ export async function compareComponentView(
     ? await context.beforeReader.text(before.path)
     : undefined;
   const head = after ? await context.afterReader.text(after.path) : undefined;
-  const baseStylesheets = before
-    ? insertedStylesheetResources(base, before.usage, before.path)
-    : [];
-  const headStylesheets = after
-    ? insertedStylesheetResources(head, after.usage, after.path)
-    : [];
   const view: ViewReview = {
     viewport: selected.viewport,
     colorScheme: selected.colorScheme,
     ignoredIds: [],
     state: before ? "removed" : "added",
   };
-  if (base === undefined || head === undefined) {
-    const normalized =
-      base !== undefined
-        ? normalizeOneSidedView(base, before!)
-        : normalizeOneSidedView(head!, after!);
-    const evidence = await context.resources.compare(
-      before
-        ? {
-            path: before.path,
-            html: normalized,
-            insertedStylesheets: baseStylesheets,
-          }
-        : undefined,
-      after
-        ? {
-            path: after.path,
-            html: normalized,
-            insertedStylesheets: headStylesheets,
-          }
-        : undefined,
-      undefined,
-      undefined,
-      () => [
-        componentCssDocuments(
-          base,
-          head,
-          selected.path,
-          before?.usage,
-          after?.usage,
-          root,
-        ),
-      ],
+  if (base === undefined || head === undefined)
+    return compareOneSidedComponentView(
+      context,
+      before,
+      after,
+      base ?? head!,
+      view,
+      root,
     );
-    return {
-      comparisonPath: "complete",
-      view: { ...view, ...evidence, material: true },
-      reasons: [{ kind: "material" }, ...(evidence.reasons ?? [])],
-      changedImplementations: new Set(),
-      ownedResources: ownedResourceReasons(
-        evidence.reasons ?? [],
-        context.prefix,
-        before?.usage,
-        after?.usage,
-        root,
-      ),
-    };
-  }
   let prepared: PreparedComponentComparison | undefined;
+  const pages = context.componentAware
+    ? new PageAnalysisPair(
+        before!,
+        after!,
+        base,
+        head,
+        context.links?.(before!.path, after!.path),
+        root,
+      )
+    : undefined;
   if (context.useFastPath !== false) {
     const attempt = await compareUnchangedComponentView(
       context,
@@ -117,161 +71,24 @@ export async function compareComponentView(
       base,
       head,
       root,
+      pages,
     );
     if (attempt.comparison) return attempt.comparison;
     prepared = attempt.prepared;
   }
-  prepared ??= prepareComponentProjection(
+  if (pages && context.useStylePath !== false) {
+    const comparison = await compareStyleOnlyView(context, pages, view, root);
+    if (comparison) return comparison;
+  }
+  return compareCompleteComponentView(
+    context,
     before!,
     after!,
     base,
     head,
+    view,
     root,
-    context.links?.(before!.path, after!.path),
-  );
-  const { baseRanges, headRanges, projected, excluded } = prepared;
-  const reasons: EntryChangeReason[] = [];
-  const rootOwnershipChanged = rootResourcesChanged(
-    before!.usage,
-    after!.usage,
-    root,
-  );
-  if (projected.before !== projected.after) reasons.push({ kind: "material" });
-  if (rootOwnershipChanged) reasons.push({ kind: "material" });
-  if (projected.inputs) reasons.push({ kind: "inputs" });
-  if (projected.structure) reasons.push({ kind: "structure" });
-  const actualResource = normalizeReviewPair(
-    stripMarkers(base, before?.usage, baseRanges),
-    stripMarkers(head, after?.usage, headRanges),
-    selected.path,
-    context.links?.(before!.path, after!.path),
-  );
-  const actual = componentPageMaterial(
-    before!,
-    after!,
-    base,
-    head,
+    pages,
     prepared,
-    root,
-    context.links?.(before!.path, after!.path),
   );
-  const resourceBefore = projected.resourceBefore ?? projected.before;
-  const resourceAfter = projected.resourceAfter ?? projected.after;
-  const actualBefore = actualResource.resourceBase ?? actualResource.base;
-  const actualAfter = actualResource.resourceHead ?? actualResource.head;
-  const repoPath = (path: string) =>
-    context.prefix ? `${context.prefix}/${path}` : path;
-  const evidence = await context.resources.compare(
-    { path: before!.path, html: resourceBefore },
-    { path: after!.path, html: resourceAfter },
-    excluded,
-    { before: actualBefore, after: actualAfter },
-  );
-  reasons.push(...(evidence.reasons ?? []));
-  const actualEvidence = await context.resources.compare(
-    {
-      path: before!.path,
-      html: actualBefore,
-      insertedStylesheets: baseStylesheets,
-    },
-    {
-      path: after!.path,
-      html: actualAfter,
-      insertedStylesheets: headStylesheets,
-    },
-    undefined,
-    undefined,
-    () => [
-      componentCssDocuments(
-        base,
-        head,
-        selected.path,
-        before?.usage,
-        after?.usage,
-        root,
-      ),
-    ],
-  );
-  const byteChanges = await changedResourceBytes(
-    await context.beforeReader.resources(
-      before!.path,
-      resourceBefore,
-      excluded,
-    ),
-    await context.afterReader.resources(after!.path, resourceAfter, excluded),
-    context.beforeReader,
-    context.afterReader,
-    context.resourceIdentity,
-  );
-  const actualBeforeResources = await context.beforeReader.resources(
-    before!.path,
-    actualBefore,
-    undefined,
-    baseStylesheets,
-  );
-  const actualAfterResources = await context.afterReader.resources(
-    after!.path,
-    actualAfter,
-    undefined,
-    headStylesheets,
-  );
-  const actualByteChanges = await changedResourceBytes(
-    actualBeforeResources,
-    actualAfterResources,
-    context.beforeReader,
-    context.afterReader,
-    context.resourceIdentity,
-  );
-  const actualByteImpact = (route: string) =>
-    !isStylesheetPath(route) ||
-    (actualBeforeResources.has(route) && actualAfterResources.has(route));
-  if (
-    [...byteChanges].some(
-      (route) =>
-        (!isStylesheetPath(route) ||
-          (actualByteChanges.has(route) && actualByteImpact(route))) &&
-        !context.changed.has(repoPath(route)),
-    )
-  )
-    reasons.push({ kind: "material" });
-  const actualResourceChange =
-    Boolean(actualEvidence.reasons?.length) ||
-    [...actualByteChanges].some(
-      (route) =>
-        actualByteImpact(route) && !context.changed.has(repoPath(route)),
-    );
-  return {
-    comparisonPath: "complete",
-    ownedResources: ownedResourceReasons(
-      actualEvidence.reasons ?? [],
-      context.prefix,
-      before?.usage,
-      after?.usage,
-      root,
-    ),
-    changedImplementations: changedComponentImplementations(
-      base,
-      head,
-      before?.usage,
-      after?.usage,
-      baseRanges,
-      headRanges,
-      context.links?.(before!.path, after!.path),
-    ),
-    view: {
-      ...view,
-      ...actualEvidence,
-      ignoredIds: actual.ignoredIds,
-      ...(actual.base !== actual.head ? { material: true as const } : {}),
-      state:
-        actual.base !== actual.head ||
-        actualResourceChange ||
-        rootOwnershipChanged
-          ? "changed"
-          : projected.rawEqual
-            ? "unchanged"
-            : "ignored-only",
-    },
-    reasons,
-  };
 }

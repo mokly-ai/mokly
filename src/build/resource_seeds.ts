@@ -3,8 +3,6 @@ import { viewRoute } from "@mokly/viewer/data";
 
 import type { CatalogueMetadata } from "../registry/catalogue_index.js";
 
-import type { ResourceSeed } from "./html_links.js";
-
 /** Keep the referring route on every explicit renderer resource. */
 export function componentResourceSeeds(
   views: ReadonlyMap<string, ComponentViewRecord>,
@@ -26,5 +24,25 @@ export function manifestResourceSeeds(
           })),
         )
       : [],
+  );
+}
+
+/** An explicit closure seed retains its referring document for diagnostics. */
+export interface ResourceSeed {
+  path: string;
+  sourceRoute: string;
+}
+
+/** Bind bare seeds to the first document while keeping explicit origins. */
+export function resourceSeedOrigins(
+  seeds: readonly (string | ResourceSeed)[],
+  firstDocument: string | undefined,
+): Map<string, string> {
+  return new Map(
+    seeds.map((seed) =>
+      typeof seed === "string"
+        ? [seed, firstDocument ?? seed]
+        : [seed.path, seed.sourceRoute],
+    ),
   );
 }

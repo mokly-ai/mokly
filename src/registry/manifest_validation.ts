@@ -114,7 +114,8 @@ function validateMetadata(
       `paths ${collision[0]} and ${collision[1]} differ only by letter case`,
     );
   validateManifestRelationships(entries, byPath);
-  if (componentUsage) validateManifestComponentUsage(value as never);
+  if (componentUsage)
+    validateManifestComponentUsage(value as never, historical);
   return value as unknown as ManifestMetadata;
 }
 

@@ -4,11 +4,13 @@ import path from "node:path";
 import type { Compilation } from "../build/compile.js";
 import {
   buildPublicClosure,
-  type ResourceSeed,
   type PublicClosureSnapshot,
 } from "../build/html_links.js";
 import { PendingGeneratedFiles } from "../build/pending_generated.js";
-import { manifestResourceSeeds } from "../build/resource_seeds.js";
+import {
+  manifestResourceSeeds,
+  type ResourceSeed,
+} from "../build/resource_seeds.js";
 import type { ResolvedConfig } from "../config/types.js";
 import type { CatalogueMetadata } from "../registry/catalogue_index.js";
 import { generatedDocumentRoutes } from "../registry/generated_documents.js";

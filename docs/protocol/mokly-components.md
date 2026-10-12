@@ -203,6 +203,7 @@ Implementations must not silently register an unreachable component page.
 
 - [Component change attribution](./mokly-component-changes.md)
 - [Component stylesheet declaration and linking](./mokly-component-stylesheets.md)
+- [Inline style ownership](./mokly-inline-styles.md)
 - [Runtime prop schema and codec](./mokly-component-props.md)
 - [Manifest schema](./mokly-component-manifest.md)
 - [Comparison schema](./mokly-component-review.md)

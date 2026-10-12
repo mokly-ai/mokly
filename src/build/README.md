@@ -134,7 +134,9 @@ CSS Modules mutation checklist:
   its identity with `path`; the diagnostic names that module under the
   [imported-styles error contract](../../docs/protocol/mokly-imported-styles-errors.md).
 
-`renderer_resources.ts` validates each asserted public file before it ignores
+`renderer_resources.ts` accepts string and structured renderer results. It
+warns once per route for returned `styles` and discards that field. It
+validates each asserted public file before it ignores
 CSS owner records. Generated CSS uses its pending canonical route as its stable
 warning identity. Authored CSS uses its validated public-file identity.
 The shared public-file policy rejects symlink components before this filter.
@@ -393,16 +395,18 @@ See the [build pipeline](../../docs/architecture/build-pipeline.md),
 [component guide](../components/README.md).
 
 The implemented [public closure contract](../../docs/protocol/mokly-public-closure.md)
-uses one policy instance per compile for configured stylesheets, renderer seeds
-and transitive links. The approved [post-render edit target](../../docs/protocol/mokly-comparison-inventory.md#post-render-offset-mapping)
-will replace positional style rebinding with exact text-patch offset mapping.
+uses one policy instance per compile for configured stylesheets, explicit closure seeds
+and transitive links. The [post-render edit target](../../docs/protocol/mokly-comparison-inventory.md#post-render-offset-mapping)
+owns later offset-mapping changes; current component ownership comes from the
+rendered document and validated ranges.
 
 `config/public_policy.ts` caches authored-file decisions for one compilation;
 `config/public_denial.ts` shares lexical/current privacy with export. The
 `html_links.ts` closure builder returns checked membership and watch evidence;
 `public_resource.ts` parses only authorized HTML/CSS, and `resource_seeds.ts`
-retains the route that declares each renderer resource. Requested documents
-carry those seeds through the existing preview observation.
+retains the referring route for explicit closure seeds. Component resource
+references come from rendered HTML. Requested documents and previews use the
+same closure validation and watch observation.
 
 The approved [path/output integration](../../docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
 Markdown documents and moves inside one generated tree. It introduces manifest

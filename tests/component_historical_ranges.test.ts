@@ -7,6 +7,7 @@ import { validateComponentRanges } from "../dist/components/ranges.js";
 import { ComponentMaterialReader } from "../dist/review/component_resources.js";
 import { compareComponentView } from "../dist/review/component_view.js";
 import type { ComponentViewContext } from "../dist/review/component_view_types.js";
+import { catalogueLinkNormalizer } from "../dist/review/moves/links.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
 import type { ComponentRangeRecord } from "../packages/viewer/dist/components/manifest_types.js";
 import {
@@ -105,6 +106,8 @@ function viewContext(route: string, document: string): ComponentViewContext {
   const beforeReader = reader();
   const afterReader = reader();
   return {
+    componentAware: true,
+    links: catalogueLinkNormalizer([], [], []),
     beforeReader,
     afterReader,
     changed: new Set(),

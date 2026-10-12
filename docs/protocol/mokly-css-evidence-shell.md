@@ -27,6 +27,10 @@ This document owns visual rules for evidence defined by
 [presentation contract](./mokly-css-evidence-presentation.md) owns derivation
 and exact copy.
 
+The [scalable plan](../../plans/scalable-inline-style-analysis.md#milestone-16-inline-style-evidence-mockup)
+schedules an inline-excluded mockup and a separate inline-style block before
+that block's UI implementation. Inline data is retained by its [evidence contract](./mokly-inline-style-evidence.md).
+
 ## Shell Presentation
 
 The inspector groups kept selectors by stylesheet and rule outcome, including
@@ -118,6 +122,8 @@ rules:
 - No design screen without a comparison toolbar renders a comparison stage
   heading. A screen depicted in Current mode, whether unchanged, excluded-only,
   or ignored-only, shows the plain preview with no heading.
+- Inline evidence follows the same compact Details layout; its exact merge
+  rules and copy belong to [CSS evidence presentation](./mokly-inline-style-evidence.md).
 - Selector text, status names, and analysis vocabulary never appear in a
   heading or in the catalogue tree; they appear only inside the secondary
   details list, and only where the detail has review value.

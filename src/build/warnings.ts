@@ -83,3 +83,13 @@ export function ignoredStylesheetResourceOwner(
 function quoted(value: string): string {
   return escapeTerminalControlCharacters(JSON.stringify(value));
 }
+
+/** Inline rules infer their owners from rendered component boundaries. */
+export function ignoredRendererStyles(route: string): BuildDiagnostic {
+  return {
+    code: "ignored-renderer-styles",
+    route,
+    message:
+      "Renderer styles ownership is ignored. Mokly infers inline style ownership from rendered markup.",
+  };
+}

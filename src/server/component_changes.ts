@@ -6,6 +6,7 @@ import { isIncompatibleEarlierBaseline } from "../baseline/compatibility.js";
 import { ConfiguredGitCommandRunner } from "../config/git.js";
 import { toPosixPath } from "../config/paths.js";
 import type { ResolvedConfig } from "../config/types.js";
+import { runWithComparisonWork } from "../diagnostics/material_timings.js";
 import { errorMessage, isMoklyError } from "../errors.js";
 import { changedManifestPaths } from "../registry/changed_paths.js";
 import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
@@ -159,111 +160,114 @@ export async function readCatalogueChanges(
     hasRegisteredComponents(baseline) || hasRegisteredComponents(manifest);
   const prefix = toPosixPath(path.relative(config.repoRoot, config.mockupsDir));
   const reader = new EvidenceAssetReader(config, outputs);
-  const beforeReader = new GitReviewAssetReader(
-    baselineResourceConfig(config, baseline),
-    git.reader,
-    commit,
-    prefix,
-    baseline,
-  );
-  const changedPaths =
-    acceptedEvidence ??
-    (await importedChangedPaths(
-      config,
-      beforeReader,
-      reader,
-      authoredPaths!,
-      outputs,
-      accepted?.deliveredStyleSources,
-      accepted?.routes,
-    ));
-  const cssAnalysis = new CssResourceAnalysis();
-  const prepared = await prepareMoveClassification({
-    before: baseline,
-    after: manifest,
-    config,
-    baseCommit: commit,
-    baseRef: base,
-    changedPaths,
-    beforeReader,
-    afterReader: reader,
-    cssAnalysis,
-    sourceReader: git.sourceReader ?? git.reader,
-    markdown: await readMoveMarkdown(
-      baseline,
-      manifest,
-      config,
-      git.sourceReader ?? git.reader,
+  const classify = async () => {
+    const beforeReader = new GitReviewAssetReader(
+      baselineResourceConfig(config, baseline),
+      git.reader,
       commit,
-      accepted?.documentMarkdown,
-    ),
-  });
-  const result = await classifyComponents(prepared);
-  const content = await classifyChangedContent(
-    manifest,
-    baseline,
-    config,
-    git.reader,
-    commit,
-    changedPaths,
-    reader,
-    components ? "pages" : "all",
-    {
-      pairing: prepared.pairing,
-      beforeReader: prepared.beforeReader,
-      ...(prepared.resources ? { resources: prepared.resources } : {}),
-    },
-    cssAnalysis,
-    result,
-  );
-  const pageIds = new Set(
-    manifest.entries.flatMap((entry) =>
-      entry.kind === "page" || entry.kind === "document" ? [entry.path] : [],
-    ),
-  );
-  const ids = changedManifestPaths(
-    manifest,
-    baseline,
-    config,
-    content.changedPaths,
-    prepared.pairing.moves,
-  ).filter((id) => !components || pageIds.has(id));
-  await retainHeadViewDigests(manifest, reader);
-  return {
-    baseline,
-    pairing: prepared.pairing,
-    comparison: {
+      prefix,
+      baseline,
+    );
+    const changedPaths =
+      acceptedEvidence ??
+      (await importedChangedPaths(
+        config,
+        beforeReader,
+        reader,
+        authoredPaths!,
+        outputs,
+        accepted?.deliveredStyleSources,
+        accepted?.routes,
+      ));
+    const cssAnalysis = new CssResourceAnalysis();
+    const prepared = await prepareMoveClassification({
+      before: baseline,
+      after: manifest,
+      config,
       baseCommit: commit,
       baseRef: base,
       changedPaths,
-      headDigests: reader.digests,
-      ...(outputs
-        ? {
-            headOutputs: transferredHeadOutputs(outputs),
-          }
-        : {}),
-    },
-    result,
-    ...(components
-      ? screenResultEvidence(result)
-      : {
-          screenViews: screenViewChanges(
-            manifest,
-            baseline,
-            config,
-            content.changedPaths,
-            prepared.pairing.moves,
-          ),
-          screenEvidence: content.screens,
-        }),
-    ...(content.pages.length ? { pageEvidence: content.pages } : {}),
-    changedEntries: [
-      ...new Set([
-        ...ids,
-        ...result.changes
-          .filter((entry) => entry.reasons.length > 0)
-          .map((entry) => (entry.after ?? entry.before)!.path),
-      ]),
-    ].sort(),
+      beforeReader,
+      afterReader: reader,
+      cssAnalysis,
+      sourceReader: git.sourceReader ?? git.reader,
+      markdown: await readMoveMarkdown(
+        baseline,
+        manifest,
+        config,
+        git.sourceReader ?? git.reader,
+        commit,
+        accepted?.documentMarkdown,
+      ),
+    });
+    const result = await classifyComponents(prepared);
+    const content = await classifyChangedContent(
+      manifest,
+      baseline,
+      config,
+      git.reader,
+      commit,
+      changedPaths,
+      reader,
+      components ? "pages" : "all",
+      {
+        pairing: prepared.pairing,
+        beforeReader: prepared.beforeReader,
+        ...(prepared.resources ? { resources: prepared.resources } : {}),
+      },
+      cssAnalysis,
+      result,
+    );
+    const pageIds = new Set(
+      manifest.entries.flatMap((entry) =>
+        entry.kind === "page" || entry.kind === "document" ? [entry.path] : [],
+      ),
+    );
+    const ids = changedManifestPaths(
+      manifest,
+      baseline,
+      config,
+      content.changedPaths,
+      prepared.pairing.moves,
+    ).filter((id) => !components || pageIds.has(id));
+    await retainHeadViewDigests(manifest, reader);
+    return {
+      baseline,
+      pairing: prepared.pairing,
+      comparison: {
+        baseCommit: commit,
+        baseRef: base,
+        changedPaths,
+        headDigests: reader.digests,
+        ...(outputs
+          ? {
+              headOutputs: transferredHeadOutputs(outputs),
+            }
+          : {}),
+      },
+      result,
+      ...(components
+        ? screenResultEvidence(result)
+        : {
+            screenViews: screenViewChanges(
+              manifest,
+              baseline,
+              config,
+              content.changedPaths,
+              prepared.pairing.moves,
+            ),
+            screenEvidence: content.screens,
+          }),
+      ...(content.pages.length ? { pageEvidence: content.pages } : {}),
+      changedEntries: [
+        ...new Set([
+          ...ids,
+          ...result.changes
+            .filter((entry) => entry.reasons.length > 0)
+            .map((entry) => (entry.after ?? entry.before)!.path),
+        ]),
+      ].sort(),
+    };
   };
+  return components ? runWithComparisonWork(classify) : classify();
 }

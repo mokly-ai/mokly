@@ -17,7 +17,6 @@ import type {
   ComponentGraphRenderer,
   LinkedComponentStylesheet,
 } from "../components/render.js";
-import { rebaseStyleOwnership } from "../components/style_ownership.js";
 import {
   isComponentVariantDefinition,
   type ComponentDefinition,
@@ -26,14 +25,15 @@ import { PublicFilePolicy } from "../config/public_policy.js";
 import type { ResolvedConfig } from "../config/types.js";
 import { documentTemplate } from "../documents/template.js";
 import { MoklyError, errorMessage } from "../errors.js";
+import { rendererDocument } from "../renderer/result.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
 import type { Renderer } from "../renderer/types.js";
 
 import type { BuildDiagnostic } from "./build_warnings.js";
 import { GENERATED_MARKER } from "./generated_marker.js";
-import type { ResourceSeed } from "./html_links.js";
 import { renderPage } from "./render_page.js";
 import { rendererWithoutCssOwners } from "./renderer_resources.js";
+import type { ResourceSeed } from "./resource_seeds.js";
 import { stylesheetHref, type StyleDelivery } from "./styles/links.js";
 import { isGeneratedRoute } from "./styles/routes.js";
 
@@ -154,26 +154,17 @@ export function renderFragments(
               });
               rendered = output.html;
               stylesheetLinks?.set(route, output.stylesheetLinks);
-              componentViews.set(route, {
-                ...output.view,
-                styles: rebaseStyleOwnership(
-                  rendered,
-                  GENERATED_MARKER + rendered,
-                  output.view.styles,
-                ),
-              });
+              componentViews.set(route, output.view);
             } else {
               const result = safeRenderer(input);
-              rendered = typeof result === "string" ? result : result.html;
-              if (
-                typeof result !== "string" &&
-                (result.styles?.length || result.resources?.length)
-              )
+              rendered = rendererDocument(result, input);
+              if (typeof result !== "string" && result.resources?.length)
                 throw new Error(
                   "component ownership requires registered components",
                 );
             }
           } catch (error) {
+            if (error instanceof MoklyError) throw error;
             throw new MoklyError(
               "build-invalid",
               `renderer failed for ${entry.path} (${viewport}, ${colorScheme}): ${errorMessage(error)}`,

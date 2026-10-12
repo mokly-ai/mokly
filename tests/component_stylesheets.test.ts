@@ -153,16 +153,38 @@ test("insertion rebases renderer-owned style offsets through the generated marke
     `import { renderToStaticMarkup } from "react-dom/server";
 export default (input) => { const css = '.action{border-radius:12px}'; const html = '<html><head><link rel="stylesheet" href="' + input.stylesheets[0] + '"><style>' + css + '</style></head><body>' + renderToStaticMarkup(input.node) + '</body></html>'; return { html, styles: [{startOffset: html.indexOf(css), endOffset: html.indexOf(css) + css.length, componentIds: ["action"]}] }; };`,
   );
-  const { manifest, outputs } = await compileCatalogue(
+  const { manifest, outputs, diagnostics } = await compileCatalogue(
     await loadConfig(fixture.root),
   );
   const screen = manifest.entries.find((entry) => entry.path === "home");
   assert.ok(screen?.kind === "screen");
   const html = textOutput(outputs, viewRoute(screen.path, "mobile", "light"))!;
-  const { startOffset, endOffset } = screen.componentViews![0]!.styles[0]!;
   assert.equal(
-    html.slice(startOffset, endOffset),
+    /<style>([^<]*)<\/style>/u.exec(html)?.[1],
     ".action{border-radius:12px}",
+  );
+  assert.equal("styles" in screen.componentViews![0]!, false);
+  assert.deepEqual(screen.componentViews![0]!.insertedStylesheets, [
+    {
+      path: "pane.css",
+      componentPaths: ["pane"],
+      startOffset: 99,
+      endOffset: 144,
+    },
+    {
+      path: "action.css",
+      componentPaths: ["action"],
+      startOffset: 144,
+      endOffset: 191,
+    },
+  ]);
+  assert.equal(
+    diagnostics.filter(
+      (warning) =>
+        warning.code === "ignored-renderer-styles" &&
+        warning.route === viewRoute(screen.path, "mobile", "light"),
+    ).length,
+    1,
   );
 });
 

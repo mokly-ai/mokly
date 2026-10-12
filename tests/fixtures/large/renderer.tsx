@@ -4,13 +4,15 @@ import { AppRegistry } from "react-native-web";
 
 import type { RenderInput } from "@mokly/mokly";
 
-import { tokens, darkTokens } from "../../../examples/basic/theme.js";
+import { tokens, darkTokens } from "./theme.js";
 
 const themes = {
   light: createSharedUiTheme(tokens),
   dark: createSharedUiTheme(darkTokens),
 };
 const Empty = () => null;
+const AREA_ONE_ACTION_COLOR = "rgba(1,2,3,1.00)";
+const SCREEN_ONE_MARKUP = "";
 
 export default function render(input: RenderInput): string {
   const body = renderToStaticMarkup(
@@ -22,8 +24,19 @@ export default function render(input: RenderInput): string {
   const nativeStyles = renderToStaticMarkup(
     AppRegistry.getApplication("scale-styles", {}).getStyleElement(),
   );
+  const componentStyles = body.includes('data-scale-action="area-1"')
+    ? `<style data-scale-component-styles="">[data-scale-action="area-1"]{border-top-color:${AREA_ONE_ACTION_COLOR}}</style>`
+    : "";
+  const markedBody =
+    input.entry.path === "area-1/screens/activity-group-1/screen-1" &&
+    SCREEN_ONE_MARKUP
+      ? body.replace(
+          "<main ",
+          `<main data-scale-markup="${SCREEN_ONE_MARKUP}" `,
+        )
+      : body;
   const links = input.stylesheets
     .map((href) => `<link rel="stylesheet" href="${href}">`)
     .join("");
-  return `<!doctype html><html lang="en" data-color-scheme="${input.colorScheme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${input.entry.title}</title>${links}${nativeStyles}</head><body>${body}</body></html>`;
+  return `<!doctype html><html lang="en" data-color-scheme="${input.colorScheme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${input.entry.title}</title>${links}${nativeStyles}${componentStyles}</head><body>${markedBody}</body></html>`;
 }

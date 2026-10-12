@@ -37,7 +37,6 @@ function usageView(view: ShellCatalogueView): ComponentViewRecord | undefined {
     instances: view.usage.instances,
     slots: view.usage.slots,
     ranges: view.usage.ranges,
-    styles: [],
     resources: [],
   };
 }

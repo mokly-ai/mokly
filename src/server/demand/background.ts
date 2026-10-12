@@ -1,5 +1,9 @@
 /** Bound background lifetime to one accepted source generation. */
-import { MessageChannel, Worker } from "node:worker_threads";
+import {
+  MessageChannel,
+  Worker,
+  type WorkerOptions,
+} from "node:worker_threads";
 
 import type { Compilation } from "../../build/compile.js";
 import type { ComponentRuntime } from "../../build/component_runtime.js";
@@ -11,6 +15,7 @@ import { timingArguments } from "../../diagnostics/timings.js";
 import type { PreparedReviewRepository } from "../../review/prepare.js";
 import type { CatalogueChangeClassification } from "../classification_result.js";
 
+import { backgroundInputs } from "./background_inputs.js";
 import { BackgroundGitHost } from "./git_host.js";
 
 export class BackgroundCompilation {
@@ -31,24 +36,22 @@ export class BackgroundCompilation {
     runtime: ComponentRuntime,
     existing?: Compilation,
     private readonly onWarning?: (event: GenerationWarning) => void,
+    createWorker: (url: URL, options: WorkerOptions) => Worker = (
+      url,
+      options,
+    ) => new Worker(url, options),
   ) {
     const { port1, port2 } = new MessageChannel();
     this.git = new BackgroundGitHost(runtime.config.repoRoot, port1);
     try {
-      this.worker = new Worker(
+      this.worker = createWorker(
         new URL("./background_worker.js", import.meta.url),
         {
           workerData: {
-            runtime,
+            ...backgroundInputs(runtime, existing),
             pause: this.pause.buffer,
             debug: timingArguments().length > 0,
             gitPort: port2,
-            ...(existing
-              ? {
-                  existingManifest: existing.manifest,
-                  existingOutputs: existing.outputs,
-                }
-              : {}),
           },
           execArgv: [],
           transferList: [port2],

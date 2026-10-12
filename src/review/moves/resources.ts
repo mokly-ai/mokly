@@ -91,6 +91,18 @@ export class MoveResources {
     return this[side].get(route) ?? route;
   }
 
+  /** Prove side-independent identities without reading or rewriting source text. */
+  equalSourceIdentities(): boolean {
+    if (this.before.size !== this.after.size) return false;
+    for (const route of this.before.keys())
+      if (!this.after.has(route)) return false;
+    if (this.pairs) {
+      for (const [before, after] of this.pairs)
+        if (before !== after) return false;
+    }
+    return true;
+  }
+
   /** Scope the byte proof to both referenced sides; unrelated identical files cannot suppress edits. */
   equivalent(
     before: ReadonlySet<string>,

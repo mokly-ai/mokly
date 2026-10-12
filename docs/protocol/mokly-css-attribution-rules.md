@@ -29,11 +29,12 @@ inside an embedded document does not style its host document. Keep normal
 resource confinement and changed-byte eligibility. Configuration, declarations,
 JavaScript imports and owner records cannot bypass this scope.
 
-Use the before and after documents after the existing paired Review-ignore
-normalization, before component-output projection. Preserve the map from each
-remaining element to the validated component ranges on that side. Removed
-ignored content contributes no element. One-sided adoption retains the existing
-paired policy; do not normalize either side again. A missing view has no tree.
+Component-aware matching uses the original before and after trees and original
+validated component ranges. Paired ignored elements supply no selector subject,
+while their nodes remain structural selector context. One-sided adoption keeps
+the existing paired policy. Catalogues without registered components and the
+separate whole-document pass keep their normalized matching contract. A missing
+view has no tree.
 Recover Mokly-inserted links from validated `insertedStylesheets` spans for
 resource discovery and CSS rule scope, including inside paired Review-ignore.
 Use the same [link finder and scopes](./mokly-stylesheet-links.md) on complete

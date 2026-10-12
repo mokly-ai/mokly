@@ -1,24 +1,40 @@
 /** Shared ownership-projected resource policy for fast and complete comparisons. */
 
-import {
-  canonicalJson,
-  isStylesheetPath,
-  type GeneratedComponentView,
-} from "@mokly/viewer/data";
+import type { GeneratedComponentView } from "@mokly/viewer/data";
 
-import { stripMarkers } from "../components/comparison_material.js";
 import {
   projectComponentPair,
   type ComponentProjection,
 } from "../components/comparison_projection.js";
-import { comparisonStylesheetMaterial } from "../components/comparison_stylesheets.js";
 import {
   validateComponentRanges,
   type RenderedRange,
 } from "../components/ranges.js";
+import { parseHtml } from "../diagnostics/html_parse.js";
 
-import type { ReviewLinkNormalization } from "./ignore.js";
-import { normalizeSingleDocument, normalizeReviewPair } from "./ignore.js";
+import { projectedResourceExclusion } from "./component_resource_exclusion.js";
+import type { ComponentViewContext } from "./component_view_types.js";
+import type { CssDocument } from "./css/document.js";
+import {
+  attributeInlineRules,
+  type InlineAttributionResult,
+} from "./css/inline_attribution.js";
+import { sameInlineOuterSources } from "./css/inline_styles.js";
+import { normalizeReviewPair } from "./ignore.js";
+import { pageInlineMaterials } from "./page_inline_material.js";
+import { PageAnalysisPair } from "./page_pair.js";
+import {
+  projectAnalyzedPair,
+  type ProjectedReferences,
+} from "./page_projection.js";
+
+export interface PreparedInlineStyleEvidence {
+  allExcluded: boolean;
+  retainedSelectors?: {
+    status: "matched" | "unresolved";
+    selectors: readonly string[];
+  };
+}
 
 /** Projection material prepared once and shared by fast and complete comparison. */
 export interface PreparedComponentComparison {
@@ -26,115 +42,196 @@ export interface PreparedComponentComparison {
   headRanges?: readonly RenderedRange[];
   projected: ComponentProjection;
   excluded: (path: string) => boolean;
+  matching: { before: string | CssDocument; after: string | CssDocument };
+  references?: ProjectedReferences;
+  ownedComponentIds: ReadonlySet<string>;
+  inlineAnalysis?: InlineAttributionResult;
+  inlineEvidence?: PreparedInlineStyleEvidence;
+}
+
+interface ProjectionPreparationOptions {
+  analyzeInline?: boolean;
 }
 
 /** Validate ranges, project ownership, and bind the matching resource policy. */
 export function prepareComponentProjection(
+  context: ComponentViewContext,
   before: GeneratedComponentView,
   after: GeneratedComponentView,
   base: string,
   head: string,
   root?: string,
-  links?: ReviewLinkNormalization,
+  options: ProjectionPreparationOptions = {},
+  pages?: PageAnalysisPair,
 ): PreparedComponentComparison {
-  const baseRanges = before.usage
-    ? validateComponentRanges(base, before.usage.ranges)
+  pages ??= context.componentAware
+    ? new PageAnalysisPair(
+        before,
+        after,
+        base,
+        head,
+        context.links?.(before.path, after.path),
+        root,
+      )
     : undefined;
-  const headRanges = after.usage
-    ? validateComponentRanges(head, after.usage.ranges)
-    : undefined;
-  const baseMaterial = comparisonStylesheetMaterial(base, before.usage, root);
-  const headMaterial = comparisonStylesheetMaterial(head, after.usage, root);
-  const projected = projectComponentPair(
-    baseMaterial.html,
-    headMaterial.html,
-    baseMaterial.usage,
-    headMaterial.usage,
-    after.path,
-    root,
-    baseMaterial.html === base ? baseRanges : undefined,
-    headMaterial.html === head ? headRanges : undefined,
-    links,
+  const baseRanges = pages
+    ? pages.beforeAnalysis.ranges
+    : before.usage
+      ? validateComponentRanges(base, before.usage.ranges)
+      : undefined;
+  const headRanges = pages
+    ? pages.afterAnalysis.ranges
+    : after.usage
+      ? validateComponentRanges(head, after.usage.ranges)
+      : undefined;
+  const matching = pages
+    ? undefined
+    : normalizeReviewPair(base, head, after.path);
+  const paired = pages?.pairedIgnoreIds ?? matching!.pairedIgnoreIds;
+  const analysis =
+    options.analyzeInline !== false &&
+    before.usage &&
+    after.usage &&
+    baseRanges &&
+    headRanges
+      ? attributeInlineRules({
+          before: {
+            source: base,
+            sourceRanges: baseRanges,
+            usage: before.usage,
+            ...(pages
+              ? { spans: pages.beforeAnalysis.inlineStyles(paired) }
+              : {}),
+          },
+          after: {
+            source: head,
+            sourceRanges: headRanges,
+            usage: after.usage,
+            ...(pages
+              ? { spans: pages.afterAnalysis.inlineStyles(paired) }
+              : {}),
+          },
+          pairedIgnoreIds: paired,
+          ...(root ? { rootComponentId: root } : {}),
+          parser: context.resources.css.parser,
+          ...(pages?.inlinePreparation
+            ? { prepared: pages.inlinePreparation }
+            : {}),
+          prepare: () => ({
+            before: {
+              document:
+                pages?.beforeAnalysis.matching(paired) ??
+                parseHtml("inlineMatching", matching!.base, {
+                  sourceCodeLocationInfo: true,
+                }),
+              ranges:
+                pages?.beforeAnalysis.ranges ??
+                validateComponentRanges(matching!.base, before.usage!.ranges),
+            },
+            after: {
+              document:
+                pages?.afterAnalysis.matching(paired) ??
+                parseHtml("inlineMatching", matching!.head, {
+                  sourceCodeLocationInfo: true,
+                }),
+              ranges:
+                pages?.afterAnalysis.ranges ??
+                validateComponentRanges(matching!.head, after.usage!.ranges),
+            },
+          }),
+        })
+      : undefined;
+  const inline = pageInlineMaterials(
+    analysis,
+    base,
+    head,
+    {
+      fingerprints: context.useMaterialFingerprints !== false,
+      reuseSourceSafety:
+        context.useFastPath !== false && context.useStylePath !== false,
+    },
+    pages,
   );
+  const analyzedProjection = pages
+    ? projectAnalyzedPair(pages, inline)
+    : undefined;
+  const projected =
+    analyzedProjection?.projected ??
+    projectComponentPair(
+      base,
+      head,
+      before.usage,
+      after.usage,
+      after.path,
+      root,
+      inline,
+      baseRanges,
+      headRanges,
+      context.links?.(before.path, after.path),
+    );
   return {
     ...(baseRanges ? { baseRanges } : {}),
     ...(headRanges ? { headRanges } : {}),
     projected,
-    excluded: projectedResourceExclusion(
-      before,
-      after,
-      projected.pairedComponentIds,
-      root,
-    ),
+    matching: {
+      before: pages?.beforeAnalysis.matching(paired) ?? matching!.base,
+      after: pages?.afterAnalysis.matching(paired) ?? matching!.head,
+    },
+    ...(analyzedProjection
+      ? { references: analyzedProjection.references }
+      : {}),
+    ownedComponentIds:
+      analysis?.status === "resolved" ? analysis.ownedComponentIds : new Set(),
+    ...(analysis ? { inlineAnalysis: analysis } : {}),
+    ...prepareInlineEvidence(analysis),
+    excluded:
+      pages?.resourceExclusion(() =>
+        projectedResourceExclusion(
+          before,
+          after,
+          projected.pairedComponentIds,
+          root,
+        ),
+      ) ??
+      projectedResourceExclusion(
+        before,
+        after,
+        projected.pairedComponentIds,
+        root,
+      ),
   };
 }
 
-/** Build the exact projected-resource exclusion used by complete comparison. */
-function projectedResourceExclusion(
-  before: GeneratedComponentView,
-  after: GeneratedComponentView,
-  pairedComponentIds: ReadonlySet<string>,
-  root: string | undefined,
-): (path: string) => boolean {
-  return (path: string) =>
-    suppressOwnedResource(path, pairedComponentIds, before, after, root);
-}
-
-function suppressOwnedResource(
-  path: string,
-  paired: ReadonlySet<string>,
-  before: GeneratedComponentView,
-  after: GeneratedComponentView,
-  root?: string,
-): boolean {
-  if (isStylesheetPath(path)) return false;
-  if (!before.usage || !after.usage) return false;
-  const left = before.usage.resources.find((item) => item.path === path);
-  const right = after.usage.resources.find((item) => item.path === path);
-  return Boolean(
-    left &&
-    right &&
-    canonicalJson(left.componentIds) === canonicalJson(right.componentIds) &&
-    left.componentIds.every((id) => id !== root && paired.has(id)),
+export function prepareInlineEvidence(
+  analysis: InlineAttributionResult | undefined,
+): {
+  inlineEvidence?: PreparedInlineStyleEvidence;
+} {
+  if (!analysis || analysis.status === "skipped") return {};
+  if (
+    analysis.status === "unresolved" &&
+    sameInlineOuterSources(analysis.beforeSpans, analysis.afterSpans)
+  )
+    return {};
+  if (analysis.status === "unresolved")
+    return {
+      inlineEvidence: {
+        allExcluded: false,
+        retainedSelectors: analysis.retainedSelectors,
+      },
+    };
+  const diffed = analysis.rules.filter(
+    ({ change }) => change.kind !== "unchanged",
   );
-}
-
-/** Normalize one-sided resource material after validating original ranges. */
-export function normalizeOneSidedView(
-  html: string,
-  view: GeneratedComponentView,
-): string {
-  const ranges = view.usage
-    ? validateComponentRanges(html, view.usage.ranges)
-    : undefined;
-  const original = stripMarkers(html, view.usage, ranges);
-  return normalizeSingleDocument(original, view.path);
-}
-
-/** Compare page material while keeping only the saved root's inserted stylesheet links. */
-export function componentPageMaterial(
-  before: GeneratedComponentView,
-  after: GeneratedComponentView,
-  base: string,
-  head: string,
-  prepared: PreparedComponentComparison,
-  root?: string,
-  links?: ReviewLinkNormalization,
-): ReturnType<typeof normalizeReviewPair> {
-  const baseMaterial = comparisonStylesheetMaterial(base, before.usage, root);
-  const headMaterial = comparisonStylesheetMaterial(head, after.usage, root);
-  return normalizeReviewPair(
-    stripMarkers(
-      baseMaterial.html,
-      baseMaterial.usage,
-      baseMaterial.html === base ? prepared.baseRanges : undefined,
-    ),
-    stripMarkers(
-      headMaterial.html,
-      headMaterial.usage,
-      headMaterial.html === head ? prepared.headRanges : undefined,
-    ),
-    after.path,
-    links,
-  );
+  if (!diffed.length) return {};
+  return {
+    inlineEvidence: {
+      allExcluded: diffed.every(
+        ({ attribution }) => attribution.kind === "excluded",
+      ),
+      ...(analysis.retainedSelectors
+        ? { retainedSelectors: analysis.retainedSelectors }
+        : {}),
+    },
+  };
 }

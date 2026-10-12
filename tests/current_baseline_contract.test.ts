@@ -1,16 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import type { ComponentViewRecord } from "@mokly/viewer";
+
 import { isIncompatibleEarlierBaseline } from "../dist/baseline/compatibility.js";
 import { compileCatalogue } from "../dist/build/compile.js";
-import { comparisonStylesheetMaterial } from "../dist/components/comparison_stylesheets.js";
 import { loadConfig } from "../dist/config/load.js";
 import {
   parseHistoricalManifest,
   parseManifest,
 } from "../dist/registry/manifest.js";
 import { readBaseManifest } from "../dist/review/base_manifest.js";
+import { applyInlineMaterial } from "../dist/review/css/inline_rendering.js";
 import type { BaselineReader } from "../dist/review/git.js";
+import { PageAnalysis } from "../dist/review/page_analysis.js";
 
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { invalidCurrentManifest } from "./helpers/current_baseline_fixture.js";
@@ -38,16 +41,20 @@ test("comparison requires explicit provenance on a present private usage record"
     styles: [],
     resources: [],
   };
-  assert.throws(
-    () => comparisonStylesheetMaterial(html, usage),
-    /provenance|inserted/,
-  );
-  assert.equal(
-    comparisonStylesheetMaterial(html, { ...usage, insertedStylesheets: [] })
-      .html,
-    html,
-  );
-  assert.equal(comparisonStylesheetMaterial(html, undefined).html, html);
+  const material = (view: ComponentViewRecord | undefined) => {
+    const page = new PageAnalysis(
+      html,
+      "mokly-generated/page/index.html",
+      view,
+    );
+    return applyInlineMaterial(html, {
+      replacements: page.stylesheetEdits(),
+      appendix: "",
+    });
+  };
+  assert.throws(() => material(usage), /provenance|inserted/);
+  assert.equal(material({ ...usage, insertedStylesheets: [] }), html);
+  assert.equal(material(undefined), html);
 });
 
 for (const version of [3, 4, 5, 6, 7, 8, 9])

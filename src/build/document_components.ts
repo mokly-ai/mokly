@@ -5,7 +5,6 @@ import type { ResolvedRegistryEntry } from "../authoring/types.js";
 import { validateComponentResources } from "../components/output_validation.js";
 import { validateComponentRanges } from "../components/ranges.js";
 import type { LinkedComponentStylesheet } from "../components/render.js";
-import { rebaseStyleOwnership } from "../components/style_ownership.js";
 import { finalizeComponentStylesheets } from "../components/stylesheet_provenance.js";
 import type { PublicFilePolicy } from "../config/public_policy.js";
 import type { ResolvedConfig } from "../config/types.js";
@@ -17,7 +16,6 @@ import type { PendingGeneratedFiles } from "./pending_generated.js";
 export function finalizeDocumentView(input: {
   route: string;
   entry: ResolvedRegistryEntry;
-  original: string;
   html: string;
   captured: ComponentViewRecord | undefined;
   config: ResolvedConfig;
@@ -26,16 +24,7 @@ export function finalizeDocumentView(input: {
   pending: PendingGeneratedFiles;
   policy?: PublicFilePolicy;
 }): { html: string; view?: ComponentViewRecord } {
-  const {
-    route,
-    entry,
-    original,
-    captured,
-    config,
-    links,
-    components,
-    pending,
-  } = input;
+  const { route, entry, captured, config, links, components, pending } = input;
   if (!captured) return { html: input.html };
   if (entry.kind !== "screen" && entry.kind !== "component")
     throw new MoklyError(
@@ -49,18 +38,15 @@ export function finalizeDocumentView(input: {
     config.mockupsDir,
     links,
   );
-  const view = {
-    ...finalized.view,
-    styles: rebaseStyleOwnership(original, finalized.html, captured.styles),
-  };
+  const view = finalized.view;
   validateComponentRanges(finalized.html, view.ranges);
   validateComponentViewRecord(
     view,
     components,
     route,
     entry.kind === "component" && "variantOf" in entry
-      ? entry.variantOf
-      : undefined,
+      ? { rootId: entry.variantOf }
+      : {},
   );
   validateComponentResources(
     new Map([[route, view]]),

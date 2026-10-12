@@ -10,11 +10,11 @@ import { timeAsync } from "../diagnostics/timings.js";
 
 import { addArtifactFile } from "./artifact_files.js";
 import type { StylesheetReviewArtifact } from "./artifact_stylesheets.js";
-import { type GitReviewAssetReader, type ReviewAssetReader } from "./assets.js";
+import type { GitReviewAssetReader, ReviewAssetReader } from "./assets.js";
+import type { CompareReviewOptions } from "./compare.js";
 import { CompilationAssetReader } from "./compilation_assets.js";
 import { classifyComponents } from "./component_classification.js";
 import { baselineForCurrentIdentities } from "./component_metadata.js";
-import type { CssResourceAnalysis } from "./css/resource_analysis.js";
 import type { BaselineReader } from "./git.js";
 import type { MarkdownMoveSources } from "./moves/markdown_sources.js";
 import { prepareMoveClassification } from "./moves/prepare.js";
@@ -31,8 +31,7 @@ export async function compareComponentCatalogue(
   changedPaths: readonly string[],
   baseCommit: string,
   baseRef: string,
-  useFastPath?: boolean,
-  cssAnalysis?: CssResourceAnalysis,
+  options: CompareReviewOptions = {},
   markdown?: MarkdownMoveSources,
   sourceReader?: BaselineReader,
 ): Promise<StylesheetReviewArtifact> {
@@ -72,10 +71,9 @@ export async function compareComponentCatalogue(
     changedPaths,
     baseCommit,
     baseRef,
-    ...(cssAnalysis ? { cssAnalysis } : {}),
+    ...options,
     ...(markdown ? { markdown } : {}),
     ...(sourceReader ? { sourceReader } : {}),
-    ...(useFastPath === undefined ? {} : { useFastPath }),
   });
   const result = await classifyComponents(prepared);
   baseline = baselineForCurrentIdentities(

@@ -13,10 +13,10 @@ import type { PublicFilePolicy } from "../config/public_policy.js";
 import type { ResolvedConfig } from "../config/types.js";
 
 import type { BuildDiagnostic } from "./build_warnings.js";
-import type { ResourceSeed } from "./html_links.js";
 import type { LoadedGraph } from "./load_graph.js";
 import type { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
+import type { ResourceSeed } from "./resource_seeds.js";
 
 export async function renderCooperatively(
   entries: readonly ResolvedRegistryEntry[],

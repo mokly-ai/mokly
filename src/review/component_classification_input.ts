@@ -20,9 +20,15 @@ export interface ComponentClassificationInput {
   baseCommit: string;
   baseRef: string;
   cssParser?: CssRuleParser;
+  /** Test-only: vary each independent CSS cache bound without changing classification. */
+  cssCacheBytes?: number;
   cssAnalysis?: CssResourceAnalysis;
   /** Test-only: disable the unchanged-view decision so both paths can be compared. */
   useFastPath?: boolean;
+  /** Test-only: disable the style-only route without changing validation. */
+  useStylePath?: boolean;
+  /** Test-only: retain the delivered text-material oracle. */
+  useMaterialFingerprints?: boolean;
   /** Reuse the generation's pairing instead of computing another candidate pass. */
   pairing?: MovePairing;
   markdown?: MarkdownMoveSources;

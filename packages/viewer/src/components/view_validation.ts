@@ -1,6 +1,5 @@
 import { reviewMaterialKey } from "../data/material_key.js";
 import { isKebabCase, isEntryPath } from "../navigation/logical.js";
-import { isStylesheetPath } from "../review/css/stylesheet_path.js";
 
 import { decodeProps, encodeProps } from "./codec.js";
 import { canonicalJson, exactKeys, invalidData } from "./data.js";
@@ -13,19 +12,39 @@ import type {
 } from "./manifest_types.js";
 import { validateProps } from "./props.js";
 import { validateComponentSource } from "./source.js";
-import { sortedStrings, validateResourcePath } from "./validation_helpers.js";
+import { sortedStrings } from "./validation_helpers.js";
+import { validateViewMaterials } from "./view_material_validation.js";
 import { validateViewReferences } from "./view_references.js";
+
+export interface ComponentViewsValidationOptions {
+  dark: boolean;
+  historical?: boolean;
+  rootId?: string;
+}
+
+export interface ComponentViewValidationOptions {
+  historicalUsage?: boolean;
+  rootId?: string;
+}
 
 export function validateComponentViews(
   value: unknown,
-  dark: boolean,
   components: ReadonlyMap<
     string,
     Pick<ManifestComponent, "propSchema" | "slots">
   >,
   at: string,
-  rootId?: string,
+  options: ComponentViewsValidationOptions,
 ): asserts value is readonly ComponentViewRecord[] {
+  if (arguments.length !== 4 || typeof at !== "string")
+    invalidData(
+      "$componentViews",
+      "expected components, path and options object",
+    );
+  validateOptions(options, ["dark", "historical", "rootId"], `${at}.options`);
+  if (typeof options.dark !== "boolean")
+    invalidData(`${at}.options.dark`, "expected a boolean");
+  const { dark, rootId } = options;
   const axes = ["mobile", "desktop"].flatMap((viewport) =>
     (dark ? ["light", "dark"] : ["light"]).map(
       (scheme) => `${viewport}/${scheme}`,
@@ -42,7 +61,6 @@ export function validateComponentViews(
         "instances",
         "slots",
         "ranges",
-        "styles",
         "resources",
         "insertedStylesheets",
       ],
@@ -54,7 +72,6 @@ export function validateComponentViews(
       "instances",
       "slots",
       "ranges",
-      "styles",
       "resources",
       "insertedStylesheets",
     ])
@@ -64,7 +81,7 @@ export function validateComponentViews(
       view as unknown as ComponentViewRecord,
       components,
       `${at} / ${axes[i]}`,
-      rootId,
+      { ...(rootId === undefined ? {} : { rootId }) },
     );
   });
 }
@@ -77,9 +94,15 @@ export function validateComponentViewRecord(
     Pick<ManifestComponent, "propSchema" | "slots">
   >,
   at: string,
-  rootId?: string,
-  historical = false,
+  options: ComponentViewValidationOptions,
 ): void {
+  if (arguments.length !== 4 || typeof at !== "string")
+    invalidData(
+      "$componentView",
+      "expected components, path and options object",
+    );
+  validateOptions(options, ["historicalUsage", "rootId"], `${at}.options`);
+  const { historicalUsage: historical = false, rootId } = options;
   for (const instance of view.instances) {
     exactKeys(
       instance,
@@ -169,54 +192,7 @@ export function validateComponentViewRecord(
     ...view.instances.map((instance) => instance.componentId),
     ...(rootId ? [rootId] : []),
   ]);
-  let end = 0;
-  for (const style of view.styles) {
-    exactKeys(style, ["startOffset", "endOffset", "componentIds"], at);
-    if (
-      !Number.isSafeInteger(style.startOffset) ||
-      !Number.isSafeInteger(style.endOffset) ||
-      style.startOffset < end ||
-      style.endOffset <= style.startOffset
-    )
-      invalidData(at, "invalid or overlapping style range");
-    end = style.endOffset;
-    validateOwners(style.componentIds, rendered, at);
-  }
-  for (const resource of view.resources) {
-    exactKeys(resource, ["path", "componentIds"], at);
-    validateResourcePath(resource.path, at);
-    if (isStylesheetPath(resource.path))
-      invalidData(at, "stylesheet resources cannot have owners");
-    validateOwners(resource.componentIds, rendered, at);
-  }
-  sortedStrings(
-    view.resources.map((resource) => resource.path),
-    `${at}.resources`,
-  );
-  if (view.insertedStylesheets !== undefined) {
-    if (!Array.isArray(view.insertedStylesheets))
-      invalidData(at, "insertedStylesheets must be an array");
-    let previousEnd = 0;
-    for (const link of view.insertedStylesheets) {
-      exactKeys(
-        link,
-        ["startOffset", "endOffset", "path", "componentPaths"],
-        at,
-      );
-      if (
-        typeof link.startOffset !== "number" ||
-        typeof link.endOffset !== "number" ||
-        !Number.isSafeInteger(link.startOffset) ||
-        !Number.isSafeInteger(link.endOffset) ||
-        link.startOffset < previousEnd ||
-        link.endOffset <= link.startOffset
-      )
-        invalidData(at, "invalid or overlapping inserted stylesheet span");
-      validateResourcePath(link.path, at);
-      validateOwners(link.componentPaths, rendered, at);
-      previousEnd = link.endOffset;
-    }
-  }
+  validateViewMaterials(view, rendered, at);
 }
 
 function validateOwner(
@@ -248,12 +224,15 @@ function validateOrders(
       );
 }
 
-function validateOwners(
+function validateOptions(
   value: unknown,
-  rendered: ReadonlySet<string>,
+  fields: readonly string[],
   at: string,
 ): void {
-  sortedStrings(value, at);
-  if (!value.length || !value.every((id) => rendered.has(id)))
-    invalidData(at, "style/resource owners must render in this view");
+  exactKeys(value, fields, at);
+  for (const field of Object.keys(value)) {
+    const expected = field === "rootId" ? "string" : "boolean";
+    if (typeof value[field] !== expected)
+      invalidData(`${at}.${field}`, `expected a ${expected}`);
+  }
 }

@@ -1,11 +1,12 @@
 /** Compile and traverse selectors behind one contained error boundary. */
-import { compile, selectAll } from "css-select";
+import { compile, selectAll, selectOne } from "css-select";
 import { SelectorType, stringify } from "css-what";
 import type { Selector } from "css-what";
 import { html } from "parse5";
 
 import { cssDocumentOptions } from "./document.js";
 import type { CssDocument, CssElement } from "./document.js";
+import { documentSubjectAllowed } from "./document_subjects.js";
 import { CssSelectorError } from "./match_types.js";
 import { nthSelectors, staticSelectors } from "./pseudos.js";
 
@@ -14,14 +15,37 @@ export function matchesDocument(
   query: Selector[][],
   document: CssDocument,
 ): boolean {
-  return matchingElements(query, document).length > 0;
+  return queryDocument(query, document, (predicate, options) =>
+    Boolean(selectOne(predicate, document, options)),
+  );
 }
 
-/** Keep all matches so one inside match cannot hide a later page element. */
+/** Return every matching element through the same conservative rewrite. */
+export function selectDocument(
+  query: Selector[][],
+  document: CssDocument,
+): CssElement[] {
+  return queryDocument(query, document, (predicate, options) =>
+    selectAll(predicate, document, options),
+  );
+}
+
+/** Keep all allowed matches for catalogue-wide CSS membership. */
 export function matchingElements(
   query: Selector[][],
   document: CssDocument,
 ): CssElement[] {
+  return selectDocument(query, document);
+}
+
+function queryDocument<T>(
+  query: Selector[][],
+  document: CssDocument,
+  select: (
+    predicate: (element: CssElement) => boolean,
+    options: ReturnType<typeof cssDocumentOptions>,
+  ) => T,
+): T {
   try {
     const options = cssDocumentOptions(document);
     const pseudos: Record<string, (element: CssElement) => boolean> = {};
@@ -59,7 +83,11 @@ export function matchingElements(
       );
     const selectors = rewrite(staticSelectors(query));
     const predicate = compile(selectors, { ...options, pseudos });
-    return selectAll(predicate, document, options);
+    return select(
+      (element) =>
+        documentSubjectAllowed(document, element) && predicate(element),
+      options,
+    );
   } catch (cause) {
     throw new CssSelectorError("selector-parse-failed", cause);
   }

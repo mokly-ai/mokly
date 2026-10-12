@@ -44,7 +44,7 @@ Browsers receive public catalogue data, never the private source manifest.
 The implemented [public catalogue](./mokly-catalogue.md) adds
 `/mokly-viewer/catalogue.json` beside this private boundary; it is not a manifest
 endpoint. Serve/export allowlist its viewer fields and omit `sourceFiles`,
-resolved dependency evidence, ownership/style offsets, private envelopes, and
+resolved dependency evidence, ownership/style offsets, retired ownership records, private envelopes, and
 absolute paths. Authored display metadata and optional
 [instance source locations](./mokly-instances.md#optional-invocation-source)
 remain repository-relative and confer no permission to fetch source files.

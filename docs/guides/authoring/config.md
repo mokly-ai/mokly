@@ -192,7 +192,7 @@ one React runtime even when the executable came from an npx cache.
 ## Public files
 
 Only authored regular files referenced by a rendered document, a stylesheet
-rule or a renderer resource record are public; nested HTML and CSS URLs are
+rule or a renderer resource record are public. Nested HTML and CSS URLs are
 followed transitively. Keep these files under `mockupsDir` and outside
 `mokly-generated/`; source files, symlinks and unreferenced files stay private.
 Stylesheet hrefs are relative to each generated document inside `mokly-generated/`.

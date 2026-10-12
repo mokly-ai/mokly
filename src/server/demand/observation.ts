@@ -1,7 +1,7 @@
 /** Generation-tagged generated inputs for incremental resource watch discovery. */
 import { isSafeCatalogueRoute, isSafeRepositoryPath } from "@mokly/viewer/data";
 
-import type { ResourceSeed } from "../../build/html_links.js";
+import type { ResourceSeed } from "../../build/resource_seeds.js";
 
 export interface PreviewObservation {
   generation: string;

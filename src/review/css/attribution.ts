@@ -14,7 +14,6 @@ import type { CssMatchingPair, CssOutputRange } from "./containment.js";
 import type { CssElementMatch } from "./match_types.js";
 
 export interface CssOutputMatch {
-  match: CssElementMatch;
   occurrences: readonly CssOutputRange[];
   selector: string;
   root?: string;
@@ -167,7 +166,6 @@ export function outputMatch(
         );
   const root = ranges.find((range) => range.root)?.componentId;
   return {
-    match,
     occurrences: ranges,
     selector: match.selector,
     ...(root ? { root } : {}),

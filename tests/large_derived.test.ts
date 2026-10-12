@@ -9,7 +9,7 @@ import { prepareDerivedToolchain } from "../scripts/large/toolchain.mjs";
 import { generateLargeFixture } from "./fixtures/large/generate.js";
 import { repositoryRoot } from "./helpers/fixture.js";
 
-test("the derived large fixture archives install/build inputs and ignores only generated output", async (t) => {
+test("the derived large fixture archives inputs and ignores generated output and fixture metadata", async (t) => {
   const root = await fs.mkdtemp(
     path.join(repositoryRoot, ".context/large-derived-"),
   );
@@ -29,31 +29,49 @@ test("the derived large fixture archives install/build inputs and ignores only g
     (await fs.readFile(path.join(root, ".gitignore"), "utf8"))
       .trim()
       .split("\n"),
-    [".review/", ".mokly-cache/", "node_modules/", "mockups/mokly-generated/"],
+    [
+      ".review/",
+      ".mokly-cache/",
+      "node_modules/",
+      ".mokly-large-fixture.json",
+      "mockups/mokly-generated/",
+    ],
   );
   const lock = JSON.parse(
     await fs.readFile(path.join(repositoryRoot, "package-lock.json"), "utf8"),
   );
   const calls: string[][] = [];
+  let packCount = 0;
   await prepareDerivedToolchain(
     repositoryRoot,
     root,
     async (executable, argv, options) => {
       calls.push([executable, ...argv]);
       if (argv[0] === "pack") {
-        assert.equal(options.cwd, repositoryRoot);
-        assert.ok(argv.includes("--ignore-scripts"));
-        await fs.writeFile(
-          path.join(root, "tooling", "mokly-test.tgz"),
-          "archived package bytes",
+        const viewer = packCount++ === 1;
+        assert.equal(
+          options.cwd,
+          viewer
+            ? path.join(repositoryRoot, "packages/viewer")
+            : repositoryRoot,
         );
-        return { stdout: '[{"filename":"mokly-test.tgz"}]', stderr: "" };
+        assert.ok(argv.includes("--ignore-scripts"));
+        const filename = viewer ? "viewer-test.tgz" : "mokly-test.tgz";
+        await fs.writeFile(
+          path.join(root, "tooling", filename),
+          viewer ? "archived viewer bytes" : "archived package bytes",
+        );
+        return { stdout: JSON.stringify([{ filename }]), stderr: "" };
       }
       assert.equal(options.cwd, root);
       const pkg = JSON.parse(
         await fs.readFile(path.join(root, "package.json"), "utf8"),
       );
       assert.equal(pkg.dependencies["@mokly/mokly"], "file:tooling/mokly.tgz");
+      assert.equal(
+        pkg.dependencies["@mokly/viewer"],
+        "file:tooling/viewer.tgz",
+      );
       assert.equal(
         pkg.dependencies["@firna/ui"],
         lock.packages["node_modules/@firna/ui"].version,
@@ -69,6 +87,10 @@ test("the derived large fixture archives install/build inputs and ignores only g
         await fs.readFile(path.join(root, "tooling/mokly.tgz"), "utf8"),
         "archived package bytes",
       );
+      assert.equal(
+        await fs.readFile(path.join(root, "tooling/viewer.tgz"), "utf8"),
+        "archived viewer bytes",
+      );
       if (argv[0] === "install") {
         assert.ok(argv.includes("--package-lock-only"));
         await fs.writeFile(
@@ -82,6 +104,7 @@ test("the derived large fixture archives install/build inputs and ignores only g
   assert.deepEqual(
     calls.map((call) => call.slice(0, 2)),
     [
+      ["npm", "pack"],
       ["npm", "pack"],
       ["npm", "install"],
       ["npm", "ci"],

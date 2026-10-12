@@ -1,6 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 
-/** The fixture's only edit adds a rule that matches no screen at any size. */
+/** Setup's unrelated stylesheet edit matches no screen at any size. */
 export const expectedStylesheetChanges = 0;
 
 /** Classification publication precedes asynchronous IPC delivery and child adoption. */
@@ -15,7 +15,7 @@ export async function waitForBrowseChanges(url, timeoutMs = 300000) {
     if (!response.ok)
       throw new Error(`Browse returned HTTP ${response.status}`);
     const html = await response.text();
-    if (html.includes('data-changes-status="ready"')) return;
+    if (html.includes('data-changes-status="ready"')) return html;
     if (html.includes('data-changes-status="unavailable"'))
       throw new Error("Changes is unavailable in Browse");
     await setTimeout(100);

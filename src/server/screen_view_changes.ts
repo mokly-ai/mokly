@@ -107,14 +107,26 @@ export function screenResultEvidence(result: ReviewResultV7): {
         path,
         views: views
           .filter(
-            (view) => view.reasons?.length || view.excludedResources?.length,
+            (view) =>
+              view.reasons?.length ||
+              view.excludedResources?.length ||
+              view.inlineStyles,
           )
-          .map(({ viewport, colorScheme, reasons, excludedResources }) => ({
-            viewport,
-            colorScheme,
-            ...(reasons ? { reasons } : {}),
-            ...(excludedResources ? { excludedResources } : {}),
-          })),
+          .map(
+            ({
+              viewport,
+              colorScheme,
+              reasons,
+              excludedResources,
+              inlineStyles,
+            }) => ({
+              viewport,
+              colorScheme,
+              ...(reasons ? { reasons } : {}),
+              ...(excludedResources ? { excludedResources } : {}),
+              ...(inlineStyles ? { inlineStyles } : {}),
+            }),
+          ),
       }))
       .filter((entry) => entry.views.length),
   };

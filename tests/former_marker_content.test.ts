@@ -89,6 +89,7 @@ for (const [name, content] of comments) {
       base: html,
       head: html,
       ignoredIds: [],
+      pairedIgnoreIds: [],
     });
     const { context, view } = markerView(html, html, usage);
     for (const useFastPath of [false, true]) {

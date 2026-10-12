@@ -115,6 +115,7 @@ interface ReviewResult {
       state: "added" | "removed" | "changed" | "ignored-only" | "unchanged";
       ignoredIds: readonly string[];
       material?: true;
+      inlineStyles?: InlineStyleEvidence;
       reasons?: readonly {
         kind: "dependency";
         path: string;
@@ -149,12 +150,15 @@ catalogue without registered components emits empty `components` and
 `affectedConsumers` arrays. Its `changes` still records directly changed
 screens and use cases; there is no second screen-only shape.
 
-Optional view `material`, `reasons`, and `excludedResources` implement
-[CSS change attribution](./mokly-css-attribution.md). `material` is present
-exactly when the view's normalized documents differ. Empty optional lists are
-omitted. `DependencyAnalysis` uses the [per-rule evidence schema](./mokly-css-attribution-membership.md);
-missing view evidence means no retained or excluded resources for that view. Retained resource
-reasons make paired views changed, and summary counts follow these states.
+Optional resource evidence follows [CSS attribution](./mokly-css-attribution.md)
+and its [per-rule schema](./mokly-css-attribution-membership.md).
+`inlineStyles` follows [inline evidence](./mokly-inline-style-evidence.md), and
+`ignoredIds` follows [inline ownership](./mokly-inline-styles.md#membership-and-states).
+`material` is present when actual material differs after paired ignores, inserted-link
+removal and inline canonicalization. Single-document normalization distinguishes
+unchanged from ignored-only. Empty optional lists are omitted. Missing evidence
+carries no retained or excluded facts. Retained resource reasons make paired
+views changed; summary counts follow those states.
 
 The [review validation contract](./mokly-component-review-validation.md)
 exclusively owns every `review.json` array order. No timestamp or absolute

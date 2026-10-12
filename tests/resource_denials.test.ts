@@ -54,7 +54,7 @@ for (const [name, cause] of [
       instances: [],
       slots: [],
       ranges: [],
-      styles: [],
+
       resources: [{ path: name, componentIds: [] }],
     };
     const check = (error: Error): boolean => {
@@ -142,7 +142,7 @@ test("unresolvable resource aliases retain typed errors and the referring route"
     instances: [],
     slots: [],
     ranges: [],
-    styles: [],
+
     resources: [{ path: "alias.css", componentIds: [] }],
   };
   for (const [validate, errorType] of [

@@ -9,8 +9,10 @@ CssRuleMatchResult` returns `status: "resolved"` with one `{ change, outcome }`
 per diffed rule, in added, removed, then changed list order. It preserves each
 list's ordinal ordering and original rule records. An unresolved diff passes
 through with its side-tagged parse failures. `CssDocumentPair.before` and
-`.after` are optional default-adapter parse5 documents supplied after paired
-normalization; the matcher performs no file reads or classification writes.
+`.after` are optional default-adapter parse5 documents. Component-aware
+comparison supplies original trees and a paired-ignore subject filter. Other
+callers keep their documented normalization. The matcher performs no file
+reads or classification writes.
 
 `analyzeStylesheetChange(before: string, after: string, documents:
 CssDocumentPair, parser?: CssRuleParser): CssAnalysisOutcome` composes all three

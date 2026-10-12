@@ -8,9 +8,10 @@ Review-ignore exception are implemented in
 
 ## Shared Finder
 
-Placement, renderer-link reuse, final-link provenance and resource discovery
-use one shared HTML link finder. Parse HTML with source locations and scripting
-enabled. Return only `link` elements in the HTML namespace
+Placement, renderer-link reuse, final-link provenance, resource discovery
+and move normalization use the shared `classifyHtmlLink` rule for HTML
+namespaces and rel tokens. The link finder parses HTML with source locations
+and scripting enabled. Return only `link` elements in the HTML namespace
 (`http://www.w3.org/1999/xhtml`), in document order, with their decoded
 attributes, logical head/body location and original UTF-16 spans. Do not use
 separate regular-expression or head-only scans for the same link decision.
@@ -22,6 +23,9 @@ SVG and MathML namespace links supply no placement anchor, reused link,
 inserted-link span or resource. HTML content at an integration point, such as
 SVG `foreignObject`, stays active. Decide from each element's parsed namespace,
 not from its ancestors' tag names.
+Component-aware reference collection applies this namespace rule to its shared
+original-page tree without another parse. Move normalization keeps foreign
+link hrefs unchanged and normalizes active HTML link resources.
 
 A stylesheet link has an ASCII-case-insensitive `stylesheet` token in its
 ASCII-whitespace-delimited `rel` value. Other tokens, such as `alternate`, do
@@ -78,8 +82,9 @@ Do not infer extra starting points from declarations or from matching href text.
 Use this same resource set for complete comparison, the unchanged-view fast
 path and CSS rule analysis. An edit to inserted CSS can therefore change its
 component and affect consumers even when its head anchor was ignored. Selector
-matching still uses the Review-ignore-normalized document: the exception does
-not restore ignored authored markup, styles or links. Page material separately
+matching uses original trees and ranges, with ignored subjects excluded.
+Ignored nodes remain structural selector context; their resource references
+stay ignored unless a validated inserted span supplies the resource. Page material separately
 removes the recorded links under the provenance contract. Template content and
 reused renderer links receive no exception. Complete and selected artifacts
 retain the same private spans until snapshot-resource validation finishes.

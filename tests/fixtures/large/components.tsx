@@ -2,6 +2,8 @@ import { Button } from "@firna/ui/button";
 
 import { defineComponent } from "@mokly/mokly";
 
+import { InlineActionStyle } from "./inline_styles.js";
+
 const metadata = {
   relatedDocs: ["notes.md"],
 };
@@ -28,13 +30,15 @@ export function createComponents(area: string) {
       secondary: { kind: "boolean" },
     },
     render: (props) => (
-      <Button
-        onPress={noop}
-        disabled={props.disabled ?? false}
-        tone={props.secondary ? "secondary" : "primary"}
-      >
-        {props.label}
-      </Button>
+      <InlineActionStyle area={area}>
+        <Button
+          onPress={noop}
+          disabled={props.disabled ?? false}
+          tone={props.secondary ? "secondary" : "primary"}
+        >
+          {props.label}
+        </Button>
+      </InlineActionStyle>
     ),
     variants: [
       { slug: "default", title: "Default", props: { label: "Continue" } },

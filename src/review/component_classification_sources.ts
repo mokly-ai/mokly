@@ -7,7 +7,12 @@ import type {
   ScreenReviewV7,
 } from "@mokly/viewer/data";
 
-import { timeAsync, timingCounts } from "../diagnostics/timings.js";
+import { runWithComparisonWork } from "../diagnostics/material_timings.js";
+import {
+  timeAsync,
+  timingCounts,
+  timingDocumentWork,
+} from "../diagnostics/timings.js";
 import { relatedDocumentReferences } from "../documents/references.js";
 
 import { classificationComparisons } from "./component_classification_comparisons.js";
@@ -83,7 +88,7 @@ export async function classifyComponentsWithSources(
   );
   const pairs = entryPairs(before, after, pairing.moves);
   const comparisonCounts = new ComponentComparisonCounts();
-  await timeAsync("review.compare-screens", async () => {
+  const compare = async () => {
     const entries = await classificationComparisons(
       context,
       pairs,
@@ -194,8 +199,12 @@ export async function classifyComponentsWithSources(
           reasons: uniqueReasons(reasons),
         });
     }
-    timingCounts("review.compare-screens", () => comparisonCounts.record());
-  });
+    if (!timingDocumentWork())
+      timingCounts("review.compare-screens", () => comparisonCounts.record());
+  };
+  await timeAsync("review.compare-screens", () =>
+    context.componentAware ? runWithComparisonWork(compare) : compare(),
+  );
   return finishComponentClassification({
     request: input,
     before,

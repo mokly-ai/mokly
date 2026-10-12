@@ -4,10 +4,10 @@ import {
 } from "@mokly/viewer/data";
 import type { DependencyReason } from "@mokly/viewer/data";
 
+import { compareComponentViews } from "./component_compare_views.js";
 import type { entryPairs } from "./component_metadata.js";
 import { entryViewPairs } from "./component_pairing.js";
 import type { componentVariantEntries } from "./component_variant_classification.js";
-import { compareComponentView } from "./component_view.js";
 import type {
   ComparedComponentView,
   ComponentViewContext,
@@ -34,11 +34,7 @@ export async function classificationComparisons(
     const root = parent?.path;
     const grouped = entryViewPairs(pair, before, after, moves);
     const pairedViews = grouped.views;
-    const compared = await Promise.all(
-      pairedViews.map((view) =>
-        compareComponentView(context, view.before, view.after, root),
-      ),
-    );
+    const compared = await compareComponentViews(context, pairedViews, root);
     entries.push({ pair, pairedViews, compared, root, grouped });
   }
   const attribution = context.resources.css.attribution;

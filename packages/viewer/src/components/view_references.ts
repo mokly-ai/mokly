@@ -17,7 +17,7 @@ export function validateViewReferences(
   instances: ReadonlyMap<string, ComponentInstanceRecord>,
   slots: ReadonlyMap<string, ComponentSlotRecord>,
   at: string,
-  historical = false,
+  historicalUsage = false,
 ): void {
   const ownerExists = (owner: ComponentInputOwner) => {
     if (owner.kind === "instance" && !instances.has(owner.instanceKey))
@@ -51,7 +51,7 @@ export function validateViewReferences(
     const instance = instances.get(slot.instanceKey);
     if (
       !instance ||
-      (!historical &&
+      (!historicalUsage &&
         !components.get(instance.componentId)?.slots.includes(slot.name))
     )
       invalidData(

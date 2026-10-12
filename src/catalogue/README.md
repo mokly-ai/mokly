@@ -91,6 +91,10 @@ declarations; their wire encoding, keys and ownership references remain validate
 Display strings and props remain authored data; repository-relative source
 metadata never grants permission to serve source files.
 
+Ready Changes retains `inlineStyles` in each view's optional `resourceEvidence`,
+including all-excluded inline rules, without inventing a stylesheet path. The
+public reader validates its payload separately from comparison state fields.
+
 Ready Changes includes optional `resourceEvidence` on each screen or saved
 component view and on each whole-document page. It carries the same retained
 rule keys, changed component paths, page selectors and exclusions as comparison

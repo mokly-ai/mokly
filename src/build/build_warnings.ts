@@ -15,6 +15,7 @@ export type BuildDiagnosticCode =
   | "removed-dependencies"
   | "removed-owned-dependencies"
   | "removed-shared-impact"
+  | "ignored-renderer-styles"
   | "duplicate-component-stylesheet"
   | "missing-configured-stylesheet-link"
   | "ignored-stylesheet-resource-owner";
@@ -40,6 +41,7 @@ const CODES: readonly BuildDiagnosticCode[] = [
   "removed-dependencies",
   "removed-owned-dependencies",
   "removed-shared-impact",
+  "ignored-renderer-styles",
   "duplicate-component-stylesheet",
   "missing-configured-stylesheet-link",
   "ignored-stylesheet-resource-owner",

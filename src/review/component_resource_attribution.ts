@@ -8,6 +8,7 @@ import { canonicalJson, isStylesheetPath } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 
+import type { InlineResourceOwners } from "./component_inline_resources.js";
 import { uniqueReasons } from "./component_metadata.js";
 
 /** Retained actual-invocation evidence can affect an owner without a saved variant. */
@@ -19,33 +20,69 @@ export interface OwnedResourceReason {
 export function ownedResourceReasons(
   reasons: readonly DependencyReason[],
   prefix: string,
+  inlineOwners: InlineResourceOwners,
   before?: ComponentViewRecord,
   after?: ComponentViewRecord,
   root?: string,
 ): OwnedResourceReason[] {
-  const usages = [before, after].filter((usage) => usage !== undefined);
-  const present = new Set([
+  const present = presentComponents(before, after, root);
+  return reasons.flatMap((reason) =>
+    [...resourceOwners(reason.path, prefix, inlineOwners, before, after)]
+      .filter((componentId) => present.has(componentId))
+      .map((componentId) => ({ componentId, reason })),
+  );
+}
+
+/** Resolve byte-only changes against the same explicit and inferred owners. */
+export function ownedResourceComponents(
+  paths: readonly string[],
+  prefix: string,
+  inlineOwners: InlineResourceOwners,
+  before?: ComponentViewRecord,
+  after?: ComponentViewRecord,
+  root?: string,
+): ReadonlySet<string> {
+  const present = presentComponents(before, after, root);
+  return new Set(
+    paths.flatMap((path) =>
+      [...resourceOwners(path, prefix, inlineOwners, before, after)].filter(
+        (id) => present.has(id),
+      ),
+    ),
+  );
+}
+
+function presentComponents(
+  before?: ComponentViewRecord,
+  after?: ComponentViewRecord,
+  root?: string,
+): ReadonlySet<string> {
+  return new Set([
     ...(root ? [root] : []),
-    ...usages.flatMap((usage) =>
-      usage.instances.map((instance) => instance.componentId),
+    ...[before, after].flatMap(
+      (usage) => usage?.instances.map((instance) => instance.componentId) ?? [],
     ),
   ]);
-  return reasons.flatMap((reason) => {
-    if (isStylesheetPath(reason.path)) return [];
-    const publicPath = prefix
-      ? reason.path.slice(prefix.length + 1)
-      : reason.path;
-    const owners = new Set([
-      ...usages.flatMap((usage) =>
-        usage.resources.flatMap((resource) =>
+}
+
+function resourceOwners(
+  path: string,
+  prefix: string,
+  inlineOwners: InlineResourceOwners,
+  before?: ComponentViewRecord,
+  after?: ComponentViewRecord,
+): ReadonlySet<string> {
+  if (isStylesheetPath(path)) return new Set();
+  const publicPath = prefix ? path.slice(prefix.length + 1) : path;
+  return new Set([
+    ...(inlineOwners.get(path) ?? []),
+    ...[before, after].flatMap(
+      (usage) =>
+        usage?.resources.flatMap((resource) =>
           resource.path === publicPath ? resource.componentIds : [],
-        ),
-      ),
-    ]);
-    return [...owners]
-      .filter((componentId) => present.has(componentId))
-      .map((componentId) => ({ componentId, reason }));
-  });
+        ) ?? [],
+    ),
+  ]);
 }
 
 export function propagateOwnedResources(

@@ -1,0 +1,192 @@
+# Shell Layout
+
+Continuation of [mokly-shell-design](./mokly-shell-design.md).
+
+## Layout
+
+The shell fills the viewport (`100vh`, document scrolling disabled); every
+scrollable region scrolls internally:
+
+- **Top bar** — 48px, surface background, hairline bottom border: the
+  [Mokly mark and wordmark](./mokly-shell-brand.md), then a centred search field
+  (max-width 440px, led by a 15px stroked magnifier icon that holds its size while the field flexes)
+  that flexes down to whatever room the bar leaves it. Below the breakpoint a menu button opens the
+  catalogue drawer. Search uses
+  `Search catalogue` as its accessible name and `Search catalogue…` as its
+  placeholder in both viewport sizes, covering screens, pages, and flows.
+  The bar carries no preview mode switch; the delivered Auto/Light/Dark
+  Appearance control is the one setting that belongs here.
+  Matching uses the single [search rule](./mokly-folders.md#titles).
+  Filtering hides empty groups and opens retained groups, and composes with
+  the All/Changes filter.
+- **Tag picker** — a tag-icon control at the trailing edge of the search
+  field, muted like the leading search icon and filling to a soft rounded square
+  on hover. It opens a panel anchored under the field and aligned to its width
+  (max-width 440px): a `--chrome-surface` card with a hairline border, 10px
+  radius, and `--chrome-shadow` elevation, holding an uppercase 11px muted
+  `Tags` head above a wrapping row of the details inspector's tag chips. The
+  panel lists every tag the catalogue declares, in alphabetical order, and
+  scrolls internally once that set outgrows it. Selecting a chip enters
+  `tag:<tag>` in the search field, replacing any tag term already entered, and
+  closes the panel; selecting the chip whose tag is the entered term clears that
+  term. The chip matching the entered query carries the accent active state with
+  contrast text and glyph. A tag chip is a button on both surfaces: it reports
+  whether its tag is entered through `aria-pressed`, fills with the soft accent
+  on hover, and moves down 1px with an inset shadow while pressed. Opening the
+  panel moves focus to the chip for the entered tag, or to the first chip when
+  no tag is entered; the chip row then keeps a single tab stop that ArrowLeft
+  and ArrowRight rove and wrap at both ends, Home and End send to its ends, and
+  Enter or Space activates. That chip row is a labelled toolbar carrying the
+  single tab stop, while the details inspector's chips stay independent tab
+  stops. Escape closes the panel and returns focus to the control without
+  changing the query, and a click outside closes it, returning focus to the
+  control only when the closing panel still holds it. A catalogue that declares
+  no tags renders neither the control nor the panel.
+- **Navigation** — 248px initial column, `#fbfbfa` background, hairline right
+  border. On desktop, an 8px-wide split separator with a centred 2×32px grip
+  resizes the column from 192px to 480px without exceeding half the viewport.
+  Dragging resizes continuously; Left/Right change it by 16px, Home/End choose
+  its bounds, and double-click restores 248px. Served pages remember the last
+  chosen width. The grip rests in the strong border color and turns
+  accent-colored with a soft accent halo while hovered, keyboard-focused, or
+  being dragged; the
+  [workspace inspector divider](./mokly-component-workspace-design.md) reuses
+  that affordance rotated. The separator is absent from the mobile drawer and
+  without JavaScript. The head row is `CATALOGUE` (uppercase, 11px) with a text button
+  labelled `Collapse all`; an All/Changes segmented filter (with a monospace
+  changed count) is always present in live Serve, followed by the scrollable tree.
+  While a comparison is being prepared or detection is pending, an 11px spinner
+  replaces the count in its fixed four-character-wide slot. Selected Changes
+  shows a spinner in place of rows with one of two messages: “Preparing
+  comparison” above “This takes a moment. You can keep browsing All while it
+  finishes.” before the comparison exists, then “Checking for changes…” while
+  detection runs. Only the preparing state carries a secondary line; it is the
+  one state whose message is a title plus detail, and the one whose spinner
+  aligns to the first line instead of centring on the message. Each count-slot
+  spinner is a status region named after the work it reports, so preparing and
+  checking are distinguishable without opening the sidebar. A failed comparison, whether
+  preparation or detection failed, shows the single unavailable message and a
+  dash, and never names a command, path, or reason; a completed empty result
+  shows `0` and “No changes found.” The filter and tree origin keep their
+  positions throughout, and All stays selectable in every state.
+  Reduced-motion settings disable rotation.
+  The drawer below the breakpoint shows the same body. Static exports without
+  Changes retain their filter-free layout. The catalogue-navigation component's
+  `loading`, `preparing`, and `unavailable` variants are the mobile/desktop
+  owning mockups for the three non-ready states.
+  `design/changes/availability/preparing` and `design/changes/availability/unavailable` additionally own
+  the preparing and failed states inside the complete shell, where Changes is
+  selected and the chosen screen stays available. The preparing state exists only
+  for derived baselines; see
+  [derived baselines](./mokly-derived-baselines.md) for when it is published.
+  - The tree begins with separate `Specs` and `Components` native disclosures,
+    both open by default and both closed by `Collapse all`. Search and Changes
+    hide sections when they hide every row in them. Both sections are views of
+    the one [catalogue tree](./mokly-catalogue.md#tree) filtered by kind; the
+    [folder contract](./mokly-folders.md#rows-and-clicks) owns rows.
+  - Folder groups are native
+    `<details>` whose summary row shows a closed/open folder SVG pair (swapped
+    via the `[open]` state), a bold label, and a monospace child count.
+    The count is the number of immediate child rows that the active All,
+    Changes and search/tag filters retain in this section. Count a retained
+    child folder or variant parent once, not its descendants, and count a
+    retained Overview row once. Collapsing a group does not change its count.
+    Rows and counts must use the same visibility rule; do not count hidden,
+    removed or nonmatching rows when that active filter excludes them.
+    The summary only expands or collapses the folder and never navigates. A folder
+    whose own page is a document, page, or flow lists that page as its first
+    child row with that page's own icon, labelled with the page title or
+    `Overview` when that equals the folder title; a folder whose own page is a
+    screen or component renders as that entry's row with the disclosure
+    described below. Leaves show a screen, variant, page, document, flow, or
+    component SVG; the document SVG adds two lines of text to the page outline,
+    and flow icons read in the accent.
+  - Rows indent 16px per depth from an 8px root inset and paint one faint
+    1px vertical guide per ancestor depth. The hover/active highlight is an
+    inset pill starting at the row's indent (`--mbk-indent`), so guides stay
+    visible; the active row uses the accent with contrast text.
+  - A screen or component with variants keeps its link row and adds a 16px
+    chevron disclosure button at the row's trailing edge that toggles a list of
+    its variant rows one indent step deeper, each with the variant icon — an
+    outline of the parent's kind over a second, partially drawn outline, muted
+    like the screen icon so only the flow icon takes the accent. The row and its button
+    share one hover/selected pill, and the button rotates its chevron while
+    open. The Changes filter shows only changed rows and marks the parent only
+    when a variant changed, never for a changed folder member. The mark is a
+    6px accent dot at the row's trailing edge, drawn in the contrast color on
+    the active row; no edge, rail, or border marks a row. Beside the dot the
+    row carries the visually hidden word `Changed`, which assistive technology
+    reads and the search box ignores. A Removed or Moved row takes neither,
+    because its label already ends in `· Removed` or `· Moved`; a moved entry,
+    edited or not, keeps that one row at its new place. The
+    [variant contract](./mokly-variants.md) owns the behavior; the
+    `design/browse/variants/**` and `design/browse/index-entries/**` states own
+    its mockups, the latter for a folder screen listing its members.
+  - Catalogue-link navigation opens the active section and every folder on the active
+    row's path and scrolls that row into view. Search and Changes filtering may
+    stay selected only while the active row remains visible. Reapplying an
+    active filter during navigation preserves collapsed groups outside the
+    destination path, while editing the search or filter opens groups to reveal
+    current matches. Clearing filtering restores earlier disclosures except
+    for a destination path opened by navigation.
+    Background loading/recovery retains a selected Changes filter while results
+    are pending and when they arrive, even if the active preview is not in Changes.
+- **Screen head** — surface band with the breadcrumb trail (11.5px, `›`
+  separators; a folder crumb opens the folder's own page when one exists and
+  otherwise expands that folder in the tree) and a title row: 19px heading plus
+  a monospace path button showing the entry's path as written, with no `#`
+  prefix. The button uses the
+  standard pointer cursor, moves down 1px with an inset shadow while pressed,
+  and copies the path without navigating.
+  A selected screen places one right-aligned group of icon controls here:
+  Mobile/Desktop/Both dropdown and component highlighting when applicable.
+  Tooltips name each action. The head band carries no scheme control; the
+  catalogue's one Appearance control lives in the top bar.
+  A control whose axis hides a changed view carries a 6px accent dot in its
+  top-right corner, ringed 1.5px in the surface colour: Appearance when a
+  changed view uses another scheme and the viewport dropdown when another
+  viewport changed. Both never marks the viewport dropdown. The control names
+  a visually hidden `Other theme changed` or `Other viewport changed` through
+  `aria-describedby`; the dot stays distinct from selection and draws no rail.
+- **Stage** — dotted-grid background (22px radial dots), centred frames with
+  40px gap that stack from the top below 760px, internal `overflow: auto`,
+  `MOBILE` / `DESKTOP` uppercase frame labels, and no toolbar above the grid.
+- **Details inspector** — the shared icon footer opens the chosen tab in place;
+  closing it leaves no icon selected. Desktop uses a centered grip on the divider
+  and mobile uses a full-workspace-width rounded bottom sheet with an iOS-style
+  grabber. The footer owns that sheet's surface and shadow while its dock owns
+  placement and height. Only panel content scrolls within the bounded workspace.
+  Details contains a two-column
+  body (`1.35fr / 1fr`) with description and
+  `Why this screen —` rationale on the left and uppercase-labelled metadata
+  rows (Source, Moved from, Schemes, Changed views, Tags, Related docs,
+  Dependencies, Used by) on the right. Paths render as monospace chips; use
+  cases render as pill chips with the flow icon; a related doc that is itself a
+  catalogue document links to its entry; the Schemes row is plain text
+  naming the schemes the screen renders in (`light, dark`). The Changed views
+  row is plain text naming the views a ready classification marked changed
+  (`Mobile · Dark, Desktop · Dark`), mobile before desktop and light before
+  dark; it is hidden while no view is named. The Tags row lists the tags the entry
+  declares as pill chips with the tag icon: selecting one enters `tag:<tag>` in
+  the search field, so the filter stays visible and clearable there, and the
+  chip whose tag is in the entered query carries the accent active state with
+  contrast text and glyph. An entry that declares no tags omits the row.
+
+Details has no Generated or Route row: every file derives from the entry's
+path, and the address bar already shows the shell URL. A moved entry's Details
+add a `Moved from` row holding its previous path, the `Moved` label its Changes
+row carries, and its comparison details name that path as the earlier side. A
+document's Details show its description, tags, and Markdown source file; a
+component's Details add the shown entry's path above its source.
+
+Shared home guidance asks visitors to choose an item from the navigation.
+Its summary counts current catalogue records of every entry kind, including
+screen and component variant records, independent of the active tree filters.
+Use an exhaustive type-checked kind-to-label map in this order: screens,
+components, user flows, catalogue pages, documents. Use singular for one,
+plural otherwise; omit zero-count kinds and join the rest with `" · "`. A
+zero-entry input omits the summary. Removed records do not enter these counts.
+Unknown routes use `Item not found` and offer another catalogue item or the
+catalogue home. Kind-specific wording is reserved for a known screen, page,
+document, or flow; shared controls and missing-route messages cover the whole
+catalogue.

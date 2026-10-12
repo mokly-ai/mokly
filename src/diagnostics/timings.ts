@@ -3,6 +3,8 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { randomUUID } from "node:crypto";
 import { performance } from "node:perf_hooks";
 
+import { DocumentWork, type DocumentWorkField } from "./document_work.js";
+
 export interface TimingEvent {
   schemaVersion: 1;
   session: string;
@@ -21,6 +23,7 @@ export interface TimingEvent {
 
 interface TimingSink {
   clock?: () => number;
+  heapSample?: () => number;
   write?: (event: TimingEvent) => void;
 }
 
@@ -30,12 +33,14 @@ interface Session {
   origin: number;
   sequence: number;
   clock: () => number;
+  heapSample?: () => number;
   write: (event: TimingEvent) => void;
 }
 
 interface Context {
   session: Session;
   parentId?: number;
+  documentWork?: DocumentWork;
 }
 
 const storage = new AsyncLocalStorage<Context | undefined>();
@@ -55,6 +60,7 @@ export function runWithTimings<T>(
         id: randomUUID(),
         role,
         clock,
+        ...(sink.heapSample ? { heapSample: sink.heapSample } : {}),
         origin: clock(),
         sequence: 0,
         write:
@@ -83,7 +89,7 @@ export function timeSync<T>(stage: string, operation: () => T): T {
   const context = storage.getStore();
   if (!context) return operation();
   const span = begin(context, stage);
-  return storage.run({ session: context.session, parentId: span.id }, () => {
+  return storage.run({ ...context, parentId: span.id }, () => {
     try {
       const result = operation();
       span.end("ok");
@@ -103,25 +109,22 @@ export async function timeAsync<T>(
   const context = storage.getStore();
   if (!context) return operation();
   const span = begin(context, stage);
-  return storage.run(
-    { session: context.session, parentId: span.id },
-    async () => {
+  return storage.run({ ...context, parentId: span.id }, async () => {
+    try {
+      const result = await operation();
+      let details: { readonly cacheHit?: boolean } | undefined;
       try {
-        const result = await operation();
-        let details: { readonly cacheHit?: boolean } | undefined;
-        try {
-          details = metadata?.(result);
-        } catch {
-          // Diagnostics must not change the operation's outcome.
-        }
-        span.end("ok", details);
-        return result;
-      } catch (error) {
-        span.end("error");
-        throw error;
+        details = metadata?.(result);
+      } catch {
+        // Diagnostics must not change the operation's outcome.
       }
-    },
-  );
+      span.end("ok", details);
+      return result;
+    } catch (error) {
+      span.end("error");
+      throw error;
+    }
+  });
 }
 
 /** Calculate aggregate numeric metadata only when diagnostics were explicitly enabled. */
@@ -135,6 +138,49 @@ export function timingCounts(
     ...baseEvent(context, stage),
     event: "counts",
     counts: counts(),
+  });
+}
+
+/** No collector is constructed outside an enabled timing comparison scope. */
+export function timingDocumentWork(): DocumentWork | undefined {
+  return storage.getStore()?.documentWork;
+}
+
+export function documentWorkSync<T>(
+  field: DocumentWorkField,
+  operation: () => T,
+): T {
+  const work = timingDocumentWork();
+  return work ? work.measure(field, operation) : operation();
+}
+
+export function documentResourceReferences<T>(operation: () => T): T {
+  const work = timingDocumentWork();
+  return work ? work.resourceReferences(operation) : operation();
+}
+
+export async function runWithDocumentWork<T>(
+  operation: () => Promise<T>,
+): Promise<T> {
+  const context = storage.getStore();
+  if (!context) return operation();
+  if (context.documentWork) return operation();
+  const documentWork = new DocumentWork(
+    context.session.clock,
+    context.session.heapSample,
+  );
+  return storage.run({ ...context, documentWork }, async () => {
+    try {
+      return await operation();
+    } finally {
+      timingCounts("review.compare-screens", () =>
+        documentWork.comparisonCounts(),
+      );
+      timingCounts("review.document-work", () => documentWork.record());
+      timingCounts("review.inline-style-analysis", () => ({
+        ...documentWork.inlineStyles,
+      }));
+    }
   });
 }
 

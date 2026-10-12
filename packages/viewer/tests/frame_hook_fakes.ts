@@ -104,10 +104,10 @@ export function previewUsage(): ComponentViewRecord {
       },
     ],
     ranges: [],
-    resources: [],
     slots: [],
-    styles: [],
     viewport: "desktop",
+    resources: [],
+    insertedStylesheets: [],
   };
 }
 

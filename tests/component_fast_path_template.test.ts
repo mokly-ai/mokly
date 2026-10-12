@@ -10,6 +10,7 @@ import { classifyComponents } from "../dist/review/component_classification.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import { textOutput } from "./helpers/generated_text.js";
+import { assertParserRecoveryDifference } from "./helpers/page_visibility.js";
 
 const image = '<img loading="lazy" src="../../image.svg" />';
 const templateCases = [
@@ -84,6 +85,7 @@ for (const templateCase of templateCases)
           baseCommit: "a".repeat(40),
           baseRef: "main",
           useFastPath,
+          useStylePath: false,
         });
       const [optimized, complete] = await Promise.all([
         classify(true),
@@ -134,6 +136,7 @@ for (const selectCase of selectCases)
           baseCommit: "a".repeat(40),
           baseRef: "main",
           useFastPath,
+          useStylePath: false,
         });
       const [optimized, complete] = await Promise.all([
         classify(true),
@@ -143,13 +146,16 @@ for (const selectCase of selectCases)
       const screenChange = optimized.changes.find(
         (change) => change.kind === "screen" && change.after?.path === "home",
       );
-      assert.ok(screenChange);
-      assert.ok(
-        screenChange.reasons.some((reason) =>
-          evidenceKind === "git"
-            ? reason.kind === "dependency" &&
-              reason.path === "mockups/image.svg"
-            : reason.kind === "material",
-        ),
+      assert.equal(
+        screenChange,
+        undefined,
+        "M7 retains source visibility; M6 fabricated the discarded select image by reparsing the slot appendix",
+      );
+      await assertParserRecoveryDifference(
+        compilation,
+        config,
+        { "image.svg": "base image" },
+        { "image.svg": "head image" },
+        evidenceKind === "git" ? ["mockups/image.svg"] : [],
       );
     });

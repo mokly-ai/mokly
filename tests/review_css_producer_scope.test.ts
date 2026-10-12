@@ -3,8 +3,12 @@ import test from "node:test";
 
 import { MoklyError } from "../dist/errors.js";
 import { classifyComponents } from "../dist/review/component_classification.js";
+import { assertViewAnalysisScope } from "../dist/review/css/paths.js";
 import { ResourceComparison } from "../dist/review/resource_comparison.js";
-import type { ResourceEvidence } from "../packages/viewer/dist/data.js";
+import type {
+  ResourceEvidence,
+  ViewReview,
+} from "../packages/viewer/dist/data.js";
 
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { fixtureCssAnalysis } from "./helpers/css_evidence.js";
@@ -52,7 +56,31 @@ test("v7 asserts analysed reason scope at the producer boundary", async (t) => {
       context.mock.method(
         ResourceComparison.prototype,
         "compare",
-        async () => evidence,
+        async function (this: ResourceComparison) {
+          return {
+            ...evidence,
+            reasons: evidence.reasons?.map((reason) => ({
+              ...reason,
+              ...(reason.analysis
+                ? {
+                    analysis: this.css.attribution.record(
+                      reason.analysis.rules.map((rule) => ({
+                        ...(rule.ruleKey ? { ruleKey: rule.ruleKey } : {}),
+                        status: rule.status,
+                        selectors: rule.selectors,
+                        matches: rule.pageSelectors.map((selector) => ({
+                          selector,
+                          occurrences: [],
+                          components: [],
+                          nested: [],
+                        })),
+                      })),
+                    ),
+                  }
+                : {}),
+            })),
+          };
+        },
       );
       const compare = () =>
         classifyComponents({
@@ -65,6 +93,7 @@ test("v7 asserts analysed reason scope at the producer boundary", async (t) => {
           baseCommit: "a".repeat(40),
           baseRef: "main",
           useFastPath: false,
+          useStylePath: false,
         });
       if (valid) await assert.doesNotReject(compare);
       else
@@ -75,4 +104,17 @@ test("v7 asserts analysed reason scope at the producer boundary", async (t) => {
           return true;
         });
     });
+});
+
+test("inline evidence carries no stylesheet path scope", async (t) => {
+  const fixture = await componentReviewFixture(t, (source) => source);
+  const view: ViewReview = {
+    viewport: "mobile",
+    colorScheme: "light",
+    state: "changed",
+    material: true,
+    ignoredIds: [],
+    inlineStyles: { status: "matched", selectors: [".entry"] },
+  };
+  assert.doesNotThrow(() => assertViewAnalysisScope([view], fixture.config));
 });

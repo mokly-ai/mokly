@@ -1,9 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { parse as parseSelector } from "css-what";
 import { parse } from "parse5";
 
 import { cssDocumentOptions } from "../src/review/css/document.js";
+import {
+  matchesDocument,
+  selectDocument,
+} from "../src/review/css/document_query.js";
 
 import { analyze, documents, excluded, kept } from "./helpers/review_css.js";
 
@@ -56,4 +61,16 @@ test("CSS queries preserve foreign case in nth-of selectors and ignore HTML attr
     ),
     kept("matched", "linearGradient:nth-child(2 of linearGradient)"),
   );
+});
+
+test("CSS document selection shares matching rewrites and returns every element", () => {
+  const document = parse(
+    '<!doctype html><button class="target"></button><button class="target"></button>',
+    { sourceCodeLocationInfo: true },
+  );
+  const query = parseSelector(".target:hover");
+  assert.equal(matchesDocument(query, document), true);
+  const matches = selectDocument(query, document);
+  assert.equal(matches.length, 2);
+  assert.ok(matches.every((element) => element.sourceCodeLocation));
 });

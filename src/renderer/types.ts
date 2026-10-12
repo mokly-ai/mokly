@@ -4,7 +4,6 @@ import type {
   ColorScheme,
   Viewport,
   ComponentResourceOwnership,
-  ComponentStyleOwnership,
 } from "@mokly/viewer";
 
 import type { ScreenDefinition } from "../authoring/types.js";
@@ -20,10 +19,10 @@ export interface RenderInput {
   viewport: Viewport;
 }
 
-/** Optional exact ownership of component-generated style/resource material. */
+/** Complete document with optional non-CSS resource ownership. */
 export interface RenderResult {
   html: string;
-  styles?: readonly ComponentStyleOwnership[];
+  styles?: never;
   resources?: readonly ComponentResourceOwnership[];
 }
 

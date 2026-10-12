@@ -14,8 +14,8 @@ The rule for comments with the former spelling is implemented in
 Implemented for manifest v10, including strict admission of baseline usage
 records. `componentId` names a component parent by its path.
 
-This contract owns the per-view component instance, slot, range, style, and
-resource records stored by [manifest v10](./mokly-component-manifest.md).
+This contract owns the per-view component instance, slot, range, non-CSS resource and inserted-link
+records stored by [manifest v10](./mokly-component-manifest.md).
 Stable instance-key behavior is defined separately by
 [Component Instance Identity](./mokly-instances.md).
 
@@ -79,7 +79,6 @@ interface ComponentViewRecord {
   instances: readonly ComponentInstanceRecord[];
   slots: readonly ComponentSlotRecord[];
   ranges: readonly ComponentRangeRecord[];
-  styles: readonly ComponentStyleOwnership[];
   resources: readonly ComponentResourceOwnership[];
   insertedStylesheets: readonly InsertedComponentStylesheet[];
 }
@@ -133,7 +132,7 @@ its document cannot prove follow
 Historical marker translation is not supported. The frozen instance and slot
 key domain strings above are unchanged.
 
-Range ids, physical parents, style offsets, and placement counts are inspection
+Range ids, physical parents and placement counts are inspection
 coordinates, not input identity. Moving or duplicating unchanged slot material
 does not by itself mark a caller changed. Logical id, order, props, and owner
 changes remain material under the
@@ -152,15 +151,16 @@ applicable. Renderer wrappers and head content remain outside it.
 The root is not an instance, slot, prop owner or Used by occurrence. Preserve
 existing instance keys, caller ownership and inspection behavior. Strip its
 markers as package markers for document comparison, so the new marker pair
-alone is not material. Keep it when validating containment for CSS. Rebase
-coordinates through package link edits, provenance projection and Review-ignore using
-the same validated range policy as other boundaries; never infer its output
-from a body element or a common selector.
+alone is not material. Keep it when validating containment for CSS. Use original final-document
+coordinates for comparison membership. Link removal and paired ignores are
+material edits; they do not move the ranges used by the matching tree. Never
+infer root output from a body element or a common selector.
 
 The root pair is containment proof only. It does not change which manual
 Review-ignore regions are allowed. A previously valid region around root output
-with no instance or caller-slot boundaries stays valid. Normalized-away elements
-supply no CSS matches, including when that region removes all root output.
+with no instance or caller-slot boundaries stays valid. Subjects inside paired ignores supply no CSS matches, including when a region
+hides all root output. The original tree remains structural selector context,
+as [page matching](./mokly-page-analysis.md#original-page-matching) defines.
 
 Screens have no root range. Current and baseline component views require one; duplicates,
 unpaired markers or a root on a screen fail normal component-range validation.
@@ -172,21 +172,20 @@ Catalogue v6 usage ranges carry this target. Readers and inspection
 accept it as a boundary without presenting it as a nested component or adding
 an instance count. Public evidence carries no range offsets or DOM elements.
 
-## Style And Resource Ownership
+## Resource Ownership And Inserted Links
 
-Style offsets are nonnegative safe integers delimiting a nonempty half-open
-UTF-16 range within a parsed final style element. The builder rebases renderer
-offsets through transformations and validates final ownership. Ranges do not
-overlap and sort by start offset.
+A renderer returns a document string or an object with `html` and optional
+`resources`. Usage records contain no `styles` array. A returned renderer
+`styles` field is ignored with a warning; eligible inline rules use
+[inferred ownership](./mokly-inline-styles.md).
 
 Resource paths are exact mockups-root-relative public files and sort lexically,
-one record per path. Every owner list is nonempty, sorted, duplicate-free, and
-names components that actually render in the view, including the component root
-when applicable. These records own only non-stylesheet files. Renderer CSS
-records are ignored with a warning; Mokly derives no CSS resource records.
-Current and baseline v10 records reject CSS owners. Renderer `styles`
-remain exact document ranges. CSS rule membership uses element containment,
-not these assertions.
+one record per path. Every owner list is nonempty, sorted, duplicate-free and
+names components that render in the view, including the root when applicable.
+These records own only non-CSS files. CSS resource assertions are checked,
+warned and retained as private closure seeds; persisted usage rejects CSS owners.
+Only non-CSS references follow inferred inline owners. CSS file membership uses
+original element containment and own-page matches, not ownership assertions.
 
 `insertedStylesheets` records final-document full-link UTF-16 spans, decoded
 public paths and rendered declaring paths. It is private provenance, not file
@@ -206,6 +205,22 @@ missing usage is never normalized to empty.
 
 Readers reject unknown fields, invalid hashes, missing references, cycles,
 incorrect ordering, duplicate records, invalid source locations, unsafe
-resource paths, overlapping styles, and owners absent from the view. Optional
+resource paths, overlapping inserted links, and owners absent from the view. Optional
 invocation source is secondary metadata and never enters keys, props hashes, or
 Changes projections.
+
+The public validators require an explicit options object.
+`validateComponentViews(value, components, at, { dark, rootId?, historical? })`
+checks the complete axis-ordered list; `dark` is required.
+`validateComponentViewRecord(view, components, at, { rootId?, historicalUsage? })`
+checks one render. Pass `{}` for a current screen. `rootId` names the component
+parent for a saved view, including its root's non-CSS resource ownership.
+
+`historicalUsage` defaults to false. It keeps already-admitted historical
+inspection props and slots when current schemas change. It does not admit an
+earlier manifest shape. Current and historical manifest usage have the same
+v10 fields, with no `styles` array. The `historical` list option is retained
+for callers, but it does not remove fields or translate input. Options are
+plain objects with only the named fields. `rootId` is a string; the other fields
+are booleans. Missing options, positional arguments, unknown keys, invalid
+option types and extra arguments fail with `ComponentValidationError`.

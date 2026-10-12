@@ -14,9 +14,9 @@ One generation-scoped policy owns the decision for each catalogue-relative
 authored path. Resolve its logical and physical location, source membership,
 protected-location membership and regular-file status once per compilation.
 Cache both accepted and rejected decisions by normalized path. Configured
-stylesheets, renderer resource declarations and the transitive link walk reuse
-this same instance. Create a new instance after every source/config/resource
-change; do not retain filesystem decisions across accepted generations.
+stylesheets and the transitive document-link walk reuse this same instance.
+Create a new instance after every source/config/resource change; do not retain
+filesystem decisions across accepted generations.
 
 The policy rejects unsafe or escaping paths, hidden path segments, symbolic
 links at any path component, nonregular files, the manifest, cache, Review and
@@ -49,15 +49,15 @@ source-root equality or Review-root overlap rules.
 
 Build, requested-document compilation, resource Watch, Serve and both
 publication paths use one closure builder. Its inputs are the accepted
-generated documents, pending compiled CSS/assets, renderer-declared resources,
+generated documents, pending compiled CSS/assets, renderer-declared resource seeds,
 the public-file policy and an explicit full/on-demand traversal mode.
 Return the sorted unique authored closure and traversal evidence for watching:
 per-file references, logical locations and invalid recovery targets.
 
 Use the existing shared HTML/CSS reference parser. Include ordinary `<a href>`,
 `data-nav-href`, resource hints such as preload, `<iframe>`, `srcset`, CSS imports
-and URLs, and explicit renderer resource seeds. Ignore external/data URLs under
-the current URL rules. Decode and confine relative local paths, retain fragment
+and URLs. Ignore external/data URLs under the current URL rules. Decode and
+confine relative local paths, retain fragment
 validation, and walk authored HTML and CSS transitively. Read each file and
 visit each edge set once per pass; handle cycles without recursive duplication.
 Binary resources retain their exact bytes and have no parsed child links.
@@ -142,16 +142,17 @@ binary bytes, manifest/cache privacy, ownership, collision checks and rollback.
 
 Write failing regressions before implementation. Use one fixture with a linked
 authored page, PDF, `data-nav-href`, preload, iframe, `srcset`, CSS dependencies
-and renderer resources. Assert exact equality between compiler and Watch
-closures. Fetch the linked page and PDF through watched Serve before and after
-resource changes. In-process, adopt a new generation before its checked result:
+and renderer-declared resources plus resources linked only by the renderer. Assert exact equality between
+compiler and Watch closures. Fetch the linked page and PDF through watched
+Serve before and after resource changes. In-process, adopt a new generation
+before its checked result:
 the checked PDF stays readable, and a file that only an on-demand render of the
 earlier generation added returns 404. After two resource reloads, the second
 completion keeps the PDF that the first reload linked, although the reused
 manifest closure lacks it. Block the background write of a structural rebuild:
 the restarted child still serves the checked PDF. A rebuild that adds an
 import outside the entry roots also keeps the list. After a config-file change,
-the new child receives no list. Verify protected declarations fail with the
+the new child receives no list. Verify protected links fail with the
 referring route.
 Replace an accepted file and an ancestor with symlinks and require GET/HEAD 404.
 

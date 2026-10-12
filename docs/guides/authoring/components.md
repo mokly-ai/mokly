@@ -129,11 +129,18 @@ are checked against component output on the component's own saved pages.
 A component keeps only matches outside a different nested component that has
 its own-page matches for the same rule. Self-nesting does not remove matches.
 Imports follow the same rule. Screen-only styles inside a component invocation
-change the screen, not every use of that component. A renderer may return
-exact document style ranges or non-CSS resource ownership. A resource owner
-record for any stylesheet is ignored with a warning. Put
+change the screen, not every use of that component. A renderer may return non-CSS resource ownership beside its HTML. A returned
+`styles` field is ignored with a warning. A resource owner record for a stylesheet
+is checked, ignored with a warning and kept as a closure seed. Put
 `componentStylesheets` in a configured rule's shared list to choose where
 declared CSS is linked.
+
+For eligible `<style>` elements outside component markup, Mokly infers ownership
+from paired rendered ranges. A rule that reaches page markup stays with the
+page. A component-owned rule affects that component and its consumers.
+Only non-CSS references follow those inferred owners; every CSS file uses the
+own-page rule membership above. For style delivery, see the
+[Styles guide](/docs/authoring/styles/).
 
 ## Resolve a saved instance
 
@@ -159,15 +166,16 @@ catalogue, inspect rendered markup or classify a visual change.
 
 ## Exported types
 
-| Type                                                                                              | Use                                     |
-| ------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| `ComponentInput`, `ComponentDefinition`, `ComponentVariantDefinition`, `ComponentEntryDefinition` | What `defineComponent` takes and stores |
-| `RegisteredComponent`                                                                             | The returned `Component` and `entries`  |
-| `ComponentProps`, `ComponentRenderContext`                                                        | What `render` receives                  |
-| `ComponentVariant`                                                                                | One variant declaration                 |
-| `ComponentControl`, `ComponentControlLabel`, `ControlFor`                                         | The editable controls                   |
-| `ObjectPropSchema`, `DataPropSchema`, `DataPropField`                                             | The schema of a component's data        |
-| `InferProp`, `ComponentPropsData`, `PropValue`, `PropPrimitive`                                   | The values a schema allows              |
-| `ComponentStyleOwnership`, `ComponentResourceOwnership`                                           | Exact ownership a renderer may report   |
-| `ComponentInstanceRecord`, `ComponentSourceLocation`                                              | Saved instance identity and source      |
-| `InstanceResolution`                                                                              | The result of `resolveInstance`         |
+| Type                                                                                              | Use                                                  |
+| ------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `ComponentInput`, `ComponentDefinition`, `ComponentVariantDefinition`, `ComponentEntryDefinition` | What `defineComponent` takes and stores              |
+| `RegisteredComponent`                                                                             | The returned `Component` and `entries`               |
+| `ComponentProps`, `ComponentRenderContext`                                                        | What `render` receives                               |
+| `ComponentVariant`                                                                                | One variant declaration                              |
+| `ComponentControl`, `ComponentControlLabel`, `ControlFor`                                         | The editable controls                                |
+| `ObjectPropSchema`, `DataPropSchema`, `DataPropField`                                             | The schema of a component's data                     |
+| `InferProp`, `ComponentPropsData`, `PropValue`, `PropPrimitive`                                   | The values a schema allows                           |
+| `ComponentResourceOwnership`                                                                      | Non-CSS resource owners a renderer may report        |
+| `ComponentStyleOwnership`                                                                         | Style-range type; renderer style records are ignored |
+| `ComponentInstanceRecord`, `ComponentSourceLocation`                                              | Saved instance identity and source                   |
+| `InstanceResolution`                                                                              | The result of `resolveInstance`                      |

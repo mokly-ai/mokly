@@ -136,6 +136,6 @@ for (const owned of [false, true])
     if (result.schemaVersion !== 7) return;
     assert.deepEqual(
       result.changes.map((entry) => entry.after!.path),
-      owned ? ["action"] : ["action", "pane", "home"],
+      [],
     );
   });

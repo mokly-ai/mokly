@@ -34,11 +34,7 @@ import type {
   PreparedDocument,
 } from "./document_types.js";
 import type { GeneratedFile } from "./generated_file.js";
-import {
-  validateHtmlLinks,
-  type HtmlValidationContext,
-  type ResourceSeed,
-} from "./html_links.js";
+import { validateHtmlLinks, type HtmlValidationContext } from "./html_links.js";
 import type { LoadedGraph } from "./load_graph.js";
 import { validateLogicalFragments } from "./logical_records.js";
 import {
@@ -49,7 +45,7 @@ import { validateGeneratedOutputPaths } from "./output_paths.js";
 import { assertSnapshotRoutes } from "./output_snapshot.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
-import { componentResourceSeeds } from "./resource_seeds.js";
+import { componentResourceSeeds, type ResourceSeed } from "./resource_seeds.js";
 
 /** Pure/countable boundaries used once per accepted document generation. */
 export interface DocumentValidationSeams {
@@ -252,7 +248,6 @@ export class DocumentCompiler {
       stylesheetLinks,
       resourceSeeds,
     );
-    const original = outputs.get(route)!;
     const resolvedLinks = resolveDocumentLinks(
       outputs,
       this.entries,
@@ -267,7 +262,6 @@ export class DocumentCompiler {
     const finalized = finalizeDocumentView({
       route,
       entry,
-      original,
       html,
       captured: componentViews.get(route),
       config,

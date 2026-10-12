@@ -4,8 +4,10 @@ import {
   componentUsageSignals,
   componentUsageTopologyEqual,
   stripComponentMarkers,
+  stripMarkers,
 } from "../components/comparison_material.js";
-import { comparisonStylesheetMaterial } from "../components/comparison_stylesheets.js";
+import { materialRecipe } from "../components/material_recipe.js";
+import { mayContainCssReferences } from "../css_references.js";
 
 import {
   prepareComponentProjection,
@@ -17,7 +19,15 @@ import type {
   ComparedComponentView,
   ComponentViewContext,
 } from "./component_view_types.js";
+import {
+  sameInlineOuterSources,
+  type InlineStyleSpan,
+} from "./css/inline_styles.js";
 import { normalizeReviewPair, normalizeSingleDocument } from "./ignore.js";
+import type { PageAnalysisPair } from "./page_pair.js";
+import { identicalPageQuickCheck } from "./page_quick_check.js";
+import { insertedComparisonSource } from "./page_stylesheet_links.js";
+import { styleNeedsFullValidation } from "./style_source_safety.js";
 
 export interface UnchangedComponentAttempt {
   comparison?: ComparedComponentView;
@@ -33,81 +43,172 @@ export async function compareUnchangedComponentView(
   base: string,
   head: string,
   root?: string,
+  pages?: PageAnalysisPair,
 ): Promise<UnchangedComponentAttempt> {
   if (before.path !== after.path) return {};
   const links = context.links?.(before.path, after.path);
-  const baseMaterial = comparisonStylesheetMaterial(base, before.usage, root);
-  const headMaterial = comparisonStylesheetMaterial(head, after.usage, root);
-  const retained = normalizeReviewPair(
-    baseMaterial.html,
-    headMaterial.html,
-    after.path,
-    links,
-  );
+  if (
+    pages &&
+    (!pages.links || pages.links.equalSource === true) &&
+    base === head &&
+    componentUsageTopologyEqual(before.usage, after.usage)
+  ) {
+    const comparison = await identicalPageQuickCheck(context, pages, view);
+    return comparison ? { comparison } : {};
+  }
+  const rootOnly =
+    Boolean(pages) &&
+    [before.usage, after.usage].every(
+      (usage) =>
+        usage &&
+        usage.instances.length === 0 &&
+        usage.slots.length === 0 &&
+        usage.ranges.length === 1 &&
+        usage.ranges[0]!.target.kind === "root",
+    );
+  const comparisonSource = (source: string, usage: typeof before.usage) => {
+    const material = insertedComparisonSource(source, usage, root);
+    return rootOnly ? stripComponentMarkers(material) : material;
+  };
+  const baseSource = comparisonSource(base, before.usage);
+  const headSource = comparisonSource(head, after.usage);
+  const retained =
+    pages?.normalize(baseSource, headSource) ??
+    normalizeReviewPair(baseSource, headSource, after.path, links);
   if (retained.base !== retained.head) return {};
   if (!componentUsageTopologyEqual(before.usage, after.usage)) return {};
-
-  const strippedBase = stripComponentMarkers(baseMaterial.html);
-  const strippedHead = stripComponentMarkers(headMaterial.html);
-  const actual = normalizeReviewPair(
-    strippedBase,
-    strippedHead,
-    after.path,
-    links,
+  const baseStylesheets = insertedStylesheetResources(
+    base,
+    before.usage,
+    before.path,
+    pages?.beforeAnalysis.document,
   );
-  if (actual.base !== actual.head) return {};
+  const headStylesheets = insertedStylesheetResources(
+    head,
+    after.usage,
+    after.path,
+    pages?.afterAnalysis.document,
+  );
+  let safeStyles: readonly InlineStyleSpan[] | undefined;
+  if (pages) {
+    const paired = pages.pairedIgnoreIds;
+    const baseStyles = pages.beforeAnalysis.inlineStyles(paired);
+    const headStyles = pages.afterAnalysis.inlineStyles(paired);
+    if (!sameInlineOuterSources(baseStyles, headStyles)) return {};
+    for (const side of [pages.beforeAnalysis, pages.afterAnalysis])
+      if (
+        side.inlineStyles(paired).some(styleNeedsFullValidation) ||
+        side.hasDroppedStyleReferences(paired)
+      )
+        return {};
+    safeStyles = headStyles;
+  }
+  const fallback = (
+    prepared?: PreparedComponentComparison,
+  ): UnchangedComponentAttempt => {
+    if (
+      pages &&
+      safeStyles &&
+      context.useMaterialFingerprints !== false &&
+      context.useFastPath !== false &&
+      context.useStylePath !== false
+    )
+      pages.rememberStyleSafety(safeStyles);
+    return prepared && !pages ? { prepared } : {};
+  };
+
+  const strippedBase = stripMarkers(
+    baseSource,
+    before.usage,
+    pages?.beforeAnalysis.ranges,
+  );
+  const strippedHead = stripComponentMarkers(headSource);
+  const actual =
+    strippedBase === baseSource && strippedHead === headSource
+      ? retained
+      : (pages?.normalize(strippedBase, strippedHead) ??
+        normalizeReviewPair(strippedBase, strippedHead, after.path, links));
+  if (actual.base !== actual.head) return fallback();
 
   const hasOwnershipEdits = [before.usage, after.usage].some(
     (usage) =>
       usage &&
       (usage.instances.length > 0 ||
-        usage.ranges.some((range) => range.target.kind === "root") ||
-        usage.styles.length > 0 ||
+        (!pages &&
+          usage.ranges.some((range) => range.target.kind === "root")) ||
         usage.slots.some((slot) => slot.owner.kind === "entry")),
   );
-  const prepared = hasOwnershipEdits
-    ? prepareComponentProjection(before, after, base, head, root, links)
+  const hasInlineReferences = [base, head].some(mayContainCssReferences);
+  const prepared = (
+    pages ? hasOwnershipEdits : hasOwnershipEdits || hasInlineReferences
+  )
+    ? prepareComponentProjection(
+        context,
+        before,
+        after,
+        base,
+        head,
+        root,
+        {
+          analyzeInline: pages ? false : hasInlineReferences,
+        },
+        pages,
+      )
     : undefined;
   const projected = prepared?.projected;
   const excluded = prepared?.excluded;
-  const fallback = (): UnchangedComponentAttempt =>
-    prepared ? { prepared } : {};
-  if (projected && projected.before !== projected.after) return fallback();
+  const empty = { replacements: [], appendix: "" };
+  const actualBefore =
+    prepared?.references?.actualBefore ??
+    pages?.beforeAnalysis.materialReferences(
+      materialRecipe(base, empty),
+      pages.pairedIgnoreIds,
+    );
+  const actualAfter =
+    prepared?.references?.actualAfter ??
+    pages?.afterAnalysis.materialReferences(
+      materialRecipe(head, empty),
+      pages.pairedIgnoreIds,
+    );
+  if (projected && projected.before !== projected.after)
+    return fallback(prepared);
 
-  const actualResource = normalizeReviewPair(
-    stripComponentMarkers(base),
-    stripComponentMarkers(head),
-    after.path,
-    links,
-  );
   const afterResources = await context.afterReader.resources(
     after.path,
-    actualResource.resourceHead ?? actualResource.head,
+    actual.resourceHead ?? actual.head,
     undefined,
-    insertedStylesheetResources(head, after.usage, after.path),
+    { references: actualAfter, insertedStylesheets: headStylesheets },
   );
-  const beforeResources = await context.beforeReader.resources(
+  const beforeResources = await context.beforeReader.resourcesIfPresent(
     before.path,
-    actualResource.resourceBase ?? actualResource.base,
+    actual.resourceBase ?? actual.base,
     undefined,
-    insertedStylesheetResources(base, before.usage, before.path),
+    { references: actualBefore, insertedStylesheets: baseStylesheets },
   );
+  if (!beforeResources) return fallback(prepared);
   const projectedAfterResources =
     projected && excluded
       ? await context.afterReader.resources(
           after.path,
           projected.resourceAfter ?? projected.after,
           excluded,
+          {
+            references: prepared?.references?.after,
+          },
         )
       : new Set<string>();
   const projectedBeforeResources =
     projected && excluded
-      ? await context.beforeReader.resources(
+      ? await context.beforeReader.resourcesIfPresent(
           before.path,
           projected.resourceBefore ?? projected.before,
           excluded,
+          {
+            references: prepared?.references?.before,
+          },
         )
       : projectedAfterResources;
+  if (!projectedBeforeResources) return fallback(prepared);
   const resources = new Set([
     ...beforeResources,
     ...afterResources,
@@ -117,7 +218,7 @@ export async function compareUnchangedComponentView(
   const repoPath = (route: string) =>
     context.prefix ? `${context.prefix}/${route}` : route;
   if ([...resources].some((route) => context.changed.has(repoPath(route))))
-    return fallback();
+    return fallback(prepared);
   if (
     (
       await changedResourceBytes(
@@ -129,7 +230,7 @@ export async function compareUnchangedComponentView(
       )
     ).size > 0
   )
-    return fallback();
+    return fallback(prepared);
   if (
     (
       await changedResourceBytes(
@@ -141,7 +242,7 @@ export async function compareUnchangedComponentView(
       )
     ).size > 0
   )
-    return fallback();
+    return fallback(prepared);
 
   const signals = componentUsageSignals(before.usage, after.usage);
   const reasons = [

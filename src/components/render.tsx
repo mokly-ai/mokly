@@ -8,15 +8,15 @@ import { invalidData } from "@mokly/viewer/data";
 
 import { definitionPath } from "../authoring/identity.js";
 import type { BuildDiagnostic } from "../build/build_warnings.js";
+import { rendererDocument } from "../renderer/result.js";
 import { serializeReviewSentinels } from "../renderer/sentinels.js";
-import type { RenderInput, Renderer, RenderResult } from "../renderer/types.js";
+import type { RenderInput, Renderer } from "../renderer/types.js";
 
 import { Boundary } from "./boundary.js";
 import { ComponentCollector } from "./collector.js";
 import { componentInputs } from "./inputs.js";
 import { serializeComponentSentinels } from "./ranges.js";
 import { ComponentContext } from "./render_context.js";
-import { rebaseStyleOwnership } from "./style_ownership.js";
 import { insertComponentStylesheets } from "./stylesheet_links.js";
 import { rendererStylesheetPaths } from "./stylesheet_reuse.js";
 import type {
@@ -85,19 +85,14 @@ export const renderWithComponents: ComponentGraphRenderer = (
     </ComponentContext>
   );
   const result = renderer({ ...input, node });
-  const rendered: RenderResult =
-    typeof result === "string" ? { html: result } : result;
-  if (
-    !rendered ||
-    typeof rendered.html !== "string" ||
-    !/<html[\s>]/i.test(rendered.html)
-  )
+  const rendered = rendererDocument(result, input);
+  if (!/<html[\s>]/i.test(rendered))
     invalidData(
       collector.label,
       "renderer must return a complete HTML document",
     );
   const serialized = serializeComponentSentinels(
-    serializeReviewSentinels(rendered.html),
+    serializeReviewSentinels(rendered),
     collector.boundaries,
   );
   const declarations = new Map<string, { file: string; paths: Set<string> }>();
@@ -156,10 +151,12 @@ export const renderWithComponents: ComponentGraphRenderer = (
       a.key < b.key ? -1 : 1,
     ),
     ranges: serialized.ranges,
-    styles: rebaseStyleOwnership(rendered.html, html, rendered.styles ?? []),
-    resources: [...(rendered.resources ?? [])].sort((left, right) =>
-      left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
-    ),
+    resources:
+      typeof result === "string"
+        ? []
+        : [...(result.resources ?? [])].sort((left, right) =>
+            left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
+          ),
   };
   return {
     html,

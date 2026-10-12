@@ -42,3 +42,24 @@ with the matching package; no converter is provided. The preview command against
 an earlier main base still succeeds with Changes unavailable. Only the explicit
 writers take the output lock; immutable in-memory route snapshots replace disk
 capture and reject undeclared worker routes.
+
+## Renderer Ownership And Inline Evidence
+
+Renderers may return a complete HTML string or an object with `html` and
+optional `resources`. The `RenderResult` type keeps non-CSS resource ownership.
+Its `styles` field is typed `never`; at runtime Mokly warns once and ignores
+a returned `styles` field. Inline ownership is inferred from rendered markup.
+CSS resource declarations are checked, warn and seed the private closure, but
+never assign an owner to a stylesheet.
+
+Current manifest v10 usage has no `styles`. It keeps non-CSS `resources`, root
+ranges and `insertedStylesheets`. Review v7 views and catalogue v6
+`resourceEvidence` carry `inlineStyles`. Rebuild earlier output with the matching
+package. No earlier manifest layout is admitted as v10.
+
+Both `@mokly/viewer/data` validators use an options object. Use
+`validateComponentViews(value, components, at, { dark, rootId?, historical? })`
+and `validateComponentViewRecord(view, components, at, { rootId?, historicalUsage? })`.
+The fourth options object is required; pass `{}` for current single-view usage
+without a component root. The [usage contract](./mokly-component-usage-records.md#validation)
+defines the options and rejection of positional calls.

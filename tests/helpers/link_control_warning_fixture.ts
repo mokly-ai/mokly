@@ -87,7 +87,7 @@ defineScreen({path:'target',title:'Target',description:'Target',relatedDocs:[],m
   };
 }
 
-/** Keep missing anchors while changing only the renderer's style range. */
+/** Keep missing anchors while changing only a non-CSS resource owner. */
 async function stylesheetPlacementFixture(success: boolean) {
   const fixture = await createFixture(
     `import {defineComponent,defineScreen} from '@mokly/mokly';
@@ -102,8 +102,9 @@ export default [...action.entries,defineScreen({path:'home',title:'Home',descrip
   await fs.writeFile(
     path.join(fixture.root, "renderer.tsx"),
     `import {renderToStaticMarkup} from 'react-dom/server';
-export default input => ({html:'<!doctype html><html><head></head><body>'+renderToStaticMarkup(input.node)+'</body></html>',styles:[]});`,
+export default input => ({html:'<!doctype html><html><head></head><body>'+renderToStaticMarkup(input.node)+'</body></html>'});`,
   );
+  await fs.writeFile(path.join(fixture.mockupsDir, "owner.svg"), "<svg/>");
   for (const file of ["action.css", "base.css"])
     await fs.writeFile(path.join(fixture.mockupsDir, file), "body{margin:0}");
   await fs.writeFile(
@@ -126,23 +127,19 @@ export default input => ({html:'<!doctype html><html><head></head><body>'+render
     await fs.writeFile(
       renderer,
       (await fs.readFile(renderer, "utf8")).replace(
-        "styles:[]",
-        'styles:[{startOffset:0,endOffset:1,componentIds:["action"]}]',
+        "({html:",
+        '({resources:[{path:"owner.svg",componentIds:["missing"]}],html:',
       ),
     );
     git("add", "renderer.tsx");
-    git("commit", "-qm", "test: invalid placement style range");
+    git("commit", "-qm", "test: invalid placement resource owner");
   }
-  const diagnostics: BuildDiagnostic[] = (
-    success
-      ? [
-          ["action/default/index.desktop.html", "../../../base.css"],
-          ["action/default/index.mobile.html", "../../../base.css"],
-          ["home/index.desktop.html", "../../base.css"],
-          ["home/index.mobile.html", "../../base.css"],
-        ]
-      : [["action/default/index.mobile.html", "../../../base.css"]]
-  ).map(([route, href]) => ({
+  const diagnostics: BuildDiagnostic[] = [
+    ["action/default/index.desktop.html", "../../../base.css"],
+    ["action/default/index.mobile.html", "../../../base.css"],
+    ["home/index.desktop.html", "../../base.css"],
+    ["home/index.mobile.html", "../../base.css"],
+  ].map(([route, href]) => ({
     code: "missing-configured-stylesheet-link",
     route: route!,
     message: `configured stylesheet link "${href}" is absent; component stylesheets use another anchor.`,
@@ -150,6 +147,6 @@ export default input => ({html:'<!doctype html><html><head></head><body>'+render
   return {
     ...fixture,
     diagnostics,
-    failure: /ownership must name preserved text inside a style element/,
+    failure: /style\/resource owners must render in this view/,
   };
 }

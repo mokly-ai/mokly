@@ -6,16 +6,23 @@ import type {
   ResourceEvidence,
 } from "@mokly/viewer/data";
 
+import { documentWorkSync } from "../../diagnostics/timings.js";
+import { MoklyError } from "../../errors.js";
+
 import { analyzeStylesheetChange } from "./analyze.js";
 import {
   CssAttribution,
   outputMatch,
   type CollectedCssRule,
 } from "./attribution.js";
+import { ByteBoundedLru } from "./byte_lru.js";
 import type { CssMatchingPair } from "./containment.js";
+import { diffCssRules } from "./diff.js";
 import { CssRuleIdentities } from "./identity.js";
 import { matchCssRules } from "./match.js";
+import { detachParseResult } from "./parse_cache.js";
 import { LightningCssRuleParser } from "./rules.js";
+import { CssSegmentAnalysis } from "./segment_analysis.js";
 import {
   CssRuleParseError,
   type CssRuleParser,
@@ -35,32 +42,47 @@ export interface ResourceMatchingPair extends CssMatchingPair {
 }
 
 export class CssResourceAnalysis {
-  private readonly parsed = new Map<string, CssRuleParseResult>();
-  private readonly cached: CssRuleParser;
+  private readonly parsed: ByteBoundedLru<CssRuleParseResult>;
+  readonly parser: CssRuleParser;
   private readonly identities = new CssRuleIdentities();
   readonly attribution = new CssAttribution();
 
   constructor(
     parser: CssRuleParser = new LightningCssRuleParser(),
     private readonly matcher: typeof matchCssRules = matchCssRules,
+    cacheBytes?: number,
   ) {
-    this.cached = {
-      parse: (source) => {
-        let result = this.parsed.get(source);
-        if (!result) {
-          try {
-            result = parser.parse(source);
-          } catch (cause) {
-            result = {
-              status: "unresolved",
-              error: new CssRuleParseError(cause),
-            };
+    this.parsed = new ByteBoundedLru(detachParseResult, cacheBytes);
+    const whole: CssRuleParser = {
+      parse: (source) => this.parseWhole(parser, source),
+      ...(parser.parseSegments
+        ? {
+            parseSegments: (segments: readonly string[]) =>
+              parser.parseSegments!(segments),
           }
-          this.parsed.set(source, result);
-        }
-        return result;
-      },
+        : {}),
     };
+    const inline = new CssSegmentAnalysis(whole, cacheBytes);
+    this.parser = {
+      parse: whole.parse,
+      parseInlineRuns: (source) => inline.parseRuns(source),
+    };
+  }
+
+  private parseWhole(
+    parser: CssRuleParser,
+    source: string,
+  ): CssRuleParseResult {
+    let result = this.parsed.get(source);
+    if (!result) {
+      try {
+        result = documentWorkSync("inlineRuleMs", () => parser.parse(source));
+      } catch (cause) {
+        result = { status: "unresolved", error: new CssRuleParseError(cause) };
+      }
+      result = this.parsed.set(source, result);
+    }
+    return result;
   }
 
   analyze(
@@ -76,7 +98,19 @@ export class CssResourceAnalysis {
         reasons.push({ kind: "dependency", path: resource.path });
         continue;
       }
-      const rules = this.rules(resource, documents);
+      let rules: CollectedCssRule[];
+      try {
+        rules = this.rules(resource, documents);
+      } catch (error) {
+        if (error instanceof MoklyError) throw error;
+        rules = [
+          {
+            status: "unresolved",
+            selectors: this.changedSelectors(resource),
+            matches: [],
+          },
+        ];
+      }
       if (rules.length)
         reasons.push({
           kind: "dependency",
@@ -106,7 +140,7 @@ export class CssResourceAnalysis {
         resource.before ?? "",
         resource.after ?? "",
         pair,
-        this.cached,
+        this.parser,
         this.matcher,
       );
       if (analysed.kind === "excluded") continue;
@@ -128,5 +162,27 @@ export class CssResourceAnalysis {
       }
     }
     return result;
+  }
+  /** Recover serialized changed selectors without allowing a second failure to escape. */
+  private changedSelectors(resource: ChangedResource): readonly string[] {
+    try {
+      const diff = diffCssRules(
+        resource.before ?? "",
+        resource.after ?? "",
+        this.parser,
+      );
+      if (diff.status === "unresolved") return [];
+      return [
+        ...new Set(
+          [
+            ...diff.added,
+            ...diff.removed,
+            ...diff.changed.flatMap(({ before, after }) => [before, after]),
+          ].flatMap((rule) => rule.selectors),
+        ),
+      ].sort();
+    } catch {
+      return [];
+    }
   }
 }

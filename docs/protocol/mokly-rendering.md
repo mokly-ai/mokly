@@ -36,8 +36,7 @@ import type {
   ColorScheme,
   ScreenDefinition,
   ComponentVariantDefinition,
-  ComponentStyleOwnership,
-  ComponentResourceOwnership,
+  RenderResult,
   Viewport,
 } from "@mokly/mokly";
 
@@ -50,12 +49,6 @@ interface RenderInput {
   viewport: Viewport;
 }
 
-interface RenderResult {
-  html: string;
-  styles?: readonly ComponentStyleOwnership[];
-  resources?: readonly ComponentResourceOwnership[];
-}
-
 export default function render(input: RenderInput): string | RenderResult;
 ```
 
@@ -64,8 +57,10 @@ For a component variant entry, `entry` is the variant entry itself and
 rendered on its own, and `RenderInput` has no `variantId` field.
 
 The string or `html` field must contain a complete `<html>` document. Optional
-document-style and non-CSS resource records provide exact ownership; unclaimed or mixed
-material stays conservative. Every renderer resource path also declares a
+non-CSS resource records provide ownership. A returned `styles` field produces
+one warning and is ignored; eligible inline style ownership is inferred under
+[inline ownership](./mokly-inline-styles.md). Unclaimed or mixed material stays
+conservative. Every renderer resource path also declares a
 checked closure resource, including a stylesheet with no HTML link. CSS
 ownership claims are ignored after public-file validation, with the documented
 warning; their paths remain private closure seeds for delivery and watching.
@@ -142,8 +137,8 @@ Only links that Mokly inserts receive recorded spans after the package
 finishes ordinary link edits. No transient token is written. No CSS resource
 owners are derived. Renderer stylesheet ownership is ignored with a warning;
 the validated resource declaration remains in the checked closure. CSS
-attribution still needs actual linked rule proof. Document `styles` and
-non-CSS owners retain their meaning.
+attribution still needs actual linked rule proof. Returned document `styles`
+warns and is ignored; non-CSS owners retain their meaning.
 Shell and device-frame CSS is package-owned and self-contained; product CSS is
 never copied into the npm package.
 
@@ -152,3 +147,10 @@ never copied into the npm package.
 The deterministic generated views, manifest v10 shape, CSS/assets and ownership
 rules are defined in the linked [Generated Rendering Contract](./mokly-rendering-generated.md).
 Exact identity-derived routes follow [Artifact Paths](./mokly-artifact-paths.md).
+
+## Ignored Style Records
+
+Returned renderer `styles` produces one `ignored-renderer-styles` warning per
+rendered route. Mokly ignores the field without validating its contents. HTML
+and non-CSS resource records remain available. Its message is:
+`Renderer styles ownership is ignored. Mokly infers inline style ownership from rendered markup.`

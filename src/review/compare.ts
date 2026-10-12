@@ -23,6 +23,10 @@ import type { ReadOnlyReviewRepository } from "./repository.js";
 export interface CompareReviewOptions {
   /** Disable the unchanged-view optimization for differential tests. */
   useFastPath?: boolean;
+  /** Disable the style-only route for differential tests. */
+  useStylePath?: boolean;
+  /** Test-only: compare delivered text materials without fingerprinting. */
+  useMaterialFingerprints?: boolean;
   /** Reuse the exact merged evidence already constructed for export/publication. */
   changeEvidence?: ChangeEvidence;
   cssAnalysis?: CssResourceAnalysis;
@@ -82,8 +86,7 @@ export async function compareReview(
     changedPaths,
     baseCommit,
     baseRef,
-    options.useFastPath,
-    options.cssAnalysis,
+    options,
     await readMoveMarkdown(
       baseManifest,
       compilation.manifest,
