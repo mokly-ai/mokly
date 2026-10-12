@@ -72,8 +72,9 @@ A hyphenated element name resolves against the component registry: the
 `element` of an [HTML component](./mokly-html-components.md) or of a
 JavaScript component registered with `element`. A hyphenated name that matches
 no component fails with `html-element`, because rendering it as a plain element
-would silently lose the component. `mokly-ignore` and `mokly-ignore-scope` are
-reserved names, below.
+would silently lose the component. `mokly-ignore`, `mokly-ignore-scope`, and
+`mokly-slot` are reserved names: the first two are defined below, and the slot
+placeholder belongs to the [render sidecar](./mokly-sidecar.md).
 
 ## Component Elements
 

@@ -17,13 +17,15 @@ field of the [comparison contract](./mokly-comparison.md).
 | Rust rebuild, approved    | 11                 | 8                 | 7          |
 
 Both catalogue kinds, with and without registered components, use the same
-numbers. The approved line uses manifest v11, review result v8, and public
-read model v7, with globally unique entry paths. The private catalogue-change snapshot is v3 and removed
-page preview metadata is v3. Delivery descriptors are v5. The manifest stores
-folder records, component variants, per-view usage, root output ranges and
-inserted-stylesheet provenance,
-with no derived file names on entries; the generated inventory lists exact paths. Markdown documents and their resource copies are
-implemented. Accepted move pairs carry `previousPath` in review records and
+numbers, with globally unique entry paths. On the frozen line the private
+catalogue-change snapshot is v3, and the manifest stores folder records,
+component variants, per-view usage, root output ranges and inserted-stylesheet
+provenance. On the approved line the snapshot is v4, and manifest v11 derives
+usage ranges from markers and carries no text offsets, as the
+[format inventory](./mokly-format-versions.md) states. Removed page preview
+metadata is v3 and delivery descriptors are v5 on both lines. No entry carries
+derived file names; the generated inventory lists exact paths. Markdown
+documents and their resource copies are implemented. Accepted move pairs carry `previousPath` in review records and
 the public read model; the manifest retains authored hints only.
 Current and baseline manifest readers accept only one version; earlier output
 follows [baseline compatibility](./mokly-baseline-compatibility.md).

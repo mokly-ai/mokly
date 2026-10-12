@@ -124,8 +124,7 @@ more than re-deriving the behaviour from the requirements.
   trait seams, `dyn` dispatch,
   `unimock`, `thiserror`, `tracing`, 300-line files, `_tests_` directories.
 
-**Non-goals of this plan:** implementing any Rust crate beyond the workspace
-skeleton the follow-on plans need; changing the viewer's presentation;
+**Non-goals of this plan:** changing the viewer's presentation;
 compatibility readers; a pure YAML screen format; loops or expressions in HTML
 bodies; pixel comparison.
 
@@ -213,13 +212,15 @@ merges; the freeze applies to it from 2026-10-12.
       classified delete; the superseded plans, which git history keeps; the
       preview deployment workflow; and the root package's `bin`, `exports`,
       `files`, and publish configuration.
+- [ ] Repoint or remove every live reference to the native engine contract
+      before the teardown deletes `docs/protocol/mokly-native-engine.md`.
 - [ ] Close every active plan that the rebuild supersedes with a Completed
       status paragraph that names this plan.
 - [ ] Trim `xtask`: the repository suite keeps the audit, Prettier, ESLint,
       the length audits, Rust formatting, Clippy, tests, and the file-length
       audit; a viewer suite runs the viewer typecheck and tests; the package,
       unit, browser, and hydration suites and their remote shards are removed
-      until the follow-on plans add new ones.
+      until later milestones add new ones.
 - [ ] Update `.github/workflows/ci.yml`, `release-please-config.json`, and
       `.release-please-manifest.json` for the reduced tree; keep the viewer
       release path.
@@ -255,7 +256,7 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
 ## Milestone 4: Catalogue model and discovery
 
 At completion `mokly build` discovers a catalogue of HTML screens, HTML
-components, Markdown documents, pages, flows, and use cases, validates it, and
+components, Markdown documents, pages, and use cases, validates it, and
 writes manifest v11 without rendering.
 
 - [ ] Implement roots, default globs, folder records, path identity, variants,
@@ -344,7 +345,7 @@ tree comparison, CSS attribution, and both baseline kinds.
       limits, and process scopes of the storage contract.
 - [ ] Implement tree comparison in `mokly-compare`: marker-derived ownership,
       ignore regions, materiality on canonical trees, moves, documents, pages,
-      flows, affected consumers, and review result v8.
+      affected consumers, and review result v8.
 - [ ] Implement CSS attribution in `mokly-css`: rule collection, diffing,
       selector matching with the keep list, own-page membership, the inline
       rule for whole-screen React entries, and a content-addressed parsed-CSS
@@ -417,6 +418,27 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Open from the 2026-10-12 review, report under
+    `.context/rust-rebuild/review-2026-10-12-rebase.md`:
+  - 1: 24 live pages still name the superseded native engine contract as the
+    approved target or state its design as current; repoint or remove them.
+  - 3: the comparison contract must say whether head style elements, owned
+    and unowned, leave the canonical form before materiality.
+  - 4: the ignore-scope marker has no extent; resolve scopes at render time
+    or give the marker a start and end pair.
+  - 5: the behaviour-table script named by the rebuild procedures does not
+    exist; decide where it lives before the reference capture.
+  - 6: the server milestones end before the viewer milestones that read
+    their new formats; reword the exit criteria or reorder.
+  - 10: no contract defines how a JavaScript component registers an
+    `element`.
+  - 13: sidecar recycle thresholds are fixed on one page and configurable on
+    another.
+  - 14: the protocol triage lives only in the git-ignored `.context/` file.
+  - 15: the documentation policy page is classified as retired.
+  - 16: four pages whose numbers the inventory bumps carry no Delivery Status
+    pointer to the new number.
+  - 17: one branch commit body contains an angle-bracket placeholder.
 
 ## Post-merge follow-up (non-blocking)
 
