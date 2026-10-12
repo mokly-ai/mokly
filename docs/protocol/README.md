@@ -185,6 +185,7 @@ See the [graceful-handling contract](./protocol-status.md#graceful-handling).
 - [npm Release Notes](./npm-release-notes.md)
 - [Npm Release Operations](./npm-release-operations.md)
 - [Mokly CI And Npm Release Contract](./npm-release.md)
+- [Remote Verification: Base Commit Sync](./remote-verification-base.md)
 - [Remote Verification: Cleanup And Interrupts](./remote-verification-cleanup.md)
 - [Remote Verification: Testbox Execution](./remote-verification-testbox.md)
 - [Remote Verification](./remote-verification.md)
