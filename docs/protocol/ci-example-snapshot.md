@@ -14,23 +14,28 @@ with exactly these fields:
 
 | Field                   | Value                                                                                                                 |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `schemaVersion`         | `1`.                                                                                                                  |
+| `schemaVersion`         | `2`.                                                                                                                  |
 | `key`                   | The freshness key, as 64 lowercase hexadecimal characters.                                                            |
-| `diagnostics`           | The compilation's normalized build diagnostics as `{ code, route, message }` records.                                 |
-| `manifest`              | The compilation's manifest v9 object.                                                                                 |
+| `diagnostics`           | Normalized build diagnostics with `code`, `message` and either `route` or a typed `subject` (`kind`, `path`).         |
+| `manifest`              | The compilation's manifest v10 object.                                                                                |
 | `outputs`               | `[route, file]` pairs in compilation order. Text stays a string; binary output is `{ "kind": "bytes", "base64": … }`. |
 | `deliveredStyleSources` | The compilation's repository-relative delivered style inputs.                                                         |
 | `documentMarkdown`      | `[sourcePath, markdown]` pairs; omitted when the compilation has none.                                                |
+| `resourceSeeds`         | `{ path, sourceRoute }` string records in compilation order, including duplicates; omitted when absent.               |
 
-The last five rows are the compilation's own fields. Encoding rejects a
+The last six rows are the compilation's own fields. Encoding rejects a
 compilation that has any other field. The producer then fails, so
 `npm run prepare:unit` stops instead of writing a snapshot that drops the
 field.
 
 Decoding requires the manifest object to serialize exactly to the snapshot's
 `mokly-manifest.json` output. The compile writes that output only after its
-strict manifest v9 validation, so decoding does not repeat the validation, which
-costs seconds per test process. Diagnostics pass the build-warning validator.
+strict manifest v10 validation, so decoding does not repeat the validation, which
+costs seconds per test process. Diagnostics pass `isBuildDiagnostic` and
+`normalizeBuildDiagnostics`, which validate, sort and de-duplicate both route
+and subject records. Resource seeds must be an array of objects with exactly
+the two string fields above. Encoding and decoding validate seeds, keep their
+order and preserve the difference between an absent field and an empty array.
 Decoding rejects another schema version, a malformed key, unknown fields,
 duplicate routes or document paths, and invalid binary transfer values. A
 decoded compilation equals the encoded one, with binary outputs as plain
@@ -40,7 +45,7 @@ so a test that needs `componentRuntime` compiles instead.
 ## Freshness Key
 
 The freshness key is the SHA-256 digest of the line
-`mokly-example-compilation-snapshot 1`, where `1` is the schema version,
+`mokly-example-compilation-snapshot 2`, where `2` is the schema version,
 followed by one `[path, digest]` JSON line per input, in code-unit order of the
 repository-relative `/`-separated path. Every line ends with a newline.
 `digest` is the SHA-256 of the file bytes, `symlink:` plus the target of a
@@ -48,11 +53,11 @@ symbolic link, or `missing` when the path is absent or is not a regular file.
 The inputs are:
 
 - every file that `git ls-files --cached --others --exclude-standard` lists
-  under `examples/basic`, `examples/imported-assets`, `docs/protocol` and
-  `README.md`, so a tracked file deleted from the working tree hashes as
-  `missing`. The example's stylesheets import assets from
-  `examples/imported-assets`, and `copyExampleSources` copies the same four
-  paths;
+  under `examples/basic`, `examples/imported-assets`, `docs/protocol`,
+  `README.md` and `plans`, so a tracked file deleted from the working tree
+  hashes as `missing`. The example's stylesheets import assets from
+  `examples/imported-assets`, its Markdown links into `plans/`, and
+  `copyExampleSources` copies the same five paths;
 - every regular file under `dist/` and `packages/viewer/dist/`, or the
   directory itself as `missing`;
 - `package-lock.json` and `tsconfig.json`.
@@ -60,6 +65,8 @@ The inputs are:
 Ignored generated output never enters the key. The producer and the test
 helper share one key function, so a mismatch means an input changed after the
 snapshot was written.
+The schema version is part of the key, so a format change makes older
+snapshots stale even when their source inputs have not changed.
 
 ## Producer
 

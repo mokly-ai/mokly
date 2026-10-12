@@ -20,7 +20,7 @@ for (const mobile of [false, true]) {
       for (let i = 0; i < 40; i++) mockups.push(defineScreen({
         path: "extra-" + i, title: "Extra " + i, description: "Scroll fixture",
         mobile: <main>Extra {i}</main>,
-        desktop: <main>Extra {i}</main>, useCasePaths: [], dependencies: [], relatedDocs: []
+        desktop: <main>Extra {i}</main>, useCasePaths: [], relatedDocs: []
       }));
     `;
     const fixture = await createFixture(source);

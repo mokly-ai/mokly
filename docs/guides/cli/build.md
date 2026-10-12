@@ -68,3 +68,6 @@ Mokly keeps private state in `.mokly-cache/` at the repository
 root and writes a `.gitignore` file inside it, so Git never shows or adds that
 folder. Also list `.mokly-cache/` in your root `.gitignore` when other tools,
 such as formatters or linters, read only that file.
+
+Warnings name a generated page, an entry, a component, a folder or the
+configuration file. Strict mode counts all warnings, including ignored inputs.

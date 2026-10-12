@@ -11,7 +11,7 @@ import type {
 import type { ManifestScreen } from "../registry/types.js";
 import type {
   ComponentReview,
-  ScreenReviewV6,
+  ScreenReviewV7,
 } from "../review/component_types.js";
 import type { ReviewState, ViewReview } from "../review/types.js";
 
@@ -40,7 +40,7 @@ const CHANGED_STATES: ReadonlySet<ReviewState> = new Set<ReviewState>([
 export function changedViews(
   entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV6 | undefined,
+  comparison: ComponentReview | ScreenReviewV7 | undefined,
   variantPath?: string,
 ): readonly ChangedView[] {
   return orderChangedViews(
@@ -54,7 +54,7 @@ export function changedViews(
 export function viewStates(
   entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV6 | undefined,
+  comparison: ComponentReview | ScreenReviewV7 | undefined,
   variantPath?: string,
 ): readonly ViewState[] | undefined {
   return evidenceViews(entry, context, comparison, variantPath)?.map(
@@ -69,7 +69,7 @@ export function viewStates(
 export function changedViewsBySelection(
   entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV6 | undefined,
+  comparison: ComponentReview | ScreenReviewV7 | undefined,
   variantIds: readonly string[] = [],
 ): ChangedViewsBySelection {
   if (entry.kind === "screen")
@@ -93,7 +93,7 @@ export function changedViewsBySelection(
 export function viewStatesBySelection(
   entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV6 | undefined,
+  comparison: ComponentReview | ScreenReviewV7 | undefined,
   variantIds: readonly string[] = [],
 ): ViewStatesBySelection {
   if (entry.kind === "screen") {
@@ -127,7 +127,7 @@ export function selectedChangedViews(
 function evidenceViews(
   entry: ManifestComponent | ManifestComponentVariant | ManifestScreen,
   context: ShellContext,
-  comparison: ComponentReview | ScreenReviewV6 | undefined,
+  comparison: ComponentReview | ScreenReviewV7 | undefined,
   variantPath?: string,
 ): readonly ReviewedView[] | undefined {
   const reviewed =

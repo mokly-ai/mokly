@@ -2,7 +2,7 @@
 import path from "node:path";
 
 import type { ColorScheme, Viewport } from "@mokly/viewer";
-import type { HistoricalManifest, ManifestV9 } from "@mokly/viewer/data";
+import type { HistoricalManifest, ManifestV10 } from "@mokly/viewer/data";
 import {
   entryRoute,
   documentRoute,
@@ -23,13 +23,14 @@ export interface DocumentPair {
   head: string;
   context: string;
   changed: boolean;
-  view?: { id: string; viewport: Viewport; colorScheme: ColorScheme };
+  view?: { path: string; viewport: Viewport; colorScheme: ColorScheme };
+  pagePath?: string;
 }
 
 /** Use accepted byte inventories to select baseline bodies without relying on Git tracking. */
 export function markChangedDocumentBytes(
   pairs: readonly DocumentPair[],
-  manifest: ManifestV9,
+  manifest: ManifestV10,
   baseline: HistoricalManifest,
 ): void {
   const hashes = (value: HistoricalManifest) =>
@@ -50,7 +51,7 @@ export function markChangedDocumentBytes(
 }
 
 export function documentPairs(
-  manifest: ManifestV9,
+  manifest: ManifestV10,
   baseline: HistoricalManifest,
   changed: ReadonlySet<string>,
   documents: "all" | "pages",
@@ -87,6 +88,7 @@ export function documentPairs(
         ...(base ? { base } : {}),
         head,
         context: head,
+        pagePath: screen.path,
         changed: base !== head || changed.has(head),
       });
       continue;
@@ -105,7 +107,7 @@ export function documentPairs(
           head: after,
           context: `${entryRoute(screen.path)} (${viewport}, ${scheme})`,
           changed: before !== after || changed.has(after),
-          view: { id: screen.path, viewport, colorScheme: scheme },
+          view: { path: screen.path, viewport, colorScheme: scheme },
         });
       }
     }

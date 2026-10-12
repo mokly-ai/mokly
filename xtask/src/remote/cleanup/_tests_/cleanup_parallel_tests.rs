@@ -119,6 +119,7 @@ fn fixture(case: Case) -> (Dependencies, Arc<Mutex<Vec<String>>>) {
             environment: unused.clone(),
             programs: shared.clone(),
             clock,
+            snapshot: Arc::new(Unimock::new(())),
             git: unused.clone(),
             blacksmith: shared.clone(),
             github: shared.clone(),

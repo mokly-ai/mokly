@@ -41,7 +41,7 @@ test(
       path.join(root, "build.cjs"),
       `const fs = require("node:fs");
 fs.mkdirSync("mockups/mokly-generated/pages", { recursive: true });
-fs.writeFileSync("mockups/mokly-generated/mokly-manifest.json", JSON.stringify({ schemaVersion: 9, folders: [], generatedBy: "mokly", sourceFiles: [], entries: [], assetClosure: ["page.html"], generatedFiles: [], blobHashAlgorithm: "sha1" }));
+fs.writeFileSync("mockups/mokly-generated/mokly-manifest.json", JSON.stringify({ schemaVersion: 10, folders: [], generatedBy: "mokly", sourceFiles: [], entries: [], assetClosure: ["page.html"], generatedFiles: [], blobHashAlgorithm: "sha1" }));
 fs.writeFileSync("mockups/page.html", "Historical output");
 `,
     );

@@ -32,7 +32,7 @@ test("a committed stale root-level v7 manifest selects a generated-subtree rebui
     },
   });
   assert.equal(result.selection, "rebuild");
-  assert.equal(result.marker?.manifestVersion, 9);
+  assert.equal(result.marker?.manifestVersion, 10);
   assert.deepEqual(trees, [
     [
       "ls-tree",
@@ -62,7 +62,7 @@ for (const [name, bytes] of [
     fixture.fs.put(layout.marker, "regular", Buffer.from(bytes));
     const rebuilt = await fixture.builder.build(fixture.request);
     assert.equal(rebuilt.cacheHit, false);
-    assert.equal(rebuilt.marker.manifestVersion, 9);
+    assert.equal(rebuilt.marker.manifestVersion, 10);
     assert.ok(fixture.calls.length > before);
     assert.equal((await fixture.builder.build(fixture.request)).cacheHit, true);
   });
@@ -79,7 +79,7 @@ test("cache completion is published by one final atomic rename", async () => {
       assert.equal(await fixture.fs.stat(layout.marker), undefined);
       assert.equal(
         JSON.parse(Buffer.from(bytes).toString()).manifestVersion,
-        9,
+        10,
       );
     }
     await write(file, bytes);

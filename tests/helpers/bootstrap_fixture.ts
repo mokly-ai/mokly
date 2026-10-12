@@ -125,7 +125,7 @@ export async function bootstrapFixture(
     "docs/protocol/mokly-frame-adapter.md": "# Frame protocol test fixture\n",
     "docs/protocol/mokly-rendering.md": "# Rendering protocol test fixture\n",
     "docs/protocol/mokly-catalogue.md": "# Catalogue protocol test fixture\n",
-    "docs/protocol/fixtures/catalogue-v5.json": '{"schemaVersion":1}\n',
+    "docs/protocol/fixtures/catalogue-v6.json": '{"schemaVersion":1}\n',
     LICENSE: "MIT\n",
     "CHANGELOG.md": "# Test release\n",
     "source.txt": "reviewed source\n",

@@ -35,7 +35,6 @@ belongs elsewhere below `mockupsDir` and enters the referenced asset closure.
 The [unified output contract](./mokly-unified-output.md) defines route reservation,
 source boundaries and output-independent command behavior.
 
-Configured stylesheet links precede generated renderer and entry links in
-each rendered view. The renderer link precedes the entry link, even if no
-configured stylesheet rule matches. The built-in renderer adds no stylesheet;
-complete page callbacks must link their generated entry CSS explicitly.
+The [renderer stylesheet contract](./mokly-rendering.md#renderer-stylesheets)
+owns the complete `RenderInput.stylesheets` list and its order, including
+delivery without a configured rule and how pages link CSS.

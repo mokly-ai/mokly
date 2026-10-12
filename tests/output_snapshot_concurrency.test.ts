@@ -17,7 +17,7 @@ import { runWithTimings } from "../dist/diagnostics/timings.js";
 import { createFixture, repositoryRoot } from "./helpers/fixture.js";
 
 function source(folder: string): string {
-  return `import {defineScreen} from '@mokly/mokly';export const entries=Array.from({length:4},(_,i)=>defineScreen({path:'${folder}/screen-'+i,title:'Screen '+i,description:'A screen',dependencies:[],relatedDocs:[],mobile:'Mobile',desktop:'Desktop'}));`;
+  return `import {defineScreen} from '@mokly/mokly';export const entries=Array.from({length:4},(_,i)=>defineScreen({path:'${folder}/screen-'+i,title:'Screen '+i,description:'A screen',relatedDocs:[],mobile:'Mobile',desktop:'Desktop'}));`;
 }
 function message(child: ChildProcess, type: string): Promise<void> {
   return new Promise((resolve, reject) => {

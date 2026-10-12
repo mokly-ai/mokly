@@ -6,7 +6,6 @@ import {
   DarkAppearanceIcon,
   LightAppearanceIcon,
 } from "../../parts/icons.js";
-import { useDesignStyle } from "../style_context.js";
 
 import type { AppearanceSelectorProps } from "./appearance-selector.js";
 
@@ -27,7 +26,6 @@ export function AppearanceSelectorView({
   compact,
   otherSchemeChanged,
 }: AppearanceSelectorProps) {
-  useDesignStyle("appearance-selector");
   const changedId = useId();
   return (
     <label

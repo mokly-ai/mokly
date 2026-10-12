@@ -17,7 +17,7 @@ for (const [name, change, routes] of componentChangeCases)
       fixture.git,
       "main",
     );
-    assert.equal(artifact.result.schemaVersion, 6);
+    assert.equal(artifact.result.schemaVersion, 7);
     assert.ok("changes" in artifact.result);
     const result = artifact.result;
     assert.deepEqual(
@@ -67,8 +67,8 @@ test("component title changes mark its variants without inventing affected consu
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   assert.deepEqual(
     result.changes.map((entry) => (entry.after ?? entry.before)!.path).sort(),
     ["action", "action/default", "action/disabled"].sort(),
@@ -89,8 +89,8 @@ test("an implementation edit visible only at real consumer props still identifie
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   assert.deepEqual(
     result.changes.map((entry) => entry.after!.path),
     ["action"],
@@ -125,8 +125,8 @@ for (const adopted of [false, true])
       fixture.git,
       "main",
     );
-    assert.equal(result.schemaVersion, 6);
-    if (result.schemaVersion !== 6) return;
+    assert.equal(result.schemaVersion, 7);
+    if (result.schemaVersion !== 7) return;
     assert.deepEqual(
       result.changes.map((entry) => entry.after!.path),
       adopted ? ["action"] : [],
@@ -146,8 +146,8 @@ test("affected-only views retain their real comparison state without entering Ch
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
   assert.deepEqual(
     result.changes.map((entry) => entry.after!.path),
     ["action"],

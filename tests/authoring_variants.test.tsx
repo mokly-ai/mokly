@@ -28,7 +28,7 @@ const config: ResolvedConfig = {
   generatedDir: path.join(repositoryRoot, "mockups/mokly-generated"),
   moduleResolution: { aliases: {}, loaders: {}, packageRoots: [] },
   repoRoot: repositoryRoot,
-  review: { base: "main", outDir: ".review", sharedImpact: [] },
+  review: { base: "main", outDir: ".review" },
   sourceFiles: [sourceRelativePath],
   stylesheets: [],
   watch: { debounceMs: 100, rules: [] },
@@ -40,7 +40,6 @@ test("screen variants inherit metadata, preserve slugs, brand and source attribu
       slug: "welcome",
       address: "example.test/welcome",
       colorSchemes: ["light"],
-      dependencies: ["README.md"],
       description: "Welcome",
       desktop: "Desktop",
       path: "welcome",
@@ -63,7 +62,6 @@ test("screen variants inherit metadata, preserve slugs, brand and source attribu
           slug: "retry",
           address: "example.test/retry",
           colorSchemes: ["light"],
-          dependencies: ["package.json"],
           description: "Retry saving",
           desktop: "Retry desktop",
 
@@ -89,7 +87,6 @@ test("screen variants inherit metadata, preserve slugs, brand and source attribu
     address: "example.test/welcome",
     colorSchemes: ["light"],
     definedIn: sourceRelativePath,
-    dependencies: ["README.md"],
     description: "Empty workspace",
     desktop: "Empty desktop",
     kind: "screen",
@@ -101,7 +98,6 @@ test("screen variants inherit metadata, preserve slugs, brand and source attribu
     useCasePaths: [],
   });
   assert.equal(overridden?.address, "example.test/retry");
-  assert.deepEqual(overridden?.dependencies, ["package.json"]);
   assert.deepEqual(overridden?.relatedDocs, [
     "docs/protocol/mokly-screen-variants.md",
   ]);
@@ -181,7 +177,6 @@ test("defineScreen runtime shape follows absent, undefined, empty, and broad var
 function parentInput() {
   return {
     slug: "welcome",
-    dependencies: [] as readonly string[],
     description: "Welcome",
     desktop: "Desktop",
     path: "welcome",

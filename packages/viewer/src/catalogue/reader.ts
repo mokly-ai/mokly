@@ -25,7 +25,7 @@ import {
 } from "./values.js";
 import { MoklyVersionError } from "./version_error.js";
 
-/** Parse known v5 fields; ignore compatible additions without exposing private data. */
+/** Parse known v6 fields; ignore compatible additions without exposing private data. */
 export function readCatalogue(value: unknown): CatalogueReadModel {
   const model = readCatalogueModel(value, readEntry);
   validateCatalogueReferences(model);
@@ -68,8 +68,8 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
   readRoutedEntry: (value: unknown) => Entry,
 ): ParsedCatalogue<Entry> {
   const input = object(value);
-  if (input.schemaVersion !== 5)
-    throw new MoklyVersionError("catalogue", input.schemaVersion, 5);
+  if (input.schemaVersion !== 6)
+    throw new MoklyVersionError("catalogue", input.schemaVersion, 6);
   assertPublicCatalogue(input);
   const identity = object(input.identity),
     revision = object(input.revision);
@@ -84,7 +84,7 @@ function readCatalogueModel<Entry extends ParsedRoutedEntry>(
       return entry as Extract<Entry, { kind: Kind }>;
     });
   return {
-    schemaVersion: 5,
+    schemaVersion: 6,
     identity: { id: catalogueIdentity, title: text(identity.title) },
     deploymentId: hash(input.deploymentId),
     revision: {

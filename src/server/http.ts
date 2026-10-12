@@ -17,7 +17,7 @@ import { loadServeBrowserAssets } from "./client_modules.js";
 import { ComponentChangeCache } from "./component_change_cache.js";
 import { ComponentRenderService } from "./controls/service.js";
 import { ForegroundActivity } from "./demand/activity.js";
-import { DocumentService } from "./demand/service.js";
+import { liveDocumentService } from "./demand/service.js";
 import { acceptedGeneratedStatic } from "./generated_static.js";
 import { catalogueRequestHandler } from "./http_request_handler.js";
 import { closeCatalogueHttp } from "./http_shutdown.js";
@@ -55,36 +55,42 @@ export async function startCatalogueServer(
     snapshot.outputs ??
     acceptedGeneratedStatic(options.componentRuntime);
   const movedLinks = new RenderMoveTargets();
+  const renderService = (runtime: ComponentRuntime) =>
+    new ComponentRenderService(
+      runtime,
+      movedLinks.read,
+      options.onBuildWarning,
+    );
   let controls = options.componentRuntime
-    ? new ComponentRenderService(options.componentRuntime, movedLinks.read)
+    ? renderService(options.componentRuntime)
     : undefined;
   const activity = new ForegroundActivity(options.onForeground ?? (() => {}));
   const createDocuments = (runtime: ComponentRuntime) =>
-    runtime.manifest.schemaVersion === "live-index-2"
-      ? new DocumentService(runtime, activity.channel(), {
-          moveTargets: movedLinks.read,
-          onDocument: (document) => {
-            if (document.assetClosure)
-              assetClosure.visit(document.assetClosure);
-            if (runtime.generation === controls?.capability().generation)
-              publicCatalogue.acceptDocument(
-                document,
-                publicInput(),
-                contentVersion,
-              );
-            options.onPreviewResources?.({
-              generation: runtime.generation,
-              ...(document.resourceSeeds
-                ? { resourceSeeds: document.resourceSeeds }
-                : {}),
-              documents: [
-                [document.route, document.html],
-                ...(document.watchDocuments ?? []),
-              ],
-            });
-          },
-        })
-      : undefined;
+    liveDocumentService(
+      runtime,
+      activity.channel(),
+      (document) => {
+        if (document.assetClosure) assetClosure.visit(document.assetClosure);
+        if (runtime.generation === controls?.capability().generation)
+          publicCatalogue.acceptDocument(
+            document,
+            publicInput(),
+            contentVersion,
+          );
+        options.onPreviewResources?.({
+          generation: runtime.generation,
+          ...(document.resourceSeeds
+            ? { resourceSeeds: document.resourceSeeds }
+            : {}),
+          documents: [
+            [document.route, document.html],
+            ...(document.watchDocuments ?? []),
+          ],
+        });
+      },
+      movedLinks.read,
+      options.onBuildWarning,
+    );
   let documents = options.componentRuntime
     ? createDocuments(options.componentRuntime)
     : undefined;
@@ -110,7 +116,7 @@ export async function startCatalogueServer(
     : undefined;
   let componentChanges =
     options.componentChanges ??
-    snapshot.componentChanges ??
+    validated.componentChanges ??
     (options.review && options.componentChangeSource
       ? await new ComponentChangeCache(options.componentChangeSource).read(
           options.updateVersion ?? 1,
@@ -240,7 +246,7 @@ export async function startCatalogueServer(
         activeCatalogue = catalogue;
       }
       if (controls) controls.replace(runtime);
-      else controls = new ComponentRenderService(runtime, movedLinks.read);
+      else controls = renderService(runtime);
     },
     publishUpdate(update = {}): void {
       const next = advanceCatalogueState(

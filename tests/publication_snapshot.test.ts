@@ -115,7 +115,7 @@ for (const includeChanges of [false, true]) {
     );
     await fs.promises.appendFile(
       fixture.entryPath,
-      '\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ path: "publication-added", title: "Added during publication", description: "A new document", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><body>Added document</body></html>" }));\n',
+      '\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ path: "publication-added", title: "Added during publication", description: "A new document", relatedDocs: [], render: () => "<!doctype html><html><body>Added document</body></html>" }));\n',
     );
     const output = path.join(fixture.root, ".context/published");
     await buildPreview(

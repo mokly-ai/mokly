@@ -41,7 +41,6 @@ test("declared screen and use-case tags reach their leaves without inventing pag
       tags: ["forms", "onboarding"],
     },
     {
-      declaredDependencies: [],
       description: "Tour",
       path: "Screens/tour",
       kind: "use-case",

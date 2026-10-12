@@ -1,5 +1,17 @@
 # Watched Catalogue Development
 
+## Delivery Status
+
+CSS rule attribution and ignored stylesheet owner records are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
+
+The [source-path removal plan](../../plans/remove-source-path-evidence.md) records delivery history.
+
+The generation-scoped warning channel and supervisor-factory cleanup are
+implemented in [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
+Other watch behavior is implemented.
+
+## Watch Inputs
+
 `mokly serve` watches by default; `--no-watch` serves one deterministic
 snapshot. Every development catalogue shell loads the package-owned browser client, which connects to
 the versioned event stream. Higher versions refresh background evidence in place
@@ -21,8 +33,11 @@ by generated output:
   treated as a silent orphan; a changed resource that a Markdown document
   references rebuilds too, because Mokly copies it into generated output;
 - an input shared with shell metadata rebuilds before restarting the child;
-- configured stylesheets and referenced local CSS, fonts, images, and other
-  resources used only through public URLs reload the browser without rebuilding;
+- configured or component-declared stylesheets and referenced local CSS, fonts,
+  images and other resources used only through public URLs reload the browser
+  without rebuilding. Every validated declaration is an exact watch target
+  before initial readiness, even if no view renders it. Successful
+  reconfiguration adds each new declaration before readiness;
 - [imported CSS](./mokly-imported-styles.md), including modules, nested
   imports, local assets and PostCSS-reported files, rebuilds from source.
   Plain and module CSS, nested imports, referenced assets, and
@@ -69,19 +84,19 @@ stats through startup gates; resource notifications coalesce by path and deliver
 the latest descriptor for that path.
 
 Exact required files, including the config and its imports, inventoried sources,
-the renderer, and configured stylesheets, retain both their ancestor path and the
+the renderer, and configured or component-declared stylesheets, retain both their ancestor path and the
 file itself even when intentionally nested beneath an ordinarily ignored
-directory. Configured stylesheet files remain reload inputs.
-The logical path of a previously reachable public resource remains a reload
-input when its symlink temporarily points outside the repository or dangles;
-never watch the escaped physical target. Generated output, Review output and
-cache still take precedence, so only an authored public alias can recover.
+directory. Configured and declared stylesheet files remain reload inputs.
 Generated output, Review output and the cache take precedence over exact
 required inputs; denied directory **names** apply only to discovery and
 directory scans, not inventoried files, configured modules or their ancestors.
 Classify logical and physical aliases by these distinct reasons before applying
-the required-input exception. Those package-owned output classifications take
-precedence over additional watch rules.
+the required-input exception.
+Changing a declaration or imported source rebuilds; editing the declared
+public file reloads/evidence-refreshes documents rendering its declarer without
+an explicit watch rule. See
+[component stylesheets](./mokly-component-stylesheets.md).
+Those package-owned classifications take precedence over additional watch rules.
 A created path beneath a denied directory relative to its root, or beneath
 `review.outDir`, is ignored because discovery cannot accept it. A file created
 below a root that none of its `files` globs matches and that is not imported
@@ -106,6 +121,24 @@ Only confined regular files in the referenced closure are public watch inputs;
 resource watchers do not follow symlinks. Their lexical paths remain observable
 so an invalid or replaced symlink can be repaired as a regular file. Generated files and
 package-owned ignored paths remain excluded, preventing output feedback loops.
+The logical path of a previously reachable public resource remains a reload
+input when its symlink temporarily points outside the repository or dangles;
+never watch the escaped physical target. Generated output, Review output and
+cache still take precedence, so only an authored public alias can recover.
+
+Build a generation-scoped index of exact required files and their ancestors
+once per accepted config/inventory. Ignore callbacks use constant-time set
+lookups for exact files and ancestors; descendant checks walk the path's
+ancestors without scanning the inventory. Watch targets omit individual files
+already covered by an entry glob root, PostCSS directory-dependency root or
+watch-rule root unless a denied-name directory lies between that root and a
+required file. Such files remain explicit targets, including when they appear
+after watcher readiness; their arrival changes the effective watch-target set
+and replaces the watcher.
+Reconfigure replaces the watcher only when the set of effective watch roots
+changes, not when another file joins an already-watched reported directory.
+A newly added matching file there causes one rebuild and browser reload
+without extra graph loads for watcher replacement.
 
 The repository's `npm run dev` command builds the local CLI once, then runs
 watched Serve with `examples/basic/mokly.config.ts`. Arguments after `--`
@@ -127,9 +160,18 @@ traversal. Active transaction trees and the initialized internal reservation
 namespace remain pruned. Unowned files still make subsequent export replacement
 fail; watch classification does not grant permission to overwrite them.
 
-The input graphs are resolved before the source/config watcher is constructed. It
-becomes ready before initial index preparation; import changes replace its watch
-set using the same readiness and recovery rules as configuration adoption.
+The source inventory is resolved without evaluating consumer modules before the
+source/config watcher is constructed. That watcher becomes ready before the
+consumer graph is evaluated or the initial index is prepared, so edits during
+evaluation are buffered. Once registry validation accepts the declared
+stylesheets, a replacement source watcher adds every declaration and becomes
+ready before index completion, child startup, or reported readiness. Keep the
+inventory watcher active until its replacement is ready; apply the same
+ordering and failure recovery on successful configuration reloading. A declared
+CSS edit between evaluation and the replacement becoming ready needs no extra
+compensation: Serve reads CSS from disk for each request and starts background
+Changes only afterwards. Import changes replace the source watch set with the
+same readiness and recovery rules.
 Build a generation-scoped index of exact required files and their ancestors
 once per accepted config/inventory. Ignore callbacks consult that index in
 constant time; watch targets omit individual files already covered by an entry
@@ -146,17 +188,27 @@ it is written. Discovery repeats after readiness to capture newly introduced
 references during watcher attachment. Notifications during generation and child
 startup are buffered. Each notification delivery is isolated: a classifier
 exception is reported once, that event is dropped, and later notifications keep
-flowing. A child receives the parent-validated catalogue, validates its source
-inventory, and binds before readiness. Initial startup tries a requested concrete
-port and then each higher port in order when the address is occupied; port `0`
-delegates selection to the operating system. The resolved port remains stable
-across child restarts, which bind strictly rather than changing the published URL.
-Exhausting the valid port range or encountering another bind error exits non-zero
-without leaking watchers. An unexpected child failure after readiness reports its
-diagnostic once, starts cleanup if the process remains alive, and enqueues a
-restart through the same serialized action queue used for authored changes. The
-supervisor retains ownership until terminal confirmation; a replacement cannot
-bypass an in-progress cleanup or contend with the failed child's still-bound port.
+flowing. A child receives the parent-validated catalogue, validates
+its source inventory, and binds before
+readiness. Child and background warnings follow the
+[generation warning contract](./mokly-build-warnings.md#watched-serve-generations).
+The shared diagnostic sink flushes before Catalogue ready or failure and
+rejects old-attempt records immediately when a newer attempt starts.
+Initial startup tries a
+requested concrete port and then each higher port in order when the address
+is occupied; port `0` delegates selection to the
+operating system. The resolved port remains stable across child restarts, which
+bind strictly rather than changing the published URL. Exhausting the valid port
+range or encountering another bind error exits non-zero without leaking
+watchers. An unexpected child failure after readiness reports its diagnostic
+once, starts cleanup if the process remains alive, and enqueues a restart through
+the same serialized action queue used for authored changes. The supervisor
+retains ownership until terminal confirmation; a replacement cannot bypass an
+in-progress cleanup or contend with the failed child's still-bound port.
+
+Construct the process supervisor inside the startup cleanup block that owns
+the already-created watchers. A throwing injected supervisor factory closes
+those watchers before startup rejects; it must not leave a live source watcher.
 
 The supervisor retains the five-minute readiness safety allowance for the child
 to receive the accepted config, live index and retained renderer, construct its

@@ -1,6 +1,7 @@
+import { MoklyVersionError } from "../catalogue/version_error.js";
 import { canonicalJson } from "../components/data.js";
 
-import type { ReviewResultV6 } from "./component_types.js";
+import type { ReviewResultV7 } from "./component_types.js";
 import { affectedConsumerOrderKey } from "./order.js";
 import {
   requireEqual,
@@ -21,11 +22,12 @@ import {
 import { validateResultReferences } from "./result_references.js";
 import type { ReviewResult } from "./types.js";
 
-/** Decode the path-addressed v6 result shared by every catalogue. */
+/** Decode the path-addressed v7 result shared by every catalogue. */
 export function parseReviewResult(value: unknown): ReviewResult {
   try {
     return validateResult(value);
   } catch (error) {
+    if (error instanceof MoklyVersionError) throw error;
     reviewInvalid(
       error instanceof Error ? error.message : "invalid comparison",
     );
@@ -33,13 +35,11 @@ export function parseReviewResult(value: unknown): ReviewResult {
 }
 
 function validateResult(value: unknown): ReviewResult {
-  if (
-    !value ||
-    typeof value !== "object" ||
-    !("schemaVersion" in value) ||
-    value.schemaVersion !== 6
-  )
+  if (!value || typeof value !== "object" || !("schemaVersion" in value))
     reviewInvalid("unsupported schemaVersion");
+  if (typeof value.schemaVersion === "number" && value.schemaVersion !== 7)
+    throw new MoklyVersionError("review", value.schemaVersion, 7);
+  if (value.schemaVersion !== 7) reviewInvalid("unsupported schemaVersion");
   const result = reviewObject(value, [
     "schemaVersion",
     "baseCommit",
@@ -47,7 +47,6 @@ function validateResult(value: unknown): ReviewResult {
     "changedPaths",
     "ignoredImpact",
     "screens",
-    "sharedImpact",
     "components",
     "changes",
     "affectedConsumers",
@@ -56,7 +55,6 @@ function validateResult(value: unknown): ReviewResult {
     reviewInvalid("invalid base commit");
   reviewString(result.baseRef);
   const changed = reviewStrings(result.changedPaths, reviewPath);
-  reviewStrings(result.sharedImpact, reviewPath);
   const screens = reviewArray(result.screens).map((screen) =>
     validateReviewScreen(screen, false, changed),
   );
@@ -123,12 +121,12 @@ function validateResult(value: unknown): ReviewResult {
   const affected = reviewArray(result.affectedConsumers).map(validateAffected);
   requireOrdered(affected, (item) =>
     affectedConsumerOrderKey(
-      item as unknown as ReviewResultV6["affectedConsumers"][number],
+      item as unknown as ReviewResultV7["affectedConsumers"][number],
     ),
   );
   validateIgnoredImpact(result.ignoredImpact, screens);
-  validateResultReferences(value as ReviewResultV6);
-  validateResultMoves(value as ReviewResultV6);
+  validateResultReferences(value as ReviewResultV7);
+  validateResultMoves(value as ReviewResultV7);
   return value as ReviewResult;
 }
 

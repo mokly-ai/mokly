@@ -4,12 +4,18 @@ import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type { ReviewResultV6 } from "../packages/viewer/dist/review/component_types.js";
+import type { ReviewResultV7 } from "../packages/viewer/dist/review/component_types.js";
 import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
 import type { WorkspaceData } from "../packages/viewer/dist/shell/workspace_data.js";
 import { WorkspaceEvidence } from "../packages/viewer/dist/shell/workspace_evidence.js";
 
-test("loaded v2 details merge with classification, deduplicate selectors and suppress retained exclusions", () => {
+import {
+  cssReason,
+  cssRule,
+  fixtureCssAnalysis,
+} from "./helpers/css_evidence.js";
+
+test("loaded comparison details merge with classification, deduplicate selectors and suppress retained exclusions", () => {
   const data = workspace();
   data.resourceEvidence = [
     {
@@ -19,7 +25,7 @@ test("loaded v2 details merge with classification, deduplicate selectors and sup
         {
           kind: "dependency",
           path: "mockups/shared.css",
-          analysis: { status: "matched", selectors: [".auth"] },
+          analysis: fixtureCssAnalysis("matched", [".auth"]),
         },
       ],
       excludedResources: [
@@ -36,18 +42,22 @@ test("loaded v2 details merge with classification, deduplicate selectors and sup
           ...loaded.screens[0]!.views[0]!,
           ignoredIds: ["chrome"],
           reasons: [
-            {
-              kind: "dependency",
-              path: "mockups/shared.css",
-              analysis: {
+            cssReason("mockups/shared.css", [
+              cssRule({
+                ruleKey: "a".repeat(64),
+                selectors: [".auth"],
+                pageSelectors: [".auth"],
+              }),
+              cssRule({
+                ruleKey: "c".repeat(64),
                 status: "unresolved",
-                selectors: [".auth", ".global"],
-              },
-            },
+                selectors: [".global"],
+              }),
+            ]),
             {
               kind: "dependency",
               path: "mockups/unused.css",
-              analysis: { status: "matched", selectors: [".saved"] },
+              analysis: fixtureCssAnalysis("matched", [".saved"]),
             },
           ],
         },
@@ -68,21 +78,27 @@ test("loaded v2 details merge with classification, deduplicate selectors and sup
   assert.match(markup, /This change can apply anywhere on the screen/);
   for (const selector of [".auth", ".global", ".saved"])
     assert.equal(markup.split(`>${selector}</code>`).length - 1, 1);
-  assert.equal(markup.split("<li>mockups/shared.css</li>").length - 1, 1);
-  assert.match(markup, /mockups\/logo.svg/);
+  assert.equal(markup.split("<li>mockups/shared.css<p>").length - 1, 1);
+  assert.doesNotMatch(markup, /mockups\/logo\.svg/);
+  assert.match(markup, /mockups\/shared\.css/);
   assert.match(markup, /Excluded content: chrome/);
   assert.doesNotMatch(markup, /Examined and excluded|Shared component changes/);
   assert.equal(markup.split("<h3>Comparison details</h3>").length - 1, 1);
   assert.equal(renderEvidence(data, parsed), markup);
 });
 
-test("historical v2 loaded evidence remains available when classification has no view slice", () => {
+test("loaded view reasons remain visible without classification, not legacy shared-impact paths", () => {
   const data = workspace();
   delete data.status;
   const loaded = comparison();
+  loaded.changedPaths = ["mockups/loaded.svg", ...loaded.changedPaths];
+  loaded.screens[0]!.views[0]!.reasons = [
+    { kind: "dependency", path: "mockups/loaded.svg" },
+  ];
   const markup = renderEvidence(data, parseReviewResult(loaded));
   assert.doesNotMatch(markup, / hidden=/);
-  assert.match(markup, /mockups\/logo.svg/);
+  assert.match(markup, /mockups\/loaded\.svg/);
+  assert.doesNotMatch(markup, /mockups\/logo\.svg/);
   assert.doesNotMatch(markup, /Shared component changes/);
 });
 
@@ -93,7 +109,7 @@ test("loaded comparisons for another screen cannot add evidence to the selected 
   assert.doesNotMatch(renderEvidence(data, loaded), /mockups\/logo.svg/);
 });
 
-test("v3 workspace evidence uses its selected comparison and keeps excluded stylesheets separate", () => {
+test("v7 workspace evidence omits source-only paths and keeps excluded stylesheets separate", () => {
   const data = workspace();
   data.status = "Unmodified";
   data.comparison = componentComparison(
@@ -104,10 +120,8 @@ test("v3 workspace evidence uses its selected comparison and keeps excluded styl
   const loaded = parseReviewResult(componentComparison(["entries/stale.ts"]));
 
   const markup = renderEvidence(data, loaded);
-  assert.match(
-    markup,
-    /Changes to these files may affect this screen:<\/p><ul><li>entries\/renderer\.ts<\/li><\/ul>/,
-  );
+  assert.doesNotMatch(markup, /Changes to these files may affect this screen:/);
+  assert.doesNotMatch(markup, /entries\/renderer\.ts/);
   assert.doesNotMatch(markup, /entries\/stale\.ts/);
   assert.match(
     markup,
@@ -116,7 +130,7 @@ test("v3 workspace evidence uses its selected comparison and keeps excluded styl
   assert.doesNotMatch(markup, /Changed styles that apply to this screen/);
 });
 
-test("loaded v3 shared impact joins retained dependency paths once in sorted order", () => {
+test("loaded v7 evidence omits source-only paths and deduplicates retained resources", () => {
   const loaded = parseReviewResult(
     componentComparison(
       ["entries/alpha.ts", "entries/beta.ts"],
@@ -127,8 +141,9 @@ test("loaded v3 shared impact joins retained dependency paths once in sorted ord
 
   assert.match(
     markup,
-    /Changes to these files may affect this screen:<\/p><ul><li>entries\/alpha\.ts<\/li><li>entries\/beta\.ts<\/li><\/ul>/,
+    /Changes to these files may affect this screen:<\/p><ul class="mbk-evidence-files"><li>entries\/beta\.ts<\/li><\/ul>/,
   );
+  assert.doesNotMatch(markup, /entries\/alpha\.ts/);
   assert.equal(markup.split("<li>entries/beta.ts</li>").length - 1, 1);
 });
 
@@ -145,19 +160,19 @@ function renderEvidence(
 }
 
 function componentComparison(
-  sharedImpact: string[],
+  sourcePaths: string[],
   reasonPath?: string,
   excludedCss?: string,
-): ReviewResultV6 {
+): ReviewResultV7 {
   const address = { path: "home", title: "Home" };
   return {
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: [
-      ...new Set([...sharedImpact, ...(reasonPath ? [reasonPath] : [])]),
+      ...new Set([...sourcePaths, ...(reasonPath ? [reasonPath] : [])]),
     ].sort(),
-    sharedImpact: [...sharedImpact].sort(),
+
     ignoredImpact: [],
     screens: [
       {
@@ -165,8 +180,7 @@ function componentComparison(
         before: address,
         after: address,
         state: "unchanged",
-        dependencies: [],
-        sharedImpact,
+
         views: (["mobile", "desktop"] as const).map((viewport) => ({
           viewport,
           colorScheme: "light",
@@ -197,9 +211,9 @@ function componentComparison(
   };
 }
 
-function comparison(): ReviewResultV6 {
+function comparison(): ReviewResultV7 {
   return {
-    schemaVersion: 6 as const,
+    schemaVersion: 7 as const,
     baseRef: "main",
     baseCommit: "a".repeat(40),
     changedPaths: [
@@ -207,7 +221,6 @@ function comparison(): ReviewResultV6 {
       "mockups/shared.css",
       "mockups/unused.css",
     ],
-    sharedImpact: ["mockups/logo.svg"],
     ignoredImpact: [],
     screens: [
       {
@@ -216,8 +229,6 @@ function comparison(): ReviewResultV6 {
         path: "home",
         title: "Home",
         state: "changed",
-        dependencies: [],
-        sharedImpact: ["mockups/logo.svg"],
         views: [
           {
             viewport: "mobile",
@@ -244,7 +255,6 @@ function workspace(): WorkspaceData {
     comparisonEligible: true,
     entry: {
       colorSchemes: ["light"],
-      declaredDependencies: [],
       path: "home",
       kind: "screen",
       title: "Home",

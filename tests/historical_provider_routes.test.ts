@@ -10,7 +10,7 @@ import { viewerCatalogue } from "../packages/viewer/dist/viewer/projection.js";
 const fixture = readCatalogue(
   JSON.parse(
     fs.readFileSync(
-      new URL("../docs/protocol/fixtures/catalogue-v5.json", import.meta.url),
+      new URL("../docs/protocol/fixtures/catalogue-v6.json", import.meta.url),
       "utf8",
     ),
   ),

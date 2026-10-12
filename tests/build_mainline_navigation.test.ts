@@ -20,7 +20,7 @@ test("registry reports source-attributed case-folded folder collisions", async (
   const fixture = await createFixture(`
 import { defineScreen } from "@mokly/mokly";
 import React from "react";
-const metadata = { dependencies: [], relatedDocs: [] };
+const metadata = { relatedDocs: [] };
 export const mockups = [
   defineScreen({ ...metadata, description: "First screen", desktop: <main>First</main>, path: "Browse/first", mobile: <main>First</main>, title: "First" }),
   defineScreen({ ...metadata, description: "Second screen", desktop: <main>Second</main>, path: "browse/second", mobile: <main>Second</main>, title: "Second" })
@@ -65,7 +65,7 @@ test("screen colorSchemes must be a subset of config", async (context) => {
   }
 });
 
-test("missing declared dependencies and stylesheets are actionable", async (context) => {
+test("missing related documents and stylesheets are actionable", async (context) => {
   const fixture = await createFixture();
   context.after(() => removeFixture(fixture));
   const config = await loadConfig(fixture.root);
@@ -210,7 +210,6 @@ function screenWithColorSchemes(colorSchemes: string): string {
 import React from "react";
 export const mockups = [defineScreen({
   colorSchemes: ${colorSchemes} as ("dark" | "light")[],
-  dependencies: [],
   description: "Scheme screen",
   desktop: <main>Desktop</main>,
   path: "scheme-screen",

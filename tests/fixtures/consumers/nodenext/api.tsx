@@ -37,6 +37,8 @@ import {
   type WatchRule,
 } from "@mokly/mokly";
 
+import "./removed_fields.js";
+import "./removed_review_fields.js";
 const config: MoklyConfig = defineConfig({
   roots: [{ dir: "entries" }],
   mockupsDir: "mockups",
@@ -68,7 +70,6 @@ const documentPage: PageInput = {
   path: "typed-page",
   title: "Page",
   description: "Page",
-  dependencies: [],
   relatedDocs: [],
   render: () => "<html><body>Page</body></html>",
 };
@@ -81,7 +82,6 @@ const typedVariant: ScreenVariantInput = {
 };
 const screenInputBase = {
   slug: "typed-return-boundary",
-  dependencies: [],
   description: "Typed return boundary",
   desktop: node,
   path: "typed-return-boundary",
@@ -162,7 +162,6 @@ const unionDefinitions: ScreenDefinition | readonly ScreenDefinition[] =
 const unsafeUnion: ScreenDefinition = defineThroughGeneric(unionInput);
 const variantDefinitions: readonly ScreenDefinition[] = defineScreen({
   slug: "typed-variant-parent",
-  dependencies: [],
   description: "Typed variant parent",
   desktop: node,
   path: "typed-variant-parent",
@@ -175,7 +174,6 @@ const definitions: RegistryDefinition[] = [
   definePage(documentPage),
   defineScreen({
     slug: "typed-screen",
-    dependencies: [],
     description: "Type declaration fixture",
     desktop: node,
     path: "typed-screen",
@@ -246,8 +244,13 @@ type PublicTypes =
   | WatchConfig
   | WatchRule;
 
-const renderer: Renderer = (input) =>
-  `<html><body>${input.entry.title}</body></html>`;
+const renderer: Renderer = (input) => {
+  if (input.entry.kind === "component") {
+    // @ts-expect-error Renderer entries do not expose component declarations.
+    void input.entry.stylesheets;
+  }
+  return `<html><body>${input.entry.title}</body></html>`;
+};
 const exhaustive: PublicTypes | Renderer | undefined = renderer;
 void exhaustive;
 

@@ -44,7 +44,6 @@ test("public helpers retain stable authoring semantics", () => {
     path: "account/invoice",
     title: "Invoice",
     description: "An invoice",
-    dependencies: [],
     relatedDocs: [],
     mobile: "Invoice",
     desktop: "Invoice",

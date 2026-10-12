@@ -9,10 +9,10 @@ uses the content-addressed Plan → Blobs → Complete exchange over a schema 3
 ownership marker and upload v2 envelope. HTTP 426 reports the fixed viewer
 namespace compatibility message and stops without retry or downgrade.
 
-Publish forwards the exporter's primary build diagnostics to its CLI reporter
-before bundle capture and upload. With `--strict`, that callback raises the
-typed build failure at the same boundary, so no archive or HTTP side effect can
-begin.
+After the initial checkout check, Publish forwards the exporter's primary build
+diagnostics to its CLI reporter before bundle capture and upload. With `--strict`,
+that callback raises the typed build failure at the same boundary, so no archive
+or HTTP side effect can begin.
 
 `run.ts` composes injected Git, export, HTTP and time boundaries. It pins the
 actual checkout HEAD, adds an owned manifest through the exporter, captures its
@@ -74,6 +74,11 @@ installation through completion, so helper shutdown still reaches the Mokly
 reporter and status 1. Outside that one window, cancellation is never inferred
 from causes, aggregate members, messages or a later command signal.
 
+The compilation cancellation tests use a proxy around esbuild. It clears
+`ESBUILD_BINARY_PATH` for the real compiler process so npm's JavaScript
+launcher cannot start the proxy again. The same tests cover native executable
+and JavaScript launcher installations.
+
 ```bash
 npm run build
 node --import tsx --test --test-concurrency=2 tests/publish*.test.ts tests/export_current.test.ts
@@ -81,4 +86,8 @@ npm run package:smoke
 ```
 
 See the [action usage](../../.github/actions/publish/README.md),
-[export internals](../export/README.md) and [implementation plans](../../plans/).
+[export internals](../export/README.md).
+
+## Delivery Status
+
+See the [implementation plans](../../plans/).

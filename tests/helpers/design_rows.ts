@@ -82,3 +82,17 @@ export function filterTargets(node: Node): (string | undefined)[][] {
       attribute(option, "data-mokly-link"),
     ]);
 }
+
+/** Desktop catalogue rows: label, changed mark, destination and current page. */
+export function navRows(node: Node, section: "components" | "specs") {
+  const nav = byClass(node, "mbk-nav-section").find(
+    (element) => attribute(element, "data-nav-section") === section,
+  );
+  if (!nav) return [];
+  return byClass(nav, "mbk-nav-row").map((row) => [
+    rowLabel(row),
+    byClass(row, "mbk-nav-changed").length > 0,
+    attribute(row, "data-mokly-link"),
+    attribute(row, "aria-current"),
+  ]);
+}

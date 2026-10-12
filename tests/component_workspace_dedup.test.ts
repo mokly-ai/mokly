@@ -20,7 +20,7 @@ test("affected usage keeps complete serialized identity and evidence order with 
     fixture.git,
     "main",
   );
-  if (result.schemaVersion !== 6) assert.fail("Expected component result");
+  if (result.schemaVersion !== 7) assert.fail("Expected component result");
   const retained = (path: string) => {
     const current = fixture.after.manifest.entries.find(
       (candidate) => candidate.path === path,

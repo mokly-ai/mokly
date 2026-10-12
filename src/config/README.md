@@ -4,6 +4,10 @@ This internal boundary resolves `MoklyConfig` from a config file. Filesystem pat
 are config-relative; source paths retained in manifests are repository-relative.
 Unknown configuration fields fail with `config-invalid`. Root path prefixes
 cannot start with `mokly-generated`, compared case-insensitively.
+The removed `review.sharedImpact` input is the explicit exception: it warns
+and has no effect. `ReviewConfig` rejects its values with `?: never`, including
+in assigned or spread objects. Explicit `undefined` also fails when
+`exactOptionalPropertyTypes` is enabled.
 
 `roots.ts` validates source directories, safe file globs, path prefixes and
 transparent directory names. Omission selects `[{ dir: "specs" }]` with

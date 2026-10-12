@@ -4,7 +4,7 @@ import test from "node:test";
 
 import { readCatalogueChanges } from "../dist/server/component_changes.js";
 import type { CatalogueNode } from "../packages/viewer/dist/catalogue/types.js";
-import type { ManifestV9 } from "../packages/viewer/dist/registry/types.js";
+import type { ManifestV10 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { readCatalogue } from "../packages/viewer/src/catalogue/reader.js";
 import { projectCatalogue } from "../src/catalogue/projection.js";
@@ -188,14 +188,14 @@ test("removed variants keep baseline authored order at a surviving parent's posi
   );
 });
 
-test("public v5 fixture conforms and compatible readers ignore additive fields", async () => {
+test("public v6 fixture conforms and compatible readers ignore additive fields", async () => {
   const json = await fs.readFile(
-    "docs/protocol/fixtures/catalogue-v5.json",
+    "docs/protocol/fixtures/catalogue-v6.json",
     "utf8",
   );
   const fixture = JSON.parse(json);
   const model = readCatalogue(fixture);
-  assert.equal(model.schemaVersion, 5);
+  assert.equal(model.schemaVersion, 6);
   assert.deepEqual(
     model.removedEntries.map(({ entry, preview }) => [entry.kind, preview]),
     [
@@ -221,7 +221,7 @@ test("public v5 fixture conforms and compatible readers ignore additive fields",
   assert.throws(() => readCatalogue({ ...fixture, schemaVersion: 1 }));
   assert.throws(() =>
     readCatalogue({
-      schemaVersion: 6 as const,
+      schemaVersion: 7 as const,
       generatedBy: "mokly",
       entries: [],
     }),
@@ -230,7 +230,7 @@ test("public v5 fixture conforms and compatible readers ignore additive fields",
 
 test("reader rejects unsafe paths, private extensions and broken known references", async () => {
   const fixture = JSON.parse(
-    await fs.readFile("docs/protocol/fixtures/catalogue-v5.json", "utf8"),
+    await fs.readFile("docs/protocol/fixtures/catalogue-v6.json", "utf8"),
   );
   const mutations = [
     (value: typeof fixture) => {
@@ -289,6 +289,6 @@ function findNode(
 }
 
 type CurrentManifestScreen = Extract<
-  ManifestV9["entries"][number],
+  ManifestV10["entries"][number],
   { kind: "screen" }
 >;

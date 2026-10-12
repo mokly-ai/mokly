@@ -7,10 +7,10 @@ import type {
   ManifestComponentVariant,
 } from "../../packages/viewer/dist/components/manifest_types.js";
 import { isManifestComponentVariant } from "../../packages/viewer/dist/data.js";
-import type { ManifestV9 } from "../../packages/viewer/dist/registry/types.js";
+import type { ManifestV10 } from "../../packages/viewer/dist/registry/types.js";
 
 /** Every actual screen and saved-variant view, in its own entry scope. */
-export function componentViews(manifest: ManifestV9): ComponentViewRecord[] {
+export function componentViews(manifest: ManifestV10): ComponentViewRecord[] {
   return manifest.entries.flatMap((entry) =>
     entry.kind === "screen"
       ? [...(entry.componentViews ?? [])]
@@ -21,7 +21,7 @@ export function componentViews(manifest: ManifestV9): ComponentViewRecord[] {
 }
 
 export function componentParent(
-  manifest: ManifestV9,
+  manifest: ManifestV10,
   id: string,
 ): ManifestComponent {
   const entry = manifest.entries.find((candidate) => candidate.path === id);
@@ -33,7 +33,7 @@ export function componentParent(
 }
 
 export function componentVariants(
-  manifest: ManifestV9,
+  manifest: ManifestV10,
   parentId: string,
 ): ManifestComponentVariant[] {
   return manifest.entries.filter(

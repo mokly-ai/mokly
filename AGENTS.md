@@ -115,6 +115,8 @@ the rule. Rules for one application, package, or feature live in the
 
 - App independence, generated-output safety, server and watcher lifecycle,
   comparison behaviour, and protocol alignment.
+- The current-documentation rule in the
+  [documentation policy](./docs/protocol/documentation-policy.md).
 
 ## Status
 

@@ -13,7 +13,7 @@ test("component Git fixtures reject missing text and binary documents", async ()
   const compilation: Compilation = {
     diagnostics: [],
     manifest: currentManifest({
-      schemaVersion: 9,
+      schemaVersion: 10,
       generatedBy: "mokly",
       entries: [],
       folders: [],

@@ -32,4 +32,5 @@ export function assertSameCompilation(
     expected.deliveredStyleSources,
   );
   assert.deepStrictEqual(actual.documentMarkdown, expected.documentMarkdown);
+  assert.deepStrictEqual(actual.resourceSeeds, expected.resourceSeeds);
 }

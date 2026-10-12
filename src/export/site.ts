@@ -3,6 +3,7 @@ import path from "node:path";
 import type {
   HistoricalManifest,
   ReviewArtifact,
+  PageResourceEvidence,
   StaticDelivery,
 } from "@mokly/viewer/data";
 import {
@@ -37,6 +38,7 @@ import {
   loadShellFontAssets,
 } from "../server/client_modules.js";
 import { homePage, notFoundPage, viewPage } from "../server/pages.js";
+import { screenResultEvidence } from "../server/screen_view_changes.js";
 
 import { comparisonContentId } from "./content_id.js";
 import { exportError } from "./error.js";
@@ -65,6 +67,7 @@ export function assembleExport(
   changesStatus: "disabled" | "ready" | "unavailable" = comparison
     ? "ready"
     : "disabled",
+  pageEvidence: readonly PageResourceEvidence[] = [],
 ): {
   inventory: ExportInventory;
   delivery: StaticDelivery;
@@ -169,6 +172,7 @@ export function assembleExport(
           componentChanges: {
             baseline,
             result: comparison.result,
+            ...(pageEvidence.length ? { pageEvidence } : {}),
             ...(comparison.pairing ? { pairing: comparison.pairing } : {}),
             changedEntries: [
               ...new Set([
@@ -178,37 +182,7 @@ export function assembleExport(
                 ...materialIds.filter((id) => pageIds.has(id)),
               ]),
             ].sort(),
-            screenEvidence: comparison.result.screens
-              .map(({ path, views }) => ({
-                path,
-                views: views
-                  .filter(
-                    (view) =>
-                      view.reasons?.length || view.excludedResources?.length,
-                  )
-                  .map(
-                    ({
-                      viewport,
-                      colorScheme,
-                      reasons,
-                      excludedResources,
-                    }) => ({
-                      viewport,
-                      colorScheme,
-                      ...(reasons ? { reasons } : {}),
-                      ...(excludedResources ? { excludedResources } : {}),
-                    }),
-                  ),
-              }))
-              .filter((screen) => screen.views.length > 0),
-            screenViews: comparison.result.screens.map(({ path, views }) => ({
-              path,
-              views: views.map(({ viewport, colorScheme, state }) => ({
-                viewport,
-                colorScheme,
-                state,
-              })),
-            })),
+            ...screenResultEvidence(comparison.result),
           },
         }
       : { comparisons: changesStatus !== "disabled" }),

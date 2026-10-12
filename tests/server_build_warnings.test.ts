@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { ManifestV9 } from "@mokly/viewer/data";
+import type { ManifestV10 } from "@mokly/viewer/data";
 
 import type { BuildDiagnostic } from "../dist/build/build_warnings.js";
 import type { Compilation } from "../dist/build/compile.js";
@@ -26,7 +26,7 @@ test("Serve reports one generation's warnings immediately before catalogue ready
       entries: [],
       folders: [],
       generatedBy: "mokly",
-      schemaVersion: 9,
+      schemaVersion: 10,
       sourceFiles: [],
     }),
     deliveredStyleSources: [],
@@ -81,7 +81,7 @@ class WarningReporter extends PlainServeReporter {
       this.events.push(`warning:${diagnostic.route}`);
   }
 
-  override catalogueReady(manifest: ManifestV9): void {
+  override catalogueReady(manifest: ManifestV10): void {
     const screens = manifest.entries.filter(
       (entry) => entry.kind === "screen",
     ).length;

@@ -1,0 +1,123 @@
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import test from "node:test";
+
+import { MoklyVersionError } from "@mokly/viewer";
+
+import { projectCatalogue } from "../dist/catalogue/projection.js";
+import { compareReview } from "../dist/review/compare.js";
+import { readCatalogue } from "../packages/viewer/dist/catalogue/reader.js";
+import { parseReviewResult } from "../packages/viewer/dist/review/result_validation.js";
+import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
+
+import { componentReviewFixture } from "./helpers/component_review_fixture.js";
+import { cssSchemaFixture } from "./helpers/review_css_schema.js";
+
+test("catalogue v6 omits dependencies and rejects v1 to v5", async (t) => {
+  const fixture = await componentReviewFixture(t, (source) => source);
+  const model = projectCatalogue({
+    configPath: "mokly.config.ts",
+    catalogue: createCatalogue(fixture.after.manifest),
+    changesStatus: "disabled",
+    comparisonUrl: null,
+    revision: { content: 0, evidence: 0 },
+  });
+  assert.equal(model.schemaVersion, 6);
+  for (const entry of [
+    ...model.screens,
+    ...model.pages,
+    ...model.useCases,
+    ...model.components,
+    ...model.removedEntries.map(({ entry }) => entry),
+  ])
+    assert.equal(Object.hasOwn(entry.details, "dependencies"), false);
+  assert.deepEqual(readCatalogue(JSON.parse(JSON.stringify(model))), model);
+  const publicFixture = JSON.parse(
+    await fs.readFile("docs/protocol/fixtures/catalogue-v6.json", "utf8"),
+  );
+  assert.deepEqual(readCatalogue(publicFixture), publicFixture);
+  for (const entry of [
+    ...publicFixture.screens,
+    ...publicFixture.pages,
+    ...publicFixture.useCases,
+    ...publicFixture.components,
+    ...publicFixture.removedEntries.map(
+      ({ entry }: { entry: { details: object } }) => entry,
+    ),
+  ])
+    assert.equal(Object.hasOwn(entry.details, "dependencies"), false);
+  for (const version of [1, 2, 3, 4, 5])
+    assert.throws(
+      () => readCatalogue({ ...publicFixture, schemaVersion: version }),
+      /Unsupported Mokly catalogue version/,
+    );
+  const legacyField = structuredClone(model) as unknown as {
+    screens: { details: Record<string, unknown> }[];
+  };
+  legacyField.screens[0]!.details.dependencies = [];
+  assert.throws(
+    () => readCatalogue(legacyField),
+    /private|dependencies|unexpected/i,
+  );
+});
+
+test("comparison v7 omits legacy evidence and rejects v6 and earlier", async (t) => {
+  for (const oldVersion of [1, 2, 3, 4, 5, 6] as const) {
+    const legacy = {
+      ...cssSchemaFixture(),
+      schemaVersion: oldVersion,
+    };
+    assert.throws(
+      () => parseReviewResult(legacy),
+      (error: unknown) => {
+        assert.ok(error instanceof MoklyVersionError);
+        assert.equal(error.version, oldVersion);
+        assert.equal(error.supported, 7);
+        assert.equal(error.boundary, "review");
+        return true;
+      },
+    );
+  }
+  const fixture = await componentReviewFixture(t, (source) =>
+    source.replace(
+      "<button data-viewport=",
+      '<button className="changed" data-viewport=',
+    ),
+  );
+  const { result } = await compareReview(
+    fixture.after,
+    fixture.config,
+    fixture.git,
+    "main",
+  );
+  assert.equal(result.schemaVersion, 7);
+  assert.equal(Object.hasOwn(result, "sharedImpact"), false);
+  for (const entry of [
+    ...result.screens,
+    ...("components" in result ? result.components : []),
+  ]) {
+    assert.equal(Object.hasOwn(entry, "dependencies"), false);
+    assert.equal(Object.hasOwn(entry, "sharedImpact"), false);
+  }
+  assert.deepEqual(
+    parseReviewResult(JSON.parse(JSON.stringify(result))),
+    result,
+  );
+  const screenOnly = cssSchemaFixture();
+  assert.deepEqual(parseReviewResult(screenOnly), screenOnly);
+  for (const current of [screenOnly, result]) {
+    for (const field of ["sharedImpact", "dependencies"] as const) {
+      const withResultField = JSON.parse(JSON.stringify(current));
+      withResultField[field] = [];
+      assert.throws(() => parseReviewResult(withResultField), /review/i);
+      const withEntryField = JSON.parse(JSON.stringify(current));
+      withEntryField.screens[0][field] = [];
+      assert.throws(() => parseReviewResult(withEntryField), /review/i);
+    }
+    if (current.schemaVersion === 7 && current.components.length) {
+      const withComponentField = JSON.parse(JSON.stringify(current));
+      withComponentField.components[0].dependencies = [];
+      assert.throws(() => parseReviewResult(withComponentField), /review/i);
+    }
+  }
+});

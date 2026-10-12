@@ -158,7 +158,7 @@ development server it captured remains unchanged.
 
 ## Public Descriptor
 
-Catalogue v5 carries the optional preview descriptor on each removed entry:
+Catalogue v6 carries the optional preview descriptor on each removed entry:
 
 ```ts
 interface RemovedEntry {
@@ -197,7 +197,7 @@ Preview validation is separate: readers validate `preview.kind`, tolerate
 `preview` being absent, and reject a preview on current entries or when
 `comparisonUrl` is null; the derived preview metadata path stays confined to
 the advertised generation beneath `mokly-viewer/diffs/generations/**` by
-construction. The shipped [v5 fixture](./fixtures/catalogue-v5.json) exercises
+construction. The shipped [v6 fixture](./fixtures/catalogue-v6.json) exercises
 these descriptors.
 
 The embedded viewer first resolves the selected snapshot and historical entry,

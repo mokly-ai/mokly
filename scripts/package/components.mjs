@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 import { inspectConsumerExport } from "./export.mjs";
 import { runBin, smokeServer } from "./fixture.mjs";
@@ -20,6 +21,16 @@ export async function smokeRegisteredComponents(
       "<section data-component-preview>{children}</section>",
       '<FirnaCard accent="#345678">{children}</FirnaCard>',
     );
+  else {
+    source = source.replace(
+      'path: "packed-action",',
+      'path: "packed-action", stylesheets: ["component.css"],',
+    );
+    await fs.writeFile(
+      path.join(root, "mockups/component.css"),
+      "button{color:navy}",
+    );
+  }
   const entries = crossPlatform ? "catalogue/entries" : "entries";
   const output = crossPlatform ? "docs/mockups" : "mockups";
   await fs.writeFile(path.join(root, entries, "components.mockup.tsx"), source);
@@ -31,7 +42,7 @@ export async function smokeRegisteredComponents(
       "utf8",
     ),
   );
-  assert.equal(manifest.schemaVersion, 9);
+  assert.equal(manifest.schemaVersion, 10);
   const componentEntries = manifest.entries.filter(
     (entry) => entry.kind === "component",
   );
@@ -46,6 +57,43 @@ export async function smokeRegisteredComponents(
   const consumer = manifest.entries.find(
     (entry) => entry.path === "packed-components",
   );
+  if (!crossPlatform) {
+    const action = manifest.entries.find(
+      (entry) => entry.path === "packed-action",
+    );
+    const variant = componentEntries.find(
+      (entry) => entry.variantOf === action.path,
+    );
+    const view = variant.componentViews[0];
+    assert.deepEqual(view.resources, []);
+    assert.deepEqual(
+      view.insertedStylesheets.map(({ path, componentPaths }) => ({
+        path,
+        componentPaths,
+      })),
+      [{ path: "component.css", componentPaths: ["packed-action"] }],
+    );
+    assert.equal(
+      view.ranges.filter((range) => range.target.kind === "root").length,
+      1,
+    );
+    const { generatedResourcePath, viewRoute } = await import(
+      pathToFileURL(path.join(root, "node_modules/@mokly/viewer/dist/data.js"))
+        .href
+    );
+    const html = await fs.readFile(
+      path.join(
+        root,
+        output,
+        generatedResourcePath(viewRoute(variant.path, "mobile", "light")),
+      ),
+      "utf8",
+    );
+    assert.match(
+      html,
+      /<link rel="stylesheet" href="\.\.\/\.\.\/\.\.\/component\.css">/,
+    );
+  }
   for (const view of consumer.componentViews) {
     assert.ok(view.instances.length > 0);
     for (const instance of view.instances) {
@@ -61,9 +109,7 @@ export async function smokeRegisteredComponents(
     "utf8",
   );
   await smokeServer(root, ["--base", "HEAD"], async (url) => {
-    const page = await (
-      await fetch(`${url}/view/packed-action/index.html`)
-    ).text();
+    const page = await (await fetch(`${url}/view/packed-action/`)).text();
     const state = page.match(
       /<script[^>]*data-mokly-host-capability-state=""[^>]*>([^<]+)<\/script>/,
     );
@@ -106,7 +152,7 @@ export async function smokeRegisteredComponents(
     "published",
     "HEAD",
     ["view/packed-action/index.html", "view/packed-panel/index.html"],
-    6,
+    7,
   );
   assert.equal(review.components.length, 2);
   const published = await fs.readFile(

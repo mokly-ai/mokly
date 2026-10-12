@@ -69,7 +69,7 @@ test("Changes keeps real content edits alongside ignored-region edits", async (t
   );
 });
 
-test("dependency-only edits retain evidence without generating a review list", async (t) => {
+test("unrendered source-only edits produce neither Changes nor evidence", async (t) => {
   const fixture = await changedFixture(t);
   await fs.writeFile(path.join(fixture.root, "notes.md"), "# Edited notes\n");
   assert.deepEqual(
@@ -93,7 +93,7 @@ test("dependency-only edits retain evidence without generating a review list", a
   ).json()) as ReviewResult;
   const home = result.screens.find((s) => s.path === "home");
   assert.equal(home?.state, "unchanged");
-  assert.ok(home?.sharedImpact.includes("notes.md"));
+  assert.equal(Object.hasOwn(home!, "sharedImpact"), false);
 });
 
 test("Changes ignores a stale generated dark view when the source is unchanged", async (t) => {

@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import type { ReviewArtifact } from "@mokly/viewer/data";
+import type { ReviewArtifact, PageResourceEvidence } from "@mokly/viewer/data";
 
 import { compileCatalogue } from "../build/compile.js";
 import { projectRealPath, toPosixPath } from "../config/paths.js";
@@ -11,18 +11,18 @@ import {
   parseHistoricalManifest,
   parseManifest,
 } from "../registry/manifest.js";
-import { hasRegisteredComponents } from "../registry/manifest_capabilities.js";
 import { GitReviewAssetReader } from "../review/assets.js";
 import { baselineResourceConfig } from "../review/base_manifest.js";
 import { reviewChangedPaths } from "../review/changed_paths.js";
 import { compareReview } from "../review/compare.js";
+import { CssResourceAnalysis } from "../review/css/resource_analysis.js";
 import { importedChangedPaths } from "../review/imported_changes.js";
 import {
   captureRemovedPagePreviews,
   packageRemovedPagePreviews,
   RepositoryRemovedPagePreview,
 } from "../review/page_preview.js";
-import { changedContentPaths } from "../server/changed_content.js";
+import { classifyChangedContent } from "../server/changed_content.js";
 
 import { prepareExportBaseline } from "./baseline.js";
 import { withExportCleanup } from "./cleanup.js";
@@ -89,7 +89,7 @@ async function generateExport(
       );
     const compilation = await withPreInstallationCancellation(
       options.signal,
-      () => compile(config, undefined, options.signal),
+      () => compile(config, undefined, options.signal, options.onWarning),
     );
     assertExportActive(options.signal);
     options.onBuildDiagnostics?.(compilation.diagnostics);
@@ -118,6 +118,8 @@ async function generateExport(
             : [];
         let comparison: ReviewArtifact | undefined;
         let contentChanges: readonly string[] = [];
+        let pageEvidence: readonly PageResourceEvidence[] = [];
+        const cssAnalysis = new CssResourceAnalysis();
         if (prepared && baseline) {
           const prefix = toPosixPath(
             path.relative(config.repoRoot, config.mockupsDir),
@@ -151,11 +153,11 @@ async function generateExport(
             transaction.stage,
             assetReader,
             exclusions,
-            { changeEvidence },
+            { changeEvidence, cssAnalysis },
           );
           for (const diagnostic of comparison.pairing?.diagnostics ?? [])
             options.diagnostic?.(diagnostic);
-          contentChanges = await changedContentPaths(
+          const content = await classifyChangedContent(
             compilation.manifest,
             baseline,
             config,
@@ -163,9 +165,12 @@ async function generateExport(
             prepared.commit,
             changeEvidence,
             assetReader,
-            hasRegisteredComponents(compilation.manifest) ? "pages" : "all",
+            "pages",
             { ...(comparison.pairing ? { pairing: comparison.pairing } : {}) },
+            cssAnalysis,
           );
+          contentChanges = content.changedPaths;
+          pageEvidence = content.pages;
           const removedEntries = removedManifestEntries(
             compilation.manifest,
             baseline,
@@ -205,6 +210,7 @@ async function generateExport(
             : incompatible
               ? "unavailable"
               : "ready",
+          pageEvidence,
         );
         if (
           !options.noChanges &&

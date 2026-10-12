@@ -15,7 +15,7 @@ for (const segment of ["styles", "ASSETS"])
       `
 import fs from "node:fs";
 import { definePage } from "@mokly/mokly";
-export default definePage({ path: "${segment}/page", title: "Page", description: "Page", dependencies: [], relatedDocs: [], render: () => {
+export default definePage({ path: "${segment}/page", title: "Page", description: "Page", relatedDocs: [], render: () => {
   fs.writeFileSync(${JSON.stringify(probe)}, "rendered");
   return "<html><body>Page</body></html>";
 }});`,

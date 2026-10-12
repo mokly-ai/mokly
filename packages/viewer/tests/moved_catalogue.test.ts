@@ -4,14 +4,13 @@ import test from "node:test";
 
 import { currentManifest } from "../../../tests/helpers/current_manifest.js";
 import { readCatalogue } from "../src/catalogue/reader.js";
-import type { ManifestEntry, ManifestV9 } from "../src/registry/types.js";
+import type { ManifestEntry, ManifestV10 } from "../src/registry/types.js";
 import { createCatalogue } from "../src/shell/catalogue.js";
 import { viewerCatalogue } from "../src/viewer/projection.js";
 
 const screen = (path: string) =>
   ({
     colorSchemes: ["light"],
-    declaredDependencies: [],
     description: path,
     kind: "screen",
     path,
@@ -22,11 +21,11 @@ const screen = (path: string) =>
     useCasePaths: [],
   }) as unknown as ManifestEntry;
 
-const manifest: ManifestV9 = currentManifest({
+const manifest: ManifestV10 = currentManifest({
   entries: [screen("account/billing/invoice"), screen("home")],
   folders: [],
   generatedBy: "mokly",
-  schemaVersion: 9,
+  schemaVersion: 10,
   sourceFiles: [],
 });
 
@@ -50,7 +49,7 @@ test("the public viewer reads each paired entry's previous path from the read mo
   const model = JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v5.json",
+        "../../../docs/protocol/fixtures/catalogue-v6.json",
         import.meta.url,
       ),
       "utf8",

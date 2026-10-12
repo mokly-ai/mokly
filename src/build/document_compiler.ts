@@ -5,15 +5,12 @@ import {
   entryRoute,
   documentRoute,
   isManifestComponentVariant,
-  validateComponentViewRecord,
   generatedViews,
 } from "@mokly/viewer/data";
 import type { ArtifactView } from "@mokly/viewer/data";
 
 import type { ResolvedRegistryEntry } from "../authoring/types.js";
-import { validateComponentResources } from "../components/output_validation.js";
-import { validateComponentRanges } from "../components/ranges.js";
-import { rebaseStyleOwnership } from "../components/style_ownership.js";
+import type { LinkedComponentStylesheet } from "../components/render.js";
 import { PublicFilePolicy } from "../config/public_policy.js";
 import { extractCssReferences } from "../css_references.js";
 import { MoklyError } from "../errors.js";
@@ -24,11 +21,18 @@ import type { EntryMove } from "../review/moves/types.js";
 
 import {
   normalizeBuildDiagnostics,
+  isLinkControlDiagnostic,
   type BuildDiagnostic,
 } from "./build_warnings.js";
 import type { ComponentRuntime } from "./component_runtime.js";
 import { DocumentCache } from "./document_cache.js";
+import { finalizeDocumentView } from "./document_components.js";
 import { resolveDocumentLinks } from "./document_links.js";
+import type {
+  CompiledDocument,
+  DocumentTarget,
+  PreparedDocument,
+} from "./document_types.js";
 import type { GeneratedFile } from "./generated_file.js";
 import {
   validateHtmlLinks,
@@ -36,7 +40,6 @@ import {
   type ResourceSeed,
 } from "./html_links.js";
 import type { LoadedGraph } from "./load_graph.js";
-import type { LogicalReferenceRecord } from "./logical_record_types.js";
 import { validateLogicalFragments } from "./logical_records.js";
 import {
   moveTargetsForGeneration,
@@ -47,23 +50,6 @@ import { assertSnapshotRoutes } from "./output_snapshot.js";
 import { PendingGeneratedFiles } from "./pending_generated.js";
 import { renderFragments } from "./render.js";
 import { componentResourceSeeds } from "./resource_seeds.js";
-
-export interface CompiledDocument {
-  diagnostics: readonly BuildDiagnostic[];
-  route: string;
-  html: string;
-  view?: ComponentViewRecord;
-  watchDocuments?: readonly (readonly [string, string])[];
-  assetClosure?: readonly string[];
-  resourceSeeds?: readonly ResourceSeed[];
-}
-interface PreparedDocument extends CompiledDocument {
-  records: readonly LogicalReferenceRecord[];
-  anchors: ReadonlySet<string>;
-}
-interface DocumentTarget extends ArtifactView {
-  entryId: string;
-}
 
 /** Pure/countable boundaries used once per accepted document generation. */
 export interface DocumentValidationSeams {
@@ -144,6 +130,11 @@ export class DocumentCompiler {
       parsed: new Map(),
       onDemand: true,
       policy: new PublicFilePolicy(runtime.config),
+      resourceSeedsForRoute: (route) =>
+        this.routes.has(route)
+          ? ((this.activeRead?.(route) ?? this.prepare(route)).resourceSeeds ??
+            [])
+          : [],
     };
   }
 
@@ -159,9 +150,19 @@ export class DocumentCompiler {
       : this.prepare(route);
     const outputs = new Map([[route, document.html]]);
     const observed = new Map<string, string>();
+    const warnings = [...(document.diagnostics ?? [])];
+    const resourceSeeds = [...(document.resourceSeeds ?? [])];
     const read = (target: string) => {
       const value = target === route ? document : this.prepare(target);
-      if (target !== route) observed.set(target, value.html);
+      if (target !== route) {
+        observed.set(target, value.html);
+        resourceSeeds.push(...(value.resourceSeeds ?? []));
+        warnings.push(
+          ...value.diagnostics.filter(
+            (warning) => !isLinkControlDiagnostic(warning),
+          ),
+        );
+      }
       return value;
     };
     validateLogicalFragments(
@@ -178,9 +179,7 @@ export class DocumentCompiler {
         outputs,
         this.runtime.config,
         this.links,
-        document.view
-          ? componentResourceSeeds(new Map([[route, document.view]]))
-          : [],
+        resourceSeeds,
       );
     } finally {
       this.activeRead = undefined;
@@ -193,13 +192,11 @@ export class DocumentCompiler {
           this.links.parsed.delete(target);
     }
     return {
-      diagnostics: document.diagnostics,
+      diagnostics: normalizeBuildDiagnostics(warnings),
       route,
       html: document.html,
       assetClosure,
-      resourceSeeds: document.view
-        ? componentResourceSeeds(new Map([[route, document.view]]))
-        : [],
+      resourceSeeds,
       ...(document.view ? { view: document.view } : {}),
       ...(observed.size ? { watchDocuments: [...observed] } : {}),
     };
@@ -226,16 +223,23 @@ export class DocumentCompiler {
     const config = this.runtime.config;
     const views = new Map<string, ArtifactView>();
     const componentViews = new Map<string, ComponentViewRecord>();
+    const warnings: BuildDiagnostic[] = [];
+    const resourceSeeds: ResourceSeed[] = [];
+    const stylesheetLinks = new Map<
+      string,
+      readonly LinkedComponentStylesheet[]
+    >();
     const outputs = renderFragments(
       this.entries,
       this.graph.renderer,
       config,
       views,
-      (input, renderer, components) =>
+      (input, renderer, components, placement) =>
         this.graph.renderWithComponents(
           { ...input, ...(componentProps ? { componentProps } : {}) },
           renderer,
           components,
+          placement,
         ),
       componentViews,
       target,
@@ -244,6 +248,9 @@ export class DocumentCompiler {
         pending: this.pending,
         ...(this.links.policy ? { policy: this.links.policy } : {}),
       },
+      (warning) => warnings.push(warning),
+      stylesheetLinks,
+      resourceSeeds,
     );
     const original = outputs.get(route)!;
     const resolvedLinks = resolveDocumentLinks(
@@ -253,40 +260,35 @@ export class DocumentCompiler {
       views,
       this.byId,
       this.moves,
+      (warning) => warnings.push(warning),
     );
-    const html = outputs.get(route)!;
+    let html = outputs.get(route)!;
     const entry = this.byId.get(target.entryId)!;
+    const finalized = finalizeDocumentView({
+      route,
+      entry,
+      original,
+      html,
+      captured: componentViews.get(route),
+      config,
+      links: stylesheetLinks.get(route) ?? [],
+      components: this.components,
+      pending: this.pending,
+      ...(this.links.policy ? { policy: this.links.policy } : {}),
+    });
+    html = finalized.html;
+    const view = finalized.view;
     normalizeSingleDocument(html, route);
-    const captured = componentViews.get(route);
-    const view = captured
-      ? {
-          ...captured,
-          styles: rebaseStyleOwnership(original, html, captured.styles),
-        }
-      : undefined;
-    if (view) {
-      validateComponentRanges(html, view.ranges);
-      validateComponentViewRecord(
-        view,
-        this.components,
-        route,
-        entry.kind === "component" && "variantOf" in entry
-          ? entry.variantOf
-          : undefined,
-      );
-      validateComponentResources(
-        new Map([[route, view]]),
-        config,
-        this.pending,
-        this.links.policy,
-      );
-    }
     const prepared = {
-      diagnostics: normalizeBuildDiagnostics(resolvedLinks.diagnostics),
+      diagnostics: normalizeBuildDiagnostics(warnings),
       route,
       html,
       records: resolvedLinks.records,
       anchors: extractHtmlReferences(html).anchors,
+      resourceSeeds: [
+        ...componentResourceSeeds(componentViews),
+        ...resourceSeeds,
+      ],
       ...(view ? { view } : {}),
     };
     if (!componentProps) this.prepared.set(route, prepared);

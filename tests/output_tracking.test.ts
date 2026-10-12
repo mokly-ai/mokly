@@ -76,7 +76,7 @@ test("Build writes a new route in a tracked repository before staging it", async
   await git("commit", "-qm", "test: baseline");
   await fs.appendFile(
     fixture.entryPath,
-    '\nimport { definePage } from "@mokly/mokly";\nmockups.push(definePage({ path: "new-page", title: "New Page", description: "New Page", dependencies: [], relatedDocs: [], render: () => "<!doctype html><html><head><title>New Page</title></head><body><main>New Page</main></body></html>" }));\n',
+    '\nimport { definePage } from "@mokly/mokly";\nmockups.push(definePage({ path: "new-page", title: "New Page", description: "New Page", relatedDocs: [], render: () => "<!doctype html><html><head><title>New Page</title></head><body><main>New Page</main></body></html>" }));\n',
   );
   await build();
   const config = await loadConfig(fixture.root);

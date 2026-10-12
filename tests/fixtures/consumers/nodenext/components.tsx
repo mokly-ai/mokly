@@ -22,7 +22,6 @@ const component = defineComponent({
   path: "typed-component",
   title: "Typed component",
   description: "Packed declaration inference.",
-  dependencies: [],
   relatedDocs: [],
   propSchema: schema,
   slots: ["children"],

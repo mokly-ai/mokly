@@ -22,7 +22,7 @@ export interface LightOnlyDocumentHost {
 
 const SOURCE = `import { defineScreen } from "@mokly/mokly";
 import React from "react";
-export const home = defineScreen({ path: "home", title: "Home", description: "Home", dependencies: [], relatedDocs: [], mobile: <main>Home</main>, desktop: <main>Home</main> });
+export const home = defineScreen({ path: "home", title: "Home", description: "Home", relatedDocs: [], mobile: <main>Home</main>, desktop: <main>Home</main> });
 `;
 
 const OLD_TERMS = `---

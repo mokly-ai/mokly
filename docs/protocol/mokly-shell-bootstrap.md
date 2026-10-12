@@ -3,7 +3,7 @@
 ## Delivery Status
 
 Serve uses a serialize-once scoped model and strict reader. Static delivery and
-application-owned viewers use complete catalogue v5. Both bootstrap forms require
+application-owned viewers use complete catalogue v6. Both bootstrap forms require
 root `schemaVersion: 2`; missing or other versions fail with a version error.
 
 ## Purpose And Boundary
@@ -72,10 +72,10 @@ in-scope use-case step may change it.
 
 ## Readers And Validation
 
-The public `readCatalogue` boundary accepts only complete catalogue v5. It
+The public `readCatalogue` boundary accepts only complete catalogue v6. It
 rejects `omitted` at any current or historical screen/component view. The
-public canonical serializer and `docs/protocol/fixtures/catalogue-v5.json`
-cover that complete v5 contract, with one fixed generated-tree layout.
+public canonical serializer and `docs/protocol/fixtures/catalogue-v6.json`
+cover that complete v6 contract, with one fixed generated-tree layout.
 
 The live reader validates context and view fields, parses the shell catalogue
 with ordinary value, hierarchy, snapshot, and reference checks, resolves entry
@@ -235,7 +235,7 @@ Acceptance requires:
   missing, and every selected removed entry kind;
 - rejection of leaked, missing, misplaced, malformed, and public-catalogue
   `omitted` usage;
-- canonical scoped-bootstrap round trips and exact public v5 fixture bytes;
+- canonical scoped-bootstrap round trips and exact public v6 fixture bytes;
 - server/hydration serializer call counts of one/zero after initial creation;
 - no hydration mismatch in development React and no iframe remount on usage
   adoption;

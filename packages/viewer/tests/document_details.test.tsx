@@ -16,7 +16,7 @@ function catalogue() {
   const model = JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v5.json",
+        "../../../docs/protocol/fixtures/catalogue-v6.json",
         import.meta.url,
       ),
       "utf8",
@@ -75,7 +75,6 @@ const manifestEntry = (
 ): ManifestEntry =>
   ({
     colorSchemes: ["light"],
-    declaredDependencies: [],
     description: title,
     kind,
     path,
@@ -95,7 +94,7 @@ test("the served manifest's source path links its current document", () => {
       ],
       folders: [],
       generatedBy: "mokly",
-      schemaVersion: 9,
+      schemaVersion: 10,
       sourceFiles: [],
     }),
     [
@@ -129,7 +128,7 @@ test("the served manifest's source path links its current document", () => {
   );
 });
 
-test("a served document lists its resources under Dependencies, as projection does", () => {
+test("a served document shows its source without the removed dependency list", () => {
   const document = {
     ...manifestEntry("document", "guide/terms", "Payment terms"),
     resources: ["specs/guide/terms.svg"],
@@ -139,14 +138,13 @@ test("a served document lists its resources under Dependencies, as projection do
       entries: [document],
       folders: [],
       generatedBy: "mokly",
-      schemaVersion: 9,
+      schemaVersion: 10,
       sourceFiles: [],
     }),
   );
-  assert.match(
-    renderToStaticMarkup(
-      <EntryDetailsBody catalogue={shell} entry={document} />,
-    ),
-    /Dependencies<\/span><span class="mbk-meta-v"><span class="mbk-chips"><code class="mbk-code">specs\/guide\/terms\.md<\/code><code class="mbk-code">specs\/guide\/terms\.svg<\/code><\/span>/u,
+  const markup = renderToStaticMarkup(
+    <EntryDetailsBody catalogue={shell} entry={document} />,
   );
+  assert.match(markup, /Source<\/span>.*specs\/guide\/terms\.md/u);
+  assert.doesNotMatch(markup, /Dependencies|terms\.svg/u);
 });

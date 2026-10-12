@@ -156,7 +156,7 @@ test("on-demand Serve sends accepted stylesheet and asset bytes over stale disk"
   assert.equal((await head.arrayBuffer()).byteLength, 0);
 });
 
-test("component-declared resources accept pending stylesheets before they exist on disk", async (t) => {
+test("renderer CSS owners warn for pending stylesheets before they exist on disk", async (t) => {
   const fixture = await createFixture(componentEntrySource(), {
     extraConfig: 'renderer: "renderer.tsx",',
   });
@@ -176,7 +176,7 @@ test("component-declared resources accept pending stylesheets before they exist 
   assert.deepEqual(
     compiled.manifest.entries.find((entry) => entry.kind === "screen")
       ?.componentViews?.[0]?.resources,
-    [{ path: styleRoute, componentIds: ["action"] }],
+    [],
   );
 });
 
@@ -195,7 +195,7 @@ test("component resources reject stale reserved disk files absent from pending o
   );
   await assert.rejects(
     compileCatalogue(await loadConfig(fixture.root)),
-    /component resource is not a public file: mokly-generated\/styles\/stale\.css/,
+    /renderer resource is not a public file: mokly-generated\/styles\/stale\.css/,
   );
 });
 

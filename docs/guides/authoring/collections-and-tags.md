@@ -93,7 +93,6 @@ export default defineScreen({
   description: "An account with no activity yet.",
   mobile: <main>No activity yet</main>,
   desktop: <main>No activity yet</main>,
-  dependencies: [],
   relatedDocs: [],
   tags: ["forms", "empty-state"],
 });

@@ -17,7 +17,7 @@ export interface ReviewEntrySides {
   after?: ReviewEntryAddress;
   previousPath?: string;
 }
-export interface ScreenReviewV6 extends ScreenReview, ReviewEntrySides {}
+export interface ScreenReviewV7 extends ScreenReview, ReviewEntrySides {}
 export interface ReviewVariantAddress {
   path: string;
   title: string;
@@ -74,7 +74,7 @@ export interface AffectedConsumer {
     { kind: "screen"; path: string } | { kind: "component"; path: string };
   evidence: readonly AffectedUsageEvidence[];
 }
-export interface ReviewResultV6 {
+export interface ReviewResultV7 {
   baseCommit: string;
   baseRef: string;
   changedPaths: readonly string[];
@@ -84,9 +84,8 @@ export interface ReviewResultV6 {
     id: string;
     viewport: Viewport;
   }[];
-  screens: readonly ScreenReviewV6[];
-  schemaVersion: 6;
-  sharedImpact: readonly string[];
+  screens: readonly ScreenReviewV7[];
+  schemaVersion: 7;
   components: readonly ComponentReview[];
   changes: readonly ChangedEntry[];
   affectedConsumers: readonly AffectedConsumer[];

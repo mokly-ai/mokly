@@ -6,7 +6,7 @@ import type {
   ComponentUsageContext,
   Manifest,
   ManifestScreen,
-  ReviewResultV6,
+  ReviewResultV7,
 } from "../packages/viewer/dist/data.js";
 
 import {
@@ -19,6 +19,7 @@ import {
   usageChainsOf,
   usageVariantsOf,
 } from "./helpers/attribution_result.js";
+import { fixtureCssAnalysis } from "./helpers/css_evidence.js";
 
 const chip = "library/chip";
 const other = "library/other";
@@ -55,12 +56,11 @@ function evidence(
   };
 }
 
-const result: ReviewResultV6 = {
-  schemaVersion: 6,
+const result: ReviewResultV7 = {
+  schemaVersion: 7,
   baseCommit: "a".repeat(40),
   baseRef: "main",
   changedPaths: [otherSheet, chipSheet],
-  sharedImpact: [],
   ignoredImpact: [],
   screens: [],
   components: [],
@@ -83,7 +83,7 @@ const result: ReviewResultV6 = {
         {
           kind: "dependency",
           path: chipSheet,
-          analysis: { status: "unresolved", selectors: ["body"] },
+          analysis: fixtureCssAnalysis("unresolved", ["body"]),
         },
         { kind: "metadata" },
       ],
@@ -150,7 +150,7 @@ test("reasons retain exact dependency analysis and reject missing or duplicate e
     {
       kind: "dependency",
       path: chipSheet,
-      analysis: { status: "unresolved", selectors: ["body"] },
+      analysis: fixtureCssAnalysis("unresolved", ["body"]),
     },
     { kind: "metadata" },
   ]);
@@ -211,7 +211,6 @@ function screen(path: string, componentIds: readonly string[]): ManifestScreen {
     title: path,
     description: "Projection fixture",
     sourcePath: "fixture.mockup.tsx",
-    declaredDependencies: [],
     relatedDocs: [],
     useCasePaths: [],
     colorSchemes: ["light"],
@@ -238,7 +237,7 @@ function screen(path: string, componentIds: readonly string[]): ManifestScreen {
 test("manifest consumers require real screen usage and count each screen once", () => {
   const manifest: Manifest = {
     generatedBy: "mokly",
-    schemaVersion: 9,
+    schemaVersion: 10,
     assetClosure: [],
     blobHashAlgorithm: "sha256",
     generatedFiles: [],
@@ -255,7 +254,6 @@ test("manifest consumers require real screen usage and count each screen once", 
         title: "Bar",
         description: "Projection fixture",
         sourcePath: "bar.mockup.tsx",
-        declaredDependencies: [],
         relatedDocs: [],
         colorSchemes: ["light"],
         variantOf: bar,

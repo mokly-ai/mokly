@@ -20,14 +20,18 @@ export type ScreenPageState =
   | "empty"
   | "unavailable"
   | "inspection-loading"
-  | "removed-consumer";
+  | "removed-consumer"
+  | "style-outside";
 
 /** A single consumer screen reused by Current, inspection, and comparison mockups. */
 export function WelcomeExample({
   directChange = false,
+  outsideAction = false,
   selection = "off",
 }: {
   directChange?: boolean;
+  /** Welcome's own link that reuses the action's style outside Action. */
+  outsideAction?: boolean;
   selection?: InspectionSelection;
 }) {
   return (
@@ -46,6 +50,9 @@ export function WelcomeExample({
             directChange ? footerLabelChange.after : footerLabelChange.before
           }
         />
+        {outsideAction ? (
+          <span className="ce-action ce-outside-action">Not now</span>
+        ) : null}
       </div>
       <HighlightMask selection={selection === "off" ? "outer" : selection} />
     </div>
@@ -89,6 +96,7 @@ export function ConsumerFrame({
     ) : (
       <WelcomeExample
         directChange={state === "direct-change"}
+        outsideAction={state === "style-outside"}
         selection={
           state === "highlight"
             ? "outer"

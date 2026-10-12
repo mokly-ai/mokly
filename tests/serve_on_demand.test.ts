@@ -21,7 +21,7 @@ for (const watch of [false, true]) {
         `
       import { definePage } from "@mokly/mokly";
       mockups.push(definePage({ path: "broken", title: "Broken", description: "Broken page",
-        dependencies: [], relatedDocs: [],
+        relatedDocs: [],
         render: () => { throw new Error("unrequested page rendered"); } }));
     `,
     );
@@ -88,7 +88,7 @@ test(
         `
     import { definePage } from "@mokly/mokly";
     mockups.push(definePage({ path: "broken", title: "Broken", description: "Broken page",
-      dependencies: [], relatedDocs: [],
+      relatedDocs: [],
       render: () => { throw new Error("background cannot complete"); } }));
   `,
     );

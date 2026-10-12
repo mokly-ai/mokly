@@ -1,0 +1,70 @@
+{
+  "assetClosure": [],
+  "blobHashAlgorithm": "sha1",
+  "entries": [
+    {
+      "colorSchemes": ["light"],
+      "controls": {},
+      "declaredDependencies": [],
+      "description": "Released component",
+      "kind": "component",
+      "ownedDependencies": [],
+      "path": "action",
+      "propSchema": {
+        "kind": "object",
+        "properties": {}
+      },
+      "relatedDocs": [],
+      "slots": [],
+      "sourcePath": "entries/action.mockup.tsx",
+      "title": "Action"
+    },
+    {
+      "colorSchemes": ["light"],
+      "componentViews": [
+        {
+          "colorScheme": "light",
+          "instances": [],
+          "ranges": [],
+          "resources": [],
+          "slots": [],
+          "styles": [],
+          "viewport": "mobile"
+        },
+        {
+          "colorScheme": "light",
+          "instances": [],
+          "ranges": [],
+          "resources": [],
+          "slots": [],
+          "styles": [],
+          "viewport": "desktop"
+        }
+      ],
+      "declaredDependencies": [],
+      "description": "Released component",
+      "kind": "component",
+      "path": "action/default",
+      "props": {},
+      "relatedDocs": [],
+      "sourcePath": "entries/action.mockup.tsx",
+      "suppliedSlots": [],
+      "title": "Default",
+      "variantOf": "action"
+    }
+  ],
+  "folders": [],
+  "generatedBy": "mokly",
+  "generatedFiles": [
+    {
+      "blobHash": "4774e3df28315820d75c4a2a150080320dc8163c",
+      "path": "action/default/index.desktop.html"
+    },
+    {
+      "blobHash": "a61e41209fdcb4b97fd47a962b82a848c0f93fa2",
+      "path": "action/default/index.mobile.html"
+    }
+  ],
+  "schemaVersion": 9,
+  "sourceFiles": ["entries/action.mockup.tsx", "mokly.config.ts"]
+}

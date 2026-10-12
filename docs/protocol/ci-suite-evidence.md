@@ -56,6 +56,13 @@ default one-minute browser test timeout. Assertion deadlines and retries
 remain unchanged, worker counts follow [Test Concurrency](#test-concurrency),
 and server readiness retains its own bound.
 
+The ordinary preview's real catalogue build runs in an owned Node child,
+outside Playwright's expanded diagnostic stack capture. The child uses the same
+configuration and export engine, and the worker validates and serves its output.
+Its build deadline reserves cleanup time inside the existing setup budget.
+Cold preview navigation waits for the requested document responses before
+checking scheme URLs with the normal assertion deadline.
+
 Wrangler Pages fixtures pass port zero and adopt the exact readiness URL
 Wrangler reports; they do not release a probe socket before server startup.
 Miniature Playwright projects used inside unit tests set an explicit output

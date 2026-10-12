@@ -2,34 +2,27 @@ import type { ComponentViewRecord } from "@mokly/viewer";
 import type {
   ChangedEntry,
   ComponentReview,
-  EntryChangeReason,
   DependencyReason,
-  ViewReview,
 } from "@mokly/viewer/data";
-import { isStylesheetPath } from "@mokly/viewer/data";
+import { canonicalJson, isStylesheetPath } from "@mokly/viewer/data";
 
 import { MoklyError } from "../errors.js";
 
-import {
-  uniqueReasons,
-  type ComponentDependencyPolicy,
-  type ReviewEntry,
-} from "./component_metadata.js";
+import { uniqueReasons } from "./component_metadata.js";
 
 /** Retained actual-invocation evidence can affect an owner without a saved variant. */
-export interface OwnedCssReason {
+export interface OwnedResourceReason {
   componentId: string;
   reason: DependencyReason;
 }
 
-export function ownedCssReasons(
+export function ownedResourceReasons(
   reasons: readonly DependencyReason[],
-  policy: ComponentDependencyPolicy,
   prefix: string,
   before?: ComponentViewRecord,
   after?: ComponentViewRecord,
   root?: string,
-): OwnedCssReason[] {
+): OwnedResourceReason[] {
   const usages = [before, after].filter((usage) => usage !== undefined);
   const present = new Set([
     ...(root ? [root] : []),
@@ -38,12 +31,11 @@ export function ownedCssReasons(
     ),
   ]);
   return reasons.flatMap((reason) => {
-    if (!reason.analysis) return [];
+    if (isStylesheetPath(reason.path)) return [];
     const publicPath = prefix
       ? reason.path.slice(prefix.length + 1)
       : reason.path;
     const owners = new Set([
-      ...policy.owners(reason.path),
       ...usages.flatMap((usage) =>
         usage.resources.flatMap((resource) =>
           resource.path === publicPath ? resource.componentIds : [],
@@ -56,44 +48,8 @@ export function ownedCssReasons(
   });
 }
 
-/** Exact caller declarations remain independent, but cannot bypass CSS exclusion. */
-export function exactScreenCssReasons(
-  before: ReviewEntry | undefined,
-  after: ReviewEntry | undefined,
-  views: readonly ViewReview[],
-): DependencyReason[] {
-  return views.flatMap((view) =>
-    (view.reasons ?? []).filter(
-      (reason) =>
-        reason.analysis &&
-        [before, after].some(
-          (entry) =>
-            entry?.kind === "screen" &&
-            entry.declaredDependencies?.includes(reason.path),
-        ),
-    ),
-  );
-}
-
-/** Preserve glob and unowned-path evidence alongside retained dependency reasons. */
-export function resourceImpact(
-  shared: readonly string[],
-  unowned: readonly string[],
-  reasons: readonly EntryChangeReason[],
-): string[] {
-  return [
-    ...new Set([
-      ...shared.filter((path) => !isStylesheetPath(path)),
-      ...unowned,
-      ...reasons.flatMap((reason) =>
-        reason.kind === "dependency" ? [reason.path] : [],
-      ),
-    ]),
-  ].sort();
-}
-
-export function propagateOwnedCss(
-  evidence: readonly OwnedCssReason[],
+export function propagateOwnedResources(
+  evidence: readonly OwnedResourceReason[],
   impacting: Set<string>,
   components: readonly ComponentReview[],
   changes: ChangedEntry[],
@@ -101,7 +57,7 @@ export function propagateOwnedCss(
   for (const { componentId, reason } of evidence) {
     const component = components.find((entry) => entry.path === componentId);
     if (!component)
-      throw new MoklyError("review-invalid", "CSS owner has no component");
+      throw new MoklyError("review-invalid", "resource owner has no component");
     impacting.add(componentId);
     const existing = changes.find(
       (entry) =>
@@ -117,8 +73,23 @@ export function propagateOwnedCss(
         ...(component.after ? { after: component.after } : {}),
         reasons: [reason],
       });
-    component.sharedImpact = [
-      ...new Set([...component.sharedImpact, reason.path]),
-    ].sort();
   }
+}
+
+/** Root resource declarations affect material only for non-stylesheet ownership. */
+export function rootResourcesChanged(
+  before: ComponentViewRecord | undefined,
+  after: ComponentViewRecord | undefined,
+  root: string | undefined,
+): boolean {
+  if (!root) return false;
+  const paths = (usage: ComponentViewRecord | undefined) =>
+    usage?.resources
+      .filter(
+        (resource) =>
+          !isStylesheetPath(resource.path) &&
+          resource.componentIds.includes(root),
+      )
+      .map((resource) => resource.path) ?? [];
+  return canonicalJson(paths(before)) !== canonicalJson(paths(after));
 }

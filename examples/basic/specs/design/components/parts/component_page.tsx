@@ -1,6 +1,8 @@
+import { optional } from "../../library/composition.js";
 import { COMPONENT_NAVIGATION } from "../../parts/component_nav_data.js";
 import type { ComparisonMode } from "../../parts/destinations.js";
 import type { ArtboardViewport } from "../../parts/shell.js";
+import { COMPONENT_STYLE_COPY } from "../../parts/stylesheet_evidence.js";
 
 import { actionVariants } from "./action_props.js";
 import { componentComparison } from "./comparison_fixtures.js";
@@ -29,14 +31,22 @@ const COMPARISON_MODES: Partial<
   difference: "difference",
   "overlay-tall": "overlay",
   removed: "side-by-side",
+  "style-changed": "side-by-side",
+};
+
+/** The recorded change a comparing state's caption names, when not appearance. */
+const COMPARISON_CHANGES: Partial<Record<ComponentPageState, string>> = {
+  "style-changed": COMPONENT_STYLE_COPY.stylesChanged,
 };
 
 /** The Changes scenario whose navigation each state's artboard depicts. */
 function changeScenario(state: ComponentPageState): ChangeScenario {
   if (state === "removed" || state === "added") return state;
+  if (state === "style-changed") return "styles";
   if (COMPONENT_ENTRY_BY_STATE[state].component === "checklist")
     return "checklist";
-  return state === "disabled" || componentComparison(state)
+  return state === "disabled" ||
+    componentComparison(state)?.status === "changed"
     ? "component"
     : "all";
 }
@@ -89,6 +99,7 @@ export function ComponentPage({
           </ComponentCanvas>
         ) : mode ? (
           <ComponentComparison
+            {...optional("change", COMPARISON_CHANGES[state])}
             mode={mode}
             removed={state === "removed"}
             subject={entry.component === "checklist" ? "checklist" : "action"}

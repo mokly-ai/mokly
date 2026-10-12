@@ -9,7 +9,7 @@ import type { ReadOnlyReviewRepository } from "../dist/review/repository.js";
 import { generatedViews } from "../packages/viewer/dist/data.js";
 import type {
   ManifestScreen,
-  ManifestV9,
+  ManifestV10,
 } from "../packages/viewer/dist/registry/types.js";
 
 import { textOutput } from "./helpers/generated_text.js";
@@ -47,7 +47,7 @@ export function fakeGit(
 }
 
 export function filesForCompilation(
-  manifest: ManifestV9,
+  manifest: ManifestV10,
   compilation: Compilation,
 ): Map<string, GeneratedFile> {
   const files = new Map<string, GeneratedFile>([
@@ -63,7 +63,7 @@ export function filesForCompilation(
   return files;
 }
 
-export function withoutDarkFragments(manifest: ManifestV9): ManifestV9 {
+export function withoutDarkFragments(manifest: ManifestV10): ManifestV10 {
   return {
     ...manifest,
     generatedFiles: manifest.generatedFiles.filter(

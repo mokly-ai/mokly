@@ -3,13 +3,14 @@ import type { TransferredGeneratedFile } from "../../dist/build/generated_file.j
 
 /** JSON-safe snapshot of one example compilation and its freshness key. */
 export interface ExampleSnapshot {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly key: string;
   readonly diagnostics: Compilation["diagnostics"];
   readonly manifest: Compilation["manifest"];
   readonly outputs: readonly (readonly [string, TransferredGeneratedFile])[];
   readonly deliveredStyleSources: readonly string[];
   readonly documentMarkdown?: readonly (readonly [string, string])[];
+  readonly resourceSeeds?: Compilation["resourceSeeds"];
 }
 
 /** Outcome of comparing a snapshot file with the current inputs. */

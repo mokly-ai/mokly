@@ -28,8 +28,8 @@ test("the example export and reconstructed publication use portable path segment
     entry,
     `import { definePage, defineScreen } from "@mokly/mokly";
 export const entries = [
-  definePage({ path: "example/archived", title: "Archived", description: "Archived guide", dependencies: [], relatedDocs: [], render: () => "<html><body>Archived guide</body></html>" }),
-  defineScreen({ path: "example/archived-screen", title: "Archived screen", description: "Previous screen", dependencies: [], relatedDocs: [], mobile: "Previous mobile", desktop: "Previous desktop" }),
+  definePage({ path: "example/archived", title: "Archived", description: "Archived guide", relatedDocs: [], render: () => "<html><body>Archived guide</body></html>" }),
+  defineScreen({ path: "example/archived-screen", title: "Archived screen", description: "Previous screen", relatedDocs: [], mobile: "Previous mobile", desktop: "Previous desktop" }),
 ];`,
   );
   await writeCompilation(await compileCatalogue(config), config);

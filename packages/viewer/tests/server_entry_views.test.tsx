@@ -10,7 +10,7 @@ const fixture = readCatalogue(
   JSON.parse(
     fs.readFileSync(
       new URL(
-        "../../../docs/protocol/fixtures/catalogue-v5.json",
+        "../../../docs/protocol/fixtures/catalogue-v6.json",
         import.meta.url,
       ),
       "utf8",

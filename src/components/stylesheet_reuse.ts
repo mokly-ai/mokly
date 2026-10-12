@@ -1,0 +1,64 @@
+import fs from "node:fs";
+import path from "node:path";
+
+import { parseHtmlLinks } from "../html_links.js";
+
+/** First renderer-authored public link for each declared real file. */
+export function rendererStylesheetPaths(
+  html: string,
+  route: string,
+  mockupsDir: string,
+  declaredPhysicalPaths: ReadonlySet<string>,
+  configuredHrefs: readonly string[] = [],
+): Map<string, string> {
+  const first = new Map<string, string>();
+  const preferred = new Map<string, { index: number; publicPath: string }>();
+  for (const link of parseHtmlLinks(html).links) {
+    if (!link.stylesheet) continue;
+    const href = link.attributes.get("href");
+    const file = href && publicFileFromHref(href, route, mockupsDir);
+    if (!file || !declaredPhysicalPaths.has(file.physicalPath)) continue;
+    if (!first.has(file.physicalPath))
+      first.set(file.physicalPath, file.publicPath);
+    const configuredIndex = configuredHrefs.indexOf(href!);
+    if (
+      configuredIndex >= 0 &&
+      configuredIndex < (preferred.get(file.physicalPath)?.index ?? Infinity)
+    )
+      preferred.set(file.physicalPath, {
+        index: configuredIndex,
+        publicPath: file.publicPath,
+      });
+  }
+  return new Map(
+    [...first].map(([physical, publicPath]) => [
+      physical,
+      preferred.get(physical)?.publicPath ?? publicPath,
+    ]),
+  );
+}
+
+export function publicFileFromHref(
+  href: string,
+  route: string,
+  mockupsDir: string,
+): { physicalPath: string; publicPath: string } | undefined {
+  try {
+    const origin = "http://mokly.invalid";
+    const url = new URL(href, `${origin}/${route}`);
+    if (url.origin !== origin) return;
+    const publicPath = decodeURIComponent(url.pathname).slice(1);
+    const candidate = path.resolve(mockupsDir, publicPath);
+    const relative = path.relative(mockupsDir, candidate);
+    if (
+      relative === ".." ||
+      relative.startsWith(`..${path.sep}`) ||
+      path.isAbsolute(relative) ||
+      !fs.existsSync(candidate)
+    )
+      return;
+    return { physicalPath: fs.realpathSync(candidate), publicPath };
+  } catch {
+    return;
+  }
+}

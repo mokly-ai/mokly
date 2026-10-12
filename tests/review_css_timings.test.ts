@@ -76,6 +76,7 @@ test("CSS diagnostics keep parser failures unresolved without logging their cont
     kind: "kept",
     status: "unresolved",
     selectors: [],
+    rules: [],
   });
   assert.equal(events.length, 2);
   assert.equal(events.at(-1)?.stage, "review.css-analysis");

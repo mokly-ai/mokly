@@ -8,13 +8,16 @@ import { ScreenHead, ViewSwitch } from "./shell.js";
  */
 export function WelcomeHead({
   active,
+  changed = false,
   changes = false,
 }: {
   active: "both" | "desktop" | "mobile";
+  changed?: boolean;
   changes?: boolean;
 }) {
   return (
     <ScreenHead
+      {...(changed ? { comparisons: true, status: "changed" as const } : {})}
       action={<ViewSwitch active={active} />}
       crumbs={changes ? ["Example", "Screens"] : SCREEN_CRUMBS}
       path={ENTRY_PATHS.welcome}

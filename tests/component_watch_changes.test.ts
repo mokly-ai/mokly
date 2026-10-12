@@ -17,19 +17,18 @@ import {
 } from "./helpers/watched_catalogue.js";
 
 test(
-  "watched component source and owned CSS stay out of consumer Changes until screen props change",
+  "watched component source and declared CSS stay out of consumer Changes until screen props change",
   { timeout: 60_000 },
   async (t) => {
     const source = componentEntrySource().replace(
       'path: "action",',
-      'path: "action", dependencies: ["mockups/action.css"], ownedDependencies: ["mockups/action.css"],',
+      'path: "action", stylesheets: ["action.css"],',
     );
     const fixture = await changedFixture(
       t,
       source,
       {
-        extraConfig:
-          'colorSchemes: ["light", "dark"], stylesheets: [{ match: "**", stylesheets: ["action.css"] }],',
+        extraConfig: 'colorSchemes: ["light", "dark"],',
       },
       async ({ mockupsDir }) => {
         await fs.writeFile(
@@ -70,13 +69,13 @@ test(
       path.join(fixture.mockupsDir, "action.css"),
       "button{color:green}",
     );
-    html = await waitForChangedCount(server.url, version(html), 1);
+    html = await waitForChangedCount(server.url, version(html), 3);
     assert.equal((await workspace("home/index.html")).change, undefined);
     await fs.writeFile(
       fixture.entryPath,
       edited.replaceAll('label="Finish"', 'label="Purchase"'),
     );
-    await waitForChangedCount(server.url, version(html), 2);
+    await waitForChangedCount(server.url, version(html), 4);
     assert.equal(
       (await workspace("home/index.html")).change?.after?.path,
       "home",
@@ -89,13 +88,13 @@ test(
     );
     assert.equal(response.status, 200);
     const review = await response.json();
-    assert.equal(review.schemaVersion, 6);
+    assert.equal(review.schemaVersion, 7);
     assert.deepEqual(
       review.changes
         .map((entry: { after: { path: string } }) => entry.after.path)
         .sort(),
-      ["action", "home"],
+      ["action", "action/default", "action/disabled", "home"],
     );
-    assert.equal(changedCount(await catalogue(server.url)), 2);
+    assert.equal(changedCount(await catalogue(server.url)), 4);
   },
 );

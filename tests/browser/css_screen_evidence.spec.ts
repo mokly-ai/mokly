@@ -15,6 +15,7 @@ import {
   UNCHANGED_HEADING,
   UNNAMED_LEAD,
   UNRESOLVED_LEAD,
+  evidenceFiles,
   evidenceSpacing,
   openCatalogue,
   openComparison,
@@ -59,10 +60,8 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(
         evidence.getByText(MATCHED_LEAD, { exact: true }),
       ).toBeVisible();
-      await expect(evidence.getByRole("listitem")).toHaveText([
-        STYLESHEET,
-        ".auth",
-      ]);
+      const files = [[STYLESHEET, [[MATCHED_LEAD, [".auth"]]]]];
+      expect(await evidenceFiles(evidence)).toEqual(files);
       await expect(evidence.locator("code.mbk-code")).toHaveText([".auth"]);
       await expect(evidence).not.toContainText(EXCLUDED_LEAD);
       await expect(evidence).not.toContainText(EXAMINED_LEAD);
@@ -78,7 +77,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
           await expect(
             evidence.getByText(MATCHED_LEAD, { exact: true }),
           ).toBeVisible();
-          await expect(evidence.locator("code.mbk-code")).toHaveText([".auth"]);
+          expect(await evidenceFiles(evidence)).toEqual(files);
         }
     });
 
@@ -96,9 +95,8 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(
         evidence.getByText(UNRESOLVED_LEAD, { exact: true }),
       ).toBeVisible();
-      await expect(evidence.getByRole("listitem")).toHaveText([
-        STYLESHEET,
-        ".guide",
+      expect(await evidenceFiles(evidence)).toEqual([
+        [STYLESHEET, [[UNRESOLVED_LEAD, [".guide"]]]],
       ]);
       await expect(evidence.locator("code.mbk-code")).toHaveText([".guide"]);
       await expect(evidence).not.toContainText(MATCHED_LEAD);
@@ -118,7 +116,9 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(
         evidence.getByText(UNNAMED_LEAD, { exact: true }),
       ).toBeVisible();
-      await expect(evidence.getByRole("listitem")).toHaveText([STYLESHEET]);
+      expect(await evidenceFiles(evidence)).toEqual([
+        [STYLESHEET, [[UNNAMED_LEAD, []]]],
+      ]);
       await expect(evidence.locator("code.mbk-code")).toHaveCount(0);
       await expect(evidence).not.toContainText(UNRESOLVED_LEAD);
       await expect(evidence).not.toContainText(MATCHED_LEAD);
@@ -126,7 +126,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       expect(await evidenceSpacing(evidence)).toEqual({
         paragraph: "8px",
         list: "8px",
-        afterList: "14px",
+        sentence: "8px",
       });
       await expect(await openComparison(page)).toHaveText([
         `Mobile · ${STYLE_HEADING}`,
@@ -149,6 +149,11 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
         evidence.getByText(EXAMINED_LEAD, { exact: true }),
       ).toBeVisible();
       await expect(evidence.getByRole("listitem")).toHaveText([STYLESHEET]);
+      expect(await evidenceSpacing(evidence)).toEqual({
+        paragraph: "8px",
+        list: "8px",
+        afterList: "14px",
+      });
       await expect(evidence).not.toContainText(FILES_LEAD);
       await expect(evidence).not.toContainText(MATCHED_LEAD);
       await expect(evidence).not.toContainText(UNRESOLVED_LEAD);
@@ -251,7 +256,7 @@ test.describe("screen-only evidence and its loaded comparison", () => {
       .getByRole("button", { name: "Side by side", exact: true })
       .click();
     expect(parseReviewResult(await (await response).json()).schemaVersion).toBe(
-      6,
+      7,
     );
     await expect(page.locator(".mbk-diff-view").first()).toBeVisible();
     await expect(evidence.locator("code.mbk-code")).toHaveText([".auth"]);

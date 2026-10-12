@@ -19,7 +19,6 @@ type View = Variant["componentViews"][number];
 type Instance = View["instances"][number];
 
 const common = {
-  declaredDependencies: [],
   description: "An entry",
   relatedDocs: [],
   sourcePath: "specs/entries.mockup.tsx",
@@ -47,7 +46,6 @@ function component(path: string, extra: Partial<Component> = {}): Component {
     colorSchemes: ["light"],
     controls: {},
     kind: "component",
-    ownedDependencies: [],
     path,
     propSchema: { kind: "object", properties: {} },
     slots: [],

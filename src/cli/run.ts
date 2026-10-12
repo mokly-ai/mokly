@@ -3,11 +3,12 @@ import path from "node:path";
 import { enforceStrictBuildWarnings } from "../build/build_warnings.js";
 import { compileCatalogue } from "../build/compile.js";
 import { FileSystemGeneratedOutputStore } from "../build/output_store.js";
+import { BuildWarningSink } from "../build/warning_sink.js";
 import { loadConfig } from "../config/load.js";
 import { runWithTimings, timeAsync } from "../diagnostics/timings.js";
 import { runServerChild } from "../server/child.js";
 import { receiveComponentRuntimeStartup } from "../server/controls/runtime_ipc.js";
-import { serve, type RunningServe } from "../server/serve.js";
+import { serve } from "../server/serve.js";
 
 import { parseArguments, type CliArguments } from "./arguments.js";
 import { openServedBrowser } from "./browser.js";
@@ -18,10 +19,11 @@ import {
   processTerminalEnvironment,
   reportPhase,
   selectReporter,
-  ServeShortcuts,
   type CliReporter,
   type TerminalEnvironment,
 } from "./reporter/index.js";
+import { redactCliSecrets } from "./secrets.js";
+import { waitForShutdown } from "./serve_shutdown.js";
 import { packageVersion } from "./version.js";
 
 /** Execute one CLI invocation and return its process exit code. */
@@ -40,11 +42,45 @@ export async function run(
     reporter.write(`${packageVersion()}\n`);
     return 0;
   }
-  return runWithTimings(
-    arguments_.debugTimings ?? false,
-    arguments_.command === "__serve-child" ? "child" : arguments_.command,
-    () => execute(arguments_, cwd, environment, reporter),
+  const warnings: BuildWarningSink = new BuildWarningSink((warning) =>
+    arguments_.command === "__serve-child" && process.send
+      ? process.send({
+          type: "warning",
+          generation: startupGeneration,
+          warning,
+        })
+      : reporter.buildWarnings([
+          {
+            code: warning.code,
+            ...(warning.subject
+              ? {
+                  subject: {
+                    ...warning.subject,
+                    path: redactCliSecrets(
+                      warning.subject.path,
+                      argv,
+                      environment.env,
+                    ),
+                  },
+                }
+              : {
+                  route: redactCliSecrets(warning.route, argv, environment.env),
+                }),
+            message: redactCliSecrets(warning.message, argv, environment.env),
+          },
+        ]),
   );
+  const startupGeneration = warnings.generation;
+  try {
+    return await runWithTimings(
+      arguments_.debugTimings ?? false,
+      arguments_.command === "__serve-child" ? "child" : arguments_.command,
+      () => execute(arguments_, cwd, environment, reporter, warnings),
+    );
+  } catch (error) {
+    warnings.flush();
+    throw error;
+  }
 }
 
 async function execute(
@@ -52,14 +88,16 @@ async function execute(
   cwd: string,
   environment: TerminalEnvironment,
   reporter: CliReporter,
+  warnings: BuildWarningSink,
 ): Promise<number> {
   const startedAt = environment.now();
   if (arguments_.command === "publish") {
     const publish = await import("./publish.js");
     const outputPresentation = await import("./publish_output.js");
     const result = await timeAsync("publish", () =>
-      publish.runPublish(arguments_, cwd, reporter, environment.env),
+      publish.runPublish(arguments_, cwd, reporter, environment.env, warnings),
     );
+    warnings.flush();
     const output = outputPresentation.publishOutput(
       result,
       arguments_.token ?? environment.env.MOKLY_TOKEN,
@@ -80,7 +118,10 @@ async function execute(
       reporter,
       "Loading configuration",
       "Configuration loaded",
-      () => timeAsync("config.load", () => loadConfig(cwd, arguments_.config)),
+      () =>
+        timeAsync("config.load", () =>
+          loadConfig(cwd, arguments_.config, warnings.forGeneration()),
+        ),
     ));
   if (arguments_.command === "export") {
     const result = await reportPhase(
@@ -90,11 +131,12 @@ async function execute(
       () =>
         timeAsync("export", () =>
           runExport(config, {
+            onWarning: (warning) => warnings.add(warning),
             diagnostic: (message) => reporter.runtimeDiagnostic(message),
             incompatibleBaseline: (commit) =>
               reporter.incompatibleBaseline(commit),
             onBuildDiagnostics: (diagnostics) => {
-              reporter.buildWarnings(diagnostics);
+              warnings.complete(diagnostics);
               enforceStrictBuildWarnings(
                 diagnostics,
                 arguments_.strict ?? false,
@@ -105,6 +147,7 @@ async function execute(
           }),
         ),
     );
+    warnings.flush();
     reporter.summary(
       `Exported Mokly to ${result.outDir}.\nDeploy this directory at your site's root with your hosting provider.\n`,
       `Exported Mokly to ${result.outDir}`,
@@ -133,9 +176,12 @@ async function execute(
       reporter,
       "Rendering catalogue",
       "Catalogue rendered",
-      () => compileCatalogue(config),
+      () =>
+        compileCatalogue(config, undefined, undefined, (warning) =>
+          warnings.add(warning),
+        ),
     );
-    reporter.buildWarnings(compilation.diagnostics);
+    warnings.complete(compilation.diagnostics);
     enforceStrictBuildWarnings(
       compilation.diagnostics,
       arguments_.strict ?? false,
@@ -146,6 +192,7 @@ async function execute(
       "Generated output written",
       () => outputStore.write(compilation, config),
     );
+    warnings.flush();
     reporter.summary(
       `Generated ${compilation.outputs.size} Mokly files.\n`,
       `Generated ${compilation.outputs.size} files in ${relativeOutput(cwd, config.mockupsDir)}`,
@@ -158,9 +205,12 @@ async function execute(
       reporter,
       "Rendering catalogue",
       "Catalogue rendered",
-      () => compileCatalogue(config),
+      () =>
+        compileCatalogue(config, undefined, undefined, (warning) =>
+          warnings.add(warning),
+        ),
     );
-    reporter.buildWarnings(compilation.diagnostics);
+    warnings.complete(compilation.diagnostics);
     enforceStrictBuildWarnings(
       compilation.diagnostics,
       arguments_.strict ?? false,
@@ -189,6 +239,10 @@ async function execute(
   const base = arguments_.base ?? config.review.base;
   const port = arguments_.port ?? 4173;
   if (arguments_.command === "__serve-child") {
+    if (!runtimeStartup) {
+      config.diagnostics?.forEach((warning) => warnings.add(warning));
+      warnings.flush();
+    }
     await runServerChild(
       config,
       port,
@@ -198,6 +252,7 @@ async function execute(
       arguments_.retainedRuntime ?? false,
       runtimeStartup?.manifest,
       runtimeStartup?.assetClosure,
+      (warning) => warnings.add(warning),
     );
     return 0;
   }
@@ -210,7 +265,7 @@ async function execute(
         build: arguments_.build ?? false,
         watch: arguments_.watch ?? true,
       },
-      { reporter },
+      { reporter, warnings },
     ),
   );
   const shutdown = waitForShutdown(
@@ -235,49 +290,4 @@ async function execute(
 
 function relativeOutput(cwd: string, output: string): string {
   return path.relative(cwd, output) || ".";
-}
-
-function waitForShutdown(
-  running: RunningServe,
-  environment: TerminalEnvironment,
-  reporter: CliReporter,
-  watched: boolean,
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    let closing = false;
-    const onSignal = (): void => void close();
-    const shortcuts = new ServeShortcuts(environment, reporter, {
-      clear: () => reporter.clearServe(),
-      close: onSignal,
-      help: () => reporter.showShortcuts(),
-      open: async () => {
-        await openServedBrowser(
-          environment.browserOpener,
-          reporter,
-          running.url,
-        );
-      },
-      rebuild: () => running.rebuild?.(),
-    });
-    const cleanup = (): void => {
-      shortcuts.close();
-      process.off("SIGINT", onSignal);
-      process.off("SIGTERM", onSignal);
-    };
-    const close = async (): Promise<void> => {
-      if (closing) return;
-      closing = true;
-      try {
-        await running.close();
-        cleanup();
-        resolve();
-      } catch (error) {
-        cleanup();
-        reject(error);
-      }
-    };
-    process.once("SIGINT", onSignal);
-    process.once("SIGTERM", onSignal);
-    if (watched) shortcuts.start();
-  });
 }

@@ -20,6 +20,7 @@ pub(super) fn request(directory: &Path, script: &str) -> Request {
         input: None,
         log: None,
         cancellable: true,
+        git_index: None,
         blacksmith: false,
     }
 }

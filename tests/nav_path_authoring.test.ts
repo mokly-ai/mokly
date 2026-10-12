@@ -4,8 +4,7 @@ import test from "node:test";
 import { textOutput } from "./helpers/generated_text.js";
 import { pathFixture, pageSource } from "./helpers/path_fixture.js";
 
-const metadata =
-  "title:'Invoice',description:'Invoice state',dependencies:[],relatedDocs:[]";
+const metadata = "title:'Invoice',description:'Invoice state',relatedDocs:[]";
 
 test("index, ordinary, variant and declared paths share the resolved link-base rule", async (t) => {
   const fixture = await pathFixture({

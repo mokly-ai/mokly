@@ -218,7 +218,7 @@ function manifest(entries: readonly ManifestScreen[]) {
   return currentManifest({
     entries,
     generatedBy: "mokly",
-    schemaVersion: 9 as const,
+    schemaVersion: 10 as const,
     folders: [],
     sourceFiles: [...new Set(entries.map((entry) => entry.sourcePath))].sort(),
   });

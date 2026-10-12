@@ -108,7 +108,7 @@ export async function prepareReviewRepository(
     toPosixPath(path.relative(config.repoRoot, config.mockupsDir)) || ".";
   const blobReader = new CommittedBaselineReader(runner);
   let selection: BaselineSelection = "rebuild";
-  let descriptor = baselineCatalogue(commit, prefix, "generated-v9");
+  let descriptor = baselineCatalogue(commit, prefix, "generated-v10");
   const tree = await readCommitTree(runner, commit, descriptor.generatedRoot);
   const candidate = joinCataloguePath(descriptor.generatedRoot, MANIFEST_NAME);
   const kind = treeEntryKind(tree.get(candidate));

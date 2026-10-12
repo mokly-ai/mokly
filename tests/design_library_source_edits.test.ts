@@ -37,10 +37,7 @@ const groups: readonly EditGroup[] = [
     name: "1: top-bar implementation",
     edits: [sourceEdits.topBarClass],
     changes: {
-      "design/library/chrome/top-bar": [
-        { kind: "dependency", path: sourceEdits.topBarClass.file },
-        { kind: "material" },
-      ],
+      "design/library/chrome/top-bar": [{ kind: "material" }],
     },
     impacting: ["design/library/chrome/top-bar"],
   },
@@ -48,10 +45,7 @@ const groups: readonly EditGroup[] = [
     name: "2: tag-chip implementation",
     edits: [sourceEdits.tagChipLabel],
     changes: {
-      "design/library/controls/tag-chip": [
-        { kind: "dependency", path: sourceEdits.tagChipLabel.file },
-        { kind: "material" },
-      ],
+      "design/library/controls/tag-chip": [{ kind: "material" }],
     },
     impacting: ["design/library/controls/tag-chip"],
   },

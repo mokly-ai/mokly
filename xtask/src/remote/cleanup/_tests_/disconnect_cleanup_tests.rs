@@ -83,6 +83,7 @@ fn fixture(close: Close, failed_stop: bool) -> (Dependencies, Arc<Mutex<Vec<Stri
             } else {
                 Unimock::new(())
             }),
+            snapshot: Arc::new(Unimock::new(())),
             git: unused.clone(),
             blacksmith: shared.clone(),
             github: shared.clone(),

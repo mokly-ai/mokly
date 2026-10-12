@@ -113,10 +113,14 @@ equality remains an export-only `export-invalid` check.
 
 ## Baselines And Required Smoke
 
-Manifest v9 is the only readable content format. The generated subtree, exact
+Only the complete combined manifest-v10 shape is readable. Required saved-view
+root ranges and inserted-link provenance remain part of admission. Stored CSS
+owners and removed source declarations are invalid. A different v10 shape is
+invalid data, not earlier-version output, and receives no conversion.
+The generated subtree, exact
 inventory and blob hashes still select per-commit Git blobs or the base's own
 rebuild. A committed root-level manifest never decides selection. After the
-base's own recipe, a recognized pre-v9 manifest at its canonical generated or
+base's own recipe, a recognized pre-v10 manifest at its canonical generated or
 root-level location produces `baseline-incompatible-earlier`, with no content
 read and no cached incompatible entry. Keep partial-cache cleanup, valid
 settings-mismatch failure and the current moved-root discovery boundary.
@@ -129,14 +133,15 @@ Use the exact product line:
 Changes are unavailable because the comparison base was built with an earlier version of Mokly. Changes will return once the base includes this version.
 ```
 
-Run `npm run preview:build -- --include-changes --base origin/main` against the
-pinned incoming main commit. Its own code writes its v8 layout; the combined
-package must detect that after rebuilding and finish the preview with the line
-above and unavailable Changes. Do not inject the combined package into that
-historical build or cache the earlier-format result.
+Use each pinned base's own recipe and package. A lower-version base must finish
+current preview delivery with the exact earlier-version line and unavailable
+Changes. A v10 base without required combined proof follows the invalid-data
+contract: Serve keeps All usable; explicit comparison captures fail safely.
+Do not inject the current package into a historical build or cache an
+earlier-format result.
 
 Smoke Build, tracked/untracked Check, Serve and static export with Markdown,
-folders and a moved entry. Use a separate v9 baseline to prove moved comparisons
-and resources work. Check current-only delivery against the incoming v8 base,
+folders and a moved entry. Use a complete combined-v10 baseline to prove moved
+comparisons and resources. Check lower-version and invalid-current baselines,
 all format rejection boundaries, namespace paths, lock-free nonwriters and
-worker route rejection. Keep all unrelated incoming tests and assertions.
+worker route rejection. Keep unrelated tests and assertions.

@@ -17,7 +17,6 @@ function catalogue(folder: string, count: number): ManifestEntry[] {
       title: `Item ${index}`,
       description: "Component",
       relatedDocs: [],
-      declaredDependencies: [],
       colorSchemes: ["light"] as const,
       kind: "component" as const,
     };
@@ -27,7 +26,6 @@ function catalogue(folder: string, count: number): ManifestEntry[] {
         propSchema: { kind: "object" as const, properties: {} },
         slots: [],
         controls: {},
-        ownedDependencies: [],
       },
       {
         ...common,

@@ -104,7 +104,7 @@ test("the review reader rejects duplicate pairings and simultaneous removed reco
   change.before!.path = duplicate.screens[1]!.before!.path;
   change.previousPath = duplicate.screens[1]!.previousPath!;
   assert.throws(() => parseReviewResult(duplicate), {
-    message: "[mokly/review] [mokly/review] previous paths must be unique",
+    message: "[mokly/review] previous paths must be unique",
   });
   const removed = structuredClone(result);
   const screen = structuredClone(removed.screens[0]!);
@@ -118,7 +118,6 @@ test("the review reader rejects duplicate pairings and simultaneous removed reco
     a.path < b.path ? -1 : 1,
   );
   assert.throws(() => parseReviewResult(removed), {
-    message:
-      "[mokly/review] [mokly/review] paired previous path cannot be removed",
+    message: "[mokly/review] paired previous path cannot be removed",
   });
 });

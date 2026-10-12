@@ -137,7 +137,7 @@ test("baseline handoffs preserve pinned commits and explicit revocation", () => 
       commit === null ? undefined : "blobs",
       commit === null
         ? undefined
-        : baselineCatalogue(commit, "mockups", "generated-v9"),
+        : baselineCatalogue(commit, "mockups", "generated-v10"),
     );
     assert.equal(message.baselineCommit, commit);
     assert.deepEqual(parseChildUpdateMessage(message), message);
@@ -166,7 +166,7 @@ test("catalogue completion accepts manifest v8 and rejects the preceding v7 enve
     generation: "a".repeat(32),
     version: 1,
     manifest: {
-      schemaVersion: 9,
+      schemaVersion: 10,
       generatedBy: "mokly",
       entries: [],
       folders: [],
@@ -189,7 +189,7 @@ test("catalogue completion keeps a safe authored list and ignores an unsafe one"
     generation: "a".repeat(32),
     version: 2,
     manifest: {
-      schemaVersion: 9,
+      schemaVersion: 10,
       generatedBy: "mokly",
       entries: [],
       folders: [],

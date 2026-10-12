@@ -23,8 +23,8 @@ for (const changed of ["parent", "variant"] as const)
       fixture.git,
       "main",
     );
-    assert.equal(result.schemaVersion, 6);
-    if (result.schemaVersion !== 6) return;
+    assert.equal(result.schemaVersion, 7);
+    if (result.schemaVersion !== 7) return;
     const expected =
       changed === "variant" ? ["home/empty", "variant-flow"] : ["home"];
 
@@ -60,8 +60,8 @@ test("a variant consuming a changed component is an affected screen on its own r
     fixture.git,
     "main",
   );
-  assert.equal(result.schemaVersion, 6);
-  if (result.schemaVersion !== 6) return;
+  assert.equal(result.schemaVersion, 7);
+  if (result.schemaVersion !== 7) return;
 
   assert.ok(
     result.affectedConsumers.some(

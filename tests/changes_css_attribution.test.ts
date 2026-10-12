@@ -7,6 +7,7 @@ import { parseReviewResult } from "../packages/viewer/dist/review/result_validat
 
 import { committedReviewRepository } from "./helpers/committed_repository.js";
 import { cssAttributionFixture } from "./helpers/css_attribution_fixture.js";
+import { resourceReasonSummaries } from "./helpers/css_evidence.js";
 
 for (const components of [false, true]) {
   for (const [name, css, included, status] of [
@@ -15,7 +16,7 @@ for (const components of [false, true]) {
     ["custom property", ".guide { --tone: red; }", true, "unresolved"],
     ["formatting only", "\n", false, undefined],
   ] as const) {
-    test(`CSS attribution v${components ? 3 : 2}: ${name} agrees across all views and live membership`, async (t) => {
+    test(`CSS attribution v7 (components=${components}): ${name} agrees across all views and live membership`, async (t) => {
       const fixture = await cssAttributionFixture(t, components);
       await fixture.append(css);
       const live = await computeCatalogueChanges(
@@ -33,7 +34,7 @@ for (const components of [false, true]) {
         assert.equal(view.state, included ? "changed" : "unchanged");
         if (included) {
           assert.deepEqual(view.excludedResources, undefined);
-          assert.deepEqual(view.reasons, [
+          assert.deepEqual(resourceReasonSummaries(view.reasons), [
             {
               kind: "dependency",
               path: "mockups/shared.css",
@@ -51,10 +52,12 @@ for (const components of [false, true]) {
         }
       }
       assert.equal(
-        screen.sharedImpact.includes("mockups/shared.css"),
+        screen.views.some((view) =>
+          view.reasons?.some((reason) => reason.path === "mockups/shared.css"),
+        ),
         included,
       );
-      if (artifact.result.schemaVersion === 6) {
+      if (artifact.result.schemaVersion === 7) {
         assert.deepEqual(live.componentChanges?.result, artifact.result);
         assert.equal(
           artifact.result.changes.some((entry) => entry.after?.path === "home"),
@@ -63,7 +66,7 @@ for (const components of [false, true]) {
       }
       if (status === "unresolved") {
         const views = artifact.result.screens.flatMap((entry) => entry.views);
-        if (artifact.result.schemaVersion === 6)
+        if (artifact.result.schemaVersion === 7)
           views.push(
             ...artifact.result.components.flatMap((entry) =>
               entry.variants.flatMap((variant) => variant.views),
@@ -83,7 +86,7 @@ for (const components of [false, true]) {
       assert.ok(files.has("snapshots/after/shared.css"));
       assert.match(
         String(files.get("summary.md")),
-        artifact.result.schemaVersion === 6
+        artifact.result.schemaVersion === 7
           ? new RegExp(`Changes: ${artifact.result.changes.length};`)
           : new RegExp(
               `output changes: ${artifact.result.screens.filter((screen) => screen.state === "changed").length};`,
@@ -93,7 +96,7 @@ for (const components of [false, true]) {
   }
 
   for (const resource of ["image.svg", "font.woff2"]) {
-    test(`CSS attribution v${components ? 3 : 2} preserves ${resource} impact`, async (t) => {
+    test(`CSS attribution v7 (components=${components}) preserves ${resource} impact`, async (t) => {
       const fixture = await cssAttributionFixture(t, components);
       await fixture.append("\n", resource);
       const live = await computeCatalogueChanges(
@@ -106,7 +109,7 @@ for (const components of [false, true]) {
       for (const view of artifact.result.screens.find(
         (entry) => entry.path === "home",
       )!.views) {
-        assert.deepEqual(view.reasons, [
+        assert.deepEqual(resourceReasonSummaries(view.reasons), [
           { kind: "dependency", path: `mockups/${resource}` },
         ]);
         assert.equal(view.state, "changed");

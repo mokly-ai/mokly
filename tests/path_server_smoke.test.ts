@@ -9,7 +9,7 @@ import { pathFixture } from "./helpers/path_fixture.js";
 
 test("Serve renders a path-addressed screen through the live workspace boundary", async (t) => {
   const fixture = await pathFixture({
-    "specs/account/invoice.mockup.tsx": `import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'Invoice',description:'An invoice',dependencies:[],relatedDocs:[],mobile:'Invoice',desktop:'Invoice'});`,
+    "specs/account/invoice.mockup.tsx": `import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'Invoice',description:'An invoice',relatedDocs:[],mobile:'Invoice',desktop:'Invoice'});`,
   });
   t.after(fixture.remove);
   const config = await fixture.config();
@@ -33,7 +33,7 @@ test("Serve opens prototype-named paths with unavailable comparison evidence", a
     Object.fromEntries(
       paths.map((name) => [
         `specs/${name}.mockup.ts`,
-        `import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'${name}',description:'Prototype-named screen',dependencies:[],relatedDocs:[],mobile:'${name}',desktop:'${name}'});`,
+        `import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'${name}',description:'Prototype-named screen',relatedDocs:[],mobile:'${name}',desktop:'${name}'});`,
       ]),
     ),
   );

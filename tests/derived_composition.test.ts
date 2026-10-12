@@ -28,7 +28,7 @@ test("composition selects committed reads without building and pins repository e
           return JSON.stringify({
             entries: [],
             folders: [],
-            schemaVersion: 9,
+            schemaVersion: 10,
             assetClosure: [],
             blobHashAlgorithm: "sha1",
             generatedFiles: [],
@@ -98,9 +98,9 @@ test("derived composition forwards cancellation and progress to the injected bui
             schemaVersion: 2,
             commit: request.commit,
             commands: request.commands,
-            manifestVersion: 9,
+            manifestVersion: 10,
             historicalCatalogueRoot: "mockups",
-            layout: "generated-v9",
+            layout: "generated-v10",
             finishedAt: new Date(0).toISOString(),
           },
         };

@@ -45,7 +45,7 @@ import { defineScreen } from "@mokly/mokly";
 import "./secondary.css";
 export const mockups = [defineScreen({
   path: "secondary", title: "Secondary",
-  description: "Independent screen", dependencies: [], relatedDocs: [],
+  description: "Independent screen", relatedDocs: [],
   desktop: <main className="guide">Other</main>,
   mobile: <main className="guide">Other</main>,
 })];
@@ -80,8 +80,8 @@ export const mockups = [defineScreen({
   await fs.writeFile(
     fixture.configPath,
     (await fs.readFile(fixture.configPath, "utf8")).replace(
-      'sharedImpact: ["notes.md"]',
-      `sharedImpact: ["entries/**", "notes.md"]${storage === "rebuild" ? ', baselineBuild: [["node", "baseline.mjs"]]' : ""}`,
+      'review: { outDir: ".review" }',
+      `review: { outDir: ".review"${storage === "rebuild" ? ', baselineBuild: [["node", "baseline.mjs"]]' : ""} }`,
     ),
   );
   const config = await loadConfig(fixture.root);

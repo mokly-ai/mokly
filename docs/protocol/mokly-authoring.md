@@ -9,6 +9,17 @@ This contract expands the [package API](./mokly-package.md). Configuration
 follows the [configuration contract](./mokly-configuration.md); consumer
 rendering follows the [rendering contract](./mokly-rendering.md).
 
+## Delivery Status
+
+CSS rule attribution and ignored stylesheet owner records are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
+Other behavior below remains implemented.
+
+This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+
+The configuration guard is implemented in
+[M28A](../../plans/remove-source-path-evidence.md#milestone-28a-integrate-main-131-and-133).
+Stronger removed-field type tests are implemented in [M30](../../plans/remove-source-path-evidence.md#milestone-30-strengthen-tests-the-docs-guard-and-removed-field-types).
+
 ## Public Authoring API
 
 The root package export supplies typed, documented authoring helpers:
@@ -16,6 +27,7 @@ The root package export supplies typed, documented authoring helpers:
 - `defineConfig`;
 - `defineScreen`, `definePage`, `defineUseCase`, and `defineFolder`;
 - `defineComponent` and its schema-derived props, variants, and control types;
+- `componentStylesheets`, the shared configured-stylesheet position marker;
 - `mockLink` and `MockLink` for path-addressed links;
 - `ReviewIgnore`, `ReviewIgnoreScope`, and `reviewMaterialKey`.
 
@@ -43,7 +55,7 @@ no `navPath`. The common input boundary is:
 
 ```ts
 interface EntryInput {
-  dependencies: readonly string[];
+  dependencies?: never;
   description: string;
   movedFrom?: string;
   path?: string;
@@ -55,16 +67,12 @@ interface EntryInput {
 }
 ```
 
-Each entry provides a title, description, related docs, and dependency paths.
-A dependency may identify an existing repository file or directory; Review
-matches the path itself and every descendant and reports the concrete changed
-path as impact evidence. A source path or a changed descendant matched only by
-a declared directory does not list an otherwise unchanged entry in Browse
-Changes. Exact declarations and component-owned paths follow the
-[component path rule](./mokly-component-changes.md#dependencies-and-styles).
-Changes compares output, rendered resources, and reviewable metadata, pairs
-moved entries, and propagates directly changed screens to their flows under
-the [Changes contract](./mokly-changes.md).
+Each entry provides a title, description and related docs. Changes compares
+output, rendered resources and reviewable metadata, pairs moved entries, and
+propagates directly changed screens to their flows under the
+[Changes contract](./mokly-changes.md). Source paths supply attribution and
+protection only. Components declare public CSS through
+[component stylesheets](./mokly-component-stylesheets.md).
 
 ## Entry Kinds
 
@@ -84,7 +92,7 @@ and recorded as `variantOf`, never authored. The
 [variant contract](./mokly-variants.md) owns inheritance, validation, and the
 return shape of `defineScreen`, which is one definition without `variants`
 and a parent-first array with them. A screen variant inherits the parent's
-address, colour schemes, dependencies, related docs, and tags when it omits
+address, colour schemes, related docs, and tags when it omits
 them; its flow membership never inherits.
 
 `defineScreen` inputs may declare `colorSchemes`. When omitted, a screen
@@ -123,6 +131,19 @@ names. Path segments satisfy the
 URLs verbatim. A configured static-asset segment starts with an ASCII letter,
 digit, underscore, or hyphen, then uses only URL-unreserved ASCII letters, digits, `.`, `_`, `~`,
 or `-`; its filename stem must not be a Windows device name.
+
+All entry, folder and variant inputs reject removed `dependencies`
+values through `dependencies?: never`; component inputs also reject removed
+`ownedDependencies` values through `ownedDependencies?: never`. This includes
+spread objects. An explicit `undefined` is rejected only when the consumer
+enables `exactOptionalPropertyTypes`. Without it, runtime collection still
+warns on the present key and ignores it. No removed field inherits or supplies
+evidence. See [build warnings](./mokly-build-warnings.md).
+
+`defineScreen` inputs may declare `colorSchemes`. When
+omitted, a screen inherits the catalogue set; `colorSchemes: ["light"]` is the
+supported opt-out from a dark-enabled catalogue. A declaration must be
+non-empty, duplicate-free, include `"light"`, and be a subset of the config.
 
 ## Module Attribution And Discovery
 
@@ -214,3 +235,15 @@ Closure collection and href computation follow
 All public exports ship ESM JavaScript and declarations usable by NodeNext and
 bundler TypeScript resolution. The package export map and packed-tarball tests
 define the public boundary; consumers must not import `dist` internals.
+
+## Removed Input Warnings
+
+A present removed `dependencies` key emits `removed-dependencies` with an entry
+subject. A present removed `ownedDependencies` key emits
+`removed-owned-dependencies` with a component subject. Variants name their own
+complete path. Their messages are exactly:
+
+```text
+dependencies has been removed; ignoring it. Delete the field.
+ownedDependencies has been removed; ignoring it. Delete the field.
+```

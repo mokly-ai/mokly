@@ -121,7 +121,7 @@ Measure the full list and the new sample against the same build:
 The full route list loaded the mockup frames of every entry, and a failed frame
 resource load reached the page console. The sample loads only its own frames.
 `tests/example_resource_references.test.ts` therefore audits every `.html` and
-`.css` file under `examples/basic/mokly-generated/` and in the v9 manifest
+`.css` file under `examples/basic/mokly-generated/` and in the v10 manifest
 `assetClosure` with `tests/helpers/generated_resource_references.ts`. The audit
 receives those inputs relative to `examples/basic/`, the catalogue root. It
 does not scan authored source or local cache directories. References can cross

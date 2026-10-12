@@ -7,7 +7,7 @@ import { cleanupBaselines } from "../dist/baseline/cleanup.js";
 
 import { baselineFixture } from "./helpers/baseline_fixture.js";
 
-test("valid v8 settings mismatch fails intact before output validation", async () => {
+test("valid v10 settings mismatch fails intact before output validation", async () => {
   const fixture = baselineFixture();
   const result = await fixture.builder.build(fixture.request);
   const layout = cacheLayout(fixture.request.repoRoot, fixture.request.commit);

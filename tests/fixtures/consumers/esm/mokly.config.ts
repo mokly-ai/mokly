@@ -1,4 +1,4 @@
-import { defineConfig } from "@mokly/mokly";
+import { componentStylesheets, defineConfig } from "@mokly/mokly";
 
 export default defineConfig({
   roots: [{ dir: "entries" }, { dir: "src", files: ["**/*.mockup.{ts,tsx}"] }],
@@ -7,7 +7,11 @@ export default defineConfig({
   review: {
     base: "HEAD",
     outDir: ".review",
-    sharedImpact: ["notes.md"],
   },
-  stylesheets: [{ match: "**/index.html", stylesheets: ["fixture.css"] }],
+  stylesheets: [
+    {
+      match: "**/index.html",
+      stylesheets: ["fixture.css", componentStylesheets],
+    },
+  ],
 });

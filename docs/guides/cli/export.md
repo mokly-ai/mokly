@@ -67,3 +67,6 @@ generated tree or rebuild it using that commit's own dependencies and tooling.
 In CI, check out the full history and use a trusted base for rebuilds. A base
 built by an earlier Mokly version makes Changes unavailable; export prints the
 reason and still packages current content. Other invalid baseline inputs fail.
+
+Warnings name a generated page, an entry, a component, a folder or the
+configuration file. Strict mode counts all warnings, including ignored inputs.

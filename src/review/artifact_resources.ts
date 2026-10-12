@@ -3,13 +3,17 @@ import {
   snapshotSidePath,
   snapshotViewPath,
 } from "@mokly/viewer/data";
-import type { ReviewArtifact, ViewReview } from "@mokly/viewer/data";
+import type { ViewReview } from "@mokly/viewer/data";
 
+import type { StylesheetReviewArtifact } from "./artifact_stylesheets.js";
 import { referencedRoutes } from "./asset_references.js";
+import { insertedStylesheetResources } from "./component_stylesheet_resources.js";
 import { normalizeReviewPair } from "./ignore.js";
 
 /** Check graph-backed evidence against the actual retained snapshots before publication. */
-export function validateArtifactResources(artifact: ReviewArtifact): void {
+export function validateArtifactResources(
+  artifact: StylesheetReviewArtifact,
+): void {
   const views: {
     path: string;
     previousPath?: string;
@@ -78,11 +82,20 @@ export function validateArtifactResources(artifact: ReviewArtifact): void {
       const root = side === "before" ? beforePath : afterPath;
       if (!root) continue;
       const prefix = snapshotSidePath(side);
-      const pending = referencedRoutes(
-        root,
-        side === "before" ? normalized.base : normalized.head,
-        { resourceHints: false },
+      const spans = artifact.insertedStylesheets?.get(root);
+      const inserted = insertedStylesheetResources(
+        side === "before" ? before : after,
+        spans ? { insertedStylesheets: spans } : undefined,
+        root.slice(prefix.length),
       );
+      const pending = [
+        ...referencedRoutes(
+          root,
+          side === "before" ? normalized.base : normalized.head,
+          { resourceHints: false },
+        ),
+        ...inserted.map((route) => `${prefix}${route}`),
+      ];
       const seen = new Set<string>();
       for (let index = 0; index < pending.length; index++) {
         const route = pending[index]!;

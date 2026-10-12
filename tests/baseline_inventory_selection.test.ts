@@ -45,7 +45,7 @@ for (const variant of ["complete", "missing", "stale", "extra"] as const) {
       diagnostic: (message) => diagnostics.push(message),
     });
     assert.equal(treeReads, 1);
-    assert.equal(selected.descriptor.layout, "generated-v9");
+    assert.equal(selected.descriptor.layout, "generated-v10");
     assert.equal(selected.descriptor.generatedRoot, "mockups/mokly-generated");
     assert.equal(
       selected.selection,

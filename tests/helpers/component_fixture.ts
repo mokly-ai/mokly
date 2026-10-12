@@ -11,7 +11,7 @@ export function componentEntrySource(
 ): string {
   return `import React from "react";
 import { defineComponent, defineScreen, MockLink, ReviewIgnore } from "@mokly/mokly";
-const metadata = { dependencies: ["notes.md"], relatedDocs: [] };
+const metadata = { relatedDocs: [] };
 const action = defineComponent({ ...metadata,
   path: "action", title: "Action", description: "A shared action", propSchema: { kind: "object", properties: { label: { schema: { kind: "string" } }, disabled: { schema: { kind: "boolean" }, optional: true }, hidden: { schema: { kind: "boolean" }, optional: true } } },
   controls: { label: { kind: "text", maxLength: 80 }, disabled: { kind: "boolean" } },

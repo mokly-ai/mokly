@@ -9,6 +9,8 @@ import { matchCssRules } from "../dist/review/css/match.js";
 import { CssSelectorError } from "../dist/review/css/match_types.js";
 import { CssResourceAnalysis } from "../dist/review/css/resource_analysis.js";
 
+import { resourceReasonSummaries } from "./helpers/css_evidence.js";
+
 test("a throwing matcher keeps its resource unresolved and continues classification", () => {
   const analysis = new CssResourceAnalysis(undefined, (diff, documents) => {
     if (
@@ -20,15 +22,16 @@ test("a throwing matcher keeps its resource unresolved and continues classificat
       throw new Error("Injected matcher failure");
     return matchCssRules(diff, documents);
   });
+  const evidence = analysis.analyze(
+    [
+      { path: "a.css", after: ".failure { color: red; }" },
+      { path: "b.css", after: ".auth { color: blue; }" },
+      { path: "c.css", after: ".unused { color: green; }" },
+    ],
+    [{ after: parse('<!doctype html><p class="auth">Sign in</p>') }],
+  );
   assert.deepEqual(
-    analysis.analyze(
-      [
-        { path: "a.css", after: ".failure { color: red; }" },
-        { path: "b.css", after: ".auth { color: blue; }" },
-        { path: "c.css", after: ".unused { color: green; }" },
-      ],
-      [{ after: parse('<!doctype html><p class="auth">Sign in</p>') }],
-    ),
+    { ...evidence, reasons: resourceReasonSummaries(evidence.reasons) },
     {
       reasons: [
         {

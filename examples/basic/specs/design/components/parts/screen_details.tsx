@@ -90,7 +90,9 @@ export function ScreenDetails({ state }: { state: ScreenPageState }) {
       ? "closed"
       : noInstances || state === "highlight"
         ? "components"
-        : "props";
+        : state === "style-outside"
+          ? "info"
+          : "props";
   return (
     <Inspector
       initial={initial}
@@ -107,7 +109,10 @@ export function ScreenDetails({ state }: { state: ScreenPageState }) {
                   Source <code>{screen.source}</code>
                 </p>
               </section>
-              <ComparisonDetails comparison={screenComparison(state)} />
+              <ComparisonDetails
+                comparison={screenComparison(state)}
+                subject="screen"
+              />
             </>
           ),
         },

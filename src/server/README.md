@@ -1,11 +1,34 @@
 # Serving catalogues
 
+## Delivery Status
+
+Removal of baseline compatibility below is implemented in
+[M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
+
+Generation-scoped warning delivery and supervisor-factory startup cleanup are
+implemented in [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
+The [warning contract](../../docs/protocol/mokly-build-warnings.md#watched-serve-generations)
+defines suppression as soon as a newer attempt starts, including when a failed
+attempt leaves the old child serving. Background completion must not replay
+`compilation.diagnostics`. The supervisor factory runs inside watcher cleanup.
+
+## Scope
+
 Serve publishes a validated catalogue, renders requested documents and exposes
 comparison snapshots. `serve.ts` owns single-process Serve; `serve_watched.ts`
 owns watchers, background work and the supervised HTTP child. `http.ts` and
 `child.ts` serve accepted inputs and never prepare historical baselines.
+Watched Serve resolves the source inventory and makes its first watcher ready
+before evaluating the consumer graph. After validation, it extends that watch
+set with every declared CSS file, including unused components, and waits for
+the replacement before preparing the index or starting the child. Successful
+reconfiguration uses the same candidate and recovery sequence. The evaluated
+graph is reused for the live runtime rather than evaluated twice.
+
 `http_request_handler.ts` isolates per-request routing from the server's
 mutable catalogue and evidence lifecycle.
+`generated_static.ts` captures accepted imported-CSS routes before binding.
+`demand/service.ts` creates the live document service from the accepted runtime.
 `component_change_cache.ts` coalesces accepted classification reads across
 the server's content generations.
 `component_change_types.ts` defines the shared snapshot and classifier contracts.
@@ -70,7 +93,7 @@ lexical fallback if its projection fails. Source notifications
 are isolated at the gate: classifier failures are reported, that notification
 is dropped, and later notifications continue through the same watcher.
 
-GET/HEAD `/mokly-viewer/catalogue.json` returns the public v5
+GET/HEAD `/mokly-viewer/catalogue.json` returns the public v6
 [read model](../catalogue/README.md) as complete JSON with
 `Cache-Control: no-store`; it never contains bootstrap-only omitted usage.
 `public_catalogue.ts` serializes an atomic snapshot when accepted content,
@@ -105,6 +128,14 @@ esbuild outputs rather than maintained by hand. Every shell request renders the
 hydrated React document. Serve loads the small `react-host.js` composition over
 the shared `react-shell.js`; export and preview load `react-shell.js` directly.
 The CLI host modules retain private live-update and capability transports.
+
+`component_changes.ts` completes the catalogue-wide CSS proof before it
+publishes evidence. `classified_css.ts` passes that screen evidence to the
+lightweight content pass without another rule analysis. Non-CSS aliases keep
+their existing policy. Whole-document pages share the same rule classifier and
+pinned baseline. Ready public views and pages retain `resourceEvidence`; pending
+and unavailable updates clear it. Selected endpoints copy frozen rule facts,
+including changes proved on other component pages, without evaluating entries.
 
 `screen_view_changes.ts` retains per-view screen-only material decisions from
 the existing classification pass. The public projection does not infer Changes
@@ -145,29 +176,32 @@ uses `ServedReviewRepository` in `review_repository.ts` to open a confined cache
 reader through `readOnlyRepositoryForCommit` / `baselineReaderForCommit` and
 ignore stale versions. The single-process host uses the same holder directly.
 The Serve parent selects the pinned baseline reader per commit, using the
-historical manifest's presence and matching v9 inventory
+historical manifest's presence and matching v10 inventory
 or the rebuild cache. The child receives that selection; it neither
 builds baselines nor writes output. `serve --build` writes in the parent only
 after complete compilation and resource-watch readiness, including once with
 `--no-watch`; plain Serve never writes output.
-Only `check` consults the head Git index and guards `.mokly-cache/` tracking;
-neither the Serve parent nor child needs tracked state to render or write.
+`check` consults the head Git index and guards `.mokly-cache/` tracking.
+CLI Publish separately checks the checkout and committed or ignored output.
+Neither the Serve parent nor child needs tracked state to render or write.
 That reader validates the configured Git top level on its first read, so the
 unselected route reports `config-invalid` for a nested `repoRoot` while All
 remains available. Parent preparation, classification and selected readers use
 the same config-owned validation.
 
-Both readers accept only manifest v9. Recognized earlier output follows the
+Both readers accept only manifest v10. Recognized earlier output follows the
 successful unavailable behavior and single terminal line in the
 [baseline compatibility contract](../../docs/protocol/mokly-baseline-compatibility.md).
 `classification_result.ts` carries that expected typed outcome across the
 background worker without converting it into a generic classifier failure;
-unsupported newer or malformed v9 data keeps the normal safe diagnostic path.
+unsupported newer or malformed v10 data keeps the normal safe diagnostic path.
+v10 data with removed fields, missing required roots or provenance, or CSS
+owners is invalid. All stays usable. No schema or stored layout is converted.
 
 `configured_review.ts` requires an injected `ReadOnlyReviewRepository` or a
 `ReviewRepositorySource` that supplies the current reader. The full comparison
 route fails with typed `review-invalid` ("The comparison is not prepared")
-until a selected v9 reader is available. `selected_review_routes.ts` owns one
+until a selected v10 reader is available. `selected_review_routes.ts` owns one
 bounded generation service for screen/component comparisons and removed-page
 previews. Pages use `review.json?page=<page-path>`, while screens and component
 variants use `review.json?path=<entry-path>`; each redirects to immutable metadata
@@ -212,16 +246,23 @@ is delivered; superseded generations never become resource fallbacks.
 The classification worker uses
 structured-clone byte transfer instead of JSON.
 The CLI injects the terminal reporter's server-facing subset into both Serve
-compositions. Plain mode emits only the historical readiness and diagnostic
-bytes. Rich mode presents accepted catalogue, baseline, Changes, reference, and
-watch-action boundaries. Diagnostics originating in a supervised child cross a
+compositions. Plain mode emits historical readiness and diagnostic bytes, plus
+deduplicated build warnings when inputs are ignored. Rich mode presents
+accepted catalogue, baseline, Changes, reference and watch-action boundaries.
+Diagnostics originating in a supervised child cross a
 validated IPC message so the parent remains the sole terminal owner; a child
 without IPC retains direct diagnostic output. A generation's
 [build warnings](../../docs/protocol/mokly-build-warnings.md) arrive on the
 background compilation result through the existing structured clone.
-`reportCatalogueReady` reports them once before `Catalogue ready` for watched
-and snapshot Serve. On-demand documents retain diagnostics for parity but never
-print or expose them through HTTP.
+`reportCatalogueReady` combines streamed and result diagnostics, then reports
+each once before `Catalogue ready` for watched and snapshot Serve. Ignored-input
+producers also retain their captured
+`warningGeneration` across workers, child renders and transient Props renders.
+The parent accepts only its current attempt and deduplicates all producers.
+Resource reloads keep that identity. Failed attempts flush only their own
+records. Ordinary on-demand link diagnostics wait for exhaustive compilation;
+child-only and transient producers use the same sink after readiness.
+No diagnostic enters an HTTP response.
 
 The [referenced asset closure](../../docs/protocol/mokly-generated-output.md#closure-urls-and-publication)
 is the only authored public surface: generated routes live
@@ -306,7 +347,7 @@ watcher keeps it. The child ignores a list that `isAuthoredClosure` rejects.
 
 The approved [path/output integration](../../docs/protocol/mokly-path-output-integration.md) keeps path identity, folders,
 Markdown documents and moves inside one generated tree. It introduces manifest
-v9, catalogue v5 and review v6, with explicit versions for the other boundaries.
+v10, catalogue v6 and review v7, with explicit versions for the other boundaries.
 Accepted workers use immutable in-memory route sets; only writing commands
 acquire the output lock. The integration plan records verification and scope.
 
@@ -324,3 +365,7 @@ before background writes complete. Source and resource edits rebuild together.
 
 Document Changes follows declared attachment links as well as rendered media.
 The shared resource graph uses normalized HTML so ignored regions remain excluded.
+`content_resource_evidence.ts` maps public resource routes to repository paths
+for comparison evidence. `screen_view_changes.ts` supplies the same screen evidence to
+Serve and static export. `catalogue_snapshot.ts` builds the initial accepted
+snapshot before live updates begin.

@@ -5,7 +5,7 @@ import type {
   ManifestEntry,
   ManifestPage,
   ManifestScreen,
-  ManifestV9,
+  ManifestV10,
 } from "../packages/viewer/dist/registry/types.js";
 import { createCatalogue } from "../packages/viewer/dist/shell/catalogue.js";
 import { targetHead } from "../packages/viewer/dist/shell/head.js";
@@ -161,7 +161,6 @@ function occurrences(nodes: readonly NavNode[], id: string): number {
 function screen(id: string, title: string): ManifestScreen {
   return {
     colorSchemes: ["light"],
-    declaredDependencies: [],
     description: title,
     path: id,
     kind: "screen",
@@ -178,7 +177,6 @@ function variant(id: string, title: string, variantOf: string): ManifestScreen {
 
 function page(id: string, title: string, _route: string): ManifestPage {
   return {
-    declaredDependencies: [],
     description: title,
     path: id,
     kind: "page",
@@ -192,15 +190,12 @@ function page(id: string, title: string, _route: string): ManifestPage {
 function manifest(
   entries: readonly ManifestEntry[],
   pages: readonly ManifestPage[] = [],
-): ManifestV9 {
+): ManifestV10 {
   const all = [...entries, ...pages];
   return currentManifest({
-    entries: all.map((entry) => ({
-      ...entry,
-      declaredDependencies: entry.declaredDependencies ?? [],
-    })),
+    entries: all,
     generatedBy: "mokly",
-    schemaVersion: 9 as const,
+    schemaVersion: 10 as const,
     folders: [],
     sourceFiles: [...new Set(all.map(({ sourcePath }) => sourcePath))].sort(),
   });

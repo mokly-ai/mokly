@@ -94,7 +94,10 @@ type DetailsPanelProps = {
   | { subject?: never; children: ReactNode }
 );
 
-/** Existing screen metadata in the shared icon inspector. */
+/**
+ * Existing screen metadata, or an authored metadata body such as a document
+ * page's, in the shared icon inspector. Comparison evidence follows either.
+ */
 export function DetailsPanel({
   destination,
   activeTag,
@@ -104,27 +107,30 @@ export function DetailsPanel({
   open,
   subject,
 }: DetailsPanelProps) {
-  const evidence = comparisonEvidence !== undefined;
-  const info =
+  const body =
     subject === undefined ? (
       children
     ) : (
+      <DetailsBody
+        activeTag={activeTag}
+        changedViews={changedViews}
+        subject={subject}
+      />
+    );
+  const info =
+    comparisonEvidence === undefined ? (
+      body
+    ) : (
       <>
-        <DetailsBody
-          activeTag={activeTag}
-          changedViews={changedViews}
-          subject={subject}
-        />
-        {evidence ? (
-          <section
-            className="mbk-comparison-details"
-            aria-label="Comparison details"
-          >
-            <h3>Comparison details</h3>
-            <p>Compared with the branch point on origin/main.</p>
-            {comparisonEvidence}
-          </section>
-        ) : null}
+        {body}
+        <section
+          className="mbk-comparison-details"
+          aria-label="Comparison details"
+        >
+          <h3>Comparison details</h3>
+          <p>Compared with the branch point on origin/main.</p>
+          {comparisonEvidence}
+        </section>
       </>
     );
   return (

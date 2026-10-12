@@ -2,8 +2,8 @@
 
 ## Delivery Status
 
-This contract defines identity-derived HTML addresses for v9 output and the
-strict catalogue-v5 policy. The current viewer namespace is `mokly-viewer/`;
+This contract defines identity-derived HTML addresses for v10 output and the
+strict catalogue-v6 policy. The current viewer namespace is `mokly-viewer/`;
 [the namespace contract](./mokly-viewer-namespace.md) defines its version gates.
 Implementation and verification are tracked by
 [Generated Output Simplification](../../plans/generated-output-simplification.md).
@@ -26,15 +26,15 @@ CSS assets use `styles/` and `assets/`; Markdown copies use their derived
 resource paths. The private manifest has one fixed name. The
 [reserved HTML segments](./mokly-unified-output.md#one-owned-tree) remain enforced.
 
-Public catalogue v5 contains no layout-prefix field. The viewer always uses
+Public catalogue v6 contains no layout-prefix field. The viewer always uses
 `GENERATED_DIRECTORY` from `@mokly/viewer/data` to derive current paths.
-Only v5 is readable. Reject older and unknown versions before reading entries
+Only v6 is readable. Reject older and unknown versions before reading entries
 or deriving URLs. Disk existence, host settings and payload metadata cannot
 select another layout. Current generated files always use `/static/mokly-generated/`.
 
 V5 records contain identity and view axes, not `route`, `documentPath` or
 `fragmentPath` fields. Derive each current file from that identity and the
-shared directory constant. Private v9/live-index stages derive the same addresses.
+shared directory constant. Private v10/live-index stages derive the same addresses.
 Complete public models and strictly scoped live models retain their separate
 usage validation. Source changes still invalidate stale frame work and events.
 
@@ -87,12 +87,12 @@ and publication use that same layout. Neither reads stale generated disk files
 nor includes `static/mokly-generated/mokly-manifest.json`. Relative HTML/CSS
 references behave the same on disk and through `/static/`.
 
-Only v9 baselines provide comparison content. A pre-v9 base follows the exact
+Only v10 baselines provide comparison content. A pre-v10 base follows the exact
 [earlier-baseline outcome](./mokly-generated-manifest.md#earlier-baseline-outcome);
 it supplies no older-layout snapshots or removed-entry previews. Snapshot
-publication uses its existing generation-local layout for accepted v9 content.
+publication uses its existing generation-local layout for accepted v10 content.
 
-Current delivery uses catalogue v5, static delivery v5 and bootstrap v2.
+Current delivery uses catalogue v6, static delivery v5 and bootstrap v2.
 Ownership v3 and upload v2 finalize the renamed paths under the
 [namespace version gates](./mokly-viewer-namespace.md#version-matrix).
 Receivers validate their supported formats before paths; they never rewrite

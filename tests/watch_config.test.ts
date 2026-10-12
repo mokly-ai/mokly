@@ -9,6 +9,10 @@ import { serve } from "../dist/server/serve.js";
 import { classifyWatchPath } from "../dist/server/watch_events.js";
 import { watchTargets } from "../dist/server/watch_paths.js";
 
+import {
+  declared,
+  fixtureWithSheets,
+} from "./helpers/component_stylesheet_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
 import {
   FakeConfigLoader,
@@ -72,6 +76,70 @@ test("consumer configuration is a reconfiguration watch target", async (context)
     classifyWatchPath({ path: config.configPath, kind: "change" }, config),
     "reconfigure",
   );
+});
+
+test("watched Serve attaches every declared stylesheet before the first build and refreshes declarations on reconfigure", async (context) => {
+  const fixture = await fixtureWithSheets(declared(), "stylesheets: [],");
+  context.after(() => removeFixture(fixture));
+  const initial = await loadConfig(fixture.root);
+  initial.watch.debounceMs = 0;
+  assert.equal(initial.componentStylesheetPaths, undefined);
+  const watchers = new FakeWatcherFactory();
+  const output = new FakeOutputStore();
+  const supervisor = new FakeSupervisor();
+  const running = await serve(
+    initial,
+    { port: 0, build: true, watch: true },
+    {
+      configLoader: new FakeConfigLoader(initial),
+      outputStore: output,
+      processSupervisorFactory: new FakeSupervisorFactory(supervisor),
+      serverFactory: new UnusedServerFactory(),
+      watcherFactory: watchers,
+    },
+  );
+  fixture.beforeRemove(() => running.close());
+  assert.equal(
+    watchers.targets[0]?.includes(path.join(fixture.mockupsDir, "action.css")),
+    false,
+  );
+  const initialExtended = watchers.targets.findLast((targets) =>
+    targets.includes(initial.configPath),
+  );
+  for (const file of ["action.css", "pane.css"])
+    assert.ok(initialExtended?.includes(path.join(fixture.mockupsDir, file)));
+  await waitFor(() => output.configs.length === 1);
+
+  await fs.promises.writeFile(
+    path.join(fixture.mockupsDir, "replacement.css"),
+    ".replacement{color:green}",
+  );
+  await fs.promises.writeFile(
+    fixture.entryPath,
+    (await fs.promises.readFile(fixture.entryPath, "utf8")).replace(
+      'stylesheets: ["action.css"]',
+      'stylesheets: ["replacement.css"]',
+    ),
+  );
+  const sourceIndex = watchers.targets.findLastIndex((targets) =>
+    targets.includes(initial.configPath),
+  );
+  watchers.watchers[sourceIndex]?.change(initial.configPath);
+  await waitFor(() => supervisor.restarts === 1);
+  const replacement = watchers.targets.find((targets) =>
+    targets.includes(path.join(fixture.mockupsDir, "replacement.css")),
+  );
+  assert.ok(replacement);
+  assert.ok(replacement.includes(path.join(fixture.mockupsDir, "pane.css")));
+  assert.equal(
+    replacement.includes(path.join(fixture.mockupsDir, "action.css")),
+    false,
+  );
+  assert.equal(watchers.watchers[sourceIndex]?.closed, true);
+  const activeIndex = watchers.targets.findLastIndex(
+    (targets) => targets === replacement,
+  );
+  assert.equal(watchers.watchers[activeIndex]?.closed, false);
 });
 
 test("dark stylesheet changes classify as reload", async (context) => {

@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import { cssEvidenceFixture } from "./css_evidence_fixture.js";
 import {
   CHANGED_HEADING,
+  EXAMINED_LEAD,
   EXCLUDED_LEAD,
   FILES_LEAD,
   INSPECTOR_VIEWPORTS,
@@ -11,12 +12,16 @@ import {
   STYLESHEET,
   UNRESOLVED_LEAD,
   VARIANT_TERMINAL,
+  evidenceFiles,
   evidenceSpacing,
   openCatalogue,
   openComparison,
   openEvidence,
 } from "./css_evidence_page.js";
 import { chooseScheme, chooseViewport } from "./workspace_actions.js";
+
+/** The branch-point sentence of a catalogue that Serve compares with `main`. */
+const SERVED_BASE = "Compared with the branch point on main.";
 
 let matched: Awaited<ReturnType<typeof cssEvidenceFixture>>;
 let unresolved: Awaited<ReturnType<typeof cssEvidenceFixture>>;
@@ -50,9 +55,8 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(
         evidence.getByText(FILES_LEAD, { exact: true }),
       ).toBeVisible();
-      await expect(evidence.getByRole("listitem").first()).toHaveText(
-        STYLESHEET,
-      );
+      const files = [[STYLESHEET, [[MATCHED_LEAD, [".auth"]]]]];
+      expect(await evidenceFiles(evidence)).toEqual(files);
       await expect(
         evidence.getByText(MATCHED_LEAD, { exact: true }),
       ).toBeVisible();
@@ -64,7 +68,8 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       expect(await evidenceSpacing(evidence)).toEqual({
         paragraph: "8px",
         list: "8px",
-        afterList: "14px",
+        sentence: "8px",
+        styles: "8px",
       });
 
       for (const scheme of ["dark", "light"] as const)
@@ -74,7 +79,7 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
           await expect(
             evidence.getByText(MATCHED_LEAD, { exact: true }),
           ).toBeVisible();
-          await expect(evidence.locator("code.mbk-code")).toHaveText([".auth"]);
+          expect(await evidenceFiles(evidence)).toEqual(files);
         }
     });
 
@@ -96,6 +101,11 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(
         evidence.getByText(SCREEN_TERMINAL, { exact: true }),
       ).toBeVisible();
+      expect(await evidenceSpacing(evidence)).toEqual({
+        paragraph: "8px",
+        list: "8px",
+        afterList: "14px",
+      });
       await expect(evidence).not.toContainText(FILES_LEAD);
       await expect(evidence).not.toContainText(MATCHED_LEAD);
       await expect(evidence).not.toContainText(VARIANT_TERMINAL);
@@ -114,6 +124,31 @@ for (const [name, size] of INSPECTOR_VIEWPORTS) {
       await expect(page.locator(".mbk-nav-scroll")).not.toContainText(
         "stylesheet",
       );
+    });
+
+    test("an excluded-only screen shows the mockup's Details card and no comparison", async ({
+      page,
+    }) => {
+      await page.goto(`${matched.url}/view/details/`);
+      await expect(page.locator("[data-workspace-status]")).toHaveText(
+        "Unmodified",
+      );
+      const evidence = await openEvidence(page);
+      await expect(evidence.locator("h3")).toHaveText(["Comparison details"]);
+      await expect(evidence.locator("p")).toHaveText([
+        SERVED_BASE,
+        EXCLUDED_LEAD,
+        EXAMINED_LEAD,
+        SCREEN_TERMINAL,
+      ]);
+      await expect(evidence.locator("li")).toHaveText([STYLESHEET]);
+      await expect(page.locator("[data-current-screen]")).toBeVisible();
+      await expect(page.locator(".mbk-diff-toolbar")).toBeHidden();
+      await expect(
+        page.getByRole("button", { name: "Side by side", exact: true }),
+      ).toBeHidden();
+      await expect(page.locator("[data-diff-stage]")).toBeHidden();
+      await expect(page.locator(".mbk-diff-view h3")).toHaveCount(0);
     });
 
     test("a change that can reach anything says so without naming a status", async ({

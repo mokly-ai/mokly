@@ -1,5 +1,5 @@
 /** Compile and traverse selectors behind one contained error boundary. */
-import { compile, selectOne } from "css-select";
+import { compile, selectAll } from "css-select";
 import { SelectorType, stringify } from "css-what";
 import type { Selector } from "css-what";
 import { html } from "parse5";
@@ -14,6 +14,14 @@ export function matchesDocument(
   query: Selector[][],
   document: CssDocument,
 ): boolean {
+  return matchingElements(query, document).length > 0;
+}
+
+/** Keep all matches so one inside match cannot hide a later page element. */
+export function matchingElements(
+  query: Selector[][],
+  document: CssDocument,
+): CssElement[] {
   try {
     const options = cssDocumentOptions(document);
     const pseudos: Record<string, (element: CssElement) => boolean> = {};
@@ -51,7 +59,7 @@ export function matchesDocument(
       );
     const selectors = rewrite(staticSelectors(query));
     const predicate = compile(selectors, { ...options, pseudos });
-    return selectOne(predicate, document, options) !== null;
+    return selectAll(predicate, document, options);
   } catch (cause) {
     throw new CssSelectorError("selector-parse-failed", cause);
   }

@@ -5,7 +5,13 @@ import { analyzeStylesheetChange } from "../src/review/css/analyze.js";
 import { CssRuleParseError } from "../src/review/css/types.js";
 import type { CssRuleParser } from "../src/review/css/types.js";
 
-import { analyze, documents, excluded, kept } from "./helpers/review_css.js";
+import {
+  analyze,
+  documents,
+  excluded,
+  kept,
+  outcomeSummary,
+} from "./helpers/review_css.js";
 
 test("CSS analysis excludes no-op, whitespace, comments, and unchanged rule moves", () => {
   for (const [before, after] of [
@@ -87,7 +93,7 @@ test("CSS analysis composes the injected parser, diff, and document match", () =
     },
   };
   assert.deepEqual(
-    analyzeStylesheetChange("old", "new", documents(), parser),
+    outcomeSummary(analyzeStylesheetChange("old", "new", documents(), parser)),
     kept("matched", ".button"),
   );
   assert.deepEqual(calls, ["old", "new"]);

@@ -24,7 +24,7 @@ function variant(slug: string, label: string, movedFrom?: string): string {
 function receipt(importPath: string, movedFrom?: string): string {
   return `import {defineScreen} from '@mokly/mokly';
     import {badge} from '${importPath}';
-    export default defineScreen({title:'Receipt',description:'Your order receipt',dependencies:[],relatedDocs:[],
+    export default defineScreen({title:'Receipt',description:'Your order receipt',relatedDocs:[],
     ${movedFrom ? `movedFrom:'${movedFrom}',` : ""}
     mobile:<main><h1>Receipt</h1><badge.Component label='Paid'/></main>,
     desktop:<main><h1>Receipt</h1><badge.Component label='Paid'/></main>});`;
@@ -122,7 +122,7 @@ function transferredVariant(): BranchPointSources {
 }
 
 function caseRenames(): BranchPointSources {
-  const screen = `import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'Receipt',description:'Order receipt',dependencies:[],relatedDocs:[],mobile:<p>Receipt</p>,desktop:<p>Receipt</p>});`;
+  const screen = `import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'Receipt',description:'Order receipt',relatedDocs:[],mobile:<p>Receipt</p>,desktop:<p>Receipt</p>});`;
   return {
     before: {
       "specs/shop/Receipt.mockup.tsx": screen,

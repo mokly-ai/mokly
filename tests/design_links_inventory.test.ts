@@ -27,7 +27,7 @@ test("the canonical documented inventory exactly matches the complete design pat
     await Promise.all(
       [
         "docs/protocol/mokly-shell-design-inventory.md",
-        "docs/protocol/mokly-component-design.md",
+        "docs/protocol/mokly-component-design-inventory.md",
         "docs/protocol/mokly-component-inspector-design.md",
         "docs/protocol/mokly-component-controls-design.md",
       ].map((file) => fs.readFile(path.join(repositoryRoot, file), "utf8")),

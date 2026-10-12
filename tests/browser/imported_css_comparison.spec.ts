@@ -29,7 +29,7 @@ import { defineScreen } from "@mokly/mokly";
 import classes from "./theme.module.css";
 export const mockups = [defineScreen({
   path: "home", title: "Home", description: "Imported CSS comparison",
-  dependencies: [], relatedDocs: [], mobile: <main><button className={classes.auth}>Sign in</button></main>,
+  relatedDocs: [], mobile: <main><button className={classes.auth}>Sign in</button></main>,
   desktop: <main><button className={classes.auth}>Sign in</button></main>
 })];`);
   const source = path.join(fixture.entriesDir, "theme.module.css");

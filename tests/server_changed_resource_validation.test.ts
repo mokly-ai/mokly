@@ -173,7 +173,7 @@ test("Changes rejects invalid references inside a changed embedded document", as
     validEntrySource({
       body: '<iframe src="../embedded/index.html" title="Embed" />',
     }) +
-    '\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ path: "embedded", title: "Embed", description: "Embedded page", dependencies: [], relatedDocs: [], render: () => "<html><body>Valid embedded page</body></html>" }));';
+    '\nimport { definePage } from "@mokly/mokly"; mockups.push(definePage({ path: "embedded", title: "Embed", description: "Embedded page", relatedDocs: [], render: () => "<html><body>Valid embedded page</body></html>" }));';
   const fixture = await changedFixture(t, source);
   await fs.writeFile(
     fixture.entryPath,
@@ -244,7 +244,7 @@ test("Changes rejects deleted directories still referenced by a screen", async (
   ]);
 });
 
-test("README edits are not public content changes and require no resource traversal", async (t) => {
+test("README edits do not change public content after all four generated views are read", async (t) => {
   const fixture = await changedFixture(
     t,
     undefined,
@@ -272,7 +272,7 @@ test("README edits are not public content changes and require no resource traver
     asChangeEvidence(["mockups/README.md"]),
     new ObservedReader(fixture.config, accepted.outputs),
   );
-  assert.deepEqual(result, { changedPaths: [], screens: [] });
+  assert.deepEqual(result, { changedPaths: [], screens: [], pages: [] });
   assert.deepEqual(reads.sort(), [
     "mokly-generated/details/index.desktop.html",
     "mokly-generated/details/index.mobile.html",

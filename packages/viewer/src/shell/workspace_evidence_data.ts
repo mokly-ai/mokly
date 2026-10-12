@@ -4,6 +4,7 @@ import type {
   ComponentReview,
   EntryChangeReason,
 } from "../review/component_types.js";
+import { mergeCssAnalysis } from "../review/css/evidence.js";
 import type {
   ReviewResult,
   ScreenReview,
@@ -17,13 +18,17 @@ import { componentReview } from "./workspace_entry.js";
 /** Complete evidence projected into one Details panel. */
 export interface WorkspaceComparisonEvidence {
   comparison: ComponentReview | ScreenReview | undefined;
+  /** Parent id of a component workspace, whose own rules keep its sentence. */
+  componentId: string | undefined;
   views: readonly ViewReview[];
   resourceViews: readonly ViewResourceEvidence[];
   reasons: readonly EntryChangeReason[];
-  sharedImpact: readonly string[];
 }
 
-/** Keep catalogue facts while adding only the loaded selection's details. */
+/**
+ * Keep catalogue facts, including the selected views' live evidence in
+ * Current, while adding only the loaded selection's details.
+ */
 export function workspaceComparisonEvidence(
   data: WorkspaceData,
   variantPath?: string,
@@ -46,17 +51,15 @@ export function workspaceComparisonEvidence(
   const comparison = data.comparison ?? selected;
   return {
     comparison,
+    componentId: data.component?.path,
     views,
     resourceViews: [...resources, ...views],
     reasons: mergeReasons([
       ...(data.change?.reasons ?? []),
       ...(change?.reasons ?? []),
       ...resources.flatMap((view) => view.reasons ?? []),
-      ...comparisonViews(selected, variantPath).flatMap(
-        (view) => view.reasons ?? [],
-      ),
+      ...views.flatMap((view) => view.reasons ?? []),
     ]),
-    sharedImpact: comparison?.sharedImpact ?? [],
   };
 }
 
@@ -91,18 +94,7 @@ function mergeReasons(
         ...reason,
         ...(analyses.length
           ? {
-              analysis: {
-                status: analyses.some(
-                  (analysis) => analysis.status === "unresolved",
-                )
-                  ? "unresolved"
-                  : "matched",
-                selectors: [
-                  ...new Set(
-                    analyses.flatMap((analysis) => analysis.selectors),
-                  ),
-                ].sort(),
-              },
+              analysis: mergeCssAnalysis(analyses),
             }
           : {}),
       });

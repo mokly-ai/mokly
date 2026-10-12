@@ -26,8 +26,7 @@ export function moveCatalogueSources(
 ): Record<string, string> {
   if (options.unrelatedDocuments)
     return { "specs/old/guide.md": meetingMarkdown };
-  const metadata =
-    "description:'A workspace screen',dependencies:[],relatedDocs:[]";
+  const metadata = "description:'A workspace screen',relatedDocs:[]";
   const flow = options.flow ? ",useCasePaths:['./tour']" : "";
   const css = options.styles === "imported" ? "import './styled.css';" : "";
   const child = options.component ? "<action.Component label='Continue'/>" : "";
@@ -54,7 +53,7 @@ export function moveCatalogueSources(
       : {}),
     ...(options.flow
       ? {
-          "specs/old/tour.mockup.ts": `import {defineUseCase} from '@mokly/mokly'; export default defineUseCase({title:'Tour',description:'A journey',dependencies:[],relatedDocs:[],steps:[{screenPath:'./screen'},{screenPath:'./target'}]});`,
+          "specs/old/tour.mockup.ts": `import {defineUseCase} from '@mokly/mokly'; export default defineUseCase({title:'Tour',description:'A journey',relatedDocs:[],steps:[{screenPath:'./screen'},{screenPath:'./target'}]});`,
         }
       : {}),
     ...(options.component
@@ -96,7 +95,7 @@ export function moveComponentSource({
   movedFrom?: string;
 } = {}): string {
   return `import {defineComponent} from '@mokly/mokly'; ${imports}
-    export const ${name}=defineComponent({title:${JSON.stringify(title)},description:'A shared action',dependencies:[],relatedDocs:[],
+    export const ${name}=defineComponent({title:${JSON.stringify(title)},description:'A shared action',relatedDocs:[],
     ${movedFrom === undefined ? "" : `movedFrom:${JSON.stringify(movedFrom)},`}
     propSchema:{kind:'object',properties:{label:{schema:{kind:'string'}}}},
     render:(props)=>${render},variants:[${variants}]});`;

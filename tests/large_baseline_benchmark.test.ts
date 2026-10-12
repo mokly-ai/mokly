@@ -17,7 +17,7 @@ test("a cold benchmark reset clears only the pinned baseline and rejects held lo
   await builder.build({ ...request, commit: "b".repeat(40) });
   const config = {
     repoRoot: request.repoRoot,
-    review: { base: "main", outDir: ".review", sharedImpact: [] },
+    review: { base: "main", outDir: ".review" },
   };
   const evidence = {
     mergeBase: async () => request.commit,

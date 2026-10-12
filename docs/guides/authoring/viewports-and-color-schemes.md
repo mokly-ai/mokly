@@ -73,7 +73,7 @@ export default defineScreen({
   description: "A receipt that keeps its paper appearance.",
   mobile: <main>Receipt</main>,
   desktop: <main>Receipt</main>,
-  dependencies: [],
+
   relatedDocs: [],
   colorSchemes: ["light"],
 });

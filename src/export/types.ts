@@ -35,6 +35,7 @@ export interface ExportOptions {
   base?: string;
   /** Route non-fatal baseline cleanup diagnostics through the CLI reporter. */
   diagnostic?: (message: string) => void;
+  onWarning?: (warning: BuildDiagnostic) => void;
   /** Report the expected earlier-version baseline outcome once. */
   incompatibleBaseline?: (commit: string) => void;
   /** Omit baseline reads and comparison artifacts; publish uses this capability. */

@@ -37,7 +37,7 @@ test("public stylesheet and ordinary-file links stay source-safe through repeate
       "specs/guide.md":
         "# Guide\n\n[Styles](../generated/theme.css)\n\n[Notes](../generated/notes.txt)\n\n![Public picture](../generated/public.png)",
       "specs/screen.mockup.tsx":
-        "import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'Screen',description:'A screen',dependencies:[],relatedDocs:[],mobile:<h1>Mobile</h1>,desktop:<h1>Desktop</h1>});",
+        "import {defineScreen} from '@mokly/mokly'; export default defineScreen({title:'Screen',description:'A screen',relatedDocs:[],mobile:<h1>Mobile</h1>,desktop:<h1>Desktop</h1>});",
       "generated/theme.css": "h1{color:green}",
       "generated/notes.txt": "Public notes",
       "generated/public.png": "public image",
