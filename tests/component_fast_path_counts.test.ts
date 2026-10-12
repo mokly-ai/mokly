@@ -44,6 +44,11 @@ test(`zero-change classification discovers each required side once`, async (t) =
     (count, entry) => count + generatedViews(entry).length,
     0,
   );
+  const document = events.find(
+    ({ stage, event }) =>
+      stage === "review.document-work" && event === "counts",
+  )!.counts!;
+  assert.equal(document.htmlParses, views);
   const counts = events.find(
     (event) =>
       event.stage === "review.compare-screens" && event.event === "counts",

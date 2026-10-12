@@ -164,6 +164,20 @@ export default (input) => { const css = '.action{border-radius:12px}'; const htm
     ".action{border-radius:12px}",
   );
   assert.equal("styles" in screen.componentViews![0]!, false);
+  assert.deepEqual(screen.componentViews![0]!.insertedStylesheets, [
+    {
+      path: "pane.css",
+      componentPaths: ["pane"],
+      startOffset: 99,
+      endOffset: 144,
+    },
+    {
+      path: "action.css",
+      componentPaths: ["action"],
+      startOffset: 144,
+      endOffset: 191,
+    },
+  ]);
   assert.equal(
     diagnostics.filter(
       (warning) =>
