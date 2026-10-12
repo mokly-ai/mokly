@@ -12,7 +12,12 @@ which had merged Generated Output Simplification (PR #156) and Remove
 Source-Path Evidence (PR #179): the current formats are manifest v10, review
 result v7, public read model v6 and change snapshot v3, the output modes are
 gone, and the agent rules moved to `docs/dev`. Milestone 2 absorbs the
-contract updates those merges require. No code has changed.
+contract updates those merges require. On 2026-10-12 the user also asked
+to adopt the design decisions of PR #158 (workspace 174, branch
+`calummoore/irvine-v6` at `67f87b61`) as the engine's comparison target,
+so the comparison milestones can proceed before that PR merges; the Design
+target section and Milestones 2, 6 and 9 to 15 record it. No code has
+changed.
 
 **Goal:** add a Rust engine that the TypeScript CLI loads in its own process
 through Node-API bindings built with napi-rs, and make the `mokly` executable
@@ -87,6 +92,60 @@ candidates and are out of scope here.
      `cli_terminal_copy`, which Rust tests replace.
   4. The hand-written TypeScript interfaces that generated files replace.
 
+**Design target (adopted from PR #158, recorded 2026-10-12):**
+
+- The engine implements the comparison semantics that PR #158 defines in the
+  [inferred inline style ownership](https://github.com/mokly-ai/mokly/blob/67f87b61a0820414fee9d77413370ed7bffc785c/plans/inferred-inline-style-ownership.md)
+  and [scalable inline style analysis](https://github.com/mokly-ai/mokly/blob/67f87b61a0820414fee9d77413370ed7bffc785c/plans/scalable-inline-style-analysis.md)
+  plans and their contracts, pinned at commit `67f87b61`:
+  [inline styles](https://github.com/mokly-ai/mokly/blob/67f87b61a0820414fee9d77413370ed7bffc785c/docs/protocol/mokly-inline-styles.md),
+  [inline style resources](https://github.com/mokly-ai/mokly/blob/67f87b61a0820414fee9d77413370ed7bffc785c/docs/protocol/mokly-inline-style-resources.md),
+  [inline style evidence](https://github.com/mokly-ai/mokly/blob/67f87b61a0820414fee9d77413370ed7bffc785c/docs/protocol/mokly-inline-style-evidence.md),
+  [CSS parse reuse](https://github.com/mokly-ai/mokly/blob/67f87b61a0820414fee9d77413370ed7bffc785c/docs/protocol/mokly-css-parse-reuse.md),
+  [CSS run composition](https://github.com/mokly-ai/mokly/blob/67f87b61a0820414fee9d77413370ed7bffc785c/docs/protocol/mokly-css-run-composition.md),
+  [page analysis](https://github.com/mokly-ai/mokly/blob/67f87b61a0820414fee9d77413370ed7bffc785c/docs/protocol/mokly-page-analysis.md),
+  [page source provenance](https://github.com/mokly-ai/mokly/blob/67f87b61a0820414fee9d77413370ed7bffc785c/docs/protocol/mokly-page-source-provenance.md),
+  [fingerprinted materials](https://github.com/mokly-ai/mokly/blob/67f87b61a0820414fee9d77413370ed7bffc785c/docs/protocol/mokly-fingerprinted-materials.md),
+  [style-only route](https://github.com/mokly-ai/mokly/blob/67f87b61a0820414fee9d77413370ed7bffc785c/docs/protocol/mokly-style-only-route.md),
+  [material work counts](https://github.com/mokly-ai/mokly/blob/67f87b61a0820414fee9d77413370ed7bffc785c/docs/protocol/mokly-material-work-counts.md),
+  [component review evidence](https://github.com/mokly-ai/mokly/blob/67f87b61a0820414fee9d77413370ed7bffc785c/docs/protocol/mokly-component-review-evidence.md),
+  the [timing counts](https://github.com/mokly-ai/mokly/blob/67f87b61a0820414fee9d77413370ed7bffc785c/docs/protocol/mokly-timings.md) and the
+  [large-fixture benchmark contract](https://github.com/mokly-ai/mokly/blob/67f87b61a0820414fee9d77413370ed7bffc785c/tests/fixtures/large/benchmark-contract.md).
+  It does not port the analysis that main runs today. After PR #158 merges,
+  these links become local links.
+- Inline ownership is inferred at comparison time: the unowned `<style>` rules
+  of a paired view are diffed, matched against both documents, and mapped to
+  the innermost recorded range, giving one attribution per rule
+  (`unresolved`, `excluded`, `entry`, or `owned`). Rules that match nothing
+  are excluded. Materiality follows attribution: unowned style elements are
+  removed and one canonical rendering is appended, in actual and projected
+  forms. Non-CSS references inside owned rules follow their owner; CSS files
+  keep own-page rule membership; renderer `styles` records are ignored with a
+  warning. Formats stay manifest v10, review result v7 with `inlineStyles`,
+  and catalogue v6 with `resourceEvidence`.
+- Each page side is parsed once with parser-supplied provenance and
+  original-page matching; an identical-text quick check settles unchanged
+  views; comparison materials are guarded fingerprints. CSS parsing reuses
+  verified segments through byte-bounded LRU caches, keeps one stored rule
+  data definition, and diffs with changed-segment cancellation and run
+  composition. A style-only route skips the full comparison when its six
+  conditions are proven; the full comparison with the route disabled is its
+  oracle. Work counts (`views`, `fastPath`, `stylePath`, `completePath`,
+  `heapPeakMiB`, `review.inline-style-analysis`, and `review.material-work`
+  behind `MOKLY_MATERIAL_WORK=1`) and the four-scenario benchmark with
+  value-stable fixtures are the scale evidence. Performance acceptance stays
+  deferred by the user's decision of 2026-10-06; its procedure is retained.
+- The engine keeps the same differential switches (fast path, style-only
+  route, fingerprints, segment reuse, material details), so its full path is
+  its own oracle for every shortcut, as PR #158's tests do. Until PR #158
+  merges, its TypeScript at the pinned commit, built in the git-ignored
+  worktree `.context/native-rust-engine/oracle/`, is the external oracle for
+  the parity corpus; afterwards the in-repo TypeScript is, until Milestone 15
+  removes it.
+- Engine memory replaces V8 heap for comparison data, so the engine reports
+  its resident bytes beside `heapPeakMiB`; the parse-reuse byte bounds apply
+  unchanged inside the engine.
+
 **Design constraints for Milestone 2 to settle precisely:**
 
 - One operation per engine call is coarse: one rename, one job action, one
@@ -136,14 +195,16 @@ candidates and are out of scope here.
 
 ## Native shape
 
-| Crate                   | Owns                                                                                                                                                                                                                    |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `crates/mokly-model`    | Every shared shape: manifest, review result, review artifact, change snapshot, preview metadata, markers, engine request and event records, host channel frames, and canonical JSON. Pure data, with TypeScript export. |
-| `crates/mokly-engine`   | The `cdylib` Node-API binding. Thin `#[napi]` functions over strings and buffers, error-code mapping, event callback, async wiring. No logic.                                                                           |
-| `crates/mokly-host`     | The `mokly-host` binary: clap grammar, help and version, output modes, terminal rendering, reporter, channel listener, service lifecycle, shortcuts, browser opening.                                                   |
-| `crates/mokly-platform` | `ExclusiveRename` (`renameat2`, `renamex_np`, `MoveFileExW`), `ProcessJob` (Windows job object), and process-group placement, shared by the engine and the host.                                                        |
-| `crates/mokly-git`      | `GitCommandRunner` trait, spawned `git` with the existing batching and output bounds, merge-base, changed paths, batched object reads, and cancellation.                                                                |
-| `crates/mokly-review`   | Reader traits, resource graph traversal, materiality, CSS rule attribution, component classification, move pairing, and artifact assembly. Split into more crates when a family grows.                                  |
+| Crate                   | Owns                                                                                                                                                                                                                                                                                                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `crates/mokly-model`    | Every shared shape: manifest, review result, review artifact, change snapshot, preview metadata, markers, engine request and event records, host channel frames, and canonical JSON. Pure data, with TypeScript export.                                                                                                                                                   |
+| `crates/mokly-engine`   | The `cdylib` Node-API binding. Thin `#[napi]` functions over strings and buffers, error-code mapping, event callback, async wiring. No logic.                                                                                                                                                                                                                             |
+| `crates/mokly-host`     | The `mokly-host` binary: clap grammar, help and version, output modes, terminal rendering, reporter, channel listener, service lifecycle, shortcuts, browser opening.                                                                                                                                                                                                     |
+| `crates/mokly-platform` | `ExclusiveRename` (`renameat2`, `renamex_np`, `MoveFileExW`), `ProcessJob` (Windows job object), and process-group placement, shared by the engine and the host.                                                                                                                                                                                                          |
+| `crates/mokly-git`      | `GitCommandRunner` trait, spawned `git` with the existing batching and output bounds, merge-base, changed paths, batched object reads, and cancellation.                                                                                                                                                                                                                  |
+| `crates/mokly-css`      | CSS rule collection through the `lightningcss` crate with locations, the segment scanner and batched verification, byte-bounded LRU caches, stored rule data and identity, the multiset diff with changed-segment cancellation and run composition, selector matching with the closed keep list, own-page membership, inline attribution, and the style-only route rules. |
+| `crates/mokly-page`     | Page analysis: one source-located parse per view side, parser-supplied provenance, ignore pairing, reference records and derived material references, original-page matching subjects, the identical-text quick check, fingerprinted materials, and reference extraction for HTML and CSS.                                                                                |
+| `crates/mokly-review`   | Reader traits, resource closures and proofs, materiality, the unchanged-view decision and route orchestration, component classification with inline evidence, move pairing, artifact assembly, and work counts.                                                                                                                                                           |
 
 npm layout:
 
@@ -170,14 +231,18 @@ Generated Output Simplification ([PR #156](https://github.com/mokly-ai/mokly/pul
 `mokly-generated/`; Remove Source-Path Evidence
 ([PR #179](https://github.com/mokly-ai/mokly/pull/179), 2026-10-09) changed the
 review evidence and component stylesheets. Together they set manifest v10,
-review result v7, public read model v6 and change snapshot v3. Inline Style
-Ownership with Scalable Analysis
-([PR #158](https://github.com/mokly-ai/mokly/pull/158); 47 new review files and
-a rewritten benchmark) is still open. Milestones 3 to 5 and 7 to 8 do not
-depend on it and can proceed. Milestone 6 targets the formats that are current
-when it starts and is repeated for a later format only once. Milestones 9 to
-15 start after PR #158 merges, or after the user decides to proceed without
-it, so the differential tests have a stable target. The CLI move into
+review result v7, public read model v6 and change snapshot v3. The third,
+Inline Style Ownership with Scalable Analysis
+([PR #158](https://github.com/mokly-ai/mokly/pull/158), rebased on main), is
+open, and its design is this plan's comparison target. Work that needs none
+of its code proceeds now: Milestones 3 to 5, 7 and 8, and the pure crates of
+Milestones 10 and 12, which test against the contracts' explicit cases and
+the oracle worktree. Milestone 6 and Milestones 11, 13, 14 and 15 need PR
+#158's viewer and CLI code in the branch: if the PR has not merged when
+Milestone 6 starts, merge `origin/calummoore/irvine-v6` into this branch under
+the preservation audit and record that decision in Status; otherwise rebase
+onto main after its merge. Milestone 6 targets the formats that are current
+when it starts and is repeated for a later format only once. The CLI move into
 `packages/mokly` (branch `calummoore/src-to-packages-move`) changes the `src/`
 paths named here; apply the new paths when it merges.
 
@@ -316,6 +381,25 @@ Define the host, the package set, and the shared definitions before any code.
       `docs/protocol/README.md`; update `README.md`.
 - [ ] Search `docs/` for `bin.js`, `__serve-child`, `main.js`, and
       `@mokly/engine-` and align every mention.
+- [ ] Write the contract's comparison operations against the PR #158
+      contracts: `resourceClosure`, `analyzeStyles` (linked-stylesheet rule
+      membership and inline attribution for one paired view),
+      `compareCatalogue` and `classifyChanges`, producing review v7 with
+      `inlineStyles`, catalogue v6 `resourceEvidence`, and the work counts.
+      The quick check, style-only route, fingerprints and segment reuse are
+      engine-internal, each behind a named differential switch that is on
+      by default. Link each PR #158 contract by permalink at `67f87b61`;
+      replace the permalinks with local links after the merge.
+- [ ] Select the Rust HTML parser with source positions that satisfies the
+      page source provenance contract (candidates: `swc_html_parser` spans,
+      or an offset-tracking tree sink on `html5ever`); record the choice and
+      the parity proof of its locations against parse5 over the corpus.
+- [ ] Define engine memory reporting: resident engine bytes for caches and
+      page analyses reported beside `heapPeakMiB`, the parse-reuse byte
+      bounds, and the budget rule the scale evidence uses.
+- [ ] Define the oracle worktree procedure under
+      `.context/native-rust-engine/oracle/`: the pinned commit, build steps,
+      corpus runs, artifact comparison, and where its evidence is saved.
 - [ ] Validate Prettier, links, anchors, protocol sizes, and the
       protocol-reading tests.
 - [ ] Commit.
@@ -434,6 +518,12 @@ Rust becomes the single source of every shared shape; TypeScript is generated.
       error records, and the host channel frames, at the format versions that
       are current when this milestone starts. Derive `serde` and `ts-rs` on
       every type with the documented naming and tagging rules.
+- [ ] Prerequisite: the branch contains PR #158's viewer and CLI code,
+      either from main or by merging `origin/calummoore/irvine-v6` under
+      the preservation audit with the user's recorded decision.
+- [ ] Include PR #158's shapes: `ComponentViewRecord` without `styles`,
+      `ViewReview.inlineStyles`, catalogue v6 `resourceEvidence`, the
+      count and sample-outcome records, and the benchmark records.
 - [ ] Implement the canonical JSON writer that matches `canonicalJson` byte
       for byte, and the Rust validators for the formats the engine reads.
 - [ ] Generate TypeScript with `cargo xtask generate-types` into
@@ -555,12 +645,13 @@ behavior.
 
 Capture the two defects as failing acceptance tests before fixing them.
 
-- [ ] Adopt the rewritten `scripts/large/benchmark.mjs` from the inline style
-      branch once it merges, or repair the stale colour-scheme toggle wait if
-      it has not; make the opt-in benchmark pass through the shell pages.
-- [ ] Add Changes-ready and peak-memory assertions to the opt-in benchmark and
-      an export run with a memory budget; reuse the `heapPeakMiB` counter where
-      it exists; record the budget in `mokly-timings.md`. Both fail today.
+- [ ] Adopt PR #158's large-fixture benchmark contract and harness as the scale
+      evidence tool: template digest, the four-scenario matrix with
+      restoration, cold and warm samples, and sample outcomes. Repair the stale
+      colour-scheme toggle wait only if that harness is not yet in the branch.
+- [ ] Add Changes-ready and memory assertions: `heapPeakMiB` plus the engine's
+      resident bytes against a budget recorded in `mokly-timings.md`, for Serve
+      and for an export run. Both fail today.
 - [ ] Add a resource-graph occurrence accounting test on a small generated
       fixture: count `review.resource-graph` occurrences per view and compare
       with the allowance in the timing contract. Record any excess from the
@@ -568,61 +659,111 @@ Capture the two defects as failing acceptance tests before fixing them.
 - [ ] Add a bridge benchmark: register a 150 MB generation and a 25 MB
       manifest through the engine and assert the transfer stays under 5% of
       the classification time.
+- [ ] Keep performance acceptance deferred under the user's decision of
+      2026-10-06; the engine's later acceptance uses the contract's same-session
+      reference-and-candidate procedure.
 - [ ] Commit.
 
 ## Milestone 10: Resource closure in Rust
 
-- [ ] Add `crates/mokly-review` reader traits: current outputs (in-memory map
-      or output directory), public files with exclusions, baseline reads, and
-      the confinement rules. Add `crates/mokly-git` with the batched object
-      reads, bounds, and cancellation.
-- [ ] Port reference extraction (HTML through `html5ever`, CSS through the
-      `lightningcss` crate) and the transitive traversal with the 64 MiB bound,
-      alias handling, and verified-deletion checks.
+Pure analysis that can start before PR #158 merges, from the contracts'
+explicit cases.
+
+- [ ] Add `crates/mokly-page`: one source-located parse per view side with
+      parser-supplied provenance (adopted attributes, formatting clones, and
+      elements without a start token), ignore pairing and flat ignore spans,
+      reference records and derived material references, original-page
+      matching subjects, the identical-text quick check, and guarded
+      fingerprinted materials with the reserved-prefix guard, plain-string
+      fallback, both forms, and digest encoding.
+- [ ] Add `crates/mokly-git` with the batched object reads, bounds, and
+      cancellation, and the reader traits in `crates/mokly-review`: an
+      in-memory route map, the `mokly-generated/` tree, a Git commit with its
+      `generated-v10` descriptor, a rebuilt baseline tree, and the public
+      closure policy.
+- [ ] Port reference extraction (HTML and CSS through one shared tokenizer for
+      `url()` and `@import`), the transitive traversal with the 64 MiB bound,
+      alias handling, verified-deletion checks, and resource proof reads for
+      Git-blob and rebuilt baselines.
 - [ ] Expose `resourceClosure`; call it from `resource_graph.ts` when the
       engine is available, behind the transitional `MOKLY_NATIVE_ENGINE`
       switch documented in the protocol.
-- [ ] Differential tests: run both implementations over the parity corpus and
-      the test fixtures; closures must be identical. Timing events must match
-      the contract.
+- [ ] Unit tests from the page-analysis and provenance contracts' explicit
+      cases; differential runs over the parity corpus and the fixtures against
+      the oracle: closures, references, and fingerprints must be identical, and
+      timing events must match the contract.
 - [ ] Commit.
 
 ## Milestone 11: Entry comparison loop in Rust
 
-- [ ] Port ignore normalization, material keys, document and page materiality,
-      the unchanged-view fast path decision, and the screen, document, page,
-      and flow comparison loop.
+Needs PR #158's code in the branch; see Sequencing.
+
+- [ ] Port ignore normalization, material keys, fingerprinted comparison
+      materials, document and page materiality, the unchanged-view decision
+      with the identical-text quick check and conservative resource proofs,
+      and the screen, document, page, and flow comparison loop.
 - [ ] Expose `compareCatalogue` for a catalogue without registered components;
       keep component catalogues on the TypeScript path until Milestone 13.
 - [ ] Differential tests over the corpus; the `review.compare-screens` counts
-      record must match.
+      (`views`, `fastPath`, `stylePath`, `completePath`) must match.
 - [ ] Commit.
 
 ## Milestone 12: CSS rule attribution in Rust
 
-- [ ] Port rule collection, the multiset diff, selector matching with the
-      ordered keep policy through the `selectors` crate against the
-      `html5ever` tree, and the reduction to one outcome. Include the inline
-      style attribution engine, shared page parses, and the style-only route
-      once the inline style branch has merged.
-- [ ] Expose `analyzeStylesheetChange`; differential tests over the CSS
-      fixtures and the review CSS test corpus, including every unresolved
-      construct in the keep-list.
+Pure analysis that can start before PR #158 merges.
+
+- [ ] Add `crates/mokly-css`: rule collection through the `lightningcss` crate
+      with locations, the segment scanner and batched verification with the
+      whole-element fallback, byte-bounded LRU caches for whole inputs and
+      verified segments, stored rule data (address, identity, rank, canonical
+      text, references, custom flag), and the multiset diff with
+      changed-segment cancellation, unchanged-reference pairing, and
+      stored-text composition.
+- [ ] Port selector matching with the ordered keep list through the
+      `selectors` crate against page-analysis subjects in original-page
+      context, nesting parents through `:is()`, state stripping, and the
+      reduction to one outcome; port own-page rule membership for linked
+      stylesheets and inline attribution (`unresolved`, `excluded`, `entry`,
+      `owned`) with innermost-range owners, paired instances, and `propsKey`
+      inheritance.
+- [ ] Port the style-only route: its six eligibility conditions, result,
+      fallback, counters, and per-view proof, with the full comparison as its
+      oracle through a named switch.
+- [ ] Expose `analyzeStyles` for one paired view; differential tests over the
+      CSS fixtures, the review CSS corpus, and the oracle, including every
+      unresolved construct and the approved displacement and matched-copy
+      differences, which need exact expected results.
 - [ ] Commit.
 
 ## Milestone 13: Component classification in Rust
 
-- [ ] Port ownership projection, range validation, instance pairing, affected
-      consumers, variant classification, path evidence, and source validation.
+Needs PR #158's code in the branch.
+
+- [ ] Port ownership projection with actual and projected inline materials
+      and the canonical style rendering, range validation, instance pairing,
+      affected consumers, variant classification, path evidence, and source
+      validation.
+- [ ] Port non-CSS resource ownership as the union of renderer `resources`
+      records and inferred inline references, inline evidence emission with
+      its strict validation, and the catalogue v6 `resourceEvidence` payload.
 - [ ] `compareCatalogue` now handles component catalogues; differential tests
-      over the corpus and the component fixtures.
+      over the corpus and the component fixtures, with the fast path, the
+      style-only route, fingerprints, and segment reuse each switched off in
+      turn.
 - [ ] Commit.
 
 ## Milestone 14: Moves, Git evidence, and artifact assembly in Rust
 
+Needs PR #158's code in the branch.
+
 - [ ] Port merge-base resolution, changed-path discovery, baseline manifest
       reading, move pairing with its similarity passes, artifact assembly, and
       the removed-page preview capture. Return resource bytes without copying.
+- [ ] Port the core document-work collector and the material-work detail
+      collector behind `MOKLY_MATERIAL_WORK=1`, the
+      `review.inline-style-analysis` and `review.material-work` records,
+      `heapPeakMiB` beside the engine's resident bytes, and the benchmark
+      sample outcomes.
 - [ ] Expose `classifyChanges`: one call does the whole classification for
       Serve, export, publication, and the preview scripts, with cancellation
       and progress events. A generation is registered once and later calls
@@ -637,8 +778,9 @@ Capture the two defects as failing acceptance tests before fixing them.
       scripts to `classifyChanges`. Remove the 1 GB worker cap or replace it
       with the engine's documented budget.
 - [ ] With the user's recorded approval, delete the TypeScript comparison
-      implementation, the transitional switch, and the dependencies no other
-      module uses. `parse5` stays for build validation.
+      implementation, including the analysis modules PR #158 added, the
+      transitional switch, and the dependencies no other module uses.
+      `parse5` stays for build validation.
 - [ ] Update every README and protocol Delivery Status touched by the removal.
 - [ ] Commit.
 
@@ -672,3 +814,6 @@ Capture the two defects as failing acceptance tests before fixing them.
   per Serve start).
 - Decide whether an interim TypeScript mitigation for the Serve worker cap is
   wanted before the engine lands; it would be a separate plan.
+- Run the deferred classification performance acceptance of the benchmark
+  contract against the engine when the user re-enables it: reference and
+  candidate measured in one session on one machine, in alternating order.
