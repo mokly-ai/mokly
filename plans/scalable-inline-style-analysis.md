@@ -1,6 +1,6 @@
 # Scalable Inline Style Analysis
 
-Status: Active. Milestone 15 is in progress; the plan closes when PR #158 merges. Review findings stay recorded for the user's decision. Performance acceptance is deferred to a later plan.
+Status: Active. Milestones 1–15 are complete. Milestones 16 and 17 (the inline style evidence mockup and UI) are open; the plan closes when PR #158 merges. Review findings stay recorded for the user's decision. Performance acceptance is deferred to a later plan.
 
 Make inferred inline style ownership work, and work fast, on a full-size React
 Native Web catalogue. Mokly must stop retaining memory it does not need, bound
@@ -2249,7 +2249,7 @@ Supervisor decision (2026-10-10), after the user questioned compatibility code: 
       deletions, commit and push. Fetch main and report a new dry run if it moved;
       do not merge again. Stop if PR #182 has merged before the push.
 - [x] Discovered: merge main #193 (remote gate from a pushed base commit), and link its new protocol page from the protocol index. Evidence: `.context/scalable-inline-style-analysis/m15-merge/third/`.
-- [ ] After the push, use
+- [x] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`. Keep the review read-only, then apply the
       [review-fix rule](../docs/dev/review.md): fix `Auto-fix: yes` findings,
@@ -2275,6 +2275,8 @@ Supervisor decision (2026-10-10), after the user questioned compatibility code: 
       Finding 9: user decision (2026-10-12): record only. `a57a6d6c` ticked the replay, pin and gate TODOs before `887871bc`–`eac05a37` did that work, and it names the user as the owner of the WeakMap projection decision, which the supervisor made.
       Fix-round evidence: `.context/scalable-inline-style-analysis/m15-review/approved-round/`.
       User decision (2026-10-12): approve the fixture-only port in `tests/review_css_producer_scope.test.ts`. Its mock records the existing synthetic CSS rules through the production recorder. Keep every assertion, replay pin and exclusion unchanged.
+      Re-review of the fix round (`f43ee1a7..44bd21d8`) complete; report: `.context/scalable-inline-style-analysis/m15-review/rereview.md`. No `Auto-fix: yes` findings.
+      Re-review finding 1 (Low, docs): the 2026-10-11 supervisor decision on the replay projection of `records` has no superseded line after the user's 2026-10-12 decision (findings 1 and 2, option A); pending the user's decision.
 
 ## Milestone 16: Inline Style Evidence Mockup
 
