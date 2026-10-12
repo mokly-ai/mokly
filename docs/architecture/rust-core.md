@@ -122,8 +122,8 @@ Comparison works on trees, never on text offsets. The
   set of parsed pages.
 - Parsed CSS is cached by content hash with a byte bound; eviction changes time
   only.
-- The render cache and the base-side dependency cache are bounded by bytes;
-  a dependency install has a time limit.
+- The render cache, the base-side extraction cache, and the base-side
+  dependency cache are bounded by bytes; a dependency install has a time limit.
 - Sidecars are recycled after a fixed number of renders or when their
   resident size passes a fixed cap; the fragment cache makes a recycle cheap.
 - The acceptance milestone of the plan records the time and memory budgets for

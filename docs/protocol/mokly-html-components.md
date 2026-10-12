@@ -148,7 +148,7 @@ variants:
 
 Used from a screen as `<ui-button label="Save" tone="primary"></ui-button>`,
 it renders `<button class="btn btn-primary" type="button"><span
-class="btn-label">Save</span></button>` inside instance markers. The entry
+class="btn-label">Save</span></button>` as an ownership region. The entry
 `components/ui-button` has the variants `components/ui-button/primary` and
 `components/ui-button/disabled`.
 

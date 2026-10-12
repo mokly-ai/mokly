@@ -79,9 +79,10 @@ attributed authoring facade) ports to it directly and its metafile is the
 module inventory. Rolldown is reviewed again after the first release.
 
 The source root is the repository root for the head side of a comparison. For
-the base side it is the directory the
-[comparison contract](./mokly-comparison.md) extracted under its dependency
-tiers; the bundle resolves dependencies from that root's `node_modules`.
+the base side it is the directory into which the
+[comparison contract](./mokly-comparison.md) extracted the base commit, and the
+module resolution settings name the `node_modules` directory its dependency
+tiers chose: the working tree's or the installed base set.
 
 The bundle evaluates in the sidecar's own module context with the consumer's
 `require`. React and React DOM resolve from the consumer, as today. A bundle
@@ -106,7 +107,9 @@ A fragment carries the comment markers of the
 [comparison contract](./mokly-comparison.md) for the component instances,
 slots, and ignore regions it contains. `ReviewIgnore` writes an ignore pair; a
 disabled `ReviewIgnoreScope` suppresses the pairs inside it, so no scope marker
-exists. The binary reads the markers into tree ownership and drops them.
+exists. A fragment never emits `mokly-root`; the core attaches the root region
+of a component page itself. The binary reads the markers into tree ownership
+and drops them.
 
 ## Slots For JavaScript Components
 

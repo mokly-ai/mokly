@@ -24,12 +24,12 @@ provenance. On the approved line there is no generated manifest: the catalogue r
 from sources into a bounded cache, usage derives from the composed trees, and
 the snapshot is v4, as the [format inventory](./mokly-format-versions.md)
 states. Removed page preview
-metadata is v3 and delivery descriptors are v5 on both lines. No entry carries
-derived file names; the generated inventory lists exact paths. Markdown
-documents and their resource copies are implemented. Accepted move pairs carry `previousPath` in review records and
-the public read model; the manifest retains authored hints only.
-Current and baseline manifest readers accept only one version; earlier output
-follows [baseline compatibility](./mokly-baseline-compatibility.md).
+metadata is v3 and delivery descriptors are v5 on both lines. On the frozen line, no entry carries derived file names, the generated
+inventory lists exact paths, the manifest retains authored hints only, and
+current and baseline manifest readers accept only one version; earlier output
+follows [baseline compatibility](./mokly-baseline-compatibility.md). Markdown
+documents and their resource copies are implemented. Accepted move pairs carry
+`previousPath` in review records and the public read model on both lines.
 
 ## Location And Types
 

@@ -5,8 +5,9 @@ with exact plain output and rich error presentation.
 
 ## Delivery Status
 
-The paragraph labelled **Approved target** records pending notice-stream changes
-from [Generated Output Simplification](../../plans/generated-output-simplification.md).
+The paragraph labelled **Frozen target** records notice-stream changes from
+[Generated Output Simplification](../../plans/generated-output-simplification.md)
+that were approved for the TypeScript backend and are frozen with it, unlanded.
 The remaining plain and rich output rules describe current behaviour.
 
 ## Plain Compatibility
@@ -43,8 +44,8 @@ Expected plain errors remain exactly `[mokly/<code>] <message>\n`. Timing mode
 retains the same stdout and adds its documented JSON lines to stderr alongside
 baseline notes, build warnings and existing failures.
 
-**Approved target:** successful baseline preparation notes and the exact
-earlier-version notice use stdout, under the
+**Frozen target:** successful baseline preparation notes and the exact
+earlier-version notice were to use stdout, under the
 [watch-writer contract](./mokly-watch-writers.md#summaries-and-plain-notices).
 Warning-free successful plain commands write nothing to stderr except requested
 timing JSON. Build warnings and errors remain on stderr.

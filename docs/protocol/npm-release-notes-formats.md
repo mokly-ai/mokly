@@ -18,9 +18,9 @@ version. Malformed current results keep a plain invalid-review error with one
 message, with version numbers only in diagnostic details. Embedded viewers emit
 `onError` with code `"version"`; Current remains available without comparison panes.
 
-The approved watch-writer change moves successful plain baseline notes and the
-earlier-version notice to stdout; errors and requested timing JSON retain
-stderr. Referenced authored files are not private solely because of an extension
+The watch-writer change that moved successful plain baseline notes and the
+earlier-version notice to stdout is frozen with the TypeScript backend and
+never landed; errors and requested timing JSON retain stderr. Referenced authored files are not private solely because of an extension
 or build-folder name; source inputs, protected locations, hidden segments and
 symlinks remain private.
 

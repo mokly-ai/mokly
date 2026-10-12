@@ -14,8 +14,8 @@ for both catalogue kinds, including before a comparison is loaded. Screen-only
 delivery reuses accepted classification without a second resource analysis.
 See [CSS Change Attribution](../../plans/css-change-attribution.md).
 The [Rust rebuild plan](../../plans/rust-rebuild.md) keeps these stages on parsed trees under
-the [comparison contract](./mokly-comparison.md); recorded spans and text
-normalization are not used there.
+the [comparison contract](./mokly-comparison.md); recorded spans, text
+normalization, and the generated-tree inputs are not used there.
 
 Discovery of inserted links inside Review-ignore is implemented in
 [M28](../../plans/remove-source-path-evidence.md#milestone-28-fix-component-stylesheet-links).

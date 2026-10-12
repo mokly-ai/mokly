@@ -238,7 +238,8 @@ is a warning and does not stop Serve.
 
 ## Writing Watch Commands
 
-The approved writer target makes `build --watch` and `serve --build` use one summary helper
-as `build`, with `.` for an empty relative catalogue path. Report completed
-writes only. The [watch-writer contract](./mokly-watch-writers.md) defines
-cancellation and plain stdout notices; plain Serve performs no write.
+The writer target that makes `build --watch` and `serve --build` use one summary helper
+as `build`, with `.` for an empty relative catalogue path and completed writes
+only, was approved for the TypeScript backend and is frozen with it; it never
+landed. The [watch-writer contract](./mokly-watch-writers.md) records it; plain
+Serve performs no write.

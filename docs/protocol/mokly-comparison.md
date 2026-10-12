@@ -31,7 +31,7 @@ markers. Every comment name with the `mokly-` prefix is reserved for markers.
 | ---------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | `<!--mokly-instance:start id="r-3" path="…" instance="…" props="…"-->` | a rendered component instance; `props` is the canonical props digest |
 | `<!--mokly-slot:start id="r-3" name="children"-->`                     | slot content supplied to instance `r-3` by its enclosing owner       |
-| `<!--mokly-root:start id="r-0" path="…"-->`                            | the root component of a component page                               |
+| `<!--mokly-root:start id="r-0" path="…"-->`                            | the root component of a component page, attached by the core         |
 | `<!--mokly-ignore:start id="hero" key="…"-->`                          | a Review-ignore region with its optional material key                |
 | `<!--mokly-<kind>:end id="…"-->`                                       | closes the region with that id                                       |
 
@@ -66,7 +66,7 @@ name, attribute values and text decoded, runs of ASCII whitespace in text
 collapsed to one space except inside `pre`, `textarea`, `script`, and `style`,
 and non-marker comments kept. Two views with equal canonical forms are not
 material changes, so attribute order, entity spelling, and formatting do not
-count. Markers themselves are excluded from the form. Head `<style>` elements,
+count. Head `<style>` elements,
 owned and unowned, are excluded too; their rules enter the comparison only
 through the rule evidence of [Style Ownership](#style-ownership): a changed
 rule attributed to the entry makes the view `changed`, a rule attributed to a
@@ -129,14 +129,19 @@ HTML screens, components, and documents need no checkout. Both sides render
 with the current Mokly version, so a Mokly upgrade alone lists no change, and
 the render cache keeps a side's views until their inputs change.
 
-React and Storybook components at the base follow three dependency tiers:
+React and Storybook components, React screens, the consumer renderer module,
+and consumer PostCSS at the base need the base's JavaScript on disk. The base
+commit's sources are extracted on demand into a bounded cache keyed by the
+commit, and the sidecar bundles from that directory. Its dependencies follow
+three tiers:
 
 1. The base's lockfile and package manifests equal the working tree's: the
-   sidecar bundles the base's sources with the working tree's dependencies.
-2. They differ: the base commit is extracted into a bounded content-addressed
-   cache keyed by the lockfile hash and the package manager version, its
-   dependencies are installed with lifecycle scripts disabled under a time
-   limit, and the sidecar bundles from that directory.
+   bundle resolves dependencies from the working tree's `node_modules`
+   through the module resolution settings.
+2. They differ: the base's dependencies are installed, with lifecycle scripts
+   disabled and under a time limit, into a bounded cache keyed by the
+   lockfile hash and the package manager version, and the bundle resolves
+   them from there.
 3. The install cannot run, because the machine is offline, the package
    manager is unsupported, or the time limit passes: tier 1 applies and the
    `base-dependencies` warning names the differing lockfile.

@@ -23,7 +23,10 @@ from the removed `docs/dev` directory to
 [the protocol page](../docs/protocol/rust-rebuild-procedures.md). Later that day
 the user withdrew the committed generated tree: both comparison sides render
 from sources, export is a plain output, and the Milestone 1 contracts were
-revised to match (Decisions 11 to 13).
+revised to match (Decisions 11 to 13). The protocol index then moved eight
+generated-tree and baseline pages to retired and the CSS attribution and
+Markdown documents pages to rewritten; it lists 72 kept, 75 rewritten, and 21
+retired pages beside the five new contracts.
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
@@ -325,7 +328,8 @@ written to the repository.
 
 - [ ] Implement HTML components in `mokly-html`: prop schemas, scalar coercion,
       `$name` data references, named slots, attribute and text substitution,
-      `mokly-viewport`, `mokly-instance`, and the element registry.
+      `mokly-viewport`, `mokly-instance`, and the element registry with the
+      reserved `mokly-` prefix.
 - [ ] Implement screen composition: viewports, colour schemes, stylesheet
       rules, document assembly, `mock:` link rewriting, ignore regions with
       their scopes resolved, and the ownership annotations the comparison
@@ -376,6 +380,9 @@ through the sidecar, and the example catalogue renders again.
 - [ ] Implement component, screen, and story renders that return a fragment
       plus the styles the render produced; implement the fragment cache in
       Rust keyed by bundle generation, export, props, viewport, and scheme.
+- [ ] Register JavaScript components by `element` from `defineComponent`, with
+      the uniqueness rule, the reserved `mokly-` prefix, and the reserved-prop
+      failure of the components contract.
 - [ ] Implement live prop editing in Serve through the same render path.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and
@@ -392,10 +399,12 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [ ] Implement Git access in `mokly-git`: merge base, changed paths, bounded
       blob and tree reads, and archive extraction of a commit.
 - [ ] Implement base-side rendering: the base commit's Git tree as a source
-      tree through the build graph, the three dependency tiers of Decision 12
-      with the bounded install cache, scripts disabled, the time limit, and
-      the `base-dependencies` warning.
-- [ ] Implement tree comparison in `mokly-compare`: marker-derived ownership,
+      tree through the build graph, on-demand extraction of the base commit into
+      a cache keyed by commit, the three dependency tiers of Decision 12 with
+      the bounded install cache, scripts disabled, the time limit, and the
+      `base-dependencies` warning.
+- [ ] Implement tree comparison in `mokly-compare`: ownership regions attached
+      at composition,
       ignore regions, materiality on canonical trees, moves, documents, pages,
       affected consumers, and review result v8.
 - [ ] Implement CSS attribution in `mokly-css`: rule collection, diffing,
@@ -474,6 +483,15 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Open from the review of commit c0d01ac4, report under
+    `.context/rust-rebuild/review-2026-10-12-source-rendering.md`:
+  - 2: `mokly build` and `mokly check` have no distinct meaning without a
+    generated tree; fold them or define the difference.
+  - 3: the render, extraction, and dependency caches have no stated location,
+    and the no-writes rule needs the export exception.
+  - 4: ignore-scope precedence across the sidecar boundary is undefined.
+  - Observation: the sidecar has no method that returns the JavaScript
+    component registry (`element`, prop schema, slots, controls, variants).
 
 ## Post-merge follow-up (non-blocking)
 

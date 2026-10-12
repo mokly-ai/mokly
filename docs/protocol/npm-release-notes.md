@@ -52,7 +52,8 @@ macOS x64 and arm64, and Windows x64; other platforms are unsupported. Screens,
 components, pages and use cases may be HTML and YAML files. There is no
 generated tree: delete every committed `mokly-generated/` directory and
 `.mokly-cache`. Changes renders both commits from their sources, so it works
-across the upgrade. Review result v8 and read model v7 replace the earlier
+across the upgrade when the base commit's sources pass the current validation,
+and is unavailable with those diagnostics otherwise. Review result v8 and read model v7 replace the earlier
 numbers; no reader accepts an earlier number. The authoring API and config load with no compatibility shims. Mokly
 Cloud resets and republishes; the upload exchange is unchanged.
 
