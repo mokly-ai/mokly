@@ -398,7 +398,7 @@ change: rows, icons, crumbs, and the details inspector look the same.
 - [x] Commit and push. The v1-to-v2 fixture replacement is recorded in the
       commit messages; copy it into the PR description when the PR is opened.
 - [x] Review the complete local diff against `origin/main` using
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b4314fec74ea931862a8ab2afab69d560040396a/docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
       recommendation, without changing the implementation. Two independent
@@ -551,7 +551,7 @@ mockup, or visual change.
 - [x] Run `cargo xtask check`; fix anything it reports until it passes.
 - [x] Commit and push.
 - [x] Review the complete local diff against `origin/main` using
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b4314fec74ea931862a8ab2afab69d560040396a/docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
       recommendation, without changing the implementation. Two independent
@@ -693,7 +693,7 @@ product change.
 - [x] Run `cargo xtask check`; fix anything it reports until it passes.
 - [x] Commit and push.
 - [x] Review the complete local diff against `origin/main` using
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b4314fec74ea931862a8ab2afab69d560040396a/docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
       recommendation, without changing the implementation. Two independent
@@ -784,7 +784,7 @@ change.
 - [x] Run `cargo xtask check`; fix anything it reports until it passes.
 - [x] Commit and push.
 - [x] Review the complete local diff against `origin/main` using
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b4314fec74ea931862a8ab2afab69d560040396a/docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
       recommendation, without changing the implementation. Two independent

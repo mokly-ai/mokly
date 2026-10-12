@@ -184,8 +184,9 @@ After a failure, fix it and rerun the narrowest command that covers it. Use the
 targeted commands for failing unit test files or browser specs. Use the failed
 `--suite` for repository or package findings. Then run the complete gate once
 more. If the gate cannot run, explain the blocker and list the checks already
-run. Documentation-only and plan-only changes retain the exception in
-[AGENTS.md](../../AGENTS.md): validate Markdown and review the diff.
+run. Documentation-only and plan-only changes keep the exception in the
+`finish-work` skill, which [AGENTS.md](../../AGENTS.md) names: validate the
+changed Markdown and review the diff.
 
 Any selected unit run, filtered Playwright run (including project selection),
 or single `cargo xtask check --suite` run is partial verification. A complete

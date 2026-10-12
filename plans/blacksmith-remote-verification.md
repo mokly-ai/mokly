@@ -380,7 +380,7 @@ Leave the final review to the separate reviewer.
 - [x] After the checks pass, run `git add -A`, commit with Conventional
       Commits and push the branch.
 - [x] After the push, a reviewer uses
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/fcc50591dd1a8d6d3b85c9c3c8160a6a4270294e/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`. The reviewer
       reports the findings. Keep the review read-only. The implementer then
       applies the review-fix rule in `AGENTS.md`. Fix the `Auto-fix: yes`
@@ -448,7 +448,7 @@ Required work:
 - [x] Update the plan after all checks pass. Run `git add -A`. Commit with
       Conventional Commits and push the branch.
 - [x] After the push, a reviewer uses
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/fcc50591dd1a8d6d3b85c9c3c8160a6a4270294e/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`. The reviewer
       reports the findings. Keep the review read-only. The implementer then
       applies the review-fix rule in `AGENTS.md`. Fix the `Auto-fix: yes`

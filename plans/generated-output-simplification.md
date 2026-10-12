@@ -2298,7 +2298,7 @@ The npm pin is 11.21.0; preserve its workflow and lockfile-shape checks.
       fix drift. Validate changed Markdown. If code changes, rerun the full gate.
 - [ ] `git add -A`; commit with Conventional Commits; push.
 - [ ] After the push, review the complete local diff against `origin/main`
-      using `docs/implementation-review-prompt.md`; report numbered findings
+      using the `implementation-review` skill; report numbered findings
       with severities and recommendations without changing the implementation.
 
 ## Post-merge follow-up (non-blocking)

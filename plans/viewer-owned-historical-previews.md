@@ -200,7 +200,7 @@ complete contract, and register the plan.
       diff; documentation-only work does not require `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/f23c376966343a226a8b7e76aee32a784cf08fa4/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -300,7 +300,7 @@ every host, keeping every existing preview regression green.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/f23c376966343a226a8b7e76aee32a784cf08fa4/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -348,7 +348,7 @@ is typed, and the completed removed-previews plan states the resolution.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/f23c376966343a226a8b7e76aee32a784cf08fa4/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.

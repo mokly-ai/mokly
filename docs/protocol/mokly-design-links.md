@@ -324,5 +324,5 @@ normal enhanced navigation. Do not equate these two contexts.
   target validation. A positive total-link count alone does not prove adoption.
 - Run the relevant suites and complete `cargo xtask check`, then commit all
   authored source and documentation changes and push. Keep generated output ignored. After the push, use the
-  [implementation review prompt](../implementation-review-prompt.md) against
-  `origin/main`; report findings without automatically fixing them.
+  `implementation-review` skill against `origin/main`; report findings
+  without automatically fixing them.

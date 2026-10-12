@@ -209,7 +209,7 @@ outside merge-blocking milestones.
       and a title of at most 50 characters, and push the branch, including all
       authored new files.
 - [x] Only after the push, review the complete local diff against `origin/main`
-      using [the implementation review prompt](../docs/implementation-review-prompt.md).
+      using [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/daa06c96c25b5733152e0ca8d79989c899c541b0/docs/implementation-review-prompt.md).
       Report every finding with severity, context, impact, lettered options
       and a recommendation; do not automatically fix review findings.
 

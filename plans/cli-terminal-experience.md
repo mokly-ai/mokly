@@ -125,7 +125,7 @@ Quiet the npm banners, smoke-test the real terminal, and deliver.
 - [x] Update `CHANGELOG`-adjacent release notes only if the release tooling requires it; otherwise leave release-please to generate them from the commit.
 - [x] Run `npm run typecheck`, `npm run lint`, `npm run format:check`, the full `npm test`, `npm run test:browser` and `cargo xtask check`; resolve failures.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits and push the branch.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md) to review the complete local diff against `origin/main`; report numbered, severity-rated findings with lettered options and a recommendation without changing the implementation.
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/ddb263ba694f94484debbea73916f67226d5b1f5/docs/implementation-review-prompt.md) to review the complete local diff against `origin/main`; report numbered, severity-rated findings with lettered options and a recommendation without changing the implementation.
 
 ## Milestone 6: Prominent Serve URL panel — completed
 
@@ -145,7 +145,7 @@ without changing plain-mode bytes or lifecycle behavior.
       `cargo xtask check`; resolve failures.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/ddb263ba694f94484debbea73916f67226d5b1f5/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report findings
       without changing the implementation.
 
@@ -161,7 +161,7 @@ interface before the pull request merges.
 - [x] Run the focused packaged-guide test and `cargo xtask check`.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/ddb263ba694f94484debbea73916f67226d5b1f5/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report findings
       without changing the implementation.
 

@@ -311,7 +311,7 @@ toggle test uses an isolated fixture with one variant parent.
       and a title of at most 50 characters, and push the branch. Include all
       authored new files and record approved route retirements.
 - [x] Only after the push, review the complete local diff against `origin/main`
-      using [the implementation review prompt](../docs/implementation-review-prompt.md).
+      using [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/daa06c96c25b5733152e0ca8d79989c899c541b0/docs/implementation-review-prompt.md).
       Report every finding with severity, context, impact, lettered options
       and a recommendation; do not automatically fix review findings.
 
@@ -341,7 +341,7 @@ the reviewed product implementation or applying review findings.
 - [x] After checks pass, run `git add -A`, commit with Conventional Commits,
       and push the branch with all authored files tracked.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/2ec4d837df2c2fdbd74453b5844a36bd9b4272bf/docs/implementation-review-prompt.md)
       against the complete diff from `origin/main`; report findings without
       changing the implementation.
 
@@ -523,7 +523,7 @@ type checks and formatting passed before the final gate retry.
 - [x] After checks pass, run `git add -A`, commit using Conventional Commits
       and push this branch; update PR #115 for the delivered snapshot fix.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/2ec4d837df2c2fdbd74453b5844a36bd9b4272bf/docs/implementation-review-prompt.md)
       on the complete diff against `origin/main`; report numbered findings with
       severity, impact, lettered options and recommendations without fixing them.
       The read-only review found one P3 parity issue in the reparented removed
@@ -583,7 +583,7 @@ relative links in 23 changed Markdown files resolve.
 - [x] After checks pass, `git add -A`, commit with a Conventional Commit,
       push the branch and update PR #115 for the completed parity fix.
 - [x] After the push, review the complete local diff against `origin/main`
-      with [the implementation review prompt](../docs/implementation-review-prompt.md)
+      with [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/2ec4d837df2c2fdbd74453b5844a36bd9b4272bf/docs/implementation-review-prompt.md)
       without changing the implementation; report numbered findings, severity,
       impact, lettered options and a recommended scope, if any.
 
@@ -622,7 +622,7 @@ adopting mainline Appearance's shared screen layout. The retired
 - [x] After checks pass, run `git add -A`, commit the merge using a
       Conventional Commit, and push the branch (`4a109ec`).
 - [x] After the push, review the complete local diff against `origin/main`
-      using [the implementation review prompt](../docs/implementation-review-prompt.md);
+      using [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/2ec4d837df2c2fdbd74453b5844a36bd9b4272bf/docs/implementation-review-prompt.md);
       report findings without changing the implementation.
 
 Post-push review of the integrated branch found no new concrete findings.

@@ -189,7 +189,7 @@ required before runtime UI work begins.
 - [x] After checks pass, include all updated docs, sources, tests and generated
       artifacts with `git add -A`, commit and push this branch. Then review the
       complete diff against `origin/main` with
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md),
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/d4228f90b97b2698a1b6bed53ddbdf446d4750c8/docs/implementation-review-prompt.md),
       report findings without automatic fixes, and stop before Milestone 3.
 
 Delivered: the fifteen appearance screens and the two appearance-related
@@ -254,7 +254,7 @@ this is mockup authoring, not runtime work, and the viewer API is unchanged.
       flow screens in both viewports, and include regenerated output.
 - [x] After checks pass, `git add -A`, commit and push this branch. Then review
       the complete diff against `origin/main` with
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md),
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/d4228f90b97b2698a1b6bed53ddbdf446d4750c8/docs/implementation-review-prompt.md),
       report findings without automatic fixes, and stop for the user's mockup
       review before Milestone 2C.
 
@@ -309,7 +309,7 @@ no authored scheme pairs.
 - [x] Add or update inventory, link and both-scheme tests; run the example
       build and check, relevant tests and `cargo xtask check`; smoke through
       `npm run dev`; commit and push; then review with
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/d4228f90b97b2698a1b6bed53ddbdf446d4750c8/docs/implementation-review-prompt.md)
       against `origin/main` and report findings without fixing them.
 
 Delivered: `design-browse-screen`, `design-browse-details-screen` and
@@ -345,7 +345,7 @@ component should own it instead of each screen opting in.
       `cargo xtask check`; smoke both viewports through `npm run dev`,
       including a narrow top bar and a component-explorer artboard.
 - [x] Commit and push, then review with
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/d4228f90b97b2698a1b6bed53ddbdf446d4750c8/docs/implementation-review-prompt.md)
       against `origin/main` and report findings without fixing them.
 
 Delivered: `chrome/top-bar` requires its `appearance` prop and always composes
@@ -398,7 +398,7 @@ design documentation; none changes the viewer package.
       include regenerated output.
 - [x] After checks pass, `git add -A`, commit and push; then review the
       complete diff against `origin/main` with
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/d4228f90b97b2698a1b6bed53ddbdf446d4750c8/docs/implementation-review-prompt.md)
       and report findings without fixing them.
 
 Delivered: the Welcome comparison family — `design-changes-current`,
@@ -458,7 +458,7 @@ product behaviour.
 - [x] Confirm `git diff --diff-filter=D --name-status <merge-base>..HEAD`
       lists only the approved removals, then `git add -A`, commit and push;
       then review the complete diff against `origin/main` with
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/d4228f90b97b2698a1b6bed53ddbdf446d4750c8/docs/implementation-review-prompt.md)
       and report findings without fixing them.
 
 ## Milestone 2G: Align control boundaries and mockup copy (complete)
@@ -493,7 +493,7 @@ several descriptions still describe the superseded independent-preview model.
       under `.context/` prefixed `m2g-`, and include regenerated output.
 - [x] Commit and push, then review the complete diff against `origin/main`
       with
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/d4228f90b97b2698a1b6bed53ddbdf446d4750c8/docs/implementation-review-prompt.md)
       and report findings without fixing them.
 
 Delivered: the Appearance selector hover, the hovered or checked view controls
@@ -532,7 +532,7 @@ and 24.20 as well, and the CLI preflight still accepts the affected releases.
 - [x] Run `npm run build`, `npm test`, the browser suite and
       `cargo xtask check`; commit and push; then review the complete diff
       against `origin/main` with
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/d4228f90b97b2698a1b6bed53ddbdf446d4750c8/docs/implementation-review-prompt.md)
       and report findings without fixing them.
 
 ## Milestone 2I: Widen the boundary audit to every design stylesheet (complete)
@@ -559,7 +559,7 @@ be consulted because status badges are not state selectors.
       the design unit and browser suites and `cargo xtask check`; smoke the
       selected-variant pill through `npm run dev`; commit and push; then
       review the complete diff against `origin/main` with
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/d4228f90b97b2698a1b6bed53ddbdf446d4750c8/docs/implementation-review-prompt.md)
       and report findings without fixing them.
 
 Delivered: `tests/helpers/design_styles.ts` scans every design stylesheet,
@@ -592,7 +592,7 @@ scans, so the gate fails on generated third-party files after a browser run.
 - [x] Run the browser suite, then `cargo xtask check` without cleaning, and
       confirm the gate passes with the scratch present; commit and push; then
       review the complete diff against `origin/main` with
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/d4228f90b97b2698a1b6bed53ddbdf446d4750c8/docs/implementation-review-prompt.md)
       and report findings without fixing them.
 
 Delivered: the flat ESLint configuration imports the repository `.gitignore`
@@ -636,7 +636,7 @@ threshold. Close them so the audit enforces the contract without gaps.
       comparison-mode control and a disabled action in both schemes through
       `npm run dev`; commit and push; then review the complete diff against
       `origin/main` with
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/d4228f90b97b2698a1b6bed53ddbdf446d4750c8/docs/implementation-review-prompt.md)
       and report findings without fixing them.
 
 Delivered: `.mbk-seg` and the inspection `.ce-button` moved to
@@ -685,7 +685,7 @@ the audit by omission rather than by a stated rule.
       the design unit and browser suites and `cargo xtask check`; smoke a
       linked tag chip in both schemes through `npm run dev`; commit and push;
       then review the complete diff against `origin/main` with
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/d4228f90b97b2698a1b6bed53ddbdf446d4750c8/docs/implementation-review-prompt.md)
       and report findings without fixing them.
 
 Delivered: `.mbk-chip:is(a)` draws `--chrome-control-edge` while a label chip
@@ -727,7 +727,7 @@ only by two tests in combination.
 - [x] Run `npm run build`, `npm run example:build`, `npm run example:check`,
       the design unit and browser suites and `cargo xtask check`; commit and
       push; then review the complete diff against `origin/main` with
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/d4228f90b97b2698a1b6bed53ddbdf446d4750c8/docs/implementation-review-prompt.md)
       and report findings without fixing them. Further Low findings on the
       design audit are recorded for the user rather than opening another
       mockup milestone, so runtime work can begin.
@@ -954,7 +954,7 @@ Deliver a tested change with accurate documentation and a complete review diff.
       title of at most 50 characters, and push the current branch. Include all
       newly created files and regenerated artifacts in the commit and push.
 - [x] Only after the push, use
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/d4228f90b97b2698a1b6bed53ddbdf446d4750c8/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`, including staged,
       unstaged and untracked files. Report numbered findings with severity,
       feature context, impact, lettered solution options and a recommended
@@ -994,7 +994,7 @@ complete pushed result without changing it in response to that review.
 - [x] Run `git add -A`, commit the merge using a Conventional Commit, push the
       current branch, and verify the remote ref and clean worktree.
 - [x] Only after the push, use
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/d4228f90b97b2698a1b6bed53ddbdf446d4750c8/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`. Report findings
       without changing the implementation.
 
@@ -1024,7 +1024,7 @@ Complete the focused browser checks and repository verification before delivery.
 - [x] After all checks pass, run `git add -A`, commit using Conventional Commits,
       push the current branch, and verify the remote ref and clean worktree.
 - [x] Only after the push, use
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/d4228f90b97b2698a1b6bed53ddbdf446d4750c8/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`. Report findings
       without changing the implementation.
 
@@ -1067,6 +1067,6 @@ Validate and deliver the palette alignment on the current branch.
 - [x] After checks pass, run `git add -A`, commit using Conventional Commits,
       push the current branch, and verify the remote ref and clean worktree.
 - [x] Only after the push, use
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/d4228f90b97b2698a1b6bed53ddbdf446d4750c8/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`. Report findings
       without changing the implementation.

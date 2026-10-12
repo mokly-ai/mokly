@@ -198,7 +198,7 @@ completely before any code changes.
       repeat the prepared unit suite.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -247,7 +247,7 @@ catalogue before any UI implementation.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -290,7 +290,7 @@ viewer's document rendering and browser entry, not the CLI server.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -336,7 +336,7 @@ layer without emitting scoped bootstraps yet, so product behavior is unchanged.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -412,7 +412,7 @@ emits them, while complete catalogues keep today's behavior.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -527,7 +527,7 @@ Summary: switch Serve and export/preview capture to route-scoped bootstraps.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -557,7 +557,7 @@ the delivered behavior.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -601,7 +601,7 @@ coverage or behavior.
   - Pushed `bdb7780` (`test(viewer): split capability suites`) to
     `calummoore/route-scoped-shell-bootstrap`.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -648,7 +648,7 @@ evidence bound to the current request.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -697,7 +697,7 @@ At #96, the browser shard 2 job took 897 s.
 ### Milestone 1 — 2026-09-25
 
 - Reviewed the complete pushed `origin/main...b18ac46` diff using
-  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+  [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md).
 - Initial self-review findings: none.
 - Residual test risk: this milestone defines the documentation contract only.
   Historical-route scope resolution, loading/failed retry transitions,
@@ -729,7 +729,7 @@ use-case and page targets so their installed scope matches their route.
 ### Milestone 2 — 2026-09-25
 
 - Reviewed the complete pushed `origin/main...d1ef60b` diff using
-  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+  [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md).
 - Findings: none.
 - Residual test risk: these are static design states. The runtime transitions,
   retry behavior and in-place usage adoption remain intentionally deferred to
@@ -753,7 +753,7 @@ use-case and page targets so their installed scope matches their route.
 ### Milestone 3 — 2026-09-25
 
 - Reviewed the complete pushed `origin/main...3a4fda8` diff using
-  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+  [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md).
 - Findings: none.
 - Residual test risk: the before/after interaction timings are single profiles
   and therefore include ordinary scheduling noise. Structural serializer
@@ -763,7 +763,7 @@ use-case and page targets so their installed scope matches their route.
 ### Milestone 4 — 2026-09-25
 
 - Reviewed the complete pushed `origin/main...378f9a1` diff using
-  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+  [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md).
 
 1. **Low — The capability descriptor value and its serialized text can
    disagree.** `StandaloneShellDocument` accepts both `capabilityDescriptor`
@@ -796,7 +796,7 @@ use-case and page targets so their installed scope matches their route.
 ### Milestone 5 — 2026-09-25
 
 - Reviewed the complete pushed `origin/main...d25df6d` diff using
-  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+  [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md).
 
 1. **Medium — Returning to the initial route can reuse private workspace data
    before route evidence is adopted.** `useWorkspaceData` accepts
@@ -849,7 +849,7 @@ use-case and page targets so their installed scope matches their route.
   TypeScript typechecks passed. The complete gate passed 2,449 unit and 789
   browser tests, with zero failures, skips or cancellations.
 - Re-reviewed the complete pushed `origin/main...e9e1dea` diff using
-  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+  [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md).
   No additional findings were identified by the correction review.
 - **Still deferred — Medium:** the numbered A → B → A initial-workspace finding
   above was not fixed. Milestone 6 must restate it prominently in its review
@@ -860,7 +860,7 @@ use-case and page targets so their installed scope matches their route.
 ### Milestone 6 — 2026-09-26
 
 - Reviewed the complete pushed `origin/main...b386d76` diff using
-  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+  [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md).
 - The review was read-only; none of the findings below changed the
   implementation.
 
@@ -975,7 +975,7 @@ use-case and page targets so their installed scope matches their route.
 ### Milestone 6 correction review — 2026-09-26
 
 - Reviewed the complete pushed `origin/main...b5e9e37` diff using
-  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+  [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md).
   The review was read-only; no implementation was changed.
 - No new findings. The correction removes the unreviewed build transform,
   restores one checked hydration implementation, and tests the corrected
@@ -1067,7 +1067,7 @@ are retained under `.context/test-timings/m7/`.
 ### Milestone 7 review — 2026-09-26
 
 - Reviewed the complete pushed `origin/main...47b0b96` diff using
-  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+  [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md).
   The review was read-only; no implementation was changed.
 - No new findings. The three previously deferred findings remain the complete
   final review result:
@@ -1123,7 +1123,7 @@ are retained under `.context/test-timings/m7/`.
 ### Milestone 8 review — 2026-09-26
 
 - Reviewed the complete pushed `origin/main...bdb7780` diff using
-  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+  [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md).
   The review was read-only; no implementation was changed.
 - No new findings. The split preserves all 14 test names, bodies, assertions,
   helper bodies and ordering, and every resulting test file is below 300 lines.
@@ -1167,7 +1167,7 @@ are retained under `.context/test-timings/m7/`.
 ### Milestone 9 review — 2026-09-26
 
 - Reviewed the complete pushed `origin/main...26e7984` diff using
-  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md),
+  [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b2c82c1591c91f2550a66c464833b1f864bdab07/docs/implementation-review-prompt.md),
   focusing on `26e7984` (`fix(viewer): bind live Usage to current request`).
   The review was read-only.
 - The Medium A → B → A finding is fixed by `26e7984`. Only

@@ -403,7 +403,7 @@ results, and the dependency audit history.
       review.
 - [x] Run `git add -A`, commit with a Conventional Commits message, and push.
 - [x] After the push, review the complete local diff against `origin/main`
-      with [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      with [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/eb5d2cdcc42c81659b3a6d51562461bbbfe01806/docs/implementation-review-prompt.md)
       and report findings without changing the implementation.
 
 The review ran on `cb28f59b`. Milestone 7 applies the user's decisions below:
@@ -493,7 +493,7 @@ in #146, which the branch merged before the complete gate ran.
 - [x] Commit completed work locally in logical Conventional Commits.
 - [x] Run git add -A, commit with a Conventional Commits message, and push.
 - [x] After the push, review the complete local diff against `origin/main`
-      with [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      with [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/eb5d2cdcc42c81659b3a6d51562461bbbfe01806/docs/implementation-review-prompt.md)
       and report findings without changing the implementation.
 
 The review ran on `78b35567`. Its findings go to the user for a decision and
@@ -541,7 +541,7 @@ Evidence: `.context/attribution-test-consolidation/milestone-8-round-2-validatio
 - [x] Run `git add -A`, commit with a Conventional Commits message that names
       the fixed findings, and push.
 - [x] After the push, re-run the review once with
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/eb5d2cdcc42c81659b3a6d51562461bbbfe01806/docs/implementation-review-prompt.md)
       against `origin/main`. Fix any new `Auto-fix: yes` findings once, then
       stop and report the rest.
   - [x] Re-review finding 1 (Low, docs or spec, small; Auto-fix: yes): correct

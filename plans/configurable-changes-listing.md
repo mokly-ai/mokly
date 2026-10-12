@@ -128,7 +128,7 @@ No visual change: the viewer reads listing from the shared function.
 - [ ] Run `cargo xtask check`; fix anything it reports until it passes.
 - [ ] Commit and push.
 - [ ] Review the complete local diff against `origin/main` using
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      the `implementation-review` skill
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
       recommendation, without changing the implementation.

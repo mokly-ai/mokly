@@ -279,7 +279,7 @@ authored values.
       Serve suites, then run `cargo xtask check` under a supported Node release.
 - [ ] Run `git add -A`, commit the completed fixes using Conventional Commits,
       and push the branch.
-- [ ] After the push, use `docs/implementation-review-prompt.md` to review the
+- [ ] After the push, use the `implementation-review` skill to review the
       complete local diff against `origin/main`; report findings without
       changing the implementation.
 

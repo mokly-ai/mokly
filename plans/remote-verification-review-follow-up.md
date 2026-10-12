@@ -208,7 +208,7 @@ Evidence: `.context/remote-verification-review-follow-up/milestone-6.md`, `merge
 - [x] After the checks pass, run `git add -A`, commit with Conventional
       Commits and push the branch.
 - [x] After the push, a reviewer uses
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/3ce2fb554ede6448a9940222ad1ea01e93b1bdd5/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and reports the
       findings. Keep the review read-only. The implementer then applies the
       review-fix rule in `AGENTS.md`: fix the `Auto-fix: yes` findings, run
