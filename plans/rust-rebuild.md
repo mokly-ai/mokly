@@ -7,9 +7,12 @@ to remove the replaced JavaScript and its tests together instead of
 incrementally, to treat the old outputs as guidance rather than an exact
 parity target, to keep counting format versions instead of resetting to v1, to
 provide no backward compatibility with old output, to reset Mokly Cloud, and to
-keep the upload exchange protocol unchanged. Milestones 1 and 2 of this plan
-land in one pull request; the follow-on plans listed under Programme carry the
-Rust core, one pull request each. No milestone is complete.
+keep the upload exchange protocol unchanged. The user also decided that
+everything needed for the new version lands in this one plan and one pull
+request, and overrode, for this pull request only, the plan rules that bind
+one plan to one pull request and that require a functioning product after
+every milestone: the branch has no CLI between Milestone 2 and Milestone 6.
+No milestone is complete.
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
@@ -57,14 +60,26 @@ more than re-deriving the behaviour from the requirements.
    not change. They carry bytes and digests and never interpret the catalogue.
 8. The first release of the new core is a 0.x minor version with a
    breaking-change release note.
+9. HTML screens and components carry their front matter in a leading `---`
+   block with the same delimiter rule as Markdown documents. No comment form
+   is accepted, so there is one way to write it. Mokly's own attributes keep
+   their short names, `mokly-viewport` and `mokly-instance`; strict HTML
+   validity is not a goal of the format.
+10. The sidecar bundles consumer JavaScript and reports the module graph;
+    Rust owns invalidation and caching. Milestone 1 chooses between esbuild
+    and Rolldown for that bundling and records why.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
   Milestone 2. The teardown commit restates them.
-- The functioning-product rule is suspended between the teardown and the
-  follow-on plan that serves a catalogue again. The viewer package keeps
+- The functioning-product rule is suspended between the teardown and
+  Milestone 6, which serves a catalogue again. The viewer package keeps
   working throughout.
+- Pending the user's approval, under the rule that a new gate needs it: the
+  Rust advisory audit, the generated-TypeScript byte-identity check, and the
+  time and memory budgets of Milestone 14. Milestone 3 records the answer
+  before adding any of them.
 
 **Architecture:**
 
@@ -105,19 +120,14 @@ skeleton the follow-on plans need; changing the viewer's presentation;
 compatibility readers; a pure YAML screen format; loops or expressions in HTML
 bodies; pixel comparison.
 
-## Programme
+## Order of work
 
-This plan lands the spec and the teardown. The Rust core follows in these
-plans, created when their predecessor merges, one pull request each, in this
-order: workspace skeleton and native packaging; HTML screens and components
-end to end with the catalogue, manifest v11, read model v7, Serve through the
-viewer, and export; the sidecar for React, Storybook, the viewer shell, and
-live prop editing; Changes with tree comparison, CSS attribution, tracked and
-rebuilt baselines, review v8, and snapshot v4; watch and incremental builds;
-publish through the unchanged exchange and the first 0.x release; and
-large-project acceptance on the large fixture, bookfolio, and the Mokly Cloud
-catalogue. Each follow-on plan runs the gap sweep of Milestone 1 for its
-subsystem before it closes.
+The milestones run in order on one branch. Milestones 1 and 2 remove the old
+backend; Milestones 3 to 6 restore a CLI that serves HTML catalogues;
+Milestones 7 to 13 add the sidecar, Changes, watch, export, publish, and
+release packaging; Milestone 14 proves scale; Milestone 15 closes the plan.
+Each milestone runs the gap sweep of Milestone 1 for its subsystem before it
+closes. Milestones tagged `ui` change only the viewer package.
 
 ## Milestone 1: Architecture spec and contracts
 
@@ -135,7 +145,12 @@ without guesswork, and every protocol page is classified.
 - [ ] Write `docs/protocol/mokly-html-screens.md` and
       `docs/protocol/mokly-html-components.md` from the HTML screens plan's
       decisions and the HTML component format above, each with one worked
-      example and exact diagnostics.
+      example and exact diagnostics, with the `---` front matter rule of
+      Decision 9, and with the file kinds for pages, flows, and use cases
+      that need no JavaScript (YAML or HTML files, decided here).
+- [ ] Decide and record the sidecar bundler (Decision 10), the consumer
+      PostCSS worker, the React style-collection rule, and the Storybook
+      portable-stories entry.
 - [ ] Write `docs/protocol/mokly-comparison.md` and revise
       `mokly-css-attribution.md`: tree materiality, marker-derived ownership,
       the inline style rule for whole-screen entries, Changes membership,
@@ -159,9 +174,10 @@ without guesswork, and every protocol page is classified.
 
 ## Milestone 2: Reference capture and teardown
 
-At completion the tree holds the viewer, the kept specs, the authored example
-content, a trimmed `xtask`, and a green reduced gate. No CLI exists until the
-follow-on plans restore it.
+At completion the branch holds the viewer, the kept specs, the authored
+example content, a trimmed `xtask`, and a green reduced gate. No CLI exists
+until Milestone 6. `main` keeps the old backend until this pull request
+merges; the freeze applies to it from 2026-10-12.
 
 - [ ] Confirm the landable pull requests merged: #135, #182, and the test and
       CI housekeeping; the user merges them.
@@ -190,6 +206,190 @@ follow-on plans restore it.
       release path.
 - [ ] Run `cargo xtask check` on the reduced tree until it passes.
 - [ ] Record the deleted top-level paths in the commit body.
+- [ ] Commit.
+
+## Milestone 3: Workspace skeleton and native packaging
+
+At completion the Rust workspace builds, the `mokly` binary runs `--help` and
+`--version`, and the platform packages, shim, and CI build steps exist.
+
+- [ ] Add the crates: `mokly-model` (shared shapes, canonical JSON, generated
+      TypeScript), `mokly-cli` (the binary, clap grammar, terminal output),
+      `mokly-platform` (exclusive rename, process groups, Windows job objects),
+      `mokly-git` (command runner, bounded batches), and `mokly-sidecar` (the
+      client of the sidecar protocol). Later milestones add their own crates.
+      Each crate has a README with the required sections.
+- [ ] Add the five `@mokly/native-<target>` workspace packages, the shim in
+      `@mokly/mokly` that resolves the binary and checks versions, and the
+      `cargo xtask build-native` and `generate-types` commands; `npm run build`
+      builds the host target.
+- [ ] Extend `xtask check`: Rust formatting, Clippy, tests, file length, the
+      generated-type byte-identity check and the Rust advisory audit once
+      approved, and the viewer suite. CI builds the native artifacts in every
+      job and on the Testbox through `rust-toolchain.toml`.
+- [ ] Record the gate approvals from the Status section before adding the gates.
+- [ ] Commit.
+
+## Milestone 4: Catalogue model and discovery
+
+At completion `mokly build` discovers a catalogue of HTML screens, HTML
+components, Markdown documents, pages, flows, and use cases, validates it, and
+writes manifest v11 without rendering.
+
+- [ ] Implement roots, default globs, folder records, path identity, variants,
+      moves hints, and the diagnostics of the identity contracts in
+      `mokly-catalogue`.
+- [ ] Implement the front matter parser and the file kinds decided in
+      Milestone 1, with exact diagnostics and line and column reporting.
+- [ ] Implement manifest v11 in `mokly-model` with canonical JSON, the source
+      inventory, and the generated TypeScript types.
+- [ ] Behaviour tests from fixtures: one catalogue per identity rule, every
+      diagnostic, and the reference catalogue's entry set.
+- [ ] Commit.
+
+## Milestone 5: HTML rendering and generated output
+
+At completion `mokly build` and `mokly check` render HTML screens and
+components into `mokly-generated/` under the tracked and untracked rules.
+
+- [ ] Implement HTML components in `mokly-html`: prop schemas, scalar coercion,
+      `$name` data references, named slots, attribute and text substitution,
+      `mokly-viewport`, `mokly-instance`, and the element registry.
+- [ ] Implement screen composition: viewports, colour schemes, stylesheet
+      rules, document assembly, `mock:` link rewriting, ignore markers, and the
+      component and ignore marker comments the comparison relies on.
+- [ ] Implement the output transaction: staging, atomic install through
+      `mokly-platform`, the tracked and untracked rules, the check command, and
+      the public closure policy for referenced assets.
+- [ ] Implement stylesheet handling on `lightningcss`: imports, assets, and
+      per-root bundles.
+- [ ] Port the example catalogue's HTML-only parts and add HTML fixtures; run
+      the gap sweep against the rendering and output contracts.
+- [ ] Write the HTML authoring guides under `docs/guides`.
+- [ ] Commit.
+
+## Milestone 6: Sidecar foundation and Serve
+
+At completion `mokly serve` serves an HTML catalogue through the viewer. The
+sidecar exists only to render the viewer shell.
+
+- [ ] Implement the sidecar protocol in `@mokly/mokly` and `mokly-sidecar`:
+      process pool, newline-delimited JSON, cancellation, timeouts, fail-closed
+      rules, and the shell render with its per-route cache.
+- [ ] Implement the server in `mokly-server`: static delivery, the public read
+      model v7, shell routes, live update streams, shutdown ordering, and the
+      terminal output contract in the CLI.
+- [ ] Behaviour tests: every route shape, delivery descriptors, and shutdown.
+- [ ] Commit.
+
+## Milestone 7: Viewer reads read model v7
+
+Tags: ui
+
+- [ ] Update the viewer's data readers and validators to the generated read
+      model v7 types; no presentation change.
+- [ ] Run the viewer suite and the hydration routes against the Milestone 6
+      server.
+- [ ] Commit.
+
+## Milestone 8: Sidecar rendering for JavaScript
+
+At completion React components, React screens, and Storybook stories render
+through the sidecar, and the example catalogue renders again.
+
+- [ ] Implement consumer bundling in the sidecar with the bundler of Decision
+      10, the module graph report, the consumer renderer module, React
+      resolution from the consumer, and the optional consumer PostCSS worker.
+- [ ] Implement component, screen, and story renders that return a fragment
+      plus the styles the render produced; implement the fragment cache in
+      Rust keyed by bundle generation, export, props, viewport, and scheme.
+- [ ] Implement live prop editing in Serve through the same render path.
+- [ ] Restore the example catalogue, the design catalogue, and a packed
+      consumer smoke; run the gap sweep against the old rendering and
+      component contracts.
+- [ ] Write the JavaScript authoring guides.
+- [ ] Commit.
+
+## Milestone 9: Changes
+
+At completion Serve and the CLI classify changes against the Git base with
+tree comparison, CSS attribution, and both baseline kinds.
+
+- [ ] Implement Git evidence in `mokly-git`: merge base, changed paths, and
+      bounded blob reads.
+- [ ] Implement baselines: tracked output through blobs, and rebuilt output
+      through the base's own commands with the cache, locks, extraction
+      limits, and process scopes of the storage contract.
+- [ ] Implement tree comparison in `mokly-compare`: marker-derived ownership,
+      ignore regions, materiality on canonical trees, moves, documents, pages,
+      flows, affected consumers, and review result v8.
+- [ ] Implement CSS attribution in `mokly-css`: rule collection, diffing,
+      selector matching with the keep list, own-page membership, the inline
+      rule for whole-screen React entries, and a content-addressed parsed-CSS
+      cache.
+- [ ] Implement background classification in Serve, the change snapshot v4,
+      and on-demand comparison snapshots and panes.
+- [ ] Behaviour tests from the captured scenarios, rewritten in the new
+      formats; run the gap sweep against the Changes, attribution, and
+      baseline contracts.
+- [ ] Commit.
+
+## Milestone 10: Viewer reads review v8 and snapshot v4
+
+Tags: ui
+
+- [ ] Update the viewer's review and snapshot readers to the generated types;
+      comparison panes and Changes presentation do not change.
+- [ ] Run the viewer suite against Milestone 9 output.
+- [ ] Commit.
+
+## Milestone 11: Watch and incremental builds
+
+- [ ] Implement the content-addressed build graph: inputs hashed per entry,
+      invalidation from the sidecar's module graph, HTML component
+      dependencies, stylesheet dependencies, and PostCSS reports.
+- [ ] Implement the watcher with the denial rules, rebuild on change, bundle
+      replay for HTML-only edits, and live updates to the viewer.
+- [ ] Behaviour tests that count rebuilds and renders per change.
+- [ ] Commit.
+
+## Milestone 12: Export and publish
+
+- [ ] Implement export in `mokly-export`: the complete static catalogue,
+      delivery descriptors, the ownership marker, and the transaction with
+      backup, exclusive rename, and rollback.
+- [ ] Implement publish through the unchanged exchange v1: plan, blobs,
+      complete, retries, accounting, the clean-checkout and uncommitted
+      changes rules, and the upload validation fixtures.
+- [ ] Restore the preview deployment workflow on the new CLI.
+- [ ] Write the export and publish guides.
+- [ ] Commit.
+
+## Milestone 13: Release packaging
+
+- [ ] Add the release build matrix for the five targets, the package set
+      (viewer, five platform packages, CLI), the registry guards, and the
+      publish order.
+- [ ] Update Release Please for the package set and write the breaking-change
+      release note for the first 0.x release of the new core.
+- [ ] Dry-run the release scripts locally; the real publication is post-merge.
+- [ ] Commit.
+
+## Milestone 14: Large-project acceptance
+
+- [ ] Port the large fixture generator with HTML and React variants and the
+      four-scenario benchmark harness; record the time and memory budgets in
+      the timings contract once approved.
+- [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
+      through build, serve, Changes, watch, and export; save the evidence
+      under `.context/rust-rebuild/`.
+- [ ] Complete the gap sweep: every triage decision is in a spec or recorded
+      as an accepted difference for the release note.
+- [ ] Commit.
+
+## Milestone 15: Verification, close-out, and review
+
+- [ ] Run `cargo xtask check`; fix anything it reports until it passes.
 - [ ] Commit and push.
 - [ ] Review the complete local diff against `origin/main` using
       `docs/implementation-review-prompt.md`. Report findings with numbers,
@@ -199,8 +399,7 @@ follow-on plans restore it.
 
 ## Post-merge follow-up (non-blocking)
 
-- Create the first follow-on plan, the workspace skeleton and native
-  packaging, from the Programme section.
-- Reset Mokly Cloud and republish its catalogue when the first 0.x release of
-  the new core ships.
+- Publish the first 0.x release of the new core: platform packages, viewer,
+  then CLI; verify each registry package.
+- Reset Mokly Cloud and republish its catalogue with the released CLI.
 - Decide on a WebAssembly fallback for platforms without a native package.
