@@ -56,7 +56,31 @@ test("v7 asserts analysed reason scope at the producer boundary", async (t) => {
       context.mock.method(
         ResourceComparison.prototype,
         "compare",
-        async () => evidence,
+        async function (this: ResourceComparison) {
+          return {
+            ...evidence,
+            reasons: evidence.reasons?.map((reason) => ({
+              ...reason,
+              ...(reason.analysis
+                ? {
+                    analysis: this.css.attribution.record(
+                      reason.analysis.rules.map((rule) => ({
+                        ...(rule.ruleKey ? { ruleKey: rule.ruleKey } : {}),
+                        status: rule.status,
+                        selectors: rule.selectors,
+                        matches: rule.pageSelectors.map((selector) => ({
+                          selector,
+                          occurrences: [],
+                          components: [],
+                          nested: [],
+                        })),
+                      })),
+                    ),
+                  }
+                : {}),
+            })),
+          };
+        },
       );
       const compare = () =>
         classifyComponents({

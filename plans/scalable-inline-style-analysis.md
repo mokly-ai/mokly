@@ -2274,6 +2274,7 @@ Supervisor decision (2026-10-10), after the user questioned compatibility code: 
       Finding 7: User decision (2026-10-12): option A; fixed in `8adb7fb8`.
       Finding 9: user decision (2026-10-12): record only. `a57a6d6c` ticked the replay, pin and gate TODOs before `887871bc`–`eac05a37` did that work, and it names the user as the owner of the WeakMap projection decision, which the supervisor made.
       Fix-round evidence: `.context/scalable-inline-style-analysis/m15-review/approved-round/`.
+      User decision (2026-10-12): approve the fixture-only port in `tests/review_css_producer_scope.test.ts`. Its mock records the existing synthetic CSS rules through the production recorder. Keep every assertion, replay pin and exclusion unchanged.
 
 ## Milestone 16: Inline Style Evidence Mockup
 
