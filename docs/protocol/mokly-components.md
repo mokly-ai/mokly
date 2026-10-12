@@ -12,7 +12,8 @@ The remaining contract is implemented.
 
 The [Rust rebuild plan](../../plans/rust-rebuild.md) adds an optional `element` to the
 `defineComponent` input: a lowercase name that starts with a letter, holds at
-least one hyphen, and is none of the names the HTML standard reserves. It
+least one hyphen, and is none of the names the HTML standard reserves, nor
+`mokly-ignore`, `mokly-ignore-scope`, or `mokly-slot`. It
 registers the component for [HTML screens](./mokly-html-screens.md). The name
 must be unique across HTML and JavaScript components; a collision fails the
 build and names both files. An `element` whose schema declares `to`,

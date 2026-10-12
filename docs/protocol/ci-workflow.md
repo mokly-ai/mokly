@@ -6,8 +6,7 @@ Implemented. CI selects baseline or strict mode by event and pull request.
 The Dependency Audit workflow maintains strict findings on `main`.
 The workflow verification tests below replace the former literal workflow
 tests. The [Rust rebuild plan](../../plans/rust-rebuild.md) adds the Rust
-workspace's build steps, a Cargo cache keyed from `Cargo.lock`, and the native
-package build matrix to this graph.
+workspace's build steps and the native package build matrix to this graph.
 
 ## Workflow Boundary
 

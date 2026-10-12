@@ -439,6 +439,13 @@ Tags: ui
     `.context/rust-rebuild/review-2026-10-12-rebase.md`:
   - 4: the ignore-scope marker has no extent. The user proposed a custom
     `mokly-` element instead of a comment marker; under discussion.
+  - Open from the review of commit 795eddb9, report under
+    `.context/rust-rebuild/review-2026-10-12-decisions.md`:
+  - 4: the functioning-product suspension names no window between the end of
+    Milestone 9 and the end of Milestone 10, when the viewer still reads
+    review v7 and snapshot v3.
+  - Observation: the comparison contract attributes a rule "to nobody", but
+    `RuleEvidence` requires an `owner`; the encoding is undefined.
 
 ## Post-merge follow-up (non-blocking)
 
