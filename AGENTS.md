@@ -4,8 +4,9 @@ Mokly builds app-independent static mockup catalogues, serves them for
 development browsing, and renders visual comparisons. The `@mokly/mokly`
 CLI, build, and server are under `src/`. The `@mokly/viewer` React viewer is
 under `packages/viewer`. The example catalogue is under `examples/basic`, the
-tests are under `tests/`, and the Rust verification task runner is under
-`xtask/`. The protocol docs under `docs/protocol` are the spec.
+tests are under `tests/` and `packages/viewer/tests`, and the Rust
+verification task runner is under `xtask/`. The protocol docs under
+`docs/protocol` are the spec.
 
 This file holds the rules that are specific to this repository. The
 always-on rules and the detailed procedures live in the shared skills from
@@ -78,7 +79,8 @@ the rule. Rules for one application, package, or feature live in the
   `xtask/protocol-document-caps.json` are the only exceptions. Fetch
   `origin/main` before you run `cargo xtask source-file-length-lint`.
 - `cargo xtask rust-file-length-lint` caps Rust files under `xtask/` and
-  `crates/` at 300 lines. There is no override. `--all` audits every file.
+  `crates/` at 300 lines. Every run audits every Rust file there. There is
+  no override.
 - `tests/markdown_links.test.ts` checks the local links and anchors in
   `AGENTS.md`, `docs/`, `plans/`, and every `README.md`. It needs the
   example output from `npm run prepare:verification`.
@@ -87,8 +89,9 @@ the rule. Rules for one application, package, or feature live in the
   configuration, components, and CSS under `examples/basic/`.
 - Do not write angle-bracket placeholders such as `<path>` in commit
   messages or pull request descriptions. Write `{path}` instead. Release
-  Please parses the release PR body as HTML, so an unclosed tag stops the
-  release. See
+  Please copies changelog text into the release PR body and parses that
+  body as HTML, so an unclosed tag stops the release. Code spans do not
+  help, because the parser does not read Markdown. See
   [release recovery](./docs/protocol/npm-release-management.md#release-recovery).
 - [CI test timing](./docs/protocol/ci-test-timing.md) holds the timing
   contract for the unit, browser, and hydration suites. Read it with the
@@ -103,8 +106,10 @@ the rule. Rules for one application, package, or feature live in the
   same tree. Check its existing components before you create a component.
 - The design mockups of these screens live in
   `examples/basic/specs/design`. Build them from the shared design
-  components in `examples/basic/specs/design/library`. Their styles live in
-  `examples/basic/design-library`.
+  components in `examples/basic/specs/design/library`. Each shared
+  component's own styles live in `examples/basic/design-library`. Shared,
+  layout, and global design styles stay in the mixed
+  `examples/basic/design*.css` files.
 
 ## Review focus
 
