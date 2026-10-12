@@ -401,10 +401,10 @@ under `.context/remote-verification-base-commit/`.
 - [x] After the checks pass, run `git add -A`, commit with Conventional
       Commits and push the branch.
 - [x] After the push, a reviewer uses
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d9f2148332f53eee5bc991a2db39a32792d1b25e/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and reports the
       findings. Keep the review read-only. The implementer then applies the
-      review-fix rule in [the review rules](../docs/dev/review.md): fix the
+      review-fix rule in [the review rules](https://github.com/mokly-ai/mokly/blob/d9f2148332f53eee5bc991a2db39a32792d1b25e/docs/dev/review.md): fix the
       `Auto-fix: yes` findings, run the checks, commit and push, re-review
       once, fix any new `Auto-fix: yes` findings once more, then stop and
       report the rest. Add each open finding as one line under this TODO.
@@ -458,10 +458,10 @@ Evidence: `.context/remote-verification-base-commit/finding1.md`.
       names finding 1. Keep it unpushed for the complete gate. After the gate
       passes, record the completed TODOs and push. Keep all evidence ignored.
 - [x] After the push, a reviewer uses
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d9f2148332f53eee5bc991a2db39a32792d1b25e/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and reports the
       findings. Keep the review read-only. The implementer then applies the
-      review-fix rule in [the review rules](../docs/dev/review.md): fix the
+      review-fix rule in [the review rules](https://github.com/mokly-ai/mokly/blob/d9f2148332f53eee5bc991a2db39a32792d1b25e/docs/dev/review.md): fix the
       `Auto-fix: yes` findings, run the checks, commit and push, re-review
       once, fix any new `Auto-fix: yes` findings once more, then stop and
       report the rest. Add each open finding as one line under this TODO.
@@ -520,10 +520,10 @@ Evidence: `.context/remote-verification-base-commit/milestone6.md`.
       no owned box, snapshot or extra worktree and unchanged checkout config.
       Run the Markdown checks. Commit with Conventional Commits and push.
 - [x] After the push, a reviewer uses
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d9f2148332f53eee5bc991a2db39a32792d1b25e/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and reports the
       findings. Keep the review read-only. The implementer then applies the
-      review-fix rule in [the review rules](../docs/dev/review.md): fix the
+      review-fix rule in [the review rules](https://github.com/mokly-ai/mokly/blob/d9f2148332f53eee5bc991a2db39a32792d1b25e/docs/dev/review.md): fix the
       `Auto-fix: yes` findings, run the checks, commit and push, re-review
       once, fix any new `Auto-fix: yes` findings once more, then stop and
       report the rest. Add each open finding as one line under this TODO.
@@ -567,10 +567,10 @@ Evidence: `.context/remote-verification-base-commit/finding8.md`.
 - [x] After the checks and spike pass, commit the close-out with Conventional
       Commits and push. Keep all evidence ignored.
 - [x] After the push, a reviewer uses
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d9f2148332f53eee5bc991a2db39a32792d1b25e/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and reports the
       findings. Keep the review read-only. The implementer then applies the
-      review-fix rule in [the review rules](../docs/dev/review.md): fix the
+      review-fix rule in [the review rules](https://github.com/mokly-ai/mokly/blob/d9f2148332f53eee5bc991a2db39a32792d1b25e/docs/dev/review.md): fix the
       `Auto-fix: yes` findings, run the checks, commit and push, re-review
       once, fix any new `Auto-fix: yes` findings once more, then stop and
       report the rest. Add each open finding as one line under this TODO.
