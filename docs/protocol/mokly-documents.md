@@ -6,8 +6,9 @@ Build, Check, Serve and export render documents. The shell presents them in
 the page view with their rows, breadcrumbs, path chip, Details, Related docs
 links, and `Light only` note. A moved document keeps one `Moved` row and names
 its previous path in Details. The [Rust rebuild plan](../../plans/rust-rebuild.md) keeps
-this contract, and HTML screens and components reuse its `---` delimiter rule
-for their YAML front matter.
+discovery, front matter, titles, rendering, and links, rewrites the resource
+copy and generated-output rules for the source-rendered line, and reuses the
+`---` delimiter rule for the YAML front matter of HTML screens and components.
 
 A document is a Markdown file that a [root](./mokly-paths.md#roots) matches.
 It becomes an entry of kind `document` with a path derived like every other

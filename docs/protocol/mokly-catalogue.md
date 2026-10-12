@@ -25,11 +25,12 @@ from sources into a bounded cache, usage derives from the composed trees, and
 the snapshot is v4, as the [format inventory](./mokly-format-versions.md)
 states. Removed page preview
 metadata is v3 and delivery descriptors are v5 on both lines. On the frozen line, no entry carries derived file names, the generated
-inventory lists exact paths, the manifest retains authored hints only, and
-current and baseline manifest readers accept only one version; earlier output
-follows [baseline compatibility](./mokly-baseline-compatibility.md). Markdown
-documents and their resource copies are implemented. Accepted move pairs carry
-`previousPath` in review records and the public read model on both lines.
+inventory lists exact paths, the manifest retains authored hints only, Markdown
+documents and their resource copies are implemented, and current and baseline
+manifest readers accept only one version; earlier output follows
+[baseline compatibility](./mokly-baseline-compatibility.md). Accepted move
+pairs carry `previousPath` in review records and the public read model on both
+lines.
 
 ## Location And Types
 

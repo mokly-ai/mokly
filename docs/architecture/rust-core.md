@@ -112,8 +112,9 @@ Comparison works on trees, never on text offsets. The
   owner.
 - Both sides render from sources with the current Mokly version: the head from
   the working tree, the base from the base commit's Git tree. A React or
-  Storybook component at the base renders with the base's dependencies under
-  the three dependency tiers of the comparison contract.
+  Storybook component, a React screen, the renderer module, or consumer PostCSS
+  at the base runs from the base commit's extracted sources under the three
+  dependency tiers of the comparison contract.
 
 ## Memory Bounds
 

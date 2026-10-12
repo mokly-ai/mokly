@@ -31,7 +31,6 @@ markers. Every comment name with the `mokly-` prefix is reserved for markers.
 | ---------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | `<!--mokly-instance:start id="r-3" path="…" instance="…" props="…"-->` | a rendered component instance; `props` is the canonical props digest |
 | `<!--mokly-slot:start id="r-3" name="children"-->`                     | slot content supplied to instance `r-3` by its enclosing owner       |
-| `<!--mokly-root:start id="r-0" path="…"-->`                            | the root component of a component page, attached by the core         |
 | `<!--mokly-ignore:start id="hero" key="…"-->`                          | a Review-ignore region with its optional material key                |
 | `<!--mokly-<kind>:end id="…"-->`                                       | closes the region with that id                                       |
 
@@ -48,7 +47,9 @@ parsed by a spec-compliant HTML parser, with its markers as comment nodes,
 before it is grafted in. An element's owner is the innermost instance, slot,
 or root region that contains it; slot content belongs to the region that
 supplied it. The implied `html`, `head`, and `body` elements and every element
-outside any region belong to the entry. An element inside an ignore region is
+outside any region belong to the entry. On a component page the core attaches
+the root region, id `r-0`, to the root component itself, with no marker. An
+element inside an ignore region is
 ignored. An ignore scope is resolved while the document is composed: a
 disabled scope suppresses the ignore regions inside it, the innermost scope
 wins, and no scope reaches comparison, as the frozen backend's

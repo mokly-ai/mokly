@@ -492,6 +492,8 @@ Tags: ui
   - 4: ignore-scope precedence across the sidecar boundary is undefined.
   - Observation: the sidecar has no method that returns the JavaScript
     component registry (`element`, prop schema, slots, controls, variants).
+  - Observation: `ci-verification.md` and `mokly-export-ownership.md` still
+    name a retired page as an approved target; the pattern of finding 5.
 
 ## Post-merge follow-up (non-blocking)
 
