@@ -9,9 +9,9 @@ import { generatedViews } from "../packages/viewer/dist/components/views.js";
 
 import {
   assertComparisonModesEquivalent,
-  assertFastPathEquivalent,
   compilationFiles,
 } from "./helpers/component_fast_path.js";
+import { assertStrictFastPathEquivalent } from "./helpers/component_fast_path_strict.js";
 import { componentEntrySource } from "./helpers/component_fixture.js";
 import { componentReviewFixture } from "./helpers/component_review_fixture.js";
 import { createFixture, removeFixture } from "./helpers/fixture.js";
@@ -76,7 +76,7 @@ for (const evidenceKind of ["bytes", "git"] as const)
     };
     const result = await (
       evidenceKind === "bytes"
-        ? assertFastPathEquivalent
+        ? assertStrictFastPathEquivalent
         : assertComparisonModesEquivalent
     )({
       before: fixture.before.manifest,
