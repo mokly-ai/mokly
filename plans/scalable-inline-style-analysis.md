@@ -2155,6 +2155,8 @@ Supervisor decision (2026-10-11): fix the M15 replay integration by comparing an
 
 Supervisor decision (2026-10-11): find and fix the nine remaining replay divergences with failing tests first. Audit every classification entry and the original-page range contract. Fix production only for a proven production defect; otherwise replay the production proof lifecycle and reader capabilities. Keep runner flags, concurrency, exclusions and assertions; any pin change needs full attribution and a separate commit.
 
+User decision (2026-10-12): findings 1 and 2 use option A. This reverses the supervisor's 2026-10-11 decision to sort CSS proof in production. Remove that sort and compare a canonical copy of the collected proof in the replay.
+
 Supervisor decisions under the user's merge request: D1 C keeps string results
 and `{ html; resources? }`, warns once for returned `styles`, and ignores that
 field. D3 A keeps CSS resource checking, warnings and closure seeds; this closes
@@ -2264,6 +2266,14 @@ Supervisor decision (2026-10-10), after the user questioned compatibility code: 
       Finding 5 (Low, test): the Class A regression test passes when it runs zero catalogues; pending the user's decision.
       Finding 7 (Low, docs): open finding Inferred M6-3 now recommends undoing a fix from `0d23ed0d`; pending the user's decision.
       Finding 9 (Low, process): `a57a6d6c` ticked later TODOs early, and it gives the projection decision to the user instead of the supervisor; pending the user's decision.
+      Finding 1: User decision (2026-10-12): option A; fixed in `6ca01568`.
+      Finding 2: User decision (2026-10-12): option A; fixed in `6ca01568`.
+      Finding 3: User decision (2026-10-12): option A; fixed in `97c3eb39`.
+      Finding 4: User decision (2026-10-12): option A; fixed in `2b6e00a1`.
+      Finding 5: User decision (2026-10-12): options A and B; fixed in `a416e70f`.
+      Finding 7: User decision (2026-10-12): option A; fixed in `8adb7fb8`.
+      Finding 9: user decision (2026-10-12): record only. `a57a6d6c` ticked the replay, pin and gate TODOs before `887871bc`–`eac05a37` did that work, and it names the user as the owner of the WeakMap projection decision, which the supervisor made.
+      Fix-round evidence: `.context/scalable-inline-style-analysis/m15-review/approved-round/`.
 
 ## Milestone 16: Inline Style Evidence Mockup
 
