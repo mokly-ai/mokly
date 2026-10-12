@@ -1,25 +1,39 @@
-/** Prepare per-run CSS records for the catalogue replay's deep comparisons. */
+import assert from "node:assert/strict";
+
+import { canonicalJson } from "@mokly/viewer/data";
+
+/** Compare complete CSS proof without its private WeakMap or collection order. */
 export function fingerprintProofProjection(value) {
   const sources = value?.sources;
   const proof = sources?.cssProof;
-  if (!(proof?.records instanceof WeakMap)) return value;
-  const result = value.result;
-  const records = [];
-  const append = (reasons) => {
-    for (const reason of reasons ?? [])
-      if (reason.analysis !== undefined)
-        records.push(proof.records.get(reason.analysis));
-  };
-  for (const change of result.changes ?? []) append(change.reasons);
-  for (const screen of result.screens ?? [])
-    for (const view of screen.views ?? []) append(view.reasons);
-  for (const component of result.components ?? [])
-    for (const variant of component.variants ?? [])
-      for (const view of variant.views ?? []) append(view.reasons);
-  return replace(
-    value,
-    "sources",
-    replace(sources, "cssProof", replace(proof, "records", records)),
+  if (!proof) return value;
+  assert.ok(
+    proof.all.length > 0 || !hasCssRules(value.result),
+    "CSS rule evidence has an empty collected proof",
+  );
+  const all = proof.all
+    .map((rule) => ({ rule, key: canonicalJson(rule) }))
+    .sort((left, right) =>
+      left.key < right.key ? -1 : left.key > right.key ? 1 : 0,
+    )
+    .map(({ rule }) => rule);
+  const descriptors = Object.getOwnPropertyDescriptors(proof);
+  delete descriptors.records;
+  descriptors.all = { ...descriptors.all, value: all };
+  const projected = Object.create(Object.getPrototypeOf(proof), descriptors);
+  return replace(value, "sources", replace(sources, "cssProof", projected));
+}
+
+function hasCssRules(result) {
+  const entries = [
+    ...(result.changes ?? []),
+    ...(result.screens ?? []).flatMap((screen) => screen.views ?? []),
+    ...(result.components ?? []).flatMap((component) =>
+      (component.variants ?? []).flatMap((variant) => variant.views ?? []),
+    ),
+  ];
+  return entries.some((entry) =>
+    entry.reasons?.some((reason) => reason.analysis?.rules?.length),
   );
 }
 

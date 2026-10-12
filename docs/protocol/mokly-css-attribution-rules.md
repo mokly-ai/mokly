@@ -73,10 +73,6 @@ in the same stylesheet still retain their matches.
 
 ## Components Changed By A Rule
 
-Freeze collected proof in a deterministic order independent of view completion.
-Retain every match and original-page UTF-16 range; ordering never rebases or
-deduplicates occurrences.
-
 First collect resolved own-page matches for every component and rule identity
 across the complete catalogue. These are all matches inside that component's
 root output, before any nested-component filtering. Include every saved

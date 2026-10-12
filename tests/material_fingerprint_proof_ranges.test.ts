@@ -18,7 +18,7 @@ import {
 import { fingerprintProofProjection } from "./helpers/fingerprint_proof_projection.mjs";
 import { fingerprintReplayReader } from "./helpers/fingerprint_replay_reader.mjs";
 
-test("frozen CSS proof is independent of view completion order", () => {
+test("replay projection compares range records across collection orders", () => {
   const first = {
     ruleKey: "rule",
     status: "matched",
@@ -56,7 +56,7 @@ test("frozen CSS proof is independent of view completion order", () => {
   assert.deepEqual(proof([first, second]), proof([second, first]));
 });
 
-test("screen-header replay keeps ordered proof in original page coordinates", async (t) => {
+test("screen-header replay keeps equal range sets in original page coordinates", async (t) => {
   const fixture = await designLibraryFixture(t);
   const changed = "examples/basic/design-library/chrome/screen-header.css";
   await fixture.edit(
