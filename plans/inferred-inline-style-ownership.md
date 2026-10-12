@@ -2,6 +2,7 @@
 
 Status: Active. Implementation is delivered on this branch. Review findings
 remain for the user's decision; mainline integration is in progress.
+Milestone 6 review finding 3 is obsolete (2026-10-12): since `0d23ed0d`, screen evidence carries `inlineStyles` by design, so its recommended change would remove a fix; see Milestone 15 of `plans/scalable-inline-style-analysis.md`.
 
 Replace the renderer-supplied style and resource ownership records with
 ownership that Mokly derives from the rendered documents and the component
