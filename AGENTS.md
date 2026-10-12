@@ -98,6 +98,10 @@ the rule. Rules for one application, package, or feature live in the
   `deterministic-tests` skill.
 - Read a plan item that names the removed `cargo xtask review` command as a
   review item that uses the `implementation-review` skill.
+- Read the
+  [Rust rebuild procedures](./docs/protocol/rust-rebuild-procedures.md)
+  before you capture references from the frozen TypeScript backend, close a
+  rebuild milestone, or classify a protocol page for the rebuild.
 
 ## Product
 

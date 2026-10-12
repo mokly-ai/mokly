@@ -17,7 +17,10 @@ screens, HTML components, and comparison contracts exist, the format
 inventory names manifest v11, review v8, read model v7 and snapshot v4, and
 every protocol page is classified. The structural test that binds the
 catalogue page's format table to the old code fails until the teardown
-removes that test.
+removes that test. On 2026-10-12 the branch was rebased onto the
+`AGENTS.md` that names the shared skills, and the rebuild procedures moved
+from the removed `docs/dev` directory to
+[the protocol page](../docs/protocol/rust-rebuild-procedures.md).
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
@@ -117,7 +120,8 @@ more than re-deriving the behaviour from the requirements.
   rule stated in the spec.
 - Every shared shape has one definition in a Rust model crate, and the
   TypeScript types are generated from it. Format bumps are one edit.
-- Rust conventions follow `docs/dev/rust.md`: trait seams, `dyn` dispatch,
+- Rust conventions follow the shared `rust` skill that `AGENTS.md` names:
+  trait seams, `dyn` dispatch,
   `unimock`, `thiserror`, `tracing`, 300-line files, `_tests_` directories.
 
 **Non-goals of this plan:** implementing any Rust crate beyond the workspace
@@ -219,6 +223,9 @@ merges; the freeze applies to it from 2026-10-12.
 - [ ] Update `.github/workflows/ci.yml`, `release-please-config.json`, and
       `.release-please-manifest.json` for the reduced tree; keep the viewer
       release path.
+- [ ] Update `AGENTS.md` for the reduced tree: the commands, the repository
+      rules, and the moment to read the `rust` skill, which then covers
+      `crates/` as well as `xtask/`.
 - [ ] Run `cargo xtask check` on the reduced tree until it passes.
 - [ ] Record the deleted top-level paths in the commit body.
 - [ ] Commit.
@@ -406,11 +413,10 @@ Tags: ui
 
 - [ ] Run `cargo xtask check`; fix anything it reports until it passes.
 - [ ] Commit and push.
-- [ ] Review the complete local diff against `origin/main` using
-      `docs/implementation-review-prompt.md`. Report findings with numbers,
-      severities, impact, lettered options, and a recommendation, then apply
-      the review-fix rule in `docs/dev/review.md`: fix the `Auto-fix: yes`
-      findings, re-review once, and report the rest.
+- [ ] Review the complete local diff against `origin/main` with the
+      `implementation-review` skill after the push. Report the findings,
+      then apply the review-fix rule: fix the `Auto-fix: yes` findings,
+      re-review once, and report the rest.
 
 ## Post-merge follow-up (non-blocking)
 

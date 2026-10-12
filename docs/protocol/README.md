@@ -13,7 +13,7 @@ review v7. The [Rust rebuild plan](../../plans/rust-rebuild.md) is the approved
 target for the Rust core, its new contracts, and manifest v11, review v8, read
 model v7 and change snapshot v4 under the
 [format inventory](./mokly-format-versions.md). Every page below carries one
-classification from the [rebuild procedures](../dev/rebuild.md): kept as is,
+classification from the [rebuild procedures](./rust-rebuild-procedures.md): kept as is,
 rewritten by the milestone that owns its subsystem, or retired at the
 teardown. A retired page stays accurate for the frozen backend until then.
 
@@ -39,6 +39,7 @@ unsupported number before interpreting content.
 - [HTML screens, pages, and use cases](./mokly-html-screens.md)
 - [HTML components](./mokly-html-components.md)
 - [Tree comparison and Changes](./mokly-comparison.md)
+- [Rust rebuild procedures](./rust-rebuild-procedures.md)
 
 ## Kept Contracts
 

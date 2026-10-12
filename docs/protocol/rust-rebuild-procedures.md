@@ -1,9 +1,17 @@
-# Rebuild Procedures
+# Rust Rebuild Procedures
 
-Procedures for the [Rust rebuild plan](../../plans/rust-rebuild.md): how the
-frozen TypeScript backend's outputs are captured as references, and how each
-Rust milestone runs its gap sweep. [`AGENTS.md`](../../AGENTS.md) holds the
-always-on rules; this document holds the steps.
+## Delivery Status
+
+Working procedures of the [Rust rebuild plan](../../plans/rust-rebuild.md):
+how the frozen TypeScript backend's outputs are captured as references, how
+each Rust subsystem runs its gap sweep before its milestone closes, and how
+every protocol page is classified for the rebuild. The shared skills that
+[`AGENTS.md`](../../AGENTS.md) names hold the always-on rules; this page holds
+the steps. Until the teardown, the build commands in `AGENTS.md` and the
+example catalogue belong to the frozen TypeScript backend. After the rebuild
+the same authored content renders through the Rust binary and the
+[render sidecar](./mokly-sidecar.md), and HTML screens and components join it
+under the [HTML screens contract](./mokly-html-screens.md).
 
 ## Reference Capture
 
@@ -34,7 +42,7 @@ per view, and resource closures per view.
 
 ## Gap Sweep
 
-Each Rust milestone that replaces a subsystem runs one bounded sweep before it
+Each Rust subsystem replacement runs one bounded sweep before its milestone
 closes. The sweep is a reading exercise against the frozen contracts and the
 old test names, not a port.
 
@@ -61,5 +69,5 @@ Every page under `docs/protocol` carries one classification in the triage
 file: keep (true for both lines, kept as is), rewrite (true in spirit,
 rewritten for the Rust core in the milestone that owns the subsystem), or
 delete (describes the frozen implementation only, removed at the teardown).
-The [protocol index](../protocol/README.md) groups pages by that
-classification until the rewrite milestones replace it with the final index.
+The [protocol index](./README.md) groups pages by that classification until
+the rewrite milestones replace it with the final index.
