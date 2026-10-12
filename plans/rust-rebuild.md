@@ -81,13 +81,22 @@ more than re-deriving the behaviour from the requirements.
 
 - Deleting content on `origin/main` for the teardown: the paths named in
   Milestone 2. The teardown commit restates them.
-- The functioning-product rule is suspended between the teardown and
-  Milestone 6, which serves a catalogue again. The viewer package keeps
-  working throughout.
+- The functioning-product rule is suspended between the teardown and the end
+  of Milestone 7, when the viewer reads the served catalogue again. The viewer
+  package keeps working throughout.
 - Pending the user's approval, under the rule that a new gate needs it: the
   Rust advisory audit, the generated-TypeScript byte-identity check, and the
   time and memory budgets of Milestone 14. Milestone 3 records the answer
   before adding any of them.
+
+**Review decisions the user gave on 2026-10-12:** every live native engine
+reference is repointed now; head styles, owned and unowned, leave the canonical
+form; the behaviour-table script is written on this branch; the server
+milestones serve the new formats and the viewer reads them in the milestone
+that follows; `defineComponent` gains `element`; sidecar recycling thresholds
+are fixed; the protocol triage stays under `.context/`; the documentation
+policy page is kept; the four remaining format owners carry Delivery Status
+pointers; the pull request description writes `{target}` for the placeholder.
 
 **Architecture:**
 
@@ -113,7 +122,8 @@ more than re-deriving the behaviour from the requirements.
 - Comparison works on trees, not text. Component and ignore markers are
   comment nodes; an element's owner is its nearest enclosing marker pair;
   materiality compares canonical trees after removing ignored regions and
-  unowned styles. CSS attribution keeps today's rule-level matching and its
+  head styles, owned and unowned; styles count through rule evidence only.
+  CSS attribution keeps today's rule-level matching and its
   conservative keep list, on the `lightningcss` and `selectors` crates.
   Inline style ownership for sidecar-rendered components comes from the render
   itself, so no inference is needed; whole-screen React entries get one simple
@@ -200,6 +210,8 @@ merges; the freeze applies to it from 2026-10-12.
 - [ ] Confirm the landable pull requests merged: #135, #182, and the test and
       CI housekeeping; the user merges them.
 - [ ] Tag the last TypeScript backend commit on `main` as `ts-backend-final`.
+- [ ] Write `scripts/rebuild/behaviour-table.mjs` on this branch: it reduces one
+      captured scenario to the JSON table that the rebuild procedures define.
 - [ ] Capture reference outputs with the old CLI under
       `.context/rust-rebuild/reference/`: the example catalogue, the large
       fixture's four scenarios, and the moved, removed, Markdown document,
@@ -212,7 +224,7 @@ merges; the freeze applies to it from 2026-10-12.
       classified delete; the superseded plans, which git history keeps; the
       preview deployment workflow; and the root package's `bin`, `exports`,
       `files`, and publish configuration.
-- [ ] Repoint or remove every live reference to the native engine contract
+- [x] Repoint or remove every live reference to the native engine contract
       before the teardown deletes `docs/protocol/mokly-native-engine.md`.
 - [ ] Close every active plan that the rebuild supersedes with a Completed
       status paragraph that names this plan.
@@ -293,7 +305,8 @@ components into `mokly-generated/` under the tracked and untracked rules.
 
 ## Milestone 6: Sidecar foundation and Serve
 
-At completion `mokly serve` serves an HTML catalogue through the viewer. The
+At completion `mokly serve` serves an HTML catalogue as read model v7 over
+HTTP with the shell routes; the viewer renders it after Milestone 7. The
 sidecar exists only to render the viewer shell.
 
 - [ ] Implement the sidecar protocol in `@mokly/mokly` and `mokly-sidecar`:
@@ -336,7 +349,8 @@ through the sidecar, and the example catalogue renders again.
 ## Milestone 9: Changes
 
 At completion Serve and the CLI classify changes against the Git base with
-tree comparison, CSS attribution, and both baseline kinds.
+tree comparison, CSS attribution, and both baseline kinds. Serve emits review
+v8 and snapshot v4; the viewer renders them after Milestone 10.
 
 - [ ] Implement Git evidence in `mokly-git`: merge base, changed paths, and
       bounded blob reads.
@@ -414,31 +428,17 @@ Tags: ui
 
 - [ ] Run `cargo xtask check`; fix anything it reports until it passes.
 - [ ] Commit and push.
+- [ ] Open the pull request. Its description and squash body write `{target}`
+      for the package placeholder, justify each merge decision with its paths,
+      and record every approved removal.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
   - Open from the 2026-10-12 review, report under
     `.context/rust-rebuild/review-2026-10-12-rebase.md`:
-  - 1: 24 live pages still name the superseded native engine contract as the
-    approved target or state its design as current; repoint or remove them.
-  - 3: the comparison contract must say whether head style elements, owned
-    and unowned, leave the canonical form before materiality.
-  - 4: the ignore-scope marker has no extent; resolve scopes at render time
-    or give the marker a start and end pair.
-  - 5: the behaviour-table script named by the rebuild procedures does not
-    exist; decide where it lives before the reference capture.
-  - 6: the server milestones end before the viewer milestones that read
-    their new formats; reword the exit criteria or reorder.
-  - 10: no contract defines how a JavaScript component registers an
-    `element`.
-  - 13: sidecar recycle thresholds are fixed on one page and configurable on
-    another.
-  - 14: the protocol triage lives only in the git-ignored `.context/` file.
-  - 15: the documentation policy page is classified as retired.
-  - 16: four pages whose numbers the inventory bumps carry no Delivery Status
-    pointer to the new number.
-  - 17: one branch commit body contains an angle-bracket placeholder.
+  - 4: the ignore-scope marker has no extent. The user proposed a custom
+    `mokly-` element instead of a comment marker; under discussion.
 
 ## Post-merge follow-up (non-blocking)
 

@@ -10,8 +10,9 @@ Public argument forwarding, cancellation and title validation are implemented.
 Remote execution and automatic selection are implemented. Dependency audit
 modes and scheduled update pull requests are implemented under the
 [audit contracts](./dependency-audit-update-pr.md).
-The native engine build steps, Rust advisory audit, and release build matrix
-are the approved target of the [native engine contract](./mokly-native-engine.md).
+The [Rust rebuild plan](../../plans/rust-rebuild.md) adds the Rust workspace's
+build steps and the native package build matrix; a Rust advisory audit is
+proposed, not yet approved.
 
 ## Verification Boundary
 

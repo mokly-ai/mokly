@@ -95,10 +95,6 @@ filename-selected specs separately from `browser`.
 Tests using `changedFixture` register servers and workers with
 `fixture.onCleanup` to drain them before removing their working tree.
 
-The [native engine contract](../docs/protocol/mokly-native-engine.md) assigns
-this crate the `build-engine` command and the Rust advisory audit; its Delivery
-Status records when they exist.
-
 ## Quick Start
 
 ```bash
@@ -368,9 +364,10 @@ global config file and system config disabled. Code under test still uses
 - [Dependency security](../docs/protocol/dependency-security.md)
 - [Baseline dependency audit](../docs/protocol/dependency-audit-baseline.md)
 - [Dependency update pull request](../docs/protocol/dependency-audit-update-pr.md)
-- [Native engine contract](../docs/protocol/mokly-native-engine.md)
 
 ## Delivery Status
 
 The [prompt shutdown plan](../plans/testbox-prompt-shutdown.md) records verification
-and open findings.
+and open findings. The [Rust rebuild plan](../plans/rust-rebuild.md) trims this
+crate's suites at the teardown and adds the `build-native` command; the Rust
+advisory audit is proposed, not yet approved.

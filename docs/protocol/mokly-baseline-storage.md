@@ -13,6 +13,8 @@ Removal of baseline compatibility is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
 This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+The [Rust rebuild plan](../../plans/rust-rebuild.md) raises the marker to
+`schemaVersion: 3` with `manifestVersion: 11` and `layout: "generated-v11"`.
 
 ## Rebuild Procedure
 
@@ -213,10 +215,9 @@ POSIX commands run beneath a Node gate worker in an owned process group;
 cancellation sends TERM then KILL after one second. When verification ownership
 is inherited, the group registers atomically before the gate releases the
 command. Windows commands belong to a non-inheritable, kill-on-close Job Object
-created through the job boundary of the [native engine contract](./mokly-native-engine.md),
-whose Delivery Status names the current provider. The same gate worker is
+created through the package's existing native bridge. The same gate worker is
 assigned before it receives the command. Registration, assignment or
-job-boundary failures fail closed before historical code starts. Windows
+native-bridge failures fail closed before historical code starts. Windows
 cancellation terminates the entire job even if the immediate launcher has
 exited; disposal waits until the job has no active processes and all captured
 pipes close. Successful commands also dispose their scope, terminating any

@@ -12,8 +12,9 @@ The classifier, Browse/watch cache, comparison artifacts, and static exporter
 share this attribution policy and its path-keyed result and changed-entry set. The
 [component explorer plan](../../plans/component-explorer.md) records delivery.
 Unregistered catalogues retain their ordinary behavior. The
-[native engine contract](./mokly-native-engine.md) is the approved target for running this
-attribution in the Rust engine; the policy and result are unchanged.
+[Rust rebuild plan](../../plans/rust-rebuild.md) runs this attribution on trees
+under the [comparison contract](./mokly-comparison.md), with rule evidence
+attributed to owners.
 
 ## Changes Membership
 

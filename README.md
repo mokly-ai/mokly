@@ -330,7 +330,6 @@ TypeScript backend is frozen while that work lands.
 - [Variants](./docs/protocol/mokly-variants.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [Rust core architecture](./docs/architecture/rust-core.md)
-- [Native engine contract](./docs/protocol/mokly-native-engine.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
 - [Agent and contributor rules](./AGENTS.md), which name the shared skills that hold the detailed procedures
 - [Changelog](./CHANGELOG.md)

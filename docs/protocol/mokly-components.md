@@ -10,6 +10,14 @@ implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-cla
 
 The remaining contract is implemented.
 
+The [Rust rebuild plan](../../plans/rust-rebuild.md) adds an optional `element` to the
+`defineComponent` input: a lowercase name that starts with a letter, holds at
+least one hyphen, and is none of the names the HTML standard reserves. It
+registers the component for [HTML screens](./mokly-html-screens.md). The name
+must be unique across HTML and JavaScript components; a collision fails the
+build and names both files. An `element` whose schema declares `to`,
+`fragment`, `slot`, or `moklyViewport` fails registration.
+
 The public `defineComponent` API, saved variants, ownership attribution,
 explorer, inspection, and local controls are implemented. The
 [component explorer plan](../../plans/component-explorer.md) records delivery.

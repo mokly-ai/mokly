@@ -15,8 +15,9 @@ Manifest/usage types come from the
 [component manifest](./mokly-component-manifest.md). Version 6 addresses
 screens, components, variants, and views by entry path and view axes, carries
 `previousPath` for paired moves, and stores no artifact path. The
-[native engine contract](./mokly-native-engine.md) is the approved target for producing
-this schema in the Rust engine without changing it.
+[Rust rebuild plan](../../plans/rust-rebuild.md) replaces it with review v8, whose
+owner-attributed rule evidence the [comparison contract](./mokly-comparison.md)
+defines.
 
 ## Normative Result
 

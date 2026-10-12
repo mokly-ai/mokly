@@ -20,6 +20,9 @@ the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
 
 This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
+The [Rust rebuild plan](../../plans/rust-rebuild.md) replaces the package's JavaScript
+backend with the Rust binary of the `@mokly/native-<target>` packages behind a
+Node shim, under the [Rust core architecture](../architecture/rust-core.md).
 [Whole-document pages](./mokly-pages.md) use the same paths and hierarchy as
 screens and flows, and [Markdown documents](./mokly-documents.md) join them by
 file. Current and comparison-base manifests require v10; consumers use ordinary
@@ -164,16 +167,6 @@ Baseline readers never execute consumer code through the current package.
 The [page contract](./mokly-pages.md) defines the public page inputs,
 rendering pipeline, derived paths, inheritance, and schema validation.
 
-## Native Engine
-
-The CLI loads a Rust engine into its own process for work that needs no React
-or consumer JavaScript: the exclusive export rename, the Windows baseline job,
-and catalogue comparison. The engine ships as five optional platform packages,
-`@mokly/engine-<platform>`, at the CLI's exact version for Linux x64 and arm64
-with glibc, macOS x64 and arm64, and Windows x64. The
-[native engine contract](./mokly-native-engine.md) defines the packages, the loader,
-every operation, and its Delivery Status.
-
 ## Packaged Documentation
 
 The root package ships the plain-Markdown CLI guides under `docs/guides` and
@@ -199,5 +192,4 @@ literals, and package boundary.
 - [Generated output and manifest v10](./mokly-rendering-generated.md#generated-contract)
 - [Build, Browse, and Review runtime](./mokly-runtime.md)
 - [Packaged CLI guides](./mokly-guides.md)
-- [Native engine](./mokly-native-engine.md)
 - [CI and npm release](./npm-release.md)

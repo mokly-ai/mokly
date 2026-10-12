@@ -108,19 +108,16 @@ exports replace source deep imports. The browser entry starts standalone
 hydration as a package side effect. Coordinated release automation publishes
 the viewer before the CLI that depends on it.
 
-## Native Engine Boundary
+## Rust Core Boundary
 
-The [native engine contract](../protocol/mokly-native-engine.md) is the
-approved target for a Rust engine that the CLI loads into its own process
-through Node-API bindings. The engine owns work that needs no React or
-consumer JavaScript: the exclusive export rename, the Windows baseline job,
-and catalogue comparison with its Git evidence, resource closures, CSS rule
-attribution, component classification, and move pairing. React rendering,
-esbuild bundling, the consumer renderer, PostCSS plugins, the viewer, and the
-HTTP server stay in JavaScript. Only strings, JSON data, and byte buffers
-cross the boundary; the viewer package keeps the canonical schemas and the
-engine proves parity against them. The
-[native engine plan](../../plans/native-rust-engine.md) records delivery.
+The [Rust core architecture](./rust-core.md) is the approved target for the
+backend: a Rust binary owns the process, the build graph, HTML parsing and
+rendering, comparison, the server, and export. JavaScript runs only in the
+[render sidecar](../protocol/mokly-sidecar.md): esbuild bundling, React and
+Storybook renders, the viewer shell, and consumer PostCSS. Rendered HTML,
+collected styles, and JSON frames cross that boundary. The Rust model crate
+owns every shared shape and generates the TypeScript types that the viewer and
+the sidecar consume.
 
 ## Complete-Document Boundary
 
@@ -198,5 +195,5 @@ the export engine as a JavaScript API or take over deployment/authentication.
 - [Static export contract](../protocol/mokly-export.md)
 - [Static delivery contract](../protocol/mokly-export-delivery.md)
 - [Viewer API](../protocol/mokly-viewer.md)
-- [Native engine contract](../protocol/mokly-native-engine.md)
+- [Rust core architecture](./rust-core.md)
 - [Public catalogue](../protocol/mokly-catalogue.md)

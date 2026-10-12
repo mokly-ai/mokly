@@ -93,8 +93,9 @@ Comparison works on trees, never on text offsets. The
 - Both sides of a view are parsed with a spec-compliant HTML parser into trees.
   Mokly's component and ignore markers are comment nodes in those trees, so an
   element's owner is the innermost marker region that contains it.
-- Materiality compares canonical trees after ignored regions and unowned style
-  elements are removed. Attribute order, entity spelling, and formatting
+- Materiality compares canonical trees after ignored regions and head style
+  elements, owned and unowned, are removed; styles count through rule
+  evidence only. Attribute order, entity spelling, and formatting
   differences are not changes.
 - CSS attribution keeps today's rule-level diff, selector matching, and
   conservative keep list, on the `lightningcss` and `selectors` crates.
@@ -112,8 +113,8 @@ Comparison works on trees, never on text offsets. The
   set of parsed pages.
 - Parsed CSS is cached by content hash with a byte bound; eviction changes time
   only.
-- Sidecars are recycled after a configured number of renders or when their
-  resident size passes a cap; the fragment cache makes a recycle cheap.
+- Sidecars are recycled after a fixed number of renders or when their
+  resident size passes a fixed cap; the fragment cache makes a recycle cheap.
 - The acceptance milestone of the plan records the time and memory budgets for
   the large fixture, with the sidecar count held constant.
 

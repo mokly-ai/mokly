@@ -24,7 +24,7 @@ fragment transport, manifest-bound preview adaptation, and active-tree
 disclosure are implemented. Their delivery history is recorded in the completed
 [in-frame catalogue link navigation plan](../../plans/in-frame-catalogue-link-navigation.md).
 Path identity, manifest v10, Markdown documents, and move detection are
-implemented.
+implemented. The [Rust rebuild plan](../../plans/rust-rebuild.md) serves manifest v11 paths and a `live-index-3` index with the v11 entry shape.
 
 This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 

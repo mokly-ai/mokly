@@ -61,7 +61,11 @@ name, attribute values and text decoded, runs of ASCII whitespace in text
 collapsed to one space except inside `pre`, `textarea`, `script`, and `style`,
 and non-marker comments kept. Two views with equal canonical forms are not
 material changes, so attribute order, entity spelling, and formatting do not
-count. Markers themselves are excluded from the form.
+count. Markers themselves are excluded from the form. Head `<style>` elements,
+owned and unowned, are excluded too; their rules enter the comparison only
+through the rule evidence of [Style Ownership](#style-ownership): a changed
+rule attributed to the entry makes the view `changed`, a rule attributed to a
+component keeps the view affected, and an excluded rule changes nothing.
 
 Ignored regions pair by id across sides. A region whose id exists on one side
 only is ordinary content. A changed material key on a paired region is a

@@ -4,8 +4,8 @@
 
 Pairing, validation, diagnostics, comparison delivery, and the viewer's `Moved`
 labels and details implement this contract. The
-[native engine contract](./mokly-native-engine.md) is the approved target for running
-pairing in the Rust engine; this contract is unchanged.
+[Rust rebuild plan](../../plans/rust-rebuild.md) keeps pairing under the
+[comparison contract](./mokly-comparison.md).
 
 Because an entry's path is its identity, moving a file or renaming a
 directory changes identity. This contract pairs a removed baseline entry with

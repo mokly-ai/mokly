@@ -4,7 +4,7 @@
 
 Serve uses a serialize-once scoped model and strict reader. Static delivery and
 application-owned viewers use complete catalogue v6. Both bootstrap forms require
-root `schemaVersion: 2`; missing or other versions fail with a version error.
+root `schemaVersion: 2`; missing or other versions fail with a version error. The [Rust rebuild plan](../../plans/rust-rebuild.md) raises the root `schemaVersion` to 3 with the generated read model v7.
 
 ## Purpose And Boundary
 

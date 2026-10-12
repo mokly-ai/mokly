@@ -35,8 +35,8 @@ Scenarios, one directory each:
 For each scenario keep the manifest, the generated tree listing with blob
 hashes, the review artifact, the catalogue read model, the export inventory,
 and the terminal output of build, check, serve startup, and export. Then run
-the behaviour-table script, `scripts/rebuild/behaviour-table.mjs` at the tag,
-which reduces a scenario to one JSON table: entries by kind and path, listed
+the behaviour-table script, `scripts/rebuild/behaviour-table.mjs` on the
+rebuild branch, over the saved outputs; it reduces a scenario to one JSON table: entries by kind and path, listed
 changes with states and reasons, affected consumers, kept and excluded rules
 per view, and resource closures per view.
 
