@@ -13,6 +13,9 @@ publication. The inspector receives retained and excluded stylesheet evidence
 for both catalogue kinds, including before a comparison is loaded. Screen-only
 delivery reuses accepted classification without a second resource analysis.
 See [CSS Change Attribution](../../plans/css-change-attribution.md).
+The [Rust rebuild plan](../../plans/rust-rebuild.md) keeps these stages on parsed trees under
+the [comparison contract](./mokly-comparison.md); recorded spans and text
+normalization are not used there.
 The [native engine contract](./mokly-native-engine.md) is the approved target for
 running rule analysis in the Rust engine; the rules, outcomes, and result
 are unchanged.
@@ -135,7 +138,7 @@ live classification snapshot or in static exports.
    Resolve nesting parents outermost first, substituting `&` with `:is()` of
    the complete parent selector list, or applying an implicit descendant when
    needed. Unresolvable combinations stay unresolved. Match using the default
-   parse5 document tree, respecting document quirks, inert template boundaries,
+   comparison tree (parse5 in the frozen backend), respecting document quirks, inert template boundaries,
    and HTML versus SVG/MathML name case; absent view sides contribute no tree.
    Interactive/browser-state pseudo-classes (`:hover`, `:focus`, `:visited`,
    etc.) and non-shadow pseudo-elements (`::before`, etc.) are not evaluated.

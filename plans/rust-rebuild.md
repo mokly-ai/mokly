@@ -12,7 +12,12 @@ everything needed for the new version lands in this one plan and one pull
 request, and overrode, for this pull request only, the plan rules that bind
 one plan to one pull request and that require a functioning product after
 every milestone: the branch has no CLI between Milestone 2 and Milestone 6.
-No milestone is complete.
+Milestone 1 is complete: the Rust core architecture, the sidecar, HTML
+screens, HTML components, and comparison contracts exist, the format
+inventory names manifest v11, review v8, read model v7 and snapshot v4, and
+every protocol page is classified. The structural test that binds the
+catalogue page's format table to the old code fails until the teardown
+removes that test.
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
@@ -134,43 +139,53 @@ closes. Milestones tagged `ui` change only the viewer package.
 Documentation only. At completion the new spec set defines the rebuild
 without guesswork, and every protocol page is classified.
 
-- [ ] Write `docs/architecture/rust-core.md`: the crate layout, process
+- [x] Write `docs/architecture/rust-core.md`: the crate layout, process
       topology (shim, binary, sidecar pool), the build graph and its cache
       keys, the tree-based comparison model, memory bounds, and the format
       inventory with the numbers of Decision 4.
-- [ ] Write `docs/protocol/mokly-sidecar.md`: the sidecar lifecycle, the
+- [x] Write `docs/protocol/mokly-sidecar.md`: the sidecar lifecycle, the
       newline-delimited JSON requests and responses for component, screen,
       story, and shell renders, the style-collection rule, the fragment cache
       key, cancellation, timeouts, and the fail-closed rules.
-- [ ] Write `docs/protocol/mokly-html-screens.md` and
+- [x] Write `docs/protocol/mokly-html-screens.md` and
       `docs/protocol/mokly-html-components.md` from the HTML screens plan's
       decisions and the HTML component format above, each with one worked
       example and exact diagnostics, with the `---` front matter rule of
       Decision 9, and with the file kinds for pages, flows, and use cases
       that need no JavaScript (YAML or HTML files, decided here).
-- [ ] Decide and record the sidecar bundler (Decision 10), the consumer
+- [x] Decide and record the sidecar bundler (Decision 10), the consumer
       PostCSS worker, the React style-collection rule, and the Storybook
       portable-stories entry.
-- [ ] Write `docs/protocol/mokly-comparison.md` and revise
+- [x] Write `docs/protocol/mokly-comparison.md` and revise
       `mokly-css-attribution.md`: tree materiality, marker-derived ownership,
       the inline style rule for whole-screen entries, Changes membership,
       review result v8, and change snapshot v4.
-- [ ] Revise `mokly-catalogue.md`, `mokly-format-versions.md`,
+- [x] Revise `mokly-catalogue.md`, `mokly-format-versions.md`,
       `mokly-paths.md`, `mokly-folders.md`, `mokly-variants.md`,
       `mokly-moves.md`, and `mokly-documents.md` to the new numbers and the
       tree model; state that no earlier number is readable.
-- [ ] Classify every page in `docs/protocol` as keep, rewrite, or delete, with
+- [x] Classify every page in `docs/protocol` as keep, rewrite, or delete, with
       one reason each, in `.context/rust-rebuild/protocol-triage.md`; put the
       resulting index in `docs/protocol/README.md`. The upload exchange pages
       and fixtures are keep, unchanged.
-- [ ] Write the gap-sweep procedure and the reference-capture procedure into
+- [x] Write the gap-sweep procedure and the reference-capture procedure into
       `docs/dev/rebuild.md`: which scenarios to capture, the behaviour-table
       script, and the triage bins of Decision 3.
-- [ ] Update `README.md`, `docs/dev/documentation.md`, `AGENTS.md` where they
+- [x] Update `README.md`, `docs/dev/documentation.md`, `AGENTS.md` where they
       assume the TypeScript backend, and add the breaking-change note to
       `docs/protocol/npm-release-notes.md`.
-- [ ] Validate Prettier, links, protocol sizes, and the documentation tests.
-- [ ] Commit.
+- [x] Validate Prettier, links, protocol sizes, and the documentation tests.
+- [x] Commit.
+
+Outcomes recorded in the contracts: the screen suffix is `.screen.html`
+(not `.mockup.html`) so HTML screens, components and pages share one naming
+rule; pages are `.page.html` and use cases `.use-case.yaml`; the sidecar
+bundles with esbuild because the frozen backend's plugin behaviour ports
+directly and its metafile is the module inventory, with Rolldown reviewed
+after the first release; the bundle generation is the fragment cache key; and
+styles are collected per render. The protocol triage is
+`.context/rust-rebuild/protocol-triage.md`: 77 pages kept, 81 rewritten by
+their owning milestones, 14 retired at the teardown.
 
 ## Milestone 2: Reference capture and teardown
 

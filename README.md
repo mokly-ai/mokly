@@ -329,6 +329,7 @@ TypeScript backend is frozen while that work lands.
 - [Viewer appearance and preview schemes](./docs/protocol/mokly-viewer-appearance.md)
 - [Variants](./docs/protocol/mokly-variants.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
+- [Rust core architecture](./docs/architecture/rust-core.md)
 - [Native engine contract](./docs/protocol/mokly-native-engine.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
 - [Agent and contributor rules](./AGENTS.md), which name the shared skills that hold the detailed procedures
@@ -357,8 +358,10 @@ version. A global npm install applies only to the active Node.js version.
 rustup reads the toolchain file and installs the pinned Rust the first time
 `cargo` runs in the repository. Use the pinned npm version for dependency
 changes.
-Until the [Rust rebuild](./plans/rust-rebuild.md) lands its crates under
-`crates/`, Rust is used only by `cargo xtask`.
+The TypeScript backend under `src/` is frozen: the
+[Rust rebuild](./plans/rust-rebuild.md) replaces it with the crates described
+in the [Rust core architecture](./docs/architecture/rust-core.md). Until those
+crates land, Rust is used only by `cargo xtask`.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git

@@ -4,7 +4,8 @@
 
 Folder records, title resolution, order, exclusions, path trees, the Specs
 and Components rows, the `Overview` row, entry rows for a folder's own screen
-or component, and breadcrumb links and folder reveals are implemented.
+or component, and breadcrumb links and folder reveals are implemented. The
+[Rust rebuild plan](../../plans/rust-rebuild.md) keeps this contract unchanged.
 
 A folder is a path with entries below it. It has no definition of its own, no
 status, and no Changes row. This contract owns the optional folder record that

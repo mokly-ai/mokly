@@ -3,7 +3,9 @@
 ## Delivery Status
 
 Build, Check, Serve, export, and the viewer use file-derived paths.
-Move pairing and its viewer presentation are implemented.
+Move pairing and its viewer presentation are implemented. The [Rust rebuild plan](../../plans/rust-rebuild.md)
+keeps this contract and adds the HTML and YAML file kinds of the
+[HTML screens contract](./mokly-html-screens.md) to the default globs.
 
 This is the single contract for an entry's path: how it derives from the
 discovered file that exports the entry, which strings are valid segments, how `index`

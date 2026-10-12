@@ -18,6 +18,7 @@ The existing released-export-name check remains independent.
 - `b39d89a4 feat!: simplify generated output and delivery` — generated output,
   removed options, current-only formats and the portable namespace below.
 - `acac1c73 feat(publish)!: require a clean checkout` — the Publish note below.
+- The Rust rebuild pull request — the Rust rebuild note below.
 
 ## Generated Output And Manifest API
 
@@ -41,6 +42,19 @@ Rebuild committed `mokly-generated/` once with Build, commit it, and regenerate
 exports. Do not hand-convert manifests.
 An earlier base gives Changes unavailable with the existing message. Build,
 Serve, export and publish succeed. Earlier outcomes are never cached.
+
+## Breaking Rust Rebuild Release Note
+
+The first 0.x release of the Rust core replaces the TypeScript backend under
+the [Rust rebuild plan](../../plans/rust-rebuild.md). `@mokly/mokly` installs
+a native `mokly` binary from `@mokly/native-<target>` on Linux x64 and arm64,
+macOS x64 and arm64, and Windows x64; other platforms are unsupported. Screens,
+components, pages and use cases may be HTML and YAML files. Output uses
+manifest v11, review result v8 and read model v7; no reader accepts an
+earlier number, so regenerate every catalogue, discard `.mokly-cache`, and
+expect Changes to be unavailable until the Git base is rebuilt by the new
+version. The authoring API and config load with no compatibility shims. Mokly
+Cloud resets and republishes; the upload exchange is unchanged.
 
 ## Breaking Publish Checkout Release Note
 

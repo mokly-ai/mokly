@@ -2,19 +2,23 @@
 
 ## Delivery Status
 
-Optional per-view/page `resourceEvidence` and root usage ranges are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match) of the [source-path removal plan](../../plans/remove-source-path-evidence.md); screen and saved-view display is implemented in [M20](../../plans/remove-source-path-evidence.md#milestone-20-show-the-outside-component-evidence), and the whole-document page display is implemented in [M20B](../../plans/remove-source-path-evidence.md#milestone-20b-show-whole-document-page-evidence).
-Read model v6 replaces released v5. `ResourceEvidence` follows the
-[CSS evidence schema](./mokly-css-attribution-membership.md).
+Read model v6 is the shape the frozen TypeScript backend serves. The
+[Rust rebuild plan](../../plans/rust-rebuild.md) is the approved target for read model
+v7 below, which follows manifest v11 and review v8; no reader accepts an
+earlier number. `ResourceEvidence` follows the
+[CSS evidence schema](./mokly-css-attribution-membership.md) with the owner
+field of the [comparison contract](./mokly-comparison.md).
 
 ## Supported Formats
 
-| Catalogue                     | Generated manifest | Comparison result |
-| ----------------------------- | ------------------ | ----------------- |
-| Without registered components | 9                  | 6                 |
-| With registered components    | 9                  | 6                 |
+| Line                      | Generated manifest | Comparison result | Read model |
+| ------------------------- | ------------------ | ----------------- | ---------- |
+| Frozen TypeScript backend | 10                 | 7                 | 6          |
+| Rust rebuild, approved    | 11                 | 8                 | 7          |
 
-Current output uses manifest v10, review result v7, and public read model v6,
-with globally unique entry paths. The private catalogue-change snapshot is v3 and removed
+Both catalogue kinds, with and without registered components, use the same
+numbers. The approved line uses manifest v11, review result v8, and public
+read model v7, with globally unique entry paths. The private catalogue-change snapshot is v3 and removed
 page preview metadata is v3. Delivery descriptors are v5. The manifest stores
 folder records, component variants, per-view usage, root output ranges and
 inserted-stylesheet provenance,
@@ -51,7 +55,7 @@ type ChangeKind = "added" | "changed" | "removed" | "unmodified";
 type PublicPath = string;
 
 interface CatalogueReadModel {
-  schemaVersion: 6;
+  schemaVersion: 7;
   identity: { id: string; title: string };
   deploymentId: string;
   revision: { content: number; evidence: number };
