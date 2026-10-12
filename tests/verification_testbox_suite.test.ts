@@ -45,6 +45,7 @@ test("the 11 commands derive exact cargo arguments, report names and streamed ou
         captureOutput,
       })),
       [
+        { file: "git", args: ["add", "-A"], captureOutput: false },
         {
           file: "git",
           args: ["rev-parse", "--is-shallow-repository"],
@@ -184,15 +185,16 @@ test("shallow history is restored before checking the lockfile or starting cargo
     stderr: "",
   });
   await runTestboxSuite(TESTBOX_ARGUMENTS, harness.dependencies);
-  assert.deepEqual(harness.commands[1]?.args, [
+  assert.deepEqual(harness.commands[2]?.args, [
     "fetch",
     "--unshallow",
     "--tags",
     "origin",
   ]);
-  assert.equal(harness.commands[1]?.captureOutput, false);
-  assert.deepEqual(harness.events.slice(0, 4), [
+  assert.equal(harness.commands[2]?.captureOutput, false);
+  assert.deepEqual(harness.events.slice(0, 5), [
     "fingerprint",
+    "git add -A",
     "git rev-parse --is-shallow-repository",
     "git fetch --unshallow --tags origin",
     "read:/repo/package-lock.json",
@@ -206,7 +208,7 @@ for (const state of ["changed", "missing"]) {
     else harness.files.set(harness.stamp, Buffer.from("old-digest\n"));
     await runTestboxSuite(TESTBOX_ARGUMENTS, harness.dependencies);
     assert.deepEqual(
-      harness.commands.slice(1, 3).map(({ file, args, captureOutput }) => ({
+      harness.commands.slice(2, 4).map(({ file, args, captureOutput }) => ({
         file,
         args,
         captureOutput,

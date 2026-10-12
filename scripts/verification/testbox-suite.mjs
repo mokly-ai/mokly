@@ -93,6 +93,7 @@ export async function runTestboxSuite(args, dependencies) {
     throw new Error(
       `source-tree fingerprint does not match: expected ${request.expected}; actual ${fingerprint}`,
     );
+  await requireSuccess(command("git", ["add", "-A"]), "Git staging");
   const history = await requireSuccess(
     command("git", ["rev-parse", "--is-shallow-repository"], true),
     "Git shallow check",

@@ -3,7 +3,7 @@
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 
-use crate::child_environment::SECRET_VARIABLES;
+use crate::child_environment::{GIT_REPOSITORY_VARIABLES, SECRET_VARIABLES};
 use crate::remote::error::Operation;
 #[cfg(unix)]
 use crate::remote::process::kill_command;
@@ -20,6 +20,7 @@ fn every_remote_request_removes_the_org_key_and_keeps_cli_configuration() {
             input: None,
             log: None,
             cancellable: true,
+            git_index: None,
             blacksmith,
         });
         assert_eq!(
@@ -59,5 +60,23 @@ fn process_group_kill_removes_the_org_key_without_spawning_a_helper() {
                 .get_envs()
                 .any(|(name, value)| name == *secret && value.is_none())
         );
+    }
+}
+
+/// Cleanup helpers cannot pass repository selection or config to their descendants.
+#[cfg(unix)]
+#[test]
+fn process_group_kill_removes_git_repository_variables() {
+    let command = kill_command(123);
+    for name in GIT_REPOSITORY_VARIABLES.iter().chain(SECRET_VARIABLES) {
+        assert!(
+            command
+                .get_envs()
+                .any(|(key, value)| key == *name && value.is_none()),
+            "{name} must be removed"
+        );
+    }
+    for name in ["GIT_ASKPASS", "GIT_SSH_COMMAND"] {
+        assert!(!command.get_envs().any(|(key, _)| key == name));
     }
 }

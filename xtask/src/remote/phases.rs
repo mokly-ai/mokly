@@ -1,6 +1,7 @@
 //! Parallel warmup and the all-probes-before-suites barrier.
 
 use std::collections::BTreeSet;
+use std::path::Path;
 use std::thread;
 
 use crate::remote::cleanup::contracts::BoxCleanup;
@@ -91,6 +92,7 @@ impl DefaultRemoteRunner {
         boxes: &[String],
         fingerprint: &str,
         head: &str,
+        snapshot: &Path,
         cleanup: &dyn BoxCleanup,
     ) -> Result<()> {
         let dependencies = &self.dependencies;
@@ -103,7 +105,7 @@ impl DefaultRemoteRunner {
                 .map(|id| {
                     let command = &command;
                     scope.spawn(move || {
-                        let output = dependencies.blacksmith.run(id, command, None)?;
+                        let output = dependencies.blacksmith.run(snapshot, id, command, None)?;
                         let text = output.combined();
                         cleanup.record_run(id, &text);
                         let identity = success(&output, Operation::Blacksmith)

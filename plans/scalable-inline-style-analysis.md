@@ -2246,6 +2246,7 @@ Supervisor decision (2026-10-10), after the user questioned compatibility code: 
 - [x] Record every merge and test decision in the PR justifications, audit
       deletions, commit and push. Fetch main and report a new dry run if it moved;
       do not merge again. Stop if PR #182 has merged before the push.
+- [ ] Discovered: merge main #193 (remote gate from a pushed base commit), and link its new protocol page from the protocol index. Evidence: `.context/scalable-inline-style-analysis/m15-merge/third/`.
 - [ ] After the push, use
       [the implementation review prompt](../docs/implementation-review-prompt.md)
       against `origin/main`. Keep the review read-only, then apply the

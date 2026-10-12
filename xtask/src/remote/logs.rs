@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex};
 
 use crate::remote::contracts::{LogSink, Logs};
 use crate::remote::error::{Error, Operation, Result};
+use crate::remote::identity::RunIdentity;
 
 /// Filesystem log factory rooted in the checkout.
 pub(crate) struct SystemLogs {
@@ -15,6 +16,14 @@ pub(crate) struct SystemLogs {
 }
 
 impl Logs for SystemLogs {
+    fn write_identity(&self, identity: &RunIdentity) -> Result<()> {
+        let path = self
+            .workspace
+            .join(".context/verification-logs/remote")
+            .join(identity.run().as_str())
+            .join("identity.json");
+        self.open(&path)?.write(identity.json().as_bytes())
+    }
     fn prepare(&self, run: &str) -> Result<()> {
         for relative in [
             ".context/verification-logs/remote",

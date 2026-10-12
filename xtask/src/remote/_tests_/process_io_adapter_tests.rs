@@ -16,6 +16,7 @@ use crate::remote::process::Process;
 
 use super::process_adapter_support::{process, request};
 
+/// Re-execute one named test and require the child to run its assertions.
 fn isolated_environment(test_name: &str, variables: &[(&str, &str)]) -> bool {
     const CHILD_MARKER: &str = "MOKLY_XTASK_ADAPTER_ENV_CHILD";
     if env::var(CHILD_MARKER).as_deref() == Ok(test_name) {
@@ -32,6 +33,11 @@ fn isolated_environment(test_name: &str, variables: &[(&str, &str)]) -> bool {
         .unwrap();
     assert!(
         output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+    assert!(
+        String::from_utf8_lossy(&output.stdout).contains("running 1 test"),
         "{}",
         String::from_utf8_lossy(&output.stdout)
     );
@@ -174,4 +180,40 @@ fn removes_secret_environment_from_real_children() {
             .unwrap();
         assert!(output.success(), "the child inherited a secret variable");
     }
+}
+
+/// Repository overrides from a Git-started parent never reach a request's real child.
+#[test]
+fn removes_git_repository_variables_from_real_children() {
+    let variables = [
+        ("GIT_DIR", "/unused/git-dir"),
+        ("GIT_WORK_TREE", "/unused/work-tree"),
+        ("GIT_INDEX_FILE", "/unused/index"),
+        ("GIT_PREFIX", "parent-prefix/"),
+        ("GIT_ASKPASS", "retained-askpass"),
+        ("GIT_SSH_COMMAND", "retained-ssh-command"),
+    ];
+    if isolated_environment(
+        "removes_git_repository_variables_from_real_children",
+        &variables,
+    ) {
+        return;
+    }
+    let directory = TestDirectory::new();
+    let process = process(Arc::new(AtomicBool::new(false)), Arc::new(Unimock::new(())));
+    for (name, _) in &variables[..4] {
+        assert!(env::var(name).is_ok());
+        let output = process
+            .execute(&request(
+                directory.path(),
+                &format!("test \"${{{name}+set}}\" != set"),
+            ))
+            .unwrap();
+        assert!(output.success(), "the child inherited {name}");
+    }
+    let output = process.execute(&request(
+        directory.path(),
+        "test \"$GIT_ASKPASS\" = retained-askpass && test \"$GIT_SSH_COMMAND\" = retained-ssh-command",
+    )).unwrap();
+    assert!(output.success());
 }

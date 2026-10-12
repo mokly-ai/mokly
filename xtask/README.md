@@ -24,8 +24,9 @@ internal binary and is not published to npm or crates.io.
 
 The crate provides the implementation behind `cargo xtask check`,
 `cargo xtask rust-file-length-lint`, and `cargo xtask source-file-length-lint`.
-Every spawned command runs from the workspace root even if xtask starts in a
-subdirectory. The source audit finds that root with Git, covers `.ts`, `.tsx`,
+Local suite commands run from the workspace root even if xtask starts in a
+subdirectory. Snapshot operations and remote sync use the directories defined
+by the base sync contract. The source audit finds the workspace root with Git, covers `.ts`, `.tsx`,
 `.js`, `.jsx`, `.mjs`, `.cjs`, `.mts` and `.cts` anywhere in the repository plus
 `docs/protocol/**/*.md`, and excludes only Git-ignored untracked files.
 `--all` audits every tracked or non-ignored untracked scoped file.
@@ -134,7 +135,8 @@ complete gate passes the same mode to the repository command on its Testbox.
 `--executor auto|local|remote` overrides `MOKLY_CHECK_EXECUTOR`.
 An absent flag and variable select `auto`. Explicit `local` skips remote checks.
 Explicit `remote` rejects `--suite` and GitHub Actions.
-Push local `HEAD` before a remote check. Install `blacksmith`, `rsync` and `ssh`.
+Remote checks need a pushed ancestor in local origin refs. Unpushed checkout
+commits can use that base. Install `blacksmith`, `rsync` and `ssh`.
 PATH lookup skips entries when file access fails.
 Set `BLACKSMITH_ORG_TOKEN` to use org-key login through stdin.
 Remote mode can use the current CLI login when the key is absent.
@@ -142,13 +144,37 @@ Login saves the key in `~/.blacksmith/credentials`.
 It replaces any saved login for the same organization.
 The CLI never receives the key in arguments or remote commands.
 Every xtask child removes the shared secret environment list, which currently
-contains only `BLACKSMITH_ORG_TOKEN`. Key login still uses standard input.
+contains only `BLACKSMITH_ORG_TOKEN`, and the shared Git repository variable
+list. This keeps hooks, `git rebase -x` and aliases from redirecting children to
+the caller's repository. Remote requests set their temporary index afterwards.
+Settings carried by `GIT_CONFIG_PARAMETERS` or `GIT_CONFIG_COUNT`, including
+`git -c` settings, are removed with the list. Other variables, such as
+`GIT_ASKPASS` and `GIT_SSH_COMMAND`, stay. Key login still uses standard input.
 Availability checks name all missing programs in one diagnostic, in the order
 `blacksmith`, `rsync`, `ssh`, with their install hints.
 Warmup uses the Testbox workflow from `main`.
 Set `MOKLY_TESTBOX_REF=<pushed branch>` only to test a changed Testbox workflow
 before it merges.
-It does not change the required source fingerprint or `HEAD`.
+It changes neither the source fingerprint nor the selected base commit.
+
+Every remote run builds a fresh detached snapshot under
+`.context/verification-snapshots/<run>/`. The snapshot has the checkout's
+working files and a pushed base as `HEAD`. That base can equal checkout
+`HEAD` or precede unpushed commits. The main merge-base filter keeps the
+checkout and box comparison bases equal.
+Probes and suites sync from the snapshot. Management and report downloads
+keep the workspace root. Before warmup, both fingerprints must match.
+The suite wrapper stages the synced box files after its fingerprint check,
+so index readers see the same tree as a committed checkout.
+The final fingerprint still reads the checkout. Its `HEAD`, index and files
+stay unchanged by snapshot construction. Existing snapshot or temporary-index
+paths fail preparation. Cleanup removes only this run's owned paths.
+Snapshot Git requests cannot be cancelled. Cleanup also covers partial builds
+and panic unwind. A removal failure warns once with manual commands.
+It does not fail the check. The identity line and summary name the base.
+The summary also gives the remaining box cleanup count.
+`identity.json` records checkout `HEAD`, base, ahead count and fingerprint
+beside the logs. Suite reports and aggregation use the base commit.
 
 The [remote contract](../docs/protocol/remote-verification.md) defines the
 availability order, probe barrier and report aggregate.
@@ -229,19 +255,35 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 
-The `*_adapter_tests.rs` files under `src/remote/_tests_/` and
-`src/remote/clients/_tests_/` test operating-system boundaries with real shell
-children and temporary directories. They cover streamed logs, private stdin,
-child environments, process-group cleanup, fresh log files, PATH permissions
+The `*_adapter_tests.rs` files under `src/remote/_tests_/`,
+`src/remote/clients/_tests_/` and `src/remote/snapshot/_tests_/` test
+operating-system boundaries with real shell children and temporary directories.
+The base and snapshot adapter tests create real Git repositories in temporary
+directories. The adapter tests cover streamed logs, private stdin, child
+environments, process-group cleanup, fresh log files, PATH permissions
 and interrupt state order. They also cover the SSH close request, socket path
 and cleanup details. They use readiness signals and expected-state waits.
 They do not assert elapsed time.
+Fixture Git setup and inspection use
+[`git_test_runner.rs`](./src/remote/_tests_/git_test_runner.rs) with an empty
+global config file and system config disabled. Code under test still uses
+`SystemProcess` with its real config. Captured requests record only that code.
 
 ### Key Code
 
 - [`src/cli.rs`](./src/cli.rs) parses and dispatches commands.
 - [`src/application.rs`](./src/application.rs) selects the effective executor.
 - [`src/remote/runner.rs`](./src/remote/runner.rs) owns remote phase order.
+- [`src/remote/base.rs`](./src/remote/base.rs) selects the typed pushed ancestor
+  and preserves the main merge base. [`git_identity.rs`](./src/remote/git_identity.rs)
+  validates Git object names.
+- [`src/remote/preparation.rs`](./src/remote/preparation.rs) builds and compares
+  the snapshot before warmup. [`identity.rs`](./src/remote/identity.rs) formats
+  the typed run evidence.
+- [`src/remote/snapshot/system.rs`](./src/remote/snapshot/system.rs) creates
+  snapshots through injected process and file boundaries. Its
+  [runner guard](./src/remote/snapshot/guard.rs) and
+  [construction guard](./src/remote/snapshot/construction.rs) own cleanup.
 - [`src/remote/contracts.rs`](./src/remote/contracts.rs) defines injected
   environment, Git, CLI, clock, script, log, signal and output boundaries.
 - [`src/remote/cleanup/guard.rs`](./src/remote/cleanup/guard.rs) owns box state
@@ -257,7 +299,8 @@ They do not assert elapsed time.
 - [`src/command.rs`](./src/command.rs) defines the injected command-runner
   boundary.
 - [`src/child_environment.rs`](./src/child_environment.rs) defines the shared
-  secret environment list for local commands, remote requests and helpers.
+  secret and Git repository variable lists for local commands, remote requests,
+  helpers and Rust test Git requests.
 - [`src/check/request.rs`](./src/check/request.rs) validates suite, shard, and
   dependency audit selections before subprocesses start.
 - [`src/check/commands.rs`](./src/check/commands.rs) defines the shared suite
@@ -315,6 +358,7 @@ They do not assert elapsed time.
 - [CI suite evidence](../docs/protocol/ci-suite-evidence.md)
 - [CI example compilation snapshot](../docs/protocol/ci-example-snapshot.md)
 - [Remote verification](../docs/protocol/remote-verification.md)
+- [Base commit sync](../docs/protocol/remote-verification-base.md)
 - [Cleanup and interrupts](../docs/protocol/remote-verification-cleanup.md)
 - [Testbox execution](../docs/protocol/remote-verification-testbox.md)
 - [Dependency security](../docs/protocol/dependency-security.md)

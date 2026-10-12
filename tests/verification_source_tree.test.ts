@@ -133,10 +133,15 @@ test("submodule index entries fail even when their working-tree path is absent",
   await assert.rejects(readSourceTree(root), /submodule/u);
 });
 
-test("a directory in place of a tracked file fails rather than disappearing", async (context) => {
+test("a nested repository in place of a tracked file fails rather than disappearing", async (context) => {
   const { root, file } = await repository(context);
   await fs.rm(file);
-  await fs.mkdir(file);
+  const { isolatedGitEnvironment } =
+    await import("./helpers/source_tree_types.js");
+  const env = await isolatedGitEnvironment(
+    path.join(root, ".git", "empty-global.gitconfig"),
+  );
+  await execute("git", ["init", "--initial-branch=nested", file], { env });
   await assert.rejects(readSourceTree(root), /file type/u);
 });
 
