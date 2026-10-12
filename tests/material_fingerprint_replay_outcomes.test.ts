@@ -3,6 +3,8 @@ import { execFile } from "node:child_process";
 import test from "node:test";
 import { promisify } from "node:util";
 
+import { parseFingerprintCatalogueRecords } from "./helpers/fingerprint_catalogue_records.js";
+
 const execute = promisify(execFile);
 
 test("catalogue replay collects fresh CSS proof for each production classification", async () => {
@@ -22,7 +24,17 @@ test("catalogue replay collects fresh CSS proof for each production classificati
     ],
     { env, maxBuffer: 8 * 1024 ** 2 },
   );
-  assert.match(stdout, /"failures":0/);
+  const records = parseFingerprintCatalogueRecords(stdout);
+  assert.equal(records.length, 1);
+  const record = records[0]!;
+  assert.equal(record.failures, 0);
+  assert.ok(
+    record.catalogues > 0,
+    "the replay must run at least one catalogue",
+  );
+  assert.equal(record.pairs, 2 * record.catalogues);
+  assert.equal(record.catalogues, 6);
+  assert.equal(record.pairs, 12);
 });
 
 test("catalogue replay rejects equal replay errors after an original success", async () => {
