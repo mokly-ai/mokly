@@ -153,7 +153,7 @@ mainline paths.
 Each milestone leaves a functioning product and ends with its checks, a
 Conventional Commits commit, a push, and a review of the complete local diff
 against `origin/main` using
-[docs/implementation-review-prompt.md](../docs/implementation-review-prompt.md).
+[docs/implementation-review-prompt.md](https://github.com/mokly-ai/mokly/blob/a177abd22da825576a11c7d102232c71b7d83f32/docs/implementation-review-prompt.md).
 Report review findings numbered, with severity, context, the impact of doing
 nothing, lettered options, and a recommendation; never fix them automatically.
 Add regression tests before changing existing behavior, and keep docs aligned
@@ -597,7 +597,7 @@ Complete the implementation and its review before the PR merge boundary.
       explanatory body, then push the existing branch. Inspect the committed
       diff and deletions against `origin/main`.
 - [x] Only after the push, use
-      [docs/implementation-review-prompt.md](../docs/implementation-review-prompt.md)
+      [docs/implementation-review-prompt.md](https://github.com/mokly-ai/mokly/blob/a177abd22da825576a11c7d102232c71b7d83f32/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`. Do not change
       implementation or automatically fix findings. Report each numbered finding
       with severity, context, impact of doing nothing, lettered solution options,

@@ -142,7 +142,7 @@ watched updates, Review JSON, and publication.
 - [x] Update the PR #118 description to cover this change.
 - [x] Commit and push.
 - [x] Review the complete local diff against `origin/main` using
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b4314fec74ea931862a8ab2afab69d560040396a/docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
       recommendation, without changing the implementation. An independent
@@ -238,7 +238,7 @@ Tags: ui
 - [x] Update the PR #118 description if it no longer covers the branch.
 - [x] Commit and push.
 - [x] Review the complete local diff against `origin/main` using
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b4314fec74ea931862a8ab2afab69d560040396a/docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
       recommendation, without changing the implementation. An independent
@@ -285,7 +285,7 @@ The user asked to fix findings 7 and 8 with the recommended options.
 - [x] Run `cargo xtask check`; fix anything it reports until it passes.
 - [x] Commit and push.
 - [x] Review the complete local diff against `origin/main` using
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b4314fec74ea931862a8ab2afab69d560040396a/docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
       recommendation, without changing the implementation. An independent

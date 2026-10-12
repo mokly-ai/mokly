@@ -357,7 +357,7 @@ Collect the acceptance evidence on the branch before the merge.
       run 37354719684, confirm the `fullFiles` count did not shrink, and save
       the result with the Milestone 6 evidence.
 - [x] Only after the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/28c17fa312f91a6ae36c540adb7c4b1e5cdb6939/docs/implementation-review-prompt.md)
       against `origin/main`. Report numbered findings with severity, context,
       the impact of doing nothing, lettered options, and a recommendation. Do
       not change the implementation or fix findings automatically.
@@ -368,7 +368,7 @@ complete local gate result. Full review report:
 `.context/shared-example-compilation-snapshot/review.md`.
 
 Review summary. The post-push review used
-[the implementation review prompt](../docs/implementation-review-prompt.md)
+[the implementation review prompt](https://github.com/mokly-ai/mokly/blob/28c17fa312f91a6ae36c540adb7c4b1e5cdb6939/docs/implementation-review-prompt.md)
 on head `9d15e6d` and reported three findings; Milestone 7 applies the
 review-fix rule that main's #147 added.
 
@@ -387,7 +387,7 @@ the fix, and the other findings wait for the user.
       line, `mokly-example-compilation-snapshot 1`.
 - [x] Run `cargo xtask check`, commit with the fixed findings named in the
       message, and push.
-- [x] Re-run [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] Re-run [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/28c17fa312f91a6ae36c540adb7c4b1e5cdb6939/docs/implementation-review-prompt.md)
       once on the fix against `origin/main`. Fix new `Auto-fix: yes` findings
       once, then stop and report. The re-review confirmed findings 4 and 5
       and reported finding 6, `Auto-fix: yes`: the example README now says
@@ -423,7 +423,7 @@ instead of writing a snapshot that drops the field.
 - [x] Run `cargo xtask check`, commit with finding 1 named in the message, and
       push.
 - [x] Only after the push, review the change with
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/28c17fa312f91a6ae36c540adb7c4b1e5cdb6939/docs/implementation-review-prompt.md)
       against `origin/main`, then apply the review-fix rule: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest. The
       review of `c51b896` confirmed the finding 1 fix and reported no new
@@ -462,7 +462,7 @@ snapshot so that the key and the test copy cover the same inputs.
       unit runs require it.
 - [x] Run `cargo xtask check`, commit, and push.
 - [x] Only after the push, review the change with
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/28c17fa312f91a6ae36c540adb7c4b1e5cdb6939/docs/implementation-review-prompt.md)
       against `origin/main`, then apply the review-fix rule: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest.
   - [x] Fix finding 8 (Low, docs): `ci-verification.md` says that a complete
@@ -514,7 +514,7 @@ merges main and confirms that the snapshot needs no change.
       the preservation checks, validate the Markdown, and run the repository
       suite.
 - [x] Only after the push, review the change with
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/28c17fa312f91a6ae36c540adb7c4b1e5cdb6939/docs/implementation-review-prompt.md)
       against `origin/main`, then apply the review-fix rule: fix the
       `Auto-fix: yes` findings, re-review once, and report the rest.
   - [x] Fix finding 14 (Low, docs): the status paragraph and the heading no

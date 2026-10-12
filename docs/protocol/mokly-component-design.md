@@ -191,5 +191,5 @@ caption to its recorded change and pins the Checklist's Changes, and
 aligned with the catalogue. Visually inspect
 all generated mobile and desktop pages, including both selected-instance states.
 Run `cargo xtask check` before committing and pushing. After the push, use the
-[implementation review prompt](../implementation-review-prompt.md) against
-`origin/main` and report findings without changing the implementation.
+`implementation-review` skill against `origin/main` and report findings
+without changing the implementation.

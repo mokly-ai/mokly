@@ -334,7 +334,7 @@ the following milestones have a complete contract, and register the plan.
       diff; documentation-only work does not require `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d71b03b7dc40710ef8b187beb6a25ea7a07d6fda/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the
       findings without changing the implementation.
 
@@ -389,7 +389,7 @@ the design catalogue before the implementation lands.
 - [x] Run the design tests, then `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d71b03b7dc40710ef8b187beb6a25ea7a07d6fda/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the
       findings without changing the implementation.
 
@@ -418,7 +418,7 @@ without changing removed-preview behaviour.
       tests and browser specs, then `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d71b03b7dc40710ef8b187beb6a25ea7a07d6fda/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the
       findings without changing the implementation.
 
@@ -487,7 +487,7 @@ drives both documents from one shared scroller.
       then `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d71b03b7dc40710ef8b187beb6a25ea7a07d6fda/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the
       findings without changing the implementation.
 
@@ -612,7 +612,7 @@ document-sized frames; the user confirmed it on 2026-09-27.
       `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d71b03b7dc40710ef8b187beb6a25ea7a07d6fda/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the
       findings without changing the implementation.
 - [x] Fix the review findings that showed this milestone's own work broken,
@@ -678,7 +678,7 @@ complete contract.
       documentation-only work does not require `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d71b03b7dc40710ef8b187beb6a25ea7a07d6fda/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the
       findings without changing the implementation.
 
@@ -729,7 +729,7 @@ and the "Scroll together" toggle on and off, before the runtime changes.
 - [x] Run the design tests, then `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d71b03b7dc40710ef8b187beb6a25ea7a07d6fda/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the
       findings without changing the implementation.
 
@@ -823,7 +823,7 @@ anchors to regions first, and prove both in the browser.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
       Pushed as `5c372c6` and merged in PR #121.
 - [ ] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d71b03b7dc40710ef8b187beb6a25ea7a07d6fda/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report the
       findings without changing the implementation.
 

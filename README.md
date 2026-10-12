@@ -326,7 +326,7 @@ appearance with any preview scheme. See the
 - [Variants](./docs/protocol/mokly-variants.md)
 - [Package ownership boundary](./docs/architecture/package-boundary.md)
 - [React-to-static-HTML pipeline](./docs/architecture/build-pipeline.md)
-- [Agent and contributor rules](./AGENTS.md) with the detailed rule docs under [`docs/dev`](./docs/dev/)
+- [Agent and contributor rules](./AGENTS.md), which name the shared skills that hold the detailed procedures
 - [Changelog](./CHANGELOG.md)
 
 The guides are user-facing and ship with the npm package. The protocol documents

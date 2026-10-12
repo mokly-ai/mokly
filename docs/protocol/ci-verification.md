@@ -138,7 +138,7 @@ include `fix: preserve upload counts`, `chore(main): release 0.13.0` and
 
 This type list is fixed. The unit test asserts the list directly; it does not
 derive policy from Git history, remote-tracking references, or the commit
-examples in `docs/dev/git.md`.
+examples in the shared `git-commit` skill.
 
 An invalid title exits unsuccessfully and prints exactly:
 

@@ -372,7 +372,7 @@ pass 300 lines; `validateShardReports` calls it.
       deletion is in the Inventory. Record the deletions in the commit and PR
       description.
 - [x] Run `git add -A`, commit with Conventional Commits, and push.
-- [ ] Review: after the push, use `docs/implementation-review-prompt.md` to
+- [ ] Review: after the push, use the `implementation-review` skill to
       review the complete local diff against `origin/main`. Report the
       findings. Apply the review-fix rule: fix the `Auto-fix: yes` findings,
       run the checks, commit, push, re-run the review once, and report the
@@ -424,7 +424,10 @@ pass 300 lines; `validateShardReports` calls it.
     `ci-workflow.md` and `AGENTS.md` claim stricter tests than kept (some
     value regexes and the job names in the policy test). Recommendation:
     reword the sentences; do not change the tests. Re-evaluated after merge
-    `b9b62e7`: main did not touch these sentences; unchanged.
+    `b9b62e7`: main did not touch these sentences; unchanged. On 2026-10-12
+    the two `AGENTS.md` rules moved to a proposed section of the shared
+    `deterministic-tests` skill; the `AGENTS.md` part of this finding now
+    applies to that section.
   - Review 1, open, finding 6 (test, medium): `mokly/no-artifact-path-literals`
     covers nine fewer files than the deleted scanner (`packages/viewer/scripts/`,
     root `eslint.config.js`, `playwright.config.ts`). Recommendation: scope the

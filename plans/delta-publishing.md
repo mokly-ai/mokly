@@ -708,7 +708,7 @@ Complete branch work before review; merge remains the completion boundary.
       Committed as `52ca854 feat(publish)!: upload catalogue content deltas`;
       the title originally planned here was 51 characters, over the
       50-character limit in `AGENTS.md`.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/0c8245f8dd3d6fd9802f8d2bf9cdea43819f9a69/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; write the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
@@ -878,7 +878,7 @@ Release notes depend on the squash title, so CI checks it.
 - [x] After checks pass, `git add -A`, commit with a Conventional Commits
       title of at most 50 characters, and push the branch. Committed as
       `b012d69 fix(publish): apply the delta publishing review`.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/0c8245f8dd3d6fd9802f8d2bf9cdea43819f9a69/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
@@ -963,7 +963,7 @@ test keeps every test independent of remote-tracking references.
 - [x] After checks pass, `git add -A`, commit with a Conventional Commits
       title of at most 50 characters, and push the branch. Committed as
       `bf63380 fix(publish): keep recovery errors after Ctrl+C`.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/0c8245f8dd3d6fd9802f8d2bf9cdea43819f9a69/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
@@ -1051,7 +1051,7 @@ CI proves the suites do not need remote-tracking references.
 - [x] After checks pass, `git add -A`, commit with a Conventional Commits
       title of at most 50 characters, and push the branch. Committed as
       `78f259d fix(publish): classify Ctrl+C before installation`.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/0c8245f8dd3d6fd9802f8d2bf9cdea43819f9a69/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
@@ -1128,7 +1128,7 @@ Documentation and contract only. Validate with Prettier and the guide tests;
 - [x] After checks pass, `git add -A`, commit with a Conventional Commits
       title of at most 50 characters, and push the branch. Committed as
       `4f230ad fix(publish): settle Ctrl+C races and remote state`.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/0c8245f8dd3d6fd9802f8d2bf9cdea43819f9a69/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
@@ -1160,7 +1160,7 @@ Documentation and contract only. Validate with Prettier and the guide tests;
 - [x] After checks pass, `git add -A`, commit with a Conventional Commits
       title of at most 50 characters, and push the branch. Committed as
       `820849d ci: remove the remote-state cleanup script`.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/0c8245f8dd3d6fd9802f8d2bf9cdea43819f9a69/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
@@ -1189,7 +1189,7 @@ Documentation and contract only. Validate with Prettier and the guide tests;
 - [x] After checks pass, `git add -A`, commit with a Conventional Commits
       title of at most 50 characters, and push the branch. Committed as
       `a7d0a07 test: replace the git ref lint with a workflow guard`.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/0c8245f8dd3d6fd9802f8d2bf9cdea43819f9a69/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
@@ -1218,7 +1218,7 @@ Documentation and contract only. Validate with Prettier and the guide tests;
 - [x] After checks pass, `git add -A`, commit with a Conventional Commits
       title of at most 50 characters, and push the branch. Committed as
       `6e84de7 test: move the remote-state scanner to a helper`.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/0c8245f8dd3d6fd9802f8d2bf9cdea43819f9a69/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
@@ -1256,7 +1256,7 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       `85290c7` failed unit shard 4 (see the decision's revisions); every
       check on `2be592f` passed, with browser shards of 12m32s, 15m17s,
       14m48s and 7m51s.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/0c8245f8dd3d6fd9802f8d2bf9cdea43819f9a69/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them
@@ -1357,7 +1357,7 @@ Documentation and contract only. Validate with Prettier and the guide tests;
       `cd08836c chore: merge main into bogota-v7`; `cargo xtask check`
       passed (unit 2,813, browser 723, hydration 218) and every check on the
       pull request passed.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/0c8245f8dd3d6fd9802f8d2bf9cdea43819f9a69/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; append the
       numbered, severity-rated findings with lettered options and a
       recommendation to `docs/reviews/delta-publishing.md` and report them

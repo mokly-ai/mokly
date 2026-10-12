@@ -154,7 +154,7 @@ record any necessary contract clarifications before implementation.
       `plans/README.md`; validate Markdown with Prettier and review the diff.
 - [x] After Markdown checks pass, `git add -A`, commit with Conventional
       Commits, and push the documentation.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d7b0ac356b9397caf1db4e8c88add161da8c0f1b/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       findings with severity, options and recommendations without changing
       the implementation, then stop before Milestone 2.
@@ -191,7 +191,7 @@ from the new optional field.
       `cargo xtask check`, and update READMEs.
 - [x] After checks pass, `git add -A`, commit the completed work with
       Conventional Commits, push, and stop for review.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d7b0ac356b9397caf1db4e8c88add161da8c0f1b/docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; report findings
       without changing the implementation, then stop before Milestone 3.
 
@@ -255,7 +255,7 @@ Write and serve the confirmed read model from the same projection code.
 - [x] Update READMEs and delivery statuses; run focused tests and
       `cargo xtask check`.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and push.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d7b0ac356b9397caf1db4e8c88add161da8c0f1b/docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; record findings
       without changing the implementation, then stop before Milestone 4.
 
@@ -422,7 +422,7 @@ indices, retaining the original href, target, namespace and degradation checks.
 - [x] Cover inspector budget, bundle confinement, release inventory, lifecycle
       failures and current-only metadata injection in focused regressions.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits and push.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d7b0ac356b9397caf1db4e8c88add161da8c0f1b/docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; record numbered
       findings with severity, options and recommendations without changing code.
 
@@ -588,7 +588,7 @@ Create `@mokly/viewer` and make Serve and export its first hosts.
       and retain every existing watch test unchanged.
 - [x] After focused checks and `cargo xtask check` pass, `git add -A`, commit
       with Conventional Commits and the requested co-author trailer, and push.
-- [x] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After that push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d7b0ac356b9397caf1db4e8c88add161da8c0f1b/docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; record findings with
       severity, impact, lettered options and recommendations without fixing them.
 
@@ -848,7 +848,7 @@ Prepare both packages to release together from the merge.
       both tarballs from a clean consumer.
 - [x] Run `cargo xtask check`; after it passes, `git add -A`, commit with
       Conventional Commits, and push the branch.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d7b0ac356b9397caf1db4e8c88add161da8c0f1b/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -1020,7 +1020,7 @@ bug fix; record the addressing commit for every finding below.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits (title
       at most 50 characters, body naming all findings and the Codex co-author
       trailer), and push `calummoore/tianjin-v6`.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d7b0ac356b9397caf1db4e8c88add161da8c0f1b/docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; record numbered findings
       with severity, impact, lettered options and recommendations without fixing.
 
@@ -1265,7 +1265,7 @@ public schemas. Earlier milestone notes and findings remain unchanged.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits (title
       at most 50 characters, body naming both findings and ending with the Codex
       co-author trailer), and push `calummoore/tianjin-v6`.
-- [x] After the push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After the push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d7b0ac356b9397caf1db4e8c88add161da8c0f1b/docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; record numbered findings
       with severity, impact, lettered options and recommendations without fixing.
 
@@ -1420,7 +1420,7 @@ updates without remounting the frame.
       inspector size, and unchanged Serve/export shell and comparison bytes.
 - [x] After checks pass, run `git add -A`, commit with Conventional Commits and
       the requested co-author trailer, and push the branch.
-- [x] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After that push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d7b0ac356b9397caf1db4e8c88add161da8c0f1b/docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; record each finding
       with severity, impact, lettered options and a recommendation without fixing.
 
@@ -1568,7 +1568,7 @@ invalidated inspection exactly once without stale masks, labels or pick state.
 - [x] After checks pass, run `git add -A`, commit with Conventional Commits
       (title at most 50 characters, body naming M9-1 and ending with the requested
       co-author trailer), and push the branch.
-- [x] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After that push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d7b0ac356b9397caf1db4e8c88add161da8c0f1b/docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; record numbered findings
       with severity, impact, lettered options and a recommendation without fixing.
 
@@ -1677,7 +1677,7 @@ race pending pick activation past evidence cancellation.
       and skips, and confirm formatting, docs and the complete browser suite.
 - [x] After checks pass, run `git add -A`, commit with Conventional Commits and
       push the branch.
-- [x] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After that push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/d7b0ac356b9397caf1db4e8c88add161da8c0f1b/docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; report numbered findings
       with severity, impact, lettered options and a recommendation without fixing.
 

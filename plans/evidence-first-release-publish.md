@@ -131,7 +131,7 @@ Milestones 2 and 3 have no open questions, and register the plan.
 - [x] Run `npx prettier --check` on the changed Markdown and review the diff.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/bf9e3c9a4151fedacf8c7db5bc957609689a348b/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report
       findings without changing the implementation.
 
@@ -198,7 +198,7 @@ existing complete path.
       complete `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/bf9e3c9a4151fedacf8c7db5bc957609689a348b/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report
       findings without changing the implementation.
 
@@ -242,7 +242,7 @@ guard, and prove the workflow contract with tests.
       `npm run format:check`, then the complete `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/bf9e3c9a4151fedacf8c7db5bc957609689a348b/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report
       findings without changing the implementation.
 
@@ -265,7 +265,7 @@ dual-runtime release evidence boundary.
 - [x] `git add -A`, commit the semantic merge resolution with a Conventional
       Commit, and push the branch, including the merge commit.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/bf9e3c9a4151fedacf8c7db5bc957609689a348b/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main` and report
       findings without changing the implementation.
 

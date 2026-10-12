@@ -216,5 +216,5 @@ After dependency updates, use a clean `npm ci`, run the complete
 `cargo xtask check`, and exercise the real preview runtime through its browser
 tests. Review lockfile removals, package engines, native optional packages, and
 the packed artifact. Commit and push all completed changes before using the
-[implementation review prompt](../implementation-review-prompt.md) against
-`origin/main`; apply the repository review-fix rule to its findings.
+`implementation-review` skill against `origin/main`; apply its review-fix rule
+to the findings.

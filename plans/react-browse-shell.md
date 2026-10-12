@@ -686,7 +686,7 @@ boundary.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b5c9f07dc70290c990f9608fc0d75e58188a50b5/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -711,7 +711,7 @@ hydrate public viewer SSR in place before enabling browser-only behavior.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b5c9f07dc70290c990f9608fc0d75e58188a50b5/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -739,7 +739,7 @@ one host document.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b5c9f07dc70290c990f9608fc0d75e58188a50b5/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -764,7 +764,7 @@ cannot concatenate with dynamic package-owned IDs into the same DOM identifier.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b5c9f07dc70290c990f9608fc0d75e58188a50b5/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -791,7 +791,7 @@ same-origin frame is mounting or replacing its document.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b5c9f07dc70290c990f9608fc0d75e58188a50b5/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -819,7 +819,7 @@ handoff contract so CI exercises each lifecycle state deterministically.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b5c9f07dc70290c990f9608fc0d75e58188a50b5/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.

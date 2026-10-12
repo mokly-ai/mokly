@@ -29,7 +29,7 @@ Reviewers may accept these names and references in the following content:
   are domain terms, not implementation references.
 
 Reviews check this rule. No test checks documentation wording, as required by
-[`AGENTS.md`](../../AGENTS.md). Tests compare documentation with code
+the shared `deterministic-tests` skill. Tests compare documentation with code
 structurally, including parsed values, names, options, tables, links and counts.
 
 ## Plan History And Local Links

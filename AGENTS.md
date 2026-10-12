@@ -1,171 +1,124 @@
 # A guide for agents
 
-This file holds the rules that apply in every session. Detailed procedures
-live under [`docs/dev`](./docs/dev). Each entry below says what the doc covers
-and when to read it. Read the doc at that point instead of guessing the rule.
+Mokly builds app-independent static mockup catalogues, serves them for
+development browsing, and renders visual comparisons. The `@mokly/mokly`
+CLI, build, and server are under `src/`. The `@mokly/viewer` React viewer is
+under `packages/viewer`. The example catalogue is under `examples/basic`, the
+tests are under `tests/` and `packages/viewer/tests`, and the Rust
+verification task runner is under `xtask/`. The protocol docs under
+`docs/protocol` are the spec.
 
-## Detailed rule docs
+This file holds the rules that are specific to this repository. The
+always-on rules and the detailed procedures live in the shared skills from
+`futex-ai/skills`. Read the skill at the named moment instead of guessing
+the rule. Rules for one application, package, or feature live in the
+`README.md`, doc, or protocol doc next to the code they describe.
 
-- [Review](./docs/dev/review.md): the post-push implementation review. It
-  holds the review-fix rule, the flaky-test rule, the `Auto-fix: yes` and
-  `Auto-fix: no` conditions, effort grades, the numbered finding format, the fix-round
-  limit, and how to report fixed and open findings. Read it after you push,
-  before you run or apply a review.
-- [Plans](./docs/dev/plans.md): plan files under `plans/`. It holds the
-  status paragraph, milestone and TODO rules, `ui` and `mockup` tags, the
-  PR-merge completion boundary, post-merge follow-up sections, and where
-  evidence logs go. Read it before you create, edit, or tick a plan.
-- [Documentation](./docs/dev/documentation.md): README structure, Rust crate
-  README sections, rules for `docs/`, protocol docs, and mockups including
-  screen components and user flows. Read it before you edit a README, a doc,
-  a protocol doc, or a mockup.
-- [Rust](./docs/dev/rust.md): the full Rust conventions with examples. It
-  holds crate layout, traits and `dyn` dispatch, file size limits, imports,
-  test layout, visibility and modules, explicit drops, typing, panics,
-  unsafe code, and the error-handling contract. Read it before you edit Rust
-  under `xtask/` or any crate.
-- [Databases](./docs/dev/databases.md): query separation, migration naming
-  and freezing, the migration lock, and `*-store-pg` crate boundaries. Read
-  it before you touch migrations, Diesel, or store crates.
-- [Git](./docs/dev/git.md): Conventional Commits, title limits, commit
-  examples, the mainline feature preservation procedure with its merge audit
-  commands, the stale-reference and history rules for removals and renames,
-  and the permalink fix for failed history links. Read it before you commit,
-  merge, rebase, or open a PR.
-- [Product UI](./docs/dev/product-ui.md): where screens live, component
-  reuse, forbidden visual patterns, environment labels, real data, and
-  user-facing copy. Read it before you implement or change a user-facing
-  screen or copy.
+## Shared skills
 
-## General
+- `finish-work`: before you say work is complete, and before you commit.
+- `plans`: before you create, edit, or tick a plan under `plans/`.
+- `implementation-review`: after you push, before you run or apply a
+  review.
+- `deterministic-tests`: when a test flakes, or when a test would assert
+  elapsed time.
+- `git-commit`: before and after you commit, and when you open a pull
+  request.
+- `git-merge`: before you merge or rebase, and after each merge commit.
+- `documentation`: before you edit a `README.md`, a doc, or a protocol doc.
+- `rust`: before you edit Rust under `xtask/`.
+- `mockups`: before you create or change an entry of the example catalogue
+  under `examples/basic`, including the design mockups under
+  `examples/basic/specs/design`.
+- `product-ui`: before you implement or change a user-facing screen or
+  copy.
 
-- When adding new packages or services, always attempt to build them to check for errors
-- Everything must be fully tested
-- During development, run only tests that cover the change. Require a 100% pass
-  rate. Follow the commands and rebuild rules in
-  [developer test commands](./docs/protocol/developer-test-commands.md).
-- Tests must not assert elapsed wall-clock time. Use operation counts, captured inputs, event order or fake-clock time.
-  Follow [CI Test Timing](./docs/protocol/ci-test-timing.md).
-- Do not test documentation wording with regular expressions or sentence
-  matches. Test documentation against code structurally: compare parsed
-  values, names, options, tables, links, and counts with the code or data
-  that owns them.
-- Verify workflow YAML by executing its scripts with controlled inputs and by
-  checking policy properties, such as pinned action revisions and no
-  untrusted interpolation in `run:` steps. Do not assert literal job names,
-  step order, matrix values, or run strings.
-- Run `cargo xtask check --suite repository` early. Leave complete unit and
-  browser suite runs to the complete gate.
-- Run the complete `cargo xtask check` once before saying work is complete.
-  A local run stops at the first failed suite. A remote run reports every
-  failed suite. After a failure, fix it. Rerun only the
-  failing tests or the failed repository or package suite. Then rerun the
-  complete gate. If it cannot run, explain the blocker and the checks already run.
-  If a test that the diff does not touch fails and then passes on the rerun,
-  it is an unrelated flaky test. Do not fix it in this branch. Report it under
-  the flaky-test rule in [`docs/dev/review.md`](./docs/dev/review.md).
-- After tests and `cargo xtask check` pass, run `git add -A`, commit the
-  completed work using Conventional Commits, and push the branch; newly created
-  files must be tracked and included in the commit, push, and review diff
-- After the push, review the complete local diff against `origin/main` with
-  [`docs/implementation-review-prompt.md`](./docs/implementation-review-prompt.md),
-  then apply the review-fix rule in [`docs/dev/review.md`](./docs/dev/review.md):
-  fix only the findings tagged `Auto-fix: yes`, re-review once, and report
-  the rest. The review itself stays read-only
-- A flaky test that the diff adds or changes may be fixed without asking only
-  under the flaky-test rule in [`docs/dev/review.md`](./docs/dev/review.md):
-  reproduce the flake, name the nondeterminism source, make the test
-  deterministic, keep every assertion, and add no retry, sleep, repeat, skip,
-  quarantine, or longer time limit. Do not fix a flaky test that the diff does
-  not touch; report it with its name, failure text, rerun outcome, and
-  suspected source. Slow, custom, or low-value tests, gates, lints, and checks
-  stay `Auto-fix: no`; ask the user whether to fix or remove each one, and
-  state what it protects and how long it runs
-- Keep review reports, verification evidence, measurements, and other scratch
-  output under the git-ignored `.context/` directory. Do not create review
-  records or evidence files in the repository
-- Write agent responses to the user, including summaries, plans, and review
-  output, in Simplified Technical English (STE, ASD-STE100): short sentences,
-  one instruction per sentence, active voice, and simple, consistent words
-- Documentation-only or plan-only changes, including initial plan creation, do not require `cargo xtask check`; validate the changed Markdown and review the diff instead
-- This project is not currently in production/live, so breaking changes are
-  acceptable when they improve correctness, architecture, or product quality
-- Prefer graceful handling. When input is recoverable, warn and continue; fail
-  only when the output would be wrong or unsafe. Do not add a new build error,
-  rejection, gate, or stricter validation without asking the user
-- Read the README.md for the relevant section of code you are working on, and
-  update it with any new useful context. Keep every README.md up to date with
-  the code you change, and follow
-  [`docs/dev/documentation.md`](./docs/dev/documentation.md) for the required
-  structure
-- Docs under `docs/`, protocol docs, and mockups are part of the spec. Keep
-  them aligned with the implementation in the same change, and follow
-  [`docs/dev/documentation.md`](./docs/dev/documentation.md)
-- Plans live under `plans/`. Create one only with the user's consent and
-  follow [`docs/dev/plans.md`](./docs/dev/plans.md). Tick TODOs as you
-  complete them, and add any TODO you discover under the relevant milestone
-- If you get compile errors, keep working to fix them until you no longer have errors
-- If you get a command error, like invalid parameter error, don't give up immediately, try at least once again
-- Keep files short - around 300 lines is an ideal length, split up the file if
-  longer. The repository gate caps changed TypeScript/JavaScript at 300 lines
-  and protocol Markdown at 250 lines
-- Take as long as you need
-- Be careful; think carefully about the best impl
-- Use best practises
-- Code quality is important
-- Keep this file limited to general repo-wide rules that apply in every
-  session. Put detailed procedures under `docs/dev` and list them above.
-  Application-specific, crate-specific, or feature-specific rules should live
-  in the relevant README.md, docs, or protocol files near the code they
-  describe.
-- Whenever adding new features, run smoke tests (i.e. start the server, try commands, etc)
-- Whenever you find bugs like this ensure you add a test first to capture the failure, and then fix it
-- Data displayed to the user must never be faked, stubbed, hardcoded, or
-  mocked in product code; render an explicit empty, loading, or error state
-  until the real source is wired. User-facing copy must read as product
-  language, never as engineer-facing build or status output. Follow
-  [`docs/dev/product-ui.md`](./docs/dev/product-ui.md) for UI and copy work
+## Communication
 
-## Rust
+- Write responses, summaries, plans, and review output in Simplified
+  Technical English (ASD-STE100): short sentences, one instruction per
+  sentence, active voice, and simple, consistent words.
+- Assume the reader has no context. Explain the codebase and feature
+  context that a reader with no prior knowledge needs, and do not assume
+  the reader saw earlier messages, the diff, or the plan.
+- Report outcomes faithfully. Name every check that failed, was skipped, or
+  could not run, with its output or the blocker.
+- Ask for all decisions in one numbered message. For each decision give
+  its severity and effort, the context, the impact if no action is taken,
+  lettered options, and a recommended option. Do the independent work
+  first, then stop and wait.
+- End every task with a final report: what changed and the commit, each
+  decision and its outcome, the checks that ran, anything skipped, and the
+  outstanding decisions or review items that still need the user.
 
-The full conventions with examples are in [`docs/dev/rust.md`](./docs/dev/rust.md).
-These rules apply to every Rust edit:
+## Commands
 
-- Use a workspace with multiple crates to split up the code into concrete units; every crate has its own README.md
-- Run `cargo fmt --all -- --check` after Rust changes; if it fails, run `cargo fmt --all` and re-run the check. Run `cargo clippy` after making any changes
-- Add **external** dependencies with `cargo add` without a version; add **workspace internal crates** manually with `dependency = { workspace = true }`
-- Model all non-pure behavior behind traits and consume it through `dyn Trait`, with `Arc<dyn Trait + Send + Sync>` for shared runtime dependencies. Prefer `dyn` dispatch over parametric generics. Only small pure free functions and pure value types are exempt
-- Use `unimock` to mock trait boundaries in unit tests, including same-crate traits with one implementation; unit tests must not use real disk IO, databases, Docker, subprocesses, clocks, or network calls
-- Use `tracing` for diagnostics in libraries, servers, and workers; never `println!`, `eprintln!`, or `dbg!` there. Direct terminal output is only for CLI results, prompts, raw data output, REPL messages, build-script directives, tests, examples, and `xtask` output
-- Every Rust module has a module-level doc comment and every public item has a doc comment; avoid inline comments
-- Rust files under `crates/` and `xtask/` have a 300-line hard cap enforced by `cargo xtask rust-file-length-lint`; target 200 lines, split into modules, and never use `include!` to get around it
-- Order imports std, external crates, `crate::`, then `self::`/`super::`. Declare them at the top of the file, never rename with `as`, and prefer imports over inline `crate::` paths
-- Keep tests out of production files. Put them in a `_tests_` directory beside the source and declare them with `#[cfg(test)] #[path = "_tests_/<name>_tests.rs"]`. Use file-based `insta` snapshots only
-- Use the narrowest visibility that works, keep `lib.rs`, `mod.rs`, and `bin.rs` as thin module roots, use `#[path]` only for test modules, and use `#[expect(dead_code, reason = "...")]` rather than a silent `allow`
-- Do not call `drop` unless absolutely necessary; end a borrow with a scope instead
-- Prefer enums and structs over raw strings and `serde_json::Value`; fully type domain, service, and interface code
-- **NEVER** use `panic!()`, `unwrap()`, or `expect()` in production code; test code may use them
-- Avoid `unsafe` except for FFI, keep it minimal, and add a safety comment
-- Define errors as `thiserror` enums per crate or module with `[crate/mod]` message prefixes, typed variants that callers branch on, and `Internal(#[from] InternalError)` as the fallback. Propagate with `?`. Never use `anyhow`, `eyre`, `#[error(transparent)]`, `Other(String)`, string matching on errors, or `map_err` in production code
+- Build: `npm run build`.
+- Targeted tests: `npm test -- <file> --test-name-pattern=<regex>` for unit
+  tests and `npm run test:browser -- <spec> -g "<name>"` for browser specs.
+  Both commands build first. The
+  [developer test commands](./docs/protocol/developer-test-commands.md)
+  hold the full rules, including the raw commands that test the last build.
+- Early check (format, lint, file length, exports, Rust):
+  `cargo xtask check --suite repository`.
+- Complete gate: `cargo xtask check`. A local run stops at the first failed
+  suite. A [remote run](./docs/protocol/remote-verification.md) reports
+  every failed suite. Rerun one failed suite with `--suite <name>`.
+- Format: `npm run format` and `cargo fmt --all`.
+- Markdown check: `npm run format:check` and
+  `npm test -- tests/markdown_links.test.ts`.
+- Mockup check, after you change an example entry, the renderer, the
+  configuration, or a configured style: `npm run build`,
+  `npm run example:build`, and `npm run example:check`. Then smoke-test the
+  changed pages through `npm run dev`.
 
-## Git
+## Repository rules
 
-The full rules, commit examples, and the mainline preservation procedure are in
-[`docs/dev/git.md`](./docs/dev/git.md). These rules apply to every commit:
+- The repository gate caps changed TypeScript and JavaScript files at 300
+  lines and protocol Markdown at 250 lines. The exact reviewed caps in
+  `xtask/protocol-document-caps.json` are the only exceptions. Fetch
+  `origin/main` before you run `cargo xtask source-file-length-lint`.
+- `cargo xtask rust-file-length-lint` caps Rust files under `xtask/` and
+  `crates/` at 300 lines. Every run audits every Rust file there. There is
+  no override.
+- `tests/markdown_links.test.ts` checks the local links and anchors in
+  `AGENTS.md`, `docs/`, `plans/`, and every `README.md`. It needs the
+  example output from `npm run prepare:verification`.
+- Never commit anything under `examples/basic/mokly-generated/`, and never
+  hand-edit its HTML or `mokly-manifest.json`. Commit the authored specs,
+  configuration, components, and CSS under `examples/basic/`.
+- Do not write angle-bracket placeholders such as `<path>` in commit
+  messages or pull request descriptions. Write `{path}` instead. Release
+  Please copies changelog text into the release PR body and parses that
+  body as HTML, so an unclosed tag stops the release. Code spans do not
+  help, because the parser does not read Markdown. See
+  [release recovery](./docs/protocol/npm-release-management.md#release-recovery).
+- [CI test timing](./docs/protocol/ci-test-timing.md) holds the timing
+  contract for the unit, browser, and hydration suites. Read it with the
+  `deterministic-tests` skill.
+- Read a plan item that names the removed `cargo xtask review` command as a
+  review item that uses the `implementation-review` skill.
 
-- Use the **Conventional Commits** format for every commit message and pull request title. Commit titles use at most 50 characters; pull request titles and their squash commit titles use at most 72 Unicode code points. A commit may hold multiple entries separated by blank lines, ordered by type priority
-- Do not delete or override anything already on `origin/main`, including code, APIs, tests, docs, mockups, plans, migrations, and schema, without explicit user approval
-- Before you merge or rebase, and before and after you commit, run the mainline preservation audit in [`docs/dev/git.md`](./docs/dev/git.md); resolve conflicts path-by-path, and verify the worktree before saying a merge is complete
-- When a change removes or renames a feature, test, fixture, scenario,
-  command, or file, search `docs/`, `plans/`, and every `README.md` for its
-  name. Update each stale reference in live content in the same change.
-  Record each plan edit in the commit or PR description.
-- `docs/` and every `README.md` are live content. In an active plan,
-  completed milestones and checked TODOs are history; all other content is
-  live. In a completed plan, open review findings and unchecked post-merge
-  follow-ups are live; all other content is history. Do not change the
-  words of history.
-- `tests/markdown_links.test.ts` checks the local links in `AGENTS.md`,
-  `docs/`, `plans/`, and every `README.md`. If a history link fails this
-  check, do not change the words of history; replace the link with a GitHub
-  permalink as described in [`docs/dev/git.md`](./docs/dev/git.md).
+## Product
+
+- The product screens are the Browse shell under
+  `packages/viewer/src/shell`. Serve, export, and React hosts render this
+  same tree. Check its existing components before you create a component.
+- The design mockups of these screens live in
+  `examples/basic/specs/design`. Build them from the shared design
+  components in `examples/basic/specs/design/library`. Each shared
+  component's own styles live in `examples/basic/design-library`. Shared,
+  layout, and global design styles stay in the mixed
+  `examples/basic/design*.css` files.
+
+## Review focus
+
+- App independence, generated-output safety, server and watcher lifecycle,
+  comparison behaviour, and protocol alignment.
+- The current-documentation rule in the
+  [documentation policy](./docs/protocol/documentation-policy.md).
+
+## Status
+
+- This project is not in production. Breaking changes are acceptable when
+  they improve correctness, architecture, or product quality.

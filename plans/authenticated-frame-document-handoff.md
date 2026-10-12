@@ -136,7 +136,7 @@ the implementation has a complete contract, and record the plan.
       diff; documentation-only work does not require `cargo xtask check`.
 - [x] `git add -A`, commit with Conventional Commits, and push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b95ad472c04768e777bc8f2d3b0555380f0e8f61/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -215,7 +215,7 @@ regression green.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b95ad472c04768e777bc8f2d3b0555380f0e8f61/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -259,7 +259,7 @@ first hydration or authenticated handoff continuity.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b95ad472c04768e777bc8f2d3b0555380f0e8f61/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.
@@ -290,7 +290,7 @@ without weakening the navigation or handoff assertions.
 - [x] After checks pass, `git add -A`, commit with Conventional Commits, and
       push the branch.
 - [x] After the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/b95ad472c04768e777bc8f2d3b0555380f0e8f61/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report
       numbered, severity-rated findings with options and recommendations
       without changing the implementation.

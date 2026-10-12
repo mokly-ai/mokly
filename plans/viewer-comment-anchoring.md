@@ -192,7 +192,7 @@ Define the complete contract above before any implementation.
 - [x] Validate the changed Markdown with `npx prettier --check` on the changed
       files and review the diff for internal consistency.
 - [x] Run `git add -A`, commit with Conventional Commits and push the branch.
-- [x] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After that push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/adac9e1d56549a5ba164bf90508a93fd59d34e44/docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; report numbered
       findings with severity, impact, lettered options and a recommendation
       without fixing.
@@ -256,7 +256,7 @@ and round-trip it, then address instance refs on any variant.
       require zero failures, retries and skips.
 - [x] After checks pass, run `git add -A`, commit with Conventional Commits and
       push the branch.
-- [x] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After that push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/adac9e1d56549a5ba164bf90508a93fd59d34e44/docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; report numbered
       findings with severity, impact, lettered options and a recommendation
       without fixing.
@@ -312,7 +312,7 @@ Highlight every commented instance at once using the existing masks and labels.
       require zero failures, retries and skips.
 - [x] After checks pass, run `git add -A`, commit with Conventional Commits and
       push the branch.
-- [x] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After that push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/adac9e1d56549a5ba164bf90508a93fd59d34e44/docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; report numbered
       findings with severity, impact, lettered options and a recommendation
       without fixing.
@@ -391,7 +391,7 @@ Position host-owned marker content on instances and keep it there.
       require zero failures, retries and skips.
 - [x] After checks pass, run `git add -A`, commit with Conventional Commits and
       push the branch.
-- [x] After that push, use [the implementation review prompt](../docs/implementation-review-prompt.md)
+- [x] After that push, use [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/adac9e1d56549a5ba164bf90508a93fd59d34e44/docs/implementation-review-prompt.md)
       against the complete local diff from `origin/main`; report numbered
       findings with severity, impact, lettered options and a recommendation
       without fixing.

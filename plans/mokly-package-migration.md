@@ -102,7 +102,7 @@ Delivered in `96a7ca6` (`feat!: rename package to Mokly`), pushed to
 Summary: review the exact pushed result without changing implementation.
 
 - [x] After the push, use
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/681db1aa2ed63dc94f5bb40b563a2a95ff526167/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report every
       finding and recommendation without applying fixes.
 
@@ -217,7 +217,7 @@ new findings. Record the outcome and move this plan to the completed index in a
 documentation-only closeout commit, then push and review that final diff too.
 
 - [x] After the push, use
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/96a7ca66ba89e24017152368e2154e75230e9f9a/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`; report every
       finding and recommendation without applying fixes.
 

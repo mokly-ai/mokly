@@ -482,7 +482,7 @@ writer together, and remove the development redirect and preview redirects.
       layout, identity-only manifest v7, read model v3, review result v4,
       delivery v3, and the removed `/id/` URLs; push.
 - [x] Review the complete local diff against `origin/main` using
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b4314fec74ea931862a8ab2afab69d560040396a/docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
       recommendation, without changing the implementation.
@@ -713,7 +713,7 @@ Tags: ui
       against baselines built by earlier Mokly versions, the removed
       `InstanceRef.variantId`, and the `ScreenNavigateEvent` fields; push.
 - [x] Review the complete local diff against `origin/main` using
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b4314fec74ea931862a8ab2afab69d560040396a/docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
       recommendation, without changing the implementation.
@@ -821,7 +821,7 @@ origin/main`; a test where `origin/main` moved after the branch point
 - [x] Run `cargo xtask check`; fix anything it reports until it passes.
 - [x] Commit; push.
 - [x] Review the complete local diff against `origin/main` using
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b4314fec74ea931862a8ab2afab69d560040396a/docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
       recommendation, without changing the implementation.
@@ -938,7 +938,7 @@ refer to the
 - [x] Run `cargo xtask check`; fix anything it reports until it passes.
 - [x] Commit; push.
 - [x] Review the complete local diff against `origin/main` using
-      [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/b4314fec74ea931862a8ab2afab69d560040396a/docs/implementation-review-prompt.md)
       after the push; report each finding with a number, severity, plain
       explanation, impact of doing nothing, lettered options, and a
       recommendation, without changing the implementation.
@@ -946,7 +946,7 @@ refer to the
 ## Review record
 
 Milestones 2–8 (`a6fe0da`..`d227702e`) were reviewed with the [implementation
-review prompt](../docs/implementation-review-prompt.md) after the full gate
+review prompt](https://github.com/mokly-ai/mokly/blob/b4314fec74ea931862a8ab2afab69d560040396a/docs/implementation-review-prompt.md) after the full gate
 and push, split by area across six read-only reviewers who each checked their
 findings against the cited lines. The coordinator re-checked both High
 findings and findings 3–8, 12, and 13 directly in the code; finding 9 still

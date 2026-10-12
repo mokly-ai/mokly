@@ -84,7 +84,7 @@ import from `../dist`), React 19 static rendering, Playwright Chromium against
 - After checks pass at each milestone end: `git add -A`, commit with a
   Conventional Commits title of at most 50 characters, and push the branch.
   The final review milestone uses
-  [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+  [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/038283000b54a893210e814e22fbd44bffd6d8e9/docs/implementation-review-prompt.md)
   against `origin/main` after the push. Do not auto-fix review findings;
   report each numbered finding with severity, impact, lettered options, and a
   recommendation.
@@ -675,7 +675,7 @@ not evidence that the conversion ran.
 #### Task 9.2: Review
 
 - [x] After the push, review the complete local diff against `origin/main`
-      using [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md).
+      using [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/038283000b54a893210e814e22fbd44bffd6d8e9/docs/implementation-review-prompt.md).
       Report numbered findings with severity, context, impact, lettered
       options, and a recommendation without changing the implementation.
       The findings are recorded below under Review Findings.
@@ -815,7 +815,7 @@ Viewer shares the Changes activation decision.
       `fix(browse): follow the shown view and share Changes activation` and
       push.
 - [x] After the push, review the complete local diff against `origin/main`
-      using [`docs/implementation-review-prompt.md`](../docs/implementation-review-prompt.md)
+      using [`docs/implementation-review-prompt.md`](https://github.com/mokly-ai/mokly/blob/e38bbc3ae8b2a240e2316a18e3329b6c046a2d7a/docs/implementation-review-prompt.md)
       and report findings without changing the implementation. The review
       confirmed all six earlier findings closed and reported three new
       findings, recorded under Second Review Findings.

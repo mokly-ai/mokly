@@ -262,7 +262,7 @@ implementation PR merges; arrange the index transition as part of that merge.
       Conventional Commits and push the current branch, including every new
       source, test, documentation and report-support file in the review diff.
 - [x] Only after that push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/3f6ea4265129112d7626c1fc16e6d100b33fdf4f/docs/implementation-review-prompt.md)
       to review the complete local diff against `origin/main`. Report numbered
       findings with severity, feature context, impact of doing nothing, lettered
       solution options and a recommended scope. Do not change the implementation
@@ -339,7 +339,7 @@ Finish the approved review fixes without weakening the measured CI contract.
       Conventional Commit and push the current branch. Pushed as `3a95e30`
       and merged in PR #93.
 - [ ] Only after the push, use
-      [the implementation review prompt](../docs/implementation-review-prompt.md)
+      [the implementation review prompt](https://github.com/mokly-ai/mokly/blob/3f6ea4265129112d7626c1fc16e6d100b33fdf4f/docs/implementation-review-prompt.md)
       against `origin/main` and report any findings in the session without
       changing the implementation or checking review output into the repository.
 
