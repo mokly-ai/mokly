@@ -2,8 +2,10 @@
 
 ## Delivery Status
 
-The [native engine plan](../../plans/native-rust-engine.md) is the approved
-target for this contract; no part of it is implemented yet. Until the plan
+The [Rust rebuild plan](../../plans/rust-rebuild.md) supersedes the
+[native engine plan](../../plans/native-rust-engine.md) that approved this
+contract; its teardown milestone removes or replaces this document, and no
+part of it is implemented. Until the plan
 delivers the engine, the exclusive export rename and the Windows baseline job
 use the lazily loaded Koffi bridge with the primitives named below, and the
 comparison engine runs in TypeScript inside the Node process. Contracts that

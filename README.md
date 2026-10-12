@@ -314,11 +314,9 @@ appearance with any preview scheme. See the
 [viewer appearance contract](./docs/protocol/mokly-viewer-appearance.md) and
 [semantic palette](./docs/protocol/mokly-viewer-palette.md).
 
-A planned native engine adds optional `@mokly/engine-<platform>` packages that
-`@mokly/mokly` installs for the exclusive export rename, the Windows baseline
-job, and catalogue comparison. The
-[native engine contract](./docs/protocol/mokly-native-engine.md) defines the
-platforms, the loader, and every operation.
+The [Rust rebuild plan](./plans/rust-rebuild.md) replaces the TypeScript
+backend with a Rust core and a Node sidecar for JavaScript rendering; the
+TypeScript backend is frozen while that work lands.
 
 ## Documentation
 
@@ -359,9 +357,8 @@ version. A global npm install applies only to the active Node.js version.
 rustup reads the toolchain file and installs the pinned Rust the first time
 `cargo` runs in the repository. Use the pinned npm version for dependency
 changes.
-The [native engine plan](./plans/native-rust-engine.md) adds Rust crates
-under `crates/` that `npm run build` compiles for the host; until it lands,
-Rust is used only by `cargo xtask`.
+Until the [Rust rebuild](./plans/rust-rebuild.md) lands its crates under
+`crates/`, Rust is used only by `cargo xtask`.
 
 ```bash
 git clone https://github.com/mokly-ai/mokly.git

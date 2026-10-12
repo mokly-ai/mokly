@@ -1,23 +1,12 @@
 # Native Rust Engine And Host
 
-Status: Active. Created 2026-10-05 with the user's consent after a measurement
-step; its logs and phase table live under `.context/native-rust-engine/`,
-moved out of the repository on 2026-10-12 under the evidence rule. Milestone 1
-is complete: the native engine contract and every dependent document name it
-as the approved target. On 2026-10-06 the user folded the separate Rust CLI
-host plan (workspace 242, branch `calummoore/rust-cli-host-feasibility`) into
-this plan and added shared type definitions; the user archives that workspace
-once this plan owns its scope. On 2026-10-12 the branch was rebased onto main,
-which had merged Generated Output Simplification (PR #156) and Remove
-Source-Path Evidence (PR #179): the current formats are manifest v10, review
-result v7, public read model v6 and change snapshot v3, the output modes are
-gone, and the agent rules moved to `docs/dev`. Milestone 2 absorbs the
-contract updates those merges require. On 2026-10-12 the user also asked
-to adopt the design decisions of PR #158 (workspace 174, branch
-`calummoore/irvine-v6` at `67f87b61`) as the engine's comparison target,
-so the comparison milestones can proceed before that PR merges; the Design
-target section and Milestones 2, 6 and 9 to 15 record it. No code has
-changed.
+Status: Completed. Superseded on 2026-10-12 by the
+[Rust rebuild plan](./rust-rebuild.md); no pull request merged. The user
+decided to freeze the TypeScript backend and rebuild the core in Rust instead
+of porting the comparison engine into the Node process. Milestone 1 of this
+plan delivered the native engine contract and its dependent document updates;
+the rebuild plan's teardown milestone removes or replaces them. Its
+measurement logs stay under `.context/native-rust-engine/`.
 
 **Goal:** add a Rust engine that the TypeScript CLI loads in its own process
 through Node-API bindings built with napi-rs, and make the `mokly` executable
