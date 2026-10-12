@@ -128,8 +128,6 @@ engine runs a phase, so `review.*` records keep this contract unchanged.
 process; it ends with `status: error` when the engine is unavailable. The
 engine emits no record while timings are disabled.
 
-The scale fixture's recorded measurements live in the
-[fixture guide](../../tests/fixtures/large/README.md#recorded-measurements).
 The memory budget for Changes-ready Serve and complete export on the default
 scale fixture is recorded here when it is measured against the engine.
 

@@ -1,15 +1,18 @@
 # Native Rust Engine And Host
 
-Status: Active. Created 2026-10-05 with the user's consent after the
-measurement step recorded below. Milestone 1 is complete: the native engine
-contract and every dependent document name it as the approved target, and the
-measurements are recorded in the fixture guide. On 2026-10-06 the user folded
-the separate Rust CLI host plan (workspace 242, branch
-`calummoore/rust-cli-host-feasibility`) into this plan and added shared type
-definitions; the user archives that workspace once this plan owns its scope.
-Milestone 2 updates the contracts for both additions before any code changes.
-No code has changed. The raw measurement logs and the span aggregator live
-under `.context/timings/` on the measuring machine; they are not tracked.
+Status: Active. Created 2026-10-05 with the user's consent after a measurement
+step; its logs and phase table live under `.context/native-rust-engine/`,
+moved out of the repository on 2026-10-12 under the evidence rule. Milestone 1
+is complete: the native engine contract and every dependent document name it
+as the approved target. On 2026-10-06 the user folded the separate Rust CLI
+host plan (workspace 242, branch `calummoore/rust-cli-host-feasibility`) into
+this plan and added shared type definitions; the user archives that workspace
+once this plan owns its scope. On 2026-10-12 the branch was rebased onto main,
+which had merged Generated Output Simplification (PR #156) and Remove
+Source-Path Evidence (PR #179): the current formats are manifest v10, review
+result v7, public read model v6 and change snapshot v3, the output modes are
+gone, and the agent rules moved to `docs/dev`. Milestone 2 absorbs the
+contract updates those merges require. No code has changed.
 
 **Goal:** add a Rust engine that the TypeScript CLI loads in its own process
 through Node-API bindings built with napi-rs, and make the `mokly` executable
@@ -19,28 +22,18 @@ at a time. Define every shared data shape once, in Rust, and generate the
 TypeScript from it. Keep one test suite and the same public CLI, manifest,
 review result, and read model.
 
-**Problem (measured on 2026-10-05):** the large synthetic fixture (30 areas,
+**Problem (measured on 2026-10-05):** on the large synthetic fixture (30 areas,
 40 screens, 12 rows, 4 stylesheets; 1,590 entries, 5,550 views, 142 MB of
-HTML, a 24 MB manifest) on 8 vCPUs and 16 GB with Node 24.21.0 gave:
-
-| Phase                                           | Build  | Serve background | Export            |
-| ----------------------------------------------- | ------ | ---------------- | ----------------- |
-| React rendering (`render`)                      | 59.0 s | 75.3 s           | 62.3 s            |
-| HTML passes (links, resources, compat, logical) | 20.7 s | 28.6 s           | 31.6 s            |
-| Component metadata validation                   | 4.4 s  | 6.0 s            | 7.4 s             |
-| esbuild bundle and evaluate                     | 0.6 s  | 0.5 s            | 0.7 s             |
-| Output write and path checks                    | 8.5 s  | 13.9 s           | 13.6 s            |
-| Comparison (`review.*`)                         | none   | worker died      | 139 s, then crash |
-
-Two scale defects came out of the same runs:
-
-1. In Serve, the Changes worker reached its 1 GB heap cap after about 90 s of
-   classification in both runs. Changes became unavailable. The cap is set in
-   `src/server/demand/background.ts`.
-2. In Export, the same comparison ran in-process. `review.compare-screens`
-   reached 139 s, then the process spent about three minutes in garbage
-   collection and aborted at the default 4.3 GB heap limit. The resource graph
-   traversal ran 15,512 times for 5,520 views.
+HTML, a 24 MB manifest) on 8 vCPUs and 16 GB with Node 24.21.0, React
+rendering took 54 to 67 percent of every compile in Build, Serve and Export and
+must stay JavaScript. Comparison was the slowest phase once Changes ran and
+failed on memory twice. In Serve the Changes worker reached its 1 GB heap cap,
+set in `src/server/demand/background.ts`, after about 90 s of classification,
+so Changes became unavailable. In Export the screen comparison reached 139 s,
+with 15,512 resource-graph traversals for 5,520 views, then the process aborted
+at the default 4.3 GB heap limit. esbuild bundling, CSS and the output
+transaction were small. The phase table, raw spans and aggregator are in
+`.context/native-rust-engine/measurements-2026-10-05.md`.
 
 Rendering stays JavaScript, so a Rust host alone would not change the largest
 cost. The comparison engine is pure data work, is the slowest phase once
@@ -171,16 +164,22 @@ npm layout:
 
 ## Sequencing
 
-Three workspaces that merge soon rewrite the comparison engine and its
-formats: Generated Output Simplification (manifest v9, review result v6,
-snapshot v3, no output modes), Remove Source-Path Evidence (changed review
-evidence and component stylesheets), and Inline Style Ownership with Scalable
-Analysis (47 new review files and a rewritten benchmark). Milestones 3 to 5
-and 7 to 8 do not depend on them and can proceed. Milestone 6 targets the
-formats that are current when it starts and is repeated for a later format
-only once. Milestones 9 to 15 start after those branches merge, so the
-differential tests have a stable target. The CLI move into `packages/mokly`
-changes the `src/` paths named here; apply the new paths when it merges.
+Two of the three branches that rewrite the comparison engine have merged.
+Generated Output Simplification ([PR #156](https://github.com/mokly-ai/mokly/pull/156),
+2026-10-07) removed the output modes and moved generated output into
+`mokly-generated/`; Remove Source-Path Evidence
+([PR #179](https://github.com/mokly-ai/mokly/pull/179), 2026-10-09) changed the
+review evidence and component stylesheets. Together they set manifest v10,
+review result v7, public read model v6 and change snapshot v3. Inline Style
+Ownership with Scalable Analysis
+([PR #158](https://github.com/mokly-ai/mokly/pull/158); 47 new review files and
+a rewritten benchmark) is still open. Milestones 3 to 5 and 7 to 8 do not
+depend on it and can proceed. Milestone 6 targets the formats that are current
+when it starts and is repeated for a later format only once. Milestones 9 to
+15 start after PR #158 merges, or after the user decides to proceed without
+it, so the differential tests have a stable target. The CLI move into
+`packages/mokly` (branch `calummoore/src-to-packages-move`) changes the `src/`
+paths named here; apply the new paths when it merges.
 
 ## Milestone 1: Contracts and documentation
 
@@ -223,13 +222,17 @@ Define the complete native boundary before any code.
       `src/engine/` are added when those directories exist.
 - [x] Add the new document to `docs/protocol/README.md` and list the supported
       platforms in `docs/guides/start/install.md`.
-- [x] Add this plan to `plans/README.md` (done at creation) and keep its Status
-      current.
+- [x] Keep this plan's `Status:` paragraph current; there is no plans index
+      file.
 - [x] Record the 2026-10-05 measurements in `tests/fixtures/large/README.md`
       and point the diagnostic contract at them.
 - [x] Validate Prettier, links, anchors, protocol sizes, and the
       protocol-reading tests.
 - [x] Commit.
+
+Evidence: `.context/native-rust-engine/measurements-2026-10-05.md` and
+`.context/native-rust-engine/timings/` hold the measurement logs and the
+span aggregator.
 
 ## Milestone 2: Host and shared-definition contracts
 
@@ -241,6 +244,33 @@ Define the host, the package set, and the shared definitions before any code.
       functions take only strings, buffers, and numbers, name `mokly-model` as
       the single source of every shared shape, and point every record shape at
       the generated TypeScript file instead of hand-written interfaces.
+- [ ] Update the contract's format statements to the inventory in
+      `docs/protocol/mokly-format-versions.md`: manifest v10, review result
+      v7, public read model v6 and change snapshot v3. Name that inventory
+      instead of version numbers where the text allows it.
+- [ ] Replace the output-mode reader descriptors with the current ones: an
+      in-memory route map, the `<mockupsDir>/mokly-generated/` tree, a Git
+      commit with its `generated-v10` baseline descriptor, or a rebuilt
+      baseline tree. Replace "public exclusions" with the public closure
+      policy of `mokly-public-closure.md`.
+- [ ] Rename `build-engine` to `build-native` in the contract and in
+      `xtask/README.md`, and add the `generate-types` command there.
+- [ ] Align the Rust advisory audit with the baseline and strict modes of
+      `dependency-audit-baseline.md`: baseline mode fails only on advisories
+      that the branch's `Cargo.lock` adds relative to the comparison commit;
+      strict mode applies to Release Please and dependency update pull
+      requests and to the scheduled audit; the dependency update pull
+      request owns Rust fixes. Update the Rust Dependencies section of
+      `dependency-security.md` and `ci-workflow.md`.
+- [ ] Record the user's approval for each new gate before the plan adds it:
+      the Rust advisory audit, the generated-TypeScript byte-identity check,
+      the bridge-transfer budget, and the native build step in every
+      verification job. The agent rules require the user's approval for a
+      new gate.
+- [ ] State that the remote gate builds the native artifacts on each Testbox
+      through `npm run build` with the toolchain from `rust-toolchain.toml`,
+      and that `target/` and the built artifacts stay ignored and are never
+      synced (`remote-verification-testbox.md`).
 - [ ] Add `docs/protocol/mokly-shared-definitions.md` (at most 250 lines):
       the model crate's scope, the generator and its invocation, the output
       files and their byte-identity check, serde and naming rules (tagged
@@ -322,7 +352,10 @@ Both artifacts exist, build, and report their versions. No behavior changes.
       TypeScript byte-identity check.
 - [ ] CI: add the Rust setup and the native build step to the package, unit,
       browser, hydration, and native jobs; add the pinned Cargo cache action;
-      update `tests/ci_workflow.test.ts`.
+      update the workflow policy and script tests
+      (`tests/ci_workflow_policies.test.ts`, `ci_workflow_scripts.test.ts`
+      and `ci_workflow_remote_state.test.ts`) through executed scripts and
+      policy properties, not literal job names.
 - [ ] Package suite: pack the host platform package with the viewer and CLI;
       inspect its manifest, `os`/`cpu`/`libc`, both artifacts, files, and
       license; install it explicitly in every packed consumer so no
@@ -359,7 +392,7 @@ Both artifacts exist, build, and report their versions. No behavior changes.
       `src/baseline/windows_job.ts`, their tests that only exercised koffi, and
       the `koffi` dependency. Update the lockfile and the audit scope.
 - [ ] Smoke: export twice into the same directory, then with a competing
-      destination; cancel a derived baseline rebuild on Windows CI.
+      destination; cancel a baseline rebuild on Windows CI.
 - [ ] Commit.
 
 ## Milestone 5: Release packaging
@@ -384,6 +417,9 @@ Both artifacts exist, build, and report their versions. No behavior changes.
       license, exact version, and the archive contents of a platform package.
 - [ ] Extend the package smoke with a step that runs the installed host binary
       with `--help` from the consumer fixture.
+- [ ] Add a breaking-change release note for the required native platform
+      packages under the release notes contract in
+      `docs/protocol/npm-release-notes.md`.
 - [ ] Dry-run the release workflow logic locally with `workflow_dispatch`
       inputs or script-level tests; a real publication is post-merge.
 - [ ] Commit.
@@ -414,8 +450,8 @@ Rust becomes the single source of every shared shape; TypeScript is generated.
       Every rejection fixture of the TypeScript decoders must be rejected by
       the Rust validators.
 - [ ] Add the byte-identity check for every generated file to the repository
-      suite, and a test that the protocol documents name the generated files
-      as the normative shapes.
+      suite, and a structural test that compares each protocol document's
+      generated-file links with the generated file list; no wording checks.
 - [ ] Commit.
 
 ## Milestone 7: Host crate
@@ -609,16 +645,18 @@ Capture the two defects as failing acceptance tests before fixing them.
 ## Milestone 16: Verification, close-out, and review
 
 - [ ] Run the opt-in large fixture: Serve reaches Changes ready inside the
-      budget without a worker death; export completes; record the new spans
-      beside the 2026-10-05 numbers in the fixture guide.
+      budget without a worker death; export completes; save the new spans
+      under `.context/native-rust-engine/` beside the 2026-10-05 logs and
+      summarize the result in this plan's Status.
 - [ ] Smoke on the example catalogue through the host: `npm run dev`, build,
       check, export, a preview build with Changes, and an interrupted Serve.
 - [ ] Run `cargo xtask check`; fix anything it reports until it passes.
 - [ ] Commit and push.
 - [ ] Review the complete local diff against `origin/main` using
       `docs/implementation-review-prompt.md`. Report findings with numbers,
-      severities, impact, lettered options, and a recommendation; do not change
-      the implementation.
+      severities, impact, lettered options, and a recommendation, then apply
+      the review-fix rule in `docs/dev/review.md`: fix the `Auto-fix: yes`
+      findings, re-review once, and report the rest.
 
 ## Post-merge follow-up (non-blocking)
 
