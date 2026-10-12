@@ -19,8 +19,8 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
 - The shim resolves the platform package, checks that its version equals the
   CLI package version, and executes the binary with inherited standard streams.
   It never falls back to a JavaScript implementation.
-- The binary owns the terminal, every command, and every file the catalogue
-  writes. It starts sidecars only when a catalogue needs JavaScript: a
+- The binary owns the terminal, every command, and every file export
+  writes; no command writes into the repository. It starts sidecars only when a catalogue needs JavaScript: a
   `.mockup.tsx` entry, a registered JavaScript component, a Storybook story,
   a consumer PostCSS module, or the viewer shell for Serve and export.
 - A sidecar renders what it is asked to render and returns text. It keeps no
@@ -29,22 +29,22 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
 
 ## Crates
 
-| Crate             | Owns                                                                                                                    | Depends on                      |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| `mokly-model`     | Every shared shape, canonical JSON, format numbers, and the generated TypeScript types.                                 | nothing internal                |
-| `mokly-platform`  | Exclusive rename, process groups, Windows job objects, file locks.                                                      | nothing internal                |
-| `mokly-git`       | The Git command runner, merge base, changed paths, bounded blob and tree reads, archive extraction.                     | `platform`                      |
-| `mokly-sidecar`   | The sidecar pool: spawning, framing, requests, timeouts, recycling.                                                     | `model`, `platform`             |
-| `mokly-catalogue` | Roots, discovery, front matter, path identity, folders, variants, use cases, documents, the registry, manifest v11.     | `model`                         |
-| `mokly-html`      | HTML components and screens: parsing, substitution, slots, composition, markers, link rewriting, document assembly.     | `model`, `catalogue`, `sidecar` |
-| `mokly-css`       | Stylesheet bundling on `lightningcss`, rule collection, diffing, selector matching, the keep list, attribution.         | `model`                         |
-| `mokly-build`     | The content-addressed build graph, scheduling, the output transaction, tracked and untracked rules, the public closure. | `catalogue`, `html`, `css`      |
-| `mokly-compare`   | Baselines, tree comparison, materiality, moves, affected consumers, review result v8, change snapshot v4, artifacts.    | `build`, `css`, `git`           |
-| `mokly-server`    | HTTP, static delivery, read model v7, shell routes, live updates, on-demand comparison, shutdown.                       | `build`, `compare`, `sidecar`   |
-| `mokly-watch`     | Watch rules, invalidation, rebuilds, replay.                                                                            | `build`, `server`               |
-| `mokly-export`    | The static site, delivery descriptors, ownership markers, the export transaction.                                       | `build`, `compare`, `platform`  |
-| `mokly-publish`   | The unchanged upload exchange v1: plan, blobs, complete, retries, accounting.                                           | `export`                        |
-| `mokly-cli`       | The `mokly` binary: clap grammar, output modes, reporters, shortcuts, the composition root.                             | everything above                |
+| Crate             | Owns                                                                                                                                           | Depends on                      |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `mokly-model`     | Every shared shape, canonical JSON, format numbers, and the generated TypeScript types.                                                        | nothing internal                |
+| `mokly-platform`  | Exclusive rename, process groups, Windows job objects, file locks.                                                                             | nothing internal                |
+| `mokly-git`       | The Git command runner, merge base, changed paths, bounded blob and tree reads, archive extraction.                                            | `platform`                      |
+| `mokly-sidecar`   | The sidecar pool: spawning, framing, requests, timeouts, recycling.                                                                            | `model`, `platform`             |
+| `mokly-catalogue` | Roots, discovery, front matter, path identity, folders, variants, use cases, documents, the registry, the catalogue model.                     | `model`                         |
+| `mokly-html`      | HTML components and screens: parsing, substitution, slots, composition, markers, link rewriting, document assembly.                            | `model`, `catalogue`, `sidecar` |
+| `mokly-css`       | Stylesheet bundling on `lightningcss`, rule collection, diffing, selector matching, the keep list, attribution.                                | `model`                         |
+| `mokly-build`     | The content-addressed build graph, scheduling, the render cache, the source tree trait over the working tree and Git trees, the asset closure. | `catalogue`, `html`, `css`      |
+| `mokly-compare`   | Base-side rendering, the dependency tiers, tree comparison, materiality, moves, affected consumers, review result v8, change snapshot v4.      | `build`, `css`, `git`           |
+| `mokly-server`    | HTTP, static delivery, read model v7, shell routes, live updates, on-demand comparison, shutdown.                                              | `build`, `compare`, `sidecar`   |
+| `mokly-watch`     | Watch rules, invalidation, rebuilds, replay.                                                                                                   | `build`, `server`               |
+| `mokly-export`    | The static site, delivery descriptors, ownership markers, the export transaction.                                                              | `build`, `compare`, `platform`  |
+| `mokly-publish`   | The unchanged upload exchange v1: plan, blobs, complete, retries, accounting.                                                                  | `export`                        |
+| `mokly-cli`       | The `mokly` binary: clap grammar, output modes, reporters, shortcuts, the composition root.                                                    | everything above                |
 
 Dependencies point downward only. Every impure boundary is a trait consumed
 through `dyn`, mocked with `unimock` in unit tests. Each crate has a README with
@@ -77,7 +77,9 @@ the machine.
 | HTML component    | its source and the keys of the components it uses                                                                                    |
 | stylesheet bundle | the root's imported CSS sources, assets, PostCSS module, and resolution settings                                                     |
 | document          | the entry key, viewport, colour scheme, the fragment and component keys it composes, the stylesheet rules that apply, the config key |
-| manifest          | every entry record and document key                                                                                                  |
+| source tree       | the working tree, or the base commit's Git tree read through blobs and extracted on demand                                           |
+| dependency set    | the side's lockfile and package manifests and the package manager version                                                            |
+| catalogue model   | every entry record                                                                                                                   |
 
 A watched change hashes the changed file, finds the nodes whose keys moved, and
 recomputes only those. An HTML-only edit never rebundles JavaScript; a
@@ -85,14 +87,19 @@ JavaScript edit rebundles once and re-renders only the fragments whose
 generation changed. Fragment results are memoized across screens, so a
 component rendered with the same props on many screens renders once.
 
+No node is written to the repository. Serve, Changes, and export read the
+cache, which is bounded by bytes and evicted least recently used; export is the
+only command that writes files, into its own output directory.
+
 ## Comparison Model
 
 Comparison works on trees, never on text offsets. The
 [comparison contract](../protocol/mokly-comparison.md) owns the rules:
 
-- Both sides of a view are parsed with a spec-compliant HTML parser into trees.
-  Mokly's component and ignore markers are comment nodes in those trees, so an
-  element's owner is the innermost marker region that contains it.
+- Both sides of a view are trees the core composed in memory. Ownership and
+  ignore regions are node annotations; a sidecar fragment carries them as
+  comment markers, which the core reads and drops when it grafts the fragment.
+  An element's owner is the innermost region that contains it.
 - Materiality compares canonical trees after ignored regions and head style
   elements, owned and unowned, are removed; styles count through rule
   evidence only. Attribute order, entity spelling, and formatting
@@ -103,8 +110,10 @@ Comparison works on trees, never on text offsets. The
   their owner is known by construction. Head styles of a whole-screen render
   are attributed by the same selector matching, with the entry as the default
   owner.
-- Baselines are the base commit's tracked `mokly-generated/` blobs, or a
-  rebuild by the base's own commands when the output is untracked.
+- Both sides render from sources with the current Mokly version: the head from
+  the working tree, the base from the base commit's Git tree. A React or
+  Storybook component at the base renders with the base's dependencies under
+  the three dependency tiers of the comparison contract.
 
 ## Memory Bounds
 
@@ -113,6 +122,8 @@ Comparison works on trees, never on text offsets. The
   set of parsed pages.
 - Parsed CSS is cached by content hash with a byte bound; eviction changes time
   only.
+- The render cache and the base-side dependency cache are bounded by bytes;
+  a dependency install has a time limit.
 - Sidecars are recycled after a fixed number of renders or when their
   resident size passes a fixed cap; the fragment cache makes a recycle cheap.
 - The acceptance milestone of the plan records the time and memory budgets for
@@ -125,24 +136,24 @@ shape or interpretation changes. No reader accepts an earlier number; readers
 reject before interpreting any field. Package 1.0.0 is the first number held
 stable.
 
-| Boundary                               | Version        | Change from the frozen backend                                    |
-| -------------------------------------- | -------------- | ----------------------------------------------------------------- |
-| Private generated manifest             | 11             | HTML entry kinds, marker-derived ranges, no recorded text offsets |
-| Public catalogue read model            | 7              | follows manifest v11 and review v8 evidence                       |
-| Review result                          | 8              | tree materiality, owner-attributed rules, no offsets              |
-| Catalogue change snapshot              | 4              | pairs review v8 with manifest v11 baselines                       |
-| Live catalogue index                   | `live-index-3` | manifest v11 entry shapes                                         |
-| Shell bootstrap envelope               | 3              | embeds catalogue v7                                               |
-| Baseline completion marker             | 3              | requires manifest 11 and the `generated-v11` layout               |
-| Static delivery descriptor             | 5              | unchanged                                                         |
-| Private live capability descriptor     | 2              | unchanged                                                         |
-| Inspector wire envelope                | 2              | unchanged                                                         |
-| Removed page/document preview metadata | 3              | unchanged                                                         |
-| Export ownership                       | 3              | unchanged                                                         |
-| Upload metadata, plan exchange         | 2, 1           | unchanged; Mokly Cloud implements them                            |
-| Export transaction marker              | 2              | unchanged                                                         |
-| Navigation disclosure storage          | v4             | unchanged                                                         |
-| Timing and verification records        | 1              | unchanged                                                         |
+| Boundary                               | Version        | Change from the frozen backend                                     |
+| -------------------------------------- | -------------- | ------------------------------------------------------------------ |
+| Private generated manifest             | none           | retired: the catalogue model lives in memory; nothing is written   |
+| Public catalogue read model            | 7              | follows the source-rendered catalogue model and review v8 evidence |
+| Review result                          | 8              | tree materiality, owner-attributed rules, no offsets               |
+| Catalogue change snapshot              | 4              | pairs review v8 with the base commit                               |
+| Live catalogue index                   | `live-index-3` | source-rendered entry shapes                                       |
+| Shell bootstrap envelope               | 3              | embeds catalogue v7                                                |
+| Baseline completion marker             | none           | retired: both sides render from sources; no baseline cache         |
+| Static delivery descriptor             | 5              | unchanged                                                          |
+| Private live capability descriptor     | 2              | unchanged                                                          |
+| Inspector wire envelope                | 2              | unchanged                                                          |
+| Removed page/document preview metadata | 3              | unchanged                                                          |
+| Export ownership                       | 3              | unchanged                                                          |
+| Upload metadata, plan exchange         | 2, 1           | unchanged; Mokly Cloud implements them                             |
+| Export transaction marker              | 2              | unchanged                                                          |
+| Navigation disclosure storage          | v4             | unchanged                                                          |
+| Timing and verification records        | 1              | unchanged                                                          |
 
 The accepted output snapshot format of the frozen backend has no successor;
 the build graph keeps generations in memory without a private IPC format.

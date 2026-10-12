@@ -72,9 +72,10 @@ A hyphenated element name resolves against the component registry: the
 `element` of an [HTML component](./mokly-html-components.md) or of a
 JavaScript component registered with `element`. A hyphenated name that matches
 no component fails with `html-element`, because rendering it as a plain element
-would silently lose the component. `mokly-ignore`, `mokly-ignore-scope`, and
-`mokly-slot` are reserved names: the first two are defined below, and the slot
-placeholder belongs to the [render sidecar](./mokly-sidecar.md).
+would silently lose the component. Every element name with the `mokly-`
+prefix is reserved for Mokly: `mokly-ignore` and `mokly-ignore-scope` are
+defined below, `mokly-slot` belongs to the [render sidecar](./mokly-sidecar.md),
+and any other `mokly-` name fails with `html-element`.
 
 ## Component Elements
 
@@ -112,8 +113,11 @@ placeholder belongs to the [render sidecar](./mokly-sidecar.md).
   the same root, tier, and fragment rules as `MockLink asChild`.
 - `<mokly-ignore id="…" material-key="…">` marks a Review-ignore region and
   `<mokly-ignore-scope enabled="true|false">` a scope, with the semantics of
-  `ReviewIgnore` and `ReviewIgnoreScope`. Both become the marker comments the
-  [comparison contract](./mokly-comparison.md) reads.
+  `ReviewIgnore` and `ReviewIgnoreScope`. An ignore region becomes an ignored
+  region of the composed tree under the
+  [comparison contract](./mokly-comparison.md). A scope is resolved while the
+  screen is composed and leaves nothing in the output: a disabled scope
+  suppresses the ignore regions inside it, and the innermost scope wins.
 
 ## Variants
 
@@ -139,13 +143,14 @@ including a variant.
 2. Render HTML components in Rust by substitution and slot filling, recursively.
    Render JavaScript components through the [sidecar](./mokly-sidecar.md),
    memoized by props, viewport, and colour scheme, with slot placeholders.
-3. Compose the fragment once per viewport and colour scheme, insert the
-   instance and ignore markers, collect the styles the sidecar returned, and
-   assemble the document with the configured stylesheets.
-4. Rewrite links and validate them. Write the views under
-   `mokly-generated/` with the [generated output](./mokly-generated-output.md)
-   rules. Record the entry in manifest v11 with its usage ranges derived from
-   the markers.
+3. Compose the fragment once per viewport and colour scheme, attach the
+   instance ownership and the ignore regions to the tree, collect the styles
+   the sidecar returned, and assemble the document with the configured
+   stylesheets.
+4. Rewrite links and validate them. Keep the views in the render cache keyed
+   by their inputs; Serve, Changes, and export read them there, and nothing is
+   written to the repository. Record the entry's usage in the catalogue model
+   from the attached ownership.
 
 Build, Check, Serve, export, Changes, and publish treat an HTML screen like
 every other screen. A catalogue of HTML files alone never starts a sidecar.

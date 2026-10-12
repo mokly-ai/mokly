@@ -6,22 +6,26 @@ Approved target of the [Rust rebuild plan](../../plans/rust-rebuild.md); not
 implemented. The frozen TypeScript backend compares normalized text with
 recorded offsets instead; its rules live in
 [Changes and screen comparisons](./mokly-changes.md) and the component
-attribution contracts until the rebuild replaces them.
+attribution contracts until the rebuild replaces them. Both sides render from
+sources; there is no generated tree and no baseline cache.
 
 ## Purpose And Inputs
 
 Comparison decides, for every entry and view, whether the base and the head
 differ in a way a reviewer should see, and who owns each difference. Its
-inputs are the head generation in memory, the base documents from a
-[baseline](#baselines), the Git changed paths, and the configured review
-settings. It works on parsed trees. It never reads recorded text offsets, and
+inputs are the head side rendered from the working tree, the base side
+rendered from the base commit under [Sides](#sides), the Git changed paths,
+and the configured review settings. It works on parsed trees. It never reads recorded text offsets, and
 it never splices document text.
 
 ## Markers
 
-Mokly writes its ownership and review markers as HTML comments while it
-composes a document. They survive every build, export, and baseline, and they
-are the only ownership information comparison needs.
+The core attaches ownership and ignore regions to tree nodes while it
+composes a document. The one place that information crosses a process
+boundary is the HTML fragment a sidecar returns: the fragment carries it as
+the comment markers below, and the core reads them into node annotations and
+drops them when it grafts the fragment. Served and exported documents carry no
+markers. Every comment name with the `mokly-` prefix is reserved for markers.
 
 | Marker                                                                 | Meaning                                                              |
 | ---------------------------------------------------------------------- | -------------------------------------------------------------------- |
@@ -29,7 +33,6 @@ are the only ownership information comparison needs.
 | `<!--mokly-slot:start id="r-3" name="children"-->`                     | slot content supplied to instance `r-3` by its enclosing owner       |
 | `<!--mokly-root:start id="r-0" path="…"-->`                            | the root component of a component page                               |
 | `<!--mokly-ignore:start id="hero" key="…"-->`                          | a Review-ignore region with its optional material key                |
-| `<!--mokly-ignore-scope enabled="false"-->`                            | an ignore scope switch for the subtree that follows                  |
 | `<!--mokly-<kind>:end id="…"-->`                                       | closes the region with that id                                       |
 
 A region is the sequence of sibling nodes between its start and end markers,
@@ -40,14 +43,16 @@ the `marker-in-raw-text` warning and comparison ignores it.
 
 ## Tree Model
 
-Both sides of a view are parsed by a spec-compliant HTML parser into trees in
-which the markers are comment nodes. An element's owner is the innermost
-instance, slot, or root region that contains it; slot content belongs to the
-region that supplied it. The implied `html`, `head`, and `body` elements and
-every element outside any region belong to the entry. An element whose
-nearest enclosing ignore region is active is ignored, and an ignore scope
-switch applies to the subtree after it, as the frozen backend's `ReviewIgnore`
-and `ReviewIgnoreScope` define.
+Both sides of a view are the trees the core composed; a sidecar fragment is
+parsed by a spec-compliant HTML parser, with its markers as comment nodes,
+before it is grafted in. An element's owner is the innermost instance, slot,
+or root region that contains it; slot content belongs to the region that
+supplied it. The implied `html`, `head`, and `body` elements and every element
+outside any region belong to the entry. An element inside an ignore region is
+ignored. An ignore scope is resolved while the document is composed: a
+disabled scope suppresses the ignore regions inside it, the innermost scope
+wins, and no scope reaches comparison, as the frozen backend's
+`ReviewIgnoreScope` behaves.
 
 Formatting clones that the adoption agency algorithm creates and elements that
 the parser implies take their position in the tree; nothing refers to the
@@ -89,9 +94,8 @@ renderer wrote, follow the inline rule: diff their rules between the sides
 with the stylesheet rule diff, match each changed rule's selectors against
 both trees, and attribute it to the one component whose regions contain every
 matched element, to the entry when a matched element lies outside every
-region or the matches span several components, to nobody when it matches no
-element on either side, and to the entry as `unresolved` when the keep list
-applies. An excluded rule never makes a view material; a rule attributed to a
+region or the matches span several components, and to the entry as `unresolved` when the keep list applies. A rule that
+matches no element on either side produces no evidence record. An excluded rule never makes a view material; a rule attributed to a
 component is that component's change and keeps the screen listed as affected.
 
 ## Resources
@@ -99,8 +103,9 @@ component is that component's change and keeps the screen listed as affected.
 References are read from the tree with the owner of the referencing element:
 `src`, `href`, `srcset`, `poster`, inline style `url()`, and stylesheet
 `url()` and `@import` chains. The closure follows them through the
-[public closure policy](./mokly-public-closure.md) and embedded documents, with
-the same confinement, verified-deletion, and byte-comparison rules as today.
+[public closure policy](./mokly-public-closure.md) and embedded documents; the
+head side reads files from the working tree, the base side from Git blobs, and
+bytes are compared as today.
 A changed referenced resource is conservative evidence of a rendering change
 for every view that reaches it, attributed to the owner of the reference. A
 resource is never discovered by joining text across a removed region.
@@ -115,16 +120,29 @@ and listed as affected, not as changes. Variants are projected independently
 and move with their parent. The metadata set, flow propagation, and the
 removed-entry presentation keep the rules of the frozen contracts.
 
-## Baselines
+## Sides
 
-The base is the merge base of the configured `review.base` and `HEAD`. When
-the base commit tracks `mokly-generated/`, its documents come from Git blobs.
-Otherwise the base is rebuilt by its own configured commands into the cache,
-under the storage contract's locks, limits, and process scopes, and the
-completion marker is v3, which requires manifest 11 and the `generated-v11`
-layout. A base whose manifest carries another number makes Changes
-unavailable with the message that the base must be rebuilt by the current
-version.
+The base is the merge base of the configured `review.base` and `HEAD`. The
+head side renders from the working tree. The base side renders from the base
+commit's Git tree through the same build graph, with sources read from blobs;
+HTML screens, components, and documents need no checkout. Both sides render
+with the current Mokly version, so a Mokly upgrade alone lists no change, and
+the render cache keeps a side's views until their inputs change.
+
+React and Storybook components at the base follow three dependency tiers:
+
+1. The base's lockfile and package manifests equal the working tree's: the
+   sidecar bundles the base's sources with the working tree's dependencies.
+2. They differ: the base commit is extracted into a bounded content-addressed
+   cache keyed by the lockfile hash and the package manager version, its
+   dependencies are installed with lifecycle scripts disabled under a time
+   limit, and the sidecar bundles from that directory.
+3. The install cannot run, because the machine is offline, the package
+   manager is unsupported, or the time limit passes: tier 1 applies and the
+   `base-dependencies` warning names the differing lockfile.
+
+A base whose sources fail the current validation makes Changes unavailable
+with those diagnostics.
 
 ## Review Result v8 And Snapshot v4
 
@@ -156,12 +174,12 @@ Entries keep the path-keyed shape of review v7: kind, path, `previousPath` on
 moved pairs, metadata reasons, views, and component variants grouped under
 their parent. Per-rule evidence replaces the offset-bearing inline evidence,
 and every record names its owner. The catalogue change snapshot v4 pairs
-review v8 with manifest v11 for Serve, export, and publication. The generated
+review v8 with the base commit for Serve, export, and publication. The generated
 TypeScript types are the normative shapes.
 
 ## Related Docs
 
 - [CSS change attribution](./mokly-css-attribution.md)
 - [Moves](./mokly-moves.md)
-- [Baseline storage and execution](./mokly-baseline-storage.md)
+- [Render sidecar](./mokly-sidecar.md)
 - [Rust core architecture](../architecture/rust-core.md)

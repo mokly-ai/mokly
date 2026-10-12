@@ -32,9 +32,10 @@ Scenarios, one directory each:
 | `ignore-edit`      | the example with a change inside a paired Review-ignore region only        |
 | `renderer-change`  | the example with a renderer edit that changes head styles for every screen |
 
-For each scenario keep the manifest, the generated tree listing with blob
-hashes, the review artifact, the catalogue read model, the export inventory,
-and the terminal output of build, check, serve startup, and export. Then run
+For each scenario keep the review artifact, the catalogue read model, the
+export inventory, and the terminal output of build, check, serve startup, and
+export; the frozen manifest and generated tree are not kept, because the Rust
+core writes neither. Then run
 the behaviour-table script, `scripts/rebuild/behaviour-table.mjs` on the
 rebuild branch, over the saved outputs; it reduces a scenario to one JSON table: entries by kind and path, listed
 changes with states and reasons, affected consumers, kept and excluded rules

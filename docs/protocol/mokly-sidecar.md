@@ -49,17 +49,17 @@ sidecar run in order; the pool spreads independent requests across sidecars.
 
 ## Methods
 
-| Method            | Params                                                                                   | Result                              |
-| ----------------- | ---------------------------------------------------------------------------------------- | ----------------------------------- |
-| `hello`           | none                                                                                     | `{ version }`                       |
-| `bundle`          | entry files, renderer module, stories files, module resolution settings, repository root | `{ generation, modules, warnings }` |
-| `renderScreen`    | generation, export, viewport, colour scheme                                              | render result                       |
-| `renderComponent` | generation, export, props, slot placeholders, viewport, colour scheme                    | render result                       |
-| `renderStory`     | generation, story id, args, viewport, colour scheme                                      | render result                       |
-| `renderShell`     | catalogue read model bytes, view, context                                                | `{ html }`                          |
-| `processCss`      | PostCSS module, source path, text                                                        | `{ text, dependencies }`            |
-| `dispose`         | generation                                                                               | nothing                             |
-| `shutdown`        | none                                                                                     | nothing                             |
+| Method            | Params                                                                               | Result                              |
+| ----------------- | ------------------------------------------------------------------------------------ | ----------------------------------- |
+| `hello`           | none                                                                                 | `{ version }`                       |
+| `bundle`          | entry files, renderer module, stories files, module resolution settings, source root | `{ generation, modules, warnings }` |
+| `renderScreen`    | generation, export, viewport, colour scheme                                          | render result                       |
+| `renderComponent` | generation, export, props, slot placeholders, viewport, colour scheme                | render result                       |
+| `renderStory`     | generation, story id, args, viewport, colour scheme                                  | render result                       |
+| `renderShell`     | catalogue read model bytes, view, context                                            | `{ html }`                          |
+| `processCss`      | PostCSS module, source path, text                                                    | `{ text, dependencies }`            |
+| `dispose`         | generation                                                                           | nothing                             |
+| `shutdown`        | none                                                                                 | nothing                             |
 
 A render result is `{ html, styles, resources, warnings }`: the fragment, the
 CSS rules the render produced in first-appearance order, the non-CSS resource
@@ -78,6 +78,11 @@ generation. esbuild is chosen because the frozen backend's plugin behaviour
 attributed authoring facade) ports to it directly and its metafile is the
 module inventory. Rolldown is reviewed again after the first release.
 
+The source root is the repository root for the head side of a comparison. For
+the base side it is the directory the
+[comparison contract](./mokly-comparison.md) extracted under its dependency
+tiers; the bundle resolves dependencies from that root's `node_modules`.
+
 The bundle evaluates in the sidecar's own module context with the consumer's
 `require`. React and React DOM resolve from the consumer, as today. A bundle
 or evaluation failure returns `bundle-failed` with the module and the
@@ -94,6 +99,14 @@ elements the fragment itself contains. Rules keep first-appearance order.
 The binary deduplicates rules by identity across fragments and places them in
 the document head before the configured stylesheets. A styling library the
 sidecar does not know contributes only the `<style>` elements in the fragment.
+
+## Markers In Fragments
+
+A fragment carries the comment markers of the
+[comparison contract](./mokly-comparison.md) for the component instances,
+slots, and ignore regions it contains. `ReviewIgnore` writes an ignore pair; a
+disabled `ReviewIgnoreScope` suppresses the pairs inside it, so no scope marker
+exists. The binary reads the markers into tree ownership and drops them.
 
 ## Slots For JavaScript Components
 
@@ -150,8 +163,9 @@ JavaScript never start a sidecar and never fail for these reasons.
 
 The sidecar runs consumer code with the same trust as the consumer's own build.
 It receives the environment unchanged, like the frozen backend's render
-workers. Baseline rebuilds keep their separate environment allowlist under the
-[baseline storage contract](./mokly-baseline-storage.md).
+workers. Installing a base commit's dependencies for the comparison contract's second
+tier runs the package manager with lifecycle scripts disabled and a time limit,
+so no consumer script executes at install time.
 
 ## Related Docs
 

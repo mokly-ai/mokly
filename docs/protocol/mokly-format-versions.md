@@ -5,7 +5,8 @@
 The frozen TypeScript backend implements manifest v10, catalogue v6, and
 review v7 under [path identity in one generated tree](./mokly-path-output-integration.md).
 The [Rust rebuild plan](../../plans/rust-rebuild.md) is the approved target for
-the numbers below. One format number denotes one shape and interpretation.
+the numbers below; that line writes no generated tree and no baseline cache.
+One format number denotes one shape and interpretation.
 Readers accept only the current number; checking older data is not a content
 compatibility reader, and no reader for an earlier number exists.
 
@@ -13,13 +14,13 @@ compatibility reader, and no reader for an earlier number exists.
 
 | Boundary                                | Version                   | Reason and reader                                                                                       |
 | --------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Private generated manifest              | 11                        | Path entries for every file kind, marker-derived usage ranges, closure and blob inventory; no offsets.  |
-| Public complete/scoped catalogue        | 7                         | Follows manifest v11 entries and review v8 evidence; public/scoped readers require 7.                   |
+| Private generated manifest              | none                      | Retired: the catalogue model lives in memory and the read model is its public form; nothing is written. |
+| Public complete/scoped catalogue        | 7                         | Follows the source-rendered catalogue model and review v8 evidence; public/scoped readers require 7.    |
 | Review result                           | 8                         | Tree materiality, owner-attributed rule and resource evidence, moves; producers and decoders require 8. |
-| Catalogue change snapshot               | 4                         | Current private path/move/removal evidence paired with review v8 and manifest v11 baselines.            |
-| Live catalogue index                    | `live-index-3`            | Manifest v11 entry and folder shapes with source-only metadata.                                         |
+| Catalogue change snapshot               | 4                         | Current private path/move/removal evidence paired with review v8 and the base commit.                   |
+| Live catalogue index                    | `live-index-3`            | Source-rendered entry and folder shapes with source-only metadata.                                      |
 | Shell bootstrap envelope                | 3                         | Required version plus path-based view, catalogue v7 or external reference, and delivery v5.             |
-| Baseline completion marker              | 3                         | Requires manifest 11, the `generated-v11` layout and the historical catalogue root.                     |
+| Baseline completion marker              | none                      | Retired: both sides render from sources; no baseline cache exists.                                      |
 | Static delivery descriptor              | 5                         | Unchanged: path/index canonical URLs and the current namespace.                                         |
 | Private live capability descriptor      | 2                         | Unchanged: path-keyed workspace/request identities.                                                     |
 | Inspector wire envelope                 | 2                         | Unchanged: navigation carries `screenPath`; both peers require 2 before message fields.                 |
@@ -43,37 +44,23 @@ are strict unversioned authoring schemas: new authoring inputs, not a second
 interpretation of persisted catalogue data. No stored-state converter or
 fallback exists for any boundary.
 
-## Manifest V11
+## Catalogue Model
 
-```ts
-interface ManifestV11 {
-  schemaVersion: 11;
-  generatedBy: "mokly";
-  entries: readonly ManifestEntry[];
-  folders: readonly ManifestFolder[];
-  sourceFiles: readonly string[];
-  assetClosure: readonly string[];
-  generatedFiles: readonly { path: string; blobHash: string }[];
-  blobHashAlgorithm: "sha1" | "sha256";
-}
-```
-
-Entries keep the path-based fields of v10 for screens, pages, documents, use
-cases, components and variants, and add the HTML and YAML file kinds of the
-[HTML screens contract](./mokly-html-screens.md). Usage records derive their
-instance, slot and root ranges from the markers in the generated documents,
-under the [comparison contract](./mokly-comparison.md), and carry no text
-offsets. Resource owners exclude CSS. The exact-byte Git blob hash, sorted
-inventories, source/closure separation and manifest self-exclusion are kept.
-The generated TypeScript types in the model crate are the normative shapes;
-the `Manifest` and `HistoricalManifest` aliases name v11 only.
+The Rust core keeps the catalogue model in memory and writes no manifest.
+Entries keep the path-based fields of the frozen manifest for screens, pages,
+documents, use cases, components and variants, and add the HTML and YAML file
+kinds of the [HTML screens contract](./mokly-html-screens.md). Usage records
+derive their instance, slot and root regions from the composed trees under the
+[comparison contract](./mokly-comparison.md) and carry no text offsets.
+Resource owners exclude CSS. The read model v7 is the model's public form, and
+the generated TypeScript types in the model crate are the normative shapes;
+no `Manifest` or `HistoricalManifest` type exists.
 
 ## Rejection Before Interpretation
 
 Reject versions before reading identity, route, resource or nested payload
-fields. Catalogue v6 and below are unsupported by the v7 reader; manifest v10
-and below are earlier output, not current metadata; review v7 and below are
-unsupported comparison results. Unknown newer versions are invalid, never the
+fields. Catalogue v6 and below are unsupported by the v7 reader; a frozen manifest is
+not read at all; review v7 and below are unsupported comparison results. Unknown newer versions are invalid, never the
 graceful earlier-baseline result.
 
 Delivery stays a `valid`/`unsupported-version`/`invalid` classifier.
@@ -85,13 +72,10 @@ error. Export maps invalid/unsupported delivery to its existing
 before processing navigation. No field renaming or path conversion rescues an
 unsupported payload.
 
-A base commit whose generated output carries manifest 10 or below, or whose
-cache marker is v2 or below, makes Changes unavailable with the message that
-the base must be rebuilt by the current version. Such entries are partial
-cache entries and are removed under their own lock before rebuilding. A
-complete valid v3 marker with different settings keeps the exact fail-intact
-error. Retention remains a metadata-only check. No earlier-format build or
-incompatibility outcome is cached.
+A base commit is rendered from its sources by the current version, so no
+earlier-format base exists. A base whose sources fail the current validation
+makes Changes unavailable with those diagnostics, and that outcome is not
+cached.
 
 Older receivers retain HTTP 426 handling with no Blob/Complete request or
 downgrade. Ownership and upload versions are unchanged because their own
@@ -105,6 +89,5 @@ Test every changed version boundary with the frozen backend's formats and an
 unknown newer version. Confirm rejection precedes getters for identity/path
 fields. Update complete/scoped, static/live, packed-consumer, upload and
 browser fixtures together. Keep old-version fixtures only as rejection tests.
-Verify the exact earlier-version line, successful current output and
-unavailable Changes with a pinned base whose own recipe writes manifest v10.
-A complete v11 base proves moved comparisons and historical files.
+Verify unavailable Changes with a base whose sources fail current validation,
+and moved comparisons and removed previews with a base rendered from Git.

@@ -49,11 +49,11 @@ The first 0.x release of the Rust core replaces the TypeScript backend under
 the [Rust rebuild plan](../../plans/rust-rebuild.md). `@mokly/mokly` installs
 a native `mokly` binary from `@mokly/native-<target>` on Linux x64 and arm64,
 macOS x64 and arm64, and Windows x64; other platforms are unsupported. Screens,
-components, pages and use cases may be HTML and YAML files. Output uses
-manifest v11, review result v8 and read model v7; no reader accepts an
-earlier number, so regenerate every catalogue, discard `.mokly-cache`, and
-expect Changes to be unavailable until the Git base is rebuilt by the new
-version. The authoring API and config load with no compatibility shims. Mokly
+components, pages and use cases may be HTML and YAML files. There is no
+generated tree: delete every committed `mokly-generated/` directory and
+`.mokly-cache`. Changes renders both commits from their sources, so it works
+across the upgrade. Review result v8 and read model v7 replace the earlier
+numbers; no reader accepts an earlier number. The authoring API and config load with no compatibility shims. Mokly
 Cloud resets and republishes; the upload exchange is unchanged.
 
 ## Breaking Publish Checkout Release Note

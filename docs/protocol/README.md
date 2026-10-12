@@ -10,9 +10,9 @@ and moves are paired with their baseline.
 
 The frozen TypeScript backend implements manifest v10, catalogue v6 and
 review v7. The [Rust rebuild plan](../../plans/rust-rebuild.md) is the approved
-target for the Rust core, its new contracts, and manifest v11, review v8, read
-model v7 and change snapshot v4 under the
-[format inventory](./mokly-format-versions.md). Every page below carries one
+target for the Rust core, its new contracts, and review v8, read model v7 and
+change snapshot v4 under the [format inventory](./mokly-format-versions.md),
+with no generated tree. Every page below carries one
 classification from the [rebuild procedures](./rust-rebuild-procedures.md): kept as is,
 rewritten by the milestone that owns its subsystem, or retired at the
 teardown. A retired page stays accurate for the frozen backend until then.
@@ -128,8 +128,6 @@ unsupported number before interpreting content.
 - [Selected Developer Test Results](./developer-test-results.md)
 - [Path-Derived Artifact Paths](./mokly-artifact-paths.md)
 - [Mokly Public Authoring Contract](./mokly-authoring.md)
-- [Baseline Catalogue Discovery And Addressing](./mokly-baseline-addressing.md)
-- [Baseline Storage And Execution](./mokly-baseline-storage.md)
 - [Build Warnings](./mokly-build-warnings.md)
 - [Catalogue Change Metadata And Removed Pages](./mokly-catalogue-changes.md)
 - [Catalogue Projection And Delivery](./mokly-catalogue-delivery.md)
@@ -152,15 +150,12 @@ unsupported number before interpreting content.
 - [Imported CSS Configuration](./mokly-configuration-imported-styles.md)
 - [CSS Attribution Membership](./mokly-css-attribution-membership.md)
 - [CSS Rule Membership And Identity](./mokly-css-attribution-rules.md)
-- [Per-Commit Baseline Selection](./mokly-derived-baselines.md)
 - [Entry Modules](./mokly-entry-modules.md)
 - [Consumer Static Export](./mokly-export.md)
 - [Static Export Browser And Identity](./mokly-export-browser.md)
 - [Export Public Files And Package Boundary](./mokly-export-public-files.md)
 - [Export Recovery](./mokly-export-recovery.md)
 - [Identity-Derived Generated Document Delivery](./mokly-generated-delivery.md)
-- [Generated Manifest And Baseline Version Gate](./mokly-generated-manifest.md)
-- [Generated Output, Git State, And Asset Closure](./mokly-generated-output.md)
 - [Imported Stylesheet Delivery](./mokly-imported-styles.md)
 - [Imported Stylesheet Assets And Delivery](./mokly-imported-styles-assets.md)
 - [Imported Stylesheet Diagnostics](./mokly-imported-styles-errors.md)
@@ -181,7 +176,6 @@ unsupported number before interpreting content.
 - [Removed Preview Frames And Lifecycle](./mokly-removed-preview-frames.md)
 - [Removed Content Previews](./mokly-removed-previews.md)
 - [Mokly Rendering And Generated Output Contract](./mokly-rendering.md)
-- [Generated Rendering Contract](./mokly-rendering-generated.md)
 - [Root Discovery And Source Membership](./mokly-root-discovery.md)
 - [Mokly Build And Browse Runtime](./mokly-runtime.md)
 - [Selected live comparisons](./mokly-selected-comparisons.md)
@@ -190,11 +184,9 @@ unsupported number before interpreting content.
 - [CLI Terminal Compatibility And Errors](./mokly-terminal-errors.md)
 - [CLI Terminal Output](./mokly-terminal-output.md)
 - [Startup Diagnostics And Scale Fixtures](./mokly-timings.md)
-- [Unified Generated Output And Imported Styles](./mokly-unified-output.md)
 - [Portable Viewer Namespace And Version Gates](./mokly-viewer-namespace.md)
 - [Watched Catalogue Development](./mokly-watch.md)
 - [Watch Runtime And Recovery](./mokly-watch-runtime.md)
-- [Shared Watch Setup And Output Writers](./mokly-watch-writers.md)
 - [Repository Preview Deployments](./npm-preview-deployments.md)
 - [Mokly CI And Npm Release Contract](./npm-release.md)
 - [Npm Release Verification Evidence](./npm-release-evidence.md)
@@ -206,14 +198,22 @@ unsupported number before interpreting content.
 
 - [CI Example Compilation Snapshot](./ci-example-snapshot.md)
 - [CI Fixture Preparation And Lifetime](./ci-fixture-preparation.md)
+- [Baseline Catalogue Discovery And Addressing](./mokly-baseline-addressing.md)
 - [Baseline Compatibility](./mokly-baseline-compatibility.md)
+- [Baseline Storage And Execution](./mokly-baseline-storage.md)
 - [Check, Export And Frame Boundary Results](./mokly-boundary-results.md)
 - [Comparison Inventory And Post-Render Edits](./mokly-comparison-inventory.md)
 - [Component Review Fast Path](./mokly-component-review-fast-path.md)
 - [Component Stylesheet Ownership And Comparison](./mokly-component-stylesheet-ownership.md)
+- [Per-Commit Baseline Selection](./mokly-derived-baselines.md)
 - [Directory Constants And Import Lint](./mokly-directory-lint.md)
+- [Generated Manifest And Baseline Version Gate](./mokly-generated-manifest.md)
+- [Generated Output, Git State, And Asset Closure](./mokly-generated-output.md)
 - [Accepted Generation Route Set](./mokly-generation-routes.md)
 - [Native Engine](./mokly-native-engine.md)
 - [Path Identity In One Generated Tree](./mokly-path-output-integration.md)
+- [Generated Rendering Contract](./mokly-rendering-generated.md)
 - [Source Protection Acceptance](./mokly-source-protection-acceptance.md)
 - [Stylesheet Link Discovery](./mokly-stylesheet-links.md)
+- [Unified Generated Output And Imported Styles](./mokly-unified-output.md)
+- [Shared Watch Setup And Output Writers](./mokly-watch-writers.md)

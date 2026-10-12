@@ -12,7 +12,7 @@ decoder implement this path-keyed component-aware schema v7 for
 [Changes contract](./mokly-changes.md) and
 [named result interfaces](../../packages/viewer/src/review/types.ts).
 Manifest/usage types come from the
-[component manifest](./mokly-component-manifest.md). Version 6 addresses
+[component manifest](./mokly-component-manifest.md). Version 7 addresses
 screens, components, variants, and views by entry path and view axes, carries
 `previousPath` for paired moves, and stores no artifact path. The
 [Rust rebuild plan](../../plans/rust-rebuild.md) replaces review v7 with review v8, whose

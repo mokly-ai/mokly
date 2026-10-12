@@ -13,8 +13,9 @@ Removal of baseline compatibility is implemented in
 [M23B](../../plans/remove-source-path-evidence.md#milestone-23b-remove-baseline-compatibility).
 
 This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
-The [Rust rebuild plan](../../plans/rust-rebuild.md) raises the marker to
-`schemaVersion: 3` with `manifestVersion: 11` and `layout: "generated-v11"`.
+The [Rust rebuild plan](../../plans/rust-rebuild.md) retires this contract:
+both comparison sides render from sources, and no baseline cache or completion
+marker exists.
 
 ## Rebuild Procedure
 

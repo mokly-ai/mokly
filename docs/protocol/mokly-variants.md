@@ -4,8 +4,8 @@
 
 Variants use slugs and derived parent paths. The manifest and public tree retain
 those relationships and authored sibling order. The
-[Rust rebuild plan](../../plans/rust-rebuild.md) keeps this contract on manifest v11 and
-read model v7 and adds variants declared in HTML and YAML front matter.
+[Rust rebuild plan](../../plans/rust-rebuild.md) keeps this contract on the in-memory
+catalogue model and read model v7 and adds variants declared in HTML and YAML front matter.
 
 ## Purpose And Boundary
 
@@ -153,7 +153,7 @@ resource validation, collision and generated-inventory
 checks, and transactional writes. A component parent has no views; its page
 shows its first variant entry.
 
-The manifest is schema v11. `variantOf` is present exactly on variant entries
+The manifest is schema v10. `variantOf` is present exactly on variant entries
 of either kind and holds the parent's path under the
 [manifest contract](./mokly-component-manifest.md). Validation requires the
 named parent to be a current entry of the same kind without `variantOf` and

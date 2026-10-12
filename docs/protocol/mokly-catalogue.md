@@ -4,7 +4,7 @@
 
 Read model v6 is the shape the frozen TypeScript backend serves. The
 [Rust rebuild plan](../../plans/rust-rebuild.md) is the approved target for read model
-v7 below, which follows manifest v11 and review v8; no reader accepts an
+v7 below, which follows the source-rendered catalogue model and review v8; no reader accepts an
 earlier number. `ResourceEvidence` follows the
 [CSS evidence schema](./mokly-css-attribution-membership.md) with the owner
 field of the [comparison contract](./mokly-comparison.md).
@@ -14,15 +14,16 @@ field of the [comparison contract](./mokly-comparison.md).
 | Line                      | Generated manifest | Comparison result | Read model |
 | ------------------------- | ------------------ | ----------------- | ---------- |
 | Frozen TypeScript backend | 10                 | 7                 | 6          |
-| Rust rebuild, approved    | 11                 | 8                 | 7          |
+| Rust rebuild, approved    | none               | 8                 | 7          |
 
 Both catalogue kinds, with and without registered components, use the same
 numbers, with globally unique entry paths. On the frozen line the private
 catalogue-change snapshot is v3, and the manifest stores folder records,
 component variants, per-view usage, root output ranges and inserted-stylesheet
-provenance. On the approved line the snapshot is v4, and manifest v11 derives
-usage ranges from markers and carries no text offsets, as the
-[format inventory](./mokly-format-versions.md) states. Removed page preview
+provenance. On the approved line there is no generated manifest: the catalogue renders
+from sources into a bounded cache, usage derives from the composed trees, and
+the snapshot is v4, as the [format inventory](./mokly-format-versions.md)
+states. Removed page preview
 metadata is v3 and delivery descriptors are v5 on both lines. No entry carries
 derived file names; the generated inventory lists exact paths. Markdown
 documents and their resource copies are implemented. Accepted move pairs carry `previousPath` in review records and

@@ -14,19 +14,23 @@ one plan to one pull request and that require a functioning product after
 every milestone: the branch has no CLI between Milestone 2 and Milestone 6.
 Milestone 1 is complete: the Rust core architecture, the sidecar, HTML
 screens, HTML components, and comparison contracts exist, the format
-inventory names manifest v11, review v8, read model v7 and snapshot v4, and
+inventory names review v8, read model v7 and snapshot v4, and
 every protocol page is classified. The structural test that binds the
 catalogue page's format table to the old code fails until the teardown
 removes that test. On 2026-10-12 the branch was rebased onto the
 `AGENTS.md` that names the shared skills, and the rebuild procedures moved
 from the removed `docs/dev` directory to
-[the protocol page](../docs/protocol/rust-rebuild-procedures.md).
+[the protocol page](../docs/protocol/rust-rebuild-procedures.md). Later that day
+the user withdrew the committed generated tree: both comparison sides render
+from sources, export is a plain output, and the Milestone 1 contracts were
+revised to match (Decisions 11 to 13).
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
 detect changes and affected screens from rendered output and CSS rules, as
 today; render screens and components from HTML with YAML front matter without
-JavaScript; keep tracked and rebuilt generated output and baselines, as today;
+JavaScript; render every view in memory from the sources of either commit,
+with no generated tree;
 render components, screens, and stories from JavaScript, React, and Storybook;
 and work well with catalogues of thousands of screens. The viewer package stays
 and reads the new formats.
@@ -53,15 +57,16 @@ more than re-deriving the behaviour from the requirements.
    the old contracts are a checklist for cases the new spec missed or left
    undefined, not an oracle. Differences are triaged as improvement, spec gap,
    or regression, and the decision is written into the spec.
-4. Formats keep counting: manifest v11, review result v8, public read model
-   v7, change snapshot v4. Every reader accepts exactly one number and
+4. Formats keep counting: review result v8, public read model v7, change
+   snapshot v4; no generated manifest exists (Decision 11). Every reader accepts exactly one number and
    rejects others with an actionable error. Numbers bump freely before 1.0,
    with no reader for the earlier number. Package 1.0.0 is the first stable
    format promise.
 5. No backward compatibility with old output: no reader, shim, or migration
    for old manifests, caches, baselines, config shapes, or authoring modules.
-   A base commit that only ever built old output makes Changes unavailable
-   until the base moves past the switch.
+   A base commit renders from its sources, so Changes works across the
+   switch; a base whose sources fail current validation makes Changes
+   unavailable with those diagnostics (Decision 11).
 6. Mokly Cloud is reset and republished; its viewer and receiver update in the
    same window as the first release of the new core.
 7. The upload exchange (plan, blob, complete; v1) and its validation rules do
@@ -76,14 +81,35 @@ more than re-deriving the behaviour from the requirements.
 10. The sidecar bundles consumer JavaScript and reports the module graph;
     Rust owns invalidation and caching. Milestone 1 chooses between esbuild
     and Rolldown for that bundling and records why.
+11. No committed generated tree (2026-10-12). Both sides of a comparison
+    render from sources: the head from the working tree, the base from the
+    base commit's Git tree, through one build graph and a bounded render
+    cache; both sides use the current Mokly version. No command writes into
+    the repository. Export is a plain output that nothing reads back, and
+    publish uploads it. This withdraws the earlier requirement to keep
+    tracked and rebuilt output.
+12. React and Storybook components at the base follow three dependency tiers
+    (2026-10-12): an identical lockfile uses the working tree's
+    dependencies; a different lockfile installs the base's dependencies into
+    a bounded content-addressed cache with lifecycle scripts disabled under a
+    time limit; an impossible install uses the working tree's dependencies
+    with a warning.
+13. Markers (2026-10-12): the core attaches ownership and ignore regions to
+    tree nodes; comment markers exist only in the fragments a sidecar
+    returns; ignore scopes resolve at render time; the `mokly-` prefix is
+    reserved for element names in authored HTML and for comment names in
+    fragments. A changed style rule that matches no element produces no
+    evidence record.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
 - Deleting content on `origin/main` for the teardown: the paths named in
   Milestone 2. The teardown commit restates them.
 - The functioning-product rule is suspended between the teardown and the end
-  of Milestone 7, when the viewer reads the served catalogue again. The viewer
-  package keeps working throughout.
+  of Milestone 7, when the viewer reads the served catalogue again, and from
+  the end of every milestone that emits a new format until the end of the
+  milestone in which the viewer reads it; today that is Milestones 9 to 10.
+  The viewer package keeps working throughout.
 - Pending the user's approval, under the rule that a new gate needs it: the
   Rust advisory audit, the generated-TypeScript byte-identity check, and the
   time and memory budgets of Milestone 14. Milestone 3 records the answer
@@ -97,6 +123,10 @@ that follows; `defineComponent` gains `element`; sidecar recycling thresholds
 are fixed; the protocol triage stays under `.context/`; the documentation
 policy page is kept; the four remaining format owners carry Delivery Status
 pointers; the pull request description writes `{target}` for the placeholder.
+Later that day the user chose render-time scope resolution with comment
+markers only in sidecar fragments, the suspension principle for every
+new-format gap, no evidence record for a rule that matches nothing, and the
+one-word version repair on the component review page.
 
 **Architecture:**
 
@@ -104,7 +134,8 @@ pointers; the pull request description writes `{target}` for the placeholder.
   platform packages, resolved by a small Node shim in `@mokly/mokly`. The
   binary owns discovery, the catalogue model, HTML composition, stylesheets,
   document assembly, a content-addressed build graph with parallel scheduling,
-  watch, the server, comparison, export, and publish.
+  watch, the server, comparison, export, and publish. No command writes into
+  the repository; export writes its own output directory.
 - A pool of Node sidecars renders only JavaScript: a React component with
   props, a React screen, a Storybook story through portable stories, and the
   viewer shell for Serve and export. A sidecar returns an HTML fragment plus
@@ -119,8 +150,11 @@ pointers; the pull request description writes `{target}` for the placeholder.
   exact diagnostics) and adds HTML components: a front matter block with the
   element name, prop schema, and slots, and a body with attribute and text
   substitution and named slots. No loops or expressions in the first version.
-- Comparison works on trees, not text. Component and ignore markers are
-  comment nodes; an element's owner is its nearest enclosing marker pair;
+- Comparison works on trees, not text. Both sides render from sources with
+  the current version, the base from its Git tree under the dependency tiers
+  of Decision 12. Ownership and ignore regions are node annotations, carried
+  as comment markers only in sidecar fragments; an element's owner is its
+  nearest enclosing region;
   materiality compares canonical trees after removing ignored regions and
   head styles, owned and unowned; styles count through rule evidence only.
   CSS attribution keeps today's rule-level matching and its
@@ -269,37 +303,40 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
 
 At completion `mokly build` discovers a catalogue of HTML screens, HTML
 components, Markdown documents, pages, and use cases, validates it, and
-writes manifest v11 without rendering.
+builds the catalogue model without rendering.
 
 - [ ] Implement roots, default globs, folder records, path identity, variants,
       moves hints, and the diagnostics of the identity contracts in
       `mokly-catalogue`.
 - [ ] Implement the front matter parser and the file kinds decided in
       Milestone 1, with exact diagnostics and line and column reporting.
-- [ ] Implement manifest v11 in `mokly-model` with canonical JSON, the source
-      inventory, and the generated TypeScript types.
+- [ ] Implement the catalogue model in `mokly-model` with canonical JSON and
+      the generated TypeScript types; it lives in memory, with no file on
+      disk.
 - [ ] Behaviour tests from fixtures: one catalogue per identity rule, every
       diagnostic, and the reference catalogue's entry set.
 - [ ] Commit.
 
-## Milestone 5: HTML rendering and generated output
+## Milestone 5: HTML rendering and the render cache
 
 At completion `mokly build` and `mokly check` render HTML screens and
-components into `mokly-generated/` under the tracked and untracked rules.
+components into the bounded render cache and report diagnostics; nothing is
+written to the repository.
 
 - [ ] Implement HTML components in `mokly-html`: prop schemas, scalar coercion,
       `$name` data references, named slots, attribute and text substitution,
       `mokly-viewport`, `mokly-instance`, and the element registry.
 - [ ] Implement screen composition: viewports, colour schemes, stylesheet
-      rules, document assembly, `mock:` link rewriting, ignore markers, and the
-      component and ignore marker comments the comparison relies on.
-- [ ] Implement the output transaction: staging, atomic install through
-      `mokly-platform`, the tracked and untracked rules, the check command, and
-      the public closure policy for referenced assets.
+      rules, document assembly, `mock:` link rewriting, ignore regions with
+      their scopes resolved, and the ownership annotations the comparison
+      relies on.
+- [ ] Implement the render cache: content keys, the byte bound, eviction, and
+      the source tree trait over the working tree and Git trees; the check
+      command; and the closure of referenced assets for Serve and export.
 - [ ] Implement stylesheet handling on `lightningcss`: imports, assets, and
       per-root bundles.
 - [ ] Port the example catalogue's HTML-only parts and add HTML fixtures; run
-      the gap sweep against the rendering and output contracts.
+      the gap sweep against the rendering contracts.
 - [ ] Write the HTML authoring guides under `docs/guides`.
 - [ ] Commit.
 
@@ -349,14 +386,15 @@ through the sidecar, and the example catalogue renders again.
 ## Milestone 9: Changes
 
 At completion Serve and the CLI classify changes against the Git base with
-tree comparison, CSS attribution, and both baseline kinds. Serve emits review
+tree comparison, CSS attribution, and base-side rendering from Git. Serve emits review
 v8 and snapshot v4; the viewer renders them after Milestone 10.
 
-- [ ] Implement Git evidence in `mokly-git`: merge base, changed paths, and
-      bounded blob reads.
-- [ ] Implement baselines: tracked output through blobs, and rebuilt output
-      through the base's own commands with the cache, locks, extraction
-      limits, and process scopes of the storage contract.
+- [ ] Implement Git access in `mokly-git`: merge base, changed paths, bounded
+      blob and tree reads, and archive extraction of a commit.
+- [ ] Implement base-side rendering: the base commit's Git tree as a source
+      tree through the build graph, the three dependency tiers of Decision 12
+      with the bounded install cache, scripts disabled, the time limit, and
+      the `base-dependencies` warning.
 - [ ] Implement tree comparison in `mokly-compare`: marker-derived ownership,
       ignore regions, materiality on canonical trees, moves, documents, pages,
       affected consumers, and review result v8.
@@ -367,8 +405,8 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [ ] Implement background classification in Serve, the change snapshot v4,
       and on-demand comparison snapshots and panes.
 - [ ] Behaviour tests from the captured scenarios, rewritten in the new
-      formats; run the gap sweep against the Changes, attribution, and
-      baseline contracts.
+      formats; run the gap sweep against the Changes and attribution
+      contracts.
 - [ ] Commit.
 
 ## Milestone 10: Viewer reads review v8 and snapshot v4
@@ -415,8 +453,9 @@ Tags: ui
 ## Milestone 14: Large-project acceptance
 
 - [ ] Port the large fixture generator with HTML and React variants and the
-      four-scenario benchmark harness; record the time and memory budgets in
-      the timings contract once approved.
+      four-scenario benchmark harness; record the time and memory budgets, the
+      dependency install time limit, and the render and install cache bounds
+      in the timings contract once approved.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
       through build, serve, Changes, watch, and export; save the evidence
       under `.context/rust-rebuild/`.
@@ -435,17 +474,6 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - Open from the 2026-10-12 review, report under
-    `.context/rust-rebuild/review-2026-10-12-rebase.md`:
-  - 4: the ignore-scope marker has no extent. The user proposed a custom
-    `mokly-` element instead of a comment marker; under discussion.
-  - Open from the review of commit 795eddb9, report under
-    `.context/rust-rebuild/review-2026-10-12-decisions.md`:
-  - 4: the functioning-product suspension names no window between the end of
-    Milestone 9 and the end of Milestone 10, when the viewer still reads
-    review v7 and snapshot v3.
-  - Observation: the comparison contract attributes a rule "to nobody", but
-    `RuleEvidence` requires an `owner`; the encoding is undefined.
 
 ## Post-merge follow-up (non-blocking)
 

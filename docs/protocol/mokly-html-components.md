@@ -41,8 +41,8 @@ rules. Keys:
 `element` follows the custom element name grammar: lowercase ASCII, starts
 with a letter, contains at least one hyphen, and is none of the names the HTML
 standard reserves. It must be unique across HTML and JavaScript components;
-a collision fails the build naming both files. `mokly-ignore`,
-`mokly-ignore-scope`, and `mokly-slot` are reserved.
+a collision fails the build naming both files. Every `mokly-` name is
+reserved for Mokly.
 
 ## Props
 
@@ -97,13 +97,13 @@ the parent's path plus the slug, parent first, under the
 
 Rendering a component element substitutes the coerced props, fills the slots
 with the supplied content, and renders nested components the same way. Each
-rendered instance is wrapped in the instance markers the
-[comparison contract](./mokly-comparison.md) reads, carrying the component
-path, the instance id, and the props key, so the usage ranges in manifest v11
-derive from the output rather than from recorded offsets. Slot content keeps
+rendered instance is an ownership region of the composed tree under the
+[comparison contract](./mokly-comparison.md), carrying the component path, the
+instance id, and the props key, so usage derives from the output rather than
+from recorded offsets. Slot content keeps
 its supplier as owner. A JavaScript component used from an HTML screen renders
-through the [sidecar](./mokly-sidecar.md) with the same markers added by the
-binary.
+through the [sidecar](./mokly-sidecar.md); the binary reads the fragment's
+markers into the same regions.
 
 A component's own page renders each variant with the component as the root
 instance, at every viewport and colour scheme, with the configured stylesheets.
