@@ -5,7 +5,8 @@
 Variants use slugs and derived parent paths. The manifest and public tree retain
 those relationships and authored sibling order. The
 [Rust rebuild plan](../../plans/rust-rebuild.md) keeps this contract on the in-memory
-catalogue model and read model v7 and adds variants declared in HTML and YAML front matter.
+catalogue model and read model v7, adds variants declared in HTML and YAML front matter, and
+makes each Storybook story a variant of its file's component entry.
 
 ## Purpose And Boundary
 

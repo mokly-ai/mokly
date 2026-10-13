@@ -75,7 +75,7 @@ the machine.
 | config            | the resolved config and the Mokly version                                                                                            |
 | entry source      | the file bytes of a screen, component, page, use case, document, or folder record                                                    |
 | bundle generation | the sidecar's module graph: every consumer source file, the renderer module, resolution settings, the installed React version        |
-| fragment          | bundle generation, render kind, export or story id, canonical props, viewport, colour scheme, enclosing ignore scope                 |
+| fragment          | bundle generation, render kind, definition handle or story id, canonical props, viewport, colour scheme, enclosing ignore scope      |
 | HTML component    | its source and the keys of the components it uses                                                                                    |
 | stylesheet bundle | the root's imported CSS sources, assets, PostCSS module, and resolution settings                                                     |
 | document          | the entry key, viewport, colour scheme, the fragment and component keys it composes, the stylesheet rules that apply, the config key |

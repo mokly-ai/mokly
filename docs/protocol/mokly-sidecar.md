@@ -42,7 +42,7 @@ Frames are newline-delimited JSON, UTF-8, at most 64 MiB each. A request has
 sidecar run in order; the pool spreads independent requests across sidecars.
 
 ```json
-{"id":12,"method":"renderComponent","params":{"generation":"3f9c…","export":"specs/ui/button.mockup.tsx#Button","props":{"label":"Save"},"viewport":"mobile","colorScheme":"light","ignoreScope":"enabled"}}
+{"id":12,"method":"renderComponent","params":{"generation":"3f9c…","handle":"specs/ui/button.mockup.tsx#Button","props":{"label":"Save"},"viewport":"mobile","colorScheme":"light","ignoreScope":"enabled"}}
 {"id":12,"result":{"html":"<button class=\"css-1x2\">Save</button>","styles":[".css-1x2{color:red}"],"resources":[],"warnings":[]}}
 {"event":"diagnostic","params":{"message":"…"}}
 ```
@@ -54,8 +54,8 @@ sidecar run in order; the pool spreads independent requests across sidecars.
 | `hello`           | none                                                                                          | `{ version }`                                                |
 | `bundle`          | entry files, renderer module, stories files, module resolution settings, source root          | `{ generation, modules, warnings }`                          |
 | `describe`        | generation                                                                                    | `{ screens, pages, useCases, folders, components, stories }` |
-| `renderScreen`    | generation, export, viewport, colour scheme                                                   | render result                                                |
-| `renderComponent` | generation, export, props, slot placeholders, viewport, colour scheme, enclosing ignore scope | render result                                                |
+| `renderScreen`    | generation, handle, viewport, colour scheme                                                   | render result                                                |
+| `renderComponent` | generation, handle, props, slot placeholders, viewport, colour scheme, enclosing ignore scope | render result                                                |
 | `renderStory`     | generation, story id, args, viewport, colour scheme                                           | render result                                                |
 | `renderShell`     | catalogue read model bytes, view, context                                                     | `{ html }`                                                   |
 | `processCss`      | PostCSS module, source path, text                                                             | `{ text, dependencies }`                                     |
@@ -69,9 +69,12 @@ records the renderer declared, and build warnings.
 ## Definitions
 
 `describe` evaluates the entry modules and the stories files of a generation
-and returns every definition they export, each with its export name: screens
+and returns every definition they export, each with its handle: screens
 with their variants, pages, use cases, folders, components, and the story
-inventory. A component definition carries its `element` when declared, the
+inventory. A handle is the file path plus the export name, and for a screen
+variant the variant slug follows after a slash, for example
+`specs/account/invoice.mockup.tsx#default/overdue`; a render request names
+the definition by its handle. A component definition carries its `element` when declared, the
 prop schema, the slots, the controls, and the saved variants. The binary feeds
 every definition into the catalogue model, builds the component registry from
 the component definitions and the HTML components, applies the uniqueness and
@@ -148,8 +151,14 @@ sidecar loads the consumer's `.storybook/preview` annotations with
 `setProjectAnnotations`, composes each story with `composeStories` from
 `@storybook/react`, and renders it with `renderToStaticMarkup`. The story id
 is the file path plus the export name, and `describe` lists every story of the
-generation. Viewport and colour scheme reach the
-story as the globals `moklyViewport` and `moklyColorScheme`. A consumer
+generation. A stories file becomes one component entry at the path derived
+from the file, titled from its `title` annotation or its component's name;
+its `argTypes` supply the prop schema and controls when present, and the
+schema is empty otherwise. Each story becomes a variant of that entry at the
+parent's path plus the export name as slug, with its `args` as props, under
+the [variant contract](./mokly-variants.md); the read model needs no new
+kind. Viewport and colour scheme reach the story as the globals
+`moklyViewport` and `moklyColorScheme`. A consumer
 without `@storybook/react` fails `bundle` with `bundle-failed` naming the
 missing package.
 

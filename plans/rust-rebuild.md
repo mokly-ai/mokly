@@ -29,7 +29,9 @@ Markdown documents pages to rewritten; it lists 72 kept, 75 rewritten, and 21
 retired pages beside the five new contracts. On 2026-10-13 the user chose the
 two verbs `serve` and `build`, caches outside the repository, the enclosing
 scope state in render requests, the sidecar's `describe` call, and frozen
-wording for the last retired-page targets (Decisions 14 to 16).
+wording for the last retired-page targets (Decisions 14 to 16), then the
+definition handle and component entries for Storybook stories (Decisions 17
+and 18).
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
@@ -127,6 +129,14 @@ more than re-deriving the behaviour from the requirements.
     from it, the fragment cache key includes it, each slot placeholder reports
     the state at its position, which the core applies as the innermost scope
     of the slot content, and the core applies no outer scope to a fragment.
+17. Handles (2026-10-13): `describe` returns every definition with a handle,
+    the file path plus the export name, and a screen variant adds its slug
+    after a slash; `renderScreen` and `renderComponent` name a definition by
+    its handle, and the fragment key holds the handle or the story id.
+18. Stories (2026-10-13): a stories file becomes one component entry at the
+    path derived from the file, and each story becomes a variant of it with
+    its `args` as props; `argTypes` supply the schema and controls when
+    present. The read model and the viewer need no story kind.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
@@ -156,8 +166,9 @@ new-format gap, no evidence record for a rule that matches nothing, and the
 one-word version repair on the component review page. On 2026-10-13 the user
 also chose the sidecar's `describe` call as the source of JavaScript component
 definitions and frozen wording for the two remaining retired-page targets, then
-widened `describe` to every definition kind and the story inventory and fixed
-the `ignoreScope` values as `enabled` and `disabled`.
+widened `describe` to every definition kind and the story inventory, fixed
+the `ignoreScope` values as `enabled` and `disabled`, chose the definition
+handle for render requests, and made Storybook stories component variants.
 
 **Architecture:**
 
@@ -171,7 +182,7 @@ the `ignoreScope` values as `enabled` and `disabled`.
   props, a React screen, a Storybook story through portable stories, and the
   viewer shell for Serve and `build`. A sidecar returns an HTML fragment plus
   the styles that render produced. The binary memoizes every fragment by the
-  hash of bundle generation, export, props, viewport, scheme, and enclosing
+  hash of bundle generation, handle, props, viewport, scheme, and enclosing
   ignore scope, and caches
   shell HTML by route and catalogue revision.
 - Screens and components can be HTML files with YAML front matter. The format
@@ -410,8 +421,9 @@ through the sidecar, and the example catalogue renders again.
       resolution from the consumer, and the optional consumer PostCSS worker.
 - [ ] Implement component, screen, and story renders that return a fragment
       plus the styles the render produced; implement the fragment cache in
-      Rust keyed by bundle generation, export, props, viewport, scheme, and
-      the enclosing ignore scope; slot placeholders report their scope state.
+      Rust keyed by bundle generation, handle, props, viewport, scheme, and
+      the enclosing ignore scope; slot placeholders report their scope state;
+      a stories file is a component entry whose stories are its variants.
 - [ ] Implement `describe`: every definition the entry modules and stories
       files export, with the story inventory; feed every definition into the
       catalogue model, and register JavaScript components by `element` with
@@ -521,12 +533,6 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - Open from the review of commit 426b9c6d, report under
-    `.context/rust-rebuild/review-2026-10-13-describe.md`:
-  - 1: `renderScreen` takes an export name, but a screen export holds one
-    screen with its variants or several screens; define the render handle.
-  - Observation: no page says what catalogue entry a Storybook story
-    becomes; the read model has no story kind.
 
 ## Post-merge follow-up (non-blocking)
 
