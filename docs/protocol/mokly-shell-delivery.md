@@ -23,9 +23,7 @@ starts no sidecar, and the Rust core never produces shell markup.
 
 The index and the detail are the public read model, split by how the shell
 uses them. The index holds what every page needs. The detail holds what one
-entry needs. On the example catalogue, per-view usage records are nine tenths
-of the frozen backend's one document, and a page uses only the current entry's
-share; the measurements are recorded under `.context/rust-rebuild/`.
+entry needs.
 
 ## Routes
 
@@ -48,8 +46,9 @@ rewrite rules.
 `<route>` is the entry route of the [path contract](./mokly-paths.md).
 `<entry path>` is the entry's path with `.json` appended; a path segment never
 contains `..`, and the file for `a/b` and the directory for `a/b/c` coexist.
-The Serve-only routes of the
-[component controls](./mokly-component-controls.md) and
+The comparison routes under `diffs/` keep the owners that the
+[changes serving contract](./mokly-changes-serving.md) names. The Serve-only
+routes of the [component controls](./mokly-component-controls.md) and
 [on-demand](./mokly-on-demand.md) contracts are unchanged in purpose and owned
 by those pages. Every JSON route answers GET and HEAD with
 `application/json; charset=utf-8` and `X-Content-Type-Options: nosniff`.

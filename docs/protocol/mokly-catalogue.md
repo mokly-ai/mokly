@@ -25,7 +25,7 @@ component variants, per-view usage, root output ranges and inserted-stylesheet
 provenance. On the approved line there is no generated manifest: the catalogue renders
 from sources into a bounded cache, usage derives from the composed trees, and
 the snapshot is v4, as the [format inventory](./mokly-format-versions.md)
-states. On the approved line the [shell delivery contract](./mokly-shell-delivery.md) delivers the read model as the catalogue index v7, which carries no per-view usage or resource evidence, plus one entry detail v1 per entry; `catalogue.json` is retired (Decision 21). Removed page preview
+states. On the approved line the [shell delivery contract](./mokly-shell-delivery.md) delivers the read model as the catalogue index v7, which carries no per-view usage or resource evidence, plus one entry detail v1 per entry; `catalogue.json` is retired. Removed page preview
 metadata is v3 on both lines; delivery descriptors are v5 on the frozen line only. On the frozen line, no entry carries derived file names, the generated
 inventory lists exact paths, the manifest retains authored hints only, Markdown
 documents and their resource copies are implemented, and current and baseline

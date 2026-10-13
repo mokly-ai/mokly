@@ -452,8 +452,8 @@ without JavaScript.
       detail routes with `Cache-Control: no-store`, the document and asset
       routes, the live descriptor, the update event stream, shutdown
       ordering, and the terminal output contract in the CLI.
-- [ ] Behaviour tests: every route of the shell delivery contract, the
-      identity and revision fences, and shutdown.
+- [ ] Behaviour tests: every route of the shell delivery contract that
+      Milestone 6 serves, the identity and revision fences, and shutdown.
 - [ ] Commit.
 
 ## Milestone 7: Viewer reads read model v7
@@ -627,6 +627,29 @@ Tags: ui
     controls contract's step base; decide the rule.
   - 8: derived select options have no label rule for `enum` values and
     untitled `oneOf` members.
+  - Open from the review of commit 1fdf5d95, report under
+    `.context/rust-rebuild/review-2026-10-13-shell-delivery.md`:
+  - 1: a removed entry's detail inside an immutable comparison generation
+    carries `deploymentId` and `revision`, which move on every update;
+    decide the fields and the fence for generation details.
+  - 2: the index and the detail carry no `updateVersion` and no Serve-mode
+    signal, so the update fence and the absent-descriptor rules cannot be
+    implemented; decide where the live state lives.
+  - 3: Serve derives `deploymentId` from the canonical index, so every
+    revision change reads as another deployment and forces a page load;
+    decide a Serve-stable deployment id.
+  - 4: page-level `resourceEvidence` has no home in the index or in entry
+    detail v1; decide where page CSS evidence travels.
+  - 5: the kept catalogue page's v7 type requires `usage` on every view while
+    the index reader rejects it; decide the type split and the page's
+    classification.
+  - 6: the detail's `workspace` member names a `WorkspaceData` shape that no
+    protocol page defines; decide its fields against review v8.
+  - 7: the live descriptor route carries the render token with no CORS or
+    exposure rule; decide the rule.
+  - 8: five kept viewer pages (catalogue tree, scroll together, frame
+    adapter, viewer markers, shell destinations) still state hydration and
+    SSR behaviour; decide whether they move to rewritten with pointers.
 
 ## Post-merge follow-up (non-blocking)
 

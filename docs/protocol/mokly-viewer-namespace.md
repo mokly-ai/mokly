@@ -8,6 +8,11 @@ Delivery uses catalogue v6, delivery v5, bootstrap v2, ownership v3 and upload v
 Content-delta uploads and Plan v1 remain unchanged. The current Cloud service
 must support those versions and paths before accepting a publication.
 
+The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page: under
+the [shell delivery contract](./mokly-shell-delivery.md) the namespace gains
+`index.json`, `entries/**`, and `live.json`, and `catalogue.json` is retired
+(Decision 21).
+
 ## Paths And Single Ownership
 
 Define `VIEWER_DIRECTORY = "mokly-viewer"` alongside `GENERATED_DIRECTORY` in
