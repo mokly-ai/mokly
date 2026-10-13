@@ -86,9 +86,10 @@ slots default to the parent's; its supplied slots default to empty.
 - A slug outside the segment grammar, two variants with one slug, a nested
   `variants`, and an unknown key keep the diagnostics of the variants
   contract.
-- A `mokly-if`, `$name`, or `{{name}}` reference to a prop that the schema
-  does not declare fails with `html-props`, as does a `mokly-if` reference to
-  a prop whose kind is not `boolean`. An absent optional prop removes a
+- In a screen body, a `mokly-if`, `$name`, or `{{name}}` reference to a prop
+  that the schema does not declare fails with `html-props`, as does a
+  `mokly-if` reference to a prop whose kind is not `boolean`; a component
+  body keeps its own rules. An absent optional prop removes a
   `mokly-if` element and omits a `$name` attribute.
 
 ## Read Model

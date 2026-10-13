@@ -116,9 +116,9 @@ colour scheme, with the configured stylesheets.
 ## Diagnostics
 
 Errors use the [HTML screen codes](./mokly-html-screens.md#diagnostics) with
-the component file, line, and column. One condition is specific to
-components: `props`, or a variant's `props`, that the schema rejects fail with
-`html-attribute` naming the variant slug and the property path.
+the component file, line, and column. The component's `props`, or a
+variant's merged `props`, that the schema rejects fail with `html-attribute`
+naming the variant slug, when any, and the property path.
 
 ## Example
 
@@ -142,7 +142,7 @@ variants:
     props: { label: Save, tone: primary }
   - slug: disabled
     title: Disabled
-    props: { label: Save, tone: primary, disabled: true }
+    props: { disabled: true }
 ---
 
 <button class="btn btn-{{tone}}" disabled="{{disabled}}" type="button">

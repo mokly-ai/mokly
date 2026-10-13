@@ -173,15 +173,15 @@ screen. A catalogue of HTML files alone never starts a sidecar.
 
 ## Diagnostics
 
-| Code                   | Meaning                                                                |
-| ---------------------- | ---------------------------------------------------------------------- |
-| `html-front-matter`    | missing block, YAML error, unknown or invalid key                      |
-| `html-element`         | forbidden element, unknown hyphenated element, component cycle         |
-| `html-attribute`       | a value the prop schema rejects, or a reserved prop name               |
-| `html-props`           | an undeclared or mistyped `$name`, `{{name}}`, or `mokly-if` reference |
-| `html-slot`            | content for an undeclared slot, or an unrendered placeholder           |
-| `html-unused-props`    | warning: a prop no reference in the body reads                         |
-| `html-foster-parented` | warning: a component element moved out of a table                      |
+| Code                   | Meaning                                                                                                   |
+| ---------------------- | --------------------------------------------------------------------------------------------------------- |
+| `html-front-matter`    | missing block, YAML error, unknown or invalid key                                                         |
+| `html-element`         | forbidden element, unknown hyphenated element, component cycle                                            |
+| `html-attribute`       | a value the prop schema rejects, or a reserved prop name                                                  |
+| `html-props`           | an undeclared `$name`, `{{name}}`, or `mokly-if` reference, or `mokly-if` on a prop that is not `boolean` |
+| `html-slot`            | content for an undeclared slot, or an unrendered placeholder                                              |
+| `html-unused-props`    | warning: a prop no reference in the body reads                                                            |
+| `html-foster-parented` | warning: a component element moved out of a table                                                         |
 
 Errors are `build-invalid` failures with the repository-relative file, line,
 and column. Warnings use the [build warning record](./mokly-build-warnings.md).
