@@ -155,7 +155,9 @@ markers only in sidecar fragments, the suspension principle for every
 new-format gap, no evidence record for a rule that matches nothing, and the
 one-word version repair on the component review page. On 2026-10-13 the user
 also chose the sidecar's `describe` call as the source of JavaScript component
-definitions and frozen wording for the two remaining retired-page targets.
+definitions and frozen wording for the two remaining retired-page targets, then
+widened `describe` to every definition kind and the story inventory and fixed
+the `ignoreScope` values as `enabled` and `disabled`.
 
 **Architecture:**
 
@@ -410,9 +412,11 @@ through the sidecar, and the example catalogue renders again.
       plus the styles the render produced; implement the fragment cache in
       Rust keyed by bundle generation, export, props, viewport, scheme, and
       the enclosing ignore scope; slot placeholders report their scope state.
-- [ ] Register JavaScript components by `element` from `defineComponent`,
-      through the sidecar's `describe` call, with the uniqueness rule, the reserved `mokly-` prefix, and the reserved-prop
-      failure of the components contract.
+- [ ] Implement `describe`: every definition the entry modules and stories
+      files export, with the story inventory; feed screens, pages, use cases,
+      and folders into the catalogue model, and register JavaScript
+      components by `element` with the uniqueness rule, the reserved `mokly-`
+      prefix, and the reserved-prop failure of the components contract.
 - [ ] Implement live prop editing in Serve through the same render path.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and
@@ -517,13 +521,6 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - Open from the review of commit 085dc1b5, report under
-    `.context/rust-rebuild/review-2026-10-13-verbs.md`:
-  - 1: `describe` returns `defineComponent` definitions only; the catalogue
-    model also needs the screen, page, use case, and folder definitions of
-    JavaScript modules and the story inventory.
-  - 5: the `ignoreScope` request field has no stated values or default, and
-    the transport example omits it.
 
 ## Post-merge follow-up (non-blocking)
 

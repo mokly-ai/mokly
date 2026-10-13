@@ -36,7 +36,7 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
 | `mokly-platform`  | Exclusive rename, process groups, Windows job objects, file locks.                                                                              | nothing internal                |
 | `mokly-git`       | The Git command runner, merge base, changed paths, bounded blob and tree reads, archive extraction.                                             | `platform`                      |
 | `mokly-sidecar`   | The sidecar pool: spawning, framing, requests, timeouts, recycling.                                                                             | `model`, `platform`             |
-| `mokly-catalogue` | Roots, discovery, front matter, path identity, folders, variants, use cases, documents, the catalogue model.                                    | `model`                         |
+| `mokly-catalogue` | Roots, discovery, front matter, path identity, folders, variants, use cases, documents, the catalogue model.                                    | `model`, `sidecar`              |
 | `mokly-html`      | HTML components and screens: parsing, substitution, slots, composition, markers, link rewriting, document assembly, the component registry.     | `model`, `catalogue`, `sidecar` |
 | `mokly-css`       | Stylesheet bundling on `lightningcss`, rule collection, diffing, selector matching, the keep list, attribution.                                 | `model`                         |
 | `mokly-graph`     | The content-addressed render graph, scheduling, the render cache, the source tree trait over the working tree and Git trees, the asset closure. | `catalogue`, `html`, `css`      |
@@ -80,7 +80,7 @@ the machine.
 | document          | the entry key, viewport, colour scheme, the fragment and component keys it composes, the stylesheet rules that apply, the config key |
 | source tree       | the working tree, or the base commit's Git tree read through blobs and extracted on demand                                           |
 | dependency set    | the side's lockfile and package manifests and the package manager version                                                            |
-| definitions       | the bundle generation, through the sidecar's `describe` call                                                                         |
+| definitions       | the bundle generation, through the sidecar's `describe` call: every exported definition and the story inventory                      |
 | catalogue model   | every entry record and the definitions                                                                                               |
 
 A watched change hashes the changed file, finds the nodes whose keys moved, and
