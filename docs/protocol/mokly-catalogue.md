@@ -146,6 +146,9 @@ interface CatalogueScreen extends CatalogueEntry {
   address?: string;
   variantOf?: string; // Present exactly on variant screens; the parent path.
   colorSchemes: readonly ColorScheme[];
+  propSchema: ObjectPropSchema;
+  props: ComponentWireProps; // the entry's own props, or a variant's merged props
+  controls: Readonly<Record<string, ComponentControl>>;
   views: readonly CatalogueView[];
   useCasePaths: readonly string[];
 }
@@ -167,20 +170,17 @@ interface CatalogueUseCase extends CatalogueEntry {
 }
 interface CatalogueComponent extends CatalogueEntry {
   kind: "component";
+  variantOf?: string; // Present exactly on variant entries; the parent path.
   colorSchemes: readonly ColorScheme[];
   propSchema: ObjectPropSchema;
+  props: ComponentWireProps; // the entry's own props, or a variant's merged props
   slots: readonly string[];
+  suppliedSlots: readonly string[]; // empty on a parent
   controls: Readonly<Record<string, ComponentControl>>;
-}
-interface CatalogueComponentVariant extends CatalogueEntry {
-  kind: "component";
-  variantOf: string; // Present exactly on variant entries; the parent path.
-  colorSchemes: readonly ColorScheme[];
-  props: ComponentWireProps;
-  suppliedSlots: readonly string[];
   views: readonly CatalogueView[];
   comparison: ComparisonSelection;
 }
+type CatalogueComponentVariant = CatalogueComponent & { variantOf: string };
 ```
 
 No entry record carries a derived route or file name. Resource evidence names
@@ -192,7 +192,7 @@ have no current files; their historical documents come only from their
 `preview` descriptor. `PublicPath` is an artifact-root-relative POSIX file path,
 without a leading slash, origin, query or hash; resolve it against the source's
 origin root, not the JSON directory or host app URL. A current component parent
-has no views; its page shows its first current variant. `previousPath` is
+has its own views, rendered from its own props, and its page shows them first. `previousPath` is
 present exactly on entries the
 [move contract](./mokly-moves.md) paired with a baseline entry.
 

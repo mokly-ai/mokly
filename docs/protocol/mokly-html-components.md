@@ -88,7 +88,8 @@ The body is an HTML fragment with the screen body rules, plus substitution:
 ## Variants
 
 Each `variants` entry declares `slug`, `title`, `props`, and may declare
-`description`, `tags`, `movedFrom`, and `slots`. `props` must satisfy the
+`description`, `tags`, `movedFrom`, and `slots`. `props` replace top-level
+keys of the component's own props, and the merged props must satisfy the
 schema. `slots` maps declared slot names to HTML fragments that fill them on
 the variant's page. A variant flattens into an entry of kind `component` at
 the parent's path plus the slug, parent first, under the

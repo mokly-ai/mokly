@@ -72,51 +72,34 @@ variant that needs another tree is a separate file.
 A variant's `title` is its own. A story variant's title is its `name`
 annotation or its export name. A stories file entry is titled from the last
 segment of the meta `title`, else from the component's display name, else
-from its derived slug. A variant's description defaults to the parent's; its
-tags, related docs, slots, and supplied slots default to empty; its colour
-schemes default to the parent's.
+from its derived slug. A variant's description, tags, related docs, colour schemes, and declared
+slots default to the parent's; its supplied slots default to empty.
 
 ## Validation
 
-- `props` and every variant's props must satisfy the schema. For HTML kinds a
-  rejected value fails with `html-attribute` naming the variant slug and the
-  property path; for React kinds the component diagnostics of the
+- The entry's props and every variant's merged props must satisfy the
+  schema; a variant's own map may omit keys the entry's props supply. For HTML
+  kinds a rejected value fails with `html-attribute` naming the variant slug,
+  when any, and the property path; for React kinds the component diagnostics of the
   [components contract](./mokly-components.md) apply; for a stories file the
   story is named.
 - A slug outside the segment grammar, two variants with one slug, a nested
   `variants`, and an unknown key keep the diagnostics of the variants
   contract.
-- A `mokly-if` or `$name` reference to a prop that the schema does not
-  declare fails with `html-props`, and a `mokly-if` reference to a prop whose
-  kind is not `boolean` fails with `html-props`.
+- A `mokly-if`, `$name`, or `{{name}}` reference to a prop that the schema
+  does not declare fails with `html-props`, as does a `mokly-if` reference to
+  a prop whose kind is not `boolean`. An absent optional prop removes a
+  `mokly-if` element and omits a `$name` attribute.
 
 ## Read Model
 
-Read model v7 gives every screen and component the same prop fields:
-
-```ts
-interface EntryProps {
-  propSchema: ObjectPropSchema;
-  props: ComponentWireProps; // the entry's own props, or a variant's merged props
-  controls: Readonly<Record<string, ComponentControl>>;
-}
-interface CatalogueScreen extends CatalogueEntry, EntryProps {
-  kind: "screen";
-  variantOf?: string;
-  views: readonly CatalogueView[];
-}
-interface CatalogueComponent extends CatalogueEntry, EntryProps {
-  kind: "component";
-  variantOf?: string;
-  slots: readonly string[];
-  suppliedSlots: readonly string[];
-  views: readonly CatalogueView[];
-}
-```
-
-A component parent has its own views, rendered from its own props, and a
-variant carries its merged props. The generated TypeScript types in the model
-crate are the normative shapes.
+Read model v7 gives every screen and component the same prop fields in the
+[public catalogue read model](./mokly-catalogue.md): `propSchema`, `props`,
+which holds the entry's own props or a variant's merged props, and
+`controls`. A component parent has its own `views`, rendered from its own
+props, and an empty `suppliedSlots`; `variantOf` is present exactly on the
+variants of either kind. The catalogue page's block is the one shape until
+the generated TypeScript types of the model crate replace it.
 
 ## Related Docs
 

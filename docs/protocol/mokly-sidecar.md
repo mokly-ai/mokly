@@ -56,7 +56,7 @@ sidecar run in order; the pool spreads independent requests across sidecars.
 | `describe`        | generation                                                                                    | `{ screens, pages, useCases, folders, components, stories }` |
 | `renderScreen`    | generation, handle, props, viewport, colour scheme                                            | render result                                                |
 | `renderComponent` | generation, handle, props, slot placeholders, viewport, colour scheme, enclosing ignore scope | render result                                                |
-| `renderStory`     | generation, story id, args, viewport, colour scheme                                           | render result                                                |
+| `renderStory`     | generation, story id, props, viewport, colour scheme                                          | render result                                                |
 | `renderShell`     | catalogue read model bytes, view, context                                                     | `{ html }`                                                   |
 | `processCss`      | PostCSS module, source path, text                                                             | `{ text, dependencies }`                                     |
 | `dispose`         | generation                                                                                    | nothing                                                      |
@@ -76,8 +76,10 @@ inventory. A handle is the file path, `#`, and the export name, for example
 definition by its handle and passes the props of the entry or of the variant,
 because a variant is a props set under the
 [entry props contract](./mokly-entry-props.md). A component definition carries its `element`
-when declared, the prop schema, the slots, the controls, and the saved
-variants. The binary feeds
+when declared, the prop schema, its own props, the slots, the controls, and
+the saved variants; a screen definition carries its prop schema when
+declared, its own props, its controls, and each variant's slug, title, props,
+and metadata overrides. The binary feeds
 every definition into the catalogue model, builds the component registry from
 the component definitions and the HTML components, applies the uniqueness and
 reserved-name rules of the [components contract](./mokly-components.md), and
@@ -158,7 +160,9 @@ from the file: the meta's `args` are its props, `argTypes` declare the part
 of the schema they cover and inference supplies the rest, and each story is a
 variant at the parent's path plus the export name as slug, with its `args` as
 props, under the [entry props contract](./mokly-entry-props.md); the read
-model needs no new kind. Viewport and colour scheme reach the story as the globals
+model needs no new kind. A `renderStory` request carries the merged data
+props, applied over the composed story's own args, so non-data args stay as
+the file defines them. Viewport and colour scheme reach the story as the globals
 `moklyViewport` and `moklyColorScheme`. A consumer without `@storybook/react`
 fails `bundle` with `bundle-failed` naming the missing package.
 

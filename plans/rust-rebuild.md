@@ -558,6 +558,15 @@ Tags: ui
   - 3: the handle is ambiguous for an array export that holds more than one
     definition.
   - Observation: the sidecar has no render method for a `definePage` page.
+  - Open from the review of commit 15f1579c, report under
+    `.context/rust-rebuild/review-2026-10-13-variant-model.md`:
+  - 3: schema inference does not define the item schema of an array or
+    nested optionality.
+  - 4: what an `argTypes` entry declares, and which entries exclude a key,
+    is undefined.
+  - 9: whether `mokly-if` applies in HTML component bodies is undecided.
+  - 13: six frozen pages that state the replaced variant rules carry no
+    Delivery Status pointer; three of them sit at their line cap.
 
 ## Post-merge follow-up (non-blocking)
 
