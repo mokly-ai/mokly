@@ -15,14 +15,15 @@ compatibility reader, and no reader for an earlier number exists.
 | Boundary                                | Version                   | Reason and reader                                                                                                                      |
 | --------------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | Private generated manifest              | none                      | Retired: the catalogue model lives in memory and the read model is its public form; nothing is written.                                |
-| Public complete/scoped catalogue        | 7                         | Follows the source-rendered catalogue model and review v8 evidence; screens carry props and controls; public/scoped readers require 7. |
+| Public catalogue index                  | 7                         | The read model without per-view usage and resource evidence; screens carry props and controls; the index reader requires 7.            |
+| Entry detail                            | 1                         | New: one entry's per-view usage, resource evidence, and workspace lists; the detail reader requires 1.                                 |
 | Review result                           | 8                         | Tree materiality, owner-attributed rule and resource evidence, moves; producers and decoders require 8.                                |
 | Catalogue change snapshot               | 4                         | Current private path/move/removal evidence paired with review v8 and the base commit.                                                  |
 | Live catalogue index                    | `live-index-3`            | Source-rendered entry and folder shapes with source-only metadata.                                                                     |
-| Shell bootstrap envelope                | 3                         | Required version plus path-based view, catalogue v7 or external reference, and delivery v5.                                            |
+| Shell bootstrap envelope                | none                      | Retired: the shell renders in the browser from the index and detail routes; pages embed no state.                                      |
 | Baseline completion marker              | none                      | Retired: both sides render from sources; no baseline cache exists.                                                                     |
-| Static delivery descriptor              | 5                         | Unchanged: path/index canonical URLs and the current namespace.                                                                        |
-| Private live capability descriptor      | 2                         | Unchanged: path-keyed workspace/request identities.                                                                                    |
+| Static delivery descriptor              | none                      | Retired: the index carries the deployment id and the comparison URL.                                                                   |
+| Live descriptor                         | 3                         | A Serve JSON route with the base, identity, revisions, update version, and render capability; the workspace moved to the entry detail. |
 | Inspector wire envelope                 | 2                         | Unchanged: navigation carries `screenPath`; both peers require 2 before message fields.                                                |
 | Removed page/document preview metadata  | 3                         | Unchanged `{schemaVersion,baseRef,baseCommit,path}` shape.                                                                             |
 | Export ownership                        | 3                         | Unchanged exact `{path,sha256,size}` inventory, bounds and namespace; written by `build`.                                              |
@@ -63,12 +64,10 @@ fields. Catalogue v6 and below are unsupported by the v7 reader; a frozen manife
 not read at all; review v7 and below are unsupported comparison results. Unknown newer versions are invalid, never the
 graceful earlier-baseline result.
 
-Delivery stays a `valid`/`unsupported-version`/`invalid` classifier.
-Catalogue, bootstrap and review readers use `MoklyVersionError` at their
+Index, detail, live descriptor and review readers use `MoklyVersionError` at their
 version gates. The review gate rejects numeric versions other than 8 before
 content validation; malformed current results keep the plain invalid-review
-error. The static build maps invalid/unsupported delivery to the
-`export-invalid` context. Inspector peers reject a mismatched wire version
+error. Inspector peers reject a mismatched wire version
 before processing navigation. No field renaming or path conversion rescues an
 unsupported payload.
 
@@ -81,13 +80,13 @@ Older receivers retain HTTP 426 handling with no Blob/Complete request or
 downgrade. Ownership and upload versions are unchanged because their own
 fields and namespace are unchanged; catalogue and review readers independently
 enforce their payload versions. Mokly Cloud adopts catalogue v7, review v8 and
-bootstrap v3 in the same window as the first release of the Rust core.
+entry detail v1 in the same window as the first release of the Rust core.
 
 ## Acceptance
 
 Test every changed version boundary with the frozen backend's formats and an
 unknown newer version. Confirm rejection precedes getters for identity/path
-fields. Update complete/scoped, static/live, packed-consumer, upload and
+fields. Update index, detail, live, static, packed-consumer, upload and
 browser fixtures together. Keep old-version fixtures only as rejection tests.
 Verify unavailable Changes with a base whose sources fail current validation,
 and moved comparisons and removed previews with a base rendered from Git.

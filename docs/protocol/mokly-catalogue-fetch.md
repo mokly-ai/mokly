@@ -7,6 +7,11 @@ Implemented. This contract is split from the
 fetch rules for `mokly-viewer/catalogue.json` and the files it points at. The read
 model's shape, projection, and versions stay in that contract.
 
+The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page for
+the index and entry detail routes of the
+[shell delivery contract](./mokly-shell-delivery.md); `catalogue.json` is
+retired (Decision 21).
+
 ## Serve And Fetch Rules
 
 Serve uses `Cache-Control: no-store` and live-index metadata, with pending usage

@@ -14,6 +14,12 @@ Usage, exact-scoped emission and strict live reading are implemented by the
 Only the separate static state form remains external and complete after
 resolution.
 
+The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page: the
+descriptor becomes the live descriptor v3 at `/mokly-viewer/live.json`, the
+workspace moves to the entry detail, route evidence and updates fetch the JSON
+routes of the [shell delivery contract](./mokly-shell-delivery.md), and no
+update reloads the page (Decision 21).
+
 ## Boundary
 
 The public catalogue is the shell's portable read model. A live page embeds its

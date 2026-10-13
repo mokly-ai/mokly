@@ -2,10 +2,10 @@
 
 ## Delivery Status
 
-Implemented portable serving for [consumer export](./mokly-export.md), with
-Cloudflare normalization confined to its repository adapter. Public catalogue,
-viewer, inspector, and [removed previews](./mokly-removed-previews.md) share
-delivery descriptor v5 and one path-derived `/view/<path>/` shell page per entry.
+Implemented portable serving for [consumer export](./mokly-export.md), with Cloudflare normalization confined to its repository adapter. Public catalogue,
+viewer, inspector, and [removed previews](./mokly-removed-previews.md) share delivery descriptor v5 and one path-derived `/view/<path>/` shell page per entry.
+The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page: `build` writes one identical stub per shell route, the catalogue index, and one entry
+detail per entry under the [shell delivery contract](./mokly-shell-delivery.md), and the delivery descriptor is retired (Decision 21).
 
 ## Hosting Contract
 

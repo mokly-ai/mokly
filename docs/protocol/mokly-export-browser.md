@@ -8,6 +8,12 @@ with the standalone browser inventory and deployment identity algorithm.
 The [React Browse shell plan](../../plans/react-browse-shell.md) records the
 runtime replacement and its compatibility checks.
 
+The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page: the
+standalone inventory is a client-rendered shell bundle with no hydration
+entry, and the deployment identity covers the stubs, the index, and the
+details, under the [shell delivery contract](./mokly-shell-delivery.md)
+(Decision 21).
+
 ## Browser Modules
 
 The standalone browser inventory under `mokly-viewer/client/` is the hydrated shell:

@@ -1,8 +1,8 @@
 # Embeddable Mokly Viewer
 
-The viewer library renders one React shell
-in Serve, export and embedded hosts. Serve uses the strict
-[entry-scoped bootstrap](./mokly-shell-bootstrap.md).
+## Delivery Status
+
+Implemented: the viewer library renders one React shell in Serve, export and embedded hosts, and Serve uses the strict [entry-scoped bootstrap](./mokly-shell-bootstrap.md). The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page: the shell renders only in the browser from the index and detail sources of the [shell delivery contract](./mokly-shell-delivery.md), and `renderViewer` is retired (Decision 21).
 
 ## Package And Props
 

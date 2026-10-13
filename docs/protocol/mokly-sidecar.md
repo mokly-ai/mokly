@@ -9,8 +9,8 @@ worker threads instead.
 ## Purpose And Boundary
 
 The sidecar is the only place Mokly runs JavaScript. The Rust binary starts it
-when a catalogue needs a JavaScript bundle, a React or Storybook render, a
-consumer PostCSS module, or the viewer shell. The sidecar returns text: HTML
+when a catalogue needs a JavaScript bundle, a React or Storybook render, or a
+consumer PostCSS module. The sidecar returns text: HTML
 fragments, CSS, module and definition inventories, and diagnostics. It never
 reads the catalogue, never writes files, and keeps no state beyond loaded
 bundle generations. Catalogue decisions, caching, invalidation, comparison, and
@@ -57,7 +57,6 @@ sidecar run in order; the pool spreads independent requests across sidecars.
 | `renderScreen`    | generation, handle, props, viewport, colour scheme                                            | render result                                                |
 | `renderComponent` | generation, handle, props, slot placeholders, viewport, colour scheme, enclosing ignore scope | render result                                                |
 | `renderStory`     | generation, story id, props, viewport, colour scheme                                          | render result                                                |
-| `renderShell`     | catalogue read model bytes, view, context                                                     | `{ html }`                                                   |
 | `processCss`      | PostCSS module, source path, text                                                             | `{ text, dependencies }`                                     |
 | `dispose`         | generation                                                                                    | nothing                                                      |
 | `shutdown`        | none                                                                                          | nothing                                                      |

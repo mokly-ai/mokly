@@ -2,6 +2,10 @@
 
 ## Delivery Status
 
+Retired at the teardown of the [Rust rebuild plan](../../plans/rust-rebuild.md):
+the Rust core renders no shell on the server, and the
+[shell delivery contract](./mokly-shell-delivery.md) replaces this page
+(Decision 21). It stays accurate for the frozen backend until then.
 Implemented by the [viewer library plan](../../plans/mokly-viewer-library.md)
 and the [React Browse shell plan](../../plans/react-browse-shell.md): one
 server-rendered, hydrated shell serves Serve, export, and React hosts. This

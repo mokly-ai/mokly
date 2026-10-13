@@ -11,6 +11,10 @@ Adoption of the current entry's scoped bootstrap with its complete private
 workspace when applicable, exact-scoped Serve responses, and rejection of
 complete live catalogues are implemented.
 
+The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page:
+evidence arrives through the index and entry detail routes of the
+[shell delivery contract](./mokly-shell-delivery.md) (Decision 21).
+
 ## Revisions and publication
 
 Live Serve distinguishes authored content changes from background evidence.

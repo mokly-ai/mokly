@@ -114,10 +114,11 @@ The [Rust core architecture](./rust-core.md) is the approved target for the
 backend: a Rust binary owns the process, the render graph, HTML parsing and
 rendering, comparison, the server, the static build, and publish. JavaScript runs only in the
 [render sidecar](../protocol/mokly-sidecar.md): esbuild bundling, React and
-Storybook renders, the viewer shell, and consumer PostCSS. Rendered HTML,
+Storybook renders, and consumer PostCSS. Rendered HTML,
 collected styles, and JSON frames cross that boundary. The Rust model crate
 owns every shared shape and generates the TypeScript types that the viewer and
-the sidecar consume.
+the sidecar consume. The Browse shell renders only in the browser from the
+routes of the [shell delivery contract](../protocol/mokly-shell-delivery.md).
 
 ## Complete-Document Boundary
 

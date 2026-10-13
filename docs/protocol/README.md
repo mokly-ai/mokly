@@ -10,8 +10,8 @@ and moves are paired with their baseline.
 
 The frozen TypeScript backend implements manifest v10, catalogue v6 and
 review v7. The [Rust rebuild plan](../../plans/rust-rebuild.md) is the approved
-target for the Rust core, its new contracts, and review v8, read model v7 and
-change snapshot v4 under the [format inventory](./mokly-format-versions.md),
+target for the Rust core, its new contracts, and review v8, read model v7 as
+the catalogue index, entry detail v1, and change snapshot v4 under the [format inventory](./mokly-format-versions.md),
 with no generated tree. Every page below carries one
 classification from the [rebuild procedures](./rust-rebuild-procedures.md): kept as is,
 rewritten by the milestone that owns its subsystem, or retired at the
@@ -40,6 +40,7 @@ unsupported number before interpreting content.
 - [HTML components](./mokly-html-components.md)
 - [Entry props and variants](./mokly-entry-props.md)
 - [Tree comparison and Changes](./mokly-comparison.md)
+- [Shell delivery and read model routes](./mokly-shell-delivery.md)
 - [Rust rebuild procedures](./rust-rebuild-procedures.md)
 
 ## Kept Contracts
@@ -53,7 +54,6 @@ unsupported number before interpreting content.
 - [Dependency Security](./dependency-security.md)
 - [Current Documentation Policy](./documentation-policy.md)
 - [Branch-Point Entry Lookup](./mokly-branch-point-lookup.md)
-- [Catalogue Read Model Fetch Rules](./mokly-catalogue-fetch.md)
 - [Catalogue Tree](./mokly-catalogue-tree.md)
 - [Public Catalogue Read Model](./mokly-catalogue.md)
 - [Changes Screen Controls](./mokly-changes-controls.md)
@@ -76,7 +76,6 @@ unsupported number before interpreting content.
 - [Mokly Design Mockup Links](./mokly-design-links.md)
 - [Navigation Disclosure Persistence](./mokly-disclosure-persistence.md)
 - [Document Rendering Safety](./mokly-document-safety.md)
-- [Static Export Delivery](./mokly-export-delivery.md)
 - [Export Ownership v3](./mokly-export-ownership.md)
 - [Static Export Safety And Public Files](./mokly-export-safety.md)
 - [Folders](./mokly-folders.md)
@@ -99,11 +98,8 @@ unsupported number before interpreting content.
 - [Catalogue Upload v2](./mokly-upload.md)
 - [Variant Navigation And Changes](./mokly-variant-navigation.md)
 - [Variants](./mokly-variants.md)
-- [Viewer Appearance](./mokly-viewer-appearance.md)
 - [Viewer Markers And Multi-Instance Highlights](./mokly-viewer-markers.md)
 - [Viewer Semantic Palette](./mokly-viewer-palette.md)
-- [Viewer SSR, Hydration And Host Independence](./mokly-viewer-ssr.md)
-- [Embeddable Mokly Viewer](./mokly-viewer.md)
 - [One-Time Mokly Registry Bootstrap](./npm-bootstrap.md)
 - [GitHub Publishing Protections](./npm-github-protections.md)
 - [Historical npm Upgrade Notes](./npm-release-history.md)
@@ -119,7 +115,6 @@ unsupported number before interpreting content.
 ## Contracts Rewritten For The Rust Core
 
 - [CI Suite Evidence](./ci-suite-evidence.md)
-- [Development Hydration Coverage](./ci-verification-hydration.md)
 - [CI Verification](./ci-verification.md)
 - [CI Workflow Graph](./ci-workflow.md)
 - [Developer Test Commands](./developer-test-commands.md)
@@ -129,6 +124,7 @@ unsupported number before interpreting content.
 - [Build Warnings](./mokly-build-warnings.md)
 - [Catalogue Change Metadata And Removed Pages](./mokly-catalogue-changes.md)
 - [Catalogue Projection And Delivery](./mokly-catalogue-delivery.md)
+- [Catalogue Read Model Fetch Rules](./mokly-catalogue-fetch.md)
 - [Catalogue Serialization, Identity And Versions](./mokly-catalogue-serialization.md)
 - [Changes Serving And Comparison](./mokly-changes-serving.md)
 - [Changes and screen comparisons](./mokly-changes.md)
@@ -153,6 +149,7 @@ unsupported number before interpreting content.
 - [Markdown Documents](./mokly-documents.md)
 - [Entry Modules](./mokly-entry-modules.md)
 - [Static Export Browser And Identity](./mokly-export-browser.md)
+- [Static Export Delivery](./mokly-export-delivery.md)
 - [Export Public Files And Package Boundary](./mokly-export-public-files.md)
 - [Export Recovery](./mokly-export-recovery.md)
 - [Consumer Static Export](./mokly-export.md)
@@ -180,12 +177,13 @@ unsupported number before interpreting content.
 - [Root Discovery And Source Membership](./mokly-root-discovery.md)
 - [Mokly Build And Browse Runtime](./mokly-runtime.md)
 - [Selected live comparisons](./mokly-selected-comparisons.md)
-- [Standalone Shell Bootstrap](./mokly-shell-bootstrap.md)
 - [Catalogue Source Protection](./mokly-source-protection.md)
 - [CLI Terminal Compatibility And Errors](./mokly-terminal-errors.md)
 - [CLI Terminal Output](./mokly-terminal-output.md)
 - [Startup Diagnostics And Scale Fixtures](./mokly-timings.md)
+- [Viewer Appearance](./mokly-viewer-appearance.md)
 - [Portable Viewer Namespace And Version Gates](./mokly-viewer-namespace.md)
+- [Embeddable Mokly Viewer](./mokly-viewer.md)
 - [Watch Runtime And Recovery](./mokly-watch-runtime.md)
 - [Watched Catalogue Development](./mokly-watch.md)
 - [Repository Preview Deployments](./npm-preview-deployments.md)
@@ -199,6 +197,7 @@ unsupported number before interpreting content.
 
 - [CI Example Compilation Snapshot](./ci-example-snapshot.md)
 - [CI Fixture Preparation And Lifetime](./ci-fixture-preparation.md)
+- [Development Hydration Coverage](./ci-verification-hydration.md)
 - [Baseline Catalogue Discovery And Addressing](./mokly-baseline-addressing.md)
 - [Baseline Compatibility](./mokly-baseline-compatibility.md)
 - [Baseline Storage And Execution](./mokly-baseline-storage.md)
@@ -214,7 +213,9 @@ unsupported number before interpreting content.
 - [Native Engine](./mokly-native-engine.md)
 - [Path Identity In One Generated Tree](./mokly-path-output-integration.md)
 - [Generated Rendering Contract](./mokly-rendering-generated.md)
+- [Standalone Shell Bootstrap](./mokly-shell-bootstrap.md)
 - [Source Protection Acceptance](./mokly-source-protection-acceptance.md)
 - [Stylesheet Link Discovery](./mokly-stylesheet-links.md)
 - [Unified Generated Output And Imported Styles](./mokly-unified-output.md)
+- [Viewer SSR, Hydration And Host Independence](./mokly-viewer-ssr.md)
 - [Shared Watch Setup And Output Writers](./mokly-watch-writers.md)

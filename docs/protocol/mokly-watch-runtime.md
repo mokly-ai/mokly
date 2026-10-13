@@ -7,6 +7,11 @@ Continuation of [Watched Catalogue Development](./mokly-watch.md).
 The warning-generation fence and failed-start supervisor cleanup are implemented
 in [M29](../../plans/remove-source-path-evidence.md#milestone-29-fix-serve-warnings-and-startup-cleanup).
 
+The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page:
+updates deliver JSON through the routes of the
+[shell delivery contract](./mokly-shell-delivery.md), no update reloads the
+page, and the one-shot reload recovery is retired (Decision 21).
+
 ## Adoption And Recovery
 
 Initial startup, successful rebuilds and configuration changes, and resource

@@ -19,7 +19,7 @@ The appearance mockups are delivered: every appearance entry renders in both
 schemes, the depicted top bar component owns the one Appearance control, and
 separate head-band scheme depictions are gone.
 
-The [dark-mode plan](../../plans/viewer-dark-mode.md) tracks the work.
+The [dark-mode plan](../../plans/viewer-dark-mode.md) tracks the work. The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page: the shell renders only in the browser under the [shell delivery contract](./mokly-shell-delivery.md), so the pre-paint startup asset and the server-supplied initial theme go (Decision 21).
 
 ## One Control In Standalone, Two Inputs When Embedded
 

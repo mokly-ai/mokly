@@ -4,6 +4,13 @@ Continuation of [CI Verification](./ci-verification.md). This page owns the
 route sample of the development hydration suite and the generated resource
 audit that replaces the frame loads the smaller sample no longer makes.
 
+## Delivery Status
+
+Retired at the teardown of the [Rust rebuild plan](../../plans/rust-rebuild.md):
+the Rust core's shell renders only in the browser under the
+[shell delivery contract](./mokly-shell-delivery.md), so no hydration exists
+(Decision 21). This page stays accurate for the frozen backend until then.
+
 ## What The Suite Checks
 
 Serve and export send the Browse shell as complete server HTML. The standalone

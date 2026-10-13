@@ -34,7 +34,13 @@ definition handle and component entries for Storybook stories (Decisions 17
 and 18), and one variant model for every kind (Decision 19), which added the
 entry props contract as the sixth new page. Later that day the user adopted a
 strict profile of JSON Schema 2020-12 for every prop schema (Decision 20), and
-the component prop schema page moved from kept to rewritten.
+the component prop schema page moved from kept to rewritten. Later on
+2026-10-13 the user chose a client-rendered shell with the catalogue index and
+entry detail split (Decision 21), which added the shell delivery contract as
+the seventh new page, retired the viewer SSR, shell bootstrap, and hydration
+coverage pages, and moved the catalogue fetch, embeddable viewer, static export
+delivery, and viewer appearance pages from kept to rewritten; the index lists
+66 kept, 78 rewritten, and 24 retired pages.
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
@@ -161,6 +167,20 @@ more than re-deriving the behaviour from the requirements.
     validator that generates no code; `json-schema-to-ts` derives the
     authoring types. Inference emits the profile, with a `type` list for
     mixed kinds and no `items` for an array empty in every set.
+21. Client-rendered shell (2026-10-13): the Browse shell renders only in the
+    browser. Serve and `build` deliver one identical stub page per shell
+    route, the catalogue index v7 without per-view usage at
+    `mokly-viewer/index.json`, and one entry detail v1 per entry with its
+    usage, resource evidence, and workspace lists; Serve adds the live
+    descriptor v3 at `mokly-viewer/live.json`. No process renders shell HTML,
+    so the sidecar starts only for JavaScript rendering, and `renderShell`,
+    the shell bootstrap, the delivery descriptor, hydration, the page-fetching
+    route evidence, and the one-shot reload recovery are retired. No update
+    reloads the page. `MoklyViewer` takes an index source and a detail
+    source, and `renderViewer` goes. The
+    [shell delivery contract](../docs/protocol/mokly-shell-delivery.md) owns
+    the routes; the example-export measurements behind the decision are in
+    `.context/rust-rebuild/shell-delivery-measurements-2026-10-13.md`.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
@@ -205,12 +225,15 @@ adopted the JSON Schema profile for prop schemas.
   watch, the server, comparison, the static build, and publish. No command
   writes into the repository; `build` writes its output directory.
 - A pool of Node sidecars renders only JavaScript: a React component with
-  props, a React screen, a Storybook story through portable stories, and the
-  viewer shell for Serve and `build`. A sidecar returns an HTML fragment plus
-  the styles that render produced. The binary memoizes every fragment by the
-  hash of bundle generation, handle, props, viewport, scheme, and enclosing
-  ignore scope, and caches
-  shell HTML by route and catalogue revision.
+  props, a React screen, and a Storybook story through portable stories. A
+  sidecar returns an HTML fragment plus the styles that render produced. The
+  binary memoizes every fragment by the hash of bundle generation, handle,
+  props, viewport, scheme, and enclosing ignore scope.
+- The Browse shell renders only in the browser, from the catalogue index and
+  one entry detail per entry under the
+  [shell delivery contract](../docs/protocol/mokly-shell-delivery.md). Serve
+  and `build` deliver one identical stub page per route and never render
+  shell HTML.
 - Screens and components can be HTML files with YAML front matter. The format
   adopts the decisions of the HTML screens plan on branch
   `calummoore/yaml-vs-html-screens` (front matter keys, custom element names,
@@ -417,19 +440,20 @@ from Milestone 12.
 - [ ] Write the HTML authoring guides under `docs/guides`.
 - [ ] Commit.
 
-## Milestone 6: Sidecar foundation and Serve
+## Milestone 6: Serve
 
-At completion `mokly serve` serves an HTML catalogue as read model v7 over
-HTTP with the shell routes; the viewer renders it after Milestone 7. The
-sidecar exists only to render the viewer shell.
+At completion `mokly serve` serves an HTML catalogue: the shell stub on every
+shell route, the catalogue index v7, one entry detail per entry, the
+documents, the live descriptor, the update event stream, and shutdown; the
+viewer renders it after Milestone 7. No sidecar starts for a catalogue
+without JavaScript.
 
-- [ ] Implement the sidecar protocol in `@mokly/mokly` and `mokly-sidecar`:
-      process pool, newline-delimited JSON, cancellation, timeouts, fail-closed
-      rules, and the shell render with its per-route cache.
-- [ ] Implement the server in `mokly-server`: static delivery, the public read
-      model v7, shell routes, live update streams, shutdown ordering, and the
-      terminal output contract in the CLI.
-- [ ] Behaviour tests: every route shape, delivery descriptors, and shutdown.
+- [ ] Implement the server in `mokly-server`: the stub, the index and entry
+      detail routes with `Cache-Control: no-store`, the document and asset
+      routes, the live descriptor, the update event stream, shutdown
+      ordering, and the terminal output contract in the CLI.
+- [ ] Behaviour tests: every route of the shell delivery contract, the
+      identity and revision fences, and shutdown.
 - [ ] Commit.
 
 ## Milestone 7: Viewer reads read model v7
@@ -442,8 +466,13 @@ Tags: ui
       controls on screens, and validate control input with a profile
       validator that generates no code, under the entry props contract; no
       other presentation change.
-- [ ] Run the viewer suite and the hydration routes against the Milestone 6
-      server.
+- [ ] Replace server rendering and hydration in the viewer package with the
+      client-rendered shell of the shell delivery contract: the `browser`
+      entry mounts into the stub, index and detail readers replace
+      `readCatalogue` and the bootstrap readers, `MoklyViewer` takes the
+      index and detail sources, the `server` entry and `renderViewer` go,
+      and the package README follows.
+- [ ] Run the viewer suite against the Milestone 6 routes.
 - [ ] Commit.
 
 ## Milestone 8: Sidecar rendering for JavaScript
@@ -451,6 +480,9 @@ Tags: ui
 At completion React components, React screens, and Storybook stories render
 through the sidecar, and the example catalogue renders again.
 
+- [ ] Implement the sidecar protocol in `@mokly/mokly` and `mokly-sidecar`:
+      process pool, newline-delimited JSON, cancellation, timeouts, and the
+      fail-closed rules.
 - [ ] Implement consumer bundling in the sidecar with the bundler of Decision
       10, the module graph report, the consumer renderer module, React
       resolution from the consumer, and the optional consumer PostCSS worker.
@@ -517,17 +549,18 @@ Tags: ui
       invalidation from the sidecar's module graph, HTML component
       dependencies, stylesheet dependencies, and PostCSS reports.
 - [ ] Implement the watcher with the denial rules, rebuild on change, bundle
-      replay for HTML-only edits, and live updates to the viewer.
+      replay for HTML-only edits, and live updates to the viewer through the
+      live descriptor, index, and entry detail routes, with no page reload.
 - [ ] Behaviour tests that count rebuilds and renders per change.
 - [ ] Commit.
 
 ## Milestone 12: Static build and publish
 
-- [ ] Implement the static output of `mokly build` in `mokly-static`: the
-      complete static catalogue with the shell pages, delivery descriptors,
-      the ownership marker, the `--out` option with its default `mokly-static/`
-      output directory, and
-      the transaction with backup, exclusive rename, and rollback.
+- [ ] Implement the static output of `mokly build` in `mokly-static`: one
+      stub per shell route, the catalogue index, the entry details, the
+      documents, the comparison generation, the ownership marker, the `--out`
+      option with its default `mokly-static/` output directory, and the
+      transaction with backup, exclusive rename, and rollback.
 - [ ] Implement publish, which builds into its own directory first, through
       the unchanged exchange v1: plan, blobs,
       complete, retries, accounting, the clean-checkout and uncommitted
