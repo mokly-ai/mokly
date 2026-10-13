@@ -12,8 +12,8 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
   └─ mokly (Rust binary)       @mokly/native-<target>: CLI, render graph, HTML
        │                       rendering, CSS, comparison, watch, server,
        │                       static build, publish
-       └─ sidecar pool (Node)  @mokly/mokly: bundling, definitions, React and
-                               Storybook renders, consumer PostCSS
+       └─ sidecar pool (Node)  @mokly/mokly: bundling, definitions, React, page,
+                               and Storybook renders, consumer PostCSS
 ```
 
 - The shim resolves the platform package, checks that its version equals the
@@ -70,21 +70,21 @@ Every output is a node whose key is the hash of its inputs. Nodes are
 recomputed only when a key changes, in parallel across a worker pool sized to
 the machine.
 
-| Node              | Key                                                                                                                                  |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| config            | the resolved config and the Mokly version                                                                                            |
-| entry source      | the file bytes of a screen, component, page, use case, document, or folder record                                                    |
-| bundle generation | the sidecar's module graph: every consumer source file, the renderer module, resolution settings, the installed React version        |
-| fragment          | bundle generation, render kind, definition handle or story id, canonical props, viewport, colour scheme, enclosing ignore scope      |
-| HTML component    | its source and the keys of the components it uses                                                                                    |
-| stylesheet bundle | the root's imported CSS sources, assets, PostCSS module, and resolution settings                                                     |
-| document          | the entry key, viewport, colour scheme, the fragment and component keys it composes, the stylesheet rules that apply, the config key |
-| source tree       | the working tree, or the base commit's Git tree read through blobs and extracted on demand                                           |
-| dependency set    | the side's lockfile and package manifests and the package manager version                                                            |
-| definitions       | the bundle generation, through the sidecar's `describe` call: every exported definition and the story inventory                      |
-| catalogue model   | every entry record and the definitions                                                                                               |
-| catalogue index   | the catalogue model without per-view usage and resource evidence                                                                     |
-| entry detail      | the entry's views' usage and resource evidence from the composed trees, and its workspace lists from the catalogue model             |
+| Node              | Key                                                                                                                                                                                                              |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| config            | the resolved config and the Mokly version                                                                                                                                                                        |
+| entry source      | the file bytes of a screen, component, page, use case, document, or folder record                                                                                                                                |
+| bundle generation | the sidecar's module graph: every consumer source file, the renderer module, resolution settings, the installed React version                                                                                    |
+| fragment          | bundle generation, render kind, definition handle or story id, canonical props, viewport, colour scheme, enclosing ignore scope; a page render is a fragment of kind `page`, keyed by generation and handle only |
+| HTML component    | its source and the keys of the components it uses                                                                                                                                                                |
+| stylesheet bundle | the root's imported CSS sources, assets, PostCSS module, and resolution settings                                                                                                                                 |
+| document          | the entry key, viewport, colour scheme, the fragment and component keys it composes, the stylesheet rules that apply, the config key; a page document has no viewport or scheme                                  |
+| source tree       | the working tree, or the base commit's Git tree read through blobs and extracted on demand                                                                                                                       |
+| dependency set    | the side's lockfile and package manifests and the package manager version                                                                                                                                        |
+| definitions       | the bundle generation, through the sidecar's `describe` call: every exported definition and the story inventory                                                                                                  |
+| catalogue model   | every entry record and the definitions                                                                                                                                                                           |
+| catalogue index   | the catalogue model without per-view usage and resource evidence                                                                                                                                                 |
+| entry detail      | the entry's views' usage and resource evidence from the composed trees, and its workspace lists from the catalogue model                                                                                         |
 
 A watched change hashes the changed file, finds the nodes whose keys moved, and
 recomputes only those. An HTML-only edit never rebundles JavaScript; a

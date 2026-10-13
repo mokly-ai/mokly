@@ -58,8 +58,9 @@ propSchema:
   properties:
     label: { type: string, minLength: 1 }
     tone:
-      - { const: primary, title: Primary }
-      - { const: secondary, title: Secondary }
+      oneOf:
+        - { const: primary, title: Primary }
+        - { const: secondary, title: Secondary }
     disabled: { type: boolean }
     badge:
       type: object
@@ -76,9 +77,10 @@ or computed values. Controls for live editing derive from the schema under the
 
 The body is an HTML fragment in the
 [template language](./mokly-html-screens.md#screen-body) of the screen body,
-reading the component's own props: `{{name}}` substitution, `$name` references
-and coerced attributes on nested component elements, `mokly-if`, and
-`mokly-viewport`, with the same diagnostics. A component body adds:
+reading the component's own props: `{{name}}` substitution, `mokly-if`,
+`mokly-viewport`, and the
+[component element rules](./mokly-html-screens.md#component-elements) for the
+components it nests, with the same diagnostics. A component body adds:
 
 - `<slot></slot>` is the `children` placeholder and `<slot name="x"></slot>`
   a named one. Supplied content replaces the element; the placeholder's own

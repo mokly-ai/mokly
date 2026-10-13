@@ -260,10 +260,11 @@ export, added `renderPage`, and approved pointers on the five frozen pages.
   watch, the server, comparison, the static build, and publish. No command
   writes into the repository; `build` writes its output directory.
 - A pool of Node sidecars renders only JavaScript: a React component with
-  props, a React screen, and a Storybook story through portable stories. A
-  sidecar returns an HTML fragment plus the styles that render produced. The
-  binary memoizes every fragment by the hash of bundle generation, handle,
-  props, viewport, scheme, and enclosing ignore scope.
+  props, a React screen, a Storybook story through portable stories, and a
+  `definePage` document. A sidecar returns an HTML fragment plus the styles
+  that render produced, or a page's complete document. The binary memoizes
+  every fragment by the hash of bundle generation, handle, props, viewport,
+  scheme, and enclosing ignore scope; a page by generation and handle.
 - The Browse shell renders only in the browser, from the catalogue index and
   one entry detail per entry under the
   [shell delivery contract](../docs/protocol/mokly-shell-delivery.md). Serve
@@ -272,12 +273,12 @@ export, added `renderPage`, and approved pointers on the five frozen pages.
 - Screens and components can be HTML files with YAML front matter. The format
   adopts the decisions of the HTML screens plan on branch
   `calummoore/yaml-vs-html-screens` (front matter keys, custom element names,
-  kebab-case attributes coerced through prop schemas, `$name` prop references,
-  `{{name}}` substitution and `mokly-if` in screen bodies,
-  named slots, `mokly-viewport`, variants, `mock:` links, ignore markers, and
-  exact diagnostics) and adds HTML components: a front matter block with the
-  element name, prop schema, and slots, and a body with attribute and text
-  substitution and named slots. No loops or expressions in the first version.
+  kebab-case attributes coerced through prop schemas, variants, `mock:` links,
+  ignore markers, and exact diagnostics) and adds HTML components: a front
+  matter block with the element name, prop schema, and slots. Screen and
+  component bodies share one template language, `$name` prop references,
+  `{{name}}` substitution, `mokly-if`, and `mokly-viewport`, with named slots
+  in component bodies. No loops or expressions in the first version.
 - Comparison works on trees, not text. Both sides render from sources with
   the current version, the base from its Git tree under the dependency tiers
   of Decision 12. Ownership and ignore regions are node annotations, carried
@@ -513,8 +514,9 @@ Tags: ui
 
 ## Milestone 8: Sidecar rendering for JavaScript
 
-At completion React components, React screens, and Storybook stories render
-through the sidecar, and the example catalogue renders again.
+At completion React components, React screens, JavaScript pages, and
+Storybook stories render through the sidecar, and the example catalogue
+renders again.
 
 - [ ] Implement the sidecar protocol in `@mokly/mokly` and `mokly-sidecar`:
       process pool, newline-delimited JSON, cancellation, timeouts, and the
@@ -640,6 +642,11 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Open from the review of commit 9a7aa5e2, report under
+    `.context/rust-rebuild/review-2026-10-13-nine-decisions.md`:
+  - 5: a function-valued story arg with no `argTypes` entry has no stated
+    rule; decide whether it is excluded silently or with the
+    `props-not-data` warning.
   - Open from the review of commit 1fdf5d95, report under
     `.context/rust-rebuild/review-2026-10-13-shell-delivery.md`:
   - 1: a removed entry's detail inside an immutable comparison generation

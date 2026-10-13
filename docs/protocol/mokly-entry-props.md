@@ -16,9 +16,9 @@ Every screen and component is a render over props:
 - A render: an HTML body, a React function of props, or a Storybook
   component.
 - `propSchema`: a JSON Schema object under the
-  [profile](#prop-schema-profile) below. It is required for a component and
-  optional for a screen or a stories file, where
-  [inference](#schema-inference) supplies it.
+  [profile](#prop-schema-profile) below. It is required for a component,
+  optional for a screen, where [inference](#schema-inference) supplies it,
+  and always inferred for a stories file.
 - `props`: the entry's own prop values. They default to the empty map and
   must satisfy the schema, so a component whose schema requires a prop
   declares `props`.
@@ -33,8 +33,8 @@ Every screen and component is a render over props:
   select for `enum` and for `oneOf` of `const` members, each option labelled
   by its `title`, else by the string itself for a string value, else by the
   JSON text of the value; every other shape is shown but not editable. `title`
-  and `description` label a control. `defineComponent` may declare `controls`
-  to replace the derived ones.
+  and `description` label a control. `defineScreen` and `defineComponent` may
+  declare `controls` to replace the derived ones.
 
 The entry's own view renders `props`. Each variant is an entry of the
 parent's kind at the parent's path plus its slug, with `variantOf`, its own
@@ -92,13 +92,13 @@ is the schema, and props it rejects fail.
 
 ## Kinds
 
-| Kind                   | Render                                                                                                                           | Props                                                                                                                                                                                     |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| React screen           | `render(props)`, or `mobile(props)` and `desktop(props)`, in `defineScreen`                                                      | `propSchema`, `props`, `variants`, and `controls` in the input                                                                                                                            |
-| React component        | `render(props)` in `defineComponent`                                                                                             | `propSchema` under the profile, and optional `slots`, `controls`, `props`, and `variants`                                                                                                 |
-| HTML screen            | the body, in the [template language](./mokly-html-screens.md#screen-body) of the HTML screens contract                           | front matter `propSchema`, `props`, and `variants`                                                                                                                                        |
-| HTML component         | the body, in the same template language with slot placeholders, under the [HTML components contract](./mokly-html-components.md) | front matter `propSchema`, `props`, and `variants`                                                                                                                                        |
-| Storybook stories file | the meta's component, through the [render sidecar](./mokly-sidecar.md#storybook)                                                 | the meta's `args` are the props, the schema is inferred, `argTypes` enrich the derived controls, and each story is a variant whose slug is its export name and whose props are its `args` |
+| Kind                   | Render                                                                                                                                                        | Props                                                                                                                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| React screen           | `render(props)`, or `mobile(props)` and `desktop(props)`, in `defineScreen`                                                                                   | `propSchema`, `props`, `variants`, and `controls` in the input                                                                                                                            |
+| React component        | `render(props)` in `defineComponent`                                                                                                                          | `propSchema` under the profile, and optional `slots`, `controls`, `props`, and `variants`                                                                                                 |
+| HTML screen            | the body, in the [template language](./mokly-html-screens.md#screen-body) of the HTML screens contract                                                        | front matter `propSchema`, `props`, and `variants`                                                                                                                                        |
+| HTML component         | the body, in the same template language and component element rules, with slot placeholders, under the [HTML components contract](./mokly-html-components.md) | front matter `propSchema`, `props`, and `variants`                                                                                                                                        |
+| Storybook stories file | the meta's component, through the [render sidecar](./mokly-sidecar.md#storybook)                                                                              | the meta's `args` are the props, the schema is inferred, `argTypes` enrich the derived controls, and each story is a variant whose slug is its export name and whose props are its `args` |
 
 A `defineScreen` input with `mobile` and `desktop` React nodes is a render
 that ignores its props, so a screen without `props` and without `variants`
