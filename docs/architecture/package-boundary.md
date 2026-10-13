@@ -111,8 +111,8 @@ the viewer before the CLI that depends on it.
 ## Rust Core Boundary
 
 The [Rust core architecture](./rust-core.md) is the approved target for the
-backend: a Rust binary owns the process, the build graph, HTML parsing and
-rendering, comparison, the server, and export. JavaScript runs only in the
+backend: a Rust binary owns the process, the render graph, HTML parsing and
+rendering, comparison, the server, the static build, and publish. JavaScript runs only in the
 [render sidecar](../protocol/mokly-sidecar.md): esbuild bundling, React and
 Storybook renders, the viewer shell, and consumer PostCSS. Rendered HTML,
 collected styles, and JSON frames cross that boundary. The Rust model crate

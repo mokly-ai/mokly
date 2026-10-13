@@ -111,7 +111,8 @@ more than re-deriving the behaviour from the requirements.
     catalogue, renders every view, fails on errors and, with `--strict`, on
     warnings, and writes the static output into the directory `--out` names,
     `mokly-static/` at the repository root by default, which Git must ignore.
-    `publish` builds into its own directory and uploads. There is no `check`
+    `publish` builds into its own directory outside the repository and
+    uploads. There is no `check`
     and no `export`; a validation-only run is a build to a temporary
     directory.
 15. Caches (2026-10-13): the render cache is process memory. The base-side
@@ -205,8 +206,8 @@ bodies; pixel comparison.
 
 The milestones run in order on one branch. Milestones 1 and 2 remove the old
 backend; Milestones 3 to 6 restore a CLI that serves HTML catalogues;
-Milestones 7 to 13 add the sidecar, Changes, watch, export, publish, and
-release packaging; Milestone 14 proves scale; Milestone 15 closes the plan.
+Milestones 7 to 13 add the sidecar, Changes, watch, the static build, publish,
+and release packaging; Milestone 14 proves scale; Milestone 15 closes the plan.
 Each milestone runs the gap sweep of Milestone 1 for its subsystem before it
 closes. Milestones tagged `ui` change only the viewer package.
 
@@ -363,7 +364,7 @@ from Milestone 12.
       relies on.
 - [ ] Implement the render cache: content keys, the byte bound, eviction, and
       the source tree trait over the working tree and Git trees; the `build`
-      validation run; and the closure of referenced assets for Serve and the
+      validation run with `--strict`; and the closure of referenced assets for Serve and the
       static output.
 - [ ] Implement stylesheet handling on `lightningcss`: imports, assets, and
       per-root bundles.
@@ -430,8 +431,9 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [ ] Implement base-side rendering: the base commit's Git tree as a source
       tree through the render graph, on-demand extraction of the base commit into
       a cache keyed by commit, the three dependency tiers of Decision 12 with
-      the bounded install cache, scripts disabled, the time limit, and the
-      `base-dependencies` warning.
+      the bounded install cache, scripts disabled, the time limit, the
+      `base-dependencies` warning, and the terminal line that names the cache
+      directory.
 - [ ] Implement tree comparison in `mokly-compare`: ownership regions attached
       at composition,
       ignore regions, materiality on canonical trees, moves, documents, pages,
@@ -470,7 +472,8 @@ Tags: ui
 
 - [ ] Implement the static output of `mokly build` in `mokly-static`: the
       complete static catalogue with the shell pages, delivery descriptors,
-      the ownership marker, the default `mokly-static/` output directory, and
+      the ownership marker, the `--out` option with its default `mokly-static/`
+      output directory, and
       the transaction with backup, exclusive rename, and rollback.
 - [ ] Implement publish, which builds into its own directory first, through
       the unchanged exchange v1: plan, blobs,
@@ -514,6 +517,13 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Open from the review of commit 085dc1b5, report under
+    `.context/rust-rebuild/review-2026-10-13-verbs.md`:
+  - 1: `describe` returns `defineComponent` definitions only; the catalogue
+    model also needs the screen, page, use case, and folder definitions of
+    JavaScript modules and the story inventory.
+  - 5: the `ignoreScope` request field has no stated values or default, and
+    the transport example omits it.
 
 ## Post-merge follow-up (non-blocking)
 

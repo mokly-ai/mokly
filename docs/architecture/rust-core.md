@@ -19,8 +19,9 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
 - The shim resolves the platform package, checks that its version equals the
   CLI package version, and executes the binary with inherited standard streams.
   It never falls back to a JavaScript implementation.
-- The binary owns the terminal, every command, and every file `build`
-  writes into its output directory; no other command writes files. It starts sidecars only when a catalogue needs JavaScript: a
+- The binary owns the terminal, every command, and every file write; no
+  command writes into the repository except `build` into its output
+  directory. It starts sidecars only when a catalogue needs JavaScript: a
   `.mockup.tsx` entry, a registered JavaScript component, a Storybook story,
   a consumer PostCSS module, or the viewer shell for Serve and `build`.
 - A sidecar renders what it is asked to render and returns text. It keeps no
@@ -35,8 +36,8 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
 | `mokly-platform`  | Exclusive rename, process groups, Windows job objects, file locks.                                                                              | nothing internal                |
 | `mokly-git`       | The Git command runner, merge base, changed paths, bounded blob and tree reads, archive extraction.                                             | `platform`                      |
 | `mokly-sidecar`   | The sidecar pool: spawning, framing, requests, timeouts, recycling.                                                                             | `model`, `platform`             |
-| `mokly-catalogue` | Roots, discovery, front matter, path identity, folders, variants, use cases, documents, the registry, the catalogue model.                      | `model`                         |
-| `mokly-html`      | HTML components and screens: parsing, substitution, slots, composition, markers, link rewriting, document assembly.                             | `model`, `catalogue`, `sidecar` |
+| `mokly-catalogue` | Roots, discovery, front matter, path identity, folders, variants, use cases, documents, the catalogue model.                                    | `model`                         |
+| `mokly-html`      | HTML components and screens: parsing, substitution, slots, composition, markers, link rewriting, document assembly, the element registry.       | `model`, `catalogue`, `sidecar` |
 | `mokly-css`       | Stylesheet bundling on `lightningcss`, rule collection, diffing, selector matching, the keep list, attribution.                                 | `model`                         |
 | `mokly-graph`     | The content-addressed render graph, scheduling, the render cache, the source tree trait over the working tree and Git trees, the asset closure. | `catalogue`, `html`, `css`      |
 | `mokly-compare`   | Base-side rendering, the dependency tiers, tree comparison, materiality, moves, affected consumers, review result v8, change snapshot v4.       | `graph`, `css`, `git`           |
@@ -92,9 +93,12 @@ No node is written to the repository. The render cache is process memory,
 bounded by bytes and evicted least recently used; Serve, Changes, and `build`
 read it. The base-side extraction cache and the dependency install cache live
 outside the repository, in the operating system's cache directory under a key
-derived from the repository path, with the same bound and eviction; the
-terminal names that directory, and deleting it is safe. `build` is the only
-command that writes files, into the output directory its `--out` names.
+derived from the repository path, each with its own byte bound and
+least-recently-used eviction; the terminal names that directory, and deleting
+it is safe. `build` is the only command that writes into the repository, into
+the output directory `--out` names, `mokly-static/` at the repository root by
+default, which Git must ignore; `publish` builds into its own directory outside
+the repository and uploads.
 
 ## Comparison Model
 

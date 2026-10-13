@@ -146,7 +146,8 @@ including a variant.
 1. Parse the front matter and the body. Resolve every component element.
 2. Render HTML components in Rust by substitution and slot filling, recursively.
    Render JavaScript components through the [sidecar](./mokly-sidecar.md),
-   memoized by props, viewport, and colour scheme, with slot placeholders.
+   memoized by props, viewport, colour scheme, and the enclosing ignore
+   scope, with slot placeholders that report their scope state.
 3. Compose the fragment once per viewport and colour scheme, attach the
    instance ownership and the ignore regions to the tree, collect the styles
    the sidecar returned, and assemble the document with the configured

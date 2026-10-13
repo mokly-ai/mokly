@@ -23,8 +23,8 @@ For duplicate CSS, configured-link placement or overlap, stylesheet owners and
 the removed inputs in [Build Warnings](./mokly-build-warnings.md#record),
 continue with safe, unambiguous output and warn when an authored input is
 discarded. Confinement, source protection and retained-input validation still
-apply. Strict Build, Check, export and publish fail before writes or uploads;
-Serve refuses strict mode.
+apply. In the frozen backend, strict Build, Check, export and publish fail
+before writes or uploads, and Serve refuses strict mode.
 
 ## Supported Formats
 

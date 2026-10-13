@@ -82,7 +82,7 @@ both files on a collision. A module that cannot be evaluated returns
 `bundle` compiles the consumer's JavaScript into one in-memory bundle with
 esbuild and keeps it in the sidecar under a generation id. The generation id is
 the hash of every module in the metafile, the renderer module, the resolution
-settings, and the installed React version; the binary uses it as the cache key
+settings, and the installed React version; the binary uses it as one part of the cache key
 for every fragment. The sidecar reports `modules`, the repository-relative
 source files of the graph, so the binary can watch them and invalidate the
 generation. esbuild is chosen because the frozen backend's plugin behaviour
