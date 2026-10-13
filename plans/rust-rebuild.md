@@ -414,8 +414,9 @@ through the sidecar, and the example catalogue renders again.
       the enclosing ignore scope; slot placeholders report their scope state.
 - [ ] Implement `describe`: every definition the entry modules and stories
       files export, with the story inventory; feed every definition into the
-      catalogue model, and register JavaScript components by `element` with the uniqueness rule, the reserved `mokly-`
-      prefix, and the reserved-prop failure of the components contract.
+      catalogue model, and register JavaScript components by `element` with
+      the uniqueness rule, the reserved `mokly-` prefix, and the reserved-prop
+      failure of the components contract.
 - [ ] Implement live prop editing in Serve through the same render path.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and

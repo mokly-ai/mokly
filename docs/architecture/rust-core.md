@@ -13,7 +13,8 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
        │                       rendering, CSS, comparison, watch, server,
        │                       static build, publish
        └─ sidecar pool (Node)  @mokly/mokly: bundling, definitions, React,
-                               Storybook and viewer-shell renders, PostCSS
+                               Storybook and viewer-shell renders, consumer
+                               PostCSS
 ```
 
 - The shim resolves the platform package, checks that its version equals the

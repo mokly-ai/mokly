@@ -11,9 +11,9 @@ worker threads instead.
 The sidecar is the only place Mokly runs JavaScript. The Rust binary starts it
 when a catalogue needs a JavaScript bundle, a React or Storybook render, a
 consumer PostCSS module, or the viewer shell. The sidecar returns text: HTML
-fragments, CSS, module and definition inventories, and diagnostics. It never reads the
-catalogue, never writes files, and keeps no state beyond loaded bundle
-generations. Catalogue decisions, caching, invalidation, comparison, and output
+fragments, CSS, module and definition inventories, and diagnostics. It never
+reads the catalogue, never writes files, and keeps no state beyond loaded
+bundle generations. Catalogue decisions, caching, invalidation, comparison, and output
 belong to the binary.
 
 ## Lifecycle
@@ -74,10 +74,9 @@ with their variants, pages, use cases, folders, components, and the story
 inventory. A component definition carries its `element` when declared, the
 prop schema, the slots, the controls, and the saved variants. The binary feeds
 every definition into the catalogue model, builds the component registry from
-the component definitions and the HTML components,
-applies the uniqueness and reserved-name rules of the
-[components contract](./mokly-components.md), and fails registration naming
-both files on a collision. `describe` shares the `bundle` deadline. A module
+the component definitions and the HTML components, applies the uniqueness and
+reserved-name rules of the [components contract](./mokly-components.md), and
+fails registration naming both files on a collision. `describe` shares the `bundle` deadline. A module
 that cannot be evaluated returns `bundle-failed` with the module and the
 diagnostic text.
 
