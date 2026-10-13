@@ -69,10 +69,18 @@ script policy. One body renders both viewports; an element with
 `mokly-viewport="mobile"` or `mokly-viewport="desktop"` is kept in that
 viewport only and removed from the other. An element with `mokly-if="$name"`
 names a prop whose schema `type` is exactly `boolean`; it is kept when the
-prop is true and removed when it is false or absent. `{{name}}` in text or in an attribute value substitutes a prop with the
-[component body rules](./mokly-html-components.md#body); an undeclared name
-fails with `html-props`. Every other
-attribute is ordinary HTML and is never interpreted.
+prop is true and removed when it is false or absent. `{{name}}` in text or in
+an attribute value substitutes a prop, HTML-escaped, with no raw form; a
+dotted path such as `{{badge.count}}` reads into an object prop; a `boolean`
+prop in an attribute whose value is exactly `{{name}}` keeps the attribute
+when true and removes it when false; an absent optional prop substitutes the
+empty string in text and removes such an attribute; `{{…}}` naming an
+undeclared prop, an array, or an object without a path fails with
+`html-props`; `{{` that does not close is ordinary text. Every other
+attribute is ordinary HTML and is never interpreted. A component body uses
+this same template language with the component's own props and adds slot
+placeholders under the [HTML components contract](./mokly-html-components.md#body);
+one parser and one renderer serve both.
 
 A hyphenated element name resolves against the component registry: the
 `element` of an [HTML component](./mokly-html-components.md) or of a
@@ -174,15 +182,15 @@ screen. A catalogue of HTML files alone never starts a sidecar.
 
 ## Diagnostics
 
-| Code                   | Meaning                                                                                                                   |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `html-front-matter`    | missing block, YAML error, unknown or invalid key                                                                         |
-| `html-element`         | forbidden element, unknown hyphenated element, component cycle                                                            |
-| `html-attribute`       | a value the prop schema rejects, or a reserved prop name                                                                  |
-| `html-props`           | an undeclared `$name`, `{{name}}`, or `mokly-if` reference, or `mokly-if` on a prop whose `type` is not exactly `boolean` |
-| `html-slot`            | content for an undeclared slot, or an unrendered placeholder                                                              |
-| `html-unused-props`    | warning: a prop no reference in the body reads                                                                            |
-| `html-foster-parented` | warning: a component element moved out of a table                                                                         |
+| Code                   | Meaning                                                                                                                                                                                 |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `html-front-matter`    | missing block, YAML error, unknown or invalid key                                                                                                                                       |
+| `html-element`         | forbidden element, unknown hyphenated element, component cycle                                                                                                                          |
+| `html-attribute`       | a value the prop schema rejects, or a reserved prop name                                                                                                                                |
+| `html-props`           | a `$name`, `{{name}}`, or `mokly-if` reference to an undeclared prop, `{{name}}` on an array or an object without a path, or `mokly-if` on a prop whose `type` is not exactly `boolean` |
+| `html-slot`            | content for an undeclared slot, or an unrendered placeholder                                                                                                                            |
+| `html-unused-props`    | warning: a prop no reference in the body reads                                                                                                                                          |
+| `html-foster-parented` | warning: a component element moved out of a table                                                                                                                                       |
 
 Errors are `build-invalid` failures with the repository-relative file, line,
 and column. Warnings use the [build warning record](./mokly-build-warnings.md).

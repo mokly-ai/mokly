@@ -6,7 +6,11 @@ Default and named exports, branded definitions, slug derivation and relative
 references are implemented. Under the [Rust rebuild plan](../../plans/rust-rebuild.md)
 a stories file is not an entry module: the [render sidecar](./mokly-sidecar.md#storybook)
 turns it into a component entry whose stories are variants named by their
-export names.
+export names. An export then contributes exactly one definition, the object one
+`defineScreen`, `definePage`, `defineUseCase`, `defineFolder`, or
+`defineComponent` call returned; an export that holds an array fails with
+`array-export` naming the export, because a variant is a props set inside its
+parent and no helper returns an array.
 
 An entry module is a TypeScript or JavaScript file matched by a
 [root](./mokly-paths.md#roots). This contract owns how Mokly collects

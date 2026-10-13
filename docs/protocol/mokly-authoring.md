@@ -3,13 +3,14 @@
 ## Delivery Status
 
 The path-based TypeScript API, Markdown authoring, move pairing, and their
-viewer presentation are implemented.
+viewer presentation are implemented. Under the [Rust rebuild plan](../../plans/rust-rebuild.md)
+a screen is a render over props: `defineScreen` takes `render(props)` with
+`propSchema`, `props`, `variants`, and `controls`, a variant is a `Partial`
+props set with no nodes of its own, and the [entry props contract](./mokly-entry-props.md) owns the model.
 
 This contract expands the [package API](./mokly-package.md). Configuration
 follows the [configuration contract](./mokly-configuration.md); consumer
 rendering follows the [rendering contract](./mokly-rendering.md).
-
-## Delivery Status
 
 CSS rule attribution and ignored stylesheet owner records are implemented in [M19](../../plans/remove-source-path-evidence.md#milestone-19-classify-css-by-where-its-rules-match).
 Other behavior below remains implemented.

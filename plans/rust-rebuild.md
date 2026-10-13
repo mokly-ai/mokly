@@ -40,7 +40,11 @@ entry detail split (Decision 21), which added the shell delivery contract as
 the seventh new page, retired the viewer SSR, shell bootstrap, and hydration
 coverage pages, and moved the catalogue fetch, embeddable viewer, static export
 delivery, and viewer appearance pages from kept to rewritten; the index lists
-66 kept, 78 rewritten, and 24 retired pages.
+66 kept, 78 rewritten, and 24 retired pages. On 2026-10-13 the user then
+settled the prop schema details, made `argTypes` control hints, unified the
+screen and component template language, required one definition per export,
+and added `renderPage` (Decisions 22 to 26); the five frozen pages that stated
+the old variant rules carry pointers.
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
@@ -145,8 +149,8 @@ more than re-deriving the behaviour from the requirements.
     under Decision 19: a variant is a props set and has no handle of its own.
 18. Stories (2026-10-13): a stories file becomes one component entry at the
     path derived from the file, and each story becomes a variant of it with
-    its `args` as props; `argTypes` declare the part of the schema they cover
-    and Decision 19 infers the rest. The read model and the viewer need no
+    its `args` as props; the schema is inferred from the args, and `argTypes`
+    enrich the derived controls (Decision 23). The read model and the viewer need no
     story kind.
 19. One variant model (2026-10-13): every screen and component is a render
     over props with `propSchema`, `props`, and optional `variants` whose
@@ -154,12 +158,12 @@ more than re-deriving the behaviour from the requirements.
     components need no variant and their page shows the own props first; a
     schema that is not declared is inferred from the saved props, and
     non-data values are excluded with a warning; controls derive from the
-    schema; `defineScreen` takes `render(props)`; HTML screen bodies gain
-    `{{name}}` substitution and the boolean `mokly-if` attribute and nothing
-    more; read model v7 gives screens the component prop fields.
+    schema; `defineScreen` takes `render(props)`; HTML screen and component bodies share one
+    template language (Decision 24); read model v7 gives screens the component prop fields.
 20. Prop schemas (2026-10-13): every prop schema, declared or inferred, is a
     JSON Schema 2020-12 object schema under the strict profile of the entry
-    props contract: `type`, closed `properties` with `required`, `enum`,
+    props contract: `type`, closed `properties` with `required` and
+    `additionalProperties: false` (Decision 22), `enum`,
     `const`, `oneOf` of constants, `items` with the array bounds, the string
     and number bounds, `anyOf`, `title`, `description`, and `$schema`;
     `default`, `$ref`, and every other keyword are rejected. One validator on the `jsonschema` crate checks schemas and
@@ -181,6 +185,34 @@ more than re-deriving the behaviour from the requirements.
     [shell delivery contract](../docs/protocol/mokly-shell-delivery.md) owns
     the routes; the example-export measurements behind the decision are in
     `.context/rust-rebuild/shell-delivery-measurements-2026-10-13.md`.
+22. Prop schema details (2026-10-13): every object schema, the root included,
+    carries `additionalProperties: false`, and a schema without it fails;
+    inference reads the entry's own props and every variant's merged props,
+    so the entry's own keys are `required` and a key only a variant adds is
+    optional, and a `defineScreen` without `propSchema` is generic over its
+    `props` literal with `Partial` variant props; a derived number control
+    offers only valid values, with `multipleOf` as its step counted from zero
+    and 1 for an `integer` without it, and no schema is rejected for the
+    step; a derived select labels an option by its `title`, else the string
+    itself, else the JSON text of the value.
+23. Stories as control hints (2026-10-13, amends 18): the schema of a stories
+    file is always inferred from the args; `argTypes` enrich the derived
+    controls with options, bounds, step, name, and description, exclude
+    non-prop args (`control: false`, `table.disable`, an `action`, a
+    `function` type) without a warning, and never enter validation.
+24. One template language (2026-10-13, amends 19): screen bodies and
+    component bodies share one template language, `$name` references and
+    coerced attributes on component elements, `{{name}}` substitution,
+    `mokly-if`, and `mokly-viewport`, with slot placeholders in component
+    bodies only; a body reads only its own entry's props, an undeclared
+    reference fails with `html-props` in either body, and one parser and one
+    renderer serve both.
+25. One definition per export (2026-10-13): an export contributes exactly
+    one definition; an array export fails with `array-export` naming the
+    export, because no helper returns an array once a variant is a props set.
+26. Pages (2026-10-13): the sidecar's `renderPage` runs a `definePage`
+    callback by its handle and returns the complete document, its resources,
+    and warnings; the core applies the pages contract's document rules to it.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
@@ -214,7 +246,10 @@ widened `describe` to every definition kind and the story inventory, fixed
 the `ignoreScope` values as `enabled` and `disabled`, chose the definition
 handle for render requests, and made Storybook stories component variants.
 The same day the user normalised variants to one model for every kind and
-adopted the JSON Schema profile for prop schemas.
+adopted the JSON Schema profile for prop schemas, then settled the profile's
+closed objects, inference sets, control step and labels, made `argTypes`
+control hints, unified the template language, required one definition per
+export, added `renderPage`, and approved pointers on the five frozen pages.
 
 **Architecture:**
 
@@ -419,12 +454,12 @@ into the bounded render cache, and reports diagnostics; it writes its output
 from Milestone 12.
 
 - [ ] Implement HTML components and the entry props model in `mokly-html`:
-      prop schemas under the JSON Schema profile and their inference,
-      props-driven variants, scalar coercion,
-      `$name` prop references, `mokly-if`, named slots, attribute and text
-      substitution in component and screen bodies,
-      `mokly-viewport`, `mokly-instance`, and the component registry with the
-      reserved `mokly-` prefix.
+      prop schemas under the JSON Schema profile with closed objects and
+      their inference from merged props, props-driven variants, scalar
+      coercion, one template language for screen and component bodies
+      (`$name` prop references, `{{name}}` substitution, `mokly-if`,
+      `mokly-viewport`, named slots), `mokly-instance`, and the component
+      registry with the reserved `mokly-` prefix.
 - [ ] Implement screen composition: viewports, colour schemes, stylesheet
       rules, document assembly, `mock:` link rewriting, ignore regions with
       their scopes resolved, and the ownership annotations the comparison
@@ -463,8 +498,9 @@ Tags: ui
 - [ ] Update the viewer's data readers and validators to the generated read
       model v7 types.
 - [ ] Show a component's own props before its variants, offer the derived
-      controls on screens, and validate control input with a profile
-      validator that generates no code, under the entry props contract; no
+      controls on screens with the zero-based step and the title-or-value
+      select labels, and validate control input with a profile validator
+      that generates no code, under the entry props contract; no
       other presentation change.
 - [ ] Replace server rendering and hydration in the viewer package with the
       client-rendered shell of the shell delivery contract: the `browser`
@@ -486,15 +522,16 @@ through the sidecar, and the example catalogue renders again.
 - [ ] Implement consumer bundling in the sidecar with the bundler of Decision
       10, the module graph report, the consumer renderer module, React
       resolution from the consumer, and the optional consumer PostCSS worker.
-- [ ] Implement component, screen, and story renders that return a fragment
-      plus the styles the render produced, with `defineScreen` rendering over
-      props, `json-schema-to-ts` for the authoring types, and schema
-      inference for screens and stories; implement the fragment cache in
+- [ ] Implement component, screen, page, and story renders, with
+      `defineScreen` rendering over props, `json-schema-to-ts` for declared
+      schemas and the `props` literal type for undeclared ones, schema
+      inference for screens and stories, and `argTypes` as control hints; implement the fragment cache in
       Rust keyed by bundle generation, handle, props, viewport, scheme, and
       the enclosing ignore scope; slot placeholders report their scope state;
       a stories file is a component entry whose stories are its variants.
 - [ ] Implement `describe`: every definition the entry modules and stories
-      files export, with the story inventory; feed every definition into the
+      files export, one per export with `array-export` otherwise, with the
+      story inventory; feed every definition into the
       catalogue model, and register JavaScript components by `element` with
       the uniqueness rule, the reserved `mokly-` prefix, and the reserved-prop
       failure of the components contract.
@@ -603,30 +640,6 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - Open from the review of commit 2a068ff5, report under
-    `.context/rust-rebuild/review-2026-10-13-handles.md`:
-  - 3: the handle is ambiguous for an array export that holds more than one
-    definition.
-  - Observation: the sidecar has no render method for a `definePage` page.
-  - Open from the review of commit 15f1579c, report under
-    `.context/rust-rebuild/review-2026-10-13-variant-model.md`:
-  - 4: which profile keywords an `argTypes` entry declares, and which
-    entries exclude a key, is undefined.
-  - 9: whether `mokly-if` applies in HTML component bodies is undecided.
-  - 13: five frozen pages that state the replaced variant rules carry no
-    Delivery Status pointer (authoring, controls, navigation, viewer, design
-    components); three of them sit at their line cap.
-  - Open from the review of commit 28242db9, report under
-    `.context/rust-rebuild/review-2026-10-13-json-schema.md`:
-  - 1: the profile does not close objects as written; decide whether
-    `additionalProperties: false` is required on every object schema or
-    inserted by the core.
-  - 2: inference reads a variant's own map, so a key the entry always
-    supplies becomes optional; decide whether inference reads merged props.
-  - 3: a derived number control's step from `multipleOf` disagrees with the
-    controls contract's step base; decide the rule.
-  - 8: derived select options have no label rule for `enum` values and
-    untitled `oneOf` members.
   - Open from the review of commit 1fdf5d95, report under
     `.context/rust-rebuild/review-2026-10-13-shell-delivery.md`:
   - 1: a removed entry's detail inside an immutable comparison generation

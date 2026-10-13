@@ -8,7 +8,11 @@ Removal of baseline compatibility is implemented in
 This contract is implemented. The [source-path removal plan](../../plans/remove-source-path-evidence.md) records its delivery history.
 Pages use file-derived paths and complete-document rendering. The
 [removed content previews plan](../../plans/removed-content-previews.md)
-implements page-only historical capture and delivery.
+implements page-only historical capture and delivery. Under the
+[Rust rebuild plan](../../plans/rust-rebuild.md) the [render sidecar](./mokly-sidecar.md)
+runs a JavaScript page's `render` callback through `renderPage` and returns the
+complete document; the core applies the document rules below to it and to
+`.page.html` files alike.
 
 ## Purpose And Boundary
 

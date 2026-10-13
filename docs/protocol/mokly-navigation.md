@@ -10,7 +10,7 @@ and outer-navigation rule in Serve, export, and embedded hosts, and controlled
 and uncontrolled unknown-destination handling is implemented. Path-addressed
 links and `/view/<path>/` URLs are implemented, as are the Specs and Components
 sections, browse-only folder rows, `Overview` rows, and the breadcrumb folder
-links and reveals of the [folder contract](./mokly-folders.md#rows-and-clicks).
+links and reveals of the [folder contract](./mokly-folders.md#rows-and-clicks). Under the [Rust rebuild plan](../../plans/rust-rebuild.md) a component parent has its own view, rendered from its own props under the [entry props contract](./mokly-entry-props.md), so a link to a parent resolves to that view and its page shows it first.
 
 ## Scope
 

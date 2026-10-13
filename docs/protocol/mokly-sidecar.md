@@ -9,8 +9,8 @@ worker threads instead.
 ## Purpose And Boundary
 
 The sidecar is the only place Mokly runs JavaScript. The Rust binary starts it
-when a catalogue needs a JavaScript bundle, a React or Storybook render, or a
-consumer PostCSS module. The sidecar returns text: HTML
+when a catalogue needs a JavaScript bundle, a React, page, or Storybook
+render, or a consumer PostCSS module. The sidecar returns text: HTML
 fragments, CSS, module and definition inventories, and diagnostics. It never
 reads the catalogue, never writes files, and keeps no state beyond loaded
 bundle generations. Catalogue decisions, caching, invalidation, comparison, and
@@ -57,13 +57,18 @@ sidecar run in order; the pool spreads independent requests across sidecars.
 | `renderScreen`    | generation, handle, props, viewport, colour scheme                                            | render result                                                |
 | `renderComponent` | generation, handle, props, slot placeholders, viewport, colour scheme, enclosing ignore scope | render result                                                |
 | `renderStory`     | generation, story id, props, viewport, colour scheme                                          | render result                                                |
+| `renderPage`      | generation, handle                                                                            | `{ html, resources, warnings }`                              |
 | `processCss`      | PostCSS module, source path, text                                                             | `{ text, dependencies }`                                     |
 | `dispose`         | generation                                                                                    | nothing                                                      |
 | `shutdown`        | none                                                                                          | nothing                                                      |
 
 A render result is `{ html, styles, resources, warnings }`: the fragment, the
 CSS rules the render produced in first-appearance order, the non-CSS resource
-records the renderer declared, and build warnings.
+records the renderer declared, and build warnings. `renderPage` runs a
+`definePage` callback and returns the complete document it produced, the
+resource records the renderer declared, and warnings, with no styles; the
+binary applies the document rules of the [pages contract](./mokly-pages.md)
+to it.
 
 ## Definitions
 
@@ -155,8 +160,8 @@ sidecar loads the consumer's `.storybook/preview` annotations with
 `@storybook/react`, and renders it with `renderToStaticMarkup`. The story id
 is the file path, `#`, and the export name, and `describe` lists every story
 of the generation. A stories file becomes one component entry at the path derived
-from the file: the meta's `args` are its props, `argTypes` declare the part
-of the schema they cover and inference supplies the rest, and each story is a
+from the file: the meta's `args` are its props, the schema is inferred from
+the args, and each story is a
 variant at the parent's path plus the export name as slug, with its `args` as
 props, under the [entry props contract](./mokly-entry-props.md); the read
 model needs no new kind. A `renderStory` request carries the merged data
@@ -164,6 +169,14 @@ props, applied over the composed story's own args, so non-data args stay as
 the file defines them. Viewport and colour scheme reach the story as the globals
 `moklyViewport` and `moklyColorScheme`. A consumer without `@storybook/react`
 fails `bundle` with `bundle-failed` naming the missing package.
+
+`argTypes` never enter the schema or validation. An entry's `options` become
+the choices of the derived select, its `control.min`, `control.max`, and
+`control.step` the bounds and step of the derived number control, and its
+`name` and `description` the control's label and help text. An arg with
+`control: false`, `table.disable: true`, an `action`, or a `function` type is
+not a prop: it is excluded from the props, the schema, and the fragment key
+without a warning, and the story renders with the file's own value for it.
 
 ## Consumer PostCSS
 

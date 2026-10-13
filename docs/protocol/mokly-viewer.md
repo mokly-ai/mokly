@@ -2,7 +2,7 @@
 
 ## Delivery Status
 
-Implemented: the viewer library renders one React shell in Serve, export and embedded hosts, and Serve uses the strict [entry-scoped bootstrap](./mokly-shell-bootstrap.md). The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page: the shell renders only in the browser from the index and detail sources of the [shell delivery contract](./mokly-shell-delivery.md), and `renderViewer` is retired (Decision 21).
+Implemented: the viewer library renders one React shell in Serve, export and embedded hosts, and Serve uses the strict [entry-scoped bootstrap](./mokly-shell-bootstrap.md). The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page: the shell renders only in the browser from the index and detail sources of the [shell delivery contract](./mokly-shell-delivery.md), and `renderViewer` is retired (Decision 21). The same plan gives a component parent its own view from its own props, shown first on its page, under the [entry props contract](./mokly-entry-props.md).
 
 ## Package And Props
 

@@ -14,8 +14,8 @@ that renders them by substitution. Mokly renders it in Rust without
 JavaScript. It joins the same registry as JavaScript components, so an HTML
 screen can use either kind, a component page shows its variants, and Changes
 attributes rules and resources to it like any registered component. An HTML
-component cannot run code, loop, branch on values, or compute; a component
-that needs those stays JavaScript.
+component cannot run code, loop, or compute, and it branches only through
+`mokly-if`; a component that needs more stays JavaScript.
 
 ## Front Matter
 
@@ -53,16 +53,17 @@ reserved for Mokly.
 ```yaml
 propSchema:
   type: object
+  additionalProperties: false
   required: [label, tone]
   properties:
     label: { type: string, minLength: 1 }
     tone:
-      oneOf:
-        - { const: primary, title: Primary }
-        - { const: secondary, title: Secondary }
+      - { const: primary, title: Primary }
+      - { const: secondary, title: Secondary }
     disabled: { type: boolean }
     badge:
       type: object
+      additionalProperties: false
       required: [count]
       properties: { count: { type: integer } }
 ```
@@ -73,17 +74,12 @@ or computed values. Controls for live editing derive from the schema under the
 
 ## Body
 
-The body is an HTML fragment with the screen body rules, plus substitution:
+The body is an HTML fragment in the
+[template language](./mokly-html-screens.md#screen-body) of the screen body,
+reading the component's own props: `{{name}}` substitution, `$name` references
+and coerced attributes on nested component elements, `mokly-if`, and
+`mokly-viewport`, with the same diagnostics. A component body adds:
 
-- `{{name}}` in text or in an attribute value substitutes the prop. A dotted
-  path such as `{{badge.count}}` reads into an object prop. The value is
-  HTML-escaped; there is no raw substitution.
-- A substituted `boolean` prop in an attribute whose value is exactly
-  `{{name}}` keeps the attribute when true and removes it when false.
-- An omitted optional prop substitutes the empty string in text and removes an
-  attribute whose value is exactly `{{name}}`.
-- `{{…}}` naming an undeclared prop, an array, or an object without a path
-  fails with `html-attribute`. `{{` that does not close is ordinary text.
 - `<slot></slot>` is the `children` placeholder and `<slot name="x"></slot>`
   a named one. Supplied content replaces the element; the placeholder's own
   children are the default content when nothing is supplied. A placeholder for
@@ -138,6 +134,7 @@ description: The primary action control.
 tags: [ui]
 propSchema:
   type: object
+  additionalProperties: false
   required: [label, tone]
   properties:
     label: { type: string, minLength: 1 }

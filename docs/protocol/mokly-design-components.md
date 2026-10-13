@@ -10,7 +10,9 @@ screens. Registered entries live under Components → Design → Shared componen
 beside Example Action and Toolbar. The generated manifest owns all counts;
 the library and its consuming screens use paths.
 
-The remaining contract is implemented.
+The remaining contract is implemented. Under the [Rust rebuild plan](../../plans/rust-rebuild.md)
+a parent's page shows its own view first, rendered from its own props, under
+the [entry props contract](./mokly-entry-props.md).
 
 This contract and the [library inventory](./mokly-design-component-library.md)
 define delivery; [shell design](./mokly-shell-design.md) and
