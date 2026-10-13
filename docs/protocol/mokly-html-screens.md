@@ -35,23 +35,23 @@ allowed, and `no` stays a string. A use case file is one YAML document with
 the same keys and no body. Front matter is required because `title` is
 required; a missing block fails with `html-front-matter`.
 
-| Key            | Type             | Meaning                                                          |
-| -------------- | ---------------- | ---------------------------------------------------------------- |
-| `title`        | string, required | entry title                                                      |
-| `description`  | string           | defaults to the empty string                                     |
-| `tags`         | string list      | kebab-case tags, unique, authored order kept                     |
-| `path`         | string           | declared complete path replacing the derived one                 |
-| `movedFrom`    | string           | previous complete path for the [move contract](./mokly-moves.md) |
-| `rationale`    | string           | design rationale shown in Details                                |
-| `relatedDocs`  | string list      | related document links                                           |
-| `dependencies` | string list      | declared files or directories, as today                          |
-| `address`      | string           | screens: the address-bar label                                   |
-| `useCasePaths` | string list      | screens: use cases the screen belongs to                         |
-| `colorSchemes` | string list      | screens and components: non-empty subset including `light`       |
-| `propSchema`   | map              | the prop schema; optional for screens, required for components   |
-| `props`        | map              | screens and components: the entry's own prop values              |
-| `variants`     | list             | screens and components: see Variants                             |
-| `steps`        | list             | use cases: `{ screenPath, title?, description? }` in order       |
+| Key            | Type             | Meaning                                                                                           |
+| -------------- | ---------------- | ------------------------------------------------------------------------------------------------- |
+| `title`        | string, required | entry title                                                                                       |
+| `description`  | string           | defaults to the empty string                                                                      |
+| `tags`         | string list      | kebab-case tags, unique, authored order kept                                                      |
+| `path`         | string           | declared complete path replacing the derived one                                                  |
+| `movedFrom`    | string           | previous complete path for the [move contract](./mokly-moves.md)                                  |
+| `rationale`    | string           | design rationale shown in Details                                                                 |
+| `relatedDocs`  | string list      | related document links                                                                            |
+| `dependencies` | string list      | declared files or directories, as today                                                           |
+| `address`      | string           | screens: the address-bar label                                                                    |
+| `useCasePaths` | string list      | screens: use cases the screen belongs to                                                          |
+| `colorSchemes` | string list      | screens and components: non-empty subset including `light`                                        |
+| `propSchema`   | map              | a JSON Schema object under the prop schema profile; optional for screens, required for components |
+| `props`        | map              | screens and components: the entry's own prop values                                               |
+| `variants`     | list             | screens and components: see Variants                                                              |
+| `steps`        | list             | use cases: `{ screenPath, title?, description? }` in order                                        |
 
 An unknown key fails with `unknown field <field>`. Keys that do not apply to
 a kind are unknown for that kind. A prop name matches
@@ -88,10 +88,11 @@ and any other `mokly-` name fails with `html-element`.
 
 - An attribute name is kebab-case and maps to the camelCase prop key. The
   value is coerced through the component's prop schema: `string` takes the
-  text; `boolean` accepts an empty value, `true`, or `false`; `number` accepts
-  a JSON number; `null` accepts `null`; `enum` accepts the text equal to the
-  string form of exactly one value; `union` takes the first member that
-  accepts. Array and object props need a `$name` reference.
+  text; `boolean` accepts an empty value, `true`, or `false`; `number` and
+  `integer` accept a JSON number; `null` accepts `null`; `enum`, `const`, and
+  `oneOf` accept the text equal to the string form of exactly one value; a
+  `type` list or `anyOf` takes the first member that accepts. Array and object
+  props need a `$name` reference.
 - A value that is exactly `$name` substitutes the prop unchanged for any prop
   type; `$$` escapes a literal leading dollar. A reference to an undeclared
   prop fails with `html-props`; an absent optional prop omits the attribute,

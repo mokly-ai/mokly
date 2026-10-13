@@ -50,7 +50,7 @@ import type {
   ComponentRangeRecord,
   ComponentSlotRecord,
   ComponentWireProps,
-  ObjectPropSchema,
+  PropSchema, // a JSON Schema object under the entry props profile
 } from "@mokly/viewer";
 
 type Viewport = "mobile" | "desktop";
@@ -146,7 +146,7 @@ interface CatalogueScreen extends CatalogueEntry {
   address?: string;
   variantOf?: string; // Present exactly on variant screens; the parent path.
   colorSchemes: readonly ColorScheme[];
-  propSchema: ObjectPropSchema;
+  propSchema: PropSchema;
   props: ComponentWireProps; // the entry's own props, or a variant's merged props
   controls: Readonly<Record<string, ComponentControl>>;
   views: readonly CatalogueView[];
@@ -172,7 +172,7 @@ interface CatalogueComponent extends CatalogueEntry {
   kind: "component";
   variantOf?: string; // Present exactly on variant entries; the parent path.
   colorSchemes: readonly ColorScheme[];
-  propSchema: ObjectPropSchema;
+  propSchema: PropSchema;
   props: ComponentWireProps; // the entry's own props, or a variant's merged props
   slots: readonly string[];
   suppliedSlots: readonly string[]; // empty on a parent

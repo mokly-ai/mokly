@@ -20,9 +20,10 @@ build and names both files. An `element` whose schema declares `to`,
 `fragment`, `slot`, `moklyViewport`, or `moklyIf` fails registration. The plan also makes
 `variants` optional, adds an optional `props` map for the component's own
 view, which its page shows first, makes `variants[].props` a partial of the
-derived props type that replaces top-level keys, and derives `controls` from
-the schema when none are declared, under the
-[entry props contract](./mokly-entry-props.md).
+derived props type that replaces top-level keys, derives `controls` from
+the schema when none are declared, and makes `propSchema` a JSON Schema object
+under the profile of the [entry props contract](./mokly-entry-props.md), with
+the props type derived by `json-schema-to-ts`.
 
 The public `defineComponent` API, saved variants, ownership attribution,
 explorer, inspection, and local controls are implemented. The

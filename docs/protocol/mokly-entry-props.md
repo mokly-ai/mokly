@@ -15,9 +15,9 @@ Every screen and component is a render over props:
 
 - A render: an HTML body, a React function of props, or a Storybook
   component.
-- `propSchema`: the schema of the props, in the shape of the
-  [normative prop schema](./mokly-component-props.md#normative-schema). It is
-  required for a component and optional for a screen or a stories file, where
+- `propSchema`: a JSON Schema object under the
+  [profile](#prop-schema-profile) below. It is required for a component and
+  optional for a screen or a stories file, where
   [inference](#schema-inference) supplies it.
 - `props`: the entry's own prop values. They default to the empty map and
   must satisfy the schema, so a component whose schema requires a prop
@@ -25,10 +25,13 @@ Every screen and component is a render over props:
 - `variants`: optional. Each declares `slug`, `title`, and `props` that
   replace top-level keys of the entry's props and never deep merge, plus the
   metadata overrides of the variants contract.
-- Controls: derived from the schema, a text control for `string`, a toggle
-  for `boolean`, a number control for `number`, a select for `enum`, and
-  other kinds shown but not editable. `defineComponent` may declare
-  `controls` to replace the derived ones.
+- Controls: derived from the schema. A text control for `string` with
+  `maxLength`; a toggle for `boolean`; a number control for `number` and
+  `integer` with `minimum`, `maximum`, and `multipleOf` as its bounds and
+  step; a select for `enum` and for `oneOf` of `const` members, labelled by
+  their `title`; every other shape is shown but not editable. `title` and
+  `description` label a control. `defineComponent` may declare `controls` to
+  replace the derived ones.
 
 The entry's own view renders `props`. Each variant is an entry of the
 parent's kind at the parent's path plus its slug, with `variantOf`, its own
@@ -37,17 +40,48 @@ parent's render with the merged props. A component needs no variant, and a
 component page shows the entry's own props first, then each variant. Light and
 dark and the viewports stay view axes, never variants.
 
+## Prop Schema Profile
+
+A prop schema is a JSON Schema 2020-12 object schema restricted to this
+profile. A keyword outside it, or a keyword used outside its rule, fails with
+the kind's schema diagnostic: `html-front-matter` for an HTML file, the
+component diagnostics of the [components contract](./mokly-components.md)
+for a JavaScript definition.
+
+| Keyword                                                      | Rule                                                                                                                  |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `type`                                                       | `string`, `number`, `integer`, `boolean`, `null`, `object`, `array`, or a list of them; the root is `object`          |
+| `properties`, `required`                                     | the declared props; every object is closed, so `additionalProperties` may only be `false` and an undeclared key fails |
+| `enum`, `const`, `oneOf`                                     | JSON primitives; `oneOf` holds `const` members only, each with an optional `title`                                    |
+| `items`, `minItems`, `maxItems`                              | arrays are dense; an absent `items` accepts any JSON value                                                            |
+| `minLength`, `maxLength`, `minimum`, `maximum`, `multipleOf` | the string and number bounds                                                                                          |
+| `anyOf`                                                      | a union; any matching member accepts the value unchanged                                                              |
+| `title`, `description`, `$schema`                            | annotations; `$schema` may only name draft 2020-12                                                                    |
+
+`default`, `$ref`, `$defs`, `if`, `allOf`, `not`, `pattern`, `format`,
+`patternProperties`, `dependentSchemas`, and every other keyword are rejected,
+so a schema is self-contained, declares no default, and coerces nothing. Props
+are plain JSON: a function, a React element, a class instance, a non-finite
+number, or a cycle is not a prop. The Rust core validates schemas and props
+with one validator on the `jsonschema` crate. The viewer validates control
+input with a validator for this profile that generates no code, so an
+exported site needs no `unsafe-eval`. `json-schema-to-ts` derives the
+TypeScript props type of `render(props)` from an `as const` schema.
+
 ## Schema Inference
 
 When an entry declares no `propSchema`, the schema is inferred from the
-entry's own props and every variant's props together. Each key seen in any
-set is a property. Its kind comes from the values: `string`, `number`,
-`boolean`, `null`, `object` with inferred properties, or `array`. A key absent
-from some set is `optional`. Values of different kinds across sets form a
-`union`. A function, a React element, or any other non-data value is not a
-prop: it is excluded from the schema, from the props, and from the fragment
-key, with the `props-not-data` warning naming the entry and the key. A
-declared `propSchema` is the schema, and props it rejects fail.
+entry's own props and every variant's props together, in the profile. Each
+key seen in any set is a property, and a key present in every set is
+`required`. A value's `type` comes from the value: `string`, `number`,
+`boolean`, `null`, `object` with inferred properties and the same `required`
+rule inside it, or `array` whose `items` is inferred from every element across
+the sets. Kinds that differ across sets or across elements form a `type`
+list, and an array that is empty in every set has no `items`. A function, a
+React element, or any other non-data value is not a prop: it is excluded from
+the schema, from the props, and from the fragment key, with the
+`props-not-data` warning naming the entry and the key. A declared `propSchema`
+is the schema, and props it rejects fail.
 
 ## Kinds
 
@@ -108,5 +142,6 @@ the generated TypeScript types of the model crate replace it.
 - [HTML screens, pages, and use cases](./mokly-html-screens.md)
 - [HTML components](./mokly-html-components.md)
 - [Registered components](./mokly-components.md)
+- [Component prop schema of the frozen backend](./mokly-component-props.md)
 - [Render sidecar](./mokly-sidecar.md)
 - [Public catalogue read model](./mokly-catalogue.md)

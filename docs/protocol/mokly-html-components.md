@@ -47,23 +47,29 @@ reserved for Mokly.
 
 ## Props
 
-`propSchema` maps each prop name to a schema with the shape of the
-[normative prop schema](./mokly-component-props.md#normative-schema) in YAML:
+`propSchema` is a JSON Schema object under the
+[prop schema profile](./mokly-entry-props.md#prop-schema-profile), in YAML:
 
 ```yaml
 propSchema:
-  label: { kind: string, minLength: 1 }
-  tone: { kind: enum, values: [primary, secondary] }
-  disabled: { kind: boolean, optional: true }
-  badge:
-    { kind: object, optional: true, properties: { count: { kind: number } } }
+  type: object
+  required: [label, tone]
+  properties:
+    label: { type: string, minLength: 1 }
+    tone:
+      oneOf:
+        - { const: primary, title: Primary }
+        - { const: secondary, title: Secondary }
+    disabled: { type: boolean }
+    badge:
+      type: object
+      required: [count]
+      properties: { count: { type: integer } }
 ```
 
-`optional: true` marks an optional prop; everything else is the schema. There
-are no defaults, coercions, or computed values, as in the normative schema.
-Controls for live editing derive from the schema: a text control for `string`,
-a toggle for `boolean`, a number control for `number`, a select for `enum`;
-other kinds are shown but not editable.
+A prop absent from `required` is optional. There are no defaults, coercions,
+or computed values. Controls for live editing derive from the schema under the
+[entry props contract](./mokly-entry-props.md).
 
 ## Body
 
@@ -131,9 +137,12 @@ title: Button
 description: The primary action control.
 tags: [ui]
 propSchema:
-  label: { kind: string, minLength: 1 }
-  tone: { kind: enum, values: [primary, secondary] }
-  disabled: { kind: boolean, optional: true }
+  type: object
+  required: [label, tone]
+  properties:
+    label: { type: string, minLength: 1 }
+    tone: { enum: [primary, secondary] }
+    disabled: { type: boolean }
 props: { label: Save, tone: primary }
 slots: [children]
 variants:

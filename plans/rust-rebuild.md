@@ -32,7 +32,9 @@ scope state in render requests, the sidecar's `describe` call, and frozen
 wording for the last retired-page targets (Decisions 14 to 16), then the
 definition handle and component entries for Storybook stories (Decisions 17
 and 18), and one variant model for every kind (Decision 19), which added the
-entry props contract as the sixth new page.
+entry props contract as the sixth new page. Later that day the user adopted a
+strict profile of JSON Schema 2020-12 for every prop schema (Decision 20), and
+the component prop schema page moved from kept to rewritten.
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
@@ -149,6 +151,16 @@ more than re-deriving the behaviour from the requirements.
     schema; `defineScreen` takes `render(props)`; HTML screen bodies gain
     `{{name}}` substitution and the boolean `mokly-if` attribute and nothing
     more; read model v7 gives screens the component prop fields.
+20. Prop schemas (2026-10-13): every prop schema, declared or inferred, is a
+    JSON Schema 2020-12 object schema under the strict profile of the entry
+    props contract: `type`, closed `properties` with `required`, `enum`,
+    `const`, `oneOf` of constants, `items`, the string and number bounds,
+    `anyOf`, and annotations; `default`, `$ref`, and every other keyword are
+    rejected. One validator on the `jsonschema` crate checks schemas and
+    props in Rust; the viewer validates control input with a profile
+    validator that generates no code; `json-schema-to-ts` derives the
+    authoring types. Inference emits the profile, with a `type` list for
+    mixed kinds and no `items` for an array empty in every set.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
@@ -181,7 +193,8 @@ definitions and frozen wording for the two remaining retired-page targets, then
 widened `describe` to every definition kind and the story inventory, fixed
 the `ignoreScope` values as `enabled` and `disabled`, chose the definition
 handle for render requests, and made Storybook stories component variants.
-The same day the user normalised variants to one model for every kind.
+The same day the user normalised variants to one model for every kind and
+adopted the JSON Schema profile for prop schemas.
 
 **Architecture:**
 
@@ -339,7 +352,8 @@ merges; the freeze applies to it from 2026-10-12.
 At completion the Rust workspace builds, the `mokly` binary runs `--help` and
 `--version`, and the platform packages, shim, and CI build steps exist.
 
-- [ ] Add the crates: `mokly-model` (shared shapes, canonical JSON, generated
+- [ ] Add the crates: `mokly-model` (shared shapes, canonical JSON, the prop
+      schema profile and its validator on the `jsonschema` crate, generated
       TypeScript), `mokly-cli` (the binary, clap grammar, terminal output),
       `mokly-platform` (exclusive rename, process groups, Windows job objects),
       `mokly-git` (command runner, bounded batches), and `mokly-sidecar` (the
@@ -382,7 +396,8 @@ into the bounded render cache, and reports diagnostics; it writes its output
 from Milestone 12.
 
 - [ ] Implement HTML components and the entry props model in `mokly-html`:
-      prop schemas and inference, props-driven variants, scalar coercion,
+      prop schemas under the JSON Schema profile and their inference,
+      props-driven variants, scalar coercion,
       `$name` prop references, `mokly-if`, named slots, attribute and text
       substitution in component and screen bodies,
       `mokly-viewport`, `mokly-instance`, and the component registry with the
@@ -423,9 +438,10 @@ Tags: ui
 
 - [ ] Update the viewer's data readers and validators to the generated read
       model v7 types.
-- [ ] Show a component's own props before its variants and offer the derived
-      controls on screens, under the entry props contract; no other
-      presentation change.
+- [ ] Show a component's own props before its variants, offer the derived
+      controls on screens, and validate control input with a profile
+      validator that generates no code, under the entry props contract; no
+      other presentation change.
 - [ ] Run the viewer suite and the hydration routes against the Milestone 6
       server.
 - [ ] Commit.
@@ -440,7 +456,8 @@ through the sidecar, and the example catalogue renders again.
       resolution from the consumer, and the optional consumer PostCSS worker.
 - [ ] Implement component, screen, and story renders that return a fragment
       plus the styles the render produced, with `defineScreen` rendering over
-      props and schema inference for screens and stories; implement the fragment cache in
+      props, `json-schema-to-ts` for the authoring types, and schema
+      inference for screens and stories; implement the fragment cache in
       Rust keyed by bundle generation, handle, props, viewport, scheme, and
       the enclosing ignore scope; slot placeholders report their scope state;
       a stories file is a component entry whose stories are its variants.
@@ -560,10 +577,8 @@ Tags: ui
   - Observation: the sidecar has no render method for a `definePage` page.
   - Open from the review of commit 15f1579c, report under
     `.context/rust-rebuild/review-2026-10-13-variant-model.md`:
-  - 3: schema inference does not define the item schema of an array or
-    nested optionality.
-  - 4: what an `argTypes` entry declares, and which entries exclude a key,
-    is undefined.
+  - 4: which profile keywords an `argTypes` entry declares, and which
+    entries exclude a key, is undefined.
   - 9: whether `mokly-if` applies in HTML component bodies is undecided.
   - 13: six frozen pages that state the replaced variant rules carry no
     Delivery Status pointer; three of them sit at their line cap.
