@@ -37,7 +37,7 @@ npx mokly ...                  @mokly/mokly shim: Node version gate, binary look
 | `mokly-git`       | The Git command runner, merge base, changed paths, bounded blob and tree reads, archive extraction.                                             | `platform`                      |
 | `mokly-sidecar`   | The sidecar pool: spawning, framing, requests, timeouts, recycling.                                                                             | `model`, `platform`             |
 | `mokly-catalogue` | Roots, discovery, front matter, path identity, folders, variants, use cases, documents, the catalogue model.                                    | `model`                         |
-| `mokly-html`      | HTML components and screens: parsing, substitution, slots, composition, markers, link rewriting, document assembly, the element registry.       | `model`, `catalogue`, `sidecar` |
+| `mokly-html`      | HTML components and screens: parsing, substitution, slots, composition, markers, link rewriting, document assembly, the component registry.       | `model`, `catalogue`, `sidecar` |
 | `mokly-css`       | Stylesheet bundling on `lightningcss`, rule collection, diffing, selector matching, the keep list, attribution.                                 | `model`                         |
 | `mokly-graph`     | The content-addressed render graph, scheduling, the render cache, the source tree trait over the working tree and Git trees, the asset closure. | `catalogue`, `html`, `css`      |
 | `mokly-compare`   | Base-side rendering, the dependency tiers, tree comparison, materiality, moves, affected consumers, review result v8, change snapshot v4.       | `graph`, `css`, `git`           |

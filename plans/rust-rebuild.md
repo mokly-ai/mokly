@@ -356,7 +356,7 @@ from Milestone 12.
 
 - [ ] Implement HTML components in `mokly-html`: prop schemas, scalar coercion,
       `$name` data references, named slots, attribute and text substitution,
-      `mokly-viewport`, `mokly-instance`, and the element registry with the
+      `mokly-viewport`, `mokly-instance`, and the component registry with the
       reserved `mokly-` prefix.
 - [ ] Implement screen composition: viewports, colour schemes, stylesheet
       rules, document assembly, `mock:` link rewriting, ignore regions with
