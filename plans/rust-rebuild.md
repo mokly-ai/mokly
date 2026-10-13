@@ -630,8 +630,9 @@ Tags: ui
   - Open from the review of commit 1fdf5d95, report under
     `.context/rust-rebuild/review-2026-10-13-shell-delivery.md`:
   - 1: a removed entry's detail inside an immutable comparison generation
-    carries `deploymentId` and `revision`, which move on every update;
-    decide the fields and the fence for generation details.
+    carries `deploymentId` and `revision`, which move on every update, and
+    in `build` the deployment id hashes the generation whose details carry
+    that id; decide the fields and the fence for generation details.
   - 2: the index and the detail carry no `updateVersion` and no Serve-mode
     signal, so the update fence and the absent-descriptor rules cannot be
     implemented; decide where the live state lives.
@@ -650,6 +651,13 @@ Tags: ui
   - 8: five kept viewer pages (catalogue tree, scroll together, frame
     adapter, viewer markers, shell destinations) still state hydration and
     SSR behaviour; decide whether they move to rewritten with pointers.
+  - Open from the re-review of commit 62223201, report under
+    `.context/rust-rebuild/review-2026-10-13-shell-delivery-fix.md`:
+  - 1: the shell delivery page names the owner of the comparison routes
+    through the changes serving contract, one hop away; decide whether to
+    name the comparison serving contract directly.
+  - Observation: neither the namespace pointer nor the shell delivery page
+    says what happens to the frozen evidence routes under `views/**`.
 
 ## Post-merge follow-up (non-blocking)
 
