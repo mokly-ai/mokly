@@ -413,9 +413,8 @@ through the sidecar, and the example catalogue renders again.
       Rust keyed by bundle generation, export, props, viewport, scheme, and
       the enclosing ignore scope; slot placeholders report their scope state.
 - [ ] Implement `describe`: every definition the entry modules and stories
-      files export, with the story inventory; feed screens, pages, use cases,
-      and folders into the catalogue model, and register JavaScript
-      components by `element` with the uniqueness rule, the reserved `mokly-`
+      files export, with the story inventory; feed every definition into the
+      catalogue model, and register JavaScript components by `element` with the uniqueness rule, the reserved `mokly-`
       prefix, and the reserved-prop failure of the components contract.
 - [ ] Implement live prop editing in Serve through the same render path.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
@@ -521,6 +520,12 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Open from the review of commit 426b9c6d, report under
+    `.context/rust-rebuild/review-2026-10-13-describe.md`:
+  - 1: `renderScreen` takes an export name, but a screen export holds one
+    screen with its variants or several screens; define the render handle.
+  - Observation: no page says what catalogue entry a Storybook story
+    becomes; the read model has no story kind.
 
 ## Post-merge follow-up (non-blocking)
 

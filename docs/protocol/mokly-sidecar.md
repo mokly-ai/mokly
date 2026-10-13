@@ -11,7 +11,7 @@ worker threads instead.
 The sidecar is the only place Mokly runs JavaScript. The Rust binary starts it
 when a catalogue needs a JavaScript bundle, a React or Storybook render, a
 consumer PostCSS module, or the viewer shell. The sidecar returns text: HTML
-fragments, CSS, module inventories, and diagnostics. It never reads the
+fragments, CSS, module and definition inventories, and diagnostics. It never reads the
 catalogue, never writes files, and keeps no state beyond loaded bundle
 generations. Catalogue decisions, caching, invalidation, comparison, and output
 belong to the binary.
@@ -43,7 +43,7 @@ sidecar run in order; the pool spreads independent requests across sidecars.
 
 ```json
 {"id":12,"method":"renderComponent","params":{"generation":"3f9c…","export":"specs/ui/button.mockup.tsx#Button","props":{"label":"Save"},"viewport":"mobile","colorScheme":"light","ignoreScope":"enabled"}}
-{"id":12,"result":{"html":"<button class=\"css-1x2\">Save</button>","styles":[".css-1x2{color:red}"],"resources":[]}}
+{"id":12,"result":{"html":"<button class=\"css-1x2\">Save</button>","styles":[".css-1x2{color:red}"],"resources":[],"warnings":[]}}
 {"event":"diagnostic","params":{"message":"…"}}
 ```
 
@@ -73,8 +73,8 @@ and returns every definition they export, each with its export name: screens
 with their variants, pages, use cases, folders, components, and the story
 inventory. A component definition carries its `element` when declared, the
 prop schema, the slots, the controls, and the saved variants. The binary feeds
-the screens, pages, use cases, and folders into the catalogue model, builds the
-component registry from the component definitions and the HTML components,
+every definition into the catalogue model, builds the component registry from
+the component definitions and the HTML components,
 applies the uniqueness and reserved-name rules of the
 [components contract](./mokly-components.md), and fails registration naming
 both files on a collision. `describe` shares the `bundle` deadline. A module
@@ -126,9 +126,10 @@ disabled `ReviewIgnoreScope` suppresses the pairs inside it, so no scope marker
 exists. The `ignoreScope` state of the request is `enabled` or `disabled`; the
 binary sends `enabled` for a component element outside every scope. The state
 seeds the React scope context, so nesting across the boundary follows the
-innermost scope, and the binary applies no outer scope to the fragment. A fragment never emits `mokly-root`;
-the core attaches the root region of a component page itself. The binary reads
-the markers into tree ownership and drops them.
+innermost scope, and the binary applies no outer scope to the fragment. A
+fragment never emits `mokly-root`; the core attaches the root region of a
+component page itself. The binary reads the markers into tree ownership and
+drops them.
 
 ## Slots For JavaScript Components
 
@@ -136,10 +137,10 @@ When an HTML screen passes slot content to a JavaScript component, the sidecar
 renders each slot as the placeholder element
 `<mokly-slot name="<slot>" token="<token>" ignore-scope="<state>"></mokly-slot>`
 at the position the component renders its children, with the scope state at
-that position, `enabled` or `disabled`. The binary replaces the placeholder with the slot's HTML after
-the fragment returns, with the placeholder's state as the innermost scope of
-that content. A placeholder that the component did
-not render fails the screen with `html-slot`.
+that position, `enabled` or `disabled`. The binary replaces the placeholder
+with the slot's HTML after the fragment returns, with the placeholder's state as
+the innermost scope of that content. A placeholder that the component did not
+render fails the screen with `html-slot`.
 
 ## Storybook
 
