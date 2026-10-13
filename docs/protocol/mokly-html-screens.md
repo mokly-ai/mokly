@@ -48,14 +48,16 @@ required; a missing block fails with `html-front-matter`.
 | `address`      | string           | screens: the address-bar label                                   |
 | `useCasePaths` | string list      | screens: use cases the screen belongs to                         |
 | `colorSchemes` | string list      | screens and components: non-empty subset including `light`       |
-| `data`         | map              | screens: values that `$name` references substitute               |
-| `variants`     | list             | screens: see Variants                                            |
+| `propSchema`   | map              | the prop schema; optional for screens, required for components   |
+| `props`        | map              | the entry's own prop values, read by `$name` and `{{name}}`      |
+| `variants`     | list             | screens and components: see Variants                             |
 | `steps`        | list             | use cases: `{ screenPath, title?, description? }` in order       |
 
 An unknown key fails with `unknown field <field>`. Keys that do not apply to
-a kind are unknown for that kind. A `data` key matches
-`^[A-Za-z][A-Za-z0-9_-]*$`; an unused `data` entry is the `html-unused-data`
-warning.
+a kind are unknown for that kind. A prop name matches
+`^[A-Za-z][A-Za-z0-9_-]*$`; a prop no element references is the
+`html-unused-props` warning. Props, schema inference, and variants follow the
+[entry props contract](./mokly-entry-props.md).
 
 ## Screen Body
 
@@ -65,8 +67,11 @@ through unchanged. `script`, `html`, `head`, `body`, and `base` elements fail
 with `html-element`, under the [document safety](./mokly-document-safety.md)
 script policy. One body renders both viewports; an element with
 `mokly-viewport="mobile"` or `mokly-viewport="desktop"` is kept in that
-viewport only and removed from the other. Every other attribute is ordinary
-HTML and is never interpreted.
+viewport only and removed from the other. An element with `mokly-if="$name"`
+is kept when that `boolean` prop is true and removed when it is false.
+`{{name}}` in text or in an attribute value substitutes a prop with the
+[component body rules](./mokly-html-components.md#body). Every other
+attribute is ordinary HTML and is never interpreted.
 
 A hyphenated element name resolves against the component registry: the
 `element` of an [HTML component](./mokly-html-components.md) or of a
@@ -85,10 +90,10 @@ and any other `mokly-` name fails with `html-element`.
   text; `boolean` accepts an empty value, `true`, or `false`; `number` accepts
   a JSON number; `null` accepts `null`; `enum` accepts the text equal to the
   string form of exactly one value; `union` takes the first member that
-  accepts. Array and object props need a `data` reference.
-- A value that is exactly `$name` substitutes the `data` entry unchanged for
-  any prop type; `$$` escapes a literal leading dollar. A missing reference
-  fails with `html-data`. Schema validation runs after substitution and reports
+  accepts. Array and object props need a `$name` reference.
+- A value that is exactly `$name` substitutes the prop unchanged for any prop
+  type; `$$` escapes a literal leading dollar. A missing reference fails with
+  `html-props`. Schema validation runs after substitution and reports
   the component and the property path.
 - `to`, `fragment`, `slot`, `mokly-instance`, and `mokly-viewport` are reserved
   on component elements and never reach props. Registering an `element` whose
@@ -127,9 +132,11 @@ and any other `mokly-` name fails with `html-element`.
 
 A screen `variants` entry declares `slug` and `title` and may declare
 `description`, `tags`, `colorSchemes`, `address`, `rationale`, `relatedDocs`,
-`dependencies`, `useCasePaths`, `movedFrom`, and `data`. A variant `data` map
-replaces matching top-level keys and never deep merges. Inheritance follows the
-[variant contract](./mokly-variants.md). The body is shared; a variant that
+`dependencies`, `useCasePaths`, `movedFrom`, and `props`. A variant `props`
+map replaces matching top-level keys and never deep merges, under the
+[entry props contract](./mokly-entry-props.md). Metadata inheritance follows the
+[variant contract](./mokly-variants.md). The body is shared: a variant changes
+what it shows through `$name`, `{{name}}`, and `mokly-if`, and a variant that
 needs another tree is a separate file.
 
 ## Pages And Use Cases
@@ -143,7 +150,8 @@ including a variant.
 
 ## Rendering
 
-1. Parse the front matter and the body. Resolve every component element.
+1. Parse the front matter and the body, resolve the props of the entry or
+   the variant, substitute them, and resolve every component element.
 2. Render HTML components in Rust by substitution and slot filling, recursively.
    Render JavaScript components through the [sidecar](./mokly-sidecar.md),
    memoized by props, viewport, colour scheme, and the enclosing ignore
@@ -167,9 +175,9 @@ screen. A catalogue of HTML files alone never starts a sidecar.
 | `html-front-matter`    | missing block, YAML error, unknown or invalid key              |
 | `html-element`         | forbidden element, unknown hyphenated element, component cycle |
 | `html-attribute`       | a value the prop schema rejects, or a reserved prop name       |
-| `html-data`            | a missing `$name` reference                                    |
+| `html-props`           | a missing or mistyped `$name` or `mokly-if` reference          |
 | `html-slot`            | content for an undeclared slot, or an unrendered placeholder   |
-| `html-unused-data`     | warning: a `data` entry no element references                  |
+| `html-unused-props`    | warning: a prop no element references                          |
 | `html-foster-parented` | warning: a component element moved out of a table              |
 
 Errors are `build-invalid` failures with the repository-relative file, line,
@@ -185,34 +193,37 @@ title: Account home
 description: The account landing screen.
 tags: [account]
 useCasePaths: [account/sign-in]
-data:
+props:
   user: { name: Ada, plan: pro }
+  renews: true
 variants:
-  - slug: empty
-    title: Account home, empty
-    data:
+  - slug: free
+    title: Account home, free plan
+    props:
       user: { name: Ada, plan: free }
+      renews: false
 ---
 
 <ui-header user="$user"></ui-header>
 <main class="account">
-  <h1>Welcome back</h1>
+  <h1>Welcome back, {{user.name}}</h1>
   <ui-button label="Manage billing" to="account/billing"></ui-button>
-  <ui-card tone="info" mokly-viewport="desktop">
+  <ui-card tone="info" mokly-viewport="desktop" mokly-if="$renews">
     <p>Your plan renews on 1 November.</p>
   </ui-card>
 </main>
 ```
 
 The entry `account/home` renders at both viewports with `ui-header`,
-`ui-button`, and `ui-card` resolved from the registry; `account/home/empty` is
-its variant with the replaced `user` data. The card's paragraph fills its
-`children` slot. Substitution with `{{…}}` belongs to component bodies; in a
-screen body it is ordinary text.
+`ui-button`, and `ui-card` resolved from the registry; `account/home/free` is
+its variant with the replaced props, and its card is removed because `renews`
+is false. The inferred schema has `user` as an object and `renews` as a
+`boolean`. The card's paragraph fills its `children` slot.
 
 ## Related Docs
 
 - [HTML components](./mokly-html-components.md)
+- [Entry props and variants](./mokly-entry-props.md)
 - [Paths, roots, and identity](./mokly-paths.md)
 - [Entry modules](./mokly-entry-modules.md) for the JavaScript form
 - [Rust core architecture](../architecture/rust-core.md)

@@ -31,7 +31,8 @@ two verbs `serve` and `build`, caches outside the repository, the enclosing
 scope state in render requests, the sidecar's `describe` call, and frozen
 wording for the last retired-page targets (Decisions 14 to 16), then the
 definition handle and component entries for Storybook stories (Decisions 17
-and 18).
+and 18), and one variant model for every kind (Decision 19), which added the
+entry props contract as the sixth new page.
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
@@ -130,13 +131,24 @@ more than re-deriving the behaviour from the requirements.
     the state at its position, which the core applies as the innermost scope
     of the slot content, and the core applies no outer scope to a fragment.
 17. Handles (2026-10-13): `describe` returns every definition with a handle,
-    the file path plus the export name, and a screen variant adds its slug
-    after a slash; `renderScreen` and `renderComponent` name a definition by
-    its handle, and the fragment key holds the handle or the story id.
+    the file path, `#`, and the export name; `renderScreen` and
+    `renderComponent` name a definition by its handle and pass the props, and
+    the fragment key holds the handle or the story id. Amended the same day
+    under Decision 19: a variant is a props set and has no handle of its own.
 18. Stories (2026-10-13): a stories file becomes one component entry at the
     path derived from the file, and each story becomes a variant of it with
-    its `args` as props; `argTypes` supply the schema and controls when
-    present. The read model and the viewer need no story kind.
+    its `args` as props; `argTypes` declare the part of the schema they cover
+    and Decision 19 infers the rest. The read model and the viewer need no
+    story kind.
+19. One variant model (2026-10-13): every screen and component is a render
+    over props with `propSchema`, `props`, and optional `variants` whose
+    props replace top-level keys; the entry's own view renders its props;
+    components need no variant and their page shows the own props first; a
+    schema that is not declared is inferred from the saved props, and
+    non-data values are excluded with a warning; controls derive from the
+    schema; `defineScreen` takes `render(props)`; HTML screen bodies gain
+    `{{name}}` substitution and the boolean `mokly-if` attribute and nothing
+    more; read model v7 gives screens the component prop fields.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
@@ -169,6 +181,7 @@ definitions and frozen wording for the two remaining retired-page targets, then
 widened `describe` to every definition kind and the story inventory, fixed
 the `ignoreScope` values as `enabled` and `disabled`, chose the definition
 handle for render requests, and made Storybook stories component variants.
+The same day the user normalised variants to one model for every kind.
 
 **Architecture:**
 
@@ -188,7 +201,8 @@ handle for render requests, and made Storybook stories component variants.
 - Screens and components can be HTML files with YAML front matter. The format
   adopts the decisions of the HTML screens plan on branch
   `calummoore/yaml-vs-html-screens` (front matter keys, custom element names,
-  kebab-case attributes coerced through prop schemas, `$name` data references,
+  kebab-case attributes coerced through prop schemas, `$name` prop references,
+  `{{name}}` substitution and `mokly-if` in screen bodies,
   named slots, `mokly-viewport`, variants, `mock:` links, ignore markers, and
   exact diagnostics) and adds HTML components: a front matter block with the
   element name, prop schema, and slots, and a body with attribute and text
@@ -367,8 +381,10 @@ At completion `mokly build` validates, renders HTML screens and components
 into the bounded render cache, and reports diagnostics; it writes its output
 from Milestone 12.
 
-- [ ] Implement HTML components in `mokly-html`: prop schemas, scalar coercion,
-      `$name` data references, named slots, attribute and text substitution,
+- [ ] Implement HTML components and the entry props model in `mokly-html`:
+      prop schemas and inference, props-driven variants, scalar coercion,
+      `$name` prop references, `mokly-if`, named slots, attribute and text
+      substitution in component and screen bodies,
       `mokly-viewport`, `mokly-instance`, and the component registry with the
       reserved `mokly-` prefix.
 - [ ] Implement screen composition: viewports, colour schemes, stylesheet
@@ -406,7 +422,10 @@ sidecar exists only to render the viewer shell.
 Tags: ui
 
 - [ ] Update the viewer's data readers and validators to the generated read
-      model v7 types; no presentation change.
+      model v7 types.
+- [ ] Show a component's own props before its variants and offer the derived
+      controls on screens, under the entry props contract; no other
+      presentation change.
 - [ ] Run the viewer suite and the hydration routes against the Milestone 6
       server.
 - [ ] Commit.
@@ -420,7 +439,8 @@ through the sidecar, and the example catalogue renders again.
       10, the module graph report, the consumer renderer module, React
       resolution from the consumer, and the optional consumer PostCSS worker.
 - [ ] Implement component, screen, and story renders that return a fragment
-      plus the styles the render produced; implement the fragment cache in
+      plus the styles the render produced, with `defineScreen` rendering over
+      props and schema inference for screens and stories; implement the fragment cache in
       Rust keyed by bundle generation, handle, props, viewport, scheme, and
       the enclosing ignore scope; slot placeholders report their scope state;
       a stories file is a component entry whose stories are its variants.
@@ -535,11 +555,6 @@ Tags: ui
       re-review once, and report the rest.
   - Open from the review of commit 2a068ff5, report under
     `.context/rust-rebuild/review-2026-10-13-handles.md`:
-  - 1: story `args` as variant props contradict the closed-schema and
-    plain-data rules of the props contract; define the schema inference
-    and the `argTypes` mapping.
-  - 2: a story variant's title and the other required entry fields are
-    undefined.
   - 3: the handle is ambiguous for an array export that holds more than one
     definition.
   - Observation: the sidecar has no render method for a `definePage` page.

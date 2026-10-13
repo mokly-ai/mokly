@@ -34,9 +34,10 @@ rules. Keys:
 | `relatedDocs`  | string list      | related document links                                              |
 | `dependencies` | string list      | declared files or directories                                       |
 | `colorSchemes` | string list      | non-empty subset including `light`                                  |
-| `props`        | map              | prop name to schema; see Props                                      |
+| `propSchema`   | map, required    | prop name to schema; see Props                                      |
+| `props`        | map              | the component's own prop values, rendered first on its page         |
 | `slots`        | string list      | declared slot names; `children` must be declared to accept children |
-| `variants`     | list, required   | at least one saved variant; see Variants                            |
+| `variants`     | list             | saved variants; see Variants                                        |
 
 `element` follows the custom element name grammar: lowercase ASCII, starts
 with a letter, contains at least one hyphen, and is none of the names the HTML
@@ -46,11 +47,11 @@ reserved for Mokly.
 
 ## Props
 
-`props` maps each prop name to a schema with the shape of the
+`propSchema` maps each prop name to a schema with the shape of the
 [normative prop schema](./mokly-component-props.md#normative-schema) in YAML:
 
 ```yaml
-props:
+propSchema:
   label: { kind: string, minLength: 1 }
   tone: { kind: enum, values: [primary, secondary] }
   disabled: { kind: boolean, optional: true }
@@ -91,7 +92,9 @@ Each `variants` entry declares `slug`, `title`, `props`, and may declare
 schema. `slots` maps declared slot names to HTML fragments that fill them on
 the variant's page. A variant flattens into an entry of kind `component` at
 the parent's path plus the slug, parent first, under the
-[variant contract](./mokly-variants.md).
+[variant contract](./mokly-variants.md). Variants are optional: the
+component's own `props` render first on its page, under the
+[entry props contract](./mokly-entry-props.md).
 
 ## Rendering And Ownership
 
@@ -105,15 +108,15 @@ its supplier as owner. A JavaScript component used from an HTML screen renders
 through the [sidecar](./mokly-sidecar.md); the binary reads the fragment's
 markers into the same regions.
 
-A component's own page renders each variant with the component as the root
-instance, at every viewport and colour scheme, with the configured stylesheets.
+A component's own page renders the component's own props and then each
+variant, each with the component as the root instance, at every viewport and
+colour scheme, with the configured stylesheets.
 
 ## Diagnostics
 
 Errors use the [HTML screen codes](./mokly-html-screens.md#diagnostics) with
-the component file, line, and column. Two conditions are specific to
-components: a `variants` list that is empty or missing fails with
-`html-front-matter`, and a variant whose `props` the schema rejects fails with
+the component file, line, and column. One condition is specific to
+components: `props`, or a variant's `props`, that the schema rejects fail with
 `html-attribute` naming the variant slug and the property path.
 
 ## Example
@@ -126,10 +129,11 @@ element: ui-button
 title: Button
 description: The primary action control.
 tags: [ui]
-props:
+propSchema:
   label: { kind: string, minLength: 1 }
   tone: { kind: enum, values: [primary, secondary] }
   disabled: { kind: boolean, optional: true }
+props: { label: Save, tone: primary }
 slots: [children]
 variants:
   - slug: primary
@@ -149,11 +153,12 @@ variants:
 Used from a screen as `<ui-button label="Save" tone="primary"></ui-button>`,
 it renders `<button class="btn btn-primary" type="button"><span
 class="btn-label">Save</span></button>` as an ownership region. The entry
-`components/ui-button` has the variants `components/ui-button/primary` and
-`components/ui-button/disabled`.
+`components/ui-button` renders its own props first and has the variants
+`components/ui-button/primary` and `components/ui-button/disabled`.
 
 ## Related Docs
 
+- [Entry props and variants](./mokly-entry-props.md)
 - [HTML screens, pages, and use cases](./mokly-html-screens.md)
 - [Registered components](./mokly-components.md) for the JavaScript form
 - [Component prop schema](./mokly-component-props.md)

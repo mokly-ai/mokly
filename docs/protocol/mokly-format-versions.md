@@ -12,27 +12,27 @@ compatibility reader, and no reader for an earlier number exists.
 
 ## Version Inventory
 
-| Boundary                                | Version                   | Reason and reader                                                                                       |
-| --------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Private generated manifest              | none                      | Retired: the catalogue model lives in memory and the read model is its public form; nothing is written. |
-| Public complete/scoped catalogue        | 7                         | Follows the source-rendered catalogue model and review v8 evidence; public/scoped readers require 7.    |
-| Review result                           | 8                         | Tree materiality, owner-attributed rule and resource evidence, moves; producers and decoders require 8. |
-| Catalogue change snapshot               | 4                         | Current private path/move/removal evidence paired with review v8 and the base commit.                   |
-| Live catalogue index                    | `live-index-3`            | Source-rendered entry and folder shapes with source-only metadata.                                      |
-| Shell bootstrap envelope                | 3                         | Required version plus path-based view, catalogue v7 or external reference, and delivery v5.             |
-| Baseline completion marker              | none                      | Retired: both sides render from sources; no baseline cache exists.                                      |
-| Static delivery descriptor              | 5                         | Unchanged: path/index canonical URLs and the current namespace.                                         |
-| Private live capability descriptor      | 2                         | Unchanged: path-keyed workspace/request identities.                                                     |
-| Inspector wire envelope                 | 2                         | Unchanged: navigation carries `screenPath`; both peers require 2 before message fields.                 |
-| Removed page/document preview metadata  | 3                         | Unchanged `{schemaVersion,baseRef,baseCommit,path}` shape.                                              |
-| Export ownership                        | 3                         | Unchanged exact `{path,sha256,size}` inventory, bounds and namespace; written by `build`.               |
-| Upload metadata                         | 2                         | Unchanged strict envelope and `mokly-viewer/` comparison namespace; Mokly Cloud implements it.          |
-| Plan response/exchange                  | 1                         | Unchanged content-delta fields, expiry and digest accounting; Mokly Cloud implements it.                |
-| Navigation disclosure storage           | `mokly:nav-disclosure:v4` | Unchanged path-keyed folder/variant storage.                                                            |
-| Export transaction marker               | 2                         | Unchanged `{schemaVersion,output}` basename ownership shape; written by `build`.                        |
-| Verification process-owner records      | 1                         | Unchanged PID/token/process-lifetime shape.                                                             |
-| Browser module inventory                | 1                         | Unchanged exact module-path inventory shape.                                                            |
-| Timing records and verification reports | 1                         | Unchanged timing/runner evidence shape.                                                                 |
+| Boundary                                | Version                   | Reason and reader                                                                                                                      |
+| --------------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Private generated manifest              | none                      | Retired: the catalogue model lives in memory and the read model is its public form; nothing is written.                                |
+| Public complete/scoped catalogue        | 7                         | Follows the source-rendered catalogue model and review v8 evidence; screens carry props and controls; public/scoped readers require 7. |
+| Review result                           | 8                         | Tree materiality, owner-attributed rule and resource evidence, moves; producers and decoders require 8.                                |
+| Catalogue change snapshot               | 4                         | Current private path/move/removal evidence paired with review v8 and the base commit.                                                  |
+| Live catalogue index                    | `live-index-3`            | Source-rendered entry and folder shapes with source-only metadata.                                                                     |
+| Shell bootstrap envelope                | 3                         | Required version plus path-based view, catalogue v7 or external reference, and delivery v5.                                            |
+| Baseline completion marker              | none                      | Retired: both sides render from sources; no baseline cache exists.                                                                     |
+| Static delivery descriptor              | 5                         | Unchanged: path/index canonical URLs and the current namespace.                                                                        |
+| Private live capability descriptor      | 2                         | Unchanged: path-keyed workspace/request identities.                                                                                    |
+| Inspector wire envelope                 | 2                         | Unchanged: navigation carries `screenPath`; both peers require 2 before message fields.                                                |
+| Removed page/document preview metadata  | 3                         | Unchanged `{schemaVersion,baseRef,baseCommit,path}` shape.                                                                             |
+| Export ownership                        | 3                         | Unchanged exact `{path,sha256,size}` inventory, bounds and namespace; written by `build`.                                              |
+| Upload metadata                         | 2                         | Unchanged strict envelope and `mokly-viewer/` comparison namespace; Mokly Cloud implements it.                                         |
+| Plan response/exchange                  | 1                         | Unchanged content-delta fields, expiry and digest accounting; Mokly Cloud implements it.                                               |
+| Navigation disclosure storage           | `mokly:nav-disclosure:v4` | Unchanged path-keyed folder/variant storage.                                                                                           |
+| Export transaction marker               | 2                         | Unchanged `{schemaVersion,output}` basename ownership shape; written by `build`.                                                       |
+| Verification process-owner records      | 1                         | Unchanged PID/token/process-lifetime shape.                                                                                            |
+| Browser module inventory                | 1                         | Unchanged exact module-path inventory shape.                                                                                           |
+| Timing records and verification reports | 1                         | Unchanged timing/runner evidence shape.                                                                                                |
 
 The frozen backend's accepted output snapshot format has no successor; the
 Rust render graph holds generations in memory without a private IPC format.

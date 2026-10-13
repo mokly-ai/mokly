@@ -7,7 +7,9 @@ Read model v6 is the shape the frozen TypeScript backend serves. The
 v7 below, which follows the source-rendered catalogue model and review v8; no reader accepts an
 earlier number. `ResourceEvidence` follows the
 [CSS evidence schema](./mokly-css-attribution-membership.md) with the owner
-field of the [comparison contract](./mokly-comparison.md).
+field of the [comparison contract](./mokly-comparison.md). Screens and
+component parents carry `propSchema`, `props`, `controls`, and their own
+`views` under the [entry props contract](./mokly-entry-props.md).
 
 ## Supported Formats
 

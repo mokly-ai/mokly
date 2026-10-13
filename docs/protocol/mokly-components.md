@@ -17,7 +17,10 @@ name with the `mokly-` prefix. It
 registers the component for [HTML screens](./mokly-html-screens.md). The name
 must be unique across HTML and JavaScript components; a collision fails the
 build and names both files. An `element` whose schema declares `to`,
-`fragment`, `slot`, or `moklyViewport` fails registration.
+`fragment`, `slot`, or `moklyViewport` fails registration. The plan also makes
+`variants` optional, adds an optional `props` map for the component's own
+view, which its page shows first, and derives `controls` from the schema when
+none are declared, under the [entry props contract](./mokly-entry-props.md).
 
 The public `defineComponent` API, saved variants, ownership attribution,
 explorer, inspection, and local controls are implemented. The

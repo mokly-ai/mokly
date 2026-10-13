@@ -38,6 +38,7 @@ unsupported number before interpreting content.
 - [Render sidecar](./mokly-sidecar.md)
 - [HTML screens, pages, and use cases](./mokly-html-screens.md)
 - [HTML components](./mokly-html-components.md)
+- [Entry props and variants](./mokly-entry-props.md)
 - [Tree comparison and Changes](./mokly-comparison.md)
 - [Rust rebuild procedures](./rust-rebuild-procedures.md)
 
