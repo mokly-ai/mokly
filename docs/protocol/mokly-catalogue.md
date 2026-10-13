@@ -40,8 +40,9 @@ Export writes `mokly-viewer/catalogue.json` at the artifact root. Serve exposes
 GET/HEAD `/mokly-viewer/catalogue.json` with `application/json; charset=utf-8`.
 Component value types follow the [manifest](./mokly-component-manifest.md),
 [props](./mokly-component-props.md), [controls](./mokly-component-controls.md)
-and [instance](./mokly-instances.md) contracts. The viewer exports these types
-without a CLI dependency.
+and [instance](./mokly-instances.md) contracts; under v7 the prop schema
+follows the [entry props contract](./mokly-entry-props.md). The viewer exports
+these types without a CLI dependency.
 
 ```ts
 import type {

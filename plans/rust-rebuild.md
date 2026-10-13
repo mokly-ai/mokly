@@ -154,9 +154,9 @@ more than re-deriving the behaviour from the requirements.
 20. Prop schemas (2026-10-13): every prop schema, declared or inferred, is a
     JSON Schema 2020-12 object schema under the strict profile of the entry
     props contract: `type`, closed `properties` with `required`, `enum`,
-    `const`, `oneOf` of constants, `items`, the string and number bounds,
-    `anyOf`, and annotations; `default`, `$ref`, and every other keyword are
-    rejected. One validator on the `jsonschema` crate checks schemas and
+    `const`, `oneOf` of constants, `items` with the array bounds, the string
+    and number bounds, `anyOf`, `title`, `description`, and `$schema`;
+    `default`, `$ref`, and every other keyword are rejected. One validator on the `jsonschema` crate checks schemas and
     props in Rust; the viewer validates control input with a profile
     validator that generates no code; `json-schema-to-ts` derives the
     authoring types. Inference emits the profile, with a `type` list for
@@ -580,8 +580,20 @@ Tags: ui
   - 4: which profile keywords an `argTypes` entry declares, and which
     entries exclude a key, is undefined.
   - 9: whether `mokly-if` applies in HTML component bodies is undecided.
-  - 13: six frozen pages that state the replaced variant rules carry no
-    Delivery Status pointer; three of them sit at their line cap.
+  - 13: five frozen pages that state the replaced variant rules carry no
+    Delivery Status pointer (authoring, controls, navigation, viewer, design
+    components); three of them sit at their line cap.
+  - Open from the review of commit 28242db9, report under
+    `.context/rust-rebuild/review-2026-10-13-json-schema.md`:
+  - 1: the profile does not close objects as written; decide whether
+    `additionalProperties: false` is required on every object schema or
+    inserted by the core.
+  - 2: inference reads a variant's own map, so a key the entry always
+    supplies becomes optional; decide whether inference reads merged props.
+  - 3: a derived number control's step from `multipleOf` disagrees with the
+    controls contract's step base; decide the rule.
+  - 8: derived select options have no label rule for `enum` values and
+    untitled `oneOf` members.
 
 ## Post-merge follow-up (non-blocking)
 

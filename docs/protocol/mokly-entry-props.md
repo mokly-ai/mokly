@@ -48,17 +48,18 @@ the kind's schema diagnostic: `html-front-matter` for an HTML file, the
 component diagnostics of the [components contract](./mokly-components.md)
 for a JavaScript definition.
 
-| Keyword                                                      | Rule                                                                                                                  |
-| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `type`                                                       | `string`, `number`, `integer`, `boolean`, `null`, `object`, `array`, or a list of them; the root is `object`          |
-| `properties`, `required`                                     | the declared props; every object is closed, so `additionalProperties` may only be `false` and an undeclared key fails |
-| `enum`, `const`, `oneOf`                                     | JSON primitives; `oneOf` holds `const` members only, each with an optional `title`                                    |
-| `items`, `minItems`, `maxItems`                              | arrays are dense; an absent `items` accepts any JSON value                                                            |
-| `minLength`, `maxLength`, `minimum`, `maximum`, `multipleOf` | the string and number bounds                                                                                          |
-| `anyOf`                                                      | a union; any matching member accepts the value unchanged                                                              |
-| `title`, `description`, `$schema`                            | annotations; `$schema` may only name draft 2020-12                                                                    |
+| Keyword                                                      | Rule                                                                                                                                                                                                                 |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`                                                       | `string`, `number`, `integer`, `boolean`, `null`, `object`, `array`, or a list of them; the root is `object`                                                                                                         |
+| `properties`, `required`                                     | the declared props, on `object` only; every object is closed, so `additionalProperties` may only be `false` and an undeclared key fails; `required` names declared properties, each once                             |
+| `enum`, `const`, `oneOf`                                     | JSON primitives; `oneOf` holds `const` members only, each with an optional `title`                                                                                                                                   |
+| `items`, `minItems`, `maxItems`                              | on `array` only; arrays are dense, and an absent `items` accepts any JSON value                                                                                                                                      |
+| `minLength`, `maxLength`, `minimum`, `maximum`, `multipleOf` | the string bounds on `string` and the number bounds on `number` or `integer`; finite JSON numbers, never negative zero, a lower bound never above its upper bound; lengths and item counts are non-negative integers |
+| `anyOf`                                                      | a union; any matching member accepts the value unchanged                                                                                                                                                             |
+| `title`, `description`, `$schema`                            | annotations; `$schema`, on the root only, is exactly `https://json-schema.org/draft/2020-12/schema`                                                                                                                  |
 
-`default`, `$ref`, `$defs`, `if`, `allOf`, `not`, `pattern`, `format`,
+Every schema declares `type`, or one of `enum`, `const`, `oneOf`, and
+`anyOf`. `default`, `$ref`, `$defs`, `if`, `allOf`, `not`, `pattern`, `format`,
 `patternProperties`, `dependentSchemas`, and every other keyword are rejected,
 so a schema is self-contained, declares no default, and coerces nothing. Props
 are plain JSON: a function, a React element, a class instance, a non-finite
@@ -88,7 +89,7 @@ is the schema, and props it rejects fail.
 | Kind                   | Render                                                                                                                                           | Props                                                                                                                                                                           |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | React screen           | `render(props)`, or `mobile(props)` and `desktop(props)`, in `defineScreen`                                                                      | `propSchema`, `props`, `variants`, and `controls` in the input                                                                                                                  |
-| React component        | `render(props)` in `defineComponent`                                                                                                             | as today, plus optional `props` and optional `variants`                                                                                                                         |
+| React component        | `render(props)` in `defineComponent`                                                                                                             | `propSchema` under the profile, `slots`, optional `controls`, optional `props`, and optional `variants`                                                                         |
 | HTML screen            | the body, with `$name` attribute references, `{{name}}` substitution, and `mokly-if`, under the [HTML screens contract](./mokly-html-screens.md) | front matter `propSchema`, `props`, and `variants`                                                                                                                              |
 | HTML component         | the body, with `{{name}}` substitution and slots, under the [HTML components contract](./mokly-html-components.md)                               | front matter `propSchema`, `props`, and `variants`                                                                                                                              |
 | Storybook stories file | the meta's component, through the [render sidecar](./mokly-sidecar.md#storybook)                                                                 | the meta's `args` are the props, `argTypes` declare the part of the schema they cover, and each story is a variant whose slug is its export name and whose props are its `args` |
@@ -122,7 +123,7 @@ slots default to the parent's; its supplied slots default to empty.
   contract.
 - In a screen body, a `mokly-if`, `$name`, or `{{name}}` reference to a prop
   that the schema does not declare fails with `html-props`, as does a
-  `mokly-if` reference to a prop whose kind is not `boolean`; a component
+  `mokly-if` reference to a prop whose schema `type` is not exactly `boolean`; a component
   body keeps its own rules. An absent optional prop removes a
   `mokly-if` element and omits a `$name` attribute.
 
@@ -133,8 +134,10 @@ Read model v7 gives every screen and component the same prop fields in the
 which holds the entry's own props or a variant's merged props, and
 `controls`. A component parent has its own `views`, rendered from its own
 props, and an empty `suppliedSlots`; `variantOf` is present exactly on the
-variants of either kind. The catalogue page's block is the one shape until
-the generated TypeScript types of the model crate replace it.
+variants of either kind. `propSchema` is the declared or inferred schema,
+unchanged, as a JSON Schema object under the profile; the viewer exports its
+type as `PropSchema`. The catalogue page's block is the one shape until the
+generated TypeScript types of the model crate replace it.
 
 ## Related Docs
 
