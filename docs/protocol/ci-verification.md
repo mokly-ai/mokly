@@ -232,6 +232,6 @@ complete gate.
 The cache and audit continuation is [Dependency Cache And Security](./ci-verification-security.md).
 
 Global setup currently prepares one baseline and cache for isolated fixture
-copies. The [fixture preparation contract](./ci-fixture-preparation.md) defines
-the approved replacement with committed-output fixtures and keeps the 600-second
-limit. Existing workflow and audit contracts remain in force.
+copies. The [fixture preparation contract](./ci-fixture-preparation.md) recorded a
+replacement with committed-output fixtures that is frozen with the TypeScript
+backend and never landed; the 600-second limit stays. Existing workflow and audit contracts remain in force.

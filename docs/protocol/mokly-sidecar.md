@@ -49,21 +49,33 @@ sidecar run in order; the pool spreads independent requests across sidecars.
 
 ## Methods
 
-| Method            | Params                                                                               | Result                              |
-| ----------------- | ------------------------------------------------------------------------------------ | ----------------------------------- |
-| `hello`           | none                                                                                 | `{ version }`                       |
-| `bundle`          | entry files, renderer module, stories files, module resolution settings, source root | `{ generation, modules, warnings }` |
-| `renderScreen`    | generation, export, viewport, colour scheme                                          | render result                       |
-| `renderComponent` | generation, export, props, slot placeholders, viewport, colour scheme                | render result                       |
-| `renderStory`     | generation, story id, args, viewport, colour scheme                                  | render result                       |
-| `renderShell`     | catalogue read model bytes, view, context                                            | `{ html }`                          |
-| `processCss`      | PostCSS module, source path, text                                                    | `{ text, dependencies }`            |
-| `dispose`         | generation                                                                           | nothing                             |
-| `shutdown`        | none                                                                                 | nothing                             |
+| Method            | Params                                                                                        | Result                              |
+| ----------------- | --------------------------------------------------------------------------------------------- | ----------------------------------- |
+| `hello`           | none                                                                                          | `{ version }`                       |
+| `bundle`          | entry files, renderer module, stories files, module resolution settings, source root          | `{ generation, modules, warnings }` |
+| `describe`        | generation                                                                                    | `{ components }`                    |
+| `renderScreen`    | generation, export, viewport, colour scheme                                                   | render result                       |
+| `renderComponent` | generation, export, props, slot placeholders, viewport, colour scheme, enclosing ignore scope | render result                       |
+| `renderStory`     | generation, story id, args, viewport, colour scheme                                           | render result                       |
+| `renderShell`     | catalogue read model bytes, view, context                                                     | `{ html }`                          |
+| `processCss`      | PostCSS module, source path, text                                                             | `{ text, dependencies }`            |
+| `dispose`         | generation                                                                                    | nothing                             |
+| `shutdown`        | none                                                                                          | nothing                             |
 
 A render result is `{ html, styles, resources, warnings }`: the fragment, the
 CSS rules the render produced in first-appearance order, the non-CSS resource
 records the renderer declared, and build warnings.
+
+## Component Definitions
+
+`describe` evaluates the entry modules of a generation and returns every
+`defineComponent` definition: the export, its `element` when declared, the
+prop schema, the slots, the controls, and the saved variants. The binary builds
+the component registry from these definitions and the HTML components, applies
+the uniqueness and reserved-name rules of the
+[components contract](./mokly-components.md), and fails registration naming
+both files on a collision. A module that cannot be evaluated returns
+`bundle-failed` with the module and the diagnostic text.
 
 ## Bundling
 
@@ -107,17 +119,21 @@ A fragment carries the comment markers of the
 [comparison contract](./mokly-comparison.md) for the component instances,
 slots, and ignore regions it contains. `ReviewIgnore` writes an ignore pair; a
 disabled `ReviewIgnoreScope` suppresses the pairs inside it, so no scope marker
-exists. A fragment never emits `mokly-root`; the core attaches the root region
-of a component page itself. The binary reads the markers into tree ownership
-and drops them.
+exists. The `ignoreScope` state of the request seeds the React scope context,
+so nesting across the boundary follows the innermost scope, and the binary
+applies no outer scope to the fragment. A fragment never emits `mokly-root`;
+the core attaches the root region of a component page itself. The binary reads
+the markers into tree ownership and drops them.
 
 ## Slots For JavaScript Components
 
 When an HTML screen passes slot content to a JavaScript component, the sidecar
 renders each slot as the placeholder element
-`<mokly-slot name="<slot>" token="<token>"></mokly-slot>` at the position the
-component renders its children. The binary replaces the placeholder with the
-slot's HTML after the fragment returns. A placeholder that the component did
+`<mokly-slot name="<slot>" token="<token>" ignore-scope="<state>"></mokly-slot>`
+at the position the component renders its children, with the scope state at
+that position. The binary replaces the placeholder with the slot's HTML after
+the fragment returns, with the placeholder's state as the innermost scope of
+that content. A placeholder that the component did
 not render fails the screen with `html-slot`.
 
 ## Storybook

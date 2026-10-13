@@ -22,11 +22,14 @@ removes that test. On 2026-10-12 the branch was rebased onto the
 from the removed `docs/dev` directory to
 [the protocol page](../docs/protocol/rust-rebuild-procedures.md). Later that day
 the user withdrew the committed generated tree: both comparison sides render
-from sources, export is a plain output, and the Milestone 1 contracts were
+from sources, the static output is a plain output, and the Milestone 1 contracts were
 revised to match (Decisions 11 to 13). The protocol index then moved eight
 generated-tree and baseline pages to retired and the CSS attribution and
 Markdown documents pages to rewritten; it lists 72 kept, 75 rewritten, and 21
-retired pages beside the five new contracts.
+retired pages beside the five new contracts. On 2026-10-13 the user chose the
+two verbs `serve` and `build`, caches outside the repository, the enclosing
+scope state in render requests, the sidecar's `describe` call, and frozen
+wording for the last retired-page targets (Decisions 14 to 16).
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
@@ -86,13 +89,14 @@ more than re-deriving the behaviour from the requirements.
     and Rolldown for that bundling and records why.
 11. No committed generated tree (2026-10-12). Both sides of a comparison
     render from sources: the head from the working tree, the base from the
-    base commit's Git tree, through one build graph and a bounded render
+    base commit's Git tree, through one render graph and a bounded render
     cache; both sides use the current Mokly version. No command writes into
-    the repository. Export is a plain output that nothing reads back, and
-    publish uploads it. This withdraws the earlier requirement to keep
+    the repository. The static output of `build` is a plain output that
+    nothing reads back, and `publish` uploads it. This withdraws the earlier requirement to keep
     tracked and rebuilt output.
-12. React and Storybook components at the base follow three dependency tiers
-    (2026-10-12): an identical lockfile uses the working tree's
+12. React and Storybook components, React screens, the renderer module, and
+    consumer PostCSS at the base follow three dependency tiers (2026-10-12,
+    widened 2026-10-13): an identical lockfile uses the working tree's
     dependencies; a different lockfile installs the base's dependencies into
     a bounded content-addressed cache with lifecycle scripts disabled under a
     time limit; an impossible install uses the working tree's dependencies
@@ -103,6 +107,25 @@ more than re-deriving the behaviour from the requirements.
     reserved for element names in authored HTML and for comment names in
     fragments. A changed style rule that matches no element produces no
     evidence record.
+14. Two verbs (2026-10-13): `serve` and `build`. `build` validates the
+    catalogue, renders every view, fails on errors and, with `--strict`, on
+    warnings, and writes the static output into the directory `--out` names,
+    `mokly-static/` at the repository root by default, which Git must ignore.
+    `publish` builds into its own directory and uploads. There is no `check`
+    and no `export`; a validation-only run is a build to a temporary
+    directory.
+15. Caches (2026-10-13): the render cache is process memory. The base-side
+    extraction cache and the dependency install cache live outside the
+    repository, in the operating system's cache directory under a key derived
+    from the repository path, bounded by bytes and evicted least recently
+    used; the terminal names the directory, and deleting it is safe. No
+    command writes into the repository except `build` into its output
+    directory.
+16. Scope state (2026-10-13): the core sends the enclosing ignore scope state
+    with each component render, the sidecar seeds its React scope context
+    from it, the fragment cache key includes it, each slot placeholder reports
+    the state at its position, which the core applies as the innermost scope
+    of the slot content, and the core applies no outer scope to a fragment.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
@@ -129,21 +152,24 @@ pointers; the pull request description writes `{target}` for the placeholder.
 Later that day the user chose render-time scope resolution with comment
 markers only in sidecar fragments, the suspension principle for every
 new-format gap, no evidence record for a rule that matches nothing, and the
-one-word version repair on the component review page.
+one-word version repair on the component review page. On 2026-10-13 the user
+also chose the sidecar's `describe` call as the source of JavaScript component
+definitions and frozen wording for the two remaining retired-page targets.
 
 **Architecture:**
 
 - The `mokly` executable is a Rust binary shipped in `@mokly/native-<target>`
   platform packages, resolved by a small Node shim in `@mokly/mokly`. The
   binary owns discovery, the catalogue model, HTML composition, stylesheets,
-  document assembly, a content-addressed build graph with parallel scheduling,
-  watch, the server, comparison, export, and publish. No command writes into
-  the repository; export writes its own output directory.
+  document assembly, a content-addressed render graph with parallel scheduling,
+  watch, the server, comparison, the static build, and publish. No command
+  writes into the repository; `build` writes its output directory.
 - A pool of Node sidecars renders only JavaScript: a React component with
   props, a React screen, a Storybook story through portable stories, and the
-  viewer shell for Serve and export. A sidecar returns an HTML fragment plus
+  viewer shell for Serve and `build`. A sidecar returns an HTML fragment plus
   the styles that render produced. The binary memoizes every fragment by the
-  hash of bundle generation, export, props, viewport, and scheme, and caches
+  hash of bundle generation, export, props, viewport, scheme, and enclosing
+  ignore scope, and caches
   shell HTML by route and catalogue revision.
 - Screens and components can be HTML files with YAML front matter. The format
   adopts the decisions of the HTML screens plan on branch
@@ -305,8 +331,9 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
 ## Milestone 4: Catalogue model and discovery
 
 At completion `mokly build` discovers a catalogue of HTML screens, HTML
-components, Markdown documents, pages, and use cases, validates it, and
-builds the catalogue model without rendering.
+components, Markdown documents, pages, and use cases, validates it, builds the
+catalogue model, and reports diagnostics; rendering and output follow in later
+milestones.
 
 - [ ] Implement roots, default globs, folder records, path identity, variants,
       moves hints, and the diagnostics of the identity contracts in
@@ -322,9 +349,9 @@ builds the catalogue model without rendering.
 
 ## Milestone 5: HTML rendering and the render cache
 
-At completion `mokly build` and `mokly check` render HTML screens and
-components into the bounded render cache and report diagnostics; nothing is
-written to the repository.
+At completion `mokly build` validates, renders HTML screens and components
+into the bounded render cache, and reports diagnostics; it writes its output
+from Milestone 12.
 
 - [ ] Implement HTML components in `mokly-html`: prop schemas, scalar coercion,
       `$name` data references, named slots, attribute and text substitution,
@@ -335,8 +362,9 @@ written to the repository.
       their scopes resolved, and the ownership annotations the comparison
       relies on.
 - [ ] Implement the render cache: content keys, the byte bound, eviction, and
-      the source tree trait over the working tree and Git trees; the check
-      command; and the closure of referenced assets for Serve and export.
+      the source tree trait over the working tree and Git trees; the `build`
+      validation run; and the closure of referenced assets for Serve and the
+      static output.
 - [ ] Implement stylesheet handling on `lightningcss`: imports, assets, and
       per-root bundles.
 - [ ] Port the example catalogue's HTML-only parts and add HTML fixtures; run
@@ -379,9 +407,10 @@ through the sidecar, and the example catalogue renders again.
       resolution from the consumer, and the optional consumer PostCSS worker.
 - [ ] Implement component, screen, and story renders that return a fragment
       plus the styles the render produced; implement the fragment cache in
-      Rust keyed by bundle generation, export, props, viewport, and scheme.
-- [ ] Register JavaScript components by `element` from `defineComponent`, with
-      the uniqueness rule, the reserved `mokly-` prefix, and the reserved-prop
+      Rust keyed by bundle generation, export, props, viewport, scheme, and
+      the enclosing ignore scope; slot placeholders report their scope state.
+- [ ] Register JavaScript components by `element` from `defineComponent`,
+      through the sidecar's `describe` call, with the uniqueness rule, the reserved `mokly-` prefix, and the reserved-prop
       failure of the components contract.
 - [ ] Implement live prop editing in Serve through the same render path.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
@@ -399,7 +428,7 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 - [ ] Implement Git access in `mokly-git`: merge base, changed paths, bounded
       blob and tree reads, and archive extraction of a commit.
 - [ ] Implement base-side rendering: the base commit's Git tree as a source
-      tree through the build graph, on-demand extraction of the base commit into
+      tree through the render graph, on-demand extraction of the base commit into
       a cache keyed by commit, the three dependency tiers of Decision 12 with
       the bounded install cache, scripts disabled, the time limit, and the
       `base-dependencies` warning.
@@ -427,9 +456,9 @@ Tags: ui
 - [ ] Run the viewer suite against Milestone 9 output.
 - [ ] Commit.
 
-## Milestone 11: Watch and incremental builds
+## Milestone 11: Watch and incremental rendering
 
-- [ ] Implement the content-addressed build graph: inputs hashed per entry,
+- [ ] Implement the content-addressed render graph: inputs hashed per entry,
       invalidation from the sidecar's module graph, HTML component
       dependencies, stylesheet dependencies, and PostCSS reports.
 - [ ] Implement the watcher with the denial rules, rebuild on change, bundle
@@ -437,16 +466,18 @@ Tags: ui
 - [ ] Behaviour tests that count rebuilds and renders per change.
 - [ ] Commit.
 
-## Milestone 12: Export and publish
+## Milestone 12: Static build and publish
 
-- [ ] Implement export in `mokly-export`: the complete static catalogue,
-      delivery descriptors, the ownership marker, and the transaction with
-      backup, exclusive rename, and rollback.
-- [ ] Implement publish through the unchanged exchange v1: plan, blobs,
+- [ ] Implement the static output of `mokly build` in `mokly-static`: the
+      complete static catalogue with the shell pages, delivery descriptors,
+      the ownership marker, the default `mokly-static/` output directory, and
+      the transaction with backup, exclusive rename, and rollback.
+- [ ] Implement publish, which builds into its own directory first, through
+      the unchanged exchange v1: plan, blobs,
       complete, retries, accounting, the clean-checkout and uncommitted
       changes rules, and the upload validation fixtures.
 - [ ] Restore the preview deployment workflow on the new CLI.
-- [ ] Write the export and publish guides.
+- [ ] Write the build and publish guides.
 - [ ] Commit.
 
 ## Milestone 13: Release packaging
@@ -466,7 +497,7 @@ Tags: ui
       dependency install time limit, and the render and install cache bounds
       in the timings contract once approved.
 - [ ] Run the fixture, the bookfolio catalogue, and the Mokly Cloud catalogue
-      through build, serve, Changes, watch, and export; save the evidence
+      through build, serve, Changes, and watch; save the evidence
       under `.context/rust-rebuild/`.
 - [ ] Complete the gap sweep: every triage decision is in a spec or recorded
       as an accepted difference for the release note.
@@ -483,17 +514,6 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
-  - Open from the review of commit c0d01ac4, report under
-    `.context/rust-rebuild/review-2026-10-12-source-rendering.md`:
-  - 2: `mokly build` and `mokly check` have no distinct meaning without a
-    generated tree; fold them or define the difference.
-  - 3: the render, extraction, and dependency caches have no stated location,
-    and the no-writes rule needs the export exception.
-  - 4: ignore-scope precedence across the sidecar boundary is undefined.
-  - Observation: the sidecar has no method that returns the JavaScript
-    component registry (`element`, prop schema, slots, controls, variants).
-  - Observation: `ci-verification.md` and `mokly-export-ownership.md` still
-    name a retired page as an approved target; the pattern of finding 5.
 
 ## Post-merge follow-up (non-blocking)
 

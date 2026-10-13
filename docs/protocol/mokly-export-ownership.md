@@ -156,6 +156,7 @@ completeness, digest verification, authorization or all upload limits. The
 packed-consumer smoke checks these installed fixtures with an independent
 reader, then verifies an actual published inventory against the extracted bytes.
 
-The approved [refusal contract](./mokly-boundary-results.md#export-refusals)
-names the output folder in every refusal and lists unexpected files when known.
+The [refusal contract](./mokly-boundary-results.md#export-refusals), approved
+for the TypeScript backend and frozen with it unlanded, names the output folder
+in every refusal and lists unexpected files when known.
 It adds no adoption or upgrade path and preserves every existing file.

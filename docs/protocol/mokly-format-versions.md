@@ -25,17 +25,17 @@ compatibility reader, and no reader for an earlier number exists.
 | Private live capability descriptor      | 2                         | Unchanged: path-keyed workspace/request identities.                                                     |
 | Inspector wire envelope                 | 2                         | Unchanged: navigation carries `screenPath`; both peers require 2 before message fields.                 |
 | Removed page/document preview metadata  | 3                         | Unchanged `{schemaVersion,baseRef,baseCommit,path}` shape.                                              |
-| Export ownership                        | 3                         | Unchanged exact `{path,sha256,size}` inventory, bounds and namespace.                                   |
+| Export ownership                        | 3                         | Unchanged exact `{path,sha256,size}` inventory, bounds and namespace; written by `build`.               |
 | Upload metadata                         | 2                         | Unchanged strict envelope and `mokly-viewer/` comparison namespace; Mokly Cloud implements it.          |
 | Plan response/exchange                  | 1                         | Unchanged content-delta fields, expiry and digest accounting; Mokly Cloud implements it.                |
 | Navigation disclosure storage           | `mokly:nav-disclosure:v4` | Unchanged path-keyed folder/variant storage.                                                            |
-| Export transaction marker               | 2                         | Unchanged `{schemaVersion,output}` basename ownership shape.                                            |
+| Export transaction marker               | 2                         | Unchanged `{schemaVersion,output}` basename ownership shape; written by `build`.                        |
 | Verification process-owner records      | 1                         | Unchanged PID/token/process-lifetime shape.                                                             |
 | Browser module inventory                | 1                         | Unchanged exact module-path inventory shape.                                                            |
 | Timing records and verification reports | 1                         | Unchanged timing/runner evidence shape.                                                                 |
 
 The frozen backend's accepted output snapshot format has no successor; the
-Rust build graph holds generations in memory without a private IPC format.
+Rust render graph holds generations in memory without a private IPC format.
 Lock-holder files keep their PID/token identities; do not confuse tokens,
 generation hashes, event revisions or package versions with format versions.
 
@@ -67,7 +67,7 @@ Delivery stays a `valid`/`unsupported-version`/`invalid` classifier.
 Catalogue, bootstrap and review readers use `MoklyVersionError` at their
 version gates. The review gate rejects numeric versions other than 8 before
 content validation; malformed current results keep the plain invalid-review
-error. Export maps invalid/unsupported delivery to its existing
+error. The static build maps invalid/unsupported delivery to the
 `export-invalid` context. Inspector peers reject a mismatched wire version
 before processing navigation. No field renaming or path conversion rescues an
 unsupported payload.

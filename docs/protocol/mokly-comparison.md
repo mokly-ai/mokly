@@ -53,7 +53,10 @@ element inside an ignore region is
 ignored. An ignore scope is resolved while the document is composed: a
 disabled scope suppresses the ignore regions inside it, the innermost scope
 wins, and no scope reaches comparison, as the frozen backend's
-`ReviewIgnoreScope` behaves.
+`ReviewIgnoreScope` behaves. The core sends the enclosing scope state with each
+component render, the sidecar resolves nesting from it, and the core applies no
+outer scope to a fragment; slot content takes the state its placeholder reports
+as its innermost scope.
 
 Formatting clones that the adoption agency algorithm creates and elements that
 the parser implies take their position in the tree; nothing refers to the
@@ -125,15 +128,16 @@ removed-entry presentation keep the rules of the frozen contracts.
 
 The base is the merge base of the configured `review.base` and `HEAD`. The
 head side renders from the working tree. The base side renders from the base
-commit's Git tree through the same build graph, with sources read from blobs;
+commit's Git tree through the same render graph, with sources read from blobs;
 HTML screens, components, and documents need no checkout. Both sides render
 with the current Mokly version, so a Mokly upgrade alone lists no change, and
 the render cache keeps a side's views until their inputs change.
 
 React and Storybook components, React screens, the consumer renderer module,
 and consumer PostCSS at the base need the base's JavaScript on disk. The base
-commit's sources are extracted on demand into a bounded cache keyed by the
-commit, and the sidecar bundles from that directory. Its dependencies follow
+commit's sources are extracted on demand into the bounded cache outside the
+repository that the [architecture page](../architecture/rust-core.md#render-graph)
+names, keyed by the commit, and the sidecar bundles from that directory. Its dependencies follow
 three tiers:
 
 1. The base's lockfile and package manifests equal the working tree's: the
@@ -180,7 +184,7 @@ Entries keep the path-keyed shape of review v7: kind, path, `previousPath` on
 moved pairs, metadata reasons, views, and component variants grouped under
 their parent. Per-rule evidence replaces the offset-bearing inline evidence,
 and every record names its owner. The catalogue change snapshot v4 pairs
-review v8 with the base commit for Serve, export, and publication. The generated
+review v8 with the base commit for Serve, the static build, and publication. The generated
 TypeScript types are the normative shapes.
 
 ## Related Docs

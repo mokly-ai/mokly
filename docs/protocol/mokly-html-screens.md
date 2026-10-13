@@ -70,7 +70,8 @@ HTML and is never interpreted.
 
 A hyphenated element name resolves against the component registry: the
 `element` of an [HTML component](./mokly-html-components.md) or of a
-JavaScript component registered with `element`. A hyphenated name that matches
+JavaScript component registered with `element`, which the sidecar's `describe`
+call reports. A hyphenated name that matches
 no component fails with `html-element`, because rendering it as a plain element
 would silently lose the component. Every element name with the `mokly-`
 prefix is reserved for Mokly: `mokly-ignore` and `mokly-ignore-scope` are
@@ -117,7 +118,10 @@ and any other `mokly-` name fails with `html-element`.
   region of the composed tree under the
   [comparison contract](./mokly-comparison.md). A scope is resolved while the
   screen is composed and leaves nothing in the output: a disabled scope
-  suppresses the ignore regions inside it, and the innermost scope wins.
+  suppresses the ignore regions inside it, and the innermost scope wins. A
+  component element inside a scope renders with that scope state, the
+  component's own scopes nest inside it, and slot content takes the state at
+  its placeholder.
 
 ## Variants
 
@@ -148,12 +152,12 @@ including a variant.
    the sidecar returned, and assemble the document with the configured
    stylesheets.
 4. Rewrite links and validate them. Keep the views in the render cache keyed
-   by their inputs; Serve, Changes, and export read them there, and nothing is
+   by their inputs; Serve, Changes, and `build` read them there, and nothing is
    written to the repository. Record the entry's usage in the catalogue model
    from the attached ownership.
 
-Build, Check, Serve, export, Changes, and publish treat an HTML screen like
-every other screen. A catalogue of HTML files alone never starts a sidecar.
+Serve, `build`, Changes, and publish treat an HTML screen like every other
+screen. A catalogue of HTML files alone never starts a sidecar.
 
 ## Diagnostics
 
