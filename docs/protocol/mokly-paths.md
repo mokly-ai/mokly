@@ -6,7 +6,10 @@ Build, Check, Serve, export, and the viewer use file-derived paths.
 Move pairing and its viewer presentation are implemented. The [Rust rebuild plan](../../plans/rust-rebuild.md)
 keeps this contract and adds the HTML and YAML file kinds of the
 [HTML screens contract](./mokly-html-screens.md) and the Storybook story files
-of the [render sidecar](./mokly-sidecar.md#storybook) to the default globs.
+of the [render sidecar](./mokly-sidecar.md#storybook) to the default globs. A
+stories file is neither a document nor an entry module: its path derives like
+an entry module's, and each story's export name is the slug of a variant,
+validated as a segment.
 
 This is the single contract for an entry's path: how it derives from the
 discovered file that exports the entry, which strings are valid segments, how `index`

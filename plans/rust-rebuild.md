@@ -533,6 +533,16 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Open from the review of commit 2a068ff5, report under
+    `.context/rust-rebuild/review-2026-10-13-handles.md`:
+  - 1: story `args` as variant props contradict the closed-schema and
+    plain-data rules of the props contract; define the schema inference
+    and the `argTypes` mapping.
+  - 2: a story variant's title and the other required entry fields are
+    undefined.
+  - 3: the handle is ambiguous for an array export that holds more than one
+    definition.
+  - Observation: the sidecar has no render method for a `definePage` page.
 
 ## Post-merge follow-up (non-blocking)
 

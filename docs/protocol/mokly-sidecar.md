@@ -71,11 +71,12 @@ records the renderer declared, and build warnings.
 `describe` evaluates the entry modules and the stories files of a generation
 and returns every definition they export, each with its handle: screens
 with their variants, pages, use cases, folders, components, and the story
-inventory. A handle is the file path plus the export name, and for a screen
-variant the variant slug follows after a slash, for example
+inventory. A handle is the file path, `#`, and the export name, and for a
+screen variant the variant slug follows after a slash, for example
 `specs/account/invoice.mockup.tsx#default/overdue`; a render request names
-the definition by its handle. A component definition carries its `element` when declared, the
-prop schema, the slots, the controls, and the saved variants. The binary feeds
+the definition by its handle. A component definition carries its `element`
+when declared, the prop schema, the slots, the controls, and the saved
+variants. The binary feeds
 every definition into the catalogue model, builds the component registry from
 the component definitions and the HTML components, applies the uniqueness and
 reserved-name rules of the [components contract](./mokly-components.md), and
@@ -150,17 +151,16 @@ A story file is a `*.stories.{ts,tsx,js,jsx}` file matched by a root. The
 sidecar loads the consumer's `.storybook/preview` annotations with
 `setProjectAnnotations`, composes each story with `composeStories` from
 `@storybook/react`, and renders it with `renderToStaticMarkup`. The story id
-is the file path plus the export name, and `describe` lists every story of the
-generation. A stories file becomes one component entry at the path derived
+is the file path, `#`, and the export name, and `describe` lists every story
+of the generation. A stories file becomes one component entry at the path derived
 from the file, titled from its `title` annotation or its component's name;
 its `argTypes` supply the prop schema and controls when present, and the
 schema is empty otherwise. Each story becomes a variant of that entry at the
 parent's path plus the export name as slug, with its `args` as props, under
 the [variant contract](./mokly-variants.md); the read model needs no new
 kind. Viewport and colour scheme reach the story as the globals
-`moklyViewport` and `moklyColorScheme`. A consumer
-without `@storybook/react` fails `bundle` with `bundle-failed` naming the
-missing package.
+`moklyViewport` and `moklyColorScheme`. A consumer without `@storybook/react`
+fails `bundle` with `bundle-failed` naming the missing package.
 
 ## Consumer PostCSS
 
