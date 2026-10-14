@@ -150,7 +150,21 @@ Use the npm version that `packageManager` pins; the
 [CI workflow graph](./ci-workflow.md#job-execution) explains why lockfile
 changes need it. Lockfile-only mode can record bundled entries of optional platform packages
 that this machine does not install. Keep the lockfile diff to the intended
-entries.
+entries. A bare `npm update` also moves held packages; restore each hold below
+before you commit.
+
+Rust dependencies have one lockfile, `Cargo.lock`, for the `xtask` workspace.
+`cargo update` refreshes crates inside the `xtask/Cargo.toml` ranges and the
+workspace `rust-version`. `rust-toolchain.toml` pins the exact toolchain;
+`tests/rust_pin.test.ts` requires that release to match the workspace
+`rust-version` in `Cargo.toml`, and requires `README.md`,
+[CI workflow graph](./ci-workflow.md),
+[npm release management](./npm-release-management.md), and the
+[Testbox contract](./remote-verification-testbox.md) to name it. Move the pin,
+`rust-version`, and those docs together, and only after rustfmt, Clippy with
+`-D warnings`, and the xtask tests pass on the new release. No gate runs
+`cargo audit`; run it after a Rust update and report its result in the pull
+request.
 
 Use a narrowly scoped override only to select a patched release when a parent
 pins an affected dependency and a compatible parent update is not appropriate.
@@ -183,7 +197,11 @@ The current maintenance choices are:
   a new explicit risk review, not an automatic extension.
 - `wrangler` 4.113.0 stays exactly pinned with its existing Miniflare/Workerd
   versions. It requires `esbuild` 0.28.1 exactly, so the lockfile nests that
-  copy under Wrangler until a Wrangler update accepts Mokly's esbuild release.
+  copy under Wrangler. Wrangler 4.149.0 and later accept Mokly's `esbuild`
+  0.28.2, but Wrangler 4.117.0 and later, including 4.151.0 at review on
+  2026-10-14, need a Miniflare 5 prerelease. Move Wrangler only in a reviewed
+  change after a stable Miniflare 5 release; that change re-checks the
+  overrides below and removes the nested esbuild copy.
   The `miniflare`-scoped overrides select `undici` 7.29.1 and `sharp` 0.35.5,
   whose bundled native image libraries include the librsvg fix for
   [GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w).
