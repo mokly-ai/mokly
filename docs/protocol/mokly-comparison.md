@@ -174,6 +174,10 @@ interface RuleEvidence {
   status: "matched" | "excluded" | "unresolved";
   owner: { kind: "entry" } | { kind: "component"; path: string };
 }
+interface ResourceEvidence {
+  path: string; // the rendered resource route the view reaches
+  owner: { kind: "entry" } | { kind: "component"; path: string };
+}
 ```
 
 The [component comparison records](./mokly-component-comparison-records.md)

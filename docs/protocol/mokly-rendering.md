@@ -167,8 +167,9 @@ written into the repository:
   [shell delivery contract](./mokly-shell-delivery.md) delivers them in the
   entry detail.
 - The document is serialized once. Identical inputs give identical bytes on
-  every platform, and `documentKey` is the hash of those bytes. The document
-  and its tree live in the render cache keyed by their inputs. Serve answers
+  every platform; `documentKey` is the document node's key, the hash of those
+  inputs, and exists before the render. The document and its tree live in the
+  render cache keyed by their inputs. Serve answers
   `/static/mokly-generated/<route>` from the cache, `build` writes
   `static/mokly-generated/<route>` into its output directory, and the base
   side of a comparison renders the base commit's sources through the same

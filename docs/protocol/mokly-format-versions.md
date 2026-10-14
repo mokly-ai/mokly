@@ -8,7 +8,7 @@
 | Entry detail                            | 1                         | New: one entry's per-view usage, resource evidence, and workspace lists; the detail reader requires 1.                      |
 | Review result                           | 8                         | Tree materiality, owner-attributed rule and resource evidence, moves; producers and decoders require 8.                     |
 | Catalogue change snapshot               | 4                         | Current private path/move/removal evidence paired with review v8 and the base commit.                                       |
-| Live descriptor                         | 3                         | A Serve JSON route with the render capability only; the index carries the one revision and the bundle generation.           |
+| Live descriptor                         | 3                         | A Serve JSON route with the render capability only; the index carries the one revision and the render generation.           |
 | Inspector wire envelope                 | 2                         | Unchanged: navigation carries `screenPath`; both peers require 2 before message fields.                                     |
 | Removed page/document preview metadata  | 3                         | Unchanged `{schemaVersion,baseRef,baseCommit,path}` shape.                                                                  |
 | Export ownership                        | 3                         | Unchanged exact `{path,sha256,size}` inventory, bounds and namespace; written by `build`.                                   |

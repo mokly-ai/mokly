@@ -112,8 +112,8 @@ identical stub page per shell route, the catalogue index at
 `mokly-viewer/entries/`; Serve adds the live descriptor and the update event
 stream. The shell renders itself from the index and the current entry's
 detail and fetches the next detail on navigation. The index carries one
-revision per Serve state, every detail view carries the hash of its rendered
-document, and the shell reloads only the frames whose hash changed. No
+revision per Serve state and the document key of every view, page, and
+document, and the shell reloads only the frames whose key changed. No
 process renders shell HTML, so a catalogue without JavaScript starts no
 sidecar. The
 [shell delivery contract](../protocol/mokly-shell-delivery.md) owns the

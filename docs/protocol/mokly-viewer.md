@@ -19,8 +19,7 @@ Rust model crate. The package has three entry points:
   `build` deliver it as `/mokly-viewer/client/shell.js`.
 - `./styles.css` is the scoped stylesheet of an embedded root.
 
-There is no `./server` entry, no `renderViewer`, no server-side rendering, and
-no hydration. Every delivery renders the shell from data in the browser.
+Every delivery renders the shell from data in the browser.
 
 ```ts
 import type { CSSProperties, ReactNode, Ref } from "react";

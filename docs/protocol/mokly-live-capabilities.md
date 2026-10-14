@@ -25,7 +25,8 @@ detail, a URL, local storage, or the shell store.
 ## Render Capability
 
 The descriptor carries the temporary-render capability of the component
-controls contract, bound to the bundle `generation` it names. The shell holds
+controls contract, bound to the render `generation` it names, which equals
+the index's `live.generation` for HTML and JavaScript entries alike. The shell holds
 the capability in one closure that performs the render request and exposes
 `temporaryPreviews.render` and `temporaryPreviews.expired` through one React
 context; `useViewerCapabilities()` returns them in Serve and `undefined`
@@ -43,7 +44,7 @@ the descriptor and replaces the capability; a render request against the old
 generation fails with the stale-generation code of the controls contract, and
 the shell rerenders the current validated props against the new one.
 
-When the descriptor fetch fails while the index names a generation, browsing
+When the descriptor fetch fails while the index carries `live`, browsing
 works and live prop editing is unavailable with a browser warning; the shell
 retries on the next update. A descriptor with another `schemaVersion` is the
 version error of the [viewer namespace](./mokly-viewer-namespace.md).
@@ -57,8 +58,9 @@ in flight. A message carries the new `revision` as its id, and the shell
 refreshes the index and the current entry's detail under the
 [shell delivery updates](./mokly-shell-delivery.md#updates-in-serve). How the
 refreshed state reaches the navigation, the frames, and the workspace is the
-[live evidence contract](./mokly-live-evidence.md). No message carries data,
-no update reloads the page, and no reload recovery exists.
+[live evidence contract](./mokly-live-evidence.md). Every message carries the server's
+`deploymentId` as its data, and a message from another server process is a
+full page load; no other update reloads the page.
 
 `EventSource` is an optional browser facility. When it is missing, denied, or
 throws, the shell still renders the catalogue, reports the transport failure

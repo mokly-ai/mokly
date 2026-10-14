@@ -56,7 +56,10 @@ is gone, the 78 pages that described it in part are rewritten now, no test
 asserts protocol content, and every other plan is deleted. The previous protocol is `main` commit `0bbd737e`. The same day
 the 78 pages were rewritten by subject, the kept pages were swept for retired
 wording, the `dependencies` entry field went under Decision 5, and the index
-lists 151 pages by subject.
+lists 151 pages by subject. Later on 2026-10-14 the user settled the eleven
+open shell delivery findings: document keys in the index, the live descriptor
+for every catalogue, the deployment id in each event message, and no usage
+route (Decision 30).
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
@@ -261,6 +264,23 @@ more than re-deriving the behaviour from the requirements.
     follow-ups are void under this reset. `main` commit `0bbd737e` keeps the
     merged plans; the branch history before commit `d4bac78d` keeps the
     native engine plan.
+30. Shell delivery settled (2026-10-14, amends 27): `documentKey` lives on
+    the index's view, page, and document records, is the document node's
+    input hash of the render graph, and exists before a render; the shell
+    fetches the live descriptor whenever the index carries `live`, whose
+    `generation` is the render generation that fences live prop renders for
+    HTML and JavaScript entries alike; each event stream message carries the
+    revision as its id and the server's `deploymentId` as its data, and a
+    message with another deployment id is a full page load; the live
+    descriptor v3 has a typed shape; a view's and a page's `resourceEvidence`
+    is the review v8 `rules` and `resources` records with their owners, and
+    the comparison contract defines `ResourceEvidence`; the workspace has no
+    `status`; Serve sends no cross-origin header on any route; no page states
+    server rendering or hydration; the shell delivery page names the
+    comparison serving contract as the owner of the comparison routes; and
+    per-view usage has no route of its own, so a detail carries `pending`
+    until the next publication. This settles the open findings of the shell
+    delivery reviews of commits 1fdf5d95, 62223201, and 7cb14ebf.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
@@ -560,8 +580,8 @@ without JavaScript.
 - [ ] Implement the server in `mokly-server`: the stub, the index and entry
       detail routes with `Cache-Control: no-store`, the document and asset
       routes, the live descriptor, the event stream with the revision as the
-      message id, shutdown ordering, and the terminal output contract in the
-      CLI.
+      message id and the deployment id as its data, shutdown ordering, and
+      the terminal output contract in the CLI.
 - [ ] Behaviour tests: every route of the shell delivery contract that
       Milestone 6 serves, the identity and revision fences, and shutdown.
 - [ ] Commit.
@@ -799,42 +819,13 @@ entry`; decide whether to rename them now.
     `props-not-data` warning.
   - Open from the review of commit 1fdf5d95, report under
     `.context/rust-rebuild/review-2026-10-13-shell-delivery.md`:
-  - 1 to 6: settled by Decision 27 on 2026-10-14.
-  - 7: the live descriptor route carries the render token with no CORS or
-    exposure rule; decide the rule.
-  - 8: five kept viewer pages (catalogue tree, scroll together, frame
-    adapter, viewer markers, shell destinations) still state hydration and
-    SSR behaviour; decide whether they move to rewritten with pointers.
+  - 1 to 6: settled by Decision 27 on 2026-10-14; 7 and 8 by Decision 30.
   - Open from the re-review of commit 62223201, report under
     `.context/rust-rebuild/review-2026-10-13-shell-delivery-fix.md`:
-  - 1: the shell delivery page names the owner of the comparison routes
-    through the changes serving contract, one hop away; decide whether to
-    name the comparison serving contract directly.
-  - Observation: neither the namespace pointer nor the shell delivery page
-    says what happens to the frozen evidence routes under `views/**`.
+  - 1 and the observation: settled by Decision 30 on 2026-10-14.
   - Open from the review of commit 7cb14ebf, report under
     `.context/rust-rebuild/review-2026-10-14-one-revision.md`:
-  - 1: document keys exist only for the routed entry's own views, so page,
-    document, and use-case frames have no reload input; decide where the
-    keys live (recommended: in the index's view, page, and document records).
-  - 2: the live descriptor is fetched only when the catalogue has consumer
-    JavaScript, so HTML-only catalogues get no live prop editing; decide
-    whether the `live` block alone enables the fetch (recommended).
-  - 3: a message whose id is at or below the installed revision is ignored,
-    so a Serve restart leaves open tabs stale; decide whether any differing
-    id starts a refresh (recommended).
-  - 4: `documentKey` hashes rendered bytes, but Serve answers a detail before
-    an on-demand render completes; decide whether Serve renders an entry's
-    views before it answers its detail (recommended).
-  - 7: the live descriptor v3 and the render capability have no typed shape;
-    decide where the shape lives (recommended: a `LiveDescriptorV3` block on
-    the shell delivery page).
-  - 8: `ResourceEvidence` in the detail names a type the catalogue page no
-    longer declares, and review v8 uses the name for an array; decide the
-    detail's shape (recommended: the review v8 per-view records).
-  - 9: `Workspace.status` duplicates the index's `changes.kind` with another
-    spelling; decide whether to drop it (recommended) or type it as
-    `ChangeKind`.
+  - 1, 2, 3, 4, 7, 8, and 9: settled by Decision 30 on 2026-10-14.
 
 ## Post-merge follow-up (non-blocking)
 

@@ -61,7 +61,7 @@ interface CatalogueReadModel {
   deploymentId: string;
   revision: number; // one counter per Serve state, from 1; 0 in a build
   base?: string; // the Changes base ref when Changes is configured
-  live?: { generation: string | null }; // Serve only: the bundle generation
+  live?: { generation: string }; // Serve only: the render generation
   changesStatus: ChangesStatus;
   comparisonUrl: PublicPath | null;
   tree: readonly CatalogueNode[];
@@ -137,6 +137,7 @@ interface CatalogueView {
   viewport: Viewport;
   colorScheme: ColorScheme;
   comparison: ComparisonSelection;
+  documentKey: string; // the document node's input hash in the render graph
 }
 interface CatalogueScreen extends CatalogueEntry {
   kind: "screen";
@@ -151,10 +152,12 @@ interface CatalogueScreen extends CatalogueEntry {
 }
 interface CataloguePage extends CatalogueEntry {
   kind: "page";
+  documentKey: string;
 }
 interface CatalogueDocument extends CatalogueEntry {
   kind: "document";
   colorSchemes: readonly ColorScheme[];
+  documentKeys: readonly { colorScheme: ColorScheme; documentKey: string }[];
 }
 interface CatalogueUseCase extends CatalogueEntry {
   kind: "use-case";

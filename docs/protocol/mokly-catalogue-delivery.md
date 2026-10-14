@@ -17,10 +17,10 @@ change snapshot v4 of the [comparison contract](./mokly-comparison.md). It
 never spreads a model record, an entry, or an internal evidence object into
 public JSON.
 
-The index carries every current entry record, the tree, the removed records,
-`changesStatus`, and `comparisonUrl`, and no per-view usage or resource
-evidence. The detail carries one entry's per-view `documentKey`, usage,
-resource evidence, and workspace lists. Serve projects both from one model
+The index carries every current entry record with its document keys, the
+tree, the removed records, `changesStatus`, and `comparisonUrl`, and no
+per-view usage or resource evidence. The detail carries one entry's per-view
+usage, resource evidence, and workspace lists. Serve projects both from one model
 state in one publication, and `build` writes both for every entry.
 
 - Screens and components emit one view per effective viewport and colour
@@ -28,8 +28,9 @@ state in one publication, and `build` writes both for every entry.
   light-only fallback stays in the viewer. A component parent's views render
   its own props, and a variant's views render the merged props of the
   [entry props contract](./mokly-entry-props.md). Documents copy the
-  catalogue's `colorSchemes` and have no views. Pages and use cases have no
-  views and no usage; a page's resource evidence is in its detail.
+  catalogue's `colorSchemes`, carry one document key per scheme, and have no
+  views. A page carries one document key; pages and use cases have no views
+  and no usage, and a page's resource evidence is in its detail.
 - A current entry's comparison state is never `removed`; that state is valid
   only inside `removedEntries`. A current entry whose aggregate state is
   `removed` because some of its views were removed projects as `changed`; its

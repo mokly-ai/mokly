@@ -12,7 +12,7 @@ Changes completion or status move, a bundle change, or a completed on-demand
 render; the server may combine several completions into one publication.
 There is no separate content or evidence version: a source edit and a usage
 completion publish the same way, and the shell decides per frame through each
-view's `documentKey` in the detail.
+view's `documentKey` in the index.
 
 Evidence travels only in the index and in the entry details. The index
 carries `changesStatus`, each entry's `changes`, each view's `comparison`,
@@ -25,14 +25,17 @@ temporary prop preview of the component controls contract uses the usage
 records of its own render response and never enters a detail.
 
 The event stream at `/mokly-viewer/events` writes one message per
-publication whose `id` is the new revision and whose `data` is empty, and one
-message with the current revision on every new connection, so a reconnecting
-shell catches up at once. The stream exists only in Serve.
+publication whose `id` is the new revision and whose `data` is the server's
+`deploymentId`, and one message with the current values on every new
+connection, so a reconnecting shell catches up at once and a shell that
+reconnects to another server process performs a full page load. The stream
+exists only in Serve.
 
 ## Browser adoption
 
-On a message above the installed revision the shell cancels a refresh still
-in flight, fetches the index and the current entry's detail, and adopts them
+On a message whose `data` differs from the installed `deploymentId` the
+standalone shell performs a full page load. On a message above the installed
+revision the shell cancels a refresh still in flight, fetches the index and the current entry's detail, and adopts them
 in one store commit under the shell delivery fences; the page never reloads.
 During and after adoption the shell keeps the navigation tree, the
 All/Changes buttons, the mounted preview frames, the filter, search text,
@@ -43,8 +46,10 @@ and additions and removals follow the canonical server order after the
 current tree. Removed screens and components stay in All, and removed pages
 and documents appear only in Changes.
 
-The shell reloads only the mounted frames whose `documentKey` changed; a
-frame whose key is unchanged keeps its document, scroll, and selection. When the refreshed index does not list the current entry, the route shows the
+The shell reloads only the mounted frames whose `documentKey` in the
+refreshed index changed, whether the frame shows a screen or component view,
+a page, a document, or a use-case step; a frame whose key is unchanged keeps
+its document, scroll, and selection. When the refreshed index does not list the current entry, the route shows the
 missing state and keeps the URL. A removed entry's detail is fetched from the
 generation the refreshed index names; a record absent from the refreshed index shows the missing state. When a fetch fails or the pair disagrees after
 one more index fetch, the shell keeps its installed state and shows the entry

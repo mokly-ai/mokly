@@ -19,7 +19,7 @@ together, and the shell fences a detail against the installed index under the
 
 The shell fetches the index at start and on an update message, the routed
 entry's detail on each navigation and update, and the live descriptor when
-the index names a bundle generation. Every fetch is an ordinary GET without
+the index carries `live`. Every fetch is an ordinary GET without
 custom headers, uses `credentials: "omit"`, stays on the source origin, and
 rejects a redirect outside it. A URL source is HTTP(S) without userinfo or
 fragment. A removed entry's detail and its historical documents are read
