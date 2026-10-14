@@ -7,8 +7,9 @@ Continuation of [CI And npm Release Contract](./npm-release.md).
 Conventional Commits feed two release-please Node components through
 `release-please-config.json` and `.release-please-manifest.json`. A push to
 `main` creates or updates a release PR; an ordinary push with no release does
-not publish. The single release PR owns both package versions and changelogs,
-the root lockfile and the release manifest. The CLI keeps `vX.Y.Z` tags
+not publish. The single release PR owns the root version, which the CLI and the five
+platform packages share, the viewer version, both changelogs, the root
+lockfile and the release manifest. The CLI keeps `vX.Y.Z` tags
 (`include-component-in-tag: false`, `include-v-in-tag: true`). The viewer uses
 `viewer-vX.Y.Z`, with component `viewer` and `packages/viewer/CHANGELOG.md`.
 Both tags must identify the same reviewed release commit.
@@ -36,8 +37,10 @@ keeps breaking pre-1.0 changes on the minor stream. Published tags are immutable
 versions advance only through the release PR.
 
 The `node-workspace` plugin uses `updateAllPackages: true` to propose both
-packages whenever either releases, including a patch of an otherwise unchanged
-package. It preserves the CLI's exact dependency (no caret or local link).
+components whenever either releases, including a patch of an otherwise
+unchanged component; the platform packages take the root version. It preserves
+the CLI's exact viewer dependency and its exact optional platform dependencies
+(no caret or local link).
 Versions remain independent; `linked-versions` would incorrectly force them
 equal and is unnecessary for a combined PR. A viewer `extra-files` JSON updater
 also sets the root lockfile's `packages[""].dependencies["@mokly/viewer"]`:
@@ -63,17 +66,21 @@ The release workflow then:
    complete `cargo xtask check --dependency-audit strict` gate. The
    [release verification evidence contract](./npm-release-evidence.md) defines
    candidate selection, validation and failure semantics.
-6. Packs viewer then CLI, validates both packed manifests and inventories plus
-   the runtime license closure, and smoke-tests those exact paths in clean
-   consumers. Each archive has its own integrity, shasum, inventory and size
-   report under `release-artifact/viewer` or `release-artifact/cli`. Rechecks
-   the source and tags after lifecycle scripts and preserves both artifacts.
+6. Downloads the five platform archives from the build jobs, packs the viewer
+   and then the CLI, validates every packed manifest and inventory plus the
+   runtime license closure, and smoke-tests clean consumers from those exact
+   archives under the
+   [release contract](./npm-release.md#release-build-matrix-and-publication-order).
+   Each archive has its own integrity, shasum, inventory and size report under
+   `release-artifact/<package>`. Rechecks the source and tags after lifecycle
+   scripts and preserves every artifact.
 7. Queries npm. A recognized missing-version response (`E404` or `ETARGET`)
    permits a publish; any other lookup failure stops the workflow. An existing
    version must byte-for-byte match the checked report and commit or the
    workflow fails.
-8. Publishes the checked viewer path publicly with npm trusted publishing when
-   absent; completes its registry verification before publishing the CLI path.
+8. Publishes the platform packages, then the viewer, then the CLI, each
+   publicly with npm trusted publishing when absent; each publication
+   completes its registry verification before the next starts.
 9. Downloads the registry artifact and rechecks integrity, shasum, file
    inventory, version, optional `gitHead`, the `latest` dist-tag, and npm
    signatures/provenance. Because npm metadata and tarball endpoints may become
@@ -88,8 +95,8 @@ A manual dispatch from workflow ref `main` retries an existing `publish_ref`
 Its `verification` input defaults to `evidence`; selecting `complete` forces the
 full local gate without making GitHub evidence requests. A single concurrency
 group serializes automatic runs and manual retries without cancelling an
-in-progress publish. A completed viewer publication is verified and skipped on
-retry; the CLI cannot publish before that verification succeeds.
+in-progress publish. A completed publication is verified and skipped on
+retry; a later package cannot publish before the earlier verification succeeds.
 
 Merging the combined Release Please PR is the human authorization to publish.
 The `npm` environment does not require a second reviewer: its purpose is to bind

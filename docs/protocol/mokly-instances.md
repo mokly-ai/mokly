@@ -156,11 +156,10 @@ and serialized as the normalized relative path only; an escaping location
 fails validation, and an unavailable location is omitted, never guessed from
 definition attribution or stack traces.
 
-The sidecar supplies the location for a `defineComponent` wrapper. Its bundle
-compiles JSX in development mode and resolves `react/jsx-dev-runtime` to a
-Mokly-owned shim inside the consumer graph. The shim forwards to the
-consumer's `react/jsx-runtime`, preserves child semantics and the single React
-runtime, and attaches the invocation `__source` only to wrappers that
+The sidecar supplies the location for a `defineComponent` wrapper through the
+JSX development shim of its [bundling rules](./mokly-sidecar.md#bundling). The
+shim forwards to the consumer's `react/jsx-runtime`, preserves child semantics
+and the single React runtime, and attaches the invocation `__source` only to wrappers that
 `defineComponent` identified, through the reserved `__moklySource` prop. The
 wrapper strips `__moklySource` before prop and slot validation, hashing, and
 the consumer render, exactly as it strips `moklyInstance`. The name is

@@ -5,7 +5,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## Startup And Completeness
 
 Serve validates the configuration, the catalogue model, the routes, the
-hierarchy, the prop schemas, and the source set before it listens.
+hierarchy, the prop schemas, and the [source inventory](./mokly-source-protection.md#complete-source-inventory) before it listens.
 Validation creates one immutable route set from the model's identities; a
 request for a route outside that set is 404, and a new catalogue state
 creates a new set. Serve does not render every document, classify Git

@@ -1,5 +1,7 @@
 # Combined Path And Output Format Versions
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Version Inventory
 
 | Boundary                                | Version                   | Reason and reader                                                                                                           |

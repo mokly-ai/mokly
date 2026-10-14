@@ -15,7 +15,8 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ```
 
 That line is the only plan reference a page carries, and it is removed when the
-behaviour is implemented. The plan names the milestone that implements each
+behaviour is implemented. The root `README.md` also links the `plans/`
+directory; no page carries another plan link. The plan names the milestone that implements each
 page; a page never does. The protocol of the previous backend is at the commit
 the plan names.
 

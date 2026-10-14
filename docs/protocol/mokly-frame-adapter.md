@@ -1,5 +1,7 @@
 # Viewer Frame Adapter
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Public Interface
 
 The viewer exports these types; `CatalogueUsage` follows the [read model](./mokly-catalogue.md).
@@ -219,11 +221,10 @@ As soon as the new immediate `Document` becomes same-origin-accessible, the
 adapter independently authenticates its exact origin, decoded resource path and
 query, then moves the receiver before slower subresources can delay the iframe
 `load` event. The replacement watcher and `load` handler accept only this
-assigned-resource authentication; previously authenticated identity never lets
-a transferred document satisfy a new mount. Readiness installs inspection and
-geometry over the authenticated document. Unsubscribing or disposing removes
-the receiver, so an unenhanced document continues to use its portable native
-links.
+assigned-resource authentication; previously authenticated identity never lets a
+transferred document satisfy a new mount. Readiness installs inspection and
+geometry over the authenticated document. Unsubscribing or disposing removes the
+receiver, so an unenhanced document continues to use its portable native links.
 
 The sandbox remains exactly `allow-same-origin`; consumer scripts stay disabled.
 Historical [removed previews](./mokly-removed-previews.md) and
@@ -255,16 +256,15 @@ The static host must ignore queries for file lookup. Never derive trust from
 
 After load, the adapter sends `hello` to the exact `frameOrigin`. The inspector
 accepts it only from `event.source === window.parent` and
-`event.origin === expectedHostOrigin`; it pins the first accepted nonce for
-that document and replies `ready` to that exact origin. Duplicate hello with
-the same nonce may resend ready; another nonce cannot replace the session.
-The adapter accepts replies only when
-`event.source === frame.contentWindow`, `event.origin === frameOrigin`, and
-channel, version and nonce match its active mount. Both sides use exact
-`targetOrigin` for every `postMessage`, never `"*"`. No `window.top` or
-`parent.location` reads/writes occur. The inspector is inert without handshake:
-no overlays, navigation interception, geometry collection or outgoing messages.
-Only its bounded handshake listener exists before activation.
+`event.origin === expectedHostOrigin`; it pins the first accepted nonce for that
+document and replies `ready` to that exact origin. Duplicate hello with the same
+nonce may resend ready; another nonce cannot replace the session. The adapter
+accepts replies only when `event.source === frame.contentWindow`,
+`event.origin === frameOrigin`, and channel, version and nonce match its active
+mount. Both sides use exact `targetOrigin` for every `postMessage`, never `"*"`.
+No `window.top` or `parent.location` reads/writes occur. The inspector is inert
+without handshake: no overlays, navigation interception, geometry collection or
+outgoing messages. Only its bounded handshake listener exists before activation.
 
 Ready/requests time out after five seconds, disposing the session without retries.
 Disposal/unload clears all work; a fresh mount loads a new document and nonce.

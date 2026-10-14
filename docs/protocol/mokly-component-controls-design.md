@@ -74,11 +74,11 @@ membership.
 
 ## Verification
 
-Build the example with `mokly build --strict` so that Mokly renders every
-matching artboard, and commit only the authored changes; the build output stays
-ignored. Test all input labels/types, current variant identity, full reset
+Serve the example with `mokly serve` so that Mokly renders every matching
+artboard, and commit only the authored changes. Test all input labels/types, current variant identity, full reset
 values, optional/unset states, pending/error preservation, validation errors,
 disabled comparison inputs, read-only guidance, and links between owning states.
-Open every artboard from disk and visually inspect both viewport variants. Test
-inspector open/switch/close and keyboard behavior in standalone and served frames.
+Open every artboard in the served Browse frames and visually inspect both
+viewport variants. Test inspector open/switch/close and keyboard behavior in
+served frames and in the `mokly build` output.
 Run the complete local gate, commit/push, and required post-push review.

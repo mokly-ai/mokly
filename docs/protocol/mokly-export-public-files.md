@@ -46,7 +46,7 @@ SVG and CSS identifiers keep their resource policy; historical snapshot
 navigation is not modified and receives resource-only validation.
 
 The shared public-file confinement check is a minimum boundary, not permission
-to copy the whole repository. Prune entry trees, discovered sources, the
+to copy the whole repository. Prune entry trees, [inventoried](./mokly-source-protection.md#complete-source-inventory) sources, the
 configuration and the renderer module, inventoried source modules, dotfiles
 and dot directories, Git, dependency, and cache trees, the output directory,
 and the reservation paths for each selected closure file. Explicit HTTP(S) and

@@ -210,9 +210,9 @@ highlighting, editable/reset and published read-only controls, and the attributi
 matrix. Preserve comparison-bar eligibility/backgrounds, icons/carets, desktop
 divider alignment, mobile sheets and bounded scrolling across the full inventory.
 
-Build the example with `mokly build --strict`, open every changed HTML fragment
-directly from disk, smoke-test actual Serve and the static output, and verify
-that no consumer scripts or fake usage data were introduced. Measure the expanded
-catalogue's plain `npm run dev` startup and assert bounded base-side Git batching
-by command count rather than relaxing readiness deadlines. Run the complete
-repository gate before delivery, then commit, push and review.
+Run the browser suite against `mokly serve` of the example under the
+[CI verification contract](./ci-verification.md), inspect every changed design
+page in the served Browse frames, smoke-test the `mokly build` output, and
+verify that no consumer scripts or fake usage data were introduced. Assert
+bounded base-side Git batching by command count rather than relaxing readiness
+deadlines. Run the complete gate before delivery, then commit, push and review.

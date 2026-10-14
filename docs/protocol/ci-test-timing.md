@@ -1,8 +1,13 @@
 # CI Test Timing
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Required tests check correctness without depending on machine speed. This
-contract applies to the Node tests and the browser specs under `tests/`.
-It supplements [CI suite evidence](./ci-suite-evidence.md).
+contract applies to every Node test file that the viewer suite discovers under
+`tests/` and `packages/viewer/tests/`, and to the browser specs under
+`tests/browser/`. Rust tests under `crates/` and `xtask/` follow the same
+assertion rule with Cargo's own test timeouts. It supplements
+[CI suite evidence](./ci-suite-evidence.md).
 
 ## Assertion Rule
 
@@ -23,8 +28,7 @@ used by an assertion, apply these acceptance relations:
 - The count at the smaller size must be greater than zero. This includes
   per-path counts and totals. A missed interception must fail the test.
 - Counts for work that happens once per run must be equal at both sizes.
-  This includes fixed-root projection, sorts, glob compilation, index
-  construction, and working-directory resolution.
+  This includes sorts, index construction, and working-directory resolution.
 - Each counted total at the larger size must be at most 4.5 times its total
   at the smaller size. Linear work grows by about 4 times. Quadratic work
   grows by about 16 times.
@@ -33,22 +37,21 @@ Apply equality checks even when total growth passes. Repeated fixed-root
 resolution can remain linear while violating the once-per-run contract.
 Keep the operation's result assertions beside its count assertions.
 
-The [stylesheet collection contract](./mokly-imported-styles.md#roots-collection-and-deduplication)
-requires one working-directory resolution per metafile. Each root traversal
-reads a metafile input at most once.
+A Rust test applies the same relations with its own counters, for example the
+number of Git commands that a base-side extraction issues at two catalogue
+sizes.
 
 ### Captured Watcher Targets
 
-Capture the targets passed to the watcher factory. Assert that the factory
-receives each required directory-dependency root. Assert that it receives no
-source file covered by that root. Follow the
-[watch-target contract](./mokly-watch.md).
-Required files below a denied-name directory keep their explicit targets,
-as that contract requires.
+A test of the watch crate captures the targets passed to the file watcher.
+Assert that the watcher receives each required directory-dependency root.
+Assert that it receives no source file covered by that root. Follow the
+[watch-target contract](./mokly-watch.md). Required files below a denied-name
+directory keep their explicit targets, as that contract requires.
 
 Keep readiness and added-file event checks under the test timeout. Keep
-existing single-watcher and single-rebuild assertions. Readiness duration
-can be reported as text, but it cannot decide whether the test passes.
+single-watcher and single-rebuild assertions. Readiness duration can be
+reported as text, but it cannot decide whether the test passes.
 
 ### Event Order
 
@@ -78,14 +81,14 @@ The following uses can still read a real clock:
 - Timestamps used as test data can come from a clock. For example,
   `new Date(Date.now() - 10_000)` represents an earlier timestamp.
 
-A successful `acquireOutputLock(root, { timeoutMs })` call is an
-expected-state wait. Its test-supplied `timeoutMs` must allow at least
+Waiting for the `ready` line of `mokly serve`, or for a frame's `ready` reply,
+is an expected-state wait. Its test-supplied allowance must allow at least
 10 seconds.
 
 A timeout that the test expects to expire tests the timeout outcome. It
-can stay short if the test makes no elapsed-time assertion. For example,
-`acquireOutputLock(root, { timeoutMs: 100 })` inside `assert.rejects` can
-use a real timer to check the timeout outcome.
+can stay short if the test makes no elapsed-time assertion. For example, a
+request with a 100 ms allowance inside `assert.rejects` can use a real timer
+to check the timeout outcome.
 
 A polling deadline does not establish a speed contract.
 A test-runner timeout is a hang guard for the whole test.
@@ -94,9 +97,8 @@ An expected-state allowance inside a test can be longer than the runner timeout.
 The runner timeout then bounds the whole test.
 The inner allowance sets the failure message when it expires first.
 
-The fixture setup budgets in `tests/helpers/fixture_timing.ts` stay unchanged.
-Fixture phase reporting continues to follow
-[CI suite evidence](./ci-suite-evidence.md).
+The fixture setup budgets live in `tests/helpers/fixture_timing.ts`. Fixture
+phase reporting follows [CI suite evidence](./ci-suite-evidence.md).
 
 ## Shared Evidence Helpers
 
@@ -141,10 +143,8 @@ Failure text names the operation, the selected path, and both counts.
 Counted code must call `fs` and `path` functions through their default
 imports. A named function import can escape the wrappers. The positive
 smaller-size count prevents that missed interception from passing silently.
-Count glob compilation with
-`context.mock.method(Minimatch.prototype, "make")`. Minimatch 10 calls
-`make` from its constructor. Count element reads of `config.sourceFiles`
-and `metafile.inputs` with a test-owned `Proxy`.
+Count element reads of a configuration list with a test-owned `Proxy` when a
+once-per-run rule covers it.
 
 ### Duration Reporting Helper
 
@@ -167,17 +167,17 @@ Both forms use one decimal place followed by ` ms`.
 
 ## Benchmark Boundary
 
-Opt-in benchmarks outside `tests/` are outside this assertion rule. They
-can enforce millisecond thresholds. `scripts/large/benchmark.mjs` keeps
-`usableMs < 5000` for both cold and warm runs. The
-[startup benchmark contract](./mokly-timings.md) remains unchanged.
+Opt-in benchmarks outside the test directories are outside this assertion
+rule. They can enforce millisecond thresholds. The
+[diagnostics contract](./mokly-timings.md#budgets) owns the large-catalogue
+budgets and their thresholds.
 
 ## ESLint Guard
 
 Apply `no-restricted-syntax` in `eslint.config.js` to every JavaScript and
-TypeScript file under `tests/`, including browser specs.
-The only exempt file is `tests/helpers/durations.ts`. Files under `src/`
-and `scripts/` are outside the guard.
+TypeScript file under `tests/` and `packages/viewer/tests/`, including browser
+specs. The only exempt file is `tests/helpers/durations.ts`. Every other file
+is outside the guard.
 
 The guard rejects two patterns, including inside a `page.evaluate` callback:
 

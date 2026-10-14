@@ -19,7 +19,7 @@ directory too.
 
 Output must neither contain nor be contained by a configured root, and must
 not contain any resolved entry module or document,
-or the directory holding one. It must not contain discovered authoring inputs, the
+or the directory holding one. It must not contain [inventoried](./mokly-source-protection.md#complete-source-inventory) authoring inputs, the
 config, renderer module, or a consumer package's `package.json`. Reject
 repository root, Git metadata, dependency directories, and package runtime
 directories as targets. These checks also apply when the requested directory

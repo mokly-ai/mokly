@@ -94,9 +94,17 @@ with the module and the diagnostic text.
 esbuild and keeps it in the sidecar under a generation id. The generation id is
 the hash of every module in the metafile, the renderer module, the resolution
 settings, and the installed React version; the binary uses it as one part of the cache key
-for every fragment. The sidecar reports `modules`, the repository-relative
-source files of the graph, so the binary can watch them and invalidate the
-generation. esbuild is chosen because its plugin model gives the virtual entry, one React instance resolved from the consumer, the
+for every fragment. The sidecar reports `modules`, the module graph: each
+repository-relative source file of the graph with its imports in source order,
+including re-exports and dynamic imports, and each stylesheet import by its
+resolved logical path. The binary watches the files, invalidates the
+generation, and reads each root's stylesheet order from the edges under the
+[imported stylesheet contract](./mokly-imported-styles.md#roots-collection-and-deduplication).
+The bundle compiles JSX in development mode and resolves
+`react/jsx-dev-runtime` to a Mokly-owned shim inside the consumer graph; the
+shim forwards to the consumer's `react/jsx-runtime` and attaches the invocation
+source only to `defineComponent` wrappers, as the
+[instances contract](./mokly-instances.md) reads it. esbuild is chosen because its plugin model gives the virtual entry, one React instance resolved from the consumer, the
 attributed authoring facade directly, and its metafile is the module inventory. Rolldown is reviewed again after the first release.
 
 The source root is the repository root for the head side of a comparison. For

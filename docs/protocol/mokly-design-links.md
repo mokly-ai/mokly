@@ -296,7 +296,7 @@ normal enhanced navigation. Do not equate these two contexts.
 
 - Before wiring controls, record failing semantic assertions for missing home,
   navigation, miniature-screen, flow-reference, and example-button links.
-- Verify expected control destinations against the built example's catalogue
+- Verify expected control destinations against the served example's catalogue
   index in both viewports, plus every light/dark example-button output. Detect wrong
   subjects, self-links masquerading as transitions, folder/absent destinations,
   duplicate/nested focus targets, and inactive controls becoming links.
@@ -309,7 +309,7 @@ normal enhanced navigation. Do not equate these two contexts.
 - In Browse, exercise pointer and Tab/Enter activation from mobile and desktop
   design frames, history Back/Forward, canonical outer URLs, active catalogue
   rows, and preserved outer viewport selection. Keep consumer scripts denied.
-- Open every changed built design page directly from disk and inspect both
+- Open every changed design page in the served Browse frames and inspect both
   variants for visual regressions; test representative portable link round trips.
 - Run `mokly build` and exercise the same journeys in the static output. Cover
   actual Review snapshot link fallback separately.

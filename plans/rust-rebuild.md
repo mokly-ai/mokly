@@ -635,6 +635,10 @@ renders again.
 - [ ] Restore the example catalogue, the design catalogue, and a packed
       consumer smoke; run the gap sweep against the old rendering and
       component contracts.
+- [ ] Restore the browser suite against `mokly serve` of the example: its
+      four shards, the six remote Testbox commands, and the five-report
+      aggregate that the CI verification and remote verification contracts
+      define.
 - [ ] Write the JavaScript authoring guides.
 - [ ] Commit.
 
@@ -756,10 +760,10 @@ Tags: ui
   - F: the source directory of the `@mokly/mokly` shim, sidecar, and
     authoring API after the teardown is unnamed; the README assumes
     `packages/mokly`.
-  - G: `npm-release-management.md` packs and publishes only the viewer and
-    the CLI; `npm-release.md` publishes seven packages.
-  - H: a React variant may declare `slots` as a map from slot name to a
-    React node, by analogy with HTML components; confirm.
+  - G: settled on 2026-10-14; the release management page follows the
+    seven packages of the release contract.
+  - H: settled on 2026-10-14; the components contract states that a
+    variant's `slots` maps declared slot names to React nodes.
   - I: the CSS Modules page scopes classes in the sidecar, the PostCSS and
     imported-styles pages scope them in the core after `processCss`, and the
     sidecar contract has no scoping call; decide the scoping engine.
@@ -767,10 +771,8 @@ Tags: ui
     method table has no configuration call; decide the loader.
   - K: `MockLink asChild` wraps its child in a comment marker pair that the
     comparison contract does not define; decide the marker kind.
-  - L: the sidecar `bundle` result reports `modules` as a flat list while the
-    imported-styles page reads import edges from it, and the JSX dev-runtime
-    shim is specified only on the instances page; decide whether the sidecar
-    contract owns both (recommended).
+  - L: settled on 2026-10-14; the sidecar contract reports the module graph
+    with its import edges and names the JSX development shim.
   - M: the terminal line that names the private build directory of `publish`
     has no owner; decide the line (recommended: a plain
     `Mokly publish build: <directory>` line in the terminal errors contract).
@@ -781,42 +783,32 @@ entry`; decide whether to rename them now.
   - O: three pages state `serve --base <ref>` while Decision 14 names
     `--base` for `build` and `publish` only; record the extension or remove
     it.
-  - P: the design pages verify through a built example, artboards opened
-    from disk, and backend Node tests that the gate pages forbid; decide
-    their verification sections.
-  - Q: `ci-test-timing.md` binds its rules to the TypeScript backend (the
-    output lock, Minimatch, the metafile, `scripts/large`); decide whether
-    to rewrite it now or at the teardown.
+  - P: settled on 2026-10-14; the design pages verify through the served
+    example and the browser suite.
+  - Q: settled on 2026-10-14; `ci-test-timing.md` is rewritten to the
+    end-state suites.
   - R: the viewer page lists the root, `./browser`, and `./styles.css`
     entries while the API-report page requires `runtime` and `data`
     reports; decide the viewer's public entries.
-  - S: the README keeps the "previous TypeScript backend" sentence and two
-    plan links beside its Status line, and the policy gives two rules for
-    the README's `plans/` link; decide the README's allowed references.
-  - T: no milestone restores the browser suite, its shards, the Testbox
-    commands, and the five-report aggregate that the CI pages define;
-    decide the milestone (recommended: Milestone 8).
+  - S: settled on 2026-10-14; the README keeps the Status line and the
+    `plans/` directory link only, and the policy names that link.
+  - T: settled on 2026-10-14; Milestone 8 restores the browser suite.
   - U: `AGENTS.md` describes the present tree; decide whether it waits for
     the teardown item (recommended) or follows now.
   - Open from the re-review of commit 9f834234, report under
     `.context/rust-rebuild/review-2026-10-14-rewrite-fix.md`:
-  - 1: `mokly-frame-adapter.md` sits at its 366-line cap and has no Status
-    line; decide which two lines to remove so the line fits (recommended)
-    or whether its end-state sentences revert to pointers.
+  - 1: settled on 2026-10-14; `mokly-frame-adapter.md` carries the Status
+    line within its cap.
   - 2: three pages cite a `Changes ready` terminal line with a moved count
     and an ignored-only count that the terminal output page does not
     define; decide the exact line (recommended) or drop the claims.
-  - 6: the fix commit replaced "inventoried" on seven lines with "source
-    set" and "discovered sources" while the source protection page owns the
-    term "complete source inventory"; decide the one term (recommended:
-    restore the owner's term and link it).
-  - 7: the branch point lookup page supplies its cases to "node and browser
-    tests"; decide the owner (recommended: Rust and browser tests).
+  - 6: settled on 2026-10-14; the seven lines use the source inventory term
+    of the source protection contract and link it.
+  - 7: settled on 2026-10-14; the lookup cases feed Rust and browser tests.
   - Open from the review of commit 9a7aa5e2, report under
     `.context/rust-rebuild/review-2026-10-13-nine-decisions.md`:
-  - 5: a function-valued story arg with no `argTypes` entry has no stated
-    rule; decide whether it is excluded silently or with the
-    `props-not-data` warning.
+  - 5: settled on 2026-10-14; the entry props contract excludes a function or
+    other non-data value with the `props-not-data` warning, for stories too.
   - Open from the review of commit 1fdf5d95, report under
     `.context/rust-rebuild/review-2026-10-13-shell-delivery.md`:
   - 1 to 6: settled by Decision 27 on 2026-10-14; 7 and 8 by Decision 30.
@@ -832,15 +824,13 @@ entry`; decide whether to rename them now.
     the controls contract's render request and response carry `revision`
     only and name a stale-revision code; decide the fence value
     (recommended: the revision, with a rerender after a generation change).
-  - 4: the CSS evidence presentation page reads `screenEvidence`, reasons,
-    exclusions, retained paths, and `material`, which the detail's `rules`
-    and `resources` records do not carry; decide the vocabulary mapping
-    (recommended: map onto the records and drop the two names).
+  - 4: settled on 2026-10-14; the CSS evidence presentation page reads the
+    detail's `rules` and `resources` records only.
   - 9: `ViewEvidence` requires both arrays while review v8 omits an empty
     `rules` list; decide whether a ready view or page always carries the field
     with empty arrays allowed (recommended) or omits it when both are empty.
-  - 11: the format inventory page has no Status line but describes the
-    unimplemented formats; decide whether it gains the line (recommended).
+  - 11: settled on 2026-10-14; the format inventory page carries the Status
+    line.
 
 ## Post-merge follow-up (non-blocking)
 

@@ -29,8 +29,6 @@ desktop sizes, in light and dark, and shows which screens changed between two
 Git commits.
 
 Status: In progress under the [Rust rebuild plan](./plans/rust-rebuild.md).
-The released `@mokly/mokly` packages run the previous TypeScript backend; this
-README describes the product that the plan delivers.
 
 Run Mokly locally while you build, write the same catalogue as static files,
 or embed its viewer in another React application. Mokly owns the catalogue;
@@ -290,8 +288,7 @@ subsystem, with the viewer under `packages/viewer`, the verification task
 runner under `xtask/`, and the reference consumer under
 [`examples/basic`](./examples/basic/README.md). The
 [Rust core architecture](./docs/architecture/rust-core.md) is the map of the
-crates and the npm packages, and the
-[rebuild plan](./plans/rust-rebuild.md) gives the order in which they land.
+crates and the npm packages.
 
 Run the tests that cover a change while you develop:
 

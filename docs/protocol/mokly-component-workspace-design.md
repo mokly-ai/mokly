@@ -160,7 +160,8 @@ stay separate from saved comparison evidence.
 ## Verification
 
 Capture regressions before making the changes. Exercise native viewport,
-theme, and highlight controls from disk and inside served frames. Verify both
+theme, and highlight controls inside served frames and in the `mokly build`
+output. Verify both
 rendered contexts, independent mask ids, correct labels, retained control values,
 leaf/composite tab membership, and explicit comparison eligibility.
 
@@ -169,7 +170,8 @@ grabber. Check bounds, closing/reopening, retained edits and preview dimensions,
 and document/main/inspector scrolling separately at mobile and desktop sizes.
 Verify centered menu/caret SVGs and clear Usage geometry at both sizes.
 Keep existing link, prop, usage, highlight-geometry, and Changes-count assertions.
-Open and visually inspect every changed artboard and the interactive Both/Dark
-states. Build the example with `mokly build --strict` and run
-`npx playwright test tests/browser/component*.spec.ts`.
+Open and visually inspect every changed artboard in the served Browse frames
+and the interactive Both/Dark states. Run the component specs of the browser
+suite against `mokly serve` with
+`npm run test:browser -- tests/browser/component*.spec.ts`.
 Finish with `cargo xtask check`, commit/push, and the post-push review.

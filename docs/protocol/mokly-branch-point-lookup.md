@@ -55,7 +55,7 @@ The counterpart of a current entry is its base identity:
 3. Otherwise return no counterpart. The current entry is new.
 
 A pair proves the counterpart identity even when base entries are not
-available to the caller. Without a pair or a supplied base commit's sources,
+available to the caller. Without a pair or a supplied [base inventory](./mokly-source-protection.md#complete-source-inventory),
 the lookup cannot prove a counterpart and returns none. The embedded public
 catalogue has no base usage; its input details follow the
 [viewer boundary](./mokly-viewer.md).
@@ -112,7 +112,7 @@ renames, parent role checks, and the pair/current-path invariant.
 The index and detail readers reject a removed variant without a
 nonempty `parentTitle`, and reject that field on a removed non-variant.
 
-One shared set of real Git base commits supplies these cases to node and
+One shared set of real Git base commits supplies these cases to Rust and
 browser tests:
 
 1. A screen and a component consumer move while the component they use

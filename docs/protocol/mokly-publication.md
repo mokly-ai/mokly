@@ -83,7 +83,7 @@ document, the bundled CSS, the opaque assets, the catalogue model, and the
 authored closure, all from the render cache. Nothing on disk is read back. The
 stylesheet freshness pass and the scoped npm URL checks apply.
 
-Fingerprint the inventoried inputs before rendering: the sources, the
+Fingerprint the [inventoried](./mokly-source-protection.md#complete-source-inventory) inputs before rendering: the sources, the
 configuration, the renderer module, the configured stylesheets, and the
 authored closure, including every inventoried helper even beneath an otherwise
 excluded `.context` directory. Use the shared confined file enumeration for
@@ -98,7 +98,7 @@ to the same directory still contribute their own logical fingerprint paths.
 Exclude the active stage and the destination from input enumeration by their
 canonical paths as well as by the usual output rules. This keeps the build's
 own writes out of its input digest when `.context` or a parent directory is an
-in-repository symlink. Explicit discovered authoring inputs stay included
+in-repository symlink. Explicit inventoried authoring inputs stay included
 even when directory enumeration excludes their location.
 
 Construct one catalogue model from that fingerprinted input set and use it for
