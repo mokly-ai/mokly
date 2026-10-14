@@ -67,7 +67,7 @@ interface CatalogueReadModel {
   schemaVersion: 7;
   identity: { id: string; title: string };
   deploymentId: string;
-  revision: number; // one counter per Serve state; fixed in a build
+  revision: number; // one counter per Serve state, from 1; 0 in a build
   base?: string; // the Changes base ref when Changes is configured
   live?: { generation: string | null }; // Serve only: the bundle generation
   changesStatus: ChangesStatus;

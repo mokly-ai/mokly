@@ -183,7 +183,7 @@ change, a Changes completion or status move, a bundle change, or a completed
 on-demand render; the server may combine several completions into one
 publication. Each publication replaces the index and the details in one step
 and raises `revision` by one. The event stream writes one message per
-publication whose `id` is the new revision and that carries no other data;
+publication whose `id` is the new revision and whose `data` field is empty;
 on every new connection the server writes one message with the current
 revision at once.
 
@@ -209,8 +209,8 @@ while hashing; generation files carry no deployment id, so one comparison
 gives the same bytes in every build. Serve chooses one `deploymentId` for the
 life of the server process, for example the hash of the catalogue identity and
 a start value, so a different id always means another build or another server
-process. `revision` orders the states of one Serve process and is fixed in a
-build.
+process. `revision` orders the states of one Serve process, which publishes
+its first state as `1`; a build writes `revision: 0`.
 
 ## Embedded Viewer
 
@@ -221,7 +221,7 @@ or a promise of either. The `@mokly/viewer/server` entry and `renderViewer`
 are retired; a React host renders the viewer in the browser. The
 `@mokly/viewer/browser` entry mounts the standalone shell into the stub's
 mount element. The [embeddable viewer contract](./mokly-viewer.md) owns the
-props, and the plan's viewer milestone revises it.
+props.
 
 ## Fail-Closed Rules
 

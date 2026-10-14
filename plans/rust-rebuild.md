@@ -687,6 +687,28 @@ Tags: ui
     name the comparison serving contract directly.
   - Observation: neither the namespace pointer nor the shell delivery page
     says what happens to the frozen evidence routes under `views/**`.
+  - Open from the review of commit 7cb14ebf, report under
+    `.context/rust-rebuild/review-2026-10-14-one-revision.md`:
+  - 1: document keys exist only for the routed entry's own views, so page,
+    document, and use-case frames have no reload input; decide where the
+    keys live (recommended: in the index's view, page, and document records).
+  - 2: the live descriptor is fetched only when the catalogue has consumer
+    JavaScript, so HTML-only catalogues get no live prop editing; decide
+    whether the `live` block alone enables the fetch (recommended).
+  - 3: a message whose id is at or below the installed revision is ignored,
+    so a Serve restart leaves open tabs stale; decide whether any differing
+    id starts a refresh (recommended).
+  - 4: `documentKey` hashes rendered bytes, but Serve answers a detail before
+    an on-demand render completes; decide whether Serve renders an entry's
+    views before it answers its detail (recommended).
+  - 7: the live descriptor v3 and the render capability have no typed shape;
+    decide the field list.
+  - 8: `ResourceEvidence` in the detail names a type the catalogue page no
+    longer declares, and review v8 uses the name for an array; decide the
+    detail's shape (recommended: the review v8 per-view records).
+  - 9: `Workspace.status` duplicates the index's `changes.kind` with another
+    spelling; decide whether to drop it (recommended) or type it as
+    `ChangeKind`.
 
 ## Post-merge follow-up (non-blocking)
 

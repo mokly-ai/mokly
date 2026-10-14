@@ -10,7 +10,8 @@ model's shape, projection, and versions stay in that contract.
 The [Rust rebuild plan](../../plans/rust-rebuild.md) rewrites this page for
 the index and entry detail routes of the
 [shell delivery contract](./mokly-shell-delivery.md); `catalogue.json` is
-retired (Decision 21).
+retired, and Serve uses one revision and a per-process deployment id
+(Decisions 21 and 27).
 
 ## Serve And Fetch Rules
 
