@@ -161,8 +161,9 @@ temporary-render capability of the component controls contract. The shell
 fetches it whenever the index carries `live`, at start and when
 `live.generation` changes; a catalogue without JavaScript has one too, because
 the Rust core renders an HTML entry with edited props itself. When the fetch
-fails, browsing works and live prop editing is unavailable with a browser
-warning. A static build has none.
+fails, browsing works, live prop editing is unavailable with a browser
+warning, and the shell retries on the next publication message. A static
+build has none.
 
 ## Fetch And Fences
 

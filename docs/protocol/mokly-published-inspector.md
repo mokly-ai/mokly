@@ -9,7 +9,9 @@ The static build injects the dependency-free inspector IIFE from
 after marker validation. It supplies an inert allowlisted map of
 instance keys to range ids/parents and validated logical-link identities from
 that document's accepted metadata, so `r-n` regions can be resolved without
-reading the catalogue. Bound this map to the
+reading the catalogue; the inspector locates each range through the
+`mokly-instance` and `mokly-slot` comment markers that served and built
+documents keep under the [comparison contract](./mokly-comparison.md#markers). Bound this map to the
 [wire protocol limits](./mokly-frame-adapter.md#wire-protocol-v2) and 262,144
 UTF-8 bytes; oversized maps disable cross-origin inspection explicitly. No
 private evidence or source text is embedded. Unowned files get no inspector or

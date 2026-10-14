@@ -8,7 +8,7 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 React DOM peers. `@mokly/mokly` depends on its exact released version. The
 viewer never imports the CLI, Node built-ins, Git, or consumer code, and it
 renders only in the browser. Its shared shapes are the generated types of the
-Rust model crate. The package has three entry points:
+Rust model crate. The package has four entry points:
 
 - The root React entry exports `MoklyViewer`, its types, the frame adapters,
   `resolveInstance`, and the readers of the catalogue index and the entry

@@ -15,7 +15,8 @@ and the scoped text that it bundles under the
 produces both, so the map and the delivered stylesheet agree by construction.
 The sidecar's [`bundle`](./mokly-sidecar.md#bundling) compiles the import to a
 stub that reads the map from the generation's table, which the core supplies
-through `cssModules` before the first render. Scoping runs after renderer
+through `cssModules` after `bundle` reports the graph and before `describe`
+evaluates the modules. Scoping runs after renderer
 pruning and after the consumer's PostCSS plugins, with no source map, so a
 `sourceMappingURL` comment never loads a map or reads a file. Diagnostic positions refer to the CSS that the scoper receives.
 

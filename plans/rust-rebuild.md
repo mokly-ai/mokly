@@ -300,7 +300,8 @@ more than re-deriving the behaviour from the requirements.
     `lightningcss` after the consumer's PostCSS step and derives the class map
     with the path-hash naming rule; `bundle` compiles each module CSS import
     to a stub that reads the generation's map table, which the core supplies
-    through the sidecar's `cssModules` call before the first render.
+    through the sidecar's `cssModules` call after `bundle` reports the graph and
+    before `describe` evaluates the modules.
 34. Live render fence (2026-10-14, amends 30): the live render request and
     response carry the installed `revision`, and Serve rejects an older
     revision with the stale-revision code; a change of the index's
@@ -331,7 +332,8 @@ more than re-deriving the behaviour from the requirements.
     frames, publication changes, configuration discovery) merge into their
     owners and `verification-protocol-index.md` is deleted; the viewer package
     README, the xtask README, the guides, and `AGENTS.md` follow the end state
-    now.
+    now. The guides wait for the user's decision on the guide tests, recorded
+    under the review TODO as item E.
 
 **Approvals the user gave on 2026-10-12, recorded for the teardown:**
 
@@ -617,7 +619,8 @@ from Milestone 12.
 - [ ] Implement stylesheet handling on `lightningcss`: imports, assets, and
       per-root bundles.
 - [ ] Port the example catalogue's HTML-only parts and add HTML fixtures; run
-      the gap sweep against the rendering contracts.
+      the gap sweep against the rendering contracts; the example README
+      follows.
 - [ ] Write the HTML authoring guides under `docs/guides`.
 - [ ] Commit.
 
@@ -800,7 +803,11 @@ Tags: ui
   - B: settled by Decision 32 on 2026-10-14.
   - C: settled by Decision 31 on 2026-10-14.
   - D: settled by Decision 38 on 2026-10-14.
-  - E: settled by Decision 38 on 2026-10-14.
+  - E: the viewer README, the xtask README, and `AGENTS.md` follow Decision 38. The guides are blocked: the root tests `guides_cli`, `guides_ci`, and
+    `guides_upload_validation` compare them with the current CLI, and the
+    guides contract requires shipped behaviour; decide whether to rewrite the
+    guides now and reduce those tests to structure, links, and versions, or
+    to rewrite them at Milestone 12 (recommended).
   - F: settled by Decision 36 on 2026-10-14.
   - G: settled on 2026-10-14; the release management page follows the
     seven packages of the release contract.

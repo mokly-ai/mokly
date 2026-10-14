@@ -77,8 +77,7 @@ the rule. Rules for one application, package, or feature live in the
 - Mockup check, after you change an example entry, the renderer, the
   configuration, or a configured style: `npm run build`, then
   `npx mokly build --config examples/basic/mokly.config.json --strict --out .context/example`.
-  Then smoke-test the changed pages through
-  `npx mokly serve --config examples/basic/mokly.config.json`.
+  Then smoke-test the changed pages through `npm run dev`.
 
 ## Repository rules
 
@@ -112,7 +111,7 @@ the rule. Rules for one application, package, or feature live in the
 
 - The product screens are the Browse shell under
   `packages/viewer/src/shell`. Serve, the static build, and React hosts
-  render this same tree in the browser. Check its existing components before
+  render this same tree in the browser. Check the shell's components before
   you create a component.
 - The design mockups of these screens live in
   `examples/basic/specs/design`. Build them from the shared design

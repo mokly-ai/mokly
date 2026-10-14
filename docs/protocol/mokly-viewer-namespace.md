@@ -71,8 +71,7 @@ The public paths of a catalogue are `mokly-viewer/index.json`,
 `mokly-viewer/shell.css`, `mokly-viewer/fonts/**`, and the immutable
 generations under `mokly-viewer/diffs/generations/**`. Serve answers
 `live.json`, `events`, `diffs/review.json`, and `components/**` to the
-same-origin shell only, outside the public paths, and a static output never
-contains them. The public paths keep ordinary path confinement and grant no
+same-origin shell only, outside the public paths. The public paths keep ordinary path confinement and grant no
 access to sources, controls, or the watcher.
 
 ## Version Matrix

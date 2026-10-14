@@ -20,13 +20,13 @@
   <a href="#development">Development</a>
 </p>
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 `@mokly/viewer` is an open-source React library that renders a Mokly catalogue
 inside another product. It reads the catalogue that `mokly serve` serves or
 `mokly build` writes, and it renders the same Browse shell as the standalone
 catalogue: browsing, comparison, and inspection. Your application keeps control
 of its navigation, branding, authentication, and collaboration UI.
-
-Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 > Need to create a catalogue? Use
 > [`@mokly/mokly`](https://www.npmjs.com/package/@mokly/mokly). The viewer is a
@@ -399,18 +399,10 @@ The embedded viewer reports the same failure through `onError` with code
 [version gates](../../docs/protocol/mokly-viewer-namespace.md#version-matrix)
 list every boundary.
 
-`@mokly/viewer/data` exports `GENERATED_DIRECTORY`, the `mokly-generated` route
-segment, and the shared path functions `entryRoute`, `viewRoute`,
-`documentRoute`, `viewHref`, `parseViewHref`, `currentDocumentPath`,
-`generatedResourcePath`, `generatedResourceRoute`, `snapshotViewPath`,
-`snapshotDocumentPath`, `snapshotSidePath`, `snapshotResourcePath`, and
-`previewMetadataPath`. `viewHref` returns the canonical `/view/<path>/` URL, and
-`parseViewHref` reads the canonical, extensionless, and `index.html` forms of
-that URL back into a path. The snapshot and preview functions build paths
-inside one comparison generation. `isPathSegment`, `isEntryPath`, and
-`isWindowsDeviceName` implement the path grammar. The complete naming contract
-is [path-derived artifact paths](../../docs/protocol/mokly-artifact-paths.md),
-and the [path contract](../../docs/protocol/mokly-paths.md) owns the grammar.
+`@mokly/viewer/data` exports the pure path functions and the generated
+directory names of the
+[artifact path contract](../../docs/protocol/mokly-artifact-paths.md), which
+lists every export; it has no React dependency.
 
 ## Theming
 

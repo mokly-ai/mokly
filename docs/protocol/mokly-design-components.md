@@ -171,7 +171,7 @@ edits to saved variants and control labels as well as implementation source edit
 
 Each registered component declares its exclusive public sheet through
 `libraryMetadata`. Route rules select only required mixed/global stylesheets;
-place `componentStylesheets` between shared base CSS and context/layout
+place `$componentStylesheets` between shared base CSS and context/layout
 overrides. Mokly inserts actual rendered component links in first-render,
 authored-file order; there is no per-render React style collector, candidate
 pool, `useDesignStyle` call, or renderer-side link synthesis. The renderer emits

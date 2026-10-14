@@ -70,8 +70,8 @@ markers of the comparison contract; its composed trees hold ownership in
 memory, and canonical form removes the markers before comparison.
 
 Ship the package shell assets and the complete browser module graph from the
-installed package. Do not ship consumer inputs, source maps, configuration
-modules, npm packages, `.git`, local environment files, or comparison
+installed package. Do not ship consumer inputs, source maps, the configuration
+file, the renderer and PostCSS modules, npm packages, `.git`, local environment files, or comparison
 diagnostic summaries. The output's public-safe inventory is distinct from
 private comparison data.
 

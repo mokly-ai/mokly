@@ -107,7 +107,7 @@ hrefs, in this order:
 
 1. The shared list of the first matching rule: each local path as its bundled
    route and each HTTP(S) URL unchanged, with the entry's declared component
-   stylesheets at the `componentStylesheets` marker of that list, or after
+   stylesheets at the `$componentStylesheets` marker of that list, or after
    the shared entries when the list has no marker, under the
    [component stylesheet contract](./mokly-component-stylesheets.md).
 2. That rule's scheme-specific list for the view's colour scheme, in the

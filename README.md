@@ -149,6 +149,7 @@ follow the command, for example `mokly build --config tools/mokly.config.json`.
 | -------------------------- | ------------------------------------------------------------------ |
 | `mokly serve`              | Serve the catalogue, render on demand, and watch for changes       |
 | `mokly serve --open`       | Serve and open the local URL in a browser                          |
+| `mokly serve --base <ref>` | Serve with Changes against another Git base                        |
 | `mokly build`              | Validate, render every view, and write the static site             |
 | `mokly build --out <path>` | Write the static site to `path` instead of `mokly-static/`         |
 | `mokly build --strict`     | Fail on warnings as well as on errors                              |

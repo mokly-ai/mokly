@@ -317,7 +317,7 @@ each other. Embedded roots also own their flex containment and measure host
 stage overlays against the current preview, keeping sibling viewers,
 navigation and the inspector outside an overlay's bounds. Browser transport
 remains behind `useViewerCapabilities`. The
-[live capability contract](../../../../docs/protocol/mokly-component-controls.md#rendering-boundary)
+[rendering boundary of the component controls contract](../../../../docs/protocol/mokly-component-controls.md#rendering-boundary)
 defines route loading, revision fencing and export omission.
 The standalone bootstrap contract
 defines usage scope, strict readers, serialization and capture invariants.

@@ -12,7 +12,7 @@ Three inputs supply CSS to a composed screen or component document, and the
 Rust core bundles them all:
 
 - configured `stylesheets` rules: local paths, config-relative, or HTTP(S)
-  URLs, with the scheme-specific lists and the `componentStylesheets` marker
+  URLs, with the scheme-specific lists and the `$componentStylesheets` marker
   of the [configuration contract](./mokly-configuration.md#shape);
 - stylesheets that entry modules and the renderer import, which the
   [sidecar](./mokly-sidecar.md#bundling) reports in the module graph and the
@@ -35,7 +35,7 @@ head as owned style elements under the
 ## PostCSS Module
 
 `postcss` optionally names a config-relative local module inside `repoRoot`.
-The core inventories its local imports as watched configuration inputs. The
+The core inventories its local imports as watched stylesheet inputs. The
 module runs in the sidecar's `processCss` call, in a fresh isolated module
 context per bundle generation, with consumer plugin packages loaded unbundled
 from the consumer's `node_modules`. PostCSS 8-compatible arrays include

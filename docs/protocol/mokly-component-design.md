@@ -137,7 +137,7 @@ shared component stylesheets are hand-authored public inputs, scoped to the
 `design/components/**/index.html` documents.
 Route-scoped rules link the required mixed/global sheets from the forty-one
 component design routes. Registered components declare exclusive CSS through
-`stylesheets`; the `componentStylesheets` marker keeps those links between base
+`stylesheets`; the `$componentStylesheets` marker keeps those links between base
 and layout sheets. Shared metadata supplies related docs, while folder records
 supply navigation. Source paths supply no comparison evidence. The controls
 stylesheet stays scoped to its eleven owning entries. Watched Serve reloads

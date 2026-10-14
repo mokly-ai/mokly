@@ -108,9 +108,10 @@ source only to `defineComponent` wrappers, as the
 [instances contract](./mokly-instances.md) reads it. A `*.module.css` import
 compiles to a stub that reads the file's class map from the generation's map
 table; the core scopes the file under the
-[CSS Modules contract](./mokly-imported-styles-modules.md) and supplies every
-map of the generation through `cssModules` before the first render, and a
-render of a generation without its table fails closed. esbuild is chosen because its plugin model gives the virtual entry, one React instance resolved from the consumer, the
+[CSS Modules contract](./mokly-imported-styles-modules.md) and supplies every map of the generation through `cssModules` after `bundle`
+reports the graph and before `describe` evaluates the modules; `bundle`
+evaluates nothing, and `describe` or a render of a generation without its
+table fails closed. esbuild is chosen because its plugin model gives the virtual entry, one React instance resolved from the consumer, the
 attributed authoring facade directly, and its metafile is the module inventory. Rolldown is reviewed again after the first release.
 
 The source root is the repository root for the head side of a comparison. For
@@ -147,8 +148,9 @@ binary sends `enabled` for a component element outside every scope. The state
 seeds the React scope context, so nesting across the boundary follows the
 innermost scope, and the binary applies no outer scope to the fragment. A
 fragment never emits `mokly-root`; the core attaches the root region of a
-component page itself. The binary reads the markers into tree ownership and
-drops them.
+component page itself. The binary reads the markers into tree ownership, consumes the ignore and
+`mokly-link` pairs, and writes the instance and slot pairs around the composed
+regions under the [comparison contract](./mokly-comparison.md#markers).
 
 ## Slots For JavaScript Components
 

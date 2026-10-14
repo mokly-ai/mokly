@@ -83,9 +83,8 @@ reserved for tokens, and this is the only token.
 ```
 
 The shared `stylesheets` list of a configured rule accepts public or HTTP(S) strings or that token, at most once. `lightStylesheets` and
-`darkStylesheets` accept strings only; a marker there, a second marker in the
-shared list, or a marker in any other configuration position fails loading
-with `config-invalid`. Matching route rules stay unique. With a marker, the
+`darkStylesheets` accept strings only; a marker there or a second marker in the
+shared list fails loading with `config-invalid`. Matching route rules stay unique. With a marker, the
 declared links take its position in the matching shared list. Without one,
 they follow all shared links and precede the matching scheme-specific links.
 No marker emits a literal `<link>`. A rule for another route has no effect.

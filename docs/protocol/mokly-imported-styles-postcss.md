@@ -33,8 +33,8 @@ module's directory. `import.meta.url`, `import.meta.dirname`, and
 source's real location. CommonJS modules and local `.cts` helpers use
 `require` conditions, keep Node built-ins, and receive `require`,
 `__dirname`, and `__filename` rooted at the real module path. The module's
-local imports are private, watched configuration inputs in the source
-inventory; a change reloads the configuration. On the base side of a
+local imports are private, watched stylesheet inputs in the source
+inventory; a change rebuilds the stylesheet bundles. On the base side of a
 comparison the module runs with the base commit's sources and dependencies
 under the [dependency tiers](./mokly-comparison.md#sides).
 
