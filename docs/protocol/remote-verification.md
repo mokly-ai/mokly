@@ -1,5 +1,7 @@
 # Remote Verification
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Executor Selection
 
 `cargo xtask check` accepts `--executor auto|local|remote`. The flag overrides
@@ -113,7 +115,7 @@ Run probes and suite commands from the snapshot under the
 1. Read local `HEAD` and the base commit. Build the snapshot. Then read the
    checkout and snapshot fingerprints and require equal values before warmup.
    Record the [run identity](./remote-verification-base.md#identity-output-and-file).
-2. Warm up 11 boxes in parallel through `blacksmith testbox warmup`.
+2. Warm up six boxes in parallel through `blacksmith testbox warmup`.
    Use `.github/workflows/blacksmith-testbox.yml`, `--ref main` and
    `--idle-timeout 30`. Use `MOKLY_TESTBOX_REF` when it is set.
    Record each box ID. Warmup must return exactly one
@@ -121,7 +123,7 @@ Run probes and suite commands from the snapshot under the
 3. Probe every box through `blacksmith testbox run`.
    Allow at most 10 minutes for readiness. The probe must confirm both the
    checkout fingerprint and selected base commit on every box.
-4. Start the [11 suite commands](./remote-verification-testbox.md#remote-commands)
+4. Start the [six suite commands](./remote-verification-testbox.md#remote-commands)
    in parallel. Assign one command to each box. No suite may start until
    all probes pass.
 5. When a command ends, download its report if it produces one.
@@ -136,8 +138,8 @@ Run probes and suite commands from the snapshot under the
 9. Remove the snapshot and temporary index under the
    [snapshot cleanup contract](./remote-verification-base.md#snapshot-cleanup).
 
-A successful check requires all 11 commands to exit 0. It also requires all
-nine downloads, a valid aggregate and an unchanged local source tree.
+A successful check requires all six commands to exit 0. It also requires all
+five downloads, a valid aggregate and an unchanged local source tree.
 After the first suite command starts, a box that is neither stopped nor proven
 completed after all cleanup attempts does not fail the check. The
 [cleanup contract](./remote-verification-cleanup.md#cleanup-and-interrupts)
@@ -154,7 +156,7 @@ blacksmith testbox warmup blacksmith-testbox.yml --ref main --idle-timeout 30
 ## Report Download And Aggregation
 
 Use the [Testbox report contract](./remote-verification-testbox.md#report-download-and-aggregation)
-for the nine downloads, fresh run directories and local aggregate.
+for the five downloads, fresh run directories and local aggregate.
 
 ## Output And Logs
 

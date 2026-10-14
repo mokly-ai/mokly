@@ -17,7 +17,7 @@ available only in Current. No pixel counts or percentages are ever shown.
 
 ## Presentation
 
-Serve, static export, and embedded viewers with either adapter use one
+Serve, the static build, and embedded viewers with either adapter use one
 presentation path for every pane document. After the comparison JSON validates,
 the viewer fetches every document the selected viewport and scheme need, for
 both viewports when both are shown, before reporting ready. Each address must
@@ -28,7 +28,7 @@ pinned `comparisonUrl`. The GET carries the comparison's abort signal and uses
 the comparison credential rule: `credentials: "omit"` for pinned delivery and
 `credentials: "same-origin"` for live delivery.
 
-Review v7 addresses panes by entry identity, view axes, and state. The viewer derives
+Review v8 addresses panes by entry identity, view axes, and state. The viewer derives
 each side's `snapshots/<side>/mokly-generated/<viewRoute(...)>` address from the entry's path,
 `previousPath` on a [moved](./mokly-moves.md) entry's before side; no entry route
 or snapshot path travels in comparison JSON.
@@ -101,7 +101,7 @@ Narrow layouts keep the existing single-column responsive rules.
 
 A pane whose document is missing, such as the current side of a removed
 component variant, keeps the existing explicit missing-pane message and the
-comparison falls back to Side by side, as it does today.
+comparison falls back to Side by side.
 
 An app shell may keep a zero-range page while its panels scroll. Those inner
 regions pair and mirror by authored name, id, role and accessible name, or a
@@ -148,7 +148,7 @@ An embedded viewer may fetch, on the source origin, every path beneath the
 advertised generation's `snapshots/before/` and `snapshots/after/` directories
 once a comparison is selected, under the existing CORS, `credentials: "omit"`,
 `nosniff`, and `text/html` rules of the
-[export delivery contract](./mokly-export-delivery.md). The documented host
+[static delivery contract](./mokly-export-delivery.md). The documented host
 CORS requirement already covers `mokly-viewer/diffs/generations/**`, so pane
 documents need no new hosting rule. A `srcdoc` document inherits the embedding
 document's Content Security Policy; an embedded host must allow the artifact
@@ -162,9 +162,9 @@ each request to its immutable generation and configured sides.
 
 Regressions prove the page items below in live Serve through the selected
 comparison path (`tests/browser/comparison_alignment.spec.ts` and
-`comparison_alignment_input.spec.ts`). Against a static export and an embedded
+`comparison_alignment_input.spec.ts`). Against a static build and an embedded
 viewer through both frame adapters, `comparison_alignment_hosts.spec.ts` proves
-stacked wheel alignment, frame attributes, inert links and anchors, and export
+stacked wheel alignment, frame attributes, inert links and anchors, and static
 Side by side mirroring; the pane failure path runs embedded. The region, key,
 anchor, and Scroll together items are proved by the five
 `tests/browser/comparison_regions*.spec.ts` suites, which the scrolling,
@@ -201,7 +201,7 @@ under `packages/viewer/tests/` cover the controllers.
   generation; no pane loads a snapshot as its `src`.
 - A document or host that asks for smooth scrolling still moves with the
   shared offset at once, in a stack and in Side by side.
-- Links and forms inside a pane stay inert in Serve, a static export and an
+- Links and forms inside a pane stay inert in Serve, a static build and an
   embedded viewer, including while a slow resource holds back its load.
 - Ready waits for every selected document; a pane document that cannot be
   presented renders the failure copy, reaches an embedded host's error event,

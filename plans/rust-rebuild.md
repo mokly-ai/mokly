@@ -53,8 +53,10 @@ Later on 2026-10-14 the user reset the documentation (Decisions 28 and 29):
 protocol pages define the end state only, the 24 pages that described the
 previous backend alone are deleted, every status section and history pointer
 is gone, the 78 pages that described it in part are rewritten now, no test
-asserts protocol content, and every other plan is deleted. The previous
-protocol is `main` commit `0bbd737e`.
+asserts protocol content, and every other plan is deleted. The previous protocol is `main` commit `0bbd737e`. The same day
+the 78 pages were rewritten by subject, the kept pages were swept for retired
+wording, the `dependencies` entry field went under Decision 5, and the index
+lists 151 pages by subject.
 
 **Goal:** rebuild Mokly's backend as a Rust core with a Node sidecar for
 JavaScript rendering, on a clean tree. The core meets five requirements:
@@ -137,7 +139,10 @@ more than re-deriving the behaviour from the requirements.
     warnings, and writes the static output into the directory `--out` names,
     `mokly-static/` at the repository root by default, which Git must ignore.
     `publish` builds into its own directory outside the repository and
-    uploads. There is no `check`
+    uploads. Amended on 2026-10-14 by the end-state rewrite: `build` and
+    `publish` take `--base <ref>` and `--no-changes`; `publish` builds into
+    a private directory that the terminal names and keeps after a failed
+    upload. There is no `check`
     and no `export`; a validation-only run is a build to a temporary
     directory.
 15. Caches (2026-10-13): the render cache is process memory. The base-side
@@ -427,19 +432,19 @@ merges; the freeze applies to it from 2026-10-12.
       `design_screen_counts`, `imported_styles_error_catalogue`) and the
       protocol-page assertions inside six other test files.
 - [x] Delete every other plan (Decision 29).
-- [ ] Rewrite the root `README.md` and the architecture pages to the end
+- [x] Rewrite the root `README.md` and the architecture pages to the end
       state.
-- [ ] Rewrite the 78 pages that described the previous backend in part, by
+- [x] Rewrite the 78 pages that described the previous backend in part, by
       subject, each at or under 250 lines with the `Status` line:
-  - [ ] authoring;
-  - [ ] rendering;
-  - [ ] comparison and Changes;
-  - [ ] read model and delivery;
-  - [ ] Serve, watch, and the CLI;
-  - [ ] static build and publish;
-  - [ ] viewer;
-  - [ ] design mockups;
-  - [ ] CI, verification, and release.
+  - [x] authoring;
+  - [x] rendering;
+  - [x] comparison and Changes;
+  - [x] read model and delivery;
+  - [x] Serve, watch, and the CLI;
+  - [x] static build and publish;
+  - [x] viewer;
+  - [x] design mockups;
+  - [x] CI, verification, and release.
 - [ ] Confirm the landable pull requests merged: #135, #182, and the test and
       CI housekeeping; the user merges them.
 - [ ] Tag the last TypeScript backend commit on `main` as `ts-backend-final`.
@@ -460,7 +465,8 @@ merges; the freeze applies to it from 2026-10-12.
       before the teardown deletes `docs/protocol/mokly-native-engine.md`.
 - [ ] Trim `xtask`: the repository suite keeps the audit, Prettier, ESLint,
       the length audits, Rust formatting, Clippy, tests, and the file-length
-      audit; a viewer suite runs the viewer typecheck and tests; the package,
+      audit; a viewer suite runs the viewer typecheck and tests and the tooling tests
+      under `tests/`; the package,
       unit, browser, and hydration suites and their remote shards are removed
       until later milestones add new ones.
 - [ ] Update `.github/workflows/ci.yml`, `release-please-config.json`, and
@@ -711,6 +717,29 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
+    consolidated here):
+  - A: served and built documents carry no markers (Decision 13), but the
+    frame adapter, the viewer markers, and the published inspector locate
+    instance regions inside the mounted document; decide the locator.
+  - B: `defineComponent` keeps `render(props, { viewport, colorScheme })`
+    while screens take `render(props)`; decide one signature.
+  - C: the comparison contract lists an `excluded` rule status that the
+    per-rule rule makes unreachable, while the CSS membership page writes
+    one per-stylesheet `excluded` record; decide whether that record exists.
+  - D: seven pages are merge candidates after the rewrite (generated
+    delivery, catalogue entry records, catalogue fetch, live capabilities,
+    removed preview frames, publication changes, configuration discovery).
+  - E: the viewer package README, the xtask README, and the guides still
+    describe the previous product; decide whether they follow now or at
+    their milestones.
+  - F: the source directory of the `@mokly/mokly` shim, sidecar, and
+    authoring API after the teardown is unnamed; the README assumes
+    `packages/mokly`.
+  - G: `npm-release-management.md` packs and publishes only the viewer and
+    the CLI; `npm-release.md` publishes seven packages.
+  - H: a React variant may declare `slots` as a map from slot name to a
+    React node, by analogy with HTML components; confirm.
   - Open from the review of commit 9a7aa5e2, report under
     `.context/rust-rebuild/review-2026-10-13-nine-decisions.md`:
   - 5: a function-valued story arg with no `argTypes` entry has no stated

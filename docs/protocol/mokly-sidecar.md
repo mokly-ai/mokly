@@ -96,10 +96,8 @@ the hash of every module in the metafile, the renderer module, the resolution
 settings, and the installed React version; the binary uses it as one part of the cache key
 for every fragment. The sidecar reports `modules`, the repository-relative
 source files of the graph, so the binary can watch them and invalidate the
-generation. esbuild is chosen because the frozen backend's plugin behaviour
-(the virtual entry, one React instance resolved from the consumer, the
-attributed authoring facade) ports to it directly and its metafile is the
-module inventory. Rolldown is reviewed again after the first release.
+generation. esbuild is chosen because its plugin model gives the virtual entry, one React instance resolved from the consumer, the
+attributed authoring facade directly, and its metafile is the module inventory. Rolldown is reviewed again after the first release.
 
 The source root is the repository root for the head side of a comparison. For
 the base side it is the directory into which the
@@ -178,8 +176,7 @@ without a warning, and the story renders with the file's own value for it.
 ## Consumer PostCSS
 
 `processCss` runs the consumer's PostCSS module in a worker inside the sidecar
-with a fresh module context per generation, as the frozen backend's isolated
-worker does. It returns the transformed text and the plugin-reported file and
+with a fresh module context per generation. It returns the transformed text and the plugin-reported file and
 directory dependencies for watching. Mokly's own CSS work stays in Rust.
 
 ## Cancellation And Timeouts
@@ -209,8 +206,7 @@ JavaScript never start a sidecar and never fail for these reasons.
 ## Security
 
 The sidecar runs consumer code with the same trust as the consumer's own build.
-It receives the environment unchanged, like the frozen backend's render
-workers. Installing a base commit's dependencies for the comparison contract's second
+It receives the environment unchanged. Installing a base commit's dependencies for the comparison contract's second
 tier runs the package manager with lifecycle scripts disabled and a time limit,
 so no consumer script executes at install time.
 
@@ -219,4 +215,4 @@ so no consumer script executes at install time.
 - [Entry props and variants](./mokly-entry-props.md)
 - [Rust core architecture](../architecture/rust-core.md)
 - [HTML screens](./mokly-html-screens.md)
-- [Rendering contract of the frozen backend](./mokly-rendering.md)
+- [Rendering and document assembly](./mokly-rendering.md)

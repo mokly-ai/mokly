@@ -2,137 +2,137 @@
 
 Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
-This spec validates and emits the [component comparison result schema](./mokly-component-review.md).
-Canonical order enforcement and the shared affected-consumer key are
-implemented by both the producer and strict path-keyed review result v7 reader.
+This contract validates and emits the
+[component comparison schema](./mokly-component-review.md). The producer and
+the strict path-keyed review v8 reader enforce the same canonical order and
+share one affected-consumer order key.
 
 ## Validation And Canonical Output
 
-Use one result schema and reason policy in Browse's lightweight classification,
-comparison generation, publishing, and client decoding. Validate against both
-source manifests while generating/publishing so evidence cannot name an unknown
-entry, view, instance, or rendered resource. Require every component/screen ChangedEntry
-to match its result record's side addresses. Use-case addresses and screen
-reasons must match the source manifests' use-case steps. Unknown fields in new
-structures, inconsistent sides, duplicate records/reasons, missing view evidence,
-and invalid values fail rather than being silently dropped.
+One result schema and one reason policy serve Serve's background
+classification, the selected comparison, `build`, `publish`, and the viewer's
+decoding. The producer validates the result against both sides' catalogue
+models, so evidence cannot name an unknown entry, view, instance, or rendered
+resource. Every screen, component, variant, and use case record must match its
+side addresses; use case addresses and screen reasons must match the sides'
+use case steps. Unknown fields, inconsistent sides, duplicate records or
+reasons, missing view evidence, and invalid values fail rather than being
+dropped.
 
-For each entry, the classifier records retained resources from its actual
-view comparisons and non-CSS owned resource evidence at actual invocations.
-For CSS, freeze per-rule unfiltered and kept own-page matches and page selectors.
-Nested filtering uses the unfiltered sets; component reasons require kept
-matches on the named component or variant's own pages. The
+For each entry, the classifier records the owner-attributed rule and resource
+records of its actual view comparisons. For CSS, it records the unfiltered
+and kept own-page match sets of every rule identity before any entry's
+evidence is decided. Nested filtering uses the unfiltered sets; a component
+owner requires kept matches on that component's or variant's own pages. The
 [ownership rule](./mokly-component-changes.md#rendered-resources-and-styles)
-excludes unrendered source paths and manually declared paths. Source validation
-accepts a `dependency` reason only when that entry's recorded sources contain
-its path and, for CSS, its eligible rule records. A retained path alone cannot
-justify a page or component reason. It uses the frozen classifier evidence, never the result's own rows
-or a fresh path match. Source keys use kind and path, including flattened variants; a moved entry
-uses its current path.
+excludes unrendered source paths and declared paths. Source validation accepts
+a `dependency` reason only when a view of that entry carries a rule or
+resource record owned by the entry for that path; a reachable path alone never
+justifies a reason. It uses the recorded classifier evidence, never the
+result's own rows or a fresh path match. Source keys use kind and path,
+flattened variants included; a moved entry uses its current path.
 
-Source validation receives the same accepted pairs as classification. It requires
-exact `previousPath` coverage, both original side addresses, and one Changes
-record for every moved screen, component, variant or use case. Readers reject
-case-only previous paths, duplicate historical identities, and any paired
-historical identity also advertised as removed. Catalogue readers additionally
-require ready, included, unmodified-or-changed current records for prior paths.
-Empty entry reasons are valid only for a paired move. Page and document moves
-remain catalogue evidence under the [move contract](./mokly-moves.md#result).
+Source validation receives the accepted move pairs of classification. It
+requires exact `previousPath` coverage, both original side addresses, and one
+record for every moved screen, component, variant, or use case. Readers reject
+a case-only `previousPath`, duplicate historical identities, and a paired
+historical identity that is also listed as removed. Catalogue readers
+additionally require ready, included, unmodified-or-changed current records
+for prior paths. Empty reasons are valid only for a paired move. Page and
+document moves are catalogue evidence under the
+[move contract](./mokly-moves.md#result).
 
 Source validation also receives the implementation-impact set computed from
-the classifier's paired material, unchanged inputs and rendered-resource policy. It
-requires exact equality with the complete affected-consumer evidence derived
-from that set and both manifests. Neither a subset nor the set of every changed
-component is sufficient: saved-variant/control metadata edits can be direct
-changes without implementation impact. Wrapper-only or unresolved CSS page
-reasons also have no component impact unless another rule proves a kept own-root
-match. Never build the CSS impact set from consumer invocation matches. Every classification path performs this
-validation before returning results, including lightweight Browse updates.
+the classifier's paired canonical forms, unchanged inputs, and
+rendered-resource policy. It requires exact equality with the complete
+affected-consumer evidence derived from that set and both sides' usage.
+Neither a subset nor the set of every changed component is sufficient:
+variant or control metadata edits can be direct changes without
+implementation impact, and a wrapper-only or unresolved entry reason has no
+component impact unless another rule proves a kept own-root match. The CSS
+impact set is never built from consumer-instance matches. Every
+classification path performs this validation before it returns a result.
 
-The [selected live endpoint](./mokly-selected-comparisons.md) projects a validated
-complete result onto one screen or component variant entry. Its response uses
-this schema's record and reference validation, while catalogue-wide source
-coverage and affected evidence remain owned by the original background
-classification and shell inspector.
+The [selected comparison](./mokly-selected-comparisons.md) of Serve projects
+a validated complete result onto one screen or component variant entry. Its
+response uses this schema's record and reference validation; catalogue-wide
+source coverage and affected evidence stay with the background classification
+and the shell inspector.
 
 Entry paths follow the [path grammar](./mokly-paths.md#segment-grammar);
 `ignoredIds` use the
 [Review-ignore grammar](./mokly-changes-serving.md#review-ignore). The result
-stores no snapshot path: files are derived with the shared builders in the
+stores no snapshot path: files are derived with the shared builders of the
 [artifact path contract](./mokly-artifact-paths.md). When those files are
-written or served, reject absolute paths, traversal, encoded
-separators, source-root access, and non-regular files using existing
-snapshot/resource validation. Props in variant addresses use
-the corresponding side's schema and canonical wire codec. Instance keys are
-opaque validated identifiers and never become filesystem paths or selectors.
+written or served, absolute paths, traversal, encoded separators, source-root
+access, and non-regular files are rejected under the
+[comparison serving contract](./mokly-comparison-serving.md). Props in entry
+addresses use the side's own schema and the canonical JSON of the
+[entry props contract](./mokly-entry-props.md). Instance keys are opaque
+validated identifiers and never become filesystem paths or selectors.
 
-Serving filesystem-backed retained snapshots repeats regular-file and confinement checks at
-request time. Symlinks at the retained root, any descendant directory, or the
-file itself return 404, including artifacts modified after generation.
-Diagnostic Markdown renders authored titles as escaped single-line text and
-uses safe code-span delimiters for refs and paths; JSON retains original values.
-Selected live generations instead serve an immutable captured byte map; they do
-not reopen filesystem paths when delivering a retained snapshot.
+A generation written by `build` is served by a static host as plain files;
+Serve's selected generations serve an immutable captured byte map and reopen
+no filesystem path. Diagnostic text renders authored titles as escaped
+single-line text and uses safe code-span delimiters for refs and paths; JSON
+keeps original values.
 
-Lexical ordering uses UTF-16 code units. This paragraph exclusively owns
-`review.json` array order: `screens` and `components` sort by path; each
-`components[].variants` array contains current variants in current authored
-order followed by baseline-only variants in baseline authored order; each
-entry's views are mobile/light, mobile/dark, desktop/light, desktop/dark;
-`changes` sorts by kind then `(after ?? before).path`; and affected consumers
-sort by `changedComponentId`, consumer kind, then consumer path. The shared
-`@mokly/viewer/data` export `affectedConsumerOrderKey(record)` joins that tuple
-with `\u0000` and is used by producer and reader. Reasons sort by kind, then
-by `path` or `screenPath`. Affected evidence sorts by side (before then
-after), context entry path, `variantPath` when present, viewport/scheme order,
-and canonical JSON of `via`; `via` itself keeps dependency-chain order. Path
-sets are sorted and unique, and `ignoredImpact` uses viewport/scheme/id order
-of its Review-ignore ids. Readers enforce every stated order and reject
+Lexical ordering uses UTF-16 code units. This paragraph exclusively owns the
+array order of `review.json`: `entries` sorts by kind, then path; a
+component's `variants` lists its current variants in current authored order,
+then its base-only variants in base authored order; each record's views are
+mobile/light, mobile/dark, desktop/light, desktop/dark; reasons sort by kind,
+then by `path` or `screenPath`; `rules` and `resources` records sort as the
+[evidence schema](./mokly-css-attribution-membership.md#evidence-schema)
+states; `affected` sorts by `changedComponentId`, consumer kind, then consumer
+path, and its evidence by side (before, then after), context kind, context
+entry path, view order, and the canonical JSON of `via`, which keeps its chain
+order; `diagnostics` keep the order in which the comparison produced them.
+Path sets are sorted and unique. Readers enforce every stated order and reject
 duplicates rather than reordering input.
 
-New object keys sort lexically; optional fields are omitted and required empty
-arrays remain explicit. Emit two-space JSON and a final LF, with no timestamp,
-absolute checkout path, or transient controls result. Serve no-store/nosniff
-headers and retain immutable snapshot generations and unmodified documents.
+The result is the canonical JSON of the model crate: keys in lexical order,
+optional fields omitted, required empty arrays explicit, no timestamp,
+absolute path, or transient control result. Generation routes carry
+`no-store` and `nosniff`, and a generation's files never change.
 
-Emit review result v7 for every catalogue. Readers accept only review result v7;
-older and unknown versions fail. Shared fixture tests must
-cover valid/invalid schemas, deterministic round trips, current and removed
-variants/consumers, metadata-only changes, zero Changes with affected screens,
-and identical served/published membership. This coverage is required.
+Every producer emits review result v8, and every reader accepts only version
+8; another or an unknown number fails before any field is read. Fixture tests
+cover valid and invalid results, deterministic round trips, current and
+removed variants and consumers, metadata-only changes, zero Changes with
+affected screens, and identical served and built membership.
 
 ## Path Identity
 
-Pair entries by kind and case-folded path. A case-only rename keeps one identity
-and has no removed record; classify it by metadata and material content. Component
-parents and variants share this pairing namespace, so changing between the two
-shapes produces one Changed record with both sides. Grouped component comparison
-records retain the views belonging to each component side.
+Pair entries by kind and case-folded path. A case-only rename keeps one
+identity and has no removed record; classify it by metadata and material
+content. Component parents and variants share this pairing namespace, so a
+change between the two shapes produces one changed record with both sides.
+Grouped component records keep the views that belong to each component side.
 
-## Baselines
+## Sides
 
-Baseline and current documents come from validated manifest-v10 output and
-retain their original bytes. Style offsets and component ranges share each
-document's UTF-16 coordinate space. Only a canonical, valid v10 baseline reaches
-attribution, under the baseline compatibility contract.
+Both sides are the composed documents of the
+[comparison contract's sides](./mokly-comparison.md#sides), rendered by the
+current Mokly version and read from the render cache with their real bytes;
+ownership regions are node annotations of those trees, and no text offset
+exists. The base is the merge base of `HEAD` and the configured base; staged,
+unstaged, and untracked edits participate on the head side. No command checks
+the base commit out. Cross-kind path reuse and moves follow the
+[comparison engine](./mokly-changes-serving.md#comparison-engine) and the
+[move contract](./mokly-moves.md); title edits are metadata changes.
 
-Use the existing merge base with `origin/main` or the configured base; staged,
-unstaged, and untracked current edits still participate. Cross-kind path reuse
-and moves follow the [comparison pairing rule](./mokly-changes-serving.md#comparison-engine)
-and the [move contract](./mokly-moves.md); title edits remain metadata changes.
+New and removed components and variants keep explicit missing sides. Usage is
+the union of both sides, so removing a component does not erase its former
+consumers. A component with no variant affected by a render edit can still be
+changed through an owned non-CSS resource or a proven render difference at a
+paired instance with unchanged inputs; this exception never supplies a
+stylesheet-rule component reason. For that instance, parent-owned child inputs
+are kept and caller-owned slots excluded under the same ownership policy as
+the component's own pages. Metadata-only edits invent no affected consumers,
+and no variant is invented for every possible prop combination.
 
-New/removed components and variants retain explicit missing comparison sides.
-Union baseline/current usage so removing a component does not erase its former
-consumers. A component with no saved variant affected by an implementation edit
-can still be changed through a linked owned non-CSS resource or a proven
-implementation difference at a paired actual invocation with unchanged inputs.
-This exception never supplies a stylesheet-rule component reason.
-For that invocation, retain parent-owned child inputs and exclude caller-owned
-slots using the same ownership policy as saved variants. Metadata-only edits
-do not invent affected consumers. Do not
-invent a variant representing every possible prop combination.
-
-When either side lacks validated component metadata, compare its real content
-conservatively. Initial registration or one-sided ownership adoption must not
-hide a simultaneous edit or create synthetic empty components. Do not rebuild
-or check out the baseline during comparison.
+When a side lacks a component's regions, because the component is registered
+on one side only, its real content is compared conservatively. Initial
+registration or one-sided ownership must not hide a simultaneous edit or
+create synthetic empty components.

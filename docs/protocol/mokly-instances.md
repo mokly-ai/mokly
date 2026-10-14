@@ -4,13 +4,16 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Identity And Scope
 
-An instance is one logical invocation of a `defineComponent` wrapper. Its
-`ComponentInstanceRecord` belongs to one screen or component variant entry's
-`ComponentViewRecord`; see the [manifest schema](./mokly-component-manifest.md).
-The component root of its own variant entry is the entry owner, not a used
-instance. Replaying captured slot content can place one instance more than once.
+An instance is one logical use of a registered component inside an entry's
+render: a component element in an HTML screen, component, or page body, or a
+`defineComponent` wrapper in a React render or a Storybook story. Its
+`ComponentInstanceRecord` belongs to one view of one screen or component entry
+under the [usage records contract](./mokly-component-usage-records.md). The
+component root of its own entry's page is the entry owner, not a used
+instance. Slot content that a component renders more than once places one
+instance more than once.
 
-The exact algorithm in [`keys.ts`](../../packages/viewer/src/components/keys.ts) is:
+The key algorithm is:
 
 ```ts
 const preimage = [
@@ -20,68 +23,74 @@ const preimage = [
   slotKey ?? null,
   id,
 ];
-const key = createHash("sha256").update(JSON.stringify(preimage)).digest("hex");
+const key = sha256(JSON.stringify(preimage)); // lowercase hex
 ```
 
 Hash UTF-8 bytes with no trailing newline, salt, whitespace, or path prefix.
-The result is exactly 64 lowercase hexadecimal characters. The historical
-`mokabook-instance-v1` domain string is frozen, including its spelling.
-`id` is the validated local `moklyInstance` value, defaulting to the registered
-component's resolved path's final segment when omitted, including after index
-collapse or a declared path override. Explicit values retain lowercase kebab-case
-grammar; inferred defaults follow the component path's segment grammar.
-`owner` is `{ kind: "entry" }` or
-`{ kind: "instance", instanceKey }`. The separate receiving-slot key is the
-same digest operation over `["mokabook-slot-v1", instanceKey, name]`.
+The result is exactly 64 lowercase hexadecimal characters. The
+`mokabook-instance-v1` domain string is a fixed protocol identifier,
+including its spelling. `id` is the validated local instance id: the
+`mokly-instance` attribute of a component element, or the `moklyInstance`
+prop of a wrapper, defaulting to the final segment of the registered
+component's resolved path, including after index collapse or a declared path
+override. Explicit values use lowercase kebab-case grammar; inferred defaults
+follow the component path's segment grammar. `owner` is `{ kind: "entry" }`
+or `{ kind: "instance", instanceKey }`. The receiving-slot key is the same
+digest operation over `["mokabook-slot-v1", instanceKey, name]`.
 
-The containing entry path, viewport, color scheme, `componentId`, props, and
+The containing entry path, viewport, colour scheme, `componentId`, props, and
 source location are **not** in the instance preimage. In particular, moving an
-entry-owned invocation to another screen can retain the same digest. Keys are
-unique within a view, not globally across a catalogue. Public `InstanceRef`
-stores the owning entry path in `screenPath` plus viewport, scheme, key, and
-optional flow `stepIndex`; it has no `variantId`, because a component variant's
-path is already the owning entry path. Moving entries changes the scoped reference even
-if the digest is identical. Never search another entry for a missing key.
+entry-owned use to another screen can keep the same digest. Keys are unique
+within a view, not globally across a catalogue. Public `InstanceRef` stores
+the owning entry path in `screenPath` plus viewport, scheme, key, and optional
+flow `stepIndex`; it has no `variantId`, because a component variant's path is
+already the owning entry path. Moving entries changes the scoped reference
+even when the digest is identical. Never search another entry for a missing
+key.
 
 `slotKey` denotes the original input slot scope. Forwarding a slot preserves
-that scope; it does not replace it with each later physical receiving slot.
-The input owner and physical range parent can differ.
+that scope; it does not replace it with each later receiving slot. The input
+owner and the region that contains the output can differ.
 
 ## Stability Rule
 
 A digest changes if and only if its serialized preimage changes, subject to the
 usual SHA-256 collision assumption. Edits that change it are:
 
-- Changing the effective `moklyInstance` id, including changing the final component path segment when it supplies the default.
-- Changing input ownership between entry and instance, or moving the invocation
-  to a parent with a different instance key.
-- Changing the original receiving slot key, including entering/leaving a slot,
-  renaming its declared slot, or changing its receiving instance's key.
+- Changing the effective instance id, including changing the final component
+  path segment when it supplies the default.
+- Changing input ownership between entry and instance, or moving the use to a
+  parent with a different instance key.
+- Changing the original receiving slot key, including entering or leaving a
+  slot, renaming its declared slot, or changing its receiving instance's key.
 - Changing an ancestor input key when that change propagates into this
   instance's owner key or slot key.
 
 Edits that keep it, provided those inputs stay the same, are:
 
 - Editing data props, slot content, component implementation, styles or assets.
-- Reordering siblings, or inserting/removing other siblings with distinct ids.
-- Changing source filename, invocation line/column, comments or formatting.
-- Renaming an entry title or folder title, or moving the containing entry; moving between
-  entry scopes can retain the digest but changes the scoped reference.
-- Changing viewport/scheme, or rendering under a sibling variant entry; each
-  context has its own record.
-- Moving, forwarding, or replaying an unchanged captured slot in the rendered
-  DOM, or changing physical wrappers, range ids, or placement count.
-- Replacing the registered component while retaining an explicit local id;
-  `componentId` remains recorded separately and Changes can still be material.
+- Reordering siblings, or inserting or removing other siblings with distinct
+  ids.
+- Changing source filename, invocation line or column, comments or formatting.
+- Renaming an entry title or folder title, or moving the containing entry;
+  moving between entry scopes can keep the digest but changes the scoped
+  reference.
+- Changing viewport or scheme, or rendering under a sibling variant entry;
+  each context has its own record.
+- Rendering unchanged slot content again, or changing physical wrappers,
+  region ids, or placement count.
+- Replacing the registered component while keeping an explicit local id;
+  `componentId` is recorded separately and Changes can still be material.
 
 Duplicate local ids in the same input scope and placement are build errors.
-Repeated placement is allowed only for deterministic captured-slot replay;
-it must retain the same logical inputs. Never repair collisions with positional
-suffixes: that would break stability under reordering.
+Repeated placement comes only from slot content that a component renders more
+than once with the same logical inputs. Never repair collisions with
+positional suffixes: that would break stability under reordering.
 
 ## Record-Only Resolution
 
-The viewer exports this pure function using validated manifest record types:
+The viewer package exports this pure function over validated usage record
+types:
 
 ```ts
 type InstanceResolution = "present" | "moved" | "missing";
@@ -108,22 +117,24 @@ placement rule. `order` is the recorded zero-based encounter order in that
 input scope, not the index in the key-sorted `instances` array.
 
 Only `key`, `propsKey`, `order`, and normalized `slotKey` are compared. Neither
-raw `props`, `componentId`, `source`, nor any external baseline is consulted.
-Props equality relies on the manifest's validated `propsKey`. `moved` means a
-retained key whose recorded inputs/order changed; it is not a claim about pixels.
-`present` does not assert identical rendering or identical component definitions.
+raw `props`, `componentId`, `source`, nor any comparison result is consulted.
+Props equality relies on the validated `propsKey`. `moved` means a kept key
+whose recorded inputs or order changed; it is not a claim about pixels.
+`present` does not assert identical rendering or identical component
+definitions.
 
-`ComponentInstanceRecord` contains no range placement fields. Comparing
-`ComponentRangeRecord.id`, `parentId`, DOM offsets, boxes, or placement counts
-requires separate view/DOM inputs and is deliberately outside this function.
-A physical move alone therefore resolves `present`. Resolution never classifies
-Changes: [component attribution](./mokly-component-changes.md) remains authoritative.
-Callers validate records before resolution; malformed hashes are validation
-errors, not a fourth resolution state.
+`ComponentInstanceRecord` contains no region placement fields. Comparing
+region ids, region parents, boxes, or placement counts requires separate view
+inputs and is deliberately outside this function. A physical move alone
+therefore resolves `present`. Resolution never classifies Changes: the
+[comparison contract](./mokly-comparison.md) and
+[component attribution](./mokly-component-changes.md) are authoritative.
+Callers validate records before resolution; a malformed hash is a validation
+error, not a fourth resolution state.
 
 ## Optional Invocation Source
 
-Manifest v10 includes this optional instance field:
+An instance record may carry its invocation site:
 
 ```ts
 interface ComponentSourceLocation {
@@ -132,101 +143,77 @@ interface ComponentSourceLocation {
   column: number;
 }
 interface ComponentInstanceRecord {
-  // Existing required instance fields retain their manifest definitions.
+  // The required instance fields keep their usage record definitions.
   source?: ComponentSourceLocation;
 }
 ```
 
 `path` is a nonempty repository-relative POSIX path to the invocation site,
 not the component definition. `line` and `column` are positive safe integers,
-both 1-based. No absolute path, drive prefix, URL, backslash, NUL, empty/dot
-segment, or `..` escape is permitted. Resolve bundler paths against its working
-directory, confine to `repoRoot`, and serialize only the normalized relative
-path. Invalid or escaping supplied locations fail validation; unavailable
-locations are omitted, never guessed from definition attribution or stack traces.
+both 1-based. No absolute path, drive prefix, URL, backslash, NUL, empty or
+dot segment, or `..` escape is permitted. A location is confined to `repoRoot`
+and serialized as the normalized relative path only; an escaping location
+fails validation, and an unavailable location is omitted, never guessed from
+definition attribution or stack traces.
 
-The approved build proposal sets esbuild `jsxDev: true` beside
-`jsx: "automatic"` in [`load_graph.ts`](../../src/build/load_graph.ts).
-Its consumer React plugin, implemented in `consumer_resolution.ts`, resolves
-`react/jsx-dev-runtime` to a Mokly-owned shim within the same consumer graph.
-The shim exports `Fragment` and `jsxDEV`; it forwards to that consumer's
-`react/jsx-runtime` (`jsx`/`jsxs` with the supplied React key), preserving child
-semantics and a single React runtime. It uses esbuild's invocation `__source`
-argument only for wrappers identified by `defineComponent`, attaching normalized
-metadata via a reserved `__moklySource` prop. Ordinary components and intrinsic
-elements receive no added source prop; no development runtime enters HTML.
+The sidecar supplies the location for a `defineComponent` wrapper. Its bundle
+compiles JSX in development mode and resolves `react/jsx-dev-runtime` to a
+Mokly-owned shim inside the consumer graph. The shim forwards to the
+consumer's `react/jsx-runtime`, preserves child semantics and the single React
+runtime, and attaches the invocation `__source` only to wrappers that
+`defineComponent` identified, through the reserved `__moklySource` prop. The
+wrapper strips `__moklySource` before prop and slot validation, hashing, and
+the consumer render, exactly as it strips `moklyInstance`. The name is
+reserved from authored props and slots, and no development runtime or
+attribute reaches the fragment. Programmatic `createElement` calls and
+transformed modules without invocation information omit `source`.
 
-The wrapper strips `__moklySource` before prop/slot validation, hashing and
-calling the consumer render function, just as it strips `moklyInstance`.
-The name is reserved from authored data props and slots. Capture it in the
-collector only; do not emit DOM attributes, source maps, or debug markup.
-Programmatic `createElement` calls and transformed modules without invocation
-information may omit `source`. Replayed slots retain the original invocation
-location; manifest-v10 readers accept records with or without the optional field.
+`source` is excluded from instance and slot keys, `propsKey`, direct-input
+comparison, and every Changes projection. Line shifts and source moves alone
+are not material. The entry detail may carry the location as secondary
+metadata; it does not authorize serving the source file.
 
-`source` is excluded from instance/slot keys, `propsKey`, direct-input comparison,
-and every Changes projection. Line shifts and source moves alone are not material.
-The public catalogue may retain this validated location as secondary metadata;
-it does not authorize serving the source file. No new source display is added
-to the local shell by this work.
+## Ownership Regions
 
-## Rendered Boundaries
+Every rendered instance is an ownership region of the composed tree under the
+[comparison contract](./mokly-comparison.md#markers): a sequence of sibling
+nodes with one parent, carrying the component path, the instance key, and the
+props digest. The core attaches the region itself for a component element it
+renders in Rust and for the root of a component page, which has id `r-0` and
+no marker. For a sidecar render, the fragment carries each instance as a
+`mokly-instance` comment pair and each supplied slot as a `mokly-slot` pair;
+the core reads them into regions and drops them when it grafts the fragment.
+Served and built documents carry no markers. Region ids `r-n` are allocated in
+document order and recorded in the view's usage with each region's parent.
 
-The Mokly wrapper authors these exact inert React sentinels:
+Every instance of a view has at least one region. Slot content that a
+component renders more than once has one region per placement, each with its
+own id and the same key. A null render has an empty region and no invented
+box. An unrendered branch has no record, and an unrendered supplied slot has a
+slot record without a region. Region ids, parents, and placement counts are
+inspection coordinates, not identity.
 
-```html
-<template data-mokly-component-start="b-0"></template>
-<!-- rendered component or slot content -->
-<template data-mokly-component-end="b-0"></template>
-```
+The core fails the view as `build-invalid`, naming the entry, on an unknown,
+forged, unmatched, duplicate, crossing, or reordered marker in a fragment and
+on a region whose parent is wrong. Consumer output cannot author a marker: the
+`mokly-` comment prefix is reserved, and a marker inside raw text is text
+under the comparison contract. A comment with any other spelling is ordinary
+content and creates no region.
 
-`b-n` is allocated per collector boundary, starting at zero. Both attributes
-are package-reserved; consumers cannot author or forge them.
-[`ranges.ts`](../../src/components/ranges.ts) authenticates each token against
-the collector, requires the exact empty template shape with one attribute,
-and serializes it as:
+## Inspection
 
-```html
-<!--mokly-component:start:r-0-->
-<!-- rendered component or slot content -->
-<!--mokly-component:end:r-0-->
-```
+The viewer addresses an instance only through `InstanceRef` and the view's
+usage. The [frame adapter contract](./mokly-frame-adapter.md) owns geometry,
+highlighting, and picking over the mounted document, and the
+[viewer markers contract](./mokly-viewer-markers.md) positions host content on
+an instance's boxes. Geometry is an inspection coordinate, never identity, and
+a missing logical instance and unavailable geometry are separate states.
 
-`r-n` is allocated in DOM start-marker order, starting at zero. Range records
-map it to an instance key, slot key or `{ kind: "root" }`; the comment does
-not contain that target. A component saved page has one root output pair under
-the [usage contract](./mokly-component-usage-records.md#root-output-boundary).
-`parentId` is the nearest enclosing registered range, including a slot range.
+## Related Docs
 
-Every instance in a rendered view's manifest has at least one instance-targeted
-range, and **exactly one matched start/end pair per recorded range in that same
-rendered view**. A replayed instance can have multiple ranges and therefore
-multiple pairs, each with its own `r-n`. Multi-root or text output has one pair
-per placement; a null-rendering invocation has an empty pair and no invented
-box. Uninvoked branches have no instance record; an unrendered supplied slot
-can have a slot record without a range.
-
-Reject unknown, forged, missing, duplicate, crossing, reordered, or mismatched
-markers and incorrect range parentage. No template sentinel survives final
-serialization. Review-ignore regions cannot enclose instance or caller-slot
-boundaries. The root-only pair preserves existing ignore admission under the
-[root output contract](./mokly-component-usage-records.md#root-output-boundary). Generated documents must preserve validated pairs; adapters
-inspect current views using these comments without adding layout wrappers.
-Accepted baseline and current v10 documents use the same marker spelling and
-validation; historical marker translation is not supported.
-
-On both baseline and current sides, a comment with the former `mokabook-`
-spelling is ordinary page content. Mokly never reads it as a marker or removes
-it as one. The comment alone is not a validation error. It creates no component
-range, Review-ignore region or material marker. If baseline records require
-ranges that its document cannot prove, follow
-Invalid Or Missing Data.
-The frozen instance and slot key domain strings are unchanged.
-
-## Acceptance
-
-Coverage requires key-stability fixtures, record-resolution truth-table tests,
-source normalization/stripping and source-only Changes regressions, and marker
-conformance for every view, including null, nested, multi-root and replayed
-instances. Viewer and adapter tests must preserve scoped lookup and treat
-unavailable geometry separately from a missing logical instance.
+- [Tree comparison and Changes](./mokly-comparison.md)
+- [Component usage records](./mokly-component-usage-records.md)
+- [Registered components](./mokly-components.md)
+- [HTML components](./mokly-html-components.md)
+- [Render sidecar](./mokly-sidecar.md)
+- [Frame adapter](./mokly-frame-adapter.md)

@@ -10,8 +10,7 @@ The host owns marker content, accessibility, interaction and persistence.
 Markers address only component instances represented by an
 [`InstanceRef`](./mokly-instances.md). Point and region annotations are outside
 this contract. The viewer exposes no raw geometry, selectors or portal target.
-`renderViewer` does not accept markers, and standalone Serve/export render no
-marker layer.
+The standalone shell of Serve and the static build renders no marker layer.
 
 ## Public Contract
 
@@ -110,7 +109,7 @@ This prevents an asynchronous stale snapshot from losing a geometry wake-up.
 Replacement or disposal invalidates the generation, cancels scheduled work and
 prevents late results, errors or callbacks from reaching the host.
 
-The hydrated shell owns one frame registry per shell root. Workspace inspection
+The mounted shell owns one frame registry per shell root. Workspace inspection
 labels and host markers acquire that registry's single geometry scheduler and
 contribute their demanded sessions to one deduplicated set. They therefore
 share a boundary read when both target the same session. Validated usage

@@ -4,15 +4,10 @@
 
 | Boundary                                | Version                   | Reason and reader                                                                                                           |
 | --------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Private generated manifest              | none                      | Retired: the catalogue model lives in memory and the read model is its public form; nothing is written.                     |
 | Public catalogue index                  | 7                         | The read model without per-view usage and resource evidence; screens carry props and controls; the index reader requires 7. |
 | Entry detail                            | 1                         | New: one entry's per-view usage, resource evidence, and workspace lists; the detail reader requires 1.                      |
 | Review result                           | 8                         | Tree materiality, owner-attributed rule and resource evidence, moves; producers and decoders require 8.                     |
 | Catalogue change snapshot               | 4                         | Current private path/move/removal evidence paired with review v8 and the base commit.                                       |
-| Live catalogue index                    | `live-index-3`            | Source-rendered entry and folder shapes with source-only metadata.                                                          |
-| Shell bootstrap envelope                | none                      | Retired: the shell renders in the browser from the index and detail routes; pages embed no state.                           |
-| Baseline completion marker              | none                      | Retired: both sides render from sources; no baseline cache exists.                                                          |
-| Static delivery descriptor              | none                      | Retired: the index carries the deployment id and the comparison URL.                                                        |
 | Live descriptor                         | 3                         | A Serve JSON route with the render capability only; the index carries the one revision and the bundle generation.           |
 | Inspector wire envelope                 | 2                         | Unchanged: navigation carries `screenPath`; both peers require 2 before message fields.                                     |
 | Removed page/document preview metadata  | 3                         | Unchanged `{schemaVersion,baseRef,baseCommit,path}` shape.                                                                  |
@@ -25,8 +20,10 @@
 | Browser module inventory                | 1                         | Unchanged exact module-path inventory shape.                                                                                |
 | Timing records and verification reports | 1                         | Unchanged timing/runner evidence shape.                                                                                     |
 
-The frozen backend's accepted output snapshot format has no successor; the
-Rust render graph holds generations in memory without a private IPC format.
+The catalogue model lives in memory and is never written; the index carries
+the deployment id, the revision, and the comparison URL; a page embeds no
+state; both sides of a comparison render from sources. The render graph holds
+generations in memory; there is no private IPC format.
 Lock-holder files keep their PID/token identities; do not confuse tokens,
 generation hashes, event revisions or package versions with format versions.
 
@@ -37,22 +34,20 @@ fallback exists for any boundary.
 
 ## Catalogue Model
 
-The Rust core keeps the catalogue model in memory and writes no manifest.
-Entries keep the path-based fields of the frozen manifest for screens, pages,
-documents, use cases, components and variants, and add the HTML and YAML file
-kinds of the [HTML screens contract](./mokly-html-screens.md). Usage records
+The Rust core keeps the catalogue model in memory and writes nothing.
+Entries carry path-based fields for screens, pages, documents, use cases,
+components and variants, including the HTML and YAML file kinds of the
+[HTML screens contract](./mokly-html-screens.md). Usage records
 derive their instance, slot and root regions from the composed trees under the
 [comparison contract](./mokly-comparison.md) and carry no text offsets.
 Resource owners exclude CSS. The read model v7 is the model's public form, and
-the generated TypeScript types in the model crate are the normative shapes;
-no `Manifest` or `HistoricalManifest` type exists.
+the generated TypeScript types in the model crate are the normative shapes.
 
 ## Rejection Before Interpretation
 
 Reject versions before reading identity, route, resource or nested payload
-fields. Catalogue v6 and below are unsupported by the v7 reader; a frozen manifest is
-not read at all; review v7 and below are unsupported comparison results. Unknown newer versions are invalid, never the
-graceful earlier-baseline result.
+fields. The index reader rejects catalogue v6 and below; no manifest is read; the
+review reader rejects review v7 and below. Unknown newer versions are invalid.
 
 Index, detail, live descriptor and review readers use `MoklyVersionError` at their
 version gates. The review gate rejects numeric versions other than 8 before
@@ -66,17 +61,15 @@ earlier-format base exists. A base whose sources fail the current validation
 makes Changes unavailable with those diagnostics, and that outcome is not
 cached.
 
-Older receivers retain HTTP 426 handling with no Blob/Complete request or
-downgrade. Ownership and upload versions are unchanged because their own
+A receiver that does not support these versions answers HTTP 426, and the CLI
+sends no Blob or Complete request and does not downgrade. Ownership and upload versions are unchanged because their own
 fields and namespace are unchanged; catalogue and review readers independently
-enforce their payload versions. Mokly Cloud adopts catalogue v7, review v8 and
-entry detail v1 in the same window as the first release of the Rust core.
+enforce their payload versions. Mokly Cloud implements catalogue v7, review v8 and entry detail v1.
 
 ## Acceptance
 
-Test every changed version boundary with the frozen backend's formats and an
-unknown newer version. Confirm rejection precedes getters for identity/path
-fields. Update index, detail, live, static, packed-consumer, upload and
-browser fixtures together. Keep old-version fixtures only as rejection tests.
+Test every version boundary with an earlier number and an unknown newer
+number. Confirm rejection precedes getters for identity/path
+fields. Update index, detail, live, static, upload and browser fixtures together. Keep old-version fixtures only as rejection tests.
 Verify unavailable Changes with a base whose sources fail current validation,
 and moved comparisons and removed previews with a base rendered from Git.

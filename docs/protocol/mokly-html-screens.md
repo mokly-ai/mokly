@@ -37,7 +37,6 @@ required; a missing block fails with `html-front-matter`.
 | `movedFrom`    | string           | previous complete path for the [move contract](./mokly-moves.md)                                  |
 | `rationale`    | string           | design rationale shown in Details                                                                 |
 | `relatedDocs`  | string list      | related document links                                                                            |
-| `dependencies` | string list      | declared files or directories, as today                                                           |
 | `address`      | string           | screens: the address-bar label                                                                    |
 | `useCasePaths` | string list      | screens: use cases the screen belongs to                                                          |
 | `colorSchemes` | string list      | screens and components: non-empty subset including `light`                                        |
@@ -137,7 +136,7 @@ and any other `mokly-` name fails with `html-element`.
 
 A screen `variants` entry declares `slug` and `title` and may declare
 `description`, `tags`, `colorSchemes`, `address`, `rationale`, `relatedDocs`,
-`dependencies`, `useCasePaths`, `movedFrom`, and `props`. A variant `props`
+`useCasePaths`, `movedFrom`, and `props`. A variant `props`
 map replaces matching top-level keys and never deep merges, under the
 [entry props contract](./mokly-entry-props.md). Metadata inheritance follows the
 [variant contract](./mokly-variants.md). The body is shared: a variant changes

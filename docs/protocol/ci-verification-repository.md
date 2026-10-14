@@ -46,4 +46,4 @@ names, `no-artifact-path-literals` for comparison artifact paths under the
 `no-late-fixture-teardown` and `no-eager-fixture-setup` for test fixture
 ownership under [CI suite evidence](./ci-suite-evidence.md). The PostCSS
 access restrictions and the test-timing guard are also ESLint rules. A rule
-that must scan every file belongs here, in `npm run lint`, not in a unit test.
+that must scan every file belongs here, in `npm run lint`, not in a Node test.

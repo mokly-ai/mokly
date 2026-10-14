@@ -59,16 +59,16 @@ How the Rust core and the sidecar turn sources into documents: the sidecar proto
 - [Build Warnings](./mokly-build-warnings.md)
 - [Catalogue Source Protection](./mokly-source-protection.md)
 - [Document Rendering Safety](./mokly-document-safety.md)
-- [Identity-Derived Generated Document Delivery](./mokly-generated-delivery.md)
+- [Identity-Derived Document Delivery](./mokly-generated-delivery.md)
 - [Imported Stylesheet Assets And Delivery](./mokly-imported-styles-assets.md)
 - [Imported Stylesheet CSS Modules](./mokly-imported-styles-modules.md)
 - [Imported Stylesheet Delivery](./mokly-imported-styles.md)
 - [Imported Stylesheet Diagnostics](./mokly-imported-styles-errors.md)
 - [Imported Stylesheet PostCSS And Dependency Inventory](./mokly-imported-styles-postcss.md)
-- [Mokly Rendering And Generated Output Contract](./mokly-rendering.md)
 - [Path-Derived Artifact Paths](./mokly-artifact-paths.md)
 - [Public File Policy And Referenced Closure](./mokly-public-closure.md)
 - [Render Sidecar](./mokly-sidecar.md)
+- [Rendering And Document Assembly](./mokly-rendering.md)
 
 ## Comparison And Changes
 
@@ -76,6 +76,7 @@ How two commits are compared: tree comparison, CSS attribution, component eviden
 
 - [Branch-Point Entry Lookup](./mokly-branch-point-lookup.md)
 - [Catalogue Change Metadata And Removed Pages](./mokly-catalogue-changes.md)
+- [Catalogue Entry Records](./mokly-component-manifest.md)
 - [Changes and screen comparisons](./mokly-changes.md)
 - [Changes Serving And Comparison](./mokly-changes-serving.md)
 - [Comparison Generation And Serving](./mokly-comparison-serving.md)
@@ -89,7 +90,6 @@ How two commits are compared: tree comparison, CSS attribution, component eviden
 - [CSS Change Attribution](./mokly-css-attribution.md)
 - [CSS Document Matching](./mokly-css-document-matching.md)
 - [CSS Rule Membership And Identity](./mokly-css-attribution-rules.md)
-- [Manifest Schema](./mokly-component-manifest.md)
 - [Moves](./mokly-moves.md)
 - [Publication Changes And Acceptance](./mokly-publication-changes.md)
 - [Removed Content Previews](./mokly-removed-previews.md)
@@ -134,14 +134,14 @@ The static output of `build`, its safety and ownership rules, publication, and t
 - [Catalogue Upload Exchange v1](./mokly-upload-exchange.md)
 - [Catalogue Upload v2](./mokly-upload.md)
 - [Catalogue Upload Validation v2](./mokly-upload-validation.md)
-- [Consumer Static Export](./mokly-export.md)
 - [Export Ownership v3](./mokly-export-ownership.md)
-- [Export Public Files And Package Boundary](./mokly-export-public-files.md)
-- [Export Recovery](./mokly-export-recovery.md)
 - [Optional Changes In Published Catalogues](./mokly-publication.md)
-- [Static Export Browser And Identity](./mokly-export-browser.md)
-- [Static Export Delivery](./mokly-export-delivery.md)
-- [Static Export Safety And Public Files](./mokly-export-safety.md)
+- [Static Build](./mokly-export.md)
+- [Static Build Browser And Identity](./mokly-export-browser.md)
+- [Static Build Public Files And Package Boundary](./mokly-export-public-files.md)
+- [Static Build Recovery](./mokly-export-recovery.md)
+- [Static Build Safety And Public Files](./mokly-export-safety.md)
+- [Static Delivery](./mokly-export-delivery.md)
 
 ## Viewer
 

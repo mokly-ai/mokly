@@ -1,23 +1,25 @@
 # CSS Document Matching
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [CSS change attribution](./mokly-css-attribution.md).
 
 ## Document Matching Interface
 
-`matchCssRules(diff: CssRuleDiffResult, documents: CssDocumentPair):
-CssRuleMatchResult` returns `status: "resolved"` with one `{ change, outcome }`
-per diffed rule, in added, removed, then changed list order. It preserves each
-list's ordinal ordering and original rule records. An unresolved diff passes
-through with its side-tagged parse failures. `CssDocumentPair.before` and
-`.after` are optional default-adapter parse5 documents supplied after paired
-normalization; the matcher performs no file reads or classification writes.
+Document matching takes the rule diff of one stylesheet and the two sides'
+composed trees of one view, after ignored regions are removed under the
+[comparison contract](./mokly-comparison.md#materiality), and returns
+`status: "resolved"` with one `{ change, outcome }` per diffed rule, in added,
+removed, then changed list order. It preserves each list's ordinal ordering
+and original rule records. An unresolved diff passes through with its
+side-tagged parse failures. Either side's tree is optional; the matcher
+performs no file reads and writes no classification.
 
-`analyzeStylesheetChange(before: string, after: string, documents:
-CssDocumentPair, parser?: CssRuleParser): CssAnalysisOutcome` composes all three
-stages for one resource on one view. The default parser is
-`LightningCssRuleParser`; missing stylesheet sides use an empty string.
-The per-resource outcome retains per-rule matches for catalogue-wide attribution;
-its final wire shape is defined by [the evidence schema](./mokly-css-attribution-membership.md).
-No match means excluded, including a resolved empty diff. Callers remain
-responsible for reachability and `changedPaths` eligibility. CSS owner records
-never filter candidate rules or replace the kept own-page match proof.
+Stylesheet analysis composes the three stages, parse, diff, and match, for one
+stylesheet on one view, on `lightningcss`; a missing stylesheet side is an
+empty string. The per-stylesheet outcome keeps per-rule matches for
+catalogue-wide attribution; its final wire shape is defined by
+[the evidence schema](./mokly-css-attribution-membership.md). No match means
+excluded, including a resolved empty diff. Callers stay responsible for
+reachability and changed-path eligibility. CSS owner records never filter
+candidate rules or replace the kept own-page match proof.

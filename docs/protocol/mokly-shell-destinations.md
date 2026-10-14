@@ -17,7 +17,7 @@ receive the complete proposal and commit nothing until they supply it back.
 A removed-entry destination also carries its public `snapshot` identity. Route
 parsing accepts exactly one lowercase 64-hex value and requires it to match that
 removed entry's path. The query survives same-entry axis and filter changes,
-Back/Forward and hydration. Unknown, stale, repeated, or mismatched snapshots
+Back/Forward and a full page load. Unknown, stale, repeated, or mismatched snapshots
 are unavailable through the Viewer error state rather than retargeted.
 Snapshot queries are supported only on the removed entry's canonical
 `/view/<path>/` URL or the other accepted forms of the

@@ -159,33 +159,28 @@ Comparison works on trees, never on text offsets. The
 
 ## Format Inventory
 
-Numbers keep counting from the frozen backend. A number changes only when its
+Numbers continue the sequence of the previous formats. A number changes only when its
 shape or interpretation changes. No reader accepts an earlier number; readers
 reject before interpreting any field. Package 1.0.0 is the first number held
 stable.
 
-| Boundary                               | Version        | Change from the frozen backend                                        |
-| -------------------------------------- | -------------- | --------------------------------------------------------------------- |
-| Private generated manifest             | none           | retired: the catalogue model lives in memory; nothing is written      |
-| Public catalogue read model            | 7              | the catalogue index: the source-rendered model without per-view usage |
-| Entry detail                           | 1              | new: one entry's usage, resource evidence, and workspace lists        |
-| Review result                          | 8              | tree materiality, owner-attributed rules, no offsets                  |
-| Catalogue change snapshot              | 4              | pairs review v8 with the base commit                                  |
-| Live catalogue index                   | `live-index-3` | source-rendered entry shapes                                          |
-| Shell bootstrap envelope               | none           | retired: the shell renders in the browser; pages embed no state       |
-| Baseline completion marker             | none           | retired: both sides render from sources; no baseline cache            |
-| Static delivery descriptor             | none           | retired: the index carries the deployment id and comparison URL       |
-| Live descriptor                        | 3              | a Serve JSON route with the render capability only                    |
-| Inspector wire envelope                | 2              | unchanged                                                             |
-| Removed page/document preview metadata | 3              | unchanged                                                             |
-| Export ownership                       | 3              | unchanged; written by `build`                                         |
-| Upload metadata, plan exchange         | 2, 1           | unchanged; Mokly Cloud implements them                                |
-| Export transaction marker              | 2              | unchanged; written by `build`                                         |
-| Navigation disclosure storage          | v4             | unchanged                                                             |
-| Timing and verification records        | 1              | unchanged                                                             |
+| Boundary                               | Version | Change                                                                |
+| -------------------------------------- | ------- | --------------------------------------------------------------------- |
+| Private generated manifest             | none    | retired: the catalogue model lives in memory; nothing is written      |
+| Public catalogue read model            | 7       | the catalogue index: the source-rendered model without per-view usage |
+| Entry detail                           | 1       | new: one entry's usage, resource evidence, and workspace lists        |
+| Review result                          | 8       | tree materiality, owner-attributed rules, no offsets                  |
+| Catalogue change snapshot              | 4       | pairs review v8 with the base commit                                  |
+| Live descriptor                        | 3       | a Serve JSON route with the render capability only                    |
+| Inspector wire envelope                | 2       | unchanged                                                             |
+| Removed page/document preview metadata | 3       | unchanged                                                             |
+| Export ownership                       | 3       | unchanged; written by `build`                                         |
+| Upload metadata, plan exchange         | 2, 1    | unchanged; Mokly Cloud implements them                                |
+| Export transaction marker              | 2       | unchanged; written by `build`                                         |
+| Navigation disclosure storage          | v4      | unchanged                                                             |
+| Timing and verification records        | 1       | unchanged                                                             |
 
-The accepted output snapshot format of the frozen backend has no successor;
-the render graph keeps generations in memory without a private IPC format.
+The render graph keeps generations in memory; there is no private IPC format.
 
 ## Related Docs
 
@@ -196,4 +191,4 @@ the render graph keeps generations in memory without a private IPC format.
 - [Comparison](../protocol/mokly-comparison.md)
 - [Shell delivery](../protocol/mokly-shell-delivery.md)
 - [Format inventory](../protocol/mokly-format-versions.md)
-- [Build pipeline of the frozen backend](./build-pipeline.md)
+- [Render pipeline](./build-pipeline.md)

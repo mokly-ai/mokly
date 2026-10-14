@@ -2,7 +2,7 @@
 
 ## Depicted States
 
-The implemented design mockups depict the pane contract in both viewports, the
+The design mockups depict the pane contract in both viewports, the
 screen comparisons in both schemes and component comparisons in Light.
 `design/changes/diff-controls/overlay` depicts a short Overlay and
 `design/changes/diff-controls/overlay-long` a long screen part-way down its shared chrome, with

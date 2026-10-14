@@ -4,133 +4,123 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Delivery
 
-Custom renderers must emit the supplied stylesheet links; pages link CSS
-themselves. This contract extends
-[configuration](./mokly-configuration.md),
-[rendering](./mokly-rendering.md), and [source protection](./mokly-source-protection.md)
-without changing manifest v10. [Exact diagnostics](./mokly-imported-styles-errors.md)
-are normative.
+A configured local stylesheet, and CSS that an entry module, a stories file,
+or the renderer module imports with `import "./theme.css"` or
+`import styles from "./card.module.css"`, reach documents one way. Mokly
+bundles each delivery root into one stylesheet on `lightningcss` in the Rust
+core, resolves its `@import` chain and `url()` assets, and delivers the
+stylesheet and its assets as resources of the render cache under the
+`static/mokly-generated/` namespace. A configured HTTP(S) URL is linked
+unchanged and never fetched. The sources stay private. This contract
+extends [imported CSS configuration](./mokly-configuration-imported-styles.md),
+[rendering](./mokly-rendering.md), and
+[source protection](./mokly-source-protection.md).
+[Exact diagnostics](./mokly-imported-styles-errors.md) are normative. The
+[CSS Modules](./mokly-imported-styles-modules.md),
+[PostCSS](./mokly-imported-styles-postcss.md), and
+[assets](./mokly-imported-styles-assets.md) pages continue it.
 
 ## Routes And Ownership
 
-`<mockupsDir>/mokly-generated/` is wholly Mokly-owned. Its output map uses
-`styles/<repository-relative root module path>.css` and
-`assets/<repository-relative asset path>`, relative to that generated root.
-Pages, screen/component views and the private v10 manifest share the same tree.
-Preserve the module extension before `.css`: `src/home.mockup.tsx` becomes
-`styles/src/home.mockup.tsx.css`. Identical asset routes from multiple roots
-must carry identical bytes; disagreeing bytes fail Build. Sources stay private.
-The unified layout reserves `styles`
-and `assets` as the first segment of generated HTML routes. Path-derived HTML routes use `<path>/index[.<axes>].html`; the generated
-root prefix is not part of those routes.
+The routes are relative to the `static/mokly-generated/` namespace of the
+[artifact path contract](./mokly-artifact-paths.md):
+`styles/<repository-relative root module path>.css` for the bundle of a
+module root, `styles/<repository-relative stylesheet path>` for the bundle
+of a configured local stylesheet, and `assets/<repository-relative asset
+path>` for an asset. The module extension is kept before `.css`:
+`src/home.mockup.tsx` delivers `styles/src/home.mockup.tsx.css`, and the
+configured `design/base.css` delivers `styles/design/base.css`; the two
+forms never collide because a module path never ends in `.css`. `styles` and
+`assets` are reserved as the
+first segment of document routes. Nothing is written into the repository:
+Serve answers the routes from the render cache, `build` writes them into its
+output directory, publish uploads that output, and the base side of a
+comparison bundles the base commit's sources the same way under the
+[dependency tiers](./mokly-comparison.md#sides).
 
-Only a writer or tracked Check inspects the existing generated tree. Its root
-must be a real directory and descendants must be real directories or regular
-files. Reject the first sorted repo-relative symlink, FIFO, socket or device
-without following it. A successful Build replaces the whole tree and removes
-stale files and empty directories. Plain Serve, export, publication and
-untracked Check do not inspect old output. CLI Publish separately checks the
-checkout and committed generation or requires ignored derived output under the
-[upload contract](./mokly-upload.md). The
-tracking rules
-apply equally to generated CSS, assets, HTML and the manifest.
-
-Reject root directories and `roots[].files` static prefixes, renderer,
-package roots, PostCSS inputs, local `stylesheets` and `review.outDir` that
-violate the generated-tree boundary, including physical aliases. Discovery
-skips this tree; broad entry globs remain valid. Entry modules below
-`mockupsDir` remain protected sources, but a root directory equal to `mockupsDir` is
-invalid. `publicExclude` is removed. Other authored files become public only
-through the validated asset closure.
-
-Generated route segments allow a leading letter, digit, underscore or hyphen;
-subsequent characters may also include dot and tilde. Device-name stems and
-trailing dots remain invalid. A nonportable module file or directory name cannot
-produce a stylesheet route, even when an entry declares a valid `path`. Build
-fails with `cannot deliver imported CSS for {module}: the module path is not URL-safe; rename its file or directories (an entry path override does not change stylesheet routes)`,
-where `{module}` is repository-relative. Entry identity and CSS delivery routes
-have distinct inputs; the override changes only entry identity.
+A route segment starts with a letter, digit, underscore, or hyphen; later
+characters may also be a dot or a tilde. Windows device-name stems and
+trailing dots are invalid. A root module whose file or directory name cannot
+form a route fails with the catalogued message, even when the entry declares
+a valid `path`: the `path` override changes entry identity only, never the
+stylesheet route. Portable module and stylesheet paths give identical routes
+on every platform.
 
 ## Roots, Collection And Deduplication
 
-Delivery roots are **only** the configured `renderer` module (the built-in
-renderer has no stylesheet), followed by each resolved entry module sorted by
-repository-relative POSIX path. There are no other delivery or inventory-only
-consumer roots. Metafile input and output keys
-are relative to esbuild's real working directory even when the configured
-repository root is a symlink; map all keys back to the logical root before
-ordering roots or recording sources. Resolve esbuild's working directory once
-per metafile. Read each metafile input at most once per root traversal. When
-no renderer or entry reaches CSS, skip the stylesheet pass entirely. A module
-that exports only a folder record still has a CSS delivery root even
-though it registers no view. Every entry module must export a definition. Two entries sharing CSS each emit it in their own bundle.
-After the JavaScript graph build and before CSS bundling or graph inventory,
-validate each delivery root's direct CSS imports against `repoRoot`. Read the
-metafile edge's original specifier and importing module, including extensionless
-package imports, `require()` and dynamic `import()`. The error names that
-authored importer; virtual stylesheet modules and absolute resolved paths must
-not appear in it. Every CSS-pass diagnostic replaces a synthetic virtual
-importer with the root's authored module path; a synthetic absolute import is
-displayed relative to that root rather than leaking its working directory.
+The delivery roots are each configured local stylesheet, the configured
+renderer module, and every entry module and stories file that reaches CSS,
+sorted by repository-relative POSIX path within each kind. There are no
+other delivery roots. A configured stylesheet root has that file as its only
+direct stylesheet; nothing is pruned from it or by it. A module that exports
+only a
+folder record is still a root. Two entries that share a stylesheet each
+deliver it in their own bundle. When no root reaches CSS, the catalogue has no
+stylesheet node.
 
-Collect CSS in first-reachability depth-first traversal of each root's
-JavaScript imports (including re-exports and dynamic imports esbuild bundles),
-following metafile import order, with visited modules and stylesheet file
-identities keyed by resolved logical paths. One root lists each CSS file at
-most once at this stage. Resolve nested local CSS `@import`s (quoted and
-`url()` forms), including those
-that PostCSS might inline, to form each root's complete stylesheet-file
-closure. The renderer's closure includes its top-level CSS files. Before
-processing an entry root, remove **every** file in that closure from the
-entry's direct CSS list and from every depth of its local CSS `@import` tree;
-replace an excluded nested `@import` with nothing **before PostCSS runs**.
-Never prune by a selector or by comparing emitted text. Thus a renderer
-importing `tokens.css` then `dark-theme.css` cannot have `tokens.css` reappear
-later through an entry's component CSS. The first linked root wins across
-renderer/entry; within one root JavaScript first reachability wins, while
-remaining repeated CSS `@import`s retain CSS's last-position semantics.
-Do not suppress a shared file between two entry roots. Remote HTTP(S)
-`@import "https://..."` and `@import url("https://...")` stay external:
-never fetch or inventory them. For valid prelude imports, esbuild puts them
-at the start of the bundled root stylesheet before local rules, preserving
-their order; late imports after a rule stay there and follow CSS validity rules.
+The sidecar's [`bundle` call](./mokly-sidecar.md#bundling) reports the module
+graph. The core reads each root's stylesheet imports from it in
+first-reachability depth-first order of the JavaScript imports, including
+re-exports and dynamic imports, with modules and stylesheets keyed by their
+resolved logical path, so one root lists a file at most once. A CSS import
+that resolves outside the repository fails, naming the authored importer and
+the original specifier; a diagnostic never shows a virtual module or an
+absolute path.
 
-Graph pass: one in-memory JavaScript output; Mokly captures plain `.css` as
-an empty side-effect module and `.module.css` as a transformed class map,
-instead of retaining esbuild's CSS sibling output. A CSS pass bundles the
-renderer alone and all nonempty entry roots together in a multi-entry esbuild
-build, each from a distinct synthetic path with ordered `@import`s. Each
-root's prelude walk and its metafile output inputs determine its inventory;
-shared assets must have identical bytes across both builds. Select failures
-by root order, never plugin callback order. Nested imports retain their CSS
-ordering. The CSS pass uses
-the same aliases, conditions, main fields, package roots, extension and
-symlink policy as the graph pass; it does not evaluate consumer JavaScript.
-The CLI does not eagerly load CSS Modules plugins or Lightning CSS. The
-former load only when a module is scoped; Lightning remains a read-only parser
-for Changes.
-For CSS `@import` resolution in both the prelude scan and the CSS pass,
-prepend `style` to the consumer's conditions and main fields (or esbuild's
-Node defaults `main,module` when unset): neither the `style` export condition
-nor the `style` main field is selected by esbuild by default. Keep all other
-consumer resolution settings unchanged. Esbuild's metafile input imports
-retain source order, including JavaScript re-exports and dynamic imports.
-When CSS is both JavaScript-imported and imported by an earlier CSS file,
-esbuild places it last within that root; it hoists remote imports even when
-they appear after an authored style rule. A local `@import` after the import
-prelude fails at its authored file rather than resolving against the generated
-stylesheet. Remote imports remain external and are never inventoried.
+The core then resolves nested local `@import`s, quoted and `url()` forms, to
+form each root's complete stylesheet closure. The renderer's closure includes
+its top-level stylesheets. Before an entry root is bundled, every file of the
+renderer's closure is removed from the entry's direct list and from every
+depth of its `@import` tree, and an excluded nested `@import` is removed
+before PostCSS runs; nothing is pruned by selector or by emitted text. Thus a
+renderer that imports `tokens.css` and `dark-theme.css` never sees
+`tokens.css` reappear through an entry's component CSS. The first linked root
+wins across renderer and entry; within one root, JavaScript first
+reachability wins, and a repeated CSS `@import` keeps CSS's last-position
+rule. A file shared by two entry roots is not suppressed. Remote `@import`s,
+`"https://..."` and `url("https://...")`, stay external: never fetched, never
+inventoried. Prelude imports are placed at the start of the bundle in their
+order; a local `@import` after a style rule fails at its authored file.
+
+`@import` resolution prepends `style` to the consumer's conditions and main
+fields, or to `main,module` when the consumer sets none, because the `style`
+export condition and the `style` main field are not selected by default.
+Every other module resolution setting, including aliases, package roots,
+extensions, and the symlink policy, is shared with the JavaScript graph. The
+stylesheet pass evaluates no consumer JavaScript.
+
+## Bundling
+
+A root's stylesheet is one node of the render graph, keyed by its stylesheet
+sources, its assets, the PostCSS module, and the resolution settings. For
+each stylesheet of the closure the core reads the text from the working tree,
+or from a Git blob on the base side; runs the consumer's PostCSS plugins
+through the sidecar's `processCss` when the configuration names a `postcss`
+module; scopes a `*.module.css` file under the
+[CSS Modules contract](./mokly-imported-styles-modules.md); and then bundles
+the root on `lightningcss`: `@import`s inlined in prelude order, `url()`
+references rewritten to asset routes, no minification, no source maps, no
+syntax lowering, no vendor prefixing, and one trailing newline. `lightningcss`
+reprints the stylesheet, so an authored comment may be dropped. Repeated
+builds with the same inputs and deterministic plugins give byte-identical
+output; plugin determinism is the consumer's responsibility. The plain and the
+module form of a stylesheet differ only in their scoped names.
+
+Changes analyses the delivered stylesheets, not the sources, under
+[CSS change attribution](./mokly-css-attribution.md); equal normalized
+before and after rule tuples join copies across roots under the
+[membership rule](./mokly-css-attribution-rules.md). Private CSS inputs are
+rebuild inputs only.
 
 ## CSS Modules And Import Loaders
 
 See the [CSS Modules contract](./mokly-imported-styles-modules.md) for
-rename-only delivery, `@scope`, selector-list joins, exports, import loaders
-and exact verification rules.
+rename-only scoping, composition, exports, and import loaders.
 
 ## PostCSS And Dependency Inventory
 
-See the [PostCSS and dependency inventory contract](./mokly-imported-styles-postcss.md)
-for module loading, transform ordering, reported dependencies, and validation
-precedence; [exact messages](./mokly-imported-styles-errors.md) apply to both.
+See the [PostCSS contract](./mokly-imported-styles-postcss.md) for module
+loading, transform order, and reported dependencies.
 
-The remaining contract is continued in [Imported Stylesheet Assets And Delivery](./mokly-imported-styles-assets.md).
+The contract continues in
+[Imported Stylesheet Assets And Delivery](./mokly-imported-styles-assets.md).

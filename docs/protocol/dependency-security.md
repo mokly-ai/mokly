@@ -1,5 +1,7 @@
 # Dependency Security
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Verification Boundary
 
 `npm run dependencies:check` audits the workspace lockfile against the
@@ -31,22 +33,20 @@ before reusable evidence or the complete fallback. Complete mode runs
 `cargo xtask check --dependency-audit strict` and repeats the strict live audit
 when its gate starts. Evidence mode never reuses an earlier audit
 as time-sensitive security evidence. The CI repository prerequisite must pass
-before package, unit, browser, or native jobs start. A cache hit never replaces
+before viewer, browser, or native jobs start. A cache hit never replaces
 an audit. Both modes require registry access. An audit is evidence about known
 advisories at execution time, not a guarantee that every dependency is safe.
 See the [CI workflow graph](./ci-workflow.md) and
 [CI verification contract](./ci-verification.md) for job ownership and aggregation.
 
-The packed ESM-consumer smoke also audits its freshly resolved production,
-optional, and peer dependencies before exercising the installed CLI on every
-runtime selected for that CI event. Ordinary changes use the minimum supported
-Node 22.14 runtime; Release Please pull requests repeat this boundary on Node 24
-before publication. This is a separate boundary: npm does not apply Mokly's
-workspace overrides or lockfile to downstream installations. Other consumer
-fixtures continue to exercise their respective integration contracts without
-duplicating registry requests. This production audit has no exceptions. It calls
-strict `npm audit` directly in `scripts/package/consumer_cases/esm.mjs` and never
-loads the workspace exception file. Consumers must maintain and audit their own
+The release workflow's packed ESM-consumer smoke also audits its freshly
+resolved production, optional, and peer dependencies before exercising the
+installed CLI, on the publish job's Node runtime before publication. This is a
+separate boundary: npm does not apply Mokly's workspace overrides or lockfile to
+downstream installations. Other consumer smokes exercise their respective
+integration contracts without duplicating registry requests. This production
+audit has no exceptions. It calls strict `npm audit` directly in the release
+smoke and never loads the workspace exception file. Consumers must maintain and audit their own
 lockfiles, including dependencies they bring to their renderer or application.
 
 ## Reviewed Workspace Exceptions

@@ -4,7 +4,7 @@
 
 Reuse the component page, saved-variant strip, canvas, comparison band, and
 shared icon inspector. Controls occupies the Props/Controls tab; Details and Usage
-remain independently available. The leaf Action component has no Nested
+stay independently available. The leaf Action component has no Nested
 components tab. The [workspace design](./mokly-component-workspace-design.md)
 groups view controls, shows both selected preview contexts, and gives the
 inspector a resizable pane beneath the desktop preview and a rounded bottom sheet
@@ -43,10 +43,10 @@ secondary guidance is Open this catalogue locally to edit props. Switching
 between the published Default and Disabled examples keeps both views read-only.
 Do not add environment badges or implementation details to the rendered UI.
 
-Mockup inputs retain native semantics. Authored links connect edited, reset,
+Mockup inputs keep native semantics. Authored links connect edited, reset,
 variant, pending, failure, comparison, and read-only examples. Those links and
-native input editing demonstrate the design; they do not implement live server
-rendering or make a static preview reactive.
+native input editing demonstrate the design; they do not render edited props
+through Serve or make a static preview reactive.
 
 ## Owning Catalogue
 
@@ -74,10 +74,9 @@ membership.
 
 ## Verification
 
-Use the real generator and build/check every matching generated artboard. In the
-untracked layout, keep `mokly-generated/` ignored and commit the authored changes;
-if the repository tracks output, commit the entire matching `mokly-generated/`
-tree. Test all input labels/types, current variant identity, full reset
+Build the example with `mokly build --strict` so that Mokly renders every
+matching artboard, and commit only the authored changes; the build output stays
+ignored. Test all input labels/types, current variant identity, full reset
 values, optional/unset states, pending/error preservation, validation errors,
 disabled comparison inputs, read-only guidance, and links between owning states.
 Open every artboard from disk and visually inspect both viewport variants. Test

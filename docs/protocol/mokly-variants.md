@@ -1,5 +1,7 @@
 # Variants
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Purpose And Boundary
 
 A variant records one entry with one deliberate shift: the same kind, the same
@@ -11,147 +13,129 @@ breadcrumb, and is otherwise a complete entry of its parent's kind.
 
 A variant is an ordinary entry with one extra relationship: it is declared
 inside its parent, its path is the parent's path plus its slug, and the
-manifest and read model record the parent's path as `variantOf`. It has its
-own generated views, its own Changes row, and its own comparison result.
+catalogue model and the read model record the parent's path as `variantOf`.
+It has its own views, its own Changes row, and its own comparison result.
 Everything that addresses an entry by path addresses a variant the same way,
 including `mock:` links and use-case steps. This document adds no link grammar,
 query parameter, or comparison schema.
 
-Light and dark are not variants. Color scheme remains a view axis selected by
-the existing switch, and a viewport is likewise a view. Per-view change
+Light and dark are not variants. Color scheme is a view axis selected by the
+appearance switch, and a viewport is likewise a view. Per-view change
 evidence is surfaced on the view controls by the
 [runtime contract](./mokly-runtime.md#browse-shell); it never creates
 navigation rows.
 
 ## Authoring
 
-`defineScreen` accepts an optional `variants` list. Each element declares a
-screen with its own slug, title, and React nodes:
+A variant is a props set under the
+[entry props contract](./mokly-entry-props.md): every screen and component is
+a render over props, and each variant declares `slug`, `title`, and `props`
+that replace top-level keys of the parent's props and never deep merge. The
+variant renders the parent's render with the merged props and has no render of
+its own; a state that needs another tree is a separate entry.
 
-```ts
-interface ScreenVariantInput {
-  address?: string;
-  colorSchemes?: readonly ColorScheme[];
-  dependencies?: never;
-  description: string;
-  desktop: ReactNode;
-  mobile: ReactNode;
-  movedFrom?: string;
-  rationale?: string;
-  relatedDocs?: readonly string[];
-  slug: string;
-  tags?: readonly string[];
-  title: string;
-  useCasePaths?: readonly string[];
-}
+`defineScreen` and `defineComponent` accept an optional `variants` list.
+`.screen.html` and `.component.html` files declare `variants` in front matter
+under the [HTML screens](./mokly-html-screens.md#variants) and
+[HTML components](./mokly-html-components.md#variants) contracts, and each
+story of a stories file is a variant of its component entry under the
+[render sidecar contract](./mokly-sidecar.md#storybook). A screen variant may
+also declare `description`, `tags`, `colorSchemes`, `address`, `rationale`,
+`relatedDocs`, `dependencies`, `useCasePaths`, and `movedFrom`; a component
+variant may also declare `description`, `tags`, `movedFrom`, and `slots`.
 
-interface ScreenInput extends EntryInput {
-  // Existing fields unchanged.
-  variants?: readonly ScreenVariantInput[] | undefined;
-}
+```tsx
+export default defineScreen({
+  title: "Invoice",
+  description: "The invoice detail screen.",
+  props: { status: "paid", lines: 3 },
+  render: (props) => <Invoice {...props} />,
+  variants: [
+    {
+      slug: "overdue",
+      title: "Invoice, overdue",
+      props: { status: "overdue" },
+    },
+  ],
+});
 ```
 
-`defineComponent` requires a non-empty `variants` list whose elements declare
-`slug`, `title`, optional `description`, optional
-`movedFrom`, and `props`, as defined by the
-[component contract](./mokly-components.md). Both helpers flatten each variant
-into a full definition whose derived path is the parent's path plus the
-variant's slug and whose `variantOf` is the parent's path. The parent
-definition never lists its variants; the relationship is stored on the
-variant. A module's exports therefore contain the parent and every variant as
-separate entries, parent first and then variants in authored order, under the
-[entry module contract](./mokly-entry-modules.md).
+Every definition flattens its variants into full entries whose derived path is
+the parent's path plus the variant's slug and whose `variantOf` is the parent's
+path, parent first and then variants in authored order. An export contributes
+exactly one definition under the
+[entry module contract](./mokly-entry-modules.md); the definition carries its
+variants, and the catalogue model flattens them. A component needs no variant:
+its page renders its own props first, then each variant.
 
-A `defineScreen` call whose input omits `variants`, or whose `variants`
-property is definitely `undefined`, returns one `ScreenDefinition`. A call
-with a definitely present `variants` array returns a readonly
-`ScreenDefinition[]`, ordered parent first; this includes a definitely empty
-array, whose result contains only the parent. When the input type permits
-either an array or `undefined`, including the exported broad `ScreenInput`
-type, the return type is the union of those two results. The conditional
-result distributes over unions and preserves these precise results through
-generic helpers, so broad or optional input cannot be assigned unsafely to one
-definition. Exporting either result directly is valid; collection flattens
-the one array level. `defineComponent` always returns its entries as an array
-beside the renderable facade.
+Fresh variant literals in direct calls keep excess-key checks. Generic
+inference can accept extra top-level keys; `satisfies ScreenInput` or an
+explicit input annotation checks them statically. Registry preparation rejects
+every unknown field regardless of TypeScript inference.
 
-Generic `defineScreen` wrappers accept `T extends ScreenInput` without extra
-constraints. Fresh variant literals in direct calls retain excess-key checks. Generic inference
-can accept extra top-level keys; `satisfies ScreenInput` or an explicit input
-annotation checks them statically. Registry preparation rejects every unknown
-field regardless of TypeScript inference.
-
-A variant's file names derive from its own path under the
+A variant's document routes derive from its own path under the
 [artifact path contract](./mokly-artifact-paths.md); the parent's path is the
 prefix and plays no other part.
 
-A screen variant inherits the parent's `address`, `colorSchemes`,
-`relatedDocs`, and `tags` unless it declares its own value,
-which replaces rather than merges the inherited list. `useCasePaths` defaults
-to an empty list and is never inherited because membership is reciprocal with
-the flow's steps; a flow that steps through the variant must be listed by that
-variant. `title`, `description`, `mobile`, and `desktop` are always the
-variant's own. A component variant inherits the parent's `colorSchemes`,
-`relatedDocs` and `tags`, and owns its `title` and `props`. An
-authored nonempty `description` replaces the parent's; omission copies the
-parent description into the flattened entry. `slug` is one segment under the
-[segment grammar](./mokly-paths.md#segment-grammar); `overdue` under
-`account/billing/invoice` gives `account/billing/invoice/overdue`. Variants have no `path` input. Their path always consists of the parent's final
-path and their own slug; a declared parent path moves every variant with it.
+A variant's `title` is its own. Its `description`, `tags`, `relatedDocs`, and
+`colorSchemes` default to the parent's, and a screen variant's `address` does
+too; a declared list replaces rather than merges the inherited one. A
+component variant's declared slots default to the parent's and its supplied
+slots to empty. `useCasePaths` defaults to an empty list and is never
+inherited, because membership is reciprocal with the flow's steps; a flow that
+steps through the variant must be listed by that variant. `slug` is one
+segment under the [segment grammar](./mokly-paths.md#segment-grammar);
+`overdue` under `account/billing/invoice` gives
+`account/billing/invoice/overdue`. Variants have no `path` input. Their path
+always consists of the parent's final path and their own slug; a declared
+parent path moves every variant with it.
 
 Validation rejects, with source attribution:
 
-- a screen variant that declares `variants`, even when `undefined`;
+- a variant that declares `variants`, even when `undefined`;
 - a variant without a slug, or whose slug is outside the segment grammar;
 - two variants of one parent with equal slugs, which derive one path and fail
   as a [duplicate path](./mokly-paths.md#diagnostics);
-- undeclared input keys such as `path` under the general unknown-field rule, including keys
-  whose value is `undefined`;
-- a component with no variants.
+- undeclared input keys such as `path` under the general unknown-field rule,
+  including keys whose value is `undefined`;
+- merged props that the parent's prop schema rejects, under the
+  [entry props validation](./mokly-entry-props.md#validation).
 
-For screen variants, nested `variants` produces an `invalid-variants`
-registry violation with exact text `a variant cannot declare variants`.
-All other undeclared input fields use the authoring contract's general
-`invalid-field` rule. The nested-variant diagnostic is
-attributed to the source module; its authored-field marker survives bundling
-through `Symbol.for`. Unknown component-variant fields use the same general
-`invalid-field` rule after registry path resolution. The attributed variant path
-therefore always includes the final parent path; no provisional label is used.
+Nested `variants` produces an `invalid-variants` registry violation with the
+exact text `a variant cannot declare variants`. All other undeclared input
+fields use the authoring contract's general `invalid-field` rule, after
+registry path resolution, so the attributed variant path always includes the
+final parent path; no provisional label is used.
 
 If a parent's own definition is invalid, preparation reports that parent's
 root-cause violations without also reporting a relationship violation for each
 child. Nesting is exactly one level deep because a variant cannot declare
-variants; there is no authored parent reference to misname.
-
-For a component parent, preparation runs metadata validation first and runs
-`validateComponentDefinition` only when the metadata is valid. A parent that
-fails either check keeps those parent violations and does not have any child's
-props, controls, or slots validated against it. The parent remains present for
-the relationship rules and for the inherited `relatedDocs`,
-`colorSchemes`, and `tags` checks above. Once both parent validations succeed,
-preparation validates each component variant's props, controls, and slots
-against that parent exactly once.
+variants; there is no authored parent reference to misname. For a component
+parent, preparation validates the metadata first and the component definition
+only when the metadata is valid. A parent that fails either check keeps those
+parent violations, and no child's props or slots are validated against it; the
+parent stays present for the relationship rules and the inheritance checks
+above. Once both parent validations succeed, preparation validates each
+variant's merged props and slots against the parent exactly once.
 
 Every other rule of a valid parent's kind applies unchanged: path and tag
 grammar, color-scheme subsets, reciprocal use-case membership, dependency
-paths, prop validation against the component schema, and source attribution to
-the defining module.
+paths, prop validation against the schema, and source attribution to the
+defining module or file.
 
-## Generated Output And Manifest
+## Rendering And Catalogue Model
 
-Build renders a variant exactly as it renders any entry of its kind: one
-document per effective viewport and color scheme through the consumer
-renderer, with the same plain generated marker, link rewriting, fragment validation,
-resource validation, collision and generated-inventory
-checks, and transactional writes. A component parent has no views; its page
-shows its first variant entry.
+A variant renders exactly as any entry of its kind: one document per effective
+viewport and color scheme through the parent's render with the merged props,
+with the same link rewriting, fragment validation, resource validation, and
+composition into the render cache. A component parent renders its own props
+first on its page, then each variant.
 
-The manifest is schema v10. `variantOf` is present exactly on variant entries
-of either kind and holds the parent's path under the
-[manifest contract](./mokly-component-manifest.md). Validation requires the
-named parent to be a current entry of the same kind without `variantOf` and
-requires the variant's path to be the parent's path plus exactly one segment. Canonical entry sorting places a parent's
-variants directly after it in authored order.
+The catalogue model records `variantOf` exactly on variant entries of either
+kind and holds the parent's path. Validation requires the named parent to be a
+current entry of the same kind without `variantOf` and requires the variant's
+path to be the parent's path plus exactly one segment. Canonical entry sorting
+places a parent's variants directly after it in authored order.
 
 The hierarchy analysis exposes each parent's variants in authored order and
 each variant's parent. The [path contract](./mokly-paths.md#folders-and-leaves)
@@ -165,7 +149,7 @@ pairs through its slug before the ordinary signals run.
 `MockLink`, `mockLink`, and raw `mock:<path>[#fragment]` values address a
 variant by its ordinary path, complete or relative. The portable rewrite
 targets the variant's own view for the source viewport and color scheme with
-the existing light fallback, and the marker carries the variant path. A
+the light fallback, and the marker carries the variant path. A
 use-case step references a screen variant through `screenPath` like any
 screen, and the variant's `useCasePaths` must list that use case. Logical
 fragments are validated against the variant's own documents. Nothing in the
@@ -185,13 +169,13 @@ catalogue v7 readers validate those relationships.
 Coverage must prove:
 
 - flattening, derived paths, inheritance and overrides, and every rejected
-  shape, for `defineScreen` and `defineComponent`;
-- manifest emission and validation of `variantOf` for both kinds and
-  hierarchy exposure;
+  shape, for `defineScreen`, `defineComponent`, and the HTML forms;
+- catalogue model and read model emission and validation of `variantOf` for
+  both kinds and hierarchy exposure;
 - rendering, link rewriting, fragment validation, and use-case steps that
   address a variant;
 - the tree markup, disclosure persistence, `Collapse all`, search, the
-  active-row invariant, Back and Forward, the drawer, and the exported shell
+  active-row invariant, Back and Forward, the drawer, and the built shell
   without a server;
 - variant-only edits, aggregate marks, landing on the first changed variant,
   count behavior, removed variants under surviving and deleted parents, and
@@ -200,12 +184,12 @@ Coverage must prove:
 
 ## Related Docs
 
+- [Entry props and variants](./mokly-entry-props.md)
 - [Public authoring API](./mokly-authoring.md)
 - [Entry modules](./mokly-entry-modules.md)
 - [Registered components](./mokly-components.md)
 - [Variant navigation and Changes](./mokly-variant-navigation.md)
-- [Rendering and generated output](./mokly-rendering.md)
-- [Manifest schema](./mokly-component-manifest.md)
+- [Rendering](./mokly-rendering.md)
 - [Catalogue navigation contract](./mokly-navigation.md)
 - [Changes and screen comparisons](./mokly-changes.md)
 - [Catalogue change metadata](./mokly-catalogue-changes.md)

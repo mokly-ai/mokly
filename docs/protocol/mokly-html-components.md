@@ -28,7 +28,6 @@ rules. Keys:
 | `movedFrom`    | string           | previous complete path                                              |
 | `rationale`    | string           | design rationale                                                    |
 | `relatedDocs`  | string list      | related document links                                              |
-| `dependencies` | string list      | declared files or directories                                       |
 | `colorSchemes` | string list      | non-empty subset including `light`                                  |
 | `propSchema`   | map, required    | a JSON Schema object under the prop schema profile; see Props       |
 | `props`        | map              | the component's own prop values, rendered first on its page         |
@@ -166,4 +165,4 @@ class="btn-label">Save</span></button>` as an ownership region. The entry
 - [Entry props and variants](./mokly-entry-props.md)
 - [HTML screens, pages, and use cases](./mokly-html-screens.md)
 - [Registered components](./mokly-components.md) for the JavaScript form
-- [Component prop schema of the frozen backend](./mokly-component-props.md)
+- [Component prop schema](./mokly-component-props.md)

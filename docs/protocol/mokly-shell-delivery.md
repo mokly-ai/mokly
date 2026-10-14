@@ -154,8 +154,9 @@ detail only when `identity`, `deploymentId`, and `revision` equal the
 installed index. On a revision mismatch it refetches the index once; if the
 pair still disagrees, the entry shows its unavailable state with a retry
 control. A different `deploymentId` means another deployment replaced the
-files, and the shell performs a full page load of the requested URL instead
-of mixing deployments. It accepts a removed entry's detail only when
+files: the standalone shell performs a full page load of the requested URL
+instead of mixing deployments, and an embedded React host receives one
+`onError` and keeps its state. It accepts a removed entry's detail only when
 `identity` equals the index, `generation` equals the generation that the
 index's `comparisonUrl` names, and `snapshotId` equals the index's removed
 record for that path.
@@ -185,8 +186,7 @@ panel update in place. The shell reloads only the mounted frames whose
 `documentKey` changed. When `live.generation` changed, it refetches the live
 descriptor and replaces the render capability. When the current entry is no
 longer in the index, it shows the missing state and keeps the URL. The page
-never reloads, and the one-shot reload recovery of the frozen backend is
-retired. When a fetch fails or the pair disagrees after one more index fetch,
+never reloads. When a fetch fails or the pair disagrees after one more index fetch,
 the shell keeps its installed state and shows the entry as unavailable with
 retry; the next message starts a fresh refresh.
 
@@ -207,8 +207,8 @@ its first state as `1`; a build writes `revision: 0`.
 `MoklyViewer` takes an `index` source and a `detail` source instead of one
 catalogue source: the index as an object or a URL, and the detail as a
 function from an entry path and an optional snapshot id to an object, a URL,
-or a promise of either. The `@mokly/viewer/server` entry and `renderViewer`
-are retired; a React host renders the viewer in the browser. The
+or a promise of either. There is no `@mokly/viewer/server` entry and no `renderViewer`; a React host
+renders the viewer in the browser. The
 `@mokly/viewer/browser` entry mounts the standalone shell into the stub's
 mount element. The [embeddable viewer contract](./mokly-viewer.md) owns the
 props.
@@ -219,7 +219,7 @@ props.
 | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | an index, detail, or live descriptor with another `schemaVersion`                            | the version error state of the [viewer namespace](./mokly-viewer-namespace.md) contract |
 | a current entry's detail whose identity or revision differs from the index after one refetch | the entry's unavailable state with retry                                                |
-| a detail or index with another `deploymentId`                                                | a full page load of the requested URL                                                   |
+| a detail or index with another `deploymentId`                                                | a full page load in the standalone shell; one `onError` in an embedded host             |
 | a removed entry's detail whose identity, generation, or snapshot id differs from the index   | the entry's unavailable state with retry                                                |
 | a live descriptor that fails while the index names a generation                              | browsing works; live prop editing is unavailable with a browser warning                 |
 | a JSON route that redirects outside the origin, has another type, or fails                   | the entry's unavailable state with retry                                                |

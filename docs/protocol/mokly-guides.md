@@ -2,7 +2,7 @@
 
 ## Scope
 
-This implemented contract makes this repository the owner of the versioned
+This contract makes this repository the owner of the versioned
 documentation for the public Mokly CLI and catalogue. The guides are plain
 Markdown shipped in `@mokly/mokly` beside the published protocol documents and
 changelog. The private `mokly-cloud` repository owns the public documentation
@@ -21,13 +21,13 @@ section id, its filename without `.md` is the route slug, and the cloud route is
 
 Sections appear in this order:
 
-| Order | Section id  | Title                  | Summary                                                         |
-| ----- | ----------- | ---------------------- | --------------------------------------------------------------- |
-| 1     | `start`     | Getting started        | Install Mokly, point it at your screens and open the catalogue. |
-| 2     | `authoring` | Authoring              | Describe screens, components, flows and pages in TypeScript.    |
-| 3     | `catalogue` | Catalogue              | Browse, search, compare and export what the build produced.     |
-| 4     | `ci`        | Continuous integration | Publish a catalogue from a workflow on every branch.            |
-| 5     | `cli`       | CLI reference          | Every command, the options it takes and what it writes.         |
+| Order | Section id  | Title                  | Summary                                                                          |
+| ----- | ----------- | ---------------------- | -------------------------------------------------------------------------------- |
+| 1     | `start`     | Getting started        | Install Mokly, point it at your screens and open the catalogue.                  |
+| 2     | `authoring` | Authoring              | Describe screens, components, flows, pages and documents in HTML and TypeScript. |
+| 3     | `catalogue` | Catalogue              | Browse, search and compare the catalogue, and build the static site.             |
+| 4     | `ci`        | Continuous integration | Publish a catalogue from a workflow on every branch.                             |
+| 5     | `cli`       | CLI reference          | Every command, the options it takes and what it writes.                          |
 
 The cloud repository may add its own `cloud`, `reference`, and `review`
 sections. They are not valid section values in this repository's guides.

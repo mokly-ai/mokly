@@ -4,8 +4,12 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Authoring Contract
 
-`MockLink` keeps its existing anchor behavior by default. `asChild: true`
-explicitly adapts one rendered control into a catalogue link:
+A link control is one rendered element that Mokly adapts into a catalogue
+link while the consumer keeps its component, theme, and styles. It has a React
+form and an HTML form under one adaptation contract.
+
+In React, `MockLink` renders an anchor by default. `asChild: true` adapts one
+rendered control:
 
 ```tsx
 <MockLink asChild to="account/overview">
@@ -15,29 +19,39 @@ explicitly adapts one rendered control into a catalogue link:
 </MockLink>
 ```
 
-This is static-generation behavior, not React event forwarding. The consumer
-still owns the component, theme, and styles. A component that requires an
-`onPress` to render enabled still needs that prop; Mokly neither invents a
-handler nor executes one in the browser.
+This is composition, not React event forwarding. The consumer owns the
+component, theme, and styles. A component that requires an `onPress` to render
+enabled still needs that prop; Mokly neither invents a handler nor executes one
+in the browser.
 
 Child mode accepts only `asChild`, `to`, `fragment`, and one React element as
 `children`; `to` takes the complete path, relative path, or definition
-reference forms of the [authoring contract](./mokly-authoring.md#links). Put classes, styles, ids, accessibility labels, `target`, and other
-attributes on that child. Fragments, text, arrays, missing children, and extra
-wrapper props fail rather than silently losing props. The existing target and
-fragment grammars apply in both modes. A component may render one HTML `a`,
-`button`, `div`, or `span`, with text, icons, and other non-interactive content.
-It must render exactly one root element, with no non-whitespace sibling text.
-Plain `div` and `span` roots support clickable rows; their default display is
-retained when they become anchors. CSS should target classes or stable
-attributes; selectors that require the original element name no longer match
-an active control after it becomes an anchor.
+reference forms of the [authoring contract](./mokly-authoring.md#links). Put
+classes, styles, ids, accessibility labels, `target`, and other attributes on
+that child. Fragments, text, arrays, missing children, and extra wrapper props
+fail rather than silently losing props.
+
+In an HTML screen, component, or page body, `to="<path>"` with an optional
+`fragment` attribute on a component element, or on a raw `a`, `button`, `div`,
+or `span`, makes that element a link control under the
+[HTML screens contract](./mokly-html-screens.md#links-and-markers). `to`
+takes the complete or relative path form. `to` and `fragment` are reserved on
+component elements and never reach props, and a component element's control is
+the root element its render produces.
+
+The target and fragment grammars of the
+[navigation contract](./mokly-navigation.md) apply in every form. The control
+may be one HTML `a`, `button`, `div`, or `span`, with text, icons, and other
+non-interactive content. It must be exactly one root element, with no
+non-whitespace sibling text. Plain `div` and `span` roots support clickable
+rows; their default display is kept when they become anchors. CSS should
+target classes or stable attributes; a selector that requires the original
+element name does not match an active control after it becomes an anchor.
 
 The root may have no role, `role="button"`, or `role="link"`. Other roles,
-unsupported/void roots, an editable root, inline event handlers on the root,
-nested child-mode links, and malformed marker boundaries fail the build. Inert
-template contents cannot contain child-mode markers. Intended focus attributes
-belong on the root itself.
+unsupported or void roots, an editable root, inline event handlers on the
+root, nested link controls, and a malformed control boundary fail the build.
+Intended focus attributes belong on the root itself.
 
 ### Placement Tiers
 
@@ -82,10 +96,13 @@ Messages describe the classified element as `<tag>` or
 tier: `role`, `contenteditable`, `controls`, or `tabindex`. Displayed authored
 values collapse each whitespace run to one space, trim leading and trailing
 whitespace, escape `"` as `&quot;`, and render C0/C1 terminal controls as
-lowercase `\uXXXX`, so every message remains safe on one line. An `on*`
-attribute is shown by name only, never with its value. Errors keep the existing
-`<route>: MockLink child control` prefix; warning messages omit the route, which
-the [build warning record](./mokly-build-warnings.md#record) carries.
+lowercase `\uXXXX`, so every message stays safe on one line. An `on*`
+attribute is shown by name only, never with its value. Errors carry the
+`<route>: MockLink child control` prefix; an HTML control produces the same
+diagnostics with its file, line, and column under the
+[HTML screens diagnostics](./mokly-html-screens.md#diagnostics). Warning
+messages omit the route, which the
+[build warning record](./mokly-build-warnings.md#record) carries.
 
 ```text
 MockLink child control is inside <a>; move the control outside it
@@ -97,78 +114,79 @@ MockLink child control contains <span tabindex="-1">; the link has an extra focu
 MockLink child control contains <div role="menu">; the role does not belong inside a link
 ```
 
-A root's existing `href` or `data-nav-href` must either be absent or equal the
-complete logical destination supplied by `MockLink`. Conflicting destinations
+A root's own `href` or `data-nav-href` must either be absent or equal the
+complete logical destination the control supplies. Conflicting destinations
 fail. Native button form attributes are removed during adaptation: a catalogue
 link cannot also submit a form. Ordinary unmarked buttons and metadata-only
-`data-nav-href` references retain their existing behavior.
+`data-nav-href` references keep their behaviour.
 
-## Static Generation
+## Adaptation
 
-The helper emits paired inert template markers around the child. After the
-consumer renderer returns, and before logical-link rewriting, Mokly consumes these markers for screen and whole-document
-documents. It validates the parsed HTML structure and patches only marked
-boundaries and control tags/attributes using their original source offsets.
-It does not reserialize the whole document. Markers are an internal reserved
-format; malformed, unmatched, nested, or unconsumed markers fail the build.
-Attribute names follow HTML's case-insensitive parsing rules. Validation reads
-actual attributes, so literal marker names in text, comments, scripts, styles,
-or unrelated attribute values remain ordinary consumer content.
+Adaptation runs on the composed tree, after the renderer and before
+logical-link rewriting, for screen, component, and page documents alike. In an
+HTML body the element that carries `to` is the control. In a sidecar render,
+`MockLink asChild` wraps the child in a `mokly-` comment marker pair under the
+markers rule of the [comparison contract](./mokly-comparison.md#markers); the
+core reads the pair into the control's region and drops it, so no marker is
+served. A pair that consumer output authors, and a malformed, unmatched,
+nested, or unconsumed pair, fail the build. Attribute names follow HTML's
+case-insensitive parsing rules. Validation reads tree attributes, so a marker
+spelling in text, comments, scripts, styles, or unrelated attribute values is
+ordinary consumer content.
 
-The `data-mokly-link-control` attribute namespace, including the stylesheet
-marker, is reserved throughout the document and inert template contents.
-Consumer renderers cannot supply these attributes, even without child links.
-Only the adapter can create them. Duplicate attributes on reserved-metadata
-elements fail even when HTML parsing would collapse them. Final rendering retains the validated control metadata.
+The `data-mokly-link-control` attribute namespace is reserved throughout the
+document. Consumer output cannot supply these attributes, even without link
+controls; only the adapter creates them, and a duplicate attribute on an
+adapted element fails even where HTML parsing would collapse it. The composed
+document keeps the validated control metadata.
 
 An active control becomes one native HTML anchor. Child content, classes,
-inline styles, ids, labels, and other applicable attributes remain intact.
-Button roles and button-only form attributes are removed. The new logical
-`href` goes through the existing target, fragment, viewport, scheme, portable
-URL, and authenticated Browse-marker validation.
+inline styles, ids, labels, and other applicable attributes stay intact.
+Button roles and button-only form attributes are removed. The logical `href`
+goes through the target, fragment, viewport, scheme, portable URL, and
+Browse-marker rules of the navigation contract and the final checks of
+[link validation](./mokly-link-validation.md).
 
-Only documents with active adapted controls receive package-owned inline CSS.
-Low-specificity rules restore ordinary inherited link text styling and the
-source root's default display (`button`: inline-block, `div`: block,
-`span`/`a`: inline). Adapted buttons default to intrinsic `fit-content` width;
-authored widths, including full-width block buttons, take precedence. Consumers
-using automatic flex/grid stretching should specify the intended width.
-Authored CSS and inline styles take precedence over these defaults. A visible
-focus outline applies to adapted links, including controls whose component
-emits an inline outline reset. Native browser button chrome and JavaScript-only
-hover/pressed effects are not reproduced; consumers should use styled static
-controls. Native links provide keyboard activation and normal browser link
-behavior without adding a consumer script.
+Only a document with an active adapted control receives package-owned CSS, as
+one style element in its head. Low-specificity rules restore ordinary
+inherited link text styling and the source root's default display (`button`:
+inline-block, `div`: block, `span` and `a`: inline). Adapted buttons default
+to intrinsic `fit-content` width; authored widths, including full-width block
+buttons, take precedence. Consumers that use automatic flex or grid stretching
+should state the intended width. Authored CSS and inline styles take
+precedence over these defaults. A visible focus outline applies to adapted
+links, including controls whose component emits an inline outline reset.
+Native browser button chrome and JavaScript-only hover or pressed effects are
+not reproduced; use styled static controls. Native links provide keyboard
+activation and normal browser link behaviour without a consumer script.
 
-Documents without child-mode markers retain identical bytes. Adding this API
-does not rewrite existing catalogues or change the Changed filter's semantics.
+A document without link controls is unchanged by this contract. Serve,
+`build`, and both sides of a comparison see the same adapted document, and
+adaptation adds no Changes membership of its own.
 
 ## Inactive Controls
 
 `disabled`, `aria-disabled="true"`, `aria-busy="true"`, or `inert` on the
-control keeps it inactive. An enclosing inert, ARIA-disabled/busy container or
-disabled fieldset also keeps it inactive; fieldsets are conservatively treated
-as disabled even inside their first legend. Disabled/busy child props must be
-reflected in rendered HTML for Mokly to observe them.
+control keeps it inactive. An enclosing inert, ARIA-disabled or busy container
+or disabled fieldset also keeps it inactive; fieldsets are conservatively
+treated as disabled even inside their first legend. Disabled or busy child
+props must be reflected in rendered HTML for Mokly to observe them.
 
-Inactive roots retain their element, styling, label, and accessibility state;
+Inactive roots keep their element, styling, label, and accessibility state;
 their `href` is removed, and a button receives `type="button"` so it cannot
-accidentally submit a form when opened directly. The destination remains only
-in inert `data-nav-href` metadata for the existing target/fragment validation.
-No activatable Browse marker is produced. Mokly does not override a
-consumer's disabled state to make navigation work.
+accidentally submit a form when opened directly. The destination stays only
+in inert `data-nav-href` metadata for the target and fragment validation. No
+activatable Browse marker is produced. Mokly does not override a consumer's
+disabled state to make navigation work.
 
-## Integration And Verification
+## Integration
 
 The package has no consumer component-library or React Native Web runtime
-dependency. A consumer renderer can drop its custom navigation HTML transformer
-after adopting this API while retaining theme wrapping and style collection.
-This package change does not migrate or publish downstream repositories.
-
-Verification covers default-anchor byte compatibility, typed and untyped API
-misuse, source-byte preservation, native/custom controls, disabled and busy
-states, ambiguity and malformed markup, target validation, light/dark and both
-viewports, page callbacks/custom renderers and clean packed
-ESM/NodeNext consumers. Browser checks exercise real Firna buttons, pointer and
-keyboard navigation in script-free Browse/use-case frames, focus visibility,
-disabled behavior, standalone file links, and Review snapshot links.
+dependency. A consumer renderer needs no navigation HTML transformer of its
+own and keeps theme wrapping and style collection. Verification covers the
+default anchor, typed and untyped misuse, the HTML and React forms, native and
+custom controls, disabled and busy states, ambiguous and malformed markup,
+target validation, light and dark at both viewports, page callbacks and custom
+renderers, and browser checks of pointer and keyboard navigation in
+script-free Browse and use-case frames, focus visibility, disabled behaviour,
+standalone document links, and comparison snapshot links.

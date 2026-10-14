@@ -28,8 +28,7 @@ viewport or requested scheme recomputes the effective views, status, marks, and
 eligibility without a page load, as does a background evidence refresh;
 selecting a sibling variant is navigation to that entry.
 
-Server rendering, controlled selection, and comparison deep links use the same
-decision; a deep link is honored only after it confirms eligibility. Nonmatching
+Controlled selection and comparison deep links use the same decision; a deep link is honored only after it confirms eligibility. Nonmatching
 evidence retains the existing fallback decision.
 
 Eligible views offer Current / Side by side / Overlay / Difference in an opaque
@@ -41,7 +40,7 @@ Changes. Current is selected initially, including after navigation and reload.
 Selecting Changes, opening a current screen, changing its viewport or color
 scheme in Current, and receiving a watched update do not generate comparison
 snapshots in development; opening a removed entry is the one selection that
-requests its historical preview. Publications with Changes prepare snapshots
+requests its historical preview. A static build with Changes prepares snapshots
 at build time, but never fetch or render them while browsing in Current. The first
 explicit diff selection requests the comparison in either delivery mode.
 Returning to Current cancels pending UI work and restores the current screen.
@@ -65,8 +64,8 @@ unmodified container row still redirects to its first visible changed variant
 or member under [variant navigation](./mokly-variant-navigation.md#changes-rows). A direct
 URL, an All-filter activation, Back, Forward, and a reload also keep the sticky
 selection.
-These marks and the `Changed views` row apply in exports with Changes as well as
-in Serve.
+These marks and the `Changed views` row apply in a static build with Changes as
+well as in Serve.
 
 Diffs render inside the existing main region with the catalogue, title, details,
 viewport, and scheme controls retained. Both viewports are supported. Snapshot

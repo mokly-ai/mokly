@@ -34,7 +34,7 @@ needs the name:
 - A version gate that rejects an earlier number names that number.
 - A removed-input warning or a consumer migration instruction names the input
   it removes.
-- Frozen wire and hash identifiers keep their literal names.
+- Fixed wire and hash identifiers keep their literal names.
 - The npm release notes and the historical upgrade notes describe past
   releases and are history by nature.
 

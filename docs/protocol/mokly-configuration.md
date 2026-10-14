@@ -3,8 +3,8 @@
 Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 This is the detailed configuration boundary of the
-[package contract](./mokly-package.md). These settings describe current
-behavior, including imported CSS and optional PostCSS.
+[package contract](./mokly-package.md). It names every field, where each path
+resolves, and the validation that rejects an unsafe configuration.
 
 ## Configuration Discovery
 
@@ -14,53 +14,42 @@ Mokly searches upward from the current working directory for
 filesystem root and reports every filename it attempted when none is found.
 
 The config's filesystem paths resolve relative to the config file, never
-relative to the installed package or transient npx cache. Repository-matching
-globs operate on repo-relative POSIX paths. `defineConfig` validates and types
-the following contract:
+relative to the installed package or a transient npx cache.
+Repository-matching globs operate on repo-relative POSIX paths. `defineConfig`
+validates and types the following contract:
 
-- `mockupsDir`: catalogue root, with output in its `mokly-generated/` child;
-- `roots`: the directories Mokly scans for entry modules and Markdown
-  documents, each with optional file globs, a path prefix, and transparent
-  directory names, defaulting to one `specs` root;
-- `repoRoot`: repository root, defaulting to the config file's directory;
-- a light-only or light-and-dark catalogue rendering set;
-- optional renderer-module path and declarative route-to-stylesheet rules;
-- optional consumer package roots, aliases, conditions, fields, extensions, and
-  loaders for app-owned module resolution;
-- default Git base ref used to find the `HEAD` branch point, and internal comparison
-  directory;
-- additional authored inputs and static assets for watched Serve;
+- `roots`: the directories Mokly scans for HTML screens, components, pages,
+  use cases, Markdown documents, entry modules, and stories files, each with
+  optional file globs, a path prefix, and transparent directory names,
+  defaulting to one `specs` root;
+- `repoRoot`: the repository root, defaulting to the config file's directory;
+- `colorSchemes`: a light-only or light-and-dark rendering set;
+- `renderer`: the optional module that wraps React screen and component
+  renders with the product's providers;
+- `stylesheets`: declarative route-to-stylesheet rules;
+- `postcss` and `moduleResolution`: the consumer's PostCSS module and the
+  package roots, aliases, conditions, fields, extensions, and loaders that the
+  [sidecar](./mokly-sidecar.md) bundles with;
+- `review.base`: the Git ref whose merge base with `HEAD` is the comparison
+  base;
+- `watch`: additional authored inputs and static assets for watched Serve.
 
-The resolved config has one repository root, one mockups root, one sorted
-resolved source-file set across every root, and normalized repo-relative POSIX
-paths. Config
-validation rejects path traversal, output outside the repository (including
-through symlinks), entry modules inside internal or package-owned private roots,
-duplicate rules, and a watch path that cannot be classified safely. An entry
-module may be nested below `mockupsDir` as protected authored source, but not
-inside `mokly-generated/`, including through aliases. Configured entries, renderer
-and package roots in that child fail `config-invalid` with the
-setting and path; imported authoring sources fail with their path. See
-generated output.
-
-Before reading Git, `repoRoot` must resolve through symlinks to the same path
-as `git rev-parse --show-toplevel` run from that directory. A nested root fails
-with `config-invalid`, naming both paths. This validation belongs to config's
-Git boundary, not unconditional config loading. Build, Check, Serve and
-repository preview without comparisons work without Git. Check reads the index,
-never `.gitignore`, and treats no Git as untracked. CLI publish requires a clean
-checkout under the [upload contract](./mokly-upload.md). Build and Serve never
-decide their behavior from head tracking.
-Serve's parent, classifier and
-HTTP child, comparison export and preview all validate before their first Git
-read. All remains usable when history is unavailable; an explicit comparison
-request retains the typed configuration error. Missing refs or history keep
-their existing command-specific errors.
+The resolved config has one repository root, one sorted resolved source-file
+set across every root, and normalized repo-relative POSIX paths. No field names
+an output directory, because no command writes into the repository: `build`
+takes its output directory from `--out` under the
+[static build contract](./mokly-export.md), `mokly-static/` at the repository
+root by default, which Git must ignore, and `publish` builds into its own
+directory outside the repository. The render cache is process memory, and the
+base-side caches live in the operating system's cache directory under the
+[architecture page](../architecture/rust-core.md#render-graph).
 
 No default may encode `docs/mockups` as a mandatory location, product route
 families, consumer design tokens, email-template paths, or a TypeScript
-workspace layout. A conventional `docs/mockups` layout may be offered by an
-explicit initializer or documented example, not hidden in runtime logic.
+workspace layout. A conventional layout may be offered by an explicit
+initializer or documented example, not hidden in runtime logic.
+
+## Shape
 
 The normative configuration shape is:
 
@@ -85,14 +74,13 @@ type ModuleLoader =
 
 interface RootConfig {
   dir: string; // config-relative directory inside repoRoot
-  files?: readonly string[]; // ["**/*.mockup.{ts,tsx}", "**/*.md"]
+  files?: readonly string[]; // the default globs of the root field contract
   path?: string; // prefix for every derived path; none by default
   transparent?: readonly string[]; // directory names removed from paths
 }
 
 interface MoklyConfig {
   colorSchemes?: readonly ColorScheme[]; // ["light"]
-  mockupsDir: string;
   roots?: readonly RootConfig[]; // [{ dir: "specs" }]
   repoRoot?: string; // config directory
   renderer?: string;
@@ -113,120 +101,110 @@ interface MoklyConfig {
   }[];
   review?: {
     base?: string; // origin/main; merge base with HEAD
-    baselineBuild?: readonly (readonly string[])[]; // used when baseline needs rebuilding
-    outDir?: string; // .context/mokly-review
-    sharedImpact?: never;
   };
   watch?: {
     debounceMs?: number; // 75
     rules?: readonly {
-      action: "ignore" | "rebuild" | "reload" | "restart";
+      action: "ignore" | "rebuild" | "reload";
       paths: readonly string[];
     }[];
   };
 }
 ```
 
-Filesystem fields (`repoRoot`, `roots[].dir`, `mockupsDir`, `renderer`,
-module-resolution package
-roots, and Review `outDir`) are config-relative. `roots[].files` globs are
-relative to their root; `watch.rules[].paths` is
-repository-relative; see [roots](#roots). Stylesheet file paths are
-relative to `mockupsDir`; HTTP(S) stylesheet URLs are allowed.
-`colorSchemes` is a non-empty, duplicate-free subset of `"light" | "dark"`
-that must include `"light"`; it defaults to `["light"]` and normalizes to
-light-first order. Shared `stylesheets` apply to every generated view, with a
-matching `lightStylesheets` or `darkStylesheets` list appended in declaration
-order.
-The shared list may contain the exported `componentStylesheets` symbol once;
-scheme-specific lists cannot contain it. It places validated component-declared
-CSS links in rendered screen/component documents at that point; by default
-they follow shared and precede scheme-specific links. Pages are unchanged.
-See [component stylesheets](./mokly-component-stylesheets.md) for the complete
-validation and placement contract.
-`review.baselineBuild` is valid in every repository; its argv contract and
-per-commit selection follow baseline selection.
-The removed keys fail `config-invalid` with their exact guidance:
-`generatedOutput was removed; use Git tracking for check and run mokly build to write output`
-and `publicExclude was removed; remove it; only referenced authored assets are public`.
-Check, after compilation, uses index paths under `<mockupsDir>/mokly-generated/` to classify
-tracked, untracked or mixed output; mixed output fails `build-invalid` with
-both remedies as specified in generated output.
-Tracked Check compares the entire tree with disk; untracked Check ignores
-local output. Publish separately validates committed or ignored generated output.
-Build writes transactionally. Serve and export await preparation
-before classification; Serve publishes `preparing` when a rebuild is needed,
-then `pending` while classification runs. Cache hits skip `preparing`.
-`watch.rules[].paths` are repository-relative POSIX globs, while stylesheet
-`match` matches catalogue routes. `repoRoot` defaults to the config directory. Duplicate stylesheet
-matches and watch paths are invalid. Additional watch rules cannot override
-configured source/module rebuilds, reloads for configured and component-declared stylesheets and
-referenced resources, or package-owned ignores for dependency, build, test,
-Review, `mokly-generated/`, and transaction paths. Referenced authored HTML under `mockupsDir` is a checked
-closure asset and can be served and exported. It is not a catalogue entry
-unless registered with `definePage`.
-The repository's `.mokly-cache/` and its physical aliases are always private
-and ignored before source exceptions or broad globs, and cannot be configured
-as a root, mockups, Review output, or an export destination.
+Filesystem fields (`repoRoot`, `roots[].dir`, `renderer`, `postcss`, module
+resolution package roots, and local stylesheet paths) are config-relative.
+`roots[].files` globs are relative to their root; `watch.rules[].paths` are
+repository-relative POSIX globs; a stylesheet `match` matches catalogue
+routes. HTTP(S) stylesheet URLs are allowed. `colorSchemes` is a non-empty,
+duplicate-free subset of `"light" | "dark"` that must include `"light"`; it
+defaults to `["light"]` and normalizes to light-first order.
+
+Shared `stylesheets` apply to every screen and component view of a matching
+route, with a matching `lightStylesheets` or `darkStylesheets` list appended
+in declaration order; pages link their own CSS. The shared list may contain
+the exported `componentStylesheets` symbol once; scheme-specific lists cannot
+contain it. It places validated component-declared CSS links at that point; by
+default they follow shared and precede scheme-specific links. The
+[component stylesheets contract](./mokly-component-stylesheets.md) owns the
+validation and placement rules, and
+[imported CSS configuration](./mokly-configuration-imported-styles.md) owns
+`postcss`, the loader boundary, and the bundling model.
+
+## Validation
+
+Configuration accepts only the declared fields. An undeclared field fails with
+`config-invalid` and `unknown configuration field: <field>`; no removed field
+has a warning or a migration. Validation also rejects, with `config-invalid`
+naming the setting and the path:
+
+- path traversal, and a `dir`, `renderer`, `postcss`, package root, or local
+  stylesheet outside `repoRoot`, including through symlinks;
+- duplicate stylesheet `match` values and duplicate watch paths;
+- a watch path that cannot be classified safely;
+- a `moduleResolution` value outside the
+  [module resolution contract](./mokly-configuration-discovery.md#module-resolution).
+
+Additional watch rules cannot override the package-owned classifications: the
+rebuild of configured sources and modules, the reload for configured and
+component-declared stylesheets and referenced resources, and the ignores for
+dependency, build, test, and output directories, under the
+[watch contract](./mokly-watch.md). Referenced authored HTML and other assets
+become public only through the [referenced closure](./mokly-public-closure.md);
+an authored HTML file is a catalogue entry only as a `.page.html` file or
+through `definePage`.
+
+## Git Boundary
+
+Before reading Git, `repoRoot` must resolve through symlinks to the same path
+as `git rev-parse --show-toplevel` run from that directory. A nested root fails
+with `config-invalid`, naming both paths. This validation belongs to the Git
+boundary, not to unconditional config loading: Serve without a comparison and
+`build` without Changes work without Git, and an explicit comparison request
+keeps the typed configuration error. Missing refs or history keep their
+command-specific errors. `publish` requires a clean checkout under the
+[upload contract](./mokly-upload.md). Serve, `build`, and Changes validate
+before their first Git read.
+
+## Layout
+
 The recommended layout is a dedicated spec tree: the default root `specs`
-holds screens, pages, documents, and flows by product area, with
-`mockupsDir: "specs/generated"` or another output directory and
-`renderer: "specs/renderer.tsx"`, so publication output never mixes with
-authored files. A component library adds a second root over its source tree,
-such as `{ dir: "packages/ui/src", path: "components" }`, so component mockups
-stay beside component code. The documented alternative co-locates every mockup
+holds screens, pages, documents, and use cases by product area, with
+`renderer: "specs/renderer.tsx"` when React screens need providers. A
+component library adds a second root over its source tree, such as
+`{ dir: "packages/ui/src", path: "components" }`, so component mockups stay
+beside component code. The documented alternative co-locates every mockup
 beside the product code it describes, for example
 `{ dir: "src/features", transparent: ["__mockups__"] }`; both layouts produce
 the same catalogue paths under the [path contract](./mokly-paths.md). The
-`.mockup.ts` and `.mockup.tsx` names are the convention the default `files`
-pattern selects, not a runtime suffix rule.
-Authored source directories and entry modules may sit below `mockupsDir`. They
-remain inventoried protected inputs rather than public output. A root
-directory must not equal `mockupsDir`; matched files may sit below it. The generated tree cannot contain authored sources, including through aliases. Review output must not overlap an entry
-module's directory or `mockupsDir` in either direction. Those boundaries are
-covered by the nested discovery, output collision, and public alias tests in
-[`entry_discovery.test.ts`](../../tests/entry_discovery.test.ts),
-[`output_safety.test.ts`](../../tests/output_safety.test.ts), and
-[`server_safety.test.ts`](../../tests/server_safety.test.ts). The rule applies
-to configured comparison output and the transactional writer boundary. The
-[npm CLI](./mokly-package.md#cli) has no Review command or output override; the repository-only
-[preview builder](./mokly-publication.md#publication-option) separately accepts
-`--out` for its published catalogue. Export's
-required `--out` has the additional source/runtime/ownership confinement rules
-in the [export contract](./mokly-export.md).
+`.mockup.ts`, `.mockup.tsx`, `.screen.html`, `.component.html`, `.page.html`,
+`.use-case.yaml`, and `.stories.*` names are the suffixes the default `files`
+globs select; the file kinds are those of the
+[HTML screens contract](./mokly-html-screens.md#file-kinds-without-javascript).
 
-### Removed Review Setting
+## Removed Review Setting
 
-The [removed setting contract](./mokly-configuration-discovery.md#removed-review-setting)
-owns runtime warnings, no-effect handling and the TypeScript guard.
-
-The [module resolution contract](./mokly-configuration-discovery.md#module-resolution)
-owns package roots, aliases, ordered lists, loaders and consumer React identity.
-
-Export rejects a consumer package root equal to `mockupsDir` after realpath
-resolution, with `export-invalid`; config loading adds no equality rejection.
-The [public-file policy](./mokly-public-closure.md) defines the exact error.
-
-The removed `compatibility` key is rejected even when its value is `undefined`,
-with `compatibility was removed; author portable links directly`.
-The obsolete `legacy` config key is rejected, including `legacy: undefined`.
-Register every complete document explicitly with `definePage`;
-baseline compatibility never restores source discovery or old configuration.
-
-Configuration accepts only the declared fields above. An undeclared field fails
-with `config-invalid` and `unknown configuration field: <field>`.
+`review.sharedImpact`, like every other undeclared field, fails with
+`config-invalid` under the unknown-field rule; no warning exists for it.
+Shared-component impact needs no setting: linked stylesheets are attributed by
+rule under [CSS change attribution](./mokly-css-attribution.md), and a changed
+component lists its consumers as affected under the
+[comparison contract](./mokly-comparison.md#changes-membership).
 
 ## Roots
 
 The [root field contract](./mokly-root-discovery.md#root-fields) defines the
-strict `dir`, `files`, `path` and `transparent` fields and their defaults.
+strict `dir`, `files`, `path`, and `transparent` fields and their defaults.
+The [discovery contract](./mokly-configuration-discovery.md) defines
+traversal, folder-record ownership, filesystem races, and the source
+inventory.
 
-The [discovery contract](./mokly-configuration-discovery.md) defines traversal,
-folder-record ownership, filesystem races and the retained source inventory.
-
-Every matched entry module or Markdown file belongs to exactly one root.
-The [root discovery contract](./mokly-root-discovery.md) defines overlap
+Every matched file belongs to exactly one root. The
+[root discovery contract](./mokly-root-discovery.md) defines overlap
 diagnostics, including physical aliases. Overlapping directories are valid
-when their file sets are disjoint. [Imported CSS](./mokly-configuration-imported-styles.md)
-defines `postcss` and reserved output; public files use the
+when their file sets are disjoint. The
+[static build contract](./mokly-export.md) confines the output directory of
+`build` against the roots and the repository.
+[Imported CSS](./mokly-configuration-imported-styles.md) defines `postcss` and
+the loader boundary; public files use the
 [referenced closure](./mokly-public-closure.md).

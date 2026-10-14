@@ -45,8 +45,7 @@ the root region, id `r-0`, to the root component itself, with no marker. An
 element inside an ignore region is
 ignored. An ignore scope is resolved while the document is composed: a
 disabled scope suppresses the ignore regions inside it, the innermost scope
-wins, and no scope reaches comparison, as the frozen backend's
-`ReviewIgnoreScope` behaves. The core sends the enclosing scope state with each
+wins, and no scope reaches comparison, as `ReviewIgnoreScope` defines. The core sends the enclosing scope state with each
 component render, the sidecar resolves nesting from it, and the core applies no
 outer scope to a fragment; slot content takes the state its placeholder reports
 as its innermost scope.
@@ -63,8 +62,11 @@ name, attribute values and text decoded, runs of ASCII whitespace in text
 collapsed to one space except inside `pre`, `textarea`, `script`, and `style`,
 and non-marker comments kept. Two views with equal canonical forms are not
 material changes, so attribute order, entity spelling, and formatting do not
-count. Head `<style>` elements,
-owned and unowned, are excluded too; their rules enter the comparison only
+count. Inside a component instance region the canonical form keeps the
+instance identity, the component path, the instance id, and the props digest,
+in place of the component's rendered subtree, so a change inside a component
+is the component's change and keeps its consumers affected, not changed. Head
+`<style>` elements, owned and unowned, are excluded too; their rules enter the comparison only
 through the rule evidence of [Style Ownership](#style-ownership): a changed
 rule attributed to the entry makes the view `changed`, a rule attributed to a
 component keeps the view affected, and an excluded rule changes nothing.
@@ -114,8 +116,9 @@ with a material change; entries whose reviewable metadata changed; and use
 cases whose steps name a changed screen. A source edit alone never lists an
 entry. Affected consumers of a changed component are linked from the component
 and listed as affected, not as changes. Variants are projected independently
-and move with their parent. The metadata set, flow propagation, and the
-removed-entry presentation keep the rules of the frozen contracts.
+and move with their parent. The [Changes contract](./mokly-changes.md) owns the metadata set and flow
+propagation, and the [catalogue change contract](./mokly-catalogue-changes.md)
+owns the removed-entry presentation.
 
 ## Sides
 
@@ -173,6 +176,8 @@ interface RuleEvidence {
 }
 ```
 
+The [component comparison records](./mokly-component-comparison-records.md)
+page defines `ReviewEntry`, `AffectedConsumer`, and `ReviewDiagnostic`.
 Entries keep the path-keyed shape of review v7: kind, path, `previousPath` on
 moved pairs, metadata reasons, views, and component variants grouped under
 their parent. Per-rule evidence replaces the offset-bearing inline evidence,

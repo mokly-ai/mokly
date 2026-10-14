@@ -2,17 +2,17 @@
 
 ## Publication Boundary
 
-The Browse document adapter injects the dependency-free inspector IIFE from
-`mokly-viewer/client/inspector.js` into **current published HTML copies only**, after
-ownership and marker validation. It supplies an inert allowlisted map of
+The static build injects the dependency-free inspector IIFE from
+`mokly-viewer/client/inspector.js` into **the current documents it writes only**,
+after marker validation. It supplies an inert allowlisted map of
 instance keys to range ids/parents and validated logical-link identities from
-that document's accepted metadata, so `r-n` comments can be resolved without
-reading a manifest. Bound this map to the
+that document's accepted metadata, so `r-n` regions can be resolved without
+reading the catalogue. Bound this map to the
 [wire protocol limits](./mokly-frame-adapter.md#wire-protocol-v2) and 262,144
 UTF-8 bytes; oversized maps disable cross-origin inspection explicitly. No
 private evidence or source text is embedded. Unowned files get no inspector or
-map. Repository preview validates portable consumer resources before adaptation;
-the complete export inventory validates the injected package resource afterward.
+map. The build validates consumer resources before injection, and its ownership
+inventory lists the injected package resource afterward.
 
 The inert `template[data-mokly-inspector]` contains JSON with `ranges` and
 `links`, plus optional `error: "limit" | "unavailable"`. Range index `n` denotes
@@ -51,16 +51,16 @@ cutouts or hide the overlay.
 
 ## Delivery Constraints
 
-Generated files and comparison snapshots stay byte-unmodified. Snapshots never
+Served documents and comparison snapshots stay byte-unmodified. Snapshots never
 embed the script or negotiate a session. Local script-disabled frames retain
 parent-owned highlighting even when published copies contain the inert script.
 No React, server module, cookie, network request, or host-specific integration is
-included in the IIFE. `scripts/package-check.mjs` enforces a **9 KiB (9,216
-bytes) minified, uncompressed** script budget; the separately bounded
+included in the IIFE. The repository gate enforces a **9 KiB (9,216 bytes)
+minified, uncompressed** script budget; the separately bounded
 per-document inert metadata is not executable code and is excluded.
 
 ## Related Docs
 
 - [Viewer frame adapter](./mokly-frame-adapter.md)
 - [Viewer markers and multi-instance highlights](./mokly-viewer-markers.md)
-- [Static export delivery](./mokly-export-delivery.md)
+- [Static delivery](./mokly-export-delivery.md)

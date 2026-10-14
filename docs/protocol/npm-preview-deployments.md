@@ -4,69 +4,55 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Deployment Contract
 
-The [publication option](./mokly-publication.md) is implemented. The main job
-publishes the current catalogue with `npm run preview:build`; PR previews use
-`npm run preview:build -- --include-changes --base origin/main`.
+`.github/workflows/preview.yml` deploys a browsable copy of the example
+catalogue under `examples/basic` to the direct-upload Cloudflare Pages project
+`mokabook`. A `main` push updates the production deployment at
+`https://mokabook.pages.dev`. Same-repository pull requests, except Release
+Please pull requests, deploy to a stable `pr-<number>` branch alias and receive
+one updated sticky comment with the deployment result, URL, commit, and
+workflow run. Fork pull requests never receive Cloudflare credentials or
+write-capable execution.
 
-The [consumer static exporter](./mokly-export.md) provides shared output safety
-and static delivery. This document describes the repository's deployment
-adapter; consumer `mokly export` produces files without deploying or publishing
-npm.
+A preview job installs dependencies, builds Mokly with `npm run build`, and
+builds the example with `mokly build` into an output directory under
+`.context/`, outside the example root, so nothing is written into the
+repository. The `main` job builds the current catalogue. A pull request job
+builds with `--base origin/main`, so the preview includes Changes against the
+branch point; the job resolves `origin/main` from its full-history checkout.
+The [static build contract](./mokly-export.md) owns the command, its options,
+its output transaction, and the static site it writes: the shell stub at
+`index.html`, `404.html`, and `view/<path>/index.html`, the catalogue index,
+one entry detail per entry, every document, the comparison generation when a
+base is given, the viewer bundle, styles, and fonts. Cloudflare Pages serves
+`view/<path>/index.html` for the canonical `/view/<path>/` URLs without
+rewrites, and static HTML artifacts keep Cloudflare's extensionless aliases
+under the [artifact path contract](./mokly-artifact-paths.md). The output
+carries no live descriptor and no event stream, so the shell browses without
+live updates or live prop editing, under the
+[shell delivery contract](./mokly-shell-delivery.md).
 
-`.github/workflows/preview.yml` deploys a browsable copy of the synthetic basic
-consumer to the existing direct-upload Cloudflare Pages project `mokabook`. The
-infrastructure identifier remains unchanged during the npm rename. A `main`
-push updates the production deployment at `https://mokabook.pages.dev`.
-Same-repository pull requests, except Release Please pull requests, deploy to a
-stable `pr-<number>` branch alias and receive one updated sticky comment with
-the deployment result, URL, commit, and workflow run. Fork pull requests never
-receive Cloudflare credentials or write-capable execution.
+With a base, the build renders the base commit from its sources under the
+[comparison contract](./mokly-comparison.md), writes the comparison generation
+under an immutable generation path, and the index's `comparisonUrl` names it;
+visitors fetch comparison data only after selecting a diff, and a refresh loads
+that same published result. Eligible shown views offer comparison controls,
+known unchanged views show Unmodified, and pages keep Changes membership but
+never offer visual comparisons; the [Changes contract](./mokly-changes.md) owns
+the interaction and snapshot rules. A base whose sources fail the current
+validation makes Changes unavailable with those diagnostics, and the build
+publishes the current content with Changes unavailable. Missing history fails
+the build.
 
-`npm run preview:build` first rebuilds Mokly and its basic consumer output.
-The repository-only preview builder starts the real Browse server on an
-ephemeral loopback port and snapshots the home, not-found, and current entry
-shells at `view/<path>/index.html`, plus removed-entry shells only when Changes
-is included. It copies the
-shell stylesheet, browser and shared navigation modules, fonts, and every
-validated public consumer asset into `.context/mokly-preview`. HTML copies pass
-through the same validated logical-link adapter as served Browse;
-unowned reserved metadata is removed and invalid trusted output fails the
-build. Preview shell links use the canonical `/view/<path>/` URLs, which
-Cloudflare Pages serves from `view/<path>/index.html` without rewrites; static
-HTML artifacts keep Cloudflare's extensionless aliases under the
-[artifact path contract](./mokly-artifact-paths.md). Static shell HTML omits the
-watched server's live-update entrypoint.
-The parent client validates one optional `fragment` query and applies its
-encoded hash to every applicable current and light/dark frame source, with
-first-step-only use-case scope.
-
-Default capture needs no Git or comparison provider and omits review controls,
-counts, removed entries, and baseline artifacts. Explicit Changes capture pins
-one merge-base commit for impact and screen and component variant comparisons
-and rejects any input mutation during capture. It packages comparison JSON and
-isolated resources under an immutable generation path; visitors fetch them only
-after selecting a diff. Refresh loads that same published result. Unavailable
-history or invalid comparisons abort the build without replacing previous output.
-A recognized earlier baseline instead publishes current content with Changes
-unavailable under baseline compatibility.
-
-Both options omit the live-update entrypoint, watch-only modules, event routes,
-and stale comparison directories. Full history remains available in both jobs.
-Static shell metadata addresses an included comparison generation directly;
-the stable comparison redirect remains available when Changes is enabled.
-Eligible shown views offer comparison controls; known unchanged views show
-Unmodified. Missing per-view evidence uses entry-level status and eligibility;
-absent change evidence never invents a status. Pages retain Changes membership
-but never offer visual comparisons. The
-[Changes contract](./mokly-changes.md) owns the shared interaction and snapshot
-rules. Artifact replacement uses the shared exclusive reservation, ownership
-inventory and rollback transaction. Every adapter adopts only an empty
-directory or an artifact with a valid current ownership marker.
+A build failure deploys nothing, and the last deployment stays live.
+Replacement of the output directory uses the static build's exclusive
+reservation, ownership inventory, and rollback transaction; the job adopts only
+an empty directory or an output with a valid current ownership marker.
 
 Closing a same-repository pull request marks its sticky comment inactive and
 attempts to delete all Cloudflare deployments carrying that PR branch alias.
-Cleanup failures retain the deployment and report why rather than hiding the
-failure. Superseded runs for the same main ref or pull request are cancelled.
-All workflow actions use immutable commit hashes and Wrangler is lockfile-pinned.
-The [dependency security contract](./dependency-security.md) owns the audit
-gate and scoped Miniflare overrides, including their removal conditions.
+Cleanup failures keep the deployment and report why rather than hiding the
+failure. Superseded runs for the same `main` ref or pull request are cancelled.
+The workflow pins Node 24.21.0 and npm 11.21.0, uses immutable action commit
+hashes, and deploys with the lockfile-pinned Wrangler. The
+[dependency security contract](./dependency-security.md) owns the audit gate
+and scoped Miniflare overrides, including their removal conditions.

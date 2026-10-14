@@ -1,12 +1,15 @@
 # Mokly Design Component Library Inventory
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Components And Saved Examples
 
 Each row defines parent `design/library/{group}/{slug}` and its variant entries under the
 [variant contract](./mokly-variants.md). Each variant's slug is the table's
 kebab-case name, so its path is the parent's path plus that name, and every
-file name follows the [artifact contract](./mokly-artifact-paths.md); the first
-listed variant is the default shown by the parent page.
+file name follows the [artifact contract](./mokly-artifact-paths.md). The
+parent's own `props` equal its first listed variant's props, so the parent page
+shows that example first, then each variant.
 
 Group indexes are pure galleries, containing at most five component entries.
 Samples are light-only except the appearance selector and the top bar that
@@ -42,7 +45,7 @@ render-context fallback a dual-scheme sample uses above. They may reuse the
 same typed fixture values used by screen adapters. They never import/render the
 complete owning artboard. All selected-screen footers use the icon panel and the
 viewport control uses the grouped icons. No disclosure variant or segmented
-viewport presentation is supported. Comparison-mode segments remain.
+viewport presentation is supported. Comparison-mode segments stay.
 
 ## Data, Slots And Controls
 
@@ -116,7 +119,7 @@ Controls below use text, boolean, number and primitive enum selections only.
    the existing forms/onboarding examples. Empty input follows the current hidden
    picker behavior; the outer inspector can still inspect the empty variant.
 7. **Tag chip:** stable tag id, label, selected state and optional destination.
-   Controls: label and selected state. Missing destinations remain non-links;
+   Controls: label and selected state. Missing destinations stay non-links;
    repeated picker/metadata instances are keyed by tag identity, not label.
 8. **Change status:** `unmodified/added/changed/removed` status. Control: status.
    It is a pictured badge; it does not set the actual outer component's change
@@ -140,7 +143,7 @@ Controls below use text, boolean, number and primitive enum selections only.
 11. **Prop field:** label, stable input id, optional description/error and
     optional-field/supplied flags; a `control` slot contains the native input or
     selection control. Controls: label and optional description/error. Typed
-    field values and disabled/read-only behavior remain with the caller's slot,
+    field values and disabled/read-only behavior stay with the caller's slot,
     while the field frames that control's surface, border and invalid state so
     a prop panel reads the same in every host.
     Preserve label/input/error associations and assign unique ids for repeated
@@ -155,7 +158,7 @@ Controls below use text, boolean, number and primitive enum selections only.
     optional message. Missing state hides the content slot and uses the existing
     explicit missing pane; comparison-grid layout remains caller-owned.
 14. **Empty state:** title, body, optional code, action label and destination.
-    Controls: title, body and action label. Retain the existing canonical recovery
+    Controls: title, body and action label. Keep the existing canonical recovery
     links and non-interactive cases rather than adding library-specific navigation.
 15. **Flow step:** positive step number, title, description, owning screen path
     and `children` slot containing the reused screen preview. Controls: number,
@@ -187,7 +190,7 @@ Every library component declares its own exclusive public CSS file in
 `stylesheets`. The [component stylesheet contract](./mokly-component-stylesheets.md)
 links only components actually rendered in a view, including nested components
 and transient prop edits; an absent child adds no link. CSS changes use
-[own-page rule matches](./mokly-css-attribution-rules.md), not declared owners. Retain required
+[own-page rule matches](./mokly-css-attribution-rules.md), not declared owners. Keep required
 mixed/global sheets in configured rules; remove
 only migrated selectors from them, preserving their remaining behavior.
 Use a minimal host for standalones, with design tokens, original root classes,

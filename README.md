@@ -149,15 +149,16 @@ When the first screen is working, continue with the guides for
 Run the repository-local executable with `npx --no-install mokly`. Options
 follow the command, for example `mokly build --config tools/mokly.config.ts`.
 
-| Command                    | What it does                                                     |
-| -------------------------- | ---------------------------------------------------------------- |
-| `mokly serve`              | Serve the catalogue, render on demand, and watch for changes     |
-| `mokly serve --open`       | Serve and open the local URL in a browser                        |
-| `mokly build`              | Validate, render every view, and write the static site           |
-| `mokly build --out <path>` | Write the static site to `path` instead of `mokly-static/`       |
-| `mokly build --strict`     | Fail on warnings as well as on errors                            |
-| `mokly publish`            | Build into a private directory and upload to a catalogue service |
-| `mokly --help`             | Show every command and option                                    |
+| Command                    | What it does                                                       |
+| -------------------------- | ------------------------------------------------------------------ |
+| `mokly serve`              | Serve the catalogue, render on demand, and watch for changes       |
+| `mokly serve --open`       | Serve and open the local URL in a browser                          |
+| `mokly build`              | Validate, render every view, and write the static site             |
+| `mokly build --out <path>` | Write the static site to `path` instead of `mokly-static/`         |
+| `mokly build --strict`     | Fail on warnings as well as on errors                              |
+| `mokly build --base <ref>` | Compare against another Git base; `--no-changes` writes no Changes |
+| `mokly publish`            | Build into a private directory and upload to a catalogue service   |
+| `mokly --help`             | Show every command and option                                      |
 
 The CLI uses stable plain output in CI and a richer interactive display in a
 terminal. Warnings print on standard error without changing the exit status;

@@ -4,7 +4,7 @@ Continuation of [design component adoption](./mokly-design-components.md).
 
 ## Acceptance
 
-Acceptance after a registered baseline exists:
+Acceptance once the base commit has the registered components:
 
 | Edit                                                           | Direct Changes                                                                                                    | Secondary evidence                        |
 | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
@@ -21,11 +21,12 @@ Acceptance after a registered baseline exists:
 | Configured stylesheet       | Components with kept own-page matches; pages with outside matches or unresolved rules | Consumers of changed components |
 | Declared `stylesheets` file | The same rule; no declared owner attribution                                          | The same affected-consumer rule |
 | Import from a stylesheet    | The same rule applied to the imported file                                            | The same affected-consumer rule |
-| JavaScript-imported CSS     | The same rule using equal changed rules across generated bundles                      | The same affected-consumer rule |
+| JavaScript-imported CSS     | The same rule using equal changed rules across bundle generations                     | The same affected-consumer rule |
 
 The initial registration migration may create legitimate one-time structural
-changes against an unregistered baseline. Do not add blanket Review ignores to
-hide them. Prove steady-state attribution with two fully registered snapshots.
-Style-attribution tests cover the current rule: retain meaningful
+changes against a base commit without registered components. Do not add blanket
+Review ignores to hide them. Prove steady-state attribution with two fully
+registered commits.
+Style-attribution tests cover the current rule: keep meaningful
 global/layout assertions and use the shared component-aware classifier for
-CSS kept own-page matches and owned document styles, not the old raw changed-path helper.
+CSS kept own-page matches and owned document styles, not a raw changed-path helper.

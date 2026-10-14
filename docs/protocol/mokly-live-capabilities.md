@@ -4,186 +4,75 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Boundary
 
-The public catalogue is the shell's portable read model. A live page embeds its
-route-scoped bootstrap projection, while the
-complete model remains available at `mokly-viewer/catalogue.json`. Local Serve adds
-a private descriptor in a separate `application/json` script with
-`data-mokly-host-capability-state`. Private workspace evidence and the
-temporary-render token never enter the public catalogue or shell bootstrap.
+The Browse shell renders in the browser from the catalogue index and one
+entry detail per entry, in Serve and in the static output alike. Serve adds
+two things the static output never has: the live descriptor v3 at
+`/mokly-viewer/live.json` and the event stream at `/mokly-viewer/events`.
+The [shell delivery contract](./mokly-shell-delivery.md#live-descriptor) owns
+the descriptor's fields and when the shell fetches it. No page embeds a
+descriptor, a token, or a route; no host marker, host loader, or live-only
+client module exists; the client bundle under `mokly-viewer/client/**` is the
+same in Serve and in the static output. A capability is behaviour the shell
+builds in the browser from Serve JSON; it is never catalogue data.
 
-The live document has `data-mokly-host-capabilities` and loads
-`/mokly-viewer/client/react-host.js`. The live host imports the shared
-`react-shell.js`, creates CLI-owned capabilities, and calls
-`hydrateMoklyShell(document, capabilities)`. That shared, type-checked entry
-accepts exact route scope for live pages and the compact external form for
-finalized pages; it has no complete-live mode. React receives its capability
-context before the live root is created. Export has no marker, descriptor,
-token, private host modules, or host loader; its direct `react-shell.js` import
-auto-hydrates.
+Only the standalone shell that Serve delivers builds live capabilities. A
+React host that embeds `MoklyViewer` and the static output have none: their
+controls are read-only under the
+[component controls contract](./mokly-component-controls.md), and they open
+no event stream. The render-capability token never enters the index, a
+detail, a URL, local storage, or the shell store.
 
-The descriptor contains:
+## Render Capability
 
-- schema version `2`;
-- the base ref, catalogue identity, content and evidence revisions, update
-  version, optional on-demand preview generation, and optional temporary
-  renderer generation;
-- an optional temporary-render capability owned by the CLI host;
-- optional route-scoped `WorkspaceData` for screen and component routes.
+The descriptor carries the temporary-render capability of the component
+controls contract, bound to the bundle `generation` it names. The shell holds
+the capability in one closure that performs the render request and exposes
+`temporaryPreviews.render` and `temporaryPreviews.expired` through one React
+context; `useViewerCapabilities()` returns them in Serve and `undefined`
+elsewhere. React invokes rendering through the closure, so the token cannot
+enter store state. A render response is accepted only when its generation
+equals the installed one and its view matches the request; expiry checks
+cover only preview URLs the shell received.
 
-The workspace copy omits `renderCapability`. React invokes authenticated
-temporary rendering through a closure, so the token cannot enter store state.
-The descriptor is canonical JSON with inline-script escapes. Its workspace
-shape, base and on-demand preview generation are validated before use. The
-temporary-render capability is bound independently to the renderer generation.
-When both generations exist they must agree, but a complete compiled catalogue
-can expose temporary rendering without enabling on-demand Usage loading.
+Every capability call carries the current route and the installed
+`deploymentId`, `revision`, and generation. A result whose values differ from
+the installed ones is discarded. Navigation, a sibling-variant change, a
+revision adoption, and unmount abort work in flight and release nothing to
+the store. When the index's `live.generation` changes, the shell refetches
+the descriptor and replaces the capability; a render request against the old
+generation fails with the stale-generation code of the controls contract, and
+the shell rerenders the current validated props against the new one.
 
-## React Context
+When the descriptor fetch fails while the index names a generation, browsing
+works and live prop editing is unavailable with a browser warning; the shell
+retries on the next update. A descriptor with another `schemaVersion` is the
+version error of the [viewer namespace](./mokly-viewer-namespace.md).
 
-`ViewerCapabilityBoundary` separates initial data from browser behavior:
+## Updates
 
-- `useViewerInitialWorkspace()` returns the descriptor workspace during both
-  server rendering and first client render. This makes private status,
-  comparison eligibility, affected usage, input changes, related components
-  and evidence identical across hydration. A live shell uses it only to seed
-  the store's binding for the first request; routed workspace selection never
-  falls back to it after the route or source changes.
-- `useViewerLiveState()` returns the exact adopted request and its matching
-  private workspace from the shell store. A workspace from an older route or
-  revision is never exposed.
-- `useViewerCapabilities()` returns browser behavior only after the live host
-  supplies it. Export returns `undefined`.
+The event stream is the only push channel. One effect-scoped subscription
+owns one `EventSource` on `/mokly-viewer/events`, opened when the index
+carries `live`; abort, page exit, or effect replay closes it and any refresh
+in flight. A message carries the new `revision` as its id, and the shell
+refreshes the index and the current entry's detail under the
+[shell delivery updates](./mokly-shell-delivery.md#updates-in-serve). How the
+refreshed state reaches the navigation, the frames, and the workspace is the
+[live evidence contract](./mokly-live-evidence.md). No message carries data,
+no update reloads the page, and no reload recovery exists.
 
-The static evidence reader is a separate context value. It reads only the
-requested same-origin exported shell, validates its route, catalogue and
-deployment identity, and returns its inert workspace JSON. It never implements
-`ViewerHostCapabilities` or enters `useViewerLiveState()`.
-
-`ViewerHostCapabilities` contains:
-
-- `source`, the installed source and revision identity;
-- `evidence.initialWorkspace(request)`, for the exact hydration route and
-  revision;
-- `evidence.loadRouteEvidence(request, signal)`, for the paired public and
-  private evidence read after same-shell navigation;
-- `updates.consumeRecovery(request)` and
-  `updates.subscribe(request, actions, signal)`;
-- optional `temporaryPreviews.render` and `temporaryPreviews.expired`;
-- optional `onDemand.loadWorkspace` for Usage records.
-
-Every operation receives a `ViewerCapabilityRequest` containing the current
-logical route and source. The shell creates a fresh request after adopting a
-revision. It uses `ViewerCapabilityScope` to abort work when route, catalogue,
-content, evidence, update version, preview generation or renderer generation
-changes, and closes the scope on unmount.
-
-## Initial And Routed Workspace Evidence
-
-The server computes initial private `WorkspaceData` from the complete accepted
-private catalogue and the same shell context used for SSR. It never derives
-cross-route `Used by` or `Affected` lists from the route-scoped public
-bootstrap. Both SSR and hydration read that data from the descriptor,
-independently of browser-only behavior, so a matching direct load starts with
-ready Usage rather than flashing a loading or empty state.
-
-React navigation does not replace the mounted shell with fetched HTML. Every
-newly routed target calls `evidence.loadRouteEvidence` and fetches the current
-page as evidence only. Screens and components pair their scoped catalogue with
-private workspace data; use cases and pages adopt their destination scope with
-no workspace. The page's public shell bootstrap and private capability
-descriptor form one atomic candidate: the shell adopts the
-destination-scoped catalogue, source and optional routed workspace together,
-or retains its current evidence. Adoption replaces the prior scoped catalogue
-instead of merging usage retained by routes visited earlier. It accepts the
-result
-when all of these remain true:
-
-- the response is successful and its final URL is the requested URL without a
-  fragment;
-- browser location is unchanged;
-- the request signal remains active;
-- catalogue identity, content revision, base ref and render capability still
-  match the installed source;
-- evidence and update revisions never move backwards, and the public
-  catalogue exactly matches the descriptor revisions;
-- the bootstrap context and route exactly match the descriptor and current
-  logical route;
-- the render generation and token still match the installed host;
-- the returned workspace names the entry of the current logical route.
-
-Before that candidate is accepted, a route-scoped public fallback reports
-Usage as loading and derives no cross-route list from omitted records. If the
-read fails or a completed candidate is rejected, it reports
-`Usage couldn’t be loaded.` with `Try again`; retry starts a fresh fenced read.
-It never reports zero consumers from partial data. A fallback built from a
-complete catalogue, including static delivery and application-owned viewers,
-keeps the existing public-workspace behavior.
-
-A route response may advance the evidence revision while retaining the update
-version. On-demand rendering can publish newer evidence without a watch event,
-so the fetched page is the authoritative atomic pair for that route. Mixed
-public/private revisions, changed content or catalogue identity, and older
-sources are rejected.
-
-Pages, documents, flows, home and missing routes have no workspace result. A route or
-source replacement cancels the request and obsolete results are ignored.
-The public read model commits navigation before this metadata request starts;
-holding, failing or aborting the request cannot delay the URL and main-view
-transition or replace their React-owned DOM. Same-document Back cancels an
-obsolete request while retaining the mounted shell.
-
-## Watched Updates
-
-The CLI keeps the existing event protocol and `LiveUpdateController`. One
-effect-scoped subscription owns one `EventSource`; abort, page exit or effect
-replay closes it and any pending refresh. A newer update first fetches the
-current shell page and reads its scoped bootstrap and private descriptor as one
-candidate.
-
-Evidence adoption is atomic. The page descriptor's source and private
-workspace must describe the exact same evidence revision as the page's scoped
-bootstrap. Catalogue identity, content revision, evidence revision, update
-version, base ref, preview generation, route, snapshot and render capability
-are fenced before `adoptEvidence` runs. A mixed response from two server
-snapshots is rejected and follows the existing reload recovery path.
-Successful adoption returns a `ViewerEvidenceRevision` containing the current
-route's scoped catalogue, complete private workspace when the route owns one,
-and the source for the next request. The store replaces both public and private
-evidence in one commit. Frames and shell state are updated in place by the
-consumer; the capability does not mutate DOM.
-
-Content revision or render-generation changes are never adopted as evidence.
-They retain the full reload lifecycle.
-
-## Recovery And Optional Transports
-
-Reload recovery uses the existing one-shot session-storage payload. The host
-converts between the stored `changedOnly` value and the shell's `view` value,
-and accepts recovery only for the current URL and a version no newer than the
-rendered page. Reading removes the payload.
-
-`EventSource` and session storage are optional browser facilities. If either is
-missing, denied or throws, the host still hydrates the shell. It reports the
-transport failure as a browser warning and leaves only the affected update or
-recovery feature unavailable. A malformed descriptor remains a hard error
-because the marked document cannot be safely paired with a different source.
-
-Temporary previews validate the request source, generation, response view and
-render identity before returning. Expiry checks cover only known authenticated
-preview URLs. On-demand Usage validates the request route and preview
-generation, shares the existing loader, and stops on abort. Neither facility
-exists when its server capability is absent.
+`EventSource` is an optional browser facility. When it is missing, denied, or
+throws, the shell still renders the catalogue, reports the transport failure
+as a browser warning, and leaves only live updates unavailable; a page load
+fetches the current state. A malformed descriptor or an index with another
+`deploymentId` follows the shell delivery fail-closed rules.
 
 ## Delivery Checks
 
-Serve exposes `react-host.js`, `react_capabilities.js`,
-`react_capability_updates.js`, `react_transports.js`,
-`react_update_controller.js`, `host_capabilities.js` and
-`host_capability_descriptor.js`. The package graph requires every import to
-resolve within the served inventory and permits React only in `react-shell.js`.
-The CLI build rewrites the host's viewer-browser import to that relative bundle
-so delivery contains one React and context instance.
-
-Static export and generated preview catalogues exclude all seven live-only
-modules named above. Export tests also reject the host marker, private state
-script and host loader in every rendered document.
+Serve and `build` deliver one client inventory under `mokly-viewer/client/`,
+`shell.css`, and `fonts/**`, with React inside the shell bundle only; every
+import resolves within that inventory. The static output contains no
+descriptor, no token, no event stream, and no control route, and its shell
+issues no request to one. Browser coverage proves that a static page and an
+embedded viewer make no live request, that a Serve page with the stream
+denied still browses, and that a stale-generation render response never
+replaces a preview.

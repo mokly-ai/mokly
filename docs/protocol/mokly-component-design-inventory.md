@@ -4,20 +4,20 @@ Continuation of [mokly-component-design](./mokly-component-design.md).
 
 ## Owning Catalogue
 
-Source lives under `examples/basic/specs/design/components/`; generated
-artboards live under `examples/basic/mokly-generated/<path>/` as their path-derived
-`index.<viewport>.html` views. The existing
+Source lives under `examples/basic/specs/design/components/`; Mokly renders
+each artboard as its path-derived `index.<viewport>.html` views under the
+[artifact path contract](./mokly-artifact-paths.md). The existing
 Specs → Design → Component explorer folder reaches every
 screen.
 The canonical `overview` screen shows a component page, followed by links to the
-owning child pages outside the artboard. The original Pages, Inspection, and States child folders are gallery
+owning child pages outside the artboard. The Pages, Inspection, and States child folders are gallery
 indexes, each with at most five direct owning screens; inspection also links a nested
 selection gallery with two owning screens, and Pages links a nested Stacked
 comparisons gallery with three. The Inspector gallery adds two closed
 states. Controls has one canonical parent screen and Editing, States, and
 Published galleries with four, four, and two screens. The linked inspector and
 controls contracts own their additional entry inventories. Every screen has a separate
-mobile component and desktop component; there are no new user-flow pages.
+mobile component and desktop component; none is a user-flow page.
 
 | Entry                                                       | State                                                          |
 | ----------------------------------------------------------- | -------------------------------------------------------------- |
@@ -63,12 +63,12 @@ no scheme switch: the catalogue's one Appearance control, drawn in their top
 bar like every other artboard's, sets it. Links use
 the path-addressed [link contract](./mokly-authoring.md#links) so they work
 both directly from disk and in Browse. State links demonstrate navigation between mockups; static
-depictions of shell controls do not implement the separate runtime inspector.
+depictions of shell controls are not the separate runtime inspector.
 
-The shared shell retains the [existing design navigation](./mokly-design-links.md)
+The shared shell keeps the [existing design navigation](./mokly-design-links.md)
 for brand, home breadcrumb, and the canonical mobile drawer. Component artboards
 select their own typed navigation state; they never inherit Welcome's tag,
-scheme, inspector, or comparison transitions. Their viewport dropdown and highlight switch work through native form state and CSS. Comparison depictions retain native button focus and pressed states only in eligible change scenarios. In Side by side, Overlay and Difference the band also draws the Scroll together switch, on, after the mode control and before Refresh, as the [shell design](./mokly-shell-design.md#in-place-comparisons) specifies; it toggles in place.
+scheme, inspector, or comparison transitions. Their viewport dropdown and highlight switch work through native form state and CSS. Comparison depictions keep native button focus and pressed states only in eligible change scenarios. In Side by side, Overlay and Difference the band also draws the Scroll together switch, on, after the mode control and before Refresh, as the [shell design](./mokly-shell-design.md#in-place-comparisons) specifies; it toggles in place.
 Action's changed Default variant is one comparison family: its mode control
 links Current to `design/components/pages/affected`, Side by side to
 `design/components/pages/comparison`, and Overlay and Difference to
@@ -78,5 +78,5 @@ the tall Checklist, keeps all four modes as buttons. No mode control links into
 the Checklist, because it depicts another component; readers reach it beside
 Overlay and Difference in its owning Stacked comparisons gallery.
 The shared selection control preserves native anchor semantics when an authored
-transition exists. Existing Browse and Changes artboards retain their non-link
+transition exists. Existing Browse and Changes artboards keep their non-link
 spans for unsupported controls.

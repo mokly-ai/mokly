@@ -1,5 +1,7 @@
 # Remote Verification: Base Commit Sync
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [Remote Verification](./remote-verification.md).
 
 ## Base Commit
@@ -120,7 +122,7 @@ Do not add special handling for this case.
 
 ## Sync Source And Probe
 
-Run each probe and all 11 suite commands with the snapshot directory as the
+Run each probe and all six suite commands with the snapshot directory as the
 local working directory. The Blacksmith CLI fetches its `HEAD`, which is the
 base, then copies its non-ignored source differences to the box.
 Keep the checkout root for warmup, download, SSH disconnect, status and stop.
@@ -132,7 +134,7 @@ defines the command, readiness bound, parsing and all-box barrier.
 The wrapper changes only to stage the synced tree under the
 [box index rule](#box-index). Keep strict report runners and aggregate schema unchanged.
 Suite reports therefore name the box `HEAD`, which is the base.
-Run the aggregate with that same base and exactly nine downloaded reports.
+Run the aggregate with that same base and exactly five downloaded reports.
 The final fingerprint check reads the checkout, so it detects local edits
 made during remote execution.
 

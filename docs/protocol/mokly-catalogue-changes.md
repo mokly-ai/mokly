@@ -4,15 +4,15 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Shared Metadata Contract
 
-One package-internal catalogue-change module owns this typed snapshot and its
-pure selection rules. The Git-backed loader supplies validated current and
-baseline v10 manifests plus one resolved branch-point commit. Server, watcher,
-preview capture, and publication consume the same
-snapshot for a catalogue generation:
+The catalogue change snapshot v4 pairs the review result v8 of one comparison
+generation with the base commit. The Rust core produces it from the catalogue
+models of both sides under [Sides](./mokly-comparison.md#sides): the head
+from the working tree, the base from the base commit. Serve, watch, the
+static build, and publication consume the same snapshot for a generation:
 
 ```ts
-interface CatalogueChangeSnapshot {
-  schemaVersion: 3;
+interface CatalogueChangeSnapshotV4 {
+  schemaVersion: 4;
   baseRef: string;
   baseCommit: string;
   changedEntries: readonly string[];
@@ -21,166 +21,154 @@ interface CatalogueChangeSnapshot {
 }
 
 interface RemovedEntrySnapshot {
-  entry:
-    | ManifestScreen
-    | ManifestPage
-    | ManifestDocument
-    | ManifestComponent
-    | ManifestComponentVariant;
+  entry: ScreenRecord | PageRecord | DocumentRecord | ComponentRecord;
   folderTitles: readonly string[];
   parentTitle?: string; // Required exactly on removed variants.
+  snapshotId: string;
 }
 ```
 
-No-watch Serve validates an in-memory live index before listening. Its
-background generation compiles the full catalogue without writing the output
-tree unless `--build` was requested; the parent prepares any Git baseline and
-publishes the optional Changes snapshot when classification finishes. HTTP uses
-the accepted manifest and snapshot without selecting a baseline or building
-historical output. Watched children likewise receive prepared baseline
-selection from their parent rather than running a history loader. A failed
-optional calculation omits the entire Changes result, including removed
-entries; invalid current manifests or stale source inventories still prevent
-listening. On-demand comparisons use the accepted generation and pinned base.
+The snapshot and the review result of one generation share `baseCommit`. The
+generated TypeScript types of the model crate are the normative shapes.
 
-The entry types are validated manifest-v10 DTOs, including their common metadata
-and tags. A removed record carries no route: its URL and artifact names derive
-from its path. `folderTitles` holds the baseline titles of its folders from the
-top level down, resolved from the baseline manifest's folder records and index
-pages under the [title rule](./mokly-folders.md#titles), independent of a
-surviving current folder. A removed variant retains its baseline `variantOf`,
-its parent's folder titles, and the parent's baseline title in `parentTitle`.
-Capture that title before removal selection, even when another kind reuses
-the parent's path. Non-variants omit it. The
-[branch-point lookup](./mokly-branch-point-lookup.md#variant-parents) owns parent
-resolution; [variant navigation](./mokly-variant-navigation.md) owns placement.
+Serve computes the snapshot in the background after it listens and publishes
+it with the Changes status as one revision under the
+[shell delivery contract](./mokly-shell-delivery.md#updates-in-serve);
+`build` computes it before it writes. A failed calculation omits the entire
+Changes result, including removed entries, and the catalogue stays browsable.
+On-demand comparisons use the accepted generation and its base commit.
 
-`changedEntries` is the sorted, unique union of affected current entry paths
-and the selected removed-entry paths. `movedEntries` lists, sorted by current
-path, every current entry the [move contract](./mokly-moves.md) paired with a
-baseline entry; such an entry compares with that baseline entry and carries
-`previousPath` in the read model. Current entry attribution keeps the existing
-path-keyed metadata, material generated-output, and rendered-resource rules,
-extended with a page's single document and a document's documents per scheme
-and resources; folder titles are presentation and never attribution. Apply the
-same paired ignore normalization to page and document documents. For every catalogue, source paths, unreferenced files and removed path declarations
-neither add otherwise unchanged entries nor appear as comparison evidence.
-Screens, components and flows use [component attribution](./mokly-component-changes.md),
-combined with page/document material, metadata and resource Changes. Every CSS
-delivery path uses kept own-page component matches and outside/unresolved page
-reasons under the [CSS rule contract](./mokly-css-attribution-rules.md). Screen impact
-continues to propagate to use cases through their screen steps. Current display
-metadata comes from the matching current catalogue; removed display metadata
-comes from `removedEntries`. No removed-use-case support is introduced here.
+The entry types are the [entry records](./mokly-component-manifest.md) of the
+base commit's catalogue model, with their common metadata and tags. A removed
+record carries no route: its URL and its document addresses derive from its
+path. `folderTitles` holds the base titles of its folders from the top level
+down, resolved from the base folder records and index pages under the
+[title rule](./mokly-folders.md#titles), independent of a surviving current
+folder. A removed variant keeps its base `variantOf`, its parent's folder
+titles, and the parent's base title in `parentTitle`, captured before removal
+selection, even when another kind reuses the parent's path. Non-variants omit
+it. The [branch-point lookup](./mokly-branch-point-lookup.md#variant-parents)
+owns parent resolution; [variant navigation](./mokly-variant-navigation.md)
+owns placement. `snapshotId` is the removed record's identity in the
+[catalogue index](./mokly-shell-delivery.md#catalogue-index) and in the
+removed entry's detail under the comparison generation.
 
-Visual comparisons use [review result v7](./mokly-changes-serving.md#comparison-engine)
-for every catalogue. Pages and documents add no comparison records. Neither
-catalogue change detection nor page or document removal requires snapshot
-generation. The publisher must not discover removed pages or documents by reading
-`ReviewResult.screens`; that array remains the source of screen comparisons.
-The shared catalogue snapshot drives its removed-entry pages, shell metadata,
-and filter/search rows before HTML capture. It requires no additional public
-endpoint. CSS page evidence is carried by catalogue v6 `resourceEvidence`;
-[comparison v7 evidence](./mokly-css-attribution-membership.md) carries the combined shape.
+`changedEntries` is the sorted, unique union of the included current entry
+paths and the selected removed-entry paths. `movedEntries` lists, sorted by
+current path, every current entry the [move contract](./mokly-moves.md)
+paired with a base entry; such an entry compares with that base entry and
+carries `previousPath` in the read model. Membership follows the
+[Changes membership](./mokly-comparison.md#changes-membership) rule: material
+views under the canonical form, rule and resource evidence with owners,
+reviewable metadata, and use cases whose steps name a changed screen. Pages
+and documents compare their composed documents, per scheme for documents,
+under the same materiality rule. Folder titles are presentation, never
+attribution. Source paths, unreferenced files, and removed path declarations
+neither add otherwise unchanged entries nor appear as evidence. Screens and
+components use the
+[component attribution contract](./mokly-component-changes.md). Current
+display metadata comes from the current catalogue; removed display metadata
+comes from `removedEntries`. There is no removed use case.
+
+Visual comparisons use review result v8 for every catalogue. Pages and
+documents add no comparison records, and their removal needs none. The static
+build must not discover removed pages or documents by reading the review
+entries. A page's CSS evidence travels as the `resourceEvidence` of its entry
+detail.
 
 ## Removal Selection And Precedence
 
 This section owns removal selection. Compare paths with case folding for
-every kind: select a baseline screen, page,
-document, component, or variant only when no current entry of any kind has its
-path and the [move contract](./mokly-moves.md) paired it with nothing. A kind
-change therefore yields one added current entry, never a simultaneous removed
-record, and a paired baseline entry yields one current entry carrying
-`previousPath`. The public reader rejects any model whose current entries and
-`removedEntries` share a case-folded path, and a current variant cannot carry a `removed`
-comparison state. Only records inside `removedEntries` are historical.
+every kind: select a base screen, page, document, component, or variant only
+when no current entry of any kind has its path and the move contract paired
+it with nothing. A kind change therefore yields one added current entry,
+never a simultaneous removed record, and a paired base entry yields one
+current entry carrying `previousPath`. The index reader rejects any model
+whose current entries and `removedEntries` share a case-folded path, and a
+current entry cannot carry a `removed` comparison state. Only records inside
+`removedEntries` are historical.
 
-Ordinary removed entries sort by kind then path. If a removed variant's parent
-survives, place the removed variant at the position its parent occupies in that
-ordering and retain the baseline's authored sibling order among removed
-variants. This is the same combined parent/variant projection the
-[catalogue contract](./mokly-catalogue.md#serialization-identity-and-versions)
-defines.
+Ordinary removed entries sort by kind then path. If a removed variant's
+parent survives, place the removed variant at the position its parent
+occupies in that ordering and keep the base's authored sibling order among
+removed variants. This is the combined parent/variant projection of the
+[catalogue contract](./mokly-catalogue.md#serialization-identity-and-versions).
 
-A removed variant of either kind follows these same selection and precedence
-rules. Its relationship does not make it subordinate for selection: deleting
-only the variant yields one removed entry, while deleting both parent and
-variant yields one removed entry for each. A surviving parent does not claim
-or suppress the variant's Removed row. Moving an entry between folders changes
-its path; the move contract pairs it with its baseline, so it stays one entry,
-labelled Moved, rather than a removal and an addition. Renaming a folder's
-title changes no path and marks nothing.
+A removed variant of either kind follows these same rules. Its relationship
+does not make it subordinate for selection: deleting only the variant yields
+one removed entry, while deleting both parent and variant yields one removed
+entry for each. A surviving parent does not claim or suppress the variant's
+Removed row. Moving an entry between folders changes its path; the move
+contract pairs it with its base entry, so it stays one entry, labelled Moved,
+rather than a removal and an addition. Renaming a folder's title changes no
+path and marks nothing.
 
-Reject duplicate removed paths, invalid baseline metadata, and snapshots
-whose current catalogue or baseline commit differs from the generation being
-served or captured. A failed baseline read cannot become a successful empty
-removal list. Preserve the runtime's unavailable-Git behavior and watch's
-last-good generation. Invalid or missing history keeps existing command failure
-rules; recognized earlier output follows the successful unavailable result in
-the baseline compatibility contract.
+Reject duplicate removed paths, invalid base metadata, and snapshots whose
+current catalogue or base commit differs from the generation being served or
+built. A failed base read cannot become a successful empty removal list. An
+unavailable Git repository keeps the runtime's unavailable behaviour, and
+watch keeps its last good generation. A base whose sources fail current
+validation makes Changes unavailable with those diagnostics.
 
 ## Removed Page And Document Presentation
 
-When Changes is selected, append removed pages and documents as flat root-level
-leaf rows after the filtered current hierarchy, ordered by path. Reuse the
-existing removed-screen row style, the page or document icon, and removed-row
+When Changes is selected, append removed pages and documents as flat
+root-level leaf rows after the filtered current hierarchy, ordered by path.
+Reuse the removed-screen row style, the page or document icon, and removed-row
 identity; the visible label is `<title> · Removed`. There is no recreated
 folder, historical folder, extra App root, or expandable Removed group.
 
 A removed row's identity is `removed:<path>`. It is unique because a removed
 record exists only while no current entry has that path.
 
-Removed page and document rows are hidden from All; screen behavior is
-unchanged. Removed variant placement, fallback, and order follow
+Removed page and document rows are hidden from All; removed screens stay
+visible there. Removed variant placement, fallback, and order follow
 [variant navigation](./mokly-variant-navigation.md). Search and tag filtering
-use baseline path segments, title, and tags like current leaves. Changes counts
-every selected removed entry and every paired moved entry once; home totals and
-the tag picker use current entries.
+use base path segments, title, and tags like current leaves. Changes counts
+every selected removed entry and every paired moved entry once; home totals
+and the tag picker use current entries.
 
-The removed page or document view shows the baseline document from the same
+The removed page or document view shows the base document from the same
 snapshot, under the [removed previews](./mokly-removed-previews.md) contract.
-Its details show the baseline title, path, description, tags,
-related docs, and folder titles. Historical titles are informational text,
-not folder nodes or links that pretend the old hierarchy still exists.
-Changing a surviving folder's title does not rewrite the baseline titles.
-Keep the view available at `/view/<path>/` even when All is selected.
+Its details show the base title, path, description, tags, related docs, and
+folder titles. Historical titles are informational text, not folder nodes or
+links that pretend the old hierarchy still exists. Changing a surviving
+folder's title does not rewrite the base titles. Keep the view available at
+`/view/<path>/` even when All is selected.
 
 For example, removing the last entry in `Documents` leaves a flat
-`Statement · Removed` row in Changes. Details retain its old `Documents` folder
-title; neither navigation nor the home view recreates the old folder. Mockups
-must cover this exact state at mobile and desktop widths before UI work begins.
+`Statement · Removed` row in Changes. Details keep its old `Documents` folder
+title; neither navigation nor the home view recreates the old folder. The
+design mockups cover this exact state at mobile and desktop widths.
 
 ## Watch And Publication
 
-Recompute current impact, moved pairings, removed metadata, and baseline folder
-titles together when watch replaces a validated generation, before notifying
-the browser. Navigation,
-counts, details, and previous-version views must never mix snapshots from
-separate generations.
-Publication with Changes uses the same snapshot and baseline commit as its
-screen comparison capture, with safely escaped metadata in the captured shell.
+Recompute current impact, moved pairings, removed metadata, and base folder
+titles together when watch replaces a generation, before Serve publishes the
+revision. Navigation, counts, details, and previous-version views never mix
+snapshots from separate generations. A static build with Changes uses the
+same snapshot and base commit as its view comparisons, and the index carries
+its metadata as data.
 
-The [publication option](./mokly-publication.md) defaults to current entries
-only: no catalogue-change snapshot is computed or exported. With Changes
-included, retain removed page and document rows, Moved rows, and
-previous-version views from this model. Static delivery packages each removed
-page or document preview and its historical resource closure in the comparison
-generation; pages and documents still generate no visual comparison records.
+A build without Changes, under the option the
+[publication contract](./mokly-publication.md) owns, computes no snapshot and
+has no removed entries. With Changes included, the static build keeps removed
+page and document rows, Moved rows, and previous-version views from this
+model; it writes each removed entry's detail and its documents, with their
+resource closure, into the comparison generation under
+[removed previews](./mokly-removed-previews.md). Pages and documents still
+generate no visual comparison records.
 
 ## Acceptance
 
-Use generic fixtures for removing a page or document and its now-empty ancestor
-folders, renaming a surviving folder's title, reusing a path with another kind,
-and moving an entry between folders with and without edits. Assert identical
-removed metadata, `previousPath`, collision rejection, and counts in server,
-watch, and opted-in publication; preserve screen comparison regression
-coverage. Test filters/search, All versus Changes visibility, direct access to
-a removed entry's `/view/<path>/` URL, baseline breadcrumbs, Moved rows, no
-recreated folders, unavailable/malformed baselines, and zero Git/comparison
-work for publication without Changes.
-
-The validated serving/publication snapshot also retains component ownership
-classification from the same pinned baseline. No-watch Serve and publication
-reuse that evidence for every entry, including component variants; they
-never retry or resolve a newer baseline while rendering the snapshot. Watched
-component serving retains its generation-aware live cache.
+Use generic fixtures for removing a page or document and its now-empty
+ancestor folders, renaming a surviving folder's title, reusing a path with
+another kind, and moving an entry between folders with and without edits.
+Assert identical removed metadata, `previousPath`, collision rejection, and
+counts in Serve, watch, and a build with Changes; keep screen comparison
+coverage. Test filters and search, All versus Changes visibility, direct
+access to a removed entry's `/view/<path>/` URL, base breadcrumbs, Moved rows,
+no recreated folders, a base whose sources fail validation, and zero Git or
+comparison work for a build without Changes. Serve and the static build reuse
+one snapshot's ownership classification for every entry, including component
+variants, and never resolve a newer base while they render that snapshot.

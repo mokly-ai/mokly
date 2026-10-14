@@ -1,5 +1,7 @@
 # Component Explorer Design
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Owning Catalogue
 
 The [component design inventory](./mokly-component-design-inventory.md) lists
@@ -16,7 +18,7 @@ path chip and Details show the shown entry's path, such as
 `example/components/action/default`, with Details listing it above the source.
 Desktop keeps the resizable navigation;
 mobile keeps the compact header and adds short Screen/Components/Changes links
-above the heading so the relevant destinations and change count remain visible.
+above the heading so the relevant destinations and change count stay visible.
 
 The saved-variant strip follows the title and, for an eligible shown view, the comparison band. Known unchanged shown views show Unmodified beside the title, with no comparison row. The selected variant uses
 a pale sage surface, border, and explicit current-link state. Default and
@@ -59,7 +61,7 @@ The removed-state scenario also retains the former Farewell consumer and links
 it to its Removed state, which
 [removed previews](./mokly-removed-previews.md) fill with its previous version:
 the “Showing previous version” label, the historical frame for the selected
-viewport, and no comparison band. The catalogue-wide Appearance selector remains
+viewport, and no comparison band. The catalogue-wide Appearance selector is
 the only theme control, while the historical frame stays Light because that is
 the only scheme captured for the view. Its stage carries no escape link,
 because the catalogue navigation keeps Action's affected list one step away.
@@ -72,7 +74,7 @@ Because every variant is its own entry, the depicted Changes counts include
 one row per changed or removed variant, the parent row carries the aggregate
 mark rather than a status of its own unless the parent itself changed, and the
 Action badges describe the variant entry on stage. The design catalogue
-artboards are regenerated with these counts when the example is converted.
+artboards render with these counts.
 
 Every known shown view carries an Added, Changed, Removed, or Unmodified badge
 beside its title. In the removed scenario Compact is its own Removed entry
@@ -104,7 +106,7 @@ they do not generate visual-analysis prose or a separate banner. See the
 The shared inspector puts component groups in Components, with native
 disclosures, counts, and repeated-instance links. Selecting an instance opens
 Props with its supplied values, slot/ownership details, and an Open component
-link. Details and Usage remain available without crowding the selected instance. Welcome has four
+link. Details and Usage stay available without crowding the selected instance. Welcome has four
 instances: Toolbar, two Actions, and an invisible Help hint. Nested Toolbar
 contents start collapsed and expand in the nested-selection artboard. Help hint
 has an inspection entry and component page, without an invented visible region.
@@ -117,8 +119,8 @@ nested selection cuts out only the Toolbar action and dims the parent again.
 The same consumer DOM is used with highlighting off and on. Welcome uses an SVG overlay; Details uses a clipped scrim around its single Action. Neither sets ancestor opacity. Each viewport uses its own overlay, with unique SVG mask ids when Both is selected.
 
 Mask geometry is fixed to the synthetic artboard's layout and tested against
-its actual DOM bounds. Runtime geometry collection, selection, Escape handling,
-and cleanup are implemented. Comparison artboards disable highlighting, as does
+its actual DOM bounds. The runtime owns geometry collection, selection, Escape
+handling, and cleanup. Comparison artboards disable highlighting, as does
 a Removed screen because it has no current preview to inspect.
 An empty usage list says no registered components are used in this view;
 unavailable inspection never claims a zero count. Badge has a visible saved
@@ -130,8 +132,8 @@ small gap above an intact rounded outline, shared by all three region layouts.
 
 ## Verification And Maintenance
 
-Use the real generator; never hand-edit generated HTML. Six shared component
-stylesheets are hand-authored public inputs, scoped to the
+Mokly renders every artboard from its spec; never hand-write artboard HTML. Six
+shared component stylesheets are hand-authored public inputs, scoped to the
 `design/components/**/index.html` documents.
 Route-scoped rules link the required mixed/global sheets from the forty-one
 component design routes. Registered components declare exclusive CSS through
@@ -143,24 +145,23 @@ configured and declared CSS. Shared fixtures and screen parts live beside their
 owning screen modules.
 
 `tests/component_design_attribution.test.ts` classifies all nine shared sheets
-once per scenario. Manifest links pin 41, 11, 0, or all `design/` screens and
-69 component saved-variant entries. Parent components have no generated views.
-The test keeps exact per-entry rendered-resource reasons and rule analysis, the exact
+once per scenario. Rendered stylesheet links pin 41, 11, 0, or all `design/`
+screens and 69 component saved-variant entries. A parent component renders its
+own views from its own props. The test keeps exact per-entry rendered-resource
+reasons and rule analysis, the exact
 changed-entry union, and no affected consumers for unresolved shared rules.
 It excludes unrelated design screens, product screens and their use case.
-`design.css` remains rendered-resource evidence; it supplies no shared impact.
+`design.css` is rendered-resource evidence; it supplies no shared impact.
 
-Run `npm run example:build`, `npm run example:check`, and
+Build the example with `mokly build --strict`, and run
 `npx playwright test tests/browser/component*.spec.ts tests/browser/design_component_stacks.spec.ts`.
 The browser suite opens every artboard directly from disk, checks links,
 selection semantics, counts, missing states, responsive overflow, mask
 geometry, and the stacked frames' layers, blending, single scroller and drawn
 offset; `tests/design_component_stacks.test.ts` pins their structure,
 `tests/design_component_comparison_states.test.ts` ties every comparison
-caption to its recorded change and pins the Checklist's Changes, and
-`tests/design_screen_counts.test.ts` keeps the documented screen counts
-aligned with the catalogue. Visually inspect
-all generated mobile and desktop pages, including both selected-instance states.
+caption to its recorded change and pins the Checklist's Changes. Visually inspect
+all rendered mobile and desktop pages, including both selected-instance states.
 Run `cargo xtask check` before committing and pushing. After the push, use the
 `implementation-review` skill against `origin/main` and report findings
 without changing the implementation.

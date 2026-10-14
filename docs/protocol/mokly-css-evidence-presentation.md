@@ -1,17 +1,21 @@
 # CSS Evidence Presentation
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Shell Derivation
 
 Live classification retains resource evidence for every entry kind, including
 screen-only `screenEvidence`, with per-view axes, optional reasons and optional
-excluded resources. Catalogue v6 exposes it as `resourceEvidence` on views and
-single-document pages under the [evidence schema](./mokly-css-attribution-membership.md). Paths remain repository-relative. The workspace projects the
+excluded resources. The entry detail v1 of the
+[shell delivery contract](./mokly-shell-delivery.md) exposes it as
+`resourceEvidence` on views and single-document pages under the
+[evidence schema](./mokly-css-attribution-membership.md). Paths remain repository-relative. The workspace projects the
 selected screen's views as optional `resourceEvidence`; it does not invent
-component reasons, component results, or comparison states. Static exports
-project the same slice from review result v7. A workspace built only from the
-published catalogue projects the catalogue v6 `resourceEvidence` of the
-selected screen's views, or of the selected saved view's views on a component
-route: the routed variant, or the first saved variant on a parent route. A new
+component reasons, component results, or comparison states. The static build
+projects the same slice from review result v8. A workspace built from the
+detail projects the `resourceEvidence` of the selected screen's views, or of
+the shown component entry's views on a component route: the routed variant,
+or the parent's own views on a parent route. A new
 classification generation replaces the slice and clears stale evidence while
 Changes is pending or unavailable.
 
@@ -29,9 +33,8 @@ loaded comparison subset. A page-only component-view reason adds no Affected
 screens. Pending or unavailable generations clear all page evidence.
 
 A whole-document page has no workspace and no views. Its Details read the
-page record's catalogue v6 `resourceEvidence` when the shell renders a public
-catalogue, which Serve, exports and hosts all do. A shell rendered from private
-live data reads the matching live `pageEvidence` instead. That one record holds
+page's `resourceEvidence` from its entry detail in every delivery: Serve, the
+static build and hosts alike. That one record holds
 the page's reasons and exclusions, so no view merge applies. The grouping is
 the screen's, with the page wording. A removed page, and Changes that are not
 ready, have no page status and no page evidence.
@@ -46,21 +49,18 @@ font/image reason, or reason without analysis keeps the ordinary changed label.
 
 Screens, component saved views and whole-document pages use one shared
 comparison heading in Details. Show “Compared with the branch point on
-\<name\>.” only when the name is known. An empty or blank name is unknown. An
-embedded catalogue supplied through the `@mokly/viewer` public catalogue has no
-name, so it shows no sentence.
+\<name\>.” only when the name is known. The name is the `base` ref of the
+catalogue index; an empty or blank name is unknown, and an index without
+`base` shows no sentence.
 Keep the “Comparison details” heading and the rest of Details, including its
-metadata, evidence, exclusions and status lines. A served catalogue with a
-known name still shows the sentence.
+metadata, evidence, exclusions and status lines. An index with `base` shows
+the sentence in every delivery.
 
-During navigation in an exported catalogue, the temporary workspace built from
-public catalogue data uses the branch name that the export already knows.
-Show the same sentence while the destination's full workspace data loads and
-after it loads. Pass the known name to that fallback; do not infer it from a
-route or invent a default. The fallback takes the name from the shell
-context, so Serve's temporary view keeps its known name in the same way. An
-embedded catalogue without a name still shows no sentence and keeps its other
-Details.
+During navigation, the temporary workspace built from the index uses the
+`base` ref the index already carries. Show the same sentence while the
+destination's detail loads and after it loads. Pass the known name to that
+fallback; do not infer it from a route or invent a default. An index without
+`base` still shows no sentence and keeps its other Details.
 
 For a component entry, the shared wording helper selects:
 
@@ -181,7 +181,7 @@ therefore never says it. A whole-document page consumes no components, so its
 Details never link a changed component or say that sentence.
 
 A current whole-document page shows Added, Changed or Unmodified beside its
-title once its Changes are ready, from the catalogue change kind. Private live
-data gives Added when the baseline lacks the page, Changed when Changes names
-it, and otherwise Unmodified. A removed page keeps its Removed badge. The page's
+title once its Changes are ready, from the catalogue change kind: Added when
+the base side lacks the page, Changed when Changes names it, and otherwise
+Unmodified. A removed page keeps its Removed badge. The page's
 Details show the comparison details whenever its status is known.

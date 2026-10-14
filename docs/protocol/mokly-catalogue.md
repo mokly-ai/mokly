@@ -1,39 +1,42 @@
 # Public Catalogue Read Model
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Supported Formats
 
-| Line                      | Generated manifest | Comparison result | Read model |
-| ------------------------- | ------------------ | ----------------- | ---------- |
-| Frozen TypeScript backend | 10                 | 7                 | 6          |
-| Rust rebuild, approved    | none               | 8                 | 7          |
+| Boundary                  | Version                                      |
+| ------------------------- | -------------------------------------------- |
+| Catalogue model           | none: it lives in memory, nothing is written |
+| Public catalogue index    | 7                                            |
+| Entry detail              | 1                                            |
+| Review result             | 8                                            |
+| Catalogue change snapshot | 4                                            |
 
 Both catalogue kinds, with and without registered components, use the same
-numbers, with globally unique entry paths. On the frozen line the private
-catalogue-change snapshot is v3, and the manifest stores folder records,
-component variants, per-view usage, root output ranges and inserted-stylesheet
-provenance. On the approved line there is no generated manifest: the catalogue renders
-from sources into a bounded cache, usage derives from the composed trees, and
-the snapshot is v4, as the [format inventory](./mokly-format-versions.md)
-states. On the approved line the [shell delivery contract](./mokly-shell-delivery.md) delivers the read model as the catalogue index v7, which carries no per-view usage or resource evidence, plus one entry detail v1 per entry; `catalogue.json` is retired. Removed page preview
-metadata is v3 on both lines; delivery descriptors are v5 on the frozen line only. On the frozen line, no entry carries derived file names, the generated
-inventory lists exact paths, the manifest retains authored hints only, Markdown
-documents and their resource copies are implemented, and current and baseline
-manifest readers accept only one version; earlier output follows
-baseline compatibility. Accepted move
-pairs carry `previousPath` in review records and the public read model on both
-lines.
+numbers, with globally unique entry paths. Nothing is written: the catalogue
+renders from sources into a bounded render cache, usage derives
+from the composed trees, and the private catalogue change snapshot pairs
+review v8 with the base commit, as the
+[format inventory](./mokly-format-versions.md) states. The
+[shell delivery contract](./mokly-shell-delivery.md) delivers the read model
+as the catalogue index v7, which carries no per-view usage or resource
+evidence, plus one entry detail v1 per entry. Removed page preview metadata
+is v3. No entry carries a derived file name. Accepted move pairs carry
+`previousPath` in review records and in the read model.
 
 ## Location And Types
 
-Export writes `mokly-viewer/catalogue.json` at the artifact root. Serve exposes
-GET/HEAD `/mokly-viewer/catalogue.json` with `application/json; charset=utf-8`.
-On the approved line the [shell delivery contract](./mokly-shell-delivery.md)
-owns the routes.
-Component value types follow the [manifest](./mokly-component-manifest.md),
+Serve answers GET and HEAD `/mokly-viewer/index.json` and
+`/mokly-viewer/entries/<entry path>.json` with
+`application/json; charset=utf-8`, and `build` writes the same paths under
+its output directory; the
+[shell delivery contract](./mokly-shell-delivery.md#routes) owns the routes.
+Component value types follow the
+[component records](./mokly-component-manifest.md),
 [props](./mokly-component-props.md), [controls](./mokly-component-controls.md)
-and [instance](./mokly-instances.md) contracts; under v7 the prop schema
-follows the [entry props contract](./mokly-entry-props.md). The viewer exports
-these types without a CLI dependency.
+and [instance](./mokly-instances.md) contracts; the prop schema follows the
+[entry props contract](./mokly-entry-props.md). The viewer exports these
+types without a CLI dependency.
 
 ```ts
 import type {
@@ -187,7 +190,7 @@ without a leading slash, origin, query or hash; resolve it against the source's
 origin root, not the JSON directory or host app URL. A current component parent
 has its own views, rendered from its own props, and its page shows them first. `previousPath` is
 present exactly on entries the
-[move contract](./mokly-moves.md) paired with a baseline entry.
+[move contract](./mokly-moves.md) paired with an entry of the base commit.
 
 `identity.id` is lowercase SHA-256 of UTF-8 JSON, without LF, for
 `["mokly-catalogue-v1", repoRelativeConfigPath]`, scoped to the source origin.

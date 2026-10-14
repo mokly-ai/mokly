@@ -4,44 +4,83 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Generation And Serving
 
-The comparison engine's ownership and ignored-region rules remain in force.
-Review configuration selects the Git base, snapshot directory, and commands
-for derived baselines. `serve --base` and `export --base` override that base.
+A comparison generation is an immutable set of files under
+`mokly-viewer/diffs/generations/<generation>/`: `review.json`, the
+[review result v8](./mokly-comparison.md#review-result-v8-and-snapshot-v4);
+`entries/<entry path>.json`, the entry detail v1 of each removed entry under
+the [shell delivery contract](./mokly-shell-delivery.md#entry-detail); the
+removed previews of the [removed previews contract](./mokly-removed-previews.md);
+and the before and after snapshots with their transitive resources at the
+paths of the [artifact path contract](./mokly-artifact-paths.md). A file of a
+generation never changes after it is written or captured. Generation files
+carry no deployment id and no revision: a removed entry's detail carries the
+generation and its `snapshotId` instead, so one comparison gives the same
+bytes in every build and in every Serve process. Every generation route
+answers GET and HEAD with `Cache-Control: no-store` and
+`X-Content-Type-Options: nosniff`; snapshot documents are `text/html`.
 
-The [consumer static export](./mokly-export.md) reuses the comparison engine
-and result schema of the [Changes contract](./mokly-changes-serving.md#comparison-engine).
-Its [static delivery contract](./mokly-export-delivery.md)
-defines direct generation URLs without requiring a hosting-provider redirect;
-the server and repository adapter retain their stable redirect for compatibility.
+The [catalogue index](./mokly-shell-delivery.md#catalogue-index) names the
+generation: `comparisonUrl` is the artifact-root-relative path of its
+`review.json`, or `null` while Changes is not ready, is unavailable, or is
+disabled. The shell derives every snapshot and preview URL from that response
+URL and the entry's path; no descriptor and no second pointer exists.
 
-The development shell requests `/mokly-viewer/diffs/review.json` for the selected
-entry on demand, following the
-[selected comparison contract](./mokly-selected-comparisons.md). The response
-redirects to an immutable generation; snapshot URLs resolve relative to that
-response URL. No standalone HTML report or navigation payload is generated.
-Only comparison JSON and snapshot files are served through this private route.
-Before changing an open comparison's view or diff mode, the browser renews its
-generation with HEAD. A missing or replaced generation is reacquired for the
-same selection before new panes load; retained results reuse their loaded JSON.
-Development responses disable caching. Refresh requests and watched invalidation reuse
-the generation queue, retaining superseded snapshots briefly for in-flight
-requests and draining active work before shutdown.
+## Serve
 
-Published catalogues retain the same All / Changes navigation and screen controls.
-Publishing generates one validated Git comparison in a private staging directory,
-then packages its JSON and complete before/after snapshot trees under the resolved
-generation path. Static shell metadata addresses that generation directly; the
-repository adapter also retains the stable JSON redirect. The same client
-resolves relative snapshot and resource URLs without a live server.
-Snapshot HTTP responses disable caching and MIME sniffing. Diagnostic summaries
-and internal ownership markers are not published.
+Serve classifies Changes in the background after HTTP is ready and publishes
+each status move as one state under
+[updates in Serve](./mokly-shell-delivery.md#updates-in-serve): the index and
+the details are replaced in one step, `revision` rises by one, and the event
+stream carries the new revision as its message id. The classification's
+generation holds `review.json` and the removed entries' details and no
+snapshot. No shell request waits for a comparison, and no comparison data or
+snapshot is requested until a reviewer selects a diff mode or opens a removed
+entry.
 
-No comparison data or snapshot document is requested until a user selects a diff
-or opens a removed entry. Refresh and retry fetch the currently published
-comparison; only publishing a new
-artifact updates the underlying snapshots. Removed entries retain their Changes
-rows and previous-version pages. Comparison failure aborts publishing
-transactionally and preserves the previous artifact, except that recognized
-earlier baseline output completes with Changes unavailable under the
-compatibility contract. Publishing never
-writes to a running development server's configured comparison directory.
+The development shell requests a comparison on demand at
+`/mokly-viewer/diffs/review.json?path=<entry path>` under the
+[selected comparison contract](./mokly-selected-comparisons.md), and a
+removed page's or document's preview under the
+[removed previews contract](./mokly-removed-previews.md). The response
+redirects to an immutable generation named `selected-<uuid>`, whose files are
+captured in memory from the render cache and the base-side render; snapshot
+URLs resolve relative to that response URL. A selected generation projects the
+completed background classification onto the selected entry; it renders
+nothing again and reclassifies nothing. Before the shell changes an open
+comparison's view or diff mode, it renews the generation with a HEAD request.
+A missing or replaced generation is reacquired for the same selection before
+new panes load, and a retained result reuses its loaded JSON. Retention,
+capacity, coalescing, cancellation, and the request bounds belong to the
+selected comparison contract. A content change or a Changes status move
+invalidates pending captures and discards the cached selection. Superseded
+snapshots stay available briefly for in-flight requests. Shutdown stops
+admission and drains active generation work before the server exits.
+
+## Build And Publish
+
+`build` writes one complete comparison into the output directory when the
+configuration names a base: it resolves the merge base once, renders both
+sides through the render graph, classifies every entry and view, and writes
+the generation beside the index, whose `comparisonUrl` names it and whose
+`changesStatus` is `ready`. A static host serves the generation as plain
+files. The [static delivery contract](./mokly-export-delivery.md) owns the
+hosting rules, and a generation URL is never rewritten to another generation.
+The viewer fetches and validates snapshot documents under the generation and
+presents them in script-disabled frames; it never loads them as frame URLs.
+
+A base whose sources fail the current validation, or a repository without
+the base commit, makes Changes unavailable: the build completes with
+`comparisonUrl: null`, `changesStatus: "unavailable"`, no generation, and the
+diagnostics in the terminal. A comparison that fails for another reason fails
+the build before its output transaction writes, so the output directory is
+unchanged. A configuration without a base writes no generation and no
+removed entry, and its `changesStatus` is `disabled`.
+
+`publish` builds into its own directory outside the repository and uploads the
+generation with the rest of the output through the unchanged
+[upload exchange](./mokly-upload-exchange.md). A published catalogue serves
+one generation until the next publication replaces it. Refresh and retry in a
+built or published catalogue fetch the same generation. Only a new build and
+deployment changes the comparison; a tab that meets a different
+`deploymentId` performs a full page load under the
+[identity rule](./mokly-shell-delivery.md#identity).

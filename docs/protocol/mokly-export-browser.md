@@ -1,107 +1,100 @@
-# Static Export Browser And Identity
+# Static Build Browser And Identity
 
 Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
-This document supplements [Static Export Delivery](./mokly-export-delivery.md)
-with the standalone browser inventory and deployment identity algorithm.
+This page supplements [Static Delivery](./mokly-export-delivery.md) with the
+standalone browser inventory and the deployment identity algorithm that the
+[shell delivery contract](./mokly-shell-delivery.md#identity) names.
 
 ## Browser Modules
 
-The standalone browser inventory under `mokly-viewer/client/` is the hydrated shell:
-the documented standalone hydration entry, which bundles React and React DOM
-with the shell tree, plus the transport, geometry and protocol modules it
-imports (frame adapters, message transport, geometry, catalogue revision
-adoption). Export delivers the viewer-owned inventory from the generated manifest
-of the completed package build outputs; Serve also delivers the CLI-owned live
-host modules. Each manifest must match its directory files exactly. Export
-reference validation lexes package-owned `.js` files under `mokly-viewer/` as modules.
-It checks every decoded static import, re-export and literal dynamic import
-against the existing URL and inventory rules, including relative specifiers
-containing `+` or `:`. Quoted prose, comments, regular expressions and
-`import.meta` are not module requests. Computed dynamic expressions are not
-evaluated or treated as literal paths. Lexer failures abort with
-`Could not read export module references: <script path>`.
-Static mode
-never activates live host capabilities or starts update requests. Its separate
-static evidence reader can issue only the same-origin destination-shell read
-defined by the delivery contract and receives no host token or behavior.
-`navigation-resize.js` retains its delivery name as the pre-hydration script
-that synchronously captures early native disclosure choices without mutating
-React-owned DOM. The hydrated shell reads those choices for its initial render
-so they win over stored preferences and the reload snapshot; capture listeners
-and transient out-of-tree state are removed on load or page exit. The inspector
-remains `client/inspector.js`, React-free, at the 9,216-byte cap; it runs inside
-consumer documents and shares nothing with the shell bundle.
+The standalone inventory under `mokly-viewer/client/` is the client-rendered
+shell: `shell.js`, the `@mokly/viewer/browser` entry bundled with React and
+React DOM, the shell tree, the readers of the catalogue index and the entry
+detail, the frame adapters, the message transport, geometry, the comparison
+and removed-preview controllers, and the typed review and removed-preview
+validators. `mokly-viewer/shell.css` and `mokly-viewer/fonts/**` complete the
+shell's assets. The viewer package build records every browser output in the
+browser module inventory v1. `build` copies exactly the files that inventory
+lists, and Serve serves exactly those files; a package directory that differs
+from its inventory fails the command.
 
-The removed-content request lifecycle is part of `react-shell.js`; it reuses the
-same typed review and removed-page validators as the rest of the viewer. Static
-requests are limited to preview descriptors in the accepted public catalogue
-and the selected preview or pane documents beneath that advertised generation's
-permitted snapshot sides; live requests use the selected on-demand route and
-its resulting generation. There is no parallel vanilla Browse or preview runtime.
+`build` lexes every package-owned `.js` file under `mokly-viewer/` as a
+module and checks every decoded static import, re-export, and literal dynamic
+import against the inventory and the URL rules, including relative specifiers
+that contain `+` or `:`. Quoted prose, comments, regular expressions, and
+`import.meta` are not module requests. A computed dynamic expression is not
+evaluated and not treated as a path. A lexer failure fails the build and names
+the script.
 
-The Node-only server renderer and the embedding-only scoped stylesheet are
-excluded from the standalone browser inventory. Standalone `shell.css` and font
-bytes are unchanged by hydration. Module changes alter deployment identity as
-required below, so the transition to the hydrated shell changes the identity
-of every export exactly once. An export from a changed workspace also records
-its new `changedPaths` in `review.json`, which changes that generation's hash;
-snapshot and comparison resource bytes remain unchanged.
+The bundle detects a static build from the index, which has no `live` field.
+In a static build the shell never requests the live descriptor, the event
+stream, or a render; controls are read-only. It fetches the index and the
+details under the [fetch rules](./mokly-shell-delivery.md#fetch-and-fences)
+of the shell delivery contract and applies the stored or system appearance
+before its first render, so no pre-paint script and no hydration entry exist.
+Removed-content requests are limited to the generation that the index's
+`comparisonUrl` names: the removed entry's detail, the preview metadata, and
+the snapshot documents beneath that generation's permitted sides. There is no
+parallel vanilla Browse or preview runtime.
+
+The inspector is `client/inspector.js`: React-free, at the 9,216-byte cap of
+the [published inspector contract](./mokly-published-inspector.md). It runs
+inside consumer documents under the [frame adapter](./mokly-frame-adapter.md)
+and shares nothing with the shell bundle. No server module, watcher entry, or
+live-host module enters the inventory. Module changes alter the deployment
+identity as required below. A build from a changed working tree also records
+its `changedPaths` in `review.json`, which changes that generation's hash;
+snapshot and comparison resource bytes do not change.
 
 ## Deployment Identity
 
-Comparison generations identify only their comparison JSON and snapshot
-inventory. The separate `deploymentId` identifies every alias-to-file mapping
-and every installed file except the ownership marker and publication metadata
-paths explicitly declared by the provider adapter. Identity-participating files
-include shell pages, navigation metadata, public files, CSS,
-client/navigation modules, fonts and ordinary provider files. Publish declares
+A comparison generation identifies only its own files: `review.json`, the
+removed entries' details, the snapshots, their resources, and the previews.
+Its directory name is the 64-hex hash of those files, so one comparison gives
+the same bytes and the same name in every build. The separate `deploymentId`
+identifies every installed file except the ownership marker and the
+publication metadata that `publish` declares. Identity-participating files
+include the stubs, the index, the details, the rendered documents, public
+files, CSS, client modules, fonts, and every generation file. Publish declares
 only `mokly-upload.json` as publication metadata.
 
-The marker is excluded because it is derived from finalized paths and bytes.
-Publication metadata is excluded because commit, branch and export-time fields
-describe delivery rather than browser content. Both remain owned files and are
-hashed by the marker. Changing only publication metadata can therefore change
-the marker without changing `deploymentId`; unchanged identity-participating
-content and aliases retain the same identity independently of insertion order
-or output directory.
+The marker is excluded because it is derived from the finalized paths and
+bytes. Publication metadata is excluded because its commit, branch, and time
+fields describe delivery rather than browser content. Both are owned files
+that the marker hashes. Changing only publication metadata therefore changes
+the marker without changing `deploymentId`. Unchanged identity-participating
+content gives the same identity independently of insertion order and output
+directory.
 
-Finalize identity after the provider adapter, its publication-metadata
-declaration and the complete non-marker inventory are fixed. Only exporter-owned
-shell roots may carry the stamped descriptor. Require every such shell page to
-retain its original canonical path, comparison URL, and one valid root
-descriptor; adapters cannot remove or rewrite that contract. Normalize each
-owned root descriptor to its canonical JSON serialization with `deploymentId`
-set to 64 zeroes. Hash each resulting file's exact bytes, sort the
-`[path, contentHash]` pairs by JavaScript string order, sort alias pairs by alias
-path, and SHA-256 the JSON encoding of `[filePairs, aliasPairs]`.
+Finalize the identity after the complete non-marker inventory is fixed:
 
-Do not normalize lookalike metadata inside consumer documents, scripts, or
-other non-shell files. Their bytes participate unchanged unless their exact
-path was declared as publication metadata, except for the explicitly owned
-catalogue field below.
+1. For the index and for every current entry's detail, take the canonical
+   JSON of the document with its top-level `deploymentId` set to 64 zeros.
+   For every other file, take its exact bytes.
+2. Compute the SHA-256 of each result as 64 lowercase hex characters.
+3. Sort the `[path, sha256]` pairs by `path` in UTF-16 code-unit order, the
+   order the ownership marker uses.
+4. The `deploymentId` is the SHA-256 of the canonical JSON encoding of that
+   array of pairs.
 
-Finalization includes the exporter-owned `mokly-viewer/catalogue.json`: canonicalize
-its JSON with only its top-level `deploymentId` set to 64 zeroes for the file
-hash, then stamp the same resulting artifact identity there and in every owned
-shell descriptor. Its other bytes, the inspector script and inert per-document
-maps participate normally. Validate the catalogue's owned identity field before
-finalization and replace its staging placeholder before installation. This
-prevents self-reference without changing delivery descriptor v5, ownership v3,
-upload v2 or review result v7.
+Do not normalize lookalike fields inside consumer documents, scripts, or other
+files; their bytes participate unchanged unless their exact path is declared
+as publication metadata. Stamp the resulting identity into the index and into
+every current entry's detail, changing no other byte. A removed entry's detail
+carries `generation` and `snapshotId` instead, and no generation file carries
+a deployment id. Then compute the ownership entries from the exact finalized
+bytes and add the marker through the same collision-checked inventory. No
+non-marker byte changes after identity finalization. The identity determines
+the finalized browser content, while the marker is a pure function of all
+final paths and bytes, including publication metadata. The comparison
+generation keeps its separate URL and hash.
 
-Stamp the resulting identity into those owned root descriptors and the owned
-catalogue field, changing no other non-marker bytes. Then compute the ownership
-entries from the exact finalized bytes and add the marker through the same
-collision-checked inventory. No adapter, publication-metadata declaration or
-non-marker byte may change after identity finalization. Every owned root's
-staging placeholder is replaced before the marker is built and before
-installation. This avoids identity and marker self-reference: the identity
-determines finalized browser content, while the marker is a pure function of
-all final paths and bytes, including publication metadata. The comparison
-generation keeps its separate URL/hash.
-
-In-shell navigation requires both deployment identity and comparison URL to
-match; otherwise it performs a full document load before adopting any new view.
-Old descriptor versions also trigger that fallback. Within one deployment,
-ordinary in-shell navigation and browser state preservation remain unchanged.
+No page carries the identity. The stub embeds no descriptor; the shell reads
+`deploymentId` and `revision` from the index, and a build writes `revision: 0`.
+A detail whose `deploymentId` differs from the installed index means another
+deployment replaced the files, so the shell performs a full page load of the
+requested URL instead of mixing deployments. Serve chooses one `deploymentId`
+for the life of its process under the shell delivery contract, so a different
+id always means another build or another server process. Within one
+deployment, in-shell navigation and browser state preservation are unchanged.

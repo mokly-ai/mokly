@@ -19,10 +19,8 @@ node's entry title is also the folder title used by every descendant breadcrumb;
 its folder record cannot supply a second title. An entry
 node otherwise has `children` exactly when it is a screen or component with
 variants, holding those variants in authored order. Hidden folder nodes,
-including screen/component index entry nodes, retain `hidden: true` and normal
-children. Every current entry appears once in the tree. All/search hides these
-subtrees and prunes empty ancestors; Changes retains hidden ancestry and
-changed rows. Each non-variant child names its immediate parent folder; deep
+including screen/component index entry nodes, keep `hidden: true` and normal children. Every current entry appears once in the tree. All/search hides these
+subtrees and prunes empty ancestors; Changes keeps hidden ancestry and changed rows. Each non-variant child names its immediate parent folder; deep
 root paths are invalid. Removed records cannot carry `previousPath`.
 
 ## Order
@@ -39,8 +37,8 @@ different orders for the same children. The viewer therefore orders the
 children each section shows again: the children that `order` names come first
 in its sequence, with the others, at `...` when present, ordered by the rows
 they render as in that section. A folder's own page stays its first child, and
-variants keep their authored order. Serve and every reader of the read model
-derive the same sections, so server-rendered and hydrated rows agree.
+variants keep their authored order. Every reader of the read model
+derives the same sections.
 
 Readers reject an `order` or `treeOrder` that is not an array of nonempty
 strings, names one child twice, or holds a path rather than a slug.

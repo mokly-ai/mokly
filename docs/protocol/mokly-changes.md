@@ -4,143 +4,135 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Changes membership
 
-Changes is a review list of added, removed and moved screens, pages and documents, material document changes,
-reviewable route metadata changes, and user flows that embed those screens.
-A new or edited flow is included independently. In every catalogue, including
-ones with registered components, a source edit or unreferenced
-public file alone neither adds an entry to Changes nor supplies comparison
-evidence. There are no declared-path or shared-glob reasons. Retained rendered
-resource/CSS evidence, Review-ignore normalization, metadata, ancestry, flow
-propagation and component usage attribution still apply. A changed component
-may list its unchanged consumers under Affected screens; those consumers do
-not become Changes rows solely because of component usage.
-Mokly-inserted links for a rendered child component's declared CSS are not
-consumer page material. A component page keeps its root component's inserted
-links; renderer-authored links remain page content even if a declaration reuses them.
-Rendered-resource and CSS evidence use final linked documents, not this
-comparison-only projection. See the
-[component attribution contract](./mokly-component-changes.md).
+The [comparison contract](./mokly-comparison.md#changes-membership) owns the
+membership list: added, removed, and moved screens, pages, and documents;
+views with a material change; entries whose reviewable metadata changed; and
+use cases whose steps name a changed screen. This page states the rules that
+project that list onto entries, variants, views, and resources. Every rule
+reads the composed trees of the two [sides](./mokly-comparison.md#sides). No
+rule reads a source file, a text offset, or a repository path on its own.
 
-Each variant of either kind is projected independently. Its metadata projection
-contains `variantOf` and its parent's title. Changing the parent title
-therefore marks the variant changed, while a material or metadata change
-confined to the variant never adds the parent; a parent that moves carries its
-variants with it under the [move contract](./mokly-moves.md). A flow is
-propagated only when its `screenPath` step names the exact changed screen,
-including a variant.
+- A source edit alone never lists an entry. An unreferenced public file alone
+  never lists an entry and never supplies evidence. A changed Git path is
+  candidate evidence, not a reason.
+- Reviewable metadata is the address, the titles, the descriptions, the
+  rationale, the tags, the related-document links, the use case steps and
+  memberships, and the view structure: the set of viewports and colour
+  schemes. It excludes folder titles, source locations, and declared
+  dependencies.
+- A changed component lists its consumers as affected, not as changes, under
+  the [component attribution contract](./mokly-component-changes.md). An
+  affected-only screen does not make its use cases changed.
+- A use case is listed when a step's `screenPath` names the exact changed
+  screen, including a variant, or when its own metadata or steps changed.
+- A variant of either kind is projected independently. Its metadata
+  projection contains `variantOf` and its parent's title, so a changed parent
+  title marks the variant, while a change confined to the variant never adds
+  the parent. A parent that moves carries its variants with it under the
+  [move contract](./mokly-moves.md).
+- Pages and documents use the same material and resource rules on their
+  documents: one per colour scheme for a document, one for a page. They have
+  no viewport views and no comparison controls.
 
-Before marking an existing fragment, compare its branch-point and in-memory
-documents with the same paired ignore normalization and material-key rules as
-the comparison engine. Ignored-only changes are excluded from Changes; real
-content changes, material-key changes, and one-sided ignored-region adoption
-with changed content remain eligible. Both viewports and every available color
-scheme participate. Metadata includes address, titles, descriptions,
-rationale, tags, related-doc links, flow steps and memberships, and view
-structure; it excludes folder titles, source locations, and dependencies.
-The plain generated marker is excluded from document comparison, so a
-source move alone stays unchanged. Resource URLs compare by their resolved route;
-accepted source moves map generated styles/assets and copied document resources
-under the [move normalisation rule](./mokly-moves.md#normalisation). Equal mapped
-resource bytes do not add material or rendered-resource reasons. CSS URL
-spellings use that same map; real resource edits retain normal attribution.
-Inventoried owned sources relocated with their defining module compare by
-logical path and confined bytes; only byte-identical moves lose dependency
-reasons. Stored snapshots retain the original markers, paths and resource URLs.
+## Entries and views
 
-Changes to local resources referenced by a fragment supply resource evidence.
-Direct rows follow CSS rule attribution and non-CSS ownership below. Follow CSS imports, CSS URLs, and embedded-document resources
-transitively using the snapshot resource resolver and public-file confinement.
-Only references outside paired ignored regions participate; speculative
-preload/prefetch hints alone do not establish rendered impact. A linked resource
-edit is conservative evidence of a rendering change, not a pixel measurement.
-Unreferenced public files never add entries or comparison reasons.
-Every reachable existing resource is validated, including images and fonts;
-finding a changed resource does not skip its CSS/HTML references or later graph
-edges. Added screens, newly available views, and existing material fragment
-changes do not bypass resource validation. Pages and documents use these same
-rules for their generated documents and rendered resources; they do not gain
-screen comparison controls or viewport variants.
-For configured catalogue-root aliases, compare changed Git paths against both
-the logical route and its validated physical path relative to the real
-`mockupsDir`. Authored file and descendant-directory symlinks are not public.
-Obtain root identities from the same confined reader used by resource watching;
-source, internal-metadata, and escape checks still apply.
-Historical snapshot reads continue to require regular Git files and reject
-symlink blobs; detecting current impact does not relax baseline validation.
-Both comparison paths share one rule. A resource is a verified deletion in
-all baseline selections, for every type including embedded HTML, only when
-it was a regular file at the branch point, is now deleted, and remains
-referenced by a current document. It marks consumers changed and never makes
-Changes unavailable. A missing current resource that was also absent at the branch point is not a
-verified deletion. Reject dangling or escaping symlinks, unsafe or source-root
-paths, and newly missing files that are not verified deletions. Snapshot generation still requires current references
-to resolve.
-Live classification walks a changed or moved document's branch-point resource
-graph whenever the document changed or one of its current stylesheets changed,
-regardless of whether any stylesheet is in the diff, so verified deletions of
-non-stylesheet resources keep marking their consumers. Only an unchanged,
-unmoved view with no changed stylesheet skips that walk, and the complete
-comparison produces the same retained evidence for every view.
+Entries pair by kind and case-folded path. The [move contract](./mokly-moves.md)
+then pairs the remaining removed and added entries of one kind and records
+`previousPath`; a paired entry compares with its paired base entry. A base
+entry whose path now belongs to a current entry of another kind, and that the
+move contract pairs with nothing, is discarded: the current entry is `added`,
+and no removed record exists for that path. The
+[catalogue change metadata contract](./mokly-catalogue-changes.md) owns the
+removed set.
 
-Linked stylesheet edits are narrowed by
-[CSS change attribution](./mokly-css-attribution.md): a changed stylesheet
-keeps view evidence when a rule matches or is unresolved. Components change
-only through kept own-page matches after nested filtering. A page gets its own row for matches outside
-components changed by that rule, or for unresolved rules. All four CSS delivery
-paths follow [one rule](./mokly-css-attribution-rules.md).
-Stylesheets whose changed rules match nothing on a view are recorded as examined
-and excluded rather than as dependency evidence. Fonts, images, and embedded
-documents keep file-level attribution.
-This same analysis runs in live classification, watched updates, complete and
-selected comparisons, and publication. A newline-only edit has no changed rules
-and leaves consumers out of Changes; every viewport and scheme retains its own
-kept or excluded resource evidence.
+Within a paired entry, views pair by viewport and colour scheme. Each side's
+view set is its entry's effective `colorSchemes`, so a dark view present only
+on the head side is `added` and one present only on the base side is
+`removed`. Mobile and desktop classify separately from their own documents.
+Every view of every current and base entry participates.
 
-The shell receives this per-view resource evidence for screen-only catalogues
-as well as component catalogues, including in Current before snapshots exist.
-Live screen-only classification retains its analysis as `screenEvidence`, keyed
-by entry path; the workspace selects its `resourceEvidence` slice without a
-second analysis pass. Static exports select that slice from their packaged v7
-comparison. Details merge the loaded comparison's evidence
-with classification evidence, preserving retained stylesheet selectors,
-exclusions and ignored-content details without duplicate cards.
-See [CSS evidence presentation](./mokly-css-evidence-presentation.md).
+A view's state follows the [materiality rule](./mokly-comparison.md#materiality):
+`unchanged`, `changed`, `added`, `removed`, or `ignored-only`. The canonical
+form decides equality only; a comparison pane shows the real bytes of both
+sides. Ignored regions pair by id, a changed material key is material, a
+region present on one side only is ordinary content, and a view whose only
+differences lie inside paired ignored regions is `ignored-only`, which never
+lists the entry.
 
-Classification reads baseline files without writing snapshots or a comparison;
-per-commit selection uses verified Git blobs or a completed rebuilt v10 cache. Baseline reads are batched, shared
-resource edges are cached, and cycles terminate. Apart from verified deletions,
-an unavailable or invalid input makes Changes unavailable while preserving the
-tabs and access through All in live Serve.
-Watched updates and static publishing use this same membership calculation.
-A classifier error in a screen-only catalogue is logged through the ordinary
-safe diagnostic path and publishes unavailable; Serve never falls back to a
-second comparison implementation.
+Head `<style>` elements never enter the canonical form. A changed style rule
+reaches a view only as rule evidence under
+[style ownership](./mokly-comparison.md#style-ownership) and
+[CSS change attribution](./mokly-css-attribution.md): a rule attributed to the
+entry makes the view `changed`, a rule attributed to a component keeps the
+entry affected, a rule that matches nothing leaves no rule record, and a
+stylesheet whose changed rules all match nothing is recorded once as
+excluded.
 
-Serve performs the calculation in a background worker after HTTP is ready and
-complete generated output has been adopted, never during a shell request.
-The watched parent publishes the result. Until the immutable changed-entry, baseline, and
-component-evidence snapshot arrives, Browse keeps both tabs without inventing a
-Changes count. A spinner occupies the reserved count slot, and selecting Changes
-shows a loading sidebar. A baseline rebuild publishes a distinct `preparing`
-state before `pending` while it runs; see the
-derived baselines contract. Content updates clear the previous snapshot and publish
-pending status before notifying the browser, then publish a terminal ready or
-unavailable status only when the latest sequence finishes. Empty ready results
-show zero; unavailable results show a dash and a plain unavailable message.
-Earlier baseline output follows the command and copy contract in
-Baseline Compatibility.
-Tabs, count allocation and the tree origin remain fixed throughout;
-late results from superseded generations are ignored. Non-watched Serve uses the
-same asynchronous startup boundary, without observing later edits. Watched Git-only
-ref changes reclassify completed output without rendering views again.
+## Resources
 
-Component-aware classification preloads all baseline views in one bounded Git
-batch across startup, watch, Browse evidence, and publishing; readers without
-bulk support cache individual reads. Resource discovery stays lazy and obeys
-ignore/ownership rules. An incomplete batch fails classification rather than
-dropping views or weakening Git validation.
+Resource evidence follows the [resource rule](./mokly-comparison.md#resources)
+of the comparison contract: references are read from the composed tree with
+the owner of the referencing element, followed through stylesheet `url()`
+and `@import` chains and embedded documents, and compared as bytes between
+the working tree and the base commit's blobs. A changed referenced resource is
+conservative evidence of a rendering change for every view that reaches it.
+It is a reason to review, never a pixel measurement.
+
+- Only references outside ignored regions participate. Speculative `preload`
+  and `prefetch` hints alone do not establish rendered impact.
+- A changed stylesheet is narrowed to its matching rules under
+  [CSS change attribution](./mokly-css-attribution.md). A stylesheet whose
+  changed rules match nothing on a view supplies no reason for that view. A
+  newline-only edit has no changed rules and lists nothing. Fonts, images,
+  and embedded documents keep file-level attribution.
+- A resource that was a regular file in the base commit, is missing from the
+  working tree, and is still referenced by a current document is a verified
+  deletion. It marks every view that references it `changed` and never makes
+  Changes unavailable. A resource missing on both sides is not a deletion.
+- Resource references compare by their resolved route. An accepted move maps
+  the moved entry's resources under the
+  [move normalisation rule](./mokly-moves.md#normalisation); equal mapped
+  bytes add no reason, and a real edit keeps its evidence.
+- Every reachable resource is validated on both sides, images and fonts
+  included. Finding one changed resource does not skip the references after
+  it. A dangling or escaping symlink, a path outside the public closure, or a
+  missing resource that is not a verified deletion makes Changes unavailable
+  with that diagnostic.
+
+## Changes in Serve
+
+Serve classifies Changes in the background after it listens, never during a
+request, and publishes each status move as one state under
+[updates in Serve](./mokly-shell-delivery.md#updates-in-serve): each
+publication replaces the index and the details together and raises
+`revision` by one. The index's `changesStatus` is `preparing` while the base
+side's sources are extracted and its dependencies install, when the base side
+needs them; `pending` while the base side renders and the comparison runs;
+then `ready` or `unavailable`. `disabled` means the catalogue carries no
+Changes: no base is configured, or the catalogue was built without them. A
+content change clears the result, publishes `pending`, and publishes a
+terminal status only for the latest generation; a result from a superseded
+generation is discarded. A change to the base ref alone reclassifies the
+current trees without rendering the head side again. Apart from a verified
+deletion, an unavailable or invalid input makes Changes `unavailable` while
+All stays browsable, and a classifier failure is reported through the
+ordinary diagnostic path. The [on-demand Serve contract](./mokly-on-demand.md)
+owns the shell's presentation of each status.
+
+`build` and `publish` compute the same membership once, from the same trees,
+and write it into the comparison generation under the
+[comparison serving contract](./mokly-comparison-serving.md). A newline-only
+or source-only edit lists nothing on any path.
 
 ## Screen controls
 
 Screen controls and change-view selection follow the
-[control contract](./mokly-changes-serving.md#screen-controls).
+[Changes screen controls](./mokly-changes-controls.md) contract.
+
+## Related Docs
+
+- [Tree comparison and Changes](./mokly-comparison.md)
+- [Changes serving and comparison](./mokly-changes-serving.md)
+- [Component change attribution](./mokly-component-changes.md)
+- [CSS change attribution](./mokly-css-attribution.md)
+- [Moves](./mokly-moves.md)

@@ -2,7 +2,7 @@
 
 This continues the [navigation contract](./mokly-navigation.md).
 
-The implemented `sameOriginAdapter` preserves this existing behavior;
+`sameOriginAdapter` preserves this behavior;
 direct `contentDocument` access lives behind the local transport interface.
 The viewer package exposes the same boundary. Logical fragment scope is resolved
 once in the frame URL boundary shared by public markup and adapter mounts:

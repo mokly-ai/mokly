@@ -4,134 +4,134 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 Breaking-change notes: [npm release notes](./npm-release-notes.md).
 
-## Package Metadata
+## Package Set
 
-CSS Modules delivery lazily uses the runtime `postcss-modules-local-by-default`,
-`postcss-modules-extract-imports`, `postcss-modules-scope` and `icss-utils`
-packages with PostCSS; its selector/value parsers are direct runtime
-dependencies. Their transitive selector/value parser, `cssesc` and
-`util-deprecate` packages join the package license and audit scope. The
-selector and value parsers are also direct lazy runtime dependencies for
-post-scoping verification; the packed graph retains one copy of each.
-Lightning CSS remains a read-only rule parser for Changes.
-Packed-consumer smoke exercises CSS Modules, binary `url()` assets and a
-consumer PostCSS plugin through the URL-loaded `postcss_worker.js`; package
-inspection requires that worker file in the archive. See
-[dependency security](./dependency-security.md)
-and [imported styles](./mokly-imported-styles-modules.md).
+One release publishes seven packages from one reviewed commit:
 
-`package.json` describes public ESM package `@mokly/mokly`: managed version, MIT
-license, Mokly authorship, exact repository metadata, Node range
-`>=22.14.0 <24.14.0 || >=24.19.0`, `mokly` bin, exports, types, and file
-allowlist.
+| Package                  | Content                                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `@mokly/native-<target>` | one `mokly` binary per target: `linux-x64-gnu`, `linux-arm64-gnu`, `darwin-x64`, `darwin-arm64`, `win32-x64-msvc`  |
+| `@mokly/viewer`          | the Browse shell: shell assets, the index and detail readers, adapters, React mounting, and the browser entry      |
+| `@mokly/mokly`           | the Node shim behind the `mokly` bin, the sidecar entry, the authoring API, the guides, and the protocol documents |
+
+`package.json` describes the public ESM package `@mokly/mokly`: managed
+version, MIT license, Mokly authorship, exact repository metadata, Node range
+`>=22.14.0 <24.14.0 || >=24.19.0`, the `mokly` bin, the authoring export with
+its types, and the file allowlist. It lists the five platform packages as exact
+optional dependencies at its own version and `@mokly/viewer` as an exact
+dependency; React and React DOM are peer dependencies for React authoring only.
+The shim resolves the platform package for the host, rejects a version other
+than its own, and never falls back to a JavaScript implementation. The
+[Rust core architecture](../architecture/rust-core.md) owns the process
+topology.
+
+Each platform package carries `os`, `cpu`, and on Linux `libc` fields, so npm
+installs exactly one, and its version equals the CLI version in every release.
+The viewer is an MIT ESM package with no Node-only entry; the
+[shell delivery contract](./mokly-shell-delivery.md) owns its runtime boundary.
+The CLI package ships `docs/guides` and `docs/protocol` at the exact package
+version, so the cloud documentation site and independent upload receivers
+implement that release's documented boundaries. Source fixtures, tests, plans,
+caches, review artifacts, and build output other than `dist` are not published.
 
 Read the checkout's version from `package.json`; `.release-please-manifest.json`
 tracks release-please's version state, and `package-lock.json` mirrors package
-metadata. Release PRs update these together. The completed one-time
-[registry bootstrap](./npm-bootstrap.md) registered `@mokly/mokly@0.8.0` without
-changing those release-managed files. It is the accepted initial `latest`
-release and also retains the `bootstrap` tag. Do not repeat the bootstrap
-publication; later reviewed releases advance `latest` through the normal release
-workflow.
+metadata. Release pull requests update these together. `publishConfig` targets
+the public npm registry with public access.
 
-`publishConfig` targets the public npm registry with public access. The CLI
-package contains compiled runtime code, declarations, private host modules,
-README, LICENSE, CHANGELOG, package metadata, `docs/guides`, and
-`docs/protocol`. The CLI guides and protocol documents ship with the exact
-package version so the cloud documentation site and independent upload receivers
-can implement that release's documented boundaries. Source fixtures, tests,
-plans, caches, review artifacts and generated demo output are not published.
+Runtime dependencies are intentional and minimal: the sidecar's bundler and its
+PostCSS orchestration, and nothing for the binary's own work. CSS parsing,
+exclusive directory rename, Git access, and archive encoding are in the Rust
+binary and need no npm dependency. Mokly does not depend on React Native,
+consumer applications, their component systems, or Playwright. Development and
+browser-test packages are development dependencies. Packed dependencies cannot
+use `workspace:` or `file:` links; local links exist only in a test consumer's
+install manifest.
 
-The repository also builds the `@mokly/viewer` workspace, initially version
-0.1.0. Its MIT ESM distribution owns shell assets, public data readers,
-adapters, React mounting and Node-only SSR. The CLI declares an exact registry
-version dependency. Root build, clean, formatting, lint, typecheck and package
-gates cover both packages. Pack the viewer first; local smoke and release
-fixtures install both tarballs explicitly so an unpublished viewer is never
-resolved from the registry. Consumer fixtures exercise every public viewer
-entry, SSR of the [public v6 fixture](./fixtures/catalogue-v6.json) in
-`scripts/package/viewer.mjs` (`smokeViewer`), browser bundle boundaries and
-NodeNext declarations. Both manifests, packed metadata, export targets,
-allowlists, licenses, React peers and the exact viewer dependency are checked.
-Packed dependencies cannot use `workspace:` or `file:` links; local links exist
-only in the test consumer's install manifest. Archive regressions exercise the
-checkout version and several later viewer versions; intentionally mismatched
-dependencies are derived from each packed viewer's actual version, so future
-release PRs cannot invalidate the test.
+## Release Build Matrix And Publication Order
 
-Runtime dependencies are intentional and minimal. Mokly does not take a runtime
-dependency on consumer applications, their component systems, or Playwright.
-Development and browser-test packages remain development dependencies. The
-exporter's Koffi dependency supplies OS-enforced exclusive directory rename; its
-optional platform binaries must remain available for export. The native bridge
-is lazy and does not load for build/check/serve or help. The standalone CSS rule
-parser uses the production `lightningcss` dependency. Keep its optional native
-packages installed: Linux x64 glibc, macOS arm64/x64, and Windows x64 binaries
-cover the CI runners. Its Node floor is below Mokly's 22.14 floor. The installed
-Node package has no automatic WASM fallback; upstream's separate
-`lightningcss-wasm` package is not a Mokly dependency. Publish uses `tar-stream`
-to encode finalized export bytes as portable USTAR/PAX without invoking a
-platform tar executable or walking the output again.
+The release workflow builds the binary once per target, in one build job per
+target on a runner of that operating system and architecture, with Rust 1.95.0
+from `rust-toolchain.toml`. Each build job packs its platform package with npm
+11.21.0 and uploads the archive with its integrity, shasum, inventory, and size
+report. A target that fails to build stops the release before any publication.
+
+The publish job downloads the five archives, verifies that each archive's
+version equals the CLI version and that its inventory holds exactly the binary
+for its target, packs the viewer and then the CLI from the release checkout,
+validates every packed manifest and inventory plus the runtime license closure,
+and smoke-tests clean consumers from those exact archives: the CLI with its
+host platform package runs `mokly --version`, `mokly build` of a minimal
+catalogue, and `mokly serve`; a React host renders the viewer from every public
+viewer entry in a browser bundle; a NodeNext consumer type-checks the authoring
+API. The smokes install the archives, not the source tree or a workspace link,
+and read protocol documents from the installed package.
+
+Publication order is the platform packages, then the viewer, then the CLI. Each
+publication completes its registry verification before the next starts, so an
+installable CLI always resolves published platform packages and a published
+viewer. Before each publication the workflow queries npm: a recognized
+missing-version response (`E404` or `ETARGET`) permits the publish; an existing
+version must match the checked report byte for byte, or the workflow fails; any
+other lookup failure stops the workflow. A package that exists on the registry
+with the checked bytes is verified and skipped, so a retry continues where the
+earlier run stopped.
+
+Every publication uses npm trusted publishing with OIDC from the GitHub-hosted
+publish job, and each package has its own trusted publisher. After each
+publish, the workflow downloads the registry artifact and rechecks integrity,
+shasum, file inventory, version, optional `gitHead`, the `latest` dist-tag, and
+npm signatures and provenance. Registry metadata and tarball endpoints can
+become consistent at different times, so recognized missing-version or stale
+dist-tag responses retry the complete check after 2, 4, 8, and 16 seconds, then
+every 30 seconds until the cumulative delay reaches five minutes. Content,
+provenance, and unexpected transport failures fail closed. The
+[release management contract](./npm-release-management.md) owns Release Please,
+the tags, and the workflow steps; the
+[operations contract](./npm-release-operations.md) owns registration,
+maintainer setup, and the evidence each release keeps.
 
 ## Local Verification
 
 `cargo xtask check` is the complete repository gate. Release verification uses
-`cargo xtask check --dependency-audit strict`. Both orchestrate npm, Node and
+`cargo xtask check --dependency-audit strict`. Both orchestrate npm, Node, and
 Rust commands from the workspace root and include:
 
 - a live audit of all workspace dependency categories: baseline mode fails on
   new issues; strict mode fails on every uncovered Low-or-higher advisory or
   invalid exception; both fail on audit errors. Mode selection and reviewed
   path exceptions follow [dependency security](./dependency-security.md);
-- formatting and lint checks;
-- TypeScript typechecking with no unexplained source exclusions;
-- unit and integration tests with a 100% pass rate;
-- production build and declaration generation;
-- an example `check` that validates compilation, compares disk only when the
-  whole generated tree is tracked, and rejects partly tracked output;
-- package-file inspection with `npm pack --dry-run --json`;
-- packed-tarball installs in clean ESM, NodeNext, and themed consumers;
-- a strict production-dependency audit of the freshly resolved packed ESM
-  consumer, with no workspace audit exceptions;
-- local-npx and clean-cache npx-style execution from the packed artifact;
-- consumer exports from the installed CLI, including custom configs/bases,
-  cross-platform renderers, registered pages, and the compiled static client
-  graph;
-- installed `publish` uploads with and without comparisons to a local receiver,
-  inspecting the gzip tarball, documented metadata and exact exported bytes;
-- source-tree ESM, declaration, CLI, workspace-resolution, server, Review, and
-  watched-runtime regressions;
-- Playwright Browse and Review regressions using Chromium, including isolated
-  exact-file exports after source removal and the actual Cloudflare runtime; and
-- Rust formatting, Clippy and tests, plus repository-wide changed-source and
-  Rust file-length audits.
+- Prettier and ESLint;
+- the file-length audits and the export ratchets;
+- Rust formatting, workspace Clippy with warnings denied, and the Rust tests of
+  every crate, which cover discovery, rendering, comparison, Serve, the static
+  build, and publish against fixtures and the captured reference scenarios;
+- the viewer typecheck and the Node tests of the viewer and the tooling, with a
+  100% pass rate; and
+- Playwright Browse and Review regressions in Chromium against `mokly serve` of
+  the example catalogue, with zero retries.
 
 Tests that mutate files use isolated temporary directories and clean up child
-processes. Package smokes execute the packed artifact, not the source tree or a
-workspace symlink. Smoke checks read protocol documents and protocol fixtures
-from the installed package, not from the source tree; the packed NodeNext
-consumer type-checks the renderer contract that its installed
-`mokly-rendering.md` declares. Historical cross-repository parity audits are
-release evidence rather than recurring CI dependencies on other repositories.
-The independent suite and shard commands, including their complete command
-mapping and fail-closed inventory evidence, are defined by the
-[CI verification contract](./ci-verification.md). Selected suites and shards are
-partial checks; the unqualified command remains the complete release gate. The
-release workflow's `complete` verification mode always runs the local gate.
-It runs in GitHub Actions, where `GITHUB_ACTIONS=true` forbids the remote
-executor under the [remote verification contract](./remote-verification.md).
-Its default `evidence` mode may instead consume a validated aggregate that proves
-the same tree under the
+processes, including sidecars. The suite and shard commands, their complete
+command mapping, and the fail-closed inventory evidence are defined by the
+[CI verification contract](./ci-verification.md). Selected suites and shards
+are partial checks; the unqualified command is the complete release gate. The
+release workflow's `complete` verification mode always runs the local gate. It
+runs in GitHub Actions, where `GITHUB_ACTIONS=true` forbids the remote executor
+under the [remote verification contract](./remote-verification.md). Its default
+`evidence` mode may instead consume a validated aggregate that proves the same
+tree under the
 [release verification evidence contract](./npm-release-evidence.md).
 
 Browser assertions that depend on a navigated preview's layout wait for the
-expected frame URL and complete document state together, not only the outer
-Browse URL or an iframe `src` attribute. Delayed-stylesheet regressions exercise
-this boundary while retaining strict single-preview and control-state checks.
-The shared browser example waits for initial `ready` or `unavailable` Changes
-before opening test pages; completing Usage is not final publication. Loading,
-watch-update and startup-performance tests keep their independent fixtures and
-must continue to exercise pending states and command-to-preview timings.
+expected frame URL and the complete document state together, not only the
+outer Browse URL or an iframe `src` attribute. Delayed-stylesheet regressions
+exercise this boundary while keeping strict single-preview and control-state
+checks. The shared browser example waits for initial `ready` or `unavailable`
+Changes before opening test pages; completing Usage is not final publication.
+Loading, watch-update, and startup tests keep their independent fixtures and
+exercise pending states and command-to-preview timings under the
+[test timing contract](./ci-test-timing.md).
 
 ## Continuous Integration
 
@@ -140,8 +140,8 @@ timeouts, and stable branch-rule status follow the
 [CI workflow graph contract](./ci-workflow.md). Suite ownership and report
 completeness follow the [CI verification contract](./ci-verification.md).
 Release publishing accepts only the dual-runtime profile under the
-[release verification evidence contract](./npm-release-evidence.md).
-The [CI verification contract](./ci-verification-security.md#dependency-cache-and-security)
+[release verification evidence contract](./npm-release-evidence.md). The
+[dependency cache and security contract](./ci-verification-security.md#dependency-cache-and-security)
 owns cache inputs and install guarantees; the
 [CI workflow graph contract](./ci-workflow.md) owns checkout history.
 

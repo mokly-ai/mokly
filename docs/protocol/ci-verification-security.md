@@ -1,5 +1,7 @@
 # CI Verification: Dependency Cache And Security
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [CI Verification](./ci-verification.md).
 
 ## Dependency Cache And Security
@@ -23,16 +25,15 @@ unchanged exact-path, UTC expiry, and 31-day rules in
 The [update pull request workflow](./dependency-audit-update-pr.md) handles
 scheduled findings and exception issues. Operational failures still fail the
 run. Updates disable lifecycle scripts and omit API tokens from child processes.
-Every selected package-runtime job also preserves the
-separate production audit of the freshly resolved ESM consumer, which is outside
-the workspace lockfile, overrides, and audit exceptions; it stays strict.
-The release profile proves it on both
-runtimes. Intentionally isolated clean-cache consumer tests keep private empty
+The release workflow's clean-consumer smoke keeps the separate strict
+production audit of the freshly resolved packed CLI consumer, which is outside
+the workspace lockfile, overrides, and audit exceptions.
+Intentionally isolated clean-cache consumer tests keep private empty
 npm caches. Release publishing retains its uncached, OIDC-scoped boundary and
 exact-artifact checks.
 
-Fixture ownership, test concurrency, failure cleanup, unit shard balance and
-scenario grouping, browser shard balance, and acceptance measurement follow the
+Fixture ownership, test concurrency, failure cleanup, browser shard balance,
+and acceptance measurement follow the
 separate [suite evidence contract](./ci-suite-evidence.md).
 
 ## Testbox Key And Secret Boundary

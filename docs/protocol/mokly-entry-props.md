@@ -87,15 +87,14 @@ is the schema, and props it rejects fail.
 
 | Kind                   | Render                                                                                                                                                        | Props                                                                                                                                                                                     |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| React screen           | `render(props)`, or `mobile(props)` and `desktop(props)`, in `defineScreen`                                                                                   | `propSchema`, `props`, `variants`, and `controls` in the input                                                                                                                            |
+| React screen           | `render(props)` in `defineScreen`                                                                                                                             | `propSchema`, `props`, `variants`, and `controls` in the input                                                                                                                            |
 | React component        | `render(props)` in `defineComponent`                                                                                                                          | `propSchema` under the profile, and optional `slots`, `controls`, `props`, and `variants`                                                                                                 |
 | HTML screen            | the body, in the [template language](./mokly-html-screens.md#screen-body) of the HTML screens contract                                                        | front matter `propSchema`, `props`, and `variants`                                                                                                                                        |
 | HTML component         | the body, in the same template language and component element rules, with slot placeholders, under the [HTML components contract](./mokly-html-components.md) | front matter `propSchema`, `props`, and `variants`                                                                                                                                        |
 | Storybook stories file | the meta's component, through the [render sidecar](./mokly-sidecar.md#storybook)                                                                              | the meta's `args` are the props, the schema is inferred, `argTypes` enrich the derived controls, and each story is a variant whose slug is its export name and whose props are its `args` |
 
-A `defineScreen` input with `mobile` and `desktop` React nodes is a render
-that ignores its props, so a screen without `props` and without `variants`
-changes nothing. A React screen variant has no `mobile` or `desktop` of its
+A screen without `props` and without `variants` renders once per view with
+the empty map. A React screen variant has no `mobile` or `desktop` of its
 own; a state such as empty, error, or loading is a conditional inside the
 render. An HTML screen variant shares the body; it changes what the body shows
 through `$name` references, `{{name}}` substitution, and `mokly-if`, and a
@@ -144,6 +143,6 @@ generated TypeScript types of the model crate replace it.
 - [HTML screens, pages, and use cases](./mokly-html-screens.md)
 - [HTML components](./mokly-html-components.md)
 - [Registered components](./mokly-components.md)
-- [Component prop schema of the frozen backend](./mokly-component-props.md)
+- [Component prop schema](./mokly-component-props.md)
 - [Render sidecar](./mokly-sidecar.md)
 - [Public catalogue read model](./mokly-catalogue.md)

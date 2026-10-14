@@ -4,25 +4,30 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Public Authoring API
 
-The root package export supplies typed, documented authoring helpers:
+Mokly has two authoring forms. HTML screens, HTML components, HTML pages, and
+YAML use cases are files with front matter under the
+[HTML screens contract](./mokly-html-screens.md) and need no JavaScript.
+Markdown documents are files under the
+[document contract](./mokly-documents.md) with no helper at all. The
+JavaScript form is the root export of `@mokly/mokly`, which supplies typed,
+documented helpers:
 
 - `defineConfig`;
 - `defineScreen`, `definePage`, `defineUseCase`, and `defineFolder`;
-- `defineComponent` and its schema-derived props, variants, and control types;
-- `componentStylesheets`, the shared configured-stylesheet position marker;
+- `defineComponent` and its schema-derived props, variant, and control types;
+- `componentStylesheets`, the configured-stylesheet position marker;
 - `mockLink` and `MockLink` for path-addressed links;
 - `ReviewIgnore`, `ReviewIgnoreScope`, and `reviewMaterialKey`.
 
 The root also exports the input and definition types `EntryInput`,
-`ScreenInput`, `ScreenVariantInput`, `ScreenDefinition`, `PageInput`,
+`ScreenInput`, `ScreenVariantInput`, `ScreenDefinition`, `ComponentInput`,
+`ComponentVariantInput`, `ComponentDefinition`, `PageInput`,
 `PageDefinition`, `UseCaseInput`, `UseCaseStep`, `UseCaseDefinition`,
-`FolderInput`, `FolderDefinition`, and `RegistryDefinition`, plus the
-configuration and renderer interfaces.
-`ColorScheme` is exactly `"dark" | "light"`; `Viewport` is
-`"desktop" | "mobile"`. There is no nested tree API: `defineRoot`, `folder`,
-nested `screen`, nested `page`, and their input types do not exist. Folders
-come from paths, and Markdown documents come from files under the
-[document contract](./mokly-documents.md) with no helper at all.
+`FolderInput`, `FolderDefinition`, and `PropSchema`, plus the configuration
+and renderer interfaces. `ColorScheme` is exactly `"dark" | "light"`;
+`Viewport` is `"desktop" | "mobile"`. There is no nested tree API:
+`defineRoot`, `folder`, nested `screen`, nested `page`, and their input types
+do not exist. Folders come from paths and `_folder.json` records.
 
 ## Identity
 
@@ -37,7 +42,7 @@ no `navPath`. The common input boundary is:
 
 ```ts
 interface EntryInput {
-  dependencies?: never;
+  dependencies?: readonly string[];
   description: string;
   movedFrom?: string;
   path?: string;
@@ -50,37 +55,44 @@ interface EntryInput {
 ```
 
 Each entry provides a title, description and related docs. Changes compares
-output, rendered resources and reviewable metadata, pairs moved entries, and
-propagates directly changed screens to their flows under the
+rendered output, rendered resources and reviewable metadata, pairs moved
+entries, and propagates directly changed screens to their flows under the
 [Changes contract](./mokly-changes.md). Source paths supply attribution and
 protection only. Components declare public CSS through
 [component stylesheets](./mokly-component-stylesheets.md).
 
 ## Entry Kinds
 
-A screen owns one mobile React node and one desktop React node and may
-provide an address-bar label and flow membership. A use case owns ordered
-references to existing screens and never defines a screen inline. A page owns
-one complete HTML document from a synchronous render callback, with no device
-or colour variants, under the [page contract](./mokly-pages.md). A document is
-a Markdown file. A component registers a reusable adapter with typed props
-under the [component contract](./mokly-components.md); it returns a renderable
-`Component` facade beside its entries.
+A screen is a render over props. `defineScreen` takes `render(props)`, which
+returns the React node of one view, an optional `propSchema` under the
+[prop schema profile](./mokly-entry-props.md#prop-schema-profile), the
+screen's own `props`, optional `variants`, and optional `controls`. The
+[sidecar](./mokly-sidecar.md) renders the node once per viewport and colour
+scheme inside the configured renderer module, which receives both axes; a
+screen has no `mobile` or `desktop` node, and a state such as empty or
+loading is a conditional on its props. A screen may also provide an
+address-bar label and flow membership. A use case owns ordered references to
+existing screens and never defines a screen inline. A page owns one complete
+HTML document from a synchronous render callback, with no device or colour
+variants, under the [page contract](./mokly-pages.md). A document is a
+Markdown file. A component registers a render adapter with a prop schema
+under the [component contract](./mokly-components.md); its definition
+carries a typed `Component` wrapper for React screens.
 
-A screen or component may declare `variants`. Each variant declares a `slug`
-and flattens into a complete entry of the parent's kind whose path is the
-parent's final path plus that slug. A variant has no `path` input; the relationship is derived from the declaration
-and recorded as `variantOf`, never authored. The
-[variant contract](./mokly-variants.md) owns inheritance, validation, and the
-return shape of `defineScreen`, which is one definition without `variants`
-and a parent-first array with them. A screen variant inherits the parent's
-address, colour schemes, related docs, and tags when it omits
-them; its flow membership never inherits.
+A screen or component may declare `variants`. Each variant declares a `slug`,
+a `title`, and `props` that replace top-level keys of the entry's props and
+never deep merge, under the [entry props contract](./mokly-entry-props.md).
+It flattens into a complete entry of the parent's kind whose path is the
+parent's final path plus that slug. A variant has no `path` input; the
+relationship is derived and recorded as `variantOf`, never authored. The
+[variant contract](./mokly-variants.md) owns metadata inheritance and
+validation. `defineScreen` and `defineComponent` each return one definition,
+with or without variants.
 
-`defineScreen` inputs may declare `colorSchemes`. When omitted, a screen
-inherits the catalogue set; `colorSchemes: ["light"]` is the supported opt-out
-from a dark-enabled catalogue. A declaration must be non-empty, duplicate-free,
-include `"light"`, and be a subset of the config.
+`defineScreen` and `defineComponent` inputs may declare `colorSchemes`. When
+omitted, the entry inherits the catalogue set; `colorSchemes: ["light"]` is
+the supported opt-out from a dark-enabled catalogue. A declaration must be
+non-empty, duplicate-free, include `"light"`, and be a subset of the config.
 
 `defineScreen`, `definePage`, `defineUseCase`, and `defineComponent` inputs,
 and document front matter, may declare `tags`, a classification list whose
@@ -91,58 +103,49 @@ sorted. Tags are optional catalogue vocabulary, not a second hierarchy.
 The TypeScript input types define the allowed fields. Unknown keys always
 produce a registry `invalid-field` violation with the exact text
 `unknown field <field>`, attributed to the entry's source. Generic
-`defineScreen` inference can accept extra top-level keys so wrappers retain
+`defineScreen` inference can accept extra top-level keys so wrappers keep
 precise return types; use an explicit `ScreenInput` annotation or
-`satisfies ScreenInput` to check those keys statically. Fresh variant literals in direct calls
-retain excess-key checks. Runtime validation applies to every input, including
-structurally typed variables and untyped callers.
+`satisfies ScreenInput` to check those keys statically. Fresh variant
+literals in direct calls keep excess-key checks. Runtime validation applies
+to every input, including structurally typed variables and untyped callers.
 Unknown flow-step fields use the same code and the text
-`step #<n>: unknown field <field>`, with one-based step numbers.
-Folder inputs use `invalid-folder` with the same `unknown field <field>` reason
+`step #<n>: unknown field <field>`, with one-based step numbers. Folder
+inputs use `invalid-folder` with the same `unknown field <field>` reason
 under the folder-record schema. Component variants use the same general
 `invalid-field` rule after their parent's final path is resolved.
 
 ## Paths And URLs
 
 Authors never write a route. The path determines every entry, view,
-comparison, and preview file under the
+comparison, and document route under the
 [artifact path contract](./mokly-artifact-paths.md), and the catalogue URL is
 `/view/<path>/`. Wire formats carry paths and view axes rather than file
 names. Path segments satisfy the
-[segment grammar](./mokly-paths.md#segment-grammar), so Mokly writes them into
-URLs verbatim. A configured static-asset segment starts with an ASCII letter,
-digit, underscore, or hyphen, then uses only URL-unreserved ASCII letters, digits, `.`, `_`, `~`,
-or `-`; its filename stem must not be a Windows device name.
-
-All entry, folder and variant inputs reject removed `dependencies`
-values through `dependencies?: never`; component inputs also reject removed
-`ownedDependencies` values through `ownedDependencies?: never`. This includes
-spread objects. An explicit `undefined` is rejected only when the consumer
-enables `exactOptionalPropertyTypes`. Without it, runtime collection still
-warns on the present key and ignores it. No removed field inherits or supplies
-evidence. See [build warnings](./mokly-build-warnings.md).
-
-`defineScreen` inputs may declare `colorSchemes`. When
-omitted, a screen inherits the catalogue set; `colorSchemes: ["light"]` is the
-supported opt-out from a dark-enabled catalogue. A declaration must be
-non-empty, duplicate-free, include `"light"`, and be a subset of the config.
+[segment grammar](./mokly-paths.md#segment-grammar), so Mokly writes them
+into URLs verbatim. A configured static-asset segment starts with an ASCII
+letter, digit, underscore, or hyphen, then uses only URL-unreserved ASCII
+letters, digits, `.`, `_`, `~`, or `-`; its filename stem must not be a
+Windows device name.
 
 ## Module Attribution And Discovery
 
 Imports of `@mokly/mokly` from any repository-owned module bind the authoring
-helpers to that importing module. A module is repository-owned when its real
-path lies inside `repoRoot` and outside `node_modules`, `.mokly-cache/`, and
-Mokly's own package runtime; installed packages receive the plain, unattributed
-API and cannot self-attribute. Definitions created at module evaluation or
-later through a shared helper factory therefore retain the defining module's
-repo-relative source path without process-global attribution state. A
-definition created in a helper beside a product component is attributed to
-that helper, not to the entry module that exports it, and the helper need not
-match a root.
+helpers to that importing module when the sidecar bundles the module. A
+module is repository-owned when its real path lies inside `repoRoot` and
+outside `node_modules` and Mokly's own package runtime; installed packages
+receive the plain, unattributed API and cannot self-attribute. Definitions
+created at module evaluation or later through a shared helper factory
+therefore keep the defining module's repo-relative source path without
+process-global attribution state. A definition created in a helper beside a
+product component is attributed to that helper, not to the entry module that
+exports it, and the helper need not match a root.
 
 The configured [roots](./mokly-paths.md#roots) define which files Mokly
-reads. A matched `.md` file is a document; every other matched file is an
-entry module whose exports are collected under the
+reads. A matched `.md` file is a document; a matched `.screen.html`,
+`.component.html`, `.page.html`, or `.use-case.yaml` file is an HTML or YAML
+kind; a matched stories file is a component entry under the
+[sidecar contract](./mokly-sidecar.md#storybook); every other matched file is
+an entry module whose exports are collected under the
 [entry module contract](./mokly-entry-modules.md). `.mockup.ts` and
 `.mockup.tsx` are the recommended module names because the default root
 pattern selects them; a root may select another shape.
@@ -153,16 +156,16 @@ A rendered inner scroll region may carry `data-mokly-scroll` to keep its
 identity when a comparison edit moves the panel or rewrites its content. A
 normal value uses the kebab-case grammar `^[a-z0-9]+(?:-[a-z0-9]+)*$`, and the
 same exact value belongs on that region in both versions. The value `off` is
-reserved to keep that region independent. Duplicate names in one generated
+reserved to keep that region independent. Duplicate names in one rendered
 document are ambiguous; a name on a non-scrollable element is ignored. The
 [comparison region pairing contract](./mokly-comparison-region-pairing.md#counterpart-algorithm)
 defines fallback matching when a valid name is absent on either side.
 
-This is consumer metadata in the rendered document, not a TypeScript authoring
-field or Mokly-owned build marker. Mokly does not validate, rewrite, or remove
-it; the consumer renderer owns that metadata. Viewer-owned shell elements also use the name
-outside pane documents for history restoration; the separate DOM scopes keep
-those meanings independent.
+This is consumer metadata in the rendered document, not a TypeScript
+authoring field or Mokly-owned marker. Mokly does not validate, rewrite, or
+remove it; the consumer renderer owns that metadata. Viewer-owned shell
+elements also use the name outside pane documents for history restoration;
+the separate DOM scopes keep those meanings independent.
 
 ## Links
 
@@ -173,8 +176,8 @@ Authors address another entry with `mockLink(to, fragment?)` or
 - a path relative to the linking entry's folder, starting with `./` or
   `../`, such as `./invoice`;
 - a definition reference: the imported export of another entry module, which
-  Mokly resolves to that entry's path at build time. A parent-first definition
-  array or a component registration refers to its parent entry.
+  Mokly resolves to that entry's path when it renders. A component definition
+  refers to its parent entry.
 
 Relative paths use one shared base rule for links and flow references. An
 ordinary entry uses the parent of its path; an index entry uses its own path;
@@ -183,49 +186,41 @@ by these same rules. For example, an invoice and its variants link from the
 same billing folder, while a folder index links from the folder it describes.
 
 Complete raw `mock:<path>[#fragment]` values, with the same two string forms
-of `<path>`, may also appear in `href` or `data-nav-href`. The fragment is a
-bare HTML id without `#` or percent-encoding. Both helpers immediately apply
-the path grammar and reject fragment, percent-encoded, or `mock:` syntax in
-the `to` value; only the separate fragment input or the complete raw logical
-attribute form may carry a fragment. The shared runtime predicates reject
-non-string, non-definition values before regular-expression evaluation, so
-untyped JavaScript callers cannot rely on implicit coercion. A link may name
-any entry, including a variant or a document. A link to a path that names no
-entry fails the build under the
+of `<path>`, may also appear in `href` or `data-nav-href`, in React renders
+and in HTML bodies alike under the
+[HTML screens contract](./mokly-html-screens.md#links-and-markers). The
+fragment is a bare HTML id without `#` or percent-encoding. Both helpers
+immediately apply the path grammar and reject fragment, percent-encoded, or
+`mock:` syntax in the `to` value; only the separate fragment input or the
+complete raw logical attribute form may carry a fragment. The shared runtime
+predicates reject non-string, non-definition values before
+regular-expression evaluation, so untyped JavaScript callers cannot rely on
+implicit coercion. A link may name any entry, including a variant or a
+document. A link to a path that names no entry fails the build under the
 [path diagnostics](./mokly-paths.md#diagnostics), naming the new path when
 the target moved.
 
-Fragment links must target a generated fragment or public static asset with a
-relative URL; root-absolute links are rejected as non-portable. Generated
-documents retain a portable relative target plus stable marker metadata on
+Fragment links must target a rendered document or public static asset with a
+relative URL; root-absolute links are rejected as non-portable. Rendered
+documents carry a portable relative target plus stable marker metadata on
 native HTML/SVG links so Browse can open the canonical catalogue page without
 changing standalone or Review behavior. Metadata-only references use
 `data-nav-href`, and resource elements must keep real resource URLs. A
 document with an activatable logical `href` must not contain `<base href>`;
-the builder rejects that combination during final validation while continuing to support `<base target>`. The complete
-behavior is defined by the [catalogue navigation contract](./mokly-navigation.md).
-`MockLink asChild` explicitly adapts one consumer-styled control into that
-native-link contract during static generation under
-[Styled catalogue link controls](./mokly-link-controls.md). Local resource
-URLs in HTML source attributes, `srcset`, inline/style-block CSS, and
-transitively referenced HTML/CSS must likewise resolve to regular, unprotected
-files in the referenced closure beneath `mockupsDir`. Generated links target
-the accepted in-memory `mokly-generated/` tree, never stale on-disk output.
-Closure collection and href computation follow
-generated output.
+the core rejects that combination during final validation while continuing
+to support `<base target>`. The complete behavior is defined by the
+[catalogue navigation contract](./mokly-navigation.md). `MockLink asChild`
+explicitly adapts one consumer-styled control into that native-link contract
+under [Styled catalogue link controls](./mokly-link-controls.md). Local
+resource URLs in HTML source attributes, `srcset`, inline/style-block CSS,
+and transitively referenced HTML/CSS must likewise resolve to regular,
+unprotected files in the referenced closure of the
+[public closure policy](./mokly-public-closure.md). Rewritten
+links target the served or built documents under the
+`static/mokly-generated/` route namespace of the
+[artifact path contract](./mokly-artifact-paths.md); nothing on disk in the
+repository is read back.
 
-All public exports ship ESM JavaScript and declarations usable by NodeNext and
-bundler TypeScript resolution. The package export map and packed-tarball tests
-define the public boundary; consumers must not import `dist` internals.
-
-## Removed Input Warnings
-
-A present removed `dependencies` key emits `removed-dependencies` with an entry
-subject. A present removed `ownedDependencies` key emits
-`removed-owned-dependencies` with a component subject. Variants name their own
-complete path. Their messages are exactly:
-
-```text
-dependencies has been removed; ignoring it. Delete the field.
-ownedDependencies has been removed; ignoring it. Delete the field.
-```
+All public exports ship ESM JavaScript and declarations usable by NodeNext
+and bundler TypeScript resolution. The package export map defines the public
+boundary; consumers must not import `dist` internals.

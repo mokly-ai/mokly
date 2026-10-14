@@ -1,7 +1,7 @@
 # CI Test Timing
 
 Required tests check correctness without depending on machine speed. This
-contract applies to the unit, browser, and hydration suites under `tests/`.
+contract applies to the Node tests and the browser specs under `tests/`.
 It supplements [CI suite evidence](./ci-suite-evidence.md).
 
 ## Assertion Rule
@@ -175,7 +175,7 @@ can enforce millisecond thresholds. `scripts/large/benchmark.mjs` keeps
 ## ESLint Guard
 
 Apply `no-restricted-syntax` in `eslint.config.js` to every JavaScript and
-TypeScript file under `tests/`, including browser and hydration specs.
+TypeScript file under `tests/`, including browser specs.
 The only exempt file is `tests/helpers/durations.ts`. Files under `src/`
 and `scripts/` are outside the guard.
 

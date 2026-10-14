@@ -11,7 +11,7 @@ style, and a tooltip. Only the active icon has the sage selected treatment.
 
 Details contains the description, secondary source/reference metadata, and any
 comparison evidence. Comparison facts never occupy a separate canvas disclosure
-or header banner. The panel remains available on Removed screen stages even
+or header banner. The panel stays available on Removed screen stages even
 though those screens expose no comparison modes.
 Evidence availability, comparison-mode eligibility, and the initially open
 inspector panel are independent authored states. In particular, the Added screen
@@ -32,8 +32,8 @@ active disclosure and performs the same action. When closed, no icon is selected
 and no panel content occupies layout space. Enter and Space activate the focused
 icon; normal Tab navigation reaches icons and controls. No script is required
 for the mockups' disclosure behavior. It must also work in sandboxed Browse
-frames and directly from disk. The runtime implementation additionally supports
-Escape and focus return as specified by the explorer contract.
+frames and directly from disk. The runtime also supports Escape and focus
+return, as the explorer contract specifies.
 
 Both layouts use a bounded, scrollable panel inside a fixed shell. Desktop uses
 the navigation divider's centered short-line grip to resize the inspector.
@@ -41,7 +41,7 @@ Mobile uses a full-workspace-width rounded sheet over the preview with an
 iOS-style grabber; the inspector owns its border, corners and shadow while its
 dock owns placement and height. The mockup grabber toggles compact/expanded
 heights without scripts. Closing leaves the icon strip at the bottom. The
-enclosing page and main column do not scroll. The icon strip remains separate
+enclosing page and main column do not scroll. The icon strip stays separate
 from scrolling panel content. The
 [workspace design](./mokly-component-workspace-design.md) owns the exact pane,
 resize, and grouped view-control behavior.
@@ -53,7 +53,7 @@ Components panel. The canonical component page opens Details.
 
 Artboards contain no navigation footer for browsing mockup states. The existing
 Design catalogue hierarchy links every owning page and its child galleries.
-Saved-variant, usage, component, and instance links remain inside the depicted
+Saved-variant, usage, component, and instance links stay inside the depicted
 product where they belong. Every `aria-current="page"` link must point to the
 rendered artboard's path, even when multiple states share a component/screen
 title. Selection within a component or tree can use non-page current-item
@@ -81,5 +81,5 @@ desktop screen component. Each entry's files derive from its path under the
 Browser tests open each icon, switch and close panels, exercise keyboard focus,
 verify that closed panels reserve no space, and inspect both viewport layouts.
 Catalogue checks cover all owning entries and every current-page destination.
-Regression tests verify explicit Help hint source metadata and the removal of
+Regression tests verify explicit Help hint source metadata and the absence of
 footer navigation. Preserve component highlight geometry and attribution checks.

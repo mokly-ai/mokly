@@ -4,66 +4,63 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Product Contract
 
-A registered component owns a catalogue page, variant entries, and comparisons.
-Its actual rendered instances connect that page to consuming screens and other
-components. Registration supplies the identity used by previews, automatic
-change attribution, the shared icon inspector, and highlighting; consumers do not
-maintain separate usage lists or per-screen Review-ignore hashes.
+A registered component owns a catalogue page, optional variant entries, and
+comparisons. Its rendered instances connect that page to consuming screens
+and other components. Registration supplies the identity used by previews,
+automatic change attribution, the shared icon inspector, and highlighting;
+consumers do not maintain separate usage lists or per-screen Review-ignore
+hashes.
 
 A component-only change appears in Changes as a component entry. Consuming
 screens are linked under Affected screens and do not enter Changes or increase
 its count unless they have an independent screen change. See the
 [attribution contract](./mokly-component-changes.md).
 
+A component is written in one of two forms. An HTML component is a
+`.component.html` file under the
+[HTML components contract](./mokly-html-components.md). A JavaScript
+component is a `defineComponent` definition, defined below. Both join one
+registry and render under one model: a render over props, with a prop schema,
+the component's own props, and optional variants that are props sets, under
+the [entry props contract](./mokly-entry-props.md).
+
 ## Authoring Boundary
 
-The root package exports `defineComponent`. It returns `entries`, the parent
-entry followed by one entry per variant in authored order, beside a typed
-`Component` wrapper for composition. Exporting the returned object, or its
-`entries`, registers them under the
-[entry module contract](./mokly-entry-modules.md). The wrapper
-uses the consumer's real component through a render adapter. A consumer can
-re-export that wrapper once from its mockup component module and use ordinary
-JSX throughout its screens.
-
-Register an adapter and its saved examples with the public API:
+The root package exports `defineComponent`. It returns one definition, which
+an entry module exports to register it under the
+[entry module contract](./mokly-entry-modules.md). The definition carries a
+typed `Component` wrapper that renders the consumer's real component through
+the adapter; a consumer re-exports that wrapper once from its mockup
+component module and uses ordinary JSX throughout its React screens.
 
 ```tsx
 // src/components/action/index.mockup.tsx
 const action = defineComponent({
+  element: "app-action",
   title: "Action",
   description: "The primary action for a task.",
   stylesheets: ["components/action.css"],
   relatedDocs: [],
   propSchema: {
-    kind: "object",
+    type: "object",
+    additionalProperties: false,
+    required: ["label"],
     properties: {
-      label: { schema: { kind: "string" } },
-      disabled: { schema: { kind: "boolean" } },
+      label: { type: "string", minLength: 1 },
+      disabled: { type: "boolean" },
     },
-  },
+  } as const,
+  props: { label: "Continue" },
+  slots: ["children"],
   render: (props) => <Action disabled={props.disabled}>{props.label}</Action>,
   variants: [
-    {
-      slug: "default",
-      title: "Default",
-      props: { label: "Continue", disabled: false },
-    },
-    {
-      slug: "disabled",
-      title: "Disabled",
-      props: { label: "Continue", disabled: true },
-    },
+    { slug: "disabled", title: "Disabled", props: { disabled: true } },
   ],
-  controls: {
-    label: { kind: "text" },
-    disabled: { kind: "boolean" },
-  },
 });
 
 export default action;
 
-// A screen uses the same registered render adapter.
+// A React screen uses the same registered render adapter.
 const submit = (
   <action.Component
     moklyInstance="submit"
@@ -73,126 +70,158 @@ const submit = (
 );
 ```
 
-Registry preparation repeats the authoring helper's component validation on
-every exported definition, including forged objects and definitions mutated
-after registration. It snapshots schemas, controls and saved data before
-rendering. Invalid exports fail with source-attributed component diagnostics
-before output generation; helper branding alone is not validation.
+The input includes the common entry metadata, `propSchema`, and `render`.
+`element`, `props`, `variants`, `tags`, `colorSchemes`, `controls`, `slots`,
+and `stylesheets` are optional. Path, tag, and colour-scheme validation
+applies; the parent's slug defaults to the module's file name, so the example
+above is `components/action` under a root with the prefix `components`.
 
-The input includes the common entry metadata, `propSchema`, `render`, and a
-nonempty ordered `variants` list. `tags`, `colorSchemes`, `controls`, `slots`,
-and `stylesheets` are optional. Path, tag, and
-color-scheme validation applies; the parent's slug defaults to the module's
-file name, so the example above is `components/action` under a root with the
-prefix `components`, and its file names follow the
-[artifact path contract](./mokly-artifact-paths.md). Each variant contains a
-slug, title, complete typed props, and an optional description. An authored description must be nonempty and becomes the variant
-entry's description; when omitted, the flattened entry copies the parent's
-description. `defineComponent` retains unknown variant fields for general `invalid-field` validation after
-the final parent path is known; the diagnostic follows the
-[variant contract](./mokly-variants.md#authoring). A variant's path is the
-parent's path plus its slug, such as `components/action/default`, and each
-variant flattens into its own `kind: "component"` entry carrying the derived
-`variantOf`, `props`, and `suppliedSlots` and inheriting the parent's
-`colorSchemes`, `relatedDocs`, and `tags`, as the
-[variant contract](./mokly-variants.md) defines. The parent entry has no
-`variants` field and no views; its page shows its first variant entry, which
-is the default. There is no implicit merge between variants. Public component CSS is declared through `stylesheets` and linked under the [stylesheet contract](./mokly-component-stylesheets.md); it is absent from the renderer's `input.entry`.
-Repeating one real stylesheet links it once with a warning; renderer ownership
-for every stylesheet is ignored with a warning. CSS Changes follows
-[own-page rule matches](./mokly-css-attribution-rules.md), not file owners.
+- `propSchema` is a JSON Schema object under the
+  [prop schema profile](./mokly-entry-props.md#prop-schema-profile); the
+  [component prop schema contract](./mokly-component-props.md) defines the
+  derived types, the plain-data rule, and the wire form. There is no
+  inference for a component: the schema is declared.
+- `props` are the component's own prop values. They default to the empty map
+  and must satisfy the schema, so a schema with a `required` prop needs
+  `props`. The component's page renders them first.
+- `variants` each declare `slug`, `title`, and `props` that replace top-level
+  keys of the component's own props; `description`, `tags`, `movedFrom`, and
+  `slots` are optional. A variant's `slots` maps declared slot names to
+  React nodes shown on its page. The merged props must satisfy the schema.
+  Each variant flattens into a `kind: "component"` entry at the parent's path
+  plus the slug with `variantOf`, `props`, and `suppliedSlots`, inheriting the
+  parent's `colorSchemes`, `relatedDocs`, and `tags`, under the
+  [variant contract](./mokly-variants.md#authoring). Unknown variant fields
+  fail the general `invalid-field` rule after the parent's path is known.
+- `render(props, { viewport, colorScheme })` receives the validated props
+  and may choose a viewport-specific consumer component. Theme providers and
+  styling are consumer-owned; the configured renderer module wraps the
+  render.
+- `controls` replaces the controls derived from the schema under the
+  [controls contract](./mokly-component-controls.md).
+- `slots` names React-node props such as `children`; `children` must be
+  declared to accept children. Slot content renders under the caller's
+  ownership, even when the receiving component places it inside its markup,
+  so its rendered content and nested registered instances stay independently
+  comparable. A component cannot absorb a screen's primary content by
+  accepting it as a slot.
+- `stylesheets` declares public CSS under the
+  [stylesheet contract](./mokly-component-stylesheets.md).
 
-The required [prop schema](./mokly-component-props.md) determines the adapter,
-wrapper, and variant data types. Its shared runtime validator checks typed and
-untyped calls, recorded props, and local controls; render annotations and saved
-variants do not infer or override that schema. The adapter receives
-`render(props, { viewport, colorScheme })` and may choose a
-viewport-specific consumer component. Theme providers and styling remain
-consumer-owned.
-`RenderInput.entry` is a screen definition or a component variant entry, and
-a component render carries that variant's validated props in `componentProps`;
-both use the configured renderer and one consumer React instance.
-Packed-consumer tests cover this public type.
+Data props are plain data. Adapters expose complex values such as callbacks or
+icons through stable string preset keys and resolve them to actual values in
+consumer code. Changing a preset key is an input change; changing its consumer
+implementation is attributed through changed output or a changed rendered
+resource, not its source path alone. Mokly never fingerprints a callback's
+source or a function's identity. All supplied data props participate in
+material comparison, including props without a control or without visible
+output.
 
-Ordinary inputs are deterministic plain data: strings, booleans, finite
-numbers, null, arrays, and plain objects, with the existing material-key
-handling of undefined values. All supplied data props participate in material
-comparison, including props without a control or without visible output.
-Functions, symbols, cycles, and non-plain objects cannot be silently omitted.
-Adapters expose complex values such as callbacks or icons through stable
-string preset keys and resolve them to actual values in consumer code.
-Mokly never fingerprints a callback's source or a function's identity.
+## Registry
 
-`slots` names React-node props such as `children`. Slot content is rendered
-under the caller's ownership, even when the receiving component places it
-inside its markup. Its rendered content and nested registered instances remain
-independently comparable. A component cannot absorb a screen's primary content
-by accepting it as a slot. Named data presets remain suitable for fixed icons
-or content examples. Changing a preset key is an input change; changing its
-consumer implementation is attributed through changed output or a linked
-owned resource, not its source path alone.
+HTML components and `defineComponent` definitions share one registry. The
+[sidecar](./mokly-sidecar.md#definitions) reports every JavaScript
+definition through `describe`; the Rust core parses the HTML components and
+builds the registry from both before any render starts.
+
+`element` names the custom element that HTML screen and component bodies use
+for the component under the
+[component element rules](./mokly-html-screens.md#component-elements), with
+attributes coerced through the prop schema. It follows the custom element
+name grammar: lowercase ASCII, starts with a letter, contains at least one
+hyphen, and is none of the names the HTML standard reserves. Every `mokly-`
+name is reserved for Mokly. An element name must be unique across HTML and
+JavaScript components; a collision fails registration naming both files. A
+component without `element` is usable only from React through its wrapper.
+Registering an `element` whose schema declares `to`, `fragment`, `slot`,
+`moklyViewport`, or `moklyIf` fails, because those attributes are reserved
+on component elements.
+
+Registration validates every definition with source attribution before any
+output exists: the schema against the profile, the component's own props and
+every variant's merged props against the schema, each control against a
+declared data prop, and the slot names against the data keys. Data keys and
+slot names must be disjoint, and neither may use `moklyInstance`, `key`, or
+`ref`. A `Component` wrapper rendered from a definition that no entry module
+exports fails validation naming the definition; Mokly never registers an
+unreachable component page.
 
 ## Instances And Ownership
 
 `moklyInstance` is wrapper-only kebab-case input, stripped before consumer
-rendering. Its default, scope, stable key, duplicate rules, and sentinels belong
-to [Component Instance Identity](./mokly-instances.md). The
-[usage-record contract](./mokly-component-usage-records.md) owns collector
-records, input versus DOM ownership, repeated ranges, per-view separation, null
-instances, and the rule that only actual rendering establishes usage.
+rendering; `mokly-instance` is its attribute form on a component element in
+an HTML body. Its default, scope, stable key, duplicate rules, and sentinels
+belong to [Component Instance Identity](./mokly-instances.md). Each rendered
+instance is an ownership region of the composed tree under the
+[comparison contract](./mokly-comparison.md#markers): the Rust core attaches
+the region to an HTML component it renders, and reads a sidecar fragment's
+markers into the same regions. Usage derives from those regions, so only
+actual rendering establishes usage; import lists do not. The
+[usage-record contract](./mokly-component-usage-records.md) owns the records,
+input versus rendered ownership, per-view separation, and null instances.
 
 A component's path derives from its file like every entry, and the viewer's
 Components section shows the folders that contain components under the
 [read model tree rule](./mokly-catalogue.md#tree); the documented convention
 is a root with `path: "components"` over the component library. Components
-have derived file names, tags, and breadcrumbs from folder titles. Use-case
-steps continue to reference screens only.
-Component-to-component and screen-to-component backlinks are derived from
-usage rather than separately authored relationships.
+have derived tags and breadcrumbs from folder titles. Use-case steps reference
+screens only. Component-to-component and screen-to-component backlinks are
+derived from usage rather than separately authored relationships.
 
-## Generated Artifacts
+## Rendering, Documents, And Read Model
 
-One complete static document is generated for every component variant entry,
-viewport, and effective color scheme. The parent has no views; its page shows
-its first variant. Exact names follow the
-[artifact path contract](./mokly-artifact-paths.md). Output collision,
-source protection, resource validation, generated-tree inventory and transactional-write checks apply.
+From a React screen, the wrapper renders inside the screen's fragment and
+writes the instance markers. From an HTML body, the core renders the
+component through `renderComponent` with the coerced props, the slot
+placeholders, and the enclosing ignore scope, memoized by handle, props,
+viewport, colour scheme, and scope, and grafts the returned fragment with its
+collected styles under the [sidecar contract](./mokly-sidecar.md). The
+component's own page renders its own props first and then each variant, with
+the component as the root instance, at every viewport and effective colour
+scheme, with the configured and declared stylesheets. Every document is kept
+in the render cache; Serve, `build`, and Changes read it there, and nothing
+is written to the repository.
 
-Every current catalogue emits manifest schema v10, including typed component
-parent and variant entries and per-view usage records for screens and component
-variants; no entry stores a route or view path. The
-[manifest schema](./mokly-component-manifest.md) defines every record,
-reference, ordering rule, and validation boundary. Baseline readers accept the
-same current v10 shape without conversion, with availability defined by
-baseline compatibility.
+Read model v7 gives a component entry `propSchema`, `props` in the wire form,
+`slots`, `suppliedSlots`, `controls`, `views`, and `variantOf` exactly on a
+variant, under the [catalogue contract](./mokly-catalogue.md); a parent has
+its own views and an empty `suppliedSlots`. Per-view usage, resource
+evidence, and the workspace lists travel in the entry detail of the
+[shell delivery contract](./mokly-shell-delivery.md#entry-detail).
+Comparison metadata and props contain no timestamps, absolute checkout paths,
+function bodies, or transient control values. Only data props are serialized
+as values; slots serialize ownership references and rendered material, never
+React elements or executable definitions. Inspector values come from the
+recorded props. Source metadata is repository-relative and secondary to the
+preview.
 
-Inert, package-owned DOM markers bind generated ranges to their usage records.
-The collector is scoped to a render, not a process-global mutable registry.
-Markers support nesting, multiple roots, and text without introducing layout
-wrappers. Parsed validation rejects forged, duplicate, overlapping, unmatched,
-or moved records and verifies ownership in final rendered documents.
-The existing flat `ReviewIgnore` marker language remains separate and strict.
+Serve, `build`, watched rebuilds, Changes, and publish use the same registry
+and rendering path. Unregistered components keep ordinary screen rendering
+and Review-ignore behaviour.
 
-Comparison metadata and props contain no timestamps, absolute
-checkout paths, function bodies, or transient controls values. Only data props
-are serialized as values; slots serialize ownership references and rendered
-material, never React elements or executable definitions. Values shown in
-Inspector values come from the generated records. Source metadata is repository-relative
-and remains secondary to the preview.
+## Diagnostics
 
-Build, Check, watched rebuilds, published output, and packed consumers use the
-same registry and rendering pipeline. Unregistered components retain ordinary
-screen rendering and Review-ignore behavior. A referenced wrapper whose entry
-is absent from the exported registry is a validation error.
-Implementations must not silently register an unreachable component page.
+Every code below is a `build-invalid` failure attributed to the module path
+and export name of the definition; a variant failure names the variant slug,
+and a props failure names the property path.
+
+| Code                 | Condition                                                                                          |
+| -------------------- | -------------------------------------------------------------------------------------------------- |
+| `component-schema`   | `propSchema` is absent, is not an object schema, or uses a keyword outside the profile             |
+| `component-props`    | the component's own props or a variant's merged props fail the schema, or a prop is not plain data |
+| `component-element`  | `element` is outside the grammar, reserved, already registered, or declares a reserved prop        |
+| `component-controls` | a control names an undeclared prop or a slot, or its kind does not fit the prop's schema           |
+| `component-slots`    | a slot name repeats a data key, or a slot or data key is `moklyInstance`, `key`, or `ref`          |
+| `invalid-field`      | an unknown input or variant field, with the text `unknown field <field>`                           |
 
 ## Related Contracts
 
+- [Entry props and variants](./mokly-entry-props.md)
+- [HTML components](./mokly-html-components.md)
 - [Component change attribution](./mokly-component-changes.md)
 - [Component stylesheet declaration and linking](./mokly-component-stylesheets.md)
-- [Runtime prop schema and codec](./mokly-component-props.md)
-- [Manifest schema](./mokly-component-manifest.md)
-- [Comparison schema](./mokly-component-review.md)
+- [Component prop schema and codec](./mokly-component-props.md)
 - [Component pages and screen inspection](./mokly-component-explorer.md)
 - [Component controls](./mokly-component-controls.md)
-- [Build pipeline](../architecture/build-pipeline.md)
+- [Render sidecar](./mokly-sidecar.md)
+- [Render pipeline](../architecture/build-pipeline.md)

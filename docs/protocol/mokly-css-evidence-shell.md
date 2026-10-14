@@ -1,5 +1,7 @@
 # CSS Evidence In The Shell
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 ## Shell Presentation
 
 The inspector groups kept selectors by stylesheet and rule outcome, including
@@ -11,16 +13,16 @@ resources never produce Changes rows.
 
 In Details for screens, component saved views and whole-document pages, show
 “Compared with the branch point on \<name\>.” only when the name is known.
-An embedded catalogue supplied through the `@mokly/viewer` public catalogue
+The name is the `base` ref of the catalogue index; an index without `base`
 has no name, so omit that sentence. Keep the “Comparison details” heading
-and the rest of Details. A served catalogue with a known name retains the
-sentence. Use the same shared heading for all three entry kinds, as the
+and the rest of Details. An index with `base` retains the sentence in every
+delivery. Use the same shared heading for all three entry kinds, as the
 [presentation contract](./mokly-css-evidence-presentation.md#details-copy) defines.
 
-During exported navigation, the temporary view uses the branch name already
-known to the export while the selected screen's full data loads. The sentence
-must not disappear and return when that data arrives. A nameless embedded
-catalogue still omits it.
+During navigation, the temporary view uses the `base` ref the index already
+carries while the selected entry's detail loads. The sentence must not
+disappear and return when the detail arrives. An index without `base` still
+omits it.
 
 The approved design is the stylesheet-evidence group of the design catalogue,
 recorded in the

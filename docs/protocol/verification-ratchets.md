@@ -5,32 +5,38 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 ## JavaScript And TypeScript File Length
 
 Audit regular `.ts`, `.tsx`, `.mts`, `.cts`, `.js`, `.mjs`, and `.cjs` modules
-beneath `src/`, `packages/viewer/src/`, and `scripts/` when they are added,
-renamed, or changed relative to the comparison commit. Normalize CRLF to LF and
-count LF-delimited physical lines; a final LF does not add an empty line.
-Deleted files do not participate.
+beneath the three source roots when they are added, renamed, or changed
+relative to the comparison commit. The roots are the root package's source
+directory, which holds the shim, the sidecar, and the authoring API;
+`packages/viewer/src/`; and `scripts/`. Normalize CRLF to LF and count
+LF-delimited physical lines; a final LF does not add an empty line. Deleted
+files do not participate.
 
 For a new file, the maximum is 300 lines. For an existing or Git-detected
 renamed file:
 
-- if its predecessor has at most 300 lines, the candidate must remain at most
+- if its predecessor has at most 300 lines, the candidate must stay at most
   300;
 - if its predecessor is already over 300, the candidate may stay equal or
   shrink, but any growth fails.
 
 A rename keeps its predecessor comparison only when Git identifies that source;
-otherwise it is a new file. Generated output is outside the three source roots
-and therefore outside this ratchet. Diagnostics list candidate path, current
-line count, allowed count, and predecessor when applicable.
+otherwise it is a new file. Build output is outside the source roots, and the
+TypeScript types that the model crate generates are excluded by path, so
+neither is audited. Diagnostics list candidate path, current line count,
+allowed count, and predecessor when applicable. Rust files under `xtask/` and
+`crates/` follow the separate 300-line audit of the
+[repository gate](./ci-verification-repository.md), which has no ratchet and
+no override.
 
 ## Protocol Document Caps
 
-`xtask/protocol-document-caps.json` owns exact caps for protocol documents that
-remain over 250 lines. It holds one JSON object. Each key is the path of a
-Markdown document relative to `docs/protocol/`, written with `/` separators and
-without an empty, `.` or `..` segment. Keys are sorted ascending by UTF-16 code
-unit, and each value is a safe integer above 250. Invalid JSON, a document that
-is not one object, an invalid, repeated or unsorted key, or a cap that is not a
+`xtask/protocol-document-caps.json` owns exact caps for protocol documents over
+250 lines. It holds one JSON object. Each key is the path of a Markdown
+document relative to `docs/protocol/`, written with `/` separators and without
+an empty, `.` or `..` segment. Keys are sorted ascending by UTF-16 code unit,
+and each value is a safe integer above 250. Invalid JSON, a document that is
+not one object, an invalid, repeated or unsorted key, or a cap that is not a
 safe integer above 250 makes the table invalid: the error names the file and
 the audit fails. The ratchet also fails when the table is missing. A capped
 value equals that file's current physical line count; shrinking the file
@@ -45,14 +51,9 @@ file is absent. The ratchet scans Markdown recursively beneath
 every document on every run.
 
 The ratchet reads the baseline table at the comparison commit. When that commit
-has no `xtask/protocol-document-caps.json`, it reads the legacy `oversizedCaps`
-table in `tests/protocol_doc_sizes.test.ts` at that commit; a legacy file
-without that table fails the audit. When neither file exists, as on commits
-that predate the original cap test, each existing document over 250 lines takes
-its actual line count at that commit as its baseline cap, and renamed
-`mokly-variants.md` inherits `mokly-screen-variants.md`. This bootstrap cannot
-grant a cap to a new document. The legacy reader is removed once `origin/main`
-and every open branch's merge base contain the JSON file.
+has no `xtask/protocol-document-caps.json`, each existing document over 250
+lines takes its actual line count at that commit as its baseline cap. This
+bootstrap cannot grant a cap to a new document.
 
 The repository ratchet compares the candidate cap policy with the comparison
 commit:
@@ -67,13 +68,13 @@ A missing predecessor or ambiguous rename is treated as new.
 
 ## Public Package Exports
 
-The published packages are exactly the paths under `packages` in
-`release-please-config.json`; currently `.` (`@mokly/mokly`) and
-`packages/viewer` (`@mokly/viewer`). Derive each tag prefix from that package's
-release configuration: prepend `<component>-` when
-`include-component-in-tag` is true, then append `v` when
-`include-v-in-tag` is true. The current prefixes are therefore `v` and
-`viewer-v`.
+The published packages with a JavaScript surface are the paths under `packages`
+in `release-please-config.json` whose `exports` map has a JavaScript target:
+`.` (`@mokly/mokly`) and `packages/viewer` (`@mokly/viewer`). A platform
+package exports no JavaScript and has an empty surface on both sides. Derive
+each tag prefix from that package's release configuration: prepend
+`<component>-` when `include-component-in-tag` is true, then append `v` when
+`include-v-in-tag` is true. The prefixes are therefore `v` and `viewer-v`.
 
 Read the package path's entry in `.release-please-manifest.json` at `HEAD`. An
 absent entry or the exact version `0.0.0` means that package has never been
@@ -123,7 +124,7 @@ Compare the released and current surfaces as follows:
   package name for `.`, otherwise `<package>/<subpath>` with the leading `./`
   removed. Its individual names need no separate notes.
 - For each surviving subpath, require every baseline exported name that the
-  current entry point no longer exports.
+  current entry point does not export.
 - A required specifier or name is noted only when
   `docs/protocol/npm-release-notes.md` contains a single-backtick inline code
   span on one line whose entire content is exactly that specifier or name.
@@ -164,7 +165,7 @@ Import use is recorded by these rules:
 - Binding the complete module object uses every export. This covers
   `const x = require("x")`, `import x = require("x")`, and
   `const x = await import("x")`.
-- `(await import("x")).a` uses `a`. Destructured dynamic imports retain the
+- `(await import("x")).a` uses `a`. Destructured dynamic imports keep the
   named rule: aliases use the property name, as in
   `const { a, b: c } = await import("x")` using `a` and `b`.
 - A default import uses every export when its resolved target is a CommonJS
@@ -177,7 +178,7 @@ Known exceptions live in the reviewed, sorted
 `xtask/unused-internal-exports.txt` baseline as
 `<repository-relative module path>#<export name>`, one exact symbol per line,
 with no globs. The discovered unused set must be a subset of that baseline:
-any new unused export fails. A baseline entry no longer discovered also fails
+any new unused export fails. A baseline entry that is not discovered also fails
 with an instruction to delete that line. The candidate baseline must also be a
 subset of the baseline stored at the comparison commit: any entry absent there
 fails even when the current scan discovers it. These two checks make the list
@@ -194,15 +195,15 @@ baseline entry rather than a wildcard suppression.
 All four auditors are repository-suite operations and therefore run in both
 `cargo xtask check --suite repository` and the unqualified complete gate. They
 run after the live dependency audit and report all findings in their own audit
-before returning failure. Focused unit tests cover boundary counts, new and
-renamed files, an already-oversized shrink/growth pair, cap bootstrap and stale
-caps, cap-table validation, the legacy-table fallback, nested protocol
-documents and the fixtures exclusion, public re-exports, newly unused symbols,
-CommonJS use, attempted baseline growth, stale baseline removal, release-tag
-selection, public name and subpath removals, explicit exports, recursive star
-re-exports, unresolved star targets, release-note retention, and a moving
-`origin/main` whose merge base stays fixed.
+before returning failure. Focused tests cover boundary counts, new and renamed
+files, an already-oversized shrink/growth pair, cap bootstrap and stale caps,
+cap-table validation, nested protocol documents and the fixtures exclusion,
+public re-exports, newly unused symbols, CommonJS use, attempted baseline
+growth, stale baseline removal, release-tag selection, public name and subpath
+removals, explicit exports, recursive star re-exports, unresolved star targets,
+release-note retention, and a moving `origin/main` whose merge base stays
+fixed.
 
-The approved [API and member checks](./verification-api-members.md) add public
-signature reports with a release-note gate, an unused-member ratchet and a test
-for literal ESLint paths. Existing export-name and size checks remain independent.
+The [API and member checks](./verification-api-members.md) add public signature
+reports with a release-note gate, an unused-member ratchet, and a test for
+literal ESLint paths. The export-name and size checks stay independent.

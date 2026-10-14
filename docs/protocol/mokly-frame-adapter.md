@@ -193,9 +193,9 @@ behavior until the replacement authenticates.
 The adapter records weak per-frame mount provenance and the last assigned
 resource, separately from the iframe's initial `src` attribute. On the first same-origin
 mount only, its immediate watcher may authenticate an already rendered
-document whose resource exactly matches the assignment; this is the explicit
-server-rendered hydration path. Every later mount captures the immediate
-pre-replacement `Document`. When that exact object was not previously
+document whose resource exactly matches the assignment; this is the document
+the frame's initial `src` started loading. Every later mount captures the
+immediate pre-replacement `Document`. When that exact object was not previously
 authenticated for the frame, both the watcher and `load` handler exclude it
 from assigned-resource authentication even if its URL exactly equals the new
 assignment. Only a different replacement `Document` may then pass the resource
@@ -209,8 +209,8 @@ cancels any earlier navigation, even when the still-visible authenticated
 document already matches the new choice. A delayed superseded response must
 never overwrite the latest preview selection.
 
-Authenticated matching documents and the initial matching server-rendered
-document are reused without reloading; incomplete accepted documents wait only
+Authenticated matching documents and the matching document of the initial
+`src` are reused without reloading; incomplete accepted documents wait only
 for their own load completion. Only the first mount may wait for a
 startup-assigned recorded fragment that has not committed yet. Frame and
 document provenance is weakly held and does not extend either object's lifetime.
@@ -358,7 +358,7 @@ activation and emits no host navigation, while the authenticated replacement
 regains host-owned navigation. Repeat that case with the unowned document's URL
 exactly equal to the next assigned resource, proving the starting object is
 excluded while a different object loaded from that URL authenticates. Retain a
-first-mount SSR hydration case proving its matching starting document remains
+first-mount initial-`src` case proving its matching starting document remains
 eligible. Cross-origin fixtures must cover handshake and inertness, wrong
 origins/sources/nonces, opaque origins, limits, unknown fields, navigation,
 null/multi-root ranges, clipping, overlays, scroll, view swaps, timeout and

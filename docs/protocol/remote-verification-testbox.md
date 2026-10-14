@@ -1,5 +1,7 @@
 # Remote Verification: Testbox Execution
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 Continuation of [Remote Verification](./remote-verification.md).
 
 ## Workflow
@@ -81,16 +83,11 @@ Use that name for its report and log.
 | Command name     | Wrapper arguments                              |
 | ---------------- | ---------------------------------------------- |
 | `repository`     | `--suite repository --dependency-audit <mode>` |
-| `package`        | `--suite package`                              |
-| `unit-1-of-4`    | `--suite unit --shard 1/4`                     |
-| `unit-2-of-4`    | `--suite unit --shard 2/4`                     |
-| `unit-3-of-4`    | `--suite unit --shard 3/4`                     |
-| `unit-4-of-4`    | `--suite unit --shard 4/4`                     |
+| `viewer`         | `--suite viewer`                               |
 | `browser-1-of-4` | `--suite browser --shard 1/4`                  |
 | `browser-2-of-4` | `--suite browser --shard 2/4`                  |
 | `browser-3-of-4` | `--suite browser --shard 3/4`                  |
 | `browser-4-of-4` | `--suite browser --shard 4/4`                  |
-| `hydration`      | `--suite hydration`                            |
 
 The wrapper accepts only the suite and shard forms from
 [CI verification](./ci-verification.md#verification-boundary).
@@ -145,7 +142,7 @@ fallback at this boundary.
 5. Set `MOKLY_VERIFICATION_REPORT` to
    `.context/verification-reports/remote/<command>.json`.
    Run `cargo xtask check --executor local --suite <suite>`.
-   Add `--shard INDEX/4` for a unit or browser shard.
+   Add `--shard INDEX/4` for a browser shard.
    Explicit local mode prevents recursive remote execution.
 6. Return the suite's exit code. A wrapper preparation failure returns nonzero.
 
@@ -201,8 +198,8 @@ nonzero. The probe checks that SHA independently from the digest.
 
 The suite wrapper writes each report on its box to
 `.context/verification-reports/remote/<command>.json`.
-Only unit shards 1 through 4, browser shards 1 through 4 and hydration produce
-the nine required reports. Repository and package outcomes use command exits.
+Only the viewer command and browser shards 1 through 4 produce the five
+required reports. The repository outcome uses its command exit.
 
 Allocate a new local report directory for each run:
 `.context/verification-reports/remote/<run>/`.
@@ -227,8 +224,8 @@ node scripts/verification/aggregate.mjs --reports .context/verification-reports/
 
 The [existing evidence rules](./ci-verification.md#inventory-and-report-evidence)
 still apply. Keep the report schema unchanged. The aggregate must accept
-exactly nine reports for the expected commit and runtime profile.
-It must prove complete shard coverage and the browser/hydration partition.
+exactly five reports for the expected commit and runtime profile.
+It must prove complete browser shard coverage.
 The box `HEAD` and reports name the base; the
 [identity contract](./remote-verification-base.md#identity-output-and-file) records
 checkout `HEAD`. Fingerprints cover source changes and reject edits during the run.

@@ -4,173 +4,120 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 Continuation of [Watched Catalogue Development](./mokly-watch.md).
 
-## Adoption And Recovery
+## Actions And Coalescing
 
-Initial startup, successful rebuilds and configuration changes, and resource
-reloads refresh the reachable resource watch set. A ready replacement is adopted
-only with its matching output; failed writes discard it and retain the previous
-resource watches. Independently, visited previews send generation-tagged document
-closures to the parent, which attaches incremental resource watches immediately,
-even when exhaustive rendering has not finished or fails elsewhere. Incremental
-watches accumulate within a source generation and are replaced by the next
-generation's visited closure. Discovery repeats after watcher readiness.
-Missing or invalid paths and last-known descendants stay observable until
-repaired or unreferenced. [Changes resource handling](./mokly-changes.md#changes-membership)
-distinguishes invalid inputs from verified deletions; neither blocks reload or
-comparison-cache invalidation.
-Resource watches coalesce file and entry-replacement notifications and replace
-their observers when validity changes, so repairing a dangling alias as a regular
-file also restores subsequent edits. Unnamed raw events and unrelated generated
-entries cannot broaden the resource watch set.
-Generated-output ownership checks return false for unresolvable paths, so a
-temporarily dangling resource remains observable and can recover after repair.
+Watch actions execute serially through one queue. Notifications are debounced
+by `watch.debounceMs` of the
+[configuration contract](./mokly-configuration.md), and the changes that
+arrive during an active action are coalesced by impact before the next
+action starts, so two rebuilds cannot race to replace the catalogue model.
+The actions are, from least to most impact, `reload`, `rebuild`, and
+`config`; a burst takes the strongest action and keeps every observed
+candidate path for the terminal line. The `r` shortcut of the
+[terminal output contract](./mokly-terminal-output.md#interactive-controls)
+enqueues a `rebuild` through the same queue. Shutdown stops the queue first.
 
-Rebuilds are debounced and accept metadata and the retained graph together. A failed
-index candidate keeps the last-good server and output; a background failure keeps
-the last-good disk output without claiming completeness. Errors are reported while
-the watcher waits for another authored change. Warning scopes advance when an
-attempt starts, separately from accepted output. A failed rebuild or
-reconfiguration keeps the older output serving but never restores its warning
-scope. Drop late background and preview-child warnings from that older
-generation. Flush only the current attempt's warnings before its failure line;
-successful adoption keeps that attempt's deduplication set. See
-[build warning generations](./mokly-build-warnings.md#watched-serve-generations).
-A successful rebuild or healthy restart publishes a new update version. Browsers
-reload their current durable URL and restore search, changed-only selection,
-current folder disclosure, the disclosure baseline captured before active
-filtering, details disclosure, viewport and color-scheme selection, responsive
-drawer, catalogue scroll, and per-region stage scroll once. Recovery is strictly
-parsed. Both `filterBaselineDisclosures` and `changesStatus` are required;
-missing or invalid values reject the complete stored snapshot. Browse applies durable preferences and initial active-route
-selection before one-shot recovery. It then re-establishes active-route
-visibility, promoting a recovered pre-filter baseline only when a closed
-ancestor must be opened. A non-null baseline without active search or Changes
-filtering is invalid. Recovery applies only when its durable URL exactly matches
-the reloaded page and is removed before application; a later manual refresh
-cannot resurrect stale state. Recovery retains its validated Changes
-status. A selected Changes filter survives pending or
-unavailable states and their completion rather than switching to All to reveal an
-unchanged current preview. Explicit navigation still reveals its destination.
+## Rebuilds
 
-Navigation follows the [path contract](./mokly-paths.md); recovery uses the
-[disclosure persistence contract](./mokly-disclosure-persistence.md)
-for current keys, values, and incompatible snapshot handling.
+A rebuild recomputes the graph nodes whose keys moved, re-runs discovery when
+the file set changed, and validates the candidate catalogue model. A valid
+candidate is adopted in one step with its documents: the model, the route
+set, and the cache entries of the moved nodes replace the old ones together,
+and one revision is published. A failed candidate keeps the last-good model,
+route set, cache, and comparison evidence serving; the error is reported
+through the watch failure line, and the next authored change starts a fresh
+attempt. Warning scopes follow the
+[watched Serve generations](./mokly-build-warnings.md#watched-serve-generations)
+rule: an attempt starts a new scope, a failed attempt flushes only its own
+warnings before its failure line, and late warnings of a superseded attempt
+are dropped.
 
-When a successful rebuild leaves the manifest structure unchanged, or a
-resource edit or explicit watch rule requests a reload, the parent keeps the
-ready child. It first publishes a typed update that clears stale entry and
-component evidence, making the successful content generation visible without
-waiting on Git. The child keeps its last checked authored closure through this
-update, as the [public closure contract](./mokly-public-closure.md#one-closure-builder)
-requires. When the background pass completes, its `catalogue-complete` message
-carries the parent's current checked closure as `assetClosure`. A reload reuses
-the earlier compilation, so the child does not serve that compilation's older
-manifest closure. The completion is the only message to a running child that
-carries the list; `update` messages carry none. The parent then computes one
-complete classification outside the HTTP request path. A sequence token
-discards results superseded by a newer watch
-action; the current successful result publishes a second typed update that
-atomically replaces changed-entry membership, removed-entry baseline data, and
-component evidence. Both tabs are present from startup: pending status shows a
-spinner in the reserved count slot and, when selected, in the sidebar. An
-available empty list shows zero; a failed or unavailable comparison ends loading
-and shows a dash plus an unavailable sidebar. Every terminal status uses the
-same sequence/version checks as
-the result, including background build and write failures. Initial watched startup follows the
-same asynchronous classification rule after listener readiness, as does non-watched
-Serve. Watched Serve polls resolved HEAD/base commits once per second outside HTTP;
-Git resolves symbolic refs, worktrees and packed refs. A changed or newly available
-ref clears evidence and reclassifies existing completed output without rerendering
-views. Replacement and shutdown cancel old ref reads and discard stale results.
+## Configuration Changes
 
-A restarted child keeps the checked closure until the parent reloads the
-config file. The supervisor keeps the list from the last completion of the
-staged generation, even when no child is ready to receive that completion. It
-sends the list as `assetClosure` in the next child's
-`component-runtime-startup` message. This applies after a restart watch rule,
-crash recovery and a structural rebuild. A rebuild whose new imports replace the
-source watcher also keeps the list, because it does not reload the config file.
-A config-file change discards the list. The new child then starts without a
-checked closure, and until its first completion it serves only the on-demand
-additions of its own generation. The child ignores a completion or startup list
-that names an unsafe path or generated output. It then uses the manifest closure
-or starts with no authored closure.
+On a configuration file change, Serve loads and validates the candidate
+configuration, re-runs discovery, builds a replacement watcher over the new
+watch set and waits for its readiness, and validates the candidate catalogue
+model. It then adopts the configuration, the watcher, and the model in one
+step, closes the old watcher, and publishes a revision. A load, readiness, or
+validation failure keeps the old configuration, watcher, and model. A changed
+renderer module or module resolution setting produces a new bundle
+generation; the old generation is disposed after adoption. An explicit CLI
+`--base` stays pinned across reloads; without one, the adopted
+configuration's `review.base` applies. The port never changes.
 
-Watch actions execute serially. Changes received during an active action are
-coalesced by impact before the next action starts, so two rebuilds cannot race
-to replace generated output or restart the same child. The parent assigns a
-monotonic integer update version to each child and asset reload. Every served
-catalogue shell carries the update version captured when its request began. The client
-seeds its page baseline from that stamp: an equal event-stream `ready` version
-is a no-op, while a higher `ready` version or `update` event requests the current
-shell snapshot. Equal content versions adopt evidence without navigation recovery;
-a newer content version triggers reload and one-shot state recovery. A controller with no valid supplied page stamp uses its first `ready` version
-as its initial baseline; later higher events use the same refresh rules.
+## Resource Watches
 
-In rich mode, the [terminal reporter](./mokly-terminal-output.md) presents the
-existing accepted-catalogue, baseline, Changes, reference-refresh, rebuild,
-reload, restart, configuration, and failure boundaries as lifecycle or change
-lines. The presentation does not introduce another watch action. Candidate
-paths accumulate across each coalesced burst and the completed line names up to
-three. The `r` shortcut enqueues the same `rebuild` action through this serialized
-queue, so it cannot race a filesystem-triggered action.
+The referenced closure of every composed document feeds the resource watch
+set. A rendered document adds its closure as soon as it renders, even when
+the background pass has not finished, and a replaced catalogue state replaces
+the whole set. Discovery repeats after watcher readiness to capture references
+introduced while the watcher attached. Missing or invalid paths and their
+last-known descendants stay observable until repaired or unreferenced; a
+repaired dangling alias restores later edits. A changed resource clears the
+resource evidence of the documents that reference it and recomputes them; it
+never blocks a rebuild or comparison invalidation.
 
-A filesystem edit composed of multiple operations can publish intermediate
-states: removing a tracked alias may identify a deletion before its replacement
-restores the baseline. A higher version proves a completed watch action, not
-completion of every filesystem operation a caller groups into one edit. Tests
-for a specific result must wait for both a higher version and that semantic
-state within the existing deadline, distinguishing unavailable Changes from an
-available zero count. They must retain subsequent-edit and comparison
-invalidation assertions rather than assuming exactly one publication per edit.
+## Git Observation
 
-Publishing an update without restarting the child marks its cached comparison
-stale before notifying browsers. Both content reloads and evidence adoption restore Current, so comparison work
-waits for another explicit diff selection. Concurrent comparison requests reuse
-one regeneration and snapshots remain pinned to their immutable generation.
+Watched Serve polls the resolved `HEAD` and base commits once per second
+outside the HTTP event loop; Git resolves symbolic refs, worktrees, and
+packed refs. A moved merge base clears the Changes evidence, reclassifies
+from the render cache without re-rendering the head side, renders the base
+views whose commit changed, and publishes the result as a revision; the
+terminal reports `comparing again`. Replacement and shutdown cancel active
+ref reads and discard their results. Git commands run in dedicated process
+groups on POSIX, so cancellation also stops their helpers; `SIGTERM`
+escalates to `SIGKILL` after one second, and Windows terminates the direct
+child. Git output is capped at 64 MiB per stream. A late result cannot
+publish a stale classification: every terminal status uses the same sequence
+check as the result, including a background render failure.
 
-Shutdown first stops queued work, aborts active Git classification, and waits
-for any active configuration transaction, then closes all final adopted
-watchers, timers, child processes, HTTP servers, event streams, and ports. A
-candidate watcher is discarded if shutdown begins before adoption: shutdown
-interrupts an outstanding candidate readiness wait and closes that watcher
-before the action queue finishes draining. No later child restart is started.
-Tests must prove no orphan process remains after normal shutdown, failed
-startup, or interruption. The child also
-runs the same idempotent server close when its parent IPC channel disconnects,
-so an abruptly terminated parent cannot leave a listening orphan. Parent-driven
-shutdown first requests graceful IPC closure, then sends SIGTERM and SIGKILL at
-bounded intervals when necessary; the supervisor does not finish closing until
-the child exit notification arrives.
+## Publication And Adoption
 
-Each spawned child owns one readiness result, a terminal result registered from
-creation, and one shared cleanup operation. Readiness timeout (300 seconds),
-pre-ready errors, post-ready errors, IPC disconnection, explicit close, and
-restart all use that operation. Startup reports its original failure only after
-cleanup confirms the child has stopped. A ready message followed by failure
-before startup resolves cannot report successful startup. Close cancels pending
-readiness; later ready messages and updates are ignored. Concurrent close/restart
-calls share cleanup, and a separate start while the child is still owned fails
-without spawning.
+Each completed action publishes one state under the
+[shell delivery contract](./mokly-shell-delivery.md#updates-in-serve):
+`revision` rises by one, the index and every detail are replaced together,
+and the event stream carries the revision as the message id. The shell
+refetches the index and the current entry's detail, updates the navigation,
+the Changes marks, Usage, and the details panel in place, and reloads only
+the mounted frames whose `documentKey` changed. The page never reloads, and
+browser state such as search, filter, disclosure, scroll, and temporary prop
+edits survives every publication. A publication marks the comparison
+generations of the superseded state stale before the event is sent, and an
+open comparison returns to Current; the next explicit selection captures a
+new generation. A filesystem edit made of several operations can publish an
+intermediate state; a higher revision proves one completed action, not the
+completion of every operation a caller groups into one edit.
 
-The native handle observes IPC disconnection from creation and retains that
-event for late subscribers. Disconnection while waiting for readiness or while
-serving starts the same cleanup immediately, without waiting for another update.
-It reports one unexpected failure only after successful startup, so the watched
-action queue can recover on the retained port. Transport loss never confirms
-process exit: even a disconnected child stays owned through bounded escalation
-and actual terminal confirmation. A disconnection during intentional shutdown
-or after exit does not create a failure or duplicate recovery. An earlier startup
-error retains precedence over a later disconnect. Tests include a real HTTP
-child that disconnects itself, ignores SIGTERM, and is force-killed before its
-replacement resumes receiving updates on the same port.
+## Shutdown
 
-Terminal observation remains available after exit, including a failed native
-spawn that emits `close` without `exit`. Cleanup for an already-terminal child
-does not signal it or wait for another event. A failed IPC shutdown request or
-signal cannot release ownership or skip the next escalation stage. All timers
-are cancelled on terminal confirmation. Tests cover these event orders with
-controlled children and prove real server termination and port reuse after an
-injected transport failure.
+Shutdown stops the queue, discards a candidate watcher whose readiness is
+still pending, cancels active Git classification and background work, waits
+for an active configuration transaction, and then closes the watchers,
+timers, sidecars, HTTP listener, event streams, and port in the order of the
+[runtime contract](./mokly-runtime.md#shutdown). No later action starts.
+Tests prove that no orphan process survives a normal shutdown, a failed
+startup, or an interruption, and that the port is reusable afterwards.
 
-See [the catalogue runtime](./mokly-runtime.md) and [Changes](./mokly-changes.md).
+## Terminal Presentation
+
+In rich mode the [terminal reporter](./mokly-terminal-output.md#serve-layout)
+presents the catalogue-ready, Changes, rebuild, reload, configuration, Git
+refresh, and failure boundaries as lifecycle or change lines. The presentation
+adds no watch action. Candidate paths accumulate across a coalesced burst and
+the completed line names up to three.
+
+## Verification
+
+Behaviour tests count rebuilds, bundles, and renders per change: an HTML edit
+renders only its documents, a JavaScript edit bundles once, a stylesheet edit
+recomputes one bundle, and a resource edit renders no fragment. A test that
+waits for a result waits for both a higher revision and the semantic state
+within its deadline, distinguishing unavailable Changes from an available
+zero count, and keeps its subsequent-edit and comparison invalidation
+assertions rather than assuming one publication per edit. Real-process tests
+cover a sidecar that ignores `shutdown`, a Git process that ignores
+`SIGTERM`, and shutdown during a configuration transaction.
+
+See [the catalogue runtime](./mokly-runtime.md) and
+[Changes](./mokly-changes.md).

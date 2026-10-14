@@ -4,150 +4,127 @@ Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
 
 ## Publication Option
 
-Extend the existing repository-only preview builder with these commands:
+A published catalogue is the output of `mokly build`, deployed by the consumer
+or uploaded by `mokly publish`. Changes is part of it unless the build is
+current-only:
 
 ```bash
-npm run preview:build
-npm run preview:build -- --include-changes
-npm run preview:build -- --include-changes --base origin/main
+npx mokly build
+npx mokly build --no-changes
+npx mokly build --base origin/main
+npx mokly publish --no-changes
 ```
 
-The existing `--out <path>` option, output default, and ownership restrictions
-remain supported. Accept options in any order;
-reject unknown or repeated options, missing values, and `--base` without
-`--include-changes` before loading consumer code or changing output.
+`build` and `publish` include Changes by default. `--no-changes` writes a
+current-only build. `--base <ref>` overrides `review.base`, whose default is
+`origin/main`. Options are accepted in any order; an unknown or repeated
+option, a missing value, and `--base` together with `--no-changes` fail as
+`cli-invalid` before consumer code is loaded or the output is touched. Git
+availability, branch names, and a configured review base never make a build
+current-only by themselves, and a build with Changes requires a Git checkout
+with `HEAD`, the base, and their merge base under the
+[static build contract](./mokly-export.md#changes-in-the-output). A source
+archive without `.git` builds with `--no-changes`. The output directory
+follows the `--out` rules of that contract, and `publish` builds into its own
+private directory outside the repository.
 
-Output must be a strict descendant of `.context` both lexically and after
-resolving symlinks. The resolved context directory and output must stay within
-the real `repoRoot`, including existing ancestors of a new output path. Reject
-escapes before creating staging directories or replacing output. In-repository
-context and parent symlinks remain supported; an ownership marker never permits
-an outside-root destination.
+The repository preview deployment uses the same option: the `main` deployment
+builds current-only, and a pull request preview builds with Changes against
+`origin/main`, under the [preview deployment contract](./npm-preview-deployments.md).
 
-The internal `buildPreview(config, output, options)` boundary receives:
+## Current-Only Builds
 
-```ts
-type PublicationOptions =
-  | { includeChanges?: false; base?: never }
-  | { includeChanges: true; base?: string };
-```
+A current-only build writes the home, every catalogue route, the resources,
+metadata, search, tags, the folder hierarchy, and the not-found stub, and
+keeps screen viewport and colour-scheme selection and page rendering.
 
-Omitting options is equivalent to `{ includeChanges: false }`. Validate the
-same contract for JavaScript callers. With changes enabled, `base` overrides
-`config.review.base`, whose existing default is `origin/main`. Git availability,
-branch names, and an existing review configuration never enable the option
-implicitly. This extends the repository script, not the npm package CLI.
+It omits the All/Changes controls and counts, the screen comparison controls,
+removed-entry rows and their historical views, the comparison generation, and
+every base snapshot and resource. The index carries
+`changesStatus: "disabled"`, `comparisonUrl: null`, no `base`, and an empty
+`removedEntries`; every view's `comparison` has `status: "disabled"`. The
+build resolves no Git history, computes no changes, renders no base side, and
+starts no comparison. It succeeds from a valid source archive without `.git`
+and without a configured base ref.
 
-Publication capture compiles and validates in memory; it never writes the
-consumer generated tree. The repository npm wrapper explicitly builds tooling
-and the example before capture. Direct callers need no local generated tree;
-source inventory and input stability are checked by the capture boundary.
-Consumer `mokly export` also compiles in memory and includes Changes by default.
+The shell derives its capability from the index, so no development default can
+re-enable review. Stored preferences and direct links that request Changes or
+a comparison fall back to All and Current while preserving the valid route,
+viewport, colour scheme, and fragment. The browser sends no change or
+comparison request, and there is no comparison URL to request.
 
-## Current Catalogue By Default
+In both options the output has no event stream, no live descriptor, and no
+control route, and the stub is the same document. The shell never starts an
+`EventSource`, never polls for development updates, and never requests
+`/mokly-viewer/events` or `/mokly-viewer/live.json`; on static hosting those
+URLs are ordinary missing files. This holds for the home, the missing-route,
+and the removed-entry routes alike.
 
-Publish the current home, catalogue routes, resources, metadata, search, tags,
-folder hierarchy, and not-found page. Preserve screen viewport/color selection
-and page rendering.
+Building over a earlier output that holds a comparison replaces the complete
+owned output transactionally and removes the obsolete generation files; they
+are never left reachable through an earlier generation or a stale copy.
 
-Omit All/Changes controls and counts, screen comparison controls, removed-entry
-rows and previous-version pages, comparison JSON, and baseline
-snapshots/resources. Do not resolve Git history, compute changes, read baseline
-output, or initialize a comparison provider. Publication must succeed from a valid source archive
-without `.git` or a configured base ref.
-
-Pass an explicit publication capability to the capture server and shell so
-their development defaults cannot re-enable review. Stored preferences and
-direct links requesting Changes or a comparison fall back to All/Current while
-preserving the valid route, viewport, color scheme, and fragment. Comparison
-endpoints return the ordinary not-found response and never generate output.
-The browser sends no change/comparison requests.
-
-In both publication options, strip the watched-server live-update entrypoint
-from every captured shell page and omit its watch-only assets. Keep the browser
-modules needed for ordinary navigation and optional comparison controls. Never
-start an EventSource, poll for development updates, or publish/redirect an
-`/mokly-viewer/events` endpoint. On static hosting that URL has the ordinary
-not-found response. This preserves the existing static-export invariant, also
-for home, missing-route, and removed-entry pages.
-
-Existing generated comparison directories, including configured review output,
-must stay excluded from public asset copying. Building over a previous export
-with comparisons replaces the complete owned artifact transactionally, removing
-obsolete review files; never leave them reachable through a previous
-generation or stale asset copy.
-
-Both publication options use the consumer exporter's shared output transaction,
-deployment identity over non-marker files other than declared publication
-metadata, finalized ownership inventory, and alias/reference validation.
-The destination must retain its captured identity until installation; an unowned
-replacement is preserved, including one introduced during capture. Retain the
-writer reservation, OS-enforced non-replacing moves, and safe backup recovery
-defined by the [export recovery contract](./mokly-export-recovery.md).
-The repository adapter has the same current-marker ownership requirement.
-The [generated inventory rule](./mokly-export-public-files.md#generated-inventory)
-keeps exact generated routes public while protected source names stay denied.
-Its owned reservation namespace remains after cleanup, with no active locks.
-Each entry's shell is written once at `view/<path>/index.html`; current-only
-shell metadata explicitly sets `comparisonUrl: null` and never requests a
-development comparison endpoint.
-
-Use the shared confined file enumeration for input fingerprints, not public
-copying. Resolve each logical path inside the real repository before reading
-target bytes or traversing a linked directory. Hash symlink text; unrelated
-escaping, dangling, and cyclic links contribute only that metadata and do not
-abort publication. Explicit manifest and authoring inputs must resolve to
-confined regular files before their bytes are read. Directory walks terminate
-when a target repeats in the current ancestor chain; independent aliases to
-the same directory still contribute their own logical fingerprint paths.
-
-Copy compiled current documents under `static/mokly-generated/` and exactly the
-manifest's referenced authored closure under `static/` as regular files;
-never publish a directory merely because it is under `mockupsDir`. Each
-selected closure file must be a confined regular file outside `mokly-generated/`,
-not a symlink or protected input; apply staging/destination exclusions to
-both logical and resolved identities. Validate the presence of every current
-page, document and light/dark screen view named by the manifest. Validate every
-exported HTML/CSS resource reference against confined regular files in the
-staged static tree, including transitive references. An unavailable resource
-fails before installation and preserves the previous artifact. Repository
-discovery can skip dependency/build directories for inputs; publication never
-uses a directory-based public walk. Git administrative directories, protected
-inputs, and confined staging/destination paths stay excluded.
+Both options use the shared output transaction, the deployment identity over
+every non-marker file other than declared publication metadata, the finalized
+ownership inventory, and reference validation. The destination must keep its
+captured identity until installation; an unowned replacement is preserved,
+including one introduced during capture. The writer reservation, the
+OS-enforced non-replacing moves, and the safe backup recovery follow the
+[recovery contract](./mokly-export-recovery.md). The
+[output inventory rule](./mokly-export-public-files.md#output-inventory) keeps
+exact rendered routes public while protected source names stay denied. The
+owned reservation namespace stays after cleanup, with no active lock. Each
+entry's stub is written once at `view/<path>/index.html`.
 
 ## Consistent Publication Snapshot
 
-Capture one validated in-memory compilation, including generated HTML, CSS,
-opaque assets, manifest and authored closure. No local generated tree is read or
-written. A missing accepted route fails even if disk output contains it.
-The CSS/PostCSS inventory freshness pass and scoped npm URL checks remain required.
-Fingerprint exact generated bytes and authored inputs; include every inventoried
-helper even beneath otherwise excluded `.context` directories. Recompile and
-fingerprint before installation; any input or byte drift aborts capture.
+A build captures one validated in-memory render: every view, page, and
+document, the bundled CSS, the opaque assets, the catalogue model, and the
+authored closure, all from the render cache. Nothing on disk is read back. The
+stylesheet freshness pass and the scoped npm URL checks apply.
 
-Both options begin input capture before loading the current catalogue. Use
-the compilation's manifest bytes and hash them together with its inventoried
-inputs and public resources. Include inventoried helpers even beneath otherwise
-excluded `.context` directories. Construct one validated catalogue snapshot
-from that captured manifest and use it for the capture server, page capture
-list, and resource adaptation. When Changes is enabled, compute its
-changed-entry impact and removed-entry metadata from that exact current
-manifest and the pinned Git baseline. The
-capture server must not independently reload the manifest.
+Fingerprint the inventoried inputs before rendering: the sources, the
+configuration, the renderer module, the configured stylesheets, and the
+authored closure, including every inventoried helper even beneath an otherwise
+excluded `.context` directory. Use the shared confined file enumeration for
+that fingerprint, not public copying. Resolve each logical path inside the
+real repository before reading target bytes or traversing a linked directory.
+Hash symlink text; unrelated escaping, dangling, and cyclic links contribute
+only that metadata and do not abort the build. Explicit authoring inputs must
+resolve to confined regular files before their bytes are read. Directory walks
+end when a target repeats in the current ancestor chain; independent aliases
+to the same directory still contribute their own logical fingerprint paths.
 
-Exclude the active staging directory and destination from input enumeration by
-their canonical paths as well as the usual generated-artifact rules. This keeps
-publication's own writes out of its input digest when `.context` or a parent
-directory is an in-repository symlink. Explicit inventoried authoring inputs
-remain included even when directory enumeration excludes their location.
+Exclude the active stage and the destination from input enumeration by their
+canonical paths as well as by the usual output rules. This keeps the build's
+own writes out of its input digest when `.context` or a parent directory is an
+in-repository symlink. Explicit inventoried authoring inputs stay included
+even when directory enumeration excludes their location.
 
-Fingerprint again after capturing pages, comparisons, and public resources and
-before installing the staged artifact. A changed fingerprint fails publication
-and preserves the previous artifact. A completed rebuild before the initial
-fingerprint belongs wholly to the new snapshot; a rebuild after it must not
-produce mixed navigation, missing pages, or stale shell metadata. Default
-publication performs the same filesystem consistency checks without consulting
-Git.
+Construct one catalogue model from that fingerprinted input set and use it for
+the index, the details, the route list, and resource selection. When Changes
+is included, compute its changed-entry impact and removed-entry metadata from
+that exact model and the pinned merge base; the comparison never reloads the
+model independently.
+
+Write rendered documents under `static/mokly-generated/` and exactly the
+referenced authored closure under `static/` as regular files; never publish a
+directory merely because it is under `mockupsDir`. Each selected closure file
+must be a confined regular file, not a symlink or a protected input; apply the
+stage and destination exclusions to both logical and resolved identities.
+Validate the presence of every current page, document, and light and dark view
+that the index names. Validate every written HTML and CSS resource reference
+against confined regular files in the staged `static/` tree, including
+transitive references. An unavailable resource fails before installation and
+preserves the earlier output. Discovery can skip dependency and build
+directories for inputs; the build never uses a directory-based public walk.
+Git administrative directories, protected inputs, and the stage and
+destination paths stay excluded.
+
+Fingerprint again after rendering, comparison, and resource capture and before
+installing the stage. A changed fingerprint fails the build and preserves the
+earlier output. Default publication performs the same filesystem consistency
+checks without consulting Git.
 
 Changes-enabled publication continues in
 [Publication Changes And Acceptance](./mokly-publication-changes.md);

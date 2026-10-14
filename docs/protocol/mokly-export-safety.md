@@ -1,21 +1,21 @@
-# Static Export Safety And Public Files
+# Static Build Safety And Public Files
 
-This document supplements the [consumer static export contract](./mokly-export.md)
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
+This document supplements the [static build contract](./mokly-export.md)
 with output confinement and ownership reservations.
 
 ## Output Ownership And Confinement
 
-The output must be a strict descendant of `repoRoot`. Validate both lexical
-and projected real paths before creating directories and again before replacing
-anything. Reject symlink output entries and escapes through symlink ancestors.
-
-An internal hosting adapter may declare a stricter output root. Require the
-output to be a strict descendant of that root both lexically and after projecting
-real paths, at preflight and again before installation. The repository preview
-uses `.context` as this root. A symlink inside it cannot redirect output elsewhere
-in the repo. A symlinked root is supported only when its resolved location still
-satisfies all core repository/source protections; the transaction pins the real
-output location so retargeting cannot redirect installation.
+The output that `--out` names must be a strict descendant of the repository
+root. Validate both lexical and projected real paths before creating
+directories and again before replacing anything. Reject symlink output entries
+and escapes through symlink ancestors. A symlinked ancestor is supported only
+when its resolved location still satisfies all repository and source
+protections; the transaction pins the real output location so retargeting
+cannot redirect installation. `publish` builds into its own private directory
+outside the repository; every other rule on this page applies to that
+directory too.
 
 Output must neither contain nor be contained by `mockupsDir` or
 `review.outDir`, and must not contain any resolved entry module or document,
@@ -25,15 +25,15 @@ repository root, Git metadata, dependency directories, and package runtime
 directories as targets. These checks also apply when the requested directory
 does not yet exist.
 
-Every regular file path, whether produced by core export assembly, copied from
-consumer public files, or added by an adapter, must satisfy the
+Every regular file path, whether rendered by the build, copied from consumer
+public files, or written as metadata, must satisfy the
 [single portable-path rule](./mokly-export-ownership.md#file-contract) before it
 can enter the inventory. No producer can defer that check to marker writing or
 publication.
 
 Accept a missing destination or an empty real directory. A nonempty directory
 must have a regular `.mokly-export-artifact` ownership file using the
-[public schema 3](./mokly-export-ownership.md) and its generated-file inventory.
+[public schema 3](./mokly-export-ownership.md) and its file inventory.
 Reject missing/malformed markers, unexpected files outside the inventory,
 unsafe inventory paths, symlink entries, and unsupported versions, including
 older marker versions. A regular marker that fails parsing uses
@@ -43,7 +43,7 @@ filesystem entries keep their separate errors; no old marker grants adoption.
 
 Treat the marker as public-safe metadata: no absolute checkout paths,
 credentials, or timestamps. Never use its strings as unchecked deletion
-targets. Export owns replacement of its recorded output files.
+targets. `build` owns replacement of its recorded output files.
 
 Serialize writers to the same resolved output with an exclusive reservation;
 a competing process fails clearly. An abandoned reservation is never silently
@@ -55,11 +55,11 @@ the resolved output. Native real-path resolution and unmodified filename keys
 give case/symlink aliases the filesystem's own lock equivalence, without
 serializing genuinely distinct destinations. The internal namespace has a
 regular `.owner` containing `mokly-export-reservations-v1` plus a newline and
-remains after cleanup; never put authored files or export destinations inside it.
+stays after cleanup; never put authored files or output directories inside it.
 Unowned namespaces and symlinked namespace/lock directories are rejected.
 The `.mokly-export-transaction` marker records `schemaVersion: 2` and the
-output basename; `stage/` and `backup/` remain inside that reservation.
+output basename; `stage/` and `backup/` live inside that reservation.
 Only the current reservation namespace participates in writer admission.
-An unrelated sibling file cannot claim an export lock. For an abandoned current
+An unrelated sibling file cannot claim a build lock. For an abandoned current
 reservation, confirm no writer is active and inspect the retained backup before
-explicit recovery. Every adapter uses the same current ownership marker.
+explicit recovery. `build` and `publish` use the same current ownership marker.

@@ -1,14 +1,16 @@
 # Document Rendering Safety
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 This continues [Markdown Documents](./mokly-documents.md#rendering).
 
 ## Structural Validation
 
-After logical-link rewriting, parse each final
-document with parse5. Validate its parsed body independently of the Markdown
-renderer. Validate outer wrappers too, so an injected HTML/body start tag cannot
-hide an event attribute by merging it onto an existing wrapper. Build, Check,
-on-demand rendering and export use this same boundary before accepting output.
+After logical-link rewriting, validate the composed document tree
+independently of the Markdown renderer. Validate outer wrappers too, so an
+injected HTML/body start tag cannot hide an event attribute by merging it
+onto an existing wrapper. `build`, Serve, and the base side of a comparison
+use this same boundary before a document is accepted.
 
 Only HTML-namespace elements in this table are allowed in the rendered body:
 
@@ -26,8 +28,8 @@ Only HTML-namespace elements in this table are allowed in the rendered body:
 The template additionally owns its direct-body `main` wrapper with no attributes.
 Every other body element or attribute is rejected, including `script`, `style`,
 `iframe`, `object`, `embed`, `svg`, `math`, `form`, any `on*` attribute and any
-body `style` attribute. Comments are inert and may retain validated Review-ignore
-authored markers.
+body `style` attribute. Comments are inert; a served or built document carries
+no comment markers under the [comparison contract](./mokly-comparison.md).
 
 `href` and `src` permit only `http:`, `https:` and `mailto:` schemes, or portable
 relative/fragment URLs. Reject other schemes, controls, backslashes, leading or
@@ -50,15 +52,16 @@ Failure is `build-invalid` with
 - `<input> must be disabled` or `<input> must have checkbox type`;
 - `the template must contain one owned stylesheet`.
 
-Reject unsafe output rather than silently removing markup. Failed candidates
-retain the same transactional and last-good behavior as other build failures.
+Reject unsafe output rather than silently removing markup. A rejected document
+fails `build`; Serve keeps the last good generation, as for every other render
+failure.
 
 ## Script Policy
 
-The generated document template contains no script. It does not add a
-`script-src 'none'` CSP meta: Serve and exported frames add Mokly's bounded
+The document template contains no script. It does not add a
+`script-src 'none'` CSP meta: Serve and the static output add Mokly's bounded
 inspector script for authenticated link and frame behavior. That CSP would block
-the package's instrumentation too. Raw Markdown remains literal text, and the
+the package's instrumentation too. Raw Markdown is literal text, and the
 independent final allowlist prevents a renderer error from introducing executable
 elements or attributes. Historical frames keep their existing script-disabled
 sandbox under the [removed-preview contract](./mokly-removed-preview-frames.md).
@@ -70,4 +73,5 @@ case and attribute variations. Preserve later prose, paragraphs, headings, lists
 blockquotes, tables, links and emphasis as text. Inject unsafe final markup after
 the renderer to prove the independent boundary rejects it. Cover element,
 attribute, checkbox and URL rules, plus events merged onto the outer wrapper.
-Keep valid CommonMark/GFM output, both schemes, Serve links and export working.
+Keep valid CommonMark/GFM output, both schemes, Serve links and the static
+output working.
