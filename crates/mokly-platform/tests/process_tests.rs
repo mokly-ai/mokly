@@ -2,17 +2,19 @@
 
 #[cfg(unix)]
 mod unix {
-    use std::io::{BufRead, BufReader};
+    //! Real Unix process trees.
+
+    use std::io::{BufRead, BufReader, Read};
     use std::process::{Command, Stdio};
 
     use mokly_platform::processes::{ProcessGroups, SystemProcessGroups};
 
     #[test]
-    fn owned_process_group_receives_termination() {
+    fn owned_process_group_terminates_descendants_and_closes_pipes() {
         let groups: &dyn ProcessGroups = &SystemProcessGroups;
         let mut command = Command::new("sh");
         command
-            .args(["-c", "printf 'ready\\n'; exec cat"])
+            .args(["-c", r#"sh -c 'trap "printf \"descendant-stopped\n\"; exit 0" TERM; sleep 60 & printf "ready\n"; wait' & wait"#])
             .stdin(Stdio::piped())
             .stdout(Stdio::piped());
         groups.configure(&mut command).unwrap();
@@ -24,12 +26,16 @@ mod unix {
         assert_eq!(ready, "ready\n");
         group.terminate().unwrap();
         assert!(!child.wait().unwrap().success());
+        let mut remaining = String::new();
+        reader.read_to_string(&mut remaining).unwrap();
+        assert_eq!(remaining.trim(), "descendant-stopped");
         group.kill().unwrap();
     }
 }
 
 #[cfg(windows)]
 mod windows {
+    //! Real Windows job ownership.
     use std::io::{BufRead, BufReader, Read};
     use std::process::{Command, Stdio};
 

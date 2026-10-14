@@ -18,9 +18,10 @@ output belong to the binary.
   environment, the repository root as working directory, and pipes for
   standard input and output. Standard error is forwarded to the terminal
   reporter as diagnostics.
-- The pool holds between one and the machine's core count of sidecars; the
-  `--sidecars <n>` option and `MOKLY_SIDECARS` override it. A catalogue that
-  needs no JavaScript starts none.
+- The default pool size is the machine's core count. `--sidecars <n>` and
+  `MOKLY_SIDECARS` accept any positive integer and override that default;
+  the option takes precedence over the variable. A catalogue that needs no
+  JavaScript starts none.
 - The binary's first request is `hello`. The sidecar's first frame is the
   matching hello response with its package version. The binary rejects a
   version other than its own with `sidecar-version` before other traffic.
@@ -40,26 +41,26 @@ exactly one of `result` or `error`; a method without a return value uses
 sidecar run in order; the pool spreads independent requests across sidecars.
 
 ```json
-{"id":12,"method":"renderComponent","params":{"generation":"3f9c…","handle":"specs/ui/button.mockup.tsx#Button","props":{"label":"Save"},"viewport":"mobile","colorScheme":"light","ignoreScope":"enabled"}}
+{"id":12,"method":"renderComponent","params":{"generation":"3f9c…","handle":"specs/ui/button.mockup.tsx#Button","props":{"label":"Save"},"slots":{},"viewport":"mobile","colorScheme":"light","ignoreScope":"enabled"}}
 {"id":12,"result":{"html":"<button class=\"css-1x2\">Save</button>","styles":[".css-1x2{color:red}"],"resources":[],"warnings":[]}}
 {"event":"diagnostic","params":{"message":"…"}}
 ```
 
 ## Methods
 
-| Method            | Params                                                                                        | Result                                                       |
-| ----------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `hello`           | none                                                                                          | `{ version }`                                                |
-| `bundle`          | entry files, renderer module, stories files, module resolution settings, source root          | `{ generation, modules, warnings }`                          |
-| `describe`        | generation                                                                                    | `{ screens, pages, useCases, folders, components, stories }` |
-| `renderScreen`    | generation, handle, props, viewport, colour scheme                                            | render result                                                |
-| `renderComponent` | generation, handle, props, slot placeholders, viewport, colour scheme, enclosing ignore scope | render result                                                |
-| `renderStory`     | generation, story id, props, viewport, colour scheme                                          | render result                                                |
-| `renderPage`      | generation, handle                                                                            | `{ html, resources, warnings }`                              |
-| `processCss`      | PostCSS module, source path, text                                                             | `{ text, dependencies }`                                     |
-| `cssModules`      | generation, class maps by stylesheet path                                                     | nothing                                                      |
-| `dispose`         | generation                                                                                    | nothing                                                      |
-| `shutdown`        | none                                                                                          | nothing                                                      |
+| Method            | Params                                                                                        | Result                                                                    |
+| ----------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `hello`           | none                                                                                          | `{ version }`                                                             |
+| `bundle`          | entry files, renderer module, stories files, module resolution settings, source root          | `{ generation, modules, warnings }`                                       |
+| `describe`        | generation                                                                                    | `{ screens, pages, useCases, folders, components, stories, diagnostics }` |
+| `renderScreen`    | generation, handle, props, viewport, colour scheme                                            | render result                                                             |
+| `renderComponent` | generation, handle, props, slot placeholders, viewport, colour scheme, enclosing ignore scope | render result                                                             |
+| `renderStory`     | generation, story id, props, viewport, colour scheme                                          | render result                                                             |
+| `renderPage`      | generation, handle                                                                            | `{ html, resources, warnings }`                                           |
+| `processCss`      | PostCSS module, source path, text                                                             | `{ text, dependencies }`                                                  |
+| `cssModules`      | generation, class maps by stylesheet path                                                     | nothing                                                                   |
+| `dispose`         | generation                                                                                    | nothing                                                                   |
+| `shutdown`        | none                                                                                          | nothing                                                                   |
 
 A render result is `{ html, styles, resources, warnings }`: the fragment, the
 CSS rules the render produced in first-appearance order, the non-CSS resource
@@ -71,25 +72,12 @@ to it.
 
 ## Definitions
 
-`describe` evaluates the entry modules and the stories files of a generation
-and returns every definition they export, each with its handle: screens
-with their variants, pages, use cases, folders, components, and the story
-inventory. An export holds exactly one definition; an array export fails with
-`array-export` naming the export. A handle is the file path, `#`, and the export name, for example
-`specs/account/invoice.mockup.tsx#default`; a render request names the
-definition by its handle and passes the props of the entry or of the variant,
-because a variant is a props set under the
-[entry props contract](./mokly-entry-props.md). A component definition carries its `element`
-when declared, the prop schema, its own props, the slots, the controls, and
-the saved variants; a screen definition carries its prop schema when
-declared, its own props, its controls, and each variant's slug, title, props,
-and metadata overrides. The binary feeds
-every definition into the catalogue model, builds the component registry from
-the component definitions and the HTML components, applies the uniqueness and
-reserved-name rules of the [components contract](./mokly-components.md), and
-fails registration naming both files on a collision. `describe` shares the
-`bundle` deadline. A module that cannot be evaluated returns `bundle-failed`
-with the module and the diagnostic text.
+`describe` returns every exported definition with its handle and a
+`diagnostics` list. The [definition transport](./mokly-sidecar-definitions.md)
+defines typed metadata, raw authored schemas, and source-attributed authoring
+errors. These errors keep their own codes and do not invalidate the transport.
+The core validates schemas with its single `jsonschema` validator before it
+registers definitions or starts a render.
 
 ## Bundling
 

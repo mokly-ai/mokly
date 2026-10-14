@@ -13,6 +13,7 @@ pub const MAX_ARGUMENTS: usize = 128;
 pub const MAX_ARGUMENT_BYTES: usize = 16 * 1024;
 
 /// Bounded multi-command execution boundary.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = BatchesMock))]
 pub trait Batches: Send + Sync {
     /// Run ordered path batches; stop at the first failed invocation.
     fn run(&self, directory: &Path, prefix: &[OsString], paths: &[OsString])

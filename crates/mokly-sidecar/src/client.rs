@@ -1,11 +1,11 @@
 //! Ordered client requests and exact-version hello handshake.
 
-use crate::error::{Error, ProtocolError, RemoteCode, Result};
+use crate::error::{Error, ProtocolError, Result};
 use crate::methods::{Call, Empty};
 use crate::wire::{Event, Frame, MethodResult, Request};
 
 /// Framed transport provided by the process pool.
-#[cfg_attr(test, unimock::unimock(api = TransportMock))]
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = TransportMock))]
 pub trait Transport: Send {
     /// Send one request as a bounded JSON frame.
     fn send(&mut self, request: &Request) -> Result<()>;
@@ -14,13 +14,14 @@ pub trait Transport: Send {
 }
 
 /// Event delivery through the core reporter.
-#[cfg_attr(test, unimock::unimock(api = EventsMock))]
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = EventsMock))]
 pub trait Events: Send {
     /// Forward one diagnostic event.
     fn emit(&mut self, event: Event);
 }
 
 /// Client boundary used by the later sidecar pool.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ClientMock))]
 pub trait SidecarClient: Send {
     /// Complete the first hello exchange and require the exact package version.
     fn handshake(&mut self) -> Result<()>;
@@ -101,14 +102,11 @@ impl SidecarClient for Client {
                 Frame::Event(event) => self.events.emit(event),
                 Frame::Response(response) => {
                     let result = response.decode_result(request);
-                    let reusable = matches!(
-                        &result,
-                        Ok(_)
-                            | Err(Error::Remote {
-                                code: RemoteCode::BundleFailed | RemoteCode::RenderFailed,
-                                ..
-                            })
-                    );
+                    let reusable = match &result {
+                        Ok(_) => true,
+                        Err(Error::Remote { code, .. }) => code.reusable(),
+                        _ => false,
+                    };
                     if reusable && !matches!(request.call, Call::Shutdown(_)) {
                         self.state = State::Ready;
                     }
@@ -122,3 +120,7 @@ impl SidecarClient for Client {
 #[cfg(test)]
 #[path = "_tests_/client_tests.rs"]
 mod client_tests;
+
+#[cfg(test)]
+#[path = "_tests_/session_tests.rs"]
+mod session_tests;

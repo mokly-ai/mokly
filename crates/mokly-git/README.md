@@ -1,5 +1,7 @@
 # mokly-git
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 `mokly-git` runs bounded Git commands for the Mokly core. Use the runner trait
 for Git IO and the batch trait for path queries. `mokly-platform` supplies
 process groups and Windows job objects.
@@ -54,3 +56,5 @@ tests execute Git and verify output limits and failed exit statuses.
 - [Rust architecture](../../docs/architecture/rust-core.md).
 - [Runtime](../../docs/protocol/mokly-runtime.md).
 - [Comparison](../../docs/protocol/mokly-comparison.md).
+
+Consumers enable the `mock` feature to use every public trait with unimock.

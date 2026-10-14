@@ -73,9 +73,20 @@ pub(crate) fn check(
             }
         }
     }
-    for key in ["minimum", "maximum", "multipleOf"] {
+    for key in [
+        "minimum",
+        "maximum",
+        "multipleOf",
+        "minLength",
+        "maxLength",
+        "minItems",
+        "maxItems",
+    ] {
         if let Some(number) = object.get(key) {
-            if !includes("number") && !includes("integer") {
+            if ["minimum", "maximum", "multipleOf"].contains(&key)
+                && !includes("number")
+                && !includes("integer")
+            {
                 return fail(key, "numeric keyword requires number or integer type");
             }
             if number

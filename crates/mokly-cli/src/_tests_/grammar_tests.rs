@@ -1,16 +1,21 @@
 //! Public grammar acceptance and command restrictions.
 
-use clap::{CommandFactory, Parser};
+use clap::CommandFactory;
 
 use crate::grammar::{Cli, Verb};
 use crate::options::{Environment, validate};
+use crate::parsing::{ParseError, parse};
+use crate::version::VERSION;
 
 #[test]
 fn clap_grammar_is_consistent_and_help_is_plain() {
     Cli::command().debug_assert();
     insta::assert_snapshot!(Cli::command().render_long_help().to_string());
-    let version = Cli::try_parse_from(["mokly", "--version"]).unwrap_err();
-    assert_eq!(version.to_string(), "mokly 0.14.0\n");
+    assert!(matches!(
+        try_parse(["mokly", "--version"]),
+        Err(ParseError::Version)
+    ));
+    assert!(!VERSION.is_empty());
 }
 
 #[test]
@@ -65,7 +70,7 @@ fn every_command_accepts_its_complete_option_set() {
             "--debug-timings",
         ],
     ] {
-        let mut cli = Cli::try_parse_from(&arguments).unwrap();
+        let mut cli = try_parse(&arguments).unwrap();
         validate(
             &mut cli,
             &Environment {
@@ -79,18 +84,18 @@ fn every_command_accepts_its_complete_option_set() {
         cores: 4,
         ..Environment::default()
     };
-    let mut default = Cli::try_parse_from(["mokly"]).unwrap();
+    let mut default = try_parse(["mokly"]).unwrap();
     assert!(default.command.is_none());
     validate(&mut default, &environment).unwrap();
     assert!(default.serve.watch);
     assert_eq!(default.serve.port, Some(4173));
-    let mut snapshot = Cli::try_parse_from(["mokly", "serve", "--no-watch", "--port=0"]).unwrap();
+    let mut snapshot = try_parse(["mokly", "serve", "--no-watch", "--port=0"]).unwrap();
     validate(&mut snapshot, &environment).unwrap();
     let Some(Verb::Serve(snapshot)) = snapshot.command else {
         panic!()
     };
-    assert!(!snapshot.watch);
-    assert_eq!(snapshot.port, Some(0));
+    assert!(!snapshot.options.watch);
+    assert_eq!(snapshot.options.port, Some(0));
 }
 
 #[test]
@@ -120,16 +125,13 @@ fn assignments_empty_values_and_command_restrictions_fail() {
         vec!["mokly", "export"],
         vec!["mokly", "review"],
     ] {
-        assert!(
-            Cli::try_parse_from(&arguments).is_err(),
-            "accepted {arguments:?}"
-        );
+        assert!(try_parse(&arguments).is_err(), "accepted {arguments:?}");
     }
 }
 
 #[test]
 fn environment_fallbacks_and_resource_limits_are_validated() {
-    let mut cli = Cli::try_parse_from(["mokly", "publish"]).unwrap();
+    let mut cli = try_parse(["mokly", "publish"]).unwrap();
     let environment = Environment {
         cores: 4,
         sidecars: Some("2".into()),
@@ -137,7 +139,7 @@ fn environment_fallbacks_and_resource_limits_are_validated() {
         token: Some("secret==".into()),
     };
     validate(&mut cli, &environment).unwrap();
-    assert_eq!(cli.common.sidecars, Some(2));
+    assert_eq!(cli.common().sidecars, Some(2));
     let Some(Verb::Publish(publish)) = cli.command else {
         panic!()
     };
@@ -149,11 +151,31 @@ fn environment_fallbacks_and_resource_limits_are_validated() {
         ("--endpoint", "https://user:pass@example.com/plan"),
         ("--endpoint", "https://example.com/plan#fragment"),
     ] {
-        let mut cli = Cli::try_parse_from(["mokly", "publish", name, value]).unwrap();
+        let mut cli = try_parse(["mokly", "publish", name, value]).unwrap();
         assert!(validate(&mut cli, &environment).is_err());
     }
-    let mut cli = Cli::try_parse_from(["mokly", "--sidecars=5"]).unwrap();
-    assert!(validate(&mut cli, &environment).is_err());
-    let mut cli = Cli::try_parse_from(["mokly", "--port=1", "build"]).unwrap();
-    assert!(validate(&mut cli, &environment).is_err());
+    let mut cli = try_parse(["mokly", "--sidecars=5"]).unwrap();
+    validate(&mut cli, &environment).unwrap();
+    assert_eq!(cli.common().sidecars, Some(5));
+    let mut cli = try_parse(["mokly"]).unwrap();
+    validate(
+        &mut cli,
+        &Environment {
+            cores: 1,
+            sidecars: Some("8".into()),
+            ..Environment::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(cli.common().sidecars, Some(8));
+    assert!(try_parse(["mokly", "--port=1", "build"]).is_err());
+}
+
+fn try_parse(arguments: impl IntoIterator<Item = impl AsRef<str>>) -> Result<Cli, ParseError> {
+    parse(
+        &arguments
+            .into_iter()
+            .map(|argument| argument.as_ref().to_owned())
+            .collect::<Vec<_>>(),
+    )
 }

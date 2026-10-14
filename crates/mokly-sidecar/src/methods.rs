@@ -4,22 +4,25 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use ts_rs::TS;
 
 /// A request with no method parameters.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
 #[serde(deny_unknown_fields)]
+#[ts(rename = "EmptyParams")]
 pub struct Empty {}
 
 /// A loaded bundle generation.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(deny_unknown_fields)]
+#[ts(rename = "GenerationParams")]
 pub struct Generation {
     /// Content-addressed generation id.
     pub generation: String,
 }
 
 /// Consumer module resolution settings; list order is meaningful.
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ModuleResolution {
     /// Module aliases.
@@ -43,8 +46,9 @@ pub struct ModuleResolution {
 }
 
 /// Inputs compiled into one unevaluated bundle.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(rename = "BundleParams")]
 pub struct Bundle {
     /// Entry module files.
     pub entry_files: Vec<String>,
@@ -59,7 +63,7 @@ pub struct Bundle {
 }
 
 /// Preview colour scheme.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "lowercase")]
 pub enum ColorScheme {
     /// Light appearance.
@@ -69,7 +73,7 @@ pub enum ColorScheme {
 }
 
 /// Enclosing material-ignore scope at a component invocation.
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "lowercase")]
 pub enum IgnoreScope {
     /// Ignore pairs inside this scope are active.
@@ -79,8 +83,9 @@ pub enum IgnoreScope {
 }
 
 /// Render a screen by definition handle.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(rename = "RenderParams")]
 pub struct Render {
     /// Loaded bundle generation.
     pub generation: String,
@@ -95,8 +100,9 @@ pub struct Render {
 }
 
 /// Render a registered component with core-owned slot placeholders.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(rename = "RenderComponentParams")]
 pub struct RenderComponent {
     /// Shared render inputs.
     #[serde(flatten)]
@@ -108,8 +114,9 @@ pub struct RenderComponent {
 }
 
 /// Render a composed Storybook story with data args overlaid.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(rename = "RenderStoryParams")]
 pub struct RenderStory {
     /// Loaded bundle generation.
     pub generation: String,
@@ -124,8 +131,9 @@ pub struct RenderStory {
 }
 
 /// Render a synchronous complete page document.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(deny_unknown_fields)]
+#[ts(rename = "RenderPageParams")]
 pub struct RenderPage {
     /// Loaded bundle generation.
     pub generation: String,
@@ -134,8 +142,9 @@ pub struct RenderPage {
 }
 
 /// Consumer PostCSS transformation inputs.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(rename = "ProcessCssParams")]
 pub struct ProcessCss {
     /// Consumer PostCSS module path.
     pub postcss: String,
@@ -146,8 +155,9 @@ pub struct ProcessCss {
 }
 
 /// Core-generated CSS Modules maps supplied before evaluation.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(rename = "CssModulesParams")]
 pub struct CssModules {
     /// Loaded bundle generation.
     pub generation: String,
@@ -156,7 +166,7 @@ pub struct CssModules {
 }
 
 /// Every protocol method, encoded as method and params.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(
     tag = "method",
     content = "params",

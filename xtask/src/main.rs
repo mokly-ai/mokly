@@ -16,3 +16,7 @@ mod rust_file_length;
 fn main() -> std::process::ExitCode {
     cli::main()
 }
+
+#[cfg(test)]
+#[path = "_tests_/boundary_mocks_tests.rs"]
+mod boundary_mocks_tests;

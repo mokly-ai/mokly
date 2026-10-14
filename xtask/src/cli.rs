@@ -8,7 +8,7 @@ use std::sync::Arc;
 use clap::{Parser, Subcommand};
 
 use crate::application::{Application, Xtask};
-use crate::artifacts::{DefaultArtifacts, Host, SystemArtifactFiles};
+use crate::artifacts::{DefaultArtifacts, SystemArtifactFiles};
 use crate::check::request::{DependencyAudit, Shard, VerificationSuite};
 use crate::check::runner::DefaultCheckRunner;
 use crate::command::{CommandRunner, SystemCommandRunner};
@@ -101,17 +101,11 @@ pub(crate) fn main() -> ExitCode {
     let selector: Arc<dyn Selector + Send + Sync> = Arc::new(DefaultSelector {
         dependencies: dependencies.clone(),
     });
-    let host = match Host::resolve(std::env::consts::OS, std::env::consts::ARCH) {
-        Ok(host) => host,
-        Err(error) => {
-            let _ = writeln!(io::stderr().lock(), "{error}");
-            return ExitCode::FAILURE;
-        }
-    };
     let app: Arc<dyn Xtask> = Arc::new(Application {
         artifacts: Arc::new(DefaultArtifacts {
             workspace: workspace.clone(),
-            host,
+            os: std::env::consts::OS.to_owned(),
+            architecture: std::env::consts::ARCH.to_owned(),
             commands: Arc::clone(&command_runner),
             files: Arc::new(SystemArtifactFiles),
         }),

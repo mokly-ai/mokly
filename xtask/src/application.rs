@@ -147,3 +147,7 @@ mod application_tests;
 #[cfg(test)]
 #[path = "_tests_/fallback_tests.rs"]
 mod fallback_tests;
+
+#[cfg(test)]
+#[path = "_tests_/artifact_dispatch_tests.rs"]
+mod artifact_dispatch_tests;

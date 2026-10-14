@@ -2,6 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use ts_rs::TS;
 
 use crate::definitions::Definitions;
 use crate::error::{Error, ProtocolError, RemoteCode, Result};
@@ -9,7 +10,7 @@ use crate::methods::Call;
 use crate::results;
 
 /// A client request; params are present even for no-argument methods.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 pub struct Request {
     /// Request identity repeated in the response.
     pub id: u64,
@@ -19,7 +20,7 @@ pub struct Request {
 }
 
 /// Structured remote failure.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(deny_unknown_fields)]
 pub struct RemoteError {
     /// Protocol error category.
@@ -29,7 +30,7 @@ pub struct RemoteError {
 }
 
 /// Exactly one response outcome; raw JSON is decoded using the pending method.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(untagged, deny_unknown_fields)]
 pub enum Response {
     /// A successful method result.
@@ -49,7 +50,7 @@ pub enum Response {
 }
 
 /// Asynchronous sidecar diagnostics, without request ids.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(
     tag = "event",
     content = "params",
@@ -65,7 +66,7 @@ pub enum Event {
 }
 
 /// One inbound client frame; requests from the peer are invalid.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(untagged)]
 pub enum Frame {
     /// A response to the outstanding request.
@@ -75,7 +76,8 @@ pub enum Frame {
 }
 
 /// Fully decoded result of the corresponding request method.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, TS)]
+#[ts(untagged)]
 pub enum MethodResult {
     /// Hello package version.
     Hello(results::Hello),
@@ -138,3 +140,7 @@ fn decode<T: serde::de::DeserializeOwned>(value: Value) -> Result<T> {
 #[cfg(test)]
 #[path = "_tests_/wire_tests.rs"]
 mod wire_tests;
+
+#[cfg(test)]
+#[path = "_tests_/definition_tests.rs"]
+mod definition_tests;

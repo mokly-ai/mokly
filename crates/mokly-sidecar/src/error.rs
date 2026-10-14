@@ -2,7 +2,11 @@
 
 use std::io;
 
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
+use ts_rs::TS;
+
+use crate::diagnostics::DefinitionCode;
 
 /// Sidecar client operation result.
 pub type Result<T> = std::result::Result<T, Error>;
@@ -81,24 +85,37 @@ pub enum ProtocolError {
         /// Received response id.
         actual: u64,
     },
-    /// Both result and error, or neither, were supplied.
-    #[error("response must contain exactly one of result and error")]
-    Outcome,
 }
 
-/// Remote error codes defined by the sidecar contract.
-#[derive(Clone, Copy, Debug, serde::Deserialize, serde::Serialize, Error)]
-#[serde(rename_all = "kebab-case")]
+/// Remote failure categories; authoring diagnostics retain their own code.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, Error, TS)]
+#[serde(untagged)]
 pub enum RemoteCode {
+    /// Request execution or framing failure.
+    #[error("{0}")]
+    Request(RequestCode),
+    /// Source-attributed authoring failure.
+    #[error("{0}")]
+    Definition(DefinitionCode),
+}
+
+impl RemoteCode {
+    /// Whether a valid error reply leaves this session reusable.
+    pub fn reusable(self) -> bool {
+        !matches!(self, Self::Request(RequestCode::SidecarProtocol))
+    }
+}
+
+/// Execution errors a Node sidecar may send; deadlines belong to the binary.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, Error, TS)]
+#[serde(rename_all = "kebab-case")]
+pub enum RequestCode {
     /// Bundling or module evaluation failed.
     #[error("bundle-failed")]
     BundleFailed,
     /// A render failed.
     #[error("render-failed")]
     RenderFailed,
-    /// A request timed out.
-    #[error("render-timeout")]
-    RenderTimeout,
     /// The peer rejected the protocol.
     #[error("sidecar-protocol")]
     SidecarProtocol,

@@ -4,13 +4,13 @@ use std::env;
 use std::io::{self, IsTerminal, Write};
 use std::process::ExitCode;
 
-use clap::Parser;
-use clap::error::{ContextKind, ErrorKind};
-use mokly_cli::errors::{Code, Failure};
-use mokly_cli::grammar::{Cli, Verb};
+use mokly_cli::errors::Failure;
+use mokly_cli::grammar::Verb;
 use mokly_cli::options::{Environment, validate};
 use mokly_cli::output::{Style, select};
+use mokly_cli::parsing::{ParseError, parse};
 use mokly_cli::redaction::Redactor;
+use mokly_cli::version::VERSION;
 use terminal_size::{Width, terminal_size};
 
 trait Terminal {
@@ -58,38 +58,18 @@ pub(super) fn main() -> ExitCode {
             |(Width(width), _)| if width > 0 { usize::from(width) } else { 80 },
         ),
     };
-    let mut cli = match Cli::try_parse_from(&arguments) {
+    let mut cli = match parse(&arguments) {
         Ok(cli) => cli,
-        Err(error)
-            if matches!(
-                error.kind(),
-                ErrorKind::DisplayHelp | ErrorKind::DisplayVersion
-            ) =>
-        {
-            terminal.stdout(&error.to_string());
+        Err(ParseError::Help(help)) => {
+            terminal.stdout(&help);
             return ExitCode::SUCCESS;
         }
-        Err(error) => {
-            let message = if error.kind() == ErrorKind::InvalidSubcommand {
-                error.get(ContextKind::InvalidSubcommand).map_or_else(
-                    || first_line(&error),
-                    |candidate| format!("unknown command: {candidate}"),
-                )
-            } else if arguments.iter().any(|argument| argument == "--strict")
-                && !arguments
-                    .iter()
-                    .any(|argument| matches!(argument.as_str(), "build" | "publish"))
-            {
-                "--strict belongs to build or publish".to_owned()
-            } else if error.kind() == ErrorKind::UnknownArgument {
-                error.get(ContextKind::InvalidArg).map_or_else(
-                    || first_line(&error),
-                    |option| format!("unknown option: {option}"),
-                )
-            } else {
-                first_line(&error)
-            };
-            terminal.stderr(&style.error(Code::CliInvalid, &message, &redactor));
+        Err(ParseError::Version) => {
+            terminal.stdout(&format!("{VERSION}\n"));
+            return ExitCode::SUCCESS;
+        }
+        Err(ParseError::Invalid(failure)) => {
+            terminal.stderr(&style.failure(&failure, &redactor));
             return ExitCode::FAILURE;
         }
     };
@@ -100,24 +80,11 @@ pub(super) fn main() -> ExitCode {
         cores: std::thread::available_parallelism().map_or(1, usize::from),
     };
     if let Err(failure) = validate(&mut cli, &environment) {
-        let Failure::Invalid { message } = failure else {
-            return ExitCode::FAILURE;
-        };
-        terminal.stderr(&style.error(Code::CliInvalid, &message, &redactor));
+        terminal.stderr(&style.failure(&failure, &redactor));
         return ExitCode::FAILURE;
     }
     let command = cli.command.as_ref().map_or("serve", Verb::name);
     let failure = Failure::Unavailable { command };
-    terminal.stderr(&format!("{}\n", redactor.safe(&failure.to_string())));
+    terminal.stderr(&style.failure(&failure, &redactor));
     ExitCode::FAILURE
-}
-
-fn first_line(error: &clap::Error) -> String {
-    error
-        .to_string()
-        .lines()
-        .next()
-        .unwrap_or("invalid command")
-        .trim_start_matches("error: ")
-        .to_owned()
 }

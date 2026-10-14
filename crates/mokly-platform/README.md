@@ -62,3 +62,5 @@ Real OS tests live in `tests/` and use isolated temporary directories.
 - [Rust architecture](../../docs/architecture/rust-core.md).
 - [Runtime shutdown](../../docs/protocol/mokly-runtime.md#shutdown).
 - [Static output recovery](../../docs/protocol/mokly-export-recovery.md).
+
+Consumers enable the `mock` feature to use every public trait with unimock.

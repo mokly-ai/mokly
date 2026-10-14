@@ -154,3 +154,11 @@ deployment or authentication.
 - [Static build contract](../protocol/mokly-export.md)
 - [Viewer API](../protocol/mokly-viewer.md)
 - [Public catalogue read model](../protocol/mokly-catalogue.md)
+
+## Private Workspace Links
+
+The private root registers `packages/mokly` and `packages/viewer` as npm
+workspaces. It links the five native platform packages through optional
+`file:packages/native-{target}` dependencies. The public CLI package uses exact
+registry versions. Native package manifests retain their `os`, `cpu`, and
+Linux `libc` fields in development and publication.

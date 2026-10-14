@@ -1,5 +1,7 @@
 # mokly-model
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 `mokly-model` owns pure data contracts for the Mokly Rust core. Use it when a
 crate must encode canonical JSON, validate props, or share types with the
 React viewer. It has no internal crate dependency and performs no file IO.
@@ -26,7 +28,8 @@ Canonical encoding preserves array order. Each shape owner supplies the entry
 kind/path order, authored variant order, instance/slot key order, and region
 tree order. Authored tags and steps keep their order.
 
-`ts-rs` derives declarations from the Rust shapes. It supports recursive
+`ts-rs` derives declarations from the Rust shapes. Its configuration maps all
+large integer types to TypeScript `number`, because JSON readers use numbers. It supports recursive
 schemas and Serde field names without a second hand-written type model.
 `typescript::generate` returns deterministic source. `cargo xtask generate-types`
 writes it to `packages/viewer/src/generated/model.ts`. Future catalogue index,

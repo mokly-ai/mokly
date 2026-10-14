@@ -4,14 +4,18 @@ expression: "Cli::command().render_long_help().to_string()"
 ---
 Build and browse static mockup catalogues
 
-Usage: mokly [OPTIONS] [COMMAND]
+Usage: mokly [OPTIONS]
+       mokly <COMMAND>
 
 Commands:
   serve    Serve the catalogue and comparisons; watch by default
-  build    Validate and render every view into a static site
+  build    Validate, render every view, and write the static site
   publish  Build into a private directory and upload
 
 Options:
+  -v, --version
+          Show the installed package version
+
       --config <CONFIG>
           Configuration JSON path; otherwise search upward
 
@@ -38,8 +42,5 @@ Options:
 
   -h, --help
           Print help
-
-  -V, --version
-          Print version
 
 Configuration: search upward for mokly.config.json, or pass --config PATH.

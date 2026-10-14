@@ -2,79 +2,140 @@
 
 use std::collections::BTreeMap;
 
-use mokly_model::prop_schema::PropSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use ts_rs::TS;
 
-/// A saved props set on an exported screen or component.
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
+use crate::controls::{Control, StoryHints};
+use crate::definition_metadata::{EntryMetadata, EntryReference, UseCaseStep};
+use crate::diagnostics::DefinitionDiagnostic;
+use crate::methods::ColorScheme;
+
+/// A saved props set with typed metadata overrides.
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Variant {
-    /// Authored path segment.
+    /// Authored final path segment.
     pub slug: String,
     /// Display title.
     pub title: String,
-    /// Top-level props replacements.
+    /// Top-level data prop replacements.
     pub props: BTreeMap<String, Value>,
     /// Description override.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub description: Option<String>,
-    /// Ordered tags override.
+    /// Ordered tag override.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub tags: Option<Vec<String>>,
-    /// Additional declarative authoring metadata consumed by the catalogue.
-    #[serde(flatten)]
-    pub metadata: BTreeMap<String, Value>,
+    /// Previous path override.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub moved_from: Option<String>,
+    /// Effective colour scheme override.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub color_schemes: Option<Vec<ColorScheme>>,
+    /// Address-bar label override.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub address: Option<String>,
+    /// Rationale override.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub rationale: Option<String>,
+    /// Related document override.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub related_docs: Option<Vec<String>>,
+    /// Flow membership override.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub use_case_paths: Option<Vec<EntryReference>>,
+    /// Saved React slot handles retained in the Node generation.
+    #[serde(default)]
+    pub slots: BTreeMap<String, String>,
 }
 
-/// An exported definition, before the core derives catalogue identity.
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
+/// An exported definition with all declarative fields represented explicitly.
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Definition {
-    /// Repository-relative module path and export name.
+    /// Repository-relative module and export name.
     pub handle: String,
-    /// Optional authored slug.
-    pub slug: Option<String>,
-    /// Optional authored title.
-    pub title: Option<String>,
-    /// Optional help text.
-    pub description: Option<String>,
-    /// Schema supplied by the definition, required for components.
-    pub prop_schema: Option<PropSchema>,
+    /// Shared entry metadata.
+    #[serde(flatten)]
+    pub metadata: EntryMetadata,
+    /// Authored schema JSON; only the core's PropValidator interprets it.
+    #[serde(
+        default,
+        deserialize_with = "schema_value",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[ts(optional)]
+    pub prop_schema: Option<Value>,
     /// Entry's own data props.
     #[serde(default)]
     pub props: BTreeMap<String, Value>,
     /// Saved variants in authored order.
     #[serde(default)]
     pub variants: Vec<Variant>,
-    /// Declared React slots.
+    /// Declared optional React slot names.
     #[serde(default)]
     pub slots: Vec<String>,
-    /// Optional HTML custom element name.
+    /// Custom element name for HTML invocations.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
     pub element: Option<String>,
-    /// Ordered authored tags.
+    /// Explicit control overrides.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub controls: Option<BTreeMap<String, Control>>,
+    /// Effective colour schemes.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub color_schemes: Option<Vec<ColorScheme>>,
+    /// Address-bar label.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub address: Option<String>,
+    /// Authored flow memberships.
     #[serde(default)]
-    pub tags: Vec<String>,
-    /// Remaining authoring metadata is preserved at this JSON boundary.
-    #[serde(flatten)]
-    pub metadata: BTreeMap<String, Value>,
+    pub use_case_paths: Vec<EntryReference>,
+    /// Public component stylesheet paths.
+    #[serde(default)]
+    pub stylesheets: Vec<String>,
+    /// Ordered use-case steps.
+    #[serde(default)]
+    pub steps: Vec<UseCaseStep>,
+    /// Ordered folder child slugs.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub order: Option<Vec<String>>,
+    /// Folder visibility.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub hidden: Option<bool>,
 }
 
-/// Story inventory entry; each story becomes a component variant.
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
+/// Story inventory after non-data args have been excluded.
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Story {
     /// File and export name.
     pub id: String,
     /// Display title.
     pub title: String,
-    /// Serializable args, excluding action and function args.
+    /// Serializable merged args.
     pub props: BTreeMap<String, Value>,
-    /// Story control hints and other declarative annotations.
-    #[serde(flatten)]
-    pub metadata: BTreeMap<String, Value>,
+    /// Schema-independent control hints by arg name.
+    #[serde(default)]
+    pub arg_types: BTreeMap<String, StoryHints>,
 }
 
-/// Every definition exported by one bundle generation.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+/// Every definition and every source diagnostic of a bundle generation.
+#[derive(Clone, Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Definitions {
     /// React screens.
@@ -89,4 +150,13 @@ pub struct Definitions {
     pub components: Vec<Definition>,
     /// Composed stories.
     pub stories: Vec<Story>,
+    /// Source-attributed authoring diagnostics; these do not invalidate framing.
+    #[serde(default)]
+    pub diagnostics: Vec<DefinitionDiagnostic>,
+}
+
+fn schema_value<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Option<Value>, D::Error> {
+    Ok(Some(Value::deserialize(deserializer)?))
 }

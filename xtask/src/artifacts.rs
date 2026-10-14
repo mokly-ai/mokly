@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use mokly_model::typescript;
+use mokly_sidecar::typescript::generate;
 
 use crate::command::{CommandRunner, CommandSpec};
 use crate::error::{Error, FilesystemResult, Result};
@@ -96,8 +97,10 @@ impl Host {
 pub(crate) struct DefaultArtifacts {
     /// Workspace root.
     pub(crate) workspace: PathBuf,
-    /// Explicit host mapping from the composition root.
-    pub(crate) host: Host,
+    /// Operating system from the composition root.
+    pub(crate) os: String,
+    /// Architecture from the composition root.
+    pub(crate) architecture: String,
     /// Cargo process boundary.
     pub(crate) commands: Arc<dyn CommandRunner>,
     /// Copy and source-write boundary.
@@ -106,6 +109,7 @@ pub(crate) struct DefaultArtifacts {
 
 impl Artifacts for DefaultArtifacts {
     fn build_native(&self) -> Result<()> {
+        let host = Host::resolve(&self.os, &self.architecture)?;
         let target = self.workspace.join("target/native");
         self.commands.run(
             &CommandSpec::new("cargo")
@@ -116,20 +120,17 @@ impl Artifacts for DefaultArtifacts {
                     "--bin",
                     "mokly",
                     "--target",
-                    self.host.triple,
+                    host.triple,
                     "--target-dir",
                     &target.display().to_string(),
                 ])
                 .in_directory(&self.workspace),
         )?;
         self.files.copy(
-            &target
-                .join(self.host.triple)
-                .join("debug")
-                .join(self.host.executable),
+            &target.join(host.triple).join("debug").join(host.executable),
             &self.workspace.join(format!(
                 "packages/native-{}/bin/{}",
-                self.host.package, self.host.executable
+                host.package, host.executable
             )),
         )
     }
@@ -140,7 +141,17 @@ impl Artifacts for DefaultArtifacts {
                 .workspace
                 .join("packages/viewer/src/generated/model.ts"),
             &typescript::generate(),
-        )
+        )?;
+        for (name, text) in generate() {
+            self.files.write(
+                &self
+                    .workspace
+                    .join("packages/mokly/src/generated/sidecar")
+                    .join(name),
+                &text,
+            )?;
+        }
+        Ok(())
     }
 }
 

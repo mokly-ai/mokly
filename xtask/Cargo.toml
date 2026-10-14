@@ -14,7 +14,23 @@ sha2 = "0.11.0"
 thiserror = "2.0.21"
 
 [dev-dependencies]
+serde_json = "1.0.154"
 unimock = "0.6.8"
 
 [dependencies.mokly-model]
 workspace = true
+
+[dependencies.mokly-sidecar]
+workspace = true
+
+[dev-dependencies.mokly-platform]
+workspace = true
+features = ["mock"]
+
+[dev-dependencies.mokly-git]
+workspace = true
+features = ["mock"]
+
+[dev-dependencies.mokly-sidecar]
+workspace = true
+features = ["mock"]

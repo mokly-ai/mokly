@@ -23,8 +23,8 @@ Every invocation selects one reporter before command work starts:
 5. Otherwise, a TTY stdout selects rich mode and any other stdout selects plain.
 
 Unknown `MOKLY_OUTPUT` values have no effect. Mode selection does not control
-colour. Help and version use their fixed bytes in either mode and render no
-progress. Plain mode is the automation contract. Rich mode is the interactive
+colour. Help and version use the [fixed bytes](./mokly-terminal-help.md) in either
+mode and render no progress. Plain mode is the automation contract. Rich mode is the interactive
 developer experience. Stdin is never claimed in plain mode.
 
 ## Colour, Glyphs, And Width

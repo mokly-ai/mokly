@@ -20,7 +20,7 @@ fn client_requires_an_exact_version_hello_before_requests() {
             .next_call(matching!())
             .returns(Ok(Frame::Response(Response::Success {
                 id: 0,
-                result: json!({"version":"0.14.0"}),
+                result: json!({"version":"fixture-version"}),
             }))),
         TransportMock::send
             .next_call(matching!((request) if request.id == 1))
@@ -45,7 +45,7 @@ fn client_requires_an_exact_version_hello_before_requests() {
     let mut client: Box<dyn SidecarClient> = Box::new(Client::new(
         Box::new(mock.clone()),
         Box::new(mock),
-        "0.14.0".into(),
+        "fixture-version".into(),
     ));
     let shutdown = Request {
         id: 1,
@@ -73,14 +73,20 @@ fn client_requires_an_exact_version_hello_before_requests() {
 
 #[test]
 fn wrong_versions_and_first_events_fail_closed() {
-    for frame in [
-        Frame::Response(Response::Success {
-            id: 0,
-            result: json!({"version":"0.13.0"}),
-        }),
-        Frame::Event(Event::Diagnostic {
-            message: "early".into(),
-        }),
+    for (frame, version_error) in [
+        (
+            Frame::Response(Response::Success {
+                id: 0,
+                result: json!({"version":"other-version"}),
+            }),
+            true,
+        ),
+        (
+            Frame::Event(Event::Diagnostic {
+                message: "early".into(),
+            }),
+            false,
+        ),
     ] {
         let mock = Unimock::new((
             TransportMock::send.next_call(matching!(_)).returns(Ok(())),
@@ -88,10 +94,22 @@ fn wrong_versions_and_first_events_fail_closed() {
                 .next_call(matching!())
                 .returns(Ok(frame)),
         ));
-        let mut client = Client::new(Box::new(mock.clone()), Box::new(mock), "0.14.0".into());
+        let mut client = Client::new(
+            Box::new(mock.clone()),
+            Box::new(mock),
+            "fixture-version".into(),
+        );
+        match (client.handshake(), version_error) {
+            (Err(Error::Version { expected, actual }), true) => {
+                assert_eq!(expected, "fixture-version");
+                assert_eq!(actual, "other-version");
+            }
+            (Err(Error::Protocol(ProtocolError::Handshake)), false) => {}
+            result => panic!("unexpected handshake result: {result:?}"),
+        }
         assert!(matches!(
             client.handshake(),
-            Err(Error::Version { .. } | Error::Protocol(ProtocolError::Handshake))
+            Err(Error::Protocol(ProtocolError::SessionClosed))
         ));
     }
 }

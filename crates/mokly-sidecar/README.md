@@ -1,9 +1,10 @@
 # mokly-sidecar
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 `mokly-sidecar` is the Rust client of Mokly's optional Node render sidecar.
 It owns the wire protocol. The core owns catalogue decisions and rendering
-schedules. `mokly-model` supplies shared schemas; `mokly-platform` supplies
-process ownership to the pool.
+schedules. `mokly-model` supplies shared schemas; The pool receives process ownership from `mokly-platform`. The protocol client has no platform dependency.
 
 ## Responsibilities
 
@@ -61,3 +62,10 @@ both sides of the frame-size limit.
 - [Sidecar contract](../../docs/protocol/mokly-sidecar.md).
 - [Rust architecture](../../docs/architecture/rust-core.md).
 - [Entry props](../../docs/protocol/mokly-entry-props.md).
+
+`cargo xtask generate-types` writes the Node declarations under
+`packages/mokly/src/generated/sidecar/`. Each wire type has its own module,
+with dependency imports. Integer fields use TypeScript `number`. Authored
+schemas remain JSON until the core validates them. Describe diagnostics keep
+their authoring codes. Definition metadata and warning codes have typed fields.
+Consumers enable the `mock` feature to use the public unimock boundaries.

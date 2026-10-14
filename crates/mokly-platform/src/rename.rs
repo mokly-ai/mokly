@@ -9,7 +9,7 @@ use crate::unix;
 use crate::windows;
 
 /// Output transaction's exclusive rename boundary.
-#[cfg_attr(test, unimock::unimock(api = RenameMock))]
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RenameMock))]
 pub trait Rename: Send + Sync {
     /// Atomically move a file or directory only if the destination is absent.
     fn exclusive(&self, source: &Path, destination: &Path) -> Result<()>;

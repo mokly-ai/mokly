@@ -1,5 +1,7 @@
 # mokly-cli
 
+Status: In progress under the [Rust rebuild plan](../../plans/rust-rebuild.md).
+
 `mokly-cli` provides the `mokly` binary. It owns argument parsing and terminal
 presentation. The npm shim starts this binary with inherited streams.
 
@@ -24,9 +26,8 @@ boolean assignments fail. `--no-changes` conflicts with an explicit `--base`.
 
 The reporter implements output-mode precedence, fixed error categories,
 recovery hints, control escaping, token redaction, ASCII fallback, and display
-width bounds that preserve ANSI sequences. Command subsystems are supplied by
-the later core crates. An unavailable command exits 1 with one clear error line.
-It performs no catalogue work or writes.
+width bounds that preserve ANSI sequences. Command subsystems share the Rust core. The binary owns catalogue work and
+file writes.
 
 ## Quick Start
 

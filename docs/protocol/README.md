@@ -66,6 +66,7 @@ How the Rust core and the sidecar turn sources into documents: the sidecar proto
 - [Path-Derived Artifact Paths](./mokly-artifact-paths.md)
 - [Public File Policy And Referenced Closure](./mokly-public-closure.md)
 - [Render Sidecar](./mokly-sidecar.md)
+- [Sidecar Definition Transport](./mokly-sidecar-definitions.md)
 - [Rendering And Document Assembly](./mokly-rendering.md)
 
 ## Comparison And Changes
@@ -93,6 +94,7 @@ How two commits are compared: tree comparison, CSS attribution, component eviden
 - [Removed Preview Acceptance](./mokly-removed-preview-acceptance.md)
 - [Selected live comparisons](./mokly-selected-comparisons.md)
 - [Tree Comparison And Changes](./mokly-comparison.md)
+- [Git Command Runtime](./mokly-git.md)
 
 ## Read Model And Delivery
 
@@ -114,6 +116,7 @@ The development server, on-demand rendering, the watcher, live controls, termina
 
 - [CLI Terminal Compatibility And Errors](./mokly-terminal-errors.md)
 - [CLI Terminal Output](./mokly-terminal-output.md)
+- [CLI Help And Version Bytes](./mokly-terminal-help.md)
 - [Component Controls](./mokly-component-controls.md)
 - [Mokly Build And Browse Runtime](./mokly-runtime.md)
 - [On-demand Serve](./mokly-on-demand.md)

@@ -9,6 +9,7 @@ use crate::unix;
 use crate::windows;
 
 /// A child tree owned by one command; keep this guard until pipes close.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ProcessGroupMock))]
 pub trait ProcessGroup: Send + Sync {
     /// Request graceful termination of the process tree.
     fn terminate(&self) -> Result<()>;
@@ -17,6 +18,7 @@ pub trait ProcessGroup: Send + Sync {
 }
 
 /// Host process-tree ownership boundary.
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = ProcessGroupsMock))]
 pub trait ProcessGroups: Send + Sync {
     /// Configure a new process tree before starting the command.
     fn configure(&self, command: &mut Command) -> Result<()>;

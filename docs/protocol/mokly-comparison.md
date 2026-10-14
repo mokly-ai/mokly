@@ -197,6 +197,9 @@ evidence record names its owner. The catalogue change snapshot v4 pairs
 review v8 with the base commit for Serve, the static build, and publication. The generated
 TypeScript types are the normative shapes.
 
+Git subprocess environment, bounds, and cancellation follow the
+[Git command runtime](./mokly-git.md).
+
 ## Related Docs
 
 - [CSS change attribution](./mokly-css-attribution.md)

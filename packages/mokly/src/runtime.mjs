@@ -3,6 +3,8 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
+import { executeNative } from "./execution.mjs";
+
 const require = createRequire(import.meta.url);
 
 /** The host runtime, created only by the executable entry. */
@@ -30,26 +32,12 @@ export function systemRuntime() {
       };
     },
     execute: (binary, arguments_) =>
-      new Promise((resolve, reject) => {
-        const child = spawn(binary, arguments_, { stdio: "inherit" });
-        const signals = ["SIGINT", "SIGTERM", "SIGHUP"];
-        const handlers = signals.map((signal) => () => child.kill(signal));
-        const cleanup = () => {
-          signals.forEach((signal, index) => {
-            process.removeListener(signal, handlers[index]);
-          });
-        };
-        signals.forEach((signal, index) => {
-          process.on(signal, handlers[index]);
-        });
-        child.once("error", (error) => {
-          cleanup();
-          reject(error);
-        });
-        child.once("exit", (status) => {
-          cleanup();
-          resolve(status === 0 ? 0 : 1);
-        });
+      executeNative(binary, arguments_, {
+        platform: process.platform,
+        spawn,
+        subscribe: (signal, handler) => process.on(signal, handler),
+        unsubscribe: (signal, handler) =>
+          process.removeListener(signal, handler),
       }),
   };
 }

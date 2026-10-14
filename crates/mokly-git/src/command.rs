@@ -29,7 +29,7 @@ pub struct Output {
 }
 
 /// Git process execution boundary.
-#[cfg_attr(test, unimock::unimock(api = RunnerMock))]
+#[cfg_attr(any(test, feature = "mock"), unimock::unimock(api = RunnerMock))]
 pub trait Runner: Send + Sync {
     /// Execute one bounded Git invocation and require a successful exit.
     fn run(&self, request: &Request) -> Result<Output>;

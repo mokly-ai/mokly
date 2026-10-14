@@ -2,19 +2,22 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { platformPackage } from "../packages/mokly/src/platform.mjs";
+import type { ShimRuntime } from "../packages/mokly/src/shim.mjs";
 import { runShim } from "../packages/mokly/src/shim.mjs";
 import { assertNodeVersion } from "../packages/mokly/src/version.mjs";
 
-function runtime(overrides = {}) {
+const VERSION = "fixture-version";
+
+function runtime(overrides: Partial<ShimRuntime> = {}): ShimRuntime {
   return {
     nodeVersion: "24.21.0",
     platform: "linux",
     architecture: "x64",
     glibc: true,
-    cliPackage: () => ({ version: "0.14.0" }),
+    cliPackage: () => ({ version: VERSION }),
     nativePackage: (name) => {
       assert.equal(name, "@mokly/native-linux-x64-gnu");
-      return { version: "0.14.0", binary: "/native/bin/mokly" };
+      return { version: VERSION, binary: "/native/bin/mokly" };
     },
     execute: async () => 0,
     ...overrides,
@@ -52,7 +55,7 @@ test("the shim resolves exactly the five supported native packages", () => {
     ["darwin", "x64", "darwin-x64"],
     ["darwin", "arm64", "darwin-arm64"],
     ["win32", "x64", "win32-x64-msvc"],
-  ]) {
+  ] as const) {
     assert.equal(
       platformPackage(platform, architecture, true),
       `@mokly/native-${target}`,
@@ -89,7 +92,7 @@ test("missing and mismatched native packages fail without a fallback", async () 
     () => {
       throw new Error("not installed");
     },
-    () => ({ version: "0.13.0", binary: "/native/bin/mokly" }),
+    () => ({ version: "other-version", binary: "/native/bin/mokly" }),
   ]) {
     await assert.rejects(
       runShim(
@@ -135,6 +138,7 @@ test("binary startup errors give a safe recovery message", async () => {
       }),
     ),
     (error) => {
+      assert.ok(error instanceof Error);
       assert.match(error.message, /could not start the binary/);
       assert.doesNotMatch(error.message, /SECRET|ENOENT/);
       return true;

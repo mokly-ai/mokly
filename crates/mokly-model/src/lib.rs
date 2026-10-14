@@ -9,6 +9,7 @@ pub mod limits;
 mod numeric;
 mod profile;
 pub mod prop_schema;
+pub mod type_modules;
 pub mod typescript;
 pub mod validation;
 pub mod versions;

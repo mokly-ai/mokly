@@ -700,6 +700,7 @@ version = "0.14.0"
 dependencies = [
  "clap",
  "insta",
+ "serde_json",
  "terminal_size",
  "thiserror",
  "unicode-width",
@@ -747,11 +748,11 @@ version = "0.14.0"
 dependencies = [
  "insta",
  "mokly-model",
- "mokly-platform",
  "serde",
  "serde_json",
  "thiserror",
  "tracing",
+ "ts-rs",
  "unimock",
 ]
 
@@ -1524,7 +1525,11 @@ dependencies = [
  "chrono",
  "clap",
  "ctrlc",
+ "mokly-git",
  "mokly-model",
+ "mokly-platform",
+ "mokly-sidecar",
+ "serde_json",
  "sha2",
  "thiserror",
  "unimock",

@@ -10,3 +10,6 @@ rust-version = "1.95"
 [workspace.dependencies]
 mokly-model = { path = "crates/mokly-model" }
 mokly-platform = { path = "crates/mokly-platform" }
+
+mokly-sidecar = { path = "crates/mokly-sidecar" }
+mokly-git = { path = "crates/mokly-git" }

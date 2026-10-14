@@ -211,3 +211,25 @@ fn schema_numbers_keep_their_exact_json_values() {
     }
     assert!(PropValidator::compile(&schema(json!({"type":"integer","minimum":9007199254740993u64,"maximum":9007199254740992u64})), &context).is_err());
 }
+
+#[test]
+fn lengths_and_item_counts_reject_negative_zero() {
+    let context = context(AuthoringKind::JavaScript);
+    for (kind, keyword) in [
+        ("string", "minLength"),
+        ("string", "maxLength"),
+        ("array", "minItems"),
+        ("array", "maxItems"),
+    ] {
+        let mut property = json!({"type":kind});
+        property[keyword] = json!(-0.0);
+        let ModelError::Schema(diagnostic) = PropValidator::compile(&schema(property), &context)
+            .err()
+            .unwrap()
+        else {
+            panic!()
+        };
+        assert_eq!(diagnostic.path, format!("/properties/value/{keyword}"));
+        assert_eq!(diagnostic.code.as_str(), "component-schema");
+    }
+}

@@ -25,7 +25,8 @@ npx mokly publish --upload-concurrency 4
 
 Install `@mokly/mokly` first, or use `npx --package @mokly/mokly mokly publish`.
 Explicit `--endpoint` and `--token` override `MOKLY_ENDPOINT` and `MOKLY_TOKEN`.
-Both are required; empty values fail before the build. The endpoint identifies the
+Both are required; empty values fail before the build. An endpoint URL must
+not contain a fragment. The endpoint identifies the
 receiver's Plan route and must satisfy the exchange request URL boundary. For
 Mokly Cloud it is
 `https://api.mokly.ai/v1/projects/<projectId>/publications`. HTTPS is

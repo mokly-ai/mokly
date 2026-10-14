@@ -2,7 +2,8 @@
 
 use unicode_width::UnicodeWidthChar;
 
-use crate::errors::Code;
+use crate::codes::Code;
+use crate::errors::Failure;
 use crate::redaction::Redactor;
 
 /// Selected terminal reporter.
@@ -41,33 +42,90 @@ pub struct Style {
 }
 
 impl Style {
-    /// Render a complete expected error with no stack or progress frames.
+    /// Render a typed CLI failure without changing its fixed code prefix.
+    pub fn failure(&self, failure: &Failure, redactor: &Redactor) -> String {
+        if let Failure::Unavailable { .. } = failure {
+            return format!("[mokly/build-invalid] {}\n", failure.detail());
+        }
+        let (_, headline, hint) = Code::CliInvalid.presentation();
+        match failure {
+            Failure::UnknownCommand { candidate } => {
+                let plain = format!("unknown command: {}", redactor.safe(candidate));
+                if self.mode == Mode::Plain {
+                    return format!("[mokly/cli-invalid] {plain}\n");
+                }
+                let hint = closest_command(candidate).map_or_else(
+                    || hint.to_owned(),
+                    |command| format!("Run `mokly {command}`."),
+                );
+                self.rich(
+                    "cli-invalid",
+                    &format!("Unknown command \"{}\".", redactor.safe(candidate)),
+                    &hint,
+                    None,
+                )
+            }
+            Failure::UnknownOption { option } => {
+                let option = redactor.safe(option);
+                if self.mode == Mode::Plain {
+                    return format!("[mokly/cli-invalid] unknown option: {option}\n");
+                }
+                self.rich(
+                    "cli-invalid",
+                    &format!("Unknown option \"{option}\"."),
+                    hint,
+                    None,
+                )
+            }
+            _ => {
+                let detail = match failure {
+                    Failure::ShortFlag { option } => format!(
+                        "short flag cannot have trailing text: {}",
+                        redactor.safe(option)
+                    ),
+                    Failure::BooleanAssignment { option } => format!(
+                        "boolean option does not take a value: {}",
+                        redactor.safe(option)
+                    ),
+                    Failure::RepeatedOption { option } => {
+                        format!("option cannot be repeated: {}", redactor.safe(option))
+                    }
+                    Failure::SeparateHyphen { option } => format!(
+                        "{} needs a value; use its assigned form for a value starting with -",
+                        redactor.safe(option)
+                    ),
+                    Failure::Syntax { .. } => redactor.safe(&failure.detail()),
+                    _ => failure.detail(),
+                };
+                if self.mode == Mode::Plain {
+                    return format!("[mokly/cli-invalid] {detail}\n");
+                }
+                self.rich("cli-invalid", headline, hint, Some(&detail))
+            }
+        }
+    }
+
+    /// Render a typed command category with safe variable detail.
     pub fn error(&self, code: Code, message: &str, redactor: &Redactor) -> String {
         let fixed_upload = matches!(code, Code::UploadCancelled | Code::UploadTransport);
         let (code, headline, hint) = code.presentation();
         let message = if fixed_upload {
-            redactor.safe(&format!("{headline} {hint}"))
+            format!("{headline} {hint}")
         } else {
             redactor.safe(message)
         };
         if self.mode == Mode::Plain {
             return format!("[mokly/{code}] {message}\n");
         }
-        let (headline, hint) = if let Some(candidate) = message.strip_prefix("unknown command: ") {
-            (
-                format!("Unknown command \"{candidate}\"."),
-                closest_command(candidate).map_or_else(
-                    || hint.to_owned(),
-                    |command| format!("Run `mokly {command}`."),
-                ),
-            )
-        } else if let Some(option) = message.strip_prefix("unknown option: ") {
-            (format!("Unknown option \"{option}\"."), hint.to_owned())
+        let detail = if fixed_upload || message.is_empty() || message == headline {
+            None
         } else {
-            (headline.to_owned(), hint.to_owned())
+            Some(message.as_str())
         };
-        let headline = redactor.safe(&headline);
-        let hint = redactor.safe(&hint);
+        self.rich(code, headline, hint, detail)
+    }
+
+    fn rich(&self, code: &str, headline: &str, hint: &str, detail: Option<&str>) -> String {
         let glyph = if self.ascii { "x" } else { "✖" };
         let tag = if self.color {
             format!("\x1b[2m[mokly/{code}]\x1b[0m")
@@ -75,13 +133,8 @@ impl Style {
             format!("[mokly/{code}]")
         };
         let mut lines = vec![format!("{glyph} {headline}  {tag}")];
-        if !fixed_upload
-            && !message.is_empty()
-            && message != headline
-            && !message.starts_with("unknown command: ")
-            && !message.starts_with("unknown option: ")
-        {
-            lines.push(format!("  {message}"));
+        if let Some(detail) = detail {
+            lines.push(format!("  {detail}"));
         }
         lines.push(format!("  {hint}"));
         lines

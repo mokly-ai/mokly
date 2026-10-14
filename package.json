@@ -136,8 +136,14 @@
   },
   "workspaces": [
     "packages/viewer",
-    "packages/mokly",
-    "packages/native-*"
+    "packages/mokly"
   ],
-  "private": true
+  "private": true,
+  "optionalDependencies": {
+    "@mokly/native-darwin-arm64": "file:packages/native-darwin-arm64",
+    "@mokly/native-darwin-x64": "file:packages/native-darwin-x64",
+    "@mokly/native-linux-arm64-gnu": "file:packages/native-linux-arm64-gnu",
+    "@mokly/native-linux-x64-gnu": "file:packages/native-linux-x64-gnu",
+    "@mokly/native-win32-x64-msvc": "file:packages/native-win32-x64-msvc"
+  }
 }

@@ -24,7 +24,7 @@ From the workspace root:
 
 ```bash
 npm run build
-node --test tests/mokly_shim.test.mjs
+node --import tsx --test tests/mokly_shim.test.ts
 node packages/mokly/bin/mokly.mjs --help
 ```
 
@@ -32,3 +32,8 @@ The build copies the shim's ESM sources into `dist`. Native binaries are
 ignored build output under the host platform package. The exact optional
 platform dependencies must stay enabled in consumer installs. React and
 React DOM are optional peers for React authoring.
+
+On Windows, the shim keeps its console signal listeners alive for SIGINT and
+SIGBREAK. It does not forward those signals: the binary shares the console
+and receives them directly. On POSIX, the shim forwards SIGINT, SIGTERM, and
+SIGHUP. Serve treats repeated SIGINT delivery as one shutdown request.

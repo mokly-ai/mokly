@@ -1,18 +1,26 @@
 //! Complete end-state command grammar.
 
-use clap::{Args, Parser, Subcommand};
+use clap::{ArgAction, Args, Parser, Subcommand};
+
+use crate::version::VERSION;
 
 /// Parsed public CLI; absent subcommand selects watched Serve.
 #[derive(Debug, Parser)]
 #[command(
     name = "mokly",
-    version,
+    version = VERSION,
+    disable_version_flag = true,
+    propagate_version = true,
+    args_conflicts_with_subcommands = true,
     about = "Build and browse static mockup catalogues",
     after_help = "Configuration: search upward for mokly.config.json, or pass --config PATH.",
     disable_help_subcommand = true, color = clap::ColorChoice::Never
 )]
 pub struct Cli {
-    /// Options shared by every command.
+    /// Show the installed package version.
+    #[arg(short = 'v', long, global = true, action = ArgAction::Version)]
+    pub version: Option<bool>,
+    /// Options for the default Serve command.
     #[command(flatten)]
     pub common: Common,
     /// Default Serve options when no subcommand is supplied.
@@ -27,13 +35,13 @@ pub struct Cli {
 #[derive(Clone, Debug, Default, Args)]
 pub struct Common {
     /// Configuration JSON path; otherwise search upward.
-    #[arg(long, global = true, value_parser = nonempty)]
+    #[arg(long, value_parser = nonempty)]
     pub config: Option<String>,
     /// Comparison base ref; overrides review.base (default origin/main).
-    #[arg(long, global = true, value_parser = nonempty, allow_hyphen_values = false)]
+    #[arg(long, value_parser = nonempty, allow_hyphen_values = false)]
     pub base: Option<String>,
     /// Sidecar count; defaults to MOKLY_SIDECARS or the core count.
-    #[arg(long, global = true, value_parser = positive)]
+    #[arg(long, value_parser = positive)]
     pub sidecars: Option<usize>,
     /// Write timing JSON to stderr and select plain output.
     #[arg(long, global = true)]
@@ -57,9 +65,23 @@ pub struct Serve {
     pub open: bool,
 }
 
+/// Options for an explicit Serve command.
+#[derive(Clone, Debug, Args)]
+pub struct ServeCommand {
+    /// Shared Serve options.
+    #[command(flatten)]
+    pub common: Common,
+    /// Serve-only options.
+    #[command(flatten)]
+    pub options: Serve,
+}
+
 /// Static-build options.
 #[derive(Clone, Debug, Args)]
 pub struct Build {
+    /// Shared build options.
+    #[command(flatten)]
+    pub common: Common,
     /// Static output directory (default mokly-static/).
     #[arg(long, value_parser = nonempty)]
     pub out: Option<String>,
@@ -71,9 +93,12 @@ pub struct Build {
     pub no_changes: bool,
 }
 
-/// Publication options; publication always fails on build warnings.
+/// Publication options.
 #[derive(Clone, Debug, Args)]
 pub struct Publish {
+    /// Shared publication options.
+    #[command(flatten)]
+    pub common: Common,
     /// Plan endpoint; overrides MOKLY_ENDPOINT.
     #[arg(long, value_parser = nonempty)]
     pub endpoint: Option<String>,
@@ -98,8 +123,8 @@ pub struct Publish {
 #[derive(Debug, Subcommand)]
 pub enum Verb {
     /// Serve the catalogue and comparisons; watch by default.
-    Serve(Serve),
-    /// Validate and render every view into a static site.
+    Serve(ServeCommand),
+    /// Validate, render every view, and write the static site.
     Build(Build),
     /// Build into a private directory and upload.
     Publish(Publish),
@@ -112,6 +137,28 @@ impl Verb {
             Self::Serve(_) => "serve",
             Self::Build(_) => "build",
             Self::Publish(_) => "publish",
+        }
+    }
+}
+
+impl Cli {
+    /// Shared options of the selected command.
+    pub fn common(&self) -> &Common {
+        match &self.command {
+            Some(Verb::Serve(command)) => &command.common,
+            Some(Verb::Build(command)) => &command.common,
+            Some(Verb::Publish(command)) => &command.common,
+            None => &self.common,
+        }
+    }
+
+    /// Mutable shared options of the selected command.
+    pub fn common_mut(&mut self) -> &mut Common {
+        match &mut self.command {
+            Some(Verb::Serve(command)) => &mut command.common,
+            Some(Verb::Build(command)) => &mut command.common,
+            Some(Verb::Publish(command)) => &mut command.common,
+            None => &mut self.common,
         }
     }
 }

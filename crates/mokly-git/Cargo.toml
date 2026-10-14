@@ -9,9 +9,13 @@ publish = false
 [dependencies]
 thiserror = "2.0.21"
 tracing = "0.1.44"
+unimock = { version = "0.6.8", optional = true }
 
 [dev-dependencies]
 unimock = "0.6.8"
+
+[features]
+mock = ["dep:unimock"]
 
 [dependencies.mokly-platform]
 workspace = true

@@ -1,6 +1,7 @@
 //! Reporter precedence, redaction, glyph and width behaviour.
 
-use crate::errors::Code;
+use crate::codes::Code;
+use crate::errors::Failure;
 use crate::output::{Mode, Style, bounded, select};
 use crate::redaction::Redactor;
 
@@ -47,12 +48,22 @@ fn failures_are_plain_or_rich_with_redaction_before_width_bounds() {
     ));
     assert!(
         style
-            .error(Code::CliInvalid, "unknown command: bulid", &redactor)
+            .failure(
+                &Failure::UnknownCommand {
+                    candidate: "bulid".into()
+                },
+                &redactor
+            )
             .contains("Run `mokly build`.")
     );
     assert!(
         style
-            .error(Code::CliInvalid, "unknown option: --watc", &redactor)
+            .failure(
+                &Failure::UnknownOption {
+                    option: "--watc".into()
+                },
+                &redactor
+            )
             .contains("Unknown option \"--watc\".")
     );
     let style = Style {
@@ -104,4 +115,24 @@ fn upload_cancellation_and_transport_have_distinct_recovery_copy() {
     let transport = rich.error(Code::UploadTransport, "ignored provider text", &redactor);
     assert_eq!(transport.lines().count(), 2);
     assert!(!transport.contains("cancelled"));
+}
+
+#[test]
+fn short_secrets_never_change_codes_or_fixed_error_copy() {
+    let style = Style {
+        mode: Mode::Plain,
+        color: false,
+        ascii: false,
+        columns: 80,
+    };
+    for secret in ["-", "i", "option"] {
+        let redactor = Redactor::collect(&[], Some(secret));
+        let failure = Failure::UnknownOption {
+            option: "--invalid".into(),
+        };
+        let output = style.failure(&failure, &redactor);
+        assert!(output.starts_with("[mokly/cli-invalid] unknown option: "));
+        let output = style.failure(&Failure::Unavailable { command: "publish" }, &redactor);
+        assert!(output.starts_with("[mokly/build-invalid] "));
+    }
 }

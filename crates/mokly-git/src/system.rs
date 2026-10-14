@@ -38,6 +38,11 @@ impl Runner for SystemRunner {
             "GIT_ALTERNATE_OBJECT_DIRECTORIES",
             "GIT_NAMESPACE",
             "GIT_PREFIX",
+            "GIT_SHALLOW_FILE",
+            "GIT_GRAFT_FILE",
+            "GIT_REPLACE_REF_BASE",
+            "GIT_NO_REPLACE_OBJECTS",
+            "GIT_IMPLICIT_WORK_TREE",
         ] {
             command.env_remove(variable);
         }

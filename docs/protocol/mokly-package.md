@@ -66,6 +66,11 @@ mokly --help          Show commands, options, and config discovery
 mokly --version       Show the installed package version
 ```
 
+An explicit command comes first and its options follow it. Options before an
+explicit command fail. Without a command, Serve options follow `mokly`.
+The [help and version contract](./mokly-terminal-help.md) defines their exact
+stdout bytes, including `-v` and the bare package version.
+
 `serve` and `build` are the two verbs. `build` validates the catalogue,
 renders every view, fails on errors and, with `--strict`, on warnings, and
 writes the static output into the directory `--out` names, `mokly-static/`

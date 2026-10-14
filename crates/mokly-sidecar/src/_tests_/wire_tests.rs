@@ -16,7 +16,7 @@ fn every_method_and_result_round_trips() {
     story["storyId"] = json!("specs/button.stories.tsx#Primary");
     let fragment = json!({"html":"<button>Save</button>","styles":[],"resources":[],"warnings":[]});
     for (method, params, result) in [
-        ("hello", json!({}), json!({"version":"0.14.0"})),
+        ("hello", json!({}), json!({"version":"fixture-version"})),
         (
             "bundle",
             json!({"entryFiles":[],"renderer":null,"storiesFiles":[],"moduleResolution":{},"sourceRoot":"/checkout"}),
@@ -70,8 +70,18 @@ fn authoring_metadata_is_preserved_until_catalogue_validation() {
         panic!()
     };
     assert_eq!(
-        definitions.components[0].metadata["movedFrom"],
+        definitions.components[0]
+            .metadata
+            .moved_from
+            .as_deref()
+            .unwrap(),
         "old/button"
     );
-    assert!(definitions.components[0].metadata["controls"].is_object());
+    assert!(
+        definitions.components[0]
+            .controls
+            .as_ref()
+            .unwrap()
+            .contains_key("tone")
+    );
 }

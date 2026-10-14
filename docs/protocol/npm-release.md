@@ -47,8 +47,10 @@ exclusive directory rename, Git access, and archive encoding are in the Rust
 binary and need no npm dependency. Mokly does not depend on React Native,
 consumer applications, their component systems, or Playwright. Development and
 browser-test packages are development dependencies. Packed dependencies cannot
-use `workspace:` or `file:` links; local links exist only in a test consumer's
-install manifest.
+use `workspace:` or `file:` links. The private workspace root and test consumers
+may use local `file:` links. The root links the five platform packages through
+optional dependencies; they are outside npm's workspace list, so npm skips
+non-host packages. The CLI package keeps exact registry versions.
 
 ## Release Build Matrix And Publication Order
 

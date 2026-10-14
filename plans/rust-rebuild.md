@@ -565,13 +565,13 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
       `mokly-git` (command runner, bounded batches), and `mokly-sidecar` (the
       client of the sidecar protocol). Later milestones add their own crates.
       Each crate has a README with the required sections.
-- [x] Add the five `@mokly/native-<target>` workspace packages, the shim in `@mokly/mokly` under `packages/mokly` that resolves the
+- [x] Add the five `@mokly/native-<target>` platform packages linked from the private root, the shim in `@mokly/mokly` under `packages/mokly` that resolves the
       binary and checks versions, and the
       `cargo xtask build-native` and `generate-types` commands; `npm run build`
       builds the host target.
-- [ ] Resolve npm installation of platform-constrained native workspaces.
-      npm rejects non-host workspaces before optional dependency selection;
-      Phase A uses a forced local install for verification.
+- [x] Resolve native installation with optional file links from the private root.
+      The native packages stay outside npm's workspace list. The public CLI
+      keeps exact registry versions. Approved in Milestone 3 change request 1.
 - [ ] Extend `xtask check`: Rust formatting, Clippy, tests, file length, the
       generated-type byte-identity check and the Rust advisory audit once
       approved, and the viewer suite. CI builds the native artifacts in every
@@ -580,7 +580,9 @@ At completion the Rust workspace builds, the `mokly` binary runs `--help` and
 - [ ] Commit.
 
 Evidence: `.context/rust-rebuild/delegation/m3/report-1.md` and
-`.context/rust-rebuild/sweeps/m3-phase-a.md`.
+`.context/rust-rebuild/sweeps/m3-phase-a.md`. Round 1 fixes and evidence:
+`.context/rust-rebuild/delegation/m3/report-2.md` and
+`.context/rust-rebuild/sweeps/m3-r2-git.md`.
 
 ## Milestone 4: Catalogue model and discovery
 
@@ -645,6 +647,8 @@ without JavaScript.
       the terminal output contract in the CLI.
 - [ ] Behaviour tests: every route of the shell delivery contract that
       Milestone 6 serves, the identity and revision fences, and shutdown.
+- [ ] Treat repeated SIGINT delivery as one Serve shutdown request. The
+      POSIX shim may forward a console signal already delivered to the binary.
 - [ ] Commit.
 
 ## Milestone 7: Viewer reads read model v7
@@ -712,6 +716,8 @@ v8 and snapshot v4; the viewer renders them after Milestone 10.
 
 - [ ] Implement Git access in `mokly-git`: merge base, changed paths, bounded
       blob and tree reads, and archive extraction of a commit.
+- [ ] Add Git runner stdin and cancellation, SIGTERM then SIGKILL after
+      one second, and drain process pipes before settling.
 - [ ] Implement base-side rendering: the base commit's Git tree as a source
       tree through the render graph, on-demand extraction of the base commit into
       a cache keyed by commit, the three dependency tiers of Decision 12 with
@@ -765,6 +771,8 @@ Tags: ui
       the unchanged exchange v1: plan, blobs,
       complete, retries, accounting, the clean-checkout and uncommitted
       changes rules, and the upload validation fixtures.
+- [ ] Add the `git-uncommitted` detail layout and avoid repeated detail and
+      recovery-hint sentences in terminal errors.
 - [ ] Restore the preview deployment workflow on the new CLI.
 - [ ] Write the build and publish guides.
 - [ ] Commit.
@@ -776,6 +784,9 @@ Tags: ui
       publish order.
 - [ ] Update Release Please for the package set and write the breaking-change
       release note for the first 0.x release of the new core.
+- [ ] Verify that Release Please preserves the private root native `file:`
+      links and keeps the public CLI native versions coordinated. The binary
+      embeds the CLI package version at build time.
 - [ ] Dry-run the release scripts locally; the real publication is post-merge.
 - [ ] Commit.
 
@@ -803,6 +814,8 @@ Tags: ui
       `implementation-review` skill after the push. Report the findings,
       then apply the review-fix rule: fix the `Auto-fix: yes` findings,
       re-review once, and report the rest.
+  - Milestone 3 Phase A review 1, finding 16: the publish warning rule needs
+    a user decision before Milestone 12.
   - Open from the end-state rewrite of 2026-10-14 (the rewrite reports are
     consolidated here):
   - A: settled by Decision 31 on 2026-10-14.

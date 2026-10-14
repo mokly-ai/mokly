@@ -25,6 +25,11 @@ two-space indentation and a final LF. Identical inputs produce identical
 bytes regardless of enumeration order, time, or output location, so a
 detail's bytes change exactly when its content changes.
 
+Numbers retain their parsed JSON kind. Integers print as integers. Other
+numbers use `serde_json`'s shortest round-trip form, including integral floats
+such as `1.0` and negative zero as `-0.0`. Canonical writers use this spelling,
+not JavaScript's `JSON.stringify` spelling.
+
 ## Snapshot Identity
 
 `snapshotId` is the lowercase SHA-256 of the UTF-8 JSON, without LF, of
